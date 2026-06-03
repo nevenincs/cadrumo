@@ -196,9 +196,16 @@ def _value_cells_for_entradas(
                 role="label",
             )
         )
+        binding = binding_row.binding
+        # Numeric bindings live in ``binding_cells``; date bindings (consumed by
+        # the ``age_at_year_end`` op) live in ``date_binding_cells``. Both render
+        # as an operator-input Entradas cell.
+        binding_address = (
+            layout.binding_cells[binding] if binding in layout.binding_cells else layout.date_binding_cells[binding]
+        )
         cells.append(
             SheetValueCell(
-                address=layout.binding_cells[binding_row.binding],
+                address=binding_address,
                 value=None,
                 role="operator_input",
             )

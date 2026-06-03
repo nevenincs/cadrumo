@@ -116,6 +116,8 @@ class SheetLayout(BaseModel):
     entradas_cells: Mapping[CasillaId, SheetCellAddress]
     calculos_cells: Mapping[CasillaId, SheetCellAddress]
     binding_cells: Mapping[BindingId, SheetCellAddress]
+    date_binding_cells: Mapping[BindingId, SheetCellAddress] = Field(default_factory=dict)
+    filing_year: int = 0
     parameter_cells: Mapping[ParameterId, ParameterCell]
     relation_cells: Mapping[RelationId, SheetCellAddress]
     entradas_rows: tuple[_CasillaRow, ...]
@@ -144,6 +146,11 @@ class SheetLayout(BaseModel):
             raise KeyError(f"unknown binding in layout: {binding!r}")
         return self.binding_cells[binding]
 
+    def address_for_date_binding(self, binding: BindingId) -> SheetCellAddress:
+        if binding not in self.date_binding_cells:
+            raise KeyError(f"unknown date binding in layout: {binding!r}")
+        return self.date_binding_cells[binding]
+
     def address_for_relation(self, relation: RelationId) -> SheetCellAddress:
         if relation not in self.relation_cells:
             raise KeyError(f"unknown relation in layout: {relation!r}")
@@ -171,6 +178,25 @@ def _walk_expression_relations(expression: FormulaExpression) -> Iterable[Relati
         yield expression.relation
     for child in expression.args:
         yield from _walk_expression_relations(child)
+
+
+def _walk_expression_date_bindings(expression: FormulaExpression) -> Iterable[BindingId]:
+    if expression.date_binding is not None:
+        yield expression.date_binding
+    for child in expression.args:
+        yield from _walk_expression_date_bindings(child)
+
+
+def _referenced_date_bindings(revision: ModeloRevision) -> tuple[BindingId, ...]:
+    seen: dict[BindingId, None] = {}
+    formulas = {formula.id: formula for formula in revision.formulas}
+    for casilla in revision.casillas:
+        if casilla.formula is None:
+            continue
+        formula = formulas[casilla.formula]
+        for binding in _walk_expression_date_bindings(formula.expression):
+            seen.setdefault(binding, None)
+    return tuple(seen)
 
 
 def _referenced_relations(revision: ModeloRevision) -> tuple[RelationId, ...]:
@@ -280,6 +306,8 @@ def plan_layout(
         entradas_cells=casilla_plan.entradas_cells,
         calculos_cells=casilla_plan.calculos_cells,
         binding_cells=binding_plan.binding_cells,
+        date_binding_cells=binding_plan.date_binding_cells,
+        filing_year=bracket_filter_date.year if bracket_filter_date is not None else 0,
         parameter_cells=parameter_plan.parameter_cells,
         relation_cells=relation_cells,
         entradas_rows=tuple(casilla_plan.entradas_rows),
@@ -369,6 +397,7 @@ class _BindingPlan:
 
     binding_cells: dict[BindingId, SheetCellAddress]
     binding_rows: list[_BindingRow]
+    date_binding_cells: dict[BindingId, SheetCellAddress]
 
 
 def _layout_bindings(
@@ -381,9 +410,12 @@ def _layout_bindings(
 
     Bindings carry caller-supplied numeric values (ledger
     aggregations, profile fields, previous-filing snapshots).
-    Bindings referenced by formulas but not declared on the
-    revision are silently skipped — registry validation already
-    refused those.
+    Date bindings (e.g. taxpayer birth_date, consumed by the
+    ``age_at_year_end`` op) take their own Entradas rows below the
+    numeric bindings so the operator can enter the source date and the
+    translator can compile ``YEAR(cell)``. Bindings referenced by
+    formulas but not declared on the revision are silently skipped —
+    registry validation already refused those.
     """
     binding_cells: dict[BindingId, SheetCellAddress] = {}
     binding_rows: list[_BindingRow] = []
@@ -395,7 +427,18 @@ def _layout_bindings(
         binding_cells[binding_id] = SheetCellAddress.at(TabName.ENTRADAS, entradas_row, value_column)
         binding_rows.append(_BindingRow(binding=binding_id, tab=TabName.ENTRADAS, row=entradas_row, label=binding_id))
         entradas_row += 1
-    return _BindingPlan(binding_cells=binding_cells, binding_rows=binding_rows)
+    date_binding_cells: dict[BindingId, SheetCellAddress] = {}
+    for binding_id in _referenced_date_bindings(revision):
+        if binding_id in binding_cells:
+            # Already laid out as a numeric binding; reuse its cell.
+            date_binding_cells[binding_id] = binding_cells[binding_id]
+            continue
+        date_binding_cells[binding_id] = SheetCellAddress.at(TabName.ENTRADAS, entradas_row, value_column)
+        binding_rows.append(_BindingRow(binding=binding_id, tab=TabName.ENTRADAS, row=entradas_row, label=binding_id))
+        entradas_row += 1
+    return _BindingPlan(
+        binding_cells=binding_cells, binding_rows=binding_rows, date_binding_cells=date_binding_cells
+    )
 
 
 @dataclass(frozen=True, slots=True)
