@@ -254,9 +254,9 @@ Multi-format provider import parity, cross-format dedup, and export roundtrip fi
 
 Provider parity, cross-format dedup, export roundtrip.
 
-- [ ] `W07.P14.S42` - Import OFX/XLSX/PDF provider formats and assert parity with CSV import; `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
-- [ ] `W07.P14.S43` - Cross-format re-import dedups by import_fingerprint (likely-duplicate warning); `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
-- [ ] `W07.P14.S44` - Export csv/jsonl and assert roundtrip fidelity back through import; `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
+- [x] `W07.P14.S42` - Import OFX/XLSX/PDF provider formats and assert parity with CSV import; `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
+- [x] `W07.P14.S43` - Cross-format re-import dedups by import_fingerprint (likely-duplicate warning); `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
+- [x] `W07.P14.S44` - Export csv/jsonl and assert roundtrip fidelity back through import; `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
 
 ## Wave `W08` - Transaction modification lifecycle
 

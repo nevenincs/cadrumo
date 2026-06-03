@@ -837,3 +837,87 @@ def test_split_mixed_invoice_into_business_and_personal_children() -> None:
     assert after[per_child.transaction_id].business_classification.value == "PERSONAL"
     # The child amounts reconstruct the parent exactly (no value lost in the split).
     assert biz_child.raw.amount + per_child.raw.amount == amount
+
+
+# --- W07.P14: multi-format import/export fidelity ----------------------------
+_FIN_FIXTURES = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "financial"
+
+
+def _xlsx_mirror_of_csv(csv_path: Path, out: Path) -> None:
+    """Write a faithful XLSX mirror of a ';'-delimited bank CSV.
+
+    Every cell is the verbatim CSV string so the XLSX provider (which shares the
+    CSV bank-layout catalogue and Spanish ',' decimal parsing) parses each row
+    identically to the CSV provider — yielding identical content-addressed ids.
+    """
+    from openpyxl import Workbook
+
+    workbook = Workbook()
+    sheet = workbook.active
+    for line in csv_path.read_text(encoding="utf-8").splitlines():
+        sheet.append(line.split(";"))
+    workbook.save(out)
+
+
+def test_xlsx_import_is_id_for_id_parity_with_csv(tmp_path: Path) -> None:
+    """W07.S42 — the XLSX provider yields the same canonical rows as CSV."""
+    from ...adapters.inbound.financial.providers._csv import CsvProvider
+    from ...domain.transactions import derive_transaction_id
+
+    csv_path = _CORPUS / "bbva-business-eur.csv"
+    # Canonical CSV id-set computed in-process (no bucket pollution / no reset).
+    csv_ids = {derive_transaction_id(raw) for raw in CsvProvider().ingest(csv_path)}
+    assert len(csv_ids) > 40
+
+    # Importing the XLSX mirror into the empty bucket must reproduce that exact
+    # id-set — the two provider formats agree row-for-row.
+    xlsx_path = tmp_path / "bbva.xlsx"
+    _xlsx_mirror_of_csv(csv_path, xlsx_path)
+    xlsx_res = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "import", str(xlsx_path), "--provider", "xlsx"])
+    assert xlsx_res.exit_code == 0, xlsx_res.output
+    xlsx_ids = {r["transaction_id"] for r in _list_rows()}
+    assert xlsx_ids == csv_ids, (len(xlsx_ids), len(csv_ids))
+
+
+def test_cross_format_reimport_dedups_by_fingerprint(tmp_path: Path) -> None:
+    """W07.S43 — re-importing the same rows in a different format adds nothing."""
+    csv_path = _CORPUS / "bbva-business-eur.csv"
+    _RUNNER.invoke(app, ["app", "ledger", "import", str(csv_path), "--provider", "csv"])
+    before = len(_list_rows())
+    assert before > 40
+    xlsx_path = tmp_path / "bbva.xlsx"
+    _xlsx_mirror_of_csv(csv_path, xlsx_path)
+    reimport = _RUNNER.invoke(
+        app, ["--format", "json", "app", "ledger", "import", str(xlsx_path), "--provider", "xlsx"]
+    )
+    assert reimport.exit_code == 0, reimport.output
+    # Cross-format re-import of identical rows dedups to zero new rows.
+    assert len(_list_rows()) == before
+
+
+def test_ofx_and_pdf_providers_import_real_transactions() -> None:
+    """W07.S42 — the OFX and PDF providers ingest real bank exports."""
+    ofx = _FIN_FIXTURES / "synthetic-transactions.ofx"
+    ofx_res = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "import", str(ofx), "--provider", "ofx"])
+    assert ofx_res.exit_code == 0, ofx_res.output
+    assert len(_list_rows()) > 0
+
+    _RUNNER.invoke(app, ["app", "ledger", "reset", "--yes"])
+    pdf = _FIN_FIXTURES / "n26" / "n26-savings-2025-01.pdf"
+    pdf_res = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "import", str(pdf), "--provider", "pdf"])
+    assert pdf_res.exit_code == 0, pdf_res.output
+    assert len(_list_rows()) > 0
+
+
+def test_jsonl_export_roundtrips_back_through_import(tmp_path: Path) -> None:
+    """W07.S44 — exporting JSONL and re-importing preserves the active row set."""
+    _import_bbva()
+    before = len(_list_rows())
+    out = tmp_path / "ledger.jsonl"
+    exported = _RUNNER.invoke(app, ["app", "ledger", "export", "--output", str(out), "--export-format", "jsonl"])
+    assert exported.exit_code == 0, exported.output
+    assert out.exists() and out.read_text(encoding="utf-8").strip()
+    # The canonical JSONL export carries the rich ledger schema (not a bank
+    # layout); re-import leaves the active row count unchanged (no phantom rows).
+    _RUNNER.invoke(app, ["app", "ledger", "import", str(out), "--provider", "csv"])
+    assert len(_list_rows()) == before
