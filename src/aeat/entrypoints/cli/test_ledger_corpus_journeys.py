@@ -353,8 +353,24 @@ def test_split_children_then_merge() -> None:
     )
     assert split.exit_code == 0, split.output
     rows = _list_rows()
-    child_a = _find(rows, "Subcontratacion parte A")["transaction_id"]
-    child_b = _find(rows, "Subcontratacion parte B")["transaction_id"]
+    child_a_row = _find(rows, "Subcontratacion parte A")
+    child_b_row = _find(rows, "Subcontratacion parte B")
+    child_a = child_a_row["transaction_id"]
+    child_b = child_b_row["transaction_id"]
+    # Post-split post-state: both children are ACTIVE, and the original parent
+    # has transitioned to SPLIT (the catalogue retains it for audit lineage; the
+    # CLI ``list`` surfaces every lifecycle state, with lifecycle_state as the
+    # discriminator rather than filtering the parent out).
+    assert child_a_row["lifecycle_state"] == "ACTIVE"
+    assert child_b_row["lifecycle_state"] == "ACTIVE"
+    parent_after_split = next(
+        (r for r in rows if r["transaction_id"] == parent["transaction_id"]), None
+    )
+    assert parent_after_split is not None, "the SPLIT parent is retained for audit lineage"
+    assert parent_after_split["lifecycle_state"] == "SPLIT", (
+        "the parent transitions ACTIVE -> SPLIT once its children carry the balance"
+    )
+
     merged = _RUNNER.invoke(
         app,
         [
@@ -364,6 +380,38 @@ def test_split_children_then_merge() -> None:
         ],
     )
     assert merged.exit_code == 0, merged.output
+
+    # Post-merge post-state (SplitRole.MERGED semantics): the two children
+    # transition ACTIVE -> ARCHIVED, the original parent transitions SPLIT ->
+    # ARCHIVED (never back to ACTIVE), and a FRESH MERGED row — a new
+    # content-addressed id carrying the parent's narrative — becomes ACTIVE,
+    # re-carrying the rejoined balance.
+    rows_after_merge = _list_rows()
+    by_id = {r["transaction_id"]: r for r in rows_after_merge}
+    assert by_id.get(child_a, {}).get("lifecycle_state") == "ARCHIVED", (
+        "merged child A must transition to ARCHIVED"
+    )
+    assert by_id.get(child_b, {}).get("lifecycle_state") == "ARCHIVED", (
+        "merged child B must transition to ARCHIVED"
+    )
+    assert by_id.get(parent["transaction_id"], {}).get("lifecycle_state") == "ARCHIVED", (
+        "the original SPLIT parent transitions to ARCHIVED on merge, never back to ACTIVE"
+    )
+    # The fresh MERGED row re-carries the parent's EXACT narrative and amount
+    # (the rejoined balance), under a new content-addressed id. Match on exact
+    # description + amount to disambiguate from any other corpus row that merely
+    # shares the narrative substring.
+    merged_rows = [
+        r
+        for r in rows_after_merge
+        if r["description"] == parent["description"]
+        and r["amount"] == parent["amount"]
+        and r["transaction_id"] not in {child_a, child_b, parent["transaction_id"]}
+        and r["lifecycle_state"] == "ACTIVE"
+    ]
+    assert len(merged_rows) == 1, (
+        f"exactly one fresh ACTIVE MERGED row must carry the rejoined balance, got {len(merged_rows)}"
+    )
 
 
 def test_stash_remove_and_track() -> None:
@@ -375,14 +423,42 @@ def test_stash_remove_and_track() -> None:
         ["app", "ledger", "stash", "--id", stash_row["transaction_id"], "--reason", "pending review", "--yes"],
     )
     assert stashed.exit_code == 0, stashed.output
+    # Post-stash post-state: the row remains listed but transitions to STASHED
+    # (parked pending review — reversible, not removed from the catalogue).
+    stashed_row = next(
+        (r for r in _list_rows() if r["transaction_id"] == stash_row["transaction_id"]), None
+    )
+    assert stashed_row is not None, "a stashed row stays in the catalogue (reversible state)"
+    assert stashed_row["lifecycle_state"] == "STASHED"
+
+    # ``ledger track`` is a READ-ONLY audit-lineage view (it calls
+    # get_manual_transaction; it does NOT mutate lifecycle state). Asserting the
+    # real behavior: the row's state is unchanged (still STASHED) after track,
+    # and the track output reports that state. (There is no per-row un-stash CLI
+    # verb today — stash/archive are "reversible" in the domain enum but no
+    # ledger subcommand reverses them per row; surfaced to the coordinator as a
+    # follow-up gap, documented here rather than faked.)
     tracked = _RUNNER.invoke(app, ["app", "ledger", "track", stash_row["transaction_id"]])
     assert tracked.exit_code == 0, tracked.output
+    assert "STASHED" in tracked.output, "track must report the row's STASHED lifecycle state"
+    after_track = next(
+        (r for r in _list_rows() if r["transaction_id"] == stash_row["transaction_id"]), None
+    )
+    assert after_track is not None, "track is read-only; the row stays in the catalogue"
+    assert after_track["lifecycle_state"] == "STASHED", (
+        "track is a read-only lineage view and must not change lifecycle state"
+    )
+
     remove_row = _find(rows, "Comida de trabajo Restaurante El Olivo")
     removed = _RUNNER.invoke(
         app,
         ["app", "ledger", "remove", "--id", remove_row["transaction_id"], "--reason", "duplicate", "--yes"],
     )
     assert removed.exit_code == 0, removed.output
+    # Post-remove: the removed row is absent from the default list.
+    assert remove_row["transaction_id"] not in {
+        r["transaction_id"] for r in _list_rows()
+    }, "a removed row must be absent from the default list"
 
 
 # --- P08: preflight + check gates -------------------------------------------
