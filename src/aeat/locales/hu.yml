@@ -162,23 +162,61 @@ adapters:
             {expected}.'
       google_drive:
         errors:
-          content_hash_blank: 'A Google Drive tartalom hash nem lehet ures.'
-          content_hash_mismatch: 'A Google Drive tartalom hash nem egyezik; a letoltott payload integritasellenorzese sikertelen.'
-          create_namespace_no_id: 'A Google Drive nem adott vissza azonositot a nevter mappa letrehozasakor.'
-          create_vault_folder_no_id: 'A Google Drive nem adott vissza azonositot a vault mappa letrehozasakor.'
-          folder_not_owned: 'A Drive mappa {folder_name} nincs az alkalmazas tulajdonakent jelolve; az operatori adatok vedelmeben az iras megtagadva.'
-          googleapiclient_import_failed: 'A google-api-python-client fuggoseg nem importalhato; futtassa: `uv sync`, majd probalja ujra.'
-          media_non_bytes: 'A Google Drive medialetoltes {payload_type} tipust adott vissza bytes helyett.'
-          namespace_blank: 'A Google Drive tarhely nevtere nem lehet ures.'
-          namespace_forbidden_characters: 'A Google Drive nevter {namespace} tiltott utvonal-karaktereket tartalmaz.'
+          content_hash_blank: A Google Drive tartalom hash nem lehet ures.
+          content_hash_mismatch: A Google Drive tartalom hash nem egyezik; a letoltott
+            payload integritasellenorzese sikertelen.
+          create_namespace_no_id: A Google Drive nem adott vissza azonositot a nevter
+            mappa letrehozasakor.
+          create_vault_folder_no_id: A Google Drive nem adott vissza azonositot a
+            vault mappa letrehozasakor.
+          folder_not_owned: A Drive mappa {folder_name} nincs az alkalmazas tulajdonakent
+            jelolve; az operatori adatok vedelmeben az iras megtagadva.
+          googleapiclient_import_failed: 'A google-api-python-client fuggoseg nem
+            importalhato; futtassa: `uv sync`, majd probalja ujra.'
+          media_non_bytes: A Google Drive medialetoltes {payload_type} tipust adott
+            vissza bytes helyett.
+          namespace_blank: A Google Drive tarhely nevtere nem lehet ures.
+          namespace_forbidden_characters: A Google Drive nevter {namespace} tiltott
+            utvonal-karaktereket tartalmaz.
           namespace_not_found: 'A Google Drive nevter nem talalhato: {namespace}.'
-          object_key_hmac_blank: 'A Google Drive objektumkulcs HMAC nem lehet ures.'
-          object_not_found: 'A Google Drive objektum {object_key_hmac} nem talalhato ebben a nevterben: {namespace}.'
-          request_failed: 'A Google Drive {action} keres {status} allapottal sikertelen.'
-          root_folder_id_blank: 'A Google Drive gyokermappa azonosito nem lehet ures.'
-          vault_entry_not_folder: 'A beallitott Drive gyoker tartalmazza ezt: {vault_folder_name}, de ez nem mappa.'
-          vault_folder_name_blank: 'A Google Drive vault mappa neve nem lehet ures.'
-          write_non_dict_response: 'A Google Drive {action} irasi valasza varatlan alaku volt.'
+          object_key_hmac_blank: A Google Drive objektumkulcs HMAC nem lehet ures.
+          object_not_found: 'A Google Drive objektum {object_key_hmac} nem talalhato
+            ebben a nevterben: {namespace}.'
+          request_failed: A Google Drive {action} keres {status} allapottal sikertelen.
+          root_folder_id_blank: A Google Drive gyokermappa azonosito nem lehet ures.
+          vault_entry_not_folder: 'A beallitott Drive gyoker tartalmazza ezt: {vault_folder_name},
+            de ez nem mappa.'
+          vault_folder_name_blank: A Google Drive vault mappa neve nem lehet ures.
+          write_non_dict_response: A Google Drive {action} irasi valasza varatlan
+            alaku volt.
+      local:
+        errors:
+          byte_length_invalid: 'A helyi sidecar byte_length mezojenek tipusa ervenytelen:
+            {actual_type}.'
+          content_hash_blank: A helyi tartalom hash nem lehet ures.
+          content_hash_mismatch: A helyi tartalom hash nem egyezik; a payload integritasellenorzese
+            sikertelen.
+          namespace_blank: A helyi tarhely nevtere nem lehet ures.
+          namespace_create_permission: 'A helyi tarhely nem tudta letrehozni a nevteret:
+            {namespace}.'
+          namespace_forbidden_characters: A helyi tarhely nevtere {namespace} tiltott
+            utvonal-karaktereket tartalmaz.
+          namespace_not_found: 'A helyi nevter nem talalhato: {namespace}.'
+          object_delete_permission: A helyi tarhely nem tudta torolni az objektum
+            payloadjat.
+          object_key_hmac_blank: A helyi tarhely objektumkulcs HMAC nem lehet ures.
+          object_key_hmac_forbidden_characters: A helyi objektumkulcs HMAC {object_key_hmac}
+            tiltott karaktereket tartalmaz.
+          object_not_found: 'A helyi objektum {object_key_hmac} nem talalhato ebben
+            a nevterben: {namespace}.'
+          payload_commit_failed: A helyi tarhely nem tudta atomikusan veglegesiteni
+            az objektum payloadjat.
+          payload_read_permission: A helyi tarhely nem tudta olvasni az objektum payloadjat.
+          payload_write_permission: A helyi tarhely nem tudta irni az objektum payloadjat.
+          sidecar_malformed: A helyi sidecar {sidecar_path} nem olvashato vagy hibas.
+          sidecar_missing: A helyi objektum sidecarja hianyzik.
+          sidecar_not_object: A helyi sidecar {sidecar_path} nem JSON objektum.
+          sidecar_write_failed: A helyi tarhely nem tudta irni az objektum sidecarjat.
   sede:
     errors:
       cotejo_nav_failed: Az AEAT cotejo oldalra való navigáció sikertelen volt; a
@@ -1987,6 +2025,14 @@ cli:
       reaffirm_help: Egy már besorolt tranzakció besorolásának megerősítése.
       reaffirmed: Besorolás megerősítve.
       taxable_base_help: Adóköteles alapösszeg.
+    doclink:
+      actor_help: 'A bucket esemenyekhez rogzitett operatori cimke.'
+      bad_source: 'a dokumentumhivatkozas forrasanak egyikenek kell lennie: gmail, google_drive, url (kapott ''{source}'').'
+      help: 'Gmail/Drive/URL dokumentumhivatkozas rogzitese helyi bizonyitekkent egy konyvelesi soron (a tavoli dokumentumot soha nem tolti le).'
+      id_help: 'Konyvelesi tranzakcio azonosito (SHA-256 vagy egyertelmu elotag).'
+      note_help: 'A hivatkozassal rogzitett opcionalis megjegyzes.'
+      reference_help: 'A dokumentumhivatkozas referenciaja (Gmail hivatkozas, Drive fajl hivatkozas vagy URL).'
+      source_help: 'A hivatkozas forrasa: gmail, google_drive vagy url.'
     errors:
       command_input_invalid: 'Elutasítva. A tranzakció érvénytelen: {details}'
       command_input_invalid_fallback: Egy vagy több mező érvényesítése sikertelen.
@@ -2099,7 +2145,7 @@ cli:
       warnings: Figyelmeztetések
       'yes': Igen
     link:
-      actor_help: A bucket-eseményeken rögzített üzemeltetői felirat.
+      actor_help: A bucket esemenyekhez rogzitett operatori cimke.
       errors:
         cross_bucket_invoice: A számla egy másik buckethez tartozik, mint az aktív
           profil.
@@ -2109,10 +2155,12 @@ cli:
       help: Főkönyvi tranzakció összekapcsolása számlával és/vagy vásárlásiszámla-bizonyítékkal
         egyetlen kanonikus hívásban. Keresztbucket-hivatkozásokat elutasít. Csak helyi;
         soha nem lép kapcsolatba az AEAT-tal.
-      id_help: Főkönyvi tranzakcióazonosító (SHA-256 vagy egyértelmű előtag).
+      id_help: Konyvelesi tranzakcio azonosito (SHA-256 vagy egyertelmu elotag).
       invoice_id_help: A tranzakcióhoz kétirányúan kötendő számla azonosítója.
     list:
       by_group_help: A lista csoportositasa csoportcimke szerint.
+      filter_help: Sorok szűrése állapot, időszak (évre a puszta YYYY is), besorolás,
+        probléma, import vagy szöveg szerint.
       footer_truncated: '{start}-{end}. sor megjelenitese, osszesen {total} (eltolas
         {offset}). Lapozashoz hasznalja a --offset/--limit kapcsolot.'
       group_filter_help: Csak az adott csoportcimkehez tartozo sorok megjelenitese.
