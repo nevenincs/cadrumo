@@ -340,7 +340,7 @@ Folder/multi-file import + import-batch lineage.
 Classification lens + search + period-scoped JSON.
 
 - [x] `W12.P22.S77` - review --filter classification=business|personal|gated (typed key across filter spec + query); `src/aeat/application/review/_filter.py`.
-- [ ] `W12.P22.S78` - Search across description/counterparty/category from the CLI (review/list search); `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W12.P22.S78` - Search across description/counterparty/category from the CLI (review/list search); `src/aeat/entrypoints/cli/_ledger.py`.
 - [x] `W12.P22.S79` - Period-scoped JSON row list (list --period or review --filter period --format json) for building classify CSVs; `src/aeat/entrypoints/cli/_ledger.py`.
 
 ### Phase `W12.P23` - Readiness and anomaly surface

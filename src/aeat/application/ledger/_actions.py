@@ -1091,6 +1091,15 @@ def _filter_ledger_review_rows(
         rows = tuple(
             transaction for transaction in rows if transaction.business_classification.value == query.classification
         )
+    if query.text is not None:
+        needle = query.text.casefold()
+        rows = tuple(
+            transaction
+            for transaction in rows
+            if needle in transaction.raw.description.casefold()
+            or needle in (transaction.raw.counterparty or "").casefold()
+            or needle in (transaction.category_id or "").casefold()
+        )
     if query.import_id is not None or query.issue is not None:
         matching_ids = _transaction_ids_for_review_event_filters(
             bucket_id=query.bucket_id,
@@ -1111,6 +1120,7 @@ _LEDGER_REVIEW_FILTER_FIELDS: tuple[tuple[str, str], ...] = (
     ("issue", "issue"),
     ("import_id", "import"),
     ("classification", "classification"),
+    ("text", "text"),
     ("transaction_id", "id"),
 )
 

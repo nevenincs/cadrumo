@@ -146,6 +146,7 @@ class LedgerReviewFilterKey(StrEnum):
     ISSUE = "issue"
     IMPORT = "import"
     CLASSIFICATION = "classification"
+    TEXT = "text"
 
 
 class LedgerReviewStatus(StrEnum):
@@ -307,6 +308,7 @@ class LedgerReviewFilterSpec(BaseModel):
     issue: LedgerImportDiagnosticKind | None = None
     import_id: str | None = None
     classification: BusinessClassification | None = None
+    text: str | None = None
 
     @classmethod
     def from_strings(cls, raw: Iterable[str]) -> LedgerReviewFilterSpec:
@@ -319,6 +321,7 @@ class LedgerReviewFilterSpec(BaseModel):
         issue: LedgerImportDiagnosticKind | None = None
         import_id: str | None = None
         classification: BusinessClassification | None = None
+        text: str | None = None
         for clause in clauses:
             if clause.key == LedgerReviewFilterKey.STATUS:
                 status = _enum_value_or_raise(
@@ -342,6 +345,8 @@ class LedgerReviewFilterSpec(BaseModel):
                     BusinessClassification,
                     scope="ledger-classification",
                 )
+            elif clause.key == LedgerReviewFilterKey.TEXT:
+                text = clause.value
         return cls(
             clauses=clauses,
             status=status,
@@ -349,6 +354,7 @@ class LedgerReviewFilterSpec(BaseModel):
             issue=issue,
             import_id=import_id,
             classification=classification,
+            text=text,
         )
 
     @model_validator(mode="after")
@@ -370,6 +376,8 @@ class LedgerReviewFilterSpec(BaseModel):
             raise ValueError("clauses[import] / import_id field disagree")
         if (LedgerReviewFilterKey.CLASSIFICATION in present_keys) != (self.classification is not None):
             raise ValueError("clauses[classification] / classification field disagree")
+        if (LedgerReviewFilterKey.TEXT in present_keys) != (self.text is not None):
+            raise ValueError("clauses[text] / text field disagree")
         return self
 
 
