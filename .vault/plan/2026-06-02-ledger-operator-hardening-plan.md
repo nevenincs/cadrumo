@@ -20,6 +20,8 @@ related:
      - NEVER use [[wiki-links]] or markdown links in the
        document body. -->
 
+<!-- RETIRED: W04, P11, P27, S29, S30, S90, S91, S92 -->
+
 <!-- FRONTMATTER RULES:
      tags: one directory tag (hardcoded #plan) and one feature tag.
      Replace ledger-operator-hardening with a kebab-case feature tag, e.g. #foo-bar.
@@ -200,25 +202,6 @@ Fresh-context honesty review; turn findings into hardening Steps with gates.
 - [x] `W03.P10.S72` - Support --business-pct in bulk classify --from-csv (extend BulkClassifyRow) so MIXED rows (home-office/vehicle/phone) classify in bulk, not one-at-a-time; `src/aeat/application/ledger/_actions.py`.
 - [x] `W03.P10.S73` - Allow importing multiple statement files / a directory in one ledger import invocation (bulk/folder import); `src/aeat/entrypoints/cli/_ledger.py`.
 - [x] `W03.P10.S74` - Enrich ledger track lineage for imported rows (name the import-batch provenance instead of a bare '-' created bucket event); `src/aeat/entrypoints/cli/_ledger.py`.
-
-## Wave `W04` - Google ledger export — online/live (network, deferred pending authorization)
-
-The network half of the Google export goal: live Drive/Sheets upload, manual-review-in-Drive, and live Gmail/Drive document-link resolution. Separated from the offline/local export wave (W15) so cloud writes are tracked and gated independently; parked until explicit operator authorization and OAuth credentials are available in the environment.
-
-### Phase `W04.P11` - Live Drive and Gmail export
-
-Deferred: live Drive upload, manual review, Gmail/Drive document links.
-
-- [ ] `W04.P11.S29` - Live Drive export plus manual review (deferred, on go-ahead); `src/aeat/adapters/outbound/google/`.
-- [ ] `W04.P11.S30` - Gmail/Drive document-link workflow (deferred, on go-ahead); `src/aeat/adapters/outbound/google/`.
-
-### Phase `W04.P27` - Google Sheets/Drive export + document links
-
-Sheets/XLSX to Drive, manual review, Gmail/Drive doc-links.
-
-- [ ] `W04.P27.S90` - Export the ledger to Google Sheets/XLSX in Drive (outbound adapter) for manual review; `src/aeat/adapters/outbound/google/`.
-- [ ] `W04.P27.S91` - Operator manual-review-in-Drive workflow (open exported sheet, annotate, re-pull); `src/aeat/adapters/outbound/google/`.
-- [ ] `W04.P27.S92` - Gmail/Drive document-link workflow: attach justificante/invoice links from Gmail + Drive to ledger rows; `src/aeat/adapters/outbound/google/`.
 
 ## Wave `W05` - LLM classification testing
 
