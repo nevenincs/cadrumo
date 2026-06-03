@@ -342,7 +342,7 @@ Current register count: `293` production candidate files.
 | `AFR-050` | `src/aeat/adapters/persistence/storage/attachment.py` | `secure-object, plain-file` | `runtime-default` | `W12.P21.S86` | closed |
 | `AFR-051` | `src/aeat/adapters/persistence/storage/blob_store/_blob_store.py` | `master-key, plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-052` | `src/aeat/adapters/persistence/storage/blob_store/_materialisation.py` | `master-key, plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
-| `AFR-053` | `src/aeat/adapters/persistence/storage/bucket/__init__.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-053` | `src/aeat/adapters/persistence/storage/bucket/__init__.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-054` | `src/aeat/adapters/persistence/storage/bucket/_errors.py` | `manifest-bucket, master-key` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-055` | `src/aeat/adapters/persistence/storage/bucket/_export_header.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-056` | `src/aeat/adapters/persistence/storage/bucket/_keystore_paths.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
@@ -695,7 +695,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S152` - Close `AFR-050` for `src/aeat/adapters/persistence/storage/attachment.py` with signals `secure-object, plain-file`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/attachment.py`.
 - [x] `W12.P26.S153` - Close `AFR-051` for `src/aeat/adapters/persistence/storage/blob_store/_blob_store.py` with signals `master-key, plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/persistence/storage/blob_store/_blob_store.py`.
 - [x] `W12.P26.S154` - Close `AFR-052` for `src/aeat/adapters/persistence/storage/blob_store/_materialisation.py` with signals `master-key, plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/persistence/storage/blob_store/_materialisation.py`.
-- [ ] `W12.P26.S155` - Close `AFR-053` for `src/aeat/adapters/persistence/storage/bucket/__init__.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/persistence/storage/bucket/__init__.py`.
+- [x] `W12.P26.S155` - Close `AFR-053` for `src/aeat/adapters/persistence/storage/bucket/__init__.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/persistence/storage/bucket/__init__.py`.
 - [ ] `W12.P26.S156` - Close `AFR-054` for `src/aeat/adapters/persistence/storage/bucket/_errors.py` with signals `manifest-bucket, master-key`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/persistence/storage/bucket/_errors.py`.
 - [ ] `W12.P26.S157` - Close `AFR-055` for `src/aeat/adapters/persistence/storage/bucket/_export_header.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/persistence/storage/bucket/_export_header.py`.
 - [ ] `W12.P26.S158` - Close `AFR-056` for `src/aeat/adapters/persistence/storage/bucket/_keystore_paths.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/persistence/storage/bucket/_keystore_paths.py`.
