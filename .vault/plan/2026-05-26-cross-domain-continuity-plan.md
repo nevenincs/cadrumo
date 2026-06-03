@@ -443,7 +443,7 @@ Three structurally identical guard pairs between _iva_ledger.py and _renta_ledge
 
 - [x] `W09.P40.S157` - extract shared currency-not-EUR guard to _shared_issue_reasons.py or sibling helper remove duplicates; `src/aeat/application/aggregation/`.
 - [x] `W09.P40.S158` - extract shared business-classification branch PERSONAL_TRANSACTION vs UNCLASSIFIED_BUSINESS_STATE remove duplicates; `src/aeat/application/aggregation/`.
-- [ ] `W09.P40.S159` - extract shared business-proportion dispatch BUSINESS full MIXED pct else None remove duplicates; `src/aeat/application/aggregation/`.
+- [x] `W09.P40.S159` - extract shared business-proportion dispatch BUSINESS full MIXED pct else None remove duplicates; `src/aeat/application/aggregation/`.
 
 ### Phase `W09.P41` - dead stored data dual default ghost comment removal
 
