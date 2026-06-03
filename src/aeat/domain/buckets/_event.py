@@ -177,6 +177,7 @@ class BucketEventObjectType(StrEnum):
     VERIFICATION_REPORT = "verification_report"
     FILING_RECORD = "filing_record"
     PROFILE = "profile"
+    BUCKET = "bucket"
     LEDGER_TRANSACTION = "ledger_transaction"
     LEDGER_IMPORT_BATCH = "ledger_import_batch"
     LEDGER_CATALOGUE = "ledger_catalogue"
