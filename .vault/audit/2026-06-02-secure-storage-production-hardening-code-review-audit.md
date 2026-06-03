@@ -130,3 +130,9 @@ Evidence: the full production sensitive persistence policy passed with 2 tests, 
 The `W12.P26.S129` review closed `AFR-027` for `_calc_sheets_apply.py`. The adapter materialises a pure `SheetExportPlan` into app-owned Google Drive folders and a Google Sheets workbook, then returns a typed result. It does not select local storage, construct secure-object repositories, route SQL storage, write local files, or consume Google Sheets edits into local state.
 
 The reviewed settings signal uses `Settings` for the Drive vault folder name rather than naked environment access. Focused calc-sheets apply/pull tests passed with 19 tests, targeted Ruff passed, and the source scan found no DB route, naked environment, secure-object constructor, local storage constructor, or local file read/write matches.
+
+## S130-020 | PASS | Calc-sheets pull refuses unowned or stale readback
+
+The `W12.P26.S130` review closed `AFR-028` for `_calc_sheets_pull.py`. The adapter reads remote Google Sheets values into typed pull records, but it does not mutate local state or write local persistence. Drive ownership and registry metadata gates prevent arbitrary or stale workbooks from flowing into local compute.
+
+Focused pull/apply tests passed with 38 tests, including stale and missing metadata refusal coverage. Targeted Ruff passed, and the source scan found no DB route, naked environment, secure-object constructor, local storage constructor, or local file read/write matches.
