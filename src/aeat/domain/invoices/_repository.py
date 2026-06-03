@@ -38,7 +38,7 @@ def _resolve_invoice_bucket_id(bucket_id: str | None) -> str:
     trimmed = (bucket_id or "").strip()
     if trimmed:
         return trimmed
-    from ...core._bucket_pointer_io import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
 
     active = resolve_active_bucket_id()
     if active is None:

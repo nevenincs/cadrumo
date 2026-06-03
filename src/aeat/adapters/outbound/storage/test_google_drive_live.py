@@ -76,7 +76,7 @@ def _skip_unless_drive_configured() -> None:
 @contextmanager
 def _active_profile_storage_session() -> Iterator[None]:
     from ....application.user_profile._orchestration import profile_storage_session
-    from ....core._bucket_pointer_io import resolve_active_bucket_id
+    from ....core import resolve_active_bucket_id
 
     active = resolve_active_bucket_id()
     if active is None:

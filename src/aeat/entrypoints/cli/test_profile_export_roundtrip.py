@@ -63,7 +63,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
 
     from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from ...application.modelo._actions import create_work_unit
-    from ...core._bucket_pointer_io import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
     from ...core.config import override_settings
     from ...domain.calculations.registry import CasillaObservation
     from ...domain.modelos._calculation_repository import (
@@ -223,7 +223,7 @@ def test_v2_bundle_export_import_roundtrip(tmp_path: Path) -> None:
     """All four financial-history categories survive export/import with strict equality."""
 
     from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ...core._bucket_pointer_io import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
     from ...core.config import override_settings
     from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
     from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository

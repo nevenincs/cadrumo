@@ -171,7 +171,7 @@ def _root(
         # Use the lightweight core resolver to avoid importing workflow.
         from ...adapters.persistence.storage import has_active_bucket_session
         from ...application.operator_surface import build_root_landing_report
-        from ...core._bucket_pointer_io import resolve_active_bucket_id
+        from ...core import resolve_active_bucket_id
         from ._root_landing import render_cli_root_landing_lines
 
         active = resolve_active_bucket_id()

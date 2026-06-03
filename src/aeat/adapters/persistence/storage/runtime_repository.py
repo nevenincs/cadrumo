@@ -27,7 +27,7 @@ def _active_bucket_id_for_source(
     if route.kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE:
         return route.bucket_id
     if include_process_pointer:
-        from ....core._bucket_pointer_io import resolve_active_bucket_id
+        from ....core import resolve_active_bucket_id
 
         return resolve_active_bucket_id()
     return None
@@ -43,7 +43,7 @@ def secure_object_repository_for_bucket(
 
 def secure_object_repository_for_active_bucket() -> SecureObjectRepository:
     """Return a :class:`SecureObjectRepository` attached to the selected active profile bucket."""
-    from ....core._bucket_pointer_io import resolve_active_bucket_id
+    from ....core import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
@@ -88,7 +88,7 @@ def secure_object_repository_for_cold_bootstrap_state(
     ``secure_object_repository_for_bucket`` so route/session mismatches
     fail closed at the storage runtime boundary.
     """
-    from ....core._bucket_pointer_io import resolve_active_bucket_id
+    from ....core import resolve_active_bucket_id
 
     source = settings or load_settings()
     route = classify_storage_route(source)

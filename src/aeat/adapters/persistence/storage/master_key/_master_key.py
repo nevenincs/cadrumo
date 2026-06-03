@@ -65,7 +65,7 @@ if TYPE_CHECKING:
     from .....core.config import Settings
     from ._bucket_session import BucketSession
 
-from .....core._bucket_pointer_io import resolve_active_bucket_id
+from .....core import resolve_active_bucket_id
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.locks import exclusive_file_lock, fsync_parent_dir
 from .....core.logging import get_logger

@@ -42,7 +42,7 @@ if TYPE_CHECKING:
 
 def _active_profile_storage_span():
     """Return a storage context for the active profile, or a no-op when absent."""
-    from ...core._bucket_pointer_io import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
     from ..user_profile._orchestration import profile_storage_session
 
     bucket_id = resolve_active_bucket_id()

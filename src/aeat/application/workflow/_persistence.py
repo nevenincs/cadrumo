@@ -368,7 +368,7 @@ def workflow_state_repository() -> WorkflowStateRepository:
     exception: it receives an explicit bare :class:`SecureObjectRepository`
     so bootstrap-exempt recovery reads can still observe an absent state.
     """
-    from ...core._bucket_pointer_io import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
