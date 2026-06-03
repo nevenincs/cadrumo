@@ -255,8 +255,13 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     may not proceed when settings route the primary SQL store to the
     root fallback database.
     ``_full_invocation_verb_path`` returns ``None`` for in-process test
-    runner invocations, so this guard does not misclassify cached
-    Typer tests that do not populate the console-script argv shape.
+    runner invocations (``sys.argv[0]`` is not the ``aeat`` console
+    script). In that case we fall back to
+    :func:`_verb_path_from_context`, which reconstructs the verb chain
+    from the typer/click context so the bootstrap-exemption gate sees
+    the same verb path it would on a real ``aeat`` invocation — without
+    this fallback an in-process invocation would be misclassified as
+    bare and the session would never open.
     """
     from ...adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
     from ...application.storage_write_policy import inspect_storage_write_policy
@@ -264,7 +269,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     from ._bootstrap_exempt import is_bootstrap_exempt
     from ._errors import CliRefusedBoundaryError
 
-    verb_path = _full_invocation_verb_path()
+    verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
     exempt = is_bootstrap_exempt(verb_path)
     write_policy = inspect_storage_write_policy(verb_path, bootstrap_exempt=exempt)
     if not write_policy.allowed:
@@ -302,6 +307,39 @@ def _register_wizard_catalogue_for_profile_keys() -> None:
     from ...application.wizard import _persistence as _wizard_persistence
 
     _ = (_wizard_catalogue, _wizard_persistence)
+
+
+def _verb_path_from_context(ctx: typer.Context) -> str | None:
+    """Recover the verb path from the typer/click context.
+
+    Fallback for in-process invocations (e.g. ``CliRunner`` in tests)
+    where ``sys.argv[0]`` is not the ``aeat`` entry-point and the
+    argv-based :func:`_full_invocation_verb_path` returns ``None``.
+    The bootstrap-exemption gate treats a ``None`` verb path as
+    "bare invocation" (per the bare-invocation ADR), but the caller
+    only reaches this helper when ``ctx.invoked_subcommand`` is set —
+    i.e. a real subcommand IS being dispatched and the session must
+    open. Reconstructs the verb chain from the root invoked
+    subcommand plus the unparsed remainder so prefix matching against
+    :data:`BOOTSTRAP_EXEMPT_VERB_PATHS` continues to work.
+    """
+    invoked = ctx.invoked_subcommand
+    if invoked is None:
+        return None
+    tokens: list[str] = [invoked]
+    # Click stages the unparsed remainder for the dispatched subcommand on
+    # ``protected_args`` during root-callback execution (the
+    # ``protected_args`` / ``args`` split is removed in Click 9.0 in favour
+    # of a single ``args`` list, so we read both for forward compatibility).
+    protected = getattr(ctx, "protected_args", ())
+    remainder = list(protected) + list(ctx.args)
+    for token in remainder:
+        if token.startswith("-"):
+            # Stop at the first option flag; the verb chain is the
+            # leading subcommand chain only.
+            break
+        tokens.append(token)
+    return " ".join(tokens)
 
 
 def _full_invocation_verb_path() -> str | None:
