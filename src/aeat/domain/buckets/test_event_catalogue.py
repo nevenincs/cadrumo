@@ -374,6 +374,27 @@ def test_bucket_event_type_includes_bucket_maintenance_kinds() -> None:
     assert BucketEventType.BUCKET_DELETED.value == "bucket.deleted"
 
 
+def test_bucket_event_type_includes_censo_declaration_kinds() -> None:
+    """Modelo 036 declarative-recording verbs (operator declares an
+    alta / modificacion / baja was filed at sede) have dedicated
+    canonical enum slots distinct from the live-read mirror events
+    (``profile.censo.refreshed/applied``). Per the 2026-05-16 ADR
+    amendment to cli-workflow-redesign-modelo-036-037-foundation,
+    the local app never files a 036; these events record the
+    operator's declaration so downstream profile state and
+    stale-cascade logic can react.
+
+    Authority: 2026-06-03-m036-lifecycle-verbs-research +
+    cli-workflow-redesign-epic plan Step W85.P414.S2349.
+    """
+
+    from ._event import BucketEventType
+
+    assert BucketEventType.CENSO_DECLARATION_ALTA.value == "modelo.036.declaration.alta"
+    assert BucketEventType.CENSO_DECLARATION_MODIFICACION.value == "modelo.036.declaration.modificacion"
+    assert BucketEventType.CENSO_DECLARATION_BAJA.value == "modelo.036.declaration.baja"
+
+
 def test_bucket_event_object_type_includes_bucket_container() -> None:
     """``BucketEventObjectType`` carries a ``BUCKET`` value so the four
     bucket-maintenance events (``BUCKET_EXPORTED`` / ``BUCKET_IMPORTED``

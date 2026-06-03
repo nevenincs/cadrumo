@@ -96,6 +96,19 @@ class BucketEventType(StrEnum):
     CENSO_DEPENDENT_STAMPED_STALE = "modelo.censo.dependent_stamped_stale"
     MODELO_LEDGER_DEPENDENT_STAMPED_STALE = "modelo.ledger.dependent_stamped_stale"
 
+    # 036 declarative-recording verbs (operator declares an alta /
+    # modificacion / baja was filed at sede). Per the 2026-05-16
+    # ADR amendment to cli-workflow-redesign-modelo-036-037-foundation,
+    # the local app never files a 036 — AEAT is the authority. These
+    # events record the operator's declaration so downstream profile
+    # state and stale-cascade logic can react. Distinct prefix
+    # ``modelo.036.declaration.*`` separates them from the existing
+    # mirror events (``profile.censo.refreshed/applied``) authored
+    # for the live-read pipeline.
+    CENSO_DECLARATION_ALTA = "modelo.036.declaration.alta"
+    CENSO_DECLARATION_MODIFICACION = "modelo.036.declaration.modificacion"
+    CENSO_DECLARATION_BAJA = "modelo.036.declaration.baja"
+
     # bucket maintenance lifecycle
     BUCKET_EXPORTED = "bucket.exported"
     BUCKET_IMPORTED = "bucket.imported"
