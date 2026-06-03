@@ -156,6 +156,7 @@ class ClaveMovilApprovalTimeoutError(AuthError):
 class ClaveMovilFailureMode(StrEnum):
     """Closed Cl@ve Móvil live-auth failure modes."""
 
+    INITIAL_NAVIGATION_TIMEOUT = "initial_navigation_timeout"
     PENDING_PETITION_BLOCKED = "pending_petition_blocked"
     PUSH_WAIT_STATE_NOT_REACHED = "push_wait_state_not_reached"
     AUTH_COMPLETION_TIMEOUT = "auth_completion_timeout"
@@ -749,9 +750,12 @@ class ClaveMovilAuthProvider:
                 get_master_key_provider,
                 has_active_bucket_session,
             )
-            from .....application.user_profile._orchestration import build_lifecycle_service
-            from .....application.user_profile._projections import record_to_path_values, record_to_values
-            from .....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
+            from .....application.user_profile import (
+                build_lifecycle_service,
+                record_to_path_values,
+                record_to_values,
+            )
+            from .....application.workflow import read_profile_bucket_by_id
             from .....core import resolve_active_bucket_id
             from .....core.config import override_settings
             from .....domain.user_profile import ProfileNotFoundError
@@ -929,7 +933,25 @@ class ClaveMovilAuthProvider:
             context = await session_like.create_context()
             page = await context.new_page()
             self._attach_dialog_autodismiss(page)
-            await page.goto(selector_url, timeout=self._navigation_timeout_ms)
+            try:
+                await page.goto(selector_url, timeout=self._navigation_timeout_ms)
+            except (TimeoutError, PlaywrightTimeoutError) as exc:
+                raise ClaveMovilApprovalTimeoutError(
+                    f"Cl@ve Móvil initial navigation did not reach the AEAT selector within "
+                    f"{self._navigation_timeout_ms // 1000} seconds.",
+                    translated_message="adapters.auth.clave_movil.errors.initial_navigation_timeout",
+                    failure_mode=ClaveMovilFailureMode.INITIAL_NAVIGATION_TIMEOUT,
+                    context={
+                        "timeout_ms": self._navigation_timeout_ms,
+                        "target_path": target_path,
+                        "selector_url": _url_diagnostic(selector_url),
+                        **attempt_context,
+                    },
+                    suggestion=(
+                        "Retry the live read after confirming the AEAT Sede is reachable, or increase "
+                        "AEAT_BROWSER_NAVIGATION_TIMEOUT_MS for slow network conditions."
+                    ),
+                ) from exc
 
             use_non_qr = self._settings.aeat_clave_prefer_non_qr
             verification_code: str | None = None
