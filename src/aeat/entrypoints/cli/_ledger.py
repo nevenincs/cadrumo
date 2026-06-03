@@ -137,7 +137,7 @@ def _parse_required_decimal(raw: str, *, label: str) -> Decimal:
 
 def _known_import_providers() -> tuple[str, ...]:
     """Return the tuple of recognised provider ids from the canonical enum."""
-    from ...application.ledger._actions import LedgerProviderID
+    from ...application.ledger import LedgerProviderID
 
     return tuple(p.value for p in LedgerProviderID)
 
