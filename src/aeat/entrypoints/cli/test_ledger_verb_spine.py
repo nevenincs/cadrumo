@@ -170,3 +170,45 @@ def test_modelo_help_enumerates_every_registered_verb(cli_runner: CliRunner) -> 
         f"`aeat app modelo --help` omits registered verbs {missing!r}; "
         f"help output: {result.output!r}"
     )
+
+
+# Canonical modelo top-level verb roster. The verbs are the registry/work
+# surface (list, describe, casillas, formulas, readiness, aggregate),
+# the work-unit lifecycle continuum (history, reconcile,
+# reconcile-from-justificante, export), and the cross-modelo analytics
+# (project, compare). Subgroups (`bindings`, `work`, `filing-record`,
+# `verification-report`, `audit`, `iva-wallet`) carry the operational
+# surfaces and are intentionally excluded from this top-level roster.
+EXPECTED_MODELO_TOP_LEVEL_VERBS: frozenset[str] = frozenset(
+    {
+        "aggregate",
+        "casillas",
+        "compare",
+        "describe",
+        "export",
+        "formulas",
+        "history",
+        "list",
+        "project",
+        "readiness",
+        "reconcile",
+        "reconcile-from-justificante",
+    },
+)
+
+
+def test_modelo_top_level_verb_roster_matches_canonical_spine() -> None:
+    """The set of top-level `aeat app modelo` verbs equals the canonical roster.
+
+    Missing or extra entries are a contract drift that requires an explicit
+    update to :data:`EXPECTED_MODELO_TOP_LEVEL_VERBS` plus an ADR amendment.
+    Subgroup verbs (`work verify`, `audit export`, etc.) are governed by
+    their own per-subgroup gates, not by this roster."""
+
+    from ._modelo import app as modelo_app
+
+    registered = frozenset(cmd.name for cmd in modelo_app.registered_commands)
+    missing = EXPECTED_MODELO_TOP_LEVEL_VERBS - registered
+    extras = registered - EXPECTED_MODELO_TOP_LEVEL_VERBS
+    assert not missing, f"modelo verbs disappeared: {sorted(missing)}"
+    assert not extras, f"modelo verbs added without test update: {sorted(extras)}"
