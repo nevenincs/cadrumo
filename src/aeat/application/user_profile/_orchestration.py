@@ -20,7 +20,7 @@ from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import date
 
-from ...adapters.persistence.storage.bucket._layout import bucket_paths
+from ...adapters.persistence.storage.bucket import bucket_paths
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import write_pointer
