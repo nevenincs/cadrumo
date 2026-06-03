@@ -313,6 +313,36 @@ class SheetNumberFormat(BaseModel):
     pattern: str = Field(min_length=1)
 
 
+class SheetSectionHeader(BaseModel):
+    """Section-header styling directive for a section's first label cell.
+
+    Marks the column-A cell where a casilla section first appears so both
+    transports render it as a bold section header — the official AEAT workbooks
+    group casillas under bold section banners for operator orientation.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    address: SheetCellAddress
+    text: str = Field(min_length=1)
+
+
+class SheetAnchor(BaseModel):
+    """An explicit labelled start / final anchor on the calculation flow.
+
+    ``start`` marks the opening of the operator-input region (Entradas); ``final``
+    marks the filing result (resultado / cuota) on Cálculos. Rendered as a
+    labelled cell in both transports so the inputs→resultado flow is
+    unambiguously oriented, mirroring the published workbook layout.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    address: SheetCellAddress
+    kind: Literal["start", "final"]
+    label: str = Field(min_length=1)
+
+
 class SheetProvenanceRow(BaseModel):
     """One row of the `Procedencia` audit tab.
 
@@ -566,6 +596,8 @@ class SheetExportPlan(BaseModel):
     provenance: tuple[SheetProvenanceRow, ...] = ()
     protected_ranges: tuple[SheetProtectedRange, ...] = ()
     number_formats: tuple[SheetNumberFormat, ...] = ()
+    section_headers: tuple[SheetSectionHeader, ...] = ()
+    anchors: tuple[SheetAnchor, ...] = ()
     cell_constraints: tuple[SheetCellConstraint, ...] = ()
     row_sets: tuple[SheetRowSet, ...] = ()
     relation_provenance: RelationValues | None = None
@@ -605,7 +637,9 @@ __all__ = [
     "SheetExportPlan",
     "SheetFormulaCell",
     "SheetGuideContent",
+    "SheetAnchor",
     "SheetNumberFormat",
+    "SheetSectionHeader",
     "SheetProtectedRange",
     "SheetProvenanceRow",
     "SheetRowSet",
