@@ -33,3 +33,21 @@ predicate_id = "modelo-200-compensacion-bin-no-excede-stock-disponible"
 expression = 'cap_le_when_positive(["DP200014:00547", "00670"])'
 finding_kind = "BLOCKING_RULE"
 legal_refs = ["ley-27-2014:art-26"]
+
+# Art. 13 dotaciones-deterioro carry-integration advisory. The dotaciones por
+# deterioro de créditos pending at the start of the period that HAVE met their
+# deducibility conditions (casilla 01495, carried from the prior ejercicio's
+# saldo final cumplido 01499 by the cross-year carry binding) are deductible
+# THIS period — they integrate into the base imponible. When that cumplido stock
+# is positive but the amount integrated this period (casilla 01496) is zero, the
+# operator is carrying a now-deductible dotación without integrating it: a likely
+# silent under-integration. ADVISORY (non-blocking): integrating is the
+# operator's right, not a mandate — a taxpayer may legitimately defer (the stock
+# carries forward via 01499→next-year 01495) — but the silent case is surfaced so
+# the operator confirms rather than overlooks the deductible carry. Mirrors the
+# no-silent-under-declaration advisory stance (positive input, zero dependent).
+[[revisions."2024-y-siguientes".verification_predicates]]
+predicate_id = "modelo-200-dotaciones-deterioro-cumplido-disponible-integrar"
+expression = 'implies_nonzero(["01495", "01496"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-27-2014:art-13"]
