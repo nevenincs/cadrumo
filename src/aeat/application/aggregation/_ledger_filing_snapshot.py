@@ -23,9 +23,12 @@ from datetime import date, datetime
 
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos._ledger_filing_snapshot import (
+    LedgerEvidenceRow,
+    LedgerFilingEvidence,
     LedgerFilingSnapshot,
     LedgerFilingStalenessVerdict,
     LedgerRowFingerprint,
+    ManualFactBasisEntry,
     diff_ledger_fingerprints,
     snapshot_fingerprint,
 )
@@ -118,6 +121,93 @@ def compute_ledger_filing_snapshot(
     )
 
 
+def _enum_value(value: object) -> str | None:
+    """Return an enum member's canonical string value, or None."""
+    if value is None:
+        return None
+    inner = getattr(value, "value", None)
+    return inner if isinstance(inner, str) else str(value)
+
+
+def _evidence_row(transaction: Transaction) -> LedgerEvidenceRow:
+    """Project a typed transaction into a primitive evidence row.
+
+    Carries the same tax-relevant facts the fingerprint covers (so evidence and
+    fingerprint stay consistent) plus the readability + attachment references a
+    filing artefact needs. Enum members are stored as their ``value``; dates as
+    ISO-8601 strings.
+    """
+    raw = transaction.raw
+    return LedgerEvidenceRow(
+        transaction_id=transaction.transaction_id,
+        fingerprint=row_fingerprint(transaction),
+        booked_date=raw.booked_date.isoformat(),
+        value_date=raw.value_date.isoformat() if raw.value_date is not None else None,
+        amount=raw.amount,
+        currency=raw.currency,
+        direction=transaction.direction.value,
+        business_classification=transaction.business_classification.value,
+        business_pct=transaction.business_pct,
+        taxable_base=transaction.taxable_base,
+        iva_rate=transaction.iva_rate,
+        iva_amount=transaction.iva_amount,
+        iva_category=_enum_value(transaction.iva_category),
+        category_id=transaction.category_id,
+        irpf_category=transaction.irpf_category,
+        counterparty_eu_member_state=_enum_value(transaction.counterparty_eu_member_state),
+        fx_rate=transaction.fx_rate,
+        value_in_eur=transaction.value_in_eur,
+        lifecycle_state=transaction.lifecycle_state.value,
+        counterparty=raw.counterparty,
+        description=raw.description,
+        purchase_invoice_evidence_id=transaction.purchase_invoice_evidence_id,
+        attachment_ids=transaction.attachment_ids,
+    )
+
+
+def compute_ledger_filing_evidence(
+    *,
+    source_transaction_ids: Iterable[str],
+    catalogue: TransactionCatalogue,
+    snapshot_fingerprint: str,
+    captured_at: datetime,
+    manual_entries: tuple[ManualFactBasisEntry, ...] = (),
+) -> LedgerFilingEvidence:
+    """Capture the bundled fact basis behind one filing revision.
+
+    Projects every contributor in ``source_transaction_ids`` present in the
+    catalogue into a typed :class:`LedgerEvidenceRow`, binding the bundle to the
+    revision's ``snapshot_fingerprint``. ``manual_entries`` carries the
+    operator-entered fact basis (casilla inputs / binding overrides) that has no
+    contributing ledger row. Contributor ids absent from the catalogue are
+    skipped (mirroring :func:`compute_ledger_filing_snapshot`); the caller's
+    no-silent-omission guard cross-checks the evidence set against the fingerprint
+    set.
+    """
+    index = _index(catalogue)
+    rows = tuple(_evidence_row(index[tx_id]) for tx_id in sorted(set(source_transaction_ids)) if tx_id in index)
+    return LedgerFilingEvidence(
+        snapshot_fingerprint=snapshot_fingerprint,
+        rows=rows,
+        manual_entries=manual_entries,
+        captured_at=captured_at,
+    )
+
+
+def project_manual_fact_basis_entries(inputs_snapshot: Mapping[str, str]) -> tuple[ManualFactBasisEntry, ...]:
+    """Project operator-entered casilla inputs into manual fact-basis entries.
+
+    The calculation revision stores caller-supplied casilla inputs as rendered
+    strings. Non-empty values are part of the evidence bundle because no ledger
+    row explains them.
+    """
+    return tuple(
+        ManualFactBasisEntry(casilla=casilla, value=value)
+        for casilla, value in sorted(inputs_snapshot.items())
+        if value.strip()
+    )
+
+
 def evaluate_ledger_filing_staleness(
     snapshot: LedgerFilingSnapshot,
     catalogue: TransactionCatalogue,
@@ -154,8 +244,10 @@ def stale_filed_revisions(
 
 
 __all__ = [
+    "compute_ledger_filing_evidence",
     "compute_ledger_filing_snapshot",
     "evaluate_ledger_filing_staleness",
+    "project_manual_fact_basis_entries",
     "row_fingerprint",
     "stale_filed_revisions",
 ]

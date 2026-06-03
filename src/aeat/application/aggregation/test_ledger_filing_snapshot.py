@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ...domain.modelos._ledger_filing_snapshot import LedgerFilingSnapshot
+from ...domain.modelos._ledger_filing_snapshot import LedgerFilingSnapshot, ManualFactBasisEntry
 from ...domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -20,8 +20,10 @@ from ...domain.transactions import (
     TransactionLifecycleState,
 )
 from ._ledger_filing_snapshot import (
+    compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
     evaluate_ledger_filing_staleness,
+    project_manual_fact_basis_entries,
     row_fingerprint,
 )
 
@@ -37,6 +39,8 @@ def _tx(
     taxable_base: Decimal | None = Decimal("100.00"),
     iva_amount: Decimal | None = Decimal("21.00"),
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
+    purchase_invoice_evidence_id: str | None = None,
+    attachment_ids: tuple[str, ...] = (),
 ) -> Transaction:
     raw = RawTransaction(
         transaction_id=provider_id,
@@ -65,6 +69,8 @@ def _tx(
             "iva_rate": Decimal("0.21"),
             "iva_amount": iva_amount,
             "category_id": "material_oficina",
+            "purchase_invoice_evidence_id": purchase_invoice_evidence_id,
+            "attachment_ids": attachment_ids,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _CAPTURED,
             "classified_by": "manual",
@@ -99,6 +105,54 @@ def test_snapshot_roundtrips_through_strict_model() -> None:
     )
     reloaded = LedgerFilingSnapshot.model_validate_json(snap.model_dump_json())
     assert reloaded == snap
+
+
+def test_evidence_capture_projects_tax_facts_and_manual_basis() -> None:
+    tx = _tx(
+        "row-evidence",
+        purchase_invoice_evidence_id="purchase-evidence-1",
+        attachment_ids=("attachment-1",),
+    )
+    catalogue = _catalogue(tx)
+    snapshot = compute_ledger_filing_snapshot(
+        source_transaction_ids=[tx.transaction_id], catalogue=catalogue, captured_at=_CAPTURED
+    )
+    manual_entry = ManualFactBasisEntry(casilla="00501", value="140000.00", note="resultado contable")
+
+    evidence = compute_ledger_filing_evidence(
+        source_transaction_ids=[tx.transaction_id, tx.transaction_id, "missing-row"],
+        catalogue=catalogue,
+        snapshot_fingerprint=snapshot.snapshot_fingerprint,
+        captured_at=_CAPTURED,
+        manual_entries=(manual_entry,),
+    )
+
+    assert evidence.snapshot_fingerprint == snapshot.snapshot_fingerprint
+    assert evidence.manual_entries == (manual_entry,)
+    assert len(evidence.rows) == 1
+    row = evidence.rows[0]
+    assert row.transaction_id == tx.transaction_id
+    assert row.fingerprint == row_fingerprint(tx)
+    assert row.amount == Decimal("-121.00")
+    assert row.taxable_base == Decimal("100.00")
+    assert row.iva_amount == Decimal("21.00")
+    assert row.category_id == "material_oficina"
+    assert row.purchase_invoice_evidence_id == "purchase-evidence-1"
+    assert row.attachment_ids == ("attachment-1",)
+
+
+def test_manual_fact_basis_projection_skips_blank_inputs() -> None:
+    entries = project_manual_fact_basis_entries(
+        {
+            "00501": "140000.00",
+            "00502": " ",
+            "00503": "",
+        }
+    )
+
+    assert entries == (
+        ManualFactBasisEntry(casilla="00501", value="140000.00"),
+    )
 
 
 def test_empty_contributor_set_is_valid_and_uniform() -> None:
