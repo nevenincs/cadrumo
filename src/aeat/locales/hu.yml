@@ -138,10 +138,22 @@ adapters:
               útja ki lett takarva a diagnosztikából.
     justificante:
       errors:
-        parse_failed: 'Nem sikerült elemezni az igazolás PDF-et. A forrás elérési útja ki lett takarva a diagnosztikából.'
+        parse_failed: Nem sikerült elemezni az igazolás PDF-et. A forrás elérési útja
+          ki lett takarva a diagnosztikából.
     pdf:
       errors:
-        hash_failed: 'Nem sikerült kiszámítani a PDF ellenőrzőösszegét.'
+        hash_failed: Nem sikerült kiszámítani a PDF ellenőrzőösszegét.
+  outbound:
+    storage:
+      factory:
+        errors:
+          drive_root_missing: 'Nincs Google Drive gyokermappa-azonosito beallitva az aktiv profilhoz. Futtassa eloszor: `aeat config google folder set <id>`.'
+          google_auth_import_failed: 'A google-auth fuggoseg nem importalhato; futtassa: `uv sync`, majd probalja ujra.'
+          google_client_missing: 'Nincs Google OAuth-kliens regisztralva az aktiv profilhoz. Futtassa eloszor: `aeat config google register --client-json <path>`.'
+          google_token_missing: 'Nincs Google OAuth-token mentve az aktiv profilhoz. Futtassa eloszor: `aeat config google login`.'
+          kind_empty: 'Az AEAT_STORAGE_PROVIDER_KIND ures.'
+          kind_unhandled: 'A(z) {kind} tarhelyszolgaltato-tipust a factory nem kezeli.'
+          kind_unknown: 'A(z) {value} tarhelyszolgaltato-tipus nem ismert; vart ertekek: {expected}.'
   sede:
     errors:
       cotejo_nav_failed: Az AEAT cotejo oldalra való navigáció sikertelen volt; a
@@ -162,6 +174,7 @@ adapters:
         az oldal struktúrája megváltozhatott.
       listing_nav_failed: Az AEAT nyilatkozatlista navigáció sikertelen volt. Ellenőrizze
         a hálózati kapcsolatot és próbálja újra.
+      modelo_unavailable: Az AEAT nyilatkozatnyilvántartó nem kínálja a kért modellt.
       no_auth_session: Az AEAT hitelesítési munkamenet hiányzik vagy nincs perzisztálva;
         futtassa először az `aeat config auth status` parancsot.
       parse_failed: Nem sikerült elemezni az AEAT nyilatkozatválaszt; az oldal struktúrája
@@ -174,7 +187,6 @@ adapters:
       session_expired_nav_failed: Az AEAT nyilatkozatnyilvántartó nem töltött be;
         a munkamenet valószínűleg lejárt. Futtassa az 'aeat config auth test' parancsot
         és próbálja újra.
-      modelo_unavailable: 'Az AEAT nyilatkozatnyilvántartó nem kínálja a kért modellt.'
 aggregation:
   grouping:
     errors:
@@ -258,7 +270,8 @@ application:
           certificate --file ÚTVONAL` parancsot.
         path_unset: Nem lett kiválasztva tanúsítványfájl. Futtassa az `aeat config
           auth configure --provider certificate --file ÚTVONAL` parancsot.
-        unavailable: 'A tanúsítvány állapota nem érhető el; a diagnosztikai részletekért tekintse meg a hibakeresési naplókat.'
+        unavailable: A tanúsítvány állapota nem érhető el; a diagnosztikai részletekért
+          tekintse meg a hibakeresési naplókat.
       load:
         password_unset: Nincs konfigurálva tanúsítványjelszó. A folytatás előtt állítsa
           be a tanúsítványjelszót.
@@ -1033,14 +1046,15 @@ cli:
           elsőbbséget élveznek.
         bucket_id_help: A munkaegységhez tartozó bucket azonosítója.
         calculate_help: Új tervezet számítási revízió megőrzése a munkaegységhez.
-        calculate_unauthorized_advisory: 'FIGYELMEZTETÉS: a(z) %{modelo} modelo számítási
-          háttere NEM ENGEDÉLYEZETT — még nem bizonyította end-to-end teszt legalább két
-          renta-éven át (többéves renta engedélyezési kapu). Az eredmény kiszámításra és
-          mentésre került, de kezelje ideiglenesként, amíg a modelo engedélyezve nem lesz.'
         calculate_saved: 'Mentve tervezet számítási revízióként: %{revision_id} (állapot:
           %{state}). Megőrzött és később folytatható; revíziók listázása: `aeat app
           modelo work revisions %{work_unit_id}`, ezt az egyet újra megtekintheti:
           `aeat app modelo work revision %{revision_id}`.'
+        calculate_unauthorized_advisory: 'FIGYELMEZTETÉS: a(z) %{modelo} modelo számítási
+          háttere NEM ENGEDÉLYEZETT — még nem bizonyította end-to-end teszt legalább
+          két renta-éven át (többéves renta engedélyezési kapu). Az eredmény kiszámításra
+          és mentésre került, de kezelje ideiglenesként, amíg a modelo engedélyezve
+          nem lesz.'
         calculation_revision_id_help: Stabil 64 karakteres SHA-256 azonosító egy számítási
           revízióhoz.
         casilla_bare_numeric_ambiguous: 'A --casilla {key} több casillára illeszkedik
@@ -1622,10 +1636,13 @@ cli:
         terminált és újra kiválaszt).'
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <NIF>`.'
-      preflight_help: 'Jelenti, mely profilmezők hiányoznak adott (modelo, revízió, év, időszak) bevallási kontextushoz.'
-      preflight_modelo_help: 'Számozott modelo azonosító (pl. 303).'
-      preflight_period_help: 'Időszak kód (pl. 1T, 1P, 0A, 01).'
+      preflight_filing_year_help: Bevallási év (négy számjegy).
+      preflight_help: Jelenti, mely profilmezők hiányoznak adott (modelo, revízió,
+        év, időszak) bevallási kontextushoz.
+      preflight_modelo_help: Számozott modelo azonosító (pl. 303).
+      preflight_period_help: Időszak kód (pl. 1T, 1P, 0A, 01).
       preflight_revision_help: Nyilvántartási revízió azonosítója.
+      preflight_revision_id_help: Regiszter revízió azonosító (pl. 2024-0A).
       preflight_year_help: Benyújtási év.
       remove_help: Profil lezárása (a megváltoztathatatlan benyújtási pillanatképek
         megmaradnak).
@@ -1649,11 +1666,11 @@ cli:
         list` a regisztrált profilok megtekintéséhez.'
       use_help: Meglévő profil kiválasztása aktív profilként.
       use_name_help: A kiválasztandó profil azonosítója.
-      validate_help: 'Validálja a profilt a betöltött sémával szemben (alapértelmezett: aktív profil).'
+      validate_help: 'Validálja a profilt a betöltött sémával szemben (alapértelmezett:
+        aktív profil).'
+      validate_name_help: 'A validálandó profil opcionális címkéje; alapértelmezett:
+        aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
-      validate_name_help: 'A validálandó profil opcionális címkéje; alapértelmezett: aktív profil.'
-      preflight_revision_id_help: 'Regiszter revízió azonosító (pl. 2024-0A).'
-      preflight_filing_year_help: 'Bevallási év (négy számjegy).'
     repair:
       connectivity_help: Böngésző és AEAT Sede kapcsolhatóság ellenőrzése.
       connectivity_target_help: A vizsgálandó kapcsolódási cél.
@@ -1974,7 +1991,8 @@ cli:
       help: Kanonikus főkönyvsorok exportálása az aktív profilmappából.
       include_inactive_help: Archivált és elrejtett főkönyvi tranzakciók bevonása.
       output_help: Az exportált főkönyvfájl mentési útvonala.
-      period_help: 'Korlátozza az exportot egyetlen bevallási időszakra (pl. 2025Q1, 2025).'
+      period_help: Korlátozza az exportot egyetlen bevallási időszakra (pl. 2025Q1,
+        2025).
     history:
       help: Egyetlen főkönyvi tranzakcióazonosító kronológiai bucket-eseménylánca.
       id_help: A megvizsgálandó főkönyvi tranzakció azonosítója (vagy egyértelmű hexadecimális
@@ -1987,6 +2005,7 @@ cli:
       dry_run_help: Az importálás futtatása próba módban (mentés nélkül).
       dry_run_preview: 'Próba futtatás: nem mentett sorok. A fenti számok azt mutatják,
         mi történne valódi importálásnál.'
+      empty_directory: 'Nem találhatók importálható kivonatfájlok a könyvtárban: {path}'
       help: Bankikivonatok vagy nyilvántartások importálása a könyvelési főkönyvbe.
       likely_duplicates: '{count} importált sor megegyező dátummal és összeggel szerepel
         a főkönyvben, de eltérő leírással – valószínűleg ugyanannak a mozgásnak a
@@ -2001,7 +2020,6 @@ cli:
       source_help: Az importált sorok ellenőrzéséhez használt eredeti fájl.
       verbose_help: Részletes információ megjelenítése importálás közben.
       verify_help: Bejegyzések ellenőrzése importálás után.
-      empty_directory: 'Nem találhatók importálható kivonatfájlok a könyvtárban: {path}'
     labels:
       active: Aktív
       amount: Összeg
@@ -2069,14 +2087,15 @@ cli:
       id_help: Főkönyvi tranzakcióazonosító (SHA-256 vagy egyértelmű előtag).
       invoice_id_help: A tranzakcióhoz kétirányúan kötendő számla azonosítója.
     list:
+      by_group_help: A lista csoportositasa csoportcimke szerint.
+      footer_truncated: '{start}-{end}. sor megjelenitese, osszesen {total} (eltolas
+        {offset}). Lapozashoz hasznalja a --offset/--limit kapcsolot.'
+      group_filter_help: Csak az adott csoportcimkehez tartozo sorok megjelenitese.
       header: KÖNYVELÉSI FŐKÖNYVI TRANZAKCIÓK
       help: Főkönyvi tranzakciók listázása az aktív profilmappában.
-      footer_truncated: '{start}-{end}. sor megjelenitese, osszesen {total} (eltolas {offset}). Lapozashoz hasznalja a --offset/--limit kapcsolot.'
       limit_help: 'Megjelenitendo sorok maximalis szama (alapertelmezett: az osszes).'
       offset_help: 'Ennyi sor kihagyasa a listazas elott (alapertelmezett: 0).'
-      by_group_help: 'A lista csoportositasa csoportcimke szerint.'
-      group_filter_help: 'Csak az adott csoportcimkehez tartozo sorok megjelenitese.'
-      ungrouped_label: '(nincs csoport)'
+      ungrouped_label: (nincs csoport)
     merge:
       actor_help: Az üzemeltető neve, amelyet a LEDGER_TRANSACTION_MERGED eseményen
         rögzítenek.
@@ -2159,6 +2178,7 @@ cli:
       date_help: Új könyvelési dátum (ÉÉÉÉ-HH-NN).
       description_help: Új narratíva.
       direction_help: Új tranzakciós irány.
+      group_help: Szervezeti csoportcimke hozzarendelese (ures szoveg torli).
       help: Egyetlen főkönyvi tranzakció frissítése teljes csere mezőszémantikával.
       id_help: A frissítendő főkönyvi tranzakció azonosítója (vagy egyértelmű hexadecimális
         előtag).
@@ -2168,7 +2188,6 @@ cli:
       notes_help: Új üzemeltetői megjegyzések.
       taxable_base_help: Új ÁFA-mentes alapösszeg.
       value_date_help: Új értékdátum (ÉÉÉÉ-HH-NN).
-      group_help: 'Szervezeti csoportcimke hozzarendelese (ures szoveg torli).'
     view:
       help: Egyetlen főkönyvi tranzakció megtekintése az aktív profilmappában.
       transaction_id_help: A főkönyvi tranzakció azonosítója (vagy egyértelmű hexadecimális
@@ -2978,7 +2997,8 @@ errors:
     error_modelo_external_filing_import: Az importált külső bevallás nem menthető.
       Ellenőrizze a mező értékeit és az igazolás hivatkozást.
     error_modelo_filing_record_not_found: A kért benyújtási rekord nem található.
-    error_modelo_iva_wallet_reconciliation_blocked: 'A 303-as Modelo számítása blokkolva: az IVA tárca egyeztetése szükséges'
+    error_modelo_iva_wallet_reconciliation_blocked: 'A 303-as Modelo számítása blokkolva:
+      az IVA tárca egyeztetése szükséges'
     error_modelo_verification_report_not_found: A kért ellenőrzési jelentés nem található.
     error_modelo_work_unit_already_discarded: A munkajegység már el van vetve.
     error_modelo_work_unit_mutation_refused: Egy elvetett munkajegység nem módosítható.
@@ -3045,12 +3065,13 @@ errors:
     error_workflow: Munkafolyamat hiba történt.
     error_workflow_component: Egy munkafolyamat-komponens váratlan kivételt dobott.
   fail:
-    fail_access_gate_authorization_manifest: A modellengedélyezési jegyzéket nem sikerült betölteni, vagy érvénytelen engedélyezési bejegyzést tartalmaz.
     censo_sync: A Modelo 036 censo-szinkronizáció meghiúsult.
     currency_error: A devizanormalizáció meghiúsult.
     declaration_parse: A benyújtott bevallás exportját nem sikerült egyeztetési célból
       elemezni.
     exchange_rate_provider: Az árfolyam-szolgáltató nem válaszolt.
+    fail_access_gate_authorization_manifest: A modellengedélyezési jegyzéket nem sikerült
+      betölteni, vagy érvénytelen engedélyezési bejegyzést tartalmaz.
     fail_borrador_parse: A Modelo 100 tervezet PDF-et nem sikerült bevallássá elemezni.
     fail_browser_evasion: A böngésző-kijátszás beállítása nem alkalmazható.
     fail_browser_session_browser: A böngésző-munkamenet böngészőjét nem sikerült elindítani.
@@ -3292,8 +3313,10 @@ errors:
       bejegyzés nélkül.
     modelo_036_terminal_state: A Modelo 036 rekord már törölve van, és nem fogad el
       további műveleteket.
-    modelo_184_share_sum: 'A Modelo 184 tagi részesedési százalékainak pontosan 100%-ot kell kitenniük.'
-    modelo_347_threshold: 'A Modelo 347 jelentési küszöb feletti ügyleteihez kifejezett bevallási lefedettség szükséges.'
+    modelo_184_share_sum: A Modelo 184 tagi részesedési százalékainak pontosan 100%-ot
+      kell kitenniük.
+    modelo_347_threshold: A Modelo 347 jelentési küszöb feletti ügyleteihez kifejezett
+      bevallási lefedettség szükséges.
     modelo_censo_stale: 'A műveletet elutasítottuk, mert új censot alkalmazott az
       után, hogy ez a munka elkészült. Az AEAT a kötelező jogi forrás: generálja újra
       a legfrissebb censo alapján.'
@@ -3569,7 +3592,8 @@ live:
   errors:
     expediente_not_found: live.errors.expediente_not_found
     iva_history_modelo_303_only: live.errors.iva_history_modelo_303_only
-    year_range_invalid: "A kezdő évnek kisebbnek vagy egyenlőnek kell lennie a záró évvel."
+    year_range_invalid: A kezdő évnek kisebbnek vagy egyenlőnek kell lennie a záró
+      évvel.
 locales:
   cli:
     audit:
@@ -3748,8 +3772,8 @@ wizard:
     simplificado: Egyszerűsített
   commands:
     status:
-      created: 'letrehozva'
-      updated: 'frissitett'
+      created: letrehozva
+      updated: frissitett
   demo:
     description: Bemutató szekció a varázslófunkció teszteléséhez
     section:

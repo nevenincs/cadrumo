@@ -144,10 +144,22 @@ adapters:
               s'ha ocultat als diagnòstics.
     justificante:
       errors:
-        parse_failed: 'No s''ha pogut analitzar el PDF del justificant. La ruta d''origen s''ha ocultat als diagnòstics.'
+        parse_failed: No s'ha pogut analitzar el PDF del justificant. La ruta d'origen
+          s'ha ocultat als diagnòstics.
     pdf:
       errors:
-        hash_failed: 'No s''ha pogut calcular l''empremta del PDF.'
+        hash_failed: No s'ha pogut calcular l'empremta del PDF.
+  outbound:
+    storage:
+      factory:
+        errors:
+          drive_root_missing: 'No hi ha cap id de carpeta arrel de Google Drive configurat per al perfil actiu. Executa `aeat config google folder set <id>` primer.'
+          google_auth_import_failed: 'La dependencia google-auth no es pot importar; executa `uv sync` i torna-ho a provar.'
+          google_client_missing: 'No hi ha cap client OAuth de Google registrat per al perfil actiu. Executa `aeat config google register --client-json <path>` primer.'
+          google_token_missing: 'No hi ha cap token OAuth de Google persistit per al perfil actiu. Executa `aeat config google login` primer.'
+          kind_empty: 'AEAT_STORAGE_PROVIDER_KIND esta buit.'
+          kind_unhandled: 'El tipus de proveidor d emmagatzematge {kind} no esta gestionat per la factoria.'
+          kind_unknown: 'El tipus de proveidor d emmagatzematge {value} no es reconeix; s esperava un de {expected}.'
   sede:
     errors:
       cotejo_nav_failed: La navegació a la pàgina de cotejo d'AEAT ha fallat; la sessió
@@ -169,6 +181,8 @@ adapters:
         llista esperat; l'estructura de la pàgina pot haver canviat.
       listing_nav_failed: La navegació al llistat de declaracions d'AEAT ha fallat.
         Comproveu la connectivitat de xarxa i torneu-ho a intentar.
+      modelo_unavailable: El registre de declaracions de l'AEAT no ofereix el model
+        sol·licitat.
       no_auth_session: La sessió d'autenticació d'AEAT no existeix o no està persistida;
         executeu primer `aeat config auth status`.
       parse_failed: No s'ha pogut analitzar la resposta de declaracions d'AEAT; l'estructura
@@ -182,7 +196,6 @@ adapters:
       session_expired_nav_failed: El registre de declaracions d'AEAT no s'ha carregat;
         la sessió probablement ha caducat. Executeu 'aeat config auth test' i torneu-ho
         a intentar.
-      modelo_unavailable: 'El registre de declaracions de l''AEAT no ofereix el model sol·licitat.'
 aggregation:
   grouping:
     errors:
@@ -274,7 +287,8 @@ application:
           CAMI' amb un camí vàlid.
         path_unset: No s'ha seleccionat cap fitxer de certificat. Executa 'aeat config
           auth configure --provider certificate --file CAMI' per indicar-lo.
-        unavailable: 'L''estat del certificat no està disponible; consulta els registres de depuració per als detalls de diagnòstic.'
+        unavailable: L'estat del certificat no està disponible; consulta els registres
+          de depuració per als detalls de diagnòstic.
       load:
         password_unset: No hi ha cap contrasenya de certificat configurada. Configura
           la contrasenya del certificat abans de continuar.
@@ -1054,15 +1068,15 @@ cli:
         bucket_id_help: Identificador del bucket al qual pertany la unitat de treball
         calculate_help: Persistir una nova revisió draft de càlcul per a la unitat
           de treball
-        calculate_unauthorized_advisory: 'AVÍS: el backend de càlcul del model %{modelo}
-          NO està autoritzat — encara no s''ha provat amb un test integral al llarg
-          d''almenys dos exercicis de renda (porta d''autorització multi-exercici). El
-          resultat s''ha calculat i desat, però tracta''l com a provisional fins que el
-          model estigui autoritzat.'
         calculate_saved: 'Desat com a revisió de càlcul en esborrany %{revision_id}
           (estat: %{state}). Està persistit i es pot reprendre més tard; llista les
           revisions amb `aeat app modelo work revisions %{work_unit_id}` i torna a
           consultar aquesta amb `aeat app modelo work revision %{revision_id}`.'
+        calculate_unauthorized_advisory: 'AVÍS: el backend de càlcul del model %{modelo}
+          NO està autoritzat — encara no s''ha provat amb un test integral al llarg
+          d''almenys dos exercicis de renda (porta d''autorització multi-exercici).
+          El resultat s''ha calculat i desat, però tracta''l com a provisional fins
+          que el model estigui autoritzat.'
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caràcters)
           d'una revisió de càlcul
         casilla_bare_numeric_ambiguous: '--casilla {key} coincideix amb diverses caselles
@@ -1629,10 +1643,13 @@ cli:
         i tornis a seleccionar).
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
-      preflight_help: 'Informa quins camps del perfil falten per a un context de presentació (model, revisió, exercici, període).'
-      preflight_modelo_help: 'Identificador numèric del model (p. ex. 303).'
-      preflight_period_help: 'Codi de període (p. ex. 1T, 1P, 0A, 01).'
+      preflight_filing_year_help: Exercici de presentació (quatre dígits).
+      preflight_help: Informa quins camps del perfil falten per a un context de presentació
+        (model, revisió, exercici, període).
+      preflight_modelo_help: Identificador numèric del model (p. ex. 303).
+      preflight_period_help: Codi de període (p. ex. 1T, 1P, 0A, 01).
       preflight_revision_help: Registry revision id.
+      preflight_revision_id_help: Identificador de revisió del registre (p. ex. 2024-0A).
       preflight_year_help: Filing year.
       remove_help: Marcar un perfil com a retirat (les snapshots immutables es conserven)
       remove_name_help: Id del perfil a retirar
@@ -1651,11 +1668,11 @@ cli:
         list'' per veure els perfils registrats.'
       use_help: Seleccionar un perfil existent com a perfil actiu
       use_name_help: Id del perfil que s''activarà
-      validate_help: 'Valida un perfil contra l''esquema carregat (per defecte el perfil actiu).'
+      validate_help: Valida un perfil contra l'esquema carregat (per defecte el perfil
+        actiu).
+      validate_name_help: Etiqueta opcional del perfil a validar; per defecte el perfil
+        actiu.
       view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
-      validate_name_help: 'Etiqueta opcional del perfil a validar; per defecte el perfil actiu.'
-      preflight_revision_id_help: 'Identificador de revisió del registre (p. ex. 2024-0A).'
-      preflight_filing_year_help: 'Exercici de presentació (quatre dígits).'
     repair:
       connectivity_help: Comprovar connectivitat del navegador i la Seu AEAT
       connectivity_target_help: Objectiu de connectivitat que cal comprovar
@@ -1976,7 +1993,8 @@ cli:
       help: Exportar moviments canònics del llibre des del bucket del perfil actiu
       include_inactive_help: Incloure moviments arxivats i apartats
       output_help: Ruta on escriure el fitxer exportat del llibre
-      period_help: 'Limita l''exportació a un únic període de presentació (p. ex. 2025T1, 2025).'
+      period_help: Limita l'exportació a un únic període de presentació (p. ex. 2025T1,
+        2025).
     history:
       help: Mostra la cadena cronològica d'esdeveniments d'una transacció
       id_help: Id de la transacció (o prefix no ambigu)
@@ -1988,6 +2006,8 @@ cli:
       dry_run_help: Executar la importació en mode de prova (sense desar)
       dry_run_preview: 'Mode de prova: no s''ha desat cap fila. Els recomptes anteriors
         són una vista prèvia del que una importació real afegiria i ometria.'
+      empty_directory: 'No s''han trobat fitxers d''extracte importables al directori:
+        {path}'
       help: Importar extractes bancaris o registres al llibre comptable
       likely_duplicates: '{count} fila(es) importada(es) comparteixen data i import
         amb una transacció que ja és al llibre però tenen una descripció diferent:
@@ -2003,7 +2023,6 @@ cli:
       source_help: Fitxer original per verificar les files importades
       verbose_help: Mostrar informació detallada durant la importació
       verify_help: Verificar les entrades després de la importació
-      empty_directory: 'No s''han trobat fitxers d''extracte importables al directori: {path}'
     labels:
       active: Actives
       amount: Import
@@ -2072,14 +2091,15 @@ cli:
       id_help: Id del moviment del llibre (SHA-256 o prefix inequívoc).
       invoice_id_help: Id de la factura a vincular bidireccionalment amb el moviment.
     list:
+      by_group_help: Agrupa el llistat per etiqueta de grup.
+      footer_truncated: Mostrant files {start}-{end} de {total} (desplacament {offset}).
+        Feu servir --offset/--limit per paginar.
+      group_filter_help: Mostra nomes les files d'aquesta etiqueta de grup.
       header: MOVIMENTS DEL LLIBRE COMPTABLE
       help: Llistar moviments del llibre al bucket del perfil actiu
-      footer_truncated: 'Mostrant files {start}-{end} de {total} (desplacament {offset}). Feu servir --offset/--limit per paginar.'
       limit_help: 'Nombre maxim de files a mostrar (per defecte: totes).'
       offset_help: 'Omet aquest nombre de files abans de llistar (per defecte: 0).'
-      by_group_help: 'Agrupa el llistat per etiqueta de grup.'
-      group_filter_help: 'Mostra nomes les files d''aquesta etiqueta de grup.'
-      ungrouped_label: '(sense grup)'
+      ungrouped_label: (sense grup)
     merge:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       child_id_help: Id de transacció filla que vols fusionar; es pot repetir
@@ -2145,6 +2165,7 @@ cli:
       date_help: Nova data comptable (AAAA-MM-DD)
       description_help: Nova descripció de la transacció
       direction_help: Nou sentit de la transacció
+      group_help: Assigna una etiqueta de grup organitzativa (cadena buida per esborrar-la).
       help: Actualitza les dades editables d'una transacció del llibre
       id_help: Id de la transacció que vols actualitzar
       irpf_category_help: Nova categoria d'IRPF per a càlculs de models
@@ -2153,7 +2174,6 @@ cli:
       notes_help: Noves notes de l'operador
       taxable_base_help: Nou import de base imposable
       value_date_help: Nova data valor (AAAA-MM-DD)
-      group_help: 'Assigna una etiqueta de grup organitzativa (cadena buida per esborrar-la).'
     view:
       help: Mostra una transacció del llibre
       transaction_id_help: Id de la transacció (o prefix no ambigu)
@@ -2999,7 +3019,8 @@ errors:
       importada. Comprova els valors de les caselles i la referència d'evidència.
     error_modelo_filing_record_not_found: No s'ha trobat la declaració registrada
       sol·licitada.
-    error_modelo_iva_wallet_reconciliation_blocked: 'El càlcul del Model 303 està bloquejat: cal la reconciliació del wallet d''IVA'
+    error_modelo_iva_wallet_reconciliation_blocked: 'El càlcul del Model 303 està
+      bloquejat: cal la reconciliació del wallet d''IVA'
     error_modelo_verification_report_not_found: No s'ha trobat l'informe de verificació
       sol·licitat.
     error_modelo_work_unit_already_discarded: La unitat de treball ja està descartada.
@@ -3082,12 +3103,13 @@ errors:
     error_workflow_component: Un component del flux de treball ha llançat una excepció
       inesperada.
   fail:
-    fail_access_gate_authorization_manifest: No s'ha pogut carregar el manifest d'autorització de models o conté una entrada d'habilitació no vàlida.
     censo_sync: La sincronització del cens del Model 036 ha fallat.
     currency_error: Ha fallat la normalització de la moneda.
     declaration_parse: No s'ha pogut interpretar l'exportació de la declaració presentada
       per a la conciliació.
     exchange_rate_provider: El proveïdor de tipus de canvi no ha respost.
+    fail_access_gate_authorization_manifest: No s'ha pogut carregar el manifest d'autorització
+      de models o conté una entrada d'habilitació no vàlida.
     fail_borrador_parse: No s'ha pogut interpretar el PDF de l'esborrany del Model
       100 com una declaració.
     fail_browser_evasion: No s'ha pogut aplicar la configuració d'evasió del navegador.
@@ -3356,8 +3378,10 @@ errors:
       del Model 036 sense una alta prèvia.
     modelo_036_terminal_state: El registre del Model 036 ja està en estat de baixa;
       no admet més operacions.
-    modelo_184_share_sum: 'Els percentatges de participació dels membres del Model 184 han de sumar exactament el 100 %.'
-    modelo_347_threshold: 'Les operacions del Model 347 per sobre del llindar informatiu requereixen cobertura declarativa explícita.'
+    modelo_184_share_sum: Els percentatges de participació dels membres del Model
+      184 han de sumar exactament el 100 %.
+    modelo_347_threshold: Les operacions del Model 347 per sobre del llindar informatiu
+      requereixen cobertura declarativa explícita.
     modelo_censo_stale: 'L''operació es rebutja perquè has aplicat un cens nou després
       de generar aquesta feina. L''AEAT és la font legal vinculant: torna a generar-la
       amb el cens actual.'
@@ -3824,8 +3848,8 @@ wizard:
     simplificado: Simplified
   commands:
     status:
-      created: 'creat'
-      updated: 'actualitzat'
+      created: creat
+      updated: actualitzat
   demo:
     description: A demonstration section to test wizard functionality
     section:
