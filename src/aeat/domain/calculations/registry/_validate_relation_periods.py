@@ -1,9 +1,4 @@
-"""Relation source revision selector and period coverage helpers.
-
-Selects source :class:`ModeloRevision` instances for a relation and verifies
-that the source :class:`ModeloDefinition` covers every required filing year
-named by the relation.
-"""
+"""Relation source revision selector and period coverage helpers."""
 
 from __future__ import annotations
 
@@ -36,19 +31,13 @@ def select_relation_source_revisions(
 
 
 def relation_filing_year_delta(selector: Mapping[str, str | int]) -> int:
-    if "year" in selector:
-        return 0
-    delta = selector.get("filing_year_delta", 0)
-    if isinstance(delta, int):
-        return delta
-    return 0
+    delta = 0 if "year" in selector else selector.get("filing_year_delta", 0)
+    return delta if isinstance(delta, int) else 0
 
 
 def relation_fixed_source_year(selector: Mapping[str, str | int]) -> int | None:
     year = selector.get("year")
-    if isinstance(year, int):
-        return year
-    return None
+    return year if isinstance(year, int) else None
 
 
 def validate_source_year_coverage(
@@ -61,28 +50,7 @@ def validate_source_year_coverage(
     fixed_source_year: int | None = None,
     source_is_observation_history: bool = False,
 ) -> list[str]:
-    """Verify the source modelo covers every required filing year of a relation.
-
-    For *modeled* sources (ledger aggregations, annual-summary roll-ups,
-    cross-model computed outputs) the source value is produced by running the
-    source modelo's engine for that year, so a year-covering modeled revision
-    MUST exist — the strict check below.
-
-    For *observation-history* sources (``source_is_observation_history``), the
-    source value is the operator's HISTORICAL FILING — an observation that
-    exists for any year they actually filed, independent of whether this
-    application models that year's calculation engine. Requiring a
-    year-covering modeled revision for those conflates "we compute year Y" with
-    "the operator filed year Y" and wrongly rejects a legitimate prior-year
-    carry (e.g. a 2024-start revision copying the 2023 filing). For these the
-    coverage check is relaxed: the source modelo must still declare at least one
-    revision covering the required source periods (so the referenced casilla's
-    shape is known — validated by the period/output checks), but the
-    delta-shifted year interval is NOT required to fall within a modeled
-    revision. Value satisfiability becomes a resolution-time concern (the prior
-    observation is present → it resolves; absent → zero-carry, which is correct
-    for a first-year filer with no prior to carry).
-    """
+    """Verify source-year coverage; observation history requires only shape coverage."""
     source_period_set = set(source_periods)
     period_matching_revisions = tuple(
         source_revision
@@ -90,10 +58,6 @@ def validate_source_year_coverage(
         if not source_period_set or source_period_set.issubset(set(source_revision.period_selector.periods))
     )
     if source_is_observation_history:
-        # Relaxed: require only that the source shape (a revision covering the
-        # required source periods) exists. The specific delta-shifted years may
-        # predate the earliest modeled revision — the operator's prior filing
-        # is an observation, not a modeled computation.
         if source_period_set and not period_matching_revisions:
             return [
                 f"{scope} previous-filing source declares periods {sorted(source_period_set)!r} "
@@ -164,7 +128,6 @@ def _relation_source_revision_matches(
     year_from: int | None,
     year_to: int | None,
 ) -> bool:
-    """Return True when ``revision`` satisfies every dimension of the relation source selector."""
     if revision_id is not None and revision.id != revision_id:
         return False
     if year is not None and not revision.period_selector.includes_year(year):

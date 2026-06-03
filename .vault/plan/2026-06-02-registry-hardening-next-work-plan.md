@@ -122,7 +122,7 @@ Close the validator-module reviewability regression exposed while tightening TOM
 Bring the relation-period validator module back under its committed reviewability baseline without changing validation semantics.
 
 - [x] `W04.P08.S38` - Audit validator module reviewability baseline failure; `.vault/audit`.
-- [ ] `W04.P08.S39` - Reduce relation-period validator module below its reviewability baseline; `src/aeat/domain/calculations/registry/_validate_relation_periods.py`.
+- [x] `W04.P08.S39` - Reduce relation-period validator module below its reviewability baseline; `src/aeat/domain/calculations/registry/_validate_relation_periods.py`.
 - [ ] `W04.P08.S40` - Verify registry reviewability tests after validator baseline repair; `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
 
 ## Description
