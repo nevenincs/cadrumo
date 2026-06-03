@@ -198,8 +198,8 @@ Diagnose + fix test_modelo_100_tarifa_real failures
 
 M200 cuota_integra_lanes + tipo_gravamen_dispatch reds
 
-- [ ] `P13.S35` - Diagnose then fix M200 cuota_integra_lanes 9 reds; `src/aeat/domain/calculations/registry/test_modelo_200_cuota_integra_lanes.py`.
-- [ ] `P13.S36` - Diagnose then fix M200 tipo_gravamen_dispatch 7 reds; `src/aeat/domain/calculations/registry/test_modelo_200_tipo_gravamen_dispatch.py`.
+- [x] `P13.S35` - Diagnose then fix M200 cuota_integra_lanes 9 reds; `src/aeat/domain/calculations/registry/test_modelo_200_cuota_integra_lanes.py`.
+- [x] `P13.S36` - Diagnose then fix M200 tipo_gravamen_dispatch 7 reds; `src/aeat/domain/calculations/registry/test_modelo_200_tipo_gravamen_dispatch.py`.
 
 ### Phase `P14` - M100 renta chain 28-red cluster
 
