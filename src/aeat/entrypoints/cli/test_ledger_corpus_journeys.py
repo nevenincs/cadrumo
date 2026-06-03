@@ -782,3 +782,58 @@ def test_doclink_refuses_non_link_source() -> None:
         app, ["app", "ledger", "doclink", "--id", tx, "--source", "LOCAL_FILE", "--reference", "/tmp/x"]
     )
     assert res.exit_code != 0, res.output
+
+
+# --- W06.P13.S38: split a mixed invoice into business + personal children ----
+def test_split_mixed_invoice_into_business_and_personal_children() -> None:
+    """Split one parent row into a business child (with base/IVA) and a personal
+    child, then classify each independently — the mixed-invoice per-child split.
+    """
+    from decimal import Decimal
+
+    _import_bbva()
+    rows = _list_rows()
+    parent = _find(rows, "Material oficina Papeleria Gomez")
+    parent_id = parent["transaction_id"]
+    amount = Decimal(str(parent["amount"]))
+    # Two children of the same sign summing exactly to the parent amount.
+    biz = (amount * Decimal("0.6")).quantize(Decimal("0.01"))
+    personal = amount - biz
+
+    split = _RUNNER.invoke(
+        app,
+        [
+            "app", "ledger", "split", "--id", parent_id,
+            "--child-amount", str(biz), "--child-description", "Material oficina (negocio)",
+            "--child-amount", str(personal), "--child-description", "Material oficina (personal)",
+            "--reason", "uso mixto", "--yes",
+        ],
+    )
+    assert split.exit_code == 0, split.output
+
+    catalogue = _active_repo().load()
+    # Locate the two children by their split descriptions.
+    children = [t for t in catalogue.values() if t.split_lineage is not None and "Material oficina (" in t.raw.description]
+    assert len(children) == 2, [t.raw.description for t in children]
+    biz_child = next(t for t in children if "negocio" in t.raw.description)
+    per_child = next(t for t in children if "personal" in t.raw.description)
+
+    # Classify each child independently: business carries base/IVA; personal does not.
+    cls_biz = _RUNNER.invoke(
+        app,
+        [
+            "app", "ledger", "classify", "--id", biz_child.transaction_id,
+            "--classification", "BUSINESS", "--category-id", "material_oficina",
+        ],
+    )
+    assert cls_biz.exit_code == 0, cls_biz.output
+    cls_per = _RUNNER.invoke(
+        app, ["app", "ledger", "classify", "--id", per_child.transaction_id, "--classification", "PERSONAL"]
+    )
+    assert cls_per.exit_code == 0, cls_per.output
+
+    after = {t.transaction_id: t for t in _active_repo().load().values()}
+    assert after[biz_child.transaction_id].business_classification.value == "BUSINESS"
+    assert after[per_child.transaction_id].business_classification.value == "PERSONAL"
+    # The child amounts reconstruct the parent exactly (no value lost in the split).
+    assert biz_child.raw.amount + per_child.raw.amount == amount

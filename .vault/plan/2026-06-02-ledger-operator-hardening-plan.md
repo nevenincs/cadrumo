@@ -241,10 +241,10 @@ Exercise per-row tax-fact edits and assert the modelo projections recompute corr
 
 Per-row split / rate / proportionality / irpf edits with modelo recompute assertions.
 
-- [ ] `W06.P13.S38` - Split a mixed invoice into business and personal children with per-child base/IVA split; `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
-- [ ] `W06.P13.S39` - Re-derive base/IVA from gross at 21/10/4 and assert M303 soportado/repercutido recompute; `src/aeat/tests/test_ledger_corpus_fidelity.py`.
-- [ ] `W06.P13.S40` - Change business_pct and per-category usage ratio and assert deducible-base proportionality propagates; `src/aeat/tests/test_ledger_corpus_fidelity.py`.
-- [ ] `W06.P13.S41` - Reassign irpf_category (trabajo<->actividad) and assert M130/M100 routing changes; `src/aeat/tests/test_ledger_corpus_fidelity.py`.
+- [x] `W06.P13.S38` - Split a mixed invoice into business and personal children with per-child base/IVA split; `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
+- [x] `W06.P13.S39` - Re-derive base/IVA from gross at 21/10/4 and assert M303 soportado/repercutido recompute; `src/aeat/tests/test_ledger_corpus_fidelity.py`.
+- [x] `W06.P13.S40` - Change business_pct and per-category usage ratio and assert deducible-base proportionality propagates; `src/aeat/tests/test_ledger_corpus_fidelity.py`.
+- [x] `W06.P13.S41` - Reassign irpf_category (trabajo<->actividad) and assert M130/M100 routing changes; `src/aeat/tests/test_ledger_corpus_fidelity.py`.
 
 ## Wave `W07` - Import and export
 
