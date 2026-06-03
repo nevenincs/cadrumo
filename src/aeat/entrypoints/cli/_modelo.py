@@ -14,6 +14,7 @@ import json
 import re
 from collections.abc import Callable
 from contextlib import suppress
+import typing
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -6162,6 +6163,216 @@ def work_preview_maritime_exemption(
         result=payload,
         lines=lines,
     )
+
+
+# ---------------------------------------------------------------------------
+# Modelo 036 declarative-recording verbs (M036 commit 3 of 3)
+# ---------------------------------------------------------------------------
+#
+# Per the 2026-06-03 ADR amendment to
+# ``cli-workflow-redesign-modelo-036-037-foundation-adr`` and the M036
+# Path A landing plan, ``aeat app modelo m036 {alta,modificacion,baja}``
+# record an operator-declared M036 filing locally for downstream
+# stale-cascade reasoning.  The local app never files at AEAT; the
+# operator files at sede and these verbs record that fact.
+
+m036_app = typer.Typer(
+    name="m036",
+    help=tr(
+        "cli.app.modelo.m036.group_help",
+        default=(
+            "Record an M036 declaration filed at sede (alta / modificacion / baja). "
+            "The local app never files; AEAT is the authority."
+        ),
+    ),
+    no_args_is_help=True,
+    add_completion=False,
+)
+app.add_typer(m036_app, name="m036")
+
+
+def _record_m036(
+    ctx: typer.Context,
+    *,
+    event_kind: "CensoModeloEventKindRef",
+    declared_on: str,
+    sede_justificante: str | None,
+    note: str | None,
+) -> None:
+    """Shared body for the three m036 declarative verbs."""
+    _require_active_profile()
+    try:
+        parsed_declared_on = date.fromisoformat(declared_on)
+    except ValueError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.m036.errors.bad_declared_on",
+                default=f"--declared-on must be an ISO date (YYYY-MM-DD); got {declared_on!r}.",
+            )
+        ) from exc
+
+    from ...application.modelo._m036_lifecycle import (
+        M036DeclarationCommand,
+        record_m036_declaration,
+    )
+    from ...core import resolve_active_bucket_id
+    from ._modelo_payloads import M036DeclarationRecordResult
+
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None  # guarded by _require_active_profile above
+    # The profile_id on the command is the operator's profile identifier,
+    # which the active-bucket layout aliases to the bucket UUID itself.
+    # The service re-derives the bucket scope for storage from the
+    # ``bucket_id=`` argument, so the two MUST agree.
+    command = M036DeclarationCommand(
+        profile_id=bucket_id,
+        event_kind=event_kind,
+        declared_on=parsed_declared_on,
+        sede_justificante=sede_justificante,
+        note=note,
+    )
+    result = record_m036_declaration(command, bucket_id=bucket_id)
+    payload = M036DeclarationRecordResult(
+        declaration_id=result.declaration_id,
+        bucket_id=result.bucket_id,
+        profile_id=result.profile_id,
+        event_kind=result.event_kind.value,
+        declared_on=result.declared_on.isoformat(),
+        sede_justificante=result.sede_justificante,
+        recorded_at=result.recorded_at.isoformat(),
+    )
+    lines = [
+        f"declaration_id\t{result.declaration_id}",
+        f"event_kind\t{result.event_kind.value}",
+        f"declared_on\t{result.declared_on.isoformat()}",
+        f"recorded_at\t{result.recorded_at.isoformat()}",
+    ]
+    if result.sede_justificante is not None:
+        lines.append(f"sede_justificante\t{result.sede_justificante}")
+    _emit_envelope(ctx, command=f"modelo.m036.{result.event_kind.value}", result=payload, lines=lines)
+
+
+@m036_app.command(
+    "alta",
+    help=tr(
+        "cli.app.modelo.m036.alta_help",
+        default="Record an M036 alta declaration (initial census registration) filed at sede.",
+    ),
+)
+def m036_alta(
+    ctx: typer.Context,
+    declared_on: str = typer.Option(
+        ...,
+        "--declared-on",
+        help=tr(
+            "cli.app.modelo.m036.declared_on_help",
+            default="ISO date (YYYY-MM-DD) the operator filed the M036 at sede.",
+        ),
+    ),
+    sede_justificante: str | None = typer.Option(
+        None,
+        "--sede-justificante",
+        help=tr(
+            "cli.app.modelo.m036.justificante_help",
+            default="Optional AEAT acuse de recibo identifier emitted by sede for the filing.",
+        ),
+    ),
+    note: str | None = typer.Option(
+        None,
+        "--note",
+        help=tr("cli.app.modelo.m036.note_help", default="Optional operator note (<= 512 chars)."),
+    ),
+) -> None:
+    """Record an M036 alta declaration filed at sede."""
+    from ...domain.calculations.registry import CensoModeloEventKind
+
+    _record_m036(
+        ctx,
+        event_kind=CensoModeloEventKind.ALTA,
+        declared_on=declared_on,
+        sede_justificante=sede_justificante,
+        note=note,
+    )
+
+
+@m036_app.command(
+    "modificacion",
+    help=tr(
+        "cli.app.modelo.m036.modificacion_help",
+        default="Record an M036 modificacion declaration (census update) filed at sede.",
+    ),
+)
+def m036_modificacion(
+    ctx: typer.Context,
+    declared_on: str = typer.Option(
+        ...,
+        "--declared-on",
+        help=tr("cli.app.modelo.m036.declared_on_help"),
+    ),
+    sede_justificante: str | None = typer.Option(
+        None,
+        "--sede-justificante",
+        help=tr("cli.app.modelo.m036.justificante_help"),
+    ),
+    note: str | None = typer.Option(
+        None,
+        "--note",
+        help=tr("cli.app.modelo.m036.note_help"),
+    ),
+) -> None:
+    """Record an M036 modificacion declaration filed at sede."""
+    from ...domain.calculations.registry import CensoModeloEventKind
+
+    _record_m036(
+        ctx,
+        event_kind=CensoModeloEventKind.MODIFICACION,
+        declared_on=declared_on,
+        sede_justificante=sede_justificante,
+        note=note,
+    )
+
+
+@m036_app.command(
+    "baja",
+    help=tr(
+        "cli.app.modelo.m036.baja_help",
+        default="Record an M036 baja declaration (census deregistration) filed at sede.",
+    ),
+)
+def m036_baja(
+    ctx: typer.Context,
+    declared_on: str = typer.Option(
+        ...,
+        "--declared-on",
+        help=tr("cli.app.modelo.m036.declared_on_help"),
+    ),
+    sede_justificante: str | None = typer.Option(
+        None,
+        "--sede-justificante",
+        help=tr("cli.app.modelo.m036.justificante_help"),
+    ),
+    note: str | None = typer.Option(
+        None,
+        "--note",
+        help=tr("cli.app.modelo.m036.note_help"),
+    ),
+) -> None:
+    """Record an M036 baja declaration filed at sede."""
+    from ...domain.calculations.registry import CensoModeloEventKind
+
+    _record_m036(
+        ctx,
+        event_kind=CensoModeloEventKind.BAJA,
+        declared_on=declared_on,
+        sede_justificante=sede_justificante,
+        note=note,
+    )
+
+
+# Type-only forward reference for the shared body signature; the real
+# enum is imported inside each verb body to keep the cold-start surface
+# light per the CLI lazy-import discipline.
+CensoModeloEventKindRef = typing.Any
 
 
 __all__ = ["app"]

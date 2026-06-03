@@ -959,7 +959,9 @@ cli:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
         list_help: Az adott nyomtatvány/év/időszak szükséges és elérhető kötéseinek
           listázása.
-        missing_help: 'Szűrés a még hiányzó kötésekre: elhagyja az állandó értékűeket és azokat, amelyeket az aktív profil már feloldott. Aktív profil nélkül minden nem állandó kötés megjelenik (a konzervatív válasz).'
+        missing_help: 'Szűrés a még hiányzó kötésekre: elhagyja az állandó értékűeket
+          és azokat, amelyeket az aktív profil már feloldott. Aktív profil nélkül
+          minden nem állandó kötés megjelenik (a konzervatív válasz).'
         missing_required_options: 'Hiányzó kötelező beállítások: %{options}'
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
         override_help: Ideiglenes kötési felülbírálat KEY=VALUE szintaxissal (ismételhető).
@@ -1080,6 +1082,23 @@ cli:
         seed_period_help: A vetőösszeg időszaka (pl. 2024N4).
       list:
         year_help: A nyomtatványkatalógus szűrése egyetlen adóévre.
+      m036:
+        alta_help: Rögzítse az M036 alta nyilatkozatot (kezdeti adónyilvántartási
+          regisztráció), amelyet a sede portálon nyújtottak be.
+        baja_help: Rögzítse az M036 baja nyilatkozatot (adónyilvántartási megszüntetés),
+          amelyet a sede portálon nyújtottak be.
+        declared_on_help: ISO dátum (ÉÉÉÉ-HH-NN), amikor az operátor benyújtotta az
+          M036-ot a sede portálon.
+        errors:
+          bad_declared_on: '--declared-on ISO dátum kell legyen (ÉÉÉÉ-HH-NN); kapott {value}.'
+        group_help: M036 nyilatkozat rögzítése, amelyet az operátor a sede portálon
+          nyújtott be (alta / modificacion / baja). A helyi alkalmazás soha nem nyújt
+          be; az AEAT a hatóság.
+        justificante_help: A sede által a benyújtásra kibocsátott AEAT acuse de recibo
+          opcionális azonosítója.
+        modificacion_help: Rögzítse az M036 modificacion nyilatkozatot (adónyilvántartási
+          frissítés), amelyet a sede portálon nyújtottak be.
+        note_help: Opcionális operátori megjegyzés (legfeljebb 512 karakter).
       project:
         binding_help: Kötési érték KEY=VALUE szintaxissal (ismételhető).
         casilla_help: Mezőérték CASILLA=DECIMAL szintaxissal (ismételhető).
@@ -1264,6 +1283,10 @@ cli:
         history_help: Egy munkaegység minden életciklus-eseményének megjelenítése.
         history_work_unit_id_help: Annak a munkaegységnek az azonosítója, amelynek
           életciklusát meg szeretné tekinteni.
+        id_is_work_unit_not_calc_revision: Ez az azonosító egy munkaegység-azonosító,
+          de a verify/file számítási-revízió-azonosítót igényel. Futtasd az 'aeat
+          app modelo work calculate %{work_unit_id}' parancsot a számítási-revízió-azonosító
+          előállításához, majd add át azt.
         include_discarded_help: Eldobott munkaegységek bevonása a listába (alapértelmezés
           szerint kizárva).
         invalid_amendment_kind: 'A --kind értéke csak {choices} egyike lehet; kapott:
@@ -1451,7 +1474,6 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
-        id_is_work_unit_not_calc_revision: 'Ez az azonosító egy munkaegység-azonosító, de a verify/file számítási-revízió-azonosítót igényel. Futtasd az ''aeat app modelo work calculate %{work_unit_id}'' parancsot a számítási-revízió-azonosító előállításához, majd add át azt.'
   common:
     errors:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található
@@ -2063,15 +2085,22 @@ cli:
       iva_category_help: Explicit IVA-kategória felülbírálat erre a tranzakcióra (pl.
         intra_community_supply, export_third_country_zero_rated, domestic_not_subject).
       iva_rate_help: IVA-kulcs tizedes törtként, pl. 0,21.
-      llm_classified_by_label: 'osztalyozta'
-      llm_confidence_label: 'bizonyossag'
-      llm_exclusive: '--llm nem kombinalhato a --classification vagy --from-csv kapcsoloval; a kezi ut a kezelo kifejezett felulbiralasa.'
+      llm_classified_by_label: osztalyozta
+      llm_confidence_label: bizonyossag
+      llm_exclusive: --llm nem kombinalhato a --classification vagy --from-csv kapcsoloval;
+        a kezi ut a kezelo kifejezett felulbiralasa.
       llm_failed: 'Az LLM osztalyozas sikertelen: {reason}'
-      llm_help: 'Kerd meg egy helyi LLM szolgaltatot (claude/gemini/codex), hogy osztalyozza a tranzakciot; alapertelmezetten elonezet, --apply kapcsoloval menti.'
-      llm_provider_unavailable: 'A(z) ''{provider}'' LLM szolgaltato nem erheto el: a CLI nincs a PATH-on. Telepitsd a(z) ''{provider}'' CLI-t es gondoskodj rola, hogy a PATH-on legyen, vagy futtasd az ''aeat app ledger providers'' parancsot a hasznalhato szolgaltatok listazasahoz.'
-      llm_reason_label: 'indok'
-      llm_review_hint: 'Tekintsd at a fenti javaslatot. Futtasd ujra --apply kapcsoloval az elfogadashoz, --classification kapcsoloval a kezi felulbiralashoz, vagy ne tegy semmit az elutasitashoz.'
-      llm_suggestion_label: 'llm-javaslat'
+      llm_help: Kerd meg egy helyi LLM szolgaltatot (claude/gemini/codex), hogy osztalyozza
+        a tranzakciot; alapertelmezetten elonezet, --apply kapcsoloval menti.
+      llm_provider_unavailable: 'A(z) ''{provider}'' LLM szolgaltato nem erheto el:
+        a CLI nincs a PATH-on. Telepitsd a(z) ''{provider}'' CLI-t es gondoskodj rola,
+        hogy a PATH-on legyen, vagy futtasd az ''aeat app ledger providers'' parancsot
+        a hasznalhato szolgaltatok listazasahoz.'
+      llm_reason_label: indok
+      llm_review_hint: Tekintsd at a fenti javaslatot. Futtasd ujra --apply kapcsoloval
+        az elfogadashoz, --classification kapcsoloval a kezi felulbiralashoz, vagy
+        ne tegy semmit az elutasitashoz.
+      llm_suggestion_label: llm-javaslat
       mixed_requires_business_pct: Elutasítva. A --classification MIXED értékhez üzleti
         arány szükséges. Adjon meg --business-pct értéket 0 és 1 között, vagy sorolja
         be a sort BUSINESS vagy PERSONAL kategóriába.
@@ -2079,12 +2108,14 @@ cli:
       reaffirmed: Besorolás megerősítve.
       taxable_base_help: Adóköteles alapösszeg.
     doclink:
-      actor_help: 'Operátor címke.'
-      bad_source: 'a dokumentumhivatkozás forrásának egynek kell lennie az alábbiak közül: gmail, google_drive, url (kapott: ''{source}'').'
-      help: 'Gmail/Drive/URL dokumentumhivatkozás rögzítése egy főkönyvi soron (sosem tölti le).'
-      id_help: 'Főkönyvi tranzakció azonosítója.'
-      note_help: 'Opcionális megjegyzés.'
-      reference_help: 'A dokumentumhivatkozás referenciája.'
+      actor_help: Operátor címke.
+      bad_source: 'a dokumentumhivatkozás forrásának egynek kell lennie az alábbiak
+        közül: gmail, google_drive, url (kapott: ''{source}'').'
+      help: Gmail/Drive/URL dokumentumhivatkozás rögzítése egy főkönyvi soron (sosem
+        tölti le).
+      id_help: Főkönyvi tranzakció azonosítója.
+      note_help: Opcionális megjegyzés.
+      reference_help: A dokumentumhivatkozás referenciája.
       source_help: 'Hivatkozás forrása: gmail, google_drive vagy url.'
     errors:
       command_input_invalid: 'Elutasítva. A tranzakció érvénytelen: {details}'
@@ -2213,7 +2244,9 @@ cli:
       invoice_id_help: A tranzakcióhoz kétirányúan kötendő számla azonosítója.
     list:
       by_group_help: A lista csoportositasa csoportcimke szerint.
-      filter_help: 'Sorok szűrése állapot, időszak (akár ÉÉÉÉ egy évre), besorolás, probléma, import, irány (ingreso/gasto) vagy szöveg szerint. A szervezeti csoportcímke szerinti szűréshez használd külön a --group opciót.'
+      filter_help: Sorok szűrése állapot, időszak (akár ÉÉÉÉ egy évre), besorolás,
+        probléma, import, irány (ingreso/gasto) vagy szöveg szerint. A szervezeti
+        csoportcímke szerinti szűréshez használd külön a --group opciót.
       footer_truncated: '{start}-{end}. sor megjelenitese, osszesen {total} (eltolas
         {offset}). Lapozashoz hasznalja a --offset/--limit kapcsolot.'
       group_filter_help: Csak az adott csoportcimkehez tartozo sorok megjelenitese.
@@ -2241,7 +2274,8 @@ cli:
         adott időszakra. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
       period_help: Kanonikus időszak (pl. 2026N1, 2026-03, 2026).
     providers:
-      help: 'Felsorolja az alfolyamatos LLM-szolgáltatókat, amelyek CLI-je elérhető a PATH-en.'
+      help: Felsorolja az alfolyamatos LLM-szolgáltatókat, amelyek CLI-je elérhető
+        a PATH-en.
     remove:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       dry_run_help: Az eltávolítás hatásainak jelentése a főkönyvi tranzakció törlése
