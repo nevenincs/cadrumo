@@ -19,7 +19,7 @@ The active-profile signal is confined to binding the browser session profile nam
 The plain-file signals are bounded:
 
 - Playwright submitted-file downloads are read from the browser-provided temporary download path and converted to bytes for the returned artefact record.
-- Declaration PDFs that require bbox word-position parsing are routed through `_temporary_sensitive_pdf_path()` because the parser needs a real path; the helper uses `mkstemp`, writes through the raw descriptor, closes the descriptor, unlinks the path in `finally`, and converts scratch OS failures into `SedeParseError` with the existing translated Sede parse message.
+- Declaration PDFs that require bbox word-position parsing are routed through `_temporary_sensitive_pdf_path()` because the parser needs a real path; the helper uses `mkstemp`, writes through the raw descriptor, closes the descriptor, unlinks the path in `finally`, and converts scratch OS failures into unchained `SedeParseError` instances with the existing translated Sede parse message.
 
 The file's user-facing live navigation/auth failures use `tr()` translated messages on the checked paths, and the Sede error classes derive from the project `AeatError` hierarchy.
 
@@ -29,4 +29,4 @@ Validation:
 - `uv run --no-sync ruff check src/aeat/adapters/outbound/aeat/sede/_declarations.py src/aeat/adapters/outbound/aeat/sede/test_declarations.py` passed.
 - Source scans found no secure-object repository construction, storage-provider selection, SQL route setup, naked environment reads, or direct durable file writes in the reviewed module.
 
-Disposition: close `AFR-021` as `remote-mirror`. The temporary PDF scratch path is accepted as parser scratch, not durable sensitive storage, only after the continuation remediation replaced `NamedTemporaryFile(delete=False)` with the private-fd `_temporary_sensitive_pdf_path()` helper, wrapped scratch failures in the central Sede/Aeat exception hierarchy, and added focused unlink coverage. The consolidated `S121-S128` review records this as `S123-001 | MEDIUM | closed`.
+Disposition: close `AFR-021` as `remote-mirror`. The temporary PDF scratch path is accepted as parser scratch, not durable sensitive storage, only after the continuation remediation replaced `NamedTemporaryFile(delete=False)` with the private-fd `_temporary_sensitive_pdf_path()` helper, wrapped scratch failures in the central Sede/Aeat exception hierarchy without retaining chained OS exceptions, redacted parser labels, and added focused unlink plus no-chained-exception coverage. The consolidated `S121-S128` review records this as `S123-001 | MEDIUM | closed`.
