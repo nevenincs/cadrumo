@@ -27,8 +27,11 @@ from pathlib import Path
 
 import pytest
 
+from ....core.config import override_settings
+from ....core.errors import build_error_envelope, resolve_error_message
+from ....core.external_constants import UTF_8_ENCODING
 from ....domain.attachments._enums import AttachmentKind, AttachmentSource
-from ....domain.attachments._errors import AttachmentValidationError
+from ....domain.attachments._errors import AttachmentPersistenceError, AttachmentValidationError
 from ....domain.attachments._models import Attachment
 from ....tests.secure_sql import isolated_runtime_profile
 from .attachment import AttachmentStore
@@ -90,6 +93,35 @@ def test_attachment_blob_and_manifest_round_trip(tmp_path: Path) -> None:
         assert loaded.bytes_size == len(payload)
 
 
+def test_attachment_store_logical_paths_use_namespace_registry() -> None:
+    store = AttachmentStore()
+    digest = "a" * 64
+
+    assert store.blob_path(digest).as_posix() == f"db:/secure_objects/aeat.domain.attachments.blobs/{digest}"
+    assert store.manifest_path(digest).as_posix() == f"db:/secure_objects/aeat.domain.attachments.manifests/{digest}"
+
+
+def test_attachment_source_read_error_is_localized_without_path_leak(tmp_path: Path) -> None:
+    store = AttachmentStore()
+    missing = tmp_path / "private-client-alpha" / "invoice.pdf"
+
+    with pytest.raises(AttachmentPersistenceError) as excinfo:
+        store.put_file(missing)
+    envelope = build_error_envelope(excinfo.value)
+    with override_settings(aeat_output_language="en"):
+        message = resolve_error_message(excinfo.value)
+
+    assert excinfo.value.translated_message == "errors.fail.fail_financial_attachments_attachment_persistence"
+    assert "private-client-alpha" not in str(excinfo.value)
+    assert str(missing) not in str(excinfo.value)
+    assert "private-client-alpha" not in message
+    assert "private-client-alpha" not in str(envelope.context)
+    assert envelope.context == {
+        "operation": "read_source",
+        "surface": "attachment_store",
+    }
+
+
 def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) -> None:
     """Anti-tautology proof: corrupting attachment_id vs sha256 must surface.
 
@@ -131,7 +163,7 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) ->
                 SecureObjectRow.object_key == attachment.attachment_id,
             )
             row = session.execute(stmt).scalar_one()
-            envelope = _json.loads(row.payload.decode("utf-8"))
+            envelope = _json.loads(row.payload.decode(UTF_8_ENCODING))
             manifest = envelope["payload"]
             # write_manifest drops attachment_id from the persisted payload
             # (the row's object_key carries it as the content-addressing
@@ -143,7 +175,7 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) ->
             )
             tampered_digest = hashlib.sha256(b"tampered body").hexdigest()
             manifest["sha256"] = tampered_digest
-            row.payload = _json.dumps(envelope).encode("utf-8")
+            row.payload = _json.dumps(envelope).encode(UTF_8_ENCODING)
 
         with pytest.raises(AttachmentValidationError, match="invalid attachment manifest"):
             store.load_manifest(attachment.attachment_id)
