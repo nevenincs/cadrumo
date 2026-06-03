@@ -4267,7 +4267,7 @@ Retire setup-profile path and wire bucket events.
 
 Test the full verb tree and the dual-axis contract.
 
-- [ ] `W74.P358.S2069` - Add service-contract tests for ProfileLifecycleService covering all CRUD verbs plus use, duplicate, export, import, validate, preflight; `tests/application/profile`.
+- [x] `W74.P358.S2069` - Add service-contract tests for ProfileLifecycleService covering all CRUD verbs plus use, duplicate, export, import, validate, preflight; `tests/application/profile`.
 - [x] `W74.P358.S2070` - Add tests for list with-status showing draft, verified-unfiled, and last-filed counts per profile; `tests/application/profile`.
 - [x] `W74.P358.S2071` - Add CLI surface tests for the full profile verb tree; `tests/entrypoints/cli`.
 - [x] `W74.P358.S2072` - Add a regression test asserting aeat setup profile is unknown and aeat config profile use works as alias for set active; `tests/entrypoints/cli`.
