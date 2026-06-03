@@ -31,6 +31,7 @@ from ..iva import (
     invoice_line_to_iva_observation,
 )
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
+from ._protocols import InvoiceCatalogueRepositoryProtocol
 from ._repository import InvoiceCatalogueRepository
 from ._service import (
     LinkInconsistency,
@@ -46,6 +47,7 @@ __all__ = [
     "InvoiceCatalogue",
     "InvoiceCatalogueError",
     "InvoiceCatalogueRepository",
+    "InvoiceCatalogueRepositoryProtocol",
     "InvoiceError",
     "InvoiceLine",
     "InvoiceLinkError",
