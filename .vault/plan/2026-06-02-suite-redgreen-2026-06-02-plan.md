@@ -180,7 +180,7 @@ Land architect Route A spec — synthetic-PDF primitive encoding + extraction pr
 
 Sweep test_any_return_rationale_markers reds — add rationale marker tokens or replace Any with concrete type
 
-- [ ] `P10.S32` - Sweep test_any_return_rationale_markers 23 reds add rationale tokens or replace Any; `src/aeat`.
+- [x] `P10.S32` - Sweep test_any_return_rationale_markers 23 reds add rationale tokens or replace Any; `src/aeat`.
 
 ### Phase `P11` - CLI workflow verification 15-red cluster
 
