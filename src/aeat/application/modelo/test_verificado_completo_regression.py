@@ -223,6 +223,12 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos) -> None:
     assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
     assert report.missing_required_casillas == ()
     assert set(report.resolved_casillas) >= set(required)
+    verified = cr_repo.load().get(revision.calculation_revision_id)
+    assert verified is not None
+    assert verified.ledger_filing_snapshot is not None
+    assert verified.ledger_filing_evidence is not None
+    assert verified.ledger_filing_evidence.snapshot_fingerprint == verified.ledger_filing_snapshot.snapshot_fingerprint
+    assert {entry.casilla for entry in verified.ledger_filing_evidence.manual_entries} >= set(casilla_inputs)
 
 
 def test_tampered_revision_raises_drift_error(repos) -> None:
