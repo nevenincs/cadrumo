@@ -34,6 +34,8 @@ from ._applicability import (
 )
 from ._authority import ValidatedRegistryAuthority, bundled_authority
 from ._bindings import (
+    INVOICE_BINDING_SOURCE_KINDS,
+    LEDGER_BINDING_SOURCE_KINDS,
     AtributionMemberObservation,
     CasillaObservation,
     CounterpartAggregationObservation,
@@ -353,7 +355,9 @@ __all__ = [
     "CENSO_MODELO_EVENT_KINDS",
     "CENSO_MODELO_SERVICE_OWNER",
     "GROI_ORACLE_ID",
+    "INVOICE_BINDING_SOURCE_KINDS",
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
+    "LEDGER_BINDING_SOURCE_KINDS",
     "M210_CONVENIO_MISSING_SENTINEL",
     "M210_DEFERRED_TIPO_SENTINEL",
     "M210_NOT_YET_AUTHORED_SENTINEL",
