@@ -210,6 +210,13 @@ adapters:
           sidecar_missing: Local storage object sidecar is missing.
           sidecar_not_object: Local storage sidecar {sidecar_path} is not a JSON object.
           sidecar_write_failed: Local storage could not write the object sidecar.
+  persistence:
+    profile:
+      assets:
+        errors:
+          asset_already_exists: 'That asset already exists in the encrypted asset ledger.'
+          load_amortizacion_ledger_failed: 'Unable to load the encrypted amortization ledger.'
+          load_asset_ledger_failed: 'Unable to load the encrypted asset ledger.'
   sede:
     errors:
       cotejo_nav_failed: Navigation to the AEAT cotejo page failed; session may have
@@ -3338,8 +3345,7 @@ errors:
       Use only one of --quiet, --verbose or --debug.
     refused_cli_non_tty: This command needs interactive input, but standard input
       is piped. Run it in an interactive terminal.
-    refused_cli_validation_boundary: The command input failed validation. Run `aeat
-      config repair` or reset the profile state.
+    refused_cli_validation_boundary: 'The command input failed validation. Check the command''s arguments or run `aeat --help`.'
     refused_config_reset_unconfirmed: The configuration reset was not confirmed. Re-run
       the command confirming the operation.
     refused_diagnostic_model_invariant: A DiagnosticCheck construction invariant was

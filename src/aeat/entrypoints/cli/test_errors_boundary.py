@@ -233,5 +233,15 @@ def test_malformed_cli_input_surfaces_input_time_validation_boundary(
     assert "no longer matches the expected schema" not in combined, (
         f"malformed input triggered stored-data boundary instead;\ngot: {combined!r}"
     )
+    # M4 honesty: config repair must NOT be suggested for input-time validation
+    # failures.  config repair diagnoses local configuration state and cannot
+    # fix an invalid CLI argument or an application schema mismatch; pointing
+    # the operator at it is a no-op-recovery path.  The fix is in
+    # CliValidationBoundaryError.suggestion and the refused_cli_validation_boundary
+    # locale string — both now say "aeat --help" instead of "aeat config repair".
+    assert "config repair" not in combined, (
+        f"input-time validation boundary must not suggest 'config repair' (no-op "
+        f"recovery for a CLI argument error); got: {combined!r}"
+    )
     # The command must fail — it did not silently succeed on bad input.
     assert result.exit_code != 0

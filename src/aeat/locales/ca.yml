@@ -233,6 +233,13 @@ adapters:
           sidecar_not_object: El sidecar local {sidecar_path} no es un objecte JSON.
           sidecar_write_failed: L emmagatzematge local no ha pogut escriure el sidecar
             de l objecte.
+  persistence:
+    profile:
+      assets:
+        errors:
+          asset_already_exists: 'Aquest actiu ja existeix al llibre xifrat d''actius.'
+          load_amortizacion_ledger_failed: 'No s''ha pogut carregar el llibre xifrat d''amortització.'
+          load_asset_ledger_failed: 'No s''ha pogut carregar el llibre xifrat d''actius.'
   sede:
     errors:
       cotejo_nav_failed: La navegació a la pàgina de cotejo d'AEAT ha fallat; la sessió
@@ -2039,12 +2046,15 @@ cli:
       reaffirmed: Classificació reafirmada.
       taxable_base_help: Import de base imposable
     doclink:
-      actor_help: 'Etiqueta de l''operador registrada als esdeveniments del bucket.'
-      bad_source: 'l''origen de l''enllac de document ha de ser un de: gmail, google_drive, url (rebut ''{source}'').'
-      help: 'Registra un enllac de document de Gmail/Drive/URL com a evidencia local en una fila del llibre (el document remot mai es descarrega).'
-      id_help: 'Id de transaccio del llibre (SHA-256 o prefix inequivoc).'
-      note_help: 'Nota opcional registrada amb l''enllac.'
-      reference_help: 'La referencia de l''enllac del document (enllac de Gmail, enllac de fitxer de Drive o URL).'
+      actor_help: Etiqueta de l'operador registrada als esdeveniments del bucket.
+      bad_source: 'l''origen de l''enllac de document ha de ser un de: gmail, google_drive,
+        url (rebut ''{source}'').'
+      help: Registra un enllac de document de Gmail/Drive/URL com a evidencia local
+        en una fila del llibre (el document remot mai es descarrega).
+      id_help: Id de transaccio del llibre (SHA-256 o prefix inequivoc).
+      note_help: Nota opcional registrada amb l'enllac.
+      reference_help: La referencia de l'enllac del document (enllac de Gmail, enllac
+        de fitxer de Drive o URL).
       source_help: 'Origen de l''enllac: gmail, google_drive o url.'
     errors:
       command_input_invalid: 'Rebutjat. La transacció no és vàlida: {details}'
@@ -3522,8 +3532,7 @@ errors:
       són contradictòries. Fes servir només una de --quiet, --verbose o --debug.
     refused_cli_non_tty: Aquesta ordre necessita una entrada interactiva, però l'entrada
       estàndard està redirigida. Executa-la en una terminal interactiva.
-    refused_cli_validation_boundary: L'entrada de l'ordre no ha superat la validació.
-      Executa `aeat config repair` o restableix l'estat del perfil.
+    refused_cli_validation_boundary: 'L''entrada de l''ordre no ha superat la validació. Comproveu els arguments o executeu `aeat --help`.'
     refused_config_reset_unconfirmed: El restabliment de la configuració no s'ha confirmat.
       Torna a executar l'ordre confirmant l'operació.
     refused_diagnostic_model_invariant: 'Refusat: invariant del model de diagnostic

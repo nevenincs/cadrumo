@@ -239,6 +239,13 @@ adapters:
           sidecar_not_object: El sidecar local {sidecar_path} no es un objeto JSON.
           sidecar_write_failed: El almacenamiento local no pudo escribir el sidecar
             del objeto.
+  persistence:
+    profile:
+      assets:
+        errors:
+          asset_already_exists: 'Ese activo ya existe en el libro cifrado de activos.'
+          load_amortizacion_ledger_failed: 'No se pudo cargar el libro cifrado de amortización.'
+          load_asset_ledger_failed: 'No se pudo cargar el libro cifrado de activos.'
   sede:
     errors:
       cotejo_nav_failed: La navegación a la página de cotejo de AEAT falló; la sesión
@@ -2077,12 +2084,15 @@ cli:
       reaffirmed: Clasificación reafirmada.
       taxable_base_help: Importe de base imponible
     doclink:
-      actor_help: 'Etiqueta del operador registrada en los eventos del bucket.'
-      bad_source: 'el origen del enlace de documento debe ser uno de: gmail, google_drive, url (recibido ''{source}'').'
-      help: 'Registra un enlace de documento de Gmail/Drive/URL como evidencia local en una fila del libro (el documento remoto nunca se descarga).'
-      id_help: 'Id de transaccion del libro (SHA-256 o prefijo inequivoco).'
-      note_help: 'Nota opcional registrada con el enlace.'
-      reference_help: 'La referencia del enlace del documento (enlace de Gmail, enlace de archivo de Drive o URL).'
+      actor_help: Etiqueta del operador registrada en los eventos del bucket.
+      bad_source: 'el origen del enlace de documento debe ser uno de: gmail, google_drive,
+        url (recibido ''{source}'').'
+      help: Registra un enlace de documento de Gmail/Drive/URL como evidencia local
+        en una fila del libro (el documento remoto nunca se descarga).
+      id_help: Id de transaccion del libro (SHA-256 o prefijo inequivoco).
+      note_help: Nota opcional registrada con el enlace.
+      reference_help: La referencia del enlace del documento (enlace de Gmail, enlace
+        de archivo de Drive o URL).
       source_help: 'Origen del enlace: gmail, google_drive o url.'
     errors:
       command_input_invalid: 'Rechazado. La transacción no es válida: {details}'
@@ -3567,8 +3577,7 @@ errors:
       son contradictorias. Usa solo una de --quiet, --verbose o --debug.
     refused_cli_non_tty: Este comando necesita una entrada interactiva, pero la entrada
       estándar está redirigida. Ejecútalo en una terminal interactiva.
-    refused_cli_validation_boundary: La entrada del comando no superó la validación.
-      Ejecuta `aeat config repair` o restablece el estado del perfil.
+    refused_cli_validation_boundary: 'La entrada del comando no superó la validación. Compruebe los argumentos o ejecute `aeat --help`.'
     refused_config_reset_unconfirmed: El restablecimiento de la configuración no se
       confirmó. Vuelve a ejecutar el comando confirmando la operación.
     refused_diagnostic_model_invariant: 'Rechazado: invariante del modelo de diagnostico
