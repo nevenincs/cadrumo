@@ -45,6 +45,30 @@ def test_application_package_reexports_supported_bundle_schema_versions() -> Non
     assert supported, "supported bundle schema version set must not be empty"
 
 
+def test_application_package_reexports_rename_orchestration() -> None:
+    """`rename_profile` is the top-level coordinator for the cross-store relabel."""
+    import aeat.application.user_profile as package
+
+    assert "rename_profile" in package.__all__
+    assert callable(package.rename_profile)
+
+
+def test_application_package_reexports_delete_orchestration() -> None:
+    """`delete_profile_with_lifecycle_span` is the top-level soft-tombstone coordinator."""
+    import aeat.application.user_profile as package
+
+    assert "delete_profile_with_lifecycle_span" in package.__all__
+    assert callable(package.delete_profile_with_lifecycle_span)
+
+
+def test_application_package_reexports_bucket_directory_removal() -> None:
+    """`remove_profile_bucket_directory` is the top-level hard-erase primitive."""
+    import aeat.application.user_profile as package
+
+    assert "remove_profile_bucket_directory" in package.__all__
+    assert callable(package.remove_profile_bucket_directory)
+
+
 def test_domain_package_reexports_portable_export_record() -> None:
     """`aeat.domain.user_profile` exposes the portable-export domain record."""
     import aeat.domain.user_profile as package
