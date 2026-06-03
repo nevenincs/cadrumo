@@ -38,3 +38,7 @@ Status: PASS. Reviewed `W02.P02.S06` against the export evidence ADR and workboo
 ## S07-REVIEW-001 | PASS | Offline workbook renders protected evidence tab from the shared plan
 
 Status: PASS. Reviewed `W02.P02.S07` against the export evidence ADR and workbook parity ADR. The offline openpyxl materializer lives beside `SheetExportPlan`, preserves value cells, formula cells, row-set headers, guide metadata, and renders `SheetExportPlan.evidence` into a fixed protected `Evidencia` tab. The implementation does not create a modelo-specific schema path and keeps sidecar emission/reconstitution for S08/S10. Tests serialize a real XLSX payload, load it back through openpyxl, and assert the evidence contributor and manual-basis rows survive with exact string decimal values. No Critical or High issues found.
+
+## S08-REVIEW-001 | PASS | Offline export emits hash-bound machine-readable evidence sidecar
+
+Status: PASS. Reviewed `W02.P02.S08` against the export evidence ADR. The offline export result now carries XLSX bytes plus canonical JSON evidence sidecar bytes generated from `SheetExportPlan.metadata` and the typed `SheetExportPlan.evidence` facet. The sidecar includes a schema version and the actual workbook SHA-256, so it is bound to the workbook artefact rather than a parallel unverified dump. Tests parse the sidecar JSON and verify media types, payload hashes, metadata, contributor rows, and manual basis entries. No Critical or High issues found.

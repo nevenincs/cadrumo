@@ -48,10 +48,20 @@ from ._records import (
     TabName,
 )
 from ._translator import TranslationError, translate_formula
-from ._workbook_export import build_offline_workbook, serialize_offline_workbook
+from ._workbook_export import (
+    OfflineWorkbookEvidenceSidecar,
+    OfflineWorkbookExportResult,
+    build_evidence_sidecar,
+    build_offline_workbook,
+    serialize_evidence_sidecar,
+    serialize_offline_export,
+    serialize_offline_workbook,
+)
 
 __all__ = [
     "BracketRanges",
+    "OfflineWorkbookEvidenceSidecar",
+    "OfflineWorkbookExportResult",
     "OperatorInput",
     "OperatorInputs",
     "ParameterCell",
@@ -76,11 +86,14 @@ __all__ = [
     "SheetValueCell",
     "TabName",
     "TranslationError",
+    "build_evidence_sidecar",
     "build_export_plan",
     "build_offline_workbook",
     "collect_row_sets",
     "plan_layout",
     "registry_sha",
+    "serialize_evidence_sidecar",
+    "serialize_offline_export",
     "serialize_offline_workbook",
     "translate_formula",
 ]

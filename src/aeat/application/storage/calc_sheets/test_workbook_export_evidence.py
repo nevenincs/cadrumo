@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 from datetime import UTC, datetime
 from decimal import Decimal
 from io import BytesIO
@@ -21,7 +23,7 @@ from ._records import (
     SheetValueCell,
     TabName,
 )
-from ._workbook_export import serialize_offline_workbook
+from ._workbook_export import serialize_offline_export, serialize_offline_workbook
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -38,8 +40,8 @@ def _metadata() -> SheetExportMetadata:
     )
 
 
-def test_offline_workbook_renders_evidencia_tab_from_plan_evidence() -> None:
-    plan = SheetExportPlan(
+def _evidence_plan() -> SheetExportPlan:
+    return SheetExportPlan(
         metadata=_metadata(),
         value_cells=(
             SheetValueCell(
@@ -90,6 +92,9 @@ def test_offline_workbook_renders_evidencia_tab_from_plan_evidence() -> None:
         ),
     )
 
+def test_offline_workbook_renders_evidencia_tab_from_plan_evidence() -> None:
+    plan = _evidence_plan()
+
     payload = serialize_offline_workbook(plan)
     workbook = load_workbook(BytesIO(payload), data_only=False)
 
@@ -114,3 +119,24 @@ def test_offline_workbook_renders_evidencia_tab_from_plan_evidence() -> None:
     assert evidencia["K5"].value == "casilla_input"
     assert evidencia["L5"].value == "operator supplied accounting result"
     assert evidencia.protection.sheet is True
+
+
+def test_offline_export_emits_machine_readable_evidence_sidecar() -> None:
+    plan = _evidence_plan()
+
+    export = serialize_offline_export(plan)
+    sidecar = json.loads(export.evidence_sidecar_payload.decode("utf-8"))
+
+    assert export.workbook_media_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    assert export.evidence_sidecar_media_type == "application/json"
+    assert export.workbook_sha256 == hashlib.sha256(export.workbook_payload).hexdigest()
+    assert export.evidence_sidecar_sha256 == hashlib.sha256(export.evidence_sidecar_payload).hexdigest()
+    assert sidecar["schema_version"] == "calc-sheets-evidence-sidecar/v1"
+    assert sidecar["workbook_sha256"] == export.workbook_sha256
+    assert sidecar["metadata"]["modelo_id"] == "303"
+    assert sidecar["metadata"]["revision_id"] == "2009-y-siguientes"
+    assert sidecar["metadata"]["registry_sha"] == "abcd1234"
+    assert sidecar["evidence"]["snapshot_fingerprint"] == "f" * 64
+    assert sidecar["evidence"]["contributor_rows"][0]["transaction_id"] == "tx-001"
+    assert sidecar["evidence"]["contributor_rows"][0]["amount"] == "-121.00"
+    assert sidecar["evidence"]["manual_entries"][0]["kind"] == "casilla_input"
