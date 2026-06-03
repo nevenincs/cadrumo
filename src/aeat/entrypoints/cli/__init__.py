@@ -173,24 +173,29 @@ def _root(
         from ...core._bucket_pointer_io import resolve_active_bucket_id
         from ._root_landing import render_cli_root_landing_lines
 
+        from ...adapters.persistence.storage import has_active_bucket_session
+
         active = resolve_active_bucket_id()
         landing = build_root_landing_report(active)
-        if active is None:
-            # Bare invocation with no active profile: render the
-            # landing card (which names `profile create` as the next
-            # action) and exit. Reading the workflow state here would
-            # require an active session the operator has not yet
-            # established — the F1 / F2 deadlock the disaster ADR
-            # closes. Skip importing workflow and overview so bare
-            # invocation remains registry-free.
+        if active is None or not has_active_bucket_session():
+            # Bare invocation with no active profile OR no open
+            # session: render the landing card and exit. Per
+            # `2026-06-03-bare-invocation-bucket-session-gate-adr`
+            # bare invocation is a metadata-emitting introspection
+            # surface analogous to --help/--version and MUST NOT
+            # require an active bucket session. Reading
+            # workflow_state would force session-open against the
+            # encrypted bucket, breaking the cold-start /
+            # session-closed-but-profile-exists path.
             typed_landing = RootStatusResult.model_validate(landing.model_dump(mode="json"))
             _emit_envelope(
                 ctx, command="root.status", result=typed_landing, lines=render_cli_root_landing_lines(landing)
             )
             raise typer.Exit()
-        # An active profile exists: import and render the full overview.
-        # These imports pull the registry, but are now deferred until
-        # a verb that actually needs them is invoked.
+        # An active profile resolves AND a session is already open:
+        # render the full overview. These imports pull the registry,
+        # but are deferred until a verb that actually needs them is
+        # invoked.
         from ...application.overview import build_overview_status_report
         from ...application.workflow import workflow_state_repository
 

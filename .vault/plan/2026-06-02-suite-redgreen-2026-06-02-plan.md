@@ -115,9 +115,9 @@ Fix the prior-filing-history and prior-year-history wallet decision injection so
 
 Restore encryption-at-rest for filing history + attachments manifest so plaintext does not appear in SQLite bytes
 
-- [ ] `P03.S07` - Audit attachment manifest field encryption; `Restore EncryptedString or equivalent on Justificante.source_pdf_sha256 et al so the hex digest does not appear in raw SQLite bytes`.
-- [ ] `P03.S08` - Restore filing_history TestClassificationGate encryption; `test_database_payload_is_encrypted_audit_data — re-enable column-level encryption for AUDIT classification rows`.
-- [ ] `P03.S09` - Verify storage encryption suite; `test_blob_and_manifest_round_trip_without_plaintext_files + test_database_payload_is_encrypted_audit_data`.
+- [x] `P03.S07` - Audit attachment manifest field encryption; `Restore EncryptedString or equivalent on Justificante.source_pdf_sha256 et al so the hex digest does not appear in raw SQLite bytes`.
+- [x] `P03.S08` - Restore filing_history TestClassificationGate encryption; `test_database_payload_is_encrypted_audit_data — re-enable column-level encryption for AUDIT classification rows`.
+- [x] `P03.S09` - Verify storage encryption suite; `test_blob_and_manifest_round_trip_without_plaintext_files + test_database_payload_is_encrypted_audit_data`.
 
 ### Phase `P04` - Registry parity + coverage
 
