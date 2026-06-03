@@ -166,3 +166,34 @@ def test_config_profile_verb_accepts_output_language(verb: str) -> None:
     lacked ``--output-language`` now accepts it for parity with the rest
     of the config noun-group."""
     _assert_output_language_registered(["config", "profile", verb])
+
+
+# ---------------------------------------------------------------------------
+# W13.P66.S403 — sub-noun-group parity sweep
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["config", "auth", "diagnostics", "list"],
+        ["config", "auth", "diagnostics", "show"],
+        ["config", "auth", "diagnostics", "report"],
+        ["config", "auth", "apoderado", "scopes", "list"],
+        ["config", "auth", "apoderado", "status"],
+        ["config", "auth", "apoderado", "configure"],
+        ["config", "auth", "apoderado", "clear"],
+        ["config", "auth", "apoderado", "check"],
+        ["config", "bucket", "history"],
+        ["app", "ledger", "ratios", "list"],
+        ["app", "ledger", "ratios", "set"],
+        ["app", "ledger", "ratios", "unset"],
+        ["app", "ledger", "ratios", "eligible"],
+        ["app", "ledger", "ratios", "validate"],
+    ],
+)
+def test_sub_noun_group_verb_accepts_output_language(argv: list[str]) -> None:
+    """W13.P66.S403 closure: every CLI sub-noun-group verb under
+    auth_diagnostics, apoderado, bucket, and ledger ratios accepts
+    ``--output-language`` for parity with the top-level config verbs."""
+    _assert_output_language_registered(argv)

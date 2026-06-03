@@ -802,7 +802,7 @@ Quantify gaps surfaced during the 2026-06-03 lint-zero session that did not have
 
 Capture concrete follow-up Steps from items the lint-zero session surfaced but did not (and could not) close in-flight.
 
-- [ ] `W13.P66.S403` - Extend test_output_language_parity.py to sweep every CLI sub-noun-group (auth_diagnostics, auth_apoderado, repair, bucket, ratios) — W09.P45.S232 closed the 9 config profile verbs only; `src/aeat/entrypoints/cli/test_output_language_parity.py`.
+- [x] `W13.P66.S403` - Extend test_output_language_parity.py to sweep every CLI sub-noun-group (auth_diagnostics, auth_apoderado, repair, bucket, ratios) — W09.P45.S232 closed the 9 config profile verbs only; `src/aeat/entrypoints/cli/test_output_language_parity.py`.
 - [x] `W13.P66.S404` - Add .gitattributes mapping py/yml/md/toml to LF normalisation so peer commits stop introducing CRLF on Windows worktrees; `every session's commit logs were noise-cluttered with 'CRLF will be replaced by LF' warnings; `.gitattributes`.
 - [ ] `W13.P66.S405` - Sweep aggregation + binding pipelines for other dual-helper duplications similar to S159 business-proportion + S200 decimal-binding-value; `specifically look for ledger_period_for_modelo_readiness vs deadline window converters and any sibling iva/renta proportion lookups; `src/aeat/application/aggregation src/aeat/application/modelo`.
 - [ ] `W13.P66.S406` - Audit peer-WIP collision protocol — the lint-zero session encountered 3+ peer-WIP collisions on core.errors NoActiveProfileError + diagnostics.py refactor + secure-storage event records; `the abort-on-WIP rule applied but the operator-facing test failure was opaque ('AeatError subclass missing ErrorCode registry entry'); needs a clearer refusal-pattern audit; `.vault/audit/`.
