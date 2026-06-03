@@ -52,7 +52,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_vali
 from ..calculations.registry import CasillaObservation
 from ._errors import ModeloValidationError
 from ._ids import CalculationRevisionId, WorkUnitId
-from ._ledger_filing_snapshot import LedgerFilingSnapshot
+from ._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
 from ._row_models import ModeloDetailRow
 
 
@@ -280,6 +280,15 @@ class CalculationRevision(BaseModel):
     # into ``derive_calculation_revision_id`` so the content-addressed id is
     # unaffected. A non-ledger modelo carries an empty-but-valid snapshot.
     ledger_filing_snapshot: LedgerFilingSnapshot | None = None
+    # Bundled fact basis behind a ledger-derived revision (per the
+    # modelo-export-evidence-parity ADR): the typed contributing-row evidence
+    # projections plus operator manual fact-basis entries, pegged to the
+    # snapshot's ``snapshot_fingerprint``. Where ``ledger_filing_snapshot`` proves
+    # *whether* the ledger drifted, this carries *what the ledger said* so the
+    # fact basis can be reconstituted and exported as filing evidence. Captured at
+    # verify/file time; ``None`` for legacy revisions. Deliberately NOT threaded
+    # into ``derive_calculation_revision_id``.
+    ledger_filing_evidence: LedgerFilingEvidence | None = None
     # Operator-supplied detail rows for informational modelos whose
     # content is a list of repeating records rather than scalar casilla
     # values (M184 atribución members, M232 operaciones vinculadas,
