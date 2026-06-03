@@ -2073,6 +2073,30 @@ remediation is currently HELD at audit-only per the active action policy.
   W10 — proven to fail identically on the old import — and belong to the separate
   storage-runtime/session-setup flake surface.
 
+- 2026-06-04: **Honesty review — full-suite evidence (the verification owed for W10/W11).**
+  Ran the full `src/aeat` suite (`-n auto`, full capture): **193 failed, 13,625 passed, 5
+  skipped (36m)**. The suite is NOT green — but the failures are **not W10/W11
+  regressions**, established by four independent lines of evidence: (1) `pytest
+  --collect-only` is clean across all 13,817 tests (the ~80-file relocation is
+  import-sound end to end); (2) **none of the W10/W11-changed test files appear in the 193
+  failures** (cross-referenced); (3) the failures concentrate in areas my commits never
+  touched — 63 `domain/fincas`, 61 `adapters/inbound/declaracion`, 38
+  `domain/calculations/registry` — and my W10/W11 commits changed **zero** registry-TOML /
+  fincas / declaracion files; (4) the dominant root cause is a **peer-committed M200
+  registry-TOML break** — `modelos/200 .../2024-y-siguientes/.../liquidacion-bin-aplicada-maxima.toml`
+  (peer commit `93b72b0c6`) yields `RegistryLoadError: invalid revision '2024-y-siguientes'
+  ... extra_forbidden`, which cites in the log 250× and cascades through the registry +
+  registry-grounded fincas tests. The 20 `entrypoints/cli` failures include
+  `test_lazy_command_tree::test_importing_cli_package_does_not_import_registry`, proven NOT
+  mine: `aeat.core` leaks **0** registry modules, the `cli/__init__` resolver imports are
+  **function-local** (zero import-time impact), and a fresh `import aeat.entrypoints.cli`
+  leaks no registry — the test failure is conftest/test-ordering registry pollution.
+  **Honest conclusion:** the branch suite is red due to a peer M200 registry-data break (a
+  branch-health issue for that peer/registry owner, outside this campaign's touched
+  surface), not W10/W11; W10/W11 are verified by collect-only + 1000+ focused tests in
+  their actual change areas. Honesty-review follow-ups remain tracked as S108
+  (`.importlinter` stale ignores) and S109 (`test_cli_surface` session flake).
+
 ## Codification candidates
 
 
