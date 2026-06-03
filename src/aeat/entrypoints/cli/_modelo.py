@@ -96,7 +96,7 @@ from ._common import _parse_iso_date, _profile_to_taxpayer, activate_subcommand_
 _log = get_logger(__name__)
 
 if TYPE_CHECKING:
-    from ...application.modelo._reconcile import ModeloReconciliationReport
+    from ...application.modelo import ModeloReconciliationReport
     from ...domain.calculations.registry import CasillaObservation, ModeloDefinition, ModeloRevision
     from ._modelo_payloads import (
         CalculationRevisionPayload,
@@ -608,7 +608,7 @@ def _profile_resolved_binding_ids(report: _BindingReportLike) -> frozenset[str]:
     filing_year = getattr(report, "filing_year", None)
     if filing_year is None:
         return frozenset()
-    from ...application.modelo._binding_readiness import profile_resolvable_binding_ids
+    from ...application.modelo import profile_resolvable_binding_ids
     from ...domain.user_profile import ProfileNotFoundError
 
     try:
@@ -4806,7 +4806,7 @@ def modelo_reconcile_verb(
     returns the verdict. The verb is local-only per the app-modelo-shape
     ADR amendment.
     """
-    from ...application.modelo._reconcile import (
+    from ...application.modelo import (
         ModeloReconciliationCommand,
         ModeloReconciliationSourceKind,
         modelo_reconcile,
@@ -4882,7 +4882,7 @@ def modelo_reconcile_from_justificante_verb(
     ],
 ) -> None:
     """Reconcile a work unit against the supplied justificante PDF."""
-    from ...application.modelo._reconcile import (
+    from ...application.modelo import (
         ModeloReconciliationCommand,
         ModeloReconciliationSourceKind,
         modelo_reconcile,
@@ -4955,7 +4955,7 @@ def modelo_export_verb(
 ) -> None:
     """Export a verified-complete or filed modelo revision to disk."""
     from ...application.modelo import ModeloIvaWalletReconciliationBlocked
-    from ...application.modelo._export import (
+    from ...application.modelo import (
         ModeloExportCommand,
         ModeloExportCrossBucketRefusedError,
         ModeloExportNoActiveBucketError,
@@ -5269,7 +5269,7 @@ def modelo_project(
     # > profile fact > verb baseline. ``caller_binding_ids`` covers the
     # caller layer only so the profile resolver still overrides the
     # baseline.
-    from ...application.modelo._profile_binding import resolve_profile_sourced_bindings
+    from ...application.modelo import resolve_profile_sourced_bindings
     from ...core import resolve_active_bucket_id as _resolve_active_bucket_id
 
     _bucket_for_profile = _resolve_active_bucket_id()
