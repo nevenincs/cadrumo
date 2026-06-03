@@ -2,17 +2,23 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from io import BytesIO
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from openpyxl import Workbook
 from openpyxl.comments import Comment
+from pydantic import BaseModel, Field
 
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ._records import (
     SheetEvidenceContributorRow,
+    SheetEvidenceFacet,
     SheetEvidenceManualEntry,
+    SheetExportMetadata,
     SheetExportPlan,
     SheetFormulaCell,
     SheetRowSet,
@@ -23,6 +29,12 @@ from ._records import (
 if TYPE_CHECKING:
     from openpyxl.worksheet.worksheet import Worksheet
 
+
+_EVIDENCE_SIDECAR_SCHEMA_VERSION: Literal["calc-sheets-evidence-sidecar/v1"] = "calc-sheets-evidence-sidecar/v1"
+_XLSX_MEDIA_TYPE: Literal["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"] = (
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
+_JSON_MEDIA_TYPE: Literal["application/json"] = "application/json"
 
 _EVIDENCE_HEADERS: tuple[str, ...] = (
     "Tipo",
@@ -44,6 +56,32 @@ _EVIDENCE_HEADERS: tuple[str, ...] = (
 )
 
 
+class OfflineWorkbookEvidenceSidecar(BaseModel):
+    """Machine-readable evidence sidecar emitted beside an offline workbook."""
+
+    model_config = _STRICT_FROZEN
+
+    schema_version: Literal["calc-sheets-evidence-sidecar/v1"] = _EVIDENCE_SIDECAR_SCHEMA_VERSION
+    metadata: SheetExportMetadata
+    workbook_sha256: str = Field(min_length=64, max_length=64)
+    evidence: SheetEvidenceFacet
+
+
+class OfflineWorkbookExportResult(BaseModel):
+    """Serialized offline workbook plus its machine-readable evidence sidecar."""
+
+    model_config = _STRICT_FROZEN
+
+    workbook_payload: bytes
+    workbook_media_type: Literal["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"] = _XLSX_MEDIA_TYPE
+    workbook_filename_extension: Literal["xlsx"] = "xlsx"
+    workbook_sha256: str = Field(min_length=64, max_length=64)
+    evidence_sidecar_payload: bytes
+    evidence_sidecar_media_type: Literal["application/json"] = _JSON_MEDIA_TYPE
+    evidence_sidecar_filename_extension: Literal["evidence.json"] = "evidence.json"
+    evidence_sidecar_sha256: str = Field(min_length=64, max_length=64)
+
+
 def build_offline_workbook(plan: SheetExportPlan) -> Workbook:
     """Materialise a ``SheetExportPlan`` as an offline openpyxl workbook."""
     workbook = Workbook()
@@ -61,12 +99,46 @@ def build_offline_workbook(plan: SheetExportPlan) -> Workbook:
     return workbook
 
 
+def build_evidence_sidecar(
+    plan: SheetExportPlan,
+    *,
+    workbook_sha256: str,
+) -> OfflineWorkbookEvidenceSidecar:
+    """Build the machine-readable evidence sidecar for one workbook export."""
+    return OfflineWorkbookEvidenceSidecar(
+        metadata=plan.metadata,
+        workbook_sha256=workbook_sha256,
+        evidence=plan.evidence,
+    )
+
+
+def serialize_evidence_sidecar(sidecar: OfflineWorkbookEvidenceSidecar) -> bytes:
+    """Serialize an evidence sidecar as canonical UTF-8 JSON bytes."""
+    payload = sidecar.model_dump(mode="json")
+    text = json.dumps(payload, ensure_ascii=True, sort_keys=True, separators=(",", ":"))
+    return text.encode("utf-8")
+
+
 def serialize_offline_workbook(plan: SheetExportPlan) -> bytes:
     """Serialize an offline workbook plan to XLSX bytes."""
     workbook = build_offline_workbook(plan)
     buffer = BytesIO()
     workbook.save(buffer)
     return buffer.getvalue()
+
+
+def serialize_offline_export(plan: SheetExportPlan) -> OfflineWorkbookExportResult:
+    """Serialize an offline workbook and its adjacent evidence sidecar."""
+    workbook_payload = serialize_offline_workbook(plan)
+    workbook_sha256 = _sha256(workbook_payload)
+    sidecar = build_evidence_sidecar(plan, workbook_sha256=workbook_sha256)
+    evidence_sidecar_payload = serialize_evidence_sidecar(sidecar)
+    return OfflineWorkbookExportResult(
+        workbook_payload=workbook_payload,
+        workbook_sha256=workbook_sha256,
+        evidence_sidecar_payload=evidence_sidecar_payload,
+        evidence_sidecar_sha256=_sha256(evidence_sidecar_payload),
+    )
 
 
 def _write_value_cells(workbook: Workbook, cells: Iterable[SheetValueCell]) -> None:
@@ -201,7 +273,16 @@ def _join(values: tuple[str, ...]) -> str:
     return ";".join(values)
 
 
+def _sha256(payload: bytes) -> str:
+    return hashlib.sha256(payload).hexdigest()
+
+
 __all__ = [
+    "OfflineWorkbookEvidenceSidecar",
+    "OfflineWorkbookExportResult",
+    "build_evidence_sidecar",
     "build_offline_workbook",
+    "serialize_evidence_sidecar",
+    "serialize_offline_export",
     "serialize_offline_workbook",
 ]
