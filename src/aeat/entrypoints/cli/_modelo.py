@@ -915,11 +915,11 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
         # splat matches each row dataclass's fields after decimal coercion at the parse
         # boundary. type: ignore[arg-type] documents the splat-to-field-types narrowing.
         if row_type == "miembro":
-            return Modelo184MemberRow(row_type="miembro", **kv_pairs)  # type: ignore[arg-type]
+            return Modelo184MemberRow(row_type="miembro", **kv_pairs)  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-MODELO-ROW-SPLAT
         elif row_type == "vinculada":
-            return Modelo232VinculadaRow(row_type="vinculada", **kv_pairs)  # type: ignore[arg-type]
+            return Modelo232VinculadaRow(row_type="vinculada", **kv_pairs)  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-MODELO-ROW-SPLAT
         elif row_type == "operador":
-            row_m349 = Modelo349OperadorRow(row_type="operador", **kv_pairs)  # type: ignore[arg-type]
+            row_m349 = Modelo349OperadorRow(row_type="operador", **kv_pairs)  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-MODELO-ROW-SPLAT
             # NIF format check is advisory at parse time — invalid format raises BadParameter.
             nif = str(kv_pairs.get("nif_comunitario", ""))
             pais = str(kv_pairs.get("codigo_pais", ""))
@@ -939,7 +939,7 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
             return row_m349
         else:
             # Same splat-to-field-types narrowing rationale as the rows above.
-            return Modelo347ContraparteRow(row_type="contraparte", **kv_pairs)  # type: ignore[arg-type]
+            return Modelo347ContraparteRow(row_type="contraparte", **kv_pairs)  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-MODELO-ROW-SPLAT
     except typer.BadParameter:
         raise
     except (ValidationError, TypeError, ValueError, ArithmeticError) as exc:
