@@ -20,6 +20,7 @@ Closed `AFR-069` for the master-key package facade.
 - Confirmed the facade does not acquire key material, activate providers, resolve settings, read environment variables, call keyring, open files, open SQL routes, or write recovery/master-key artifacts.
 - Recorded that implementation-bearing behavior remains assigned to the subsequent master-key rows.
 - Validated scoped master-key error-envelope tests and ruff.
+- Closed `S171` through `vaultspec-core vault plan step check` and updated `AFR-069` to closed.
 
 ## Outcome
 
@@ -29,6 +30,7 @@ Validation passed:
 
 - `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/master_key/test_master_key_errors.py src/aeat/adapters/persistence/storage/master_key/test_cluster_envelopes.py`
 - `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/master_key/__init__.py src/aeat/adapters/persistence/storage/master_key/test_master_key_errors.py src/aeat/adapters/persistence/storage/master_key/test_cluster_envelopes.py`
+- `uv run --no-sync -q python -m aeat.locales audit`
 - Touched-surface hygiene scan found no direct environment access, settings construction, key acquisition calls, keyring calls, file I/O calls, broad exception suppressions, fake/stub/monkeypatch markers, skipped/xfail tests, or direct output.
 
 ## Notes
