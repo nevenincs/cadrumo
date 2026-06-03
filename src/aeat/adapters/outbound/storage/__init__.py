@@ -1,10 +1,10 @@
-"""Storage provider abstraction — public surface.
+"""Storage provider abstraction public surface.
 
-Exports the `StorageProvider` Protocol, the four pydantic records that
-cross the provider boundary, the `ProviderKind` enum, and the typed
-`OutboundStorageError` hierarchy. Concrete backends (`_local.py`,
-`_google_drive.py`, `_testing.py`) and the `_factory.py` are not
-re-exported; consumers depend on the Protocol surface and the records.
+Exports the `StorageProvider` Protocol, provider boundary records, the
+`ProviderKind` enum, remote mirror manifest helpers, the
+`get_storage_provider` factory, and the typed `OutboundStorageError`
+hierarchy. Concrete backend classes remain private implementation details;
+consumers depend on the Protocol, records, manifest helpers, and factory.
 """
 
 from __future__ import annotations
