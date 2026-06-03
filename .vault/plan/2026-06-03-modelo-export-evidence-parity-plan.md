@@ -169,7 +169,7 @@ The online Sheets export renders formatting + start/final + Evidencia identicall
 
 Online renders identically; evidence-identical assertion; live push deferred to follow-up.
 
-- [ ] `W05.P06.S22` - Sheets apply renders number formats + start/final + Evidencia identically to the offline xls; `src/aeat/adapters/outbound/google/_calc_sheets_apply.py`.
+- [x] `W05.P06.S22` - Sheets apply renders number formats + start/final + Evidencia identically to the offline xls; `src/aeat/adapters/outbound/google/_calc_sheets_apply.py`.
 - [x] `W05.P06.S23` - Offline/online evidence-identical assertion (same revision -> byte-equal evidence surface); `src/aeat/adapters/outbound/google/`.
 - [x] `W05.P06.S24` - Reference the live network push to the ledger-google-live-export follow-up plan (no live write here); `src/aeat/application/storage/calc_sheets/`.
 

@@ -384,6 +384,54 @@ def _build_evidence_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
     return data
 
 
+_NUMBER_FORMAT_TYPE: Final[Mapping[str, str]] = {
+    "money": "NUMBER",
+    "integer": "NUMBER",
+    "percentage": "PERCENT",
+}
+
+
+def _build_number_format_requests(
+    plan: SheetExportPlan,
+    *,
+    sheet_id_by_tab: Mapping[str, int],
+) -> list[dict[str, Any]]:
+    """Apply each numeric casilla's display format, mirroring the offline workbook.
+
+    Money/integer cells render as NUMBER with the casilla's pattern; ratio cells
+    as PERCENT — so the online Sheet shows the same money/percentage presentation
+    as the offline xls and the official AEAT workbook.
+    """
+    requests: list[dict[str, Any]] = []
+    for number_format in plan.number_formats:
+        sheet_id = sheet_id_by_tab.get(number_format.address.tab.value)
+        if sheet_id is None:
+            continue
+        requests.append(
+            {
+                "repeatCell": {
+                    "range": {
+                        "sheetId": sheet_id,
+                        "startRowIndex": number_format.address.row - 1,
+                        "endRowIndex": number_format.address.row,
+                        "startColumnIndex": number_format.address.column - 1,
+                        "endColumnIndex": number_format.address.column,
+                    },
+                    "cell": {
+                        "userEnteredFormat": {
+                            "numberFormat": {
+                                "type": _NUMBER_FORMAT_TYPE[number_format.data_type],
+                                "pattern": number_format.pattern,
+                            }
+                        }
+                    },
+                    "fields": "userEnteredFormat.numberFormat",
+                }
+            }
+        )
+    return requests
+
+
 def _build_emphasis_format_requests(
     plan: SheetExportPlan,
     *,
@@ -1016,6 +1064,7 @@ def apply_export_plan(
         sheet_id_by_tab=sheet_id_by_tab,
     )
     emphasis_requests = _build_emphasis_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+    number_format_requests = _build_number_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
     structural_requests = (
         cleanup_requests
         + metadata_requests
@@ -1023,6 +1072,7 @@ def apply_export_plan(
         + constraint_requests
         + note_requests
         + emphasis_requests
+        + number_format_requests
     )
     if structural_requests:
         execute_request(
