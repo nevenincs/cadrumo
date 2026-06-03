@@ -50,6 +50,12 @@ def test_rejects_unknown_keys() -> None:
         )
 
 
+def test_header_is_frozen() -> None:
+    header = _header()
+    with pytest.raises((ValidationError, TypeError), match=r"frozen|Instance is frozen|attribute"):
+        header.archive_schema_version = 2
+
+
 def test_rejects_missing_digest() -> None:
     with pytest.raises(ValidationError):
         ExportArchiveHeader.model_validate(
@@ -77,6 +83,19 @@ def test_rejects_uppercase_digest() -> None:
         _header(manifest_digest=_digest().upper())
 
 
+@pytest.mark.parametrize(
+    "manifest_digest",
+    (
+        "+" + ("a" * 63),
+        " " + ("a" * 63),
+        ("a" * 63) + "\n",
+    ),
+)
+def test_rejects_sign_or_whitespace_digest_spellings(manifest_digest: str) -> None:
+    with pytest.raises(ValidationError):
+        _header(manifest_digest=manifest_digest)
+
+
 def test_rejects_empty_bucket_id() -> None:
     with pytest.raises(ValidationError):
         _header(bucket_id="")
@@ -85,6 +104,16 @@ def test_rejects_empty_bucket_id() -> None:
 def test_rejects_non_positive_archive_schema_version() -> None:
     with pytest.raises(ValidationError):
         _header(archive_schema_version=0)
+
+
+def test_rejects_coerced_archive_schema_version() -> None:
+    with pytest.raises(ValidationError):
+        _header(archive_schema_version="1")
+
+
+def test_rejects_coerced_recovery_wrap_flag() -> None:
+    with pytest.raises(ValidationError):
+        _header(recovery_wrap_present=1)
 
 
 def test_rejects_naive_created_at() -> None:
