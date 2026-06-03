@@ -227,6 +227,10 @@ def previous_filing_observation_requirements(
 
     Args:
         revision: The :class:`ModeloRevision` whose previous-filing bindings to inspect.
+        filing_year: Target filing year; combined with each binding selector's
+            ``filing_year_delta`` to derive the required prior-filing year.
+        period: Target period token (e.g. ``"1T"``) that anchors which prior
+            periods each binding selector requires.
     """
     grouped: dict[tuple[str, int, str], dict[str, set[str]]] = {}
     for binding in revision.bindings:
@@ -267,6 +271,12 @@ def resolve_previous_filing_binding_values(
 
     Args:
         revision: The :class:`ModeloRevision` whose previous-filing bindings to resolve.
+        observations: Observed prior-filing :class:`RegistryModeloObservation`
+            rows the bindings sum / select from.
+        filing_year: Target filing year; combined with each binding's
+            ``filing_year_delta`` to derive the expected prior-filing year.
+        period: Target period token whose required prior anchors drive
+            observation matching.
     """
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
@@ -854,6 +864,8 @@ def resolve_invoice_binding_row_values(
 
     Args:
         revision: The :class:`ModeloRevision` whose row-producer bindings to resolve.
+        observations: Typed :class:`InvoiceObservation` rows the row-producer
+            bindings group, filter, and aggregate into indexed row values.
     """
     available = tuple(observations)
     resolved: dict[tuple[str, int], Decimal | str] = {}
@@ -1580,6 +1592,8 @@ def resolve_ledger_renta_expense_aggregation_binding_values(
 
     Args:
         revision: The :class:`ModeloRevision` whose renta-expense bindings to resolve.
+        observations: Typed renta-expense observations the bindings aggregate
+            via their declared ``selector.fact`` and ``aggregation.op``.
     """
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
@@ -1926,6 +1940,8 @@ def resolve_counterpart_binding_values(
 
     Args:
         revision: The :class:`ModeloRevision` whose counterpart bindings to resolve.
+        observations: Typed counterpart aggregation observations the bindings
+            filter by selector and aggregate into scalar Decimal values.
     """
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
@@ -2158,6 +2174,8 @@ def resolve_withholding_binding_values(
 
     Args:
         revision: The :class:`ModeloRevision` whose withholding bindings to resolve.
+        observations: Typed :class:`WithholdingObservation` rows the bindings
+            filter by ``clave`` and aggregate into scalar Decimal values.
     """
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
@@ -2363,6 +2381,8 @@ def resolve_related_party_binding_row_values(
 
     Args:
         revision: The :class:`ModeloRevision` whose related-party bindings to resolve.
+        observations: Typed :class:`RelatedPartyOperationObservation` rows the
+            row-producer bindings group into per-row indexed values.
     """
     available = tuple(observations)
     members: list[tuple[DataBindingDefinition, _RelatedPartySelector]] = []
