@@ -43,3 +43,11 @@ load suite, and ruff on the touched reviewability test file. The committed
 modelo corpus remains below the new 1,500-line and 600-character hard caps, and
 the registry still loads after the gate tightening. No Critical or High issues
 found.
+
+## REVIEWABILITY-GATE-004 | PASS | S38 identifies the validator baseline failure without weakening it
+
+Reviewed `W04.P08.S38`. The audit records the failing validator-module
+reviewability check and keeps the 203-line baseline intact. The failing module
+is `_validate_relation_periods.py`, which the test reports at 240 `splitlines()`
+lines. The step does not modify production code or test thresholds. No Critical
+or High issues found.
