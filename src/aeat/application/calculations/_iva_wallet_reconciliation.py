@@ -45,7 +45,7 @@ from ..aggregation._source_mesh import (
 
 if TYPE_CHECKING:
     from ._binding_prefill import BindingPrefillReport
-    from ._observations_repository import CalculationObservationRepository
+    from ._observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 
 
 class IvaCompensationReconciliationReport(BaseModel):
@@ -106,9 +106,11 @@ def reconcile_modelo_303_iva_compensation(
     taxpayer_nif: str,
     wallet: IvaCompensationWalletObservationProtocol | None,
     repository: CalculationObservationRepository | None = None,
+    decision_repository: IvaWalletDecisionRepository | None = None,
     override: IvaCompensationOverride | None = None,
     decided_at: datetime | None = None,
     max_wallet_age_days: int = DEFAULT_MAX_WALLET_AGE_DAYS,
+    treat_absent_recurrence_as_first_period: bool = False,
     persist: bool = True,
 ) -> IvaCompensationReconciliationReport:
     """Resolve, compare, and optionally persist the Modelo 303 IVA wallet decision.
@@ -118,9 +120,18 @@ def reconcile_modelo_303_iva_compensation(
         taxpayer_nif: Taxpayer identifier expected to match live wallet evidence.
         wallet: Live AEAT wallet observation to reconcile, when available.
         repository: Optional observation repository used to read prior local recurrence.
+        decision_repository: Optional decision repository used to persist the resulting wallet authority.
         override: Explicit taxpayer override evidence, when the operator has resolved a divergence.
         decided_at: Decision timestamp override for deterministic replay and tests.
         max_wallet_age_days: Maximum accepted age for live wallet evidence.
+        treat_absent_recurrence_as_first_period: When ``True`` and there is no
+            live wallet and no prior local recurrence, treat the target as the
+            taxpayer's FIRST IVA period: casilla 110 is zero per LIVA art. 99.5
+            (no prior compensation balance can exist), yielding the non-blocking
+            ``first_period_zero`` decision instead of the ``missing`` block. The
+            caller asserts first-period status (e.g. the calculate path verifies
+            no prior 303 compensation history exists). It NEVER fabricates a
+            non-zero balance: a present recurrence still flows through normally.
         persist: Whether to store the resulting decision for later calculation replay.
 
     The local side is not recomputed here. It is read through the same
@@ -144,24 +155,42 @@ def reconcile_modelo_303_iva_compensation(
     from ._observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 
     repo = repository if repository is not None else CalculationObservationRepository()
+    decision_repo = (
+        decision_repository
+        if decision_repository is not None
+        else IvaWalletDecisionRepository(objects=repo.secure_object_repository)
+    )
     recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
         snapshot,
         repository=repo,
         captured_at=decided_at,
     )
+    local_recurrence_amount = recurrence.amount if recurrence is not None else None
+    # First-period treatment: with no live wallet and no prior recurrence, the
+    # caller-asserted first IVA period has a legally-certain zero casilla 110
+    # (LIVA art. 99.5). Pass an explicit zero recurrence + the first-period flag
+    # so the decision is the non-blocking ``first_period_zero`` rather than the
+    # ``missing`` block. This NEVER overrides a real recurrence: only the
+    # genuinely-absent (None) case is mapped to zero.
+    is_first_iva_period = (
+        treat_absent_recurrence_as_first_period and wallet is None and local_recurrence_amount is None
+    )
+    if is_first_iva_period:
+        local_recurrence_amount = Decimal("0")
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=taxpayer_nif,
         target_year=snapshot.filing_year,
         target_period=snapshot.period,
         wallet=wallet,
-        local_recurrence_amount=recurrence.amount if recurrence is not None else None,
+        local_recurrence_amount=local_recurrence_amount,
         local_recurrence_source=local_recurrence_authority_source(recurrence),
         override=override,
         decided_at=decided_at,
         max_wallet_age_days=max_wallet_age_days,
+        is_first_iva_period=is_first_iva_period,
     )
     if persist:
-        IvaWalletDecisionRepository().save_decision(decision)
+        decision_repo.save_decision(decision)
     return IvaCompensationReconciliationReport(
         decision=decision,
         prefill_report=prefill_report,
