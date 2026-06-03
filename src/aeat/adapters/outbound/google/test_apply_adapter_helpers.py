@@ -17,6 +17,7 @@ Sheets API request bodies:
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Literal
 
@@ -25,9 +26,14 @@ import pytest
 from ....application.storage.calc_sheets import (
     SheetCellAddress,
     SheetCellConstraint,
+    SheetExportMetadata,
+    SheetExportPlan,
+    SheetGuideContent,
+    SheetProtectedRange,
     TabName,
 )
 from ._calc_sheets_apply import (
+    _build_structural_cleanup_requests,
     _coerce_cell_value,
     _condition_for_constraint,
     _input_message_for_constraint,
@@ -179,3 +185,85 @@ def test_input_message_renders_any_when_no_bounds() -> None:
     constraint = _make_constraint(sign="any", casilla="some.casilla")
     message = _input_message_for_constraint(constraint)
     assert "any" in message
+
+
+# ---------------------------------------------------------------------------
+# Structural cleanup before re-apply
+# ---------------------------------------------------------------------------
+
+
+def test_structural_cleanup_deletes_only_adapter_managed_metadata_and_protected_ranges() -> None:
+    """Re-applying a workbook must not accumulate duplicate AEAT structural state."""
+
+    protected = SheetProtectedRange(
+        tab=TabName.CALCULOS,
+        start_row=1,
+        end_row=12,
+        start_column=1,
+        end_column=4,
+        description="Cálculos derivados — protegido para preservar paridad",
+    )
+    plan = SheetExportPlan(
+        metadata=SheetExportMetadata(
+            modelo_id="130",
+            revision_id="2019-y-siguientes",
+            filing_year=2025,
+            period="1T",
+            engine_version="calc-sheets/0.1.0",
+            registry_sha="da9952e1610f7db6",
+            exported_at=datetime(2026, 6, 2, 17, 55, tzinfo=UTC),
+        ),
+        protected_ranges=(protected,),
+        guide=SheetGuideContent(title="Guide", paragraphs=("Line.",)),
+    )
+    spreadsheet = {
+        "developerMetadata": [
+            {"metadataId": 101, "metadataKey": "aeat_registry_sha", "metadataValue": "old"},
+            {"metadataId": 102, "metadataKey": "foreign_key", "metadataValue": "keep"},
+            {"metadataId": 103, "metadataKey": "aeat_relation:prior", "metadataValue": "old"},
+            {"metadataKey": "aeat_modelo_id", "metadataValue": "missing-id"},
+        ],
+        "sheets": [
+            {
+                "properties": {"title": "Cálculos"},
+                "protectedRanges": [
+                    {
+                        "protectedRangeId": 201,
+                        "description": protected.description,
+                    },
+                    {
+                        "protectedRangeId": 202,
+                        "description": "operator protected range",
+                    },
+                ],
+            }
+        ],
+    }
+
+    requests = _build_structural_cleanup_requests(spreadsheet, plan)
+
+    assert requests == [
+        {
+            "deleteDeveloperMetadata": {
+                "dataFilter": {
+                    "developerMetadataLookup": {
+                        "metadataId": 101,
+                    }
+                }
+            }
+        },
+        {
+            "deleteDeveloperMetadata": {
+                "dataFilter": {
+                    "developerMetadataLookup": {
+                        "metadataId": 103,
+                    }
+                }
+            }
+        },
+        {
+            "deleteProtectedRange": {
+                "protectedRangeId": 201,
+            }
+        },
+    ]

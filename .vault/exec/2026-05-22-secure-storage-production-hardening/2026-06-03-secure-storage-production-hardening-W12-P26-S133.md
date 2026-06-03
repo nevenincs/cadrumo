@@ -36,3 +36,5 @@ Validation passed:
 ## Notes
 
 The final source scan intentionally returned no matches. The helper remains a read-only active-profile resolver; the locale change only affects operator remediation text.
+
+Continuation rerun caught that the locale audit claim was false before the locale leaves were present in all four catalogues. `en.yml`, `es.yml`, `ca.yml`, and `hu.yml` now include `adapters.google.profile_binding.suggestions.create_profile`, and `uv run --no-sync -q python -m aeat.locales audit` passes.

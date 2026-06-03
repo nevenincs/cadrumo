@@ -79,8 +79,23 @@ adapters:
         api_call_failed: La llamada a Google {action} ha fallado.
         api_call_refused: La llamada a Google {action} fue rechazada (HTTP {status}).
         api_target_not_found: El destino de Google {action} no se encontró.
+        conflicting_duplicate_metadata: La hoja de Google contiene metadatos AEAT
+          duplicados y contradictorios.
+        foreign_spreadsheet_not_owned: La hoja de Google no está marcada como propiedad
+          de este perfil AEAT.
         googleapiclient_not_importable: googleapiclient no se puede importar; el adaptador
           de Google no puede acceder a la API.
+        spreadsheet_id_blank: El id de la hoja de cálculo de Google no puede estar
+          vacío.
+        workbook_snapshot_mismatch: Los metadatos de la hoja de Google no coinciden
+          con la instantánea de cálculo.
+      suggestions:
+        reexport_workbook: Vuelve a exportar el libro con `aeat config google sync
+          calc export` para renovar los metadatos gestionados por la aplicación.
+        reexport_then_pull: Vuelve a exportar el libro con `aeat config google sync
+          calc export` y después vuelve a importarlo.
+        verify_exported_workbook: Comprueba que la hoja se creó originalmente con
+          `aeat config google sync calc export` para este perfil.
     oauth_flow:
       errors:
         browser_launcher_refused: El sistema operativo rechazó abrir la URL de consentimiento
@@ -98,6 +113,8 @@ adapters:
           puerto.
         oauthlib_not_importable: google-auth-oauthlib no se puede importar; el flujo
           OAuth no puede iniciarse.
+        profile_state_unresolved: Google OAuth no puede resolver el estado del perfil
+          AEAT seleccionado.
         scope_missing: La pantalla de consentimiento de Google se cerró sin conceder
           todos los ámbitos requeridos.
         unsecured_mode_refused: Google OAuth se rechazó porque el almacén de secretos
@@ -108,6 +125,8 @@ adapters:
           huérfano y vuelve a intentarlo.
         open_consent_url_manually: Abre manualmente en tu navegador la URL de consentimiento
           impresa.
+        repair_profile_state: Ejecuta `aeat config profile health` y repara o cambia
+          el perfil activo antes de reintentar el comando de Google.
         use_keyring_or_synthetic: Configura aeat_secret_store_backend=keyring o cambia
           el perfil activo a un identificador fiscal sintético de prueba.
     profile_binding:

@@ -26,3 +26,14 @@ Validation:
 - Source scan found no storage repository constructors, provider selection, SQL route setup, naked environment reads, settings bypass, or direct local file read/write calls in `_profile_binding.py`.
 
 Disposition: close `AFR-031` as `manifest-discovery`.
+
+## S133-002 | MEDIUM | RESOLVED | Locale audit disproved the initial localized-suggestion evidence
+
+The S133 artifact claimed `python -m aeat.locales audit` was clean, but rerunning the audit found the new `adapters.google.profile_binding.suggestions.create_profile` key missing from all four locale catalogues. The resolver test alone was insufficient evidence for catalogue parity.
+
+Resolution: the missing `create_profile` leaf now exists under `adapters.google.profile_binding.suggestions` in `en.yml`, `es.yml`, `ca.yml`, and `hu.yml`.
+
+Validation:
+
+- `uv run --no-sync -q python -m aeat.locales audit` now reports `ca.yml: ok`, `en.yml: ok`, `es.yml: ok`, and `hu.yml: ok`.
+- `uv run --no-sync pytest -q src/aeat/adapters/outbound/google/test_profile_binding.py src/aeat/adapters/outbound/google/test_package_module_allowlist.py` passed.

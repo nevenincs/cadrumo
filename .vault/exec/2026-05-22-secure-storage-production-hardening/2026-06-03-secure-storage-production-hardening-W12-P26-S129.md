@@ -32,4 +32,4 @@ Validation passed:
 
 ## Notes
 
-No source edits were required for this step.
+Continuation live review found duplicate app-managed developer metadata and protected ranges on the configured Google Sheets workbook after repeated exports. `_calc_sheets_apply.py` now deletes only adapter-managed developer metadata and protected ranges before recreating the current structural state on re-apply. The focused Google adapter suite passed with 131 tests after the remediation.
