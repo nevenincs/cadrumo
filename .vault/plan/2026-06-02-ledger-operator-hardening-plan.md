@@ -118,7 +118,7 @@ Per-transaction oracle keyed by natural key plus per-modelo aggregate base sums.
 
 - [x] `W01.P02.S06` - Author per-transaction oracle for all four accounts; `src/aeat/tests/fixtures/financial/ledger-corpus/ground-truth.manifest.json`.
 - [x] `W01.P02.S07` - Author per-modelo aggregate base sums (303/130/100/390) per period; `src/aeat/tests/fixtures/financial/ledger-corpus/ground-truth.manifest.json`.
-- [ ] `W01.P02.S08` - Author derived classify --from-csv oracle inputs; `src/aeat/tests/fixtures/financial/ledger-corpus/classify/`.
+- [x] `W01.P02.S08` - Author derived classify --from-csv oracle inputs; `src/aeat/tests/fixtures/financial/ledger-corpus/classify/`.
 
 ### Phase `W01.P03` - Corpus-fidelity test
 
