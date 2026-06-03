@@ -93,13 +93,18 @@ def test_explain_help_advertises_local_only(cli_runner: CliRunner) -> None:
 
 
 def test_explain_721_returns_structured_payload_not_crash(cli_runner: CliRunner) -> None:
-    """M721 applicability rule: ``explain 721`` must return exit 0 with the three
-    legal refs from Ley 11/2021 DA 10 and Orden HFP/887/2023 — never a raw
-    OverviewExplainError traceback.
+    """M721 applicability rule: ``explain 721`` must return exit 0 with both
+    legal refs from Ley 11/2021 DA 10 (obligation) and RD 1065/2007 art. 42
+    quater (50,000 EUR threshold) — never a raw OverviewExplainError traceback.
 
     Regression guard for the defect-of-record state where Modelo 721 was absent
     from the registry and ``build_overview_explain`` raised
     ``OverviewExplainError("could not evaluate")``.
+
+    The prior assertion also required ``orden-hfp-887-2023:art-3`` but that
+    slug does not resolve against the registry legal catalogue (no such order
+    is grounded). The applicability seed was corrected to the two
+    BOE-grounded refs in commit 9be3af126; this test mirrors that grounding.
     """
 
     result = cli_runner.invoke(
@@ -109,7 +114,6 @@ def test_explain_721_returns_structured_payload_not_crash(cli_runner: CliRunner)
     assert result.exit_code == 0, result.output
     assert "OverviewExplainError" not in result.output, result.output
     assert "could not evaluate" not in result.output, result.output
-    # All three grounding legal refs must appear in the CLI output.
+    # Both grounding legal refs must appear in the CLI output.
     assert "ley-11-2021:da-10" in result.output, result.output
-    assert "orden-hfp-887-2023:art-3" in result.output, result.output
     assert "rd-1065-2007:art-42-quater" in result.output, result.output
