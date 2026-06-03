@@ -22,7 +22,17 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...adapters.persistence.storage import LIVE_M036_DECLARATION_NAMESPACE
 from ...core.identity import BucketId, ProfileId
+from ...core.time import now
+from ...domain.buckets import (
+    BucketEvent,
+    BucketEventHistoryRepository,
+    BucketEventObjectType,
+    BucketEventType,
+    append_bucket_event,
+    derive_bucket_event_id,
+)
 from ...domain.calculations.registry import CensoModeloEventKind
 
 
@@ -122,8 +132,128 @@ class M036DeclarationResult(BaseModel):
         return self.declaration_id
 
 
+_EVENT_KIND_TO_BUCKET_EVENT: dict[CensoModeloEventKind, BucketEventType] = {
+    CensoModeloEventKind.ALTA: BucketEventType.CENSO_DECLARATION_ALTA,
+    CensoModeloEventKind.MODIFICACION: BucketEventType.CENSO_DECLARATION_MODIFICACION,
+    CensoModeloEventKind.BAJA: BucketEventType.CENSO_DECLARATION_BAJA,
+}
+
+
+def _m036_declaration_object_key(bucket_id: str, declaration_id: str) -> str:
+    return f"m036-declaration:{bucket_id}:{declaration_id}"
+
+
+def _m036_declaration_not_found(declaration_id: str) -> KeyError:
+    return KeyError(f"M036 declaration {declaration_id!r} not found")
+
+
+def _m036_declaration_ambiguous_prefix(
+    declaration_id: str, full_ids: tuple[str, ...]
+) -> KeyError:
+    return KeyError(
+        f"M036 declaration prefix {declaration_id!r} is ambiguous; matches {list(full_ids)!r}"
+    )
+
+
+def record_m036_declaration(
+    command: M036DeclarationCommand,
+    *,
+    bucket_id: BucketId,
+) -> M036DeclarationResult:
+    """Persist an M036 declaration record + emit its BucketEvent atomically.
+
+    Records that the operator filed an M036 declaration at sede.  The local
+    app NEVER files; this verb only records the operator's declaration so
+    downstream profile-state re-derivation and stale-cascade reasoning can
+    react.  The content-addressed ``declaration_id`` keeps a re-declaration
+    with the identical tuple idempotent; the parallel ``BucketEvent`` (one
+    of :attr:`BucketEventType.CENSO_DECLARATION_ALTA` /
+    :attr:`~.CENSO_DECLARATION_MODIFICACION` /
+    :attr:`~.CENSO_DECLARATION_BAJA`) carries the audit-trail entry the
+    composition-service rule requires alongside the data write.
+
+    The persisted :class:`M036DeclarationResult` is encrypted into the
+    bucket-local :data:`LIVE_M036_DECLARATION_NAMESPACE` row keyed by
+    ``m036-declaration:<bucket_id>:<declaration_id>`` via the standard
+    :class:`SecureSnapshotRepository` machinery.  ``bucket_id`` is checked
+    against the repository binding at save time, so a cross-bucket payload
+    cannot land silently.
+    """
+    # Local imports avoid the import cycle between this module (in
+    # application.modelo) and SecureSnapshotRepository (in
+    # application.live, which depends transitively on application.modelo
+    # for the work-unit aggregations).
+    from ..live import SecureSnapshotRepository
+
+    declaration_id = derive_m036_declaration_id(
+        profile_id=command.profile_id,
+        event_kind=command.event_kind,
+        declared_on=command.declared_on,
+        sede_justificante=command.sede_justificante,
+    )
+    occurred_at = now()
+    result = M036DeclarationResult(
+        declaration_id=declaration_id,
+        bucket_id=bucket_id,
+        profile_id=command.profile_id,
+        event_kind=command.event_kind,
+        declared_on=command.declared_on,
+        sede_justificante=command.sede_justificante,
+        recorded_at=occurred_at,
+    )
+
+    repository = SecureSnapshotRepository(
+        bucket_id=bucket_id,
+        payload_model=M036DeclarationResult,
+        namespace_definition=LIVE_M036_DECLARATION_NAMESPACE,
+        object_key=_m036_declaration_object_key,
+        not_found_factory=_m036_declaration_not_found,
+        ambiguous_prefix_factory=_m036_declaration_ambiguous_prefix,
+        domain_label="m036_declaration",
+    )
+    repository.save(result)
+
+    event_type = _EVENT_KIND_TO_BUCKET_EVENT[command.event_kind]
+    payload: dict[str, str] = {
+        "profile_id": str(command.profile_id),
+        "declared_on": command.declared_on.isoformat(),
+    }
+    if command.sede_justificante is not None:
+        payload["sede_justificante"] = command.sede_justificante
+    if command.note is not None:
+        payload["note"] = command.note
+    event_id = derive_bucket_event_id(
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor="operator",
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=declaration_id,
+        payload=payload,
+    )
+    catalogue_repo = BucketEventHistoryRepository()
+    next_catalogue = append_bucket_event(
+        catalogue_repo.load(),
+        BucketEvent(
+            event_id=event_id,
+            bucket_id=bucket_id,
+            event_type=event_type,
+            occurred_at=occurred_at,
+            actor="operator",
+            object_type=BucketEventObjectType.PROFILE,
+            object_id=declaration_id,
+            payload_version=1,
+            payload=payload,
+        ),
+    )
+    catalogue_repo.save(next_catalogue)
+
+    return result
+
+
 __all__ = [
     "M036DeclarationCommand",
     "M036DeclarationResult",
     "derive_m036_declaration_id",
+    "record_m036_declaration",
 ]
