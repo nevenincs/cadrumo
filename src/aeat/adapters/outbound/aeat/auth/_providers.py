@@ -33,7 +33,7 @@ if TYPE_CHECKING:
         BrowserContextLike,
     )
 
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class CertificateSessionDetail(BaseModel):

@@ -17,7 +17,7 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, Field
 
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..pdf._shared import ExtractedCasilla
 
 
