@@ -2630,7 +2630,7 @@ def _resolve_business_pct_with_censo(
     HOME_OFFICE transactions and explicit-override flows are not
     perturbed.
     """
-    from ...application.ledger._ratios import censo_business_pct_for
+    from ...application.ledger import censo_business_pct_for
     from ...application.user_profile import CensoSyncService
     from ...domain.categories import SpendingCategory
 
@@ -2801,7 +2801,7 @@ def ratios_set(
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
     """Set or replace one per-category usage-ratio override on the active bucket."""
-    from ...application.ledger._ratios import censo_override_warning, set_usage_ratio
+    from ...application.ledger import censo_override_warning, set_usage_ratio
     from ...application.user_profile import CensoSyncService
 
     category_enum = _resolve_category(category)
@@ -2858,7 +2858,7 @@ def ratios_unset(
 ) -> None:
     """Clear one per-category usage-ratio override from the active bucket."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ...application.ledger._ratios import unset_usage_ratio
+    from ...application.ledger import unset_usage_ratio
     from ...domain.usage_ratios import UsageRatioValidationError
 
     category_enum = _resolve_category(category)
@@ -2909,7 +2909,7 @@ def ratios_eligible(
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
     """List every ``SpendingCategory`` that may carry a per-category proportional-deduction override."""
-    from ...application.ledger._ratios import list_eligible_ratios_for_bucket
+    from ...application.ledger import list_eligible_ratios_for_bucket
 
     bucket_id = _ratios_bucket_id()
     rows = list_eligible_ratios_for_bucket(bucket_id=bucket_id)
@@ -2953,7 +2953,7 @@ def ratios_validate(
 ) -> None:
     """Validate per-category usage-ratio overrides against eligibility and bound rules without mutating state."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ...application.ledger._ratios import validate_ratios_for_bucket
+    from ...application.ledger import validate_ratios_for_bucket
 
     bucket_id = _ratios_bucket_id()
     report = validate_ratios_for_bucket(bucket_id=bucket_id)
