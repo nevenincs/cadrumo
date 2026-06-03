@@ -95,7 +95,13 @@ def assemble_observations_for_grouping(
     """Dispatch the right assembler based on the row-set's grouping value.
 
     Args:
+        grouping: Row-set grouping token; selects which assembler runs
+            (``withholding`` / ``related_party`` / ``foreign_asset`` /
+            ``atribucion`` / ``refund``).
+        cells: Per-row cell shapes consumed by the chosen assembler.
         revision: The :class:`ModeloRevision` used to look up binding selectors.
+        filing_year: AEAT filing year carried through to the produced
+            observations' provenance.
 
     Returns a 2-tuple ``(source_kind, observations)`` where
     ``source_kind`` identifies the assembler that ran (``withholding`` /
@@ -283,7 +289,11 @@ def assemble_related_party_observations(
     """Reassemble per-operation related-party observations from row-set cells.
 
     Args:
+        cells: Per-row cell shapes the assembler projects into typed
+            observations.
         revision: The :class:`ModeloRevision` used to look up binding selectors.
+        filing_year: AEAT filing year carried through to each observation's
+            provenance.
 
     Returns a tuple of :class:`RelatedPartyOperationObservation` instances.
     """
@@ -371,7 +381,11 @@ def assemble_atribucion_observations(
     """Reassemble per-member atribución observations from row-set cells (modelo 184).
 
     Args:
+        cells: Per-row cell shapes the assembler projects into typed
+            member observations.
         revision: The :class:`ModeloRevision` used to look up binding selectors.
+        filing_year: AEAT filing year carried through to each observation's
+            provenance.
 
     Each element in the returned tuple is an :class:`AtributionMemberObservation`.
     """
