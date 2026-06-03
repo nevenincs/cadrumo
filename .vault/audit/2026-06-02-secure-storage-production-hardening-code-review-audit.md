@@ -136,3 +136,9 @@ The reviewed settings signal uses `Settings` for the Drive vault folder name rat
 The `W12.P26.S130` review closed `AFR-028` for `_calc_sheets_pull.py`. The adapter reads remote Google Sheets values into typed pull records, but it does not mutate local state or write local persistence. Drive ownership and registry metadata gates prevent arbitrary or stale workbooks from flowing into local compute.
 
 Focused pull/apply tests passed with 38 tests, including stale and missing metadata refusal coverage. Targeted Ruff passed, and the source scan found no DB route, naked environment, secure-object constructor, local storage constructor, or local file read/write matches.
+
+## S131-021 | PASS | Google OAuth errors are typed exceptions only
+
+The `W12.P26.S131` review closed `AFR-029` for `_errors.py`. The active-profile signal came from error descriptions for missing profile binding, not profile or manifest implementation. The module only declares Google OAuth exception classes rooted at `AeatError`.
+
+Registry enforcement, Google package allowlist, Google records, and CLI Google localisation tests passed with 28 total tests across the focused commands. Targeted Ruff passed. No source edits were required.
