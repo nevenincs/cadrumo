@@ -1041,7 +1041,12 @@ def bindings_list(
     so the reported binding ids match the calculation. ``--missing``
     filters to the bindings not yet resolvable from current state: it
     drops constant-valued bindings and any binding the active profile
-    already satisfies.
+    already satisfies. With no active profile nothing is satisfied yet,
+    so every non-constant binding is reported as still missing — the
+    listing then equals the unfiltered one, which is the correct
+    conservative answer rather than a no-op. Prior-filing pulls and
+    ledger aggregations are always reported missing here; ``--missing``
+    does not yet consult a prior filed revision.
     """
     service = _service()
     targets = tuple(str(m.id) for m in service._authority.modelos) if modelo is None else (modelo,)
@@ -5788,9 +5793,7 @@ def iva_wallet_seed_cmd(
     """Declare a Modelo 303 carry-forward balance for bootstrapping local history."""
     from decimal import Decimal, InvalidOperation
 
-    from ...application.calculations._iva_compensation_history import (
-        seed_iva_compensation_period,
-    )
+    from ...application.calculations import seed_iva_compensation_period
     from ...domain.iva_compensation._errors import IvaCompensationSeedConflictError
 
     if not confirm:
@@ -6001,9 +6004,7 @@ def work_preview_maritime_exemption(
     activate_subcommand_output_language(ctx, output_language)
     _require_active_profile()
 
-    from ...application.calculations._maritime_exemption_service import (
-        resolve_maritime_exemption,
-    )
+    from ...application.calculations import resolve_maritime_exemption
     from ...domain.renta import ProfileCompletenessError
     from ...domain.renta._errors import RentaValidationError
 
