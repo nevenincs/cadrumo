@@ -186,6 +186,7 @@ Exercise the final storage architecture with real code paths, real encrypted sto
 - [x] `W06.P11.S438` - model the Modelo 202 1P quota-base previous-year source coverage or add an explicit registry gate so the legal hook is not left as comment-only operator-manual behavior; `src/aeat/_data/registry/aeat/modelos/200 src/aeat/_data/registry/aeat/modelos/202 src/aeat/domain/calculations/registry/test_modelo_202_registry.py .vault/audit`.
 - [x] `W06.P11.S439` - tighten remote mirror provider metadata comparison so upload and download inspection detect namespace, object-key, byte-length, and content-hash drift against manifest entries; `src/aeat/adapters/outbound/storage/_mirror_manifest.py src/aeat/adapters/outbound/storage/test_mirror_manifest.py .vault/audit`.
 - [x] `W06.P11.S440` - resolve S43-005 by preserving secure-object revision ancestry in raw mirror manifests so stale mirrors more than one revision behind are classified without timestamp-only ambiguity; `src/aeat/adapters/persistence/storage/sql src/aeat/adapters/outbound/storage .vault/audit`.
+- [x] `W06.P11.S441` - record 2026-06-03 continuation proof for live Drive hierarchy, Sheets export/value reads, quota behavior, and focused validation after S428-S431/S440 remediation; `src/aeat/adapters/outbound/storage src/aeat/adapters/outbound/google src/aeat/application/calculations .vault/exec .vault/audit`.
 
 ## Wave `W07` - classified secure-SQL hygiene backlog adoption
 
@@ -634,8 +635,8 @@ Classify bucket-local plaintext stores and remote provider surfaces so the runti
 
 Close the runtime rollout only after mechanical checks prove the application no longer depends on competing active-profile storage APIs.
 
-- [ ] `W12.P25.S100` - Run the mechanical scanner from the active-profile runtime audit and persist a before/after delta for production and test signals; `.vault/audit`.
-- [ ] `W12.P25.S101` - Run focused storage, profile lifecycle, CLI, workflow, domain repository, outbound adapter, and test-runtime gates after runtime migration; `src/aeat`.
+- [x] `W12.P25.S100` - Run the mechanical scanner from the active-profile runtime audit and persist a before/after delta for production and test signals; `.vault/audit`.
+- [x] `W12.P25.S101` - Run focused storage, profile lifecycle, CLI, workflow, domain repository, outbound adapter, and test-runtime gates after runtime migration; `src/aeat`.
 - [ ] `W12.P25.S102` - Persist a final runtime rollout review proving direct constructors, explicit-route tests, manifest discovery, bootstrap custody, side-store exceptions, and remote mirrors each have one accepted disposition; `.vault/audit`.
 
 ### Phase `W12.P26` - affected-file CLI closure ledger
