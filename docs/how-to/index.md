@@ -60,6 +60,8 @@ Goal: mark a verified revision as filed in your own records, separate from submi
 1. File the revision: `aeat app modelo work file <calculation_revision_id>`. The verb marks a verified revision as internally filed and appends the line `filing_disambiguation (internal only — does not submit to AEAT)`.
 2. Submit to AEAT yourself at [sede.agenciatributaria.gob.es](https://sede.agenciatributaria.gob.es). The CLI never contacts AEAT.
 
+If the period's filing deadline has passed, `file` refuses with `abort_code: DEADLINE_PASSED` rather than recording a late marker; `export` can be refused for the same reason. The saved, verified revision is untouched — only the internal marker and the local artefact are gated. Where you have grounds to file late, submit to AEAT directly outside the app.
+
 ### Find the right modelo, casillas, or work unit
 
 Goal: look up modelo metadata or locate an existing work unit before you calculate.
@@ -68,6 +70,8 @@ Goal: look up modelo metadata or locate an existing work unit before you calcula
 2. List a modelo's casillas: `aeat app modelo casillas <modelo>`.
 3. Preview which bindings the ledger fills, and which are missing: `aeat app modelo bindings list --modelo <code> --year <YYYY> --period <token> --missing`.
 4. List your work units: `aeat app modelo work list`. Inspect one with `aeat app modelo work status <work_unit_id>`, and list its calculation revisions with `aeat app modelo work revisions <work_unit_id>`.
+
+A *binding* is a named input the formula needs that doesn't come from the `--casilla` values you type: a prior-year amount, a profile fact, or a ledger aggregate. `calculate` refuses with `La vinculación <key> no tiene valor asignado` when one is unresolved. An imported, classified ledger does not fill every binding — prior-year and profile facts are never in the ledger, and ledger-derived bindings only pick up transactions dated inside the period, so an out-of-period transaction leaves its cumulative binding empty. Resolve a missing binding by passing `--binding KEY=VALUE` (repeatable) on the same `calculate` command. For a first filing with no prior return on record, prior-year bindings such as `irpf.previous_year_economic_activity_net_income` take the value `0`.
 
 ## File a quarterly IVA modelo 303
 
