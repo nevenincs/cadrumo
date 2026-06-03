@@ -2273,8 +2273,17 @@ def auth_clear(
     "list",
     help=tr("cli.config.auth.diagnostics.list_help", default="List encrypted Cl@ve auth diagnostics."),
 )
-def auth_diagnostics_list(ctx: typer.Context) -> None:
+def auth_diagnostics_list(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
     """List encrypted auth diagnostics without revealing captured HTML/screenshots."""
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import list_auth_diagnostics
     from .._config_payloads import AuthDiagnosticsListResult
 
@@ -2309,8 +2318,15 @@ def auth_diagnostics_list(ctx: typer.Context) -> None:
 def auth_diagnostics_show(
     ctx: typer.Context,
     diagnostic_id: str = typer.Argument(..., help=tr("cli.config.auth.diagnostics.id_help", default="Diagnostic id")),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Show one encrypted auth diagnostic by id with sensitive bodies redacted."""
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import load_auth_diagnostic
 
     detail = load_auth_diagnostic(diagnostic_id)
@@ -2389,8 +2405,15 @@ def auth_diagnostics_report(
             ),
         ),
     ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Record the human-observed Cl@ve app state for a captured diagnostic."""
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import AUTH_DIAGNOSTIC_PHONE_STATES, record_auth_diagnostic_phone_state
 
     try:
@@ -2438,7 +2461,16 @@ apoderado_app.add_typer(scopes_app, name="scopes")
 @scopes_app.command(
     "list", help=tr("cli.config.auth.apoderado.scopes.list_help", default="List accepted apoderado scopes")
 )
-def apoderado_scopes_list(ctx: typer.Context) -> None:
+def apoderado_scopes_list(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    _activate_subcommand_output_language(ctx, output_language)
     """List all available representative scopes in the vocabulary."""
     from ....application.auth._apoderado import ApoderadoService
     from .._config_payloads import ApoderadoScopesListResult
@@ -2453,7 +2485,16 @@ def apoderado_scopes_list(ctx: typer.Context) -> None:
 @apoderado_app.command(
     "status", help=tr("cli.config.auth.apoderado.status_help", default="Show active apoderado configuration")
 )
-def apoderado_status(ctx: typer.Context) -> None:
+def apoderado_status(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth._apoderado import ApoderadoService
 
     pointer = _resolve_active_profile_pointer()
@@ -2495,7 +2536,14 @@ def apoderado_configure(
         "--scope",
         help=tr("cli.config.auth.apoderado.configure.scope_help", default="Scope tokens (can be repeated)"),
     ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth._apoderado import ApoderadoService
     from ....application.workflow._persistence import workflow_state_repository
 
@@ -2528,7 +2576,16 @@ def apoderado_configure(
 @apoderado_app.command(
     "clear", help=tr("cli.config.auth.apoderado.clear_help", default="Retire the apoderado configuration")
 )
-def apoderado_clear(ctx: typer.Context) -> None:
+def apoderado_clear(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth._apoderado import ApoderadoService
     from ....application.workflow._persistence import workflow_state_repository
 
@@ -2553,7 +2610,16 @@ def apoderado_clear(ctx: typer.Context) -> None:
 
 
 @apoderado_app.command("check", help=tr("cli.config.auth.apoderado.check_help", default="Read-only live verification"))
-def apoderado_check(ctx: typer.Context) -> None:
+def apoderado_check(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth._apoderado import ApoderadoLiveCheckUnavailableError, ApoderadoService
     from ....application.workflow._persistence import workflow_state_repository
     from ....core.errors import resolve_error_message
@@ -2636,8 +2702,15 @@ def bucket_history(
             help=tr("cli.config.bucket.actor_help"),
         ),
     ] = None,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Browse the append-only bucket-event history."""
+    _activate_subcommand_output_language(ctx, output_language)
     from ....domain.buckets import BucketEventHistoryRepository
 
     selected = _parse_bucket_event_types(event_type)

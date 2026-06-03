@@ -60,7 +60,7 @@ from ...application.review import (
     LedgerReviewFilterSpec,
 )
 from ...core import resolve_active_bucket_id
-from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
+from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY, OutputLanguage
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import now
@@ -93,6 +93,9 @@ from ._common import (
     _profile_to_taxpayer,
     _state,
     _tx_repo,
+)
+from ._common import (
+    activate_subcommand_output_language as _activate_subcommand_output_language,
 )
 
 _log = get_logger(__name__)
@@ -2438,7 +2441,16 @@ def _resolve_category(raw: str):
         "cli.app.ledger.ratios.list_help", default="List every per-category usage-ratio override on the active bucket."
     ),
 )
-def ratios_list(ctx: typer.Context) -> None:
+def ratios_list(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    _activate_subcommand_output_language(ctx, output_language)
     """List every per-category proportional-deduction override stored on the active bucket."""
     from ...application.user_profile import CensoSyncService
     from ...domain.usage_ratios import (
@@ -2496,7 +2508,14 @@ def ratios_set(
     ratio: str = typer.Argument(
         ..., help=tr("cli.app.ledger.ratios.ratio_help", default="Override ratio in the closed interval [0, 1].")
     ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
+    _activate_subcommand_output_language(ctx, output_language)
     """Set or replace one per-category usage-ratio override on the active bucket."""
     from ...application.ledger._ratios import censo_override_warning, set_usage_ratio
     from ...application.user_profile import CensoSyncService
@@ -2546,8 +2565,15 @@ def ratios_unset(
         ...,
         help=tr("cli.app.ledger.ratios.unset_category_help", default="Spending category id whose override to clear."),
     ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Clear one per-category usage-ratio override from the active bucket."""
+    _activate_subcommand_output_language(ctx, output_language)
     from ...application.ledger._ratios import unset_usage_ratio
     from ...domain.usage_ratios import UsageRatioValidationError
 
@@ -2588,7 +2614,16 @@ def ratios_unset(
         "cli.app.ledger.ratios.eligible_help", default="List every category that may carry a per-category override."
     ),
 )
-def ratios_eligible(ctx: typer.Context) -> None:
+def ratios_eligible(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    _activate_subcommand_output_language(ctx, output_language)
     """List every ``SpendingCategory`` that may carry a per-category proportional-deduction override."""
     from ...application.ledger._ratios import list_eligible_ratios_for_bucket
 
@@ -2623,8 +2658,17 @@ def ratios_eligible(ctx: typer.Context) -> None:
         default="Validate the per-category overrides against eligibility + bound rules.",
     ),
 )
-def ratios_validate(ctx: typer.Context) -> None:
+def ratios_validate(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
     """Validate per-category usage-ratio overrides against eligibility and bound rules without mutating state."""
+    _activate_subcommand_output_language(ctx, output_language)
     from ...application.ledger._ratios import validate_ratios_for_bucket
 
     bucket_id = _ratios_bucket_id()
