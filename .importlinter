@@ -171,7 +171,7 @@ ignore_imports =
     aeat.core.test_setup_answers -> aeat.application.wizard._catalogue
     aeat.core.test_setup_answers -> aeat.domain.deadlines._models
     aeat.core.test_setup_answers -> aeat.domain.deadlines._profiles
-    aeat.core.test_profile_catalogue -> aeat.application.wizard._catalogue
+    aeat.core.test_wizard_catalogue -> aeat.application.wizard._catalogue
     # ── core test files importing application/domain/adapters for fixtures ──
     aeat.core.test_external_constants -> aeat.domain.portals._categories
     aeat.core.resources._repos.test_singletons -> aeat.domain.auth.apoderamientos._catalogue
@@ -483,7 +483,7 @@ ignore_imports =
     aeat.core.test_setup_answers -> aeat.application.wizard._catalogue
     aeat.core.test_setup_answers -> aeat.domain.deadlines._models
     aeat.core.test_setup_answers -> aeat.domain.deadlines._profiles
-    aeat.core.test_profile_catalogue -> aeat.application.wizard._catalogue
+    aeat.core.test_wizard_catalogue -> aeat.application.wizard._catalogue
     aeat.domain.attachments.test_service -> aeat.tests.secure_sql
     aeat.domain.calculations.registry.test_inss_maternidad_paternidad_art7h -> aeat.tests.cli_runner
     aeat.domain.calculations.registry.test_renta_web_open_oracle -> aeat.adapters.outbound.aeat.sede._renta_web_open

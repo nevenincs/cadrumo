@@ -20,7 +20,7 @@ from .core.errors import (
     build_error_envelope,
     get_registered_error_code,
 )
-from .core.profile_catalogue import (
+from .core.wizard_catalogue import (
     WizardCatalogueAlreadyRegisteredError,
     WizardCatalogueNotRegisteredError,
 )

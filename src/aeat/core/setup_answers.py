@@ -11,7 +11,7 @@ Domain consumers call :func:`project_answers` directly; it raises
 :class:`ProjectAnswersNotRegisteredError` when the application layer has not
 yet run.
 
-This pattern mirrors the one established in :mod:`aeat.core.profile_catalogue`
+This pattern mirrors the one established in :mod:`aeat.core.wizard_catalogue`
 for ``SETUP_FLOW`` / ``WIZARD_FLOWS``.
 
 Domain taxonomy types (``EntityType``, ``IVARegime``, etc.) are imported lazily
