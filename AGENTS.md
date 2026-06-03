@@ -12,6 +12,7 @@ You MUST respect these rules at all times:
 @.codex/rules/aeat-git-worktree-safety.md
 @.codex/rules/aeat-local-execution.md
 @.codex/rules/aeat-locales-cli.md
+@.codex/rules/aeat-pytest-background-capture.md
 @.codex/rules/aeat-quality-gates.md
 @.codex/rules/aeat-rag-discovery.md
 @.codex/rules/aeat-registry-authority-flow.md
@@ -23,11 +24,13 @@ You MUST respect these rules at all times:
 @.codex/rules/aeat-swarm-audit-cadence.md
 @.codex/rules/aeat-swarm-orchestration.md
 @.codex/rules/aeat-vaultspec-centralisation.md
+@.codex/rules/composition-service-no-parallel-write-path.md
 @.codex/rules/core-struct-docstring-links.md
 @.codex/rules/fixture-provenance-declared-in-sidecar.md
 @.codex/rules/no-silent-under-declaration.md
 @.codex/rules/no-tautological-calculation-tests.md
 @.codex/rules/registry-calculation-legal-grounding.md
+@.codex/rules/service-imports-via-top-level-reexports.md
 @.codex/rules/vaultspec-archive-discipline.builtin.md
 @.codex/rules/vaultspec-cli.builtin.md
 @.codex/rules/vaultspec-codify.builtin.md
