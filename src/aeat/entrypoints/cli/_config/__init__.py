@@ -864,7 +864,15 @@ def _atomic_create_profile(*, display_name, facts, profile_id: str | None = None
 
 
 @profile_app.command("list", help=tr("cli.config.list.help"))
-def config_list(ctx: typer.Context) -> None:
+def config_list(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
     """List every registered profile via the manifest-scan helper.
 
     Replaces the prior behaviour that enumerated only the active
@@ -874,6 +882,7 @@ def config_list(ctx: typer.Context) -> None:
     :func:`list_profile_buckets` reads them and returns the full
     set without unlocking any bucket.
     """
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.workflow._profile_bucket_scan import list_profile_buckets
     from .._config_payloads import ConfigListResult, ProfilePointerPayload
 
@@ -906,8 +915,15 @@ def config_list(ctx: typer.Context) -> None:
 def config_profile_switch(
     ctx: typer.Context,
     name: str = typer.Argument(..., help=tr("cli.config.profile.switch_name_help")),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Select an existing profile as the active profile."""
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile._orchestration import select_profile_with_lifecycle_span
     from ....domain.user_profile import ProfileNotFoundError
 
@@ -1304,8 +1320,15 @@ def config_profile_delete(
     ctx: typer.Context,
     name: str = typer.Argument(..., help=tr("cli.config.profile.delete_name_help")),
     confirmed: bool = typer.Option(False, "--yes", help=tr("cli.config.profile.delete_yes_help")),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Tombstone a profile. Immutable filing snapshots are retained."""
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile._orchestration import delete_profile_with_lifecycle_span
     from ....domain.user_profile import ProfileNotFoundError
 
@@ -1360,6 +1383,12 @@ def config_profile_duplicate(
     display_name: str | None = typer.Option(
         None, "--display-name", help=tr("cli.config.profile.duplicate_display_name_help")
     ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Copy SOURCE into TARGET as a new active profile.
 
@@ -1371,6 +1400,7 @@ def config_profile_duplicate(
     bypassed the provisioner and could leave a half-copied bucket on
     a crash; the atomic provisioner rolls every write back instead.
     """
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile._orchestration import ProfileAlreadyRegisteredError
     from ....application.workflow._profile_bucket_scan import read_profile_bucket as _read_profile_bucket
     from ....domain.user_profile import ProfileNotFoundError
@@ -1459,6 +1489,12 @@ def config_profile_rename(
         ..., help=tr("cli.config.profile.rename_source_help", default="Existing profile name.")
     ),
     target: str = typer.Argument(..., help=tr("cli.config.profile.rename_target_help", default="New profile name.")),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Rename a profile by changing its operator-visible label.
 
@@ -1468,6 +1504,7 @@ def config_profile_rename(
     directory, keystore directory, secure-object key, and active-profile
     pointer are untouched.
     """
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile._orchestration import (
         ProfileAlreadyRegisteredError,
         rename_profile,
@@ -1525,6 +1562,12 @@ def config_profile_export(
         "--to",
         help=tr("cli.config.profile.export_out_help", default="Destination path for the JSON bundle."),
     ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Serialize a profile bundle to a JSON file.
 
@@ -1534,6 +1577,7 @@ def config_profile_export(
     via the atomic-create provisioner.
     """
     from ....application.user_profile._bundle import serialize_profile_bundle
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile._orchestration import profile_storage_session
     from ....domain.user_profile import ProfileNotFoundError
 
@@ -1610,6 +1654,12 @@ def config_profile_import(
         "--label",
         help=tr("cli.config.profile.import_label_help"),
     ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Read a portable profile bundle from a JSON file and register it.
 
@@ -1626,6 +1676,7 @@ def config_profile_import(
     lands the second copy under a fresh, non-colliding label while
     still minting its own immutable UUID identity.
     """
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile._bundle import (
         UnsupportedBundleSchemaVersionError,
         deserialize_profile_bundle,
@@ -1739,8 +1790,17 @@ def config_profile_import(
         default="Sign out of the active profile by clearing the pointer file.",
     ),
 )
-def config_profile_logout(ctx: typer.Context) -> None:
+def config_profile_logout(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
     """Clear the active-profile pointer so subsequent verbs refuse without an explicit switch."""
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile._orchestration import logout_active_profile
 
     before = logout_active_profile()
@@ -1763,8 +1823,17 @@ def config_profile_logout(ctx: typer.Context) -> None:
 
 
 @profile_app.command("status", help=tr("cli.config.status.help"))
-def config_status(ctx: typer.Context) -> None:
+def config_status(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
     """Show the readiness of the current configuration profile."""
+    _activate_subcommand_output_language(ctx, output_language)
     from pydantic import ValidationError
 
     from ....application.user_profile._projections import record_to_path_values

@@ -150,3 +150,19 @@ def test_work_read_only_verb_accepts_output_language(verb: str) -> None:
 def test_config_profile_validate_accepts_output_language() -> None:
     """``aeat config profile validate`` (shipped W86.P415.S2354) accepts ``--output-language``."""
     _assert_output_language_registered(["config", "profile", "validate"])
+
+
+# ---------------------------------------------------------------------------
+# W09.P45.S232 — full config profile verb tree parity sweep
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "verb",
+    ["list", "switch", "delete", "duplicate", "rename", "export", "import", "logout", "status"],
+)
+def test_config_profile_verb_accepts_output_language(verb: str) -> None:
+    """W09.P45.S232 closure: every config-profile verb that previously
+    lacked ``--output-language`` now accepts it for parity with the rest
+    of the config noun-group."""
+    _assert_output_language_registered(["config", "profile", verb])
