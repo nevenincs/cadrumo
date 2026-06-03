@@ -163,7 +163,7 @@ Wave-A cheap runtime-edge cleanup (defer the 6 module-level domain-to-adapters i
 
 Defer the 6 module-level domain-to-adapters imports, relocate application.topics out of the core import path, read assets namespaces from registry constants, promote _registry_sha.
 
-- [ ] `W05.P14.S53` - Defer the 6 module-level domain-to-adapters imports (filing/_repository:14-15, justificante/_repository:24-25, submission/_repository:14-15) into TYPE_CHECKING blocks; `verify rg '^from .+adapters' over domain returns zero (DB-16 A-1); `src/aeat/domain/filing/_repository.py`.
+- [x] `W05.P14.S53` - Defer the 6 module-level domain-to-adapters imports (filing/_repository:14-15, justificante/_repository:24-25, submission/_repository:14-15) into TYPE_CHECKING blocks; `verify rg '^from .+adapters' over domain returns zero (DB-16 A-1); `src/aeat/domain/filing/_repository.py`.
 - [x] `W05.P14.S54` - Relocate Topic, TopicCatalogue, TopicNotFoundError, load_topic_catalogue out of application/topics into core or a domain/topics home; `repoint core/resources/_repos/topics and core/errors/registry/_application:194 so core no longer imports application (DB-07/DB-18 A-2; tag relocation:TopicCatalogue); `src/aeat/application/topics/__init__.py`.
 - [x] `W05.P14.S55` - Read the assets namespaces from PROFILE_ASSETS_LEDGER_NAMESPACE/PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE constants in adapters/persistence/profile/assets.py:32-33 instead of hardcoded literals (DB-33 A-3); `src/aeat/adapters/persistence/profile/assets.py`.
 - [x] `W05.P14.S56` - Promote _registry_sha to the application/storage/calc_sheets public surface and repoint adapters/outbound/google/_calc_sheets_pull:55 off the private path (DB-31 A-4); `src/aeat/application/storage/calc_sheets/__init__.py`.
@@ -173,9 +173,9 @@ Defer the 6 module-level domain-to-adapters imports, relocate application.topics
 Elevate the inventory valuation guard to the application service, establish new-repos-behind-ports, rule on the core/resources facade, inject context into outbound adapters.
 
 - [x] `W05.P15.S57` - Elevate the inventory valuation guard: call compute_inventory_valuation in the application inventory service's movement_add before persisting, and drop the call from adapters/persistence/profile/inventory.py:207 record_movement (DB-32 B-3); `src/aeat/application/inventory/_service.py`.
-- [ ] `W05.P15.S58` - Ratify and document the D4 persistence-boundary ruling: new repositories implemented in adapters/persistence behind a domain port; `existing domain-co-located repositories accepted as managed debt (100 deferred edges tracked, not churned); record as an accepted deviation note (DB-16 B-1); `.vault/adr/2026-06-01-domain-boundary-audit-adr.md`.
-- [ ] `W05.P15.S59` - Confirm core/resources/_repos depends only on protocols/domain (not application) after A-2; `document the facade as an accepted shared-kernel registry or schedule its relocation to domain (DB-18 B-2); `src/aeat/core/resources/_repos/`.
-- [ ] `W05.P15.S60` - Inject bucket/profile context into the outbound adapter call sites (auth/_authenticator, _clave_movil, sede/_declarations, browser/_factory, google/_oauth_flow) instead of pulling application internals; `add an application facade for compute_from_pull's engine invocation (DB-31 B-4); `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [x] `W05.P15.S58` - Ratify and document the D4 persistence-boundary ruling: new repositories implemented in adapters/persistence behind a domain port; `existing domain-co-located repositories accepted as managed debt (100 deferred edges tracked, not churned); record as an accepted deviation note (DB-16 B-1); `.vault/adr/2026-06-01-domain-boundary-audit-adr.md`.
+- [x] `W05.P15.S59` - Confirm core/resources/_repos depends only on protocols/domain (not application) after A-2; `document the facade as an accepted shared-kernel registry or schedule its relocation to domain (DB-18 B-2); `src/aeat/core/resources/_repos/`.
+- [x] `W05.P15.S60` - Inject bucket/profile context into the outbound adapter call sites (auth/_authenticator, _clave_movil, sede/_declarations, browser/_factory, google/_oauth_flow) instead of pulling application internals; `add an application facade for compute_from_pull's engine invocation (DB-31 B-4); `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
 
 ## Wave `W06` - Profile surface rename and consolidation (D7)
 
@@ -355,7 +355,7 @@ The ~15 domain repositories importing from storage.sql/.errors/.envelope submodu
 
 Assert domain modules import secure-storage primitives only from the storage package top-level (no underscore-private submodule reach-ins); suite green.
 
-- [ ] `W11.P37.S107` - Verify: rg confirms domain modules import secure-storage primitives only from the top-level storage package (no .sql/.errors/.envelope/_envelope underscore reach-ins beyond sanctioned ones); full pytest suite + ty green; D4 ratified in the ADR with these import-surface cleanups recorded; `src/aeat/domain/`.
+- [ ] `W11.P37.S107` - Verify: rg confirms domain modules import secure-storage primitives only from the top-level storage package (no .sql/.errors/.envelope/_envelope underscore reach-ins beyond sanctioned ones); `full pytest suite + ty green; D4 ratified in the ADR with these import-surface cleanups recorded; `src/aeat/domain/`.
 
 ## Description
 
