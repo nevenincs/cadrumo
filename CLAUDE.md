@@ -27,6 +27,8 @@ You MUST respect these rules at all times:
 @.claude/rules/composition-service-no-parallel-write-path.md
 @.claude/rules/core-struct-docstring-links.md
 @.claude/rules/fixture-provenance-declared-in-sidecar.md
+@.claude/rules/ledger-derived-revisions-bundle-evidence.md
+@.claude/rules/modelo-export-mirrors-official-structure.md
 @.claude/rules/no-silent-under-declaration.md
 @.claude/rules/no-tautological-calculation-tests.md
 @.claude/rules/registry-calculation-legal-grounding.md
