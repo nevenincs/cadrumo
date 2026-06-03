@@ -274,10 +274,21 @@ class LedgerMergeResult(OutputSchema):
 
 @register_schema("ledger.list")
 class LedgerListResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger list``."""
+    """JSON envelope for ``aeat app ledger list``.
+
+    ``rows`` is the page actually rendered; ``total`` is the full bucket row
+    count. When ``--limit`` clips the page, ``truncated`` is ``True`` and
+    ``offset`` / ``limit`` describe the window so a large ledger is never
+    silently capped — the consumer can always see that more rows exist.
+    """
 
     bucket_id: str
     rows: list[dict]
+    total: int = 0
+    shown: int = 0
+    offset: int = 0
+    limit: int | None = None
+    truncated: bool = False
 
 
 @register_schema("ledger.view")

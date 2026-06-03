@@ -392,3 +392,59 @@ def test_preflight_and_check_surface_missing_facts() -> None:
     assert preflight.exit_code == 0, preflight.output
     check = _RUNNER.invoke(app, ["app", "ledger", "check"])
     assert check.exit_code == 0, check.output
+
+
+# --- W14.P26.S87: operating-scale rendering — honest paging/truncation -------
+def _list_payload(*args: str) -> dict:
+    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list", *args])
+    assert listed.exit_code == 0, listed.output
+    payload = json.loads(listed.output)
+    return payload.get("result", payload)
+
+
+def test_list_paging_is_honest_and_never_silently_caps() -> None:
+    _import_bbva()
+    full = _list_payload()
+    total = full["total"]
+    assert total > 20, "fixture should carry enough rows to page"
+    assert full["truncated"] is False
+    assert full["shown"] == total
+    assert len(full["rows"]) == total
+
+    # A clipped page reports the full total and flags truncation.
+    page = _list_payload("--limit", "10")
+    assert page["total"] == total
+    assert page["shown"] == 10
+    assert len(page["rows"]) == 10
+    assert page["truncated"] is True
+    assert page["rows"] == full["rows"][:10]
+
+    # The offset window is a contiguous, non-overlapping slice of the full set.
+    nxt = _list_payload("--limit", "10", "--offset", "10")
+    assert nxt["offset"] == 10
+    assert nxt["rows"] == full["rows"][10:20]
+    assert nxt["truncated"] is True
+
+    # Paging through every window reconstructs the full ledger exactly once.
+    seen: list[dict] = []
+    off = 0
+    while off < total:
+        win = _list_payload("--limit", "25", "--offset", str(off))
+        seen.extend(win["rows"])
+        off += 25
+    assert seen == full["rows"]
+
+    # The final window is honestly NOT truncated past its tail beyond offset 0.
+    last_off = (total // 25) * 25
+    tail = _list_payload("--limit", "25", "--offset", str(last_off))
+    assert tail["shown"] == total - last_off
+
+
+def test_list_truncation_footer_states_the_full_total() -> None:
+    _import_bbva()
+    total = _list_payload()["total"]
+    listed = _RUNNER.invoke(app, ["app", "ledger", "list", "--limit", "5"])
+    assert listed.exit_code == 0, listed.output
+    # The human footer names the full total so the cap is never silent.
+    assert str(total) in listed.output
+    assert "1-5" in listed.output
