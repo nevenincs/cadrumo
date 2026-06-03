@@ -27,17 +27,42 @@ from pathlib import Path
 
 import pytest
 
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...application.user_profile._orchestration import profile_create_storage_span
+from ...core.config import override_settings
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import isolated_profile_storage_root
 from ._test_envelope import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
+#: Profile id every test in this module creates via the CLI inside the span.
+_PROFILE_ID = "operator"
+
 
 @pytest.fixture(autouse=True)
 def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
+    """Isolated storage root plus a held-open bucket session for the test body.
+
+    The active bucket session is a per-process/per-context ContextVar opened by
+    the storage master-key provider. The in-process runner here invokes
+    ``config profile create`` then ``modelo work ...`` within one process, where
+    a bare create invoke opens and closes its own session, so a subsequent
+    profile-bound command finds none ("No active bucket session is open").
+    Holding :func:`profile_create_storage_span` open for the ``operator`` profile
+    the tests create keeps one session active across every invoke — the same
+    pattern the passing ledger-CLI suites use.
+    """
+    dispose_engine()
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        profile_create_storage_span(_PROFILE_ID),
+    ):
+        try:
+            yield
+        finally:
+            dispose_engine()
 
 
 def _invoke(args: list[str]):
@@ -342,6 +367,15 @@ def test_work_calculate_rejects_decimal_override_for_text_casilla(
     subtraction-convention casilla like ``0006``.  The guard must fire early
     with a diagnostic naming the casilla, its label, its data_type, and the
     correct input channel.
+
+    tracked: #53 — this test currently fails at ``_create_profile()`` with
+    REFUSED_PROFILE_NOT_FOUND: the held ``profile_create_storage_span`` and the
+    in-process CLI ``profile create`` disagree on the bucket-manifest
+    registration for the ``operator`` profile (the UUID-vs-display-name /
+    manifest-registration in-process resolution class split into task #53,
+    distinct from the #52 bucket-session bootstrap this module's other tests
+    needed). Left failing loudly (no skip/xfail) per the #52 brief until #53's
+    profile-resolution fix lands.
     """
 
     _create_profile()
