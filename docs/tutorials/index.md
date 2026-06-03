@@ -217,6 +217,35 @@ aeat app modelo work calculate <WORK_UNIT_ID> --casilla 01=12000.00 --casilla 02
 
 Replace `<WORK_UNIT_ID>` with the ID from the `create` output. The command runs the engine, persists a new draft, and prints the result. Each run saves a fresh draft and never overwrites an earlier one.
 
+### If `calculate` reports a missing binding
+
+The command above may stop with an error like this instead of printing casillas:
+
+```
+La vinculación irpf.previous_year_economic_activity_net_income no tiene valor asignado.
+```
+
+That is a *binding* — a named input the formula needs but that didn't come from the figures you typed. Casillas are the numbers you enter directly; bindings are the surrounding facts the engine pulls from elsewhere: your prior-year filings, your profile, and the ledger you imported. A binding is "missing" when the app has nowhere to read it from yet.
+
+An imported, classified ledger does **not** fill every binding, for two reasons:
+
+- **Prior-year and profile facts aren't in the ledger.** `irpf.previous_year_economic_activity_net_income` is last year's net income; it comes from a prior filing, not from this quarter's transactions.
+- **Ledger-derived bindings only see transactions dated inside the period.** If a transaction's date falls outside January–March, it won't feed a `1T` calculation, so the cumulative ledger binding can still read empty.
+
+List exactly which bindings are still missing for this modelo, year, and period:
+
+```
+aeat app modelo bindings list --modelo 130 --year 2026 --period 1T --missing
+```
+
+Supply each one with a repeatable `--binding KEY=VALUE` option on the same `calculate` command:
+
+```
+aeat app modelo work calculate <WORK_UNIT_ID> --casilla 01=12000.00 --casilla 02=4000.00 --binding irpf.previous_year_economic_activity_net_income=0
+```
+
+**First filing?** When there is no prior return on record, prior-year amounts are simply `0`. Pass `--binding irpf.previous_year_economic_activity_net_income=0` (and `0` for any other prior-year binding the list reports). That is the correct value for a first-time filer, not a placeholder.
+
 ### Read the result
 
 Look for casilla 07 in the output — the partial result of section I. For income of 12,000 and expenses of 4,000, the engine applies the 20% payment-on-account rate to the net (12,000 − 4,000 = 8,000; 20% = 1,600):
@@ -270,6 +299,15 @@ aeat app modelo work file <calculation-revision-id>
 ```
 
 The command confirms the filing with `internal only - does not submit to AEAT`. It records the event in your local history; it does not transmit anything.
+
+If the AEAT filing deadline for this period has already passed, `file` refuses instead, with a message like:
+
+```
+Refused. Deadline for modelo=130 period=2026Q1 closed on 2026-04-20
+  abort_code: DEADLINE_PASSED
+```
+
+This is a guard against quietly recording a late filing. The calculation itself stays saved and verified; only the internal `file` marker is blocked. You can still review the revision and, where you have grounds to file late, submit the return to AEAT yourself outside the app. `export` (Step 6) can be refused for the same reason. Run `aeat app modelo work list` to review your work units and their states.
 
 If the verdict comes back `incomplete` or `blocked`, the report lists each unresolved casilla and each blocking finding. Resolve those items and run `verify` again. For the full verification-report workflow, see the [how-to guide](../how-to/index.md).
 
