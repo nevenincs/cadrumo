@@ -88,3 +88,9 @@ Action remains in scope: execute the W12.P26 affected-file ledger and either res
 The `W12.P26.S121` review closed `AFR-019` for `_record_spec.py`. The file is a fixed-width Fichero BOE schema and encoder primitive, not a remote provider or storage backend.
 
 Focused validation passed with 101 primitive export-format tests and targeted Ruff. A source scan for secure-storage, settings-route, filesystem, and provider APIs returned no matches in `_record_spec.py`.
+
+## S122-013 | PASS | G313 censo live adapter is outbound-only
+
+The `W12.P26.S122` review closed `AFR-020` for `_censo_live.py`. The file is an authenticated AEAT Sede browser-fetch adapter that returns parsed censo facts; it does not select a storage provider, construct secure-object repositories, route SQL storage, or write local files.
+
+Focused censo live and Playwright wait-constant tests passed with 6 tests, targeted Ruff passed, and the storage/settings/filesystem/provider API source scan returned no matches.
