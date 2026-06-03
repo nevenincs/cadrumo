@@ -74,6 +74,7 @@ from ._evidence import (
     PurchaseInvoiceEvidencePatch,
     PurchaseInvoiceEvidenceService,
 )
+from ._rule_repository import LedgerClassificationRuleRepository
 from ._llm_classification import (
     LLMClassificationSuggestion,
     LLMProvider,
@@ -168,6 +169,7 @@ __all__ = [
     "LLMProvider",
     "LLMProviderAvailability",
     "LedgerCatalogueResetReport",
+    "LedgerClassificationRuleRepository",
     "LedgerProviderID",
     "LedgerExportCommand",
     "LedgerExportResult",
