@@ -1540,6 +1540,9 @@ def derive_calculation_completeness_casillas(
         Tuple of :class:`DerivedDisenoCasilla` representing the calculation-completeness manifest.
     """
     declared_identities = {(casilla.segmento, casilla.number) for casilla in revision.casillas}
+    internal_only_identities = frozenset(
+        (casilla.segmento, casilla.number) for casilla in revision.casillas if casilla.internal_only
+    )
 
     diseno_pairs: frozenset[tuple[str, str]] | None = None
     if diseno_path is not None:
@@ -1561,6 +1564,17 @@ def derive_calculation_completeness_casillas(
             continue
         if not multi_segment:
             ordered.append(DerivedDisenoCasilla(segmento=None, number=number))
+            continue
+        if (segmento, number) in internal_only_identities:
+            # App-internal computed casilla intentionally absent from the
+            # AEAT-published Diseño de Registros (e.g. a regulatory
+            # ceiling materialised so verification predicates can bound
+            # an operator-elective amount). The schema validator
+            # guarantees such a casilla carries no export_refs and is
+            # formula-derived; the Diseño-presence check is skipped while
+            # the segment-carrying identity is preserved for downstream
+            # manifest consumers.
+            ordered.append(DerivedDisenoCasilla(segmento=segmento, number=number))
             continue
         if diseno_pairs is not None and segmento is not None and (segmento, number) not in diseno_pairs:
             raise RegistryValidationError(
