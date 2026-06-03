@@ -278,9 +278,9 @@ When a contributing ledger row changes after a modelo is drafted/published, depe
 
 Post-publish ledger edits go stale and recompute; finalized modelos block source edits.
 
-- [ ] `W09.P16.S48` - Draft a modelo revision from the ledger, then modify a contributing ledger row; `src/aeat/tests/test_ledger_modelo_staleness.py`.
-- [ ] `W09.P16.S49` - Assert dependents are stamped stale and recalculation is triggered (no silent stale revision); `src/aeat/tests/test_ledger_modelo_staleness.py`.
-- [ ] `W09.P16.S50` - Assert a finalized/published modelo blocks destructive ledger edits to its source rows; `src/aeat/tests/test_ledger_modelo_staleness.py`.
+- [x] `W09.P16.S48` - Draft a modelo revision from the ledger, then modify a contributing ledger row; `src/aeat/tests/test_ledger_modelo_staleness.py`.
+- [x] `W09.P16.S49` - Assert dependents are stamped stale and recalculation is triggered (no silent stale revision); `src/aeat/tests/test_ledger_modelo_staleness.py`.
+- [x] `W09.P16.S50` - Assert a finalized/published modelo blocks destructive ledger edits to its source rows; `src/aeat/tests/test_ledger_modelo_staleness.py`.
 
 ## Wave `W10` - Ledger-snapshot-backed modelo filing (ADR-driven, every modelo)
 
