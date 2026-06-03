@@ -504,6 +504,18 @@ def test_verification_chain_m303_parser_extracts_all_profile_casillas(pdf_stem: 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
     assert set(extracted.keys()) == {
+        # Primitive cuota leaves (Route A of the parser-engine-totals-impedance
+        # ADR, 2026-06-02): the engine sums these into iva.cuota-devengada-total
+        # and iva.cuota-deducible-total so resultado-regimen-general is
+        # recomputed from primitives rather than copied from the printed total.
+        "iva.repercutido.general",
+        "iva.repercutido.reducido",
+        "iva.repercutido.super-reducido",
+        "iva.autorepercutido.intracomunitaria",
+        "iva.soportado.interiores",
+        "iva.autoconsumo.promotor.base",
+        # Form-page totals retained for AEAT-form fidelity and the engine
+        # resultado == c27 - c45 internal-consistency assertion.
         "27",
         "29",
         "37",
@@ -518,7 +530,8 @@ def test_verification_chain_m303_parser_extracts_all_profile_casillas(pdf_stem: 
         "71",
     }, (
         f"PARSER-GAP [{pdf_stem}]: M303 2023+ profile extraction did not produce "
-        f"the expected 12 casilla IDs.\n  got: {sorted(extracted)}"
+        f"the expected 18 casilla IDs (6 primitives + 12 form-page totals).\n"
+        f"  got: {sorted(extracted)}"
     )
     # All extracted values must be Decimal instances (amount fields).
     for casilla_id, value in extracted.items():

@@ -5,6 +5,17 @@ artefact_kind = "declaracion"
 accepted_artefact_kinds = ["declaration_pdf"]
 parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
 target_casillas = [
+    # Primitive cuota leaves — Route A of the parser-engine-totals-impedance
+    # ADR (2026-06-02). The 2009-y-siguientes revision has no
+    # iva.autoconsumo.promotor.* casillas, so only the five non-autoconsumo
+    # primitives are extracted here.
+    {casilla_id = "iva.repercutido.general", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+repercutido\s+general\s+21\s+por\s+ciento'},
+    {casilla_id = "iva.repercutido.reducido", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+repercutido\s+reducido\s+10\s+por\s+ciento'},
+    {casilla_id = "iva.repercutido.super-reducido", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+repercutido\s+super-reducido\s+4\s+por\s+ciento'},
+    {casilla_id = "iva.autorepercutido.intracomunitaria", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+autorepercutido\s+intracomunitaria'},
+    {casilla_id = "iva.soportado.interiores", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+soportado\s+interiores'},
+    # Form-page totals retained for AEAT-form fidelity and downstream
+    # cross-check (engine resultado-regimen-general == c27 - c45).
     {casilla_id = "27", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+cuota\s+devengada'},
     {casilla_id = "29", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Por\s+cuotas\s+soportadas\s+en\s+operaciones\s+interiores\s+corrientes'},
     {casilla_id = "45", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+a\s+deducir'},
