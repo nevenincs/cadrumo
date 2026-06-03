@@ -1,4 +1,24 @@
-"""Backend-owned operator surface contract for the redesigned command tree."""
+"""Backend-owned operator-surface contract for the CLI command tree.
+
+Declares, in the application layer, the shape the CLI must present: the
+accepted root command families, the canonical CRUD verb vocabulary, the
+retired-surface redirects, and the help/landing documents. The CLI is a
+thin renderer of this contract rather than its author.
+
+Major declarations:
+
+* :func:`get_operator_surface_contract` returning
+  :class:`OperatorSurfaceContract`, with :data:`ACCEPTED_ROOTS` and
+  :data:`MOUNTED_COMMAND_FAMILIES` — the root-surface definition.
+* :class:`CrudVerb` and :data:`CANONICAL_CRUD_VERBS` with
+  :class:`MutatingNounGroupContract` — the orthogonal CRUD vocabulary.
+* :class:`RetiredOperatorSurface` and :func:`retired_surface_suggestion` —
+  the forward redirects for retired command roots.
+* :func:`build_help_document` and :func:`build_root_landing_report` with
+  :class:`HelpDocument` and :class:`RootLandingReport` — the rendered
+  help and landing surfaces.
+* :class:`OperatorSurfaceContractError` — the contract-violation failure.
+"""
 
 from __future__ import annotations
 

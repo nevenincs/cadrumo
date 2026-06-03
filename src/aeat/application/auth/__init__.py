@@ -1,4 +1,25 @@
-"""Application-level provider contracts and selection for AEAT auth."""
+"""Application-level provider contracts and selection for AEAT auth.
+
+Owns the auth abstraction the rest of the application depends on: the
+provider protocol, the selection contract, the operator-facing configure /
+status / test / clear actions, and the persisted-session lifecycle. The
+concrete providers live in the outbound adapter layer and are imported
+lazily to avoid an application/adapter import cycle.
+
+Major declarations:
+
+* :class:`AuthProvider` and :class:`AuthProviderKind` — the provider
+  protocol and the closed set of supported kinds, dispatched by
+  :func:`~aeat.application.auth.select_provider`.
+* :class:`AuthProviderDescription` — the safe, log-friendly provider state.
+* :func:`configure_operator_auth`, :func:`inspect_operator_auth`,
+  :func:`test_operator_auth`, and :func:`clear_operator_auth` — the
+  operator actions behind ``aeat config auth``.
+* :func:`ensure_authenticated_aeat_session` and
+  :func:`require_verified_aeat_session` with :class:`PersistedAuthSession`
+  — the persisted-session lifecycle.
+* :class:`AuthState` — the persisted auth configuration record.
+"""
 
 from __future__ import annotations
 
