@@ -366,7 +366,7 @@ Recargo-equivalencia retailer bucket with corpus+oracle; isolation.
 
 Model RE as a real regime; operate across profiles.
 
-- [ ] `W13.P25.S85` - Model recargo equivalencia as a real regime for the retailer (IVA+RE non-deductible cost; `repercutido RE on sales), not an anomaly; `src/aeat/application/aggregation/_iva_ledger.py`.
+- [x] `W13.P25.S85` - Model recargo equivalencia as a real regime for the retailer (IVA+RE non-deductible cost; `repercutido RE on sales), not an anomaly; `src/aeat/application/aggregation/_iva_ledger.py`.
 - [ ] `W13.P25.S86` - Cross-profile switching journey: operate the ledger across two profiles in one session; `src/aeat/entrypoints/cli/test_ledger_cross_profile.py`.
 
 ## Wave `W14` - UX and rendering of the profile-bound ledger at scale
