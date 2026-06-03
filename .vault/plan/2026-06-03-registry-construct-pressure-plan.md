@@ -22,7 +22,7 @@ Confirm the remaining M200 construct pressure shape before moving any registry d
 
 Split only confirmed construct pressure using existing generic fragment merge semantics.
 
-- [ ] `P02.S02` - Split M200 constructs part 002 if audit confirms safe boundaries; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records`.
+- [x] `P02.S02` - Split M200 constructs part 002 if audit confirms safe boundaries; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records`.
 
 ### Phase `P03` - Post-split headroom verification
 

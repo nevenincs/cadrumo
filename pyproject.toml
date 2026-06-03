@@ -432,6 +432,9 @@ convention = "google"
 # password literal; ruff's S105 heuristic flags the constant name.
 "src/aeat/application/overview/_applicability.py" = ["S105"]
 "src/aeat/application/wizard/_models.py" = ["S105"]
+"src/aeat/core/config.py" = ["S105"]
+"src/aeat/adapters/persistence/storage/crypto/test_encrypted_columns.py" = ["S105", "S106"]
+"src/aeat/adapters/outbound/fx/_ecb_refresh.py" = ["S310"]
 "src/aeat/core/classification/__init__.py" = ["S105"]
 "src/aeat/core/test_config_override.py" = ["S108"]
 "src/aeat/core/file_permissions.py" = ["S603"]
