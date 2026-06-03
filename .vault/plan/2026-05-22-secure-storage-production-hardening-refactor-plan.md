@@ -350,7 +350,7 @@ Current register count: `293` production candidate files.
 | `AFR-058` | `src/aeat/adapters/persistence/storage/bucket/_lockfile.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-059` | `src/aeat/adapters/persistence/storage/bucket/_manifest.py` | `manifest-bucket, master-key, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-060` | `src/aeat/adapters/persistence/storage/bucket/_manifest_io.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | closed |
-| `AFR-061` | `src/aeat/adapters/persistence/storage/crypto/__init__.py` | `master-key` | `runtime-default` | `W12.P20.S78` | pending |
+| `AFR-061` | `src/aeat/adapters/persistence/storage/crypto/__init__.py` | `master-key` | `runtime-default` | `W12.P20.S78` | closed |
 | `AFR-062` | `src/aeat/adapters/persistence/storage/crypto/_crypto.py` | `master-key` | `runtime-default` | `W12.P20.S78` | pending |
 | `AFR-063` | `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py` | `secure-object, master-key, sql-route` | `runtime-default` | `W12.P21.S86` | pending |
 | `AFR-064` | `src/aeat/adapters/persistence/storage/envelope/__init__.py` | `secure-bound` | `runtime-default` | `W12.P21.S86` | pending |
@@ -703,7 +703,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S160` - Close `AFR-058` for `src/aeat/adapters/persistence/storage/bucket/_lockfile.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/persistence/storage/bucket/_lockfile.py`.
 - [x] `W12.P26.S161` - Close `AFR-059` for `src/aeat/adapters/persistence/storage/bucket/_manifest.py` with signals `manifest-bucket, master-key, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/persistence/storage/bucket/_manifest.py`.
 - [x] `W12.P26.S162` - Close `AFR-060` for `src/aeat/adapters/persistence/storage/bucket/_manifest_io.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/persistence/storage/bucket/_manifest_io.py`.
-- [ ] `W12.P26.S163` - Close `AFR-061` for `src/aeat/adapters/persistence/storage/crypto/__init__.py` with signals `master-key`, target `runtime-default`, and owner `W12.P20.S78`; `src/aeat/adapters/persistence/storage/crypto/__init__.py`.
+- [x] `W12.P26.S163` - Close `AFR-061` for `src/aeat/adapters/persistence/storage/crypto/__init__.py` with signals `master-key`, target `runtime-default`, and owner `W12.P20.S78`; `src/aeat/adapters/persistence/storage/crypto/__init__.py`.
 - [ ] `W12.P26.S164` - Close `AFR-062` for `src/aeat/adapters/persistence/storage/crypto/_crypto.py` with signals `master-key`, target `runtime-default`, and owner `W12.P20.S78`; `src/aeat/adapters/persistence/storage/crypto/_crypto.py`.
 - [ ] `W12.P26.S165` - Close `AFR-063` for `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py` with signals `secure-object, master-key, sql-route`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py`.
 - [ ] `W12.P26.S166` - Close `AFR-064` for `src/aeat/adapters/persistence/storage/envelope/__init__.py` with signals `secure-bound`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/envelope/__init__.py`.
