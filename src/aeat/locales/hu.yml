@@ -76,8 +76,23 @@ adapters:
         api_call_failed: A Google {action} hívás sikertelen.
         api_call_refused: A Google {action} hívást elutasították (HTTP {status}).
         api_target_not_found: A Google {action} célpontja nem található.
+        conflicting_duplicate_metadata: A Google-táblázat ellentmondó, duplikált
+          AEAT-metaadatokat tartalmaz.
+        foreign_spreadsheet_not_owned: A Google-táblázat nincs ennek az AEAT-profilnak
+          a tulajdonaként megjelölve.
         googleapiclient_not_importable: A googleapiclient nem importálható; a Google-adapter
           nem tud kapcsolódni az API-hoz.
+        spreadsheet_id_blank: A Google-táblázat azonosítója nem lehet üres.
+        workbook_snapshot_mismatch: A Google-táblázat metaadatai nem egyeznek a számítási
+          pillanatképpel.
+      suggestions:
+        reexport_workbook: Exportálja újra a munkafüzetet az `aeat config google
+          sync calc export` paranccsal, hogy az alkalmazás által kezelt metaadatok
+          frissüljenek.
+        reexport_then_pull: Exportálja újra a munkafüzetet az `aeat config google
+          sync calc export` paranccsal, majd húzza be újra.
+        verify_exported_workbook: Ellenőrizze, hogy a táblázatot eredetileg az `aeat
+          config google sync calc export` hozta létre ehhez a profilhoz.
     oauth_flow:
       errors:
         browser_launcher_refused: Az operációs rendszer böngészőindítója megtagadta
@@ -93,6 +108,8 @@ adapters:
         loopback_bind_failed: A helyi visszahurkos OAuth-vevő nem tudott portot foglalni.
         oauthlib_not_importable: A google-auth-oauthlib nem importálható; az OAuth-folyamat
           nem indítható el.
+        profile_state_unresolved: A Google OAuth nem tudja feloldani a kiválasztott
+          AEAT-profil állapotát.
         scope_missing: A Google hozzájárulási képernyő visszatért anélkül, hogy minden
           szükséges hatókört megadott volna.
         unsecured_mode_refused: A Google OAuth megtagadta a hozzáférést, mert a titkos
@@ -103,6 +120,9 @@ adapters:
           és próbálja újra.
         open_consent_url_manually: Nyissa meg manuálisan a megjelenített hozzájárulási
           URL-t a böngészőjében.
+        repair_profile_state: Futtassa az `aeat config profile health` parancsot,
+          majd javítsa ki vagy váltsa át az aktív profilt, mielőtt újrapróbálja
+          a Google-parancsot.
         use_keyring_or_synthetic: Állítsa be az aeat_secret_store_backend=keyring
           értéket, vagy váltson az aktív profilt szintetikus teszt-adóazonosítóra.
     profile_binding:

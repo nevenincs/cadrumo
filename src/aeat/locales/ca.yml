@@ -76,8 +76,22 @@ adapters:
         api_call_failed: La crida a Google {action} ha fallat.
         api_call_refused: La crida a Google {action} ha estat rebutjada (HTTP {status}).
         api_target_not_found: El destí de Google {action} no s'ha trobat.
+        conflicting_duplicate_metadata: El full de Google conté metadades AEAT duplicades
+          i contradictòries.
+        foreign_spreadsheet_not_owned: El full de Google no està marcat com a propietat
+          d'aquest perfil AEAT.
         googleapiclient_not_importable: googleapiclient no es pot importar; l'adaptador
           de Google no pot accedir a l'API.
+        spreadsheet_id_blank: L'id del full de càlcul de Google no pot estar buit.
+        workbook_snapshot_mismatch: Les metadades del full de Google no coincideixen
+          amb la instantània de càlcul.
+      suggestions:
+        reexport_workbook: Torneu a exportar el llibre amb `aeat config google sync
+          calc export` perquè es renovin les metadades gestionades per l'aplicació.
+        reexport_then_pull: Torneu a exportar el llibre amb `aeat config google sync
+          calc export` i després torneu-lo a importar.
+        verify_exported_workbook: Comproveu que el full es va crear originalment
+          amb `aeat config google sync calc export` per a aquest perfil.
     oauth_flow:
       errors:
         browser_launcher_refused: El sistema operatiu ha rebutjat obrir l'URL de consentiment
@@ -95,6 +109,8 @@ adapters:
           cap port.
         oauthlib_not_importable: google-auth-oauthlib no es pot importar; el flux
           OAuth no es pot iniciar.
+        profile_state_unresolved: Google OAuth no pot resoldre l'estat del perfil
+          AEAT seleccionat.
         scope_missing: La pantalla de consentiment de Google s'ha tancat sense concedir
           tots els àmbits requerits.
         unsecured_mode_refused: Google OAuth s'ha rebutjat perquè el magatzem de secrets
@@ -105,6 +121,8 @@ adapters:
           orfe i torna-ho a intentar.
         open_consent_url_manually: Obre manualment al navegador l'URL de consentiment
           impresa.
+        repair_profile_state: Executeu `aeat config profile health` i repareu o canvieu
+          el perfil actiu abans de tornar a provar l'ordre de Google.
         use_keyring_or_synthetic: Configura aeat_secret_store_backend=keyring o canvia
           el perfil actiu a un identificador fiscal sintètic de prova.
     profile_binding:

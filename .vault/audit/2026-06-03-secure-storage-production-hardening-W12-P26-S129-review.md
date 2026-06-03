@@ -25,3 +25,16 @@ Validation:
 - A source scan found no naked environment reads, DB route setup, secure-object repository constructors, local storage provider constructors, or direct local file read/write calls in `_calc_sheets_apply.py`.
 
 Disposition: close `AFR-027` as `remote-mirror`.
+
+## S129-002 | MEDIUM | RESOLVED | Re-export accumulated duplicate Sheets structural metadata
+
+Manual live inspection of the configured app-owned workbook found that two prior exports left duplicate `aeat_*` developer metadata entries and duplicate protected ranges on the `Cálculos`, `Procedencia`, `Tarifas`, and `Guía` tabs. That made the export mirror structurally non-idempotent and left pull metadata parsing dependent on Google API return order if future duplicate identity stamps diverged.
+
+Resolution: `apply_export_plan()` now fetches existing developer metadata and protected ranges for an existing workbook, deletes only adapter-managed developer metadata and app-generated protected ranges, then recreates the current metadata/range set. Pull-side metadata merge now refuses conflicting duplicate identity metadata instead of collapsing it silently.
+
+Validation:
+
+- Live Drive/Sheets inspection confirmed duplicate metadata/ranges on the app-owned `AEAT 130 1T 2025` workbook before the fix.
+- `uv run --no-sync pytest -q` over the focused Google adapter suite passed with 131 tests.
+- `uv run --no-sync aeat config google sync calc pull --modelo 130 --period 1T --year 2025 --spreadsheet-id 1zvR8fAvabtWjvTfosTZcflGXWaP-khyLEZbVHCmHAoc --compute` passed against the live workbook.
+- Targeted Google adapter Ruff passed.

@@ -32,4 +32,10 @@ Validation passed:
 
 ## Notes
 
-No source edits were required for this step.
+Continuation live review found repeated developer metadata on the configured workbook. `_calc_sheets_pull.py` now refuses conflicting duplicate workbook identity metadata instead of collapsing it by Google API return order, while tolerating repeated `aeat_exported_at` values for the same registry slice. The new refusal is an `OutboundStorageConflictError` with a translated-message key and `tr()`-resolved remediation text.
+
+Follow-up review also found unlocalized blank-id, foreign-ownership, and metadata/snapshot compute refusals. Those paths now carry translated-message keys, and the operator remediation strings resolve through `tr()` where present.
+
+The 2026-06-03 modelo export evidence/workbook parity ADRs were reviewed during continuation. This step remains a Google Sheets transport mirror hardening step only; it does not implement or claim the new evidence tab, bundled ledger evidence, official-layout parity gate, or offline/online single-builder parity contract.
+
+The focused Google adapter suite passed with 131 tests after the remediation, and `uv run --no-sync -q python -m aeat.locales audit` passed across all locale catalogues.

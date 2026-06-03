@@ -27,7 +27,7 @@ The pull adapter does NOT mutate any local state; it returns a
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
@@ -49,6 +49,7 @@ from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
 from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata, SheetExportPlan
 from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.decimal import coerce_decimal
+from ....core.i18n import tr
 from ....core.time._utc import coerce_utc_aware
 from ....domain.calculations.registry import (
     BindingId,
@@ -70,6 +71,17 @@ from ._api import execute_request
 
 _OWNERSHIP_KEY: Final[str] = "aeat_vault_app"
 _OWNERSHIP_VALUE: Final[str] = "aeat"
+_RELATION_METADATA_PREFIX: Final[str] = "aeat_relation:"
+_DUPLICATE_SENSITIVE_METADATA_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "aeat_engine_version",
+        "aeat_registry_sha",
+        "aeat_modelo_id",
+        "aeat_revision_id",
+        "aeat_filing_year",
+        "aeat_period",
+    }
+)
 
 # A single batch-get value-range entry from the Sheets API.
 # Shape: {"range": str, "values": list[list[object]]}
@@ -267,10 +279,8 @@ def _verify_ownership(drive_service: _GoogleResource, spreadsheet_id: str) -> No
             f"spreadsheet {spreadsheet_id!r} is not marked as app-owned; refusing "
             f"to read operator edits from a foreign Drive file",
             context={"spreadsheet_id": spreadsheet_id, "name": file_meta.get("name", "")},
-            suggestion=(
-                "verify the spreadsheet was originally created by "
-                "`aeat config google sync calc export` against this profile"
-            ),
+            suggestion=tr("adapters.google.calc_sheets.suggestions.verify_exported_workbook"),
+            translated_message="adapters.google.calc_sheets.errors.foreign_spreadsheet_not_owned",
         )
 
 
@@ -286,12 +296,41 @@ def _read_developer_metadata(
         ),
         action="sheets.spreadsheets.get.developerMetadata",
     )
+    return _merge_developer_metadata_entries(spreadsheet.get("developerMetadata", []) or [])
+
+
+def _duplicate_metadata_must_match(key: str) -> bool:
+    return key in _DUPLICATE_SENSITIVE_METADATA_KEYS or key.startswith(_RELATION_METADATA_PREFIX)
+
+
+def _merge_developer_metadata_entries(entries: Iterable[Mapping[str, Any]]) -> dict[str, str]:
+    """Merge Sheets developer metadata entries, refusing conflicting identity duplicates.
+
+    Google Sheets developer metadata keys are not unique. Repeated exports
+    can leave multiple `aeat_*` keys on the same workbook. Duplicate
+    identity keys with different values would make pull classification
+    depend on API return order, so they are treated as a conflict. The
+    informational `aeat_exported_at` stamp is intentionally excluded:
+    multiple exports of the same registry slice produce different
+    timestamps without changing workbook identity.
+    """
     pairs: dict[str, str] = {}
-    for entry in spreadsheet.get("developerMetadata", []) or []:
+    conflicting_keys: set[str] = set()
+    for entry in entries:
         key = entry.get("metadataKey")
         value = entry.get("metadataValue")
         if isinstance(key, str) and isinstance(value, str):
+            previous = pairs.get(key)
+            if previous is not None and previous != value and _duplicate_metadata_must_match(key):
+                conflicting_keys.add(key)
             pairs[key] = value
+    if conflicting_keys:
+        raise OutboundStorageConflictError(
+            "spreadsheet carries conflicting duplicate AEAT developer metadata; refusing order-dependent pull",
+            context={"conflicting_metadata_keys": sorted(conflicting_keys)},
+            suggestion=tr("adapters.google.calc_sheets.suggestions.reexport_workbook"),
+            translated_message="adapters.google.calc_sheets.errors.conflicting_duplicate_metadata",
+        )
     return pairs
 
 
@@ -394,6 +433,7 @@ def pull_operator_edits(
         raise OutboundStorageValidationError(
             "spreadsheet_id must not be blank",
             context={"spreadsheet_id": spreadsheet_id},
+            translated_message="adapters.google.calc_sheets.errors.spreadsheet_id_blank",
         )
 
     drive = _drive_service(credentials)
@@ -916,10 +956,8 @@ def _require_metadata_match(*, pull: PullResult, snapshot: RegistrySnapshot) -> 
             "workbook_registry_sha": metadata.registry_sha,
             "snapshot_registry_sha": registry_sha(snapshot),
         },
-        suggestion=(
-            "re-export the workbook against the current snapshot via "
-            "`aeat config google sync calc export`, then re-pull"
-        ),
+        suggestion=tr("adapters.google.calc_sheets.suggestions.reexport_then_pull"),
+        translated_message="adapters.google.calc_sheets.errors.workbook_snapshot_mismatch",
     )
 
 

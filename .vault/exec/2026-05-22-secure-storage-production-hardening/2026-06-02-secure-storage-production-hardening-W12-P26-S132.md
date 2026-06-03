@@ -33,5 +33,6 @@ Evidence:
 
 ## Notes
 
-- No code change was required in `_oauth_flow.py`; the remote-mirror enforcement point is the session-store / sync-push boundary hardened under `W12.P24.S98`.
+- The earlier no-code-change conclusion was too narrow. `_run_local_server()` could re-raise unclassified upstream OAuth failures outside the `GoogleAuthError` hierarchy caught by the CLI. `_raise_local_server_error()` now wraps the fallthrough as `GoogleAuthNetworkError` with the original exception preserved as cause, and `test_oauth_flow.py` covers browser, network, and unclassified translation paths.
+- Follow-up review also found `resolve_active_tax_id()` degraded missing active-profile bucket/record state to an empty tax id. That could bypass unsecured-mode refusal and proceed toward loopback OAuth. Missing profile state now raises `GoogleAuthProfileUnboundError` with a localized message and `tr()`-resolved repair guidance before `_run_local_server()` is reached.
 - The plan checkbox was closed on 2026-06-03 after the shared plan file stabilised for this row. The live OAuth browser consent probe remains opt-in live evidence and was not counted as the offline ledger closure.

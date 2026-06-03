@@ -77,9 +77,9 @@ Resolved process issues are tracked in the S101 review: the timed-out combined C
 
 ## S102-011 | HIGH | OPEN | Final runtime rollout disposition proof still has unchecked W12.P26 rows
 
-The `W12.P25.S102` review cannot close. After the S119-S128 continuation, the plan still has 226 unchecked W12.P26 affected-file closeout rows, and the affected-file register still has 229 rows marked `pending`.
+The `W12.P25.S102` review cannot close. After the S119-S136 continuation, the plan still has 217 unchecked W12.P26 affected-file closeout rows, and the affected-file register still has 220 rows marked `pending`.
 
-This is the exact surface S102 must prove: 49 `runtime-default`, 77 `manifest-discovery`, 13 `bootstrap-custody`, 36 `plaintext-exception`, 50 `remote-mirror`, and 1 `retired` row remain unchecked. Three checked locale rows also still have pending AFR status and no local S393-S395 evidence artifact.
+This is the exact surface S102 must prove: 48 `runtime-default`, 75 `manifest-discovery`, 13 `bootstrap-custody`, 36 `plaintext-exception`, 44 `remote-mirror`, and 1 `retired` row remain unchecked. Three checked locale rows also still have pending AFR status and no local S393-S395 evidence artifact.
 
 Action remains in scope: execute the W12.P26 affected-file ledger and either restore/write the S393-S395 evidence or reopen those rows. Do not mark S102 complete until the ledger supports the final disposition claim.
 
@@ -148,3 +148,35 @@ Registry enforcement, Google package allowlist, Google records, and CLI Google l
 The `W12.P26.S132` review closed `AFR-030` for `_oauth_flow.py`. The flow resolves active profile/tax-id state for unsecured-mode refusal, runs the Google loopback OAuth flow, and returns strict OAuth records; it does not persist records or construct storage backends itself.
 
 Focused Google records, package allowlist, and CLI Google localisation tests passed with 24 tests, targeted Ruff passed, and the source scan found no DB route, naked environment, secure-object constructor, local storage constructor, or local file read/write matches. Live OAuth consent remains opt-in evidence outside this offline ledger closure.
+
+## S129-023 | MEDIUM | RESOLVED | Calc-sheets re-export accumulated duplicate remote workbook structure
+
+Manual live inspection of the configured app-owned `AEAT 130 1T 2025` workbook found duplicate `aeat_*` developer metadata and duplicate app protected ranges after repeated exports. The apply adapter now deletes only adapter-managed developer metadata and protected ranges before recreating them, and the pull adapter refuses conflicting duplicate identity metadata with a typed, locale-backed `OutboundStorageConflictError`. The focused Google adapter suite passed with 131 tests, targeted Ruff passed, the locale audit passed through `python -m aeat.locales`, and the live pull/compute command still succeeds against the existing workbook.
+
+## S132-024 | MEDIUM | RESOLVED | OAuth local-server fallthrough leaked raw upstream exceptions
+
+The OAuth flow's local-server wrapper could re-raise unclassified `InstalledAppFlow.run_local_server()` exceptions outside the `GoogleAuthError` hierarchy caught by the CLI. `_raise_local_server_error()` now wraps the fallthrough as `GoogleAuthNetworkError` with the original exception preserved as cause; focused OAuth tests cover browser, network, and unclassified failure translation.
+
+## S133-025 | MEDIUM | RESOLVED | Localized profile-binding suggestion evidence overclaimed locale parity
+
+Rerunning `python -m aeat.locales audit` disproved the S133 artifact claim: the `adapters.google.profile_binding.suggestions.create_profile` key was missing from all four locale catalogues. The missing leaves were added to `en.yml`, `es.yml`, `ca.yml`, and `hu.yml`; the locale audit now passes.
+
+## S134-S136-026 | PASS | Google records, stale refresh row, and session store are closed
+
+`W12.P26.S134` through `W12.P26.S136` are now checked. `AFR-032` is closed as `remote-mirror`, `AFR-033` is closed as `retired` because `_refresh.py` is absent from disk and `git ls-files`, and `AFR-034` is closed as `runtime-default` through `secure_object_repository_for_active_bucket()`.
+
+## S132-027 | HIGH | RESOLVED | OAuth unsecured-mode preflight treated missing profile state as no tax id
+
+The code-reviewer found that `_oauth_flow.resolve_active_tax_id()` degraded a missing active-profile bucket manifest or missing profile aggregate to `""`. Because `check_unsecured_mode_safety()` only refuses a non-empty real tax id, a stale active-profile pointer under `unsecured` could proceed toward loopback OAuth instead of failing closed before network IO.
+
+Resolution: missing bucket manifests and missing profile records now raise `GoogleAuthProfileUnboundError` with `translated_message="adapters.google.oauth_flow.errors.profile_state_unresolved"` and `tr()`-resolved repair guidance. `test_oauth_flow.py` covers both a missing manifest and a real isolated active-bucket runtime whose profile aggregate is absent, proving the login flow refuses before OAuth network IO.
+
+## S130-028 | MEDIUM | RESOLVED | Pull adapter retained unlocalized operator-facing refusals
+
+The code-reviewer found that `_calc_sheets_pull.py` still had public pull/compute refusal paths without translated-message keys or localized remediation: blank spreadsheet id, foreign Drive ownership, and metadata/snapshot compute mismatch.
+
+Resolution: all three paths now pass `translated_message`; the ownership and compute remediations use `tr()` suggestions. `test_pull_adapter_helpers.py` covers blank-id validation before service construction, and `test_compute_from_pull.py` covers the stale-workbook refusal message/suggestion. The foreign-ownership path is source-reviewed because exercising it without a fake Google Drive service would violate the real-behavior test rule.
+
+## S129-S130-029 | PASS | New export parity ADRs constrain this bundle's claims
+
+The 2026-06-03 modelo export evidence/workbook parity ADRs were read before closure. This bundle only hardens the Google Sheets transport mirror: idempotent app-managed metadata/range cleanup, duplicate metadata conflict refusal, localized pull/compute refusals, and OAuth preflight failure boundaries. It does not claim the new `Evidencia` surface, bundled ledger evidence, offline/online single-builder parity, explicit start/final anchors, official-layout parity gates, documentary parity tier migration, or BOE golden-SHA sibling conformance work.
