@@ -1249,6 +1249,7 @@ def persist_and_reconcile_iva_compensation_wallet(
     *,
     output_root: Path,
     repository: _CalculationObservationRepository | None = None,
+    decision_repository: _IvaWalletDecisionRepository | None = None,
     decided_at: datetime | None = None,
 ) -> IvaWalletCaptureReport:
     """Persist, reload, reconcile, and report one AEAT IVA wallet observation.
@@ -1274,10 +1275,18 @@ def persist_and_reconcile_iva_compensation_wallet(
         taxpayer_nif=reloaded.taxpayer_nif,
         wallet=reloaded,
         repository=repository,
+        decision_repository=decision_repository,
         decided_at=decided_at,
     )
     decision = reconciliation.decision
-    loaded_decision = _IvaWalletDecisionRepository().load_decision(
+    decision_repo = (
+        decision_repository
+        if decision_repository is not None
+        else _IvaWalletDecisionRepository(
+            objects=repository.secure_object_repository if repository is not None else None
+        )
+    )
+    loaded_decision = decision_repo.load_decision(
         decision.taxpayer_nif,
         decision.target_year,
         decision.target_period,
@@ -1964,6 +1973,32 @@ async def _active_verified_session(
     return result.session, settings
 
 
+def __getattr__(name: str):
+    """Lazy-load the heavy service classes through the package boundary.
+
+    Promoted per the ``service-imports-via-top-level-reexports``
+    rule so CLI handlers and other consumers consume these symbols
+    through ``aeat.application.live`` rather than dotting into
+    ``_verify`` / ``_notifications`` / ``_expedientes``. Lazy
+    semantics preserve the existing module-load-time profile (the
+    services trigger their own heavy imports only on first
+    access).
+    """
+    if name in ("VerifyService", "VerifyVerdict", "VerifySurface"):
+        from . import _verify as _impl_mod
+
+        return getattr(_impl_mod, name)
+    if name == "NotificationsService":
+        from . import _notifications as _impl_mod
+
+        return getattr(_impl_mod, name)
+    if name in ("ExpedientesService", "ExpedientesCapture"):
+        from . import _expedientes as _impl_mod
+
+        return getattr(_impl_mod, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
 __all__ = [
     "BORRADOR_100_SNAPSHOT_NAMESPACE",
     "Borrador100Snapshot",
@@ -1971,6 +2006,8 @@ __all__ = [
     "Borrador100SnapshotService",
     "BorradorSnapshotNotFoundError",
     "CensoSnapshotNotFoundError",
+    "ExpedientesCapture",
+    "ExpedientesService",
     "FiledDataCaptureReport",
     "FiledDataListingReport",
     "FiledDataListingRow",
@@ -1993,10 +2030,14 @@ __all__ = [
     "LiveIvaReadStatus",
     "LiveIvaReadSurface",
     "LiveIvaSurfaceTimeoutError",
+    "NotificationsService",
     "SnapshotLifecycleState",
     "SourceFiledDataCaptureReport",
     "StoredIvaRemoteStateAcquisitionRow",
     "StoredIvaWalletObservationRow",
+    "VerifyService",
+    "VerifySurface",
+    "VerifyVerdict",
     "borrador_100_snapshot_object_key",
     "build_iva_remote_state_acquisition_report",
     "capture_filed_data",
