@@ -246,6 +246,14 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
                 detail="mixed ledger transaction has no usage_ratio_id proportionality reference",
             )
         )
+    # Trabajo (nómina) incoming rows are IVA-exempt by definition: an
+    # employer-paid wage/salary carries no taxable_base / iva_rate /
+    # iva_amount because the IRPF retenciones flow consumes the row,
+    # not the IVA aggregation. Skip the IVA-fact preflight on these
+    # rows so a payroll-receipt entry does not surface as three false-
+    # positive missing_iva_* findings every period.
+    if _transaction_is_trabajo_income(transaction):
+        return tuple(issues)
     for reason in iva_ledger_missing_fact_reasons(transaction):
         issues.append(
             LedgerPreflightIssue(
@@ -255,6 +263,23 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
             )
         )
     return tuple(issues)
+
+
+def _transaction_is_trabajo_income(transaction: Transaction) -> bool:
+    """Return whether the transaction is a nómina (trabajo) income row.
+
+    AEAT classifies an IRPF rendimiento del trabajo (wage/salary)
+    received from an employer as an income flow that never carries an
+    IVA component; the row's IRPF-side retenciones binding consumes
+    the gross amount and the IVA aggregation never reads it. The
+    preflight must therefore skip the IVA-fact checks on these rows.
+    """
+    if transaction.direction is not TransactionDirection.INCOMING:
+        return False
+    irpf_category = transaction.irpf_category
+    if not isinstance(irpf_category, str):
+        return False
+    return irpf_category.strip().lower() == "trabajo"
 
 
 def _preflight_reason_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> LedgerPreflightIssueReason:
