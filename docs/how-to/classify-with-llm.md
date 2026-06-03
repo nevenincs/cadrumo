@@ -28,7 +28,12 @@ The LLM runs through a local provider CLI. List the ones found on your `PATH`:
 aeat app ledger providers
 ```
 
-If your provider isn't listed, install its CLI or pick one that is.
+This lists providers whose CLI is found on your `PATH`. The provider must also
+be **logged in**: `providers` checks installation, not authentication. If a
+provider's CLI isn't signed in, `classify --llm` refuses and shows the
+provider's own message (for example, `claude CLI exited with 1: 'Not logged in
+· Please run /login'`) — log in to that CLI and retry. If your provider isn't
+listed at all, install its CLI or pick one that is.
 
 ## Ask the LLM for a suggestion
 
