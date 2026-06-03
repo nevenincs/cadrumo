@@ -69,6 +69,24 @@ def test_application_package_reexports_bucket_directory_removal() -> None:
     assert callable(package.remove_profile_bucket_directory)
 
 
+def test_application_package_reexports_orchestration_full_surface() -> None:
+    """Every public symbol declared in _orchestration.__all__ is reachable via the package.
+
+    Closes the gap that left several orchestration symbols (e.g.
+    build_lifecycle_service, profile_storage_session) without a
+    top-level re-export, forcing consumers to dot into the private
+    submodule. Codified by service-imports-via-top-level-reexports.
+    """
+    import aeat.application.user_profile as package
+    from aeat.application.user_profile import _orchestration
+
+    missing = sorted(name for name in _orchestration.__all__ if name not in package.__all__)
+    assert not missing, (
+        f"orchestration symbols missing from package __all__: {missing!r}. "
+        f"Promote them via the lazy __getattr__ block and add to __all__."
+    )
+
+
 def test_domain_package_reexports_portable_export_record() -> None:
     """`aeat.domain.user_profile` exposes the portable-export domain record."""
     import aeat.domain.user_profile as package
