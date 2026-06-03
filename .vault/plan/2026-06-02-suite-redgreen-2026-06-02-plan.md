@@ -134,7 +134,7 @@ Identity-primitive sibling-domain enum cycle, exception base hygiene, monkeypatc
 
 - [x] `P05.S14` - IvaRate sibling-domain cycle; `Relocate IvaRate out of invoices._enums into a leaf module (core or domain/iva) so iva._invoice_classification can import from public surface without cycle`.
 - [x] `P05.S15` - Exception base hygiene; `test_production_exception_classes_do_not_introduce_unregistered_builtin_roots — register or remove unregistered root`.
-- [ ] `P05.S16` - Monkeypatch + cross-module + relative-imports inventories; `Bring the three inventory ratchets back to zero (likely peer additions need rationale comments or removal)`.
+- [x] `P05.S16` - Monkeypatch + cross-module + relative-imports inventories; `Bring the three inventory ratchets back to zero (likely peer additions need rationale comments or removal)`.
 
 ### Phase `P06` - CLI surface contract
 

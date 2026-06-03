@@ -25,6 +25,7 @@ from pathlib import Path
 from defusedxml import ElementTree as ET  # ElementTree-as-ET is the conventional alias
 
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.parsing import _parse_iso8601_date
 
 _BUNDLED_RATES = Path(__file__).resolve().parents[3] / "_data" / "fx" / "eurofxref-bundled.xml"
 
@@ -79,7 +80,7 @@ def _parse_eurofxref(path: Path) -> dict[date, dict[str, Decimal]]:
         time_attr = node.get("time")
         if time_attr is None:
             continue
-        day = date.fromisoformat(time_attr)
+        day = _parse_iso8601_date(time_attr)
         rates: dict[str, Decimal] = {}
         for child in node:
             if not child.tag.endswith("Cube"):
