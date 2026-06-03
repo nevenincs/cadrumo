@@ -1967,6 +1967,37 @@ remediation is currently HELD at audit-only per the active action policy.
   Verified: 27 inventory adapter+service tests pass, ty clean. Net effect: DB-32 closed
   *and* a real production under-guard gap closed.
 
+- 2026-06-03: **D4 RATIFIED + S58/S59/S53/S60 reconciled; W10/W11 authored (operator
+  directive).** The operator ratified the D4 persistence-boundary ruling
+  (commit ADR edit) with one refinement: repositories import secure-storage primitives
+  from the storage package public top-level surface, never underscore-private submodules
+  ("_mods look wrong as import sources"). Reconciliation of the four remaining
+  Wave-B/residual steps: **S58** closed (D4 ratified in ADR). **S59** closed (verified
+  `core/resources/_repos` has zero `application` imports — topics resolves to `core.topics`
+  after S54 — confirming the D5 shared-kernel-facade ruling). **S53** closed as
+  **infeasible/superseded**: its instruction (defer the 6
+  `filing`/`justificante`/`submission` imports of `SecureBoundRepository` +
+  `SensitivityClass` into `TYPE_CHECKING`) cannot be performed —
+  `SecureBoundRepository` is a runtime generic base class and `SensitivityClass.AUDIT` a
+  runtime `ClassVar` value; those edges are exactly the managed debt D4 accepts, and the
+  import-surface cleanup is re-tracked in **Wave W11**. **S60** closed as **amplified**:
+  its adapter→application active-bucket inversion is re-tracked, hexagonally, in
+  **Wave W10**. Per the operator's "track all work as new continuous waves/phases" +
+  "ground in codebase research, enumerate the complete touched surface mechanically"
+  directives, two research-grounded waves were authored (plan commit `da33f71ea`): **W10**
+  (Active-bucket context resolution consolidated in core — relocate
+  `require_active_bucket_id` + `NoActiveProfileError` to a public `aeat.core` surface,
+  repoint the enumerated ~60 consumer sites across adapters/application/entrypoints/tests;
+  phases P29–P33) and **W11** (Secure-storage public-surface import purity — export the
+  consumed primitives from `storage/__init__`, kill the double-private
+  `envelope._envelope` reach-in in `domain/transactions/_repository`, repoint the ~15
+  domain repository import sites; phases P34–P37). Each step names its exact file:line
+  sites. Note for execution: **W10 is a single atomic relocation** (per the
+  relocation-atomicity rule, no transient re-export bridge), so its P29–P32 land in one
+  scripted commit with the tree quiescent — sequenced as a dedicated focused sweep, not
+  split across commits. With S58/S59/S53/S60 closed, all original 94 plan steps are
+  resolved; the 13 open items are exactly the newly-enumerated W10/W11 surface.
+
 ## Codification candidates
 
 
