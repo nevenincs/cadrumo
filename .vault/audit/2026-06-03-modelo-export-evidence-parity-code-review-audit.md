@@ -26,3 +26,7 @@ Status: PASS. Reviewed `W01.P01.S03` against the plan and evidence ADR. `Calcula
 ## S04-REVIEW-001 | PASS | Evidence survives encrypted revision storage
 
 Status: PASS. Reviewed `W01.P01.S04` against the encrypted-persistence and no-tautology requirements. The test uses a real isolated runtime profile and `SecureObjectRepository`, persists a `CalculationRevision` with fully populated `LedgerFilingEvidence`, reloads it through `CalculationRevisionCatalogueRepository`, and asserts strict equality plus evidence-field equality. The anti-tautology assertion compares against the same revision with evidence stripped, so the test proves evidence is real persisted state rather than a mirrored expectation. No Critical or High issues found.
+
+## S05-REVIEW-001 | PASS | Evidence contributor coverage is guarded
+
+Status: PASS. Reviewed `W01.P01.S05` against the no-silent-omission requirement. `assert_evidence_covers_snapshot` compares the exact contributor id sets from `LedgerFilingSnapshot.rows` and `LedgerFilingEvidence.rows`, raising `ModeloValidationError` with missing/extra ids on divergence. Aggregation tests cover missing-contributor failure and complete-bundle success. The staged `_actions.py` guard call is limited to importing this helper and invoking it before persisting the verified revision. No Critical or High issues found.
