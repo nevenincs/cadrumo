@@ -1,4 +1,4 @@
-"""Reviewability gates for committed AEAT registry TOML fragments."""
+"""Reviewability gates for committed AEAT modelo registry TOML fragments."""
 
 from __future__ import annotations
 
@@ -11,10 +11,12 @@ from ....core.resources import bundled_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
+_REGISTRY_ROOT = bundled_path("registry", "aeat", "modelos")
 _REGISTRY_PACKAGE_ROOT = Path(__file__).parent
-_MAX_TOML_LINES = 5_000
-_MAX_TOML_LINE_CHARS = 1_200
+_MAX_TOML_LINES = 1_500
+_MAX_TOML_LINE_CHARS = 600
+_MAX_BASELINE_TOML_LINES = 1_250
+_MAX_BASELINE_TOML_LINE_CHARS = 575
 _MAX_NEW_VALIDATOR_MODULE_LINES = 300
 _VALIDATOR_MODULE_LINE_BASELINES = {
     "_validate_cross_revision.py": 424,
@@ -68,10 +70,10 @@ def test_registry_reviewability_baseline_remains_well_below_hard_cap() -> None:
     largest = max(sizes, key=lambda size: size.line_count)
     widest = max(sizes, key=lambda size: size.max_line_chars)
 
-    assert largest.line_count < 3_500, (
+    assert largest.line_count < _MAX_BASELINE_TOML_LINES, (
         f"largest registry TOML grew beyond review baseline: {largest.path} has {largest.line_count} lines"
     )
-    assert widest.max_line_chars < 1_000, (
+    assert widest.max_line_chars < _MAX_BASELINE_TOML_LINE_CHARS, (
         f"widest registry TOML row grew beyond review baseline: {widest.path} has a {widest.max_line_chars}-char line"
     )
 
