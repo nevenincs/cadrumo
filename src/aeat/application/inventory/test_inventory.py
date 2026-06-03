@@ -12,7 +12,7 @@ import pytest
 from ...adapters.persistence.storage import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ...adapters.persistence.storage.errors import StorageValidationError
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
-from ...domain.contribuyente.inventory import MovementKind, ValuationMethod
+from ...domain.contribuyente.inventory import InventoryLedgerError, MovementKind, ValuationMethod
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from . import (
     InventoryActividadConflictError,
@@ -183,6 +183,40 @@ class TestMovementAdd:
         )
         with pytest.raises(InventoryActividadNotFoundError):
             svc.movement_add(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, movement=cmd)
+
+    def test_movement_add_refuses_invalid_negative_stock(self, secure_engine: TestRuntimeProfile) -> None:
+        """The domain valuation guard runs in the service before persisting (DB-32 B-3).
+
+        A COGS movement that consumes more stock than the ledger holds must be
+        refused by ``movement_add`` itself — the persistence adapter no longer
+        runs the valuation calculation.
+        """
+        svc = _make_svc(secure_engine)
+        svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="fifo")
+        svc.movement_add(
+            bucket_id=secure_engine.bucket_id,
+            actividad_id="A1",
+            year=2025,
+            movement=InventoryMovementCommand(
+                movement_id="BUY-1",
+                movement_date=date(2025, 3, 1),
+                kind=MovementKind.PURCHASE,
+                quantity=Decimal("1"),
+                unit_cost=Decimal("10.00"),
+            ),
+        )
+        with pytest.raises(InventoryLedgerError, match="consume more stock"):
+            svc.movement_add(
+                bucket_id=secure_engine.bucket_id,
+                actividad_id="A1",
+                year=2025,
+                movement=InventoryMovementCommand(
+                    movement_id="SELL-TOO-MANY",
+                    movement_date=date(2025, 3, 2),
+                    kind=MovementKind.COGS,
+                    quantity=Decimal("2"),
+                ),
+            )
 
 
 class TestValuationPreview:
