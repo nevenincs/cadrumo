@@ -147,13 +147,38 @@ adapters:
     storage:
       factory:
         errors:
-          drive_root_missing: 'Nincs Google Drive gyokermappa-azonosito beallitva az aktiv profilhoz. Futtassa eloszor: `aeat config google folder set <id>`.'
-          google_auth_import_failed: 'A google-auth fuggoseg nem importalhato; futtassa: `uv sync`, majd probalja ujra.'
-          google_client_missing: 'Nincs Google OAuth-kliens regisztralva az aktiv profilhoz. Futtassa eloszor: `aeat config google register --client-json <path>`.'
-          google_token_missing: 'Nincs Google OAuth-token mentve az aktiv profilhoz. Futtassa eloszor: `aeat config google login`.'
-          kind_empty: 'Az AEAT_STORAGE_PROVIDER_KIND ures.'
-          kind_unhandled: 'A(z) {kind} tarhelyszolgaltato-tipust a factory nem kezeli.'
-          kind_unknown: 'A(z) {value} tarhelyszolgaltato-tipus nem ismert; vart ertekek: {expected}.'
+          drive_root_missing: 'Nincs Google Drive gyokermappa-azonosito beallitva
+            az aktiv profilhoz. Futtassa eloszor: `aeat config google folder set <id>`.'
+          google_auth_import_failed: 'A google-auth fuggoseg nem importalhato; futtassa:
+            `uv sync`, majd probalja ujra.'
+          google_client_missing: 'Nincs Google OAuth-kliens regisztralva az aktiv
+            profilhoz. Futtassa eloszor: `aeat config google register --client-json
+            <path>`.'
+          google_token_missing: 'Nincs Google OAuth-token mentve az aktiv profilhoz.
+            Futtassa eloszor: `aeat config google login`.'
+          kind_empty: Az AEAT_STORAGE_PROVIDER_KIND ures.
+          kind_unhandled: A(z) {kind} tarhelyszolgaltato-tipust a factory nem kezeli.
+          kind_unknown: 'A(z) {value} tarhelyszolgaltato-tipus nem ismert; vart ertekek:
+            {expected}.'
+      google_drive:
+        errors:
+          content_hash_blank: 'A Google Drive tartalom hash nem lehet ures.'
+          content_hash_mismatch: 'A Google Drive tartalom hash nem egyezik; a letoltott payload integritasellenorzese sikertelen.'
+          create_namespace_no_id: 'A Google Drive nem adott vissza azonositot a nevter mappa letrehozasakor.'
+          create_vault_folder_no_id: 'A Google Drive nem adott vissza azonositot a vault mappa letrehozasakor.'
+          folder_not_owned: 'A Drive mappa {folder_name} nincs az alkalmazas tulajdonakent jelolve; az operatori adatok vedelmeben az iras megtagadva.'
+          googleapiclient_import_failed: 'A google-api-python-client fuggoseg nem importalhato; futtassa: `uv sync`, majd probalja ujra.'
+          media_non_bytes: 'A Google Drive medialetoltes {payload_type} tipust adott vissza bytes helyett.'
+          namespace_blank: 'A Google Drive tarhely nevtere nem lehet ures.'
+          namespace_forbidden_characters: 'A Google Drive nevter {namespace} tiltott utvonal-karaktereket tartalmaz.'
+          namespace_not_found: 'A Google Drive nevter nem talalhato: {namespace}.'
+          object_key_hmac_blank: 'A Google Drive objektumkulcs HMAC nem lehet ures.'
+          object_not_found: 'A Google Drive objektum {object_key_hmac} nem talalhato ebben a nevterben: {namespace}.'
+          request_failed: 'A Google Drive {action} keres {status} allapottal sikertelen.'
+          root_folder_id_blank: 'A Google Drive gyokermappa azonosito nem lehet ures.'
+          vault_entry_not_folder: 'A beallitott Drive gyoker tartalmazza ezt: {vault_folder_name}, de ez nem mappa.'
+          vault_folder_name_blank: 'A Google Drive vault mappa neve nem lehet ures.'
+          write_non_dict_response: 'A Google Drive {action} irasi valasza varatlan alaku volt.'
   sede:
     errors:
       cotejo_nav_failed: Az AEAT cotejo oldalra való navigáció sikertelen volt; a

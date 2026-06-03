@@ -143,13 +143,37 @@ adapters:
     storage:
       factory:
         errors:
-          drive_root_missing: 'No Google Drive root folder id is configured for the active profile. Run `aeat config google folder set <id>` first.'
-          google_auth_import_failed: 'The google-auth dependency is not importable; run `uv sync` and retry.'
-          google_client_missing: 'No Google OAuth client is registered for the active profile. Run `aeat config google register --client-json <path>` first.'
-          google_token_missing: 'No Google OAuth token is persisted for the active profile. Run `aeat config google login` first.'
-          kind_empty: 'AEAT_STORAGE_PROVIDER_KIND is empty.'
-          kind_unhandled: 'Storage provider kind {kind} is not handled by the factory.'
-          kind_unknown: 'Storage provider kind {value} is not recognized; expected one of {expected}.'
+          drive_root_missing: No Google Drive root folder id is configured for the
+            active profile. Run `aeat config google folder set <id>` first.
+          google_auth_import_failed: The google-auth dependency is not importable;
+            run `uv sync` and retry.
+          google_client_missing: No Google OAuth client is registered for the active
+            profile. Run `aeat config google register --client-json <path>` first.
+          google_token_missing: No Google OAuth token is persisted for the active
+            profile. Run `aeat config google login` first.
+          kind_empty: AEAT_STORAGE_PROVIDER_KIND is empty.
+          kind_unhandled: Storage provider kind {kind} is not handled by the factory.
+          kind_unknown: Storage provider kind {value} is not recognized; expected
+            one of {expected}.
+      google_drive:
+        errors:
+          content_hash_blank: 'Google Drive content hash must not be blank.'
+          content_hash_mismatch: 'Google Drive content hash mismatch; downloaded payload integrity check failed.'
+          create_namespace_no_id: 'Google Drive did not return an id when creating a namespace folder.'
+          create_vault_folder_no_id: 'Google Drive did not return an id when creating the vault folder.'
+          folder_not_owned: 'Drive folder {folder_name} is not marked as owned by this app; refusing to write to protect operator data.'
+          googleapiclient_import_failed: 'The google-api-python-client dependency is not importable; run `uv sync` and retry.'
+          media_non_bytes: 'Google Drive media download returned {payload_type} instead of bytes.'
+          namespace_blank: 'Google Drive storage namespace must not be blank.'
+          namespace_forbidden_characters: 'Google Drive storage namespace {namespace} contains forbidden path characters.'
+          namespace_not_found: 'Google Drive namespace {namespace} was not found.'
+          object_key_hmac_blank: 'Google Drive object key HMAC must not be blank.'
+          object_not_found: 'Google Drive object {object_key_hmac} was not found in namespace {namespace}.'
+          request_failed: 'Google Drive request {action} failed with status {status}.'
+          root_folder_id_blank: 'Google Drive root folder id must not be blank.'
+          vault_entry_not_folder: 'The configured Drive root contains {vault_folder_name}, but that entry is not a folder.'
+          vault_folder_name_blank: 'Google Drive vault folder name must not be blank.'
+          write_non_dict_response: 'Google Drive write response for {action} had an unexpected shape.'
   sede:
     errors:
       cotejo_nav_failed: Navigation to the AEAT cotejo page failed; session may have

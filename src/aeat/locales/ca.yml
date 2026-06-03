@@ -153,13 +153,39 @@ adapters:
     storage:
       factory:
         errors:
-          drive_root_missing: 'No hi ha cap id de carpeta arrel de Google Drive configurat per al perfil actiu. Executa `aeat config google folder set <id>` primer.'
-          google_auth_import_failed: 'La dependencia google-auth no es pot importar; executa `uv sync` i torna-ho a provar.'
-          google_client_missing: 'No hi ha cap client OAuth de Google registrat per al perfil actiu. Executa `aeat config google register --client-json <path>` primer.'
-          google_token_missing: 'No hi ha cap token OAuth de Google persistit per al perfil actiu. Executa `aeat config google login` primer.'
-          kind_empty: 'AEAT_STORAGE_PROVIDER_KIND esta buit.'
-          kind_unhandled: 'El tipus de proveidor d emmagatzematge {kind} no esta gestionat per la factoria.'
-          kind_unknown: 'El tipus de proveidor d emmagatzematge {value} no es reconeix; s esperava un de {expected}.'
+          drive_root_missing: No hi ha cap id de carpeta arrel de Google Drive configurat
+            per al perfil actiu. Executa `aeat config google folder set <id>` primer.
+          google_auth_import_failed: La dependencia google-auth no es pot importar;
+            executa `uv sync` i torna-ho a provar.
+          google_client_missing: No hi ha cap client OAuth de Google registrat per
+            al perfil actiu. Executa `aeat config google register --client-json <path>`
+            primer.
+          google_token_missing: No hi ha cap token OAuth de Google persistit per al
+            perfil actiu. Executa `aeat config google login` primer.
+          kind_empty: AEAT_STORAGE_PROVIDER_KIND esta buit.
+          kind_unhandled: El tipus de proveidor d emmagatzematge {kind} no esta gestionat
+            per la factoria.
+          kind_unknown: El tipus de proveidor d emmagatzematge {value} no es reconeix;
+            s esperava un de {expected}.
+      google_drive:
+        errors:
+          content_hash_blank: 'El hash de contingut de Google Drive no pot estar buit.'
+          content_hash_mismatch: 'El hash de contingut de Google Drive no coincideix; ha fallat la comprovacio d integritat.'
+          create_namespace_no_id: 'Google Drive no ha retornat cap id en crear la carpeta d espai de noms.'
+          create_vault_folder_no_id: 'Google Drive no ha retornat cap id en crear la carpeta vault.'
+          folder_not_owned: 'La carpeta de Drive {folder_name} no esta marcada com a propietat d aquesta app; es rebutja l escriptura per protegir dades de l operador.'
+          googleapiclient_import_failed: 'La dependencia google-api-python-client no es pot importar; executa `uv sync` i torna-ho a provar.'
+          media_non_bytes: 'La descarrega de mitjans de Google Drive ha retornat {payload_type} en lloc de bytes.'
+          namespace_blank: 'L espai de noms d emmagatzematge de Google Drive no pot estar buit.'
+          namespace_forbidden_characters: 'L espai de noms de Google Drive {namespace} conte caracters de ruta prohibits.'
+          namespace_not_found: 'No s ha trobat l espai de noms de Google Drive {namespace}.'
+          object_key_hmac_blank: 'L HMAC de clau d objecte de Google Drive no pot estar buit.'
+          object_not_found: 'No s ha trobat l objecte de Google Drive {object_key_hmac} a l espai {namespace}.'
+          request_failed: 'La peticio de Google Drive {action} ha fallat amb estat {status}.'
+          root_folder_id_blank: 'L id de carpeta arrel de Google Drive no pot estar buit.'
+          vault_entry_not_folder: 'L arrel configurada de Drive conte {vault_folder_name}, pero aquesta entrada no es una carpeta.'
+          vault_folder_name_blank: 'El nom de carpeta vault de Google Drive no pot estar buit.'
+          write_non_dict_response: 'La resposta d escriptura de Google Drive per a {action} tenia una forma inesperada.'
   sede:
     errors:
       cotejo_nav_failed: La navegació a la pàgina de cotejo d'AEAT ha fallat; la sessió

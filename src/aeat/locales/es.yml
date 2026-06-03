@@ -156,13 +156,39 @@ adapters:
     storage:
       factory:
         errors:
-          drive_root_missing: 'No hay ningun id de carpeta raiz de Google Drive configurado para el perfil activo. Ejecuta `aeat config google folder set <id>` primero.'
-          google_auth_import_failed: 'La dependencia google-auth no se puede importar; ejecuta `uv sync` y reintentalo.'
-          google_client_missing: 'No hay ningun cliente OAuth de Google registrado para el perfil activo. Ejecuta `aeat config google register --client-json <path>` primero.'
-          google_token_missing: 'No hay ningun token OAuth de Google persistido para el perfil activo. Ejecuta `aeat config google login` primero.'
-          kind_empty: 'AEAT_STORAGE_PROVIDER_KIND esta vacio.'
-          kind_unhandled: 'El tipo de proveedor de almacenamiento {kind} no esta gestionado por la factoria.'
-          kind_unknown: 'El tipo de proveedor de almacenamiento {value} no se reconoce; se esperaba uno de {expected}.'
+          drive_root_missing: No hay ningun id de carpeta raiz de Google Drive configurado
+            para el perfil activo. Ejecuta `aeat config google folder set <id>` primero.
+          google_auth_import_failed: La dependencia google-auth no se puede importar;
+            ejecuta `uv sync` y reintentalo.
+          google_client_missing: No hay ningun cliente OAuth de Google registrado
+            para el perfil activo. Ejecuta `aeat config google register --client-json
+            <path>` primero.
+          google_token_missing: No hay ningun token OAuth de Google persistido para
+            el perfil activo. Ejecuta `aeat config google login` primero.
+          kind_empty: AEAT_STORAGE_PROVIDER_KIND esta vacio.
+          kind_unhandled: El tipo de proveedor de almacenamiento {kind} no esta gestionado
+            por la factoria.
+          kind_unknown: El tipo de proveedor de almacenamiento {value} no se reconoce;
+            se esperaba uno de {expected}.
+      google_drive:
+        errors:
+          content_hash_blank: 'El hash de contenido de Google Drive no puede estar vacio.'
+          content_hash_mismatch: 'El hash de contenido de Google Drive no coincide; fallo la comprobacion de integridad.'
+          create_namespace_no_id: 'Google Drive no devolvio un id al crear la carpeta de espacio de nombres.'
+          create_vault_folder_no_id: 'Google Drive no devolvio un id al crear la carpeta vault.'
+          folder_not_owned: 'La carpeta de Drive {folder_name} no esta marcada como propiedad de esta app; se rechaza la escritura para proteger datos del operador.'
+          googleapiclient_import_failed: 'La dependencia google-api-python-client no se puede importar; ejecuta `uv sync` y reintentalo.'
+          media_non_bytes: 'La descarga de medios de Google Drive devolvio {payload_type} en vez de bytes.'
+          namespace_blank: 'El espacio de nombres de almacenamiento de Google Drive no puede estar vacio.'
+          namespace_forbidden_characters: 'El espacio de nombres de Google Drive {namespace} contiene caracteres de ruta prohibidos.'
+          namespace_not_found: 'No se encontro el espacio de nombres de Google Drive {namespace}.'
+          object_key_hmac_blank: 'El HMAC de clave de objeto de Google Drive no puede estar vacio.'
+          object_not_found: 'No se encontro el objeto de Google Drive {object_key_hmac} en el espacio {namespace}.'
+          request_failed: 'La peticion de Google Drive {action} fallo con estado {status}.'
+          root_folder_id_blank: 'El id de carpeta raiz de Google Drive no puede estar vacio.'
+          vault_entry_not_folder: 'La raiz configurada de Drive contiene {vault_folder_name}, pero esa entrada no es una carpeta.'
+          vault_folder_name_blank: 'El nombre de carpeta vault de Google Drive no puede estar vacio.'
+          write_non_dict_response: 'La respuesta de escritura de Google Drive para {action} tuvo una forma inesperada.'
   sede:
     errors:
       cotejo_nav_failed: La navegación a la página de cotejo de AEAT falló; la sesión
