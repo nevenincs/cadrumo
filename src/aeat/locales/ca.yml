@@ -1649,8 +1649,9 @@ cli:
         list'' per veure els perfils registrats.'
       use_help: Seleccionar un perfil existent com a perfil actiu
       use_name_help: Id del perfil que s''activarà
-      validate_help: Validate the active profile against the schema.
+      validate_help: 'Valida un perfil contra l''esquema carregat (per defecte el perfil actiu).'
       view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
+      validate_name_help: 'Etiqueta opcional del perfil a validar; per defecte el perfil actiu.'
     repair:
       connectivity_help: Comprovar connectivitat del navegador i la Seu AEAT
       connectivity_target_help: Objectiu de connectivitat que cal comprovar
@@ -1971,6 +1972,7 @@ cli:
       help: Exportar moviments canònics del llibre des del bucket del perfil actiu
       include_inactive_help: Incloure moviments arxivats i apartats
       output_help: Ruta on escriure el fitxer exportat del llibre
+      period_help: 'Limita l''exportació a un únic període de presentació (p. ex. 2025T1, 2025).'
     history:
       help: Mostra la cadena cronològica d'esdeveniments d'una transacció
       id_help: Id de la transacció (o prefix no ambigu)
@@ -1997,6 +1999,7 @@ cli:
       source_help: Fitxer original per verificar les files importades
       verbose_help: Mostrar informació detallada durant la importació
       verify_help: Verificar les entrades després de la importació
+      empty_directory: 'No s''han trobat fitxers d''extracte importables al directori: {path}'
     labels:
       active: Actives
       amount: Import
