@@ -361,7 +361,7 @@ def overview_agenda(
     ),
 ) -> None:
     """Surface the operator's next-due obligation with cohort breakdowns."""
-    from ...application.overview._agenda import build_overview_agenda
+    from ...application.overview import build_overview_agenda
     from ...application.user_profile import record_to_values
 
     current = _state()
@@ -456,7 +456,7 @@ def overview_backlog(
     ),
 ) -> None:
     """Surface the operator's past-due backlog without mutating state."""
-    from ...application.overview._backlog import build_overview_backlog
+    from ...application.overview import build_overview_backlog
     from ...application.user_profile import record_to_values
 
     current = _state()
@@ -525,8 +525,7 @@ def overview_explain(
     ),
 ) -> None:
     """Explain why a modelo does or does not apply to the active profile."""
-    from ...application.overview import OverviewExplainError
-    from ...application.overview._explain import build_overview_explain
+    from ...application.overview import OverviewExplainError, build_overview_explain
 
     current = _state()
     try:

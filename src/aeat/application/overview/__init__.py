@@ -884,10 +884,37 @@ __all__ = [
     "OverviewStatusReport",
     "SuppressedCalendarEntry",
     "build_filing_obligation_advisories",
+    "build_overview_agenda",
+    "build_overview_backlog",
     "build_overview_calendar",
+    "build_overview_explain",
     "build_overview_status_report",
     "derive_modelo_applicability",
     "overview_status_report_from_projection",
     "render_overview_status_lines",
     "user_state_for",
 ]
+
+
+def __getattr__(name: str):
+    """Lazy-import the agenda / backlog / explain entrypoints.
+
+    The eager top-of-module import would trigger a circular-import:
+    those submodules import names from this package while it is
+    still initialising. The lazy path keeps the symbols reachable
+    through the package boundary per the
+    ``service-imports-via-top-level-reexports`` rule.
+    """
+    if name == "build_overview_agenda":
+        from ._agenda import build_overview_agenda as _impl
+
+        return _impl
+    if name == "build_overview_backlog":
+        from ._backlog import build_overview_backlog as _impl
+
+        return _impl
+    if name == "build_overview_explain":
+        from ._explain import build_overview_explain as _impl
+
+        return _impl
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
