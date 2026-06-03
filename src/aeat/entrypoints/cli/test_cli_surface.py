@@ -86,7 +86,7 @@ def _active_bucket_id() -> str:
     field to ``<bucket-id>``. Test-side seeders (``_seed_purchase_invoice_evidence``)
     require the un-redacted UUID to persist matching bucket records.
     """
-    from ...application.workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None, "no active profile bucket resolved"

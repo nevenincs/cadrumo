@@ -25,13 +25,23 @@ write-refusal gating), :mod:`aeat.core.redaction` (output redaction),
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ._models import STRICT_FROZEN_CONFIG
 from ._period import StandardPeriodCode
+
+if TYPE_CHECKING:
+    # Static bindings for the lazily-exposed surface below. At runtime these
+    # resolve through ``__getattr__`` (cycle-safe); the type checker reads the
+    # real callable signatures here.
+    from ._bucket_pointer_io import require_active_bucket_id, resolve_active_bucket_id
 
 __all__: list[str] = [
     "STRICT_FROZEN_CONFIG",
     "AggregationSourceKind",
     "StandardPeriodCode",
+    "require_active_bucket_id",
+    "resolve_active_bucket_id",
 ]
 
 
@@ -40,4 +50,8 @@ def __getattr__(name: str) -> object:
         from .aggregation import AggregationSourceKind
 
         return AggregationSourceKind
+    if name in ("resolve_active_bucket_id", "require_active_bucket_id"):
+        from . import _bucket_pointer_io
+
+        return getattr(_bucket_pointer_io, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

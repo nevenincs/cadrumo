@@ -751,8 +751,8 @@ class ClaveMovilAuthProvider:
             )
             from .....application.user_profile._orchestration import build_lifecycle_service
             from .....application.user_profile._projections import record_to_path_values, record_to_values
-            from .....application.workflow._models import resolve_active_bucket_id
             from .....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
+            from .....core import resolve_active_bucket_id
             from .....core.config import override_settings
             from .....domain.user_profile import ProfileNotFoundError
 
@@ -863,7 +863,7 @@ class ClaveMovilAuthProvider:
     # ── Encrypted session state ────────────────────────────────────────────
 
     def _storage_state_path(self) -> Path:
-        from .....application.workflow._models import require_active_bucket_id
+        from .....core import require_active_bucket_id
 
         token_dir = self._settings.aeat_token_dir
         profile = require_active_bucket_id()

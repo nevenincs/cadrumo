@@ -26,8 +26,8 @@ from ..application.user_profile._orchestration import (
 from ..application.wizard._catalogue import WIZARD_FLOWS
 from ..application.wizard._errors import WizardValidationError
 from ..application.wizard._widgets import validate_widget_answer
-from ..application.workflow._models import resolve_active_bucket_id
 from ..application.workflow._persistence import workflow_state_repository
+from ..core import resolve_active_bucket_id
 from ..core.i18n import tr
 from ..core.redaction import redact_for_cli_output
 from ..domain.contribuyente import get_profile_key

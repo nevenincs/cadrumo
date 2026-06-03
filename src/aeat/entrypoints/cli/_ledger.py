@@ -59,7 +59,7 @@ from ...application.review import (
     FilterParseError,
     LedgerReviewFilterSpec,
 )
-from ...application.workflow._models import resolve_active_bucket_id
+from ...core import resolve_active_bucket_id
 from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.logging import get_logger
@@ -2199,8 +2199,8 @@ app.add_typer(ratios_app, name="ratios")
 
 def _ratios_bucket_id() -> str:
     """Return the active workflow bucket id or raise the standard CLI refusal."""
-    from ...application.workflow._errors import NoActiveProfileError
-    from ...application.workflow._models import require_active_bucket_id
+    from ...core import require_active_bucket_id
+    from ...core.errors import NoActiveProfileError
 
     try:
         return require_active_bucket_id()
@@ -2216,8 +2216,8 @@ def _ratios_bucket_and_profile() -> tuple[str, str | None]:
     are still allowed in that state but censo-override warnings stay
     silent because there is no profile to look up snapshots against.
     """
-    from ...application.workflow._errors import NoActiveProfileError
-    from ...application.workflow._models import require_active_bucket_id, resolve_active_bucket_id
+    from ...core import require_active_bucket_id, resolve_active_bucket_id
+    from ...core.errors import NoActiveProfileError
 
     try:
         bucket_id = require_active_bucket_id()
@@ -3714,8 +3714,8 @@ app.add_typer(rule_app, name="rule")
 
 
 def _rule_bucket_id() -> str:
-    from ...application.workflow._errors import NoActiveProfileError
-    from ...application.workflow._models import require_active_bucket_id
+    from ...core import require_active_bucket_id
+    from ...core.errors import NoActiveProfileError
 
     try:
         return require_active_bucket_id()
@@ -3766,7 +3766,7 @@ def rule_add(
 ) -> None:
     """Add or idempotently update a ledger classification rule."""
     from ...application.ledger._actions import add_classification_rule
-    from ...application.workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
 
     bucket_id = _rule_bucket_id()
     validated_category_id = _validate_category_id(category_id)
@@ -3839,7 +3839,7 @@ def rule_apply(
 ) -> None:
     """Apply stored rules to ACTIVE NOT_YET_PROCESSED transactions."""
     from ...application.ledger._rule_repository import LedgerClassificationRuleRepository
-    from ...application.workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
     from ...domain.transactions import BusinessClassification, TransactionLifecycleState
 
     bucket_id = _rule_bucket_id()

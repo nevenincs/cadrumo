@@ -1238,7 +1238,7 @@ class AeatAuthenticator:
             storage_state_path = getattr(profile, "storage_state_path", None)
             if isinstance(storage_state_path, Path):
                 return storage_state_path
-        from .....application.workflow._models import require_active_bucket_id
+        from .....core import require_active_bucket_id
 
         return self._settings.aeat_token_dir / f"{require_active_bucket_id()}-storage.json"
 

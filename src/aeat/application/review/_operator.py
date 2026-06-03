@@ -218,7 +218,7 @@ def _render_summary(value: str) -> str:
 
 
 def _active_bucket_id() -> str:
-    from ..workflow._models import require_active_bucket_id
+    from ...core import require_active_bucket_id
 
     return require_active_bucket_id()
 

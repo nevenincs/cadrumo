@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ...application.workflow._models import resolve_active_bucket_id
+from ...core import resolve_active_bucket_id
 from ...core.resources import resources
 from ...domain.user_profile import (
     ProfileNotFoundError,
@@ -165,7 +165,7 @@ def test_remove_active_profile_tombstones_and_clears_pointer(schema) -> None:
             routing_profile_id=routing_profile_id,
         )
         state = remove_active_profile(state, schema=schema)
-    from ..workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
 
     assert resolve_active_bucket_id() is None
     assert state.bucket_events[-1].action == "profile.tombstoned"

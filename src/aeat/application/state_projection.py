@@ -34,6 +34,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
+from ..core import resolve_active_bucket_id
 from ..core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.errors import AeatError
 from ..core.identity import ProfileId
@@ -54,7 +55,7 @@ from ..domain.transactions import TransactionCatalogueRepository
 from .auth import AuthProviderKind, select_provider
 from .ledger import LedgerPreflightIssue, preflight_ledger_tax_readiness
 from .user_profile import ProfilePreflightRequirement
-from .workflow._models import WorkflowState, resolve_active_bucket_id
+from .workflow._models import WorkflowState
 from .workflow._persistence import workflow_state_repository
 from .workflow._profile_health import ActiveProfileHealth, assess_active_profile_health
 

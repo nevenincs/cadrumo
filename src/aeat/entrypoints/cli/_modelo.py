@@ -178,8 +178,8 @@ def _resolve_default_actor() -> str:
     fallback label keeps the audit record populated rather than raising.
     """
     with suppress(Exception):
-        from ...application.workflow._models import resolve_active_bucket_id
         from ...application.workflow._persistence import workflow_state_repository
+        from ...core import resolve_active_bucket_id
 
         state = workflow_state_repository().load()
         record = state.active_profile_record()
@@ -202,7 +202,7 @@ def _require_active_profile() -> None:
     translated ``profile create`` guidance that the ledger surface
     already gives.
     """
-    from ...application.workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
     from ...core.i18n import tr as _tr
     from ._errors import CliRefusedBoundaryError
 
@@ -297,7 +297,7 @@ def modelo_readiness(
         ModeloReadinessRequest,
         build_operator_state_projection,
     )
-    from ...application.workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
     from ...core.i18n import tr as _tr
     from ...domain.user_profile import ProfileNotFoundError
     from ._errors import CliRefusedBoundaryError
@@ -2130,7 +2130,7 @@ def work_create(
         from ...application.overview import build_filing_obligation_advisories as _build_filing_obligation_advisories
         from ...application.user_profile._profile_repository import ProfileRepository
         from ...application.user_profile._projections import record_to_values
-        from ...application.workflow._models import resolve_active_bucket_id
+        from ...core import resolve_active_bucket_id
 
         _bucket = resolve_active_bucket_id()
         if _bucket is not None:
@@ -4404,7 +4404,7 @@ def _evidence_bundle_service():
 
 
 def _active_bucket_id() -> str:
-    from ...application.workflow._models import require_active_bucket_id
+    from ...core import require_active_bucket_id
 
     try:
         return require_active_bucket_id()
@@ -5270,7 +5270,7 @@ def modelo_project(
     # caller layer only so the profile resolver still overrides the
     # baseline.
     from ...application.modelo._profile_binding import resolve_profile_sourced_bindings
-    from ...application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id as _resolve_active_bucket_id
 
     _bucket_for_profile = _resolve_active_bucket_id()
     profile_decimal_bindings: dict[str, Decimal] = {}
