@@ -59,7 +59,7 @@ After promotion, repoint the _ids/DecimalValue/CounterpartSourceKind importers a
 - [x] `W01.P03.S18` - Repoint the _ids-alias importers in domain siblings (renta/_maritime_exemption CasillaId, filing/_schema BindingId/CasillaId) to the public surface; `src/aeat/domain/`.
 - [x] `W01.P03.S19` - Repoint adapters/outbound/aeat/sede/_nif_iva_check (AeatNifIvaObservation) and application/aggregation/_counterpart (CounterpartSourceKind) and application/calculations/_row_set_assembly (4 observation types) to the public surface; `src/aeat/adapters/outbound/aeat/sede/_nif_iva_check.py`.
 - [x] `W01.P03.S20` - Repoint application/registry/__init__ private imports of AeatNifIvaCheckerOracle, RegistryFiledStateComparison, compare_calculation_to_filed_observation, audit_registry_oracle_bindings to the now-public surface; `src/aeat/application/registry/__init__.py`.
-- [ ] `W01.P03.S21` - Fix the IvaInvoiceClassification export asymmetry: add IvaInvoiceClassification, classify_invoice_line_for_iva, invoice_line_to_iva_observation to iva/__init__ __all__, and repoint invoices/__init__ and invoices/_models from ..iva._invoice_classification to ..iva; `src/aeat/domain/iva/__init__.py`.
+- [x] `W01.P03.S21` - Fix the IvaInvoiceClassification export asymmetry: add IvaInvoiceClassification, classify_invoice_line_for_iva, invoice_line_to_iva_observation to iva/__init__ __all__, and repoint invoices/__init__ and invoices/_models from ..iva._invoice_classification to ..iva; `src/aeat/domain/iva/__init__.py`.
 
 ## Wave `W02` - Regulatory logic and values to domain (D2)
 

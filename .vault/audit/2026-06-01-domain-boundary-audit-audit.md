@@ -1903,6 +1903,24 @@ remediation is currently HELD at audit-only per the active action policy.
   application" KEPT). With S63 landed the domain-boundary campaign's structural rename
   work (S54/S61/S62/S63/S64/S65/S66) is complete.
 
+- 2026-06-03: **S21 EXECUTED — IvaInvoiceClassification export asymmetry closed
+  (commit `3842df56a`).** The `iva/__init__` docstring mandates external callers import
+  only from `aeat.domain.iva` and never reach into private underscore modules, yet
+  `IvaInvoiceClassification` / `classify_invoice_line_for_iva` /
+  `invoice_line_to_iva_observation` were reachable only via the private
+  `..iva._invoice_classification` submodule (the sibling
+  `IvaInvoiceClassificationCriteria` was already public). The `invoices` package
+  breached the contract at three external sites. Exported the three symbols from
+  `iva/__init__` (import block + `__all__`) and repointed `invoices/__init__` plus the
+  two `invoices/_models` sites (the TYPE_CHECKING annotation + the function-local
+  classify call) to the public `..iva` surface. No cycle: `_invoice_classification`'s
+  `invoices.IvaRate` back-imports are all TYPE_CHECKING/function-local, and importing
+  the private submodule already forced full `iva/__init__` load, so init order is
+  unchanged (the invoices ordering comment stays valid); the iva-internal sibling test
+  keeps its relative `._invoice_classification` import. Verified: both packages import
+  clean (no cycle), 332 iva+invoices tests green, ty clean, zero external
+  `..iva._invoice_classification` reach-ins remain.
+
 ## Codification candidates
 
 
