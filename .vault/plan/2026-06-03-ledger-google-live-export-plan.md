@@ -102,11 +102,11 @@ The network half migrated from the ledger-operator-hardening plan's W04 wave: li
 
 <!-- One-line headline summary plan. -->
 
-- [ ] `P01.S01` - Live Drive/Sheets upload of the bucket ledger (outbound adapter) for manual review; `src/aeat/adapters/outbound/google/`.
-- [ ] `P01.S02` - Operator manual-review-in-Drive round trip (open exported sheet, annotate, re-pull, apply); `src/aeat/adapters/outbound/google/`.
+- [x] `P01.S01` - Live Drive/Sheets upload of the bucket ledger (outbound adapter) for manual review; `src/aeat/adapters/outbound/google/`.
+- [x] `P01.S02` - Operator manual-review-in-Drive round trip (open exported sheet, annotate, re-pull, apply); `src/aeat/adapters/outbound/google/`.
 - [ ] `P01.S03` - Live Gmail/Drive document-link resolution: fetch justificante/invoice from recorded links; `src/aeat/adapters/outbound/google/`.
-- [ ] `P01.S04` - OAuth credential wiring: load the staged client-secret and run the authenticated session; `src/aeat/adapters/outbound/google/_oauth_flow.py`.
-- [ ] `P01.S05` - live_write opt-in integration tests self-skipping without OAuth credentials; `src/aeat/adapters/outbound/google/`.
+- [x] `P01.S04` - OAuth credential wiring: load the staged client-secret and run the authenticated session; `src/aeat/adapters/outbound/google/_oauth_flow.py`.
+- [x] `P01.S05` - live_write opt-in integration tests self-skipping without OAuth credentials; `src/aeat/adapters/outbound/google/`.
 
 ## Description
 
