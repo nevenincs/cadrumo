@@ -9,12 +9,15 @@ related:
   - '[[2026-06-03-m303-cross-period-carry-continuity-research]]'
 ---
 
-
-
-
-
-
-
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `m303-cross-period-carry-continuity` `M303 cross-period carry continuity diagnostic + fix + anti-regression` plan
 
@@ -22,10 +25,8 @@ related:
 
 Run the year-N 4T branch of _calculate_303 with the credit scenario and emit a casilla-by-casilla trace of the carry chain to pin which step diverges from the chain narrative; identify which of Hypotheses A/B/C is in play.
 
-
-
-- [ ] `P01.S01` - Run _calculate_303 year-N 4T credit branch with instrumentation; `capture full result.values mapping; record each carry-chain casilla value in the exec record; `src/aeat/application/calculations/test_modelo_303_compensacion_carry_forward_continuity.py`.
-- [ ] `P01.S02` - Identify which Hypothesis (A devengada-total / B result.values keys / C cross-step collapse) the trace pins; `name the broken step in the exec record; `.vault/exec/2026-06-03-m303-cross-period-carry-continuity/`.
+- [x] `P01.S01` - Run _calculate_303 year-N 4T credit branch with instrumentation; `capture full result.values mapping; record each carry-chain casilla value in the exec record; `src/aeat/application/calculations/test_modelo_303_compensacion_carry_forward_continuity.py`.
+- [x] `P01.S02` - Identify which Hypothesis (A devengada-total / B result.values keys / C cross-step collapse) the trace pins; `name the broken step in the exec record; `.vault/exec/2026-06-03-m303-cross-period-carry-continuity/`.
 
 ### Phase `P02` - Fix the broken link
 
@@ -39,8 +40,8 @@ Conditional on Phase 1 diagnostic: execute the matching branch (A devengada-tota
 
 Land a new cross-period anti-regression test that varies a primitive leaf in 4T/N and asserts 1T/N+1 casilla 110 auto-resolves proportionally, using real engine, real registry authority, real encrypted SQLite observation repo; non-tautological.
 
-- [ ] `P03.S06` - Author cross-period anti-regression test that parametrises credit magnitude in 4T/N and asserts 1T/N+1 casilla 110 auto-resolves proportionally using real engine + real registry authority + real encrypted SQLite observation repo; `src/aeat/application/calculations/test_modelo_303_compensacion_carry_anti_regression.py`.
-- [ ] `P03.S07` - Run both gates sequentially: carry continuity tests (3) + verification chain tests (47) + new anti-regression test; all green; commit one atomic explicit-path fix + test bundle; `src/aeat/application/calculations/`.
+- [x] `P03.S06` - Author cross-period anti-regression test that parametrises credit magnitude in 4T/N and asserts 1T/N+1 casilla 110 auto-resolves proportionally using real engine + real registry authority + real encrypted SQLite observation repo; `src/aeat/application/calculations/test_modelo_303_compensacion_carry_anti_regression.py`.
+- [x] `P03.S07` - Run both gates sequentially: carry continuity tests (3) + verification chain tests (47) + new anti-regression test; `all green; commit one atomic explicit-path fix + test bundle; `src/aeat/application/calculations/`.
 
 ## Description
 
