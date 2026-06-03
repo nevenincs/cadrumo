@@ -499,3 +499,68 @@ def test_unrelated_update_preserves_group_label() -> None:
     assert cleared.exit_code == 0, cleared.output
     final = {r["transaction_id"]: r for r in _list_rows()}[row["transaction_id"]]
     assert final["group_label"] is None
+
+
+# --- W14.P26.S89: batch transform / iterative refinement at scale ------------
+def test_batch_transform_recategorize_relabel_reallocate_at_scale() -> None:
+    """Iterative refinement over a large slice: recategorize -> relabel -> reallocate.
+
+    Proves the operator can amend hundreds of rows in batched passes and that
+    each pass is observable end-to-end (applied counts + per-row read-back),
+    the working-at-scale guarantee behind W14.
+    """
+    _import_corpus()
+    rows = _list_rows()
+    rules = _oracle_rules()
+
+    # Pass 1 — recategorize at scale: classify every row the oracle marks as a
+    # non-MIXED BUSINESS movement, in one --from-csv batch.
+    lines = ["transaction_id,classification,category_id"]
+    targeted: dict[str, str] = {}
+    for row in rows:
+        rule = _match(row["description"], rules)
+        if rule is None or rule["classification"] != "BUSINESS":
+            continue
+        cat = rule.get("category_id") or ""
+        lines.append(f"{row['transaction_id']},BUSINESS,{cat}")
+        targeted[row["transaction_id"]] = cat
+    assert len(targeted) >= 100, f"corpus must yield a hundreds-scale batch, got {len(targeted)}"
+
+    import tempfile
+
+    with tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False, encoding="utf-8") as fh:
+        fh.write("\n".join(lines) + "\n")
+        recat_csv = fh.name
+    res = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "classify", "--from-csv", recat_csv])
+    assert res.exit_code == 0, res.output
+    payload = json.loads(res.output)["result"]
+    assert payload["applied"] == len(targeted), payload
+    by_id = {r["transaction_id"]: r for r in _list_rows()}
+    for tx_id in targeted:
+        assert by_id[tx_id]["business_classification"] == "BUSINESS"
+
+    # Pass 2 — relabel at scale: assign one organisational group across a
+    # 60-row slice of the recategorized set, then confirm via --group filter.
+    slice_ids = list(targeted)[:60]
+    for tx_id in slice_ids:
+        _set_group(tx_id, "Cierre 2025")
+    grouped = _list_payload("--group", "Cierre 2025")
+    assert {r["transaction_id"] for r in grouped["rows"]} == set(slice_ids)
+
+    # Pass 3 — reallocate at scale: flip a 20-row slice to MIXED with a shared
+    # business_pct in one batch, then read back the new classification.
+    mixed_ids = slice_ids[:20]
+    realloc = ["transaction_id,classification,business_pct"]
+    realloc += [f"{tx_id},MIXED,0.60" for tx_id in mixed_ids]
+    with tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False, encoding="utf-8") as fh:
+        fh.write("\n".join(realloc) + "\n")
+        realloc_csv = fh.name
+    res2 = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "classify", "--from-csv", realloc_csv])
+    assert res2.exit_code == 0, res2.output
+    payload2 = json.loads(res2.output)["result"]
+    assert payload2["applied"] == len(mixed_ids), payload2
+    final = {r["transaction_id"]: r for r in _list_rows()}
+    for tx_id in mixed_ids:
+        assert final[tx_id]["business_classification"] == "MIXED"
+        # The group label survives an unrelated batch reallocation.
+        assert final[tx_id]["group_label"] == "Cierre 2025"
