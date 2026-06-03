@@ -1998,6 +1998,25 @@ remediation is currently HELD at audit-only per the active action policy.
   split across commits. With S58/S59/S53/S60 closed, all original 94 plan steps are
   resolved; the 13 open items are exactly the newly-enumerated W10/W11 surface.
 
+- 2026-06-03: **W11 EXECUTED — secure-storage public-surface import purity (commit
+  `4eb500407`).** S104: exported `SecureBoundRepository` (from `.envelope`),
+  `SecureObjectRepository` + `SecureObjectWrite` (from `.sql`) from
+  `adapters/persistence/storage/__init__` (the error classes were already top-level), so
+  the full secure-repo surface is importable from the storage package top-level. S105:
+  removed the double-private `envelope._envelope` reach-in in
+  `domain/transactions/_repository` (two function-local `Envelope` imports → public
+  `storage.envelope`). S106: repointed the 15 domain repositories importing
+  `SecureObjectRepository`/`SecureObjectWrite`/`SecureBoundRepository`/`Envelope` from the
+  `.sql`/`.envelope` submodules to the top-level `storage` package via a name-keyed
+  scripted swap (the fincas `.sql import _orm` private ORM imports left untouched —
+  within-domain detail, not top-level-exported); ruff import-order auto-fixed. S107
+  verified: 71 persistence-boundary roundtrip/repository tests pass, ty clean, residual
+  `rg` shows only the sanctioned fincas `_orm` imports remain on `.sql`. (The broad
+  domain-suite run stalls on the unrelated slow fincas `test_tier_resolver` registry
+  test, which W11 does not touch; verification used the focused persistence-boundary
+  subset.) W11 complete; W10 (active-bucket core consolidation) remains as the atomic
+  relocation.
+
 ## Codification candidates
 
 

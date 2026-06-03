@@ -337,25 +337,25 @@ Domain and application repositories must import secure-storage primitives (Secur
 
 Export the secure-storage primitives that domain repositories consume (SecureBoundRepository, SecureObjectRepository, SecureObjectWrite, ClassificationError, EnvelopeVersionError, StorageError) from adapters/persistence/storage/__init__ so consumers import the top-level package.
 
-- [ ] `W11.P34.S104` - Audit storage/__init__ __all__ (currently namespace constants only); `export the secure-storage primitives domain repos consume from adapters/persistence/storage/__init__.py: SecureBoundRepository (envelope/_secure_repository), SecureObjectRepository + SecureObjectWrite (sql), ClassificationError + EnvelopeVersionError + StorageError (errors); `src/aeat/adapters/persistence/storage/__init__.py`.
+- [x] `W11.P34.S104` - Audit storage/__init__ __all__ (currently namespace constants only); `export the secure-storage primitives domain repos consume from adapters/persistence/storage/__init__.py: SecureBoundRepository (envelope/_secure_repository), SecureObjectRepository + SecureObjectWrite (sql), ClassificationError + EnvelopeVersionError + StorageError (errors); `src/aeat/adapters/persistence/storage/__init__.py`.
 
 ### Phase `W11.P35` - Eliminate the double-private envelope._envelope reach-in
 
 domain/transactions/_repository imports Envelope from the underscore-private storage.envelope._envelope module; repoint to a public surface or remove the reach-in.
 
-- [ ] `W11.P35.S105` - Repoint domain/transactions/_repository.py off the underscore-private storage.envelope._envelope module (Envelope import) to a public surface, or remove the reach-in if Envelope need not be referenced directly; `src/aeat/domain/transactions/_repository.py`.
+- [x] `W11.P35.S105` - Repoint domain/transactions/_repository.py off the underscore-private storage.envelope._envelope module (Envelope import) to a public surface, or remove the reach-in if Envelope need not be referenced directly; `src/aeat/domain/transactions/_repository.py`.
 
 ### Phase `W11.P36` - Repoint domain repository import sites to the public surface
 
 The ~15 domain repositories importing from storage.sql/.errors/.envelope submodules import from the top-level storage package instead.
 
-- [ ] `W11.P36.S106` - Repoint the domain repositories from storage.sql/.errors/.envelope submodule imports to the top-level storage package: buckets/_event_repository, filing/_repository + _complementaria_repository, justificante/_repository, submission/_repository, invoices/_repository, transactions/_repository, modelos/_calculation_repository + _filing_repository + _repository + _verification_repository, usage_ratios/_service, fincas/_repository (sql._orm stays a fincas-internal ORM detail unless publicly exposed); `src/aeat/domain/`.
+- [x] `W11.P36.S106` - Repoint the domain repositories from storage.sql/.errors/.envelope submodule imports to the top-level storage package: buckets/_event_repository, filing/_repository + _complementaria_repository, justificante/_repository, submission/_repository, invoices/_repository, transactions/_repository, modelos/_calculation_repository + _filing_repository + _repository + _verification_repository, usage_ratios/_service, fincas/_repository (sql._orm stays a fincas-internal ORM detail unless publicly exposed); `src/aeat/domain/`.
 
 ### Phase `W11.P37` - Verification: domain storage imports use the public surface
 
 Assert domain modules import secure-storage primitives only from the storage package top-level (no underscore-private submodule reach-ins); suite green.
 
-- [ ] `W11.P37.S107` - Verify: rg confirms domain modules import secure-storage primitives only from the top-level storage package (no .sql/.errors/.envelope/_envelope underscore reach-ins beyond sanctioned ones); `full pytest suite + ty green; D4 ratified in the ADR with these import-surface cleanups recorded; `src/aeat/domain/`.
+- [x] `W11.P37.S107` - Verify: rg confirms domain modules import secure-storage primitives only from the top-level storage package (no .sql/.errors/.envelope/_envelope underscore reach-ins beyond sanctioned ones); `full pytest suite + ty green; D4 ratified in the ADR with these import-surface cleanups recorded; `src/aeat/domain/`.
 
 ## Description
 
