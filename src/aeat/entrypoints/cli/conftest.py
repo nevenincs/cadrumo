@@ -21,9 +21,17 @@ class _TyperAwareCliRunner(CliRunner):
     explicit ``get_command`` call at every invoke site.
     """
 
-    # KWARGS-ANY-RATIONALE-CLIRUNNER-INVOKE-OVERRIDE: click.testing.CliRunner.invoke accepts varargs / kwargs that change across click minor versions (env, input, color, catch_exceptions); typing them concretely couples this subclass to a specific click release.
-    # ANY-RETURN-RATIONALE-CLIRUNNER-INVOKE-OVERRIDE: see KWARGS rationale above; Result return is concrete via click.testing.Result.
-    # TYPE-IGNORE-RATIONALE-CLIRUNNER-INVOKE-OVERRIDE: click.testing.CliRunner.invoke's first parameter is typed as click.BaseCommand; this subclass widens to Any so a typer.Typer can be passed and auto-wrapped before delegating to super().
+    # KWARGS-ANY-RATIONALE-CLIRUNNER-INVOKE-OVERRIDE:
+    # click.testing.CliRunner.invoke accepts varargs / kwargs that change
+    # across click minor versions (env, input, color, catch_exceptions);
+    # typing them concretely couples this subclass to a specific click release.
+    # ANY-RETURN-RATIONALE-CLIRUNNER-INVOKE-OVERRIDE:
+    # See KWARGS rationale above; Result return is concrete via
+    # click.testing.Result.
+    # TYPE-IGNORE-RATIONALE-CLIRUNNER-INVOKE-OVERRIDE:
+    # click.testing.CliRunner.invoke's first parameter is typed as
+    # click.BaseCommand; this subclass widens to Any so a typer.Typer can be
+    # passed and auto-wrapped before delegating to super().
     def invoke(self, cli: Any, *args: Any, **kwargs: Any) -> Result:  # type: ignore[override]
         if isinstance(cli, typer.Typer):
             cli = typer.main.get_command(cli)

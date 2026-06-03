@@ -20,7 +20,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from ...core.profile import register_project_answers as _register_project_answers
+from ...core.setup_answers import register_project_answers as _register_project_answers
 from ..user_profile._orchestration import register_active_profile, set_active_fields
 from ..workflow._errors import WorkflowInputMismatchError
 from ..workflow._models import WorkflowState

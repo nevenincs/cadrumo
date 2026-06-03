@@ -137,7 +137,10 @@ def list_auth_diagnostics() -> AuthDiagnosticListReport:
 
 
 def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
-    """Load one encrypted Cl@ve auth diagnostic by id and return an :class:`AuthDiagnosticDetail`, redacting sensitive bodies."""
+    """Load one encrypted Cl@ve auth diagnostic by id.
+
+    Returns an :class:`AuthDiagnosticDetail`, redacting sensitive bodies.
+    """
     record = _secure_objects().load(
         _DIAGNOSTIC_NAMESPACE,
         diagnostic_id,

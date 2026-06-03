@@ -78,7 +78,10 @@ class TestSiteHealthValidatorUsesValueError:
 
 
 class TestWorkbookParityScanNarrowing:
-    """scan_workbook absorbs InvalidFileException/BadZipFile/OSError; unexpected errors raise RegistryValidationError."""
+    """scan_workbook absorbs InvalidFileException/BadZipFile/OSError.
+
+    Unexpected errors raise RegistryValidationError.
+    """
 
     def test_corrupt_xlsx_returns_failed_report(self, tmp_path) -> None:
         """openpyxl raises BadZipFile on corrupt .xlsx — absorbed into a failed report."""

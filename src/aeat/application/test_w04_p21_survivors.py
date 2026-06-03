@@ -45,14 +45,14 @@ def _assert_registered_and_roundtrip(cls: type) -> None:
 
 
 def test_profile_registration_error_is_registered_and_roundtrips() -> None:
-    from ..core.profile import ProfileRegistrationError
+    from ..core.setup_answers import ProfileRegistrationError
 
     _assert_registered_and_roundtrip(ProfileRegistrationError)
 
 
 def test_profile_registration_error_raised_on_double_register() -> None:
     """register_project_answers raises ProfileRegistrationError on a second distinct callable."""
-    from ..core.profile import _PROJECT_ANSWERS_SLOT, ProfileRegistrationError, register_project_answers
+    from ..core.setup_answers import _PROJECT_ANSWERS_SLOT, ProfileRegistrationError, register_project_answers
 
     # Snapshot the slot state to restore it after the test
     original = list(_PROJECT_ANSWERS_SLOT)

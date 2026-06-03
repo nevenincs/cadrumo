@@ -31,7 +31,9 @@ class RegistryInspectResult(OutputSchema):
     application_link_count: int
     application_link_surfaces: list[str] = []
     modelos: list[str] = []
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is the only escape without a mypy plugin upgrade
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
@@ -53,7 +55,9 @@ class RegistryVerifyResult(OutputSchema):
     application_link_count: int
     application_link_surfaces: list[str] = []
     modelos: list[str] = []
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is the only escape without a mypy plugin upgrade
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
@@ -73,7 +77,9 @@ class RegistryAuditOraclesResult(OutputSchema):
     failures: list[str] = []
     applicability_declarations: list[dict] = []
     orphan_oracle_ids: list[str] = []
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is the only escape without a mypy plugin upgrade
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 

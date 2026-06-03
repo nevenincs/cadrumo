@@ -323,7 +323,20 @@ def resolve_modelo_ledger_binding_values_from_repositories(
     """Resolve ledger-backed registry bindings from the active bucket.
 
     Args:
-        revision: The :class:`ModeloRevision` used to drive ledger aggregation binding resolution.
+        bucket_id: Active bucket identifier; carried through to provenance and
+            audit records so the resolved bindings cannot be misattributed.
+        modelo: Modelo identifier (e.g. ``"303"``) selecting the per-modelo
+            aggregation paths.
+        revision: The :class:`ModeloRevision` used to drive ledger aggregation
+            binding resolution.
+        filing_year: AEAT filing year; combines with ``period`` to derive the
+            aggregation window.
+        period: Period token (e.g. ``"1T"``, ``"0A"``) bounding the ledger
+            window.
+        transaction_repository: Optional :class:`TransactionCatalogueRepositoryProtocol`;
+            defaults to the active-bucket repository when ``None``.
+        invoice_repository: Optional :class:`InvoiceCatalogueRepositoryProtocol`;
+            defaults to the active-bucket repository when ``None``.
 
     Returns a :class:`ModeloLedgerBindingAggregation` containing all
     resolved binding values and per-source issue lists.

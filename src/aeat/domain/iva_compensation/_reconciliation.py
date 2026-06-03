@@ -16,13 +16,26 @@ regulatory invariant relating ``selected_authority`` to
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Final, Literal
+from typing import Final, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ...core.time import now
+from ._errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError
+
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+DEFAULT_MAX_WALLET_AGE_DAYS: Final[int] = 31
+_FILED_HISTORY_OBSERVATION: Final = "filed_history_observation"
+_AEAT_FILED_HISTORY_SOURCE_KINDS: Final[frozenset[str]] = frozenset(
+    {
+        "aeat_sede_justificante",
+        "aeat_sede_iva_compensation_history",
+        _FILED_HISTORY_OBSERVATION,
+    }
+)
 
 type IvaCompensationAuthority = Literal[
     "aeat_wallet",
@@ -113,11 +126,448 @@ class IvaCompensationReconciliationDecision(BaseModel):
         return self
 
 
+@runtime_checkable
+class IvaCompensationWalletObservationProtocol(Protocol):
+    """Structural port for an AEAT IVA-compensation wallet observation.
+
+    Lets the reconciliation decision logic stay in the domain without importing
+    the Sede adapter record that produces it; the adapter's
+    ``IvaCompensationWalletObservation`` satisfies this protocol structurally.
+    Members are read-only (the reconciliation only reads them), which keeps the
+    protocol covariant so a record whose attributes are subtypes (e.g. an
+    ``AnyHttpUrl`` ``source_url``) still satisfies it.
+    """
+
+    @property
+    def taxpayer_nif(self) -> str: ...
+    @property
+    def target_year(self) -> int: ...
+    @property
+    def target_period(self) -> str: ...
+    @property
+    def total_pending(self) -> Decimal: ...
+    @property
+    def source_url(self) -> object: ...
+    @property
+    def captured_at(self) -> datetime: ...
+
+
+@runtime_checkable
+class LocalIvaCompensationRecurrenceProtocol(Protocol):
+    """Structural port for a local Modelo 303 recurrence record.
+
+    The application's ``LocalIvaCompensationRecurrence`` satisfies this protocol
+    structurally; the domain projects it into an authority source without
+    importing the application layer. Members are read-only for covariance.
+    """
+
+    @property
+    def amount(self) -> Decimal: ...
+    @property
+    def binding_id(self) -> object: ...
+    @property
+    def source_kind(self) -> str: ...
+    @property
+    def source_modelo(self) -> object: ...
+    @property
+    def source_filing_year(self) -> int: ...
+    @property
+    def source_periods(self) -> tuple[str, ...]: ...
+    @property
+    def resolved_at(self) -> datetime: ...
+
+
+def reconcile_iva_compensation_wallet(
+    *,
+    taxpayer_nif: str,
+    target_year: int,
+    target_period: str,
+    wallet: IvaCompensationWalletObservationProtocol | None,
+    local_recurrence_amount: Decimal | None,
+    local_recurrence_source: IvaCompensationAuthoritySource | None = None,
+    override: IvaCompensationOverride | None = None,
+    decided_at: datetime | None = None,
+    max_wallet_age_days: int = DEFAULT_MAX_WALLET_AGE_DAYS,
+    is_first_iva_period: bool = False,
+) -> IvaCompensationReconciliationDecision:
+    """Return the :class:`IvaCompensationReconciliationDecision` for casilla ``110``.
+
+    Authority order is wallet, explicit taxpayer override, local
+    recurrence. Divergence between fresh wallet evidence and local
+    recurrence blocks automatic calculation unless an override is
+    recorded.
+
+    When ``is_first_iva_period=True`` and the selected amount is zero, the
+    decision maps to the non-blocking ``first_period_zero`` divergence.
+    Under LIVA art. 99.5 a taxpayer's first registered IVA period has no
+    prior compensation balance; zero is legally certain and does not require
+    operator review.
+    """
+    if wallet is not None:
+        validate_wallet_matches_snapshot(
+            wallet,
+            taxpayer_nif=taxpayer_nif,
+            target_year=target_year,
+            target_period=target_period,
+        )
+    when = decided_at if decided_at is not None else now()
+    wallet_amount = wallet.total_pending if wallet is not None else None
+    wallet_captured_at = wallet.captured_at if wallet is not None else None
+    stale_wallet = _is_wallet_stale(wallet_captured_at, when, max_wallet_age_days)
+    authority_sources = _authority_sources(
+        wallet=wallet,
+        local_recurrence_amount=local_recurrence_amount,
+        local_recurrence_source=local_recurrence_source,
+        override=override,
+    )
+
+    if override is not None:
+        return IvaCompensationReconciliationDecision(
+            taxpayer_nif=taxpayer_nif,
+            target_year=target_year,
+            target_period=target_period,
+            selected_authority="taxpayer_override",
+            selected_amount=override.amount,
+            wallet_amount=wallet_amount,
+            local_recurrence_amount=local_recurrence_amount,
+            override_amount=override.amount,
+            divergence="override",
+            blocked=False,
+            stale_wallet=stale_wallet,
+            reason=override.reason,
+            wallet_captured_at=wallet_captured_at,
+            authority_sources=authority_sources,
+            decided_at=when,
+        )
+
+    if is_first_iva_period:
+        effective_zero = Decimal("0")
+        if wallet_amount is not None and wallet_amount == effective_zero and not stale_wallet:
+            return IvaCompensationReconciliationDecision(
+                taxpayer_nif=taxpayer_nif,
+                target_year=target_year,
+                target_period=target_period,
+                selected_authority="aeat_wallet",
+                selected_amount=effective_zero,
+                wallet_amount=effective_zero,
+                local_recurrence_amount=local_recurrence_amount,
+                override_amount=None,
+                divergence="first_period_zero",
+                blocked=False,
+                stale_wallet=False,
+                reason=(
+                    "First registered IVA filing period: casilla 110 is zero per LIVA art. 99.5. "
+                    "No prior compensation balance exists; zero is legally certain and non-blocking."
+                ),
+                wallet_captured_at=wallet_captured_at,
+                authority_sources=authority_sources,
+                decided_at=when,
+            )
+        if wallet_amount is None and local_recurrence_amount is not None and local_recurrence_amount == effective_zero:
+            return IvaCompensationReconciliationDecision(
+                taxpayer_nif=taxpayer_nif,
+                target_year=target_year,
+                target_period=target_period,
+                selected_authority="local_recurrence",
+                selected_amount=effective_zero,
+                wallet_amount=None,
+                local_recurrence_amount=effective_zero,
+                override_amount=None,
+                divergence="first_period_zero",
+                blocked=False,
+                stale_wallet=False,
+                reason=(
+                    "First registered IVA filing period: seeded-zero local record per LIVA art. 99.5. "
+                    "No prior compensation balance exists; zero is legally certain and non-blocking."
+                ),
+                wallet_captured_at=None,
+                authority_sources=authority_sources,
+                decided_at=when,
+            )
+
+    if wallet_amount is None:
+        if local_recurrence_amount is None:
+            return IvaCompensationReconciliationDecision(
+                taxpayer_nif=taxpayer_nif,
+                target_year=target_year,
+                target_period=target_period,
+                selected_authority="missing",
+                selected_amount=None,
+                wallet_amount=None,
+                local_recurrence_amount=None,
+                override_amount=None,
+                divergence="missing",
+                blocked=True,
+                stale_wallet=False,
+                reason="No AEAT wallet observation or local recurrence is available for Modelo 303 prior compensation.",
+                wallet_captured_at=None,
+                authority_sources=authority_sources,
+                decided_at=when,
+            )
+        if _is_filed_history_source(local_recurrence_source):
+            return IvaCompensationReconciliationDecision(
+                taxpayer_nif=taxpayer_nif,
+                target_year=target_year,
+                target_period=target_period,
+                selected_authority="filed_history",
+                selected_amount=local_recurrence_amount,
+                wallet_amount=None,
+                local_recurrence_amount=local_recurrence_amount,
+                override_amount=None,
+                divergence="filed_history_only",
+                blocked=True,
+                stale_wallet=False,
+                reason=(
+                    "Direct AEAT wallet/cartera evidence is unavailable; AEAT filed-history-derived recurrence "
+                    "is recorded as fallback evidence but requires explicit taxpayer override before automatic output."
+                ),
+                wallet_captured_at=None,
+                authority_sources=authority_sources,
+                decided_at=when,
+            )
+        return IvaCompensationReconciliationDecision(
+            taxpayer_nif=taxpayer_nif,
+            target_year=target_year,
+            target_period=target_period,
+            selected_authority="local_recurrence",
+            selected_amount=local_recurrence_amount,
+            wallet_amount=None,
+            local_recurrence_amount=local_recurrence_amount,
+            override_amount=None,
+            divergence="wallet_missing",
+            blocked=True,
+            stale_wallet=False,
+            reason=(
+                "AEAT wallet is unavailable; local recurrence is lower-confidence fallback evidence and requires "
+                "explicit taxpayer override before automatic output."
+            ),
+            wallet_captured_at=None,
+            authority_sources=authority_sources,
+            decided_at=when,
+        )
+
+    if stale_wallet:
+        if local_recurrence_amount is None:
+            return IvaCompensationReconciliationDecision(
+                taxpayer_nif=taxpayer_nif,
+                target_year=target_year,
+                target_period=target_period,
+                selected_authority="missing",
+                selected_amount=None,
+                wallet_amount=wallet_amount,
+                local_recurrence_amount=None,
+                override_amount=None,
+                divergence="wallet_stale",
+                blocked=True,
+                stale_wallet=True,
+                reason="AEAT wallet observation is stale and no local recurrence fallback is available.",
+                wallet_captured_at=wallet_captured_at,
+                authority_sources=authority_sources,
+                decided_at=when,
+            )
+        return IvaCompensationReconciliationDecision(
+            taxpayer_nif=taxpayer_nif,
+            target_year=target_year,
+            target_period=target_period,
+            selected_authority="local_recurrence",
+            selected_amount=local_recurrence_amount,
+            wallet_amount=wallet_amount,
+            local_recurrence_amount=local_recurrence_amount,
+            override_amount=None,
+            divergence="wallet_stale",
+            blocked=True,
+            stale_wallet=True,
+            reason=(
+                "AEAT wallet observation is stale; local recurrence is lower-confidence fallback evidence and "
+                "requires explicit taxpayer override before automatic output."
+            ),
+            wallet_captured_at=wallet_captured_at,
+            authority_sources=authority_sources,
+            decided_at=when,
+        )
+
+    if local_recurrence_amount is not None and wallet_amount != local_recurrence_amount:
+        divergence: IvaCompensationDivergence = (
+            "wallet_higher" if wallet_amount > local_recurrence_amount else "wallet_lower"
+        )
+        return IvaCompensationReconciliationDecision(
+            taxpayer_nif=taxpayer_nif,
+            target_year=target_year,
+            target_period=target_period,
+            selected_authority="missing",
+            selected_amount=None,
+            wallet_amount=wallet_amount,
+            local_recurrence_amount=local_recurrence_amount,
+            override_amount=None,
+            divergence=divergence,
+            blocked=True,
+            stale_wallet=False,
+            reason="AEAT wallet and local recurrence diverge; review is required before automatic output.",
+            wallet_captured_at=wallet_captured_at,
+            authority_sources=authority_sources,
+            decided_at=when,
+        )
+
+    if local_recurrence_amount is None:
+        return IvaCompensationReconciliationDecision(
+            taxpayer_nif=taxpayer_nif,
+            target_year=target_year,
+            target_period=target_period,
+            selected_authority="aeat_wallet",
+            selected_amount=wallet_amount,
+            wallet_amount=wallet_amount,
+            local_recurrence_amount=None,
+            override_amount=None,
+            divergence="wallet_only",
+            blocked=False,
+            stale_wallet=False,
+            reason=(
+                "Using latest valid AEAT wallet observation for Modelo 303 prior compensation; "
+                "no local prior-filing recurrence was available for cross-check."
+            ),
+            wallet_captured_at=wallet_captured_at,
+            authority_sources=authority_sources,
+            decided_at=when,
+        )
+
+    return IvaCompensationReconciliationDecision(
+        taxpayer_nif=taxpayer_nif,
+        target_year=target_year,
+        target_period=target_period,
+        selected_authority="aeat_wallet",
+        selected_amount=wallet_amount,
+        wallet_amount=wallet_amount,
+        local_recurrence_amount=local_recurrence_amount,
+        override_amount=None,
+        divergence="match",
+        blocked=False,
+        stale_wallet=False,
+        reason="Using latest valid AEAT wallet observation for Modelo 303 prior compensation.",
+        wallet_captured_at=wallet_captured_at,
+        authority_sources=authority_sources,
+        decided_at=when,
+    )
+
+
+def _authority_sources(
+    *,
+    wallet: IvaCompensationWalletObservationProtocol | None,
+    local_recurrence_amount: Decimal | None,
+    local_recurrence_source: IvaCompensationAuthoritySource | None,
+    override: IvaCompensationOverride | None,
+) -> tuple[IvaCompensationAuthoritySource, ...]:
+    sources: list[IvaCompensationAuthoritySource] = []
+    if wallet is not None:
+        sources.append(
+            IvaCompensationAuthoritySource(
+                source_kind="aeat_wallet",
+                amount=wallet.total_pending,
+                source_locator=str(wallet.source_url),
+                captured_at=wallet.captured_at,
+            )
+        )
+    if local_recurrence_amount is not None:
+        recurrence_source = local_recurrence_source or IvaCompensationAuthoritySource(
+            source_kind="local_recurrence",
+            amount=local_recurrence_amount,
+            source_locator="local-recurrence:modelo-303-compensacion-pendiente-anteriores",
+        )
+        if recurrence_source.source_kind == _FILED_HISTORY_OBSERVATION:
+            sources.append(
+                IvaCompensationAuthoritySource(
+                    source_kind="local_recurrence",
+                    amount=local_recurrence_amount,
+                    source_locator="local-recurrence:modelo-303-compensacion-pendiente-anteriores",
+                    captured_at=recurrence_source.captured_at,
+                    source_modelo=recurrence_source.source_modelo,
+                    source_filing_year=recurrence_source.source_filing_year,
+                    source_periods=recurrence_source.source_periods,
+                )
+            )
+        sources.append(recurrence_source)
+    if override is not None:
+        sources.append(
+            IvaCompensationAuthoritySource(
+                source_kind="taxpayer_override",
+                amount=override.amount,
+                source_locator=override.evidence_locator,
+                captured_at=override.recorded_at,
+            )
+        )
+    return tuple(sources)
+
+
+def _is_filed_history_source(source: IvaCompensationAuthoritySource | None) -> bool:
+    return source is not None and source.source_kind == _FILED_HISTORY_OBSERVATION
+
+
+def local_recurrence_authority_source(
+    recurrence: LocalIvaCompensationRecurrenceProtocol | None,
+) -> IvaCompensationAuthoritySource | None:
+    """Project a local Modelo 303 recurrence record into an authority source."""
+    if recurrence is None:
+        return None
+    amount = Decimal(recurrence.amount)
+    binding_id = str(recurrence.binding_id)
+    source_modelo = str(recurrence.source_modelo)
+    source_filing_year = int(recurrence.source_filing_year)
+    source_periods = tuple(str(item) for item in recurrence.source_periods)
+    resolved_at = recurrence.resolved_at
+    source_kind: IvaCompensationAuthoritySourceKind = (
+        _FILED_HISTORY_OBSERVATION if recurrence.source_kind in _AEAT_FILED_HISTORY_SOURCE_KINDS else "local_recurrence"
+    )
+    return IvaCompensationAuthoritySource(
+        source_kind=source_kind,
+        amount=amount,
+        source_locator=f"binding:{binding_id}",
+        captured_at=resolved_at,
+        source_modelo=source_modelo,
+        source_filing_year=source_filing_year,
+        source_periods=source_periods,
+    )
+
+
+def validate_wallet_matches_snapshot(
+    wallet: IvaCompensationWalletObservationProtocol,
+    *,
+    taxpayer_nif: str,
+    target_year: int,
+    target_period: str,
+) -> None:
+    """Refuse a wallet observation that does not match the requested Modelo 303 target."""
+    if wallet.taxpayer_nif != taxpayer_nif:
+        raise IvaCompensationReconciliationInputError(
+            "IVA wallet observation taxpayer does not match the requested taxpayer"
+        )
+    if wallet.target_year != target_year or wallet.target_period != target_period:
+        raise IvaCompensationReconciliationInputError(
+            "IVA wallet observation target does not match the Modelo 303 snapshot"
+        )
+
+
+def _is_wallet_stale(
+    captured_at: datetime | None,
+    decided_at: datetime,
+    max_wallet_age_days: int,
+) -> bool:
+    if captured_at is None:
+        return False
+    if max_wallet_age_days < 0:
+        raise IvaWalletReconciliationError("max_wallet_age_days must be non-negative")
+    return decided_at - captured_at > timedelta(days=max_wallet_age_days)
+
+
 __all__ = [
+    "DEFAULT_MAX_WALLET_AGE_DAYS",
     "IvaCompensationAuthority",
     "IvaCompensationAuthoritySource",
     "IvaCompensationAuthoritySourceKind",
     "IvaCompensationDivergence",
     "IvaCompensationOverride",
     "IvaCompensationReconciliationDecision",
+    "IvaCompensationWalletObservationProtocol",
+    "LocalIvaCompensationRecurrenceProtocol",
+    "local_recurrence_authority_source",
+    "reconcile_iva_compensation_wallet",
+    "validate_wallet_matches_snapshot",
 ]

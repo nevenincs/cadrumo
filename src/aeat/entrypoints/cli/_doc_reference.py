@@ -120,7 +120,9 @@ def _assert_no_fallback_surfaces(root: click.Command) -> None:  # type: ignore[n
     degraded = [" ".join(path) for path, cmd in all_nodes.items() if _FALLBACK_MARKER in (cmd.help or "").lower()]
     if degraded:
         paths = ", ".join(degraded)
-        # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD: subprocess invocation failure surfaced as RuntimeError for operator diagnostics; not on the operator-facing AeatError contract.
+        # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD:
+        # subprocess invocation failure surfaced as RuntimeError for operator
+        # diagnostics; not on the operator-facing AeatError contract.
         raise RuntimeError(
             f"Import-failure fallback detected in CLI subtree(s): {paths}. "
             "Ensure all optional dependencies are installed before generating the reference."
@@ -589,20 +591,20 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
     # SCHEMA_REGISTRY.  The CLI loads these lazily at dispatch time; the generator
     # must trigger them explicitly before inspecting the registry.
     from . import (
-        _app_live_payloads,
-        _config_payloads,
-        _ledger_payloads,
-        _modelo_payloads,
-        _overview_payloads,
-        _registry_corpus_payloads,
-        _registry_payloads,
-        _review_payloads,
-        _root_payloads,
+        _app_live_payloads,  # noqa: F401
+        _config_payloads,  # noqa: F401
+        _ledger_payloads,  # noqa: F401
+        _modelo_payloads,  # noqa: F401
+        _overview_payloads,  # noqa: F401
+        _registry_corpus_payloads,  # noqa: F401
+        _registry_payloads,  # noqa: F401
+        _review_payloads,  # noqa: F401
+        _root_payloads,  # noqa: F401
         app,
     )
     from ._config import (
-        _google_payloads,
-        _profile_censo_payloads,
+        _google_payloads,  # noqa: F401
+        _profile_censo_payloads,  # noqa: F401
     )
 
     # Materialise every lazy subtree before the tree walk.
@@ -704,7 +706,9 @@ def generate_cli_reference_in_subprocess(docs_root: Path) -> dict[str, str]:
         check=False,
     )
     if result.returncode != 0:
-        # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD: subprocess invocation failure surfaced as RuntimeError for operator diagnostics; not on the operator-facing AeatError contract.
+        # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD:
+        # subprocess invocation failure surfaced as RuntimeError for operator
+        # diagnostics; not on the operator-facing AeatError contract.
         raise RuntimeError(f"CLI reference generation subprocess failed (exit {result.returncode}):\n{result.stderr}")
 
     # Read back what the subprocess wrote.
@@ -763,7 +767,9 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
         check=False,
     )
     if result.returncode != 0:
-        # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD: subprocess invocation failure surfaced as RuntimeError for operator diagnostics; not on the operator-facing AeatError contract.
+        # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD:
+        # subprocess invocation failure surfaced as RuntimeError for operator
+        # diagnostics; not on the operator-facing AeatError contract.
         raise RuntimeError(f"CLI leaf-path collection subprocess failed (exit {result.returncode}):\n{result.stderr}")
     return [line for line in result.stdout.splitlines() if line.strip()]
 

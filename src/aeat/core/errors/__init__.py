@@ -153,7 +153,7 @@ class CoreValidationError(CoreError, ValueError):
 class ProfileAnswerTypeError(CoreValidationError):
     """Raised when a typed profile-answers field coercion receives an unexpected type.
 
-    Lives in :mod:`aeat.core.errors` so :class:`~aeat.core.profile.SetupAnswers`
+    Lives in :mod:`aeat.core.errors` so :class:`~aeat.core.setup_answers.SetupAnswers`
     can raise a typed error without importing application-layer wizard modules.
     Application-layer wizard code raises the narrower
     :class:`~aeat.application.wizard._errors.WizardAnswerTypeError`, which

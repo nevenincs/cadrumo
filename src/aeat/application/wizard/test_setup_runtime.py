@@ -13,7 +13,7 @@ from collections import deque
 
 import pytest
 
-from ...core.profile import SetupAnswers
+from ...core.setup_answers import SetupAnswers
 from ...domain.deadlines._models import LegalEntityForm
 from ._catalogue import SETUP_FLOW
 from ._errors import WizardScriptOverflowError
@@ -92,7 +92,8 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             "false",  # bienes-extranjero-above-threshold
             # ── residence (non-resident axis #197) ────────────
             "resident_irpf",  # fiscal-residency
-            # country-of-fiscal-residence + representante-fiscal-* SKIPPED (conditional on fiscal-residency == non_resident_irnr)
+            # country-of-fiscal-residence + representante-fiscal-* SKIPPED
+            # (conditional on fiscal-residency == non_resident_irnr).
             "madrid",  # tax-residence-ccaa (visible: resident)
             # ── notes ──────────────────────────────
             "",  # notes

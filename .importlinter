@@ -110,7 +110,6 @@ ignore_imports =
     aeat.domain.submission._repository -> aeat.adapters.persistence.storage.envelope
     aeat.domain.transactions._repository -> aeat.adapters.persistence.storage
     aeat.domain.usage_ratios._service -> aeat.adapters.persistence.storage.runtime_repository
-    aeat.domain.profile._keys -> aeat.application.wizard._compiler
     aeat.core.resources._repos.topics -> aeat.application.topics
     aeat.domain.calculations.registry.test_referential_integrity -> aeat.application.diagnostics
     aeat.domain.calculations.registry.test_cross_boundary_roundtrip -> aeat.application.workflow._models
@@ -168,10 +167,10 @@ ignore_imports =
     aeat.core.test_external_constants -> aeat.domain.currency._service
     aeat.core.test_logging -> aeat.adapters.inbound.pdf._pdfplumber
     aeat.core.test_logging -> aeat.domain.calculations.registry._record_design
-    aeat.core.test_profile -> aeat.application.wizard._catalogue
-    aeat.core.test_profile -> aeat.domain.deadlines._models
-    aeat.core.test_profile -> aeat.domain.deadlines._profiles
-    aeat.core.test_profile_catalogue -> aeat.application.wizard._catalogue
+    aeat.core.test_setup_answers -> aeat.application.wizard._catalogue
+    aeat.core.test_setup_answers -> aeat.domain.deadlines._models
+    aeat.core.test_setup_answers -> aeat.domain.deadlines._profiles
+    aeat.core.test_wizard_catalogue -> aeat.application.wizard._catalogue
     # ── core test files importing application/domain/adapters for fixtures ──
     aeat.core.test_external_constants -> aeat.domain.portals._categories
     aeat.core.resources._repos.test_singletons -> aeat.domain.auth.apoderamientos._catalogue
@@ -480,10 +479,10 @@ ignore_imports =
     aeat.core.test_external_constants -> aeat.domain.currency._service
     aeat.core.test_logging -> aeat.adapters.inbound.pdf._pdfplumber
     aeat.core.test_logging -> aeat.domain.calculations.registry._record_design
-    aeat.core.test_profile -> aeat.application.wizard._catalogue
-    aeat.core.test_profile -> aeat.domain.deadlines._models
-    aeat.core.test_profile -> aeat.domain.deadlines._profiles
-    aeat.core.test_profile_catalogue -> aeat.application.wizard._catalogue
+    aeat.core.test_setup_answers -> aeat.application.wizard._catalogue
+    aeat.core.test_setup_answers -> aeat.domain.deadlines._models
+    aeat.core.test_setup_answers -> aeat.domain.deadlines._profiles
+    aeat.core.test_wizard_catalogue -> aeat.application.wizard._catalogue
     aeat.domain.attachments.test_service -> aeat.tests.secure_sql
     aeat.domain.calculations.registry.test_inss_maternidad_paternidad_art7h -> aeat.tests.cli_runner
     aeat.domain.calculations.registry.test_renta_web_open_oracle -> aeat.adapters.outbound.aeat.sede._renta_web_open
@@ -583,7 +582,6 @@ ignore_imports =
     aeat.domain.submission.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql.session
     aeat.domain.transactions.test_repository_roundtrip -> aeat.adapters.persistence.storage
     # ── domain production cross-layer edges (lazy imports deferred for cleanup) ──
-    aeat.domain.profile._keys -> aeat.application.wizard._compiler
     # ── domain test cross-layer edges ──
     aeat.domain.calculations.registry.test_referential_integrity -> aeat.application.diagnostics
     aeat.domain.calculations.registry.test_cross_boundary_roundtrip -> aeat.application.workflow._models

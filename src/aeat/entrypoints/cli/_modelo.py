@@ -904,15 +904,24 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
         if row_type == "miembro":
             return Modelo184MemberRow(
                 row_type="miembro", **kv_pairs
-            )  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO184-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo184MemberRow fields after decimal coercion at this parse boundary  # type: ignore[arg-type]
+            # CAST-RATIONALE-WIRE-PAYLOAD-MODELO184-ROW:
+            # kv_pairs is dict[str, str|Decimal]; splat matches
+            # Modelo184MemberRow fields after decimal coercion at this parse boundary.
+            )  # type: ignore[arg-type]
         elif row_type == "vinculada":
             return Modelo232VinculadaRow(
                 row_type="vinculada", **kv_pairs
-            )  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO232-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo232VinculadaRow fields after decimal coercion at this parse boundary  # type: ignore[arg-type]
+            # CAST-RATIONALE-WIRE-PAYLOAD-MODELO232-ROW:
+            # kv_pairs is dict[str, str|Decimal]; splat matches
+            # Modelo232VinculadaRow fields after decimal coercion at this parse boundary.
+            )  # type: ignore[arg-type]
         elif row_type == "operador":
             row_m349 = Modelo349OperadorRow(
                 row_type="operador", **kv_pairs
-            )  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO349-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo349OperadorRow fields after decimal coercion at this parse boundary  # type: ignore[arg-type]
+            # CAST-RATIONALE-WIRE-PAYLOAD-MODELO349-ROW:
+            # kv_pairs is dict[str, str|Decimal]; splat matches
+            # Modelo349OperadorRow fields after decimal coercion at this parse boundary.
+            )  # type: ignore[arg-type]
             # NIF format check is advisory at parse time — invalid format raises BadParameter.
             nif = str(kv_pairs.get("nif_comunitario", ""))
             pais = str(kv_pairs.get("codigo_pais", ""))
@@ -933,7 +942,10 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
         else:
             return Modelo347ContraparteRow(
                 row_type="contraparte", **kv_pairs
-            )  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO347-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo347ContraparteRow fields after decimal coercion at this parse boundary  # type: ignore[arg-type]
+            # CAST-RATIONALE-WIRE-PAYLOAD-MODELO347-ROW:
+            # kv_pairs is dict[str, str|Decimal]; splat matches
+            # Modelo347ContraparteRow fields after decimal coercion at this parse boundary.
+            )  # type: ignore[arg-type]
     except typer.BadParameter:
         raise
     except (ValidationError, TypeError, ValueError, ArithmeticError) as exc:
@@ -5861,11 +5873,12 @@ def _maritime_facts_from_active_profile():
             return False
         return raw.strip().lower() in {"true", "1", "yes"}
 
+    # CAST-RATIONALE-MARITIME-LITERAL-FIELD:
+    # _enum returns str|None from raw profile fact; Literal field type is
+    # validated by MaritimeWorkerFacts dataclass at construction.
     return MaritimeWorkerFacts(
         worker_class=_enum("maritime_worker.worker_class"),
-        vessel_flag=_enum(
-            "maritime_worker.vessel_flag"
-        ),  # CAST-RATIONALE-MARITIME-LITERAL-FIELD: _enum returns str|None from raw profile fact; Literal field type is validated by MaritimeWorkerFacts dataclass at construction  # type: ignore[arg-type]
+        vessel_flag=_enum("maritime_worker.vessel_flag"),  # type: ignore[arg-type]
         waters_type=_enum(
             "maritime_worker.waters_type"
         ),  # CAST-RATIONALE-MARITIME-LITERAL-FIELD: same as vessel_flag  # type: ignore[arg-type]

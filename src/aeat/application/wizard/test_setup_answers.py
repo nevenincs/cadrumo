@@ -6,7 +6,7 @@ validator methods on :class:`SetupAnswers` rather than going through the full
 model constructor. This confirms the raise site exists and the typed exception
 class is what gets raised at the coercion boundary, before pydantic wraps it.
 
-Since :class:`SetupAnswers` is now canonical in :mod:`aeat.core.profile`, its
+Since :class:`SetupAnswers` is now canonical in :mod:`aeat.core.setup_answers`, its
 validators raise :class:`~aeat.core.errors.ProfileAnswerTypeError` directly.
 :class:`~aeat.application.wizard._errors.WizardAnswerTypeError` is a subclass
 of ``ProfileAnswerTypeError`` — the registry / envelope tests below verify that
@@ -18,7 +18,7 @@ from __future__ import annotations
 import pytest
 
 from ...core.errors import ERROR_REGISTRY, ProfileAnswerTypeError, build_error_envelope
-from ...core.profile import SetupAnswers
+from ...core.setup_answers import SetupAnswers
 from ._errors import WizardAnswerTypeError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

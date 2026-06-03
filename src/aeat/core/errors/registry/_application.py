@@ -977,7 +977,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.calculations._errors.IvaWalletReconciliationError",
+        "aeat.domain.iva_compensation._errors.IvaWalletReconciliationError",
         ErrorCode(
             code="REFUSED_IVA_WALLET_RECONCILIATION_INVARIANT",
             category=ErrorCategory.REFUSED,

@@ -255,6 +255,7 @@ application:
           certificate --file ÚTVONAL` parancsot.
         path_unset: Nem lett kiválasztva tanúsítványfájl. Futtassa az `aeat config
           auth configure --provider certificate --file ÚTVONAL` parancsot.
+        unavailable: 'A tanúsítvány állapota nem érhető el; a diagnosztikai részletekért tekintse meg a hibakeresési naplókat.'
       load:
         password_unset: Nincs konfigurálva tanúsítványjelszó. A folytatás előtt állítsa
           be a tanúsítványjelszót.

@@ -76,7 +76,10 @@ class ModeloDraftBuilderProtocol(Protocol):
         inputs: ModeloInputs,
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
-        """Build and return a :class:`RegistryModeloDraftProtocol` registry-backed filing draft for the given :class:`TaxpayerProfile`."""
+        """Build a registry-backed filing draft for the given :class:`TaxpayerProfile`.
+
+        Returns a :class:`RegistryModeloDraftProtocol`.
+        """
         ...
 
 

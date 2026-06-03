@@ -1,4 +1,4 @@
-"""Real-behaviour tests for aeat.core.profile_catalogue.
+"""Real-behaviour tests for aeat.core.wizard_catalogue.
 
 These tests assert:
 
@@ -41,7 +41,7 @@ def test_setup_flow_round_trip_identity() -> None:
 
     # Import _catalogue first — its module body calls register_wizard_catalogue.
     from ..application.wizard import _catalogue as catalogue
-    from .profile_catalogue import get_setup_flow
+    from .wizard_catalogue import get_setup_flow
 
     assert get_setup_flow() is catalogue.SETUP_FLOW, (
         "get_setup_flow() must return the identical SETUP_FLOW object "
@@ -53,7 +53,7 @@ def test_wizard_flows_round_trip_identity() -> None:
     """get_wizard_flows() returns the exact WIZARD_FLOWS tuple from _catalogue."""
 
     from ..application.wizard import _catalogue as catalogue
-    from .profile_catalogue import get_wizard_flows
+    from .wizard_catalogue import get_wizard_flows
 
     assert get_wizard_flows() is catalogue.WIZARD_FLOWS, (
         "get_wizard_flows() must return the identical WIZARD_FLOWS tuple "
@@ -64,7 +64,7 @@ def test_wizard_flows_round_trip_identity() -> None:
 def test_setup_flow_id_is_setup() -> None:
     """The registered SETUP_FLOW carries the canonical 'setup' identifier."""
 
-    from .profile_catalogue import get_setup_flow
+    from .wizard_catalogue import get_setup_flow
 
     flow = get_setup_flow()
     assert flow.id == "setup", f"Expected flow.id == 'setup', got {flow.id!r}"
@@ -73,7 +73,7 @@ def test_setup_flow_id_is_setup() -> None:
 def test_wizard_flows_contains_setup_flow() -> None:
     """WIZARD_FLOWS is a tuple that contains the SETUP_FLOW descriptor."""
 
-    from .profile_catalogue import get_setup_flow, get_wizard_flows
+    from .wizard_catalogue import get_setup_flow, get_wizard_flows
 
     flows = get_wizard_flows()
     assert isinstance(flows, tuple), f"WIZARD_FLOWS must be a tuple, got {type(flows)}"
@@ -97,12 +97,12 @@ def test_no_deferred_upward_import_in_deadlines_profiles() -> None:
     assert _UPWARD_PATTERN not in source, (
         "aeat.domain.deadlines._profiles still contains a direct import from "
         "aeat.application.wizard._catalogue. Remove it and use get_setup_flow() from "
-        "aeat.core.profile_catalogue instead."
+        "aeat.core.wizard_catalogue instead."
     )
     assert _ALT_UPWARD_PATTERN not in source, (
         "aeat.domain.deadlines._profiles still contains an absolute import from "
         "aeat.application.wizard._catalogue. Remove it and use get_setup_flow() from "
-        "aeat.core.profile_catalogue instead."
+        "aeat.core.wizard_catalogue instead."
     )
 
 
@@ -113,22 +113,22 @@ def test_no_deferred_upward_import_in_profile_keys() -> None:
     assert _UPWARD_PATTERN not in source, (
         "aeat.domain.profile._keys still contains a direct import from "
         "aeat.application.wizard._catalogue. Remove it and use get_wizard_flows() from "
-        "aeat.core.profile_catalogue instead."
+        "aeat.core.wizard_catalogue instead."
     )
     assert _ALT_UPWARD_PATTERN not in source, (
         "aeat.domain.profile._keys still contains an absolute import from "
         "aeat.application.wizard._catalogue. Remove it and use get_wizard_flows() from "
-        "aeat.core.profile_catalogue instead."
+        "aeat.core.wizard_catalogue instead."
     )
 
 
-def test_profile_catalogue_exports_are_callable() -> None:
-    """All public symbols in aeat.core.profile_catalogue are importable and callable."""
+def test_wizard_catalogue_exports_are_callable() -> None:
+    """All public symbols in aeat.core.wizard_catalogue are importable and callable."""
 
-    from . import profile_catalogue
+    from . import wizard_catalogue
     from .errors import CoreError
 
-    assert callable(profile_catalogue.register_wizard_catalogue)
-    assert callable(profile_catalogue.get_setup_flow)
-    assert callable(profile_catalogue.get_wizard_flows)
-    assert issubclass(profile_catalogue.WizardCatalogueNotRegisteredError, CoreError)
+    assert callable(wizard_catalogue.register_wizard_catalogue)
+    assert callable(wizard_catalogue.get_setup_flow)
+    assert callable(wizard_catalogue.get_wizard_flows)
+    assert issubclass(wizard_catalogue.WizardCatalogueNotRegisteredError, CoreError)

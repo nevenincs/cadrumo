@@ -1,7 +1,7 @@
 """Pytest fixtures for `domain/deadlines/` tests.
 
 The deadline profile projection (`taxpayer_profile_from_mapping`) reads
-the wizard `SETUP_FLOW` descriptor via the `profile_catalogue` slot so
+the wizard `SETUP_FLOW` descriptor via the `wizard_catalogue` slot so
 canonical-token semantics for every boolean / select / text field stay
 in lockstep with the wizard's on-prompt validation. The catalogue is
 registered by the application layer at startup; importing
@@ -23,6 +23,6 @@ def _register_wizard_catalogue() -> None:
     """Ensure the wizard `SETUP_FLOW` catalogue is registered for the session."""
 
     from ...application.wizard import (
-        _catalogue,  # registration side effect
-        _persistence,  # registration side effect
+        _catalogue,  # noqa: F401  # registration side effect
+        _persistence,  # noqa: F401  # registration side effect
     )

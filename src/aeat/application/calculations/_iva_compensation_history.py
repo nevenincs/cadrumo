@@ -86,7 +86,9 @@ def seed_iva_compensation_period(
     repository: IvaCompensationHistoryRepository | None = None,
     seeded_at: datetime | None = None,
 ) -> IvaCompensationPeriodState:
-    """Persist a manually declared carry-forward balance for one Modelo 303 period and return an :class:`IvaCompensationPeriodState`.
+    """Persist a manually declared carry-forward balance for one Modelo 303 period.
+
+    Returns an :class:`IvaCompensationPeriodState`.
 
     Intended for first-time users whose historical M303 carry-forward pre-dates
     the local compensation history. The seeded state is structurally identical

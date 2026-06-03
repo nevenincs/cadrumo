@@ -167,7 +167,10 @@ class ApoderadoService:
         scope_tokens: tuple[str, ...],
         notes: str = "",
     ) -> ApoderadoConfiguration:
-        """Persist apoderado config and return the resulting :class:`ApoderadoConfiguration`; validates and dedups scopes against the catalogue."""
+        """Persist apoderado config and return the resulting :class:`ApoderadoConfiguration`.
+
+        Validates and dedups scopes against the catalogue.
+        """
         granted = parse_scope_tokens(scope_tokens, self._catalogue)
         config = ApoderadoConfiguration(
             bucket_id=bucket_id,

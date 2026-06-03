@@ -121,3 +121,48 @@ def test_calculate_registry_snapshot_accepts_enum_binding_via_enum_channel() -> 
     cuota = result.values.get("DP200014:00562")
     assert cuota is not None
     assert cuota == Decimal("23000.00")
+
+
+def test_calculate_registry_snapshot_applies_non_zero_bin_pendiente_compensation() -> None:
+    """Non-zero BIN-pendiente compensation reduces base imponible accordingly.
+
+    A SL with resultado contable 100000 and 10000 of prior-period BIN
+    pendiente elects to apply 10000 of BIN per LIS art. 26 (subject to
+    the 70% / 1M EUR floor, which is non-binding at this scale).
+    Binding `bin-pendiente-ejercicios-anteriores` carries the stock
+    (00670); the operator's elective application amount is casilla
+    00547 (input). Base imponible = 100000 - 10000 = 90000. Cuota at
+    23% PYME bracket = 20700. This proves the BIN-pendiente binding +
+    elective application propagate through the base-determination chain
+    to the cuota; the prior test passes BIN = 0 (fresh-filer) and
+    cannot prove the chain is active.
+    """
+    snap = _m200_snapshot()
+    result = calculate_registry_snapshot(
+        snap,
+        inputs={
+            "00501": Decimal("100000.00"),
+            "DP200014:01033": Decimal("0.00"),
+            "DP200014:01034": Decimal("0.00"),
+            "DP200014:00547": Decimal("10000.00"),
+        },
+        date_context={"filing_period": date(2024, 12, 31)},
+        binding_values={
+            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-2024-profile-incn-prior-12-months": Decimal("500000"),
+            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("10000"),
+        },
+        enum_binding_values={
+            "modelo-200-2024-profile-legal-entity-form": "sl",
+        },
+        relation_values={
+            "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
+        },
+    )
+
+    cuota = result.values.get("DP200014:00562")
+    assert cuota is not None
+    assert cuota == Decimal("20700.00"), (
+        f"BIN compensation did not propagate: expected 20700 (= (100000 - 10000) * 0.23), got {cuota}"
+    )

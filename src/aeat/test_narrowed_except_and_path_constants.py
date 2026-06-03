@@ -159,7 +159,8 @@ def test_schedules_uses_constants_in_resolver() -> None:
         "domain/calculations/registry/_schedules.py: _IVA_REGIME_PATH constant not used in _resolve_profile_fact"
     )
     assert "_TAXPAYER_ENTITY_TYPE_PATH" in func_body, (
-        "domain/calculations/registry/_schedules.py: _TAXPAYER_ENTITY_TYPE_PATH constant not used in _resolve_profile_fact"
+        "domain/calculations/registry/_schedules.py: "
+        "_TAXPAYER_ENTITY_TYPE_PATH constant not used in _resolve_profile_fact"
     )
 
 

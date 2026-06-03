@@ -4,11 +4,11 @@ Real-behavior AST + source walk that asserts all -> Any returns and
 **kwargs: Any signatures listed below carry their documented
 RATIONALE-* markers.
 
-(a) profile.py field_validator Any-return markers
+(a) setup_answers.py field_validator Any-return markers
     14 @field_validator(mode='before') def lines carry
     ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR.
 
-(b) profile_catalogue.py catalogue-slot Any-return markers
+(b) wizard_catalogue.py catalogue-slot Any-return markers
     get_setup_flow and get_wizard_flows carry
     ANY-RETURN-RATIONALE-CATALOGUE-SLOT.
 
@@ -56,10 +56,10 @@ def _lines(path: Path) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
-# (a) profile.py field_validator PYDANTIC-VALIDATOR markers
+# (a) setup_answers.py field_validator PYDANTIC-VALIDATOR markers
 # ---------------------------------------------------------------------------
 
-_PROFILE_MODULE = _SRC / "core/profile.py"
+_PROFILE_MODULE = _SRC / "core/setup_answers.py"
 _PYDANTIC_VALIDATOR_TOKEN = "ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR"
 
 # All @field_validator(mode='before') def names that must carry the token.
@@ -92,33 +92,33 @@ def _find_def_line(lines: list[str], func_name: str) -> int | None:
 
 @pytest.mark.parametrize("func_name", _PROFILE_VALIDATORS)
 def test_profile_pydantic_validators_carry_rationale(func_name: str) -> None:
-    """Each mode='before' field_validator in profile.py must carry ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR."""
+    """Each mode='before' field_validator in setup_answers.py must carry ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR."""
     lines = _lines(_PROFILE_MODULE)
     lineno = _find_def_line(lines, func_name)
-    assert lineno is not None, f"profile.py: could not locate def {func_name}"
+    assert lineno is not None, f"setup_answers.py: could not locate def {func_name}"
     def_line = lines[lineno - 1]
     assert _PYDANTIC_VALIDATOR_TOKEN in def_line, (
-        f"profile.py:{lineno} def {func_name}: missing {_PYDANTIC_VALIDATOR_TOKEN!r}"
+        f"setup_answers.py:{lineno} def {func_name}: missing {_PYDANTIC_VALIDATOR_TOKEN!r}"
     )
 
 
 # ---------------------------------------------------------------------------
-# (b) profile_catalogue.py CATALOGUE-SLOT markers
+# (b) wizard_catalogue.py CATALOGUE-SLOT markers
 # ---------------------------------------------------------------------------
 
-_CATALOGUE_MODULE = _SRC / "core/profile_catalogue.py"
+_CATALOGUE_MODULE = _SRC / "core/wizard_catalogue.py"
 _CATALOGUE_TOKEN = "ANY-RETURN-RATIONALE-CATALOGUE-SLOT"
 _CATALOGUE_FUNCS = ("get_setup_flow", "get_wizard_flows")
 
 
 @pytest.mark.parametrize("func_name", _CATALOGUE_FUNCS)
-def test_profile_catalogue_slots_carry_rationale(func_name: str) -> None:
+def test_wizard_catalogue_slots_carry_rationale(func_name: str) -> None:
     """get_setup_flow and get_wizard_flows must carry ANY-RETURN-RATIONALE-CATALOGUE-SLOT."""
     lines = _lines(_CATALOGUE_MODULE)
     lineno = _find_def_line(lines, func_name)
-    assert lineno is not None, f"profile_catalogue.py: could not locate def {func_name}"
+    assert lineno is not None, f"wizard_catalogue.py: could not locate def {func_name}"
     def_line = lines[lineno - 1]
-    assert _CATALOGUE_TOKEN in def_line, f"profile_catalogue.py:{lineno} def {func_name}: missing {_CATALOGUE_TOKEN!r}"
+    assert _CATALOGUE_TOKEN in def_line, f"wizard_catalogue.py:{lineno} def {func_name}: missing {_CATALOGUE_TOKEN!r}"
 
 
 # ---------------------------------------------------------------------------

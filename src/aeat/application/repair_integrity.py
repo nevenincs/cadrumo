@@ -221,7 +221,9 @@ def active_bucket_repair_session() -> Iterator[None]:
             yield
             return
         provider = get_master_key_provider()
-        # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL: get_master_key_provider returns object; __enter__/__exit__ are correct at runtime but unverifiable without a typed Protocol.
+        # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL:
+        # get_master_key_provider returns object; __enter__/__exit__ are correct
+        # at runtime but unverifiable without a typed Protocol.
         provider.__enter__()  # type: ignore[attr-defined]
     except Exception as exc:
         _log.debug("repair integrity could not open active bucket session: %s", type(exc).__name__)
@@ -230,7 +232,9 @@ def active_bucket_repair_session() -> Iterator[None]:
     try:
         yield
     finally:
-        # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL: get_master_key_provider returns object; __enter__/__exit__ are correct at runtime but unverifiable without a typed Protocol.
+        # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL:
+        # get_master_key_provider returns object; __enter__/__exit__ are correct
+        # at runtime but unverifiable without a typed Protocol.
         provider.__exit__(None, None, None)  # type: ignore[attr-defined]
 
 

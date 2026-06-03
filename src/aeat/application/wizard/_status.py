@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-from ...core.profile import SetupAnswers
+from ...core.setup_answers import SetupAnswers
 from ...domain.deadlines._models import (
     IVARegime,
     ModeloEnrollment,

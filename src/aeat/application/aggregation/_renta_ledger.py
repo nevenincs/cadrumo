@@ -171,7 +171,10 @@ def aggregate_renta_ledger_expenses_from_repositories(
     activity_key: str = "default",
     modelo: str = "100",
 ) -> RentaLedgerExpenseAggregation:
-    """Load persisted catalogues and aggregate first-slice Renta expenses into a :class:`RentaLedgerExpenseAggregation`."""
+    """Load persisted catalogues and aggregate first-slice Renta expenses.
+
+    Returns a :class:`RentaLedgerExpenseAggregation`.
+    """
     repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(

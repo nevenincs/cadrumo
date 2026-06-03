@@ -68,7 +68,10 @@ class DeadlineEngineAdapter:
         *,
         today: date | None = None,
     ) -> Schedule:
-        """Delegate to :meth:`DeadlineEngine.compute` for the given :class:`TaxpayerProfile` and return a :class:`Schedule`."""
+        """Delegate to :meth:`DeadlineEngine.compute` for the given :class:`TaxpayerProfile`.
+
+        Returns a :class:`Schedule`.
+        """
         return self._engine.compute(profile, year, today=today)
 
 
@@ -101,15 +104,18 @@ class ModeloDraftBuilderAdapter:
         does not satisfy the Protocol statically. The ``type: ignore`` at the
         call site documents this intentional structural bridging.
         """
+        # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PROTOCOL-CIRCULAR:
+        # Protocol introduction would create a cross-module circular dependency.
+        # Successor epic required.
         draft: ModeloDraft = build_draft(
             modelo=modelo,
             period=period,
-            profile=profile,  # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PROTOCOL-CIRCULAR: Protocol introduction would create cross-module circular dependency. Successor epic required.  # type: ignore[arg-type]
+            profile=profile,  # type: ignore[arg-type]
             inputs=inputs,
             schema_provider=self._schema_provider,
             fail_on_warning=fail_on_warning,
         )
-        return draft  # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PROTOCOL-CIRCULAR: Protocol introduction would create cross-module circular dependency. Successor epic required.  # type: ignore[return-value]
+        return draft  # type: ignore[return-value]
 
 
 class SubmissionEngineAdapter:
@@ -141,14 +147,18 @@ async def _live_expedientes_source(session: object, modelo: str | None) -> tuple
     # session is typed as ``object`` to match the ``ExpedientesSource`` Protocol
     # (Callable[[object, str | None], ...]); the concrete value at this call
     # site is always an ``AeatSession`` supplied by ``default_engine``.
-    # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PROTOCOL-CIRCULAR: Protocol introduction would create cross-module circular dependency. Successor epic required.
+    # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PROTOCOL-CIRCULAR:
+    # Protocol introduction would create a cross-module circular dependency.
+    # Successor epic required.
     return await walk_expedientes_tree(session, modelo=modelo)  # type: ignore[arg-type]
 
 
 async def _live_notifications_source(session: object) -> WorkflowNotificationsSnapshotProtocol:
     from ...adapters.outbound.aeat.sede import fetch_notifications_query
 
-    # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PROTOCOL-CIRCULAR: Protocol introduction would create cross-module circular dependency. Successor epic required.
+    # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PROTOCOL-CIRCULAR:
+    # Protocol introduction would create a cross-module circular dependency.
+    # Successor epic required.
     return await fetch_notifications_query(session)  # type: ignore[arg-type]
 
 

@@ -49,6 +49,15 @@ def payloads() -> dict[tuple[str, str], bytes]:
     }
 
 
+def _secure_object_fingerprint(
+    runtime_profile: TestRuntimeProfile,
+) -> tuple[tuple[str, bytes, str | None, str | None], ...]:
+    return tuple(
+        (row.namespace, row.object_key, row.revision_id, row.ciphertext_hash)
+        for row in runtime_profile.repository.iter_all_records_raw()
+    )
+
+
 class TestBuild:
     def test_build_produces_content_addressed_bundle_id(
         self,
@@ -243,6 +252,29 @@ class TestExport:
         )
         assert result == archive_path
         assert archive_path.exists()
+
+    def test_export_is_operator_directed_and_does_not_mutate_secure_catalogue(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        payloads: dict[tuple[str, str], bytes],
+        tmp_path: Path,
+    ) -> None:
+        svc = EvidenceBundleService(settings=runtime_profile.settings)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id=WU_1, record_payloads=payloads)
+        before_export = _secure_object_fingerprint(runtime_profile)
+        archive_path = tmp_path / "operator-export" / "bundle.zip"
+
+        result = svc.export(
+            bucket_id=runtime_profile.bucket_id,
+            bundle_id=added.bundle_id,
+            record_payloads=payloads,
+            output_path=archive_path,
+        )
+
+        assert result == archive_path
+        assert archive_path.exists()
+        assert not archive_path.is_relative_to(runtime_profile.storage_root)
+        assert _secure_object_fingerprint(runtime_profile) == before_export
 
 
 class TestReplay:

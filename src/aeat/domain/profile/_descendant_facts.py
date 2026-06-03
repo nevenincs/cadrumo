@@ -205,10 +205,12 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     if nif_raw:
         nif = nif_raw.strip().upper()
 
+    # CAST-RATIONALE-DISCAPACIDAD-LITERAL:
+    # val validated against (0, 33, 65) above; int|None cannot be narrowed to
+    # Literal[0,33,65]|None by mypy without cast.
     return DescendantInfo(
         birth_date=birth_date,
         adoption_date=adoption_date,
-        # CAST-RATIONALE-DISCAPACIDAD-LITERAL: val validated against (0, 33, 65) above; int|None cannot be narrowed to Literal[0,33,65]|None by mypy without cast
         discapacidad_grado=cast("Literal[0, 33, 65] | None", discapacidad_grado),
         convive_con_contribuyente=convive,
         custodia_compartida=custodia,

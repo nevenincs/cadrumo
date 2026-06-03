@@ -47,7 +47,7 @@ First, find the revision for the form. A revision is the rule version a modelo f
 aeat app modelo describe --modelo 130
 ```
 
-The output lists the available revisions, each with an identifier such as `2009-y-siguientes`. Copy the identifier that covers your filing period, then use it wherever the next command shows `<revision>`.
+The output lists the available revisions, each with an identifier such as `2019-y-siguientes`. Copy the identifier that covers your filing period, then use it wherever the next command shows `<revision>`.
 
 1. Create the work unit, the draft that tracks one modelo for one period:
 
@@ -89,6 +89,11 @@ You now have an exported filing. To list your work units at any point, run `aeat
 
 ## Next steps
 
-The [architecture guide](architecture.md) explains how `aeat` is structured.
+Now that you've produced a filing:
+
+- Next time, the [quickstart](how-to/quickstart.md) gets you there in four commands.
+- The [tutorial](tutorials/index.md) builds a modelo end to end with a worked example.
+- The [how-to recipes](how-to/index.md) cover other modelos and tasks: [import a bank statement](how-to/import-bank-statements.md), file 303 or 390, sync the censo, and [diagnose problems](how-to/troubleshooting.md).
+- The [explanation](explanation/index.md) covers how the pipeline works and why `aeat` never files.
 
 > **A note on figures.** Some modelos need figures you enter by hand. If a calculation reports missing inputs, add them with repeated `--casilla <number>=<value>` options on the `work calculate` command.

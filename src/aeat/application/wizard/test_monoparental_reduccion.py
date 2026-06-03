@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.profile import SetupAnswers
+from ...core.setup_answers import SetupAnswers
 from ...domain.deadlines._models import IVARegime
 from ...domain.profile._ccaa import CCAA
 from ...domain.profile._renta_codes import SituacionFamiliar

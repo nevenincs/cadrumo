@@ -45,7 +45,10 @@ def link_invoice_transaction_catalogues(
     invoice_id: str,
     transaction_id: str,
 ) -> InvoiceTransactionLinkResult:
-    """Return an :class:`InvoiceTransactionLinkResult` with catalogues where the invoice and transaction cite each other.
+    """Link one invoice to one transaction, returning the updated catalogues.
+
+    Returns an :class:`InvoiceTransactionLinkResult` where the invoice and
+    transaction cite each other.
 
     Args:
         invoices: The :class:`InvoiceCatalogue` to update with the new link.

@@ -43,7 +43,7 @@ class WizardCompileError(WizardError):
 class WizardAnswerTypeError(ProfileAnswerTypeError):
     """Raised when a :class:`SetupAnswers` field coercion receives an unexpected type.
 
-    Each ``@field_validator`` in :mod:`aeat.core.profile`'s :class:`SetupAnswers`
+    Each ``@field_validator`` in :mod:`aeat.core.setup_answers`'s :class:`SetupAnswers`
     raises :class:`~aeat.core.errors.ProfileAnswerTypeError` (the canonical core
     type); this subclass is retained so application-layer code and tests that
     catch :class:`WizardAnswerTypeError` by name continue to work.

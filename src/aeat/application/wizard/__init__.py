@@ -9,4 +9,14 @@ the typed projection, and persists the result through the standard
 profile workflow. The descriptor also projects onto the
 ``PROFILE_KEYS`` registry via ``compile_profile_keys``, keeping the
 catalogue and the validation registry in lockstep.
+
+Importing this package eagerly registers both surfaces (DB-17 / S64): the
+``_compiler`` import runs the import-time ``register_profile_keys`` push (and,
+through it, the ``_catalogue`` wizard-catalogue registration), so any consumer
+that imports ``aeat.application.wizard`` — the CLI composition root, the
+test-session conftests — guarantees the domain ``PROFILE_KEYS`` registry is
+seeded before first access. The domain therefore never pulls upward into the
+application layer to compile its keys.
 """
+
+from . import _compiler as _compiler  # noqa: F401  (eager registration side-effect)
