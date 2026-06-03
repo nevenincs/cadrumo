@@ -43,3 +43,11 @@ Status: closed.
 S117 does not close the browser factory, site-health, export format, record-spec, or censo-live rows. Those remain pending as W12.P26.S118 through W12.P26.S122.
 
 Status: open follow-up.
+
+## S117-006 | LOW | Raw-payload helper duplicated session-store key normalization
+
+Mandatory review found that the authenticator raw-payload helper wrote `path.as_posix()` directly even though production session-store calls routed through the store's key-normalization helper. If the logical key format changes later, the test helper could silently drift from production behavior.
+
+Resolution: `_session_store.py` now exposes `logical_object_key()`, and the raw-payload helper uses it instead of duplicating the key derivation.
+
+Status: closed.

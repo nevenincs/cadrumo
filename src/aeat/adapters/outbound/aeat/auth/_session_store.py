@@ -85,6 +85,11 @@ def storage_state_sha256(storage_state: Mapping[str, object]) -> str:
     return _storage_state_sha256(storage_state)
 
 
+def logical_object_key(path: Path) -> str:
+    """Return the secure-object logical key for a browser-session path."""
+    return _key(path)
+
+
 def _key(path: Path) -> str:
     return Path(path).as_posix()
 
