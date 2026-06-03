@@ -27,7 +27,7 @@ from .._namespace_registry import (
     BUCKET_DB_DIRNAME,
     BUCKETS_DIRNAME,
 )
-from ._errors import BucketValidationError
+from ._errors import BucketAlreadyPresentError, BucketValidationError
 
 
 class BucketPaths(BaseModel):
@@ -87,11 +87,14 @@ def provision_bucket_directory(root: Path, bucket_id: str) -> BucketPaths:
         A :class:`BucketPaths` record carrying every resolved subpath.
     """
     paths = bucket_paths(root, bucket_id)
-    paths.bucket_dir.parent.mkdir(parents=True, exist_ok=True)
-    paths.bucket_dir.mkdir(parents=False, exist_ok=False)
-    paths.db_dir.mkdir(parents=False, exist_ok=False)
-    paths.blobs_dir.mkdir(parents=False, exist_ok=False)
-    paths.audit_dir.mkdir(parents=False, exist_ok=False)
+    try:
+        paths.bucket_dir.parent.mkdir(parents=True, exist_ok=True)
+        paths.bucket_dir.mkdir(parents=False, exist_ok=False)
+        paths.db_dir.mkdir(parents=False, exist_ok=False)
+        paths.blobs_dir.mkdir(parents=False, exist_ok=False)
+        paths.audit_dir.mkdir(parents=False, exist_ok=False)
+    except FileExistsError as exc:
+        raise BucketAlreadyPresentError(bucket_id=bucket_id) from exc
     return paths
 
 
