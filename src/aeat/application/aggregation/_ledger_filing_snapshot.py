@@ -22,6 +22,7 @@ from collections.abc import Iterable, Mapping
 from datetime import date, datetime
 
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos._errors import ModeloValidationError
 from ...domain.modelos._ledger_filing_snapshot import (
     LedgerEvidenceRow,
     LedgerFilingEvidence,
@@ -208,6 +209,19 @@ def project_manual_fact_basis_entries(inputs_snapshot: Mapping[str, str]) -> tup
     )
 
 
+def assert_evidence_covers_snapshot(snapshot: LedgerFilingSnapshot, evidence: LedgerFilingEvidence) -> None:
+    """Raise when bundled evidence omits or invents fingerprinted contributors."""
+    snapshot_ids = {row.transaction_id for row in snapshot.rows}
+    evidence_ids = {row.transaction_id for row in evidence.rows}
+    if snapshot_ids != evidence_ids:
+        missing = sorted(snapshot_ids - evidence_ids)
+        extra = sorted(evidence_ids - snapshot_ids)
+        raise ModeloValidationError(
+            "ledger filing evidence does not cover the fingerprint snapshot: "
+            f"missing={missing} extra={extra}",
+        )
+
+
 def evaluate_ledger_filing_staleness(
     snapshot: LedgerFilingSnapshot,
     catalogue: TransactionCatalogue,
@@ -244,6 +258,7 @@ def stale_filed_revisions(
 
 
 __all__ = [
+    "assert_evidence_covers_snapshot",
     "compute_ledger_filing_evidence",
     "compute_ledger_filing_snapshot",
     "evaluate_ledger_filing_staleness",

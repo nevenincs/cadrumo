@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ...domain.modelos._ledger_filing_snapshot import LedgerFilingSnapshot, ManualFactBasisEntry
+from ...domain.modelos._errors import ModeloValidationError
+from ...domain.modelos._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot, ManualFactBasisEntry
 from ...domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -20,6 +21,7 @@ from ...domain.transactions import (
     TransactionLifecycleState,
 )
 from ._ledger_filing_snapshot import (
+    assert_evidence_covers_snapshot,
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
     evaluate_ledger_filing_staleness,
@@ -153,6 +155,31 @@ def test_manual_fact_basis_projection_skips_blank_inputs() -> None:
     assert entries == (
         ManualFactBasisEntry(casilla="00501", value="140000.00"),
     )
+
+
+def test_evidence_coverage_guard_refuses_missing_contributor() -> None:
+    tx = _tx("row-covered")
+    catalogue = _catalogue(tx)
+    snapshot = compute_ledger_filing_snapshot(
+        source_transaction_ids=[tx.transaction_id], catalogue=catalogue, captured_at=_CAPTURED
+    )
+    missing = LedgerFilingEvidence(
+        snapshot_fingerprint=snapshot.snapshot_fingerprint,
+        rows=(),
+        manual_entries=(),
+        captured_at=_CAPTURED,
+    )
+
+    with pytest.raises(ModeloValidationError, match="does not cover"):
+        assert_evidence_covers_snapshot(snapshot, missing)
+
+    complete = compute_ledger_filing_evidence(
+        source_transaction_ids=[tx.transaction_id],
+        catalogue=catalogue,
+        snapshot_fingerprint=snapshot.snapshot_fingerprint,
+        captured_at=_CAPTURED,
+    )
+    assert_evidence_covers_snapshot(snapshot, complete)
 
 
 def test_empty_contributor_set_is_valid_and_uniform() -> None:

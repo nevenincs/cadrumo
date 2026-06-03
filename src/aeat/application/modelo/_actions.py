@@ -124,6 +124,7 @@ from ...domain.period import parse_canonical_period, period_end_date
 from ...domain.submission import ModeloDraftStatus, SubmissionEngine
 from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 from ..aggregation._ledger_filing_snapshot import (
+    assert_evidence_covers_snapshot,
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
     project_manual_fact_basis_entries,
@@ -3069,6 +3070,7 @@ def verify_modelo_revision(
             captured_at=now,
             manual_entries=project_manual_fact_basis_entries(target.inputs_snapshot),
         )
+        assert_evidence_covers_snapshot(filing_snapshot, filing_evidence)
         verified = target.model_copy(
             update={
                 "state": CalculationRevisionState.VERIFICADO_COMPLETO,
