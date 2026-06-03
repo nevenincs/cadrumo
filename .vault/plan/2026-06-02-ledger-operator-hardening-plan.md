@@ -339,17 +339,17 @@ Folder/multi-file import + import-batch lineage.
 
 Classification lens + search + period-scoped JSON.
 
-- [ ] `W12.P22.S77` - review --filter classification=business|personal|gated (typed key across filter spec + query); `src/aeat/application/review/_filter.py`.
+- [x] `W12.P22.S77` - review --filter classification=business|personal|gated (typed key across filter spec + query); `src/aeat/application/review/_filter.py`.
 - [ ] `W12.P22.S78` - Search across description/counterparty/category from the CLI (review/list search); `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W12.P22.S79` - Period-scoped JSON row list (list --period or review --filter period --format json) for building classify CSVs; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W12.P22.S79` - Period-scoped JSON row list (list --period or review --filter period --format json) for building classify CSVs; `src/aeat/entrypoints/cli/_ledger.py`.
 
 ### Phase `W12.P23` - Readiness and anomaly surface
 
 Anomaly channel + readiness dashboard + annual roll-up.
 
 - [x] `W12.P23.S80` - Anomaly channel in check/preflight distinct from missing-fact reasons (recargo/erroneous/foreign), with severity; `src/aeat/application/ledger/_preflight.py`.
-- [ ] `W12.P23.S81` - Consolidated readiness dashboard (rows, pending, anomalies, ready-to-file) for sign-off; `src/aeat/application/ledger/_summary.py`.
-- [ ] `W12.P23.S82` - Annual roll-up / M100-readiness money totals (ingresos/gastos/net activity per year); `src/aeat/application/ledger/_summary.py`.
+- [x] `W12.P23.S81` - Consolidated readiness dashboard (rows, pending, anomalies, ready-to-file) for sign-off; `src/aeat/application/ledger/_summary.py`.
+- [x] `W12.P23.S82` - Annual roll-up / M100-readiness money totals (ingresos/gastos/net activity per year); `src/aeat/application/ledger/_summary.py`.
 
 ## Wave `W13` - Cross-profile runtime-pegged ledger domain
 
