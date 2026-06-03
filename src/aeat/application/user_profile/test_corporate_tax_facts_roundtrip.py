@@ -47,7 +47,7 @@ from ...domain.user_profile import (
 )
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
-# Import side-effect: registers the wizard catalogue with core.profile_catalogue
+# Import side-effect: registers the wizard catalogue with core.wizard_catalogue
 # so taxpayer_profile_from_mapping can resolve SETUP_FLOW. Without this import
 # the projection raises WizardCatalogueNotRegisteredError on first call.
 from ._projections import projection_for_taxpayer

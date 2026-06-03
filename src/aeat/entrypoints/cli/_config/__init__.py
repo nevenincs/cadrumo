@@ -46,7 +46,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import tr
 from ....core.logging import default_log_file_path as _default_log_file_path
-from ....core.profile_catalogue import get_setup_flow as _get_setup_flow
+from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from ....core.redaction import (
     CLI_BUCKET_ID_PLACEHOLDER,
     CLI_PROFILE_ID_PLACEHOLDER,

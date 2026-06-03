@@ -51,13 +51,13 @@ def _invoke_test_fn(fn: Callable[..., None]) -> None:
 
 
 # ---------------------------------------------------------------------------
-# S646 — core/profile.py markers
+# S646 — core/setup_answers.py markers
 # ---------------------------------------------------------------------------
 
 
 def test_s646_kwargs_any_rationale_profile_wizard_flow_circular() -> None:
-    """KWARGS-ANY-RATIONALE-PROFILE-WIZARD-FLOW-CIRCULAR must appear in core/profile.py."""
-    target = _SRC_ROOT / "core" / "profile.py"
+    """KWARGS-ANY-RATIONALE-PROFILE-WIZARD-FLOW-CIRCULAR must appear in core/setup_answers.py."""
+    target = _SRC_ROOT / "core" / "setup_answers.py"
     text = target.read_text(encoding="utf-8")
     assert "KWARGS-ANY-RATIONALE-PROFILE-WIZARD-FLOW-CIRCULAR" in text, (
         f"Expected marker token not found in {target.relative_to(_SRC_ROOT)}"
@@ -65,13 +65,13 @@ def test_s646_kwargs_any_rationale_profile_wizard_flow_circular() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S647 — core/profile_catalogue.py marker
+# S647 — core/wizard_catalogue.py marker
 # ---------------------------------------------------------------------------
 
 
 def test_s647_kwargs_any_rationale_catalogue_wizard_flow_circular() -> None:
-    """KWARGS-ANY-RATIONALE-CATALOGUE-WIZARD-FLOW-CIRCULAR must appear in core/profile_catalogue.py."""
-    target = _SRC_ROOT / "core" / "profile_catalogue.py"
+    """KWARGS-ANY-RATIONALE-CATALOGUE-WIZARD-FLOW-CIRCULAR must appear in core/wizard_catalogue.py."""
+    target = _SRC_ROOT / "core" / "wizard_catalogue.py"
     text = target.read_text(encoding="utf-8")
     assert "KWARGS-ANY-RATIONALE-CATALOGUE-WIZARD-FLOW-CIRCULAR" in text, (
         f"Expected marker token not found in {target.relative_to(_SRC_ROOT)}"

@@ -411,7 +411,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.profile_catalogue.WizardCatalogueNotRegisteredError",
+        "aeat.core.wizard_catalogue.WizardCatalogueNotRegisteredError",
         ErrorCode(
             code="INTERNAL_WIZARD_CATALOGUE_NOT_REGISTERED",
             category=ErrorCategory.INTERNAL,
@@ -422,7 +422,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.profile_catalogue.WizardCatalogueAlreadyRegisteredError",
+        "aeat.core.wizard_catalogue.WizardCatalogueAlreadyRegisteredError",
         ErrorCode(
             code="INTERNAL_WIZARD_CATALOGUE_ALREADY_REGISTERED",
             category=ErrorCategory.INTERNAL,

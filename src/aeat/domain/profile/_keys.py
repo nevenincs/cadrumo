@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...core.i18n import Translatable as tr
-from ...core.profile_catalogue import get_wizard_flows
+from ...core.wizard_catalogue import get_wizard_flows
 from ._errors import ProfileKeysRegistrationError, ProfileValidationError
 from ._normalise import normalise_key
 

@@ -53,5 +53,5 @@ Submodules
    aeat.core.logging
    aeat.core.output_rendering
    aeat.core.paths
-   aeat.core.profile_catalogue
    aeat.core.setup_answers
+   aeat.core.wizard_catalogue
