@@ -1647,8 +1647,9 @@ cli:
         list` a regisztrált profilok megtekintéséhez.'
       use_help: Meglévő profil kiválasztása aktív profilként.
       use_name_help: A kiválasztandó profil azonosítója.
-      validate_help: Az aktív profil érvényesítése a sémával szemben.
+      validate_help: 'Validálja a profilt a betöltött sémával szemben (alapértelmezett: aktív profil).'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
+      validate_name_help: 'A validálandó profil opcionális címkéje; alapértelmezett: aktív profil.'
     repair:
       connectivity_help: Böngésző és AEAT Sede kapcsolhatóság ellenőrzése.
       connectivity_target_help: A vizsgálandó kapcsolódási cél.
@@ -1969,6 +1970,7 @@ cli:
       help: Kanonikus főkönyvsorok exportálása az aktív profilmappából.
       include_inactive_help: Archivált és elrejtett főkönyvi tranzakciók bevonása.
       output_help: Az exportált főkönyvfájl mentési útvonala.
+      period_help: 'Korlátozza az exportot egyetlen bevallási időszakra (pl. 2025Q1, 2025).'
     history:
       help: Egyetlen főkönyvi tranzakcióazonosító kronológiai bucket-eseménylánca.
       id_help: A megvizsgálandó főkönyvi tranzakció azonosítója (vagy egyértelmű hexadecimális
@@ -1995,6 +1997,7 @@ cli:
       source_help: Az importált sorok ellenőrzéséhez használt eredeti fájl.
       verbose_help: Részletes információ megjelenítése importálás közben.
       verify_help: Bejegyzések ellenőrzése importálás után.
+      empty_directory: 'Nem találhatók importálható kivonatfájlok a könyvtárban: {path}'
     labels:
       active: Aktív
       amount: Összeg

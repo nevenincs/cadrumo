@@ -183,6 +183,25 @@ class ConfigProfileShowResult(OutputSchema):
     profile_record: str | None = None
 
 
+@register_schema("config.profile.validate")
+class ConfigProfileValidateResult(OutputSchema):
+    """JSON envelope for ``aeat config profile validate``.
+
+    Report-only surface: same :class:`ProfileValidationService` outcome that
+    ``aeat config profile show`` exposes inline, but as the primary payload
+    with no fact dump so the operator can audit a profile's schema
+    conformance independent of its data view. Exit code is ``0`` when no
+    blocking issues exist and ``2`` when any error-severity issue surfaces.
+    """
+
+    profile_id: str
+    display_name: str
+    status: str
+    valid: bool
+    schema_version: int
+    issues: list[ProfileIssuePayload]
+
+
 @register_schema("config.profile.delete")
 class ConfigProfileDeleteResult(OutputSchema):
     """JSON envelope for ``aeat config profile delete``."""

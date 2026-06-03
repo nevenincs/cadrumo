@@ -1082,6 +1082,89 @@ def config_profile_show(
         raise typer.Exit(code=2)
 
 
+@profile_app.command("validate", help=tr("cli.config.profile.validate_help"))
+def config_profile_validate(
+    ctx: typer.Context,
+    name: str | None = typer.Argument(None, help=tr("cli.config.profile.validate_name_help")),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    """Validate a profile against the loaded schema (defaults to the active profile).
+
+    Exits with code ``2`` when blocking issues surface so operators discover
+    schema-conformance failures via the shell exit status. Report-only
+    companion to :func:`config_profile_show` — same validator, narrower
+    payload (no fact dump).
+    """
+    _activate_subcommand_output_language(ctx, output_language)
+    from ....application.user_profile import ProfileValidationService
+    from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
+
+    if name is not None:
+        try:
+            pointer = _read_profile_bucket(name, include_tombstoned=True)
+        except ValueError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.unknown_profile",
+                context={"name": name},
+            ) from exc
+        if pointer is None:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.unknown_profile",
+                context={"name": name},
+            )
+    else:
+        pointer = _resolve_active_profile_pointer()
+        if pointer is None:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.errors.no_active_profile",
+            )
+    try:
+        record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
+    except ProfileNotFoundError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": name or pointer.label or pointer.bucket_id},
+        ) from exc
+    from .._config_payloads import ConfigProfileValidateResult, ProfileIssuePayload
+
+    report = ProfileValidationService(schema=load_user_profile_schema()).validate_record(record)
+    blocking = [issue for issue in report.issues if issue.severity.value == "error"]
+    result = ConfigProfileValidateResult(
+        profile_id=record.profile_id,
+        display_name=record.display_name,
+        status=record.status.value,
+        valid=not blocking,
+        schema_version=report.schema_version,
+        issues=[
+            ProfileIssuePayload(
+                severity=issue.severity.value,
+                code=issue.code,
+                path=issue.path,
+                message=issue.message,
+            )
+            for issue in report.issues
+        ],
+    )
+    lines = [
+        f"readiness\t{'blocked' if blocking else 'ready'}\tissues={len(report.issues)}",
+        f"profile_id\t{record.profile_id}",
+        f"display_name\t{record.display_name}",
+        f"status\t{record.status.value}",
+        f"schema_version\t{report.schema_version}",
+        f"valid\t{not blocking}",
+    ]
+    for issue in report.issues:
+        lines.append(f"{issue.severity.value}\t{issue.code}\t{issue.path or '-'}\t{issue.message}")
+    _emit_envelope(ctx, command="config.profile.validate", result=result, lines=lines)
+    if blocking:
+        raise typer.Exit(code=2)
+
+
 @profile_app.command("delete", help=tr("cli.config.profile.delete_help"))
 def config_profile_delete(
     ctx: typer.Context,

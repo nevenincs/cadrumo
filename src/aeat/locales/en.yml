@@ -1567,8 +1567,9 @@ cli:
         to see registered profiles.'
       use_help: Select an existing profile as the active profile
       use_name_help: Profile id to make active
-      validate_help: Validate the active profile against the schema.
+      validate_help: 'Validate a profile against the loaded schema (defaults to the active profile).'
       view_help: Show one profile's facts (defaults to the active profile)
+      validate_name_help: 'Optional profile label to validate; defaults to the active profile.'
     repair:
       connectivity_help: Check browser and AEAT Sede connectivity
       connectivity_target_help: Connectivity target to probe
@@ -1881,6 +1882,7 @@ cli:
       help: Export canonical ledger rows from the active profile bucket
       include_inactive_help: Include archived and stashed ledger transactions
       output_help: Path to write the exported ledger file
+      period_help: 'Restrict the export to one filing period (e.g. 2025Q1, 2025).'
     history:
       help: Emit the chronological bucket-event chain for one ledger transaction id
       id_help: Ledger transaction id (or unambiguous hex prefix) to inspect
@@ -1906,6 +1908,7 @@ cli:
       source_help: Original file used to verify imported rows
       verbose_help: Show detailed information during import
       verify_help: Verify entries after import
+      empty_directory: 'No importable statement files found in directory: {path}'
     labels:
       active: Active
       amount: Amount
