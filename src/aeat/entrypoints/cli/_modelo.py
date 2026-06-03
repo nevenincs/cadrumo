@@ -224,7 +224,7 @@ def _guard_foral_profile_ccaa() -> None:
     not a foral error; :func:`_require_active_profile` handles the
     unconfigured-profile case separately.
     """
-    from ...application.user_profile._orchestration import fact_value
+    from ...application.user_profile import fact_value
     from ...application.workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
@@ -2116,8 +2116,8 @@ def work_create(
     # different DEK whenever the substrate binds key material out of band.
     if modelo == "100":
         from ...application.overview import build_filing_obligation_advisories as _build_filing_obligation_advisories
+        from ...application.user_profile import record_to_values
         from ...application.user_profile._profile_repository import ProfileRepository
-        from ...application.user_profile._projections import record_to_values
         from ...core import resolve_active_bucket_id
 
         _bucket = resolve_active_bucket_id()
@@ -5898,7 +5898,7 @@ def _maritime_facts_from_active_profile():
     ``None`` / ``False`` per the dataclass contract so a profile
     without any maritime fact resolves cleanly (no pathway eligible).
     """
-    from ...application.user_profile._orchestration import fact_value
+    from ...application.user_profile import fact_value
     from ...application.workflow._persistence import workflow_state_repository
     from ...domain.renta import MaritimeWorkerFacts
 

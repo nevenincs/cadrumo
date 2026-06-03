@@ -60,7 +60,7 @@ def overview_status(
     app-overview-shape ADR's Consequences section. No compatibility
     shim is preserved; callers must use the dedicated verb.
     """
-    from ...application.user_profile._projections import record_to_values
+    from ...application.user_profile import record_to_values
     from ...core import resolve_active_bucket_id
 
     current = _state() if resolve_active_bucket_id() is not None else None
@@ -157,7 +157,7 @@ def overview_calendar(
     ),
 ) -> None:
     """Render the deadline calendar over the supplied window."""
-    from ...application.user_profile._projections import record_to_values
+    from ...application.user_profile import record_to_values
 
     rng = OverviewCalendarRange(
         from_date=_parse_iso_date(from_date, label="--from"),
@@ -242,9 +242,12 @@ def _overview_calendar_all_profiles(
     buckets are skipped with a warning line; they do not abort the scan.
     """
     from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
-    from ...application.user_profile._orchestration import profile_storage_session
+    from ...application.user_profile import (
+        profile_storage_session,
+        projection_for_taxpayer,
+        record_to_values,
+    )
     from ...application.user_profile._profile_repository import ProfileRepository
-    from ...application.user_profile._projections import projection_for_taxpayer, record_to_values
     from ...application.workflow._profile_bucket_scan import list_profile_buckets
 
     today = _date.today()
@@ -359,7 +362,7 @@ def overview_agenda(
 ) -> None:
     """Surface the operator's next-due obligation with cohort breakdowns."""
     from ...application.overview._agenda import build_overview_agenda
-    from ...application.user_profile._projections import record_to_values
+    from ...application.user_profile import record_to_values
 
     current = _state()
     as_of_date = _parse_iso_date(as_of, label="--date") if as_of else _date.today()
@@ -454,7 +457,7 @@ def overview_backlog(
 ) -> None:
     """Surface the operator's past-due backlog without mutating state."""
     from ...application.overview._backlog import build_overview_backlog
-    from ...application.user_profile._projections import record_to_values
+    from ...application.user_profile import record_to_values
 
     current = _state()
     parsed_from = _parse_iso_date(from_date, label="--from") if from_date else None

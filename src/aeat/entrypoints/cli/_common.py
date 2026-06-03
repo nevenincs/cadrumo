@@ -215,7 +215,7 @@ def _parse_iso_date(raw: str, *, label: str) -> _date:
 
 
 def _profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
-    from ...application.user_profile._projections import projection_for_taxpayer
+    from ...application.user_profile import projection_for_taxpayer
 
     record = state.active_profile_record()
     if record is None:
