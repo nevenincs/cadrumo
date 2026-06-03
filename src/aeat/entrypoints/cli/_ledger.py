@@ -4093,7 +4093,7 @@ def rule_add(
     ),
 ) -> None:
     """Add or idempotently update a ledger classification rule."""
-    from ...application.ledger._actions import add_classification_rule
+    from ...application.ledger import add_classification_rule
     from ...core import resolve_active_bucket_id
 
     bucket_id = _rule_bucket_id()
@@ -4166,7 +4166,7 @@ def rule_apply(
     ),
 ) -> None:
     """Apply stored rules to ACTIVE NOT_YET_PROCESSED transactions."""
-    from ...application.ledger._rule_repository import LedgerClassificationRuleRepository
+    from ...application.ledger import LedgerClassificationRuleRepository
     from ...core import resolve_active_bucket_id
     from ...domain.transactions import BusinessClassification, TransactionLifecycleState
 
@@ -4219,7 +4219,7 @@ def rule_apply(
         )
         return
 
-    from ...application.ledger._actions import apply_classification_rules
+    from ...application.ledger import apply_classification_rules
 
     result = apply_classification_rules(
         bucket_id=bucket_id,
@@ -4271,7 +4271,7 @@ def rule_apply(
 )
 def rule_list(ctx: typer.Context) -> None:
     """List all stored ledger classification rules (priority ascending)."""
-    from ...application.ledger._rule_repository import LedgerClassificationRuleRepository
+    from ...application.ledger import LedgerClassificationRuleRepository
 
     _rule_bucket_id()  # raises if no active profile
     rules = LedgerClassificationRuleRepository().list_rules()
