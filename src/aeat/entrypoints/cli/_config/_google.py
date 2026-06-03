@@ -57,7 +57,8 @@ from ....adapters.outbound.google._calc_sheets_apply import (
 )
 from ....adapters.outbound.google._oauth_flow import run_login_flow
 from ....adapters.outbound.google._profile_binding import resolve_active_profile
-from ....adapters.outbound.google._records import REQUIRED_SCOPES, DriveConfig
+from ....adapters.outbound.google import REQUIRED_SCOPES
+from ....adapters.outbound.google._records import DriveConfig
 from ....adapters.outbound.google._session_store import (
     delete_session,
     load_client,
