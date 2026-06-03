@@ -94,6 +94,7 @@ from ._registry_provider import (
     PerModeloRegistryBindingResolution,
     resolve_per_modelo_registry_binding_values,
 )
+from ._ledger_filing_snapshot import stale_filed_revisions
 from ._renta_ledger import (
     RentaLedgerAggregationIssue,
     RentaLedgerAggregationIssueReason,
@@ -224,6 +225,7 @@ __all__ = [
     "merge_source_resolutions",
     "resolve_modelo_ledger_binding_values_from_repositories",
     "resolve_per_modelo_registry_binding_values",
+    "stale_filed_revisions",
     "storage_degradation_resolution",
     "validate_iva_ledger_observation",
     "validate_iva_ledger_observations",

@@ -55,6 +55,13 @@ from ...application.ledger import (
     summarize_manual_transactions,
     update_manual_transaction_fields,
 )
+from ...application.ledger._llm_classification import (
+    LLMProvider,
+    apply_llm_classification,
+    available_llm_providers,
+    is_llm_provider_available,
+    suggest_llm_classification,
+)
 from ...application.review import (
     FilterParseError,
     LedgerReviewFilterSpec,
@@ -80,6 +87,7 @@ from ...domain.deadlines._models import IrpfSpecialRegime
 from ...domain.iva._schema import EUMemberState, IvaCategory
 from ...domain.transactions import (
     BusinessClassification,
+    LLMClassifierError,
     Transaction,
     TransactionCatalogueRepository,
     TransactionDirection,
@@ -558,8 +566,22 @@ def ledger_classify(
     ),
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.classify.actor_help")),
     reaffirm: bool = typer.Option(False, "--reaffirm", help=tr("cli.ledger.classify.reaffirm_help")),
+    llm: LLMProvider | None = typer.Option(None, "--llm", help=tr("cli.ledger.classify.llm_help")),
+    apply: bool = typer.Option(False, "--apply", help=tr("cli.ledger.classify.apply_help")),
 ) -> None:
-    """Classify one ledger transaction (--id) or many via --from-csv."""
+    """Classify one ledger transaction (--id), via LLM (--llm), or in bulk (--from-csv)."""
+    if llm is not None:
+        _ledger_classify_llm(
+            ctx,
+            transaction_id=transaction_id,
+            classification=classification,
+            from_csv=from_csv,
+            business_pct=business_pct,
+            provider=llm,
+            apply=apply,
+            actor=actor,
+        )
+        return
     from ...application.ledger._actions import bulk_classify_from_csv as _bulk_classify
 
     state = _state()
@@ -696,6 +718,163 @@ def ledger_classify(
         result=classify_result,
         lines=lines,
     )
+
+
+def _ledger_classify_llm(
+    ctx: typer.Context,
+    *,
+    transaction_id: str | None,
+    classification: BusinessClassification | None,
+    from_csv: str | None,
+    business_pct: str | None,
+    provider: LLMProvider,
+    apply: bool,
+    actor: str | None,
+) -> None:
+    """Run the LLM suggest / apply loop for ``aeat app ledger classify --llm``.
+
+    Without ``--apply`` the model's suggestion is printed for review and
+    nothing is persisted (the suggest step; rejecting is simply not applying).
+    With ``--apply`` the decision is written via
+    :func:`apply_llm_classification` with ``llm:<model>`` provenance. ``--llm``
+    is mutually exclusive with the manual ``--classification`` / ``--from-csv``
+    paths (manual classification is always the explicit override).
+    """
+    from ._ledger_payloads import LedgerClassifyResult
+
+    if classification is not None or from_csv is not None:
+        raise _bad(
+            tr(
+                "cli.ledger.classify.llm_exclusive",
+                default="--llm cannot be combined with --classification or --from-csv; "
+                "the manual path is the explicit operator override.",
+            )
+        )
+    if transaction_id is None:
+        raise _bad(tr("cli.ledger.classify.id_required", default="--id is required when --from-csv is not provided."))
+    if not is_llm_provider_available(provider):
+        # Instructive refusal: name the provider and the CLI it needs on PATH,
+        # never a crash. The subprocess backend shells to a local CLI binary.
+        raise _bad(
+            tr(
+                "cli.ledger.classify.llm_provider_unavailable",
+                provider=provider.value,
+                default=(
+                    f"LLM provider {provider.value!r} is unavailable: its CLI is not on PATH. "
+                    f"Install the {provider.value!r} CLI and ensure it is on PATH, "
+                    "or run 'aeat app ledger providers' to list usable providers."
+                ),
+            )
+        )
+
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    try:
+        suggestion = suggest_llm_classification(
+            bucket_id=transaction_repository.bucket_id,
+            transaction_id=resolved_id,
+            provider=provider,
+            transaction_repository=transaction_repository,
+        )
+    except LLMClassifierError as exc:
+        raise _bad(
+            tr(
+                "cli.ledger.classify.llm_failed",
+                reason=str(exc),
+                default=f"LLM classification failed: {exc}",
+            )
+        ) from exc
+
+    if not apply:
+        # Suggest (preview) — persist nothing. Rejecting = not applying.
+        classify_result = LedgerClassifyResult.model_validate(
+            {
+                "llm": True,
+                "persisted": False,
+                "transaction_id": suggestion.transaction_id,
+                "provider": suggestion.provider.value,
+                "classification": suggestion.classification.value,
+                "category": suggestion.category.value if suggestion.category is not None else None,
+                "confidence": format(suggestion.confidence, "f"),
+                "reason": suggestion.reason,
+                "provenance": suggestion.provenance,
+            }
+        )
+        lines = [
+            f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
+            f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{suggestion.classification.value}",
+            f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category.value if suggestion.category else ''}",
+            f"{tr('cli.ledger.classify.llm_confidence_label')}\t{format(suggestion.confidence, 'f')}",
+            f"{tr('cli.ledger.classify.llm_reason_label')}\t{suggestion.reason}",
+            tr("cli.ledger.classify.llm_review_hint"),
+        ]
+        _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
+        return
+
+    try:
+        result = apply_llm_classification(
+            suggestion,
+            bucket_id=transaction_repository.bucket_id,
+            business_pct=_parse_decimal(business_pct, label="business-pct"),
+            actor=actor or resolve_active_bucket_id() or "operator",
+            source_command="aeat app ledger classify --llm --apply",
+            transaction_repository=transaction_repository,
+        )
+    except ValidationError as exc:
+        raise _ledger_validation_bad(exc) from exc
+
+    transaction_payload = ledger_transaction_payload(result.transaction)
+    review_status = ledger_transaction_review_status(result.transaction)
+    classify_result = LedgerClassifyResult.model_validate(
+        {
+            "llm": True,
+            "persisted": True,
+            "provider": suggestion.provider.value,
+            "provenance": suggestion.provenance,
+            "confidence": format(suggestion.confidence, "f"),
+            "reason": suggestion.reason,
+            "bucket_id": result.ref.bucket_id,
+            "transaction_id": result.transaction.transaction_id,
+            "bucket_event_ids": list(result.bucket_event_ids),
+            "review_status": review_status,
+            "transaction": transaction_payload.model_dump(mode="json"),
+        }
+    )
+    lines = [
+        f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
+        f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{result.transaction.classified_by}",
+        f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
+    ]
+    _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
+
+
+@app.command("providers", help=tr("cli.ledger.providers.help"))
+def ledger_providers(ctx: typer.Context) -> None:
+    """List which subprocess LLM providers have a usable CLI on PATH."""
+    from ._ledger_payloads import LedgerProvidersResult
+
+    listings = available_llm_providers()
+    result = LedgerProvidersResult.model_validate(
+        {
+            "providers": [
+                {
+                    "provider": item.provider.value,
+                    "cli_binary": item.cli_binary,
+                    "available": item.available,
+                    "resolved_path": item.resolved_path,
+                }
+                for item in listings
+            ]
+        }
+    )
+    lines: list[str] = []
+    for item in listings:
+        status = "available" if item.available else "unavailable"
+        location = item.resolved_path or item.cli_binary
+        # tab-separated machine record (provider, status, location), not prose.
+        lines.append(f"{item.provider.value}\t{status}\t{location}")
+    _emit_envelope(ctx, command="ledger.providers", result=result, lines=lines)
 
 
 @app.command("categories", help=tr("cli.ledger.categories.help"))
@@ -1900,7 +2079,7 @@ def ledger_status(
     # Advisory: surface any finalized modelo revision whose backing ledger
     # snapshot has drifted from the live ledger (modelo-filing-ledger-snapshot
     # ADR). Appended as free-form lines; the structured envelope is unchanged.
-    from ...application.aggregation._ledger_filing_snapshot import stale_filed_revisions
+    from ...application.aggregation import stale_filed_revisions
     from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
     from ...domain.modelos._repository import WorkUnitCatalogueRepository
 
