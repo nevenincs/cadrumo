@@ -63,6 +63,8 @@ def _base_binding_values(*, m111: Decimal = Decimal("0"), m123: Decimal = Decima
         "renta-2024-profile-marriage-full-year": Decimal("0"),
         "renta-2024-profile-marriage-month-start": Decimal("0"),
         "renta-2024-profile-marriage-month-end": Decimal("0"),
+        # BIN-pendiente fresh-filer baseline.
+        "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
     }
 
 

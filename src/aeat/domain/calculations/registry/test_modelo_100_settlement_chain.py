@@ -137,6 +137,8 @@ def _binding_values() -> dict:
         "renta-2024-profile-marriage-full-year": Decimal("0"),
         "renta-2024-profile-marriage-month-start": Decimal("0"),
         "renta-2024-profile-marriage-month-end": Decimal("0"),
+        # BIN-pendiente fresh-filer baseline.
+        "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
     }
 
 

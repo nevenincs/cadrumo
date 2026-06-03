@@ -192,7 +192,7 @@ Diagnose + fix test_cli_workflow_verification failures
 
 Diagnose + fix test_modelo_100_tarifa_real failures
 
-- [ ] `P12.S34` - Diagnose then fix test_modelo_100_tarifa_real 14 reds; `src/aeat/domain/calculations/registry/test_modelo_100_tarifa_real.py`.
+- [x] `P12.S34` - Diagnose then fix test_modelo_100_tarifa_real 14 reds; `src/aeat/domain/calculations/registry/test_modelo_100_tarifa_real.py`.
 
 ### Phase `P13` - M200 cuota chain 16-red cluster
 
@@ -205,13 +205,13 @@ M200 cuota_integra_lanes + tipo_gravamen_dispatch reds
 
 tarifa_real + ahorro_base + settlement + retenciones + renta_chain_behaviour + reduccion_art_84 + minimo_contribuyente
 
-- [ ] `P14.S37` - Diagnose then fix M100 ahorro_base_chain 6 reds; `src/aeat/domain/calculations/registry/test_modelo_100_ahorro_base_chain.py`.
-- [ ] `P14.S38` - Diagnose then fix M100 settlement_chain 6 reds; `src/aeat/domain/calculations/registry/test_modelo_100_settlement_chain.py`.
-- [ ] `P14.S39` - Diagnose then fix M100 retenciones_binding_wiring 5 reds; `src/aeat/domain/calculations/registry/test_modelo_100_retenciones_binding_wiring.py`.
-- [ ] `P14.S40` - Diagnose then fix reduccion_art_84_conjunta 8 reds; `src/aeat/domain/calculations/registry/test_reduccion_art_84_conjunta.py`.
-- [ ] `P14.S41` - Diagnose then fix minimo_contribuyente_age_increment 8 reds; `src/aeat/domain/calculations/registry/test_minimo_contribuyente_age_increment.py`.
-- [ ] `P14.S42` - Diagnose then fix renta_chain_behaviour 5 reds; `src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py`.
-- [ ] `P14.S43` - Diagnose then fix M100 cripto_1812_propagation 5 reds; `src/aeat/domain/calculations/registry/test_modelo_100_cripto_1812_propagation.py`.
+- [x] `P14.S37` - Diagnose then fix M100 ahorro_base_chain 6 reds; `src/aeat/domain/calculations/registry/test_modelo_100_ahorro_base_chain.py`.
+- [x] `P14.S38` - Diagnose then fix M100 settlement_chain 6 reds; `src/aeat/domain/calculations/registry/test_modelo_100_settlement_chain.py`.
+- [x] `P14.S39` - Diagnose then fix M100 retenciones_binding_wiring 5 reds; `src/aeat/domain/calculations/registry/test_modelo_100_retenciones_binding_wiring.py`.
+- [x] `P14.S40` - Diagnose then fix reduccion_art_84_conjunta 8 reds; `src/aeat/domain/calculations/registry/test_reduccion_art_84_conjunta.py`.
+- [x] `P14.S41` - Diagnose then fix minimo_contribuyente_age_increment 8 reds; `src/aeat/domain/calculations/registry/test_minimo_contribuyente_age_increment.py`.
+- [x] `P14.S42` - Diagnose then fix renta_chain_behaviour 5 reds; `src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py`.
+- [x] `P14.S43` - Diagnose then fix M100 cripto_1812_propagation 5 reds; `src/aeat/domain/calculations/registry/test_modelo_100_cripto_1812_propagation.py`.
 
 ### Phase `P15` - modelo_discovery_defects 14-red cluster
 
