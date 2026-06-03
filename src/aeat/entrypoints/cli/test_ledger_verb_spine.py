@@ -132,3 +132,41 @@ def test_ledger_orthogonal_verb_help_states_local_only(
     assert any(token in haystack for token in ("local-only", "local;", "nunca", "mai contacta", "csak helyi")), (
         result.output
     )
+
+
+# W72.P349.S2024: help-text enumeration gate. The `aeat app ledger --help`
+# and `aeat app modelo --help` surfaces are the operator's first encounter
+# with the noun-group's verb tree; if a canonical verb is mounted but
+# omitted from help (e.g. by a missing tr() entry), the operator cannot
+# discover it. This gate fails when help text omits any registered verb,
+# catching that drift without depending on locale-string content.
+def test_ledger_help_enumerates_every_registered_verb(cli_runner: CliRunner) -> None:
+    """`aeat app ledger --help` lists every mounted verb so the operator
+    can discover the noun-group's full surface from the help output alone."""
+
+    result = cli_runner.invoke(app, ["app", "ledger", "--help"])
+    assert result.exit_code == 0, result.output
+    missing = sorted(
+        cmd.name for cmd in ledger_app.registered_commands if cmd.name not in result.output
+    )
+    assert not missing, (
+        f"`aeat app ledger --help` omits registered verbs {missing!r}; "
+        f"help output: {result.output!r}"
+    )
+
+
+def test_modelo_help_enumerates_every_registered_verb(cli_runner: CliRunner) -> None:
+    """`aeat app modelo --help` lists every mounted verb so the operator
+    can discover the noun-group's full surface from the help output alone."""
+
+    from ._modelo import app as modelo_app
+
+    result = cli_runner.invoke(app, ["app", "modelo", "--help"])
+    assert result.exit_code == 0, result.output
+    missing = sorted(
+        cmd.name for cmd in modelo_app.registered_commands if cmd.name not in result.output
+    )
+    assert not missing, (
+        f"`aeat app modelo --help` omits registered verbs {missing!r}; "
+        f"help output: {result.output!r}"
+    )
