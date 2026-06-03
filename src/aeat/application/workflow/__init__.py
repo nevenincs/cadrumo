@@ -85,6 +85,7 @@ from ._profile_bucket_scan import (
     list_profile_buckets,
     read_profile_bucket,
     read_profile_bucket_by_id,
+    resolve_profile_bucket,
 )
 from ._profile_health import (
     ActiveProfileHealth,
@@ -167,6 +168,7 @@ __all__ = [
     "repair_active_profile_manifest_status",
     "repair_active_profile_pointer",
     "reset_workflow_state",
+    "resolve_profile_bucket",
     "resume_modelo_workflow",
     "save_run",
     "update_declaration_pointer",

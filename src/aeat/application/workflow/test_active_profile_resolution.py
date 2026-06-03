@@ -25,6 +25,7 @@ from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import write_pointer
 from ...core.config import override_settings
 from ...core.errors import NoActiveProfileError, get_registered_error_code
+from ._profile_bucket_scan import resolve_profile_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -69,3 +70,81 @@ def test_no_active_profile_error_has_registered_error_code() -> None:
     code = get_registered_error_code(NoActiveProfileError)
     assert code.code == "REFUSED_NO_ACTIVE_PROFILE"
     assert code.message_key == "errors.refused.refused_no_active_profile"
+
+
+def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
+    """Write a real live bucket manifest at ``<root>/buckets/<bucket_id>/``.
+
+    No mock: a plaintext ``manifest.toml`` carrying the immutable UUID
+    ``bucket_id`` and the operator ``label``, exactly as ``profile create``
+    materialises it.
+    """
+    from datetime import UTC, datetime
+
+    from ...adapters.persistence.storage.bucket import (
+        BucketLifecycleStatus,
+        BucketManifest,
+        bucket_paths,
+        provision_bucket_directory,
+        write_manifest,
+    )
+    from ...adapters.persistence.storage.master_key import KdfParams
+
+    now = datetime.now(UTC).replace(microsecond=0)
+    provision_bucket_directory(root, bucket_id)
+    write_manifest(
+        bucket_paths(root, bucket_id),
+        BucketManifest(
+            bucket_id=bucket_id,
+            label=label,
+            created_at=now,
+            last_unlocked_at=None,
+            kdf_params=KdfParams.default().to_manifest_params(),
+            recovery_enrolled=False,
+            schema_version=1,
+            status=BucketLifecycleStatus.ACTIVE,
+        ),
+    )
+
+
+def test_resolve_profile_bucket_resolves_an_active_profile_by_uuid(tmp_path: Path) -> None:
+    """A UUID identifier resolves directly to its bucket pointer."""
+
+    uuid = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
+    _write_live_bucket(tmp_path, bucket_id=uuid, label="operator")
+
+    pointer = resolve_profile_bucket(uuid, root=tmp_path)
+
+    assert pointer is not None
+    assert pointer.bucket_id == uuid
+    assert pointer.label == "operator"
+
+
+def test_resolve_profile_bucket_resolves_an_active_profile_by_display_name(tmp_path: Path) -> None:
+    """A display-name identifier resolves to the UUID bucket via the label fallback.
+
+    This is the real operator path: ``AEAT_ACTIVE_PROFILE=operator`` (or any
+    active-profile pointer carrying the operator label the user chose at
+    ``profile create``, never the UUID they never see). The by-UUID-direct
+    lookup misses on the label, so resolution falls back to the
+    manifest-scan-by-label and returns the correct bucket. Without the
+    fallback this raises a "no manifest" / "unknown profile" refusal on every
+    profile-scoped command.
+    """
+
+    uuid = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
+    _write_live_bucket(tmp_path, bucket_id=uuid, label="operator")
+
+    pointer = resolve_profile_bucket("operator", root=tmp_path)
+
+    assert pointer is not None
+    assert pointer.bucket_id == uuid, "the display name must resolve to the immutable UUID bucket id"
+    assert pointer.label == "operator"
+
+
+def test_resolve_profile_bucket_returns_none_for_an_unknown_identifier(tmp_path: Path) -> None:
+    """Neither a UUID-shaped nor a label-shaped unknown identifier resolves."""
+
+    _write_live_bucket(tmp_path, bucket_id="51c1fa97-28e1-4700-ac1e-ed7cf094d37b", label="operator")
+
+    assert resolve_profile_bucket("nonexistent", root=tmp_path) is None

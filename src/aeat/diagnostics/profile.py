@@ -86,7 +86,7 @@ def _resolve_target_profile(profile: str | None):
     """
     from ..application.workflow import (
         read_profile_bucket,
-        read_profile_bucket_by_id,
+        resolve_profile_bucket,
     )
 
     if profile is not None:
@@ -103,7 +103,12 @@ def _resolve_target_profile(profile: str | None):
     active = resolve_active_bucket_id()
     if active is None:
         raise _bad_no_active_profile()
-    pointer = read_profile_bucket_by_id(active)
+    # The active pointer (AEAT_ACTIVE_PROFILE env var or the on-disk
+    # pointer file) may carry either the UUID bucket id or the operator
+    # display label: an operator references a profile by the name chosen
+    # at create, never the UUID they never see. Resolve either form so a
+    # name-valued active profile does not hard-miss with "unknown profile".
+    pointer = resolve_profile_bucket(active)
     if pointer is None:
         raise _bad_unknown_profile(active)
     return pointer
