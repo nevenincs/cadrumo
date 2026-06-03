@@ -3004,13 +3004,13 @@ def _business_invoice_text_lines(record) -> list[str]:
 
 
 def _payable_invoice_service():
-    from ...application.ledger._business_operation_invoice import PayableInvoiceService
+    from ...application.ledger import PayableInvoiceService
 
     return PayableInvoiceService()
 
 
 def _collectible_invoice_service():
-    from ...application.ledger._business_operation_invoice import CollectibleInvoiceService
+    from ...application.ledger import CollectibleInvoiceService
 
     return CollectibleInvoiceService()
 
@@ -3070,7 +3070,7 @@ def payable_invoice_add(
     ),
 ) -> None:
     """Register a new payable invoice record (we owe a vendor) on the active bucket."""
-    from ...application.ledger._business_operation_invoice import (
+    from ...application.ledger import (
         BusinessOperationInvoiceInputError,
         IntracomOperationType,
         validate_eu_iva_id,
@@ -3199,7 +3199,7 @@ def payable_invoice_update(
     notes: str | None = typer.Option(None, "--notes"),
 ) -> None:
     """Update mutable fields on one payable invoice record."""
-    from ...application.ledger._business_operation_invoice import BusinessOperationInvoicePatch
+    from ...application.ledger import BusinessOperationInvoicePatch
 
     bucket_id = _ratios_bucket_id()
     patch = BusinessOperationInvoicePatch(
@@ -3322,7 +3322,7 @@ def collectible_invoice_add(
     ),
 ) -> None:
     """Register a new collectible invoice record (a customer owes us) on the active bucket."""
-    from ...application.ledger._business_operation_invoice import (
+    from ...application.ledger import (
         BusinessOperationInvoiceInputError,
         IntracomOperationType,
         validate_eu_iva_id,
@@ -3455,7 +3455,7 @@ def collectible_invoice_update(
     notes: str | None = typer.Option(None, "--notes"),
 ) -> None:
     """Update mutable fields on one collectible invoice record."""
-    from ...application.ledger._business_operation_invoice import BusinessOperationInvoicePatch
+    from ...application.ledger import BusinessOperationInvoicePatch
 
     bucket_id = _ratios_bucket_id()
     patch = BusinessOperationInvoicePatch(
