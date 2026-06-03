@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Literal
 
 from openpyxl import Workbook
 from openpyxl.comments import Comment
+from openpyxl.styles import Font
 from pydantic import BaseModel, Field
 
 from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -112,7 +113,23 @@ def build_offline_workbook(plan: SheetExportPlan) -> Workbook:
     _write_row_set_headers(workbook, plan.row_sets)
     _write_guide(workbook[TabName.GUIDE.value], plan)
     _write_evidence(workbook[TabName.EVIDENCIA.value], plan)
+    _style_section_headers_and_anchors(workbook, plan)
     return workbook
+
+
+def _style_section_headers_and_anchors(workbook: Workbook, plan: SheetExportPlan) -> None:
+    """Bold the section-header cells and the start/final anchor labels.
+
+    The anchor label text is written by the value-cell pass; this only applies
+    the bold weight, so the offline and online transports stay value-identical
+    (only the font weight, which the conformance check does not compare, differs).
+    """
+    for header in plan.section_headers:
+        cell = workbook[header.address.tab.value].cell(row=header.address.row, column=header.address.column)
+        cell.font = Font(bold=True)
+    for anchor in plan.anchors:
+        cell = workbook[anchor.address.tab.value].cell(row=anchor.address.row, column=anchor.address.column)
+        cell.font = Font(bold=True)
 
 
 def build_evidence_sidecar(

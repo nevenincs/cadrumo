@@ -384,6 +384,41 @@ def _build_evidence_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
     return data
 
 
+def _build_emphasis_format_requests(
+    plan: SheetExportPlan,
+    *,
+    sheet_id_by_tab: Mapping[str, int],
+) -> list[dict[str, Any]]:
+    """Bold the section-header cells and start/final anchor labels.
+
+    Mirrors the offline workbook's section-header + anchor styling so the two
+    transports present the same official-workbook orientation. The label text is
+    written by the value batch; this only sets the bold weight.
+    """
+    requests: list[dict[str, Any]] = []
+    addresses = [header.address for header in plan.section_headers] + [anchor.address for anchor in plan.anchors]
+    for address in addresses:
+        sheet_id = sheet_id_by_tab.get(address.tab.value)
+        if sheet_id is None:
+            continue
+        requests.append(
+            {
+                "repeatCell": {
+                    "range": {
+                        "sheetId": sheet_id,
+                        "startRowIndex": address.row - 1,
+                        "endRowIndex": address.row,
+                        "startColumnIndex": address.column - 1,
+                        "endColumnIndex": address.column,
+                    },
+                    "cell": {"userEnteredFormat": {"textFormat": {"bold": True}}},
+                    "fields": "userEnteredFormat.textFormat.bold",
+                }
+            }
+        )
+    return requests
+
+
 def _build_grid_resize_requests(
     plan: SheetExportPlan,
     *,
@@ -980,12 +1015,14 @@ def apply_export_plan(
         plan.value_cells,
         sheet_id_by_tab=sheet_id_by_tab,
     )
+    emphasis_requests = _build_emphasis_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
     structural_requests = (
         cleanup_requests
         + metadata_requests
         + protected_requests
         + constraint_requests
         + note_requests
+        + emphasis_requests
     )
     if structural_requests:
         execute_request(
