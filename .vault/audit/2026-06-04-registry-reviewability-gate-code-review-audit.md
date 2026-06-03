@@ -51,3 +51,13 @@ reviewability check and keeps the 203-line baseline intact. The failing module
 is `_validate_relation_periods.py`, which the test reports at 240 `splitlines()`
 lines. The step does not modify production code or test thresholds. No Critical
 or High issues found.
+
+## REVIEWABILITY-GATE-005 | PASS | S39 restores relation-period validator baseline without behavior changes
+
+Reviewed `W04.P08.S39`. The implementation shortens explanatory docstrings and
+comments and tightens two trivial helper bodies in `_validate_relation_periods.py`
+without changing validation branches, selector matching, coverage intervals, or
+public function signatures. The module now has 203 `splitlines()` lines, matching
+the existing baseline instead of raising it. Gates run: ruff on the touched
+validator/reviewability files, full `test_registry_reviewability.py`, and
+`test_committed_registry.py`. No Critical or High issues found.
