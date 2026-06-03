@@ -2077,6 +2077,9 @@ cli:
       footer_truncated: 'Mostrant files {start}-{end} de {total} (desplacament {offset}). Feu servir --offset/--limit per paginar.'
       limit_help: 'Nombre maxim de files a mostrar (per defecte: totes).'
       offset_help: 'Omet aquest nombre de files abans de llistar (per defecte: 0).'
+      by_group_help: 'Agrupa el llistat per etiqueta de grup.'
+      group_filter_help: 'Mostra nomes les files d''aquesta etiqueta de grup.'
+      ungrouped_label: '(sense grup)'
     merge:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       child_id_help: Id de transacció filla que vols fusionar; es pot repetir
@@ -2150,6 +2153,7 @@ cli:
       notes_help: Noves notes de l'operador
       taxable_base_help: Nou import de base imposable
       value_date_help: Nova data valor (AAAA-MM-DD)
+      group_help: 'Assigna una etiqueta de grup organitzativa (cadena buida per esborrar-la).'
     view:
       help: Mostra una transacció del llibre
       transaction_id_help: Id de la transacció (o prefix no ambigu)

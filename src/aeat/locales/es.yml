@@ -2114,6 +2114,9 @@ cli:
       footer_truncated: 'Mostrando filas {start}-{end} de {total} (desplazamiento {offset}). Use --offset/--limit para paginar.'
       limit_help: 'Numero maximo de filas a mostrar (por defecto: todas).'
       offset_help: 'Omitir este numero de filas antes de listar (por defecto: 0).'
+      by_group_help: 'Agrupar el listado por etiqueta de grupo.'
+      group_filter_help: 'Mostrar solo las filas de esta etiqueta de grupo.'
+      ungrouped_label: '(sin grupo)'
     merge:
       actor_help: Nombre del operador registrado en el evento del bucket
       child_id_help: Id de transacción hija que quieres fusionar; se puede repetir
@@ -2187,6 +2190,7 @@ cli:
       notes_help: Nuevas notas del operador
       taxable_base_help: Nuevo importe de base imponible
       value_date_help: Nueva fecha valor (AAAA-MM-DD)
+      group_help: 'Asignar una etiqueta de grupo organizativa (cadena vacia para borrarla).'
     view:
       help: Muestra una transacción del libro
       transaction_id_help: Id de la transacción (o prefijo no ambiguo)

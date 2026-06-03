@@ -2074,6 +2074,9 @@ cli:
       footer_truncated: '{start}-{end}. sor megjelenitese, osszesen {total} (eltolas {offset}). Lapozashoz hasznalja a --offset/--limit kapcsolot.'
       limit_help: 'Megjelenitendo sorok maximalis szama (alapertelmezett: az osszes).'
       offset_help: 'Ennyi sor kihagyasa a listazas elott (alapertelmezett: 0).'
+      by_group_help: 'A lista csoportositasa csoportcimke szerint.'
+      group_filter_help: 'Csak az adott csoportcimkehez tartozo sorok megjelenitese.'
+      ungrouped_label: '(nincs csoport)'
     merge:
       actor_help: Az üzemeltető neve, amelyet a LEDGER_TRANSACTION_MERGED eseményen
         rögzítenek.
@@ -2165,6 +2168,7 @@ cli:
       notes_help: Új üzemeltetői megjegyzések.
       taxable_base_help: Új ÁFA-mentes alapösszeg.
       value_date_help: Új értékdátum (ÉÉÉÉ-HH-NN).
+      group_help: 'Szervezeti csoportcimke hozzarendelese (ures szoveg torli).'
     view:
       help: Egyetlen főkönyvi tranzakció megtekintése az aktív profilmappában.
       transaction_id_help: A főkönyvi tranzakció azonosítója (vagy egyértelmű hexadecimális

@@ -378,7 +378,7 @@ Operating-scale rendering, grouping/labelling, and batch transform/amend over 10
 Render 1000s of rows; label/group; bulk amend.
 
 - [x] `W14.P26.S87` - Render/list 1000s of rows with stable columns and honest paging/truncation (no silent cap); `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W14.P26.S88` - Grouping/labelling of transactions (label/tag/group surface) and grouped display; `src/aeat/domain/transactions/_models.py`.
+- [x] `W14.P26.S88` - Grouping/labelling of transactions (label/tag/group surface) and grouped display; `src/aeat/domain/transactions/_models.py`.
 - [ ] `W14.P26.S89` - Batch transform/amend journey: iterative refinement (relabel/recategorize/reallocate) over hundreds of rows; `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
 
 ## Description
