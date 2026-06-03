@@ -86,6 +86,7 @@ from ._actions import (
     verify_modelo_revision,
     workflow_period_for_work_unit,
 )
+from ._binding_readiness import profile_resolvable_binding_ids
 from ._borrador_binding import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
@@ -93,10 +94,33 @@ from ._borrador_binding import (
     Modelo100BorradorSourceResolver,
     resolve_modelo_100_borrador_bindings,
 )
+from ._export import (
+    ModeloExportCommand,
+    ModeloExportCrossBucketRefusedError,
+    ModeloExportNoActiveBucketError,
+    ModeloExportResult,
+    export_modelo_revision,
+)
 from ._history import (
     WorkUnitHistory,
     WorkUnitHistoryEvent,
     assemble_work_unit_history,
+)
+from ._profile_binding import (
+    ProfileBindingResolutionError,
+    ProfileSourcedBindingResult,
+    resolve_profile_sourced_bindings,
+)
+from ._reconcile import (
+    ModeloReconciliationCommand,
+    ModeloReconciliationDiff,
+    ModeloReconciliationReport,
+    ModeloReconciliationSourceKind,
+    ModeloReconciliationVerdict,
+    ReconciliationCrossBucketRefusedError,
+    ReconciliationDeclaracionSourceUnsupportedError,
+    ReconciliationEvidenceInvalidError,
+    modelo_reconcile,
 )
 from ._result_summary import (
     CalculationResultSummary,
@@ -127,10 +151,24 @@ __all__ = [
     "Modelo100BorradorBindingResult",
     "Modelo100BorradorSourceResolver",
     "ModeloAggregationBindingError",
+    "ModeloExportCommand",
+    "ModeloExportCrossBucketRefusedError",
+    "ModeloExportNoActiveBucketError",
+    "ModeloExportResult",
     "ModeloIvaWalletReconciliationBlocked",
     "ModeloIvaWalletReconciliationBlockedError",
+    "ModeloReconciliationCommand",
+    "ModeloReconciliationDiff",
+    "ModeloReconciliationReport",
+    "ModeloReconciliationSourceKind",
+    "ModeloReconciliationVerdict",
     "ModeloRecordNotFoundError",
     "ModeloWorkflowGateError",
+    "ProfileBindingResolutionError",
+    "ProfileSourcedBindingResult",
+    "ReconciliationCrossBucketRefusedError",
+    "ReconciliationDeclaracionSourceUnsupportedError",
+    "ReconciliationEvidenceInvalidError",
     "ResultSummaryRow",
     "StoredCalculationDriftError",
     "TaxationComparisonError",
@@ -151,6 +189,7 @@ __all__ = [
     "compare_taxation_modes",
     "create_work_unit",
     "discard_work_unit",
+    "export_modelo_revision",
     "file_modelo_revision",
     "get_calculation_revision",
     "get_filing_record",
@@ -162,8 +201,11 @@ __all__ = [
     "list_verification_reports",
     "list_work_units",
     "mark_revision_verificado_completo",
+    "modelo_reconcile",
+    "profile_resolvable_binding_ids",
     "rename_work_unit",
     "resolve_modelo_100_borrador_bindings",
+    "resolve_profile_sourced_bindings",
     "verify_modelo_revision",
     "workflow_period_for_work_unit",
 ]
