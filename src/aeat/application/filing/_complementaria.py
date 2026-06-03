@@ -12,22 +12,23 @@ from decimal import Decimal
 from typing import Protocol, runtime_checkable
 
 from ...core.logging import get_logger
-from ...domain.filing import ModeloDraft, ModeloDraftRepository, ModeloValueKind
-from ...domain.filing._amendment import (
+from ...domain.filing import (
     AmendmentKind,
     CasillaChange,
     CasillaDelta,
     CasillaInputs,
+    CasillaSchemaProvider,
+    ModeloAmendmentError,
+    ModeloBuilderError,
     ModeloCode,
     ModeloComplementaria,
-    ModeloSustitutiva,
-    make_amendment_id,
-)
-from ...domain.filing._errors import ModeloAmendmentError, ModeloBuilderError
-from ...domain.filing._protocols import (
-    CasillaSchemaProvider,
+    ModeloDraft,
+    ModeloDraftRepository,
     ModeloInputs,
     ModeloInputValue,
+    ModeloSustitutiva,
+    ModeloValueKind,
+    make_amendment_id,
 )
 
 _logger = get_logger(__name__)
@@ -85,7 +86,7 @@ def build_complementaria(
         amended_draft=amended_draft,
         created_at=amended_draft.created_at,
     )
-    from ...domain.filing._complementaria_repository import ModeloAmendmentRepository
+    from ...domain.filing import ModeloAmendmentRepository
 
     ModeloAmendmentRepository().save(amendment)
     _logger.info(
@@ -189,7 +190,7 @@ def load_amendment(amendment_id: str) -> ModeloComplementaria | ModeloSustitutiv
     Returns a :class:`ModeloComplementaria` or :class:`ModeloSustitutiva`
     depending on the amendment kind.
     """
-    from ...domain.filing._complementaria_repository import ModeloAmendmentRepository
+    from ...domain.filing import ModeloAmendmentRepository
 
     repository = ModeloAmendmentRepository()
     try:
@@ -209,7 +210,7 @@ def list_amendments(*, modelo: str | None = None) -> tuple[ModeloComplementaria 
     Each element is a :class:`ModeloSustitutiva` or
     :class:`ModeloComplementaria` depending on its amendment kind.
     """
-    from ...domain.filing._complementaria_repository import ModeloAmendmentRepository
+    from ...domain.filing import ModeloAmendmentRepository
 
     repository = ModeloAmendmentRepository()
     results = tuple(
