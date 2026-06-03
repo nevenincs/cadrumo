@@ -46,3 +46,32 @@ class RenameBucketResult(BaseModel):
     previous_label: str = Field(min_length=1, max_length=160)
     new_label: str = Field(min_length=1, max_length=160)
     occurred_at: datetime
+
+
+class DeleteBucketCommand(BaseModel):
+    """Operator request to destructively erase a bucket.
+
+    ``confirmed=True`` is required at the service boundary so a
+    programmatic caller observes the same guarantee the CLI ``--yes``
+    flag provides. The active bucket cannot be deleted; the operator
+    must switch profiles first.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    bucket_id: BucketId
+    confirmed: bool = False
+
+
+class DeleteBucketResult(BaseModel):
+    """Outcome of a successful bucket erasure.
+
+    Carries the deleted bucket's prior label so the operator-facing
+    emitter can render a confirming line without re-reading anything.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    bucket_id: BucketId
+    previous_label: str = Field(min_length=1, max_length=160)
+    occurred_at: datetime
