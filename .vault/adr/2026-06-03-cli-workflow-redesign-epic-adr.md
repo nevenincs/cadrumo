@@ -7,7 +7,7 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
 ---
 
-# `cli-workflow-redesign-epic` adr: `S1913 export-surface only-scope clarification` | (**status:** `accepted`)
+# `cli-workflow-redesign-epic` adr: `surface-design only-scope clarifications (S1913 + S1853)` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -103,6 +103,45 @@ not on a separate prose interpretation of S1913's "only".
 - A future Step that proposes ADD a new top-level export verb (e.g.
   `aeat app overview export`) must amend the canonical roster sets,
   which forces explicit review under this ADR's interpretation.
+
+## Addendum: S1853 verify + reconcile canonical mount
+
+`W63.P311.S1853` reads "Expose declaration verification through
+`aeat app modelo verify` and `aeat app modelo reconcile` only". The
+current code state has:
+
+- `reconcile` mounted at top-level (`@app.command("reconcile")` at
+  `_modelo.py:4755`) — matches the S1853 text verbatim.
+- `verify` mounted under the `work` subgroup
+  (`@work_app.command("verify")` at `_modelo.py:3692`), i.e.
+  `aeat app modelo work verify` — does NOT match the S1853 text
+  verbatim.
+
+Applying the same TOP-LEVEL-only interpretation established above for
+S1913: the work-subgroup `verify` mount is the canonical surface
+because verification is a per-WORK-UNIT operation that operates inside
+the work-unit lifecycle (load draft, run verification gate, persist
+verification report). It is structurally a `work` subgroup verb in the
+same way that `work calculate`, `work file`, `work amend`, and
+`work history` are. Moving it to top-level (`app modelo verify`) would
+break the subgroup-CRUD shape `work` already owns and force a
+double-mount that the W71 canonical-roster gates would refuse without
+an explicit set update.
+
+The S1853 text's "only" constraint is therefore interpreted as
+governing the absence of legacy top-level alternative spellings
+(retired under `W72.P347.S2016` / `S2017` / `S2018`), not as a mandate
+to move `verify` out of its subgroup. The work-subgroup mount remains
+canonical; `reconcile` stays at top-level (per AEAT semantics: a
+reconciliation can compare any modelo's filing against external
+evidence without requiring a pre-existing work-unit context).
+
+Enforcement is again via the contract gates: any new top-level `verify`
+mount would fail
+`test_modelo_top_level_verb_roster_matches_canonical_spine` on
+landing, and any drop of the work-subgroup mount would fail the
+subgroup's own integrity gates plus the S2019 test set already
+covering the work verify lifecycle.
 
 ## Codification candidates
 
