@@ -676,6 +676,10 @@ class LedgerExportCommand(BaseModel):
     export_format: ExportSerializationFormat = ExportSerializationFormat.CSV
     include_inactive: bool = False
     output_path: Path | None = None
+    # Optional period filter (e.g. "2025Q1", "2025"): restrict the export to rows
+    # whose effective date falls in the period, so an operator can hand a gestor
+    # just the quarter/year. None exports the whole bucket.
+    period: str | None = None
     actor: str = Field(default="operator", min_length=1, max_length=64)
     source_command: str = Field(default="aeat app ledger export", min_length=1, max_length=128)
 
