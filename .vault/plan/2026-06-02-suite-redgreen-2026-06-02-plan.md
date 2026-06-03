@@ -168,6 +168,63 @@ test_date_relation_routing non-iso rejection, test_binding_prefill modelo 390 pr
 - [x] `P08.S26` - Date relation routing non-iso reject; `test_date_inputs_for_ids_rejects_non_iso_value - re-derive non-iso rejection path post _parse_iso8601_date routing`.
 - [x] `P08.S27` - Modelo 390 prefill binding-prefill; `test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observations`.
 
+### Phase `P09` - M303 verification_chain 47-red cluster
+
+Land architect Route A spec — synthetic-PDF primitive encoding + extraction profile + anti-tautology test
+
+- [ ] `P09.S29` - Land synthetic-PDF generator primitive encoding per ADR 2026-06-03-m303-synthetic-generator-primitive-spec; `src/aeat/tests/fixtures/justificantes/_generate.py`.
+- [ ] `P09.S30` - Update M303 extraction_profile to parse primitives drop totals 27 and 45; `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml`.
+- [ ] `P09.S31` - Author anti-tautology proof test mutate iva.repercutido.general and assert engine total tracks; `src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.
+
+### Phase `P10` - any-return rationale 23-red cluster
+
+Sweep test_any_return_rationale_markers reds — add rationale marker tokens or replace Any with concrete type
+
+- [ ] `P10.S32` - Sweep test_any_return_rationale_markers 23 reds add rationale tokens or replace Any; `src/aeat`.
+
+### Phase `P11` - CLI workflow verification 15-red cluster
+
+Diagnose + fix test_cli_workflow_verification failures
+
+- [ ] `P11.S33` - Diagnose then fix test_cli_workflow_verification 15-red cluster; `src/aeat/entrypoints/cli/test_cli_workflow_verification.py`.
+
+### Phase `P12` - M100 tarifa_real 14-red cluster
+
+Diagnose + fix test_modelo_100_tarifa_real failures
+
+- [ ] `P12.S34` - Diagnose then fix test_modelo_100_tarifa_real 14 reds; `src/aeat/domain/calculations/registry/test_modelo_100_tarifa_real.py`.
+
+### Phase `P13` - M200 cuota chain 16-red cluster
+
+M200 cuota_integra_lanes + tipo_gravamen_dispatch reds
+
+- [ ] `P13.S35` - Diagnose then fix M200 cuota_integra_lanes 9 reds; `src/aeat/domain/calculations/registry/test_modelo_200_cuota_integra_lanes.py`.
+- [ ] `P13.S36` - Diagnose then fix M200 tipo_gravamen_dispatch 7 reds; `src/aeat/domain/calculations/registry/test_modelo_200_tipo_gravamen_dispatch.py`.
+
+### Phase `P14` - M100 renta chain 28-red cluster
+
+tarifa_real + ahorro_base + settlement + retenciones + renta_chain_behaviour + reduccion_art_84 + minimo_contribuyente
+
+- [ ] `P14.S37` - Diagnose then fix M100 ahorro_base_chain 6 reds; `src/aeat/domain/calculations/registry/test_modelo_100_ahorro_base_chain.py`.
+- [ ] `P14.S38` - Diagnose then fix M100 settlement_chain 6 reds; `src/aeat/domain/calculations/registry/test_modelo_100_settlement_chain.py`.
+- [ ] `P14.S39` - Diagnose then fix M100 retenciones_binding_wiring 5 reds; `src/aeat/domain/calculations/registry/test_modelo_100_retenciones_binding_wiring.py`.
+- [ ] `P14.S40` - Diagnose then fix reduccion_art_84_conjunta 8 reds; `src/aeat/domain/calculations/registry/test_reduccion_art_84_conjunta.py`.
+- [ ] `P14.S41` - Diagnose then fix minimo_contribuyente_age_increment 8 reds; `src/aeat/domain/calculations/registry/test_minimo_contribuyente_age_increment.py`.
+- [ ] `P14.S42` - Diagnose then fix renta_chain_behaviour 5 reds; `src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py`.
+- [ ] `P14.S43` - Diagnose then fix M100 cripto_1812_propagation 5 reds; `src/aeat/domain/calculations/registry/test_modelo_100_cripto_1812_propagation.py`.
+
+### Phase `P15` - modelo_discovery_defects 14-red cluster
+
+Diagnose + fix CLI modelo discovery cluster
+
+- [ ] `P15.S44` - Diagnose then fix modelo_discovery_defects 14 reds; `src/aeat/entrypoints/cli/test_modelo_discovery_defects.py`.
+
+### Phase `P16` - cli_surface 13-red cluster
+
+Diagnose + fix CLI surface tests
+
+- [ ] `P16.S45` - Diagnose then fix cli_surface 13 reds; `src/aeat/entrypoints/cli/test_cli_surface.py`.
+
 ## Description
 
 <!-- Briefly describe the proposed work. Reference `{adr}`s,
