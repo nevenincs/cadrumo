@@ -113,6 +113,18 @@ Measure current registry TOML headroom and tighten committed reviewability tests
 - [x] `W03.P07.S36` - Tighten committed registry TOML file-size and row-width regression gates; `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
 - [x] `W03.P07.S37` - Verify tightened reviewability gates against the committed registry corpus; `src/aeat/domain/calculations/registry`.
 
+## Wave `W04` - validator baseline repair
+
+Close the validator-module reviewability regression exposed while tightening TOML gates, preserving validation behavior and avoiding baseline inflation.
+
+### Phase `W04.P08` - relation-period validator reviewability
+
+Bring the relation-period validator module back under its committed reviewability baseline without changing validation semantics.
+
+- [ ] `W04.P08.S38` - Audit validator module reviewability baseline failure; `.vault/audit`.
+- [ ] `W04.P08.S39` - Reduce relation-period validator module below its reviewability baseline; `src/aeat/domain/calculations/registry/_validate_relation_periods.py`.
+- [ ] `W04.P08.S40` - Verify registry reviewability tests after validator baseline repair; `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
+
 ## Description
 
 The next work should protect reviewability first, then extend continuity data
