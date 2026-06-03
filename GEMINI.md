@@ -27,6 +27,8 @@ You MUST respect these rules at all times:
 @.agents/rules/composition-service-no-parallel-write-path.md
 @.agents/rules/core-struct-docstring-links.md
 @.agents/rules/fixture-provenance-declared-in-sidecar.md
+@.agents/rules/ledger-derived-revisions-bundle-evidence.md
+@.agents/rules/modelo-export-mirrors-official-structure.md
 @.agents/rules/no-silent-under-declaration.md
 @.agents/rules/no-tautological-calculation-tests.md
 @.agents/rules/registry-calculation-legal-grounding.md
