@@ -17,12 +17,11 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.time import now
-from ....persistence.storage import SensitivityClass
+from ....persistence.storage import AEAT_BROWSER_SESSION_NAMESPACE
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....persistence.storage.sql import SecureObjectRepository
 
-_SESSION_NAMESPACE = "aeat.outbound.aeat.auth.sessions"
-_SESSION_VERSION = 1
+_SESSION_VERSION = AEAT_BROWSER_SESSION_NAMESPACE.schema_version
 
 
 class PersistedBrowserSession(BaseModel):
@@ -43,7 +42,7 @@ class PersistedBrowserSession(BaseModel):
 
 def exists(path: Path) -> bool:
     """Return whether a browser session exists for logical ``path``."""
-    return _repository().exists(_SESSION_NAMESPACE, _key(path))
+    return _repository().exists(AEAT_BROWSER_SESSION_NAMESPACE.namespace, _key(path))
 
 
 def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[str, object]) -> None:
@@ -54,9 +53,9 @@ def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[s
         written_at=now(),
     )
     _repository().save(
-        namespace=_SESSION_NAMESPACE,
+        namespace=AEAT_BROWSER_SESSION_NAMESPACE.namespace,
         object_key=_key(path),
-        classification=SensitivityClass.SESSION,
+        classification=AEAT_BROWSER_SESSION_NAMESPACE.sensitivity,
         schema_version=_SESSION_VERSION,
         written_at=payload.written_at,
         payload=payload.model_dump_json().encode(UTF_8_ENCODING),
@@ -66,9 +65,9 @@ def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[s
 def load(path: Path) -> PersistedBrowserSession | None:
     """Load a :class:`PersistedBrowserSession` for logical ``path``, or ``None`` when absent."""
     record = _repository().load(
-        _SESSION_NAMESPACE,
+        AEAT_BROWSER_SESSION_NAMESPACE.namespace,
         _key(path),
-        expected_class=SensitivityClass.SESSION,
+        expected_class=AEAT_BROWSER_SESSION_NAMESPACE.sensitivity,
         max_supported_version=_SESSION_VERSION,
     )
     if record is None:
@@ -78,7 +77,7 @@ def load(path: Path) -> PersistedBrowserSession | None:
 
 def delete(path: Path) -> bool:
     """Delete persisted browser session state for logical ``path``."""
-    return _repository().delete(_SESSION_NAMESPACE, _key(path))
+    return _repository().delete(AEAT_BROWSER_SESSION_NAMESPACE.namespace, _key(path))
 
 
 def storage_state_sha256(storage_state: Mapping[str, object]) -> str:

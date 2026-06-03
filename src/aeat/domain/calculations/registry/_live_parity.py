@@ -588,6 +588,10 @@ def audit_oracle_bindings(
 
     Args:
         modelo: The :class:`ModeloDefinition` whose cross-reference bindings to audit.
+        catalogue: :class:`LiveParityCatalogue` registering known oracles by id
+            and environment; bindings unresolved against it produce failures.
+        environment: :class:`OracleEnvironment` (defaults to ``PRODUCTION``)
+            each binding must be registered under to be considered resolved.
     """
     failures: list[str] = []
     for revision in modelo.revisions.values():

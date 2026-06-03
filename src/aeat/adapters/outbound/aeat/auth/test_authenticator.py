@@ -24,10 +24,10 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
 from .....application.auth import AuthProvider, AuthProviderDescription, AuthProviderKind
-from .....core.classification import SensitivityClass
 from .....core.config import CertificateBackend
 from .....core.i18n import tr
 from .....tests.secure_sql import isolated_runtime_profile
+from ....persistence.storage import AEAT_BROWSER_SESSION_NAMESPACE
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from . import (
     AEAT_SESSION_IDLE_TTL,
@@ -673,10 +673,10 @@ def _store_test_session(
 
 def _store_raw_session_payload(path: Path, payload: bytes) -> None:
     secure_object_repository_for_active_bucket().save(
-        namespace=_session_store._SESSION_NAMESPACE,
+        namespace=AEAT_BROWSER_SESSION_NAMESPACE.namespace,
         object_key=path.as_posix(),
-        classification=SensitivityClass.SESSION,
-        schema_version=1,
+        classification=AEAT_BROWSER_SESSION_NAMESPACE.sensitivity,
+        schema_version=AEAT_BROWSER_SESSION_NAMESPACE.schema_version,
         written_at=datetime.now(UTC),
         payload=payload,
     )

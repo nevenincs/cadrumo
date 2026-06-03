@@ -213,6 +213,14 @@ def aggregate_renta_ledger_expenses(
         invoices: The :class:`InvoiceCatalogue` used for invoice-linked deductibility checks.
         bucket_id: Activity bucket identifier for scoping the aggregation.
         period: Filing period; either a :class:`Period` instance or a period code string.
+        profile_year: Optional category-profile year override; defaults to the
+            ``period.year`` when ``None``.
+        usage_ratios: Optional per-:class:`SpendingCategory` business-use ratio
+            overrides applied before deductibility calculation.
+        activity_key: Activity identifier carried through to the produced
+            observations' provenance; defaults to ``"default"``.
+        modelo: Modelo identifier (``"100"`` IRPF or ``"130"`` pagos
+            fraccionados) selecting the per-modelo deductibility rules.
 
     Returns a :class:`RentaLedgerExpenseAggregation` containing the accepted
     observations, exclusion issues, and binding-ready casilla totals.

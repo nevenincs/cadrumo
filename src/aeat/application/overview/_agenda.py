@@ -96,6 +96,13 @@ def build_overview_agenda(
 
     Args:
         profile: The :class:`TaxpayerProfile` whose obligations are ranked.
+        as_of: Anchor date for the lookback / lookahead window.
+        horizon_days: Number of days after ``as_of`` to include in the
+            lookahead window.
+        engine: Optional :class:`DeadlineEngine` override; defaults to the
+            registry-backed engine when ``None``.
+        raw_values: Optional mapping of registry binding raw values forwarded
+            to the deadline engine for context-sensitive deadlines.
 
     Composes :func:`build_overview_calendar` over a window that spans
     ``as_of - 90 days`` (so overdue obligations from the prior quarter

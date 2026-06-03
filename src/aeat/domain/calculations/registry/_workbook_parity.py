@@ -744,6 +744,23 @@ def run_registry_workbook_parity(
 
     Args:
         snapshot: The :class:`RegistrySnapshot` providing the registry formulas to compare.
+        synthetic_input: :class:`SyntheticInputSet` whose values seed both
+            sides of the comparison (operator inputs and registry bindings).
+        workbook_path: Path to the AEAT calculation workbook to execute.
+        workbook: :class:`WorkbookArtefactReport` describing the workbook
+            artefact; must report kind ``FORMULA_FORM``.
+        output_cells: Mapping of registry output id to the workbook
+            :class:`WorkbookCellRef` carrying its computed value.
+        registry_outputs: Mapping of workbook output ids to registry output
+            ids, used to align both sides of the comparison.
+        date_context: Date-axis context forwarded to the registry formula
+            runtime.
+        relation_values: Optional resolved registry relation values seeded
+            into the registry runtime.
+        tolerance: Absolute Decimal tolerance accepted between workbook and
+            registry outputs; defaults to ``Decimal("0")``.
+        executable: Optional LibreOffice executable override used when
+            converting binary XLS workbooks.
     """
     if workbook.workbook_kind != WorkbookKind.FORMULA_FORM:
         raise RegistryValidationError(
