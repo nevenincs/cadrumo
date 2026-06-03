@@ -225,7 +225,7 @@ def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
     ``--profile`` value may be either the operator display label or the UUID
     bucket id, then pins the override to the resolved UUID.
     """
-    from ...application.workflow import resolve_profile_bucket
+    from ...application.workflow import ProfileLabelAmbiguousError, resolve_profile_bucket
     from ...core.config import override_settings
     from ._errors import CliRefusedBoundaryError
 
@@ -235,7 +235,16 @@ def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
             translated_message="cli.config.profile.unknown_profile",
             context={"name": profile},
         )
-    pointer = resolve_profile_bucket(requested)
+    # The label fallback raises ProfileLabelAmbiguousError (a WorkflowError, NOT
+    # a ValueError) when two live profiles share the name; refuse clearly rather
+    # than arbitrarily picking a bucket.
+    try:
+        pointer = resolve_profile_bucket(requested)
+    except ProfileLabelAmbiguousError as exc:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": requested},
+        ) from exc
     if pointer is None:
         raise CliRefusedBoundaryError(
             translated_message="cli.config.profile.unknown_profile",
@@ -265,6 +274,7 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     clear refusal rather than an arbitrary pick.
     """
     from ...application.workflow import (
+        ProfileLabelAmbiguousError,
         read_profile_bucket_by_id,
         resolve_profile_bucket,
     )
@@ -281,7 +291,11 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
         return
     try:
         pointer = resolve_profile_bucket(active)
-    except ValueError as exc:
+    except ProfileLabelAmbiguousError as exc:
+        # Two live profiles share the label (ProfileLabelAmbiguousError is a
+        # WorkflowError, NOT a ValueError); refuse clearly rather than picking
+        # an arbitrary bucket — a wrong silent pick on a tax profile is a
+        # data-integrity hazard.
         raise CliRefusedBoundaryError(
             translated_message="cli.config.profile.unknown_profile",
             context={"name": active},

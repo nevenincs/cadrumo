@@ -148,3 +148,24 @@ def test_resolve_profile_bucket_returns_none_for_an_unknown_identifier(tmp_path:
     _write_live_bucket(tmp_path, bucket_id="51c1fa97-28e1-4700-ac1e-ed7cf094d37b", label="operator")
 
     assert resolve_profile_bucket("nonexistent", root=tmp_path) is None
+
+
+def test_resolve_profile_bucket_raises_on_an_ambiguous_label(tmp_path: Path) -> None:
+    """Two live buckets sharing a label raise ProfileLabelAmbiguousError, never a pick.
+
+    A wrong silent pick on a tax profile is a data-integrity hazard, so the
+    label fallback refuses an ambiguous label rather than choosing one bucket.
+    The raised type is ProfileLabelAmbiguousError — a WorkflowError, NOT a
+    ValueError — which the CLI / diagnostics catch sites must match exactly to
+    surface a clean refusal instead of a raw traceback.
+    """
+    from ._errors import ProfileLabelAmbiguousError
+
+    _write_live_bucket(tmp_path, bucket_id="51c1fa97-28e1-4700-ac1e-ed7cf094d37b", label="operator")
+    _write_live_bucket(tmp_path, bucket_id="62d2ab08-39f2-4811-bd2a-fe48fd105e4a", label="operator")
+
+    assert not issubclass(ProfileLabelAmbiguousError, ValueError), (
+        "ProfileLabelAmbiguousError is NOT a ValueError; `except ValueError` would not catch it"
+    )
+    with pytest.raises(ProfileLabelAmbiguousError):
+        resolve_profile_bucket("operator", root=tmp_path)

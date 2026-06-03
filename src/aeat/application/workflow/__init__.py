@@ -38,6 +38,7 @@ from ._engine import WorkflowEngine
 
 # ---- errors (no application deps) -------------------------------------------
 from ._errors import (
+    ProfileLabelAmbiguousError,
     WorkflowAbortedError,
     WorkflowComponentError,
     WorkflowError,
@@ -132,6 +133,7 @@ __all__ = [
     "ModeloInputs",
     "ModeloInputsProviderProtocol",
     "ProfileBucketPointer",
+    "ProfileLabelAmbiguousError",
     "RegistryModeloDraftProtocol",
     "SiteHealthAlert",
     "SubmissionEngineAdapter",
