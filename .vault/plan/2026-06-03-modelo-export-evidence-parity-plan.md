@@ -145,7 +145,7 @@ Registry-grounded structural parity + live-formula + offline/online conformance.
 
 - [x] `W03.P04.S14` - Parity gate: exported casilla set equals completeness-manifest required set (number + segmento) and section order follows registry declaration; `src/aeat/application/storage/calc_sheets/test_modelo_export_parity.py`.
 - [x] `W03.P04.S15` - Assert every computed casilla carries a live spreadsheet formula; `src/aeat/application/storage/calc_sheets/test_modelo_export_parity.py`.
-- [ ] `W03.P04.S16` - Offline/online renderer conformance: one plan renders structurally identical xls + Sheets grids; `src/aeat/application/storage/calc_sheets/test_modelo_export_parity.py`.
+- [x] `W03.P04.S16` - Offline/online renderer conformance: one plan renders structurally identical xls + Sheets grids; `src/aeat/application/storage/calc_sheets/test_modelo_export_parity.py`.
 
 ## Wave `W04` - Per-modelo coverage rollout
 

@@ -34,6 +34,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "test_apply_adapter_helpers.py",
         "test_calc_sheets_apply.py",
         "test_calc_sheets_apply_evidence.py",  # W05: online Evidencia render + offline/online evidence parity
+        "test_calc_sheets_offline_online_conformance.py",  # W03.P04.S16: offline/online renderer conformance
         "test_calc_sheets_pull_typing.py",  # S200: _ValueRange / _GoogleResource type-narrowing contract
         "test_calc_sheets_row_set_headers.py",
         "test_column_index_to_letters.py",
