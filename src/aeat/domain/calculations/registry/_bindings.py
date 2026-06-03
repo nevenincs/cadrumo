@@ -32,7 +32,20 @@ INVOICE_BINDING_SOURCE_KINDS: frozenset[str] = frozenset(
     {"collectible_invoice", "payable_invoice", "purchase_invoice_evidence"}
 )
 
+# Ledger-aggregation binding source kinds. Every binding whose ``source``
+# matches one of these reads its values from the bucket-scoped ledger
+# (transaction-classified IVA aggregation or Renta first-slice expense
+# aggregation). Cross-domain consumers — notably the
+# ``state_projection`` preflight gate — route through this frozenset so
+# the registry stays the single source of truth for "which binding sources
+# require ledger readiness?".
+LEDGER_BINDING_SOURCE_KINDS: frozenset[str] = frozenset(
+    {"ledger_iva_aggregation", "ledger_renta_expense_aggregation"}
+)
+
 __all__ = [
+    "INVOICE_BINDING_SOURCE_KINDS",
+    "LEDGER_BINDING_SOURCE_KINDS",
     "CasillaObservation",
     "DataBindingDefinition",
     "InvoiceObservation",

@@ -591,7 +591,7 @@ _language_resolver import for side-effect under private name; replace with expli
 
 _LEDGER_PREFLIGHT_BINDING_SOURCES is hardcoded frozenset replace with registry-sourced derivation.
 
-- [ ] `W09.P44.S167` - replace _LEDGER_PREFLIGHT_BINDING_SOURCES hardcoded frozenset with registry-sourced derivation; `src/aeat/application/state_projection.py`.
+- [x] `W09.P44.S167` - replace _LEDGER_PREFLIGHT_BINDING_SOURCES hardcoded frozenset with registry-sourced derivation; `src/aeat/application/state_projection.py`.
 
 ### Phase `W09.P45` - locale _covered_by_namespace duplication
 
