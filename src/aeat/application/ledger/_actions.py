@@ -179,6 +179,8 @@ _LEDGER_EXPORT_FIELDNAMES = (
     "notes",
     "created_by",
     "created_source_command",
+    "value_in_eur",
+    "fx_rate",
 )
 _REMOVAL_BLOCKING_REVISION_STATES = frozenset(
     {
