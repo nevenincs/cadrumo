@@ -582,7 +582,7 @@ def ledger_classify(
             actor=actor,
         )
         return
-    from ...application.ledger._actions import bulk_classify_from_csv as _bulk_classify
+    from ...application.ledger import bulk_classify_from_csv as _bulk_classify
 
     state = _state()
     transaction_repository = _tx_repo(state)
@@ -1560,10 +1560,7 @@ def ledger_check(
     ),
 ) -> None:
     """Surface ledger anomalies for the addressed bucket without mutating state."""
-    from ...application.ledger._preflight import (
-        LedgerPreflightIssue,
-        preflight_transaction_catalogue,
-    )
+    from ...application.ledger import LedgerPreflightIssue, preflight_transaction_catalogue
     from ...domain.transactions import TransactionCatalogueRepository
 
     if bucket_id_option is not None:
@@ -1669,7 +1666,7 @@ def ledger_preflight(
     ),
 ) -> None:
     """Surface modelo-readiness gaps for the active bucket without mutating ledger state."""
-    from ...application.ledger._preflight import preflight_ledger_tax_readiness
+    from ...application.ledger import preflight_ledger_tax_readiness
 
     transaction_repository = _tx_repo(_state())
     canonical = _canonical_period(period)
@@ -2062,7 +2059,7 @@ def ledger_status(
                 f"{tr('cli.ledger.labels.ready')}\t{report.ready}",
             ]
         )
-        from ...application.ledger._preflight import preflight_ledger_tax_readiness
+        from ...application.ledger import preflight_ledger_tax_readiness
 
         preflight = preflight_ledger_tax_readiness(
             bucket_id=transaction_repository.bucket_id,
