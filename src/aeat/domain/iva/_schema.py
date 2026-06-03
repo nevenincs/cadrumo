@@ -62,6 +62,46 @@ class IvaCategory(StrEnum):
     UNKNOWN = "unknown"
 
 
+class IvaExemptionArticle(StrEnum):
+    """Closed catalogue of Ley 37/1992 Art. 20 sub-articles.
+
+    Differentiates downstream-deduction routing on operations
+    classified as :attr:`IvaCategory.DOMESTIC_EXEMPT`.
+
+    The MVP set covers the three sub-articles whose deduction-right or
+    Modelo 303 routing semantics diverge from the default
+    ``DOMESTIC_EXEMPT`` collapse, plus a catch-all for other Art. 20
+    cases. The discriminator is OPTIONAL on the classification result:
+    ``None`` means the operation is exempt with no further sub-article
+    distinction needed; a stamped value means the calculation chain can
+    route to the sub-article-specific casilla (e.g. Modelo 303 casilla
+    61 for `ART_20_UNO_26` artistas plena con prorrata).
+
+    The discriminator's legal grounding follows Ley 37/1992
+    (BOE-A-1992-28740). Each sub-article cites the matching article in
+    its docstring; the registry-side casilla bindings carry the
+    full ``legal_refs`` chain per the
+    ``registry-calculation-legal-grounding`` rule.
+
+    Authority: ``2026-06-03-iva-exemption-article-adr``.
+    """
+
+    ART_20_UNO_8 = "art_20_uno_8"
+    """Enseñanza — exenta sin derecho a deducción (Ley 37/1992 Art. 20.Uno.8)."""
+
+    ART_20_UNO_14 = "art_20_uno_14"
+    """Sanitarios — exenta sin derecho a deducción (Ley 37/1992 Art. 20.Uno.14)."""
+
+    ART_20_UNO_26 = "art_20_uno_26"
+    """Servicios artísticos — exenta con plena prorrata (Ley 37/1992 Art. 20.Uno.26).
+    Routes to Modelo 303 casilla 61."""
+
+    ART_20_OTHER = "art_20_other"
+    """Other Art. 20 sub-articles whose routing semantics do not yet
+    warrant a dedicated enum slot. New slots open as their routing
+    demands surface."""
+
+
 class EUMemberState(StrEnum):
     """Current 27 EU member states, ISO 3166-1 alpha-2 (lowercase).
 

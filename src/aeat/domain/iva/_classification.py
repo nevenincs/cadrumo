@@ -56,6 +56,7 @@ from ._lookup import lookup_rate
 from ._schema import (
     EUMemberState,
     IvaCategory,
+    IvaExemptionArticle,
     IvaRateKind,
     IvaRateRecord,
     _IvaStrictFrozen,
@@ -318,6 +319,26 @@ class IvaClassificationResult(_IvaStrictFrozen):
     requires_reverse_charge: bool = Field(default=False, description="True ⇒ inversión del sujeto pasivo.")
     matched_rule_id: str = Field(description="Stable rule id (e.g. ``R10_intra_community_supply``).")
     notes: str = Field(default="", description="Free-form explanatory note.")
+    exemption_article: IvaExemptionArticle | None = Field(
+        default=None,
+        description=(
+            "Optional Ley 37/1992 Art. 20 sub-article discriminator. Stamped"
+            " only when ``category`` is :attr:`IvaCategory.DOMESTIC_EXEMPT`"
+            " and the classification chain (or operator) has determined the"
+            " specific sub-article. Routes downstream calculation chains"
+            " (e.g. Modelo 303 casilla 61) to sub-article-specific casillas."
+            " See ``2026-06-03-iva-exemption-article-adr``."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _exemption_article_consistent_with_category(self) -> IvaClassificationResult:
+        if self.exemption_article is not None and self.category is not IvaCategory.DOMESTIC_EXEMPT:
+            raise IvaValidationError(
+                f"exemption_article {self.exemption_article.value!r} is only valid when "
+                f"category is DOMESTIC_EXEMPT; got category {self.category.value!r}",
+            )
+        return self
 
 
 # -- Predicate-driven decision table --------------------------------------
