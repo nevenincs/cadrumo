@@ -1886,3 +1886,35 @@ R08 closes when the remaining three verbs ship (`export`, `import`,
 amendment named in `W77.P374.S2153`. The progression above is not a
 closure claim — it is an honest inventory recording the partial
 landing per the campaign-close honesty-review discipline.
+
+## 2026-06-03 amendment — full R-row refresh from ground-truth audit
+
+A second 2026-06-03 ground-truth audit pass re-verified every R-row
+in the 2026-05-15 audit-correction table against the current HEAD
+of `chore/eliminate-shims`. Several R-rows the 2026-05-15 audit
+marked as reopened or partial are now closed at HEAD. The refresh
+table below supersedes the 2026-05-15 audit-correction table for
+the R-rows it covers; R-rows omitted here retain their 2026-05-15
+state.
+
+| R-id | 2026-05-15 | 2026-06-03 | Closure evidence |
+|---|---|---|---|
+| R02 | reopened | ✅ closed | `aeat app modelo reconcile` at `src/aeat/entrypoints/cli/_modelo.py:4739` + coverage in `test_modelo_reconcile_verb.py` |
+| R03 | reopened | ✅ closed | `link` / `check` / `preflight` at `src/aeat/entrypoints/cli/_ledger.py:1226` / `:1372` / `:1481` + coverage |
+| R05 | partial | ✅ closed | `PROFILE_EXPORTED` emission at `_config/__init__.py:1623`, `PROFILE_IMPORTED` at `:1794`, `PROFILE_ACTIVATED` at `_orchestration.py:277` and `:291` |
+| R08 | reopened | 🔄 partial (3/6 verbs) | `BucketMaintenanceService` at `_service.py:49`; rename + delete + browse operational, export + import + search pending. See R08 progression amendment above. |
+| R14 | partial | ✅ closed | `WorkflowResult.resumed_from` at `_models.py:484` + engine propagation at `_engine.py:254-429` |
+| R17 | partial | ✅ closed | overview `calendar` / `agenda` / `backlog` / `explain` verbs at `_overview.py:109` / `:336` / `:431` / `:509` |
+| R18 | partial | ✅ closed | `next_due` field at `_agenda.py:76` + computation at `:138-158` + test gate `test_agenda_next_due_is_earliest_future_or_today_deadline` |
+| R20 | partial | 🔄 partial (still) | `PROFILE_BUCKET_CREATED` (combines bucket.created + profile.created) + `PROFILE_ACTIVATED` present in `_event.py:83,92`; the 2-into-1 composite is documented and stable but the plan-row vocabulary still differs |
+| R21 | partial | 🔄 partial (still) | `349/.../0007-bindings.toml` has 17/17 `collectible_invoice` bindings; `payable_invoice` (intracomunitarias adquisiciones) bindings absent |
+| R24 | partial | 🔄 partial (improved) | `reconcile-from-justificante` shipped at `_modelo.py:4834`; M036 `alta` / `modificacion` / `baja` lifecycle verbs still absent — these are the open S2349 work |
+
+R02 / R03 / R05 / R14 / R17 / R18 are NOW honest closures and the
+ADR's apex R-row ledger should reflect that on its next consolidation
+pass. R20 / R21 / R24 retain their partial qualifier per the
+specific gaps named above.
+
+The 2026-06-03 ground-truth audit is the methodology this amendment
+applies: per-R-row file:line evidence cited from a fresh-context
+read of HEAD, not from the prior closure-claim record.
