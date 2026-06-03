@@ -21,7 +21,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import NoReturn
 
-from ....adapters.persistence.storage.master_key._master_key import looks_like_real_tax_id
+from ....adapters.persistence.storage.master_key import looks_like_real_tax_id
 from ....core.config import SecretStoreBackend, load_settings
 from ....core.i18n import tr
 from ....core.time import now
@@ -73,7 +73,7 @@ def resolve_active_tax_id(profile_id: str) -> str:
     `check_unsecured_mode_safety`.
     """
     from ....application.user_profile import build_lifecycle_service, fact_value
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
+    from ....application.workflow import read_profile_bucket_by_id
 
     pointer = read_profile_bucket_by_id(profile_id)
     if pointer is None:

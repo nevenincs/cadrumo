@@ -33,7 +33,7 @@ from typing import Final
 
 from pydantic import BaseModel, Field
 
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.parsing import parse_bool as _parse_bool
 from .....core.parsing import parse_date as _parse_date_canonical
 from ._errors import SedeError, SedeFailureMode

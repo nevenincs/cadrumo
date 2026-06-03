@@ -23,10 +23,8 @@ from ..application.user_profile import (
     profile_storage_session,
     set_active_field,
 )
-from ..application.wizard._catalogue import WIZARD_FLOWS
-from ..application.wizard._errors import WizardValidationError
-from ..application.wizard._widgets import validate_widget_answer
-from ..application.workflow._persistence import workflow_state_repository
+from ..application.wizard import WIZARD_FLOWS, WizardValidationError, validate_widget_answer
+from ..application.workflow import workflow_state_repository
 from ..core import resolve_active_bucket_id
 from ..core.i18n import tr
 from ..core.redaction import redact_for_cli_output
@@ -86,7 +84,7 @@ def _resolve_target_profile(profile: str | None):
     UUID) resolves directly. Returns a ``ProfileBucketPointer`` carrying
     the immutable UUID ``bucket_id`` and the operator ``label``.
     """
-    from ..application.workflow._profile_bucket_scan import (
+    from ..application.workflow import (
         read_profile_bucket,
         read_profile_bucket_by_id,
     )

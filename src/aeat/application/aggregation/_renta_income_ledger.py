@@ -37,10 +37,10 @@ from ...domain.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepository,
+    TransactionCatalogueRepositoryProtocol,
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import is_non_eur_without_conversion

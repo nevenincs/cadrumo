@@ -18,16 +18,22 @@ class UseType(StrEnum):
     storage entity. Each member maps to one of three LIRPF treatments:
 
     * **Rendimiento del capital inmobiliario** (Ley 35/2006 IRPF
-      Arts. 22-24): ``VIVIENDA_ARRENDADA``, ``LOCAL_COMERCIAL``.
+      Arts. 22-24): ``VIVIENDA_ARRENDADA``, ``LOCAL_COMERCIAL``,
+      ``VIVIENDA_TURISTICA``.
     * **Imputación de rentas inmobiliarias** (Ley 35/2006 IRPF
       Art. 85): ``OTRO_INMUEBLE_NO_AFECTO``, ``VIVIENDA_DESOCUPADA``.
     * **No tax effect**: ``VIVIENDA_HABITUAL`` (excluded by Art. 85
       first paragraph).
 
     Members:
-        VIVIENDA_ARRENDADA: Dwelling let to a tenant; feeds rental
-            income, expense, amortization, and reduction aggregates
-            via the per-contract register.
+        VIVIENDA_ARRENDADA: Dwelling let to a tenant on a long-term /
+            permanent-residence contract; feeds rental income,
+            expense, amortization, and reduction aggregates via the
+            per-contract register. ONLY this use type is eligible for
+            the LIRPF Art. 23.2 reducción (the article applies to
+            ``arrendamientos de bienes inmuebles destinados a
+            vivienda``, which the second paragraph clarifies excludes
+            touristic / temporary rentals).
         VIVIENDA_HABITUAL: Contribuyente's own habitual residence —
             no income line; excluded from imputación.
         OTRO_INMUEBLE_NO_AFECTO: Non-let, non-habitual urban
@@ -41,6 +47,19 @@ class UseType(StrEnum):
             treatment as OTRO_INMUEBLE_NO_AFECTO; flagged distinctly
             for downstream IBI recargo modelling per Ley 12/2023
             disposición final tercera.
+        VIVIENDA_TURISTICA: Dwelling let on a touristic / temporary
+            basis (rental by season, by night, via short-stay
+            platforms). Feeds the per-contract rendimiento aggregate
+            on the same surface as VIVIENDA_ARRENDADA but is NOT
+            eligible for the LIRPF Art. 23.2 reducción: the second
+            paragraph of Art. 23.2 excludes arrendamientos "que se
+            destinen a temporada o uso turístico". Distinct enum slot
+            (rather than overloading LOCAL_COMERCIAL or letting the
+            operator mark VIVIENDA_ARRENDADA) so the reducción-gate
+            and casilla 0065 clave routing can refuse the reducción
+            unambiguously. Authority: Ley 35/2006 IRPF Art. 23.2
+            (second paragraph) + R9-ROBERTO testimonial under
+            cross-domain-continuity plan W02.P11.S363.
     """
 
     VIVIENDA_ARRENDADA = "VIVIENDA_ARRENDADA"
@@ -48,6 +67,7 @@ class UseType(StrEnum):
     OTRO_INMUEBLE_NO_AFECTO = "OTRO_INMUEBLE_NO_AFECTO"
     LOCAL_COMERCIAL = "LOCAL_COMERCIAL"
     VIVIENDA_DESOCUPADA = "VIVIENDA_DESOCUPADA"
+    VIVIENDA_TURISTICA = "VIVIENDA_TURISTICA"
 
 
 class ExpenseCategory(StrEnum):

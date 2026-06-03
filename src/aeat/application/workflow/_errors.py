@@ -11,7 +11,6 @@ exception-on-abort behaviour opt in by inspecting the result themselves.
 from __future__ import annotations
 
 from ...core.errors import AeatError, CoreValidationError
-from ...core.errors import NoActiveProfileError as NoActiveProfileError
 from ._models import WorkflowAbortReason
 
 

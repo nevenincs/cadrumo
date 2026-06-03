@@ -328,7 +328,13 @@ def __getattr__(name: str):
         from . import _censo_sync
 
         return getattr(_censo_sync, name)
-    if name in ("facts_to_values", "projection_for_taxpayer", "record_to_values", "snapshot_to_values"):
+    if name in (
+        "facts_to_values",
+        "projection_for_taxpayer",
+        "record_to_path_values",
+        "record_to_values",
+        "snapshot_to_values",
+    ):
         from . import _projections
 
         return getattr(_projections, name)
@@ -342,6 +348,7 @@ def __getattr__(name: str):
         return ProfileValidationService
     if name in (
         "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
+        "UnsupportedBundleSchemaVersionError",
         "deserialize_profile_bundle",
         "serialize_profile_bundle",
     ):
@@ -380,6 +387,10 @@ def __getattr__(name: str):
         from . import _repository
 
         return getattr(_repository, name)
+    if name == "ProfileRepository":
+        from ._profile_repository import ProfileRepository
+
+        return ProfileRepository
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -411,6 +422,7 @@ __all__ = [
     "ProfilePreflightReport",
     "ProfilePreflightRequirement",
     "ProfilePreflightService",
+    "ProfileRepository",
     "ProfileSnapshot",
     "ProfileSnapshotRequest",
     "ProfileStaleCheckReport",
@@ -420,6 +432,7 @@ __all__ = [
     "RegisterProfileCommand",
     "RemoveProfileCommand",
     "RenameProfileCommand",
+    "UnsupportedBundleSchemaVersionError",
     "UserProfileFactValue",
     "UserProfileLifecycleRepository",
     "UserProfileSnapshotRepository",
@@ -433,6 +446,7 @@ __all__ = [
     "profile_storage_session",
     "projection_for_taxpayer",
     "read_active_profile",
+    "record_to_path_values",
     "record_to_values",
     "register_active_profile",
     "remove_active_profile",

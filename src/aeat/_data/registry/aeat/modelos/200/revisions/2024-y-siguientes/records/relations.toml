@@ -33,3 +33,40 @@ target_periods = ["0A"]
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-25"]
 source_refs = ["aeat-modelo-200-manual-2024"]
+
+# Cross-year art.13 dotaciones-deterioro stock carry — one relation per
+# condition-state. The prior ejercicio's saldo final pendiente de integración en
+# períodos futuros (01498 NO han cumplido condiciones / 01499 SÍ han cumplido)
+# is this ejercicio's saldo inicial a principio del período (01494 / 01495),
+# carried SEPARATELY because only the cumplido stock may be integrated. These
+# relations register the previous_filing target bindings so the prefill resolves
+# the prior-year saldo final from the observation store (LIS art. 13).
+[[revisions."2024-y-siguientes".relations]]
+id = "modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "200"
+source_revision_selector = { filing_year_delta = -1 }
+source_output = "01498"
+target_binding = "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores"
+period_alignment = { source_period = "0A", target_period = "0A", filing_year_delta = -1 }
+source_periods = ["0A"]
+target_periods = ["0A"]
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-13"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".relations]]
+id = "modelo-200-2024-rel-self-dotaciones-deterioro-cumplido-anterior"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "200"
+source_revision_selector = { filing_year_delta = -1 }
+source_output = "01499"
+target_binding = "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores"
+period_alignment = { source_period = "0A", target_period = "0A", filing_year_delta = -1 }
+source_periods = ["0A"]
+target_periods = ["0A"]
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-13"]
+source_refs = ["aeat-modelo-200-manual-2024"]

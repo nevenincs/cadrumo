@@ -85,6 +85,21 @@ def test_secure_object_registry_names_application_namespaces() -> None:
     assert repair.object_key_grammar == "{decision_id_sha256_hex}"
 
 
+def test_secure_object_registry_names_live_m036_declaration_namespace() -> None:
+    """The M036 declarative-recording verbs (#629 W85.P414.S2349)
+    persist operator declarations through this namespace. Authority:
+    2026-06-03-m036-lifecycle-verbs-research.
+    """
+    from ._namespace_registry import LIVE_M036_DECLARATION_NAMESPACE
+
+    declaration = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("live_m036_declaration")
+
+    assert declaration == LIVE_M036_DECLARATION_NAMESPACE
+    assert declaration.namespace == "aeat.application.modelo.m036_declaration"
+    assert declaration.sensitivity is SensitivityClass.IDENTITY
+    assert declaration.object_key_grammar == "m036-declaration:{bucket_id}:{declaration_id}"
+
+
 def test_singleton_object_keys_are_named_registry_values() -> None:
     workflow_state = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("workflow_state")
     invoice_catalogue = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("invoice_catalogue")

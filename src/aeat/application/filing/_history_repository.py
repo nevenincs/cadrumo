@@ -16,7 +16,7 @@ from ...adapters.persistence.storage import (
     APPLICATION_FILING_HISTORY_NAMESPACE,
     SensitivityClass,
 )
-from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ._history_models import ModeloHistory

@@ -10,12 +10,14 @@ import asyncio
 import typing
 from collections.abc import Mapping
 from datetime import datetime
+
+from ....core.time import now as _now
 from pathlib import Path
 
 import click
 import typer
 
-from ....application.auth._catalogue import known_auth_provider_ids as _known_auth_provider_ids
+from ....application.auth import known_auth_provider_ids as _known_auth_provider_ids
 from ....application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES as _CONFIG_RESET_SCOPE_CLI_VALUES
 from ....application.config_reset import parse_config_reset_scope as _parse_config_reset_scope
 from ....application.diagnostics import (
@@ -38,8 +40,8 @@ from ....application.diagnostics import (
 )
 from ....application.operator_surface import build_help_document as _build_help_document
 from ....application.operator_surface import render_help_text as _render_help_text
-from ....application.wizard._commands import build_wizard_command as _build_wizard_command
-from ....application.workflow._profile_bucket_scan import read_profile_bucket as _read_profile_bucket
+from ....application.wizard import build_wizard_command as _build_wizard_command
+from ....application.workflow import read_profile_bucket as _read_profile_bucket
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.errors import AeatError as _AeatError
 from ....core.external_constants import OutputLanguage
@@ -284,7 +286,7 @@ def repair_reset_state(
     ),
 ) -> None:
     """Drop the unreadable workflow-state envelope and emit a reset event."""
-    from ....application.workflow._persistence import fingerprint_workflow_state, reset_workflow_state
+    from ....application.workflow import fingerprint_workflow_state, reset_workflow_state
     from .._config_payloads import RepairResetStateResult, WorkflowFingerprintPayload
 
     if not dry_run and not yes:
@@ -374,7 +376,7 @@ def repair_profile(
     yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.yes_help")),
 ) -> None:
     """Inspect profile health or safely repair a degraded active-profile pointer/manifest."""
-    from ....application.workflow._profile_health import (
+    from ....application.workflow import (
         repair_active_profile_manifest_status,
         repair_active_profile_pointer,
     )
@@ -708,7 +710,7 @@ app.add_typer(repair_app, name="repair")
 
 
 def _profile_state():
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....application.workflow import workflow_state_repository
 
     return workflow_state_repository()
 
@@ -738,7 +740,7 @@ def _resolve_profile_by_label(name: str):
 
 def _resolve_active_profile_pointer():
     """Resolve the active profile (by UUID) to its bucket pointer or ``None``."""
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
+    from ....application.workflow import read_profile_bucket_by_id
 
     active = _resolve_active_bucket_id()
     if active is None:
@@ -748,7 +750,7 @@ def _resolve_active_profile_pointer():
 
 def _validate_bundle_schema_version(bundle: object) -> None:
     """Raise UnsupportedBundleSchemaVersionError if bundle version is not supported."""
-    from ....application.user_profile._bundle import (
+    from ....application.user_profile import (
         SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
         UnsupportedBundleSchemaVersionError,
     )
@@ -790,7 +792,7 @@ def _emit_profile_lifecycle_event(
         derive_bucket_event_id,
     )
 
-    occurred_at = datetime.now(UTC).replace(microsecond=0)
+    occurred_at = _now().replace(microsecond=0)
     actor = "operator"
     event_id = derive_bucket_event_id(
         bucket_id=bucket_id,
@@ -838,7 +840,7 @@ def _atomic_create_profile(*, display_name, facts, profile_id: str | None = None
     and restored if the surrounding span fails, closing the window the
     repository's own rollback cannot see.
     """
-    from ....application.user_profile._orchestration import (
+    from ....application.user_profile import (
         profile_create_storage_span,
         register_active_profile,
     )
@@ -883,7 +885,7 @@ def config_list(
     set without unlocking any bucket.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.workflow._profile_bucket_scan import list_profile_buckets
+    from ....application.workflow import list_profile_buckets
     from .._config_payloads import ConfigListResult, ProfilePointerPayload
 
     active = _resolve_active_bucket_id()
@@ -924,7 +926,7 @@ def config_profile_switch(
 ) -> None:
     """Select an existing profile as the active profile."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile._orchestration import select_profile_with_lifecycle_span
+    from ....application.user_profile import select_profile_with_lifecycle_span
     from ....domain.user_profile import ProfileNotFoundError
 
     pointer = _read_profile_bucket(name)
@@ -1037,7 +1039,7 @@ def _emit_profile_record_unreadable(
 def _read_profile_record(*, profile_id: str, bucket_id: str):
     """Read a profile record under a bucket session scoped to that profile."""
     from ....adapters.persistence.storage import has_active_bucket_session
-    from ....application.user_profile._orchestration import build_lifecycle_service, profile_storage_session
+    from ....application.user_profile import build_lifecycle_service, profile_storage_session
     from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 
     if bucket_id == _resolve_active_bucket_id() and has_active_bucket_session():
@@ -1070,7 +1072,7 @@ def config_profile_show(
     """
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile import ProfileValidationService
-    from ....application.user_profile._projections import record_to_path_values
+    from ....application.user_profile import record_to_path_values
     from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
 
     if name is not None:
@@ -1189,7 +1191,7 @@ def config_profile_preflight(
     field is missing so operators discover the gap via the shell exit status.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile._preflight import ProfilePreflightService
+    from ....application.user_profile import ProfilePreflightService
     from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
 
     pointer = _resolve_active_profile_pointer()
@@ -1341,7 +1343,7 @@ def config_profile_delete(
 ) -> None:
     """Tombstone a profile. Immutable filing snapshots are retained."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile._orchestration import delete_profile_with_lifecycle_span
+    from ....application.user_profile import delete_profile_with_lifecycle_span
     from ....domain.user_profile import ProfileNotFoundError
 
     if not confirmed:
@@ -1413,8 +1415,8 @@ def config_profile_duplicate(
     a crash; the atomic provisioner rolls every write back instead.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile._orchestration import ProfileAlreadyRegisteredError
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket as _read_profile_bucket
+    from ....application.user_profile import ProfileAlreadyRegisteredError
+    from ....application.workflow import read_profile_bucket as _read_profile_bucket
     from ....domain.user_profile import ProfileNotFoundError
 
     source_pointer = _resolve_profile_by_label(source)
@@ -1476,6 +1478,14 @@ _config_profile_create_callback = profile_app.command(
         "cli.config.profile.create_help",
         default="Initialize a new active profile and config bucket.",
     ),
+    epilog=tr(
+        "cli.config.profile.create_epilog",
+        default=(
+            "Minimal freelancer profile: --entity-type natural_person"
+            " --tax-id <NIF> --irpf-income-categories actividad_economica"
+            " --quiet --accept-defaults"
+        ),
+    ),
 )(_wizard_create_command)
 
 
@@ -1517,7 +1527,7 @@ def config_profile_rename(
     pointer are untouched.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile._orchestration import (
+    from ....application.user_profile import (
         ProfileAlreadyRegisteredError,
         rename_profile,
     )
@@ -1588,9 +1598,9 @@ def config_profile_export(
     symmetric reader and re-provisions the record into a fresh bucket
     via the atomic-create provisioner.
     """
-    from ....application.user_profile._bundle import serialize_profile_bundle
+    from ....application.user_profile import serialize_profile_bundle
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile._orchestration import profile_storage_session
+    from ....application.user_profile import profile_storage_session
     from ....domain.user_profile import ProfileNotFoundError
     from ....domain.user_profile._portable_export import UserProfilePortableExport
 
@@ -1700,20 +1710,16 @@ def config_profile_import(
     still minting its own immutable UUID identity.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile._bundle import (
+    from ....application.user_profile import (
+        ProfileAlreadyRegisteredError,
         UnsupportedBundleSchemaVersionError,
         deserialize_profile_bundle,
-    )
-    from ....application.user_profile._orchestration import (
-        ProfileAlreadyRegisteredError,
         profile_storage_session,
     )
-    from ....application.workflow._profile_bucket_scan import (
+    from ....application.workflow import (
         read_profile_bucket as _read_profile_bucket,
     )
-    from ....application.workflow._profile_bucket_scan import (
-        read_profile_bucket_by_id,
-    )
+    from ....application.workflow import read_profile_bucket_by_id
     from ....domain.user_profile._portable_export import UserProfilePortableExport
 
     if not path.is_file():
@@ -1829,7 +1835,7 @@ def config_profile_logout(
 ) -> None:
     """Clear the active-profile pointer so subsequent verbs refuse without an explicit switch."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile._orchestration import logout_active_profile
+    from ....application.user_profile import logout_active_profile
 
     before = logout_active_profile()
     from .._config_payloads import ConfigProfileLogoutResult
@@ -1864,11 +1870,11 @@ def config_status(
     _activate_subcommand_output_language(ctx, output_language)
     from pydantic import ValidationError
 
-    from ....application.user_profile._projections import record_to_path_values
-    from ....application.wizard._persistence import project_answers
-    from ....application.workflow._persistence import workflow_state_repository
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
-    from ....application.workflow._profile_health import assess_active_profile_health
+    from ....application.user_profile import record_to_path_values
+    from ....application.wizard import project_answers
+    from ....application.workflow import workflow_state_repository
+    from ....application.workflow import read_profile_bucket_by_id
+    from ....application.workflow import assess_active_profile_health
     from .._config_payloads import ConfigStatusResult
 
     profile_health = assess_active_profile_health()
@@ -2094,7 +2100,7 @@ def auth_configure(
     """Configure the active authentication provider."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import AuthProviderReservedError, configure_operator_auth
-    from ....application.auth._operator import (
+    from ....application.auth import (
         AuthConfigureDanglingActiveProfileError,
         AuthConfigureNoActiveBucketError,
     )
@@ -2230,7 +2236,7 @@ def auth_login(
     """Acquire or verify a live AEAT session through the configured provider."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import AuthProviderReservedError, login_operator_auth
-    from ....application.auth._operator import (
+    from ....application.auth import (
         AuthLoginNotEnabledError,
         AuthLoginPreconditionError,
     )
@@ -2508,7 +2514,7 @@ def apoderado_scopes_list(
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
     """List all available representative scopes in the vocabulary."""
-    from ....application.auth._apoderado import ApoderadoService
+    from ....application.auth import ApoderadoService
     from .._config_payloads import ApoderadoScopesListResult
 
     svc = ApoderadoService()
@@ -2531,7 +2537,7 @@ def apoderado_status(
     ),
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth._apoderado import ApoderadoService
+    from ....application.auth import ApoderadoService
 
     pointer = _resolve_active_profile_pointer()
     if pointer is None:
@@ -2580,8 +2586,8 @@ def apoderado_configure(
     ),
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth._apoderado import ApoderadoService
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....application.auth import ApoderadoService
+    from ....application.workflow import workflow_state_repository
 
     workflow_state_repository().load()
     pointer = _resolve_active_profile_pointer()
@@ -2622,8 +2628,8 @@ def apoderado_clear(
     ),
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth._apoderado import ApoderadoService
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....application.auth import ApoderadoService
+    from ....application.workflow import workflow_state_repository
 
     workflow_state_repository().load()
     pointer = _resolve_active_profile_pointer()
@@ -2656,8 +2662,8 @@ def apoderado_check(
     ),
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth._apoderado import ApoderadoLiveCheckUnavailableError, ApoderadoService
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....application.auth import ApoderadoLiveCheckUnavailableError, ApoderadoService
+    from ....application.workflow import workflow_state_repository
     from ....core.errors import resolve_error_message
 
     workflow_state_repository().load()

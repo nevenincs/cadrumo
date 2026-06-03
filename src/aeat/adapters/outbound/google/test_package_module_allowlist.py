@@ -25,6 +25,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "_api.py",
         "_calc_sheets_apply.py",
         "_calc_sheets_pull.py",
+        "_document_link_resolver.py",  # follow-up S03: scope-compatible Drive doclink resolution
         "_errors.py",
         "_oauth_flow.py",
         "_profile_binding.py",
@@ -40,6 +41,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "test_calc_sheets_row_set_headers.py",
         "test_column_index_to_letters.py",
         "test_compute_from_pull.py",
+        "test_document_link_resolver.py",  # follow-up S03: doclink resolver scope-refusal + parse contract
         "test_grid_resize.py",
         "test_oauth_flow.py",  # S132: OAuth local-server failures stay inside GoogleAuthError
         "test_oauth_live.py",

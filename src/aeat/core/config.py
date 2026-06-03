@@ -1275,6 +1275,7 @@ class Settings(BaseSettings):
         "aeat_status_browser_trace_dir",
         "aeat_justificantes_dir",
         "aeat_filing_history_dir",
+        "aeat_wallet_diagnostic_dump_dir",
         mode="after",
     )
     @classmethod

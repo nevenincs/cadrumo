@@ -29,7 +29,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...adapters.outbound.aeat.sede._declarations import Declaracion
+from ...adapters.outbound.aeat.sede import Declaracion
 from ...adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings, load_settings

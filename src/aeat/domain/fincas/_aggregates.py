@@ -226,9 +226,14 @@ def compute_finca_aggregates(
     return aggregates
 
 
+_RENDIMIENTO_ELIGIBLE_USE_TYPES: frozenset[UseType] = frozenset(
+    {UseType.VIVIENDA_ARRENDADA, UseType.LOCAL_COMERCIAL, UseType.VIVIENDA_TURISTICA},
+)
+
+
 def _finca_is_active_for_period(finca: Finca, period_year: int) -> bool:
     """Return True if the finca was held during ``period_year`` and has an arrendable use type."""
-    if finca.use_type not in {UseType.VIVIENDA_ARRENDADA, UseType.LOCAL_COMERCIAL}:
+    if finca.use_type not in _RENDIMIENTO_ELIGIBLE_USE_TYPES:
         return False
     if finca.acquisition_date.year > period_year:
         return False

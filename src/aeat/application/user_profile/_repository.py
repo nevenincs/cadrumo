@@ -31,7 +31,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage import (
     Envelope,
 )
-from ...adapters.persistence.storage.bucket._errors import BucketValidationError
+from ...adapters.persistence.storage.bucket import BucketValidationError
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.time import now

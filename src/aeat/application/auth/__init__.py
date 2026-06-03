@@ -167,6 +167,13 @@ def describe_provider_operator_impact(description: AuthProviderDescription) -> s
     return tr("application.auth.provider_impact.generic_ready", label=description.label)
 
 
+from ._apoderado import (
+    ApoderadoConfiguration,
+    ApoderadoConfigurationNotSetError,
+    ApoderadoLiveCheckUnavailableError,
+    ApoderadoService,
+    ApoderadoStatus,
+)
 from ._acquisition_lock import (
     AuthAcquisitionLockedError,
     AuthAcquisitionLockRecord,
@@ -193,7 +200,10 @@ from ._models import AuthState
 from ._operator import (
     AuthClearResult,
     AuthConfigureDanglingActiveProfileError,
+    AuthConfigureNoActiveBucketError,
     AuthConfigureResult,
+    AuthLoginNotEnabledError,
+    AuthLoginPreconditionError,
     AuthLoginResult,
     AuthProviderReservedError,
     AuthProvidersReport,
@@ -226,17 +236,25 @@ from ._sessions import (
 __all__ = [
     "AUTH_DIAGNOSTIC_PHONE_STATES",
     "AUTH_PROVIDER_CATALOGUE",
+    "ApoderadoConfiguration",
+    "ApoderadoConfigurationNotSetError",
+    "ApoderadoLiveCheckUnavailableError",
+    "ApoderadoService",
+    "ApoderadoStatus",
     "AuthAcquisitionLockRecord",
     "AuthAcquisitionLockState",
     "AuthAcquisitionLockStatus",
     "AuthAcquisitionLockedError",
     "AuthClearResult",
     "AuthConfigureDanglingActiveProfileError",
+    "AuthConfigureNoActiveBucketError",
     "AuthConfigureResult",
     "AuthDiagnosticDetail",
     "AuthDiagnosticListReport",
     "AuthDiagnosticReportResult",
     "AuthDiagnosticSummary",
+    "AuthLoginNotEnabledError",
+    "AuthLoginPreconditionError",
     "AuthLoginResult",
     "AuthProfileIdentityMismatchError",
     "AuthProvider",

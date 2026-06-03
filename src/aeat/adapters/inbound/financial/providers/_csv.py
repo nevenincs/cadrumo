@@ -18,7 +18,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.config import load_settings
 from .....core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from .....core.logging import get_logger

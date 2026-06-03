@@ -404,3 +404,67 @@ class TestPriorityOrder:
             period_year=2025,
         )
         assert result.tier is ReduccionTier.TIER_70_PUBLIC_ADMIN
+
+
+def _finca_with_use_type(use_type: UseType) -> Finca:
+    """Construct a baseline :class:`Finca` with the requested ``use_type`` substituted in."""
+    return Finca(
+        identifier="use-type-test",
+        address="Calle Use-Type 1",
+        valor_catastral_total=Decimal("100000.00"),
+        valor_catastral_construccion=Decimal("70000.00"),
+        coste_adquisicion=Decimal("200000.00"),
+        coste_adquisicion_construccion=Decimal("140000.00"),
+        acquisition_date=date(2010, 1, 1),
+        use_type=use_type,
+        is_stressed_area=False,
+    )
+
+
+class TestUseTypeReduccionGate:
+    """LIRPF art. 23.2 reducción applies only to VIVIENDA_ARRENDADA use type.
+
+    Authority: cross-domain-continuity plan W02.P11.S363
+    (R9-ROBERTO-HIGH). The reducción attaches to ``arrendamientos
+    destinados a vivienda permanente``; the second paragraph of art.
+    23.2 carves out touristic / temporary rentals, and the use-type
+    mapping further excludes commercial premises and non-rented use
+    types.
+    """
+
+    @pytest.mark.parametrize(
+        "ineligible_use_type",
+        [
+            UseType.VIVIENDA_TURISTICA,
+            UseType.LOCAL_COMERCIAL,
+            UseType.VIVIENDA_HABITUAL,
+            UseType.OTRO_INMUEBLE_NO_AFECTO,
+            UseType.VIVIENDA_DESOCUPADA,
+        ],
+    )
+    def test_resolve_reduccion_refuses_non_arrendada_use_types(
+        self, ineligible_use_type: UseType
+    ) -> None:
+        """Any use_type other than VIVIENDA_ARRENDADA refuses the reducción."""
+        with pytest.raises(TierResolutionError, match=r"art\. 23\.2 LIRPF"):
+            resolve_reduccion(
+                _contract(celebration=date(2024, 6, 1)),
+                _finca_with_use_type(ineligible_use_type),
+                period_year=2025,
+            )
+
+    def test_resolve_reduccion_accepts_arrendada(self) -> None:
+        """VIVIENDA_ARRENDADA is the sole eligible use_type and dispatches normally."""
+        result = resolve_reduccion(
+            _contract(celebration=date(2024, 6, 1)),
+            _finca_with_use_type(UseType.VIVIENDA_ARRENDADA),
+            period_year=2025,
+        )
+        # Default contract has no stressed-area / tier-90 qualifier and
+        # no rehab; falls through to the TIER_50 default. Either way,
+        # the call must return rather than raise.
+        assert result.tier is ReduccionTier.TIER_50
+
+    def test_vivienda_turistica_is_member_of_use_type(self) -> None:
+        """The new VIVIENDA_TURISTICA enum slot exists and is value-stable."""
+        assert UseType.VIVIENDA_TURISTICA.value == "VIVIENDA_TURISTICA"

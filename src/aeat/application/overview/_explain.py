@@ -29,8 +29,12 @@ from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )
-from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
-from ...domain.deadlines._errors import DeadlineValidationError, NoDeadlineWindowsError
+from ...domain.deadlines import (
+    DeadlineEngine,
+    DeadlineValidationError,
+    NoDeadlineWindowsError,
+    TaxpayerProfile,
+)
 from ._errors import OverviewExplainError
 
 _ProfileFactValue = str | bool | int

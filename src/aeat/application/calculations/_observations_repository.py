@@ -37,7 +37,7 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...core.time import now
 from ...domain.calculations.registry import RegistryModeloObservation
 from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision

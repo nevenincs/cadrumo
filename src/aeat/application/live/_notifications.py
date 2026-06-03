@@ -39,10 +39,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...adapters.outbound.aeat.sede._notifications import (
-    NotificationsSnapshot,
-    RemoteNotification,
-)
+from ...adapters.outbound.aeat.sede import NotificationsSnapshot, RemoteNotification
 from ...adapters.persistence.storage import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings, load_settings

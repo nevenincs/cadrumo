@@ -33,7 +33,7 @@ from ._profile_censo_payloads import (
 
 
 def _active_pointer() -> tuple[ProfileName, ProfileName]:
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
+    from ....application.workflow import read_profile_bucket_by_id
     from ....core import resolve_active_bucket_id
 
     active = resolve_active_bucket_id()

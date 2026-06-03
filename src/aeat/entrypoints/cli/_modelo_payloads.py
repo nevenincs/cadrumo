@@ -31,7 +31,7 @@ from ...domain.modelos._ids import (
 from ._schemas import OutputSchema, register_schema
 
 if TYPE_CHECKING:
-    from ...application.modelo._export import ModeloExportResult as _AppModeloExportResult
+    from ...application.modelo import ModeloExportResult as _AppModeloExportResult
 
 # ---------------------------------------------------------------------------
 # Shared sub-models (not registered — used as nested types)

@@ -96,7 +96,7 @@ from ._common import _parse_iso_date, _profile_to_taxpayer, activate_subcommand_
 _log = get_logger(__name__)
 
 if TYPE_CHECKING:
-    from ...application.modelo._reconcile import ModeloReconciliationReport
+    from ...application.modelo import ModeloReconciliationReport
     from ...domain.calculations.registry import CasillaObservation, ModeloDefinition, ModeloRevision
     from ._modelo_payloads import (
         CalculationRevisionPayload,
@@ -168,6 +168,34 @@ app = typer.Typer(
 def _bad_parameter_from_error(exc: BaseException) -> typer.BadParameter:
     """Render registered domain errors before crossing the Typer boundary."""
     return typer.BadParameter(resolve_error_message(exc))
+
+
+def _calculation_revision_not_found_bad_parameter(
+    calculation_revision_id: str, exc: CalculationRevisionNotFoundError
+) -> typer.BadParameter:
+    """Render a not-found calc-revision id, hinting when it is really a work-unit id.
+
+    ``work verify`` and ``work file`` consume a ``calculation_revision_id``,
+    while ``work calculate`` consumes a ``work_unit_id`` — both are 64-character
+    SHA-256 digests, so an operator's first instinct (reuse the id from ``work
+    create``) lands a *work-unit* id where a *calculation-revision* id is
+    required and fails with a bare not-found. When the supplied id resolves to a
+    real work unit, name the mismatch and the verb that mints the
+    calculation-revision id, so the error is instructive rather than a dead end.
+    A lookup failure here falls back to the plain rendered error — the hint is
+    best-effort, never masking. (``modelo export`` already takes a
+    ``work_unit_id``, so it has no work-unit/calc-revision confusion to hint.)
+    """
+    stripped = calculation_revision_id.strip()
+    try:
+        # get_work_unit returns the WorkUnit or raises WorkUnitNotFoundError;
+        # a successful return means the operator passed a work-unit id here.
+        get_work_unit(stripped)
+    except Exception:
+        return _bad_parameter_from_error(exc)
+    return typer.BadParameter(
+        tr("cli.app.modelo.work.id_is_work_unit_not_calc_revision", work_unit_id=stripped)
+    )
 
 
 def _resolve_default_actor() -> str:
@@ -337,9 +365,10 @@ def modelo_readiness(
         f"ledger_issues\t{len(report.ledger_issues)}",
         # ``ready`` means the profile/source preflight passed — NOT that the AEAT
         # filing-obligation window is open. Once the revision is verified-complete
-        # the local finish line is ``work export`` (a fichero-BOE artefact); the
-        # optional internal ``work file`` step needs an open obligation window.
-        "finish_line\texport verified-complete revision via 'aeat app modelo work export' (local finish line)",
+        # the local finish line is ``modelo export`` (a fichero-BOE artefact; a
+        # sibling of ``work``, not a ``work`` subcommand); the optional internal
+        # ``work file`` step needs an open obligation window.
+        "finish_line\texport verified-complete revision via 'aeat app modelo export' (local finish line)",
     ]
     from ._common import _emit_envelope
     from ._modelo_payloads import (
@@ -394,9 +423,10 @@ def modelo_readiness(
         f"ledger_issues\t{len(report.ledger_issues)}",
         # ``ready`` means the profile/source preflight passed — NOT that the AEAT
         # filing-obligation window is open. Once the revision is verified-complete
-        # the local finish line is ``work export`` (a fichero-BOE artefact); the
-        # optional internal ``work file`` step needs an open obligation window.
-        "finish_line\texport verified-complete revision via 'aeat app modelo work export' (local finish line)",
+        # the local finish line is ``modelo export`` (a fichero-BOE artefact; a
+        # sibling of ``work``, not a ``work`` subcommand); the optional internal
+        # ``work file`` step needs an open obligation window.
+        "finish_line\texport verified-complete revision via 'aeat app modelo export' (local finish line)",
     ]
     for requirement in report.missing:
         lines.append(f"{requirement.section_key}.{requirement.field_key}\t{requirement.selector}")
@@ -606,7 +636,7 @@ def _profile_resolved_binding_ids(report: _BindingReportLike) -> frozenset[str]:
     filing_year = getattr(report, "filing_year", None)
     if filing_year is None:
         return frozenset()
-    from ...application.modelo._binding_readiness import profile_resolvable_binding_ids
+    from ...application.modelo import profile_resolvable_binding_ids
     from ...domain.user_profile import ProfileNotFoundError
 
     try:
@@ -911,15 +941,16 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
         kv_pairs: dict[str, str | Decimal] = {
             k: Decimal(v) if k in _ROW_DECIMAL_FIELDS else v for k, v in kv_raw.items()
         }
-        # CAST-RATIONALE-WIRE-PAYLOAD-MODELO-ROW: kv_pairs is dict[str, str|Decimal]; the
-        # splat matches each row dataclass's fields after decimal coercion at the parse
-        # boundary. type: ignore[arg-type] documents the splat-to-field-types narrowing.
+        # kv_pairs is dict[str, str|Decimal]; the splat matches each row dataclass's
+        # fields after decimal coercion at the parse boundary. type: ignore[arg-type]
+        # documents the splat-to-field-types narrowing; per-splat CAST-RATIONALE token
+        # sits inline on each return below for the W26.P59 marker-count gate.
         if row_type == "miembro":
-            return Modelo184MemberRow(row_type="miembro", **kv_pairs)  # type: ignore[arg-type]
+            return Modelo184MemberRow(row_type="miembro", **kv_pairs)  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-MODELO-ROW-SPLAT  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO-ROW-SPLAT
         elif row_type == "vinculada":
-            return Modelo232VinculadaRow(row_type="vinculada", **kv_pairs)  # type: ignore[arg-type]
+            return Modelo232VinculadaRow(row_type="vinculada", **kv_pairs)  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-MODELO-ROW-SPLAT  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO-ROW-SPLAT
         elif row_type == "operador":
-            row_m349 = Modelo349OperadorRow(row_type="operador", **kv_pairs)  # type: ignore[arg-type]
+            row_m349 = Modelo349OperadorRow(row_type="operador", **kv_pairs)  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-MODELO-ROW-SPLAT  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO-ROW-SPLAT
             # NIF format check is advisory at parse time — invalid format raises BadParameter.
             nif = str(kv_pairs.get("nif_comunitario", ""))
             pais = str(kv_pairs.get("codigo_pais", ""))
@@ -939,7 +970,7 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
             return row_m349
         else:
             # Same splat-to-field-types narrowing rationale as the rows above.
-            return Modelo347ContraparteRow(row_type="contraparte", **kv_pairs)  # type: ignore[arg-type]
+            return Modelo347ContraparteRow(row_type="contraparte", **kv_pairs)  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-MODELO-ROW-SPLAT  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO-ROW-SPLAT
     except typer.BadParameter:
         raise
     except (ValidationError, TypeError, ValueError, ArithmeticError) as exc:
@@ -1038,7 +1069,12 @@ def bindings_list(
     so the reported binding ids match the calculation. ``--missing``
     filters to the bindings not yet resolvable from current state: it
     drops constant-valued bindings and any binding the active profile
-    already satisfies.
+    already satisfies. With no active profile nothing is satisfied yet,
+    so every non-constant binding is reported as still missing — the
+    listing then equals the unfiltered one, which is the correct
+    conservative answer rather than a no-op. Prior-filing pulls and
+    ledger aggregations are always reported missing here; ``--missing``
+    does not yet consult a prior filed revision.
     """
     service = _service()
     targets = tuple(str(m.id) for m in service._authority.modelos) if modelo is None else (modelo,)
@@ -1079,6 +1115,14 @@ def bindings_list(
         rows = report.rows
         if missing:
             profile_resolved = _profile_resolved_binding_ids(report)
+            # A ``constant_value`` binding carries its own literal and is always
+            # available, so it is never "missing". No modelo declares one today
+            # (every binding sources from manual_input / previous_filing /
+            # profile / a ledger or operation aggregation), so this clause drops
+            # nothing in the current registry; it is kept because constant_value
+            # is a deliberate source kind in the readiness vocabulary, correct
+            # for the day a registry binding adopts it. The profile-resolved
+            # exclusion is the clause that actually narrows the set today.
             rows = tuple(
                 row for row in rows if row.source != "constant_value" and row.binding_id not in profile_resolved
             )
@@ -2112,8 +2156,7 @@ def work_create(
     # different DEK whenever the substrate binds key material out of band.
     if modelo == "100":
         from ...application.overview import build_filing_obligation_advisories as _build_filing_obligation_advisories
-        from ...application.user_profile import record_to_values
-        from ...application.user_profile._profile_repository import ProfileRepository
+        from ...application.user_profile import ProfileRepository, record_to_values
         from ...core import resolve_active_bucket_id
 
         _bucket = resolve_active_bucket_id()
@@ -3715,8 +3758,9 @@ def work_verify(
             actor=actor or _resolve_default_actor(),
             workflow_profile=workflow_profile,
         )
+    except CalculationRevisionNotFoundError as exc:
+        raise _calculation_revision_not_found_bad_parameter(calculation_revision_id, exc) from exc
     except (
-        CalculationRevisionNotFoundError,
         CalculationRevisionStateError,
         WorkUnitNotFoundError,
     ) as exc:
@@ -3772,8 +3816,9 @@ def work_file(
             workflow_profile=workflow_profile,
             notes=notes,
         )
+    except CalculationRevisionNotFoundError as exc:
+        raise _calculation_revision_not_found_bad_parameter(calculation_revision_id, exc) from exc
     except (
-        CalculationRevisionNotFoundError,
         CalculationRevisionStateError,
         WorkUnitNotFoundError,
     ) as exc:
@@ -4790,7 +4835,7 @@ def modelo_reconcile_verb(
     returns the verdict. The verb is local-only per the app-modelo-shape
     ADR amendment.
     """
-    from ...application.modelo._reconcile import (
+    from ...application.modelo import (
         ModeloReconciliationCommand,
         ModeloReconciliationSourceKind,
         modelo_reconcile,
@@ -4866,7 +4911,7 @@ def modelo_reconcile_from_justificante_verb(
     ],
 ) -> None:
     """Reconcile a work unit against the supplied justificante PDF."""
-    from ...application.modelo._reconcile import (
+    from ...application.modelo import (
         ModeloReconciliationCommand,
         ModeloReconciliationSourceKind,
         modelo_reconcile,
@@ -4939,7 +4984,7 @@ def modelo_export_verb(
 ) -> None:
     """Export a verified-complete or filed modelo revision to disk."""
     from ...application.modelo import ModeloIvaWalletReconciliationBlocked
-    from ...application.modelo._export import (
+    from ...application.modelo import (
         ModeloExportCommand,
         ModeloExportCrossBucketRefusedError,
         ModeloExportNoActiveBucketError,
@@ -5253,7 +5298,7 @@ def modelo_project(
     # > profile fact > verb baseline. ``caller_binding_ids`` covers the
     # caller layer only so the profile resolver still overrides the
     # baseline.
-    from ...application.modelo._profile_binding import resolve_profile_sourced_bindings
+    from ...application.modelo import resolve_profile_sourced_bindings
     from ...core import resolve_active_bucket_id as _resolve_active_bucket_id
 
     _bucket_for_profile = _resolve_active_bucket_id()
@@ -5685,7 +5730,7 @@ def iva_wallet_balance_cmd(
     ],
 ) -> None:
     """Report the aggregated IVA wallet balance without contacting AEAT."""
-    from ...application.calculations._iva_wallet_balance import query_iva_wallet_balance
+    from ...application.calculations import query_iva_wallet_balance
 
     report = query_iva_wallet_balance(as_of_year=as_of_year)
     from ._common import _emit_envelope
@@ -5785,9 +5830,7 @@ def iva_wallet_seed_cmd(
     """Declare a Modelo 303 carry-forward balance for bootstrapping local history."""
     from decimal import Decimal, InvalidOperation
 
-    from ...application.calculations._iva_compensation_history import (
-        seed_iva_compensation_period,
-    )
+    from ...application.calculations import seed_iva_compensation_period
     from ...domain.iva_compensation._errors import IvaCompensationSeedConflictError
 
     if not confirm:
@@ -5998,9 +6041,7 @@ def work_preview_maritime_exemption(
     activate_subcommand_output_language(ctx, output_language)
     _require_active_profile()
 
-    from ...application.calculations._maritime_exemption_service import (
-        resolve_maritime_exemption,
-    )
+    from ...application.calculations import resolve_maritime_exemption
     from ...domain.renta import ProfileCompletenessError
     from ...domain.renta._errors import RentaValidationError
 

@@ -31,7 +31,7 @@ from ._common import _emit_envelope
 
 if TYPE_CHECKING:
     from ...application.auth import LiveAuthPreflightReport
-    from ...application.live._verify import VerifyVerdict
+    from ...application.live import VerifyVerdict
 
 
 def _verify_expected(value: str | None) -> VerifyVerdict | None:
@@ -924,7 +924,7 @@ def notifications_capture(ctx: typer.Context) -> None:
 )
 def notifications_list(ctx: typer.Context) -> None:
     """List persisted DEHú notification snapshots for the active bucket without contacting AEAT."""
-    from ...application.live._notifications import NotificationsService
+    from ...application.live import NotificationsService
 
     bucket_id = _active_bucket_id()
     rows = NotificationsService().list_snapshots(bucket_id=bucket_id)
@@ -961,7 +961,7 @@ def notifications_show(
     ],
 ) -> None:
     """Show one persisted DEHú notification snapshot by id prefix, including all notification rows."""
-    from ...application.live._notifications import NotificationsService
+    from ...application.live import NotificationsService
 
     bucket_id = _active_bucket_id()
     record = NotificationsService().show(bucket_id=bucket_id, snapshot_id=snapshot_id)
@@ -1189,7 +1189,7 @@ def expedientes_capture(
 )
 def expedientes_list(ctx: typer.Context) -> None:
     """List persisted expedientes (AEAT declaration register) snapshots for the active bucket."""
-    from ...application.live._expedientes import ExpedientesService
+    from ...application.live import ExpedientesService
 
     bucket_id = _active_bucket_id()
     rows = ExpedientesService().list_snapshots(bucket_id=bucket_id)
@@ -1228,7 +1228,7 @@ def expedientes_show(
     ],
 ) -> None:
     """Show one expedientes snapshot with all its declaration rows."""
-    from ...application.live._expedientes import ExpedientesService
+    from ...application.live import ExpedientesService
 
     bucket_id = _active_bucket_id()
     record = ExpedientesService().show(bucket_id=bucket_id, snapshot_id=snapshot_id)
@@ -1284,7 +1284,7 @@ def expedientes_show(
 )
 def expedientes_latest(ctx: typer.Context) -> None:
     """Show the most recent expedientes snapshot for the active bucket, or report none."""
-    from ...application.live._expedientes import ExpedientesService
+    from ...application.live import ExpedientesService
 
     bucket_id = _active_bucket_id()
     record = ExpedientesService().latest(bucket_id=bucket_id)
@@ -1368,7 +1368,7 @@ def verify_list(
     ] = None,
 ) -> None:
     """List persisted NIF verification observations, optionally filtered by surface or NIF."""
-    from ...application.live._verify import VerifyService, VerifySurface
+    from ...application.live import VerifyService, VerifySurface
 
     bucket_id = _active_bucket_id()
     resolved_surface: VerifySurface | None = None
@@ -1416,7 +1416,7 @@ def verify_show(
     ],
 ) -> None:
     """Show one persisted NIF verification observation by id prefix."""
-    from ...application.live._verify import VerifyService
+    from ...application.live import VerifyService
 
     bucket_id = _active_bucket_id()
     record = VerifyService().show(bucket_id=bucket_id, observation_id=observation_id)
@@ -1454,7 +1454,7 @@ def verify_latest(
     ],
 ) -> None:
     """Show the most recent verify observation for a given (surface, NIF) pair."""
-    from ...application.live._verify import VerifyService, VerifySurface
+    from ...application.live import VerifyService, VerifySurface
 
     bucket_id = _active_bucket_id()
     try:
@@ -1519,7 +1519,7 @@ def verify_nif_iva(
 ) -> None:
     """Live-check one intra-community NIF-IVA via the AEAT IXVI service and persist the observation."""
     from ...adapters.outbound.aeat.sede._nif_iva_check import NifIvaCheckSedeDriver
-    from ...application.live._verify import VerifyService, VerifySurface
+    from ...application.live import VerifyService, VerifySurface
     from ...core.access_gate import AeatAccessGate
     from ...core.config import load_settings
 
@@ -1573,7 +1573,7 @@ def verify_tgvi(
 ) -> None:
     """Live-check one Spanish NIF's ROI/VIES (GROI) registration and persist the observation."""
     from ...adapters.outbound.aeat.sede._groi_check import GroiSedeDriver
-    from ...application.live._verify import VerifyService, VerifySurface
+    from ...application.live import VerifyService, VerifySurface
     from ...core.access_gate import AeatAccessGate
     from ...core.config import load_settings
 

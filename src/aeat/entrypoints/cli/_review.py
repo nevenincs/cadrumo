@@ -2,8 +2,14 @@ from __future__ import annotations
 
 import typer
 
-from ...application.review import ReviewError, ReviewQueueReport, ReviewState, project_review_item, project_review_queue
-from ...application.review._operator import ReviewQueueRow
+from ...application.review import (
+    ReviewError,
+    ReviewQueueReport,
+    ReviewQueueRow,
+    ReviewState,
+    project_review_item,
+    project_review_queue,
+)
 from ...core.i18n import tr
 from ._common import _bad, _emit_envelope
 from ._review_payloads import ReviewQueueResult, ReviewQueueRowPayload, ReviewViewResult

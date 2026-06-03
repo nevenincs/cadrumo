@@ -17,7 +17,7 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...core.time import now
 from ...domain.iva_compensation._carry_forward import (
     IvaCompensationPeriodState,

@@ -896,7 +896,7 @@ def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
 
 
 def _is_missing_active_bucket_session(exc: BaseException) -> bool:
-    from ..adapters.persistence.storage.master_key._active_session import NoActiveBucketSessionError
+    from ..adapters.persistence.storage.master_key import NoActiveBucketSessionError
 
     current: BaseException | None = exc
     while current is not None:

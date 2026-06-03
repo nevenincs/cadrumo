@@ -71,6 +71,9 @@ from ._models import (
     derive_transaction_id,
     normalise_movement_reference,
 )
+from ._protocols import (
+    TransactionCatalogueRepositoryProtocol,
+)
 from ._raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ._service import (
     find_transaction,
@@ -143,6 +146,7 @@ __all__ = [
     "TransactionCatalogue",
     "TransactionCatalogueError",
     "TransactionCatalogueRepository",
+    "TransactionCatalogueRepositoryProtocol",
     "TransactionDirection",
     "TransactionEditLineageEntry",
     "TransactionError",

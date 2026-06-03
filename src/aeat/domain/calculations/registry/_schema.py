@@ -23,8 +23,7 @@ from ....core._tax_domain import TaxDomain
 from ....core.aggregation import AggregationSourceKind, RowSetGroupingKind
 from ....core.classification import SensitivityClass
 from ....core.decimal import coerce_decimal
-from ....core.identity._documents import IdentityError
-from ....core.identity._tax_id import validate_spanish_tax_id
+from ....core.identity import IdentityError, validate_spanish_tax_id
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from ._aeat_hosts import first_aeat_host
 from ._errors import RegistryValidationError

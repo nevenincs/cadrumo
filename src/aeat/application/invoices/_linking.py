@@ -14,16 +14,16 @@ from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
     InvoiceCatalogueRepository,
+    InvoiceCatalogueRepositoryProtocol,
     InvoiceLinkError,
+    link_transaction,
 )
-from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
-from ...domain.invoices._service import link_transaction
 from ...domain.transactions import (
     TransactionCatalogue,
     TransactionCatalogueRepository,
+    TransactionCatalogueRepositoryProtocol,
     link_invoice,
 )
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 
 
 class InvoiceTransactionLinkResult(BaseModel):

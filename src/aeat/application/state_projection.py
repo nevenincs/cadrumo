@@ -236,7 +236,7 @@ def _resolve_active_profile_label(bucket_id: str | None) -> str | None:
     """
     if bucket_id is None:
         return None
-    from .workflow._profile_bucket_scan import read_profile_bucket_by_id
+    from .workflow import read_profile_bucket_by_id
 
     try:
         pointer = read_profile_bucket_by_id(bucket_id)
@@ -554,7 +554,7 @@ def _build_modelo_readiness(
 
     from .user_profile._orchestration import _shared_schema, build_lifecycle_service
     from .user_profile._preflight import ProfilePreflightService
-    from .workflow._profile_bucket_scan import read_profile_bucket_by_id
+    from .workflow import read_profile_bucket_by_id
 
     pointer = read_profile_bucket_by_id(active_profile_id)
     if pointer is None:

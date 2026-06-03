@@ -55,6 +55,7 @@ from ...tests.secure_sql import isolated_runtime_profile
 from ..modelo._actions import _evaluate_verification_predicates
 from ._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ._observations_repository import CalculationObservationRepository
+from ._binding_prefill import resolve_bindings_from_local_store
 from ._relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -115,7 +116,18 @@ def _calculate_200(
     """Run the REAL M200 annual calculation from resolved relations + the SL profile."""
     snapshot = resources().modelos.authority.snapshot(_MODELO_200, filing_year=filing_year, period="0A")
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
-    binding_values = {**relation_binding_values, **_PROFILE_DECIMAL_BINDINGS}
+    # Resolve every previous_filing carry binding (BIN-stock 00670 AND the art.13
+    # dotaciones-deterioro 01494/01495) from the local observation store; any the
+    # store cannot satisfy default to zero (present-or-zero-carry) so the strict
+    # resolver below sees a complete fact set regardless of which carries this
+    # scenario seeds.
+    prefilled = resolve_bindings_from_local_store(snapshot).binding_values
+    carry_defaults = {
+        c.binding: Decimal("0")
+        for c in snapshot.revision.casillas
+        if c.input_kind.value == "bound" and c.binding
+    }
+    binding_values = {**carry_defaults, **prefilled, **relation_binding_values, **_PROFILE_DECIMAL_BINDINGS}
     inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,

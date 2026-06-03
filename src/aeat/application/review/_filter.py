@@ -34,7 +34,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.iva import InvoiceKind
-from ...domain.transactions import BusinessClassification
+from ...domain.transactions import BusinessClassification, TransactionDirection
 from ..transactions import LedgerImportDiagnosticKind
 from ._errors import FilterParseError
 
@@ -139,6 +139,8 @@ class LedgerReviewFilterKey(StrEnum):
         IMPORT: Filters to rows from a specific import-batch id.
         CLASSIFICATION: Filters to rows with a given business classification
             (``business`` / ``personal`` / ``mixed`` / ``not_yet_processed`` ...).
+        DIRECTION: Filters to rows by money-flow direction — ``incoming``
+            (ingreso), ``outgoing`` (gasto), or ``internal_transfer``.
     """
 
     STATUS = "status"
@@ -147,6 +149,7 @@ class LedgerReviewFilterKey(StrEnum):
     IMPORT = "import"
     CLASSIFICATION = "classification"
     TEXT = "text"
+    DIRECTION = "direction"
 
 
 class LedgerReviewStatus(StrEnum):
@@ -258,11 +261,16 @@ def _enum_value_or_raise[E: StrEnum](
         enum_cls: The closed enum to validate against.
         scope: Stable scope tag carried in the raised error code so the
             CLI can surface a per-scope repair hint.
-        case_fold: When ``True``, the lookup compares
-            ``clause.value.lower()`` against the enum member values.
-            Used for :class:`aeat.domain.invoices.InvoiceKind`, whose
-            members are lowercase (``issued`` / ``received``) so that
-            operators may pass either case on the command line.
+        case_fold: When ``True``, the match is case-insensitive — the
+            clause value is compared against the enum members ignoring
+            case, so an operator may type either case on the command
+            line. Used for lowercase-valued enums
+            (:class:`aeat.domain.invoices.InvoiceKind`, ``issued`` /
+            ``received``) and for uppercase-valued enums
+            (:class:`aeat.domain.transactions.BusinessClassification`
+            ``BUSINESS``, :class:`~aeat.domain.transactions.TransactionDirection`
+            ``INCOMING``) so ``classification=business`` resolves the same
+            as ``classification=BUSINESS``.
 
     Returns:
         The matching enum member.
@@ -271,14 +279,22 @@ def _enum_value_or_raise[E: StrEnum](
         FilterParseError: When the clause value is not a valid member
             of ``enum_cls``.
     """
-    candidate = clause.value.lower() if case_fold else clause.value
+    if case_fold:
+        by_folded = {member.value.casefold(): member for member in enum_cls}
+        member = by_folded.get(clause.value.casefold())
+        if member is None:
+            raise FilterParseError(
+                f"--filter {clause.key}={clause.value}",
+                reason=f"invalid-value-{scope}",
+            )
+        return member
     valid = {member.value for member in enum_cls}
-    if candidate not in valid:
+    if clause.value not in valid:
         raise FilterParseError(
             f"--filter {clause.key}={clause.value}",
             reason=f"invalid-value-{scope}",
         )
-    return enum_cls(candidate)
+    return enum_cls(clause.value)
 
 
 class LedgerReviewFilterSpec(BaseModel):
@@ -309,6 +325,7 @@ class LedgerReviewFilterSpec(BaseModel):
     import_id: str | None = None
     classification: BusinessClassification | None = None
     text: str | None = None
+    direction: TransactionDirection | None = None
 
     @classmethod
     def from_strings(cls, raw: Iterable[str]) -> LedgerReviewFilterSpec:
@@ -322,6 +339,7 @@ class LedgerReviewFilterSpec(BaseModel):
         import_id: str | None = None
         classification: BusinessClassification | None = None
         text: str | None = None
+        direction: TransactionDirection | None = None
         for clause in clauses:
             if clause.key == LedgerReviewFilterKey.STATUS:
                 status = _enum_value_or_raise(
@@ -340,13 +358,26 @@ class LedgerReviewFilterSpec(BaseModel):
             elif clause.key == LedgerReviewFilterKey.IMPORT:
                 import_id = clause.value
             elif clause.key == LedgerReviewFilterKey.CLASSIFICATION:
+                # case_fold so an operator may type the natural lowercase
+                # (classification=business) as well as the enum-cased BUSINESS;
+                # mirrors the invoice `kind` filter's case-folding.
                 classification = _enum_value_or_raise(
                     clause,
                     BusinessClassification,
                     scope="ledger-classification",
+                    case_fold=True,
                 )
             elif clause.key == LedgerReviewFilterKey.TEXT:
                 text = clause.value
+            elif clause.key == LedgerReviewFilterKey.DIRECTION:
+                # case_fold so direction=ingreso-equivalent lowercase (incoming /
+                # outgoing / internal_transfer) resolves as well as the enum case.
+                direction = _enum_value_or_raise(
+                    clause,
+                    TransactionDirection,
+                    scope="ledger-direction",
+                    case_fold=True,
+                )
         return cls(
             clauses=clauses,
             status=status,
@@ -355,6 +386,7 @@ class LedgerReviewFilterSpec(BaseModel):
             import_id=import_id,
             classification=classification,
             text=text,
+            direction=direction,
         )
 
     @model_validator(mode="after")
@@ -378,6 +410,8 @@ class LedgerReviewFilterSpec(BaseModel):
             raise ValueError("clauses[classification] / classification field disagree")
         if (LedgerReviewFilterKey.TEXT in present_keys) != (self.text is not None):
             raise ValueError("clauses[text] / text field disagree")
+        if (LedgerReviewFilterKey.DIRECTION in present_keys) != (self.direction is not None):
+            raise ValueError("clauses[direction] / direction field disagree")
         return self
 
 

@@ -13,7 +13,7 @@ This module provides two predicates that replace the three independent
 from __future__ import annotations
 
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...domain.transactions._models import Transaction
+from ...domain.transactions import Transaction
 
 
 def is_non_eur_without_conversion(transaction: Transaction) -> bool:

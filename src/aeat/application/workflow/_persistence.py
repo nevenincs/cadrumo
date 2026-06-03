@@ -21,7 +21,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage import (
     WORKFLOW_STATE_NAMESPACE as WORKFLOW_STATE_STORAGE_NAMESPACE,
 )
-from ...adapters.persistence.storage.envelope._envelope import Envelope
+from ...adapters.persistence.storage.envelope import Envelope
 from ...adapters.persistence.storage.errors import (
     ClassificationError,
     EnvelopeVersionError,

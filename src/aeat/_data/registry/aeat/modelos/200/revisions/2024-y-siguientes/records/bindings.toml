@@ -155,3 +155,43 @@ source_refs = ["aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = ["bases imponibles negativas"]
+
+# Art. 13 dotaciones por deterioro de créditos — cross-year STOCK carry.
+# A dotación whose deductibility conditions (LIS art. 13.1: 6-month overdue /
+# concurso / alzamiento / judicial claim) are not yet met stays pending and
+# carries to future periods. The prior ejercicio's "dotaciones pendientes
+# integración períodos futuros" (saldo final, casilla 01498 que NO han cumplido
+# condiciones / 01499 que SÍ han cumplido) become this ejercicio's "dotaciones
+# pendientes integración a principio del período" (saldo inicial 01494 / 01495),
+# tracked SEPARATELY per condition-state because only the cumplido stock may be
+# integrated this period. This carries the STOCK forward; the amount actually
+# integrated (01496, operator-elective — art. 13 conditions are a per-credit
+# factual judgement the engine cannot derive) and the saldo final (01498/01499,
+# determined by the per-generation detalle) stay operator-input. Mirrors the
+# BIN-stock previous_filing carry above; relies on the same observation-coverage
+# validator (the prior saldo final is the operator's historical filing, so the
+# fyd=-1 source resolves present-or-zero-carry even though M200 is modelled only
+# from 2024).
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores"
+source = "previous_filing"
+selector = { source_modelo = "200", source_output = "01498" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-13"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["deterioro"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores"
+source = "previous_filing"
+selector = { source_modelo = "200", source_output = "01499" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-13"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["deterioro"]
