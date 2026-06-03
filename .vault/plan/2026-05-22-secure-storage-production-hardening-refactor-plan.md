@@ -346,7 +346,7 @@ Current register count: `293` production candidate files.
 | `AFR-054` | `src/aeat/adapters/persistence/storage/bucket/_errors.py` | `manifest-bucket, master-key` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-055` | `src/aeat/adapters/persistence/storage/bucket/_export_header.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-056` | `src/aeat/adapters/persistence/storage/bucket/_keystore_paths.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | closed |
-| `AFR-057` | `src/aeat/adapters/persistence/storage/bucket/_layout.py` | `manifest-bucket, sql-route` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-057` | `src/aeat/adapters/persistence/storage/bucket/_layout.py` | `manifest-bucket, sql-route` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-058` | `src/aeat/adapters/persistence/storage/bucket/_lockfile.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-059` | `src/aeat/adapters/persistence/storage/bucket/_manifest.py` | `manifest-bucket, master-key, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-060` | `src/aeat/adapters/persistence/storage/bucket/_manifest_io.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
@@ -699,7 +699,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S156` - Close `AFR-054` for `src/aeat/adapters/persistence/storage/bucket/_errors.py` with signals `manifest-bucket, master-key`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/persistence/storage/bucket/_errors.py`.
 - [x] `W12.P26.S157` - Close `AFR-055` for `src/aeat/adapters/persistence/storage/bucket/_export_header.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/persistence/storage/bucket/_export_header.py`.
 - [x] `W12.P26.S158` - Close `AFR-056` for `src/aeat/adapters/persistence/storage/bucket/_keystore_paths.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/persistence/storage/bucket/_keystore_paths.py`.
-- [ ] `W12.P26.S159` - Close `AFR-057` for `src/aeat/adapters/persistence/storage/bucket/_layout.py` with signals `manifest-bucket, sql-route`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/persistence/storage/bucket/_layout.py`.
+- [x] `W12.P26.S159` - Close `AFR-057` for `src/aeat/adapters/persistence/storage/bucket/_layout.py` with signals `manifest-bucket, sql-route`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/persistence/storage/bucket/_layout.py`.
 - [ ] `W12.P26.S160` - Close `AFR-058` for `src/aeat/adapters/persistence/storage/bucket/_lockfile.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/persistence/storage/bucket/_lockfile.py`.
 - [ ] `W12.P26.S161` - Close `AFR-059` for `src/aeat/adapters/persistence/storage/bucket/_manifest.py` with signals `manifest-bucket, master-key, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/persistence/storage/bucket/_manifest.py`.
 - [ ] `W12.P26.S162` - Close `AFR-060` for `src/aeat/adapters/persistence/storage/bucket/_manifest_io.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/persistence/storage/bucket/_manifest_io.py`.
