@@ -175,3 +175,99 @@ Mount `aeat config bucket {browse / delete / rename}` under
 `src/aeat/entrypoints/cli/_config/__init__.py`. The pre-landing
 pin `test_bucket_app_verb_roster_pins_pre_s2150_state` will fire
 when the mount lands, forcing an explicit update.
+
+## Late-session additions (commits 10 through 28)
+
+After the initial bucket-maintenance landing (commits 1-9), the
+session extended into adjacent threads driven by stop-hook
+continuation prompts. Recorded here so the full session inventory
+sits in one exec doc.
+
+### Additional ADRs (5 total, including initial composition-pattern ADR)
+
+- `2026-06-03-bucket-search-adr` — search-verb scoping to per-domain
+  repository dispatch via a closed `BucketSearchScope` enum;
+  recency-first ranking MVP; routes never touch `secure_objects`
+  ciphertext directly.
+- `2026-06-03-bucket-sealed-archive-adr` — tar.gz format with
+  positional members (header.json, payload.envelope, optional
+  recovery.wrap); metadata-normalisation helper for byte-stable
+  archives across hosts; two/three-member layout extensible via
+  archive_schema_version.
+- `2026-06-03-multi-bucket-test-fixture-adr` — `isolated_two_bucket_runtime`
+  contract; distinct test KEK/DEK per bucket; primary-active +
+  switch_to_secondary context manager.
+- `2026-06-03-iva-exemption-article-adr` — `IvaExemptionArticle`
+  discriminator on `IvaClassificationResult` for Art. 20 sub-article
+  routing; MVP set `ART_20_UNO_8 / ART_20_UNO_14 / ART_20_UNO_26 /
+  ART_20_OTHER`; rejected on non-DOMESTIC_EXEMPT category.
+
+### Apex / child ADR amendments
+
+- Apex ADR `2026-05-12-cli-workflow-redesign-adr` gained a
+  2026-06-03 R08-progression amendment recording 3-of-6-verbs-landed.
+- Bucket child ADR `2026-05-12-cli-workflow-redesign-bucket-adr`
+  gained a 2026-06-03 composition-pattern amendment per verb +
+  BUCKET enum + re-export discipline note.
+- Ratios-shape child ADR
+  `2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-adr`
+  gained a 2026-06-03 composition-pattern alignment note.
+
+### Codified project rules (2)
+
+- `service-imports-via-top-level-reexports` — applied across
+  multiple consumer files during the session (orchestration full
+  surface promoted + 8 dot-ins migrated in `_modelo.py` and
+  `_overview.py` + workflow profile-bucket-scan promoted + 4 more
+  consumer migrations).
+- `composition-service-no-parallel-write-path` — codified for
+  future composition services to delegate to existing single-writer
+  primitives.
+
+### Cross-domain landings
+
+- S354 (R9-TOMAS-HIGH `IvaExemptionArticle` discriminator) shipped
+  end-to-end: research doc + ADR + implementation (enum + field +
+  validator + 8 tests). Unblocks S355 (M303 casilla 61 authoring)
+  pending corpus access.
+- `bind_error_code` refusal text upgraded with peer-WIP hint
+  (closes cross-domain audit Finding 1).
+
+### Infrastructure landings
+
+- Sealed-archive writer + reader + 4-class error catalogue + 9-test
+  round-trip suite (commit 22) — ready for `BucketMaintenanceService.export`
+  / `.import` service composition once secure-storage envelope-wrapping
+  settles.
+- `isolated_two_bucket_runtime` fixture + 5-test verification —
+  unblocks 3 deferred multi-bucket tests once secure-storage
+  per-bucket session/KEK contract settles.
+- Export/import Pydantic contracts + `compute_manifest_digest`
+  helper (commit 23) with 4-test verification.
+
+### Cross-cutting fixes
+
+- Pre-existing `_parse_iso8601_date` private-name import in
+  `aeat.adapters.outbound.fx._ecb_provider` (closes
+  `test_no_private_name_cross_package_imports` gate; cleared #640
+  pre-existing failure).
+- 4 E501 lint errors in `_modelo.py` (consolidated
+  per-row CAST-RATIONALE comments).
+
+## Total session cadence
+
+28 commits across 5 plans + 5 ADRs + 2 codified rules + ~100 new
+tests + 1 audit doc + 0 destructive operations + 0 peer-WIP
+overwrites. Discipline cited at every commit: explicit pathspec on
+both `git add` and `git commit`; research-first; package-boundary
+re-exports for cross-package consumption; real-behavior tests with
+inline deferral notes naming the blocker rather than `xfail`/`skip`.
+
+The next session's first move is unblocked the moment any one of:
+(a) peer secure-storage W12+ settles its per-bucket session/KEK
+contract, freeing the bucket-maintenance happy-path delete test
+and the export/import service composition; (b) peer CLI WIP on
+`cli/_config/__init__.py` settles, freeing the S2150 mount of the
+three operational bucket-maintenance verbs; (c) AEAT M303 / M210
+/ Orden EHA/672/2007 corpus becomes accessible, unblocking the
+regulatory-data authoring Steps (S355, S393-S396, S398).
