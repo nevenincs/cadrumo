@@ -165,6 +165,9 @@ def _decode_invoice_payload(raw: str) -> tuple[InvoiceRowPayload, ...]:
 # Parse-stage slot assembled from CSV/JSON decode before
 # Invoice.model_validate; typed InvoiceRowPayload TypedDict governs field
 # names but dict mutation is required for the line-synthesis back-fill.
+# ANY-RETURN-RATIONALE-INVOICE-PARSE-STAGING: payload is a parse-stage dict
+# assembled from CSV/JSON decode before Invoice.model_validate; in-place mutation
+# is required for the line-synthesis back-fill before the typed boundary.
 def _synthesise_single_line_if_needed(payload: dict[str, Any]) -> None:
     if "lines" in payload or "base_total" not in payload or "iva_rate" not in payload:
         return

@@ -94,6 +94,9 @@ class DefaultBrowserSession:
         """The :class:`Profile` associated with the underlying session."""
         return self._session.profile
 
+    # ADAPTER-INTERNAL-ALIAS-RATIONALE-PLAYWRIGHT-PROVISIONER: provisioner is an
+    # optional duck-typed adapter that exposes build_context_kwargs(); Playwright
+    # ships no stub for the caller-defined provisioner contract.
     async def create_context(
         self,
         *,
@@ -218,6 +221,8 @@ async def shared_playwright_runtime() -> AsyncIterator[Playwright]:
             )
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-PLAYWRIGHT-PROVISIONER: provisioner is duck-
+# typed and storage_state is Playwright's free-shape JSON blob.
 @asynccontextmanager
 async def opened_browser_page(
     playwright: Playwright,

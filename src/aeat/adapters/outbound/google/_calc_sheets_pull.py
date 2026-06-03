@@ -303,6 +303,8 @@ def _duplicate_metadata_must_match(key: str) -> bool:
     return key in _DUPLICATE_SENSITIVE_METADATA_KEYS or key.startswith(_RELATION_METADATA_PREFIX)
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-SHEETS-API-PAYLOAD: entries are Sheets
+# developer-metadata records returned as free-shape JSON by the discovery client.
 def _merge_developer_metadata_entries(entries: Iterable[Mapping[str, Any]]) -> dict[str, str]:
     """Merge Sheets developer metadata entries, refusing conflicting identity duplicates.
 

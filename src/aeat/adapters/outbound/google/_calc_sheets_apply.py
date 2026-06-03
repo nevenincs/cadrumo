@@ -634,6 +634,9 @@ def _managed_developer_metadata_key(key: object) -> bool:
     )
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-SHEETS-API-PAYLOAD: spreadsheet is the
+# free-shape JSON payload returned by the Google Sheets API; the googleapiclient
+# discovery client ships no typed model for the response.
 def _build_developer_metadata_cleanup_requests(
     spreadsheet: Mapping[str, Any],
 ) -> list[dict[str, Any]]:
@@ -670,6 +673,8 @@ def _build_developer_metadata_cleanup_requests(
     return requests
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-SHEETS-API-PAYLOAD: spreadsheet is the
+# free-shape JSON payload returned by the Google Sheets API.
 def _build_protected_range_cleanup_requests(
     spreadsheet: Mapping[str, Any],
     plan: SheetExportPlan,
@@ -696,6 +701,8 @@ def _build_protected_range_cleanup_requests(
     return requests
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-SHEETS-API-PAYLOAD: spreadsheet is the
+# free-shape JSON payload returned by the Google Sheets API.
 def _build_structural_cleanup_requests(
     spreadsheet: Mapping[str, Any],
     plan: SheetExportPlan,
