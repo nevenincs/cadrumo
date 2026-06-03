@@ -372,7 +372,6 @@ convention = "google"
 # Wave-closure inventory ratchets shell out to `sys.executable -m pytest` with
 # vetted file paths from the repo. S603's "untrusted input" warning does not
 # apply to internally-controlled paths in build-internal harnesses.
-"src/aeat/test_w17_p49_closure.py" = ["S105", "S603"]
 "src/aeat/test_w18_p50_closure.py" = ["S105", "S603"]
 "src/aeat/test_w20_p52_closure.py" = ["S105", "S603"]
 "src/aeat/test_w27_p61_closure.py" = ["S105", "S106", "S603"]
@@ -435,6 +434,28 @@ convention = "google"
 "src/aeat/core/config.py" = ["S105"]
 "src/aeat/adapters/persistence/storage/crypto/test_encrypted_columns.py" = ["S105", "S106"]
 "src/aeat/adapters/outbound/fx/_ecb_refresh.py" = ["S310"]
+# AEAT registry uses ``Q1..Q4`` casing on the BOE-published row model field names; the
+# domain model preserves the canonical AEAT casing so the registry-binding mapping
+# stays 1:1 with the published source. N815's mixedCase heuristic mis-flags these.
+"src/aeat/domain/modelos/_row_models.py" = ["N815"]
+# Tests alias the canonical private constant into a per-scenario local name; N811's
+# constant-aliased-as-non-constant heuristic mis-flags the rebinding.
+"src/aeat/application/aggregation/test_service.py" = ["N811"]
+# Test files use nested `with`/`if` blocks for legibility around AEAT fixtures; the
+# SIM refactors hurt readability for boundary-shaped tests.
+"src/aeat/adapters/outbound/aeat/auth/test_certificate.py" = ["SIM117"]
+"src/aeat/adapters/outbound/aeat/sede/test_browser_timeouts.py" = ["SIM102"]
+"src/aeat/entrypoints/cli/test_cold_start_no_profile.py" = ["SIM117"]
+"src/aeat/entrypoints/cli/test_repair_bootstrap_exempt.py" = ["SIM117"]
+"src/aeat/tests/test_config.py" = ["SIM117"]
+"src/aeat/tests/test_relative_imports_only.py" = ["SIM102"]
+"src/aeat/tests/test_cross_module_imports_resolve.py" = ["SIM103", "SIM108"]
+"src/aeat/test_w17_p49_closure.py" = ["S105", "S603", "SIM102"]
+"src/aeat/test_w26_p58_closure.py" = ["S603", "SIM102"]
+"src/aeat/test_every_module_has_test_coverage.py" = ["SIM103", "SIM108"]
+"src/aeat/test_locale_tr_positional_inventory.py" = ["SIM103"]
+"src/aeat/diagnostics/_identity_placement.py" = ["SIM102"]
+"src/aeat/domain/calculations/test_calculation_grounding.py" = ["SIM102"]
 "src/aeat/core/classification/__init__.py" = ["S105"]
 "src/aeat/core/test_config_override.py" = ["S108"]
 "src/aeat/core/file_permissions.py" = ["S603"]
@@ -485,7 +506,6 @@ convention = "google"
 "src/aeat/entrypoints/cli/test_work_calculate_row_flag.py" = ["S603"]
 "src/aeat/test_w16_p48_closure.py" = ["S603"]
 "src/aeat/test_w26_p57_closure.py" = ["S603"]
-"src/aeat/test_w26_p58_closure.py" = ["S603"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 # Lock the project into pytest-only testing.
