@@ -195,7 +195,7 @@ Fresh-context honesty review; turn findings into hardening Steps with gates.
 - [x] `W03.P10.S62` - Add ledger export --period and a period-scoped JSON row list so an operator can hand a gestor just the quarter; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W03.P10.S63` - HIGH: give check/preflight an anomaly channel separate from missing-fact reasons, and a 'non-classification' filtered view, so real anomalies (recargo, gated, foreign) surface without first hand-classifying every row; `src/aeat/application/ledger/_preflight.py`.
 - [x] `W03.P10.S64` - Add review --filter classification=business|personal and a readiness dashboard consolidating check + preflight for sign-off; `src/aeat/application/review/_filter.py`.
-- [ ] `W03.P10.S65` - Add an annual roll-up / M100-readiness surface (full-year ingresos/gastos/net activity totals) and a devengo-vs-caja cross-year reconciliation view; `src/aeat/application/ledger/_preflight.py`.
+- [x] `W03.P10.S65` - Add an annual roll-up / M100-readiness surface (full-year ingresos/gastos/net activity totals) and a devengo-vs-caja cross-year reconciliation view; `src/aeat/application/ledger/_preflight.py`.
 - [x] `W03.P10.S71` - Project value_in_eur + fx_rate on the export rows (LedgerExportRow) so CSV/JSONL hand-off carries the EUR-equivalent + FX provenance, not only native amounts; `src/aeat/application/ledger/_models.py`.
 - [x] `W03.P10.S72` - Support --business-pct in bulk classify --from-csv (extend BulkClassifyRow) so MIXED rows (home-office/vehicle/phone) classify in bulk, not one-at-a-time; `src/aeat/application/ledger/_actions.py`.
 - [ ] `W03.P10.S73` - Allow importing multiple statement files / a directory in one ledger import invocation (bulk/folder import); `src/aeat/entrypoints/cli/_ledger.py`.

@@ -1274,8 +1274,29 @@ def summarize_manual_transactions(
         checked = preflight.checked_transaction_count
         issue_count = len(preflight.issues)
         ready = preflight.ready
+    # Money roll-up over active business/mixed rows (period-filtered when given):
+    # the year-end / readiness money picture the personas asked for. Gross EUR
+    # (value_in_eur for foreign rows), not a registry calculation.
+    money_period = Period.model_validate(period) if period else None
+    income_total = Decimal("0")
+    expense_total = Decimal("0")
+    for item in transactions:
+        if item.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+            continue
+        if item.business_classification not in {BusinessClassification.BUSINESS, BusinessClassification.MIXED}:
+            continue
+        if money_period is not None and not money_period.contains(item.raw.value_date or item.raw.booked_date):
+            continue
+        eur = abs(item.value_in_eur) if item.value_in_eur is not None else abs(item.raw.amount)
+        if item.direction is TransactionDirection.INCOMING:
+            income_total += eur
+        elif item.direction is TransactionDirection.OUTGOING:
+            expense_total += eur
     return LedgerStatusReport(
         bucket_id=bucket_id,
+        income_total=_display_decimal(income_total),
+        expense_total=_display_decimal(expense_total),
+        net_total=_display_decimal(income_total - expense_total),
         total_count=len(transactions),
         active_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.ACTIVE),
         archived_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.ARCHIVED),

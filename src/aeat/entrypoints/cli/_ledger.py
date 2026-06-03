@@ -1694,6 +1694,9 @@ def ledger_status(
     transactions = transaction_repository.load()
     lines = [
         f"{tr('cli.ledger.labels.bucket')}\t{report.bucket_id}",
+        f"income_total\t{report.income_total}",
+        f"expense_total\t{report.expense_total}",
+        f"net_total\t{report.net_total}",
         f"{tr('cli.ledger.labels.rows')}\t{report.total_count}",
         f"{tr('cli.ledger.labels.active')}\t{report.active_count}",
         f"{tr('cli.ledger.labels.archived')}\t{report.archived_count}",
