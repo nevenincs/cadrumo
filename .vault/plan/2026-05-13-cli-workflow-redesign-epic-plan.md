@@ -4433,7 +4433,7 @@ Test ratios, bucket maintenance, and destructive-action safeguards.
 - [ ] `W77.P373.S2145` - Add service-contract tests for BucketMaintenanceService; `tests/application`.
 - [x] `W77.P373.S2146` - Add CLI surface tests for aeat app ledger ratios and aeat config bucket maintenance verbs; `tests/entrypoints/cli`.
 - [x] `W77.P373.S2147` - Add destructive-action safeguard tests asserting delete refuses without explicit yes; `tests/entrypoints/cli`.
-- [ ] `W77.P373.S2148` - Run the W71 contract-conformance harness with key-value-exception and lifecycle-state-verb annotations; `tests/entrypoints/cli`.
+- [x] `W77.P373.S2148` - Run the W71 contract-conformance harness with key-value-exception and lifecycle-state-verb annotations; `tests/entrypoints/cli`.
 
 ### Phase `W77.P374` - thin cli exposure
 
