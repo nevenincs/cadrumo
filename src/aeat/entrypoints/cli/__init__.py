@@ -162,6 +162,12 @@ def _root(
     # state-free dispatch avoids the registry load.
     if profile is not None:
         _activate_profile_override(ctx, profile)
+    else:
+        # No explicit --profile: the active profile comes from the
+        # AEAT_ACTIVE_PROFILE env override / pointer. Normalize a display-name
+        # value to its UUID so the core storage-route resolver (UUID-only)
+        # resolves it — an operator only knows the label, never the UUID.
+        _normalize_active_profile_label_to_uuid(ctx)
     if ctx.invoked_subcommand is None:
         # The landing surface needs the application operator_surface
         # layer; deferring the import keeps it off the ``--version`` /
@@ -213,8 +219,13 @@ def _root(
 
 
 def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
-    """Resolve ``--profile`` to a bucket id and set the active-profile override."""
-    from ...application.workflow import read_profile_bucket, read_profile_bucket_by_id
+    """Resolve ``--profile`` to a bucket id and set the active-profile override.
+
+    Resolves through the single application-layer name-or-UUID resolver so a
+    ``--profile`` value may be either the operator display label or the UUID
+    bucket id, then pins the override to the resolved UUID.
+    """
+    from ...application.workflow import resolve_profile_bucket
     from ...core.config import override_settings
     from ._errors import CliRefusedBoundaryError
 
@@ -224,12 +235,61 @@ def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
             translated_message="cli.config.profile.unknown_profile",
             context={"name": profile},
         )
-    pointer = read_profile_bucket(requested) or read_profile_bucket_by_id(requested)
+    pointer = resolve_profile_bucket(requested)
     if pointer is None:
         raise CliRefusedBoundaryError(
             translated_message="cli.config.profile.unknown_profile",
             context={"name": requested},
         )
+    ctx.with_resource(override_settings(aeat_active_profile=pointer.bucket_id))
+
+
+def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
+    """Normalize a display-name ``AEAT_ACTIVE_PROFILE`` to its UUID bucket id.
+
+    An operator addresses a profile by the label they chose at ``profile
+    create``; the immutable UUID bucket id is never surfaced to them. When no
+    ``--profile`` flag is given, the active profile is resolved from the
+    ``AEAT_ACTIVE_PROFILE`` env override (the highest-precedence rung): if that
+    value is a display LABEL rather than a UUID bucket directory, the core
+    storage-route resolver — which keys directly on ``buckets/<value>`` — would
+    hard-miss with a "no registered bucket manifest" refusal on every
+    profile-bound command. Resolve the label to its UUID through the single
+    application-layer resolver and pin the override to the UUID, so the core
+    route resolver (which stays UUID-only) receives the identifier it expects.
+
+    No-ops when no active profile resolves, when the value already resolves as a
+    UUID bucket directly (the fast path — zero change for UUID-valued input), or
+    when the label does not match any live profile (the per-command active-profile
+    guard surfaces that). An ambiguous label (more than one live match) raises a
+    clear refusal rather than an arbitrary pick.
+    """
+    from ...application.workflow import (
+        read_profile_bucket_by_id,
+        resolve_profile_bucket,
+    )
+    from ...core import resolve_active_bucket_id
+    from ...core.config import override_settings
+    from ._errors import CliRefusedBoundaryError
+
+    active = resolve_active_bucket_id()
+    if active is None:
+        return
+    if read_profile_bucket_by_id(active) is not None:
+        # Already a UUID bucket directory — the canonical fast path. Leave the
+        # active-profile value byte-identical so the UUID path is unchanged.
+        return
+    try:
+        pointer = resolve_profile_bucket(active)
+    except ValueError as exc:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": active},
+        ) from exc
+    if pointer is None:
+        # Not a live label either; leave resolution to the per-command active
+        # profile guard, which emits the canonical no-active-profile refusal.
+        return
     ctx.with_resource(override_settings(aeat_active_profile=pointer.bucket_id))
 
 
