@@ -69,6 +69,7 @@ def _calculate(inputs: dict[str, Decimal]):
             "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
             "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
             "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
         },
         relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
         date_context={"filing_period": date(2024, 12, 31)},
