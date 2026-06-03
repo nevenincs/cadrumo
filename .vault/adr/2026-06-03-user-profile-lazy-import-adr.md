@@ -90,3 +90,109 @@ The relocation respects `aeat-architecture-boundaries` symbol-relocation atomici
   **Why:** the state-free CLI surface budget enforced by `test_lazy_command_tree.py` is operator-visible; any application boundary that eagerly imports registry-coupled material drags the cost across every consumer that crosses the boundary. The PEP 562 pattern lets the boundary stay canonical (one consumption point) while keeping the cost deferred.
 
   **How to apply:** when authoring or modifying an `aeat.application.*` package `__init__.py`, check whether the file would import a domain package that itself imports the registry. If yes, the imports go through `__getattr__`. Pydantic command and result models whose field types come from such a domain package live in a sibling private module (`_commands.py` is the established name) and are themselves re-exported via `__getattr__`.
+
+## Findings — execution-time scope expansion (2026-06-04)
+
+Authoring the producer-side probe at
+`src/aeat/application/user_profile/test_lazy_boundary.py` confirmed the
+ADR's central premise: after relocating the Pydantic command and
+result models into `_commands.py` and routing the four domain records
+through PEP 562 `__getattr__`, importing
+`aeat.application.user_profile` in a fresh interpreter places zero
+`aeat.domain.calculations.registry*` modules into `sys.modules` (down
+from 69 against the unfixed boundary). The boundary itself is now
+lazy by default and the producer-side probe is green.
+
+However, the CLI-side gate at
+`src/aeat/entrypoints/cli/test_lazy_command_tree.py` remains red for
+all five originally-named tests. The leak vector is orthogonal to the
+application boundary:
+
+- `src/aeat/entrypoints/cli/__init__.py` line 46 imports
+  `decorate_typer_app` from `aeat.entrypoints.cli._errors` at module
+  scope (it must run before the typer app object is decorated, so it
+  cannot move into a lazy block).
+- `src/aeat/entrypoints/cli/_errors.py` line 55 imports
+  `StoredProfileDriftError` from `aeat.domain.user_profile`.
+- The domain package's `__init__.py` eagerly imports `_registry_contract`
+  at module scope. This is the same import path the ADR describes as
+  "legitimate" under the hexagonal-direction rule.
+
+Empirical verification: importing **only**
+`aeat.entrypoints.cli._errors` in a fresh interpreter places 69
+`aeat.domain.calculations.registry*` modules into `sys.modules` —
+identical to the regression count the CLI gate measures end-to-end.
+Importing the domain submodule directly
+(`from aeat.domain.user_profile._errors import StoredProfileDriftError`)
+places the same 69 modules because Python evaluates the package
+`__init__.py` whenever any descendant module is first imported.
+
+### Implication for the fix's sufficiency
+
+The application-boundary relocation Pattern A specifies is necessary
+(the boundary should be lazy by default, the producer probe pins the
+contract, and Pattern A is correct on its own merits) but **not
+sufficient** to turn the five CLI-gate reds green. The acceptance
+criterion in the umbrella plan cannot be reached without an additional
+decision that the ADR's Problem Statement and Decision sections do
+not contemplate, namely one of:
+
+- **Pattern E (lazy domain-package boundary):** `aeat.domain.user_profile/__init__.py`
+  routes its registry-coupled re-exports (`UserProfileSelectorIndex`,
+  `validate_user_profile_registry_contract`, `profile_binding_selectors`,
+  `build_user_profile_selector_index`, the three registry-contract
+  records, and the registry-aware loader) through PEP 562 `__getattr__`,
+  while keeping the lightweight errors / values / schema re-exports
+  eager. The ADR's "domain layer's eager pull is legitimate" claim has
+  to be revisited: the legitimacy applies to *callers that actually
+  need the registry-contract surface*, not to error-class consumers
+  like `cli/_errors.py`.
+
+- **Pattern F (consumer-side direct import):** route
+  `cli/_errors.py` and any other state-free CLI surface consumer to
+  import `StoredProfileDriftError` from a registry-free surface (a
+  dedicated `aeat.domain.user_profile.errors` re-export module, or a
+  direct private-submodule import that the package consumption rule
+  is amended to allow for the error surface). This is the inverse of
+  the `4e443841b` ruling for the error subset.
+
+- **Pattern G (move the error class up):** lift
+  `StoredProfileDriftError` (and any sibling errors consumed by the
+  state-free CLI surface) into `aeat.core` or `aeat.domain._errors`
+  so the consumer never touches the user_profile domain package at
+  all.
+
+Each pattern requires its own decision, its own ADR-level analysis
+of rule-precedence (package consumption vs lazy-loading vs
+hexagonal-direction), and its own consumer sweep. They are out of
+scope for the present ADR.
+
+### What lands now, and why
+
+The application-boundary relocation (`_commands.py` plus the extended
+`__getattr__`) and the producer-side probe land as authored. They
+deliver an honest, non-tautological structural improvement: the
+boundary is lazy, the registry-pull count through the application
+package is zero, the public surface is unchanged, no consumer needed
+adjustment, and the probe pins the contract against future
+regression. The five CLI-gate tests remain red but their leak vector
+is now demonstrably orthogonal to the application boundary and is
+fully diagnosed for a follow-up campaign.
+
+The alternative — landing nothing and waiting for the orthogonal
+decision — would discard a real win and leave the application
+boundary structurally wrong even after the CLI-side regression is
+solved. The brief's guard against the
+`m303-primitive-encoder` half-fix pattern is honoured by not editing
+the CLI-side or domain-side surfaces under the cover of this ADR;
+those edits need their own decision.
+
+### Follow-up
+
+A successor ADR (`2026-06-04-cli-errors-domain-package-lazy-import-adr`
+or equivalent) is required before the umbrella plan's
+`test_lazy_command_tree.py` gate can be brought green. The successor
+ADR's Problem Statement is the diagnosis recorded above; its
+Decision will pick among Patterns E / F / G (or a hybrid). The
+present ADR's status remains `accepted` for the scope it actually
+covers (the application boundary).
