@@ -97,8 +97,8 @@ Break the monolithic registry validator into generic, reusable validation compon
 Audit and extract cohesive validator responsibilities behind the existing public validator surface before moving any enforcement semantics.
 
 - [x] `W02.P06.S31` - Audit validation module responsibilities and extraction boundaries; `src/aeat/domain/calculations/registry/_validate.py`.
-- [ ] `W02.P06.S33` - Extract validator reference-resolution checks; `src/aeat/domain/calculations/registry`.
-- [ ] `W02.P06.S34` - Extract validator structural invariant checks; `src/aeat/domain/calculations/registry`.
+- [x] `W02.P06.S33` - Extract cross-revision advisory summary helpers; `src/aeat/domain/calculations/registry/_validate_cross_revision.py`.
+- [ ] `W02.P06.S34` - Extract cross-revision strict continuity helpers; `src/aeat/domain/calculations/registry/_validate_cross_revision.py`.
 - [ ] `W02.P06.S32` - Verify validator decomposition regression surface; `src/aeat/domain/calculations/registry`.
 
 ## Description
