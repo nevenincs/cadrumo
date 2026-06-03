@@ -321,7 +321,7 @@ Bundled eurofxref history + provider with date fallback and EUR-base inversion.
 - [x] `W11.P20.S66` - Bundle a versioned snapshot of ECB eurofxref-hist.xml under the data tree (offline, deterministic, refreshed on release); `src/aeat/_data/fx/`.
 - [x] `W11.P20.S67` - Implement EcbReferenceRateProvider(ExchangeRateProvider): parse history, get_eur_rate with most-recent-prior-working-day fallback; `strict tests (determinism, weekend fallback, EUR-base inversion direction); `src/aeat/adapters/outbound/fx/_ecb_provider.py`.
 - [x] `W11.P20.S68` - Wire the normalizer into the CLI import path so foreign rows persist fx_rate+value_in_eur; `corpus-fidelity + journey assert Revolut GBP/USD convert (no UNSUPPORTED_CURRENCY); `src/aeat/application/ledger/_actions.py`.
-- [ ] `W11.P20.S69` - Record rate source + rate-date provenance on the conversion, dovetailing with the filing snapshot; `src/aeat/domain/transactions/_models.py`.
+- [x] `W11.P20.S69` - Record rate source + rate-date provenance on the conversion, dovetailing with the filing snapshot; `src/aeat/domain/transactions/_models.py`.
 - [x] `W11.P20.S70` - Add an ECB-history refresh utility (re-acquire eurofxref-hist.xml on release; `runtime stays offline); `src/aeat/adapters/outbound/fx/_ecb_refresh.py`.
 
 ## Wave `W12` - CLI operator-ergonomics restructuring
