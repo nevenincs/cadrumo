@@ -8,8 +8,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....core.errors import build_error_envelope
 from ..errors import StorageValidationError
-from ._layout import provision_bucket_directory
+from ._layout import bucket_paths, provision_bucket_directory
 from ._manifest import (
     BucketLifecycleStatus,
     BucketManifest,
@@ -132,8 +133,25 @@ def test_read_rejects_missing_status_key(tmp_path: Path) -> None:
 def test_read_raises_when_manifest_absent(tmp_path: Path) -> None:
     paths = provision_bucket_directory(tmp_path, "alpha")
 
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(StorageValidationError, match="bucket manifest is missing") as excinfo:
         read_manifest(paths)
+    assert isinstance(excinfo.value.__cause__, FileNotFoundError)
+    assert excinfo.value.translated_message == "errors.integrity.integrity_storage_bucket_validation"
+    assert str(tmp_path) not in str(excinfo.value)
+    envelope = build_error_envelope(excinfo.value)
+    assert str(tmp_path) not in envelope.model_dump_json()
+
+
+def test_write_wraps_missing_bucket_directory_as_storage_validation(tmp_path: Path) -> None:
+    paths = bucket_paths(tmp_path, "alpha")
+
+    with pytest.raises(StorageValidationError, match="bucket manifest cannot be written") as excinfo:
+        write_manifest(paths, _fixture_manifest())
+    assert isinstance(excinfo.value.__cause__, FileNotFoundError)
+    assert excinfo.value.translated_message == "errors.integrity.integrity_storage_bucket_validation"
+    assert str(tmp_path) not in str(excinfo.value)
+    envelope = build_error_envelope(excinfo.value)
+    assert str(tmp_path) not in envelope.model_dump_json()
 
 
 def test_torn_write_does_not_corrupt_existing_manifest(tmp_path: Path) -> None:
