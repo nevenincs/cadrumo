@@ -10,8 +10,6 @@ import asyncio
 import typing
 from collections.abc import Mapping
 from datetime import datetime
-
-from ....core.time import now as _now
 from pathlib import Path
 
 import click
@@ -54,6 +52,7 @@ from ....core.redaction import (
     redact_for_cli_output,
     redact_structured_for_cli_output,
 )
+from ....core.time import now as _now
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from .._command_suggestions import AeatTyperGroup as _AeatTyperGroup
 from .._common import _emit, _emit_envelope
@@ -782,8 +781,6 @@ def _emit_profile_lifecycle_event(
     downstream auditors can reconstruct the sequence from the on-disk
     catalogue.
     """
-    from datetime import UTC, datetime
-
     from ....domain.buckets import (
         BucketEvent,
         BucketEventHistoryCatalogue,
@@ -1071,8 +1068,7 @@ def config_profile_show(
     status.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile import ProfileValidationService
-    from ....application.user_profile import record_to_path_values
+    from ....application.user_profile import ProfileValidationService, record_to_path_values
     from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
 
     if name is not None:
@@ -1872,9 +1868,11 @@ def config_status(
 
     from ....application.user_profile import record_to_path_values
     from ....application.wizard import project_answers
-    from ....application.workflow import workflow_state_repository
-    from ....application.workflow import read_profile_bucket_by_id
-    from ....application.workflow import assess_active_profile_health
+    from ....application.workflow import (
+        assess_active_profile_health,
+        read_profile_bucket_by_id,
+        workflow_state_repository,
+    )
     from .._config_payloads import ConfigStatusResult
 
     profile_health = assess_active_profile_health()
@@ -2099,10 +2097,11 @@ def auth_configure(
 ) -> None:
     """Configure the active authentication provider."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import AuthProviderReservedError, configure_operator_auth
     from ....application.auth import (
         AuthConfigureDanglingActiveProfileError,
         AuthConfigureNoActiveBucketError,
+        AuthProviderReservedError,
+        configure_operator_auth,
     )
 
     try:
@@ -2235,10 +2234,11 @@ def auth_login(
 ) -> None:
     """Acquire or verify a live AEAT session through the configured provider."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import AuthProviderReservedError, login_operator_auth
     from ....application.auth import (
         AuthLoginNotEnabledError,
         AuthLoginPreconditionError,
+        AuthProviderReservedError,
+        login_operator_auth,
     )
     from .._config_payloads import AuthLoginPayload
 
@@ -2886,9 +2886,5 @@ app.add_typer(bucket_app, name="bucket")
 from ._google import google_app as _google_app
 
 app.add_typer(_google_app, name="google")
-
-from ._init import register as _register_init
-
-_register_init(app)
 
 __all__ = ["app", "tr"]
