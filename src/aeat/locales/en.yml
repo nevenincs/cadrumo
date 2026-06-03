@@ -58,6 +58,8 @@ adapters:
           the configured timeout.
         dni_nie_not_set: AEAT_CLAVE_MOVIL_DNI_NIE is not set; configure your DNI or
           NIE before authenticating.
+        initial_navigation_timeout: Initial navigation to Cl@ve Movil did not complete
+          within the configured timeout.
         metadata_invalid: Cl@ve Móvil session metadata is invalid or could not be
           parsed.
         no_persisted_session: No persisted Cl@ve Movil session found; run `aeat config
@@ -82,13 +84,13 @@ adapters:
         googleapiclient_not_importable: googleapiclient is not importable; the Google
           adapter cannot reach the API.
         spreadsheet_id_blank: Google spreadsheet id must not be blank.
-        workbook_snapshot_mismatch: The Google Sheet metadata does not match the
-          calculation snapshot.
+        workbook_snapshot_mismatch: The Google Sheet metadata does not match the calculation
+          snapshot.
       suggestions:
-        reexport_workbook: Re-export the workbook with `aeat config google sync calc
-          export` so app-managed metadata is refreshed.
         reexport_then_pull: Re-export the workbook with `aeat config google sync calc
           export`, then pull it again.
+        reexport_workbook: Re-export the workbook with `aeat config google sync calc
+          export` so app-managed metadata is refreshed.
         verify_exported_workbook: Verify the spreadsheet was originally created by
           `aeat config google sync calc export` against this profile.
     oauth_flow:
@@ -238,10 +240,10 @@ adapters:
           load_asset_ledger_failed: Unable to load the encrypted asset ledger.
       inventory:
         errors:
-          inventory_ledger_already_exists: 'That inventory ledger already exists.'
-          inventory_ledger_not_found: 'The requested inventory ledger was not found.'
-          load_inventory_ledger_failed: 'Unable to load the encrypted inventory ledger.'
-          movement_already_exists: 'That inventory movement already exists.'
+          inventory_ledger_already_exists: That inventory ledger already exists.
+          inventory_ledger_not_found: The requested inventory ledger was not found.
+          load_inventory_ledger_failed: Unable to load the encrypted inventory ledger.
+          movement_already_exists: That inventory movement already exists.
   sede:
     errors:
       cotejo_nav_failed: Navigation to the AEAT cotejo page failed; session may have
@@ -485,6 +487,10 @@ application:
           before reading AEAT data.
         verify_failed: AEAT session could not be verified; run `aeat config auth test`
           before reading AEAT data.
+  bucket_maintenance:
+    errors:
+      delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
+      delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
   ledger:
     errors:
       evidence_attachment_requires_ids: Ledger evidence attachment requires purchase
@@ -914,8 +920,7 @@ cli:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         list_help: List the required and available bindings for a modelo / year /
           period
-        missing_help: Filter to bindings without a resolved value (require bucket
-          / ledger / profile data)
+        missing_help: 'Filter to the bindings still owed: drops constant-valued bindings and any the active profile already resolves. With no active profile every non-constant binding is shown (the conservative answer).'
         missing_required_options: 'Missing required options: %{options}'
         modelo_help: Tax form code (e.g. 303, 130, 100)
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
@@ -1388,6 +1393,7 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
+        id_is_work_unit_not_calc_revision: 'This id is a work-unit-id, but verify/file need a calculation-revision-id. Run ''aeat app modelo work calculate %{work_unit_id}'' to produce the calculation-revision-id, then pass that.'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
@@ -1615,6 +1621,8 @@ cli:
         refresh_help: Download the latest censo from AEAT and save a snapshot
         show_help: Show the latest censo AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
+      create_epilog: 'Minimal freelancer profile: --entity-type natural_person --tax-id
+        <NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Initialize a new active profile and config bucket.
       delete_active_cleared: The deleted profile was the active one; the active-profile
         pointer has been cleared. Run 'aeat config profile switch NAME' or 'aeat config
@@ -1936,6 +1944,8 @@ cli:
         touches. Local-only; never contacts AEAT.
     classify:
       actor_help: Operator name recorded on the bucket event
+      apply_help: 'Persist the LLM suggestion with llm: provenance instead of only
+        previewing it.'
       bulk_summary: 'bulk classify: %{total} rows, %{applied} applied, %{skipped}
         skipped, %{fail} failed'
       business_pct_help: Business-use share from 0 to 1; required with --classification
@@ -1963,6 +1973,18 @@ cli:
       iva_category_help: Explicit IVA category override for this transaction (e.g.
         intra_community_supply, export_third_country_zero_rated, domestic_not_subject)
       iva_rate_help: IVA rate as a decimal, for example 0.21
+      llm_classified_by_label: classified-by
+      llm_confidence_label: confidence
+      llm_exclusive: --llm cannot be combined with --classification or --from-csv;
+        the manual path is the explicit operator override.
+      llm_failed: 'LLM classification failed: {reason}'
+      llm_help: Ask a local LLM provider (claude/gemini/codex) to classify the transaction;
+        preview by default, persist with --apply.
+      llm_provider_unavailable: 'LLM provider ''{provider}'' is unavailable: its CLI is not on PATH. Install the ''{provider}'' CLI and ensure it is on PATH, or run ''aeat app ledger providers'' to list usable providers.'
+      llm_reason_label: reason
+      llm_review_hint: Review the suggestion above. Re-run with --apply to accept
+        it, with --classification to override manually, or do nothing to reject it.
+      llm_suggestion_label: llm-suggestion
       mixed_requires_business_pct: Refused. --classification MIXED needs a business
         share. Pass --business-pct with a value from 0 to 1, or classify the row as
         BUSINESS or PERSONAL instead.
@@ -1970,19 +1992,19 @@ cli:
       reaffirmed: Classification reaffirmed.
       taxable_base_help: Taxable base amount
     doclink:
-      actor_help: cli.ledger.doclink.actor_help
-      bad_source: cli.ledger.doclink.bad_source
-      help: cli.ledger.doclink.help
-      id_help: cli.ledger.doclink.id_help
-      note_help: cli.ledger.doclink.note_help
-      reference_help: cli.ledger.doclink.reference_help
-      source_help: cli.ledger.doclink.source_help
+      actor_help: 'Operator label.'
+      bad_source: 'document-link source must be one of: gmail, google_drive, url (got ''{source}'').'
+      help: 'Record a Gmail/Drive/URL document link on a ledger row (never fetched).'
+      id_help: 'Ledger transaction id.'
+      note_help: 'Optional note.'
+      reference_help: 'The document link reference.'
+      source_help: 'Link source: gmail, google_drive, or url.'
     errors:
       command_input_invalid: 'Refused. The transaction is invalid: {details}'
       command_input_invalid_fallback: one or more fields failed validation
       confirm_required: Pass --yes to confirm this destructive ledger operation, or
         use --dry-run first
-      filter_parse_error: Failed to parse ledger filter
+      filter_parse_error: 'Failed to parse ledger filter near %{token}: %{reason}.'
       id_prefix_collision: 'Transaction id prefix %{prefix!r} matches more than one
         transaction: %{candidates}. Lengthen the prefix to disambiguate.'
       id_prefix_empty: Transaction id prefix is empty; pass at least one hex character.
@@ -2099,8 +2121,7 @@ cli:
       invoice_id_help: Invoice id to bind bidirectionally to the transaction.
     list:
       by_group_help: Section the listing by group label.
-      filter_help: Filter rows by status, period (incl. bare YYYY for a year), classification,
-        issue, import, or text.
+      filter_help: 'Filter rows by status, period (incl. bare YYYY for a year), classification, issue, import, direction (ingreso/gasto), or text. To filter by organisational group label use the separate --group option.'
       footer_truncated: Showing rows {start}-{end} of {total} (offset {offset}). Use
         --offset/--limit to page.
       group_filter_help: Show only rows in this group label.
@@ -2124,6 +2145,8 @@ cli:
         currency, proportionality reference) for the active bucket's transactions
         in a given period. Local-only; never contacts AEAT.
       period_help: Canonical period (e.g. 2026Q1, 2026-03, 2026).
+    providers:
+      help: 'List which subprocess LLM providers have a usable CLI on PATH.'
     remove:
       actor_help: Operator name recorded on the bucket event
       dry_run_help: Report removal effects without deleting the ledger transaction
