@@ -20,6 +20,7 @@ from bs4 import BeautifulSoup
 from pydantic import AnyHttpUrl, AnyUrl, TypeAdapter
 
 from .....core.config import Settings
+from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now
@@ -247,7 +248,7 @@ def parse_iva_compensation_wallet_html(
                 total_pending=Decimal("0"),
                 source_url=validated_source_url,
                 captured_at=captured_at,
-                raw_sha256=hashlib.sha256(html.encode("utf-8")).hexdigest(),
+                raw_sha256=hashlib.sha256(html.encode(UTF_8_ENCODING)).hexdigest(),
             )
         raise SedeParseError("captured page does not contain a recognizable IVA compensation wallet table")
 
@@ -267,7 +268,7 @@ def parse_iva_compensation_wallet_html(
         total_pending=total_pending,
         source_url=validated_source_url,
         captured_at=captured_at,
-        raw_sha256=hashlib.sha256(html.encode("utf-8")).hexdigest(),
+        raw_sha256=hashlib.sha256(html.encode(UTF_8_ENCODING)).hexdigest(),
     )
 
 
@@ -1015,7 +1016,7 @@ async def _dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> 
         try:
             url = getattr(candidate, "url", "") or ""
             html = await candidate.content()
-            (dump_dir / f"{prefix}.html").write_text(html, encoding="utf-8")
+            (dump_dir / f"{prefix}.html").write_text(html, encoding=UTF_8_ENCODING)
             table_count = len(BeautifulSoup(html, "html.parser").find_all("table"))
             summary.append(f"page[{page_index}] url={_redacted_url(url)} tables={table_count} bytes={len(html)}")
         except (PlaywrightError, OSError) as exc:
@@ -1029,7 +1030,7 @@ async def _dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> 
             try:
                 frame_url = getattr(frame, "url", "") or ""
                 frame_html = await frame.content()
-                (dump_dir / f"{prefix}-f{frame_index}.html").write_text(frame_html, encoding="utf-8")
+                (dump_dir / f"{prefix}-f{frame_index}.html").write_text(frame_html, encoding=UTF_8_ENCODING)
                 frame_tables = len(BeautifulSoup(frame_html, "html.parser").find_all("table"))
                 summary.append(
                     f"page[{page_index}].frame[{frame_index}] url={_redacted_url(frame_url)} tables={frame_tables}"
@@ -1037,7 +1038,7 @@ async def _dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> 
             except (PlaywrightError, OSError) as exc:
                 log.debug("wallet diagnostic: frame dump failed: %s", exc, exc_info=True)
     try:
-        (dump_dir / f"{label}-summary.txt").write_text("\n".join(summary) + "\n", encoding="utf-8")
+        (dump_dir / f"{label}-summary.txt").write_text("\n".join(summary) + "\n", encoding=UTF_8_ENCODING)
     except OSError as exc:
         log.debug("wallet diagnostic: summary write failed: %s", exc, exc_info=True)
     log.info("wallet diagnostic captured label=%s pages=%s dir=%s", label, len(pages), dump_dir)
