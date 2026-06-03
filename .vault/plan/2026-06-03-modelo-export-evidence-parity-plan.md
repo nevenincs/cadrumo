@@ -121,7 +121,7 @@ Add a SheetExportPlan evidence facet + an Evidencia tab in the offline xls + a m
 
 Plan facet, xls Evidencia tab, sidecar, unevidenced-export refusal.
 
-- [ ] `W02.P02.S06` - SheetExportPlan evidence facet: per-casilla contributing rows + manual basis as typed plan records; `src/aeat/application/storage/calc_sheets/_records.py`.
+- [x] `W02.P02.S06` - SheetExportPlan evidence facet: per-casilla contributing rows + manual basis as typed plan records; `src/aeat/application/storage/calc_sheets/_records.py`.
 - [ ] `W02.P02.S07` - Render an Evidencia tab in the offline xls workbook from the evidence facet; `src/aeat/application/ledger/_workbook_export.py`.
 - [ ] `W02.P02.S08` - Emit a machine-readable evidence sidecar alongside the exported artefact; `src/aeat/application/ledger/_workbook_export.py`.
 - [ ] `W02.P02.S09` - Refuse exporting a ledger-derived revision that carries neither bundled evidence nor a resolvable reference; `src/aeat/application/modelo/_actions.py`.
