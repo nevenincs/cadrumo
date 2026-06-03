@@ -1,9 +1,9 @@
 """Tests for the storage provider abstraction's foundation surface.
 
-Covers the Protocol contract, the three pydantic records, the
-`ProviderKind` enum, and the typed `OutboundStorageError` hierarchy. Concrete
-backend (`_local.py`, `_google_drive.py`, `_testing.py`) tests live in
-their own colocated test modules.
+Covers the Protocol contract, the pydantic records, the `ProviderKind`
+enum, and the typed `OutboundStorageError` hierarchy. Concrete backend
+(`_local.py`, `_google_drive.py`) tests live in their own colocated test
+modules.
 """
 
 from __future__ import annotations
@@ -29,6 +29,7 @@ from . import (
     ProviderKind,
     ProviderObjectMetadata,
     ProviderProbeReport,
+    RemoteMirrorObjectManifest,
     StorageCorruptionError,
     StorageProvider,
 )
@@ -47,6 +48,24 @@ def _metadata(**overrides: object) -> ProviderObjectMetadata:
     }
     base.update(overrides)
     return ProviderObjectMetadata.model_validate(base)
+
+
+def _remote_object_manifest(**overrides: object) -> RemoteMirrorObjectManifest:
+    base: dict[str, object] = {
+        "namespace": "google_oauth_metadata",
+        "object_key_hmac": "a" * 64,
+        "classification": "secret",
+        "schema_version": 1,
+        "byte_length": 128,
+        "ciphertext_hash": "b" * 64,
+        "storage_revision_id": "c" * 64,
+        "previous_storage_revision_id": "d" * 64,
+        "revision_ancestor_ids": ("e" * 64,),
+        "row_written_at": datetime(2026, 5, 14, tzinfo=UTC),
+        "revision_written_at": datetime(2026, 5, 14, tzinfo=UTC),
+    }
+    base.update(overrides)
+    return RemoteMirrorObjectManifest.model_validate(base)
 
 
 def test_provider_kind_enum_values_are_stable() -> None:
@@ -110,6 +129,16 @@ def test_provider_probe_report_read_only_mode_round_trip() -> None:
     assert reloaded == report
     assert reloaded.read_only is True
     assert reloaded.writable is False
+
+
+def test_remote_mirror_object_manifest_rejects_malformed_revision_ancestor_id() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        _remote_object_manifest(revision_ancestor_ids=("short",))
+
+    errors = exc_info.value.errors()
+    assert len(errors) == 1
+    assert errors[0]["loc"] == ("revision_ancestor_ids", 0)
+    assert errors[0]["type"] == "string_too_short"
 
 
 def test_storage_error_hierarchy_unified() -> None:
