@@ -1392,6 +1392,9 @@ def calculation_closure_identities(revision: ModeloRevision, modelo_id: str) -> 
 
     Args:
         revision: The :class:`ModeloRevision` whose calculation closure to derive.
+        modelo_id: Modelo identifier used to scope cross-modelo selectors;
+            selectors whose ``source_modelo`` differs from ``modelo_id`` are
+            excluded from the closure.
 
     The closure spans the same surface (formula targets, transitive
     formula-expression refs, formula/binding endpoint casillas,
@@ -1523,6 +1526,15 @@ def derive_calculation_completeness_casillas(
 
     Args:
         revision: The :class:`ModeloRevision` whose calculation closure to derive into a manifest.
+        modelo_id: Modelo identifier; cross-modelo selectors whose
+            ``source_modelo`` differs from ``modelo_id`` are excluded from
+            the closure.
+        multi_segment: When True, the manifest is segment-aware and a casilla
+            number repeated across distinct segments produces distinct manifest
+            rows; when False, segment metadata is dropped from the manifest key.
+        diseno_path: Optional path to an AEAT Diseño workbook used to
+            cross-check that every derived manifest casilla also appears on
+            the published record design.
 
     Returns:
         Tuple of :class:`DerivedDisenoCasilla` representing the calculation-completeness manifest.
