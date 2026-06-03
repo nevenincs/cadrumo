@@ -77,9 +77,9 @@ Resolved process issues are tracked in the S101 review: the timed-out combined C
 
 ## S102-011 | HIGH | OPEN | Final runtime rollout disposition proof still has unchecked W12.P26 rows
 
-The `W12.P25.S102` review cannot close. The plan still has 236 unchecked W12.P26 affected-file closeout rows, and the affected-file register still has 239 rows marked `pending`.
+The `W12.P25.S102` review cannot close. After the S119-S128 continuation, the plan still has 226 unchecked W12.P26 affected-file closeout rows, and the affected-file register still has 229 rows marked `pending`.
 
-This is the exact surface S102 must prove: 50 `runtime-default`, 77 `manifest-discovery`, 13 `bootstrap-custody`, 37 `plaintext-exception`, 58 `remote-mirror`, and 1 `retired` row remain unchecked. Three checked locale rows also still have pending AFR status and no local S393-S395 evidence artifact.
+This is the exact surface S102 must prove: 49 `runtime-default`, 77 `manifest-discovery`, 13 `bootstrap-custody`, 36 `plaintext-exception`, 50 `remote-mirror`, and 1 `retired` row remain unchecked. Three checked locale rows also still have pending AFR status and no local S393-S395 evidence artifact.
 
 Action remains in scope: execute the W12.P26 affected-file ledger and either restore/write the S393-S395 evidence or reopen those rows. Do not mark S102 complete until the ledger supports the final disposition claim.
 
@@ -99,6 +99,28 @@ Focused censo live and Playwright wait-constant tests passed with 6 tests, targe
 
 The `W12.P26.S123` review closed `AFR-021` for `_declarations.py`. The file is an authenticated AEAT Sede filed-declaration reader: it opens the declarations register, applies remote read guards, captures AEAT-served artefacts, and returns normalized observations. It does not select an outbound storage provider, construct secure-object repositories, route SQL storage, or create durable plaintext side stores.
 
-The active-profile signal is limited to browser-session profile binding through the active bucket id. Runtime knobs use `Settings` or `load_settings()`, and the reviewed file has no naked environment reads. The plain-file signals are bounded to Playwright temporary download reads and a declaration-PDF parser scratch path that uses `mkstemp`, closes the descriptor, and unlinks in `finally`.
+The active-profile signal is limited to browser-session profile binding through the active bucket id. Runtime knobs use `Settings` or `load_settings()`, and the reviewed file has no naked environment reads. The plain-file signals are bounded to Playwright temporary download reads and a declaration-PDF parser scratch path. The continuation review found the original `NamedTemporaryFile(delete=False)` bridge too weak for taxpayer PDF bytes and replaced it with a private `mkstemp` fd helper plus focused unlink coverage.
 
 Focused declaration-PDF observation and read-guard tests passed with 12 tests, targeted Ruff passed, and source scans found no durable storage backend/provider behavior in the reviewed module.
+
+## S120-015 | MEDIUM | RESOLVED | Broader export validation blockers were real, not external noise
+
+The initial S120 closeout under-reported the broader export-format run as blocked by unrelated registry validation. Continuation validation pursued the failure chain instead: Modelo 151 now passes its focused registry test, invalid Modelo 714 placeholder formulas were removed rather than accepted as fake coverage, and the Modelo 303 golden SHA was refreshed only after adding official DP30303 offset assertions for casillas 110, 78, and 87.
+
+Evidence: Modelo 151 registry passed 4 tests, Modelo 714 registry passed 4 tests, the Modelo 303 golden test passed, targeted Ruff passed, and the broader export-format batch passed with 114 tests.
+
+## S123-016 | MEDIUM | RESOLVED | Declaration PDF bbox temp bridge used weaker plaintext custody
+
+`_declarations.py` previously wrote sensitive declaration PDF bytes through `NamedTemporaryFile(delete=False)` before reopening the path for pdfplumber. The file was short-lived, but it was still plaintext-at-rest with weaker custody than the existing sensitive temp convention.
+
+Resolution: `_temporary_sensitive_pdf_path()` now creates the path with `mkstemp`, writes through the already-open private fd, closes it before parsing, and unlinks on exit. A real filesystem test proves payload visibility during the context, private mode on POSIX, and removal after exit. The broader Sede batch passed with 155 tests.
+
+## W12P26-017 | MEDIUM | RESOLVED | Production write inventory had unreviewed diagnostic/reference writers
+
+The production write inventory failed during S123 validation on the IVA wallet diagnostic summary and ECB reference-rate refresh writes. The fix classified both instead of ignoring the gate: the wallet diagnostic has a real Playwright-backed redaction test proving raw query/input values, wallet amounts, and table labels do not enter the summary, while ECB refresh writes are documented as non-user official reference-data maintenance after parser validation.
+
+Evidence: the full production sensitive persistence policy passed with 2 tests, and targeted Ruff passed.
+
+## S121-S128-018 | PASS | AEAT export/Sede/verify affected-file slice closed
+
+`W12.P26.S121` through `W12.P26.S128` are now checked, and `AFR-019` through `AFR-026` are marked `closed` in the affected-file register. No HIGH or CRITICAL findings remain for this slice; the medium findings above were resolved with code/test changes and current validation.
