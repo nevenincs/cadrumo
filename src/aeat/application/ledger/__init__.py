@@ -25,6 +25,20 @@ Major declarations:
 from __future__ import annotations
 
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
+from ._business_operation_invoice import (
+    BusinessOperationInvoice,
+    BusinessOperationInvoiceDocument,
+    BusinessOperationInvoiceInputError,
+    BusinessOperationInvoiceNotFoundError,
+    BusinessOperationInvoicePatch,
+    BusinessOperationInvoiceRepository,
+    BusinessOperationInvoiceResult,
+    BusinessOperationInvoiceSourceKind,
+    CollectibleInvoiceService,
+    IntracomOperationType,
+    PayableInvoiceService,
+    validate_eu_iva_id,
+)
 from ._actions import (
     add_classification_rule,
     apply_classification_rules,
@@ -129,7 +143,17 @@ __all__ = [
     "BulkClassifyFailure",
     "BulkClassifyResult",
     "BulkClassifyRow",
+    "BusinessOperationInvoice",
+    "BusinessOperationInvoiceDocument",
+    "BusinessOperationInvoiceInputError",
+    "BusinessOperationInvoiceNotFoundError",
+    "BusinessOperationInvoicePatch",
+    "BusinessOperationInvoiceRepository",
+    "BusinessOperationInvoiceResult",
+    "BusinessOperationInvoiceSourceKind",
+    "CollectibleInvoiceService",
     "EligibleCategoryRow",
+    "IntracomOperationType",
     "LedgerCatalogueResetReport",
     "LedgerExportCommand",
     "LedgerExportResult",
@@ -157,6 +181,7 @@ __all__ = [
     "ManualLedgerTransactionPatch",
     "ManualLedgerTransactionResult",
     "MergeTransactionsResult",
+    "PayableInvoiceService",
     "PurchaseInvoiceEvidence",
     "PurchaseInvoiceEvidenceInputError",
     "PurchaseInvoiceEvidenceNotFoundError",
@@ -202,6 +227,7 @@ __all__ = [
     "unset_usage_ratio",
     "update_manual_transaction",
     "update_manual_transaction_fields",
+    "validate_eu_iva_id",
     "validate_ratios_for_bucket",
     "validate_ratios_profile",
 ]
