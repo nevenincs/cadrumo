@@ -173,7 +173,11 @@ def get_storage_provider(
                 translated_message="adapters.outbound.storage.factory.errors.drive_root_missing",
             )
         credentials = _build_google_credentials(profile=profile)
-        return GoogleDriveProvider(credentials=credentials, root_folder_id=root_folder_id)
+        return GoogleDriveProvider(
+            credentials=credentials,
+            root_folder_id=root_folder_id,
+            vault_folder_name=settings_resolved.aeat_google_drive_vault_folder_name,
+        )
 
     # Should never be reached — _parse_kind already refused unknown kinds.
     raise OutboundStorageValidationError(
