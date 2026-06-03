@@ -123,7 +123,11 @@ from ...domain.modelos._work_unit import (
 from ...domain.period import parse_canonical_period, period_end_date
 from ...domain.submission import ModeloDraftStatus, SubmissionEngine
 from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
-from ..aggregation._ledger_filing_snapshot import compute_ledger_filing_snapshot
+from ..aggregation._ledger_filing_snapshot import (
+    compute_ledger_filing_evidence,
+    compute_ledger_filing_snapshot,
+    project_manual_fact_basis_entries,
+)
 from ..filing import (
     approve_draft,
     build_draft,
@@ -3052,10 +3056,18 @@ def verify_modelo_revision(
         # Uniform for every modelo: a non-ledger revision has no
         # source_transaction_ids and gets a valid empty snapshot.
         tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
+        catalogue = tx_repo.load()
         filing_snapshot = compute_ledger_filing_snapshot(
             source_transaction_ids=target.source_transaction_ids,
-            catalogue=tx_repo.load(),
+            catalogue=catalogue,
             captured_at=now,
+        )
+        filing_evidence = compute_ledger_filing_evidence(
+            source_transaction_ids=target.source_transaction_ids,
+            catalogue=catalogue,
+            snapshot_fingerprint=filing_snapshot.snapshot_fingerprint,
+            captured_at=now,
+            manual_entries=project_manual_fact_basis_entries(target.inputs_snapshot),
         )
         verified = target.model_copy(
             update={
@@ -3064,6 +3076,7 @@ def verify_modelo_revision(
                 "verified_by": actor.strip(),
                 "updated_at": now,
                 "ledger_filing_snapshot": filing_snapshot,
+                "ledger_filing_evidence": filing_evidence,
             }
         )
         cr_repo.save(upsert_calculation_revision(revisions, verified))
