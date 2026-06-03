@@ -1541,7 +1541,10 @@ def ledger_export(
     period: str | None = typer.Option(
         None,
         "--period",
-        help=tr("cli.ledger.export.period_help", default="Restrict the export to one filing period (e.g. 2025Q1, 2025)."),
+        help=tr(
+            "cli.ledger.export.period_help",
+            default="Restrict the export to one filing period (e.g. 2025Q1, 2025).",
+        ),
     ),
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.export.actor_help")),
 ) -> None:
@@ -2071,6 +2074,7 @@ def ledger_review(
             issue=spec.issue.value if spec.issue is not None else None,
             import_id=spec.import_id,
             classification=spec.classification.value if spec.classification is not None else None,
+            text=spec.text,
         ),
         transaction_repository=transaction_repository,
     )

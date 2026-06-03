@@ -273,3 +273,17 @@ def test_status_surfaces_income_expense_net_rollup() -> None:
     assert report["income_total"] != "0.00"
     assert report["expense_total"] != "0.00"
     assert "net_total" in report
+
+
+def test_review_filter_text_search() -> None:
+    """review --filter text= searches description/counterparty/category."""
+    import json
+
+    assert _RUNNER.invoke(
+        app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"]
+    ).exit_code == 0
+    res = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "review", "--filter", "text=ACME"])
+    assert res.exit_code == 0, res.output
+    rows = json.loads(res.output)["result"]["rows"]
+    assert rows
+    assert all("ACME" in r["description"] for r in rows)
