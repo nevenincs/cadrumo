@@ -72,26 +72,13 @@ source_modules =
     aeat.domain
 forbidden_modules =
     aeat.application
-# Lazy function-scoped import from domain.profile._keys into
-# application.wizard._compiler remains as Wave-future cleanup. Wave 3 P04 set
-# up the register_profile_keys() injection pattern; four of the original five
-# edges (domain.deadlines._profiles -> wizard.{_catalogue,_persistence,
-# _setup_answers} and domain.profile._keys -> wizard._catalogue) are now
-# eliminated — _profiles.py reads core.profile_catalogue and _keys.py reads
-# core.profile_catalogue.get_wizard_flows. Only the single _keys -> _compiler
-# function-scoped edge (compile_profile_keys, run at first PROFILE_KEYS access)
-# remains; its full elimination requires further refactor not yet scheduled.
-#
-# core.resources._repos.topics deferred loader import (resource-management-api
-# ADR, 2026-05-16): TopicCatalogueRepository._load contains a function-local
-# `from aeat.application.topics import load_topic_catalogue` import. It runs
-# only at first resource access, never at module-import time, so
-# core/resources/ stays an acyclic leaf. The ADR places the concrete
-# Repository implementations in core/resources/ and chose lazy loading as the
-# default (ADR Q5). This is the same edge the core-not-outer and layered
-# contracts already document; this contract reaches it transitively (a domain
-# test imports core.resources, which lazily loads core.resources._repos.topics).
-# Pinned individually (no wildcard) so a new non-deferred edge is still caught.
+# Production domain -> application coupling is zero. The former
+# domain.contribuyente._keys -> application.wizard._compiler lazy edge was
+# eliminated by the DB-17 eager-registration bootstrap (importing
+# aeat.application.wizard pushes PROFILE_KEYS at import time), and the topic
+# catalogue loader now reads core.topics (a core -> core edge), so neither
+# crosses this boundary any longer. Only sanctioned test/fixture edges remain,
+# pinned individually below so a new non-deferred production edge is still caught.
 ignore_imports =
     # ── W09: sanctioned cross-layer test/fixture/oracle edges (roundtrip discipline) ──
     aeat.domain.deadlines.conftest -> aeat.application.wizard._catalogue

@@ -5,7 +5,7 @@ Real-behavior AST + source walk that asserts:
 (a) The three financial-provider teardown ``except Exception`` sites
     carry a ``BROAD-EXCEPT-RATIONALE-*`` inline comment.
 
-(b) The three ``-> Any`` lazy-module helpers in ``core/profile.py`` carry
+(b) The three ``-> Any`` lazy-module helpers in ``core/setup_answers.py`` carry
     an ``ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE`` inline marker.
 
 (c) The four ``**kwargs: Any`` snapshot-dispatch hooks carry a
@@ -69,10 +69,10 @@ def test_financial_provider_teardown_broad_except_carry_rationale() -> None:
 
 
 # ---------------------------------------------------------------------------
-# (b) profile.py lazy-module helper ANY-RETURN-RATIONALE markers
+# (b) setup_answers.py lazy-module helper ANY-RETURN-RATIONALE markers
 # ---------------------------------------------------------------------------
 
-_PROFILE_MODULE = _SRC / "core/profile.py"
+_PROFILE_MODULE = _SRC / "core/setup_answers.py"
 _PROFILE_LAZY_HELPERS = ("_m", "_p", "_ccaa")
 _PROFILE_RATIONALE_TOKEN = "ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE"
 
@@ -89,18 +89,18 @@ def _find_def_lines(source_lines: list[str], func_names: tuple[str, ...]) -> dic
 
 
 def test_profile_lazy_module_helpers_carry_any_return_rationale() -> None:
-    """_m, _p, _ccaa in profile.py must carry ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE markers."""
+    """_m, _p, _ccaa in setup_answers.py must carry ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE markers."""
     assert _PROFILE_MODULE.exists(), f"Expected source file not found: {_PROFILE_MODULE}"
     lines = _source_lines(_PROFILE_MODULE)
     def_lines = _find_def_lines(lines, _PROFILE_LAZY_HELPERS)
     missing = [name for name in _PROFILE_LAZY_HELPERS if name not in def_lines]
-    assert not missing, f"Could not locate helpers in profile.py: {missing}"
+    assert not missing, f"Could not locate helpers in setup_answers.py: {missing}"
     failures: list[str] = []
     for name, lineno in def_lines.items():
-        # Check the def line itself (1-based → 0-based index)
-        def_line = lines[lineno - 1]
-        if _PROFILE_RATIONALE_TOKEN not in def_line:
-            failures.append(f"profile.py:{lineno} def {name}: missing {_PROFILE_RATIONALE_TOKEN!r}")
+        # The marker may appear in the 10 lines preceding the def (block-comment
+        # style) or on the def line itself — same convention as the (c) hooks.
+        if not _check_marker_near_def(lines, lineno, _PROFILE_RATIONALE_TOKEN):
+            failures.append(f"setup_answers.py:{lineno} def {name}: missing {_PROFILE_RATIONALE_TOKEN!r}")
     assert not failures, "\n".join(failures)
 
 
