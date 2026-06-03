@@ -38,6 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 _FIXTURES_ROOT = FIXTURES_DIR / "site_health"
 _PROBE_URL = "https://sede.agenciatributaria.gob.es/"
 _RATE_LIMIT_DEFAULT = 300
+_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
 
 
 def _load_case(path: Path, *, default_status: int) -> tuple[int, dict[str, str], str]:
@@ -138,6 +139,37 @@ def test_waf_fixtures_classify(path: Path) -> None:
     )
     assert single is not None
     assert single.state is SiteHealthState.WAF_CHALLENGE
+
+
+def test_waf_evidence_fragment_is_centrally_redacted() -> None:
+    """Remote-provider HTML evidence must not carry raw sensitive payloads."""
+    html = (
+        "<html><body>"
+        "<p>Request blocked by web application firewall.</p>"
+        "<p>Reference ID 12345678Z</p>"
+        "<a href='https://example.test/private/path?token=secret'>support</a>"
+        f"<script>const authorization = 'bearer {_JWT}';</script>"
+        "</body></html>"
+    )
+
+    status = parse_waf_challenge(
+        _PROBE_URL,
+        403,
+        {},
+        html,
+        rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
+    )
+
+    assert status is not None
+    fragment = status.evidence.html_fragment
+    assert "Request blocked" in fragment
+    assert "12345678Z" not in fragment
+    assert "sha256:" in fragment
+    assert "private/path" not in fragment
+    assert "token=secret" not in fragment
+    assert "https://example.test" in fragment
+    assert _JWT not in fragment
+    assert "token:sha256:" in fragment
 
 
 @pytest.mark.parametrize("path", _RATE_LIMITED_FILES, ids=lambda p: p.name)
