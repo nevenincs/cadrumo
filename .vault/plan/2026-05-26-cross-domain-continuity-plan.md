@@ -793,3 +793,17 @@ Introduce a source_jurisdiction axis on the ledger so IRNR M210 routing, Beckham
 - [x] `W12.P65.S384` - add profile-conditional validation IRNR profile rejects non-ES rows on M210 calculate path per Art 13 TRLIRNR; `Beckham regime filters non-ES from IRPF base per Art 93.5 LIRPF; emit ModeloVerificationFinding with legal_refs threaded per S318 provenance pattern; `src/aeat/application/modelo/_actions.py + src/aeat/application/ledger/_preflight.py`.
 - [x] `W12.P65.S385` - author source-jurisdiction-axis ADR concurrent with implementation citing Art 13 TRLIRNR and Art 93.5 LIRPF; `add roundtrip test populating source_jurisdiction with non-default value plus anti-tautology proof mutating the persisted column and asserting ValidationError; `.vault/adr/2026-05-27-source-jurisdiction-axis-adr.md + src/aeat/application/ledger/test_source_jurisdiction_roundtrip.py`.
 - [x] `W12.P65.S386` - add aeat app ledger reclassify --source-jurisdiction CC verb for backfilling existing entries supporting --transaction-id and --filter scopes reusing bulk-classify partial-success semantics from W05.P25; `src/aeat/entrypoints/cli/_ledger.py + src/aeat/application/ledger/_actions.py`.
+
+## Wave `W13` - Session-surfaced quantification (lint-zero session)
+
+Quantify gaps surfaced during the 2026-06-03 lint-zero session that did not have a tracked Step before: CLI sub-noun-group parity sweep, line-ending normalisation, peer-WIP collision pattern, and other-modelo dual-helper sweep companion. Each Step bounds further work so peer agents inherit the surface without re-discovering it.
+
+### Phase `W13.P66` - Quantification of session-surfaced gaps
+
+Capture concrete follow-up Steps from items the lint-zero session surfaced but did not (and could not) close in-flight.
+
+- [ ] `W13.P66.S403` - Extend test_output_language_parity.py to sweep every CLI sub-noun-group (auth_diagnostics, auth_apoderado, repair, bucket, ratios) — W09.P45.S232 closed the 9 config profile verbs only; `src/aeat/entrypoints/cli/test_output_language_parity.py`.
+- [x] `W13.P66.S404` - Add .gitattributes mapping py/yml/md/toml to LF normalisation so peer commits stop introducing CRLF on Windows worktrees; `every session's commit logs were noise-cluttered with 'CRLF will be replaced by LF' warnings; `.gitattributes`.
+- [ ] `W13.P66.S405` - Sweep aggregation + binding pipelines for other dual-helper duplications similar to S159 business-proportion + S200 decimal-binding-value; `specifically look for ledger_period_for_modelo_readiness vs deadline window converters and any sibling iva/renta proportion lookups; `src/aeat/application/aggregation src/aeat/application/modelo`.
+- [ ] `W13.P66.S406` - Audit peer-WIP collision protocol — the lint-zero session encountered 3+ peer-WIP collisions on core.errors NoActiveProfileError + diagnostics.py refactor + secure-storage event records; `the abort-on-WIP rule applied but the operator-facing test failure was opaque ('AeatError subclass missing ErrorCode registry entry'); needs a clearer refusal-pattern audit; `.vault/audit/`.
+- [ ] `W13.P66.S407` - Verify CLI sub-noun-group bucket_app maintenance verbs (browse/search/export/import/rename/delete) for S2150 when BucketMaintenanceService lands; `today only 'history' is mounted under bucket_app; `src/aeat/entrypoints/cli/_config/__init__.py`.
