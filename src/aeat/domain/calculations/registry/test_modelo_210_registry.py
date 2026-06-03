@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import date
-
 import pytest
 
 from ....core.resources import bundled_path
@@ -35,7 +33,7 @@ def test_modelo_210_revision_2025_declares_constructs() -> None:
 
 
 def test_modelo_210_revision_2025_formula_targets_resolve() -> None:
-    modelo, catalogues = _load_modelo_210()
+    modelo, _catalogues = _load_modelo_210()
     revision = modelo.revisions["2025"]
     irnr_calc = next(c for c in revision.constructs if c.id == "m210-irnr-calculation")
     assert irnr_calc.formulas, "m210-irnr-calculation must declare formulas"
