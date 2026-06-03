@@ -64,6 +64,7 @@ from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY, O
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import now
+from ...domain.attachments import AttachmentSource
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -862,6 +863,80 @@ def ledger_attach(
     )
 
 
+@app.command("doclink", help=tr("cli.ledger.doclink.help", default="Record a Gmail/Drive/URL document link on a ledger row (never fetched)."))
+def ledger_doclink(
+    ctx: typer.Context,
+    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.doclink.id_help", default="Ledger transaction id.")),
+    source: AttachmentSource = typer.Option(
+        ..., "--source", help=tr("cli.ledger.doclink.source_help", default="Link source: gmail, google_drive, or url.")
+    ),
+    reference: str = typer.Option(
+        ..., "--reference", help=tr("cli.ledger.doclink.reference_help", default="The document link reference.")
+    ),
+    note: str = typer.Option("", "--note", help=tr("cli.ledger.doclink.note_help", default="Optional note.")),
+    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.doclink.actor_help", default="Operator label.")),
+) -> None:
+    """Record a Gmail/Drive/URL document link as local evidence on a ledger row.
+
+    The remote document is never fetched: the locally-stored payload is the link
+    reference itself, registered as a content-addressed
+    :class:`~aeat.domain.attachments.Attachment` and bound to the transaction's
+    ``attachment_ids``. The live counterpart (resolving the link's bytes from
+    Drive/Gmail) is tracked separately in Wave W04.
+    """
+    from ...adapters.persistence.storage.attachment import AttachmentStore
+    from ...domain.attachments import AttachmentKind
+    from ...domain.attachments._service import add_link_attachment
+
+    kind_by_source = {
+        AttachmentSource.GMAIL: AttachmentKind.EMAIL_MESSAGE,
+        AttachmentSource.GOOGLE_DRIVE: AttachmentKind.DRIVE_DOCUMENT,
+        AttachmentSource.URL: AttachmentKind.OTHER,
+    }
+    kind = kind_by_source.get(source)
+    if kind is None:
+        raise _bad(
+            tr(
+                "cli.ledger.doclink.bad_source",
+                source=source.value,
+                default=f"document-link source must be one of: gmail, google_drive, url (got '{source.value}').",
+            )
+        )
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    store = AttachmentStore()
+    attachment = add_link_attachment(
+        store,
+        kind=kind,
+        source=source,
+        source_reference=reference,
+        captured_at=now(),
+        bucket_id=transaction_repository.bucket_id,
+        link_transaction_ids=(resolved_id,),
+        notes=note,
+    )
+    result = attach_manual_transaction_evidence(
+        bucket_id=transaction_repository.bucket_id,
+        transaction_id=resolved_id,
+        attachment_ids=(attachment.attachment_id,),
+        actor=actor or resolve_active_bucket_id() or "operator",
+        source_command="aeat app ledger doclink",
+        transaction_repository=transaction_repository,
+        attachment_store=store,
+    )
+    from ._ledger_payloads import LedgerAttachResult
+
+    _emit_update_result(
+        ctx,
+        result.transaction,
+        result.ref.bucket_id,
+        result.bucket_event_ids,
+        command="ledger.doclink",
+        result_cls=LedgerAttachResult,
+    )
+
+
 @app.command("archive", help=tr("cli.ledger.archive.help"))
 def ledger_archive(
     ctx: typer.Context,
@@ -1587,6 +1662,7 @@ def ledger_export(
 @app.command("list", help=tr("cli.ledger.list.help"))
 def ledger_list(
     ctx: typer.Context,
+    filters: list[str] = typer.Option([], "--filter", help=tr("cli.ledger.list.filter_help")),
     limit: int | None = typer.Option(None, "--limit", min=1, help=tr("cli.ledger.list.limit_help")),
     offset: int = typer.Option(0, "--offset", min=0, help=tr("cli.ledger.list.offset_help")),
     group: str | None = typer.Option(None, "--group", help=tr("cli.ledger.list.group_filter_help")),
@@ -1594,22 +1670,54 @@ def ledger_list(
 ) -> None:
     """List bucket-scoped ledger transactions through the backend read service.
 
-    ``--limit`` / ``--offset`` page the result. The page is clipped honestly:
-    when more rows exist beyond the window a truncation footer states the full
-    total, so a large ledger is never silently capped. ``--group`` filters to one
-    organisational :attr:`group_label`; ``--by-group`` sections the listing under
-    a header per label so thousands of rows stay legible.
+    ``--filter KEY=VALUE`` narrows the listing using the same typed
+    :class:`LedgerReviewFilterSpec` that ``ledger review`` uses, so the two
+    surfaces share one closed-key catalogue: ``period`` (``YYYY-Qn`` / ``YYYYQn``
+    / ``YYYY-MM`` / bare ``YYYY`` for a whole year), ``status`` (pending /
+    reviewed / skipped), ``classification`` (business / personal / mixed / ...),
+    ``issue`` (gap / duplicate / ...), ``import``, and ``text`` free-text. Filters
+    apply before paging and grouping, so an operator can scope a large ledger to
+    one period/year/class instead of dumping every row and grepping.
+
+    ``--limit`` / ``--offset`` page the (filtered) result. The page is clipped
+    honestly: when more rows exist beyond the window a truncation footer states
+    the full total, so a large ledger is never silently capped. ``--group``
+    filters to one organisational :attr:`group_label`; ``--by-group`` sections the
+    listing under a header per label so thousands of rows stay legible.
     """
     # S09 doc-note: `ledger list` is a read-only query; ValidationError cannot
     # originate here from operator input. Stored-data drift (a persisted record
     # that no longer deserialises) surfaces as a CliStoredDataValidationBoundaryError
     # raised by _state() / _tx_repo() — handled by S05, not this verb.
+    try:
+        spec = LedgerReviewFilterSpec.from_strings(filters)
+    except FilterParseError as exc:
+        raise _bad(tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.raw_token)) from exc
     state = _state()
     transaction_repository = _tx_repo(state)
     all_results = list_manual_transactions(
         bucket_id=transaction_repository.bucket_id,
         transaction_repository=transaction_repository,
     )
+    if spec.clauses:
+        # Reuse the canonical review-row filter (one shared filter
+        # implementation with `ledger review`) to resolve the matching
+        # transaction-id set, then keep the list rows in that set so list's
+        # own paging / grouping / rendering are preserved unchanged.
+        matching = query_ledger_review_rows(
+            LedgerReviewQuery(
+                bucket_id=transaction_repository.bucket_id,
+                period=_canonical_period(spec.period) if spec.period else None,
+                status=spec.status.value if spec.status is not None else None,
+                issue=spec.issue.value if spec.issue is not None else None,
+                import_id=spec.import_id,
+                classification=spec.classification.value if spec.classification is not None else None,
+                text=spec.text,
+            ),
+            transaction_repository=transaction_repository,
+        )
+        matching_ids = {row.id for row in matching.rows}
+        all_results = tuple(r for r in all_results if r.transaction.transaction_id in matching_ids)
     if group is not None:
         wanted = group.strip() or None
         all_results = tuple(r for r in all_results if r.transaction.group_label == wanted)

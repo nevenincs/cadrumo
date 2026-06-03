@@ -739,3 +739,46 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
     refused = _RUNNER.invoke(app, ["app", "ledger", "update", "--id", tx, "--notes", "tweak"])
     assert refused.exit_code != 0, refused.output
     assert "finalized modelo" in refused.output.lower() or "modelo" in refused.output.lower()
+
+
+# --- W15.P28.S95: offline Gmail/Drive document-link metadata -----------------
+def test_doclink_records_drive_link_as_local_evidence_never_fetched() -> None:
+    """A Gmail/Drive/URL link is recorded as local ledger-row evidence without
+    any network fetch: the stored attachment carries the link reference and the
+    row's attachment_ids gains the content-addressed id.
+    """
+    from ...adapters.persistence.storage.attachment import AttachmentStore
+    from ...domain.attachments._service import load_attachment
+
+    _import_bbva()
+    rows = _list_rows()
+    tx = _find(rows, "Material oficina Papeleria Gomez")["transaction_id"]
+    link = "https://drive.google.com/file/d/ABC123ticket/view"
+
+    res = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "doclink", "--id", tx, "--source", "GOOGLE_DRIVE", "--reference", link, "--note", "ticket"],
+    )
+    assert res.exit_code == 0, res.output
+
+    catalogue = _active_repo().load()
+    txn = catalogue.get(tx)
+    assert txn.attachment_ids, "doclink must bind an attachment id to the row"
+    attachment = load_attachment(AttachmentStore(), txn.attachment_ids[0])
+    # The link reference is recorded verbatim; the payload is the link itself
+    # (mime text/uri-list) — proof the remote document was never fetched.
+    assert attachment.source_reference == link
+    assert attachment.source.value == "GOOGLE_DRIVE"
+    assert attachment.mime_type == "text/uri-list"
+    assert attachment.notes == "ticket"
+
+
+def test_doclink_refuses_non_link_source() -> None:
+    _import_bbva()
+    rows = _list_rows()
+    tx = _find(rows, "Material oficina Papeleria Gomez")["transaction_id"]
+    # LOCAL_FILE is a valid AttachmentSource but not a document *link* source.
+    res = _RUNNER.invoke(
+        app, ["app", "ledger", "doclink", "--id", tx, "--source", "LOCAL_FILE", "--reference", "/tmp/x"]
+    )
+    assert res.exit_code != 0, res.output
