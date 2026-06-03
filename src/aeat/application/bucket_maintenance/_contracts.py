@@ -9,6 +9,7 @@ typed as their core enums per the architecture-boundaries discipline.
 from __future__ import annotations
 
 from datetime import datetime
+from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -114,3 +115,73 @@ class BrowseBucketResult(BaseModel):
 
     bucket_id: BucketId
     rows: tuple[BucketNamespaceInventoryRow, ...]
+
+
+class ExportBucketCommand(BaseModel):
+    """Operator request to export a bucket as a sealed archive.
+
+    The ``output_path`` is operator-specified; the service refuses to
+    overwrite an existing target. The ``recovery_wrap_passphrase``
+    field is optional: when present the service derives a
+    recovery-passphrase KEK and emits a 3-member archive (including
+    ``recovery.wrap``); when absent the service uses the bucket's
+    active KEK and emits a 2-member archive without recovery-wrap.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    bucket_id: BucketId
+    output_path: Path
+    recovery_wrap_passphrase: str | None = Field(default=None, min_length=8, max_length=512)
+
+
+class ExportBucketResult(BaseModel):
+    """Outcome of a successful bucket export.
+
+    Carries the written archive path plus the manifest digest that
+    the importer cross-checks at unseal time. Operator emitters
+    render the archive path so the operator can locate the file for
+    backup or transfer.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    bucket_id: BucketId
+    output_path: Path
+    manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    recovery_wrap_present: bool
+    occurred_at: datetime
+
+
+class ImportBucketCommand(BaseModel):
+    """Operator request to import a sealed bucket archive.
+
+    The ``source_path`` is operator-specified. The service refuses
+    when the archive's ``bucket_id`` collides with an existing live
+    profile unless ``force_replace`` is ``True``; when the source
+    archive carries a recovery-wrap member, the operator MUST supply
+    the matching ``recovery_wrap_passphrase``.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    source_path: Path
+    force_replace: bool = False
+    recovery_wrap_passphrase: str | None = Field(default=None, min_length=8, max_length=512)
+
+
+class ImportBucketResult(BaseModel):
+    """Outcome of a successful bucket import.
+
+    Carries the imported bucket's identity and the manifest digest
+    the archive header declared. Downstream consumers cross-check
+    the digest against the freshly-provisioned manifest as a
+    pre-flight integrity gate.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    bucket_id: BucketId
+    manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    archive_schema_version: int = Field(ge=1)
+    occurred_at: datetime
