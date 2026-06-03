@@ -8,6 +8,7 @@ their own colocated test modules.
 
 from __future__ import annotations
 
+import importlib
 from datetime import UTC, datetime
 
 import pytest
@@ -26,6 +27,7 @@ from . import (
     ProviderKind,
     ProviderObjectMetadata,
     ProviderProbeReport,
+    StorageCorruptionError,
     StorageProvider,
 )
 
@@ -126,6 +128,32 @@ def test_storage_validation_error_is_value_error_subclass() -> None:
     assert issubclass(OutboundStorageValidationError, ValueError)
 
 
+def test_storage_package_public_surface_keeps_factory_and_manifest_helpers_private_backends_hidden() -> None:
+    module = importlib.import_module("aeat.adapters.outbound.storage")
+
+    for public_symbol in (
+        "StorageProvider",
+        "ProviderKind",
+        "OutboundStorageError",
+        "get_storage_provider",
+        "REMOTE_MIRROR_MANIFEST_NAMESPACE",
+        "REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION",
+        "build_remote_mirror_namespace_manifest",
+        "inspect_remote_mirror_upload",
+        "inspect_remote_mirror_download",
+    ):
+        assert hasattr(module, public_symbol), public_symbol
+        assert public_symbol in module.__all__, public_symbol
+
+    for private_backend_symbol in (
+        "GoogleDriveProvider",
+        "LocalFileSystemProvider",
+        "InMemoryDriveProvider",
+    ):
+        assert not hasattr(module, private_backend_symbol), private_backend_symbol
+        assert private_backend_symbol not in module.__all__, private_backend_symbol
+
+
 def test_every_leaf_carries_a_registered_error_code() -> None:
     leaves = (
         OutboundStorageError,
@@ -137,6 +165,7 @@ def test_every_leaf_carries_a_registered_error_code() -> None:
         OutboundStorageNetworkError,
         OutboundStorageIntegrityError,
         OutboundStorageUnavailableError,
+        StorageCorruptionError,
     )
     codes = {leaf.code.code for leaf in leaves}
     assert len(codes) == len(leaves), f"duplicate codes: {codes}"
