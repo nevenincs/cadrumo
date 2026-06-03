@@ -28,9 +28,12 @@ from ....application.storage.calc_sheets import (
     TabName,
     serialize_offline_workbook,
 )
+from ....application.storage.calc_sheets import SheetNumberFormat
 from ._calc_sheets_apply import (
+    _build_emphasis_format_requests,
     _build_evidence_value_data,
     _build_formula_data,
+    _build_number_format_requests,
     _build_value_data,
 )
 
@@ -111,6 +114,41 @@ def test_value_and_formula_cells_render_identically_offline_and_online() -> None
         assert online_formulas[addr] == _offline_value(workbook, cell.address), addr
         # Both transports emit a live spreadsheet formula (leading '=').
         assert str(online_formulas[addr]).startswith("=")
+
+
+def test_apply_adapter_emits_number_format_and_emphasis_requests() -> None:
+    # S22: the online apply renders number formats + start/final + section
+    # headers, not just values. A plan with a money number format yields a
+    # NUMBER repeatCell; section headers / anchors yield bold repeatCells.
+    from ....application.storage.calc_sheets import SheetAnchor, SheetSectionHeader
+
+    plan = _plan().model_copy(
+        update={
+            "number_formats": (
+                SheetNumberFormat(
+                    address=SheetCellAddress.at(TabName.CALCULOS, 2, 4),
+                    casilla="cuota",
+                    data_type="money",
+                    pattern="#,##0.00",
+                ),
+            ),
+            "section_headers": (
+                SheetSectionHeader(address=SheetCellAddress.at(TabName.ENTRADAS, 2, 1), text="Sección A"),
+            ),
+            "anchors": (
+                SheetAnchor(address=SheetCellAddress.at(TabName.CALCULOS, 2, 6), kind="final", label="RESULTADO"),
+            ),
+        }
+    )
+    sheet_id_by_tab = {tab.value: index for index, tab in enumerate(TabName)}
+    number_requests = _build_number_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+    assert number_requests, "money casilla must yield a numberFormat request"
+    fmt = number_requests[0]["repeatCell"]["cell"]["userEnteredFormat"]["numberFormat"]
+    assert fmt == {"type": "NUMBER", "pattern": "#,##0.00"}
+
+    emphasis = _build_emphasis_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+    assert emphasis, "section headers / anchors must yield bold requests"
+    assert emphasis[0]["repeatCell"]["cell"]["userEnteredFormat"]["textFormat"]["bold"] is True
 
 
 def test_evidence_surface_conforms_offline_and_online() -> None:
