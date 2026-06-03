@@ -335,7 +335,7 @@ Current register count: `293` production candidate files.
 | `AFR-043` | `src/aeat/adapters/outbound/storage/_protocol.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-044` | `src/aeat/adapters/outbound/storage/_records.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-045` | `src/aeat/adapters/persistence/profile/assets.py` | `secure-object, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
-| `AFR-046` | `src/aeat/adapters/persistence/profile/inventory.py` | `secure-object, sql-route, plain-file` | `retired` | `W12.P21.S86` | pending |
+| `AFR-046` | `src/aeat/adapters/persistence/profile/inventory.py` | `secure-object, sql-route, plain-file` | `runtime-default` | `W12.P21.S86` | closed |
 | `AFR-047` | `src/aeat/adapters/persistence/storage/__init__.py` | `runtime, master-key` | `runtime-default` | `W12.P21.S86` | pending |
 | `AFR-048` | `src/aeat/adapters/persistence/storage/_path_safety.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-049` | `src/aeat/adapters/persistence/storage/_rotation.py` | `master-key, plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
@@ -688,7 +688,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S145` - Close `AFR-043` for `src/aeat/adapters/outbound/storage/_protocol.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/storage/_protocol.py`.
 - [x] `W12.P26.S146` - Close `AFR-044` for `src/aeat/adapters/outbound/storage/_records.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/storage/_records.py`.
 - [x] `W12.P26.S147` - Close `AFR-045` for `src/aeat/adapters/persistence/profile/assets.py` with signals `secure-object, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/persistence/profile/assets.py`.
-- [ ] `W12.P26.S148` - Close `AFR-046` for `src/aeat/adapters/persistence/profile/inventory.py` with signals `secure-object, sql-route, plain-file`, target `retired`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/profile/inventory.py`.
+- [x] `W12.P26.S148` - Close `AFR-046` for `src/aeat/adapters/persistence/profile/inventory.py` with signals `secure-object, sql-route, plain-file`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/profile/inventory.py`.
 - [ ] `W12.P26.S149` - Close `AFR-047` for `src/aeat/adapters/persistence/storage/__init__.py` with signals `runtime, master-key`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/__init__.py`.
 - [ ] `W12.P26.S150` - Close `AFR-048` for `src/aeat/adapters/persistence/storage/_path_safety.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/persistence/storage/_path_safety.py`.
 - [ ] `W12.P26.S151` - Close `AFR-049` for `src/aeat/adapters/persistence/storage/_rotation.py` with signals `master-key, plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/persistence/storage/_rotation.py`.

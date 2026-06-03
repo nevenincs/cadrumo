@@ -237,9 +237,16 @@ adapters:
     profile:
       assets:
         errors:
-          asset_already_exists: 'Aquest actiu ja existeix al llibre xifrat d''actius.'
-          load_amortizacion_ledger_failed: 'No s''ha pogut carregar el llibre xifrat d''amortització.'
-          load_asset_ledger_failed: 'No s''ha pogut carregar el llibre xifrat d''actius.'
+          asset_already_exists: Aquest actiu ja existeix al llibre xifrat d'actius.
+          load_amortizacion_ledger_failed: No s'ha pogut carregar el llibre xifrat
+            d'amortització.
+          load_asset_ledger_failed: No s'ha pogut carregar el llibre xifrat d'actius.
+      inventory:
+        errors:
+          inventory_ledger_already_exists: 'Aquest llibre d''inventari ja existeix.'
+          inventory_ledger_not_found: 'No s''ha trobat el llibre d''inventari sol·licitat.'
+          load_inventory_ledger_failed: 'No s''ha pogut carregar el llibre xifrat d''inventari.'
+          movement_already_exists: 'Aquest moviment d''inventari ja existeix.'
   sede:
     errors:
       cotejo_nav_failed: La navegació a la pàgina de cotejo d'AEAT ha fallat; la sessió
@@ -3532,7 +3539,8 @@ errors:
       són contradictòries. Fes servir només una de --quiet, --verbose o --debug.
     refused_cli_non_tty: Aquesta ordre necessita una entrada interactiva, però l'entrada
       estàndard està redirigida. Executa-la en una terminal interactiva.
-    refused_cli_validation_boundary: 'L''entrada de l''ordre no ha superat la validació. Comproveu els arguments o executeu `aeat --help`.'
+    refused_cli_validation_boundary: L'entrada de l'ordre no ha superat la validació.
+      Comproveu els arguments o executeu `aeat --help`.
     refused_config_reset_unconfirmed: El restabliment de la configuració no s'ha confirmat.
       Torna a executar l'ordre confirmant l'operació.
     refused_diagnostic_model_invariant: 'Refusat: invariant del model de diagnostic

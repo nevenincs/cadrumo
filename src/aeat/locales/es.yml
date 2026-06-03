@@ -243,9 +243,15 @@ adapters:
     profile:
       assets:
         errors:
-          asset_already_exists: 'Ese activo ya existe en el libro cifrado de activos.'
-          load_amortizacion_ledger_failed: 'No se pudo cargar el libro cifrado de amortización.'
-          load_asset_ledger_failed: 'No se pudo cargar el libro cifrado de activos.'
+          asset_already_exists: Ese activo ya existe en el libro cifrado de activos.
+          load_amortizacion_ledger_failed: No se pudo cargar el libro cifrado de amortización.
+          load_asset_ledger_failed: No se pudo cargar el libro cifrado de activos.
+      inventory:
+        errors:
+          inventory_ledger_already_exists: 'Ese libro de inventario ya existe.'
+          inventory_ledger_not_found: 'No se encontró el libro de inventario solicitado.'
+          load_inventory_ledger_failed: 'No se pudo cargar el libro cifrado de inventario.'
+          movement_already_exists: 'Ese movimiento de inventario ya existe.'
   sede:
     errors:
       cotejo_nav_failed: La navegación a la página de cotejo de AEAT falló; la sesión
@@ -3577,7 +3583,8 @@ errors:
       son contradictorias. Usa solo una de --quiet, --verbose o --debug.
     refused_cli_non_tty: Este comando necesita una entrada interactiva, pero la entrada
       estándar está redirigida. Ejecútalo en una terminal interactiva.
-    refused_cli_validation_boundary: 'La entrada del comando no superó la validación. Compruebe los argumentos o ejecute `aeat --help`.'
+    refused_cli_validation_boundary: La entrada del comando no superó la validación.
+      Compruebe los argumentos o ejecute `aeat --help`.
     refused_config_reset_unconfirmed: El restablecimiento de la configuración no se
       confirmó. Vuelve a ejecutar el comando confirmando la operación.
     refused_diagnostic_model_invariant: 'Rechazado: invariante del modelo de diagnostico

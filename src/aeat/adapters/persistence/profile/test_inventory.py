@@ -17,12 +17,13 @@ import pytest
 
 from ....domain.contribuyente.inventory import (
     InventoryLedger,
+    InventoryLedgerError,
     MovementKind,
     MovementRecord,
     ValuationMethod,
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .inventory import load_inventory, record_movement, save_inventory
+from .inventory import InventoryLedgerRepository, load_inventory, record_movement, save_inventory
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -60,6 +61,43 @@ def test_inventory_persistence_and_real_movement_append() -> None:
 
     assert len(updated.period_movements) == 1
     assert load_inventory()[0] == updated
+
+
+def test_inventory_duplicate_ledger_refusal_is_localized_and_structured() -> None:
+    ledger = InventoryLedger(
+        actividad_id="retail",
+        year=2025,
+        valuation_method=ValuationMethod.FIFO,
+        opening_stock=Decimal("0.00"),
+    )
+    repository = InventoryLedgerRepository()
+    repository.create(ledger)
+
+    with pytest.raises(InventoryLedgerError) as exc_info:
+        repository.create(ledger)
+
+    assert (
+        exc_info.value.translated_message
+        == "adapters.persistence.profile.inventory.errors.inventory_ledger_already_exists"
+    )
+    assert exc_info.value.context == {"actividad_id": "retail", "year": 2025}
+
+
+def test_inventory_duplicate_movement_refusal_is_localized_and_structured() -> None:
+    ledger = InventoryLedger(
+        actividad_id="retail",
+        year=2025,
+        valuation_method=ValuationMethod.FIFO,
+        opening_stock=Decimal("0.00"),
+    )
+    movement = _movement(MovementKind.PURCHASE, "2", "10", 1)
+    save_inventory((ledger.model_copy(update={"period_movements": (movement,)}),))
+
+    with pytest.raises(InventoryLedgerError) as exc_info:
+        record_movement("retail", movement, year=2025)
+
+    assert exc_info.value.translated_message == "adapters.persistence.profile.inventory.errors.movement_already_exists"
+    assert exc_info.value.context == {"movement_id": movement.movement_id}
 
 
 def test_inventory_persistence_is_encrypted_financial_secure_object(_runtime_profile: TestRuntimeProfile) -> None:
