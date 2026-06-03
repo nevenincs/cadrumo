@@ -1,7 +1,7 @@
-aeat.domain.profile._deduccion_maternidad module
+aeat.domain.contribuyente._marriage_facts module
 ================================================
 
-.. automodule:: aeat.domain.profile._deduccion_maternidad
+.. automodule:: aeat.domain.contribuyente._marriage_facts
    :members:
    :show-inheritance:
    :ignore-module-all:
