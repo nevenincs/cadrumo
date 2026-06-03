@@ -319,7 +319,7 @@ Current register count: `293` production candidate files.
 | `AFR-027` | `src/aeat/adapters/outbound/google/_calc_sheets_apply.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-028` | `src/aeat/adapters/outbound/google/_calc_sheets_pull.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-029` | `src/aeat/adapters/outbound/google/_errors.py` | `active-profile` | `manifest-discovery` | `W12.P22.S90` | closed |
-| `AFR-030` | `src/aeat/adapters/outbound/google/_oauth_flow.py` | `secure-object, active-profile, manifest-bucket, master-key, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-030` | `src/aeat/adapters/outbound/google/_oauth_flow.py` | `secure-object, active-profile, manifest-bucket, master-key, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-031` | `src/aeat/adapters/outbound/google/_profile_binding.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-032` | `src/aeat/adapters/outbound/google/_records.py` | `secure-object, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-033` | `src/aeat/adapters/outbound/google/_refresh.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
@@ -672,7 +672,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S129` - Close `AFR-027` for `src/aeat/adapters/outbound/google/_calc_sheets_apply.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/google/_calc_sheets_apply.py`.
 - [x] `W12.P26.S130` - Close `AFR-028` for `src/aeat/adapters/outbound/google/_calc_sheets_pull.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/google/_calc_sheets_pull.py`.
 - [x] `W12.P26.S131` - Close `AFR-029` for `src/aeat/adapters/outbound/google/_errors.py` with signals `active-profile`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/outbound/google/_errors.py`.
-- [ ] `W12.P26.S132` - Close `AFR-030` for `src/aeat/adapters/outbound/google/_oauth_flow.py` with signals `secure-object, active-profile, manifest-bucket, master-key, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/google/_oauth_flow.py`.
+- [x] `W12.P26.S132` - Close `AFR-030` for `src/aeat/adapters/outbound/google/_oauth_flow.py` with signals `secure-object, active-profile, manifest-bucket, master-key, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/google/_oauth_flow.py`.
 - [ ] `W12.P26.S133` - Close `AFR-031` for `src/aeat/adapters/outbound/google/_profile_binding.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/outbound/google/_profile_binding.py`.
 - [ ] `W12.P26.S134` - Close `AFR-032` for `src/aeat/adapters/outbound/google/_records.py` with signals `secure-object, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/google/_records.py`.
 - [ ] `W12.P26.S135` - Close `AFR-033` for `src/aeat/adapters/outbound/google/_refresh.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/google/_refresh.py`.
