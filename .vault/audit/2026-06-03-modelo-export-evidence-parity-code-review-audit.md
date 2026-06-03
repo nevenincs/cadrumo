@@ -50,3 +50,23 @@ Status: PASS. Reviewed `W02.P02.S09` against the export evidence ADR. `export_mo
 ## S10-REVIEW-001 | PASS | Offline evidence sidecar roundtrip preserves casilla basis
 
 Status: PASS. Reviewed `W02.P02.S10` against the export evidence ADR and plan. The new adapter is generic: it projects bundled `LedgerFilingEvidence` into the workbook `SheetEvidenceFacet` only when the caller supplies transaction-to-casilla attribution, and refuses missing attribution instead of inferring modelo-specific tax semantics. The regression serializes the real offline workbook export, reads the XLSX `Evidencia` tab with openpyxl, validates the JSON sidecar through `OfflineWorkbookEvidenceSidecar`, checks the workbook SHA binding, and asserts contributor/manual casilla basis preservation. No Critical or High issues found.
+
+## S14-S15-REVIEW-001 | PASS | Registry-grounded offline parity gates are non-tautological
+
+Status: PASS. Reviewed landed commit `db1f5e593` against `W03.P04.S14` and `W03.P04.S15`. The parity test uses bundled registry snapshots and completeness manifests, not a duplicated hand-authored casilla list. S14 compares emitted `(number, segmento)` keys to official manifest keys; S15 compares registry computed casilla ids to actual workbook formula cells. Current full calc-sheets gate passed. No Critical or High issues found.
+
+## S17-S18-REVIEW-001 | PASS | IVA and M130 modelos are enrolled in the shared parity gate
+
+Status: PASS. Reviewed landed commit `db1f5e593` against `W04.P05.S17` and `W04.P05.S18`. M303, M390, and M130 are covered through the same parametrized registry-grounded parity test as the other export-capable modelos, with no modelo-specific expected-output table. Current full calc-sheets gate passed. No Critical or High issues found.
+
+## S19-REVIEW-001 | PASS | M100 is enrolled through generic date-binding translation
+
+Status: PASS. Reviewed `W04.P05.S19` against the plan. The implementation adds generic date-binding layout support and translates `age_at_year_end` from the reserved date-binding cell plus layout filing year, avoiding an M100-specific branch. M100 is moved from the explicit translation-gap witness into the same completeness-manifest and live-formula parity gate as the other covered modelos. Gates run: ruff on the touched calc-sheets files, full `src/aeat/application/storage/calc_sheets`, and Google worksheet export/pull roundtrip tests. No Critical or High issues found.
+
+## S20-REVIEW-001 | PASS | M200 is enrolled through generic bracket-dispatch translation
+
+Status: PASS. Reviewed landed commit `4550b9d9d` against `W04.P05.S20`. The translator generalizes the existing CCAA bracket-dispatch path to handle `lookup_bracket_by_entity_type`, and M200 is moved into the same completeness-manifest and live-formula parity gate. No M200-only layout branch is introduced. Current full calc-sheets gate passed. No Critical or High issues found.
+
+## S21-REVIEW-001 | PASS | Per-modelo coverage is explicit and bounded
+
+Status: PASS. Reviewed landed commit `be0ebb08c` against `W04.P05.S21`. The current coverage report is the explicit parametrized parity set in `test_modelo_export_parity`: M130, M303, M390, M111, M115, M200, and M100. The stale translation-gap witness was removed only after M100 and M200 built successfully, so parity is not implied beyond covered registry-backed modelos. No Critical or High issues found.
