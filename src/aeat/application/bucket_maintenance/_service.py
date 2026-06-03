@@ -27,7 +27,7 @@ from ..user_profile import (
     remove_profile_bucket_directory,
     rename_profile,
 )
-from ..workflow._profile_bucket_scan import read_profile_bucket_by_id
+from ..workflow import read_profile_bucket_by_id
 from ._contracts import (
     BrowseBucketCommand,
     BrowseBucketResult,
