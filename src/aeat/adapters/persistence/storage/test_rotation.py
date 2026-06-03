@@ -17,6 +17,7 @@ master key in a single bytes-level pass. These tests confirm:
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
@@ -24,6 +25,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
+from ....core.external_constants import UTF_8_ENCODING
 from . import (
     EncryptedBlobStore,
     Envelope,
@@ -192,7 +194,7 @@ class TestRotationRoundTrip:
             new_master_key_provider=bob,
         )
 
-        on_disk = target.read_text(encoding="utf-8")
+        on_disk = target.read_text(encoding=UTF_8_ENCODING)
         assert _NIF_CANARY not in on_disk
         assert "987.65" not in on_disk
 
@@ -296,7 +298,7 @@ class TestErrorHandling:
         store = tmp_path / "tx-store"
         store.mkdir()
         # Plant a malformed envelope-suffixed file.
-        (store / "bogus.envelope.json").write_text("not json", encoding="utf-8")
+        (store / "bogus.envelope.json").write_text("not json", encoding=UTF_8_ENCODING)
         # Plant a legit envelope alongside.
         _seed_envelope(store / "rec.envelope.json", provider=alice)
 
@@ -308,6 +310,31 @@ class TestErrorHandling:
         assert summary.rotated == 1
         assert summary.errors == 1
         assert summary.skipped == 0
+
+    def test_malformed_envelope_warning_uses_path_marker(
+        self,
+        tmp_path: Path,
+        caplog: pytest.LogCaptureFixture,
+        alice: EphemeralMasterKeyProvider,
+        bob: EphemeralMasterKeyProvider,
+    ) -> None:
+        private_root_segment = "private-profile-root-client-alpha"
+        store = tmp_path / private_root_segment / "tx-store"
+        store.mkdir(parents=True)
+        target = store / "bogus.envelope.json"
+        target.write_text("not json", encoding=UTF_8_ENCODING)
+        caplog.set_level(logging.WARNING, logger="aeat.adapters.persistence.storage._rotation")
+
+        summary = rotate_master_key(
+            (RotationPlanEntry(store_dir=store, hkdf_context=_HKDF_CONTEXT_TX),),
+            old_master_key_provider=alice,
+            new_master_key_provider=bob,
+        )
+
+        assert summary.errors == 1
+        assert "path_marker=<path:" in caplog.text
+        assert str(target) not in caplog.text
+        assert private_root_segment not in caplog.text
 
     def test_missing_store_dir_is_a_no_op(
         self,
@@ -686,7 +713,7 @@ class TestRotationLockTargetAlignment:
         store = tmp_path / "financial"
         store.mkdir()
         envelope_path = store / "usage-ratios.json"
-        envelope_path.write_text("{}", encoding="utf-8")
+        envelope_path.write_text("{}", encoding=UTF_8_ENCODING)
 
         writer_lock_target = envelope_path.with_suffix(".lock")
         entry = RotationPlanEntry(
