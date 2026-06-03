@@ -23,6 +23,6 @@ def _register_wizard_catalogue() -> None:
     """Ensure the wizard `SETUP_FLOW` catalogue is registered for the session."""
 
     from ...application.wizard import (
-        _catalogue,  # registration side effect
-        _persistence,  # registration side effect
+        _catalogue,  # noqa: F401  # registration side effect
+        _persistence,  # noqa: F401  # registration side effect
     )
