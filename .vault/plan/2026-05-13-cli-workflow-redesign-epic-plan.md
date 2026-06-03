@@ -4420,7 +4420,7 @@ Retire archive root and audit bucket app for gaps.
 Wire events and reject retired roots.
 
 - [x] `W77.P372.S2139` - Remove aeat financial profile ratios references and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
-- [ ] `W77.P372.S2140` - Wire ledger.ratios.set and ledger.ratios.unset event emission per ADR; `src/aeat/application/ledger`.
+- [x] `W77.P372.S2140` - Wire ledger.ratios.set and ledger.ratios.unset event emission per ADR; `src/aeat/application/ledger`.
 - [x] `W77.P372.S2141` - Reject aeat archive and aeat data ledgers paths at root; `src/aeat/entrypoints/cli`.
 - [x] `W77.P372.S2142` - Update help text and i18n; `src/aeat/core/i18n`.
 - [x] `W77.P372.S2143` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
