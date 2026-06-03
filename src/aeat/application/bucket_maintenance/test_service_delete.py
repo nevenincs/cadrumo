@@ -129,12 +129,16 @@ def test_delete_refusals_carry_translated_message(
     assert "bucket_id" in (active.value.context or {})
 
 
-# NB: a happy-path test (soft tombstone + hard directory removal +
-# BUCKET_DELETED emission between them) needs a two-bucket fixture so
-# the operator's active bucket is distinct from the delete target — the
-# service's active-bucket guard refuses self-deletion by design. Tracked
-# as a follow-up Step: cli-workflow-redesign W77.P373 multi-bucket
-# service fixture. Until that lands, the negative-contract tests above
-# cover the service-boundary refusals; the inner soft-tombstone and
-# hard-erase steps are covered by their own primitive roundtrip tests
-# in user_profile / orchestration test modules.
+# The happy-path delete test (full soft-tombstone + hard-erase +
+# BUCKET_DELETED-emission composition) is documented as deferred
+# because exercising it through the multi-bucket fixture surfaced
+# a real secure-storage coupling under active peer hardening
+# (#628 secure-storage-production-hardening). The fixture itself
+# (isolated_two_bucket_runtime) is landed and tested; the
+# ProfileLifecycleService write under switch_to_secondary fires
+# but the subsequent delete-side load via the active-master-key
+# provider does not resolve the secondary's keystore. The
+# session-management contract for cross-bucket writes is being
+# reshaped by peers; the happy-path test re-opens as a follow-up
+# Step once secure-storage W12+ commits settle on the
+# per-bucket-session master-key resolution path.
