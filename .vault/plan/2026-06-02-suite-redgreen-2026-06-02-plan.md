@@ -127,6 +127,7 @@ Catalogue-verification, formula-modelo parity, modelo-parity coverage, ledger-iv
 - [x] `P04.S11` - Formula-modelo parity; `test_formula_revisions_are_owned_by_constructs_with_snapshot_workflow_surfaces — wire missing formula→construct ownership`.
 - [x] `P04.S12` - Modelo parity coverage; `test_formula_bearing_modelos_have_constructs_and_model_specific_tests — list bare formula-bearing modelos`.
 - [x] `P04.S13` - M390 IVA binding chain; `Supply missing modelo-303-autoconsumo-promotor-base binding for the 390 annual pipeline test`.
+- [x] `P04.S28` - Fix M714 empty formula fragment load blocker; `src/aeat/_data/registry/aeat/modelos/714/revisions/2021-y-siguientes/formulas/0001-formulas.toml`.
 
 ### Phase `P05` - Structural ratchets
 
