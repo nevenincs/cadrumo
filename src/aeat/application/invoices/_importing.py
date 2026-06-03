@@ -92,6 +92,9 @@ def merge_invoice_import(catalogue: InvoiceCatalogue, invoices: Sequence[Invoice
 
     Args:
         catalogue: The :class:`InvoiceCatalogue` to merge the imported invoices into.
+        invoices: Sequence of :class:`Invoice` rows produced by an importer;
+            rows whose ``invoice_id`` already exists in ``catalogue`` are
+            skipped to preserve catalogue identity.
 
     Returns an :class:`InvoiceImportResult` with the updated catalogue
     and counts of imported and skipped invoices.
