@@ -4403,7 +4403,7 @@ Ratify ratios verbs and implement BucketMaintenanceService.
 - [x] `W77.P370.S2130` - Ratify aeat app ledger ratios list set unset as canonical key-value-exception verbs per W71 and add eligible and validate per the 2026-05-13 ADR extension; `src/aeat/application/ledger`.
 - [ ] `W77.P370.S2131` - Implement BucketMaintenanceService with verbs browse, search, export, import, rename, delete documented as lifecycle operations; `src/aeat/application`.
 - [ ] `W77.P370.S2132` - Add Pydantic command and result contracts and ensure destructive operations require explicit yes flag; `src/aeat/application`.
-- [ ] `W77.P370.S2133` - Add bucket.exported, bucket.imported, bucket.renamed, bucket.deleted enum members; `src/aeat/domain/buckets`.
+- [x] `W77.P370.S2133` - Add bucket.exported, bucket.imported, bucket.renamed, bucket.deleted enum members; `src/aeat/domain/buckets`.
 
 ### Phase `W77.P371` - shadow duplicate removal
 
