@@ -22,15 +22,25 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ..user_profile import rename_profile
+from ..user_profile import (
+    delete_profile_with_lifecycle_span,
+    remove_profile_bucket_directory,
+    rename_profile,
+)
 from ..workflow._profile_bucket_scan import read_profile_bucket_by_id
-from ._contracts import RenameBucketCommand, RenameBucketResult
+from ._contracts import (
+    DeleteBucketCommand,
+    DeleteBucketResult,
+    RenameBucketCommand,
+    RenameBucketResult,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - import-cycle guard
     from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 
 
 _RENAME_PAYLOAD_VERSION = 1
+_DELETE_PAYLOAD_VERSION = 1
 
 
 class BucketMaintenanceService:
@@ -100,5 +110,77 @@ class BucketMaintenanceService:
             bucket_id=command.bucket_id,
             previous_label=previous_label,
             new_label=record.display_name,
+            occurred_at=occurred_at,
+        )
+
+    def delete(self, command: DeleteBucketCommand) -> DeleteBucketResult:
+        """Destructively erase the bucket identified by ``command.bucket_id``.
+
+        Composes the existing two-step erase pattern: soft tombstone
+        via :func:`delete_profile_with_lifecycle_span` (clears the
+        active-profile pointer, writes the manifest lifecycle status,
+        tombstones the encrypted record, emits ``PROFILE_TOMBSTONED``)
+        followed by hard directory removal via
+        :func:`remove_profile_bucket_directory`. The ``BUCKET_DELETED``
+        event is emitted into the bucket's own history between the
+        soft and hard steps so the operator's verb invocation is
+        recorded before the storage is gone.
+
+        Refuses unless ``command.confirmed`` is ``True``; refuses if
+        the target bucket is the active profile (the operator must
+        switch profiles first, per the 2026-05-15 amendment to the
+        bucket ADR). Both refusals are service-boundary contracts,
+        not CLI ergonomics — a programmatic caller observes the same
+        guarantees.
+        """
+        from ...core import resolve_active_bucket_id
+        from ...domain.buckets import BucketDeleteRefusedError
+
+        if not command.confirmed:
+            raise BucketDeleteRefusedError(
+                translated_message="application.bucket_maintenance.errors.delete_not_confirmed",
+                context={"bucket_id": command.bucket_id},
+            )
+        if resolve_active_bucket_id() == command.bucket_id:
+            raise BucketDeleteRefusedError(
+                translated_message="application.bucket_maintenance.errors.delete_active_bucket",
+                context={"bucket_id": command.bucket_id},
+            )
+        pointer = read_profile_bucket_by_id(command.bucket_id)
+        if pointer is None:
+            from ...domain.user_profile import ProfileNotFoundError
+
+            raise ProfileNotFoundError(
+                translated_message="application.user_profile.errors.no_active_profile_selected",
+                context={"bucket_id": command.bucket_id},
+            )
+        previous_label = pointer.label
+        delete_profile_with_lifecycle_span(command.bucket_id)
+        occurred_at = now()
+        event = BucketEvent(
+            event_id=derive_bucket_event_id(
+                bucket_id=command.bucket_id,
+                event_type=BucketEventType.BUCKET_DELETED,
+                occurred_at=occurred_at,
+                actor="bucket-maintenance",
+                object_type=BucketEventObjectType.BUCKET,
+                object_id=command.bucket_id,
+                payload={"previous_label": previous_label},
+            ),
+            bucket_id=command.bucket_id,
+            event_type=BucketEventType.BUCKET_DELETED,
+            occurred_at=occurred_at,
+            actor="bucket-maintenance",
+            object_type=BucketEventObjectType.BUCKET,
+            object_id=command.bucket_id,
+            payload_version=_DELETE_PAYLOAD_VERSION,
+            payload={"previous_label": previous_label},
+        )
+        repository = self._event_repository or BucketEventHistoryRepository()
+        repository.save(append_bucket_event(repository.load(), event))
+        remove_profile_bucket_directory(command.bucket_id)
+        return DeleteBucketResult(
+            bucket_id=command.bucket_id,
+            previous_label=previous_label,
             occurred_at=occurred_at,
         )
