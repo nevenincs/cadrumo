@@ -349,6 +349,14 @@ def __getattr__(name: str):
 
         return getattr(_bundle, name)
     if name in (
+        "delete_profile_with_lifecycle_span",
+        "remove_profile_bucket_directory",
+        "rename_profile",
+    ):
+        from . import _orchestration
+
+        return getattr(_orchestration, name)
+    if name in (
         "USER_PROFILE_SNAPSHOT_NAMESPACE",
         "USER_PROFILE_VALUE_NAMESPACE",
         "UserProfileLifecycleRepository",
@@ -401,10 +409,13 @@ __all__ = [
     "UserProfileFactValue",
     "UserProfileLifecycleRepository",
     "UserProfileSnapshotRepository",
+    "delete_profile_with_lifecycle_span",
     "deserialize_profile_bundle",
     "facts_to_values",
     "projection_for_taxpayer",
     "record_to_values",
+    "remove_profile_bucket_directory",
+    "rename_profile",
     "serialize_profile_bundle",
     "snapshot_to_values",
     "user_profile_snapshot_object_key",
