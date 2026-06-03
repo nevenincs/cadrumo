@@ -15,7 +15,7 @@ Reviewer `Beauvoir` completed the final `W06.P11.S49` SecureStorage review acros
 
 No findings were reported. The review verified that runtime-bound repositories fail closed for missing, stale, expired, or unsecured active sessions; locale-backed error keys are present; exceptions derive from AEAT storage/core bases; and the new tests avoid fakes, mocks, stubs, monkeypatches, skips, xfails, naked environment mutation, and mirrored business logic.
 
-Closure assessment: `W06.P11.S49` can close based on the reviewed evidence. Live Google Drive mirror and formula-level calc-sheets proof remains separately tracked by the open `W06.P11.S428` through `W06.P11.S431` rows and is not claimed by this closeout.
+Closure assessment: `W06.P11.S49` can close based on the reviewed evidence. Live Google Drive mirror and formula-level calc-sheets proof is tracked separately by `W06.P11.S428` through `W06.P11.S431`, with 2026-06-03 continuation evidence under `W06.P11.S441`.
 
 ## S431-002 | MEDIUM | RESOLVED | Google Sheets quota failures were generic network errors with no client retry
 
@@ -28,6 +28,12 @@ Resolution: `execute_request` now calls google-api-python-client requests with `
 The mirror comparator could not prove that a remote root revision more than one local revision behind was an ancestor, so the implementation either had to classify true stale mirrors as conflicts or rely on timestamp-only inference. That left S43's stale-vs-conflict classification incomplete.
 
 Resolution: S440 persists `revision_ancestor_ids` on secure-object rows, exposes the tuple in `SecureObjectRawRow`, includes it in `RemoteMirrorObjectManifest`, and classifies stale mirrors by revision-id ancestry. Real repository tests now prove both the three-save stale case and the unrelated older-root conflict case.
+
+## S441-009 | PASS | Live Drive and Sheets continuation proof verified
+
+The `W06.P11.S441` review found no HIGH or CRITICAL issues. The evidence is live and bounded: active profile status and read-only probe passed, the Google Drive connector read the configured app-owned hierarchy, `_probe` was empty after the enabled live provider test, the live workbook exported as XLSX, formula reads returned the Modelo 130 chain, value reads first hit real Google Sheets HTTP 429 and then succeeded after quota reset, and focused pytest/Ruff gates passed.
+
+The current tree contains the IVA wallet calculation docstring argument-description repair needed for the targeted Ruff gate; the impacted IVA wallet test passed with 19 tests and the broader calc-sheets/export batch passed with 49 tests.
 
 ## S425-006 | PASS | Business-operation invoice JSONL store migrated to secure objects
 
@@ -52,3 +58,27 @@ Reviewer `Averroes` completed the `W12.P24.S99` review for the retained evidence
 No findings were reported. The review verified the new test uses real `EvidenceBundleService`, a real isolated runtime profile, and raw secure-object repository iteration to prove the ZIP is written to a caller-supplied path outside the storage root while the encrypted secure-object catalogue fingerprint remains unchanged.
 
 Closure assessment: `W12.P24.S99` can close. The unrelated `_iva_compensation_wallet.py` diagnostic write inventory delta remains outside this S99 slice.
+
+## S100-009 | PASS | Scanner delta closeout artifacts are honest and scoped
+
+The S100 review covered `2026-06-02-secure-storage-production-hardening-W12-P25-S100-scanner-delta.md` and the matching step record. Reviewer agent `Fermat` was spawned with the `vaultspec-code-reviewer` role but hit the account usage limit before returning findings, so the host review is recorded in `2026-06-03-secure-storage-production-hardening-W12-P25-S100-review.md` with that limitation preserved.
+
+No high or critical findings were identified. The audit records baseline/current production and test signal deltas, discloses that the original scanner source was not present as a standalone script, and leaves residual plain-file, route/session, direct-constructor, manifest-discovery, bootstrap-custody, side-store, and remote-mirror risks owned by S101, S102, and W12.P26 rather than overclaiming rollout completion.
+
+During validation, the hardening guard exposed one new unapproved explicit database-route setup in `src/aeat/application/live/test_iva_wallet_capture_backend.py`. The test was migrated to real runtime-profile storage and runtime-bound repository injection rather than added to the explicit-route allowlist.
+
+## S101-010 | PASS | Focused active-profile runtime migration gates verified
+
+The `W12.P25.S101` review found no HIGH or CRITICAL issues and no open residuals.
+
+The evidence is real validation rather than assumed coverage: storage/runtime passed 73 tests, profile lifecycle passed 30 tests, CLI lifecycle/workflow passed 76 tests after splitting the timed-out combined command, workflow persistence/resume/profile-health passed 36 tests, domain/application repositories passed 134 tests after replacing a stale removed test path, outbound storage/Google adapter tests passed 47 tests, the `SecureBoundRepository` contract passed 3 tests, and targeted Ruff passed over the focused surfaces.
+
+Resolved process issues are tracked in the S101 review: the timed-out combined CLI run is not counted as evidence, and the stale `src/aeat/domain/filing/test_repository.py` path was replaced with current repository and secure-storage roundtrip files before closure.
+
+## S102-011 | HIGH | OPEN | Final runtime rollout disposition proof still has unchecked W12.P26 rows
+
+The `W12.P25.S102` review cannot close. The plan still has 236 unchecked W12.P26 affected-file closeout rows, and the affected-file register still has 239 rows marked `pending`.
+
+This is the exact surface S102 must prove: 50 `runtime-default`, 77 `manifest-discovery`, 13 `bootstrap-custody`, 37 `plaintext-exception`, 58 `remote-mirror`, and 1 `retired` row remain unchecked. Three checked locale rows also still have pending AFR status and no local S393-S395 evidence artifact.
+
+Action remains in scope: execute the W12.P26 affected-file ledger and either restore/write the S393-S395 evidence or reopen those rows. Do not mark S102 complete until the ledger supports the final disposition claim.
