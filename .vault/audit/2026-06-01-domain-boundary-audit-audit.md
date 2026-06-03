@@ -1694,6 +1694,29 @@ remediation is currently HELD at audit-only per the active action policy.
   `domain/deadlines/conftest.py` pattern). Only after that bootstrap exists can the lazy
   pull be removed without breaking collection/runtime.
 
+- 2026-06-03: **S64 EXECUTED — DB-17 lazy domain->application pull removed; closed
+  (commit `479f6fa74`).** The bootstrap the prior empirical attempt proved necessary
+  landed via the wizard-registration-bootstrap ADR's eager-package-init approach, which
+  elegantly sidestepped the blocker that the prior attempt hit: rather than editing the
+  (peer-WIP) root conftest, `application/wizard/__init__.py` now eagerly imports
+  `_compiler`, so the registration fires whenever the wizard package is imported — and
+  BOTH existing trigger points already import it: the test-session root conftest
+  (`from .application.wizard import _catalogue`) and the production CLI bootstrap
+  `_register_wizard_catalogue_for_profile_keys()`. So PROFILE_KEYS is seeded before first
+  access in every path with NO new trigger and NO conftest edit. `_build_profile_keys`
+  deleted, `_profile_keys()` now raises the generalised `ProfileKeysRegistrationError`
+  (message-accepting; default preserved — no registry/locale cascade), the unused
+  `get_wizard_flows` import dropped, and the now-stale `.importlinter`
+  `domain.profile._keys -> application.wizard._compiler` ignore removed. No import cycle.
+  Verified: the previously-collection-breaking `domain/profile/test_keys.py` now passes;
+  **full collect-only clean (13251)**; 748 profile/wizard/deadlines/user_profile + 244
+  calculations tests green; ty clean; `Domain must not import application` KEPT. (The 3
+  `test_modelo_303_compensacion_carry_forward_continuity` reds are a pre-existing peer
+  M303 IVA-engine regression — `iva.resultado` value; peer is editing the calc registry
+  in-tree — logically independent of profile-key registration.) **ADR D7 is now
+  substantially executed** (S61 asset errors + S62 inventory errors + S64 DB-17 removal);
+  only S63 (the package rename) remains of D7 and of the whole campaign.
+
 - 2026-06-03: **S51 T8 (ModeloExport projection) attempted, ABANDONED mid-execution —
   concurrent peer edit on `cli/_modelo.py`.** `_modelo.py` polled clean at turn start;
   the projection was implemented cleanly (CLI `ModeloExportResult` -> `ModeloExportPayload`
