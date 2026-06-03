@@ -202,6 +202,34 @@ class ConfigProfileValidateResult(OutputSchema):
     issues: list[ProfileIssuePayload]
 
 
+class ProfilePreflightMissingPayload(OutputSchema):
+    """One missing-required-field row inside :class:`ConfigProfilePreflightResult`."""
+
+    selector: str
+    section_key: str
+    field_key: str
+
+
+@register_schema("config.profile.preflight")
+class ConfigProfilePreflightResult(OutputSchema):
+    """JSON envelope for ``aeat config profile preflight``.
+
+    Reports which profile fields a given ``(modelo, revision_id, filing_year,
+    period)`` filing context requires that the active profile does not yet
+    carry. ``ready=true`` when no required field is missing; exit code is
+    ``0`` when ready and ``2`` when missing fields surface so operators
+    discover the gap via the shell exit status.
+    """
+
+    profile_id: str
+    modelo: str
+    revision_id: str
+    filing_year: int
+    period: str
+    ready: bool
+    missing: list[ProfilePreflightMissingPayload]
+
+
 @register_schema("config.profile.delete")
 class ConfigProfileDeleteResult(OutputSchema):
     """JSON envelope for ``aeat config profile delete``."""

@@ -4241,7 +4241,7 @@ Implement dual-axis grammar: record CRUD plus key-value set/get/unset.
 - [x] `W74.P355.S2055` - Implement ProfileLifecycleService with canonical CRUD methods over profile records (add, remove, update, view, list); `src/aeat/application/profile`.
 - [x] `W74.P355.S2056` - Ratify set/get/unset as canonical key-value verbs for profile values per the W71 exception; `src/aeat/application/profile`.
 - [x] `W74.P355.S2057` - Implement use NAME as an alias for set active NAME and emit confirmation event per apex active-profile-safety lock; `src/aeat/application/profile`.
-- [ ] `W74.P355.S2058` - Implement duplicate, export, import, validate, preflight per the config-cli-profile-surface ADR; `src/aeat/application/profile`.
+- [x] `W74.P355.S2058` - Implement duplicate, export, import, validate, preflight per the config-cli-profile-surface ADR; `src/aeat/application/profile`.
 
 ### Phase `W74.P356` - shadow duplicate removal
 
@@ -4886,8 +4886,8 @@ Quantify the as-yet-unquantified gaps surfaced during the lint-zero-out session:
 Sub-decompose Step S2058's blanket 'duplicate/export/import/validate/preflight' into the two remaining verbs (validate, preflight); document the three already-shipped (duplicate, export, import) so S2058 closure becomes auditable.
 
 - [x] `W86.P415.S2354` - Implement aeat config profile validate verb; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W86.P415.S2355` - Implement aeat config profile preflight verb wiring ProfilePreflightReport; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W86.P415.S2356` - Close S2058 by referencing the five-verb shipping audit (duplicate/export/import already at _config/__init__.py:1138/1293/1369; `validate + preflight from S2354/S2355); `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W86.P415.S2355` - Implement aeat config profile preflight verb wiring ProfilePreflightReport; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W86.P415.S2356` - Close S2058 by referencing the five-verb shipping audit (duplicate/export/import already at _config/__init__.py:1138/1293/1369; `validate + preflight from S2354/S2355); `src/aeat/entrypoints/cli/_config/__init__.py`.
 
 ### Phase `W86.P416` - Surface-design ADRs + completeness gaps
 

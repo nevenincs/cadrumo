@@ -1543,10 +1543,9 @@ cli:
         run `aeat config profile switch NAME` (or open a new terminal and re-select).
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
-      preflight_help: Report whether the active profile is ready for one modelo /
-        year / period.
-      preflight_modelo_help: Modelo code (e.g. 303).
-      preflight_period_help: Period token (e.g. Q1, annual).
+      preflight_help: 'Report which profile fields are missing for a given (modelo, revision, filing-year, period) filing context.'
+      preflight_modelo_help: 'Numeric modelo identifier (e.g. 303).'
+      preflight_period_help: 'Period code (e.g. 1T, 1P, 0A, 01).'
       preflight_revision_help: Registry revision id.
       preflight_year_help: Filing year.
       remove_help: Tombstone a profile (immutable filing snapshots are retained)
@@ -1570,6 +1569,8 @@ cli:
       validate_help: 'Validate a profile against the loaded schema (defaults to the active profile).'
       view_help: Show one profile's facts (defaults to the active profile)
       validate_name_help: 'Optional profile label to validate; defaults to the active profile.'
+      preflight_revision_id_help: 'Registry revision id (e.g. 2024-0A).'
+      preflight_filing_year_help: 'Four-digit filing year.'
     repair:
       connectivity_help: Check browser and AEAT Sede connectivity
       connectivity_target_help: Connectivity target to probe
