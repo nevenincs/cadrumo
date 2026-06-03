@@ -1655,10 +1655,9 @@ cli:
         y vuelvas a seleccionar).
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
-      preflight_help: Report whether the active profile is ready for one modelo /
-        year / period.
-      preflight_modelo_help: Modelo code (e.g. 303).
-      preflight_period_help: Period token (e.g. Q1, annual).
+      preflight_help: 'Informa qué campos del perfil faltan para un contexto de presentación (modelo, revisión, ejercicio, periodo).'
+      preflight_modelo_help: 'Identificador numérico del modelo (p. ej. 303).'
+      preflight_period_help: 'Código de periodo (p. ej. 1T, 1P, 0A, 01).'
       preflight_revision_help: Registry revision id.
       preflight_year_help: Filing year.
       remove_help: Marcar un perfil como retirado (las snapshots inmutables se conservan)
@@ -1682,6 +1681,8 @@ cli:
       validate_help: 'Valida un perfil contra el esquema cargado (por defecto el perfil activo).'
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
       validate_name_help: 'Etiqueta opcional del perfil a validar; por defecto el perfil activo.'
+      preflight_revision_id_help: 'Identificador de revisión del registro (p. ej. 2024-0A).'
+      preflight_filing_year_help: 'Ejercicio de presentación (cuatro dígitos).'
     repair:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
       connectivity_target_help: Objetivo de conectividad que se debe comprobar

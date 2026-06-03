@@ -1082,6 +1082,85 @@ def config_profile_show(
         raise typer.Exit(code=2)
 
 
+@profile_app.command("preflight", help=tr("cli.config.profile.preflight_help"))
+def config_profile_preflight(
+    ctx: typer.Context,
+    modelo: str = typer.Option(..., "--modelo", help=tr("cli.config.profile.preflight_modelo_help")),
+    revision_id: str = typer.Option(
+        ..., "--revision-id", help=tr("cli.config.profile.preflight_revision_id_help")
+    ),
+    filing_year: int = typer.Option(
+        ..., "--filing-year", help=tr("cli.config.profile.preflight_filing_year_help")
+    ),
+    period: str = typer.Option(..., "--period", help=tr("cli.config.profile.preflight_period_help")),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    """Report which profile fields a given filing context requires that are missing.
+
+    Operates on the active profile. Exits with code ``2`` when any required
+    field is missing so operators discover the gap via the shell exit status.
+    """
+    _activate_subcommand_output_language(ctx, output_language)
+    from ....application.user_profile._preflight import ProfilePreflightService
+    from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
+
+    pointer = _resolve_active_profile_pointer()
+    if pointer is None:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.errors.no_active_profile",
+        )
+    try:
+        record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
+    except ProfileNotFoundError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": pointer.label or pointer.bucket_id},
+        ) from exc
+    from .._config_payloads import ConfigProfilePreflightResult, ProfilePreflightMissingPayload
+
+    report = ProfilePreflightService(schema=load_user_profile_schema()).report(
+        record=record,
+        modelo=modelo,
+        revision_id=revision_id,
+        filing_year=filing_year,
+        period=period,
+    )
+    result = ConfigProfilePreflightResult(
+        profile_id=report.profile_id,
+        modelo=report.modelo,
+        revision_id=report.revision_id,
+        filing_year=report.filing_year,
+        period=report.period,
+        ready=report.ready,
+        missing=[
+            ProfilePreflightMissingPayload(
+                selector=requirement.selector,
+                section_key=requirement.section_key,
+                field_key=requirement.field_key,
+            )
+            for requirement in report.missing
+        ],
+    )
+    lines = [
+        f"readiness\t{'ready' if report.ready else 'missing'}\tmissing={len(report.missing)}",
+        f"profile_id\t{report.profile_id}",
+        f"modelo\t{report.modelo}",
+        f"revision_id\t{report.revision_id}",
+        f"filing_year\t{report.filing_year}",
+        f"period\t{report.period}",
+    ]
+    for requirement in report.missing:
+        lines.append(f"missing\t{requirement.section_key}\t{requirement.field_key}\t{requirement.selector}")
+    _emit_envelope(ctx, command="config.profile.preflight", result=result, lines=lines)
+    if not report.ready:
+        raise typer.Exit(code=2)
+
+
 @profile_app.command("validate", help=tr("cli.config.profile.validate_help"))
 def config_profile_validate(
     ctx: typer.Context,

@@ -1619,10 +1619,9 @@ cli:
         terminált és újra kiválaszt).'
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <NIF>`.'
-      preflight_help: Ellenőrzi, hogy az aktív profil készen áll-e egy adott nyomtatványra
-        / évre / időszakra.
-      preflight_modelo_help: Nyomtatványkód (pl. 303).
-      preflight_period_help: Időszaktokent (pl. N1, annual).
+      preflight_help: 'Jelenti, mely profilmezők hiányoznak adott (modelo, revízió, év, időszak) bevallási kontextushoz.'
+      preflight_modelo_help: 'Számozott modelo azonosító (pl. 303).'
+      preflight_period_help: 'Időszak kód (pl. 1T, 1P, 0A, 01).'
       preflight_revision_help: Nyilvántartási revízió azonosítója.
       preflight_year_help: Benyújtási év.
       remove_help: Profil lezárása (a megváltoztathatatlan benyújtási pillanatképek
@@ -1650,6 +1649,8 @@ cli:
       validate_help: 'Validálja a profilt a betöltött sémával szemben (alapértelmezett: aktív profil).'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
       validate_name_help: 'A validálandó profil opcionális címkéje; alapértelmezett: aktív profil.'
+      preflight_revision_id_help: 'Regiszter revízió azonosító (pl. 2024-0A).'
+      preflight_filing_year_help: 'Bevallási év (négy számjegy).'
     repair:
       connectivity_help: Böngésző és AEAT Sede kapcsolhatóság ellenőrzése.
       connectivity_target_help: A vizsgálandó kapcsolódási cél.
