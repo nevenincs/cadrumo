@@ -1087,6 +1087,14 @@ def bindings_list(
         rows = report.rows
         if missing:
             profile_resolved = _profile_resolved_binding_ids(report)
+            # A ``constant_value`` binding carries its own literal and is always
+            # available, so it is never "missing". No modelo declares one today
+            # (every binding sources from manual_input / previous_filing /
+            # profile / a ledger or operation aggregation), so this clause drops
+            # nothing in the current registry; it is kept because constant_value
+            # is a deliberate source kind in the readiness vocabulary, correct
+            # for the day a registry binding adopts it. The profile-resolved
+            # exclusion is the clause that actually narrows the set today.
             rows = tuple(
                 row for row in rows if row.source != "constant_value" and row.binding_id not in profile_resolved
             )
