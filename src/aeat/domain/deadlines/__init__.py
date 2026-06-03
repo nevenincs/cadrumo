@@ -42,6 +42,7 @@ from ._engine import (
 )
 from ._errors import (
     DeadlineError,
+    DeadlineValidationError,
     NoDeadlineWindowsError,
     ProfileError,
     ScheduleComputationError,
@@ -90,6 +91,7 @@ __all__ = [
     "DeadlineEngine",
     "DeadlineError",
     "DeadlineShift",
+    "DeadlineValidationError",
     "EntityType",
     "FiscalResidency",
     "Holiday",

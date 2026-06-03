@@ -55,8 +55,7 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     expression_casilla_refs,
 )
-from ...domain.filing import CasillaCollection, CasillaSchema
-from ...domain.filing._errors import ModeloBuilderError
+from ...domain.filing import CasillaCollection, CasillaSchema, ModeloBuilderError
 
 
 class TaxpayerProfileIdentity(Protocol):
