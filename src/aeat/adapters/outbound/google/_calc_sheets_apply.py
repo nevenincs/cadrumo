@@ -48,6 +48,7 @@ from ....application.storage.calc_sheets import (
     SheetRowSet,
     SheetValueCell,
     TabName,
+    evidence_table,
 )
 from ....core.config import Settings as _Settings
 from ...outbound.storage._errors import (
@@ -361,6 +362,25 @@ def _build_row_set_header_data(row_sets: Iterable[SheetRowSet]) -> list[dict[str
                     "values": [[column.header_label]],
                 }
             )
+    return data
+
+
+def _build_evidence_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
+    """Build the Evidencia tab value writes, mirroring the offline workbook.
+
+    Consumes the shared ``evidence_table`` single source so the online Sheets
+    Evidencia surface is byte-identical to the offline xls one
+    (modelo-export-evidence-parity ADR W05): fingerprint at A1/B1, headers at
+    row 3, contributor + manual rows from row 4.
+    """
+    fingerprint, header, body = evidence_table(plan)
+    tab = TabName.EVIDENCIA.value
+    data: list[dict[str, Any]] = [
+        {"range": f"'{tab}'!A1", "values": [["Snapshot fingerprint", fingerprint]]},
+        {"range": f"'{tab}'!A3", "values": [list(header)]},
+    ]
+    for offset, row in enumerate(body):
+        data.append({"range": f"'{tab}'!A{4 + offset}", "values": [list(row)]})
     return data
 
 
@@ -922,7 +942,10 @@ def apply_export_plan(
     # Write values and formulas as USER_ENTERED so Sheets parses
     # formula strings starting with "=".
     value_data = (
-        _build_value_data(plan.value_cells) + _build_guide_value_data(plan) + _build_row_set_header_data(plan.row_sets)
+        _build_value_data(plan.value_cells)
+        + _build_guide_value_data(plan)
+        + _build_row_set_header_data(plan.row_sets)
+        + _build_evidence_value_data(plan)
     )
     formula_data = _build_formula_data(plan.formula_cells)
     update_body = {
