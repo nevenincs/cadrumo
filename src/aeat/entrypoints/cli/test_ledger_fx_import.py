@@ -237,3 +237,21 @@ def test_review_filter_by_classification() -> None:
     assert after.exit_code == 0, after.output
     matched = json.loads(after.output)["result"]["rows"]
     assert any(r.get("id") == tx or r.get("full_id") == tx or tx.startswith(str(r.get("id", ""))) for r in matched) or len(matched) >= 1
+
+
+def test_track_surfaces_import_provenance_for_imported_rows() -> None:
+    """track names the import batch (provider/source/ingest) instead of a bare '-'."""
+    import json
+
+    res = _RUNNER.invoke(
+        app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"]
+    )
+    assert res.exit_code == 0, res.output
+    rows = json.loads(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"]).output)["result"]["rows"]
+    tx = rows[0].get("full_id") or rows[0]["transaction_id"]
+    tracked = _RUNNER.invoke(app, ["app", "ledger", "track", tx])
+    assert tracked.exit_code == 0, tracked.output
+    assert "import_provider" in tracked.output
+    assert "import_source" in tracked.output
+    assert "import_fingerprint" in tracked.output
+    assert "	-" not in tracked.output.split("import_fingerprint")[1]  # fingerprint not bare
