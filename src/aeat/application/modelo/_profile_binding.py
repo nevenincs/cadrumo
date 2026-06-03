@@ -28,7 +28,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -52,6 +52,7 @@ from ...domain.user_profile import (
     load_user_profile_schema,
     profile_binding_selectors,
 )
+from ._decimal_binding_value import decimal_from_string
 
 
 class ProfileBindingResolutionError(ModeloError):
@@ -250,14 +251,15 @@ def _decimal_value(binding_id: str, value: object) -> Decimal:
         _bool_candidate = _parse_bool(stripped)
         if isinstance(_bool_candidate, bool):
             return Decimal("1") if _bool_candidate else Decimal("0")
-        try:
-            return Decimal(stripped)
-        except (InvalidOperation, ValueError) as exc:
-            raise ProfileBindingResolutionError(
-                f"profile fact for Decimal-channel binding {binding_id!r} is not decimal-compatible; "
-                f"got {value!r}. The registry consumes this binding as a numeric operand, not an enum "
-                f"dispatch key; the profile fact must carry a numeric value"
-            ) from exc
+        return decimal_from_string(
+            binding_id,
+            stripped,
+            error_factory=lambda message: ProfileBindingResolutionError(
+                f"{message}. The registry consumes this binding as a numeric operand, not an enum "
+                "dispatch key; the profile fact must carry a numeric value"
+            ),
+            pipeline_label="profile fact",
+        )
     raise ProfileBindingResolutionError(
         f"profile fact for Decimal-channel binding {binding_id!r} is not decimal-compatible; "
         f"got {value!r} (type {type(value).__name__}). The registry consumes this binding as a "
