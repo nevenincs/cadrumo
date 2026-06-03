@@ -40,6 +40,7 @@ from ._business_operation_invoice import (
     validate_eu_iva_id,
 )
 from ._actions import (
+    LedgerProviderID,
     add_classification_rule,
     apply_classification_rules,
     archive_manual_transaction,
@@ -167,6 +168,7 @@ __all__ = [
     "LLMProvider",
     "LLMProviderAvailability",
     "LedgerCatalogueResetReport",
+    "LedgerProviderID",
     "LedgerExportCommand",
     "LedgerExportResult",
     "LedgerExportRow",
