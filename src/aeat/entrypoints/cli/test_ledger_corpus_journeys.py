@@ -639,11 +639,13 @@ def test_reclassify_retains_classification_event_chain() -> None:
     tx = target["transaction_id"]
 
     first = _RUNNER.invoke(
-        app, ["app", "ledger", "classify", "--id", tx, "--classification", "BUSINESS", "--category-id", "material_oficina"]
+        app,
+        ["app", "ledger", "classify", "--id", tx, "--classification", "BUSINESS", "--category-id", "material_oficina"],
     )
     assert first.exit_code == 0, first.output
     second = _RUNNER.invoke(
-        app, ["app", "ledger", "classify", "--id", tx, "--classification", "BUSINESS", "--category-id", "asesoria_fiscal"]
+        app,
+        ["app", "ledger", "classify", "--id", tx, "--classification", "BUSINESS", "--category-id", "asesoria_fiscal"],
     )
     assert second.exit_code == 0, second.output
 
