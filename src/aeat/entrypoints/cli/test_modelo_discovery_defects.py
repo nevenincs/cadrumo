@@ -475,6 +475,8 @@ def test_modelo_202_describe_create_calculate_agree_on_period_tokens() -> None:
                 work_unit_id,
                 "--binding",
                 "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
+                "--binding",
+                "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior=0",
             ],
         )
         assert calculated.exit_code == 0, (period, calculated.output)
