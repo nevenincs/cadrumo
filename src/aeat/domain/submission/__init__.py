@@ -1,4 +1,24 @@
-"""Submission lifecycle domain package."""
+"""Submission lifecycle domain: the internal "filed" state machine.
+
+Models the local-only submission lifecycle that marks a verified modelo
+revision as internally filed (:class:`ModeloPresentado`) and records the
+attempt — never a remote AEAT write. The engine runs a preflight before
+allowing the transition.
+
+Major declarations:
+
+* :class:`SubmissionEngine` — drives a draft through preflight to the
+  ``presentado`` state.
+* :class:`Preflight` and :class:`SubmissionPreflightError` — the
+  pre-submission checks and their refusal.
+* :class:`ModeloPresentado`, :class:`SubmissionAttempt`, and
+  :class:`SubmissionStatus` — the persisted lifecycle records, keyed by
+  :func:`make_submission_id`.
+* :class:`SubmissionRepository` — the persistence boundary.
+* The :class:`ModeloDraftLoader`, :class:`ModeloDraftLike`,
+  :class:`DeadlineWindowChecker`, and :class:`AuthProviderProbe` protocols —
+  injected dependencies that keep the domain free of adapters.
+"""
 
 from __future__ import annotations
 

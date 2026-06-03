@@ -1,4 +1,28 @@
-"""End-user composite workflow engine."""
+"""End-user composite workflow engine for the modelo lifecycle.
+
+Composes the auth, filing, and submission layers into a single resumable
+workflow that drives a modelo from setup through draft, verification, and
+export. Run state is persisted per bucket, so an interrupted run resumes
+where it left off.
+
+Major declarations:
+
+* :class:`WorkflowEngine` — the orchestrator that advances a run through
+  its :class:`WorkflowStage` sequence.
+* :class:`WorkflowState` and :class:`WorkflowResult` — the persisted run
+  record and its terminal outcome.
+* :func:`resume_modelo_workflow` and :func:`find_latest_run_for_period` —
+  the resume entry points.
+* :class:`WorkflowRunRepository` and :class:`WorkflowStateRepository` —
+  the persistence boundaries.
+* :class:`WorkflowError` and its subclasses (:class:`NoActiveProfileError`,
+  :class:`WorkflowAbortedError`, :class:`WorkflowComponentError`,
+  :class:`WorkflowInputMismatchError`) — the failure taxonomy.
+
+The engine speaks to its dependencies through the protocols defined here
+(:class:`DeadlineEngineProtocol`, :class:`ModeloDraftBuilderProtocol`,
+:class:`SubmissionEngineProtocol`), so the concrete adapters stay swappable.
+"""
 
 from __future__ import annotations
 

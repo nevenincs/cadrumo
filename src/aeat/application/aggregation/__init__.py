@@ -1,4 +1,28 @@
-"""Financial aggregation value models."""
+"""Financial aggregation: roll classified ledger entries into casilla inputs.
+
+Turns the classified ledger and profile facts into the per-casilla and
+per-binding values a modelo calculation consumes, with one aggregation
+family per AEAT surface (IVA, retenciones, third-party operations, foreign
+assets, prorrata, OSS / IOSS, renta expenses). Pure value logic; the
+repositories it reads are injected.
+
+Major declarations:
+
+* :func:`aggregate_per_modelo` with :class:`PerModeloAggregationProvider`
+  and :class:`PerModeloAggregationResult` — the unified per-modelo entry
+  point.
+* :func:`aggregate_iva_ledger_observations` with :class:`IvaLedgerAggregation`
+  — the IVA (Modelo 303 family) rollup.
+* :func:`aggregate_retenciones_111` and its 115 / 123 / 180 / 190 / 193
+  siblings, with :class:`RetencionesAggregation` — withholding rollups.
+* :func:`aggregate_counterpart_347`, :func:`aggregate_counterpart_349`, and
+  :func:`aggregate_foreign_assets_720` — informativa rollups.
+* :class:`CasillaAggregation` and :class:`CasillaProvenance` — the typed
+  aggregated value plus the source provenance it carries.
+* :class:`ModeloSourceResolver` and :class:`CalculationSourceResolution` —
+  the source mesh that reconciles ledger, profile, and registry sources.
+* :class:`AggregationError` and its subclasses — the failure taxonomy.
+"""
 
 from __future__ import annotations
 
