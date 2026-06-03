@@ -309,7 +309,7 @@ Current register count: `293` production candidate files.
 | `AFR-017` | `src/aeat/adapters/outbound/aeat/browser/_site_health.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-018` | `src/aeat/adapters/outbound/aeat/export/_formats/_deserialise.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-019` | `src/aeat/adapters/outbound/aeat/export/_formats/_record_spec.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
-| `AFR-020` | `src/aeat/adapters/outbound/aeat/sede/_censo_live.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-020` | `src/aeat/adapters/outbound/aeat/sede/_censo_live.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-021` | `src/aeat/adapters/outbound/aeat/sede/_declarations.py` | `manifest-bucket, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-022` | `src/aeat/adapters/outbound/aeat/sede/_nif_iva_check.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-023` | `src/aeat/adapters/outbound/aeat/sede/_observation_store.py` | `secure-object, manifest-bucket, master-key, plain-file` | `runtime-default` | `W12.P21.S86` | pending |
@@ -662,7 +662,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S119` - Close `AFR-017` for `src/aeat/adapters/outbound/aeat/browser/_site_health.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/aeat/browser/_site_health.py`.
 - [x] `W12.P26.S120` - Close `AFR-018` for `src/aeat/adapters/outbound/aeat/export/_formats/_deserialise.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/aeat/export/_formats/_deserialise.py`.
 - [x] `W12.P26.S121` - Close `AFR-019` for `src/aeat/adapters/outbound/aeat/export/_formats/_record_spec.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/aeat/export/_formats/_record_spec.py`.
-- [ ] `W12.P26.S122` - Close `AFR-020` for `src/aeat/adapters/outbound/aeat/sede/_censo_live.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/aeat/sede/_censo_live.py`.
+- [x] `W12.P26.S122` - Close `AFR-020` for `src/aeat/adapters/outbound/aeat/sede/_censo_live.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/aeat/sede/_censo_live.py`.
 - [ ] `W12.P26.S123` - Close `AFR-021` for `src/aeat/adapters/outbound/aeat/sede/_declarations.py` with signals `manifest-bucket, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
 - [ ] `W12.P26.S124` - Close `AFR-022` for `src/aeat/adapters/outbound/aeat/sede/_nif_iva_check.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/aeat/sede/_nif_iva_check.py`.
 - [ ] `W12.P26.S125` - Close `AFR-023` for `src/aeat/adapters/outbound/aeat/sede/_observation_store.py` with signals `secure-object, manifest-bucket, master-key, plain-file`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/outbound/aeat/sede/_observation_store.py`.
