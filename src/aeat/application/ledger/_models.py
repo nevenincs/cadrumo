@@ -301,6 +301,11 @@ class LedgerTransactionPayload(BaseModel):
     lifecycle_state: str = Field(min_length=1)
     classified_by: str = Field(min_length=1)
     source_jurisdiction: str | None = None
+    # FX provenance for foreign-currency rows (ledger-fx-conversion ADR): the
+    # EUR-equivalent and the applied CCY->EUR rate, so list/review/export surface
+    # the converted value rather than only the native amount. None for EUR rows.
+    value_in_eur: str | None = None
+    fx_rate: str | None = None
 
     @field_validator("source_jurisdiction")
     @classmethod
@@ -343,6 +348,10 @@ class LedgerTransactionReviewPayload(BaseModel):
     review_status: LedgerReviewStatus
     classified_by: str = Field(min_length=1)
     source_jurisdiction: str | None = None
+    # FX provenance (ledger-fx-conversion ADR): EUR-equivalent + applied
+    # CCY->EUR rate for foreign rows; None for EUR-native rows.
+    value_in_eur: str | None = None
+    fx_rate: str | None = None
 
     @field_validator("source_jurisdiction")
     @classmethod
