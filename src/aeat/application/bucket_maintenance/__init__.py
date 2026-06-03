@@ -26,9 +26,14 @@ from ._contracts import (
     BucketNamespaceInventoryRow,
     DeleteBucketCommand,
     DeleteBucketResult,
+    ExportBucketCommand,
+    ExportBucketResult,
+    ImportBucketCommand,
+    ImportBucketResult,
     RenameBucketCommand,
     RenameBucketResult,
 )
+from ._manifest_digest import compute_manifest_digest
 from ._service import BucketMaintenanceService
 
 __all__ = [
@@ -38,6 +43,11 @@ __all__ = [
     "BucketNamespaceInventoryRow",
     "DeleteBucketCommand",
     "DeleteBucketResult",
+    "ExportBucketCommand",
+    "ExportBucketResult",
+    "ImportBucketCommand",
+    "ImportBucketResult",
     "RenameBucketCommand",
     "RenameBucketResult",
+    "compute_manifest_digest",
 ]
