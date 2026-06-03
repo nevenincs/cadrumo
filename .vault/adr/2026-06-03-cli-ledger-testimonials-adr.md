@@ -5,6 +5,8 @@ tags:
 date: '2026-06-03'
 related:
   - '[[2026-05-19-profile-lifecycle-disaster-adr]]'
+  - '[[2026-05-26-active-profile-storage-runtime-discovery-audit]]'
+  - '[[2026-05-26-active-profile-storage-runtime-classification-closeout-audit]]'
   - '[[2026-06-03-cli-ledger-testimonials-plan]]'
 ---
 
