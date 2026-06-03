@@ -109,7 +109,7 @@ Convert the achieved post-fragmentation registry corpus shape into explicit regr
 
 Measure current registry TOML headroom and tighten committed reviewability tests around the achieved corpus baseline without changing loader or schema semantics.
 
-- [ ] `W03.P07.S35` - Audit current committed registry TOML file-size and row-width headroom; `.vault/audit`.
+- [x] `W03.P07.S35` - Audit current committed registry TOML file-size and row-width headroom; `.vault/audit`.
 - [ ] `W03.P07.S36` - Tighten committed registry TOML file-size and row-width regression gates; `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
 - [ ] `W03.P07.S37` - Verify tightened reviewability gates against the committed registry corpus; `src/aeat/domain/calculations/registry`.
 
