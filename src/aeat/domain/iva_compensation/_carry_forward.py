@@ -25,6 +25,14 @@ from ._errors import (
 
 _ZERO = Decimal("0")
 
+#: Status carried by a manually-seeded opening carry-forward state (written by
+#: the application ``seed_iva_compensation_period`` helper). A seeded state
+#: declares a prior carry-forward balance in ``available_end_amount`` /
+#: ``pending_for_later_amount`` with ``generated_amount == 0`` (it generated no
+#: new credit in a filed period); the lot builder must still surface it as an
+#: available lot so ``iva-wallet balance`` reflects the seeded opening balance.
+_SEEDED_STATUS = "seeded"
+
 
 class IvaCompensationExpiryReviewState(StrEnum):
     """Review state for an IVA compensation carry-forward lot."""
@@ -146,15 +154,25 @@ def build_iva_compensation_carry_forward_report(
             remaining_to_allocate -= consumed
         if remaining_to_allocate > _ZERO:
             unallocated_applied += remaining_to_allocate
-        if state.generated_amount > _ZERO:
+        # A filed period contributes a lot equal to the credit it GENERATED this
+        # period. A manually-seeded opening balance generated nothing in a filed
+        # period (generated_amount == 0) but declares a prior carry-forward in
+        # available_end_amount; surface that seeded balance as a lot too, so
+        # `iva-wallet balance` reflects the seeded state (lot_count > 0) instead
+        # of reporting an empty wallet. The two cases are mutually exclusive (a
+        # seed never carries generated_amount), so no double-counting.
+        lot_amount = state.generated_amount
+        if lot_amount <= _ZERO and state.status == _SEEDED_STATUS:
+            lot_amount = state.available_end_amount
+        if lot_amount > _ZERO:
             working.append(
                 _WorkingCarryForwardLot(
                     taxpayer_nif=state.taxpayer_nif,
                     source_filing_year=state.filing_year,
                     source_period=state.period,
-                    generated_amount=state.generated_amount,
+                    generated_amount=lot_amount,
                     applied_amount=_ZERO,
-                    remaining_amount=state.generated_amount,
+                    remaining_amount=lot_amount,
                     source_observation_key=state.source_observation_key,
                 )
             )
