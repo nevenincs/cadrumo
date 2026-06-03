@@ -337,9 +337,10 @@ def modelo_readiness(
         f"ledger_issues\t{len(report.ledger_issues)}",
         # ``ready`` means the profile/source preflight passed — NOT that the AEAT
         # filing-obligation window is open. Once the revision is verified-complete
-        # the local finish line is ``work export`` (a fichero-BOE artefact); the
-        # optional internal ``work file`` step needs an open obligation window.
-        "finish_line\texport verified-complete revision via 'aeat app modelo work export' (local finish line)",
+        # the local finish line is ``modelo export`` (a fichero-BOE artefact; a
+        # sibling of ``work``, not a ``work`` subcommand); the optional internal
+        # ``work file`` step needs an open obligation window.
+        "finish_line\texport verified-complete revision via 'aeat app modelo export' (local finish line)",
     ]
     from ._common import _emit_envelope
     from ._modelo_payloads import (
@@ -394,9 +395,10 @@ def modelo_readiness(
         f"ledger_issues\t{len(report.ledger_issues)}",
         # ``ready`` means the profile/source preflight passed — NOT that the AEAT
         # filing-obligation window is open. Once the revision is verified-complete
-        # the local finish line is ``work export`` (a fichero-BOE artefact); the
-        # optional internal ``work file`` step needs an open obligation window.
-        "finish_line\texport verified-complete revision via 'aeat app modelo work export' (local finish line)",
+        # the local finish line is ``modelo export`` (a fichero-BOE artefact; a
+        # sibling of ``work``, not a ``work`` subcommand); the optional internal
+        # ``work file`` step needs an open obligation window.
+        "finish_line\texport verified-complete revision via 'aeat app modelo export' (local finish line)",
     ]
     for requirement in report.missing:
         lines.append(f"{requirement.section_key}.{requirement.field_key}\t{requirement.selector}")
