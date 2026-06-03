@@ -122,3 +122,31 @@ def test_auth_login_retains_output_language() -> None:
 def test_auth_test_retains_output_language() -> None:
     """``aeat config auth test`` had ``--output-language`` before S141; must keep it."""
     _assert_output_language_registered(["config", "auth", "test"])
+
+
+# ---------------------------------------------------------------------------
+# W09.P45.S316 — modelo work read-only verbs (S262/S266 broader sweep)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "verb",
+    ["list", "status", "history", "revisions", "revision", "runs"],
+)
+def test_work_read_only_verb_accepts_output_language(verb: str) -> None:
+    """Every read-only `aeat app modelo work` verb must accept ``--output-language``.
+
+    Closes the discovery3 #121 CLI completeness audit gap for the six
+    work_ verbs that previously had no language flag (S316), pinning
+    them under the parity regression gate (S262/S266 broader sweep)."""
+    _assert_output_language_registered(["app", "modelo", "work", verb])
+
+
+# ---------------------------------------------------------------------------
+# W86.P415.S2354 — config profile validate verb (lint-zero session add)
+# ---------------------------------------------------------------------------
+
+
+def test_config_profile_validate_accepts_output_language() -> None:
+    """``aeat config profile validate`` (shipped W86.P415.S2354) accepts ``--output-language``."""
+    _assert_output_language_registered(["config", "profile", "validate"])
