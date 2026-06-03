@@ -50,6 +50,7 @@ from ...domain.transactions._protocols import (
     TransactionCatalogueRepositoryProtocol,
 )
 from . import _shared_issue_reasons
+from ._business_proportion import business_proportion
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationValidationError, t
 from ._models import Period
@@ -632,12 +633,7 @@ def _flow_direction_for(direction: TransactionDirection) -> IvaFlowDirection | N
 
 
 def _business_proportionality(transaction: Transaction) -> Decimal | None:
-    if transaction.business_classification is BusinessClassification.BUSINESS:
-        return Decimal("1")
-    if transaction.business_classification is BusinessClassification.MIXED:
-        assert transaction.business_pct is not None
-        return transaction.business_pct
-    return None
+    return business_proportion(transaction.business_classification, transaction.business_pct)
 
 
 def _missing_tax_fact_reason(transaction: Transaction) -> IvaLedgerAggregationIssueReason | None:
