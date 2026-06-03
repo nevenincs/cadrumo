@@ -59,6 +59,8 @@ adapters:
           beállított időkorláton belül.
         dni_nie_not_set: Az AEAT_CLAVE_MOVIL_DNI_NIE nincs beállítva; hitelesítés
           előtt adja meg DNI- vagy NIE-számát.
+        initial_navigation_timeout: A Cl@ve Movil kezdeti navigacioja nem fejezodott
+          be a beallitott idokorlaton belul.
         metadata_invalid: A Cl@ve Móvil munkamenet-metaadatai érvénytelenek vagy nem
           elemezhetők.
         no_persisted_session: Nem talalhato Cl@ve Movil munkamenet; futtassa eloszor
@@ -76,8 +78,8 @@ adapters:
         api_call_failed: A Google {action} hívás sikertelen.
         api_call_refused: A Google {action} hívást elutasították (HTTP {status}).
         api_target_not_found: A Google {action} célpontja nem található.
-        conflicting_duplicate_metadata: A Google-táblázat ellentmondó, duplikált
-          AEAT-metaadatokat tartalmaz.
+        conflicting_duplicate_metadata: A Google-táblázat ellentmondó, duplikált AEAT-metaadatokat
+          tartalmaz.
         foreign_spreadsheet_not_owned: A Google-táblázat nincs ennek az AEAT-profilnak
           a tulajdonaként megjelölve.
         googleapiclient_not_importable: A googleapiclient nem importálható; a Google-adapter
@@ -86,11 +88,10 @@ adapters:
         workbook_snapshot_mismatch: A Google-táblázat metaadatai nem egyeznek a számítási
           pillanatképpel.
       suggestions:
-        reexport_workbook: Exportálja újra a munkafüzetet az `aeat config google
-          sync calc export` paranccsal, hogy az alkalmazás által kezelt metaadatok
-          frissüljenek.
         reexport_then_pull: Exportálja újra a munkafüzetet az `aeat config google
           sync calc export` paranccsal, majd húzza be újra.
+        reexport_workbook: Exportálja újra a munkafüzetet az `aeat config google sync
+          calc export` paranccsal, hogy az alkalmazás által kezelt metaadatok frissüljenek.
         verify_exported_workbook: Ellenőrizze, hogy a táblázatot eredetileg az `aeat
           config google sync calc export` hozta létre ehhez a profilhoz.
     oauth_flow:
@@ -121,8 +122,8 @@ adapters:
         open_consent_url_manually: Nyissa meg manuálisan a megjelenített hozzájárulási
           URL-t a böngészőjében.
         repair_profile_state: Futtassa az `aeat config profile health` parancsot,
-          majd javítsa ki vagy váltsa át az aktív profilt, mielőtt újrapróbálja
-          a Google-parancsot.
+          majd javítsa ki vagy váltsa át az aktív profilt, mielőtt újrapróbálja a
+          Google-parancsot.
         use_keyring_or_synthetic: Állítsa be az aeat_secret_store_backend=keyring
           értéket, vagy váltson az aktív profilt szintetikus teszt-adóazonosítóra.
     profile_binding:
@@ -248,10 +249,11 @@ adapters:
             be.
       inventory:
         errors:
-          inventory_ledger_already_exists: 'Ez a készletnyilvántartás már létezik.'
-          inventory_ledger_not_found: 'A kért készletnyilvántartás nem található.'
-          load_inventory_ledger_failed: 'A titkosított készletnyilvántartás nem tölthető be.'
-          movement_already_exists: 'Ez a készletmozgás már létezik.'
+          inventory_ledger_already_exists: Ez a készletnyilvántartás már létezik.
+          inventory_ledger_not_found: A kért készletnyilvántartás nem található.
+          load_inventory_ledger_failed: A titkosított készletnyilvántartás nem tölthető
+            be.
+          movement_already_exists: Ez a készletmozgás már létezik.
   sede:
     errors:
       cotejo_nav_failed: Az AEAT cotejo oldalra való navigáció sikertelen volt; a
@@ -496,6 +498,10 @@ application:
           auth test` parancsot az AEAT adatok olvasása előtt.
         verify_failed: Az AEAT munkamenetet nem sikerült ellenőrizni; futtassa az
           `aeat config auth test` parancsot az AEAT adatok olvasása előtt.
+  bucket_maintenance:
+    errors:
+      delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
+      delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
   ledger:
     errors:
       evidence_attachment_requires_ids: A főkönyvi bizonylat csatolásához vásárlási
@@ -953,8 +959,7 @@ cli:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
         list_help: Az adott nyomtatvány/év/időszak szükséges és elérhető kötéseinek
           listázása.
-        missing_help: Szűrés a feloldott értékkel nem rendelkező kötésekre (bucket
-          / főkönyv / profil adatokat igényelnek).
+        missing_help: 'Szűrés a még hiányzó kötésekre: elhagyja az állandó értékűeket és azokat, amelyeket az aktív profil már feloldott. Aktív profil nélkül minden nem állandó kötés megjelenik (a konzervatív válasz).'
         missing_required_options: 'Hiányzó kötelező beállítások: %{options}'
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
         override_help: Ideiglenes kötési felülbírálat KEY=VALUE szintaxissal (ismételhető).
@@ -1446,6 +1451,7 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
+        id_is_work_unit_not_calc_revision: 'Ez az azonosító egy munkaegység-azonosító, de a verify/file számítási-revízió-azonosítót igényel. Futtasd az ''aeat app modelo work calculate %{work_unit_id}'' parancsot a számítási-revízió-azonosító előállításához, majd add át azt.'
   common:
     errors:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található
@@ -1695,6 +1701,8 @@ cli:
         show_help: Az AEAT által legutóbb jelentett nyilvántartás megjelenítése erre
           a profilra.
         snapshot_id_help: Konkrét pillanatkép-azonosító (előtagok elfogadva).
+      create_epilog: 'Minimális önálló vállalkozói profil: --entity-type natural_person
+        --tax-id <NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Új aktív profil és konfigurációs bucket inicializálása.
       delete_active_cleared: 'A törölt profil volt az aktív; az aktív-profil-mutató
         törölve. Futtassa: `aeat config profile switch NÉV` vagy `aeat config profile
@@ -2026,6 +2034,7 @@ cli:
         kapcsolatba az AEAT-tal.
     classify:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
+      apply_help: 'Az LLM javaslatat llm: eredettel menti, nem csak elonezetet keszit.'
       bulk_summary: 'bulk classify: %{total} rows, %{applied} applied, %{skipped}
         skipped, %{fail} failed'
       business_pct_help: Üzleti célú arány 0 és 1 között; kötelező --classification
@@ -2054,6 +2063,15 @@ cli:
       iva_category_help: Explicit IVA-kategória felülbírálat erre a tranzakcióra (pl.
         intra_community_supply, export_third_country_zero_rated, domestic_not_subject).
       iva_rate_help: IVA-kulcs tizedes törtként, pl. 0,21.
+      llm_classified_by_label: 'osztalyozta'
+      llm_confidence_label: 'bizonyossag'
+      llm_exclusive: '--llm nem kombinalhato a --classification vagy --from-csv kapcsoloval; a kezi ut a kezelo kifejezett felulbiralasa.'
+      llm_failed: 'Az LLM osztalyozas sikertelen: {reason}'
+      llm_help: 'Kerd meg egy helyi LLM szolgaltatot (claude/gemini/codex), hogy osztalyozza a tranzakciot; alapertelmezetten elonezet, --apply kapcsoloval menti.'
+      llm_provider_unavailable: 'A(z) ''{provider}'' LLM szolgaltato nem erheto el: a CLI nincs a PATH-on. Telepitsd a(z) ''{provider}'' CLI-t es gondoskodj rola, hogy a PATH-on legyen, vagy futtasd az ''aeat app ledger providers'' parancsot a hasznalhato szolgaltatok listazasahoz.'
+      llm_reason_label: 'indok'
+      llm_review_hint: 'Tekintsd at a fenti javaslatot. Futtasd ujra --apply kapcsoloval az elfogadashoz, --classification kapcsoloval a kezi felulbiralashoz, vagy ne tegy semmit az elutasitashoz.'
+      llm_suggestion_label: 'llm-javaslat'
       mixed_requires_business_pct: Elutasítva. A --classification MIXED értékhez üzleti
         arány szükséges. Adjon meg --business-pct értéket 0 és 1 között, vagy sorolja
         be a sort BUSINESS vagy PERSONAL kategóriába.
@@ -2061,22 +2079,20 @@ cli:
       reaffirmed: Besorolás megerősítve.
       taxable_base_help: Adóköteles alapösszeg.
     doclink:
-      actor_help: A bucket esemenyekhez rogzitett operatori cimke.
-      bad_source: 'a dokumentumhivatkozas forrasanak egyikenek kell lennie: gmail,
-        google_drive, url (kapott ''{source}'').'
-      help: Gmail/Drive/URL dokumentumhivatkozas rogzitese helyi bizonyitekkent egy
-        konyvelesi soron (a tavoli dokumentumot soha nem tolti le).
-      id_help: Konyvelesi tranzakcio azonosito (SHA-256 vagy egyertelmu elotag).
-      note_help: A hivatkozassal rogzitett opcionalis megjegyzes.
-      reference_help: A dokumentumhivatkozas referenciaja (Gmail hivatkozas, Drive
-        fajl hivatkozas vagy URL).
-      source_help: 'A hivatkozas forrasa: gmail, google_drive vagy url.'
+      actor_help: 'Operátor címke.'
+      bad_source: 'a dokumentumhivatkozás forrásának egynek kell lennie az alábbiak közül: gmail, google_drive, url (kapott: ''{source}'').'
+      help: 'Gmail/Drive/URL dokumentumhivatkozás rögzítése egy főkönyvi soron (sosem tölti le).'
+      id_help: 'Főkönyvi tranzakció azonosítója.'
+      note_help: 'Opcionális megjegyzés.'
+      reference_help: 'A dokumentumhivatkozás referenciája.'
+      source_help: 'Hivatkozás forrása: gmail, google_drive vagy url.'
     errors:
       command_input_invalid: 'Elutasítva. A tranzakció érvénytelen: {details}'
       command_input_invalid_fallback: Egy vagy több mező érvényesítése sikertelen.
       confirm_required: Adja meg a --yes kapcsolót e romboló főkönyvi művelet megerősítéséhez,
         vagy először használja a --dry-run kapcsolót.
-      filter_parse_error: A főkönyvi szűrő elemzése sikertelen.
+      filter_parse_error: 'A főkönyvi szűrő elemzése sikertelen %{token} közelében:
+        %{reason}.'
       id_prefix_collision: 'A(z) %{prefix!r} tranzakcióazonosító-előtag több tranzakcióra
         illeszkedik: %{candidates}. Hosszabbítsa meg az előtagot az egyértelműsítéshez.'
       id_prefix_empty: A tranzakcióazonosító-előtag üres; adjon meg legalább egy hexadecimális
@@ -2197,8 +2213,7 @@ cli:
       invoice_id_help: A tranzakcióhoz kétirányúan kötendő számla azonosítója.
     list:
       by_group_help: A lista csoportositasa csoportcimke szerint.
-      filter_help: Sorok szűrése állapot, időszak (évre a puszta YYYY is), besorolás,
-        probléma, import vagy szöveg szerint.
+      filter_help: 'Sorok szűrése állapot, időszak (akár ÉÉÉÉ egy évre), besorolás, probléma, import, irány (ingreso/gasto) vagy szöveg szerint. A szervezeti csoportcímke szerinti szűréshez használd külön a --group opciót.'
       footer_truncated: '{start}-{end}. sor megjelenitese, osszesen {total} (eltolas
         {offset}). Lapozashoz hasznalja a --offset/--limit kapcsolot.'
       group_filter_help: Csak az adott csoportcimkehez tartozo sorok megjelenitese.
@@ -2225,6 +2240,8 @@ cli:
         pénznem, arányossági hivatkozás) jelentése az aktív bucket tranzakcióira egy
         adott időszakra. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
       period_help: Kanonikus időszak (pl. 2026N1, 2026-03, 2026).
+    providers:
+      help: 'Felsorolja az alfolyamatos LLM-szolgáltatókat, amelyek CLI-je elérhető a PATH-en.'
     remove:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       dry_run_help: Az eltávolítás hatásainak jelentése a főkönyvi tranzakció törlése
