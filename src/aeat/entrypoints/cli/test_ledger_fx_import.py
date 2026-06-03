@@ -255,3 +255,21 @@ def test_track_surfaces_import_provenance_for_imported_rows() -> None:
     assert "import_source" in tracked.output
     assert "import_fingerprint" in tracked.output
     assert "	-" not in tracked.output.split("import_fingerprint")[1]  # fingerprint not bare
+
+
+def test_status_surfaces_income_expense_net_rollup() -> None:
+    """status carries an income/expense/net money roll-up (year-end finding)."""
+    import json
+
+    assert _RUNNER.invoke(
+        app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"]
+    ).exit_code == 0
+    rows = json.loads(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"]).output)["result"]["rows"]
+    income = next(r.get("full_id") or r["transaction_id"] for r in rows if "ACME" in r["description"])
+    expense = next(r.get("full_id") or r["transaction_id"] for r in rows if "Gestoria" in r["description"])
+    for tx in (income, expense):
+        assert _RUNNER.invoke(app, ["app", "ledger", "classify", "--id", tx, "--classification", "BUSINESS"]).exit_code == 0
+    report = json.loads(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "status"]).output)["result"]
+    assert report["income_total"] != "0.00"
+    assert report["expense_total"] != "0.00"
+    assert "net_total" in report

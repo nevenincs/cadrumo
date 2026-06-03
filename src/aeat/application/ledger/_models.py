@@ -607,6 +607,12 @@ class LedgerStatusReport(BaseModel):
     model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
+    # Money roll-up over active business/mixed rows (period-scoped when --period
+    # is given): the readiness/year-end money picture (gross EUR, not a registry
+    # calculation). Default "0.00" for legacy reports.
+    income_total: str = "0.00"
+    expense_total: str = "0.00"
+    net_total: str = "0.00"
     total_count: int = Field(ge=0)
     active_count: int = Field(ge=0)
     archived_count: int = Field(ge=0)
