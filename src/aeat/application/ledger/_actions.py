@@ -1093,6 +1093,8 @@ def _filter_ledger_review_rows(
         rows = tuple(
             transaction for transaction in rows if transaction.business_classification.value == query.classification
         )
+    if query.direction is not None:
+        rows = tuple(transaction for transaction in rows if transaction.direction.value == query.direction)
     if query.text is not None:
         needle = query.text.casefold()
         rows = tuple(
@@ -1123,6 +1125,7 @@ _LEDGER_REVIEW_FILTER_FIELDS: tuple[tuple[str, str], ...] = (
     ("import_id", "import"),
     ("classification", "classification"),
     ("text", "text"),
+    ("direction", "direction"),
     ("transaction_id", "id"),
 )
 
