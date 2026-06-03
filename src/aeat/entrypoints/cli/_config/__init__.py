@@ -1060,10 +1060,13 @@ def config_profile_show(
 ) -> None:
     """View one profile's facts (defaults to the active profile).
 
-    Emits a readiness header line carrying the validation outcome of the
-    canonical ProfileValidationService. When blocking issues exist, the
-    command exits with code 2 after rendering the report so operators
-    discover the failure on stdout and via the shell exit status.
+    Emits a ``record_validity`` header line carrying the validation
+    outcome of the canonical ProfileValidationService — the persisted
+    record's schema validity, a distinct notion from the *filing
+    readiness* gate reported by ``config profile status``. When blocking
+    issues exist, the command exits with code 2 after rendering the report
+    so operators discover the failure on stdout and via the shell exit
+    status.
     """
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile import ProfileValidationService
@@ -1136,12 +1139,21 @@ def config_profile_show(
         facts=[ProfileFactPayload(path=path, value=str(value)) for path, value in sorted(values.items())],
     )
     lines: list[str] = []
+    # ``show`` reports *record validity* (does the persisted profile record
+    # satisfy its schema?), a distinct notion from the *filing readiness*
+    # gate that ``config profile status`` reports (does the profile carry
+    # the facts needed to start filing — tax_id and an activity?). The two
+    # surfaces previously both printed the bare token ``readiness`` with the
+    # words ``ready``/``blocked``, so a schema-valid but onboarding-incomplete
+    # profile read as a self-contradiction (``show: ready`` vs
+    # ``status: blocked``). ``show`` now emits the ``record_validity`` token
+    # with ``valid``/``invalid`` so the two measures no longer collide.
     if is_tombstoned:
-        lines.append("readiness\ttombstoned")
+        lines.append("record_validity\ttombstoned")
     elif blocking:
-        lines.append(f"readiness\tblocked\tissues={len(blocking)}")
+        lines.append(f"record_validity\tinvalid\tissues={len(blocking)}")
     else:
-        lines.append(f"readiness\tready\tissues={len(report.issues)}")
+        lines.append(f"record_validity\tvalid\tissues={len(report.issues)}")
     lines.append(f"profile_id\t{record.profile_id}")
     lines.append(f"display_name\t{record.display_name}")
     lines.append(f"status\t{record.status.value}")
@@ -1580,6 +1592,7 @@ def config_profile_export(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile._orchestration import profile_storage_session
     from ....domain.user_profile import ProfileNotFoundError
+    from ....domain.user_profile._portable_export import UserProfilePortableExport
 
     _profile_state().load()
     if name is not None:
@@ -1590,15 +1603,35 @@ def config_profile_export(
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.errors.no_active_profile",
             )
+    from ....domain.buckets import BucketEventType
+
+    # Serialize the bundle and record the PROFILE_EXPORTED lifecycle event in
+    # one bucket session: the bucket-event-history repository is profile-bound
+    # storage and routes to the active bucket session, so the emit must run
+    # inside an open session — not after the span closes.
+    def _serialize_and_record() -> UserProfilePortableExport:
+        serialized = serialize_profile_bundle(bucket_id=pointer.bucket_id)
+        _emit_profile_lifecycle_event(
+            event_type=BucketEventType.PROFILE_EXPORTED,
+            bucket_id=pointer.bucket_id,
+            object_id=pointer.bucket_id,
+            payload={
+                "display_name": pointer.label or "",
+                "out": str(out),
+                "schema_version": str(serialized.bundle_schema_version),
+            },
+        )
+        return serialized
+
     try:
         from ....adapters.persistence.storage import has_active_bucket_session
         from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 
         if pointer.bucket_id == _resolve_active_bucket_id() and has_active_bucket_session():
-            bundle = serialize_profile_bundle(bucket_id=pointer.bucket_id)
+            bundle = _serialize_and_record()
         else:
             with profile_storage_session(pointer.bucket_id):
-                bundle = serialize_profile_bundle(bucket_id=pointer.bucket_id)
+                bundle = _serialize_and_record()
     except ProfileNotFoundError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.unknown_profile",
@@ -1613,16 +1646,6 @@ def config_profile_export(
         display_name=pointer.label,
         out=str(out),
         schema_version=bundle.bundle_schema_version,
-    )
-    _emit_profile_lifecycle_event(
-        event_type=BucketEventType.PROFILE_EXPORTED,
-        bucket_id=pointer.bucket_id,
-        object_id=pointer.bucket_id,
-        payload={
-            "display_name": pointer.label or "",
-            "out": str(out),
-            "schema_version": str(bundle.bundle_schema_version),
-        },
     )
     _emit_envelope(
         ctx,
@@ -1750,26 +1773,31 @@ def config_profile_import(
             translated_message="cli.config.profile.already_exists",
             context={"name": target_label},
         ) from exc
-    # Import v2 financial-history objects into the newly-provisioned bucket.
+    from ....domain.buckets import BucketEventType
+    from .._config_payloads import ConfigProfileImportResult
+
+    # Import v2 financial-history objects into the newly-provisioned bucket
+    # and record the PROFILE_IMPORTED lifecycle event in the same span: the
+    # bucket-event-history repository is profile-bound storage and routes to
+    # the active bucket session, so it must run inside the open session.
     with profile_storage_session(target_id):
         deserialize_profile_bundle(bundle, target_bucket_id=target_id)
-    from .._config_payloads import ConfigProfileImportResult
+        _emit_profile_lifecycle_event(
+            event_type=BucketEventType.PROFILE_IMPORTED,
+            bucket_id=target_id,
+            object_id=target_id,
+            payload={
+                "display_name": target_label,
+                "source_path": str(path),
+                "schema_version": str(bundle.bundle_schema_version),
+                "fresh_uuid_mode": str(fresh_uuid_mode).lower(),
+            },
+        )
 
     import_result = ConfigProfileImportResult(
         profile_id=target_id,
         display_name=target_label,
         schema_version=bundle.bundle_schema_version,
-    )
-    _emit_profile_lifecycle_event(
-        event_type=BucketEventType.PROFILE_IMPORTED,
-        bucket_id=target_id,
-        object_id=target_id,
-        payload={
-            "display_name": target_label,
-            "source_path": str(path),
-            "schema_version": str(bundle.bundle_schema_version),
-            "fresh_uuid_mode": str(fresh_uuid_mode).lower(),
-        },
     )
     _emit_envelope(
         ctx,
@@ -1901,6 +1929,14 @@ def config_status(
     state = workflow_state_repository().load()
     record = state.active_profile_record()
     values = record_to_path_values(record)
+    # ``status`` reports *filing readiness*: a profile is only ``ready`` here
+    # once it carries the facts needed to start filing work (a tax id and an
+    # activity description). This is a stricter, forward-looking gate than the
+    # *record validity* that ``config profile show`` reports — a freshly
+    # created record can be schema-``valid`` (show) while still ``blocked``
+    # for filing (status) because no activity has been declared yet. The two
+    # surfaces use distinct header tokens (``readiness`` vs ``record_validity``)
+    # so this legitimate difference no longer reads as a contradiction.
     if not values.get("identity.tax_id") or not values.get("activities.description"):
         result = ConfigStatusResult(
             active_profile=active_profile,
