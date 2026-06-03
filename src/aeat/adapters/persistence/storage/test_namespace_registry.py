@@ -508,7 +508,7 @@ def test_every_discovered_production_secure_object_namespace_is_registered() -> 
         GOOGLE_OAUTH_CLIENT_NAMESPACE.namespace,
         WORKFLOW_STATE_NAMESPACE.namespace,
         "aeat.domain.transactions.bucket",
-        "aeat.outbound.aeat.auth.sessions",
+        AEAT_BROWSER_SESSION_NAMESPACE.namespace,
     } <= discovered
     assert sorted(discovered - registered) == []
 
@@ -642,6 +642,8 @@ def _is_storage_namespace_import(node: ast.ImportFrom) -> bool:
         in {
             "adapters.persistence.storage",
             "adapters.persistence.storage._namespace_registry",
+            "persistence.storage",
+            "persistence.storage._namespace_registry",
             "_namespace_registry",
         }
     )

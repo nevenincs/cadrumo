@@ -191,6 +191,21 @@ def calculate_registry_snapshot(
     Args:
         snapshot: The :class:`RegistrySnapshot` that supplies the revision,
             casilla definitions, and formula graph to evaluate.
+        inputs: Operator-supplied input casilla values; rejected if any value
+            is not a :class:`Decimal`.
+        date_context: Date-axis context (e.g. ``filing_period``) consumed by
+            date-aware ops; ``filing_period`` defaults to the snapshot's
+            year-end when absent.
+        binding_values: Optional resolved numeric binding values keyed by
+            ``DataBindingDefinition.id``; Decimal-only.
+        enum_binding_values: Optional string-valued bindings (e.g. profile
+            CCAA) keyed by binding id; consumed by enum-routed ops.
+        relation_values: Optional resolved relation values keyed by
+            ``relation.id``; Decimal-only.
+        date_binding_values: Optional date-valued profile bindings (e.g.
+            ``birth_date``) consumed by date-aware ops.
+        text_inputs: Optional string-valued operator inputs keyed by casilla
+            id; consumed by text-routed ops.
     """
     _reject_non_decimal(inputs, "input")
     resolved_date_context = dict(date_context)

@@ -326,6 +326,14 @@ def resolve_bindings_from_local_store(
     Args:
         snapshot: The :class:`RegistrySnapshot` whose revision's ``previous_filing``
             bindings are resolved from the local calculation observation store.
+        repository: Optional :class:`CalculationObservationRepository`;
+            defaults to the active-bucket repository when ``None``.
+        iva_history_repository: Optional
+            :class:`IvaCompensationHistoryRepository` consulted for the IVA
+            compensation prior-balance bindings; defaults to the
+            active-bucket repository when ``None``.
+        captured_at: Optional capture timestamp recorded on the produced
+            prefill records; defaults to ``datetime.now(UTC)`` when ``None``.
 
     Returns a :class:`BindingPrefillReport` carrying the resolved
     ``binding_values`` mapping (suitable for passing through
@@ -401,6 +409,14 @@ def extract_modelo_303_local_iva_compensation_recurrence(
 
     Args:
         snapshot: The :class:`RegistrySnapshot` identifying the Modelo 303 target revision.
+        repository: Optional :class:`CalculationObservationRepository`;
+            defaults to the active-bucket repository when ``None``.
+        iva_history_repository: Optional
+            :class:`IvaCompensationHistoryRepository` consulted for prior
+            compensation balances; defaults to the active-bucket repository
+            when ``None``.
+        captured_at: Optional capture timestamp recorded on the produced
+            prefill records; defaults to ``datetime.now(UTC)`` when ``None``.
 
     The returned amount is the locally reconstructed prior compensation balance
     for the target Modelo 303 period. Callers must feed it into

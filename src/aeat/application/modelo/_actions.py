@@ -120,7 +120,7 @@ from ...domain.modelos._work_unit import (
     derive_work_unit_id,
 )
 from ...domain.period import parse_canonical_period, period_end_date
-from ...domain.profile._ccaa import CCAA
+from ...domain.contribuyente._ccaa import CCAA
 from ...domain.submission import ModeloDraftStatus, SubmissionEngine
 from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 from ..aggregation._ledger_filing_snapshot import compute_ledger_filing_snapshot
@@ -2935,6 +2935,9 @@ def verify_modelo_revision(
         work_unit_repository: Optional work-unit catalogue repository override.
         calculation_repository: Optional calculation-revision catalogue
             repository override.
+        transaction_repository: Optional transaction catalogue repository
+            override consulted by the snapshot resolver and ledger-backed
+            binding checks.
         verification_repository: Optional verification-report catalogue
             repository override.
         bucket_event_repository: Optional bucket-event history repository
