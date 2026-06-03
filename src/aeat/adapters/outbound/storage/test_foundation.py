@@ -14,6 +14,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
+from ....core.errors import AeatError, CoreError
 from . import (
     OutboundStorageConflictError,
     OutboundStorageError,
@@ -111,7 +112,7 @@ def test_provider_probe_report_read_only_mode_round_trip() -> None:
 
 
 def test_storage_error_hierarchy_unified() -> None:
-    for leaf in (
+    outbound_leaves = (
         OutboundStorageConflictError,
         OutboundStorageIntegrityError,
         OutboundStorageNetworkError,
@@ -120,8 +121,13 @@ def test_storage_error_hierarchy_unified() -> None:
         OutboundStorageQuotaError,
         OutboundStorageUnavailableError,
         OutboundStorageValidationError,
-    ):
+    )
+    for leaf in outbound_leaves:
         assert issubclass(leaf, OutboundStorageError), leaf.__name__
+        assert issubclass(leaf, AeatError), leaf.__name__
+
+    assert issubclass(StorageCorruptionError, CoreError)
+    assert not issubclass(StorageCorruptionError, OutboundStorageError)
 
 
 def test_storage_validation_error_is_value_error_subclass() -> None:
