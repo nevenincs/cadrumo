@@ -360,7 +360,7 @@ The cross-profile goal: a second taxpayer bucket (recargo-equivalencia retailer)
 Recargo-equivalencia retailer bucket with corpus+oracle; isolation.
 
 - [ ] `W13.P24.S83` - Author a recargo-equivalencia retailer profile corpus + ground-truth oracle in a separate bucket; `src/aeat/tests/fixtures/financial/ledger-corpus-retailer/`.
-- [ ] `W13.P24.S84` - Cross-profile isolation test: each bucket's ledger is independent (no cross-bucket leakage); `src/aeat/entrypoints/cli/test_ledger_cross_profile.py`.
+- [x] `W13.P24.S84` - Cross-profile isolation test: each bucket's ledger is independent (no cross-bucket leakage); `src/aeat/entrypoints/cli/test_ledger_cross_profile.py`.
 
 ### Phase `W13.P25` - Recargo-equivalencia regime end-to-end + switching
 
