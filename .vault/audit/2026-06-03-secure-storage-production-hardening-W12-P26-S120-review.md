@@ -32,11 +32,13 @@ New malformed CURRENCY and RESERVED tests feed taxpayer-like byte canaries throu
 
 Status: closed.
 
-## S120-004 | INFO | Broader golden export tests are currently blocked by unrelated registry validation
+## S120-004 | MEDIUM | Broader golden export validation exposed real registry and golden-output drift
 
-The broad export-format run failed only in the Modelo 130 and Modelo 303 golden tests because registry validation currently rejects Modelo 151 legal references before those tests reach the export deserialiser. The S120-focused decoder and envelope tests passed.
+The first broader export-format run did not provide usable closure evidence. It stopped on registry validation before the Modelo 130 and Modelo 303 golden tests could exercise the export surface, and the later focused run exposed a stale Modelo 303 BOE golden hash. Treating that as an external blocker would have hidden a real validation gap.
 
-Status: open external blocker.
+Resolution: the run was pursued to completion. Modelo 151 now validates in `test_modelo_151_registry.py`. Modelo 714 Phase-A data no longer contains invalid placeholder formula rows; the registry test asserts that the current key patrimonio casillas remain manual rather than accepting fake business logic. The Modelo 303 golden hash was refreshed only after checking the official DP30303 workbook rows for casillas 110, 78, and 87 and adding byte-offset assertions for those fields. The broader export-format batch now passes with 114 tests.
+
+Status: closed.
 
 ## S120-005 | MEDIUM | Chained stdlib exceptions could retain raw wire payloads
 
@@ -49,5 +51,19 @@ Status: closed.
 ## S120-006 | INFO | Mandatory re-review found no remaining blockers
 
 The mandatory S120 re-review confirmed that the prior medium chained-exception privacy finding is closed and found no remaining medium, high, or critical issues in the S120 scope.
+
+Status: closed.
+
+## S120-007 | MEDIUM | Invalid Modelo 714 placeholder formulas could make registry coverage tautological
+
+During the broader export validation, fresh registry loading rejected Modelo 714 because the Phase-A formula table contained invalid placeholder entries rather than real registry formulas. Keeping those rows would have made the new registry coverage a shape test around fake data.
+
+Resolution: the placeholder formula entries were removed, the construct scope was aligned to existing legal/source/application references, and `test_modelo_714_registry.py` now proves the current manual casilla baseline through the real registry loader. The focused Modelo 714 registry test passed with 4 tests, and the touched registry/test files pass Ruff.
+
+Status: closed.
+
+## S120-008 | INFO | No HIGH or CRITICAL findings remain for S120
+
+After the follow-up validation and registry/golden-output corrections, no high or critical S120 findings remain. The medium issues above are closed, with evidence recorded in the paired execution note.
 
 Status: closed.
