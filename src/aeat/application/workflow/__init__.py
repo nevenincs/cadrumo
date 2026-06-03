@@ -16,8 +16,9 @@ Major declarations:
 * :class:`WorkflowRunRepository` and :class:`WorkflowStateRepository` —
   the persistence boundaries.
 * :class:`WorkflowError` and its subclasses (:class:`WorkflowAbortedError`,
-  :class:`WorkflowComponentError`, :class:`WorkflowInputMismatchError`) plus the
-  core-owned :class:`NoActiveProfileError` re-export — the failure taxonomy.
+  :class:`WorkflowComponentError`, :class:`WorkflowInputMismatchError`) — the
+  failure taxonomy. The active-profile refusal :class:`NoActiveProfileError` is
+  core-owned (:mod:`aeat.core.errors`); import it from there, not from this package.
 
 The engine speaks to its dependencies through the protocols defined here
 (:class:`DeadlineEngineProtocol`, :class:`ModeloDraftBuilderProtocol`,
@@ -78,6 +79,13 @@ from ._persistence import (
     save_run,
     workflow_state_repository,
 )
+
+# ---- profile-bucket scan (depends on _models only) --------------------------
+from ._profile_bucket_scan import (
+    list_profile_buckets,
+    read_profile_bucket,
+    read_profile_bucket_by_id,
+)
 from ._profile_health import (
     ActiveProfileHealth,
     ActiveProfileManifestStatusRepairResult,
@@ -85,13 +93,6 @@ from ._profile_health import (
     assess_active_profile_health,
     repair_active_profile_manifest_status,
     repair_active_profile_pointer,
-)
-
-# ---- profile-bucket scan (depends on _models only) --------------------------
-from ._profile_bucket_scan import (
-    list_profile_buckets,
-    read_profile_bucket,
-    read_profile_bucket_by_id,
 )
 
 # ---- protocols (no application deps) ----------------------------------------
