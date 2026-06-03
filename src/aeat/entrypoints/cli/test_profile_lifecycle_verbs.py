@@ -442,10 +442,10 @@ def test_config_profile_switch_refuses_a_tombstoned_profile(cli_runner: CliRunne
 def test_config_profile_show_reports_a_tombstoned_profile_as_tombstoned(
     cli_runner: CliRunner,
 ) -> None:
-    """``show`` of a tombstoned profile renders ``readiness tombstoned``.
+    """``show`` of a tombstoned profile renders ``record_validity tombstoned``.
 
     Closes the self-contradiction where ``show`` reported
-    ``readiness ready issues=0`` directly above ``status tombstoned``.
+    ``record_validity valid issues=0`` directly above ``status tombstoned``.
     """
 
     _seed("operator")
@@ -453,8 +453,8 @@ def test_config_profile_show_reports_a_tombstoned_profile_as_tombstoned(
     result = cli_runner.invoke(profile_app, ["show", "operator"])
     assert result.exit_code == 0, result.output
     assert "status\ttombstoned" in result.output
-    assert "readiness\ttombstoned" in result.output
-    assert "readiness\tready" not in result.output
+    assert "record_validity\ttombstoned" in result.output
+    assert "record_validity\tvalid" not in result.output
 
 
 def test_deleted_profile_name_is_reusable_by_create_and_rename(
@@ -536,7 +536,51 @@ def test_config_profile_show_runs_validation_inline(cli_runner: CliRunner) -> No
     assert result.exit_code == 0, result.output
     assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert "display_name\toperator" in result.output
-    assert "readiness\tready" in result.output
+    assert "record_validity\tvalid" in result.output
+
+
+def test_show_and_status_do_not_contradict_on_a_freshly_created_profile(
+    cli_runner: CliRunner,
+) -> None:
+    """``show`` and ``status`` report two distinct notions without colliding.
+
+    A freshly created profile carries a schema-valid record but has not
+    yet declared an activity, so it is *record-valid* yet *not filing
+    ready*. The two surfaces previously both printed the bare token
+    ``readiness`` with opposite words — ``show: readiness ready`` above
+    ``status: readiness blocked`` — which a non-technical operator reads
+    as the tool contradicting itself. This pins the disambiguation:
+    ``show`` owns ``record_validity`` (schema validity) and ``status``
+    owns ``readiness`` (filing readiness), so the same profile never
+    shows ``readiness ready`` on one surface and ``readiness blocked`` on
+    the other.
+    """
+    create_result = cli_runner.invoke(
+        root_app,
+        ["config", "profile", "create", "maria", "--quiet", "--tax-id", "12345678Z"],
+    )
+    assert create_result.exit_code == 0, create_result.output
+
+    show_result = cli_runner.invoke(root_app, ["config", "profile", "show", "maria"])
+    status_result = cli_runner.invoke(root_app, ["config", "profile", "status"])
+
+    assert show_result.exit_code == 0, show_result.output
+    assert status_result.exit_code == 0, status_result.output
+
+    # ``show`` reports record validity, not filing readiness.
+    assert "record_validity\tvalid" in show_result.output
+    assert "readiness\t" not in show_result.output
+
+    # ``status`` reports filing readiness; the freshly created profile has
+    # no declared activity, so it is legitimately ``blocked`` for filing.
+    assert "readiness\tblocked" in status_result.output
+    assert "activities.description\tmissing" in status_result.output
+    assert "record_validity\t" not in status_result.output
+
+    # The contradiction reading is gone: no single profile shows the same
+    # ``readiness`` token with opposite states across the two surfaces.
+    assert "readiness\tready" not in show_result.output
+    assert "readiness\tready" not in status_result.output
 
 
 def test_config_profile_show_refuses_when_no_active_profile(cli_runner: CliRunner) -> None:
@@ -817,7 +861,7 @@ def test_profile_rename_keeps_record_readable_under_unchanged_key(
     dispose_engine()
     show_result = runner.invoke(root_app, ["config", "profile", "show", "bob"])
     assert show_result.exit_code == 0, f"show failed: {show_result.output}"
-    assert "readiness\tready" in show_result.output, show_result.output
+    assert "record_validity\tvalid" in show_result.output, show_result.output
     assert "missing_profile_record" not in show_result.output, show_result.output
     # Per centralized-output-redaction ADR: raw profile id is rewritten
     # to a `<profile-id>` placeholder at the rendering boundary. The
@@ -1158,7 +1202,7 @@ def test_show_tombstoned_profile_is_session_context_independent(
 
     A tombstoned profile inspected with another profile's session
     active, and the same profile inspected with no session at all, must
-    both resolve the tombstoned record and report ``readiness
+    both resolve the tombstoned record and report ``record_validity
     tombstoned`` — never an ``unknown profile`` refusal in one context
     and a full record in the other.
     """
@@ -1190,8 +1234,8 @@ def test_show_tombstoned_profile_is_session_context_independent(
     # resolves and renders its tombstoned status.
     assert with_session.exit_code == 0, with_session.output
     assert no_session.exit_code == 0, no_session.output
-    assert "readiness\ttombstoned" in with_session.output
-    assert "readiness\ttombstoned" in no_session.output
+    assert "record_validity\ttombstoned" in with_session.output
+    assert "record_validity\ttombstoned" in no_session.output
     assert "status\ttombstoned" in with_session.output
     assert "status\ttombstoned" in no_session.output
     for context in (with_session, no_session):
