@@ -35,7 +35,7 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...core.identity import BucketId

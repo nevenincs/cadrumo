@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import ClassVar
 
 from ...adapters.persistence.storage import LEDGER_CLASSIFICATION_RULES_NAMESPACE, SensitivityClass
-from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...domain.transactions._classification_rule import LedgerClassificationRule
 
 
