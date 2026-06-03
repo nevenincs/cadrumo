@@ -1366,7 +1366,7 @@ async def capture_notifications(*, bucket_id: str):
     Returns:
         A tuple of (snapshot_id, fetched_row_count, persisted_at).
     """
-    from ...adapters.outbound.aeat.sede._notifications import fetch_notifications_query
+    from ...adapters.outbound.aeat.sede import fetch_notifications_query
     from ._notifications import NotificationsService
 
     session, settings = await _active_verified_session()
