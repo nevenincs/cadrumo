@@ -49,7 +49,7 @@ from typing import ClassVar, Literal
 
 from pydantic import BaseModel
 
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.config import load_settings
 from .....core.decimal import coerce_decimal
 from .....core.errors import AeatError

@@ -41,7 +41,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from ....core._models import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.time import now
 from ....domain.justificante import PdfModeloImportError
 from ._utils import sha256_file
