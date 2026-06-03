@@ -20,12 +20,11 @@ from pathlib import Path
 
 import pytest
 
+from ...core import resolve_active_bucket_id
 from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import write_pointer
 from ...core.config import override_settings
-from ...core.errors import get_registered_error_code
-from ._errors import NoActiveProfileError
-from ._models import resolve_active_bucket_id
+from ...core.errors import NoActiveProfileError, get_registered_error_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
