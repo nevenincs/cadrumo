@@ -212,3 +212,34 @@ def test_modelo_top_level_verb_roster_matches_canonical_spine() -> None:
     extras = registered - EXPECTED_MODELO_TOP_LEVEL_VERBS
     assert not missing, f"modelo verbs disappeared: {sorted(missing)}"
     assert not extras, f"modelo verbs added without test update: {sorted(extras)}"
+
+
+# W13.P66.S407 — bucket_app maintenance-verb pre-landing state pinned.
+# Per W77.P370.S2131 + W77.P374.S2150 the bucket noun-group will gain
+# six maintenance verbs (browse, search, export, import, rename, delete)
+# once BucketMaintenanceService lands. Until then, only `history` is
+# mounted. This test pins the current state so when S2150 lands the
+# implementer is forced to update EXPECTED_BUCKET_APP_VERBS, preventing
+# a silent partial-landing where some verbs ship without the others.
+EXPECTED_BUCKET_APP_VERBS: frozenset[str] = frozenset({"history"})
+
+
+def test_bucket_app_verb_roster_pins_pre_s2150_state() -> None:
+    """Bucket noun-group today carries only `history`; the six maintenance
+    verbs (per W77.P370.S2131 + W77.P374.S2150) are not yet mounted.
+
+    When S2150 lands this assertion fires, which is the intended flag:
+    the implementer must update :data:`EXPECTED_BUCKET_APP_VERBS` to
+    include the new maintenance verbs (browse / search / export /
+    import / rename / delete) so the test continues to pass and the
+    service + verb landing stays coordinated."""
+
+    from ._config import bucket_app
+
+    registered = frozenset(cmd.name for cmd in bucket_app.registered_commands)
+    assert registered == EXPECTED_BUCKET_APP_VERBS, (
+        f"bucket_app verbs drifted from the S2150 pre-landing state: "
+        f"expected {sorted(EXPECTED_BUCKET_APP_VERBS)!r}, got {sorted(registered)!r}. "
+        f"If S2150 has landed, update EXPECTED_BUCKET_APP_VERBS to reflect the new "
+        f"maintenance-verb set (browse / search / export / import / rename / delete)."
+    )
