@@ -26,6 +26,15 @@ The public surface is intentionally narrow:
   :class:`MasterKeyProvider`, :class:`SecretStore`, plus the column-level
   helpers :class:`EncryptedString`, :class:`EncryptedBytes`,
   :class:`EncryptedJSON`, and :class:`HashedLookup`.
+- Runtime and master-key session boundary — :class:`StorageRuntime`,
+  :class:`StorageRuntimeReadiness`, :func:`inspect_storage_runtime`,
+  :func:`inspect_bucket_storage_runtime`, :func:`activate_session`,
+  :func:`has_active_bucket_session`, :func:`get_active_master_key`,
+  :func:`activate_master_key_provider`, and :func:`get_master_key_provider`.
+- Secure-object hierarchy registry — :data:`STORAGE_NAMESPACE_REGISTRY`,
+  :data:`STORAGE_PATH_DEFINITIONS`, namespace constants, and
+  :func:`secure_object_logical_path`; callers must use these exported symbols
+  instead of constructing persisted secure-storage locations by hand.
 - Classification — :class:`SensitivityClass` tags every persisted record
   and governs the at-rest treatment applied by the substrate.
 """
