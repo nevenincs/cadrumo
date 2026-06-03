@@ -228,10 +228,10 @@ Drive the LLM auto-classifier over the corpus and score predictions against the 
 
 Score LLM predictions against the oracle and capture edge-case behaviour.
 
-- [ ] `W05.P12.S34` - Classify corpus descriptions via the LLM classifier and score predictions against the ground-truth oracle (accuracy per category); `src/aeat/tests/test_ledger_corpus_llm_classification.py`.
-- [ ] `W05.P12.S35` - Record classified_by=llm:<model> and confidence; `flag low-confidence rows for manual review; `src/aeat/tests/test_ledger_corpus_llm_classification.py`.
-- [ ] `W05.P12.S36` - Capture LLM behaviour on edge cases (recargo anomaly, transfers, foreign reverse-charge, regimen simplificado); `src/aeat/tests/test_ledger_corpus_llm_classification.py`.
-- [ ] `W05.P12.S37` - Gate: per-IvaCategory/SpendingCategory LLM misclassification rate tracked against a threshold; `src/aeat/tests/test_ledger_corpus_llm_classification.py`.
+- [x] `W05.P12.S34` - Classify corpus descriptions via the LLM classifier and score predictions against the ground-truth oracle (accuracy per category); `src/aeat/tests/test_ledger_corpus_llm_classification.py`.
+- [x] `W05.P12.S35` - Record classified_by=llm:<model> and confidence; `flag low-confidence rows for manual review; `src/aeat/tests/test_ledger_corpus_llm_classification.py`.
+- [x] `W05.P12.S36` - Capture LLM behaviour on edge cases (recargo anomaly, transfers, foreign reverse-charge, regimen simplificado); `src/aeat/tests/test_ledger_corpus_llm_classification.py`.
+- [x] `W05.P12.S37` - Gate: per-IvaCategory/SpendingCategory LLM misclassification rate tracked against a threshold; `src/aeat/tests/test_ledger_corpus_llm_classification.py`.
 
 ## Wave `W06` - Tax-fact manipulations: split, IVA/IRPF base-rate, proportionality
 
