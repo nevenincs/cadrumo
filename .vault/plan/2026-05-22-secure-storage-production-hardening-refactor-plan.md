@@ -321,10 +321,10 @@ Current register count: `293` production candidate files.
 | `AFR-029` | `src/aeat/adapters/outbound/google/_errors.py` | `active-profile` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-030` | `src/aeat/adapters/outbound/google/_oauth_flow.py` | `secure-object, active-profile, manifest-bucket, master-key, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-031` | `src/aeat/adapters/outbound/google/_profile_binding.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
-| `AFR-032` | `src/aeat/adapters/outbound/google/_records.py` | `secure-object, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
-| `AFR-033` | `src/aeat/adapters/outbound/google/_refresh.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
-| `AFR-034` | `src/aeat/adapters/outbound/google/_session_store.py` | `secure-object, active-profile` | `runtime-default` | `W12.P21.S86` | pending |
-| `AFR-035` | `src/aeat/adapters/outbound/llm/_cache.py` | `secure-object, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-032` | `src/aeat/adapters/outbound/google/_records.py` | `secure-object, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
+| `AFR-033` | `src/aeat/adapters/outbound/google/_refresh.py` | `remote-provider` | `retired` | `W12.P24.S98` | closed |
+| `AFR-034` | `src/aeat/adapters/outbound/google/_session_store.py` | `secure-object, active-profile` | `runtime-default` | `W12.P21.S86` | closed |
+| `AFR-035` | `src/aeat/adapters/outbound/llm/_cache.py` | `secure-object, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-036` | `src/aeat/adapters/outbound/llm/_providers/gemini.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-037` | `src/aeat/adapters/outbound/llm/_usage.py` | `secure-object, plain-file` | `runtime-default` | `W12.P21.S86` | pending |
 | `AFR-038` | `src/aeat/adapters/outbound/storage/__init__.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
@@ -675,9 +675,9 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S132` - Close `AFR-030` for `src/aeat/adapters/outbound/google/_oauth_flow.py` with signals `secure-object, active-profile, manifest-bucket, master-key, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/google/_oauth_flow.py`.
 - [x] `W12.P26.S133` - Close `AFR-031` for `src/aeat/adapters/outbound/google/_profile_binding.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/outbound/google/_profile_binding.py`.
 - [x] `W12.P26.S134` - Close `AFR-032` for `src/aeat/adapters/outbound/google/_records.py` with signals `secure-object, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/google/_records.py`.
-- [x] `W12.P26.S135` - Close `AFR-033` for `src/aeat/adapters/outbound/google/_refresh.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/google/_refresh.py`.
+- [x] `W12.P26.S135` - Close stale `AFR-033` for absent `src/aeat/adapters/outbound/google/_refresh.py` with signals `remote-provider`, target `retired`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/google/_refresh.py`.
 - [x] `W12.P26.S136` - Close `AFR-034` for `src/aeat/adapters/outbound/google/_session_store.py` with signals `secure-object, active-profile`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/outbound/google/_session_store.py`.
-- [ ] `W12.P26.S137` - Close `AFR-035` for `src/aeat/adapters/outbound/llm/_cache.py` with signals `secure-object, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/llm/_cache.py`.
+- [x] `W12.P26.S137` - Close `AFR-035` for `src/aeat/adapters/outbound/llm/_cache.py` with signals `secure-object, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/llm/_cache.py`.
 - [ ] `W12.P26.S138` - Close `AFR-036` for `src/aeat/adapters/outbound/llm/_providers/gemini.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/llm/_providers/gemini.py`.
 - [ ] `W12.P26.S139` - Close `AFR-037` for `src/aeat/adapters/outbound/llm/_usage.py` with signals `secure-object, plain-file`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/outbound/llm/_usage.py`.
 - [ ] `W12.P26.S140` - Close `AFR-038` for `src/aeat/adapters/outbound/storage/__init__.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/storage/__init__.py`.

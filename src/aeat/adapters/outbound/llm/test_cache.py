@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core.config import override_settings
 from . import LLMCache, LLMProvider, LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
@@ -73,6 +74,24 @@ def test_cache_hit_miss_and_stats(tmp_path: Path) -> None:
     assert cached.cost_estimate_usd == Decimal("0")
     assert cache.stats().entries == 1
     assert not any(tmp_path.rglob("*.json"))
+
+
+def test_cache_default_root_uses_central_settings(tmp_path: Path) -> None:
+    """Direct cache construction must honor the centralized cache directory setting."""
+
+    configured_root = tmp_path / "configured-cache"
+    with override_settings(aeat_llm_cache_dir=configured_root):
+        cache = LLMCache()
+
+    request = LLMRequest(prompt="Hello", temperature=0.0, language="es")
+    response = _response()
+    cache.write(request, response)
+    cached = cache.read(request, response.provider, response.model)
+
+    assert cache.root_dir == configured_root
+    assert cached is not None
+    assert cached.cache_hit is True
+    assert not configured_root.exists()
 
 
 @pytest.mark.parametrize(
