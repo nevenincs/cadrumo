@@ -450,8 +450,8 @@ Three structurally identical guard pairs between _iva_ledger.py and _renta_ledge
 address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileExportBundle ghost comment dead _profile_binding_selectors alias.
 
 - [x] `W09.P41.S160` - delete address_postcode field from SetupAnswers or wire to real consumer recommend delete; `src/aeat/application/wizard/_setup_answers.py`.
-- [ ] `W09.P41.S161` - replace dual IVARegime.GENERAL defaults with single shared constant; `src/aeat/application/wizard/`.
-- [ ] `W09.P41.S162` - replace dual CCAA.MADRID defaults with single shared constant; `src/aeat/application/wizard/`.
+- [x] `W09.P41.S161` - replace dual IVARegime.GENERAL defaults with single shared constant; `src/aeat/application/wizard/`.
+- [x] `W09.P41.S162` - replace dual CCAA.MADRID defaults with single shared constant; `src/aeat/application/wizard/`.
 - [x] `W09.P41.S163` - delete ghost ProfileExportBundle comment; `src/aeat/application/user_profile/__init__.py`.
 - [x] `W09.P41.S164` - delete dead alias _profile_binding_selectors; `src/aeat/domain/user_profile/_registry_contract.py`.
 - [x] `W09.P41.S198` - delete duplicate AuthProviderReservedError registration; `the class is registered twice at lines 62-65 and 106-109; `src/aeat/core/errors/registry/_application.py`.
