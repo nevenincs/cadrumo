@@ -200,7 +200,7 @@ Drop the _build_profile_keys lazy pull path (DB-17), rename core/profile.py and 
 
 - [ ] `W06.P18.S64` - Remove the _build_profile_keys lazy pull path in domain profile _keys.py that imports application.wizard._compiler; `rely solely on the existing register_profile_keys push path and add a not-registered guard (DB-17); `src/aeat/domain/profile/_keys.py`.
 - [x] `W06.P18.S65` - Rename core/profile.py to core/setup_answers.py (SetupAnswers + registration slots), retype the _m/_p/_ccaa Any lazy accessors once the cycle is broken, and update the 5 importers (DB-28; `tag relocation:SetupAnswers); `src/aeat/core/setup_answers.py`.
-- [ ] `W06.P18.S66` - Rename core/profile_catalogue.py to core/wizard_catalogue.py and update the 4 importers (DB-39; `tag relocation:WizardCatalogueSlot); `src/aeat/core/wizard_catalogue.py`.
+- [x] `W06.P18.S66` - Rename core/profile_catalogue.py to core/wizard_catalogue.py and update the 4 importers (DB-39; `tag relocation:WizardCatalogueSlot); `src/aeat/core/wizard_catalogue.py`.
 
 ## Wave `W07` - Residual findings: correctness, typing, routing and docstrings (DB-05/06/08/09/10/12/13/36/03)
 

@@ -1546,6 +1546,28 @@ remediation is currently HELD at audit-only per the active action policy.
   (`profile_catalogue.py` rename) — `setup_answers.py` now carries the `:mod:`
   cross-ref S66 will repoint.
 
+- 2026-06-03: **S66 EXECUTED — `relocation:WizardCatalogueSlot`, core/profile_catalogue.py
+  -> core/wizard_catalogue.py (commit `ecd74c620`).** Same proven scripted-rename pattern
+  as S65, immediately after it (S65 unblocked S66 by clearing the `profile.py` cross-ref
+  coupling). `git mv` module + test; scripted token replacement (`aeat.core.profile_catalogue`
+  + `profile_catalogue import` + the marker-test path `core/profile_catalogue.py`) repointed
+  all importers + 2 registry path strings + the `setup_answers.py` `:mod:` cross-ref; a
+  second bare-token pass caught the residual forms the first missed (`from . import
+  profile_catalogue`, split path parts `"core" / "profile_catalogue.py"`, comments,
+  function names, conftest mentions); `.importlinter` fixture ignore
+  `test_profile_catalogue -> test_wizard_catalogue` (the test rename had stale'd it,
+  flipping Core-not-outer BROKEN until renamed — same lesson as S65). This commit ALSO
+  completed an S65 gap: both marker tests hardcoded `core/profile.py` (a path string S65's
+  import-token script did not touch), now `core/setup_answers.py`. Verified: 197 tests
+  green, collect-only clean (4661), ty clean, Core-not-outer KEPT. Lesson codified for the
+  rename pattern: renaming a module requires updating (a) imports [token script], (b)
+  registry path strings, (c) `:mod:` docstring refs, (d) hardcoded path strings in marker
+  tests [bare + split forms], (e) `.importlinter` fixture ignores for any renamed TEST
+  file, (f) apidocs stub — a blunt import-only sweep misses (c)/(d)/(e). Pre-existing
+  unrelated red in `test_any_return_rationale_markers.py` (peer Google-Drive/calc-sheets
+  marker gaps + pre-existing inline catalogue-slot gaps) is not introduced by the
+  content-identical move.
+
 - 2026-06-02 (cont.): **DB-01 concern C / W06.P16 (S61+S62) EXECUTED — ledger error
   hierarchies relocated out of the catch-all `domain/profile/_errors.py`.** Two atomic
   explicit-path moves co-locating each ledger's errors with its records:
