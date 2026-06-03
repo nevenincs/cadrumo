@@ -89,6 +89,7 @@ tutorials/index
 how-to/index
 how-to/profile-setup
 how-to/import-bank-statements
+how-to/classify-with-llm
 how-to/reconcile
 how-to/filing-calendar
 how-to/troubleshooting

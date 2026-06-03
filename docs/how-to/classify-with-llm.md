@@ -1,0 +1,76 @@
+# Classify a transaction with an LLM
+
+Classifying transactions is the heaviest part of preparing a return. An LLM can
+suggest the classification for you, which you then review and accept, override,
+or reject. Nothing is saved until you explicitly apply a suggestion, and a
+manual decision always wins.
+
+You need an active profile, an imported ledger (see
+[Import and classify a bank statement](import-bank-statements.md)), and a local
+LLM command-line tool on your `PATH` — one of `claude`, `gemini`, or `codex`.
+Everything here is local; the LLM runs on your machine and the tool never
+contacts the Agencia Estatal de Administración Tributaria (AEAT).
+
+## What the LLM decides — and what it doesn't
+
+The LLM suggests only the non-tax dimensions: the business/personal
+classification (BUSINESS, PERSONAL, or MIXED) and, where it can, an expense
+category. It does **not** set the regulated tax figures — the taxable base, the
+IVA rate or amount, the IVA category, or the IRPF category. You still enter
+those yourself (see the `--taxable-base`, `--iva-rate`, `--iva-category`, and
+`--irpf-category` options on `aeat app ledger classify`).
+
+## Check which providers are available
+
+The LLM runs through a local provider CLI. List the ones found on your `PATH`:
+
+```
+aeat app ledger providers
+```
+
+If your provider isn't listed, install its CLI or pick one that is.
+
+## Ask the LLM for a suggestion
+
+Run `classify` with `--llm` and a provider. This **previews** the suggestion -
+the classification, the suggested category, a confidence, and the reason - and
+saves nothing:
+
+```
+aeat app ledger classify --id <transaction-id> --llm claude
+```
+
+Find the transaction id with `aeat app ledger list`. Read the suggestion and
+decide what to do next.
+
+## Accept the suggestion
+
+If the suggestion is right, apply it. This persists it with `llm:` provenance,
+so the audit trail records that the decision came from a model:
+
+```
+aeat app ledger classify --id <transaction-id> --llm claude --apply
+```
+
+## Override or reject
+
+- **Reject:** simply don't pass `--apply`. The transaction is left unchanged.
+- **Override:** classify it yourself instead. A manual decision overwrites any
+  prior value and stamps manual provenance:
+
+  ```
+  aeat app ledger classify --id <transaction-id> --classification BUSINESS
+  ```
+
+  Re-running `classify` at any time replaces the previous classification, so you
+  can correct an applied LLM suggestion the same way.
+
+## Where next
+
+- [Import and classify a bank statement](import-bank-statements.md) - load the
+  ledger and classify by hand or in bulk.
+- [Common filing recipes](index.md) - the modelo lifecycle these classifications
+  feed.
+- [CLI reference](../cli/index.rst) - every classify option and exit code.
+- [Glossary](../glossary.md) - the Spanish terms used here.
+- Report a problem on the [issue tracker](https://github.com/wgergely/aeat/issues).
