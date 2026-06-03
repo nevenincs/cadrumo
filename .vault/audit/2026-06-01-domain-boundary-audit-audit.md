@@ -2038,15 +2038,40 @@ remediation is currently HELD at audit-only per the active action policy.
   prior status (no new adapter→application edge), 42 core/workflow/registry tests + 599
   consumer tests pass; `test_registry_enforcement` green confirms the registry move kept
   the taxonomy consistent. **With W10 closed, every plan step (original 94 + W10 + W11) is
-  resolved.** Follow-ups (non-blocking, flagged): (1) `workflow/_errors.py` carries a
-  tool-added re-export alias `NoActiveProfileError` that is now dead (no importer) — a
-  candidate for removal under a structural audit per the relocation-atomicity rule, left
-  in place per the editor's intentional-change marker; (2) `modelo/_export.py`'s 1-line
-  repoint is excluded from the commit (concurrent peer WIP adding
-  `ModeloIvaWalletDecisionProvenance`) and rides with the peer's commit; (3) 13
-  pre-existing `test_cli_surface` ledger-lifecycle "no active bucket session" failures are
-  unrelated to W10 — proven to fail identically on the old import — and belong to the
-  separate storage-runtime/session-setup flake surface.
+  resolved.**
+
+- 2026-06-04: **W10 re-export bridge eradicated + resolver consumers centralized on the
+  public `aeat.core` surface (commits `5a4b4f8e0`, `7858b137d`) — operator directive "no
+  reexports".** The operator rejected leaving the tool-added
+  `from ...core.errors import NoActiveProfileError as NoActiveProfileError` bridge in
+  `workflow/_errors.py` ("goes against a plethora of audits and centralization work; must
+  respect the hexagonal pattern design"). Removed it; this surfaced the one importer the
+  W10 repoint script's `workflow._errors`-anchored pattern had missed —
+  `test_active_profile_resolution` using the bare relative `from ._errors import
+  NoActiveProfileError` / `from ._models import resolve_active_bucket_id` — now importing
+  both from canonical `aeat.core` / `aeat.core.errors`; the workflow `__init__` docstring's
+  "re-export" wording corrected. Then completed the centralization: the 16 consumers
+  (domain runtime repos, storage substrate `runtime_repository` + `master_key`, application
+  filing/auth/workflow-persistence, google `_profile_binding`, CLI) that imported
+  `resolve_active_bucket_id` from the **private** `core._bucket_pointer_io` were repointed
+  to the **public** `aeat.core` surface (the pointer-file IO primitives
+  `write_pointer`/`read_pointer` stay core-internal — a distinct concern from the public
+  active-bucket resolution). Verified: no import cycle (storage substrate → `aeat.core`
+  resolves), ty has no resolver-symbol diagnostics, 397 + 110 + 43 domain/auth/substrate/
+  roundtrip/registry tests pass. `NoActiveProfileError` and the resolvers now have a single
+  canonical import path (`aeat.core` / `aeat.core.errors`) with zero re-export bridges.
+  (`application/live/__init__` and `cli/test_profile_output_language` carry the same 1-2
+  line repoint but were excluded from the commit for concurrent peer WIP; their repoint
+  rides with the peer commits.) This reinforces the existing `aeat-architecture-boundaries`
+  (no shims/compat layers) and relocation-atomicity (no re-export bridge) rules — no new
+  rule needed; the lesson is already codified.
+
+  Remaining non-blocking items: (a) `modelo/_export.py`'s 1-line resolver repoint is
+  excluded from the W10 commit (concurrent peer WIP adding
+  `ModeloIvaWalletDecisionProvenance`) and rides with the peer's commit; (b) 13 pre-existing
+  `test_cli_surface` ledger-lifecycle "no active bucket session" failures are unrelated to
+  W10 — proven to fail identically on the old import — and belong to the separate
+  storage-runtime/session-setup flake surface.
 
 ## Codification candidates
 
