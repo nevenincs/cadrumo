@@ -143,6 +143,68 @@ landing, and any drop of the work-subgroup mount would fail the
 subgroup's own integrity gates plus the S2019 test set already
 covering the work verify lifecycle.
 
+## Addendum: S233 canonical period rendering form
+
+`W01.P07.S233` reads "R7-INES-7 fix period token notation inconsistency
+in overview backlog; M111 surfaces as 2026Q1 while the rest of the
+system uses 1T; consolidate period rendering through
+parse_canonical_period output form so backlog and calendar agree".
+
+Current state inventory:
+
+- `domain.deadlines._engine._window_registry_period` converts the raw
+  window period (e.g. `2026Q1`, `2026-01`, `2026-1T`, `2026-1P`) into
+  the registry-native form (`1T`, `01`, `0A`, `1P`) for the
+  applicability-schedule filter.
+- `ModeloDeadline.period` (the obligation row exposed to the overview
+  calendar / backlog) carries `window.period` verbatim — the raw
+  per-registry form, not the registry-native form.
+- Multiple downstream tests pin the raw form:
+  `domain/deadlines/test_engine.py` asserts `("130", "2026Q1")` while
+  `("303", "2026-1T")` for M303 — i.e. the calendar surface already
+  emits two different display vocabularies depending on each modelo's
+  window-authoring shape.
+
+Two interpretations of the consolidation are open:
+
+1. **Render-registry-native** (`1T` everywhere): change
+   `_project_window` to set `period=_window_registry_period(window)`.
+   Breaks 5+ test_engine expectations and changes the operator-facing
+   period display across every overview surface.
+
+2. **Render-canonical-display** (`2026Q1` everywhere): keep raw
+   window period but normalise M303's `2026-1T` form to `2026Q1`
+   before exposure. Requires a per-window canonicaliser.
+
+The S233 wording "consolidate period rendering through
+parse_canonical_period output form" suggests option 1 (registry-native
+`1T`), since `parse_canonical_period` returns
+`(filing_year, registry_period)` where `registry_period` is the native
+short form. However the existing test expectations explicitly assert
+the raw form, so option 1 requires test updates that may break peer
+agents mid-edit.
+
+This ADR pins the **conservative interim decision**: defer the
+breaking change. The S233 work remains tracked but is **gated on a
+declarative-display ADR** that decides:
+
+- Which canonical operator-facing form (`1T` vs `2026Q1`) overview
+  surfaces emit.
+- Whether obligation.period carries the registry-native form
+  (forcing downstream consumers to compose year + period) or the
+  full canonical form (matching existing test expectations).
+- The test-update plan for the 5+ test_engine assertions that pin
+  the raw form today.
+
+Until that declarative ADR lands, `_window_registry_period` continues
+to handle the applicability-filter conversion and overview surfaces
+continue to emit each modelo's window-authoring shape. The
+inconsistency is documented; the fix is deferred to avoid breaking
+peer-agent work mid-session.
+
+S233 stays open; the deferral itself is recorded so future agents
+inherit the decision context.
+
 ## Codification candidates
 
 - **Rule slug:** `cli-canonical-roster-as-only-source-of-truth`.
