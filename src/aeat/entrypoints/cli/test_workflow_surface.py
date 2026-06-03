@@ -209,7 +209,11 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
         refreshed = UserProfileLifecycleRepository(bucket_id=operator_profile_id).load(operator_profile_id)
         assert fact_value(refreshed, "preferences.output_language") == "en"
 
-    status_result = _invoke(["--format", "json", "config", "profile", "status"])
+    # `config profile status` reads the profile-bound secure store, needing an
+    # active bucket session that in-process CliRunner does not re-open per invoke
+    # (#52 / master_key _active_session); hold the provider active across it.
+    with activate_master_key_provider(provider):
+        status_result = _invoke(["--format", "json", "config", "profile", "status"])
     assert status_result.exit_code == 0, status_result.output
     status_envelope = json.loads(_json_output(status_result))
     assert status_envelope["command"] == "config.profile.status"
@@ -226,20 +230,24 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
         assert fact_value(stored, "identity.tax_id") == "00000000T"
         assert fact_value(stored, "preferences.output_language") == "en"
 
-    calendar_result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "overview",
-            "calendar",
-            "--from",
-            "2026-01-01",
-            "--to",
-            "2026-03-31",
-            "--allow-incomplete",
-        ]
-    )
+    # overview calendar reads the profile-bound store for obligation derivation,
+    # needing an active bucket session that in-process CliRunner does not re-open
+    # per invoke (#52 / master_key _active_session); hold the provider active.
+    with activate_master_key_provider(get_master_key_provider()):
+        calendar_result = _invoke(
+            [
+                "--format",
+                "json",
+                "app",
+                "overview",
+                "calendar",
+                "--from",
+                "2026-01-01",
+                "--to",
+                "2026-03-31",
+                "--allow-incomplete",
+            ]
+        )
     assert calendar_result.exit_code == 0, calendar_result.output
     calendar_envelope = json.loads(_json_output(calendar_result))
     assert calendar_envelope["command"] == "overview.calendar"
@@ -536,12 +544,20 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
     )
     assert created.exit_code == 0, created.output
 
-    configure = _invoke(["config", "auth", "configure", "--provider", "clave_movil"])
-    unsupported_spelling = _invoke(["config", "auth", "configure", "--provider", "clave-movil"])
-    unsupported = _invoke(["config", "auth", "configure", "--provider", "clave_permanente"])
-    unsupported_test = _invoke(["config", "auth", "test", "--provider", "dnie_pkcs"])
-    unsupported_login = _invoke(["config", "auth", "login", "--provider", "dnie_pkcs"])
-    unsupported_clear = _invoke(["config", "auth", "clear", "--provider", "clave_pin"])
+    # config auth verbs write the auth provider into the profile-bound secure
+    # store, which needs an active bucket session. In-process CliRunner does not
+    # re-open the session per invoke as a fresh CLI process does (#52 /
+    # master_key _active_session), so hold the master-key provider active across
+    # these invokes.
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+
+    with activate_master_key_provider(get_master_key_provider()):
+        configure = _invoke(["config", "auth", "configure", "--provider", "clave_movil"])
+        unsupported_spelling = _invoke(["config", "auth", "configure", "--provider", "clave-movil"])
+        unsupported = _invoke(["config", "auth", "configure", "--provider", "clave_permanente"])
+        unsupported_test = _invoke(["config", "auth", "test", "--provider", "dnie_pkcs"])
+        unsupported_login = _invoke(["config", "auth", "login", "--provider", "dnie_pkcs"])
+        unsupported_clear = _invoke(["config", "auth", "clear", "--provider", "clave_pin"])
 
     assert configure.exit_code == 0, configure.output
     assert "clave_movil" in configure.output
@@ -605,7 +621,15 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
         encoding="utf-8",
     )
 
-    imported = _invoke(["--format", "json", "app", "ledger", "import", str(statement), "--provider", "n26"])
+    # The import invoke decrypts/persists to the profile-bound store, which needs
+    # an active bucket session. In-process CliRunner does not re-open the session
+    # per invoke the way a fresh CLI process does (see #52 / master_key
+    # _active_session), so hold the master-key provider active across the invoke —
+    # the same idiom this test already uses for its read-back below.
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+
+    with activate_master_key_provider(get_master_key_provider()):
+        imported = _invoke(["--format", "json", "app", "ledger", "import", str(statement), "--provider", "n26"])
 
     assert imported.exit_code == 0, imported.output
     import_envelope = json.loads(_json_output(imported))
@@ -727,8 +751,14 @@ def test_ledger_import_verify_source_rejects_missing_original_file(
 def test_read_only_status_commands_use_isolated_local_state(encrypted_user_cli: Path) -> None:
     _seed_profile(tax_id="00000000T", name="operator", activity="design")
 
-    config_status = _invoke(["--format", "json", "config", "profile", "status"])
-    overview = _invoke(["--format", "json", "app", "overview", "status"])
+    # Both status commands read the profile-bound secure store, needing an active
+    # bucket session that in-process CliRunner does not re-open per invoke (#52 /
+    # master_key _active_session); hold the provider active across them.
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+
+    with activate_master_key_provider(get_master_key_provider()):
+        config_status = _invoke(["--format", "json", "config", "profile", "status"])
+        overview = _invoke(["--format", "json", "app", "overview", "status"])
 
     assert config_status.exit_code == 0, config_status.output
     assert overview.exit_code == 0, overview.output
