@@ -24,16 +24,16 @@ The enum values intentionally mirror the domain lifecycle status string values. 
 
 ## S161-003 | PASS | Validation conventions and tests are acceptable for this boundary
 
-The `ValueError` raises are pydantic field-validator signals, not user-facing application exceptions. No direct environment access, local settings construction, broad exception catch, suppression, fake, stub, monkeypatch, skip, or xfail markers were found in the reviewed implementation or target tests.
+The `ValueError` raises are pydantic field-validator signals, not user-facing application exceptions. No direct environment access, local settings construction, broad exception catch, suppression, fake, stub, monkeypatch, skip, xfail, or direct encoding literals were found in the reviewed implementation or target tests.
 
-The tests exercise strict pydantic validation and real TOML filesystem roundtrips. The roundtrip fixture uses non-default lifecycle state and mutates persisted TOML to prove the status field is not tautologically flattened or defaulted.
+The tests exercise strict pydantic validation and real TOML filesystem roundtrips. The roundtrip fixture uses non-default lifecycle state, mutates persisted TOML to prove the status field is not tautologically flattened or defaulted, and routes text decoding through `UTF_8_ENCODING`.
 
 Validation:
 
 - `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/bucket/test_manifest.py src/aeat/adapters/persistence/storage/bucket/test_manifest_roundtrip.py` passed with 16 tests.
 - `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/bucket/_manifest.py src/aeat/adapters/persistence/storage/bucket/test_manifest.py src/aeat/adapters/persistence/storage/bucket/test_manifest_roundtrip.py` passed.
-- Touched-file hygiene scan found no broad exception catches, suppressions, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, local secure-object marker construction, direct settings construction, or direct environment access. Its only hit was a test module docstring stating that the roundtrip test uses real filesystem I/O and no mocks.
+- Touched-file hygiene scan found no broad exception catches, suppressions, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, direct encoding literals, local secure-object marker construction, direct settings construction, or direct environment access.
 
-Review-agent note: spawning `vaultspec-code-reviewer` for this row failed with the current agent thread limit, so the formal review was completed locally using the same checklist.
+Review-agent note: a reviewer subagent was unavailable in this session due the current usage limit, so the supervisor completed the same checklist locally.
 
 Disposition: close `AFR-059` as `remote-mirror` metadata.
