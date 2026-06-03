@@ -26,7 +26,7 @@ from ..application.user_profile import (
 from ..application.wizard._catalogue import WIZARD_FLOWS
 from ..application.wizard._errors import WizardValidationError
 from ..application.wizard._widgets import validate_widget_answer
-from ..application.workflow._persistence import workflow_state_repository
+from ..application.workflow import workflow_state_repository
 from ..core import resolve_active_bucket_id
 from ..core.i18n import tr
 from ..core.redaction import redact_for_cli_output
