@@ -266,9 +266,9 @@ Edit, reclassify, re-allocate, and lifecycle transitions with lineage and finali
 
 Edit/reclassify/re-allocate with lineage and finalized-modelo guard.
 
-- [ ] `W08.P15.S45` - Update editable facts (date/amount/counterparty/description) and assert edit_lineage chain; `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
-- [ ] `W08.P15.S46` - Reclassify and re-allocate after review and assert classification_history retained; `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
-- [ ] `W08.P15.S47` - Modification refused when the row feeds a finalized modelo (blocking-reference guard); `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
+- [x] `W08.P15.S45` - Update editable facts (date/amount/counterparty/description) and assert edit_lineage chain; `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
+- [x] `W08.P15.S46` - Reclassify and re-allocate after review and assert classification_history retained; `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
+- [x] `W08.P15.S47` - Modification refused when the row feeds a finalized modelo (blocking-reference guard); `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
 
 ## Wave `W09` - Calculation-engine recalculation on post-publish ledger change
 

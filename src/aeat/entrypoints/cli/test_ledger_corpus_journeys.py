@@ -593,3 +593,147 @@ def test_transfer_row_reclassified_to_internal_transfer_and_locked_out_of_tax() 
     )
     assert refused.exit_code != 0, refused.output
     assert after["business_classification"] != "BUSINESS"
+
+
+# --- W08.P15: modification lifecycle (edit lineage, history, blocking) -------
+def _active_repo():
+    from ...core._bucket_pointer_io import resolve_active_bucket_id
+    from ...domain.transactions import TransactionCatalogueRepository
+
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    return TransactionCatalogueRepository(bucket_id=bucket_id)
+
+
+def test_edit_editable_facts_records_edit_lineage_chain() -> None:
+    """W08.S45 — editing an id-affecting fact rewrites the row id and the new
+    record carries an edit_lineage entry pointing back at the prior id.
+    """
+    _import_bbva()
+    rows = _list_rows()
+    target = _find(rows, "Material oficina Papeleria Gomez")
+    old_id = target["transaction_id"]
+
+    res = _RUNNER.invoke(
+        app, ["app", "ledger", "update", "--id", old_id, "--description", "Material oficina (corregido)"]
+    )
+    assert res.exit_code == 0, res.output
+
+    catalogue = _active_repo().load()
+    # The edit changed the narrative -> a new content-addressed id; locate the
+    # heir by its edit_lineage back-pointer.
+    heirs = [t for t in catalogue.values() if t.edit_lineage and t.edit_lineage[-1].previous_transaction_id == old_id]
+    assert len(heirs) == 1, [t.transaction_id for t in catalogue.values() if t.edit_lineage]
+    heir = heirs[0]
+    assert heir.raw.description == "Material oficina (corregido)"
+    assert old_id not in {t.transaction_id for t in catalogue.values()}
+
+
+def test_reclassify_retains_classification_event_chain() -> None:
+    """W08.S46 — reclassifying after review keeps the prior classification in the
+    auditable bucket-event chain (the operator-facing classification history).
+    """
+    _import_bbva()
+    rows = _list_rows()
+    target = _find(rows, "Material oficina Papeleria Gomez")
+    tx = target["transaction_id"]
+
+    first = _RUNNER.invoke(
+        app, ["app", "ledger", "classify", "--id", tx, "--classification", "BUSINESS", "--category-id", "material_oficina"]
+    )
+    assert first.exit_code == 0, first.output
+    second = _RUNNER.invoke(
+        app, ["app", "ledger", "classify", "--id", tx, "--classification", "BUSINESS", "--category-id", "asesoria_fiscal"]
+    )
+    assert second.exit_code == 0, second.output
+
+    history = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", tx])
+    assert history.exit_code == 0, history.output
+    events = json.loads(history.output)["result"]["events"]
+    classified = [e for e in events if e["event_type"] == "ledger.transaction.classified"]
+    # Both classification decisions are retained in the chain, not overwritten.
+    assert len(classified) >= 2, events
+
+    # The current category reflects the latest decision; the chain proves the
+    # earlier one was not silently dropped.
+    catalogue = _active_repo().load()
+    assert catalogue.get(tx).category_id == "asesoria_fiscal"
+
+
+def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
+    """W08.S47 — once a verified modelo revision cites a ledger row, the CLI
+    refuses to edit that row (finalized-modelo blocking guard).
+    """
+    from datetime import UTC, datetime
+    from decimal import Decimal
+
+    from ...core._bucket_pointer_io import resolve_active_bucket_id
+    from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+    from ...domain.modelos._calculation_revision import (
+        CalculationRevision,
+        CalculationRevisionCatalogue,
+        CalculationRevisionState,
+        derive_calculation_revision_id,
+    )
+    from ...domain.modelos._codes import ModeloCode
+    from ...domain.modelos._repository import WorkUnitCatalogueRepository
+    from ...domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+
+    _import_bbva()
+    rows = _list_rows()
+    tx = _find(rows, "Material oficina Papeleria Gomez")["transaction_id"]
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+
+    work_unit_id = derive_work_unit_id(
+        bucket_id=bucket_id, modelo="303", filing_year=2025, period="1T", revision_id="2009-y-siguientes"
+    )
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        inputs_snapshot={"01": "1"},
+        binding_overrides={},
+        casilla_values={"01": Decimal("1")},
+        source_transaction_ids=(tx,),
+    )
+    now = datetime(2026, 5, 2, 9, 0, tzinfo=UTC)
+    WorkUnitCatalogueRepository().save(
+        WorkUnitCatalogue.from_work_units(
+            (
+                WorkUnit(
+                    work_unit_id=work_unit_id,
+                    bucket_id=bucket_id,
+                    modelo=ModeloCode("303"),
+                    filing_year=2025,
+                    period="1T",
+                    revision_id="2009-y-siguientes",
+                    name="303-2025-1T",
+                    created_at=now,
+                    updated_at=now,
+                    current_calculation_revision_id=revision_id,
+                ),
+            )
+        )
+    )
+    CalculationRevisionCatalogueRepository().save(
+        CalculationRevisionCatalogue(
+            revisions={
+                revision_id: CalculationRevision(
+                    calculation_revision_id=revision_id,
+                    work_unit_id=work_unit_id,
+                    state=CalculationRevisionState.VERIFICADO_COMPLETO,
+                    inputs_snapshot={"01": "1"},
+                    binding_overrides={},
+                    source_transaction_ids=(tx,),
+                    casilla_values={"01": Decimal("1")},
+                    created_at=now,
+                    updated_at=now,
+                    verified_at=now,
+                    verified_by="operator",
+                )
+            }
+        )
+    )
+
+    refused = _RUNNER.invoke(app, ["app", "ledger", "update", "--id", tx, "--notes", "tweak"])
+    assert refused.exit_code != 0, refused.output
+    assert "finalized modelo" in refused.output.lower() or "modelo" in refused.output.lower()
