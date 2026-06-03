@@ -612,7 +612,7 @@ def test_modelo_130_golden_sha_fichero_boe(tmp_path: Path) -> None:
 # corresponds to.  The golden SHA is a byte-identity lock; any change to the
 # 303.toml export layout that alters offset, length, encoding, or sign flag
 # will alter the SHA and fail this test.
-_M303_GOLDEN_SHA256 = "17d837599f73c2be99ff71f443c064164ca3099e7767de1147add8343f6f7ac9"
+_M303_GOLDEN_SHA256 = "ac71fd62a25b87143c4ae031826b2790521578584472d3957aab821f465993dc"
 
 # Cumulative record-start offsets (0-based byte index):
 #   DP30300 starts at 0
@@ -624,6 +624,7 @@ _M303_GOLDEN_SHA256 = "17d837599f73c2be99ff71f443c064164ca3099e7767de1147add8343
 #   DP303DID starts at 5630+1523 = 7153
 #   Envelope footer starts at 7153+823 = 7976
 _M303_P01_START = 328
+_M303_P03_START = 3615
 _M303_DID_START = 7153
 
 
@@ -691,6 +692,11 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
         s = _M303_P01_START + offset - 1
         return payload[s : s + length]
 
+    def _p3(offset: int, length: int) -> bytes:
+        """Read bytes from DR DP30303 page-03 record (1-based field offset)."""
+        s = _M303_P03_START + offset - 1
+        return payload[s : s + length]
+
     def _did(offset: int, length: int) -> bytes:
         """Read bytes from DR DP303DID identification record (1-based offset)."""
         s = _M303_DID_START + offset - 1
@@ -754,6 +760,30 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
 
     # DR DP30301 row 88 (offset 1570-1581): closing tag </T30301000> (12 bytes)
     assert _p1(1570, 12) == b"</T30301000>", "DR DP30301 row 88: page-01 close tag"
+
+    # DR DP30303 rows 1-4: page-03 tag
+    assert _p3(1, 2) == b"<T", "DR DP30303 row 1: page open tag"
+    assert _p3(3, 3) == b"303", "DR DP30303 row 2: modelo in page tag"
+    assert _p3(6, 5) == b"03000", "DR DP30303 row 3: page-03 identifier must be '03000'"
+    assert _p3(11, 1) == b">", "DR DP30303 row 4: close of page tag"
+
+    # DR DP30303 row 25 (offset 255-271): casilla [110] prior-period compensation.
+    # Input binding modelo-303-compensacion-pendiente-anteriores = 0.
+    assert _p3(255, 17) == _money_bytes(Decimal("0"), signed=False), (
+        "DR DP30303 row 25: casilla 110 prior compensation must serialize as explicit zero"
+    )
+
+    # DR DP30303 row 26 (offset 272-288): casilla [78] applied compensation.
+    # With no positive prior compensation, the computed application is zero.
+    assert _p3(272, 17) == _money_bytes(Decimal("0"), signed=False), (
+        "DR DP30303 row 26: casilla 78 applied compensation must serialize as explicit zero"
+    )
+
+    # DR DP30303 row 27 (offset 289-305): casilla [87] later-period pending compensation.
+    # Formula [110] - [78] = 0 for this neutral first-quarter fixture.
+    assert _p3(289, 17) == _money_bytes(Decimal("0"), signed=False), (
+        "DR DP30303 row 27: casilla 87 posterior compensation must serialize as explicit zero"
+    )
 
     # DR DP303DID rows 1-4: identification record tag
     # Row 1-2 (offset 1-2): "<T"

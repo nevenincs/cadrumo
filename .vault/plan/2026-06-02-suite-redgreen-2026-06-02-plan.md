@@ -4,6 +4,11 @@ tags:
   - '#suite-redgreen-2026-06-02'
 date: '2026-06-02'
 tier: L2
+related:
+  - '[[2026-04-21-calc-verification-adr]]'
+  - '[[2026-05-19-modelo-registry-fragment-architecture-adr]]'
+  - '[[2026-05-20-registry-authority-flow-adr]]'
+  - '[[2026-05-27-m210-irnr-full-engine-adr]]'
 ---
 
 <!-- LINK RULES:
@@ -116,16 +121,16 @@ Fix the prior-filing-history and prior-year-history wallet decision injection so
 Restore encryption-at-rest for filing history + attachments manifest so plaintext does not appear in SQLite bytes
 
 - [x] `P03.S07` - Audit attachment manifest field encryption; `Restore EncryptedString or equivalent on Justificante.source_pdf_sha256 et al so the hex digest does not appear in raw SQLite bytes`.
-- [x] `P03.S08` - Restore filing_history TestClassificationGate encryption; `test_database_payload_is_encrypted_audit_data — re-enable column-level encryption for AUDIT classification rows`.
+- [x] `P03.S08` - Restore filing_history TestClassificationGate encryption; `test_database_payload_is_encrypted_audit_data - re-enable column-level encryption for AUDIT classification rows`.
 - [x] `P03.S09` - Verify storage encryption suite; `test_blob_and_manifest_round_trip_without_plaintext_files + test_database_payload_is_encrypted_audit_data`.
 
 ### Phase `P04` - Registry parity + coverage
 
 Catalogue-verification, formula-modelo parity, modelo-parity coverage, ledger-iva 390 binding chain
 
-- [x] `P04.S10` - Catalogue verification; `test_committed_registry_tree_has_required_model_law_coverage — identify missing model/law pair; either supply or relax with rationale`.
-- [x] `P04.S11` - Formula-modelo parity; `test_formula_revisions_are_owned_by_constructs_with_snapshot_workflow_surfaces — wire missing formula→construct ownership`.
-- [x] `P04.S12` - Modelo parity coverage; `test_formula_bearing_modelos_have_constructs_and_model_specific_tests — list bare formula-bearing modelos`.
+- [x] `P04.S10` - Catalogue verification; `test_committed_registry_tree_has_required_model_law_coverage - identify missing model/law pair; either supply or relax with rationale`.
+- [x] `P04.S11` - Formula-modelo parity; `test_formula_revisions_are_owned_by_constructs_with_snapshot_workflow_surfaces - wire missing formula→construct ownership`.
+- [x] `P04.S12` - Modelo parity coverage; `test_formula_bearing_modelos_have_constructs_and_model_specific_tests - list bare formula-bearing modelos`.
 - [x] `P04.S13` - M390 IVA binding chain; `Supply missing modelo-303-autoconsumo-promotor-base binding for the 390 annual pipeline test`.
 - [x] `P04.S28` - Fix M714 empty formula fragment load blocker; `src/aeat/_data/registry/aeat/modelos/714/revisions/2021-y-siguientes/formulas/0001-formulas.toml`.
 
@@ -134,33 +139,33 @@ Catalogue-verification, formula-modelo parity, modelo-parity coverage, ledger-iv
 Identity-primitive sibling-domain enum cycle, exception base hygiene, monkeypatch + cross-module imports + relative-imports drift
 
 - [x] `P05.S14` - IvaRate sibling-domain cycle; `Relocate IvaRate out of invoices._enums into a leaf module (core or domain/iva) so iva._invoice_classification can import from public surface without cycle`.
-- [x] `P05.S15` - Exception base hygiene; `test_production_exception_classes_do_not_introduce_unregistered_builtin_roots — register or remove unregistered root`.
+- [x] `P05.S15` - Exception base hygiene; `test_production_exception_classes_do_not_introduce_unregistered_builtin_roots - register or remove unregistered root`.
 - [x] `P05.S16` - Monkeypatch + cross-module + relative-imports inventories; `Bring the three inventory ratchets back to zero (likely peer additions need rationale comments or removal)`.
 
 ### Phase `P06` - CLI surface contract
 
 cli_workflow_verification retired-surface suggestions, operator_surface help_documents, backend_boundary, lazy_command_tree state-free general
 
-- [x] `P06.S17` - Retired-surface canonical suggestions; `test_root_contract_service_rejects_retired_surfaces_with_canonical_suggestions — supply the suggestion map peer drift removed`.
-- [x] `P06.S18` - Help documents backend-owned; `test_help_documents_are_backend_owned_and_current_surface_only — re-source help text from backend, remove stale entries`.
-- [x] `P06.S19` - Backend boundary test xfail language; `test_cli_unit_tests_do_not_contain_process_state_or_xfail_language — find and remove the forbidden language`.
-- [x] `P06.S20` - Lazy-command-tree state-free general; `test_state_free_surface_does_not_import_registry (non-help parametrize) — chase the registry leak path that --help-fix did not cover`.
+- [x] `P06.S17` - Retired-surface canonical suggestions; `test_root_contract_service_rejects_retired_surfaces_with_canonical_suggestions - supply the suggestion map peer drift removed`.
+- [x] `P06.S18` - Help documents backend-owned; `test_help_documents_are_backend_owned_and_current_surface_only - re-source help text from backend, remove stale entries`.
+- [x] `P06.S19` - Backend boundary test xfail language; `test_cli_unit_tests_do_not_contain_process_state_or_xfail_language - find and remove the forbidden language`.
+- [x] `P06.S20` - Lazy-command-tree state-free general; `test_state_free_surface_does_not_import_registry (non-help parametrize) - chase the registry leak path that --help-fix did not cover`.
 
 ### Phase `P07` - Setup + custody + Google
 
 config_custody profile lifecycle, profile-create taxpayer-type paths, google sheets pull/export, fichero BOE golden sha
 
-- [x] `P07.S21` - Config custody profile lifecycle; `test_profile_create_provisions_file_custody_and_switch_reopens_it — investigate why switch does not reopen`.
+- [x] `P07.S21` - Config custody profile lifecycle; `test_profile_create_provisions_file_custody_and_switch_reopens_it - investigate why switch does not reopen`.
 - [x] `P07.S22` - Legal-entity profile create; `test_legal_entity_profile_creates_non_interactively_without_spouse_flags`.
 - [x] `P07.S23` - Google worksheet export-pull roundtrip; `test_workbook_input_values_survive_export_pull_compute_loop`.
 - [x] `P07.S24` - Pull adapter classify_metadata empty pairs; `test_classify_metadata_returns_missing_for_empty_pairs (post sentinel + M347 fix; verify suite-level cleared)`.
-- [ ] `P07.S25` - Fichero BOE golden sha; `test_modelo_303_golden_sha_fichero_boe — recompute golden sha if peer registry change altered output`.
+- [x] `P07.S25` - Fichero BOE golden sha; `test_modelo_303_golden_sha_fichero_boe - recompute golden sha if peer registry change altered output`.
 
 ### Phase `P08` - Filing + date routing
 
 test_date_relation_routing non-iso rejection, test_binding_prefill modelo 390 prefill
 
-- [x] `P08.S26` - Date relation routing non-iso reject; `test_date_inputs_for_ids_rejects_non_iso_value — re-derive non-iso rejection path post _parse_iso8601_date routing`.
+- [x] `P08.S26` - Date relation routing non-iso reject; `test_date_inputs_for_ids_rejects_non_iso_value - re-derive non-iso rejection path post _parse_iso8601_date routing`.
 - [x] `P08.S27` - Modelo 390 prefill binding-prefill; `test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observations`.
 
 ## Description
