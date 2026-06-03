@@ -4871,7 +4871,7 @@ Test foundations, evidence bundle, harvest wrappers.
 
 Register lifecycle and harvest verbs and update apex.
 
-- [ ] `W85.P414.S2349` - Register Modelo 036 lifecycle verbs (alta, modificacion, baja) under aeat app modelo and render via _emit; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W85.P414.S2349` - Register Modelo 036 lifecycle verbs (alta, modificacion, baja) under aeat app modelo and render via _emit; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W85.P414.S2350` - Register aeat app modelo audit verbs, aeat app ledger rental verbs, aeat app modelo reconcile from-justificante, VAT-criteria flags on aeat app ledger classify; `src/aeat/entrypoints/cli`.
 - [x] `W85.P414.S2351` - Wire help text and i18n for every new verb and flag; `src/aeat/core/i18n`.
 - [x] `W85.P414.S2352` - Update apex ADR §5, §7, §8 to reflect R23/R24 closeouts and record R22 as deferred pending live-AEAT reconciliation research; `.vault/adr`.
