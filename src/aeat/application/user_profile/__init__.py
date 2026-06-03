@@ -348,6 +348,7 @@ def __getattr__(name: str):
         return ProfileValidationService
     if name in (
         "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
+        "UnsupportedBundleSchemaVersionError",
         "deserialize_profile_bundle",
         "serialize_profile_bundle",
     ):
@@ -431,6 +432,7 @@ __all__ = [
     "RegisterProfileCommand",
     "RemoveProfileCommand",
     "RenameProfileCommand",
+    "UnsupportedBundleSchemaVersionError",
     "UserProfileFactValue",
     "UserProfileLifecycleRepository",
     "UserProfileSnapshotRepository",

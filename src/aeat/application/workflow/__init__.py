@@ -70,10 +70,21 @@ from ._models import (
 from ._persistence import (
     WorkflowRunRepository,
     WorkflowStateRepository,
+    WorkflowStateResetFingerprint,
+    fingerprint_workflow_state,
     list_runs,
     load_run,
+    reset_workflow_state,
     save_run,
     workflow_state_repository,
+)
+from ._profile_health import (
+    ActiveProfileHealth,
+    ActiveProfileManifestStatusRepairResult,
+    ActiveProfileRepairResult,
+    assess_active_profile_health,
+    repair_active_profile_manifest_status,
+    repair_active_profile_pointer,
 )
 
 # ---- profile-bucket scan (depends on _models only) --------------------------
@@ -105,6 +116,9 @@ from ._resume import (
 )
 
 __all__ = [
+    "ActiveProfileHealth",
+    "ActiveProfileManifestStatusRepairResult",
+    "ActiveProfileRepairResult",
     "CertificateBundleProtocol",
     "DeadlineEngineAdapter",
     "DeadlineEngineProtocol",
@@ -135,17 +149,23 @@ __all__ = [
     "WorkflowStage",
     "WorkflowState",
     "WorkflowStateRepository",
+    "WorkflowStateResetFingerprint",
     "WorkflowStep",
     "active_transaction_catalogue_repository",
+    "assess_active_profile_health",
     "compute_run_id",
     "declaration_key",
     "default_engine",
     "find_latest_run_for_period",
+    "fingerprint_workflow_state",
     "list_profile_buckets",
     "list_runs",
     "load_run",
     "read_profile_bucket",
     "read_profile_bucket_by_id",
+    "repair_active_profile_manifest_status",
+    "repair_active_profile_pointer",
+    "reset_workflow_state",
     "resume_modelo_workflow",
     "save_run",
     "update_declaration_pointer",

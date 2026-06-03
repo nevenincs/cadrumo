@@ -21,11 +21,15 @@ application layer to compile its keys.
 
 from . import _compiler as _compiler
 from ._catalogue import WIZARD_FLOWS
+from ._commands import build_wizard_command
 from ._errors import WizardValidationError
+from ._persistence import project_answers
 from ._widgets import validate_widget_answer
 
 __all__ = [
     "WIZARD_FLOWS",
     "WizardValidationError",
+    "build_wizard_command",
+    "project_answers",
     "validate_widget_answer",
 ]
