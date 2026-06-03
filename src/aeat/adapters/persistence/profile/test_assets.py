@@ -15,9 +15,15 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.contribuyente.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
+from ....domain.contribuyente.assets import (
+    AmortizacionEntry,
+    AmortizacionLedger,
+    AssetClass,
+    AssetRecord,
+    AssetRecordError,
+)
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
+from .assets import AssetsLedgerRepository, load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -48,6 +54,18 @@ def test_asset_persistence_round_trip() -> None:
     loaded = load_assets()
 
     assert loaded == (asset,)
+
+
+def test_asset_duplicate_refusal_is_localized_and_structured() -> None:
+    asset = _asset("pc", AssetClass.ELECTRONICA_INFORMATICA)
+    repository = AssetsLedgerRepository()
+    repository.add(asset)
+
+    with pytest.raises(AssetRecordError) as exc_info:
+        repository.add(asset)
+
+    assert exc_info.value.translated_message == "adapters.persistence.profile.assets.errors.asset_already_exists"
+    assert exc_info.value.context == {"asset_id": "pc"}
 
 
 def test_asset_persistence_is_encrypted_financial_secure_object(_runtime_profile: TestRuntimeProfile) -> None:

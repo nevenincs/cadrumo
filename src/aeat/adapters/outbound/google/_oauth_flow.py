@@ -19,6 +19,7 @@ Two policy gates fire before any network IO happens:
 from __future__ import annotations
 
 from datetime import datetime
+from typing import NoReturn
 
 from ....adapters.persistence.storage.master_key._master_key import looks_like_real_tax_id
 from ....core.config import SecretStoreBackend, load_settings
@@ -29,6 +30,7 @@ from ._errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthLoopbackBindError,
     GoogleAuthNetworkError,
+    GoogleAuthProfileUnboundError,
     GoogleAuthScopeInsufficientError,
     GoogleAuthUnsecuredModeRefusedError,
 )
@@ -75,12 +77,22 @@ def resolve_active_tax_id(profile_id: str) -> str:
 
     pointer = read_profile_bucket_by_id(profile_id)
     if pointer is None:
-        return ""
+        raise GoogleAuthProfileUnboundError(
+            "google OAuth refused: active profile bucket manifest could not be resolved",
+            context={"profile": profile_id, "reason": "profile_bucket_manifest_missing"},
+            suggestion=tr("adapters.google.oauth_flow.suggestions.repair_profile_state"),
+            translated_message="adapters.google.oauth_flow.errors.profile_state_unresolved",
+        )
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)
     try:
         record = service.read(profile_id)
-    except ProfileNotFoundError:
-        return ""
+    except ProfileNotFoundError as exc:
+        raise GoogleAuthProfileUnboundError(
+            "google OAuth refused: active profile record could not be resolved",
+            context={"profile": profile_id, "bucket_id": pointer.bucket_id, "reason": "profile_record_missing"},
+            suggestion=tr("adapters.google.oauth_flow.suggestions.repair_profile_state"),
+            translated_message="adapters.google.oauth_flow.errors.profile_state_unresolved",
+        ) from exc
     return fact_value(record, "identity.tax_id") or ""
 
 
@@ -201,19 +213,7 @@ def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ..
             translated_message="adapters.google.oauth_flow.errors.loopback_bind_failed",
         ) from exc
     except Exception as exc:
-        message = str(exc).lower()
-        if "browser" in message or "webbrowser" in message:
-            raise GoogleAuthBrowserOpenError(
-                f"OS browser launcher refused: {exc}",
-                suggestion=tr("adapters.google.oauth_flow.suggestions.open_consent_url_manually"),
-                translated_message="adapters.google.oauth_flow.errors.browser_launcher_refused",
-            ) from exc
-        if "transport" in message or "connect" in message or "network" in message:
-            raise GoogleAuthNetworkError(
-                f"OAuth endpoint unreachable: {exc}",
-                translated_message="adapters.google.oauth_flow.errors.endpoint_unreachable",
-            ) from exc
-        raise
+        _raise_local_server_error(exc)
 
     # `google.oauth2.credentials.Credentials` exposes `token_uri` at runtime
     # but the `google-auth` stubs ship a narrower `Credentials` class on which
@@ -226,6 +226,27 @@ def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ..
         _decode_email_from_id_token(credentials, audience=client.client_id),
         tuple(str(scope) for scope in (credentials.scopes or ())),
     )
+
+
+def _raise_local_server_error(exc: Exception) -> NoReturn:
+    """Translate upstream local-server OAuth failures into the GoogleAuth hierarchy."""
+    message = str(exc).lower()
+    if "browser" in message or "webbrowser" in message:
+        raise GoogleAuthBrowserOpenError(
+            f"OS browser launcher refused: {exc}",
+            suggestion=tr("adapters.google.oauth_flow.suggestions.open_consent_url_manually"),
+            translated_message="adapters.google.oauth_flow.errors.browser_launcher_refused",
+        ) from exc
+    if "transport" in message or "connect" in message or "network" in message:
+        raise GoogleAuthNetworkError(
+            f"OAuth endpoint unreachable: {exc}",
+            translated_message="adapters.google.oauth_flow.errors.endpoint_unreachable",
+        ) from exc
+    raise GoogleAuthNetworkError(
+        f"OAuth local server flow failed: {exc}",
+        context={"error_type": type(exc).__name__},
+        translated_message="adapters.google.oauth_flow.errors.endpoint_unreachable",
+    ) from exc
 
 
 def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:

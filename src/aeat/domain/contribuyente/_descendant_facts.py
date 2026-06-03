@@ -211,7 +211,7 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     return DescendantInfo(
         birth_date=birth_date,
         adoption_date=adoption_date,
-        discapacidad_grado=cast("Literal[0, 33, 65] | None", discapacidad_grado),
+        discapacidad_grado=cast("Literal[0, 33, 65] | None", discapacidad_grado),  # CAST-RATIONALE-DISCAPACIDAD-GRADO-LITERAL-NARROW
         convive_con_contribuyente=convive,
         custodia_compartida=custodia,
         meses_madre_trabajo_2024=meses_madre_trabajo_2024,

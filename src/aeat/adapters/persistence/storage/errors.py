@@ -14,6 +14,8 @@ The class tree:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from ....core.errors import AeatError
 
 
@@ -225,6 +227,19 @@ class EnvelopeVersionError(PersistenceError):
 
 class PathContainmentError(PersistenceError, ValueError):
     """Raised when a computed path escapes its configured root directory."""
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+    ) -> None:
+        """Construct a path-containment error with localized operator output."""
+        super().__init__(
+            message,
+            context=context,
+            translated_message="errors.integrity.integrity_storage_path_containment",
+        )
 
 
 class BlobNotFoundError(PersistenceError):

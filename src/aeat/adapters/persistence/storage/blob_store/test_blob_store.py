@@ -5,22 +5,39 @@ from __future__ import annotations
 import hashlib
 import secrets
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from .....core.classification import SensitivityClass
+from .....core.config import override_settings
+from .....core.errors import build_error_envelope, resolve_error_message
+from .....core.external_constants import UTF_8_ENCODING
 from ..crypto import KEY_SIZE
 from ..errors import BlobIntegrityError, BlobNotFoundError, DecryptionError
 from ..master_key import EphemeralMasterKeyProvider
+from ..master_key._active_session import NoActiveBucketSessionError, activate_session
+from ..master_key._bucket_session import BucketSession
 from . import BlobReference
-from ._blob_store import EncryptedBlobStore
+from ._blob_store import BlobManifest, EncryptedBlobStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 def _digest_hex(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
+
+def _bucket_session(*, dek: bytes) -> BucketSession:
+    return BucketSession.open(
+        bucket_id="test-bucket",
+        kek=b"k" * KEY_SIZE,
+        dek=dek,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
 
 
 @pytest.fixture
@@ -110,12 +127,26 @@ class TestNotFoundAndIntegrity:
     """Missing blobs raise BlobNotFoundError; tampering raises BlobIntegrityError."""
 
     def test_get_missing_raises(self, store: EncryptedBlobStore) -> None:
+        digest = _digest_hex(b"never-stored")
         ref = BlobReference(
-            sha256_plaintext_hex=_digest_hex(b"never-stored"),
+            sha256_plaintext_hex=digest,
             classification=SensitivityClass.CORPUS,
         )
-        with pytest.raises(BlobNotFoundError):
+        with pytest.raises(BlobNotFoundError) as excinfo:
             store.get(ref)
+        envelope = build_error_envelope(excinfo.value)
+        with override_settings(aeat_output_language="en"):
+            message = resolve_error_message(excinfo.value)
+
+        assert excinfo.value.translated_message == "errors.fail.fail_storage_blob_not_found"
+        assert str(store.root_dir) not in str(excinfo.value)
+        assert digest not in str(excinfo.value)
+        assert str(store.root_dir) not in message
+        assert digest not in str(envelope.context)
+        assert envelope.context == {
+            "object_kind": "manifest",
+            "surface": "encrypted_blob_store",
+        }
 
     def test_delete_missing_raises(self, store: EncryptedBlobStore) -> None:
         ref = BlobReference(
@@ -130,8 +161,14 @@ class TestNotFoundAndIntegrity:
         ref = store.put(payload, classification=SensitivityClass.CORPUS)
         plaintext_path = store.root_dir / "blobs" / ref.sha256_plaintext_hex[:2] / ref.sha256_plaintext_hex
         plaintext_path.write_bytes(b"tampered")
-        with pytest.raises(BlobIntegrityError):
+        with pytest.raises(BlobIntegrityError) as excinfo:
             store.get(ref)
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_blob"
+        assert excinfo.value.context == {
+            "object_kind": "blob",
+            "surface": "encrypted_blob_store",
+            "violation": "plaintext_digest",
+        }
 
     def test_tampered_ciphertext_raises_integrity(self, store: EncryptedBlobStore) -> None:
         payload = b"sensitive"
@@ -143,6 +180,28 @@ class TestNotFoundAndIntegrity:
         ciphertext_path.write_bytes(bytes(wire))
         with pytest.raises(BlobIntegrityError):
             store.get(ref)
+
+    def test_get_corrupt_manifest_raises_localized_integrity_without_digest_leak(
+        self,
+        store: EncryptedBlobStore,
+    ) -> None:
+        ref = store.put(b"corrupt-manifest-direct-get-proof", classification=SensitivityClass.CORPUS)
+        manifest_path = store.root_dir / "blobs" / ref.sha256_plaintext_hex[:2] / (
+            f"{ref.sha256_plaintext_hex}.manifest.json"
+        )
+        manifest_path.write_text("{", encoding=UTF_8_ENCODING)
+
+        with pytest.raises(BlobIntegrityError) as excinfo:
+            store.get(ref)
+
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_blob"
+        assert excinfo.value.context == {
+            "object_kind": "manifest",
+            "surface": "encrypted_blob_store",
+            "violation": "manifest_payload",
+        }
+        assert str(manifest_path) not in str(excinfo.value)
+        assert ref.sha256_plaintext_hex not in str(excinfo.value)
 
 
 class TestDelete:
@@ -168,6 +227,29 @@ class TestIterate:
         digests = {m.sha256_plaintext_hex for m in manifests}
         assert len(digests) == 5  # all unique
 
+    def test_corrupt_manifest_fails_closed_without_path_leak(
+        self,
+        store: EncryptedBlobStore,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        ref = store.put(b"corrupt-manifest-proof", classification=SensitivityClass.CORPUS)
+        manifest_path = store.root_dir / "blobs" / ref.sha256_plaintext_hex[:2] / (
+            f"{ref.sha256_plaintext_hex}.manifest.json"
+        )
+        manifest_path.write_text("{", encoding=UTF_8_ENCODING)
+
+        with caplog.at_level("WARNING"), pytest.raises(BlobIntegrityError) as excinfo:
+            list(store.iter_manifests())
+
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_blob"
+        assert excinfo.value.context == {
+            "object_kind": "manifest",
+            "surface": "encrypted_blob_store",
+            "violation": "manifest_payload",
+        }
+        assert str(manifest_path) not in caplog.text
+        assert ref.sha256_plaintext_hex not in str(excinfo.value)
+
 
 class TestMasterKeyIsolation:
     """A different master key cannot decrypt previously-stored ciphertext."""
@@ -190,3 +272,63 @@ class TestMasterKeyIsolation:
         )
         with pytest.raises(DecryptionError):
             store_b.get(ref)
+
+
+class TestBlobDigestValidation:
+    @pytest.mark.parametrize(
+        "bad_digest",
+        (
+            "../" + ("a" * 61),
+            ("a" * 63) + "/",
+            "." + ("a" * 63),
+            "A" + ("a" * 63),
+            "g" * 64,
+        ),
+    )
+    def test_reference_rejects_non_lowercase_hex_digest(self, bad_digest: str) -> None:
+        with pytest.raises(ValidationError):
+            BlobReference(
+                sha256_plaintext_hex=bad_digest,
+                classification=SensitivityClass.CORPUS,
+            )
+
+    @pytest.mark.parametrize(
+        "bad_digest",
+        (
+            "../" + ("a" * 61),
+            ("a" * 63) + "/",
+            "." + ("a" * 63),
+            "A" + ("a" * 63),
+            "g" * 64,
+        ),
+    )
+    def test_manifest_rejects_path_bearing_or_non_hex_digest(self, bad_digest: str) -> None:
+        with pytest.raises(ValidationError):
+            BlobManifest(
+                sha256_plaintext_hex=bad_digest,
+                sha256_ciphertext_hex=None,
+                size_plaintext=0,
+                content_type="application/octet-stream",
+                classification=SensitivityClass.CORPUS,
+            )
+
+
+class TestActiveSessionDefaultProvider:
+    def test_ciphertext_write_without_provider_requires_active_bucket_session(self, tmp_path: Path) -> None:
+        store = EncryptedBlobStore(root_dir=tmp_path / "store")
+
+        with pytest.raises(NoActiveBucketSessionError) as excinfo:
+            store.put(b"needs active session", classification=SensitivityClass.FINANCIAL)
+
+        assert excinfo.value.translated_message == "errors.refused.refused_storage_master_key_no_active_session"
+
+    def test_ciphertext_write_uses_active_bucket_session_when_provider_is_not_injected(
+        self,
+        tmp_path: Path,
+        fixed_master_key: bytes,
+    ) -> None:
+        store = EncryptedBlobStore(root_dir=tmp_path / "store")
+
+        with activate_session(_bucket_session(dek=fixed_master_key)):
+            ref = store.put(b"active session blob", classification=SensitivityClass.FINANCIAL)
+            assert store.get(ref) == b"active session blob"

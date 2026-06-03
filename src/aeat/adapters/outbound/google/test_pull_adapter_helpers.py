@@ -22,8 +22,16 @@ import pytest
 
 from ....application.storage.calc_sheets import registry_sha
 from ....core.decimal import coerce_decimal as _coerce_decimal
+from ....core.i18n import tr
 from ....core.resources import resources
-from ._calc_sheets_pull import MetadataMatchState, _classify_metadata_match, _coerce_value
+from ...outbound.storage._errors import OutboundStorageConflictError, OutboundStorageValidationError
+from ._calc_sheets_pull import (
+    MetadataMatchState,
+    _classify_metadata_match,
+    _coerce_value,
+    _merge_developer_metadata_entries,
+    pull_operator_edits,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -205,3 +213,55 @@ def test_classify_metadata_returns_stale_for_drifted_registry_sha() -> None:
     assert verdict == "stale"
     assert metadata.registry_sha == "deadbeefdeadbeef"
     assert metadata.registry_sha != registry_sha(snapshot)
+
+
+# ---------------------------------------------------------------------------
+# Public pull validation
+# ---------------------------------------------------------------------------
+
+
+def test_pull_operator_edits_refuses_blank_spreadsheet_id_before_service_build() -> None:
+    snapshot = _modelo_130_snapshot()
+
+    with pytest.raises(OutboundStorageValidationError) as raised:
+        pull_operator_edits(snapshot=snapshot, spreadsheet_id="  ", credentials=object())
+
+    assert raised.value.context == {"spreadsheet_id": "  "}
+    assert raised.value.translated_message == "adapters.google.calc_sheets.errors.spreadsheet_id_blank"
+
+
+# ---------------------------------------------------------------------------
+# Duplicate developer metadata merge
+# ---------------------------------------------------------------------------
+
+
+def test_merge_developer_metadata_refuses_conflicting_registry_identity_duplicates() -> None:
+    """Duplicate identity stamps with different values must not collapse by API order."""
+
+    entries = (
+        {"metadataKey": "aeat_registry_sha", "metadataValue": "old-registry-sha"},
+        {"metadataKey": "aeat_registry_sha", "metadataValue": "new-registry-sha"},
+    )
+
+    with pytest.raises(OutboundStorageConflictError) as raised:
+        _merge_developer_metadata_entries(entries)
+
+    assert raised.value.context == {"conflicting_metadata_keys": ["aeat_registry_sha"]}
+    assert raised.value.translated_message == "adapters.google.calc_sheets.errors.conflicting_duplicate_metadata"
+    assert raised.value.suggestion == tr("adapters.google.calc_sheets.suggestions.reexport_workbook")
+
+
+def test_merge_developer_metadata_allows_duplicate_exported_at_for_reapplied_same_slice() -> None:
+    """Repeated exports of the same registry slice legitimately carry newer timestamps."""
+
+    pairs = _merge_developer_metadata_entries(
+        (
+            {"metadataKey": "aeat_registry_sha", "metadataValue": "da9952e1610f7db6"},
+            {"metadataKey": "aeat_registry_sha", "metadataValue": "da9952e1610f7db6"},
+            {"metadataKey": "aeat_exported_at", "metadataValue": "2026-06-02T17:54:13+00:00"},
+            {"metadataKey": "aeat_exported_at", "metadataValue": "2026-06-02T17:55:32+00:00"},
+        )
+    )
+
+    assert pairs["aeat_registry_sha"] == "da9952e1610f7db6"
+    assert pairs["aeat_exported_at"] == "2026-06-02T17:55:32+00:00"

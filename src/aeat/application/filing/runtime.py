@@ -301,7 +301,7 @@ def _build_runtime_schema_provider_cached(
     )
 
 
-def _registry_tree_fingerprint(
+def _registry_tree_fingerprint(  # ALT-FINGERPRINT-RATIONALE-REGISTRY-TREE
     root: Path,
 ) -> tuple[tuple[str, int, int], ...]:
     # ALT-FINGERPRINT-RATIONALE-REGISTRY-TREE:

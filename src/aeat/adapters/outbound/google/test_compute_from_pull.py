@@ -19,6 +19,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.i18n import tr
 from ....core.resources import resources
 from ....domain.calculations.registry._schema import InputKind
 from ...outbound.storage._errors import OutboundStorageConflictError
@@ -120,8 +121,11 @@ def test_compute_from_pull_refuses_stale_workbook() -> None:
         cells_read=0,
     )
 
-    with pytest.raises(OutboundStorageConflictError, match=r"metadata_match=<MetadataMatchState\.STALE"):
+    with pytest.raises(OutboundStorageConflictError, match=r"metadata_match=<MetadataMatchState\.STALE") as raised:
         compute_from_pull(snapshot, pull)
+
+    assert raised.value.translated_message == "adapters.google.calc_sheets.errors.workbook_snapshot_mismatch"
+    assert raised.value.suggestion == tr("adapters.google.calc_sheets.suggestions.reexport_then_pull")
 
 
 def test_compute_from_pull_refuses_missing_metadata() -> None:
@@ -160,6 +164,7 @@ def test_compute_from_pull_refuses_contradictory_matching_metadata_verdict() -> 
     assert raised.value.context is not None
     assert raised.value.context["workbook_registry_sha"] == "0" * 16
     assert raised.value.context["snapshot_registry_sha"] == _matching_metadata(snapshot).registry_sha
+    assert raised.value.translated_message == "adapters.google.calc_sheets.errors.workbook_snapshot_mismatch"
 
 
 def test_compute_from_pull_runs_against_matching_snapshot() -> None:

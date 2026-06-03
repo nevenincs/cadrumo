@@ -32,7 +32,7 @@ class _TyperAwareCliRunner(CliRunner):
     # click.testing.CliRunner.invoke's first parameter is typed as
     # click.BaseCommand; this subclass widens to Any so a typer.Typer can be
     # passed and auto-wrapped before delegating to super().
-    def invoke(self, cli: Any, *args: Any, **kwargs: Any) -> Result:  # type: ignore[override]
+    def invoke(self, cli: Any, *args: Any, **kwargs: Any) -> Result:  # type: ignore[override]  # TYPE-IGNORE-RATIONALE-CLIRUNNER-INVOKE-OVERRIDE
         if isinstance(cli, typer.Typer):
             cli = typer.main.get_command(cli)
         return super().invoke(cli, *args, **kwargs)

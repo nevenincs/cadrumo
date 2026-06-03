@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 
+from ....core.config import override_settings
+from ....core.errors import build_error_envelope, resolve_error_message
 from . import PathContainmentError
 from ._path_safety import safe_record_path, safe_repository_id, safe_subpath
 
@@ -103,6 +105,21 @@ class TestSafeRepositoryId:
         with pytest.raises(PathContainmentError, match=r"^submission_id must"):
             safe_repository_id("foo/bar", context="submission_id")
 
+    def test_rejection_message_and_context_do_not_expose_token(self) -> None:
+        token = "tax-id/12345678Z"
+
+        with pytest.raises(PathContainmentError) as excinfo:
+            safe_repository_id(token, context="taxpayer_nif")
+        envelope = build_error_envelope(excinfo.value)
+
+        assert token not in str(excinfo.value)
+        assert token not in envelope.message
+        assert token not in str(envelope.context)
+        assert envelope.context == {
+            "path_context": "taxpayer_nif",
+            "violation": "repository_id_separator",
+        }
+
     def test_failure_inherits_value_error(self) -> None:
         """Legacy ``except ValueError`` callers in test surface keep working."""
         with pytest.raises(ValueError):
@@ -118,3 +135,17 @@ class TestErrorCodeBinding:
         bound = bind_error_code(PathContainmentError)
         assert bound.code == "INTEGRITY_STORAGE_PATH_CONTAINMENT"
         assert bound.category.value == "INTEGRITY"
+
+    def test_path_containment_error_uses_localized_operator_message(self) -> None:
+        with pytest.raises(PathContainmentError) as excinfo:
+            safe_subpath(Path("records"), "../escape", context="path")
+
+        with override_settings(aeat_output_language="en"):
+            message = resolve_error_message(excinfo.value)
+
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_path_containment"
+        assert message == "A computed path escapes the configured root directory."
+        assert excinfo.value.context == {
+            "path_context": "path",
+            "violation": "relative_subpath",
+        }

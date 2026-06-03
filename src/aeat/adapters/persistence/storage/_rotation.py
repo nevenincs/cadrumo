@@ -27,6 +27,7 @@ On failure, the helper falls back to the old key.
 from __future__ import annotations
 
 import binascii
+import hashlib
 import os
 import tempfile
 from collections.abc import Iterator
@@ -51,6 +52,16 @@ from .errors import DecryptionError, EncryptionError
 from .master_key._master_key import MasterKeyProvider
 
 _log = get_logger(__name__)
+
+
+def _path_log_marker(path: Path) -> str:
+    """Return a stable diagnostic marker without exposing the filesystem path."""
+    try:
+        raw_path = path.resolve(strict=False).as_posix()
+    except OSError:
+        raw_path = path.as_posix()
+    digest = hashlib.sha256(raw_path.encode(UTF_8_ENCODING)).hexdigest()[:16]
+    return f"<path:{digest}>"
 
 
 class _RotationPlanSettings(Protocol):
@@ -226,8 +237,12 @@ def _atomic_write(target: Path, *, payload: str) -> None:
             handle.write(payload)
         os.replace(tmp_path, target)
         fsync_parent_dir(target)
-    except OSError:
-        _log.error("rotation: atomic write failed target=%s", target, exc_info=True)
+    except OSError as exc:
+        _log.error(
+            "rotation: atomic write failed path_marker=%s error_type=%s",
+            _path_log_marker(target),
+            type(exc).__name__,
+        )
         if tmp_path is not None:
             tmp_path.unlink(missing_ok=True)
         raise
@@ -285,8 +300,12 @@ def rotate_master_key(
                 cipher_envelope = CipherEnvelope.model_validate_json(
                     path.read_text(encoding=UTF_8_ENCODING),
                 )
-            except (OSError, ValueError, ValidationError):
-                _log.warning("rotate_master_key: %s is not a CipherEnvelope", path, exc_info=True)
+            except (OSError, ValueError, ValidationError) as exc:
+                _log.warning(
+                    "rotate_master_key: path_marker=%s is not a CipherEnvelope error_type=%s",
+                    _path_log_marker(path),
+                    type(exc).__name__,
+                )
                 errors += 1
                 continue
 
@@ -297,7 +316,10 @@ def rotate_master_key(
                 hkdf_context=entry.hkdf_context,
             )
             if already_rotated is not None:
-                _log.debug("rotate_master_key: %s already rotated, skipping", path)
+                _log.debug(
+                    "rotate_master_key: path_marker=%s already rotated, skipping",
+                    _path_log_marker(path),
+                )
                 skipped += 1
                 continue
 
@@ -309,8 +331,8 @@ def rotate_master_key(
             )
             if plaintext is None:
                 _log.warning(
-                    "rotate_master_key: cannot decrypt %s under either old or new key",
-                    path,
+                    "rotate_master_key: cannot decrypt path_marker=%s under either old or new key",
+                    _path_log_marker(path),
                 )
                 errors += 1
                 continue
@@ -325,8 +347,12 @@ def rotate_master_key(
             )
             try:
                 new_blob = encrypt_record(plaintext, key=new_derived_key, associated_data=aad)
-            except EncryptionError:
-                _log.warning("rotate_master_key: failed to encrypt %s", path, exc_info=True)
+            except EncryptionError as exc:
+                _log.warning(
+                    "rotate_master_key: failed to encrypt path_marker=%s error_type=%s",
+                    _path_log_marker(path),
+                    type(exc).__name__,
+                )
                 errors += 1
                 continue
 
@@ -338,8 +364,12 @@ def rotate_master_key(
             )
             try:
                 _atomic_write(path, payload=new_cipher_envelope.model_dump_json())
-            except OSError:
-                _log.warning("rotate_master_key: failed to atomic-write %s", path, exc_info=True)
+            except OSError as exc:
+                _log.warning(
+                    "rotate_master_key: failed to atomic-write path_marker=%s error_type=%s",
+                    _path_log_marker(path),
+                    type(exc).__name__,
+                )
                 errors += 1
                 continue
             rotated += 1

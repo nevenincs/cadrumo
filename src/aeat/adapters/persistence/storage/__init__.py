@@ -26,6 +26,17 @@ The public surface is intentionally narrow:
   :class:`MasterKeyProvider`, :class:`SecretStore`, plus the column-level
   helpers :class:`EncryptedString`, :class:`EncryptedBytes`,
   :class:`EncryptedJSON`, and :class:`HashedLookup`.
+- Runtime and master-key session boundary — :class:`StorageRuntime`,
+  :class:`StorageRuntimeReadiness`, :func:`inspect_storage_runtime`,
+  :func:`inspect_bucket_storage_runtime`, :func:`activate_session`,
+  :func:`has_active_bucket_session`, :func:`get_active_master_key`,
+  :func:`activate_master_key_provider`, and :func:`get_master_key_provider`.
+- Secure-object hierarchy registry — :data:`STORAGE_NAMESPACE_REGISTRY`,
+  :data:`STORAGE_PATH_DEFINITIONS`, namespace constants, and
+  :func:`secure_object_logical_path` /
+  :func:`secure_object_namespace_logical_path`; callers must use these
+  exported symbols instead of constructing persisted secure-storage
+  locations by hand.
 - Classification — :class:`SensitivityClass` tags every persisted record
   and governs the at-rest treatment applied by the substrate.
 """
@@ -127,6 +138,8 @@ from ._namespace_registry import (
     StoragePathDefinition,
     StoragePathKind,
     StorageRemoteMirrorPolicy,
+    secure_object_logical_path,
+    secure_object_namespace_logical_path,
 )
 from ._path_safety import safe_record_path, safe_repository_id, safe_subpath
 from ._rotation import (
@@ -444,6 +457,8 @@ __all__ = [
     "save_encrypted_envelope",
     "save_envelope",
     "save_wrapped_master_key",
+    "secure_object_logical_path",
+    "secure_object_namespace_logical_path",
     "session_scope",
     "unwrap_master_key",
     "verify_corpus_manifest",

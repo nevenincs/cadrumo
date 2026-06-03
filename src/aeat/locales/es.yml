@@ -79,8 +79,23 @@ adapters:
         api_call_failed: La llamada a Google {action} ha fallado.
         api_call_refused: La llamada a Google {action} fue rechazada (HTTP {status}).
         api_target_not_found: El destino de Google {action} no se encontró.
+        conflicting_duplicate_metadata: La hoja de Google contiene metadatos AEAT
+          duplicados y contradictorios.
+        foreign_spreadsheet_not_owned: La hoja de Google no está marcada como propiedad
+          de este perfil AEAT.
         googleapiclient_not_importable: googleapiclient no se puede importar; el adaptador
           de Google no puede acceder a la API.
+        spreadsheet_id_blank: El id de la hoja de cálculo de Google no puede estar
+          vacío.
+        workbook_snapshot_mismatch: Los metadatos de la hoja de Google no coinciden
+          con la instantánea de cálculo.
+      suggestions:
+        reexport_workbook: Vuelve a exportar el libro con `aeat config google sync
+          calc export` para renovar los metadatos gestionados por la aplicación.
+        reexport_then_pull: Vuelve a exportar el libro con `aeat config google sync
+          calc export` y después vuelve a importarlo.
+        verify_exported_workbook: Comprueba que la hoja se creó originalmente con
+          `aeat config google sync calc export` para este perfil.
     oauth_flow:
       errors:
         browser_launcher_refused: El sistema operativo rechazó abrir la URL de consentimiento
@@ -98,6 +113,8 @@ adapters:
           puerto.
         oauthlib_not_importable: google-auth-oauthlib no se puede importar; el flujo
           OAuth no puede iniciarse.
+        profile_state_unresolved: Google OAuth no puede resolver el estado del perfil
+          AEAT seleccionado.
         scope_missing: La pantalla de consentimiento de Google se cerró sin conceder
           todos los ámbitos requeridos.
         unsecured_mode_refused: Google OAuth se rechazó porque el almacén de secretos
@@ -108,6 +125,8 @@ adapters:
           huérfano y vuelve a intentarlo.
         open_consent_url_manually: Abre manualmente en tu navegador la URL de consentimiento
           impresa.
+        repair_profile_state: Ejecuta `aeat config profile health` y repara o cambia
+          el perfil activo antes de reintentar el comando de Google.
         use_keyring_or_synthetic: Configura aeat_secret_store_backend=keyring o cambia
           el perfil activo a un identificador fiscal sintético de prueba.
     profile_binding:
@@ -239,6 +258,19 @@ adapters:
           sidecar_not_object: El sidecar local {sidecar_path} no es un objeto JSON.
           sidecar_write_failed: El almacenamiento local no pudo escribir el sidecar
             del objeto.
+  persistence:
+    profile:
+      assets:
+        errors:
+          asset_already_exists: Ese activo ya existe en el libro cifrado de activos.
+          load_amortizacion_ledger_failed: No se pudo cargar el libro cifrado de amortización.
+          load_asset_ledger_failed: No se pudo cargar el libro cifrado de activos.
+      inventory:
+        errors:
+          inventory_ledger_already_exists: 'Ese libro de inventario ya existe.'
+          inventory_ledger_not_found: 'No se encontró el libro de inventario solicitado.'
+          load_inventory_ledger_failed: 'No se pudo cargar el libro cifrado de inventario.'
+          movement_already_exists: 'Ese movimiento de inventario ya existe.'
   sede:
     errors:
       cotejo_nav_failed: La navegación a la página de cotejo de AEAT falló; la sesión
@@ -2077,12 +2109,15 @@ cli:
       reaffirmed: Clasificación reafirmada.
       taxable_base_help: Importe de base imponible
     doclink:
-      actor_help: 'Etiqueta del operador registrada en los eventos del bucket.'
-      bad_source: 'el origen del enlace de documento debe ser uno de: gmail, google_drive, url (recibido ''{source}'').'
-      help: 'Registra un enlace de documento de Gmail/Drive/URL como evidencia local en una fila del libro (el documento remoto nunca se descarga).'
-      id_help: 'Id de transaccion del libro (SHA-256 o prefijo inequivoco).'
-      note_help: 'Nota opcional registrada con el enlace.'
-      reference_help: 'La referencia del enlace del documento (enlace de Gmail, enlace de archivo de Drive o URL).'
+      actor_help: Etiqueta del operador registrada en los eventos del bucket.
+      bad_source: 'el origen del enlace de documento debe ser uno de: gmail, google_drive,
+        url (recibido ''{source}'').'
+      help: Registra un enlace de documento de Gmail/Drive/URL como evidencia local
+        en una fila del libro (el documento remoto nunca se descarga).
+      id_help: Id de transaccion del libro (SHA-256 o prefijo inequivoco).
+      note_help: Nota opcional registrada con el enlace.
+      reference_help: La referencia del enlace del documento (enlace de Gmail, enlace
+        de archivo de Drive o URL).
       source_help: 'Origen del enlace: gmail, google_drive o url.'
     errors:
       command_input_invalid: 'Rechazado. La transacción no es válida: {details}'
@@ -3568,7 +3603,7 @@ errors:
     refused_cli_non_tty: Este comando necesita una entrada interactiva, pero la entrada
       estándar está redirigida. Ejecútalo en una terminal interactiva.
     refused_cli_validation_boundary: La entrada del comando no superó la validación.
-      Ejecuta `aeat config repair` o restablece el estado del perfil.
+      Compruebe los argumentos o ejecute `aeat --help`.
     refused_config_reset_unconfirmed: El restablecimiento de la configuración no se
       confirmó. Vuelve a ejecutar el comando confirmando la operación.
     refused_diagnostic_model_invariant: 'Rechazado: invariante del modelo de diagnostico

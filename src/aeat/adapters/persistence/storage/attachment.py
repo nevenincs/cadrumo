@@ -27,6 +27,7 @@ from typing import BinaryIO
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.attachments._errors import (
@@ -41,8 +42,8 @@ from ._namespace_registry import (
 from ._namespace_registry import (
     ATTACHMENT_MANIFEST_NAMESPACE as ATTACHMENT_MANIFEST_STORAGE_NAMESPACE,
 )
+from ._namespace_registry import secure_object_namespace_logical_path
 from .envelope import Envelope
-from .errors import ClassificationError, EnvelopeVersionError
 from .runtime_repository import secure_object_repository_for_active_bucket
 from .sql import SecureObjectRepository
 
@@ -56,14 +57,83 @@ _ATTACHMENT_MANIFEST_VERSION = ATTACHMENT_MANIFEST_STORAGE_NAMESPACE.schema_vers
 _ATTACHMENT_MANIFEST_SENSITIVITY = ATTACHMENT_MANIFEST_STORAGE_NAMESPACE.sensitivity
 _ATTACHMENT_BLOB_NAMESPACE = ATTACHMENT_BLOB_STORAGE_NAMESPACE.namespace
 _ATTACHMENT_MANIFEST_NAMESPACE = ATTACHMENT_MANIFEST_STORAGE_NAMESPACE.namespace
+_ATTACHMENT_ERROR_CONTEXT = {"surface": "attachment_store"}
+
+
+def _attachment_validation_error(message: str, *, violation: str) -> AttachmentValidationError:
+    return AttachmentValidationError(
+        message,
+        context={**_ATTACHMENT_ERROR_CONTEXT, "violation": violation},
+        translated_message="errors.integrity.integrity_financial_attachments_attachment_validation",
+    )
+
+
+def _attachment_not_found_error(message: str, *, object_kind: str) -> AttachmentNotFoundError:
+    return AttachmentNotFoundError(
+        message,
+        context={**_ATTACHMENT_ERROR_CONTEXT, "object_kind": object_kind},
+        translated_message="errors.error.error_financial_attachments_attachment_not_found",
+    )
+
+
+def _attachment_persistence_error(message: str, *, operation: str) -> AttachmentPersistenceError:
+    return AttachmentPersistenceError(
+        message,
+        context={**_ATTACHMENT_ERROR_CONTEXT, "operation": operation},
+        translated_message="errors.fail.fail_financial_attachments_attachment_persistence",
+    )
+
+
+def _validate_manifest_envelope(envelope: Envelope[Attachment]) -> None:
+    if envelope.classification != _ATTACHMENT_MANIFEST_SENSITIVITY:
+        raise _attachment_validation_error(
+            "invalid attachment manifest",
+            violation="manifest_classification",
+        )
+    if envelope.schema_version != _ATTACHMENT_MANIFEST_VERSION:
+        raise _attachment_validation_error(
+            "invalid attachment manifest",
+            violation="manifest_schema_version",
+        )
+
+
+def _decode_manifest_envelope(payload: bytes, *, attachment_id: str | None = None) -> Envelope[Attachment]:
+    try:
+        payload_dict = json.loads(payload.decode(UTF_8_ENCODING))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload") from exc
+    if not isinstance(payload_dict, dict):
+        raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload")
+    manifest_payload = payload_dict.get("payload")
+    if not isinstance(manifest_payload, dict):
+        raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload")
+    if attachment_id is None:
+        manifest_sha256 = manifest_payload.get("sha256")
+        if not isinstance(manifest_sha256, str):
+            raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload")
+        attachment_id = _require_digest(manifest_sha256, field_name="sha256")
+    manifest_payload["attachment_id"] = attachment_id
+    try:
+        envelope_json = json.dumps(payload_dict)
+        envelope = Envelope[Attachment].model_validate_json(envelope_json)
+    except ValidationError as exc:
+        raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload") from exc
+    _validate_manifest_envelope(envelope)
+    return envelope
 
 
 def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
     """Reject any digest input that is not a 64-char lowercase hex string."""
     if not isinstance(value, str):
-        raise AttachmentValidationError(f"{field_name} must be a 64-character lowercase hex digest")
+        raise _attachment_validation_error(
+            f"{field_name} must be a 64-character lowercase hex digest",
+            violation=f"{field_name}_invalid_digest",
+        )
     if len(value) != 64 or any(char not in _HEX_DIGITS for char in value):
-        raise AttachmentValidationError(f"{field_name} must be a 64-character lowercase hex digest")
+        raise _attachment_validation_error(
+            f"{field_name} must be a 64-character lowercase hex digest",
+            violation=f"{field_name}_invalid_digest",
+        )
     return value
 
 
@@ -83,12 +153,12 @@ class AttachmentStore(BaseModel):
     @property
     def blobs_dir(self) -> Path:
         """Return the logical byte-object namespace marker."""
-        return Path("db://secure_objects") / _ATTACHMENT_BLOB_NAMESPACE
+        return secure_object_namespace_logical_path(_ATTACHMENT_BLOB_NAMESPACE)
 
     @property
     def manifests_dir(self) -> Path:
         """Return the logical manifest-object namespace marker."""
-        return Path("db://secure_objects") / _ATTACHMENT_MANIFEST_NAMESPACE
+        return secure_object_namespace_logical_path(_ATTACHMENT_MANIFEST_NAMESPACE)
 
     def blob_path(self, sha256: str) -> Path:
         """Return a logical object marker for ``sha256``."""
@@ -136,7 +206,8 @@ class AttachmentStore(BaseModel):
                     bytes_size += len(chunk)
                     chunks.append(chunk)
         except OSError as exc:
-            raise AttachmentPersistenceError(f"unable to read attachment source: {source}") from exc
+            _LOGGER.debug("attachment source read failed error_type=%s", type(exc).__name__)
+            raise _attachment_persistence_error("unable to read attachment source", operation="read_source") from exc
         digest = hasher.hexdigest()
         self._objects_repo().save(
             namespace=_ATTACHMENT_BLOB_NAMESPACE,
@@ -161,7 +232,7 @@ class AttachmentStore(BaseModel):
             max_supported_version=_ATTACHMENT_BLOB_VERSION,
         )
         if record is None:
-            raise AttachmentNotFoundError(f"attachment blob not found: {digest}")
+            raise _attachment_not_found_error("attachment blob not found", object_kind="blob")
         return record.payload
 
     def open_bytes(self, sha256: str) -> BinaryIO:
@@ -173,7 +244,7 @@ class AttachmentStore(BaseModel):
         digest = _require_digest(attachment_id)
         actual = hashlib.sha256(self.read_bytes(digest)).hexdigest()
         if actual != digest:
-            raise AttachmentValidationError(f"blob digest drift for {digest}: stored sha256 is {actual}")
+            raise _attachment_validation_error("blob digest drift", violation="blob_digest_drift")
 
     def write_manifest(self, attachment: Attachment) -> None:
         """Persist ``attachment`` as an encrypted database object."""
@@ -194,7 +265,7 @@ class AttachmentStore(BaseModel):
             classification=_ATTACHMENT_MANIFEST_SENSITIVITY,
             schema_version=_ATTACHMENT_MANIFEST_VERSION,
             written_at=envelope.written_at,
-            payload=payload_json.encode("utf-8"),
+            payload=payload_json.encode(UTF_8_ENCODING),
         )
         _LOGGER.debug("wrote attachment manifest %s", attachment.attachment_id)
 
@@ -209,20 +280,13 @@ class AttachmentStore(BaseModel):
             max_supported_version=_ATTACHMENT_MANIFEST_VERSION,
         )
         if record is None:
-            raise AttachmentNotFoundError(f"attachment manifest not found: {digest}")
-        try:
-            payload_dict = json.loads(record.payload.decode("utf-8"))
-            payload_dict["payload"]["attachment_id"] = digest
-            envelope_json = json.dumps(payload_dict)
-            envelope = Envelope[Attachment].model_validate_json(envelope_json)
-        except (ClassificationError, EnvelopeVersionError) as exc:
-            raise AttachmentValidationError(f"invalid attachment manifest: {digest}") from exc
-        except (ValidationError, json.JSONDecodeError, KeyError) as exc:
-            raise AttachmentValidationError(f"invalid attachment manifest: {digest}") from exc
+            raise _attachment_not_found_error("attachment manifest not found", object_kind="manifest")
+        envelope = _decode_manifest_envelope(record.payload, attachment_id=digest)
         attachment = envelope.payload
         if attachment.attachment_id != digest:
-            raise AttachmentValidationError(
-                f"manifest key {digest} does not match stored attachment_id {attachment.attachment_id}"
+            raise _attachment_validation_error(
+                "manifest key does not match stored attachment_id",
+                violation="manifest_key",
             )
         return attachment
 
@@ -235,14 +299,7 @@ class AttachmentStore(BaseModel):
             expected_class=_ATTACHMENT_MANIFEST_SENSITIVITY,
             max_supported_version=_ATTACHMENT_MANIFEST_VERSION,
         ):
-            try:
-                payload_json = record.payload.decode("utf-8")
-                envelope_dict = json.loads(payload_json)
-                envelope_dict["payload"]["attachment_id"] = record.object_key
-                envelope_json = json.dumps(envelope_dict)
-                envelope = Envelope[Attachment].model_validate_json(envelope_json)
-            except (ValidationError, json.JSONDecodeError, KeyError) as exc:
-                raise AttachmentValidationError("invalid attachment manifest") from exc
+            envelope = _decode_manifest_envelope(record.payload)
             manifests.append(envelope.payload)
         yield from sorted(manifests, key=lambda attachment: attachment.attachment_id)
 

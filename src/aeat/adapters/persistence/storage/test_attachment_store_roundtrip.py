@@ -27,11 +27,14 @@ from pathlib import Path
 
 import pytest
 
+from ....core.config import override_settings
+from ....core.errors import build_error_envelope, resolve_error_message
+from ....core.external_constants import UTF_8_ENCODING
 from ....domain.attachments._enums import AttachmentKind, AttachmentSource
-from ....domain.attachments._errors import AttachmentValidationError
+from ....domain.attachments._errors import AttachmentPersistenceError, AttachmentValidationError
 from ....domain.attachments._models import Attachment
 from ....tests.secure_sql import isolated_runtime_profile
-from .attachment import AttachmentStore
+from .attachment import _ATTACHMENT_MANIFEST_NAMESPACE, AttachmentStore
 from .sql.engine import get_engine
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -81,13 +84,44 @@ def test_attachment_blob_and_manifest_round_trip(tmp_path: Path) -> None:
         attachment = _make_attachment(sha256=digest, bytes_size=len(payload))
         store.write_manifest(attachment)
         loaded = store.load_manifest(attachment.attachment_id)
+        listed = tuple(store.iter_manifests())
 
         assert loaded == attachment
+        assert listed == (attachment,)
         assert loaded.linked_transaction_ids == ("tx-001", "tx-002")
         assert loaded.linked_invoice_ids == ("inv-2025-001",)
         assert loaded.metadata == {"vendor": "ACME SL", "currency": "EUR"}
         assert loaded.captured_by == "cli/aeat"
         assert loaded.bytes_size == len(payload)
+
+
+def test_attachment_store_logical_paths_use_namespace_registry() -> None:
+    store = AttachmentStore()
+    digest = "a" * 64
+
+    assert store.blob_path(digest).as_posix() == f"db:/secure_objects/aeat.domain.attachments.blobs/{digest}"
+    assert store.manifest_path(digest).as_posix() == f"db:/secure_objects/aeat.domain.attachments.manifests/{digest}"
+
+
+def test_attachment_source_read_error_is_localized_without_path_leak(tmp_path: Path) -> None:
+    store = AttachmentStore()
+    missing = tmp_path / "private-client-alpha" / "invoice.pdf"
+
+    with pytest.raises(AttachmentPersistenceError) as excinfo:
+        store.put_file(missing)
+    envelope = build_error_envelope(excinfo.value)
+    with override_settings(aeat_output_language="en"):
+        message = resolve_error_message(excinfo.value)
+
+    assert excinfo.value.translated_message == "errors.fail.fail_financial_attachments_attachment_persistence"
+    assert "private-client-alpha" not in str(excinfo.value)
+    assert str(missing) not in str(excinfo.value)
+    assert "private-client-alpha" not in message
+    assert "private-client-alpha" not in str(envelope.context)
+    assert envelope.context == {
+        "operation": "read_source",
+        "surface": "attachment_store",
+    }
 
 
 def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) -> None:
@@ -113,7 +147,6 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) ->
 
     from sqlalchemy import select
 
-    from .attachment import _ATTACHMENT_MANIFEST_NAMESPACE
     from .sql._orm import SecureObjectRow
     from .sql.session import session_scope
 
@@ -131,7 +164,7 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) ->
                 SecureObjectRow.object_key == attachment.attachment_id,
             )
             row = session.execute(stmt).scalar_one()
-            envelope = _json.loads(row.payload.decode("utf-8"))
+            envelope = _json.loads(row.payload.decode(UTF_8_ENCODING))
             manifest = envelope["payload"]
             # write_manifest drops attachment_id from the persisted payload
             # (the row's object_key carries it as the content-addressing
@@ -143,7 +176,107 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) ->
             )
             tampered_digest = hashlib.sha256(b"tampered body").hexdigest()
             manifest["sha256"] = tampered_digest
-            row.payload = _json.dumps(envelope).encode("utf-8")
+            row.payload = _json.dumps(envelope).encode(UTF_8_ENCODING)
 
         with pytest.raises(AttachmentValidationError, match="invalid attachment manifest"):
             store.load_manifest(attachment.attachment_id)
+
+
+@pytest.mark.parametrize(
+    ("field_name", "tampered_value", "expected_violation"),
+    (
+        ("classification", "operational", "manifest_classification"),
+        ("schema_version", 99, "manifest_schema_version"),
+    ),
+)
+def test_attachment_manifest_envelope_metadata_drift_fails_closed(
+    tmp_path: Path,
+    field_name: str,
+    tampered_value: object,
+    expected_violation: str,
+) -> None:
+    """Row metadata and embedded manifest-envelope metadata must agree."""
+
+    import json as _json
+
+    from sqlalchemy import select
+
+    from .sql._orm import SecureObjectRow
+    from .sql.session import session_scope
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        engine = get_engine(profile.settings)
+        store = AttachmentStore()
+        payload = b"attachment manifest envelope metadata proof"
+        digest = store.put_bytes(payload)
+        attachment = _make_attachment(sha256=digest, bytes_size=len(payload))
+        store.write_manifest(attachment)
+
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _ATTACHMENT_MANIFEST_NAMESPACE,
+                SecureObjectRow.object_key == attachment.attachment_id,
+            )
+            row = session.execute(stmt).scalar_one()
+            envelope = _json.loads(row.payload.decode(UTF_8_ENCODING))
+            envelope[field_name] = tampered_value
+            row.payload = _json.dumps(envelope).encode(UTF_8_ENCODING)
+
+        with pytest.raises(AttachmentValidationError) as excinfo:
+            store.load_manifest(attachment.attachment_id)
+
+    assert excinfo.value.translated_message == "errors.integrity.integrity_financial_attachments_attachment_validation"
+    assert excinfo.value.context == {
+        "surface": "attachment_store",
+        "violation": expected_violation,
+    }
+
+
+@pytest.mark.parametrize(
+    "stored_payload",
+    (
+        bytes((0xFF,)),
+        b"[]",
+        b'{"payload": null}',
+    ),
+)
+def test_malformed_attachment_manifest_payload_is_localized_for_all_read_paths(
+    tmp_path: Path,
+    stored_payload: bytes,
+) -> None:
+    """Malformed persisted manifest bytes must not escape as raw parser exceptions."""
+
+    from sqlalchemy import select
+
+    from .sql._orm import SecureObjectRow
+    from .sql.session import session_scope
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        engine = get_engine(profile.settings)
+        store = AttachmentStore()
+        payload = b"attachment malformed manifest payload proof"
+        digest = store.put_bytes(payload)
+        attachment = _make_attachment(sha256=digest, bytes_size=len(payload))
+        store.write_manifest(attachment)
+
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _ATTACHMENT_MANIFEST_NAMESPACE,
+                SecureObjectRow.object_key == attachment.attachment_id,
+            )
+            row = session.execute(stmt).scalar_one()
+            row.payload = stored_payload
+
+        for read_manifests in (
+            lambda: store.load_manifest(attachment.attachment_id),
+            lambda: list(store.iter_manifests()),
+        ):
+            with pytest.raises(AttachmentValidationError) as excinfo:
+                read_manifests()
+            assert excinfo.value.translated_message == (
+                "errors.integrity.integrity_financial_attachments_attachment_validation"
+            )
+            assert excinfo.value.context == {
+                "surface": "attachment_store",
+                "violation": "manifest_payload",
+            }

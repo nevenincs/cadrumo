@@ -34,3 +34,25 @@ def test_public_surface_is_complete() -> None:
     """Every name in ``__all__`` must be importable from the package root."""
     for name in storage_all:
         assert name in storage_namespace, f"missing public export: {name}"
+
+
+def test_runtime_master_key_and_namespace_boundaries_are_public() -> None:
+    """Critical storage boundaries must be imported from the package root."""
+    expected_exports = {
+        "MasterKeyProvider",
+        "activate_master_key_provider",
+        "activate_session",
+        "get_active_master_key",
+        "get_master_key_provider",
+        "has_active_bucket_session",
+        "inspect_bucket_storage_runtime",
+        "inspect_storage_runtime",
+        "secure_object_logical_path",
+        "StorageRuntime",
+        "StorageRuntimeReadiness",
+        "STORAGE_NAMESPACE_REGISTRY",
+        "STORAGE_PATH_DEFINITIONS",
+    }
+
+    assert expected_exports <= set(storage_all)
+    assert expected_exports <= storage_namespace.keys()

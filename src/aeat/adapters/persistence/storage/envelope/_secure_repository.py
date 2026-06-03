@@ -142,6 +142,11 @@ class SecureBoundRepository[T: BaseModel]:
         safe_repository_id(identifier, context="identifier")
         return self.store_dir / f"{identifier}.lock"
 
+    @property
+    def secure_object_repository(self) -> SecureObjectRepository:
+        """Return the concrete secure-object repository backing this logical repository."""
+        return self._objects
+
     # ------------------------------------------------------------------
     # CRUD
     # ------------------------------------------------------------------
@@ -233,8 +238,8 @@ class SecureBoundRepository[T: BaseModel]:
             # Future improvement: eliminate via generic ClassVar alias
             # (see: CAST-RATIONALE-SECURE-REPOSITORY-ITER).
             identifiers.append(
-                self.extract_identifier(cast(T, envelope.payload))
-            )  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
+                self.extract_identifier(cast(T, envelope.payload))  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
+            )
         yield from sorted(identifiers)
 
     def iter_records(self) -> Iterator[T]:

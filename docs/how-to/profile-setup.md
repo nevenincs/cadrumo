@@ -26,6 +26,29 @@ aeat config profile status
 aeat config profile show
 ```
 
+## Create a profile without the wizard (scripted / non-interactive)
+
+The wizard above is the primary path. In a non-interactive shell — a script, a
+CI job, or a piped session — the wizard cannot prompt, so `create` refuses and
+points you at `--quiet` with the flags to supply instead. Run `aeat config
+profile create --help` for the full flag set.
+
+Pass `--quiet` to run without prompts, supplying each value as a flag, and add
+`--accept-defaults` to fill every flag you omit with the descriptor's default.
+At minimum, supply the tax id. To export a modelo later, you must also set the
+display name and surnames now — `export` reads `identity.name` and
+`identity.surnames` to build the fichero-BOE header and refuses without them:
+
+```
+aeat config profile create my-profile --quiet --accept-defaults --tax-id 12345678Z --name "Ana" --surnames "García López" --address-postcode 28013 --entity-type natural_person --irpf-income-categories actividad_economica
+```
+
+The created profile becomes active immediately, exactly as the wizard leaves it.
+Each closed-value flag (`--entity-type`, `--irpf-income-categories`,
+`--iva-regime`, and the rest) lists its accepted values in `--help`; pass them
+explicitly here rather than relying on `--accept-defaults` when the default
+isn't right for your taxpayer.
+
 ## Switch between profiles
 
 List your profiles and see which one is active:

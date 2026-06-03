@@ -13,6 +13,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.logging import get_logger
 from ._enums import AttachmentKind, AttachmentSource
 from ._models import Attachment
@@ -110,7 +111,7 @@ def add_link_attachment(
     without any network access. The content-addressed id is the digest of the
     reference text, so the same link deduplicates naturally.
     """
-    payload = source_reference.encode("utf-8")
+    payload = source_reference.encode(UTF_8_ENCODING)
     sha256 = store.put_bytes(payload)
     attachment = Attachment.model_validate(
         {

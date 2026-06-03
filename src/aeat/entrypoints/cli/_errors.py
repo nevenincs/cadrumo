@@ -74,6 +74,14 @@ class CliValidationBoundaryError(AeatError):
     downstream renderers and tests can inspect it without losing the
     typed pydantic detail.
 
+    This class covers input-time validation failures (the operator passed
+    an invalid argument or body).  It is distinct from
+    :exc:`CliStoredDataValidationBoundaryError`, which handles schema drift
+    on persisted records and legitimately suggests ``aeat config repair``.
+    Suggesting ``aeat config repair`` here would be misleading: repair
+    diagnoses local configuration state and cannot fix an application
+    schema mismatch or an invalid CLI argument.
+
     Attributes:
         original_exception: The underlying :exc:`pydantic.ValidationError`.
     """
@@ -87,10 +95,8 @@ class CliValidationBoundaryError(AeatError):
         """
         super().__init__(
             translated_message="errors.refused.refused_cli_validation_boundary",
-            context={
-                "recovery": "aeat config repair",
-            },
-            suggestion="aeat config repair",
+            context={},
+            suggestion="aeat --help",
         )
         self.original_exception: ValidationError = error
 

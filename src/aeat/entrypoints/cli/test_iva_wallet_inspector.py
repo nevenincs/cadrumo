@@ -255,6 +255,54 @@ def test_seed_iva_compensation_persists_available_end_amount(tmp_path: Path) -> 
     assert loaded == state
 
 
+def test_seeded_state_surfaces_as_a_wallet_lot(tmp_path: Path) -> None:
+    """A seeded opening balance shows up in iva-wallet balance (#50 lot_count fix).
+
+    Before the carry-forward lot builder learned about seeded states, a seed
+    populated ``available_end_amount`` / ``pending_for_later_amount`` with
+    ``generated_amount == 0``, so the lot builder (which only counted
+    ``generated_amount > 0``) produced zero lots: ``iva-wallet seed`` reported
+    ``status=seeded`` but ``iva-wallet balance`` showed ``lot_count 0`` and
+    ``total_balance 0`` — the seeded carry-forward was invisible. The fix
+    surfaces the seeded balance as a lot. This is the real-behaviour regression
+    fence: seed a non-zero balance, then assert the balance report reflects it.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="wallet-test"):
+        seed_iva_compensation_period(
+            taxpayer_nif=_NIF,
+            filing_year=2025,
+            period="4T",
+            amount=Decimal("1500.00"),
+        )
+        report = query_iva_wallet_balance(as_of_year=2025)
+
+    assert report.lot_count == 1, "seeded carry-forward must surface as exactly one wallet lot"
+    assert report.total_balance == Decimal("1500.00"), "balance must reflect the seeded amount, not zero"
+    # The seed's own filing year is the lot's source year for the four-year window.
+    assert report.next_expiry_year == 2025 + 4
+
+
+def test_zero_seed_surfaces_no_lot_anti_tautology(tmp_path: Path) -> None:
+    """Anti-tautology: a zero-amount seed produces NO lot (lot_count stays 0).
+
+    The #50 fix surfaces a seeded balance only when it is positive; a true
+    first-period zero seed (LIVA art. 99.5) carries no balance, so it must not
+    fabricate a lot. If this test ever shows lot_count > 0 for a zero seed, the
+    fix is over-counting (manufacturing balance from nothing).
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="wallet-test"):
+        seed_iva_compensation_period(
+            taxpayer_nif=_NIF,
+            filing_year=2025,
+            period="1T",
+            amount=Decimal("0"),
+        )
+        report = query_iva_wallet_balance(as_of_year=2025)
+
+    assert report.lot_count == 0, "a zero seed must not fabricate a wallet lot"
+    assert report.total_balance == Decimal("0")
+
+
 def test_seed_iva_compensation_anti_tautology_different_amounts(tmp_path: Path) -> None:
     """Anti-tautology: seeding X vs Y produces different available_end_amount.
 

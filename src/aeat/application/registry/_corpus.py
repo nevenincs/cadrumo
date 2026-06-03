@@ -365,7 +365,7 @@ def show_registry_citation(
     # find_reference/find_articulo surface KeyError, ValueError, and
     # catalogue-specific exceptions; warning-and-continue is the boundary
     # contract.
-    except Exception:
+    except Exception:  # BROAD-EXCEPT-RATIONALE-CORPUS-LOOKUP-BOUNDARY
         _LOGGER.warning(
             "registry.citations.show failed",
             extra={
