@@ -332,7 +332,7 @@ Restructuring-scale CLI surfaces the personas flagged: folder import with envelo
 
 Folder/multi-file import + import-batch lineage.
 
-- [ ] `W12.P21.S75` - Folder/multi-file ledger import in one invocation with envelope-aggregated rows/imported/skipped counts across files; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W12.P21.S75` - Folder/multi-file ledger import in one invocation with envelope-aggregated rows/imported/skipped counts across files; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W12.P21.S76` - Enrich ledger track lineage to name the import-batch provenance for imported rows (not a bare '-'); `src/aeat/entrypoints/cli/_ledger.py`.
 
 ### Phase `W12.P22` - Review, filter and search surface
