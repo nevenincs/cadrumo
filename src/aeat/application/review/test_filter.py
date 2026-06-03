@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ...domain.iva import InvoiceKind
+from ...domain.transactions import BusinessClassification, TransactionDirection
 from ..transactions import LedgerImportDiagnosticKind
 from ._filter import (
     DeclaracionReviewFilterSpec,
@@ -108,6 +109,41 @@ def test_ledger_spec_parses_duplicate_issue() -> None:
 def test_ledger_spec_parses_import_id() -> None:
     spec = LedgerReviewFilterSpec.from_strings(["import=import_003"])
     assert spec.import_id == "import_003"
+
+
+def test_ledger_spec_parses_direction_lowercase() -> None:
+    """direction=outgoing resolves to the TransactionDirection.OUTGOING enum member."""
+    spec = LedgerReviewFilterSpec.from_strings(["direction=outgoing"])
+    assert spec.direction is TransactionDirection.OUTGOING
+    assert [c.key for c in spec.clauses] == ["direction"]
+
+
+def test_ledger_spec_parses_direction_internal_transfer() -> None:
+    spec = LedgerReviewFilterSpec.from_strings(["direction=internal_transfer"])
+    assert spec.direction is TransactionDirection.INTERNAL_TRANSFER
+
+
+def test_ledger_spec_direction_is_case_insensitive() -> None:
+    """An operator may type the enum case (INCOMING) or natural lowercase."""
+    upper = LedgerReviewFilterSpec.from_strings(["direction=INCOMING"])
+    lower = LedgerReviewFilterSpec.from_strings(["direction=incoming"])
+    assert upper.direction is lower.direction is TransactionDirection.INCOMING
+
+
+def test_ledger_spec_unknown_direction_value_raises() -> None:
+    with pytest.raises(FilterParseError):
+        LedgerReviewFilterSpec.from_strings(["direction=sideways"])
+
+
+def test_ledger_spec_classification_is_case_insensitive() -> None:
+    """classification=business now resolves the same as classification=BUSINESS.
+
+    The lowercase-classification refinement: BusinessClassification members are
+    UPPERCASE, but an operator naturally types lowercase; both must resolve.
+    """
+    upper = LedgerReviewFilterSpec.from_strings(["classification=BUSINESS"])
+    lower = LedgerReviewFilterSpec.from_strings(["classification=business"])
+    assert upper.classification is lower.classification is BusinessClassification.BUSINESS
 
 
 def test_ledger_spec_empty_returns_empty_spec() -> None:

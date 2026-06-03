@@ -1019,6 +1019,55 @@ def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(
     assert single_filtered_out.rows == ()
 
 
+def test_query_ledger_review_rows_filters_by_direction(secure_objects: SecureObjectRepository) -> None:
+    """direction= narrows to one TransactionDirection; the other direction drops out.
+
+    A mixed bucket (one INCOMING client payment, one OUTGOING expense) filtered by
+    direction=OUTGOING returns only the expense — proving the direction predicate
+    discriminates rather than passing the full set through. The label reflects the
+    active filter.
+    """
+    transaction_repository, event_repository = _repositories(secure_objects, bucket_id="bucket-a")
+    create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id="bucket-a",
+            booked_date=date(2026, 5, 1),
+            amount=Decimal("250.00"),
+            direction=TransactionDirection.INCOMING,
+            description="client payment",
+            idempotency_key="dir-incoming",
+        ),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+    )
+    expense = create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id="bucket-a",
+            booked_date=date(2026, 5, 2),
+            amount=Decimal("-121.00"),
+            direction=TransactionDirection.OUTGOING,
+            description="material oficina",
+            idempotency_key="dir-outgoing",
+        ),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        occurred_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),
+    )
+
+    full = query_ledger_review_rows(
+        LedgerReviewQuery(bucket_id="bucket-a"), transaction_repository=transaction_repository
+    )
+    outgoing = query_ledger_review_rows(
+        LedgerReviewQuery(bucket_id="bucket-a", direction=TransactionDirection.OUTGOING.value),
+        transaction_repository=transaction_repository,
+    )
+
+    assert len(full.rows) == 2
+    assert [row.id for row in outgoing.rows] == [expense.ref.transaction_id]
+    assert outgoing.filters == ("direction=OUTGOING",)
+
+
 def test_query_ledger_review_rows_filters_quarter_import_and_issue_events(
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
