@@ -8,6 +8,7 @@ treatment applied by the substrate for every object in that namespace.
 from __future__ import annotations
 
 from enum import StrEnum
+from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -30,6 +31,7 @@ KEYSTORE_DIRNAME = "keystore"
 BUCKET_DEK_FILENAME = "bucket.dek.json"
 BLOB_MANIFEST_SCHEMA_VERSION = 1
 SECRET_RECORD_SCHEMA_VERSION = 1
+_SECURE_OBJECTS_TABLE_PATH_KEY = "secure_objects_table"
 
 
 class StorageNamespaceScope(StrEnum):
@@ -195,6 +197,13 @@ class StorageHierarchyRegistry(BaseModel):
             if path.key == key:
                 return path
         raise KeyError(key)
+
+
+def secure_object_logical_path(namespace: str, object_key: str) -> Path:
+    """Return the registry-defined logical SQL marker for one secure object."""
+    definition = STORAGE_NAMESPACE_REGISTRY.path_by_key(_SECURE_OBJECTS_TABLE_PATH_KEY)
+    marker_root = definition.grammar.removesuffix("/<namespace>/<object_key>")
+    return Path(marker_root) / namespace / object_key
 
 
 WORKFLOW_STATE_NAMESPACE = SecureObjectNamespaceDefinition(
@@ -886,4 +895,5 @@ __all__ = [
     "StoragePathDefinition",
     "StoragePathKind",
     "StorageRemoteMirrorPolicy",
+    "secure_object_logical_path",
 ]

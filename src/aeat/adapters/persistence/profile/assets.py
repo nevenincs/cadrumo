@@ -11,6 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from ....core.errors import AeatError
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.contribuyente.assets import (
@@ -23,6 +24,7 @@ from ..storage import (
     PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
     PROFILE_ASSETS_LEDGER_NAMESPACE,
     SensitivityClass,
+    secure_object_logical_path,
 )
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..storage.sql import SecureObjectRepository
@@ -31,10 +33,16 @@ _log = get_logger(__name__)
 
 ASSETS_LEDGER_FILENAME = "assets-ledger.secure-object"
 ASSETS_AMORTIZATION_LEDGER_FILENAME = "assets-amortization-ledger.secure-object"
-_SECURE_OBJECT_VERSION = 1
+_ASSETS_SECURE_OBJECT_VERSION = PROFILE_ASSETS_LEDGER_NAMESPACE.schema_version
+_AMORTIZACION_SECURE_OBJECT_VERSION = PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE.schema_version
 _ASSETS_NAMESPACE = PROFILE_ASSETS_LEDGER_NAMESPACE.namespace
 _AMORTIZACION_NAMESPACE = PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE.namespace
-_LEDGER_OBJECT_KEY = "default"
+_ASSETS_OBJECT_KEY = PROFILE_ASSETS_LEDGER_NAMESPACE.require_default_object_key()
+_AMORTIZACION_OBJECT_KEY = PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE.require_default_object_key()
+
+
+def _secure_object_marker(namespace: str, filename: str) -> Path:
+    return secure_object_logical_path(namespace, filename)
 
 
 def load_assets() -> tuple[AssetRecord, ...]:
@@ -105,12 +113,12 @@ class AssetsLedgerRepository:
     @property
     def envelope_path(self) -> Path:
         """Logical path retained for callers that display the storage target."""
-        return Path("db://secure_objects") / _ASSETS_NAMESPACE / ASSETS_LEDGER_FILENAME
+        return _secure_object_marker(_ASSETS_NAMESPACE, ASSETS_LEDGER_FILENAME)
 
     @property
     def lock_target(self) -> Path:
         """Logical lock marker; SQL transactions govern writes."""
-        return Path("db://secure_objects") / _ASSETS_NAMESPACE / "assets-ledger.lock"
+        return _secure_object_marker(_ASSETS_NAMESPACE, "assets-ledger.lock")
 
     def load(self) -> AssetsLedgerDocument:
         """Load the ledger, returning an empty document when absent.
@@ -126,13 +134,25 @@ class AssetsLedgerRepository:
                 _ASSETS_NAMESPACE,
                 self._object_key,
                 expected_class=SensitivityClass.FINANCIAL,
-                max_supported_version=_SECURE_OBJECT_VERSION,
+                max_supported_version=_ASSETS_SECURE_OBJECT_VERSION,
             )
             if record is None:
                 return AssetsLedgerDocument()
-            return AssetsLedgerDocument.model_validate_json(record.payload.decode("utf-8"))
+            return AssetsLedgerDocument.model_validate_json(record.payload.decode(UTF_8_ENCODING))
         except (OSError, AeatError) as exc:
-            raise AssetRecordError(f"unable to load asset ledger: {self._object_key}") from exc
+            _log.debug(
+                "asset ledger load failed",
+                extra={
+                    "namespace": _ASSETS_NAMESPACE,
+                    "object_key": self._object_key,
+                    "error_type": type(exc).__name__,
+                },
+            )
+            raise AssetRecordError(
+                f"unable to load asset ledger: {self._object_key}",
+                context={"namespace": _ASSETS_NAMESPACE, "object_key": self._object_key},
+                translated_message="adapters.persistence.profile.assets.errors.load_asset_ledger_failed",
+            ) from exc
 
     def save(self, document: AssetsLedgerDocument) -> None:
         """Persist ``document`` as FINANCIAL-class ciphertext.
@@ -161,6 +181,7 @@ class AssetsLedgerRepository:
                 f"asset {asset.identifier!r} already exists",
                 context={"asset_id": asset.identifier},
                 suggestion=None,
+                translated_message="adapters.persistence.profile.assets.errors.asset_already_exists",
             )
         updated = AssetsLedgerDocument(assets=(*current.assets, asset))
         self._save_unlocked(updated)
@@ -170,19 +191,18 @@ class AssetsLedgerRepository:
         return self.load()
 
     def _save_unlocked(self, document: AssetsLedgerDocument) -> None:
-
         self._objects.save(
             namespace=_ASSETS_NAMESPACE,
             object_key=self._object_key,
             classification=SensitivityClass.FINANCIAL,
-            schema_version=_SECURE_OBJECT_VERSION,
+            schema_version=_ASSETS_SECURE_OBJECT_VERSION,
             written_at=now(),
-            payload=document.model_dump_json().encode("utf-8"),
+            payload=document.model_dump_json().encode(UTF_8_ENCODING),
         )
 
     @property
     def _object_key(self) -> str:
-        return _LEDGER_OBJECT_KEY
+        return _ASSETS_OBJECT_KEY
 
 
 class AmortizacionLedgerRepository:
@@ -199,12 +219,12 @@ class AmortizacionLedgerRepository:
     @property
     def envelope_path(self) -> Path:
         """Logical path retained for callers that display the storage target."""
-        return Path("db://secure_objects") / _AMORTIZACION_NAMESPACE / ASSETS_AMORTIZATION_LEDGER_FILENAME
+        return _secure_object_marker(_AMORTIZACION_NAMESPACE, ASSETS_AMORTIZATION_LEDGER_FILENAME)
 
     @property
     def lock_target(self) -> Path:
         """Logical lock marker; SQL transactions govern writes."""
-        return Path("db://secure_objects") / _AMORTIZACION_NAMESPACE / "assets-amortization-ledger.lock"
+        return _secure_object_marker(_AMORTIZACION_NAMESPACE, "assets-amortization-ledger.lock")
 
     def load(self) -> AmortizacionLedger:
         """Load the ledger, returning an empty document when absent.
@@ -220,13 +240,25 @@ class AmortizacionLedgerRepository:
                 _AMORTIZACION_NAMESPACE,
                 self._object_key,
                 expected_class=SensitivityClass.FINANCIAL,
-                max_supported_version=_SECURE_OBJECT_VERSION,
+                max_supported_version=_AMORTIZACION_SECURE_OBJECT_VERSION,
             )
             if record is None:
                 return AmortizacionLedger()
-            return AmortizacionLedger.model_validate_json(record.payload.decode("utf-8"))
+            return AmortizacionLedger.model_validate_json(record.payload.decode(UTF_8_ENCODING))
         except (OSError, AeatError) as exc:
-            raise AssetRecordError(f"unable to load amortizacion ledger: {self._object_key}") from exc
+            _log.debug(
+                "asset amortizacion ledger load failed",
+                extra={
+                    "namespace": _AMORTIZACION_NAMESPACE,
+                    "object_key": self._object_key,
+                    "error_type": type(exc).__name__,
+                },
+            )
+            raise AssetRecordError(
+                f"unable to load amortizacion ledger: {self._object_key}",
+                context={"namespace": _AMORTIZACION_NAMESPACE, "object_key": self._object_key},
+                translated_message="adapters.persistence.profile.assets.errors.load_amortizacion_ledger_failed",
+            ) from exc
 
     def save(self, ledger: AmortizacionLedger) -> None:
         """Persist ``ledger`` as FINANCIAL-class ciphertext.
@@ -241,19 +273,18 @@ class AmortizacionLedgerRepository:
         return self.load()
 
     def _save_unlocked(self, ledger: AmortizacionLedger) -> None:
-
         self._objects.save(
             namespace=_AMORTIZACION_NAMESPACE,
             object_key=self._object_key,
             classification=SensitivityClass.FINANCIAL,
-            schema_version=_SECURE_OBJECT_VERSION,
+            schema_version=_AMORTIZACION_SECURE_OBJECT_VERSION,
             written_at=now(),
-            payload=ledger.model_dump_json().encode("utf-8"),
+            payload=ledger.model_dump_json().encode(UTF_8_ENCODING),
         )
 
     @property
     def _object_key(self) -> str:
-        return _LEDGER_OBJECT_KEY
+        return _AMORTIZACION_OBJECT_KEY
 
 
 __all__ = [
