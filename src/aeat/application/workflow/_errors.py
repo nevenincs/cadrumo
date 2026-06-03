@@ -11,6 +11,7 @@ exception-on-abort behaviour opt in by inspecting the result themselves.
 from __future__ import annotations
 
 from ...core.errors import AeatError, CoreValidationError
+from ...core.errors import NoActiveProfileError as NoActiveProfileError
 from ._models import WorkflowAbortReason
 
 
@@ -36,16 +37,6 @@ class WorkflowAbortedError(WorkflowError):
     :class:`aeat.application.workflow.WorkflowResult` whose ``aborted_reason`` is set.
     This exception is reserved for callers that prefer raising over
     inspecting (e.g. a future cron runner that wants a non-zero exit).
-    """
-
-
-class NoActiveProfileError(WorkflowError):
-    """Raised when an operation requires an active profile bucket and none is selected.
-
-    Bucket-scoped repositories (transaction catalogue, manual ledger,
-    bucket-local aggregation) refuse to operate without an active
-    profile. Callers that surface this to the operator should map it
-    to the standard ``cli.common.errors.no_active_profile`` message.
     """
 
 

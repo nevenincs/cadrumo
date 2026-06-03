@@ -15,9 +15,9 @@ Major declarations:
   the resume entry points.
 * :class:`WorkflowRunRepository` and :class:`WorkflowStateRepository` —
   the persistence boundaries.
-* :class:`WorkflowError` and its subclasses (:class:`NoActiveProfileError`,
-  :class:`WorkflowAbortedError`, :class:`WorkflowComponentError`,
-  :class:`WorkflowInputMismatchError`) — the failure taxonomy.
+* :class:`WorkflowError` and its subclasses (:class:`WorkflowAbortedError`,
+  :class:`WorkflowComponentError`, :class:`WorkflowInputMismatchError`) plus the
+  core-owned :class:`NoActiveProfileError` re-export — the failure taxonomy.
 
 The engine speaks to its dependencies through the protocols defined here
 (:class:`DeadlineEngineProtocol`, :class:`ModeloDraftBuilderProtocol`,
@@ -37,7 +37,6 @@ from ._engine import WorkflowEngine
 
 # ---- errors (no application deps) -------------------------------------------
 from ._errors import (
-    NoActiveProfileError,
     WorkflowAbortedError,
     WorkflowComponentError,
     WorkflowError,
@@ -63,7 +62,6 @@ from ._models import (
     active_transaction_catalogue_repository,
     compute_run_id,
     declaration_key,
-    require_active_bucket_id,
     update_declaration_pointer,
     utc_now,
 )
@@ -110,7 +108,6 @@ __all__ = [
     "ModeloInputValue",
     "ModeloInputs",
     "ModeloInputsProviderProtocol",
-    "NoActiveProfileError",
     "ProfileBucketPointer",
     "RegistryModeloDraftProtocol",
     "SiteHealthAlert",
@@ -139,7 +136,6 @@ __all__ = [
     "find_latest_run_for_period",
     "list_runs",
     "load_run",
-    "require_active_bucket_id",
     "resume_modelo_workflow",
     "save_run",
     "update_declaration_pointer",
