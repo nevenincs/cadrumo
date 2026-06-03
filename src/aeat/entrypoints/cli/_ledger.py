@@ -2049,6 +2049,7 @@ def ledger_review(
             status=spec.status.value if spec.status is not None else None,
             issue=spec.issue.value if spec.issue is not None else None,
             import_id=spec.import_id,
+            classification=spec.classification.value if spec.classification is not None else None,
         ),
         transaction_repository=transaction_repository,
     )

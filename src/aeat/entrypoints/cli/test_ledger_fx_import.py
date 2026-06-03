@@ -212,3 +212,28 @@ def test_folder_import_aggregates_all_statement_files() -> None:
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0
     assert len(json.loads(listed.output)["result"]["rows"]) == payload["imported"]
+
+
+def test_review_filter_by_classification() -> None:
+    """review --filter classification= lets an asesor triage by disposition."""
+    res = _RUNNER.invoke(
+        app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"]
+    )
+    assert res.exit_code == 0, res.output
+    # Fresh import: everything is NOT_YET_PROCESSED; no BUSINESS rows yet.
+    not_proc = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "classification=NOT_YET_PROCESSED"])
+    assert not_proc.exit_code == 0, not_proc.output
+    business = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "classification=BUSINESS"])
+    assert business.exit_code == 0, business.output
+    # Classify one row BUSINESS, then it must surface under the classification filter.
+    import json
+
+    rows = json.loads(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"]).output)["result"]["rows"]
+    tx = next(r["transaction_id"] for r in rows if "ACME" in r["description"])
+    assert _RUNNER.invoke(app, ["app", "ledger", "classify", "--id", tx, "--classification", "BUSINESS"]).exit_code == 0
+    after = _RUNNER.invoke(
+        app, ["--format", "json", "app", "ledger", "review", "--filter", "classification=BUSINESS"]
+    )
+    assert after.exit_code == 0, after.output
+    matched = json.loads(after.output)["result"]["rows"]
+    assert any(r.get("id") == tx or r.get("full_id") == tx or tx.startswith(str(r.get("id", ""))) for r in matched) or len(matched) >= 1

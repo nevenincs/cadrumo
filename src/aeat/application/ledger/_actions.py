@@ -1087,6 +1087,10 @@ def _filter_ledger_review_rows(
         rows = tuple(
             transaction for transaction in rows if ledger_transaction_review_status(transaction) == query.status
         )
+    if query.classification is not None:
+        rows = tuple(
+            transaction for transaction in rows if transaction.business_classification.value == query.classification
+        )
     if query.import_id is not None or query.issue is not None:
         matching_ids = _transaction_ids_for_review_event_filters(
             bucket_id=query.bucket_id,
@@ -1106,6 +1110,7 @@ _LEDGER_REVIEW_FILTER_FIELDS: tuple[tuple[str, str], ...] = (
     ("status", "status"),
     ("issue", "issue"),
     ("import_id", "import"),
+    ("classification", "classification"),
     ("transaction_id", "id"),
 )
 
