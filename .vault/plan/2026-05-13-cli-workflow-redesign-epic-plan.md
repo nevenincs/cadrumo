@@ -4854,7 +4854,7 @@ Wire audit verbs, reconcile, and remove placeholder stubs.
 - [x] `W85.P412.S2339` - Remove any borrador-import refusal stubs replaced by the app live borrador 100 surface per apex §8 lock; `src/aeat/application`.
 - [x] `W85.P412.S2340` - Remove any rental-stub references and ensure aeat app ledger rental verbs delegate to application rental; `src/aeat/entrypoints/cli/_ledger.py`.
 - [x] `W85.P412.S2341` - Wire aeat app modelo audit show, check, export, replay verbs to application evidence and render via _emit; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W85.P412.S2342` - Wire aeat app modelo reconcile from-justificante PATH CLI verb to existing reconciler closing W64; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W85.P412.S2342` - Wire aeat app modelo reconcile from-justificante PATH CLI verb to existing reconciler closing W64; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W85.P412.S2343` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W85.P413` - real behavior verification
