@@ -47,10 +47,9 @@ def register(app: typer.Typer) -> None:
         )
         typer.echo(redact_for_cli_output(f"{tr('cli.diagnostics.secure_objects.labels.namespace')}\t{namespace}"))
         typer.echo(f"{tr('cli.diagnostics.secure_objects.labels.count')}\t{len(report.rows)}")
-        # MACHINE-FORMAT-RATIONALE-SECURE-OBJECTS-ROW:
         # Structured machine output; secure-object digests route through central
         # redaction so any drift in digest shape is captured at the boundary.
         for row in report.rows:
-            typer.echo(redact_for_cli_output(f"{row.namespace}\t{row.object_key_digest}"))
+            typer.echo(redact_for_cli_output(f"{row.namespace}\t{row.object_key_digest}"))  # MACHINE-FORMAT-RATIONALE-SECURE-OBJECTS-ROW
 
     app.add_typer(sub)
