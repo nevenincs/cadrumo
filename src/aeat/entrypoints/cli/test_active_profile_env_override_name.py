@@ -121,6 +121,92 @@ def test_env_override_by_uuid_is_unchanged() -> None:
     assert "REFUSED_PROFILE_NOT_FOUND" not in listed.output
 
 
+def _write_second_live_bucket_sharing_label(label: str) -> None:
+    """Write a SECOND live bucket manifest carrying ``label`` (a torn-duplicate state).
+
+    The CLI ``profile create`` enforces label uniqueness, so a real operator
+    cannot mint two live profiles with the same name through the happy path; this
+    helper writes the duplicate manifest directly to simulate the torn / repair
+    state that makes a label resolve ambiguously, exercising the ambiguity-refusal
+    path through the entrypoint normalizer.
+    """
+    from datetime import UTC, datetime
+
+    from ...adapters.persistence.storage.bucket import (
+        BucketLifecycleStatus,
+        BucketManifest,
+        bucket_paths,
+        provision_bucket_directory,
+        write_manifest,
+    )
+    from ...adapters.persistence.storage.master_key import KdfParams
+    from ...core.config import load_settings
+
+    root = load_settings().aeat_local_storage_root
+    duplicate_uuid = "62d2ab08-39f2-4811-bd2a-fe48fd105e4a"
+    now = datetime.now(UTC).replace(microsecond=0)
+    provision_bucket_directory(root, duplicate_uuid)
+    write_manifest(
+        bucket_paths(root, duplicate_uuid),
+        BucketManifest(
+            bucket_id=duplicate_uuid,
+            label=label,
+            created_at=now,
+            last_unlocked_at=None,
+            kdf_params=KdfParams.default().to_manifest_params(),
+            recovery_enrolled=False,
+            schema_version=1,
+            status=BucketLifecycleStatus.ACTIVE,
+        ),
+    )
+
+
+def test_env_override_ambiguous_label_refuses_cleanly_not_traceback() -> None:
+    """Two live buckets sharing the env-override label → CLEAN refusal, not a traceback.
+
+    The entrypoint normalizer resolves the label via resolve_profile_bucket, whose
+    fallback raises ProfileLabelAmbiguousError (a WorkflowError, NOT a ValueError)
+    when two live profiles share the name. The root-callback catch must convert
+    that to a clean CLI refusal (non-zero exit, no Python traceback) — never an
+    arbitrary bucket pick and never an unhandled crash. This is the test that
+    catches a wrong ``except ValueError`` guard (which would let the error escape).
+    """
+    _create_profile_and_resolve_uuid()  # bucket 1: label "operator"
+    _write_second_live_bucket_sharing_label(_LABEL)  # bucket 2: same label
+
+    with override_settings(aeat_active_profile=_LABEL):
+        listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+
+    assert listed.exit_code != 0, listed.output
+    # A clean operator-facing refusal, not an unhandled ProfileLabelAmbiguousError
+    # traceback escaping the catch.
+    combined = (listed.output or "") + (str(listed.exception) if listed.exception else "")
+    assert "Traceback" not in combined, combined
+    assert "ProfileLabelAmbiguousError" not in combined, combined
+
+
+def test_diagnostics_active_pointer_ambiguous_label_refuses_cleanly() -> None:
+    """The diagnostics ``profile get`` active-pointer path refuses cleanly on ambiguity.
+
+    Covers the second catch site (``_resolve_target_profile``'s active-pointer
+    branch): with the active profile = an ambiguous label, the diagnostics app
+    must surface the clean ``_bad_ambiguous_profile`` refusal (non-zero exit, no
+    traceback), proving its catch matches ProfileLabelAmbiguousError too.
+    """
+    from ...diagnostics.__main__ import app as diagnostics_app
+
+    _create_profile_and_resolve_uuid()
+    _write_second_live_bucket_sharing_label(_LABEL)
+
+    with override_settings(aeat_active_profile=_LABEL):
+        result = _RUNNER.invoke(diagnostics_app, ["profile", "get", "iva.regime"])
+
+    assert result.exit_code != 0, result.output
+    combined = (result.output or "") + (str(result.exception) if result.exception else "")
+    assert "Traceback" not in combined, combined
+    assert "ProfileLabelAmbiguousError" not in combined, combined
+
+
 def test_env_override_unknown_label_does_not_resolve() -> None:
     """An ``AEAT_ACTIVE_PROFILE`` label matching no live profile does not resolve.
 
