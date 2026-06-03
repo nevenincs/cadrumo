@@ -58,10 +58,10 @@ A profile (your saved taxpayer identity and settings) is required by every workf
 aeat config profile create NAME
 ```
 
-Replace `NAME` with a label for the filer. For a non-interactive run, add `--quiet` and `--tax-id`:
+Replace `NAME` with a label for the filer. For a non-interactive run, add `--quiet` and `--tax-id` — and include `--name` and `--surnames` now, because the export step at the end reads them and refuses without them:
 
 ```
-aeat config profile create tutorial --quiet --tax-id 12345678Z
+aeat config profile create tutorial --quiet --tax-id 12345678Z --name "Ana" --surnames "García López"
 ```
 
 ### Find the sample transaction file
@@ -76,12 +76,12 @@ This tutorial uses that file throughout. To work from a copy, copy it out of the
 
 ## Step 1: create the example taxpayer profile
 
-Every profile needs a unique label and a NIF (Número de Identificación Fiscal, the Spanish tax identification number). In this tutorial you'll create one named `tutorial` for an example taxpayer whose NIF is `12345678Z`.
+Every profile needs a unique label and a NIF (Número de Identificación Fiscal, the Spanish tax identification number). In this tutorial you'll create one named `tutorial` for an example taxpayer whose NIF is `12345678Z`. Set the name and surnames at the same time: the export step in Step 6 reads `identity.name` and `identity.surnames` and refuses if they're missing, so supplying them now saves you from redoing the work.
 
 Run the create verb in non-interactive mode so the values land exactly as written:
 
 ```
-aeat config profile create tutorial --quiet --tax-id 12345678Z
+aeat config profile create tutorial --quiet --tax-id 12345678Z --name "Ana" --surnames "García López"
 ```
 
 On success, the command prints four tab-separated lines:
