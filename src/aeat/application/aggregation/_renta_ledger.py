@@ -19,8 +19,11 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.resources import resources
 from ...domain.categories import CategoryProfile, SpendingCategory
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
-from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
+from ...domain.invoices import (
+    InvoiceCatalogue,
+    InvoiceCatalogueRepository,
+    InvoiceCatalogueRepositoryProtocol,
+)
 from ...domain.iva import InvoiceKind
 from ...domain.renta import (
     RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS,
@@ -38,10 +41,10 @@ from ...domain.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepository,
+    TransactionCatalogueRepositoryProtocol,
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import effective_eur_amount, is_non_eur_without_conversion
