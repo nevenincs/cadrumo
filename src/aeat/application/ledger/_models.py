@@ -702,6 +702,7 @@ class BulkClassifyRow(BaseModel):
     transaction_id: str = Field(min_length=1)
     classification: BusinessClassification
     category_id: str | None = None
+    business_pct: Decimal | None = None
 
 
 class BulkClassifyFailure(BaseModel):
@@ -731,7 +732,9 @@ class BulkClassifyResult(BaseModel):
     bucket_event_ids: tuple[str, ...] = ()
 
 
-BULK_CLASSIFY_ALLOWED_COLUMNS: frozenset[str] = frozenset({"transaction_id", "classification", "category_id"})
+BULK_CLASSIFY_ALLOWED_COLUMNS: frozenset[str] = frozenset(
+    {"transaction_id", "classification", "category_id", "business_pct"}
+)
 
 
 class ApplyRulesAppliedRow(BaseModel):
@@ -789,6 +792,10 @@ class LedgerExportRow(BaseModel):
     created_by: str = ""
     created_source_command: str = ""
     source_jurisdiction: str = ""
+    # FX provenance on the export hand-off (ledger-fx-conversion ADR): EUR
+    # magnitude + applied CCY->EUR rate for foreign rows; "" for EUR-native rows.
+    value_in_eur: str = ""
+    fx_rate: str = ""
 
 
 class LedgerExportResult(BaseModel):

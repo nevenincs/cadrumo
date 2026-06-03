@@ -2636,6 +2636,8 @@ def _ledger_export_row(*, bucket_id: str, transaction: Transaction) -> LedgerExp
         notes=transaction.notes,
         created_by=transaction.created_by or "",
         created_source_command=transaction.source_command or "",
+        value_in_eur=_optional_decimal(transaction.value_in_eur),
+        fx_rate=_optional_decimal(transaction.fx_rate),
     )
 
 
@@ -3535,6 +3537,7 @@ def bulk_classify_from_csv(
         patch = ManualLedgerTransactionPatch(
             business_classification=row.classification,
             category_id=row.category_id,
+            business_pct=row.business_pct,
         )
         try:
             result = update_manual_transaction_fields(

@@ -28,7 +28,7 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 from ...core.identity import BucketId
-from ..profile._ccaa import CCAA
+from ..contribuyente._ccaa import CCAA
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
 from ._ids import WorkUnitId

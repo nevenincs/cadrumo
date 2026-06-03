@@ -10,8 +10,16 @@ from __future__ import annotations
 
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import Translatable as tr
-from ...core.wizard_catalogue import register_wizard_catalogue
 from ...core.setup_answers import SetupAnswers
+from ...core.wizard_catalogue import register_wizard_catalogue
+from ...domain.contribuyente import (
+    RentaDeclaracionType,
+    RentaDisabilityGrade,
+    RentaMaritalStatus,
+    RentaSexCode,
+    SituacionFamiliar,
+)
+from ...domain.contribuyente._ccaa import CCAA
 from ...domain.deadlines._models import (
     EntityType,
     FiscalResidency,
@@ -21,14 +29,6 @@ from ...domain.deadlines._models import (
     IVARegime,
     LegalEntityForm,
 )
-from ...domain.profile import (
-    RentaDeclaracionType,
-    RentaDisabilityGrade,
-    RentaMaritalStatus,
-    RentaSexCode,
-    SituacionFamiliar,
-)
-from ...domain.profile._ccaa import CCAA
 from ._models import (
     WizardChoice,
     WizardCondition,

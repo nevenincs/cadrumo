@@ -416,7 +416,7 @@ def test_renta_typed_binding_candidates_declare_substrate_enum_class() -> None:
     """Renta bindings that bridge a closed-membership substrate axis must declare `typed_enum`.
 
     The CCAA binding declares ``typed_enum = "CCAA"`` (the canonical enum in
-    :mod:`aeat.domain.profile._ccaa`).  The estimacion-directa binding
+    :mod:`aeat.domain.contribuyente._ccaa`).  The estimacion-directa binding
     declares ``typed_enum = "EstimacionDirectaModalidad"`` (from
     :mod:`aeat.domain.renta`).  Each binding whose id suffix matches a
     known typed-bridge anchor MUST declare the correct ``typed_enum`` so

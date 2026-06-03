@@ -30,7 +30,7 @@ from ..application.workflow._models import resolve_active_bucket_id
 from ..application.workflow._persistence import workflow_state_repository
 from ..core.i18n import tr
 from ..core.redaction import redact_for_cli_output
-from ..domain.profile import get_profile_key
+from ..domain.contribuyente import get_profile_key
 from ..domain.user_profile import ProfileNotFoundError, UserProfileFact
 
 

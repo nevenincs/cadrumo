@@ -683,7 +683,7 @@ class CollectibleInvoiceListResult(BusinessInvoiceListResult):
 class InventoryLedgerPayload(OutputSchema):
     """One per-actividad inventory ledger record.
 
-    Mirrors :class:`aeat.domain.profile.inventory.InventoryLedger`'s
+    Mirrors :class:`aeat.domain.contribuyente.inventory.InventoryLedger`'s
     ``model_dump(mode='json')`` plus the ``bucket_event_ids`` field the
     CLI appends at the emit site.
     """

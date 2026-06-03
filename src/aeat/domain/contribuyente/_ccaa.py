@@ -1,7 +1,7 @@
 """The closed catalogue of ordinary common-regime Spanish autonomous communities.
 
 Lives in its own module so wizard descriptor construction can reference
-the enum without triggering the rest of ``aeat.domain.profile``'s
+the enum without triggering the rest of ``aeat.domain.contribuyente``'s
 import-time chain.
 
 Canonical CCAA shape
@@ -36,7 +36,7 @@ from ...core.logging import get_logger
 # the canonical CCAA member names.  Foral regimes (NAV, PVA) and the two
 # autonomous cities (CEU, MEL) were present in RentaCCAA but fall outside
 # the common-regime scope of this enum; callers must handle them separately
-# (see ``ForalRegimeError`` in ``aeat.domain.profile``).
+# (see ``ForalRegimeError`` in ``aeat.domain.contribuyente``).
 _ISO_CODE_MAP: dict[str, str] = {
     "AND": "ANDALUCIA",
     "ARA": "ARAGON",
@@ -65,7 +65,7 @@ class CCAA(StrEnum):
 
     Foral regimes (País Vasco, Navarra) and the autonomous cities (Ceuta,
     Melilla) are intentionally excluded; those raise
-    :class:`aeat.domain.profile.ForalRegimeError` when a user selects them.
+    :class:`aeat.domain.contribuyente.ForalRegimeError` when a user selects them.
     """
 
     ANDALUCIA = "andalucia"

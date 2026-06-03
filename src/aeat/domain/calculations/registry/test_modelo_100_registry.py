@@ -12,9 +12,9 @@ import pytest
 from pydantic import AnyUrl
 
 from ....core.resources import bundled_path
-from ... import renta as _renta_snapshot_checks  # noqa: F401
-from ...profile import PROFILE_KEYS, TaxResidenceProfile
-from ...profile.family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
+from ... import renta as _renta_snapshot_checks
+from ...contribuyente import PROFILE_KEYS, TaxResidenceProfile
+from ...contribuyente.family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 from . import (
     CasillaDefinition,
     DataBindingDefinition,

@@ -163,13 +163,13 @@ def _m() -> Any:
 
 
 # ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the
-# aeat.domain.profile module object; typed return would require importing the
+# aeat.domain.contribuyente module object; typed return would require importing the
 # module at definition time, re-introducing the circular import.
 def _p() -> Any:
-    """Return the aeat.domain.profile module (lazy)."""
+    """Return the aeat.domain.contribuyente module (lazy)."""
     import importlib
 
-    return importlib.import_module("aeat.domain.profile")
+    return importlib.import_module("aeat.domain.contribuyente")
 
 
 # ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the CCAA enum class object;
@@ -179,7 +179,7 @@ def _ccaa() -> Any:
     """Return the CCAA enum class (lazy)."""
     import importlib
 
-    return importlib.import_module("aeat.domain.profile._ccaa").CCAA
+    return importlib.import_module("aeat.domain.contribuyente._ccaa").CCAA
 
 
 # ---------------------------------------------------------------------------

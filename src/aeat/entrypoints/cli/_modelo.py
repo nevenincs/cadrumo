@@ -69,6 +69,10 @@ from ...domain.calculations.registry import (
     RegistryValidationError,
     parse_modelo_period,
 )
+from ...domain.contribuyente import parse_tax_region
+from ...domain.contribuyente._deduccion_maternidad import (
+    compute_deduccion_maternidad_0611 as _compute_deduccion_maternidad_0611,
+)
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
 from ...domain.modelos._dt12_reduccion import compute_dt12_reduccion_plan_pensiones
 from ...domain.modelos._filing_record import ModeloRecord
@@ -87,10 +91,6 @@ from ...domain.modelos._row_models import (
 from ...domain.modelos._sal_reserva_especial import compute_sal_reserva_especial_dotacion
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
-from ...domain.profile import parse_tax_region
-from ...domain.profile._deduccion_maternidad import (
-    compute_deduccion_maternidad_0611 as _compute_deduccion_maternidad_0611,
-)
 from ._common import _parse_iso_date, _profile_to_taxpayer, activate_subcommand_output_language
 
 _log = get_logger(__name__)

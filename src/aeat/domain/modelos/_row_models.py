@@ -333,10 +333,10 @@ class Modelo347ContraparteRow(BaseModel):
     row_type: Literal["contraparte"] = "contraparte"
     nif: _NifStr
     nombre: _NameStr = Field(default="")
-    importe_Q1: Decimal = Field(default=Decimal("0"))  # noqa: N815
-    importe_Q2: Decimal = Field(default=Decimal("0"))  # noqa: N815
-    importe_Q3: Decimal = Field(default=Decimal("0"))  # noqa: N815
-    importe_Q4: Decimal = Field(default=Decimal("0"))  # noqa: N815
+    importe_Q1: Decimal = Field(default=Decimal("0"))
+    importe_Q2: Decimal = Field(default=Decimal("0"))
+    importe_Q3: Decimal = Field(default=Decimal("0"))
+    importe_Q4: Decimal = Field(default=Decimal("0"))
     clave_operacion: _M347_CLAVE_OPERACION = "A"
     pais_codigo: _IsoCountryCode | None = None
 

@@ -15,7 +15,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Sequence
 
 from ...core.i18n import Translatable as tr
-from ...domain.profile._keys import ProfileKey, ProfileKeyRequirement
+from ...domain.contribuyente._keys import ProfileKey, ProfileKeyRequirement
 from ._errors import WizardCompileError
 from ._models import WizardCondition, WizardFlow, WizardQuestion, WizardVisibility
 
@@ -118,11 +118,11 @@ def _register_compiled_keys() -> None:
     """Register compiled PROFILE_KEYS into the domain registry at import time.
 
     Called once when this module is first imported. The domain's
-    :func:`~aeat.domain.profile._keys.register_profile_keys` receives the
+    :func:`~aeat.domain.contribuyente._keys.register_profile_keys` receives the
     compiled tuple so the domain layer never needs to import application
     modules to populate its registry.
     """
-    from ...domain.profile._keys import register_profile_keys
+    from ...domain.contribuyente._keys import register_profile_keys
     from . import _catalogue  # local import to avoid circular dependency at module level
 
     register_profile_keys(compile_profile_keys(_catalogue.WIZARD_FLOWS))
