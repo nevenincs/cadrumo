@@ -235,3 +235,71 @@ Destructive-action protocol: `delete` requires explicit `--yes` flag at
 the CLI boundary; the service refuses without `confirmed=True`. Active
 profile bucket cannot be deleted until the operator switches profiles
 first.
+
+## 2026-06-03 amendment — composition pattern + per-verb landing
+
+The implementation of the 2026-05-15 amendment surfaced a real
+hexagonal-design risk: every method except `search` already has a
+single-writer primitive in the application or adapter layer. A naive
+re-implementation inside `BucketMaintenanceService` would shadow the
+existing atomicity contracts and the lifecycle-event emission those
+primitives carry.
+
+The reconciliation is locked by `[[2026-06-03-cli-workflow-redesign-adr]]`
+(BucketMaintenanceService composition pattern):
+
+- `rename` delegates to the top-level `rename_profile` re-export
+  (sole cross-store writer for the encrypted record + manifest label
+  pair); emits `BUCKET_RENAMED` alongside the lifecycle
+  `PROFILE_RENAMED`.
+- `delete` composes `delete_profile_with_lifecycle_span` (soft
+  tombstone, emits `PROFILE_TOMBSTONED`) and
+  `remove_profile_bucket_directory` (hard erase). Service-side
+  refusals enforce the destructive-action protocol named above;
+  `BUCKET_DELETED` lands between the soft and hard steps.
+- `browse` composes `SecureObjectRepository.list_namespaces` with
+  per-namespace `list_keys` for the namespace-level inventory.
+  Key-level browse with `SensitivityClass` redaction is a follow-up
+  Step under the composition-pattern ADR.
+- `export` composes `serialize_profile_bundle` (application-layer
+  bundle assembly into `UserProfilePortableExport`) with
+  `ExportArchiveHeader` (adapter-layer plaintext frontmatter). The
+  sealed-archive write is the remaining new code.
+- `import` composes the sealed-archive parse + two-tier collision
+  guard (`bundle.profile_id` and bucket-id; refuse unless
+  `force_replace=True`) + `deserialize_profile_bundle`.
+- `search` is scoped by `[[2026-06-03-bucket-search-adr]]` to
+  per-domain repository dispatch via a closed `BucketSearchScope`
+  enum (`LEDGER_TRANSACTION` / `MODELO_WORK_UNIT` /
+  `BUCKET_EVENT_HISTORY` for the MVP). The search verb never
+  touches `secure_objects` ciphertext directly — it routes through
+  the per-domain read surfaces that already apply
+  `SensitivityClass` redaction.
+
+Two-event co-emission per operator action (lifecycle + maintenance)
+is the intended audit shape: the lifecycle event records the data
+change, the maintenance event records the operator-surface
+invocation. A future audit query distinguishing "the record was
+relabelled" from "the operator invoked the rename verb" relies on
+the two events being distinct.
+
+Required `BucketEventObjectType` addition (landed 2026-06-03):
+`BUCKET = "bucket"` so the four bucket-maintenance events
+(`BUCKET_RENAMED` / `BUCKET_DELETED` / `BUCKET_EXPORTED` /
+`BUCKET_IMPORTED`) reference the container itself, distinct from
+the `PROFILE` value the inner lifecycle events use.
+
+Required application-package re-export surface (landed 2026-06-03):
+the service consumes every cross-store mutation primitive through
+the top-level `aeat.application.user_profile` `__all__` re-export,
+never through internal submodule imports. The promotion covers
+`rename_profile`, `delete_profile_with_lifecycle_span`,
+`remove_profile_bucket_directory`, `serialize_profile_bundle`,
+`deserialize_profile_bundle`, `SUPPORTED_BUNDLE_SCHEMA_VERSIONS`,
+and `UserProfilePortableExport`. Codified as the project rule
+`service-imports-via-top-level-reexports`.
+
+The composition discipline itself is codified as the project rule
+`composition-service-no-parallel-write-path` so future services
+that overlap an existing single-writer contract delegate rather
+than re-implement.
