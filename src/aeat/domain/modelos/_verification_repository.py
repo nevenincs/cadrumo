@@ -17,7 +17,7 @@ from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_obj
 from ._verification_report import VerificationReport, VerificationReportCatalogue
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage.sql import SecureObjectRepository
+    from ...adapters.persistence.storage import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
 _VERIFICATION_NAMESPACE = "aeat.domain.modelos.verification_reports"

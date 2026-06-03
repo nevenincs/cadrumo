@@ -17,7 +17,7 @@ from ._errors import InvoicePersistenceError
 from ._models import InvoiceCatalogue
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectWrite
+    from ...adapters.persistence.storage import SecureObjectRepository, SecureObjectWrite
 
 _log = get_logger(__name__)
 
@@ -153,8 +153,7 @@ class InvoiceCatalogueRepository:
         Args:
             catalogue: The :class:`InvoiceCatalogue` to serialise.
         """
-        from ...adapters.persistence.storage import Envelope, SensitivityClass
-        from ...adapters.persistence.storage.sql import SecureObjectWrite
+        from ...adapters.persistence.storage import Envelope, SecureObjectWrite, SensitivityClass
 
         envelope = Envelope[InvoiceCatalogue](
             schema_version=_INVOICE_CATALOGUE_VERSION,

@@ -245,6 +245,8 @@ from .sql.engine import create_engine_from_settings, dispose_engine, get_engine
 from .sql.records import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
 from .sql.repository import CorpusArtifactRepository, ModeloRepository, PortalRepository, SqlRecordRepository
 from .sql.session import get_sessionmaker, session_scope
+from .envelope import SecureBoundRepository
+from .sql import SecureObjectRepository, SecureObjectWrite
 
 __all__ = [
     "AEAT_BROWSER_SESSION_NAMESPACE",
@@ -368,8 +370,11 @@ __all__ = [
     "SecretRecord",
     "SecretStore",
     "SecretStoreError",
+    "SecureBoundRepository",
     "SecureObjectNamespaceDefinition",
+    "SecureObjectRepository",
     "SecureObjectRevisionConflictError",
+    "SecureObjectWrite",
     "SensitivityClass",
     "SqlRecordRepository",
     "StorageError",
