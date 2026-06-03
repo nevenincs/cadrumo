@@ -395,6 +395,18 @@ class _IvaTransactionOutcome:
     prorrata_issue: IvaLedgerAggregationIssue | None = None
 
 
+# Categories that never produce a declarable IVA observation: recargo de
+# equivalencia (the IVA + RE surcharge is non-deductible acquisition cost for the
+# retailer, settled via the supplier) and the unknown/erroneous sentinels.
+_NON_DECLARABLE_IVA_CATEGORIES = frozenset(
+    {
+        IvaCategory.RECARGO_EQUIVALENCIA,
+        IvaCategory.UNKNOWN,
+        IvaCategory.ERRONEOUS_INVOICE,
+    }
+)
+
+
 def _classify_iva_transaction(
     transaction: Transaction,
     *,
@@ -450,6 +462,17 @@ def _classify_iva_transaction(
                 reason=reason,
                 detail=(
                     f"business classification {transaction.business_classification.value!r} cannot feed IVA aggregation"
+                ),
+            )
+        )
+    if transaction.iva_category in _NON_DECLARABLE_IVA_CATEGORIES:
+        return _IvaTransactionOutcome(
+            gate_issue=IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_CATEGORY,
+                detail=(
+                    f"iva_category {transaction.iva_category.value!r} does not produce a declarable IVA "
+                    "observation (recargo-equivalencia is non-deductible cost; unknown/erroneous are sentinels)"
                 ),
             )
         )
