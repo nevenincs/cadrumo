@@ -83,6 +83,21 @@ class OfflineWorkbookExportResult(BaseModel):
     evidence_sidecar_sha256: str = Field(min_length=64, max_length=64)
 
 
+def evidence_table(plan: SheetExportPlan) -> tuple[str, tuple[str, ...], tuple[tuple[str, ...], ...]]:
+    """Return ``(snapshot_fingerprint, header_row, body_rows)`` for the Evidencia surface.
+
+    The single source of truth both transports render: the offline openpyxl
+    workbook and the online Google-Sheets apply adapter consume this so the
+    Evidencia surface is byte-identical across offline and online exports
+    (modelo-export-evidence-parity ADR). Every cell is a string — contributor
+    facts are pre-formatted by the same helpers ``_write_evidence`` uses.
+    """
+    body = tuple(
+        tuple(str(value) for value in _contributor_values(row)) for row in plan.evidence.contributor_rows
+    ) + tuple(tuple(str(value) for value in _manual_values(row)) for row in plan.evidence.manual_entries)
+    return (plan.evidence.snapshot_fingerprint or "", _EVIDENCE_HEADERS, body)
+
+
 def build_offline_workbook(plan: SheetExportPlan) -> Workbook:
     """Materialise a ``SheetExportPlan`` as an offline openpyxl workbook."""
     workbook = Workbook()
