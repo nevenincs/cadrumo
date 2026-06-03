@@ -123,7 +123,7 @@ Restore encryption-at-rest for filing history + attachments manifest so plaintex
 
 Catalogue-verification, formula-modelo parity, modelo-parity coverage, ledger-iva 390 binding chain
 
-- [ ] `P04.S10` - Catalogue verification; `test_committed_registry_tree_has_required_model_law_coverage — identify missing model/law pair; either supply or relax with rationale`.
+- [x] `P04.S10` - Catalogue verification; `test_committed_registry_tree_has_required_model_law_coverage — identify missing model/law pair; either supply or relax with rationale`.
 - [x] `P04.S11` - Formula-modelo parity; `test_formula_revisions_are_owned_by_constructs_with_snapshot_workflow_surfaces — wire missing formula→construct ownership`.
 - [x] `P04.S12` - Modelo parity coverage; `test_formula_bearing_modelos_have_constructs_and_model_specific_tests — list bare formula-bearing modelos`.
 - [x] `P04.S13` - M390 IVA binding chain; `Supply missing modelo-303-autoconsumo-promotor-base binding for the 390 annual pipeline test`.
