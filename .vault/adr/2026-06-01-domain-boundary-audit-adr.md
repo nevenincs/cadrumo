@@ -108,16 +108,32 @@ consumed externally) are promoted into `__all__` first, then the 33 importers ar
 to the public path. The same applies to the `IvaInvoiceClassification` iva/invoices
 export asymmetry.
 
-**D4 — Persistence boundary (the one ratification-needed ruling).** Runtime
+**D4 — Persistence boundary (RATIFIED 2026-06-03).** Runtime
 (module-level) `domain -> adapters` imports are eliminated immediately by deferring them
 (cheap, removes the live inversion). The deeper question — relocating domain repository
 *implementations* into `adapters/persistence/<domain>/` behind the existing ports vs
 formally accepting domain-co-located encrypted repositories as a documented deviation —
-is RULED as follows, pending user ratification: **new** repositories MUST be implemented
+is RULED as follows: **new** repositories MUST be implemented
 in `adapters/persistence` behind a domain port; **existing** domain-co-located
 repositories are accepted as managed debt and migrated opportunistically, never via a
-re-export bridge, with the 100 deferred imports tracked but not churned en masse. This
+re-export bridge, with the deferred imports tracked but not churned en masse. This
 keeps `domain` runtime-clean of adapters without a 16-file big-bang.
+
+*Operator ratification (2026-06-03):* D4 is accepted as written, with one refinement —
+repositories MUST import secure-storage primitives from the storage package's **public
+top-level surface**, never from underscore-private submodules (`storage.envelope._envelope`
+and the like); reaching into `_`-prefixed modules "looks wrong" as a legitimate import
+source. The original `S53` (defer the 6 `filing`/`justificante`/`submission` repository
+imports of `SecureBoundRepository`/`SensitivityClass` into `TYPE_CHECKING`) is **infeasible**
+and therefore superseded: `SecureBoundRepository` is a runtime generic base class
+(`class SubmissionRepository(SecureBoundRepository[ModeloPresentado])`) and
+`SensitivityClass.AUDIT` is a runtime `ClassVar` value — neither can be type-only. Those
+edges are exactly the managed debt D4 accepts. The import-surface cleanup is tracked
+mechanically in plan Wave `W11` (Secure-storage public-surface import purity); the sibling
+adapter→application active-bucket-resolution inversion (`S60`/DB-31 B-4) is amplified into
+Wave `W10` (Active-bucket context resolution consolidated in core), which relocates
+`require_active_bucket_id` + `NoActiveProfileError` to a public `aeat.core` surface so every
+layer depends inward.
 
 **D5 — `core` is the generic shared kernel only.** `core` holds cross-cutting
 primitives (decimal/money/hashing/json-contract/i18n/redaction/paths/logging) and closed
