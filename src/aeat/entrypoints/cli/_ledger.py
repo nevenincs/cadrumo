@@ -605,7 +605,7 @@ def ledger_classify(
         for failure in result.failures:
             # MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE:
             # tab-separated machine record (id, reason), not user-facing prose.
-            lines.append(f"  failed\t{failure.transaction_id}\t{failure.reason}")
+            lines.append(f"  failed\t{failure.transaction_id}\t{failure.reason}")  # MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE
         classify_result = LedgerClassifyResult.model_validate(
             {
                 "total": result.total,
