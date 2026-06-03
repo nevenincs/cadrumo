@@ -341,6 +341,14 @@ def __getattr__(name: str):
 
         return ProfileValidationService
     if name in (
+        "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
+        "deserialize_profile_bundle",
+        "serialize_profile_bundle",
+    ):
+        from . import _bundle
+
+        return getattr(_bundle, name)
+    if name in (
         "USER_PROFILE_SNAPSHOT_NAMESPACE",
         "USER_PROFILE_VALUE_NAMESPACE",
         "UserProfileLifecycleRepository",
@@ -356,6 +364,7 @@ def __getattr__(name: str):
 
 __all__ = [
     "CENSO_SOURCE_TAG",
+    "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
     "USER_PROFILE_VALUE_NAMESPACE",
     "CensoApplyConflictError",
@@ -392,9 +401,11 @@ __all__ = [
     "UserProfileFactValue",
     "UserProfileLifecycleRepository",
     "UserProfileSnapshotRepository",
+    "deserialize_profile_bundle",
     "facts_to_values",
     "projection_for_taxpayer",
     "record_to_values",
+    "serialize_profile_bundle",
     "snapshot_to_values",
     "user_profile_snapshot_object_key",
     "user_profile_value_object_key",
