@@ -15,7 +15,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...domain.calculations.registry import CensoModeloEventKind
-from ._m036_lifecycle import M036DeclarationCommand, M036DeclarationResult
+from ._m036_lifecycle import M036DeclarationCommand, M036DeclarationResult, derive_m036_declaration_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -93,3 +93,75 @@ def test_result_rejects_non_sha256_declaration_id(bad_id: str) -> None:
             declared_on=date(2026, 6, 3),
             recorded_at=datetime(2026, 6, 3, 14, 0, 0, tzinfo=UTC),
         )
+
+
+def test_derive_declaration_id_is_64_char_lowercase_hex() -> None:
+    """The derived id matches the result-model declaration_id pattern."""
+    declaration_id = derive_m036_declaration_id(
+        profile_id="profile-test",
+        event_kind=CensoModeloEventKind.ALTA,
+        declared_on=date(2026, 6, 3),
+        sede_justificante=None,
+    )
+
+    assert len(declaration_id) == 64
+    assert declaration_id == declaration_id.lower()
+    int(declaration_id, 16)
+
+
+def test_derive_declaration_id_is_deterministic() -> None:
+    """Same tuple → same id (idempotent re-declaration writes the same row)."""
+    a = derive_m036_declaration_id(
+        profile_id="profile-test",
+        event_kind=CensoModeloEventKind.MODIFICACION,
+        declared_on=date(2026, 6, 3),
+        sede_justificante="ACUSE-123",
+    )
+    b = derive_m036_declaration_id(
+        profile_id="profile-test",
+        event_kind=CensoModeloEventKind.MODIFICACION,
+        declared_on=date(2026, 6, 3),
+        sede_justificante="ACUSE-123",
+    )
+
+    assert a == b
+
+
+def test_derive_declaration_id_distinguishes_justificante_presence() -> None:
+    """Pre-acuse draft and post-acuse record hash to distinct ids.
+
+    A second invocation with the acuse acquired must NOT silently
+    coalesce with the pre-acuse draft — it's a new declaration record.
+    """
+    draft = derive_m036_declaration_id(
+        profile_id="profile-test",
+        event_kind=CensoModeloEventKind.ALTA,
+        declared_on=date(2026, 6, 3),
+        sede_justificante=None,
+    )
+    confirmed = derive_m036_declaration_id(
+        profile_id="profile-test",
+        event_kind=CensoModeloEventKind.ALTA,
+        declared_on=date(2026, 6, 3),
+        sede_justificante="ACUSE-XYZ",
+    )
+
+    assert draft != confirmed
+
+
+def test_derive_declaration_id_distinguishes_event_kind() -> None:
+    """Same profile + same date but different event_kind → distinct ids."""
+    alta = derive_m036_declaration_id(
+        profile_id="profile-test",
+        event_kind=CensoModeloEventKind.ALTA,
+        declared_on=date(2026, 6, 3),
+        sede_justificante=None,
+    )
+    modificacion = derive_m036_declaration_id(
+        profile_id="profile-test",
+        event_kind=CensoModeloEventKind.MODIFICACION,
+        declared_on=date(2026, 6, 3),
+        sede_justificante=None,
+    )
+
+    assert alta != modificacion

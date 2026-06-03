@@ -17,12 +17,41 @@ The service implementation lands in a follow-up commit per the
 
 from __future__ import annotations
 
+import hashlib
 from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.identity import ProfileId
 from ...domain.calculations.registry import CensoModeloEventKind
+
+
+def derive_m036_declaration_id(
+    *,
+    profile_id: ProfileId,
+    event_kind: CensoModeloEventKind,
+    declared_on: date,
+    sede_justificante: str | None,
+) -> str:
+    """Content-address the declaration tuple as 64-char lowercase SHA-256 hex.
+
+    The address makes a replay of the same operator-declared filing
+    idempotent: a second invocation with identical inputs hashes to
+    the same ``declaration_id`` and the secure-object write becomes a
+    no-op overwrite of the same row. ``sede_justificante`` is folded
+    in unmangled (``"-"`` when omitted) so a same-day same-kind
+    re-declaration that acquires the acuse is recorded as a distinct
+    record, not silently coalesced with the pre-acuse draft.
+    """
+    canonical = "\x1f".join(
+        [
+            str(profile_id),
+            event_kind.value,
+            declared_on.isoformat(),
+            sede_justificante if sede_justificante is not None else "-",
+        ],
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 class M036DeclarationCommand(BaseModel):
@@ -80,4 +109,5 @@ class M036DeclarationResult(BaseModel):
 __all__ = [
     "M036DeclarationCommand",
     "M036DeclarationResult",
+    "derive_m036_declaration_id",
 ]
