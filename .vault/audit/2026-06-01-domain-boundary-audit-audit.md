@@ -1921,6 +1921,33 @@ remediation is currently HELD at audit-only per the active action policy.
   clean (no cycle), 332 iva+invoices tests green, ty clean, zero external
   `..iva._invoice_classification` reach-ins remain.
 
+- 2026-06-03: **S68 + S69 EXECUTED — DB-05 duplicate `update_declaration_pointer`
+  collapsed (commit `92af2c938`).** The workflow package defined
+  `update_declaration_pointer` twice: the canonical `_models.py` version (richer —
+  `verified`/`updated_at`, legacy dict-payload handling — and the one the package
+  `__init__` re-exports) and a dead duplicate in `_engine.py` (self-listed in
+  `_engine.__all__` but imported by nothing and called nowhere; confirmed via grep —
+  only the def + the `__all__` entry, no internal caller). Signatures had diverged:
+  `_engine` made `draft_id`/`status` Optional with None-safe field merging, `_models`
+  required them. **S68:** deleted the `_engine` duplicate (function + its `__all__`
+  entry + the orphaned `DeclaracionPointer` import) and aligned the surviving `_models`
+  canonical to the more permissive contract — `draft_id`/`status` now Optional, a None
+  value leaves the existing pointer field untouched on update (merging `_engine`'s
+  defensive None-filter), so the canonical is a strict behavioral superset (safe:
+  `DeclaracionPointer` already declares all those fields Optional; zero callers/tests
+  exercised either version, so no behavior regressed). The public
+  `aeat.application.workflow.update_declaration_pointer` now resolves to one definition
+  in `_models`. **S69:** added `workflow/test_declaration_key.py` — a real-behavior
+  AST-walk anti-regression gate asserting both `declaration_key` and
+  `update_declaration_pointer` have exactly one *production* definition in the package
+  (test/conftest modules excluded), plus the case-folding contract
+  (`declaration_key("130","2025q1") == "130:2025Q1"`). Verified: 100 workflow tests
+  pass, ty clean, `_engine` duplicate gone. Note: committed via explicit
+  `git commit -- <pathspec>` after an earlier bare `git commit` swept three
+  peer-staged files into commit `2b037a7a4` (no work lost — peer files safely
+  committed, just under this campaign's message); pathspec discipline reaffirmed for
+  all subsequent commits on this shared worktree.
+
 ## Codification candidates
 
 
