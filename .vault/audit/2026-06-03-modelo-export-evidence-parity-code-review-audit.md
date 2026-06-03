@@ -22,3 +22,7 @@ Status: PASS. Reviewed `W01.P01.S02` against the plan, evidence ADR, and researc
 ## S03-REVIEW-001 | PASS | Verified revisions persist evidence pegged to the snapshot
 
 Status: PASS. Reviewed `W01.P01.S03` against the plan and evidence ADR. `CalculationRevision` now has an optional `ledger_filing_evidence` field that is not part of the revision-id hash, preserving legacy/id compatibility. The real verify-flow regression loads the persisted verified revision and asserts that evidence exists, shares the snapshot fingerprint, and includes operator casilla inputs as manual entries. The `_actions.py` verify-time wiring was already present in `HEAD` via shared-worktree commit `b7b6fc46b`; this review treats that committed wiring plus the current field/test closure as the S03 behavioral surface. No Critical or High issues found.
+
+## S04-REVIEW-001 | PASS | Evidence survives encrypted revision storage
+
+Status: PASS. Reviewed `W01.P01.S04` against the encrypted-persistence and no-tautology requirements. The test uses a real isolated runtime profile and `SecureObjectRepository`, persists a `CalculationRevision` with fully populated `LedgerFilingEvidence`, reloads it through `CalculationRevisionCatalogueRepository`, and asserts strict equality plus evidence-field equality. The anti-tautology assertion compares against the same revision with evidence stripped, so the test proves evidence is real persisted state rather than a mirrored expectation. No Critical or High issues found.

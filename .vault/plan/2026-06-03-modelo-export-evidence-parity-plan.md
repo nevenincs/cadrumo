@@ -110,7 +110,7 @@ Pure domain record + application capture + revision peg + roundtrip.
 - [x] `W01.P01.S01` - LedgerFilingEvidence domain record: typed contributor projection (tax facts + legal_refs + attachment/doc-link ids) + manual fact-basis entries, pegged to snapshot_fingerprint; `src/aeat/domain/modelos/_ledger_filing_snapshot.py`.
 - [x] `W01.P01.S02` - Verify-time capture: project source_transaction_ids + operator casilla inputs into typed evidence (single catalogue load, alongside fingerprint capture); `src/aeat/application/aggregation/_ledger_filing_snapshot.py`.
 - [x] `W01.P01.S03` - Peg evidence onto CalculationRevision and wire capture into verify_modelo_revision; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W01.P01.S04` - Strict encrypted-storage roundtrip + anti-tautology test (every defaultable field non-default; `mutate-then-reload inequality); `src/aeat/domain/modelos/test_ledger_filing_evidence_roundtrip.py`.
+- [x] `W01.P01.S04` - Strict encrypted-storage roundtrip + anti-tautology test (every defaultable field non-default; `mutate-then-reload inequality); `src/aeat/domain/modelos/test_ledger_filing_evidence_roundtrip.py`.
 - [ ] `W01.P01.S05` - Capture guard: bundled evidence contributor set equals the fingerprint snapshot set (no silent omission); `src/aeat/application/aggregation/_ledger_filing_snapshot.py`.
 
 ## Wave `W02` - Evidence in the offline export
