@@ -217,6 +217,13 @@ adapters:
           sidecar_missing: A helyi objektum sidecarja hianyzik.
           sidecar_not_object: A helyi sidecar {sidecar_path} nem JSON objektum.
           sidecar_write_failed: A helyi tarhely nem tudta irni az objektum sidecarjat.
+  persistence:
+    profile:
+      assets:
+        errors:
+          asset_already_exists: 'Ez az eszköz már szerepel a titkosított eszköznyilvántartásban.'
+          load_amortizacion_ledger_failed: 'A titkosított amortizációs nyilvántartás nem tölthető be.'
+          load_asset_ledger_failed: 'A titkosított eszköznyilvántartás nem tölthető be.'
   sede:
     errors:
       cotejo_nav_failed: Az AEAT cotejo oldalra való navigáció sikertelen volt; a
@@ -2026,12 +2033,15 @@ cli:
       reaffirmed: Besorolás megerősítve.
       taxable_base_help: Adóköteles alapösszeg.
     doclink:
-      actor_help: 'A bucket esemenyekhez rogzitett operatori cimke.'
-      bad_source: 'a dokumentumhivatkozas forrasanak egyikenek kell lennie: gmail, google_drive, url (kapott ''{source}'').'
-      help: 'Gmail/Drive/URL dokumentumhivatkozas rogzitese helyi bizonyitekkent egy konyvelesi soron (a tavoli dokumentumot soha nem tolti le).'
-      id_help: 'Konyvelesi tranzakcio azonosito (SHA-256 vagy egyertelmu elotag).'
-      note_help: 'A hivatkozassal rogzitett opcionalis megjegyzes.'
-      reference_help: 'A dokumentumhivatkozas referenciaja (Gmail hivatkozas, Drive fajl hivatkozas vagy URL).'
+      actor_help: A bucket esemenyekhez rogzitett operatori cimke.
+      bad_source: 'a dokumentumhivatkozas forrasanak egyikenek kell lennie: gmail,
+        google_drive, url (kapott ''{source}'').'
+      help: Gmail/Drive/URL dokumentumhivatkozas rogzitese helyi bizonyitekkent egy
+        konyvelesi soron (a tavoli dokumentumot soha nem tolti le).
+      id_help: Konyvelesi tranzakcio azonosito (SHA-256 vagy egyertelmu elotag).
+      note_help: A hivatkozassal rogzitett opcionalis megjegyzes.
+      reference_help: A dokumentumhivatkozas referenciaja (Gmail hivatkozas, Drive
+        fajl hivatkozas vagy URL).
       source_help: 'A hivatkozas forrasa: gmail, google_drive vagy url.'
     errors:
       command_input_invalid: 'Elutasítva. A tranzakció érvénytelen: {details}'
@@ -3444,8 +3454,7 @@ errors:
       Csak egyiket használja: --quiet, --verbose vagy --debug.'
     refused_cli_non_tty: Ez a parancs interaktív bemenetet igényel, de a szabványos
       bemenet csőbe van irányítva. Futtassa interaktív terminálban.
-    refused_cli_validation_boundary: A parancs bemenete nem ment át az érvényesítésen.
-      Futtassa az  parancsot, vagy állítsa vissza a profil állapotát.
+    refused_cli_validation_boundary: 'A parancs bemenete nem ment át az érvényesítésen. Ellenőrizze az argumentumokat, vagy futtassa az `aeat --help` parancsot.'
     refused_config_reset_unconfirmed: A konfigurációs visszaállítást nem erősítette
       meg. Futtassa újra a parancsot, megerősítve a műveletet.
     refused_diagnostic_model_invariant: A DiagnosticCheck konstrukciós invariánsa
