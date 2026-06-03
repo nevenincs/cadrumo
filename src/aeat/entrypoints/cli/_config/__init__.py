@@ -10,6 +10,8 @@ import asyncio
 import typing
 from collections.abc import Mapping
 from datetime import datetime
+
+from ....core.time import now as _now
 from pathlib import Path
 
 import click
@@ -790,7 +792,7 @@ def _emit_profile_lifecycle_event(
         derive_bucket_event_id,
     )
 
-    occurred_at = datetime.now(UTC).replace(microsecond=0)
+    occurred_at = _now().replace(microsecond=0)
     actor = "operator"
     event_id = derive_bucket_event_id(
         bucket_id=bucket_id,
@@ -1475,6 +1477,14 @@ _config_profile_create_callback = profile_app.command(
     help=tr(
         "cli.config.profile.create_help",
         default="Initialize a new active profile and config bucket.",
+    ),
+    epilog=tr(
+        "cli.config.profile.create_epilog",
+        default=(
+            "Minimal freelancer profile: --entity-type natural_person"
+            " --tax-id <NIF> --irpf-income-categories actividad_economica"
+            " --quiet --accept-defaults"
+        ),
     ),
 )(_wizard_create_command)
 
