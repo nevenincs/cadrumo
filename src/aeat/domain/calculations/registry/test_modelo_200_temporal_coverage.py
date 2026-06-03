@@ -121,6 +121,7 @@ def test_pyme_sl_2024_cuota_resolves_without_bracket_no_window() -> None:
             # INCN below 1.000.000 EUR → micro-empresa lane → tipo-gravamen-pyme bracket
             "modelo-200-2024-profile-incn-prior-12-months": Decimal("500000"),
             "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
         },
         relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
         date_context={"filing_period": date(2024, 12, 31)},
@@ -304,6 +305,7 @@ def test_cuota_integra_is_emitted_by_engine_without_user_input() -> None:
             "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
             "modelo-200-2024-profile-incn-prior-12-months": Decimal("5000000"),
             "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
         },
         relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
         date_context={"filing_period": date(2024, 12, 31)},
