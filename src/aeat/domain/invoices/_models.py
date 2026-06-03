@@ -33,7 +33,7 @@ from ._errors import InvoiceValidationError
 from ._ids import InvoiceId
 
 if TYPE_CHECKING:
-    from ..iva._invoice_classification import IvaInvoiceClassification
+    from ..iva import IvaInvoiceClassification
 from ._validators import (
     is_eu_member_state_code,
     validate_country_code,
@@ -452,7 +452,7 @@ class Invoice(BaseModel):
 
         """
         # Local import to avoid circular dependency at module load.
-        from ..iva._invoice_classification import classify_invoice_line_for_iva
+        from ..iva import classify_invoice_line_for_iva
 
         return classify_invoice_line_for_iva(
             iva_rate=line.iva_rate,
