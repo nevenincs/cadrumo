@@ -170,6 +170,34 @@ def _bad_parameter_from_error(exc: BaseException) -> typer.BadParameter:
     return typer.BadParameter(resolve_error_message(exc))
 
 
+def _calculation_revision_not_found_bad_parameter(
+    calculation_revision_id: str, exc: CalculationRevisionNotFoundError
+) -> typer.BadParameter:
+    """Render a not-found calc-revision id, hinting when it is really a work-unit id.
+
+    ``work verify`` and ``work file`` consume a ``calculation_revision_id``,
+    while ``work calculate`` consumes a ``work_unit_id`` — both are 64-character
+    SHA-256 digests, so an operator's first instinct (reuse the id from ``work
+    create``) lands a *work-unit* id where a *calculation-revision* id is
+    required and fails with a bare not-found. When the supplied id resolves to a
+    real work unit, name the mismatch and the verb that mints the
+    calculation-revision id, so the error is instructive rather than a dead end.
+    A lookup failure here falls back to the plain rendered error — the hint is
+    best-effort, never masking. (``modelo export`` already takes a
+    ``work_unit_id``, so it has no work-unit/calc-revision confusion to hint.)
+    """
+    stripped = calculation_revision_id.strip()
+    try:
+        # get_work_unit returns the WorkUnit or raises WorkUnitNotFoundError;
+        # a successful return means the operator passed a work-unit id here.
+        get_work_unit(stripped)
+    except Exception:
+        return _bad_parameter_from_error(exc)
+    return typer.BadParameter(
+        tr("cli.app.modelo.work.id_is_work_unit_not_calc_revision", work_unit_id=stripped)
+    )
+
+
 def _resolve_default_actor() -> str:
     """Return the active profile display_name, or a permanent fallback label.
 
@@ -3731,8 +3759,9 @@ def work_verify(
             actor=actor or _resolve_default_actor(),
             workflow_profile=workflow_profile,
         )
+    except CalculationRevisionNotFoundError as exc:
+        raise _calculation_revision_not_found_bad_parameter(calculation_revision_id, exc) from exc
     except (
-        CalculationRevisionNotFoundError,
         CalculationRevisionStateError,
         WorkUnitNotFoundError,
     ) as exc:
@@ -3788,8 +3817,9 @@ def work_file(
             workflow_profile=workflow_profile,
             notes=notes,
         )
+    except CalculationRevisionNotFoundError as exc:
+        raise _calculation_revision_not_found_bad_parameter(calculation_revision_id, exc) from exc
     except (
-        CalculationRevisionNotFoundError,
         CalculationRevisionStateError,
         WorkUnitNotFoundError,
     ) as exc:
