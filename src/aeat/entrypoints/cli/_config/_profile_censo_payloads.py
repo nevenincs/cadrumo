@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 from .._schemas import OutputSchema, register_schema
 
 if TYPE_CHECKING:
-    from ....application.user_profile._censo_sync import CensoApplyResult as _AppCensoApplyResult
+    from ....application.user_profile import CensoApplyResult as _AppCensoApplyResult
 
 
 @register_schema("config.profile.censo.refresh")
