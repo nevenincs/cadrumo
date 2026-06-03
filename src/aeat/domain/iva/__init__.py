@@ -56,6 +56,11 @@ from ._flow import (
     is_devengada_flow,
     settlement_sides_for_flow,
 )
+from ._invoice_classification import (
+    IvaInvoiceClassification,
+    classify_invoice_line_for_iva,
+    invoice_line_to_iva_observation,
+)
 from ._lookup import cite, lookup_rate
 from ._oss import (
     REGIME_PERIODICITY,
@@ -122,6 +127,7 @@ __all__ = [
     "IvaClassificationResult",
     "IvaError",
     "IvaFlowDirection",
+    "IvaInvoiceClassification",
     "IvaInvoiceClassificationCriteria",
     "IvaRateKind",
     "IvaRateNotFoundError",
@@ -148,10 +154,12 @@ __all__ = [
     "TransactionKind",
     "cite",
     "classify_input_deduction",
+    "classify_invoice_line_for_iva",
     "classify_iva",
     "compute_prorrata_general",
     "compute_sectoral_prorrata",
     "derive_flow_for_classification",
+    "invoice_line_to_iva_observation",
     "is_deducible_flow",
     "is_devengada_flow",
     "is_especial_mandatory",
