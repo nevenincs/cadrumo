@@ -4,6 +4,7 @@ title = "Modelo 100 dependent modelo inputs"
 legal_refs = [
     "ley-35-2006:art-27",
     "ley-35-2006:art-28",
+    "ley-35-2006:art-48",
     "ley-35-2006:art-99",
     "ley-27-2014:art-18",
     "ley-27-2014:art-40",
@@ -45,6 +46,7 @@ bindings = [
     "renta-2025-modelo-184-atribucion-actividades-economicas",
     "renta-2025-modelo-190-retenciones-anuales",
     "renta-2025-modelo-193-retenciones-anuales",
+    "renta-2025-base-liquidable-negativa-general-anterior",
 ]
 relations = [
     "renta-2025-rel-111-retenciones-trimestrales",
