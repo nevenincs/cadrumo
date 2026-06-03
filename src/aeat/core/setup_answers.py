@@ -414,7 +414,9 @@ class SetupAnswers(BaseModel):
     # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic
     # field_validator(mode='before') requires -> Any; actual return is always
     # a typed StrEnum/enum member.
-    def _parse_unidad_familiar_descendientes_exclusivos(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR
+    def _parse_unidad_familiar_descendientes_exclusivos(  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR
+        cls, value: object
+    ) -> Any:
         if value == "":
             return ""
         if isinstance(value, bool):
@@ -564,7 +566,9 @@ class SetupAnswers(BaseModel):
     # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic
     # field_validator(mode='before') requires -> Any; actual return is always
     # a typed StrEnum/enum member.
-    def _parse_new_entity_first_two_profit_periods(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR
+    def _parse_new_entity_first_two_profit_periods(  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR
+        cls, value: object
+    ) -> Any:
         if value == "" or value is None:
             return ""
         if isinstance(value, bool):
