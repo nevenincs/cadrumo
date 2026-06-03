@@ -37,7 +37,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.logging import get_logger
-from ._enums import ReduccionTier
+from ._enums import ReduccionTier, UseType
 from ._errors import TierResolutionError
 from ._models import Arrendamiento, Finca
 
@@ -161,7 +161,25 @@ def resolve_reduccion(
         :class:`TierResolution` carrying the tier, the numeric
         reducción percentage, the qualifying share, and the BOE
         citation identifier.
+
+    Raises:
+        TierResolutionError: If ``finca.use_type`` is not eligible
+            for the LIRPF Art. 23.2 reducción — the article applies
+            only to ``arrendamientos de bienes inmuebles destinados a
+            vivienda``, which the second paragraph excludes for
+            touristic / temporary rentals and which the use-type
+            mapping further excludes for commercial premises and
+            non-rented use types.
     """
+    if finca.use_type is not UseType.VIVIENDA_ARRENDADA:
+        raise TierResolutionError(
+            f"reducción art. 23.2 LIRPF refused: finca {finca.id} use_type "
+            f"{finca.use_type.value!r} is not VIVIENDA_ARRENDADA. The reducción "
+            f"applies only to arrendamientos destinados a vivienda permanente; "
+            f"the second paragraph of art. 23.2 excludes touristic / temporary "
+            f"rentals (VIVIENDA_TURISTICA), and the article scope excludes "
+            f"commercial premises (LOCAL_COMERCIAL) and non-rented use types.",
+        )
     resolved_amendment_year = (
         ejercicio_amendment_year
         if ejercicio_amendment_year is not None
