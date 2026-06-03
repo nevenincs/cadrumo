@@ -28,7 +28,9 @@ Validation:
 
 - `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/bucket` passed with 88 tests.
 - `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/bucket` passed.
+- `uv run --no-sync -q python -m aeat.locales audit` passed.
 - S155 target hygiene scan found no broad exception catches, suppressions, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, raw encoding literals, local secure-object marker construction, direct settings construction, or direct environment access in `src/aeat/adapters/persistence/storage/bucket/__init__.py`.
 - Broader bucket package hygiene scan surfaced existing explicit `"utf-8"` encodings in bucket IO tests only; no S155 source action is required.
+- Plan state was reconciled after the CLI checked S155 but left `AFR-053` pending; the repaired state is `AFR-053`/`S155` closed and `AFR-054` through `AFR-056` / `S156` through `S158` pending.
 
 Disposition: close `AFR-053` as `manifest-discovery`.
