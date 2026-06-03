@@ -19,6 +19,7 @@ contract is enforced at this single chokepoint.
 from __future__ import annotations
 
 from ....core._bucket_pointer_io import resolve_active_bucket_id
+from ....core.i18n import tr
 from ._errors import GoogleAuthProfileUnboundError
 
 
@@ -43,7 +44,7 @@ def resolve_active_profile() -> str:
     raise GoogleAuthProfileUnboundError(
         "no active AEAT profile bound for Google OAuth",
         context={"active_profile": resolved or ""},
-        suggestion="aeat config profile create NAME --tax-id <NIF>",
+        suggestion=tr("adapters.google.profile_binding.suggestions.create_profile"),
         translated_message="adapters.google.profile_binding.errors.no_active_profile",
     )
 

@@ -108,6 +108,9 @@ adapters:
     profile_binding:
       errors:
         no_active_profile: Nincs aktív AEAT-profil kötve a Google OAuth-hoz.
+      suggestions:
+        create_profile: Futtassa az `aeat config profile create NAME --tax-id <NIF>`
+          parancsot, majd próbálja újra a Google-parancsot.
   inbound:
     declaracion:
       errors:
@@ -2068,6 +2071,7 @@ cli:
     list:
       header: KÖNYVELÉSI FŐKÖNYVI TRANZAKCIÓK
       help: Főkönyvi tranzakciók listázása az aktív profilmappában.
+      footer_truncated: '{start}-{end}. sor megjelenitese, osszesen {total} (eltolas {offset}). Lapozashoz hasznalja a --offset/--limit kapcsolot.'
     merge:
       actor_help: Az üzemeltető neve, amelyet a LEDGER_TRANSACTION_MERGED eseményen
         rögzítenek.
