@@ -22,7 +22,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.identity import ProfileId
+from ...core.identity import BucketId, ProfileId
 from ...domain.calculations.registry import CensoModeloEventKind
 
 
@@ -82,9 +82,13 @@ class M036DeclarationResult(BaseModel):
     """Outcome of a successful declaration-recording call.
 
     Carries the content-addressed declaration id (SHA-256 over the
-    derived tuple), the canonical event-kind, the declared date,
-    and the timestamp at which the local record was written.
-    Downstream consumers (stale-cascade engine, profile-state
+    derived tuple), the canonical event-kind, the declared date, the
+    bucket scope of the record, and the timestamp at which the local
+    record was written. The ``bucket_id`` field bridges the storage
+    cross-check `SecureSnapshotRepository` performs when loading and
+    saving records (it refuses payloads whose bucket disagrees with the
+    repository binding), per the M036-declaration-service Path A ADR
+    decision. Downstream consumers (stale-cascade engine, profile-state
     re-derivation) read these fields to decide what to recompute.
     """
 
@@ -99,11 +103,23 @@ class M036DeclarationResult(BaseModel):
             "(profile_id, event_kind, declared_on, sede_justificante)."
         ),
     )
+    bucket_id: BucketId
     profile_id: ProfileId
     event_kind: CensoModeloEventKind
     declared_on: date
     sede_justificante: str | None = None
     recorded_at: datetime
+
+    # SNAPSHOT-ID-ALIAS: ``SecureSnapshotRepository`` locates payloads by a
+    # ``snapshot_id`` attribute. The M036 record's natural id is the typed
+    # content-address ``declaration_id``; the runtime property exposes it
+    # under the generic name without duplicating storage and without
+    # round-tripping through the strict JSON envelope (computed-field
+    # serialisation would emit a duplicate key the strict + extra="forbid"
+    # load contract refuses on the symmetric model_validate_json).
+    @property
+    def snapshot_id(self) -> str:
+        return self.declaration_id
 
 
 __all__ = [

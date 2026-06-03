@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Mapping
-from contextlib import asynccontextmanager, nullcontext
+from contextlib import asynccontextmanager, contextmanager, nullcontext
 from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -88,7 +88,7 @@ from ...application.calculations import (
 from ...application.calculations import (
     reconcile_modelo_303_iva_compensation as _reconcile_modelo_303_iva_compensation,
 )
-from ...core._bucket_pointer_io import resolve_active_bucket_id as _resolve_active_bucket_id
+from ...core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ...core.access_gate import AeatAccessGate as _AeatAccessGate
 from ...core.config import Settings as _Settings
 from ...core.config import load_settings as _load_settings
@@ -140,7 +140,12 @@ from ._errors import (
     LiveIvaSurfaceTimeoutError,
     classify_live_iva_acquisition_failure,
 )
-from ._snapshot_base import SnapshotLifecycleState
+from ._snapshot_base import (
+    SecureSnapshotRepository,
+    SnapshotLifecycleState,
+    SnapshotNotFoundError,
+    SnapshotRepository,
+)
 
 
 class FiledDataCaptureReport(BaseModel):
@@ -777,23 +782,24 @@ def list_iva_compensation_history(
     as_of_year: int | None = None,
 ) -> IvaCompensationHistoryReport:
     """List profile-local IVA compensation history and return an :class:`IvaCompensationHistoryReport`."""
-    repo = repository if repository is not None else _IvaCompensationHistoryRepository()
-    decision_repo = decision_repository if decision_repository is not None else _IvaWalletDecisionRepository()
-    states = repo.list_periods()
-    rows = tuple(_history_row(state) for state in states)
-    resolved_as_of_year = as_of_year if as_of_year is not None else now().year
-    carry_forward = _build_iva_compensation_carry_forward_report(states, as_of_year=resolved_as_of_year)
-    authority_decisions = tuple(_authority_decision_row(decision) for decision in decision_repo.list_decisions())
-    return IvaCompensationHistoryReport(
-        row_count=len(rows),
-        rows=rows,
-        as_of_year=carry_forward.as_of_year,
-        carry_forward_lot_count=len(carry_forward.lots),
-        carry_forward_lots=tuple(_carry_forward_lot_row(lot) for lot in carry_forward.lots),
-        unallocated_applied_amount=str(carry_forward.unallocated_applied_amount),
-        authority_decision_count=len(authority_decisions),
-        authority_decisions=authority_decisions,
-    )
+    with _active_profile_storage_span():
+        repo = repository if repository is not None else _IvaCompensationHistoryRepository()
+        decision_repo = decision_repository if decision_repository is not None else _IvaWalletDecisionRepository()
+        states = repo.list_periods()
+        rows = tuple(_history_row(state) for state in states)
+        resolved_as_of_year = as_of_year if as_of_year is not None else now().year
+        carry_forward = _build_iva_compensation_carry_forward_report(states, as_of_year=resolved_as_of_year)
+        authority_decisions = tuple(_authority_decision_row(decision) for decision in decision_repo.list_decisions())
+        return IvaCompensationHistoryReport(
+            row_count=len(rows),
+            rows=rows,
+            as_of_year=carry_forward.as_of_year,
+            carry_forward_lot_count=len(carry_forward.lots),
+            carry_forward_lots=tuple(_carry_forward_lot_row(lot) for lot in carry_forward.lots),
+            unallocated_applied_amount=str(carry_forward.unallocated_applied_amount),
+            authority_decision_count=len(authority_decisions),
+            authority_decisions=authority_decisions,
+        )
 
 
 def load_iva_remote_state(
@@ -808,25 +814,42 @@ def load_iva_remote_state(
     Returns an :class:`IvaRemoteStateStoredEvidenceReport` with the
     stored compensation history and reconciliation decisions.
     """
-    history = list_iva_compensation_history(
-        repository=repository,
-        decision_repository=decision_repository,
-        as_of_year=as_of_year,
-    )
-    store = wallet_store if wallet_store is not None else _FiledDeclaracionObservationStore(Path("."))
-    wallet_rows = tuple(
-        _stored_wallet_observation_row(observation) for observation in store.list_iva_wallet_observations()
-    )
-    acquisition_rows = tuple(
-        _stored_acquisition_manifest_row(manifest) for manifest in list_iva_remote_state_acquisition_manifests()
-    )
-    return IvaRemoteStateStoredEvidenceReport(
-        history=history,
-        wallet_observation_count=len(wallet_rows),
-        wallet_observations=wallet_rows,
-        acquisition_manifest_count=len(acquisition_rows),
-        acquisition_manifests=acquisition_rows,
-    )
+    with _active_profile_storage_span():
+        history = list_iva_compensation_history(
+            repository=repository,
+            decision_repository=decision_repository,
+            as_of_year=as_of_year,
+        )
+        store = wallet_store if wallet_store is not None else _FiledDeclaracionObservationStore(Path("."))
+        wallet_rows = tuple(
+            _stored_wallet_observation_row(observation) for observation in store.list_iva_wallet_observations()
+        )
+        acquisition_rows = tuple(
+            _stored_acquisition_manifest_row(manifest) for manifest in list_iva_remote_state_acquisition_manifests()
+        )
+        return IvaRemoteStateStoredEvidenceReport(
+            history=history,
+            wallet_observation_count=len(wallet_rows),
+            wallet_observations=wallet_rows,
+            acquisition_manifest_count=len(acquisition_rows),
+            acquisition_manifests=acquisition_rows,
+        )
+
+
+@contextmanager
+def _active_profile_storage_span():
+    active_bucket_id = _resolve_active_bucket_id()
+    if active_bucket_id is None:
+        from ...adapters.persistence.storage.errors import StorageValidationError as _StorageValidationError
+
+        raise _StorageValidationError(translated_message="errors.storage.runtime.not_ready")
+    from ...adapters.persistence.storage import has_active_bucket_session as _has_active_bucket_session
+
+    if _has_active_bucket_session():
+        yield
+        return
+    with _profile_storage_session(active_bucket_id):
+        yield
 
 
 async def capture_iva_compensation_history(
@@ -2031,7 +2054,10 @@ __all__ = [
     "LiveIvaReadSurface",
     "LiveIvaSurfaceTimeoutError",
     "NotificationsService",
+    "SecureSnapshotRepository",
     "SnapshotLifecycleState",
+    "SnapshotNotFoundError",
+    "SnapshotRepository",
     "SourceFiledDataCaptureReport",
     "StoredIvaRemoteStateAcquisitionRow",
     "StoredIvaWalletObservationRow",
