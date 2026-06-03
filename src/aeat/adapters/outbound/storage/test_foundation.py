@@ -9,6 +9,7 @@ their own colocated test modules.
 from __future__ import annotations
 
 import importlib
+import inspect
 from datetime import UTC, datetime
 
 import pytest
@@ -158,6 +159,35 @@ def test_storage_package_public_surface_keeps_factory_and_manifest_helpers_priva
     ):
         assert not hasattr(module, private_backend_symbol), private_backend_symbol
         assert private_backend_symbol not in module.__all__, private_backend_symbol
+
+
+def test_storage_provider_protocol_keeps_synchronous_bytes_contract() -> None:
+    methods = {
+        name: inspect.signature(getattr(StorageProvider, name))
+        for name in ("put", "get", "delete", "iter_namespaces", "iter_objects", "probe")
+    }
+
+    assert not inspect.iscoroutinefunction(StorageProvider.put)
+    assert list(methods["put"].parameters) == [
+        "self",
+        "namespace",
+        "object_key_hmac",
+        "payload",
+        "content_hash",
+        "label",
+    ]
+    assert methods["put"].parameters["payload"].annotation == "bytes"
+    assert methods["put"].parameters["content_hash"].kind is inspect.Parameter.KEYWORD_ONLY
+    assert methods["put"].parameters["label"].kind is inspect.Parameter.KEYWORD_ONLY
+    assert methods["put"].return_annotation == "ProviderObjectMetadata"
+
+    assert methods["get"].return_annotation == "tuple[bytes, ProviderObjectMetadata]"
+    assert methods["delete"].return_annotation == "bool"
+    assert methods["iter_namespaces"].return_annotation == "Iterator[str]"
+    assert methods["iter_objects"].return_annotation == "Iterator[ProviderObjectMetadata]"
+    assert methods["probe"].parameters["read_only"].kind is inspect.Parameter.KEYWORD_ONLY
+    assert methods["probe"].parameters["read_only"].default is False
+    assert methods["probe"].return_annotation == "ProviderProbeReport"
 
 
 def test_every_leaf_carries_a_registered_error_code() -> None:
