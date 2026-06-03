@@ -183,6 +183,53 @@ class ConfigProfileShowResult(OutputSchema):
     profile_record: str | None = None
 
 
+@register_schema("config.profile.validate")
+class ConfigProfileValidateResult(OutputSchema):
+    """JSON envelope for ``aeat config profile validate``.
+
+    Report-only surface: same :class:`ProfileValidationService` outcome that
+    ``aeat config profile show`` exposes inline, but as the primary payload
+    with no fact dump so the operator can audit a profile's schema
+    conformance independent of its data view. Exit code is ``0`` when no
+    blocking issues exist and ``2`` when any error-severity issue surfaces.
+    """
+
+    profile_id: str
+    display_name: str
+    status: str
+    valid: bool
+    schema_version: int
+    issues: list[ProfileIssuePayload]
+
+
+class ProfilePreflightMissingPayload(OutputSchema):
+    """One missing-required-field row inside :class:`ConfigProfilePreflightResult`."""
+
+    selector: str
+    section_key: str
+    field_key: str
+
+
+@register_schema("config.profile.preflight")
+class ConfigProfilePreflightResult(OutputSchema):
+    """JSON envelope for ``aeat config profile preflight``.
+
+    Reports which profile fields a given ``(modelo, revision_id, filing_year,
+    period)`` filing context requires that the active profile does not yet
+    carry. ``ready=true`` when no required field is missing; exit code is
+    ``0`` when ready and ``2`` when missing fields surface so operators
+    discover the gap via the shell exit status.
+    """
+
+    profile_id: str
+    modelo: str
+    revision_id: str
+    filing_year: int
+    period: str
+    ready: bool
+    missing: list[ProfilePreflightMissingPayload]
+
+
 @register_schema("config.profile.delete")
 class ConfigProfileDeleteResult(OutputSchema):
     """JSON envelope for ``aeat config profile delete``."""

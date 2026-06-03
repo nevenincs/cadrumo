@@ -15,7 +15,7 @@ from decimal import Decimal
 from pathlib import Path
 from uuid import uuid4
 
-from ....core.config import PROJECT_ROOT
+from ....core.config import load_settings
 from ._errors import LLMCacheError
 from ._models import LLMResponse, UsageRecord, UsageSummary
 
@@ -37,10 +37,10 @@ class UsageRecorder:
         """Initialize the recorder.
 
         Args:
-            root_dir: Directory for JSONL files; defaults to
-                ``<PROJECT_ROOT>/var/llm-usage``.
+            root_dir: Logical usage partition; defaults to the centralized
+                ``aeat_llm_usage_dir`` setting.
         """
-        self.root_dir = root_dir or (PROJECT_ROOT / "var" / "llm-usage")
+        self.root_dir = root_dir or load_settings().aeat_llm_usage_dir
 
     def build_record(self, response: LLMResponse, prompt_id: str, caller: str) -> UsageRecord:
         """Build a :class:`UsageRecord` from a public LLM response.
@@ -111,7 +111,7 @@ class UsageRecorder:
                 payload=json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8"),
             )
         except OSError as exc:
-            msg = f"Failed to append usage record to logical path {path}"
+            msg = "Failed to append LLM usage record."
             raise LLMCacheError(msg) from exc
         return path
 

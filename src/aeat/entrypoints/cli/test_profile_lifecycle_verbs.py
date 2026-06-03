@@ -402,7 +402,7 @@ def test_config_profile_delete_tombstones_with_yes(cli_runner: CliRunner) -> Non
     result = cli_runner.invoke(profile_app, ["delete", "operator", "--yes"])
     assert result.exit_code == 0, result.output
     assert "status\ttombstoned" in result.output
-    from ...application.workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
 
     assert resolve_active_bucket_id() is None
 
@@ -429,7 +429,7 @@ def test_config_profile_switch_refuses_a_tombstoned_profile(cli_runner: CliRunne
     one with exit code 0.
     """
 
-    from ...application.workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
 
     _seed("operator")
     assert cli_runner.invoke(profile_app, ["delete", "operator", "--yes"]).exit_code == 0
@@ -952,8 +952,8 @@ def test_switch_to_surviving_profile_after_deleting_the_active_one(
     session`` — the very recovery command the refusal recommended.
     """
     from ...adapters.persistence.storage.sql.engine import dispose_engine
-    from ...application.workflow._models import resolve_active_bucket_id
     from ...application.workflow._profile_bucket_scan import read_profile_bucket
+    from ...core import resolve_active_bucket_id
 
     runner = CliRunner()
     # Both profiles are setup for the switch/delete test; seed both so the
@@ -993,7 +993,7 @@ def test_first_switch_from_a_no_active_profile_state_succeeds(
     must still open its own session and activate the named profile.
     """
     from ...adapters.persistence.storage.sql.engine import dispose_engine
-    from ...application.workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
 
     runner = CliRunner()
     _create_via_cli(runner, "solo")

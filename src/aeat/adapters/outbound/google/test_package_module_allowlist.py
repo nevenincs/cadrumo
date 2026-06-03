@@ -38,8 +38,10 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "test_column_index_to_letters.py",
         "test_compute_from_pull.py",
         "test_grid_resize.py",
+        "test_oauth_flow.py",  # S132: OAuth local-server failures stay inside GoogleAuthError
         "test_oauth_live.py",
         "test_package_module_allowlist.py",
+        "test_profile_binding.py",  # S133: active-profile resolver localized refusal contract
         "test_pull_adapter_helpers.py",
         "test_pull_result_roundtrip.py",
         "test_records.py",

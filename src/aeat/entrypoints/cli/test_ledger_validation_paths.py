@@ -15,16 +15,51 @@ flags and therefore have no ValidationError path to exercise here.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
 
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...application.user_profile._orchestration import profile_create_storage_span
+from ...core.config import override_settings
+from ...tests.secure_sql import isolated_profile_storage_root
 from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _RUNNER = CliRunner()
+
+#: Profile id every test in this module creates via the CLI inside the span.
+_PROFILE_ID = "tester"
+
+
+@pytest.fixture(autouse=True)
+def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
+    """Hold an active bucket session open across this module's in-process invokes.
+
+    The active bucket session is a per-process/per-context ContextVar opened by
+    the storage master-key provider (see
+    ``adapters/persistence/storage/master_key/_active_session.py``). In the real
+    CLI each command process re-opens it from persisted state; in-process
+    ``CliRunner`` a bare ``config profile create`` invoke opens and closes its
+    own session, so a subsequent ``ledger ...`` invoke finds none ("No active
+    bucket session is open"). Wrapping the test body in
+    :func:`profile_create_storage_span` activates the master-key provider for the
+    ``tester`` profile the tests create via the CLI, so every invoke shares one
+    open session — the same pattern the passing ledger-CLI suites use.
+    """
+    dispose_engine()
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        profile_create_storage_span(_PROFILE_ID),
+    ):
+        try:
+            yield
+        finally:
+            dispose_engine()
 
 
 # ---------------------------------------------------------------------------
@@ -340,7 +375,15 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_impatriado(
     The Beckham regime taxes Spanish-source income at the flat IRNR rate
     while excluding foreign-source from the base. A silent ES default
     would quietly include foreign-source amounts in the IRPF base —
-    Art. 93.5 LIRPF segregation. Force operator to declare."""
+    Art. 93.5 LIRPF segregation. Force operator to declare.
+
+    tracked: #53 — this regime-variant test mutates the profile via the
+    diagnostics-app ``profile set``, which cannot resolve the CLI-created
+    profile in-process (UUID-vs-display-name mismatch, a root cause distinct
+    from the bucket-session regression #52 that this module's
+    ``_open_bucket_session`` fixture fixes). Left red pending #53; deliberately
+    NOT xfail/skip per aeat-roundtrip-discipline — the contract holds at
+    runtime via the real (separate-process) CLI."""
 
     _RUNNER.invoke(
         app,
@@ -396,7 +439,13 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_non_resident(
     Non-residents file IRNR under RDLeg 5/2004; per-row jurisdiction is
     the authoritative provenance for the IRNR scope filter. Operator
     must declare it on every ledger entry — no silent default is safe
-    because the IRNR base only admits Spanish-source income."""
+    because the IRNR base only admits Spanish-source income.
+
+    tracked: #53 — same UUID-vs-display-name in-process profile-resolution
+    root cause as the impatriado sibling above (diagnostics-app ``profile
+    set`` cannot resolve the CLI-created profile in-process); distinct from
+    the bucket-session regression #52 this module's fixture fixes. Left red
+    pending #53; deliberately NOT xfail/skip per aeat-roundtrip-discipline."""
 
     _RUNNER.invoke(
         app,

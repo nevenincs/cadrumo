@@ -75,9 +75,17 @@ _NON_RESIDENT_IRPF = WizardCondition(question_id="spouse-non-resident-irpf", equ
 _EU_EEA_RESIDENT = WizardCondition(question_id="spouse-eu-eea-resident", equals="true")
 
 
+_DEFAULT_IVA_REGIME: str = IVARegime.GENERAL.value
+"""Wizard default for the iva.regime question.
+
+Shared between the :data:`_IVA_CHOICES` default-marker and the
+:func:`_IVA_SECTION` question's ``default=`` so the two never drift.
+W09.P40.S161 cross-domain-continuity dedup."""
+
+
 _IVA_CHOICES: tuple[WizardChoice, ...] = (
     WizardChoice(
-        value=IVARegime.GENERAL.value,
+        value=_DEFAULT_IVA_REGIME,
         label=tr("wizard.setup.profile.iva-regime.choices.general.label"),
     ),
     WizardChoice(
@@ -649,7 +657,7 @@ _IVA_SECTION = WizardSection(
             widget=WizardWidget.SELECT,
             prompt=tr("wizard.setup.iva.iva-regime.prompt"),
             choices=_IVA_CHOICES,
-            default=IVARegime.GENERAL.value,
+            default=_DEFAULT_IVA_REGIME,
             required=False,
             answer_type=str,
         ),

@@ -1,6 +1,6 @@
 """Pydantic records and enums for the storage provider abstraction.
 
-Three records anchor the provider boundary:
+Provider records anchor the storage boundary:
 
 - `ProviderKind` — closed enum naming the v1 backends.
 - `ProviderObjectMetadata` — per-object metadata returned by listing /
@@ -10,14 +10,34 @@ Three records anchor the provider boundary:
   backend is reachable, writable, and (when applicable) bound to the
   expected root folder. The `read_only` field surfaces whether the
   probe ran in read-only mode (no sentinel-write round-trip).
+- `RemoteMirror*` records — immutable manifest and inspection records
+  for remote ciphertext mirror reconciliation.
 """
 
 from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
+
+_OBJECT_KEY_HMAC_LENGTH = 64
+_CIPHERTEXT_HASH_LENGTH = 64
+_STORAGE_REVISION_ID_LENGTH = 64
+
+_ObjectKeyHmac = Annotated[
+    str,
+    Field(min_length=_OBJECT_KEY_HMAC_LENGTH, max_length=_OBJECT_KEY_HMAC_LENGTH),
+]
+_CiphertextHash = Annotated[
+    str,
+    Field(min_length=_CIPHERTEXT_HASH_LENGTH, max_length=_CIPHERTEXT_HASH_LENGTH),
+]
+_StorageRevisionId = Annotated[
+    str,
+    Field(min_length=_STORAGE_REVISION_ID_LENGTH, max_length=_STORAGE_REVISION_ID_LENGTH),
+]
 
 
 class ProviderKind(StrEnum):
@@ -41,9 +61,8 @@ class ProviderObjectMetadata(BaseModel):
 
     `provider_object_id` is the backend-native identifier (a filesystem
     path for `LocalFileSystemProvider`, a Drive `fileId` for
-    `GoogleDriveProvider`, an in-memory key for the test backend). The
-    coordinator threads it through subsequent get/delete/patch calls
-    without re-resolving by name.
+    `GoogleDriveProvider`). The coordinator threads it through
+    subsequent get/delete/patch calls without re-resolving by name.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -60,7 +79,7 @@ class ProviderProbeReport(BaseModel):
     """Result of a `probe()` health check against a storage backend.
 
     `reachable` is True iff the backend endpoint responds at all.
-    `writable` is True iff a sentinel-file round-trip succeeded;
+    `writable` is True iff a sentinel payload write/delete succeeded;
     inherently False when the probe runs in read-only mode.
     `root_folder_present` is non-None only when the backend supports
     the notion of an operator-configured root folder (currently
@@ -83,14 +102,14 @@ class RemoteMirrorObjectManifest(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     namespace: str = Field(min_length=1)
-    object_key_hmac: str = Field(min_length=64, max_length=64)
+    object_key_hmac: _ObjectKeyHmac
     classification: str = Field(min_length=1)
     schema_version: int = Field(ge=1)
     byte_length: int = Field(ge=0)
-    ciphertext_hash: str = Field(min_length=64, max_length=64)
-    storage_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
-    previous_storage_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
-    revision_ancestor_ids: tuple[str, ...] = ()
+    ciphertext_hash: _CiphertextHash
+    storage_revision_id: _StorageRevisionId | None = None
+    previous_storage_revision_id: _StorageRevisionId | None = None
+    revision_ancestor_ids: tuple[_StorageRevisionId, ...] = ()
     row_written_at: datetime
     revision_written_at: datetime | None = None
 
@@ -103,7 +122,7 @@ class RemoteMirrorNamespaceManifest(BaseModel):
     manifest_schema_version: int = Field(default=1, ge=1)
     namespace: str = Field(min_length=1)
     object_count: int = Field(ge=0)
-    latest_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
+    latest_revision_id: _StorageRevisionId | None = None
     latest_revision_written_at: datetime | None = None
     objects: tuple[RemoteMirrorObjectManifest, ...]
 
@@ -115,7 +134,7 @@ class RemoteMirrorIssue(BaseModel):
 
     kind: RemoteMirrorIssueKind
     namespace: str = Field(min_length=1)
-    object_key_hmac: str | None = Field(default=None, min_length=64, max_length=64)
+    object_key_hmac: _ObjectKeyHmac | None = None
     detail: str = Field(min_length=1)
 
 

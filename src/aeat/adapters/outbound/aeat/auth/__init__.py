@@ -1,4 +1,28 @@
-"""AEAT Sede authentication providers and public outbound auth surface."""
+"""AEAT Sede authentication: providers, sessions, and certificate health.
+
+The outbound auth surface establishes and verifies authenticated sessions
+against the AEAT Sede electrónica. It implements the application-layer
+:class:`AuthProvider` contract for each supported provider kind and gates
+every live interaction behind the core access gate.
+
+Major declarations:
+
+* :func:`~aeat.adapters.outbound.aeat.auth.select_provider` — dispatch a
+  :class:`AuthProviderKind` to its concrete provider
+  (:class:`AeatAuthenticator` for client certificates,
+  :class:`ClaveMovilAuthProvider` for Cl@ve Móvil).
+* :class:`AeatSession` and :class:`AeatLoginAssertion` — the authenticated
+  session record and the re-probe assertion the providers return.
+* :class:`CertificateBundle` and :class:`LoadedCertificate` from
+  :mod:`aeat.adapters.outbound.aeat.auth.certificate` — the PKCS#12
+  certificate-loading and health-evaluation surface.
+* :class:`AuthError` and its subclasses
+  (:class:`AeatSessionExpiredError`, :class:`AuthConfigurationError`, and
+  the certificate and Cl@ve-Móvil error families) — the failure taxonomy.
+
+Live reads pass through :class:`AeatAccessGate`; no path performs a remote
+write to the AEAT.
+"""
 
 from __future__ import annotations
 

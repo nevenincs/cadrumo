@@ -78,9 +78,12 @@ class EnrollmentEvidenceError(ValueError):
 
     Calculation-mode recordings require a strictly-positive produced-value
     count (a real calculation emitted casillas); non-calculation-mode
-    recordings require a non-empty context label. A recording that supplies
-    neither is an attempt to claim a year the backend did not actually
-    exercise, which the recorder refuses.
+    recordings require both a non-empty context label AND a strictly-positive
+    persisted-observation count (at least one real
+    :class:`RegistryModeloObservation` was saved to the real
+    ``CalculationObservationRepository`` for that year). A recording that
+    supplies a label alone — without a persisted observation count — is
+    label-only and therefore fakeable; the recorder refuses it.
     """
 
 
@@ -100,6 +103,14 @@ class EnrollmentYearObservation(BaseModel):
         context_label: For non-calculation mode, the named real two-year
             context the test constructed (e.g. a fidelity-comparison label).
             Empty for calculation mode.
+        persisted_observation_count: For non-calculation mode, the number of
+            :class:`RegistryModeloObservation` records the test actually persisted
+            to the real ``CalculationObservationRepository`` for this year — must
+            be strictly positive, the evidence a real repository interaction
+            occurred. Zero for calculation mode. Mirrors the role of
+            ``produced_value_count`` in calculation mode: a context-mode year
+            claimed with zero persisted observations is label-only and therefore
+            fakeable; the recorder refuses it.
     """
 
     model_config = _STRICT_FROZEN
@@ -109,13 +120,17 @@ class EnrollmentYearObservation(BaseModel):
     calculation_mode: bool
     produced_value_count: int = Field(ge=0, default=0)
     context_label: str = Field(max_length=128, default="")
+    persisted_observation_count: int = Field(ge=0, default=0)
 
     @property
     def has_evidence(self) -> bool:
         """Return whether this observation carries its mode's required evidence."""
         if self.calculation_mode:
             return self.produced_value_count > 0
-        return bool(self.context_label.strip())
+        # Context mode requires both a non-blank label AND at least one persisted
+        # observation — a label alone is fakeable; the observation count proves a
+        # real CalculationObservationRepository interaction happened.
+        return bool(self.context_label.strip()) and self.persisted_observation_count > 0
 
 
 class EnrollmentEvidence(BaseModel):
@@ -209,25 +224,53 @@ class EnrollmentRecorder:
             )
         )
 
-    def record_context_year(self, *, filing_year: int, context_label: str) -> None:
+    def record_context_year(
+        self,
+        *,
+        filing_year: int,
+        context_label: str,
+        persisted_observation_count: int,
+    ) -> None:
         """Record a renta year exercised through a real non-calculation context.
 
         For informativa / reconciliation / structural modelos that do not run a
         numeric calculation, the enrolling test still drives the real adapters
-        for the year and names the context it constructed.
+        for the year and names the context it constructed. To be un-fakeable the
+        call must supply both a non-blank ``context_label`` AND a strictly
+        positive ``persisted_observation_count`` — the number of
+        :class:`RegistryModeloObservation` records actually saved to the real
+        ``CalculationObservationRepository`` for this year. A label alone is not
+        sufficient evidence: any string can be passed without touching the real
+        adapters. The observation count proves a real repository interaction
+        happened; it mirrors the role of ``produced_value_count`` in
+        :meth:`record_calculation_year`.
 
         Args:
             filing_year: The renta year the test exercised.
             context_label: A non-empty label naming the real two-year context
                 (e.g. ``"347-fidelity-year-over-year"``).
+            persisted_observation_count: The number of
+                :class:`~aeat.domain.calculations.registry.RegistryModeloObservation`
+                records the test saved to the real
+                ``CalculationObservationRepository`` for this year. MUST be
+                strictly positive — it is the evidence a real adapter interaction
+                occurred.
 
         Raises:
-            EnrollmentEvidenceError: When ``context_label`` is blank.
+            EnrollmentEvidenceError: When ``context_label`` is blank or when
+                ``persisted_observation_count`` is not strictly positive.
         """
         if not context_label.strip():
             raise EnrollmentEvidenceError(
                 f"modelo {self._modelo!r} non-calculation recording for {filing_year} carries no "
                 f"context label; name the real two-year context the test constructed"
+            )
+        if persisted_observation_count <= 0:
+            raise EnrollmentEvidenceError(
+                f"modelo {self._modelo!r} context-mode recording for {filing_year} has "
+                f"persisted_observation_count={persisted_observation_count}; at least one real "
+                f"RegistryModeloObservation must be saved to the CalculationObservationRepository "
+                f"to prove the real adapters were exercised (a label alone is fakeable)"
             )
         self._observations.append(
             EnrollmentYearObservation(
@@ -235,6 +278,7 @@ class EnrollmentRecorder:
                 filing_year=filing_year,
                 calculation_mode=False,
                 context_label=context_label,
+                persisted_observation_count=persisted_observation_count,
             )
         )
 

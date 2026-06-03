@@ -1,11 +1,14 @@
 """Typed exception hierarchy for the storage provider abstraction.
 
-Every storage backend (local filesystem, Google Drive, in-memory test)
-raises subclasses of `OutboundStorageError` so the application layer's
-sync coordinator can dispatch on the concrete failure mode without
-parsing upstream error strings. Each leaf binds to a stable `ErrorCode`
-in `aeat.core.errors.registry._adapters` so the public CLI taxonomy
-stays explicit.
+Provider and remote-mirror failures raise subclasses of
+`OutboundStorageError` so the application layer's sync coordinator can
+dispatch on the concrete failure mode without parsing upstream error
+strings. Each public leaf binds to a stable `ErrorCode` in
+`aeat.core.errors.registry._adapters` so the CLI taxonomy stays explicit.
+
+`StorageCorruptionError` is the deliberate exception: it derives from
+`CoreError` because it represents structurally invalid sidecar metadata,
+not a remote-provider transport, quota, permission, or mirror failure.
 
 The `Outbound` prefix disambiguates this hierarchy from the persistence
 side `StorageError` in `aeat.adapters.persistence.storage.errors`, which

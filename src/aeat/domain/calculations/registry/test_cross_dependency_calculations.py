@@ -236,6 +236,7 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
             "renta-2025-profile-marriage-full-year": Decimal("0"),
             "renta-2025-profile-marriage-month-start": Decimal("0"),
             "renta-2025-profile-marriage-month-end": Decimal("0"),
+            "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
@@ -310,6 +311,7 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
             "renta-2025-profile-marriage-full-year": Decimal("0"),
             "renta-2025-profile-marriage-month-start": Decimal("0"),
             "renta-2025-profile-marriage-month-end": Decimal("0"),
+            "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
@@ -601,7 +603,12 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     revision = snapshot.revision
     assert revision.id == "2024-y-siguientes"
     relation_ids = {relation.id for relation in revision.relations}
-    assert relation_ids == {"modelo-200-2024-rel-202-pagos-fraccionados"}
+    # The BIN-pendiente previous_filing binding ships as a relation on the
+    # 2024 revision (M200 base-determination ADR).
+    assert relation_ids == {
+        "modelo-200-2024-rel-202-pagos-fraccionados",
+        "modelo-200-2024-rel-self-bin-pendiente-anterior",
+    }
     classification = revision.dependency_classifications[0]
     assert classification.source_modelo == "202"
     assert classification.treatment == "direct_annual_settlement"
@@ -649,6 +656,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
             "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
             "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
             "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
         },
         date_context={"filing_period": date(2024, 12, 31)},
         relation_values=relation_values,

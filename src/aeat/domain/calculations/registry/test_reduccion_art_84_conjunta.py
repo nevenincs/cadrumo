@@ -75,6 +75,9 @@ _BASE_BINDINGS_2024 = {
     "renta-2024-profile-marriage-full-year": Decimal("0"),
     "renta-2024-profile-marriage-month-start": Decimal("0"),
     "renta-2024-profile-marriage-month-end": Decimal("0"),
+    # BIN-pendiente fresh-filer baseline: previous_filing binding for
+    # casilla 1388 (LIRPF Art. 48) resolves to zero with no prior filing.
+    "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
 }
 
 _BASE_BINDINGS_2025 = {
@@ -84,6 +87,8 @@ _BASE_BINDINGS_2025 = {
     "renta-2025-profile-marriage-full-year": Decimal("0"),
     "renta-2025-profile-marriage-month-start": Decimal("0"),
     "renta-2025-profile-marriage-month-end": Decimal("0"),
+    # BIN-pendiente fresh-filer baseline (2025 binding).
+    "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
 }
 
 

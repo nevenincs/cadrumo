@@ -1,0 +1,7 @@
+# Modelo 714 Phase A is a manual-casilla registry foundation.
+#
+# Do not add placeholder formulas here. FormulaDefinition requires a real
+# target/expression pair; encoding manual fields as fake formulas would make
+# formula-parity tests tautological and would misrepresent the current model.
+[revisions."2021-y-siguientes"]
+formulas = []

@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import quote, urljoin, urlsplit
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from pydantic import AnyHttpUrl, AnyUrl, TypeAdapter
 
 from .....core.config import Settings
@@ -65,9 +65,9 @@ _PRE303_SELECTOR_URL = _EXTERNAL.aeat.clave_movil.selector_access_url_template.f
 _WALLET_SELECTOR_URL = _EXTERNAL.aeat.clave_movil.selector_access_url_template.format(
     target=quote(_EXTERNAL.aeat.sede_paths.iva_compensation_wallet, safe="")
 )
-_OWN_NAME_REPRESENTATION_ACTION = "representation-gate-own-name-continue"
-_WALLET_DISCOVERED_ENTRYPOINT_ACTION = "wallet-discovered-entrypoint-open"
-_WALLET_EXECUTE_READ_ACTION = "wallet-execute-read-query"
+_OWN_NAME_REPRESENTATION_ACTION = _PRE303.representation_own_name_action_label
+_WALLET_DISCOVERED_ENTRYPOINT_ACTION = _PRE303.wallet_discovered_entrypoint_action_label
+_WALLET_EXECUTE_READ_ACTION = _PRE303.wallet_execute_read_action_label
 IVA_COMPENSATION_WALLET_URL = _WALLET_URL
 PRE303_PRESENTATION_SERVICE_URL = _PRE303_PRESENTATION_URL
 _READ_GUARD_POLICY = RemoteStateGuardPolicy(
@@ -236,19 +236,13 @@ def parse_iva_compensation_wallet_html(
     soup = BeautifulSoup(html, "html.parser")
     summary_total = _parse_wallet_summary_total(soup)
     rows, matched_wallet_table = _parse_wallet_result_rows(soup)
+    _assert_wallet_result_target_matches(soup, target_year=target_year, target_period=target_period)
 
     if summary_total is None and not matched_wallet_table:
         if allow_empty_wallet_shell and _looks_like_executed_empty_wallet_page(soup):
-            return IvaCompensationWalletObservation(
-                taxpayer_nif=taxpayer_nif,
-                authenticated_identity=authenticated_identity,
-                target_year=target_year,
-                target_period=target_period,
-                rows=(),
-                total_pending=Decimal("0"),
-                source_url=validated_source_url,
-                captured_at=captured_at,
-                raw_sha256=hashlib.sha256(html.encode(UTF_8_ENCODING)).hexdigest(),
+            raise SedeParseError(
+                "executed IVA wallet shell does not contain AEAT's explicit zero aggregate; "
+                "refusing to persist a synthetic zero wallet observation"
             )
         raise SedeParseError("captured page does not contain a recognizable IVA compensation wallet table")
 
@@ -321,6 +315,53 @@ def _parse_wallet_summary_total(soup: BeautifulSoup) -> Decimal | None:
         if amount is not None:
             return amount
     return None
+
+
+def _assert_wallet_result_target_matches(soup: BeautifulSoup, *, target_year: int, target_period: str) -> None:
+    """Fail closed when AEAT renders result target labels that do not match the requested query."""
+    rendered_year, rendered_period = _parse_wallet_result_target(soup)
+    if rendered_year is not None and rendered_year != target_year:
+        raise SedeParseError(
+            f"IVA wallet result exercise {rendered_year} does not match requested exercise {target_year}"
+        )
+    if rendered_period is not None and rendered_period != target_period.strip().upper():
+        raise SedeParseError(
+            f"IVA wallet result period {rendered_period!r} does not match requested period {target_period!r}"
+        )
+
+
+def _parse_wallet_result_target(soup: BeautifulSoup) -> tuple[int | None, str | None]:
+    rendered_year: int | None = None
+    rendered_period: str | None = None
+    ejercicio_token = _PRE303.iva_wallet_header_tokens[0]
+    periodo_token = _PRE303.iva_wallet_header_tokens[1]
+    for node in soup.find_all(["li", "p", "div"]):
+        strong = node.find("strong")
+        if strong is None:
+            continue
+        label = _normalised_text(strong.get_text(" "))
+        if _is_wallet_result_label(label, ejercicio_token):
+            text = _wallet_label_value_text(node, strong)
+            if text:
+                rendered_year = _parse_year(text)
+        elif _is_wallet_result_label(label, periodo_token):
+            text = _wallet_label_value_text(node, strong)
+            if text:
+                rendered_period = text.strip().upper()
+    return rendered_year, rendered_period
+
+
+def _is_wallet_result_label(label: str, token: str) -> bool:
+    return label.replace(":", " ").strip() == token
+
+
+def _wallet_label_value_text(node: Tag, label_node: Tag) -> str:
+    span = node.find("span")
+    if span is not None:
+        return _normalised_display_text(span.get_text(" "))
+    node_text = node.get_text(" ")
+    label_text = label_node.get_text(" ")
+    return _normalised_display_text(node_text.replace(label_text, "", 1).replace(":", " "))
 
 
 def discover_iva_compensation_wallet_entrypoint(html: str, *, base_url: str) -> str | None:
@@ -477,7 +518,9 @@ async def _continue_own_name_representation(
     try:
         selected_own_name = await _wait_for_own_name_representation_selector(page, settings=settings)
         await _dismiss_pre303_alert_modal_if_present(page)
+        await _assert_own_name_representation_form(page, expected_path=target_path)
         await page.click(selected_own_name)
+        await _assert_own_name_representation_form(page, expected_path=target_path)
         await page.click(_PRE303.representation_submit_selector)
         await page.wait_for_url(
             lambda url: target_path in url or is_aeat_wallet_auth_gate_redirect(url),
@@ -525,6 +568,83 @@ def _own_name_representation_selectors(*selectors: str) -> tuple[str, ...]:
         if value and value not in deduped:
             deduped.append(value)
     return tuple(deduped)
+
+
+async def _assert_own_name_representation_form(page: Page, *, expected_path: str) -> None:
+    html = await page.content()
+    soup = BeautifulSoup(html, "html.parser")
+    submit = soup.select_one(_PRE303.representation_submit_selector)
+    if submit is None:
+        raise SedeNavigationError(
+            "AEAT representation gate does not expose the configured own-name submit control",
+            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+            context=_representation_gate_context(html, landing_url=getattr(page, "url", "") or ""),
+        )
+    form = submit.find_parent("form")
+    if form is None:
+        raise SedeNavigationError(
+            "AEAT representation submit control is not inside a form",
+            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+            context=_representation_gate_context(html, landing_url=getattr(page, "url", "") or ""),
+        )
+    method = str(form.get("method", "GET")).strip().upper() or "GET"
+    action = urljoin(getattr(page, "url", "") or _PRE303_PRESENTATION_URL, str(form.get("action", "")))
+    parsed_action = urlsplit(action)
+    if method != "POST" or parsed_action.path != expected_path or not _is_allowed_wallet_host(parsed_action.netloc):
+        raise SedeNavigationError(
+            "AEAT representation form boundary changed before own-name continuation",
+            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+            context={
+                **_representation_gate_context(html, landing_url=getattr(page, "url", "") or ""),
+                "form_method": method,
+                "form_action_path": parsed_action.path,
+            },
+        )
+    own_name = soup.select_one(_PRE303.representation_own_name_selector)
+    representative = soup.select_one(_PRE303.representation_representative_selector)
+    if own_name is None or representative is None:
+        raise SedeNavigationError(
+            "AEAT representation gate does not expose both own-name and representative controls",
+            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+            context=_representation_gate_context(html, landing_url=getattr(page, "url", "") or ""),
+        )
+    if _input_checked(representative):
+        raise SedeNavigationError(
+            "AEAT representation gate has representative mode selected; refusing to continue",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            context=_representation_gate_context(html, landing_url=getattr(page, "url", "") or ""),
+            suggestion="Use only the authenticated profile user's own-name access for read-only wallet capture.",
+        )
+
+
+def _representation_gate_context(html: str, *, landing_url: str) -> dict[str, object]:
+    soup = BeautifulSoup(html, "html.parser")
+    forms = tuple(
+        {
+            "id": _bounded_text(form.get("id", "")),
+            "method": _bounded_text(form.get("method", "")),
+            "action_path": urlsplit(str(form.get("action", ""))).path,
+        }
+        for form in soup.find_all("form")[:8]
+    )
+    inputs = tuple(
+        {
+            "id": _bounded_text(input_node.get("id", "")),
+            "name": _bounded_text(input_node.get("name", "")),
+            "type": _bounded_text(input_node.get("type", "")),
+            "checked": _input_checked(input_node),
+        }
+        for input_node in soup.find_all("input")[:20]
+    )
+    return {"landing_url": _redacted_url(landing_url), "forms": forms, "inputs": inputs}
+
+
+def _input_checked(node: object) -> bool:
+    get = getattr(node, "get", None)
+    if get is None:
+        return False
+    checked = get("checked")
+    return checked is not None and str(checked).casefold() not in {"", "false", "0", "none"}
 
 
 async def _dismiss_pre303_alert_modal_if_present(page: Page) -> None:
@@ -597,19 +717,26 @@ async def _fill_wallet_query_form(page: Page, *, target_year: int, target_period
     The own-name CarteraCuotas form requires a target Ejercicio (year) and Período
     before it returns the prior-period pending-compensation rows; submitting empty
     fields re-renders the same shell. The taxpayer NIF field is server-prefilled to
-    the authenticated identity and is never written here. The fields are filled only
-    when both are present, so a future server-rendered shape change degrades to the
-    existing execute-gate diagnostics rather than raising a hard selector error.
+    the authenticated identity and is never written here. Both fields are required
+    when the execute gate is present; a future server-rendered shape change must
+    fail closed instead of allowing a wrong/default-period read to persist.
     """
     ejercicio_selector = _PRE303.wallet_ejercicio_input_selector
     periodo_selector = _PRE303.wallet_periodo_input_selector
     try:
         ejercicio_field = await page.query_selector(ejercicio_selector)
         periodo_field = await page.query_selector(periodo_selector)
-    except PlaywrightError:
-        return
+    except PlaywrightError as exc:
+        raise SedeNavigationError(
+            "AEAT IVA wallet query fields could not be inspected before the read query",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+        ) from exc
     if ejercicio_field is None or periodo_field is None:
-        return
+        raise SedeNavigationError(
+            "AEAT IVA wallet execute gate is missing required ejercicio/período query fields",
+            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+            context={"target_year": target_year, "target_period": target_period},
+        )
     await page.fill(ejercicio_selector, str(target_year))
     await page.fill(periodo_selector, str(target_period))
 
@@ -965,6 +1092,10 @@ def _normalised_text(value: str) -> str:
     return normalize_response_text(value).casefold()
 
 
+def _normalised_display_text(value: str) -> str:
+    return " ".join(str(value).replace("\xa0", " ").split())
+
+
 def _looks_like_executed_empty_wallet_page(soup: BeautifulSoup) -> bool:
     title_and_heading = _normalised_text(
         f"{_normalised_title(soup)} {' '.join(node.get_text(' ') for node in soup.find_all(['h1', 'h2']))}"
@@ -994,14 +1125,13 @@ def _is_wallet_execute_submit(input_node: object) -> bool:
 
 
 async def _dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> None:
-    """Best-effort capture of the whole page tree for offline wallet DOM-drift diagnosis.
+    """Best-effort capture of redacted page-shape metadata for wallet DOM-drift diagnosis.
 
     Enabled only when :attr:`Settings.aeat_wallet_diagnostic_dump_dir` is set;
-    callers pass that directory in as ``dump_dir``. Captures every page in the
-    context (the main document and any popup the Ejecutar query may open), each
-    page's child frames, and a full-page screenshot per page. Expected capture
-    failures (Playwright page errors and filesystem errors) are logged at debug
-    and swallowed so the diagnostic does not break the read path.
+    callers pass that directory in as ``dump_dir``. The dump intentionally writes
+    only redacted structural metadata: URL without query, table/form/input counts,
+    form action paths, input identifiers, and hashes. It never writes raw HTML,
+    frame HTML, screenshots, input values, or wallet amounts.
     """
     try:
         dump_dir.mkdir(parents=True, exist_ok=True)
@@ -1012,28 +1142,31 @@ async def _dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> 
     pages = list(getattr(context, "pages", None) or [page])
     summary: list[str] = [f"label={label}", f"page_count={len(pages)}"]
     for page_index, candidate in enumerate(pages):
-        prefix = f"{label}-p{page_index}"
         try:
             url = getattr(candidate, "url", "") or ""
             html = await candidate.content()
-            (dump_dir / f"{prefix}.html").write_text(html, encoding=UTF_8_ENCODING)
-            table_count = len(BeautifulSoup(html, "html.parser").find_all("table"))
-            summary.append(f"page[{page_index}] url={_redacted_url(url)} tables={table_count} bytes={len(html)}")
+            shape = _wallet_page_shape_context(html, landing_url=url)
+            summary.append(
+                f"page[{page_index}] url={shape['landing_url']} tables={shape['table_count']} "
+                f"forms={shape['form_count']} wallet_entrypoints={shape['wallet_entrypoint_count']} "
+                f"raw_sha256={shape['raw_sha256']}"
+            )
+            for form_index, form in enumerate(shape["forms"]):
+                summary.append(f"page[{page_index}].form[{form_index}] {form}")
+            for input_index, input_shape in enumerate(shape["inputs"]):
+                summary.append(f"page[{page_index}].input[{input_index}] {input_shape}")
         except (PlaywrightError, OSError) as exc:
             summary.append(f"page[{page_index}] content_error={type(exc).__name__}")
             log.debug("wallet diagnostic: page content dump failed idx=%s: %s", page_index, exc, exc_info=True)
-        try:
-            await candidate.screenshot(path=str(dump_dir / f"{prefix}.png"), full_page=True)
-        except (PlaywrightError, OSError) as exc:
-            log.debug("wallet diagnostic: screenshot failed idx=%s: %s", page_index, exc, exc_info=True)
         for frame_index, frame in enumerate(getattr(candidate, "frames", None) or []):
             try:
                 frame_url = getattr(frame, "url", "") or ""
                 frame_html = await frame.content()
-                (dump_dir / f"{prefix}-f{frame_index}.html").write_text(frame_html, encoding=UTF_8_ENCODING)
-                frame_tables = len(BeautifulSoup(frame_html, "html.parser").find_all("table"))
+                frame_shape = _wallet_page_shape_context(frame_html, landing_url=frame_url)
                 summary.append(
-                    f"page[{page_index}].frame[{frame_index}] url={_redacted_url(frame_url)} tables={frame_tables}"
+                    f"page[{page_index}].frame[{frame_index}] url={frame_shape['landing_url']} "
+                    f"tables={frame_shape['table_count']} forms={frame_shape['form_count']} "
+                    f"raw_sha256={frame_shape['raw_sha256']}"
                 )
             except (PlaywrightError, OSError) as exc:
                 log.debug("wallet diagnostic: frame dump failed: %s", exc, exc_info=True)

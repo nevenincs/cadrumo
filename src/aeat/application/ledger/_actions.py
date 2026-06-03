@@ -331,22 +331,22 @@ class _ImportRowPlan(NamedTuple):
 def _apply_fx_conversion(
     raw: RawTransaction,
     currency_normalizer: CurrencyNormalizationService | None,
-) -> tuple[Decimal | None, Decimal | None]:
-    """Return ``(fx_rate, value_in_eur)`` for a raw row, or ``(None, None)``.
+) -> tuple[Decimal | None, Decimal | None, str | None, str | None]:
+    """Return ``(fx_rate, value_in_eur, rate_source, rate_date_iso)`` for a raw row.
 
-    EUR-native rows always yield ``(None, None)``.  Non-EUR rows with no
-    normalizer or a missing rate also yield ``(None, None)``, preserving the
-    coupling invariant on :class:`Transaction`.
+    EUR-native rows and non-EUR rows with no normalizer / a missing rate yield
+    all ``None``, preserving the coupling invariant on :class:`Transaction`.
     """
     if raw.currency == DEFAULT_CURRENCY or currency_normalizer is None:
-        return (None, None)
+        return (None, None, None, None)
     rate_date = raw.value_date or raw.booked_date
     result = currency_normalizer.normalize(MonetaryAmount(amount=raw.amount, currency=raw.currency), rate_date)
     if result.status is not CurrencyNormalizationStatus.NORMALIZED or result.rate is None:
-        return (None, None)
+        return (None, None, None, None)
     # value_in_eur is the non-negative EUR magnitude; the sign is carried by
     # raw.amount + direction (Transaction.value_in_eur rejects negatives).
-    return (result.rate, abs(result.eur_amount))
+    rate_date_iso = result.rate_date.isoformat() if result.rate_date is not None else None
+    return (result.rate, abs(result.eur_amount), result.rate_source, rate_date_iso)
 
 
 def _evaluate_import_rows(
@@ -376,7 +376,7 @@ def _evaluate_import_rows(
         if fingerprint in existing_fingerprints or fingerprint in batch_fingerprints:
             skipped_refs.append(BucketTransactionRef(bucket_id=bucket_id, transaction_id=derive_transaction_id(raw)))
             continue
-        fx_rate, value_in_eur = _apply_fx_conversion(raw, currency_normalizer)
+        fx_rate, value_in_eur, rate_source, rate_date = _apply_fx_conversion(raw, currency_normalizer)
         transaction = Transaction.model_validate(
             {
                 "raw": raw,
@@ -384,6 +384,8 @@ def _evaluate_import_rows(
                 "import_fingerprint": fingerprint,
                 "fx_rate": fx_rate,
                 "value_in_eur": value_in_eur,
+                "rate_source": rate_source,
+                "rate_date": rate_date,
             }
         )
         batch_fingerprints.add(fingerprint)
@@ -1087,6 +1089,19 @@ def _filter_ledger_review_rows(
         rows = tuple(
             transaction for transaction in rows if ledger_transaction_review_status(transaction) == query.status
         )
+    if query.classification is not None:
+        rows = tuple(
+            transaction for transaction in rows if transaction.business_classification.value == query.classification
+        )
+    if query.text is not None:
+        needle = query.text.casefold()
+        rows = tuple(
+            transaction
+            for transaction in rows
+            if needle in transaction.raw.description.casefold()
+            or needle in transaction.raw.display_counterparty.casefold()
+            or needle in (transaction.category_id or "").casefold()
+        )
     if query.import_id is not None or query.issue is not None:
         matching_ids = _transaction_ids_for_review_event_filters(
             bucket_id=query.bucket_id,
@@ -1106,6 +1121,8 @@ _LEDGER_REVIEW_FILTER_FIELDS: tuple[tuple[str, str], ...] = (
     ("status", "status"),
     ("issue", "issue"),
     ("import_id", "import"),
+    ("classification", "classification"),
+    ("text", "text"),
     ("transaction_id", "id"),
 )
 
@@ -1269,8 +1286,29 @@ def summarize_manual_transactions(
         checked = preflight.checked_transaction_count
         issue_count = len(preflight.issues)
         ready = preflight.ready
+    # Money roll-up over active business/mixed rows (period-filtered when given):
+    # the year-end / readiness money picture the personas asked for. Gross EUR
+    # (value_in_eur for foreign rows), not a registry calculation.
+    money_period = Period.model_validate(period) if period else None
+    income_total = Decimal("0")
+    expense_total = Decimal("0")
+    for item in transactions:
+        if item.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+            continue
+        if item.business_classification not in {BusinessClassification.BUSINESS, BusinessClassification.MIXED}:
+            continue
+        if money_period is not None and not money_period.contains(item.raw.value_date or item.raw.booked_date):
+            continue
+        eur = abs(item.value_in_eur) if item.value_in_eur is not None else abs(item.raw.amount)
+        if item.direction is TransactionDirection.INCOMING:
+            income_total += eur
+        elif item.direction is TransactionDirection.OUTGOING:
+            expense_total += eur
     return LedgerStatusReport(
         bucket_id=bucket_id,
+        income_total=_display_decimal(income_total),
+        expense_total=_display_decimal(expense_total),
+        net_total=_display_decimal(income_total - expense_total),
         total_count=len(transactions),
         active_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.ACTIVE),
         archived_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.ARCHIVED),
@@ -1328,6 +1366,50 @@ def update_manual_transaction(
             transaction_ids=_transaction_modelo_source_ids(current),
             blockers=blockers,
         )
+    prepared = _prepare_manual_transaction_update(
+        current=current,
+        command=command,
+        previous_transaction_id=transaction_id,
+        now=now,
+        invoice_repository=invoice_repository,
+        attachment_store=attachment_store,
+        usage_ratio_profile=usage_ratio_profile,
+    )
+    if prepared is None:
+        raise TransactionValidationError(
+            "manual ledger update must change at least one ledger field",
+            context={"transaction_id": transaction_id},
+        )
+    replacement, events = prepared
+    _save_transaction_catalogue_and_events(
+        transaction_repository=repository,
+        event_repository=event_repository,
+        catalogue=_replace_transaction(catalogue, old_transaction_id=transaction_id, replacement=replacement),
+        events=events,
+    )
+    return _result(command.bucket_id, replacement, tuple(event.event_id for event in events))
+
+
+def _prepare_manual_transaction_update(
+    *,
+    current: Transaction,
+    command: ManualLedgerTransactionCommand,
+    previous_transaction_id: str,
+    now: datetime,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    attachment_store: _AttachmentStoreProtocol | None = None,
+    usage_ratio_profile: UsageRatioProfile | None = None,
+) -> tuple[Transaction, tuple[BucketEvent, ...]] | None:
+    """Build the replacement transaction + bucket events for one in-memory edit.
+
+    Returns ``None`` when the command is a field-for-field no-op (the caller
+    decides whether that is an error or a skip). Verifies evidence and usage-ratio
+    references but performs **no** persistence and **no** catalogue load — the
+    caller owns a single load/save so a batch re-encrypts the catalogue once
+    rather than per row (the ``bulk_classify_from_csv`` load-once/save-once
+    contract). Lifecycle and blocking-modelo guards remain the caller's
+    responsibility before invoking this builder.
+    """
     replacement = _transaction_from_command(
         command,
         occurred_at=now,
@@ -1342,10 +1424,7 @@ def update_manual_transaction(
         import_fingerprint=current.import_fingerprint,
     )
     if _mutation_signature(current) == _mutation_signature(replacement):
-        raise TransactionValidationError(
-            "manual ledger update must change at least one ledger field",
-            context={"transaction_id": transaction_id},
-        )
+        return None
     _verify_evidence_references(
         command,
         transaction_id=replacement.transaction_id,
@@ -1357,7 +1436,7 @@ def update_manual_transaction(
         current=current,
         replacement=replacement,
         command=command,
-        previous_transaction_id=transaction_id,
+        previous_transaction_id=previous_transaction_id,
     )
     events = tuple(
         _build_bucket_event(
@@ -1385,7 +1464,7 @@ def update_manual_transaction(
         lifecycle_state=current.lifecycle_state,
         lifecycle_lineage=current.lifecycle_lineage,
         edit_lineage_entry=TransactionEditLineageEntry(
-            previous_transaction_id=transaction_id,
+            previous_transaction_id=previous_transaction_id,
             actor=command.actor,
             source_command=command.source_command,
             edited_at=now,
@@ -1395,13 +1474,7 @@ def update_manual_transaction(
         evidence_event_ids=evidence_event_ids,
         import_fingerprint=current.import_fingerprint,
     )
-    _save_transaction_catalogue_and_events(
-        transaction_repository=repository,
-        event_repository=event_repository,
-        catalogue=_replace_transaction(catalogue, old_transaction_id=transaction_id, replacement=replacement),
-        events=events,
-    )
-    return _result(command.bucket_id, replacement, tuple(event.event_id for event in events))
+    return replacement, events
 
 
 def update_manual_transaction_fields(
@@ -2405,6 +2478,7 @@ def _command_from_patch(
     counterparty_eu_member_state = _optional_patched(
         patch, patch_fields, "counterparty_eu_member_state", current.counterparty_eu_member_state
     )
+    group_label = _optional_patched(patch, patch_fields, "group_label", current.group_label)
     return ManualLedgerTransactionCommand(
         bucket_id=bucket_id,
         booked_date=booked_date,
@@ -2432,6 +2506,7 @@ def _command_from_patch(
         notes=notes,
         iva_category=iva_category,
         counterparty_eu_member_state=counterparty_eu_member_state,
+        group_label=group_label,
         actor=actor,
         source_command=source_command,
         classified_by_override=classified_by_override,
@@ -2572,6 +2647,40 @@ def _blocking_modelo_references(
             ),
         )
     )
+
+
+def _blockers_by_source_transaction_id(
+    *,
+    bucket_id: str,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+) -> dict[str, tuple[LedgerRemovalBlocker, ...]]:
+    """Map each source transaction id to the finalized-modelo blockers referencing it.
+
+    Computed once so a batch edit can look up the finalized-modelo guard per row
+    without reloading the work-unit and calculation repositories on every row
+    (the load-once half of the ``bulk_classify_from_csv`` S31 contract).
+    """
+    work_units = (work_unit_repository or WorkUnitCatalogueRepository()).load()
+    revisions = (calculation_repository or CalculationRevisionCatalogueRepository()).load()
+    out: dict[str, list[LedgerRemovalBlocker]] = {}
+    for revision in revisions.values():
+        if revision.state not in _REMOVAL_BLOCKING_REVISION_STATES:
+            continue
+        work_unit = work_units.get(revision.work_unit_id)
+        if work_unit is None or work_unit.bucket_id != bucket_id:
+            continue
+        blocker = LedgerRemovalBlocker(
+            work_unit_id=work_unit.work_unit_id,
+            calculation_revision_id=revision.calculation_revision_id,
+            revision_state=revision.state.value,
+            modelo=work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+        )
+        for txid in revision.source_transaction_ids:
+            out.setdefault(txid, []).append(blocker)
+    return {txid: tuple(found) for txid, found in out.items()}
 
 
 def _transaction_modelo_source_ids(transaction: Transaction) -> tuple[str, ...]:
@@ -3166,6 +3275,7 @@ def _transaction_from_command(
         "iva_category": command.iva_category,
         "counterparty_eu_member_state": command.counterparty_eu_member_state,
         "source_jurisdiction": command.source_jurisdiction,
+        "group_label": command.group_label,
     }
     if command.business_classification is not BusinessClassification.NOT_YET_PROCESSED:
         payload.update(
@@ -3324,6 +3434,7 @@ def _mutation_signature(transaction: Transaction) -> tuple[object, ...]:
         transaction.purchase_invoice_evidence_id,
         transaction.attachment_ids,
         transaction.notes,
+        transaction.group_label,
     )
 
 
@@ -3356,6 +3467,7 @@ def _command_matches_current(command: ManualLedgerTransactionCommand, current: T
         # tuple[str, ...] on both sides — Python tuple equality is value-equal, not identity-equal.
         and command.attachment_ids == current.attachment_ids
         and command.notes == current.notes
+        and command.group_label == current.group_label
     )
 
 
@@ -3489,6 +3601,8 @@ def bulk_classify_from_csv(
     source_command: str = "aeat app ledger classify",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
 ) -> BulkClassifyResult:
     """Apply batch classifications from a CSV string.
 
@@ -3543,6 +3657,20 @@ def bulk_classify_from_csv(
     applied = 0
     skipped = 0
 
+    # Load-once/save-once (S31): the per-row path re-encrypted the whole
+    # catalogue on every update, so a 270-row batch cost ~400s of O(n)
+    # re-encryption. Load the catalogue and the finalized-modelo blocker map
+    # once, mutate an in-memory working catalogue, accumulate events, and
+    # persist a single atomic write at the end.
+    now = _normalise_timestamp(None)
+    working = repository.load()
+    all_events: list[BucketEvent] = []
+    blockers_by_txid = _blockers_by_source_transaction_id(
+        bucket_id=bucket_id,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
+
     for idx, row in enumerate(parsed_rows):
         patch = ManualLedgerTransactionPatch(
             business_classification=row.classification,
@@ -3550,23 +3678,48 @@ def bulk_classify_from_csv(
             business_pct=row.business_pct,
         )
         try:
-            result = update_manual_transaction_fields(
+            current = _require_transaction(working, row.transaction_id)
+            if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+                raise TransactionValidationError(
+                    "only active ledger transactions can be edited; archived, stashed, "
+                    "and split-parent rows are immutable",
+                    context={
+                        "transaction_id": row.transaction_id,
+                        "lifecycle_state": current.lifecycle_state.value,
+                    },
+                )
+            source_ids = _transaction_modelo_source_ids(current)
+            blockers = tuple(b for txid in source_ids for b in blockers_by_txid.get(txid, ()))
+            if blockers:
+                _raise_finalized_modelo_blocked(
+                    operation="ledger transaction update",
+                    transaction_ids=source_ids,
+                    blockers=blockers,
+                )
+            command = _command_from_patch(
                 bucket_id=bucket_id,
-                transaction_id=row.transaction_id,
+                current=current,
                 patch=patch,
                 actor=actor,
                 source_command=source_command,
-                reaffirm=False,
-                transaction_repository=repository,
-                bucket_event_repository=event_repo,
             )
-            all_event_ids.extend(result.bucket_event_ids)
-            if result.bucket_event_ids:
-                applied += 1
-            else:
-                # update_manual_transaction_fields returned without events:
-                # classification was already identical — treat as skipped.
+            prepared = _prepare_manual_transaction_update(
+                current=current,
+                command=command,
+                previous_transaction_id=row.transaction_id,
+                now=now,
+            )
+            if prepared is None:
+                # field-for-field identical — classification already applied.
                 skipped += 1
+                continue
+            replacement, events = prepared
+            working = _replace_transaction(
+                working, old_transaction_id=row.transaction_id, replacement=replacement
+            )
+            all_events.extend(events)
+            all_event_ids.extend(event.event_id for event in events)
+            applied += 1
         except (AeatError, ValidationError) as exc:
             apply_failures.append(
                 BulkClassifyFailure(
@@ -3575,6 +3728,14 @@ def bulk_classify_from_csv(
                     reason=str(exc),
                 )
             )
+
+    if all_events:
+        _save_transaction_catalogue_and_events(
+            transaction_repository=repository,
+            event_repository=event_repo,
+            catalogue=working,
+            events=tuple(all_events),
+        )
 
     all_failures = parse_failures + apply_failures
     return BulkClassifyResult(

@@ -59,11 +59,12 @@ from ...application.review import (
     FilterParseError,
     LedgerReviewFilterSpec,
 )
-from ...application.workflow._models import resolve_active_bucket_id
-from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
+from ...core import resolve_active_bucket_id
+from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY, OutputLanguage
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import now
+from ...domain.attachments import AttachmentSource
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -93,6 +94,9 @@ from ._common import (
     _profile_to_taxpayer,
     _state,
     _tx_repo,
+)
+from ._common import (
+    activate_subcommand_output_language as _activate_subcommand_output_language,
 )
 
 _log = get_logger(__name__)
@@ -463,6 +467,7 @@ def ledger_update(
     iva_amount: str | None = typer.Option(None, "--iva-amount", help=tr("cli.ledger.update.iva_amount_help")),
     irpf_category: str | None = typer.Option(None, "--irpf-category", help=tr("cli.ledger.update.irpf_category_help")),
     notes: str | None = typer.Option(None, "--notes", help=tr("cli.ledger.update.notes_help")),
+    group: str | None = typer.Option(None, "--group", help=tr("cli.ledger.update.group_help")),
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.update.actor_help")),
 ) -> None:
     """Correct editable transaction facts through the bucket-scoped backend."""
@@ -490,6 +495,7 @@ def ledger_update(
                 iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
                 irpf_category=irpf_category,
                 notes=notes,
+                group_label=group,
             ),
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command="aeat app ledger update",
@@ -599,7 +605,7 @@ def ledger_classify(
         for failure in result.failures:
             # MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE:
             # tab-separated machine record (id, reason), not user-facing prose.
-            lines.append(f"  failed\t{failure.transaction_id}\t{failure.reason}")
+            lines.append(f"  failed\t{failure.transaction_id}\t{failure.reason}")  # MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE
         classify_result = LedgerClassifyResult.model_validate(
             {
                 "total": result.total,
@@ -853,6 +859,80 @@ def ledger_attach(
         result.ref.bucket_id,
         result.bucket_event_ids,
         command="ledger.attach",
+        result_cls=LedgerAttachResult,
+    )
+
+
+@app.command("doclink", help=tr("cli.ledger.doclink.help", default="Record a Gmail/Drive/URL document link on a ledger row (never fetched)."))
+def ledger_doclink(
+    ctx: typer.Context,
+    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.doclink.id_help", default="Ledger transaction id.")),
+    source: AttachmentSource = typer.Option(
+        ..., "--source", help=tr("cli.ledger.doclink.source_help", default="Link source: gmail, google_drive, or url.")
+    ),
+    reference: str = typer.Option(
+        ..., "--reference", help=tr("cli.ledger.doclink.reference_help", default="The document link reference.")
+    ),
+    note: str = typer.Option("", "--note", help=tr("cli.ledger.doclink.note_help", default="Optional note.")),
+    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.doclink.actor_help", default="Operator label.")),
+) -> None:
+    """Record a Gmail/Drive/URL document link as local evidence on a ledger row.
+
+    The remote document is never fetched: the locally-stored payload is the link
+    reference itself, registered as a content-addressed
+    :class:`~aeat.domain.attachments.Attachment` and bound to the transaction's
+    ``attachment_ids``. The live counterpart (resolving the link's bytes from
+    Drive/Gmail) is tracked separately in Wave W04.
+    """
+    from ...adapters.persistence.storage.attachment import AttachmentStore
+    from ...domain.attachments import AttachmentKind
+    from ...domain.attachments._service import add_link_attachment
+
+    kind_by_source = {
+        AttachmentSource.GMAIL: AttachmentKind.EMAIL_MESSAGE,
+        AttachmentSource.GOOGLE_DRIVE: AttachmentKind.DRIVE_DOCUMENT,
+        AttachmentSource.URL: AttachmentKind.OTHER,
+    }
+    kind = kind_by_source.get(source)
+    if kind is None:
+        raise _bad(
+            tr(
+                "cli.ledger.doclink.bad_source",
+                source=source.value,
+                default=f"document-link source must be one of: gmail, google_drive, url (got '{source.value}').",
+            )
+        )
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    store = AttachmentStore()
+    attachment = add_link_attachment(
+        store,
+        kind=kind,
+        source=source,
+        source_reference=reference,
+        captured_at=now(),
+        bucket_id=transaction_repository.bucket_id,
+        link_transaction_ids=(resolved_id,),
+        notes=note,
+    )
+    result = attach_manual_transaction_evidence(
+        bucket_id=transaction_repository.bucket_id,
+        transaction_id=resolved_id,
+        attachment_ids=(attachment.attachment_id,),
+        actor=actor or resolve_active_bucket_id() or "operator",
+        source_command="aeat app ledger doclink",
+        transaction_repository=transaction_repository,
+        attachment_store=store,
+    )
+    from ._ledger_payloads import LedgerAttachResult
+
+    _emit_update_result(
+        ctx,
+        result.transaction,
+        result.ref.bucket_id,
+        result.bucket_event_ids,
+        command="ledger.doclink",
         result_cls=LedgerAttachResult,
     )
 
@@ -1541,7 +1621,10 @@ def ledger_export(
     period: str | None = typer.Option(
         None,
         "--period",
-        help=tr("cli.ledger.export.period_help", default="Restrict the export to one filing period (e.g. 2025Q1, 2025)."),
+        help=tr(
+            "cli.ledger.export.period_help",
+            default="Restrict the export to one filing period (e.g. 2025Q1, 2025).",
+        ),
     ),
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.export.actor_help")),
 ) -> None:
@@ -1577,24 +1660,88 @@ def ledger_export(
 
 
 @app.command("list", help=tr("cli.ledger.list.help"))
-def ledger_list(ctx: typer.Context) -> None:
-    """List bucket-scoped ledger transactions through the backend read service."""
+def ledger_list(
+    ctx: typer.Context,
+    filters: list[str] = typer.Option([], "--filter", help=tr("cli.ledger.list.filter_help")),
+    limit: int | None = typer.Option(None, "--limit", min=1, help=tr("cli.ledger.list.limit_help")),
+    offset: int = typer.Option(0, "--offset", min=0, help=tr("cli.ledger.list.offset_help")),
+    group: str | None = typer.Option(None, "--group", help=tr("cli.ledger.list.group_filter_help")),
+    by_group: bool = typer.Option(False, "--by-group", help=tr("cli.ledger.list.by_group_help")),
+) -> None:
+    """List bucket-scoped ledger transactions through the backend read service.
+
+    ``--filter KEY=VALUE`` narrows the listing using the same typed
+    :class:`LedgerReviewFilterSpec` that ``ledger review`` uses, so the two
+    surfaces share one closed-key catalogue: ``period`` (``YYYY-Qn`` / ``YYYYQn``
+    / ``YYYY-MM`` / bare ``YYYY`` for a whole year), ``status`` (pending /
+    reviewed / skipped), ``classification`` (business / personal / mixed / ...),
+    ``issue`` (gap / duplicate / ...), ``import``, and ``text`` free-text. Filters
+    apply before paging and grouping, so an operator can scope a large ledger to
+    one period/year/class instead of dumping every row and grepping.
+
+    ``--limit`` / ``--offset`` page the (filtered) result. The page is clipped
+    honestly: when more rows exist beyond the window a truncation footer states
+    the full total, so a large ledger is never silently capped. ``--group``
+    filters to one organisational :attr:`group_label`; ``--by-group`` sections the
+    listing under a header per label so thousands of rows stay legible.
+    """
     # S09 doc-note: `ledger list` is a read-only query; ValidationError cannot
     # originate here from operator input. Stored-data drift (a persisted record
     # that no longer deserialises) surfaces as a CliStoredDataValidationBoundaryError
     # raised by _state() / _tx_repo() — handled by S05, not this verb.
+    try:
+        spec = LedgerReviewFilterSpec.from_strings(filters)
+    except FilterParseError as exc:
+        raise _bad(tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.raw_token)) from exc
     state = _state()
     transaction_repository = _tx_repo(state)
-    results = list_manual_transactions(
+    all_results = list_manual_transactions(
         bucket_id=transaction_repository.bucket_id,
         transaction_repository=transaction_repository,
     )
+    if spec.clauses:
+        # Reuse the canonical review-row filter (one shared filter
+        # implementation with `ledger review`) to resolve the matching
+        # transaction-id set, then keep the list rows in that set so list's
+        # own paging / grouping / rendering are preserved unchanged.
+        matching = query_ledger_review_rows(
+            LedgerReviewQuery(
+                bucket_id=transaction_repository.bucket_id,
+                period=_canonical_period(spec.period) if spec.period else None,
+                status=spec.status.value if spec.status is not None else None,
+                issue=spec.issue.value if spec.issue is not None else None,
+                import_id=spec.import_id,
+                classification=spec.classification.value if spec.classification is not None else None,
+                text=spec.text,
+            ),
+            transaction_repository=transaction_repository,
+        )
+        matching_ids = {row.id for row in matching.rows}
+        all_results = tuple(r for r in all_results if r.transaction.transaction_id in matching_ids)
+    if group is not None:
+        wanted = group.strip() or None
+        all_results = tuple(r for r in all_results if r.transaction.group_label == wanted)
+    if by_group:
+        ungrouped = tr("cli.ledger.list.ungrouped_label")
+        all_results = tuple(
+            sorted(all_results, key=lambda r: (r.transaction.group_label or "￿", r.transaction.transaction_id))
+        )
+    total = len(all_results)
+    window_end = total if limit is None else min(offset + limit, total)
+    results = all_results[offset:window_end]
+    truncated = (offset > 0) or (window_end < total)
     rows: list[dict[str, object]] = []
     lines = [tr("cli.ledger.list.header")]
-    full_ids = tuple(result.transaction.transaction_id for result in results)
+    full_ids = tuple(result.transaction.transaction_id for result in all_results)
     display_width = compute_display_id_width(full_ids)
+    current_group: str | None = None
+    first_group_seen = False
     for result in results:
         transaction = result.transaction
+        if by_group and (not first_group_seen or transaction.group_label != current_group):
+            current_group = transaction.group_label
+            first_group_seen = True
+            lines.append(f"# {current_group or ungrouped}")
         review_status = ledger_transaction_review_status(transaction)
         review_payload = ledger_transaction_review_payload(transaction)
         display_id = transaction.transaction_id[:display_width]
@@ -1602,18 +1749,40 @@ def ledger_list(ctx: typer.Context) -> None:
             **review_payload.model_dump(mode="python"),
             "full_id": transaction.transaction_id,
             "display_id": display_id,
+            "group_label": transaction.group_label,
         }
         rows.append(row)
         lines.append(
             f"{display_id}\t{transaction.transaction_id}\t{review_payload.date}\t"
             f"{review_payload.amount}\t{review_payload.description}\t{review_status}"
         )
+    if truncated:
+        start = offset + 1 if rows else offset
+        lines.append(
+            tr(
+                "cli.ledger.list.footer_truncated",
+                start=start,
+                end=offset + len(rows),
+                total=total,
+                offset=offset,
+            )
+        )
     from ._ledger_payloads import LedgerListResult
 
     _emit_envelope(
         ctx,
         command="ledger.list",
-        result=LedgerListResult.model_validate({"bucket_id": transaction_repository.bucket_id, "rows": rows}),
+        result=LedgerListResult.model_validate(
+            {
+                "bucket_id": transaction_repository.bucket_id,
+                "rows": rows,
+                "total": total,
+                "shown": len(rows),
+                "offset": offset,
+                "limit": limit,
+                "truncated": truncated,
+            }
+        ),
         lines=lines,
     )
 
@@ -1694,6 +1863,9 @@ def ledger_status(
     transactions = transaction_repository.load()
     lines = [
         f"{tr('cli.ledger.labels.bucket')}\t{report.bucket_id}",
+        f"income_total\t{report.income_total}",
+        f"expense_total\t{report.expense_total}",
+        f"net_total\t{report.net_total}",
         f"{tr('cli.ledger.labels.rows')}\t{report.total_count}",
         f"{tr('cli.ledger.labels.active')}\t{report.active_count}",
         f"{tr('cli.ledger.labels.archived')}\t{report.archived_count}",
@@ -1807,12 +1979,30 @@ def ledger_track(
                 "tracking": ledger_transaction_tracking_payload(result.transaction).model_dump(mode="json"),
             }
         ),
-        lines=[
-            f"{tr('cli.ledger.labels.id')}\t{result.ref.transaction_id}",
-            f"{tr('cli.ledger.labels.lifecycle_state')}\t{result.transaction.lifecycle_state.value}",
-            f"{tr('cli.ledger.labels.created_event_id')}\t{result.transaction.created_event_id or '-'}",
-        ],
+        lines=_ledger_track_lines(result.ref.transaction_id, result.transaction),
     )
+
+
+def _ledger_track_lines(transaction_id: str, transaction: Transaction) -> list[str]:
+    """Track lines, naming the import-batch provenance for imported rows.
+
+    Imported transactions carry no ``created_event_id`` (set only by
+    ``ledger add``); rather than render a bare ``-``, surface the import
+    provenance the row already carries (provider, source file, ingest time,
+    fingerprint) so an asesor can defend a row's origin from ``track`` alone.
+    """
+    lines = [
+        f"{tr('cli.ledger.labels.id')}\t{transaction_id}",
+        f"{tr('cli.ledger.labels.lifecycle_state')}\t{transaction.lifecycle_state.value}",
+        f"{tr('cli.ledger.labels.created_event_id')}\t{transaction.created_event_id or '-'}",
+    ]
+    if transaction.created_event_id is None:
+        provenance = transaction.raw.provenance
+        lines.append(f"import_provider\t{provenance.provider_name}")
+        lines.append(f"import_source\t{provenance.source_path.name}")
+        lines.append(f"import_ingested_at\t{provenance.ingested_at.isoformat()}")
+        lines.append(f"import_fingerprint\t{transaction.import_fingerprint or '-'}")
+    return lines
 
 
 @app.command("import", help=tr("cli.ledger.import.help"))
@@ -1858,21 +2048,30 @@ def ledger_import(
     from ...domain.currency import CurrencyNormalizationService
 
     currency_normalizer = CurrencyNormalizationService(rate_provider=default_ecb_rate_provider())
-    result = import_ledger_source(
-        LedgerSourceImportCommand(
-            bucket_id=bucket_id,
-            path=path,
-            provider=normalised_provider,
-            dry_run=dry_run,
-            verify=verify,
-            source=source,
-            period=_canonical_period(period) if period else None,
-            actor=actor,
-            source_command="aeat app ledger import",
-        ),
-        transaction_repository=transaction_repository,
-        currency_normalizer=currency_normalizer,
-    )
+    canonical_period = _canonical_period(period) if period else None
+    # Folder/multi-file import: a directory imports every supported statement
+    # file in one invocation, sequentially (so later files dedup against earlier
+    # ones), with the envelope counts aggregated across files.
+    import_paths = _resolve_import_paths(path)
+    file_results = [
+        import_ledger_source(
+            LedgerSourceImportCommand(
+                bucket_id=bucket_id,
+                path=file_path,
+                provider=normalised_provider,
+                dry_run=dry_run,
+                verify=verify,
+                source=source,
+                period=canonical_period,
+                actor=actor,
+                source_command="aeat app ledger import",
+            ),
+            transaction_repository=transaction_repository,
+            currency_normalizer=currency_normalizer,
+        )
+        for file_path in import_paths
+    ]
+    result = file_results[0] if len(file_results) == 1 else _aggregate_import_results(file_results)
     lines = [
         f"{tr('cli.ledger.labels.rows')}\t{result.rows}",
         f"{tr('cli.ledger.labels.imported')}\t{result.imported}",
@@ -1913,6 +2112,64 @@ def ledger_import(
             likely_duplicate_notice=likely_duplicate_notice,
         ),
         lines=lines,
+    )
+
+
+_IMPORT_DIR_EXTENSIONS = frozenset({".csv", ".xlsx", ".xls", ".ofx", ".qfx", ".tsv"})
+
+
+def _resolve_import_paths(path: Path) -> list[Path]:
+    """Return the statement files to import.
+
+    A regular file imports itself; a directory imports every supported statement
+    file inside it (non-recursive, sorted) so an operator can drop a folder of
+    bank exports and import them in one invocation.
+    """
+    if not path.is_dir():
+        return [path]
+    files = sorted(
+        child
+        for child in path.iterdir()
+        if child.is_file() and child.suffix.lower() in _IMPORT_DIR_EXTENSIONS
+    )
+    if not files:
+        raise _bad(
+            tr(
+                "cli.ledger.import.empty_directory",
+                path=str(path),
+                default=f"No importable statement files found in directory: {path}",
+            )
+        )
+    return files
+
+
+def _aggregate_import_results(results: list[LedgerSourceImportResult]) -> LedgerSourceImportResult:
+    """Sum per-file import results into one envelope for a folder import."""
+    first = results[0]
+
+    def _concat(attr: str) -> tuple:
+        out: list = []
+        for result in results:
+            out.extend(getattr(result, attr))
+        return tuple(out)
+
+    return LedgerSourceImportResult(
+        rows=sum(r.rows for r in results),
+        imported=sum(r.imported for r in results),
+        skipped=sum(r.skipped for r in results),
+        likely_duplicates=sum(r.likely_duplicates for r in results),
+        dry_run=first.dry_run,
+        verify=first.verify,
+        period=first.period,
+        bucket_id=first.bucket_id,
+        import_batch_id=first.import_batch_id,
+        bucket_event_ids=_concat("bucket_event_ids"),
+        imported_transaction_refs=_concat("imported_transaction_refs"),
+        skipped_transaction_refs=_concat("skipped_transaction_refs"),
+        likely_duplicate_transaction_refs=_concat("likely_duplicate_transaction_refs"),
+        validation=first.validation,
+        source=first.source,
+        diagnostics=_concat("diagnostics"),
     )
 
 
@@ -1982,6 +2239,8 @@ def ledger_review(
             status=spec.status.value if spec.status is not None else None,
             issue=spec.issue.value if spec.issue is not None else None,
             import_id=spec.import_id,
+            classification=spec.classification.value if spec.classification is not None else None,
+            text=spec.text,
         ),
         transaction_repository=transaction_repository,
     )
@@ -2051,8 +2310,8 @@ app.add_typer(ratios_app, name="ratios")
 
 def _ratios_bucket_id() -> str:
     """Return the active workflow bucket id or raise the standard CLI refusal."""
-    from ...application.workflow._errors import NoActiveProfileError
-    from ...application.workflow._models import require_active_bucket_id
+    from ...core import require_active_bucket_id
+    from ...core.errors import NoActiveProfileError
 
     try:
         return require_active_bucket_id()
@@ -2068,8 +2327,8 @@ def _ratios_bucket_and_profile() -> tuple[str, str | None]:
     are still allowed in that state but censo-override warnings stay
     silent because there is no profile to look up snapshots against.
     """
-    from ...application.workflow._errors import NoActiveProfileError
-    from ...application.workflow._models import require_active_bucket_id, resolve_active_bucket_id
+    from ...core import require_active_bucket_id, resolve_active_bucket_id
+    from ...core.errors import NoActiveProfileError
 
     try:
         bucket_id = require_active_bucket_id()
@@ -2290,7 +2549,16 @@ def _resolve_category(raw: str):
         "cli.app.ledger.ratios.list_help", default="List every per-category usage-ratio override on the active bucket."
     ),
 )
-def ratios_list(ctx: typer.Context) -> None:
+def ratios_list(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    _activate_subcommand_output_language(ctx, output_language)
     """List every per-category proportional-deduction override stored on the active bucket."""
     from ...application.user_profile import CensoSyncService
     from ...domain.usage_ratios import (
@@ -2348,7 +2616,14 @@ def ratios_set(
     ratio: str = typer.Argument(
         ..., help=tr("cli.app.ledger.ratios.ratio_help", default="Override ratio in the closed interval [0, 1].")
     ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
+    _activate_subcommand_output_language(ctx, output_language)
     """Set or replace one per-category usage-ratio override on the active bucket."""
     from ...application.ledger._ratios import censo_override_warning, set_usage_ratio
     from ...application.user_profile import CensoSyncService
@@ -2398,8 +2673,15 @@ def ratios_unset(
         ...,
         help=tr("cli.app.ledger.ratios.unset_category_help", default="Spending category id whose override to clear."),
     ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Clear one per-category usage-ratio override from the active bucket."""
+    _activate_subcommand_output_language(ctx, output_language)
     from ...application.ledger._ratios import unset_usage_ratio
     from ...domain.usage_ratios import UsageRatioValidationError
 
@@ -2440,7 +2722,16 @@ def ratios_unset(
         "cli.app.ledger.ratios.eligible_help", default="List every category that may carry a per-category override."
     ),
 )
-def ratios_eligible(ctx: typer.Context) -> None:
+def ratios_eligible(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    _activate_subcommand_output_language(ctx, output_language)
     """List every ``SpendingCategory`` that may carry a per-category proportional-deduction override."""
     from ...application.ledger._ratios import list_eligible_ratios_for_bucket
 
@@ -2475,8 +2766,17 @@ def ratios_eligible(ctx: typer.Context) -> None:
         default="Validate the per-category overrides against eligibility + bound rules.",
     ),
 )
-def ratios_validate(ctx: typer.Context) -> None:
+def ratios_validate(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
     """Validate per-category usage-ratio overrides against eligibility and bound rules without mutating state."""
+    _activate_subcommand_output_language(ctx, output_language)
     from ...application.ledger._ratios import validate_ratios_for_bucket
 
     bucket_id = _ratios_bucket_id()
@@ -3566,8 +3866,8 @@ app.add_typer(rule_app, name="rule")
 
 
 def _rule_bucket_id() -> str:
-    from ...application.workflow._errors import NoActiveProfileError
-    from ...application.workflow._models import require_active_bucket_id
+    from ...core import require_active_bucket_id
+    from ...core.errors import NoActiveProfileError
 
     try:
         return require_active_bucket_id()
@@ -3618,7 +3918,7 @@ def rule_add(
 ) -> None:
     """Add or idempotently update a ledger classification rule."""
     from ...application.ledger._actions import add_classification_rule
-    from ...application.workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
 
     bucket_id = _rule_bucket_id()
     validated_category_id = _validate_category_id(category_id)
@@ -3691,7 +3991,7 @@ def rule_apply(
 ) -> None:
     """Apply stored rules to ACTIVE NOT_YET_PROCESSED transactions."""
     from ...application.ledger._rule_repository import LedgerClassificationRuleRepository
-    from ...application.workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
     from ...domain.transactions import BusinessClassification, TransactionLifecycleState
 
     bucket_id = _rule_bucket_id()

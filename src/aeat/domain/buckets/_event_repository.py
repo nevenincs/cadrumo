@@ -16,7 +16,7 @@ from ._errors import BucketsError
 from ._event import BucketEvent, BucketEventHistoryCatalogue
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectWrite
+    from ...adapters.persistence.storage import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
 _NAMESPACE = "aeat.domain.buckets.event_history"
@@ -86,8 +86,7 @@ class BucketEventHistoryRepository:
 
     def to_secure_object_write(self, catalogue: BucketEventHistoryCatalogue) -> SecureObjectWrite:
         """Return the :class:`SecureObjectWrite` upsert for ``catalogue`` without committing it."""
-        from ...adapters.persistence.storage import Envelope, SensitivityClass
-        from ...adapters.persistence.storage.sql import SecureObjectWrite
+        from ...adapters.persistence.storage import Envelope, SecureObjectWrite, SensitivityClass
 
         envelope = Envelope[BucketEventHistoryCatalogue](
             schema_version=_CATALOGUE_VERSION,

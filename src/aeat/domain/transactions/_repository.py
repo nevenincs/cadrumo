@@ -22,8 +22,8 @@ from ._errors import LedgerStorageError, StoredTransactionDriftError
 from ._models import BucketTransactionRef, TransactionCatalogue
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ...adapters.persistence.storage import SecureObjectRepository, SecureObjectWrite
     from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-    from ...adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectWrite
 
 _log = get_logger(__name__)
 
@@ -128,7 +128,7 @@ class TransactionCatalogueRepository:
             StoredTransactionDriftError: If the persisted payload fails
                 pydantic schema validation on deserialization.
         """
-        from ...adapters.persistence.storage.envelope._envelope import Envelope
+        from ...adapters.persistence.storage import Envelope
         from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 
         record = self._objects.load(
@@ -204,8 +204,7 @@ class TransactionCatalogueRepository:
         Args:
             catalogue: The :class:`TransactionCatalogue` to serialise.
         """
-        from ...adapters.persistence.storage.envelope._envelope import Envelope
-        from ...adapters.persistence.storage.sql import SecureObjectWrite
+        from ...adapters.persistence.storage import Envelope, SecureObjectWrite
 
         envelope = Envelope[TransactionCatalogue](
             schema_version=_TX_CATALOGUE_VERSION,

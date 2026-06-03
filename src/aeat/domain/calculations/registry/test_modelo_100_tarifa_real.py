@@ -288,6 +288,11 @@ def _base_binding_values() -> dict:
         "renta-2024-profile-marriage-full-year": Decimal("0"),
         "renta-2024-profile-marriage-month-start": Decimal("0"),
         "renta-2024-profile-marriage-month-end": Decimal("0"),
+        # BIN-pendiente fresh-filer baseline: the previous_filing binding
+        # for casilla 1388 (LIRPF Art. 48 base liquidable negativa carry)
+        # resolves to zero when no prior Modelo 100 filing exists in the
+        # test corpus. Test fixtures with no carry exercise this baseline.
+        "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
     }
 
 

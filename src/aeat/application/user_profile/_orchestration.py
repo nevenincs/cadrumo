@@ -302,7 +302,7 @@ def _append_profile_activated_event(*, profile_id: str, active_profile: str | No
 
 def select_profile_with_lifecycle_span(profile_id: str) -> None:
     """Select ``profile_id`` inside an application-owned bucket session."""
-    from ..workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
     from ..workflow._persistence import workflow_state_repository
 
     with profile_storage_session(profile_id):
@@ -322,7 +322,7 @@ def delete_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
 
 def logout_active_profile() -> str | None:
     """Clear the active profile pointer and return the profile that was logged out."""
-    from ..workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
 
     before = resolve_active_bucket_id()
     _clear_active_profile_pointer()
@@ -560,7 +560,7 @@ def read_active_profile(
 
     ``secure_objects`` is an optional :class:`SecureObjectRepository` override.
     """
-    from ..workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
@@ -599,7 +599,7 @@ def _require_active(state: WorkflowState) -> str:
     Reads through the precedence chain (Settings > pointer file >
     `state.active_profile` while the field migration is in flight).
     """
-    from ..workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:

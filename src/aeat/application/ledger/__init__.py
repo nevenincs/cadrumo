@@ -1,4 +1,26 @@
-"""Application services for bucket-scoped ledger transaction workflows."""
+"""Application services for bucket-scoped ledger transaction workflows.
+
+Owns the operator-facing ledger lifecycle: importing bank statements and
+records, classifying transactions for tax, splitting and merging entries,
+attaching evidence, and checking a period's tax-readiness before a modelo
+calculation consumes it. Every service operates on the active profile's
+bucket.
+
+Major declarations:
+
+* :func:`import_ledger_source` and :func:`bulk_classify_from_csv` — the
+  ingest and batch-classification entry points.
+* :func:`create_manual_transaction`, :func:`split_transaction`, and
+  :func:`merge_transactions` — manual ledger edits.
+* :func:`preflight_ledger_tax_readiness` with :class:`LedgerPreflightReport`
+  and :class:`LedgerPreflightIssue` — the readiness gate that reports rows
+  missing a category, base, IVA rate, currency, or prorrata reference.
+* :func:`resolve_transaction_id` — the unambiguous-prefix id resolver.
+* The typed command and result records (:class:`LedgerSourceImportCommand`,
+  :class:`LedgerImportOperationResult`, :class:`LedgerReviewQueryResult`,
+  :class:`LedgerStatusReport`, and siblings) that carry each operation
+  across the CLI boundary.
+"""
 
 from __future__ import annotations
 

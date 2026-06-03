@@ -34,6 +34,7 @@ single-year, missing-test, or contract-less entry turns the gate RED.
 
 from __future__ import annotations
 
+import ast
 from pathlib import Path
 
 import pytest
@@ -49,14 +50,52 @@ from ..core.resources import resources
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model, pytest.mark.inventory]
 
-#: The name of the cross-check every enrolling test must call. Its presence in
-#: the enrolling test source is the AST-level proof the test verifies its
-#: recorded year-set against the manifest claim rather than asserting nothing.
+#: The name of the cross-check every enrolling test must call. A real call to
+#: this function in the enrolling test source is the un-fakeable proof the test
+#: verifies its recorded year-set against the manifest claim rather than
+#: asserting nothing. Detected via AST — a comment or string literal mentioning
+#: the name does NOT satisfy the check; only an ``ast.Call`` node does.
 _ENROLLMENT_CONTRACT_CALL = assert_enrollment_matches_manifest.__name__
 
 #: Repository root: this file lives at ``src/aeat/tests/`` so the repo root is
 #: four parents up. Used to resolve manifest-declared ``enrolling_test`` paths.
 _REPO_ROOT = Path(__file__).resolve().parents[3]
+
+
+def _ast_has_call_to(source: str, func_name: str) -> bool:
+    """Return ``True`` iff ``source`` contains an AST ``Call`` node for ``func_name``.
+
+    Parses ``source`` as a Python module and walks the AST looking for any
+    :class:`ast.Call` node whose function expression resolves to ``func_name``
+    as either a bare :class:`ast.Name` (``func_name(...)``) or the final
+    attribute of an :class:`ast.Attribute` (``obj.func_name(...)``). A
+    substring match is insufficient — a comment, docstring, or string literal
+    containing the name passes substring search but produces no ``ast.Call``
+    node and is therefore correctly rejected.
+
+    Args:
+        source: Python source text of the module to inspect.
+        func_name: The unqualified function name to look for as a call target.
+
+    Returns:
+        ``True`` when at least one matching call exists; ``False`` otherwise.
+        Also returns ``False`` when ``source`` cannot be parsed (syntax error).
+    """
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return False
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        # Direct call: func_name(...)
+        if isinstance(func, ast.Name) and func.id == func_name:
+            return True
+        # Attribute call: something.func_name(...)
+        if isinstance(func, ast.Attribute) and func.attr == func_name:
+            return True
+    return False
 
 
 def _authority():
@@ -139,11 +178,69 @@ def test_authorization_coverage_report_and_validity(capsys: pytest.CaptureFixtur
             f"which does not exist at {test_path}"
         )
         source = test_path.read_text(encoding="utf-8")
-        assert _ENROLLMENT_CONTRACT_CALL in source, (
-            f"enrolling test {entry.enrolling_test!r} for modelo {entry.modelo!r} does not call "
-            f"{_ENROLLMENT_CONTRACT_CALL}(...); an enrollment must verify its recorded year-set "
-            f"against the manifest claim, not assert nothing"
+        assert _ast_has_call_to(source, _ENROLLMENT_CONTRACT_CALL), (
+            f"enrolling test {entry.enrolling_test!r} for modelo {entry.modelo!r} does not "
+            f"contain an AST call to {_ENROLLMENT_CONTRACT_CALL}(...); a comment or string "
+            f"literal mentioning the name is not sufficient — the test must actually invoke "
+            f"the function to verify its recorded year-set against the manifest claim"
         )
+
+
+def test_ast_call_detection_rejects_substring_and_accepts_real_call() -> None:
+    """Anti-tautology: ``_ast_has_call_to`` is genuinely call-based, not substring-based.
+
+    A string that MENTIONS ``assert_enrollment_matches_manifest`` in a comment,
+    docstring, or string literal must NOT satisfy the check — only an actual
+    ``ast.Call`` node in the AST does.  This test proves the distinction so a
+    future regression that accidentally reverts to ``in source`` would turn this
+    test RED, giving an explicit signal that the AST gate was weakened.
+    """
+    func = _ENROLLMENT_CONTRACT_CALL  # e.g. "assert_enrollment_matches_manifest"
+
+    # --- Substring-only sources that must FAIL the AST check ---
+
+    # 1. A comment mentioning the function name — no call node.
+    comment_only = f"# This test calls {func} to verify the manifest\n"
+    assert not _ast_has_call_to(comment_only, func), (
+        f"comment-only source must not satisfy the AST call check for {func!r}"
+    )
+
+    # 2. A docstring mentioning the function name — no call node.
+    docstring_only = f'"""{func} is called by enrollment tests."""\n'
+    assert not _ast_has_call_to(docstring_only, func), (
+        f"docstring-only source must not satisfy the AST call check for {func!r}"
+    )
+
+    # 3. A string variable holding the function name — no call node.
+    string_var = f'_CONTRACT = "{func}"\n'
+    assert not _ast_has_call_to(string_var, func), (
+        f"string-variable source must not satisfy the AST call check for {func!r}"
+    )
+
+    # --- Sources that MUST satisfy the AST check (real ast.Call nodes) ---
+
+    # 4. Direct call: func_name(evidence)
+    direct_call = f"{func}(evidence)\n"
+    assert _ast_has_call_to(direct_call, func), (
+        f"direct call source must satisfy the AST call check for {func!r}"
+    )
+
+    # 5. Attribute call: module.func_name(evidence) — how some callers import it.
+    attr_call = f"calculations.{func}(evidence)\n"
+    assert _ast_has_call_to(attr_call, func), (
+        f"attribute call source must satisfy the AST call check for {func!r}"
+    )
+
+    # 6. Real call buried among substring-only noise — the call wins.
+    mixed_source = (
+        f"# {func} is the contract\n"
+        f'"""{func} must be called."""\n'
+        f"_name = '{func}'\n"
+        f"{func}(evidence)\n"
+    )
+    assert _ast_has_call_to(mixed_source, func), (
+        f"mixed source with a real call must satisfy the AST call check for {func!r}"
+    )
 
 
 def test_empty_manifest_authorizes_nothing() -> None:

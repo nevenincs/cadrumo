@@ -42,6 +42,7 @@ from ...domain.transactions import (
 )
 from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from . import _shared_issue_reasons
+from ._business_proportion import business_proportion
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
@@ -334,11 +335,10 @@ def _income_business_amount(transaction: Transaction) -> Decimal | None:
     if transaction.irpf_category == _IRPF_CATEGORY_ACTIVIDAD_ECONOMICA:
         # The explicit IRPF category is the authoritative M130 eligibility gate.
         return amount
-    if transaction.business_classification is BusinessClassification.BUSINESS:
-        return amount
-    if transaction.business_classification is BusinessClassification.MIXED and transaction.business_pct is not None:
-        return amount * transaction.business_pct
-    return None
+    proportion = business_proportion(transaction.business_classification, transaction.business_pct)
+    if proportion is None:
+        return None
+    return amount * proportion
 
 
 def _income_casilla_aggregation(

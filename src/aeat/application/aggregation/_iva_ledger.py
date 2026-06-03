@@ -50,6 +50,7 @@ from ...domain.transactions._protocols import (
     TransactionCatalogueRepositoryProtocol,
 )
 from . import _shared_issue_reasons
+from ._business_proportion import business_proportion
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationValidationError, t
 from ._models import Period
@@ -395,6 +396,18 @@ class _IvaTransactionOutcome:
     prorrata_issue: IvaLedgerAggregationIssue | None = None
 
 
+# Categories that never produce a declarable IVA observation: recargo de
+# equivalencia (the IVA + RE surcharge is non-deductible acquisition cost for the
+# retailer, settled via the supplier) and the unknown/erroneous sentinels.
+_NON_DECLARABLE_IVA_CATEGORIES = frozenset(
+    {
+        IvaCategory.RECARGO_EQUIVALENCIA,
+        IvaCategory.UNKNOWN,
+        IvaCategory.ERRONEOUS_INVOICE,
+    }
+)
+
+
 def _classify_iva_transaction(
     transaction: Transaction,
     *,
@@ -450,6 +463,17 @@ def _classify_iva_transaction(
                 reason=reason,
                 detail=(
                     f"business classification {transaction.business_classification.value!r} cannot feed IVA aggregation"
+                ),
+            )
+        )
+    if transaction.iva_category in _NON_DECLARABLE_IVA_CATEGORIES:
+        return _IvaTransactionOutcome(
+            gate_issue=IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_CATEGORY,
+                detail=(
+                    f"iva_category {transaction.iva_category.value!r} does not produce a declarable IVA "
+                    "observation (recargo-equivalencia is non-deductible cost; unknown/erroneous are sentinels)"
                 ),
             )
         )
@@ -609,12 +633,7 @@ def _flow_direction_for(direction: TransactionDirection) -> IvaFlowDirection | N
 
 
 def _business_proportionality(transaction: Transaction) -> Decimal | None:
-    if transaction.business_classification is BusinessClassification.BUSINESS:
-        return Decimal("1")
-    if transaction.business_classification is BusinessClassification.MIXED:
-        assert transaction.business_pct is not None
-        return transaction.business_pct
-    return None
+    return business_proportion(transaction.business_classification, transaction.business_pct)
 
 
 def _missing_tax_fact_reason(transaction: Transaction) -> IvaLedgerAggregationIssueReason | None:

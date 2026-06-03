@@ -23,6 +23,8 @@ import pytest
 from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import write_pointer
 from ...core.config import override_settings
+from ...core.errors import get_registered_error_code
+from ._errors import NoActiveProfileError
 from ._models import resolve_active_bucket_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -60,3 +62,11 @@ def test_empty_settings_override_falls_through_to_pointer(tmp_path: Path) -> Non
 
     with override_settings(aeat_active_profile="   ", aeat_local_storage_root=tmp_path):
         assert resolve_active_bucket_id() == "catering"
+
+
+def test_no_active_profile_error_has_registered_error_code() -> None:
+    """The workflow no-active-profile export must bind to the relocated core error."""
+
+    code = get_registered_error_code(NoActiveProfileError)
+    assert code.code == "REFUSED_NO_ACTIVE_PROFILE"
+    assert code.message_key == "errors.refused.refused_no_active_profile"

@@ -12,6 +12,7 @@ shape-preserving values per the
 from __future__ import annotations
 
 import hashlib
+import os
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -57,6 +58,7 @@ from ._declarations import (
     _read_guard_policy_from_snapshot,
     _select_authoritative_declaration,
     _select_combobox_value,
+    _temporary_sensitive_pdf_path,
     _verify_submitted_file_context,
     _with_derived_303_compensation_available_observation,
     registry_observation_from_filed_declaration,
@@ -1126,6 +1128,18 @@ class TestSubmittedFileObservation:
 class TestDeclaracionPdfObservation:
     """Verify declaration-copy PDFs are interpreted through registry profiles."""
 
+    def test_sensitive_pdf_temp_path_is_private_and_unlinked(self) -> None:
+        body = _declaration_pdf_payload({"03": Decimal("1")})
+
+        with _temporary_sensitive_pdf_path(body) as path:
+            captured = path
+            assert path.exists()
+            assert path.read_bytes() == body
+            if os.name == "posix":
+                assert path.stat().st_mode & 0o777 == 0o600
+
+        assert not captured.exists()
+
     def test_declaration_pdf_values_become_observed_casillas(self) -> None:
         snapshot = _modelo_130_snapshot()
         profile = snapshot.extraction_profiles["modelo-130-declaracion-pdf"]
@@ -1151,6 +1165,32 @@ class TestDeclaracionPdfObservation:
         )
 
         assert {item.casilla_id: Decimal(item.value) for item in observed} == values
+
+    def test_declaration_pdf_parse_failure_redacts_identifier_and_chained_error(self) -> None:
+        snapshot = _modelo_130_snapshot()
+        declaration = Declaracion(
+            modelo="130",
+            ejercicio=2026,
+            period="1T",
+            expediente_id="EXPEDIENTE-CANARY-123",
+            estado="ALTA",
+            presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+            justificante_link_text="Ver",
+            declaration_copy_link_text="Ver",
+        )
+
+        with pytest.raises(SedeParseError) as exc_info:
+            _observed_casillas_from_declaration_pdf(
+                snapshot=snapshot,
+                declaration=declaration,
+                body=b"not a declaration PDF",
+            )
+
+        err = exc_info.value
+        assert err.__cause__ is None
+        assert err.__context__ is None
+        assert "EXPEDIENTE-CANARY-123" not in str(err)
+        assert "EXPEDIENTE-CANARY-123" not in str(getattr(err, "context", {}))
 
     def test_modelo_111_declaration_pdf_values_become_observed_casillas(self) -> None:
         snapshot = _modelo_snapshot("111", filing_year=2025, period="1T")

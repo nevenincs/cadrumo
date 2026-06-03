@@ -11,13 +11,11 @@ from __future__ import annotations
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
-from .....core.config import Settings
+from .....core.config import load_settings
 from .....core.logging import get_logger
-from .._errors import LLMConfigError
+from .._errors import LLMConfigError, LLMProviderError
 from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, check_http_error
-
-_GEMINI_GENERATE_TEMPLATE = Settings().aeat_llm_gemini_generate_content_template
 
 _logger = get_logger(__name__)
 
@@ -116,18 +114,23 @@ class GeminiAdapter(_ProviderAdapter):
         if request.system is not None:
             parts.append({"text": f"System instruction:\n{request.system}"})
         parts.append({"text": request.prompt})
-        async with httpx.AsyncClient(timeout=self._timeout_s) as client:
-            response = await client.post(
-                _GEMINI_GENERATE_TEMPLATE.format(model=request.model),
-                headers={"x-goog-api-key": self._api_key},
-                json={
-                    "contents": [{"role": "user", "parts": parts}],
-                    "generationConfig": {
-                        "temperature": request.temperature,
-                        "maxOutputTokens": request.max_tokens,
+        endpoint = load_settings().aeat_llm_gemini_generate_content_template.format(model=request.model)
+        try:
+            async with httpx.AsyncClient(timeout=self._timeout_s) as client:
+                response = await client.post(
+                    endpoint,
+                    headers={"x-goog-api-key": self._api_key},
+                    json={
+                        "contents": [{"role": "user", "parts": parts}],
+                        "generationConfig": {
+                            "temperature": request.temperature,
+                            "maxOutputTokens": request.max_tokens,
+                        },
                     },
-                },
-            )
+                )
+        except httpx.RequestError as exc:
+            _logger.debug("Gemini connection failure model=%s", request.model, exc_info=True)
+            raise LLMProviderError("Gemini connection failure.") from exc
         check_http_error(response, provider_name="Gemini", model=request.model, logger=_logger)
         parsed = _GeminiResponse.model_validate_json(response.text)
         text = "".join(part.text or "" for part in parsed.candidates[0].content.parts).strip()

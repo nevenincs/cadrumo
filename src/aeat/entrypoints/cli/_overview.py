@@ -61,7 +61,7 @@ def overview_status(
     shim is preserved; callers must use the dedicated verb.
     """
     from ...application.user_profile._projections import record_to_values
-    from ...application.workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
 
     current = _state() if resolve_active_bucket_id() is not None else None
     if period is not None:

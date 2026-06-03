@@ -252,6 +252,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
             pointer does not resolve to a registered bucket.
     """
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+    from ...core import resolve_active_bucket_id
     from ...domain.buckets import (
         BucketEvent,
         BucketEventHistoryRepository,
@@ -260,7 +261,6 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
         append_bucket_event,
         derive_bucket_event_id,
     )
-    from ..workflow._models import resolve_active_bucket_id
     from ..workflow._persistence import workflow_state_repository
     from ..workflow._profile_health import assess_active_profile_health
 

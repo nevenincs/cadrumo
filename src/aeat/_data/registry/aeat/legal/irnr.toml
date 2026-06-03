@@ -107,3 +107,16 @@ published_at = 2024-01-31
 applies_from = 2024-02-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
 review_status = "reviewed"
+
+[sources."boe-modelo-210-2024-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
+sha256 = "1adcf839bcda32e2aaf1cd2df49f27ea4925f85095b67b2ae7f035d69c015a3c"
+bytes = 141318
+retrieved_at = 2026-05-27
+published_at = 2024-01-31
+applies_from = 2024-02-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
+review_status = "reviewed"

@@ -169,11 +169,10 @@ def _root(
         # profile does NOT import workflow or overview (which pull the
         # registry) — it only renders the profile-creation prompt.
         # Use the lightweight core resolver to avoid importing workflow.
+        from ...adapters.persistence.storage import has_active_bucket_session
         from ...application.operator_surface import build_root_landing_report
         from ...core._bucket_pointer_io import resolve_active_bucket_id
         from ._root_landing import render_cli_root_landing_lines
-
-        from ...adapters.persistence.storage import has_active_bucket_session
 
         active = resolve_active_bucket_id()
         landing = build_root_landing_report(active)
@@ -261,7 +260,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     """
     from ...adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
     from ...application.storage_write_policy import inspect_storage_write_policy
-    from ...application.workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
     from ._bootstrap_exempt import is_bootstrap_exempt
     from ._errors import CliRefusedBoundaryError
 

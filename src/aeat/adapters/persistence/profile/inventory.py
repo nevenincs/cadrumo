@@ -16,7 +16,6 @@ from ....domain.contribuyente.inventory import (
     InventoryLedgerDocument,
     InventoryLedgerError,
     MovementRecord,
-    compute_inventory_valuation,
 )
 from ..storage import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -175,11 +174,12 @@ class InventoryLedgerRepository:
         return updated
 
     def record_movement(self, actividad_id: str, movement: MovementRecord, *, year: int) -> InventoryLedger:
-        """Atomically append ``movement`` after validating the new valuation.
+        """Atomically append ``movement`` to the target activity-and-year ledger.
 
-        The replacement ledger is fully revalidated via
-        :func:`aeat.domain.contribuyente.inventory.compute_inventory_valuation`
-        before being persisted, so any rule violation aborts the write.
+        The domain valuation guard (rejecting movements that would produce an
+        invalid valuation) is owned by the application inventory service, which
+        runs it before invoking persistence; this adapter performs the storage
+        append only and runs no domain calculation.
 
         Args:
             actividad_id: Identifier of the owning actividad economica.
@@ -190,8 +190,8 @@ class InventoryLedgerRepository:
             The updated :class:`InventoryLedger`.
 
         Raises:
-            InventoryLedgerError: When the target ledger does not exist, the movement id
-                is duplicated, or the resulting valuation is invalid.
+            InventoryLedgerError: When the target ledger does not exist or the
+                movement id is duplicated.
         """
         ledgers = list(self._load_unlocked().ledgers)
         for index, ledger in enumerate(ledgers):
@@ -203,7 +203,6 @@ class InventoryLedgerRepository:
                         suggestion="aeat app ledger inventory valuation preview",
                     )
                 updated = ledger.model_copy(update={"period_movements": (*ledger.period_movements, movement)})
-                compute_inventory_valuation(updated)
                 ledgers[index] = updated
                 self._save_unlocked(InventoryLedgerDocument(ledgers=tuple(ledgers)))
                 return updated

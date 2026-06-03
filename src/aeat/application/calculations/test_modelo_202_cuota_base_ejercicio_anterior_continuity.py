@@ -65,11 +65,31 @@ _MODELO_202 = "202"
 #: The M200 source casilla the 40.2 base copies (cuota líquida).
 _M200_CUOTA_LIQUIDA = "DP200014B:00592"
 
-#: The 18% modalidad 40.2 rate (LIS art. 40.2, parameter
-#: ``is.modalidad_cuota.percentage``). Used only to express the wiring
-#: assertion for casilla 03; the value the engine applies comes from the
-#: registry parameter, not from this constant.
-_MODALIDAD_40_2_RATE = Decimal("0.18")
+#: The statutory modalidad 40.2 rate as declared in the registry parameter
+#: ``is.modalidad_cuota.percentage`` — grounded in LIS art. 40.2 via the
+#: AEAT Modelo 202 instructions (required_text: "porcentaje del 18%").
+#: This constant is ONLY used as a cross-check that the registry value
+#: matches the statutory source (see the 03-leg test below). The test's
+#: wiring assertion derives the rate from the real snapshot parameter, NOT
+#: from this constant, so the test is not tautological against the registry.
+_EXPECTED_MODALIDAD_RATE_PCT = Decimal("18")  # percent, per LIS art. 40.2
+
+
+def _modalidad_rate_from_snapshot(filing_year: int) -> Decimal:
+    """Read the modalidad 40.2 percentage from the live registry snapshot.
+
+    Returns the rate as a Decimal fraction (e.g. ``Decimal("0.18")`` for 18%),
+    mirroring how the formula runtime applies ``percent(01, parameter)`` —
+    i.e. casilla_01 * value / 100. The value is read from the real
+    ``is.modalidad_cuota.percentage`` parameter on the 2P snapshot;
+    the authority is ``aeat-modelo-202-instructions``.
+    """
+    snapshot = resources().modelos.authority.snapshot(_MODELO_202, filing_year=filing_year, period="2P")
+    param = next(p for p in snapshot.revision.parameters if p.id == "is.modalidad_cuota.percentage")
+    # Parameter is declared with data_type="ratio", unit="percent": value "18"
+    # means 18%, so divide by 100 to get the Decimal multiplier.
+    pct_value = Decimal(param.values[0].value)
+    return pct_value / Decimal("100")
 
 #: Two distinct renta (target) years the M202 2P enrollment spans. The
 #: prior-year delta (-1) makes them source M200 of 2025 and 2026 respectively.
@@ -208,12 +228,21 @@ def test_modelo_202_2p_base_resolves_from_prior_year_m200_cuota(tmp_path: Path) 
 
 
 def test_modelo_202_2p_a_ingresar_recomputes_from_bound_base(tmp_path: Path) -> None:
-    """Casilla 03 (a ingresar) recomputes as 18% of the bound base minus deductions.
+    """Casilla 03 (a ingresar) recomputes as (registry rate)% of the bound base.
 
     With casilla 01 bound from the prior M200 cuota and casilla 02 = 0, the
-    pre-existing 40.2 formula yields 03 = 18% × 01. The 18% comes from the
-    registry parameter; the assertion confirms the bound base flows into the
-    instalment, not the rate's arithmetic against itself.
+    pre-existing 40.2 formula yields 03 = is.modalidad_cuota.percentage × 01.
+    The assertion derives the expected rate from the REAL registry snapshot
+    parameter (``is.modalidad_cuota.percentage``) — NOT from a hardcoded
+    literal — so the test grounds against the authoritative registry value
+    rather than reproducing the formula's arithmetic against itself.
+
+    Cross-check: the registry value must equal the statutory 18% per LIS
+    art. 40.2 as documented in the AEAT Modelo 202 instructions
+    (``aeat-modelo-202-instructions``, required_text "porcentaje del 18%").
+    If AEAT changed the rate and the registry parameter was updated but this
+    test was not, the cross-check assertion would turn RED explicitly — which
+    is the correct signal.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
@@ -221,8 +250,29 @@ def test_modelo_202_2p_a_ingresar_recomputes_from_bound_base(tmp_path: Path) -> 
         _seed_m202_1p(filing_year=_TARGET_YEAR_N, pago=Decimal("5000.00"), base=Decimal("48000.00"), obs_repo=obs_repo)
         resolved = _resolve_202_relations(filing_year=_TARGET_YEAR_N, obs_repo=obs_repo)
         result, _ = _calculate_202_2p(filing_year=_TARGET_YEAR_N, relation_values=resolved, casilla_02=Decimal("0"))
-    expected_03 = (_M200_CUOTA_BY_SOURCE_YEAR[2025] * _MODALIDAD_40_2_RATE).quantize(Decimal("0.01"))
-    assert result.values["03"] == expected_03
+        # Derive the rate from the real registry snapshot: this is the authority,
+        # not a hardcoded literal. Any future statutory rate change that updates
+        # the registry parameter automatically updates this expected value.
+        registry_rate = _modalidad_rate_from_snapshot(_TARGET_YEAR_N)
+
+    # Cross-check: registry parameter must match the statutory 18% (LIS art. 40.2).
+    # This assertion catches a registry drift where the parameter was updated to
+    # a wrong value without a statutory basis.
+    assert registry_rate * Decimal("100") == _EXPECTED_MODALIDAD_RATE_PCT, (
+        f"registry parameter is.modalidad_cuota.percentage resolved to "
+        f"{registry_rate * 100}% but statutory source (LIS art. 40.2, "
+        f"aeat-modelo-202-instructions 'porcentaje del 18%') declares "
+        f"{_EXPECTED_MODALIDAD_RATE_PCT}% — registry drift detected"
+    )
+
+    # Wiring assertion: 03 = registry_rate × 01 (with casilla 02 = 0).
+    # The rate comes from the real snapshot, not from this test's author.
+    expected_03 = (_M200_CUOTA_BY_SOURCE_YEAR[2025] * registry_rate).quantize(Decimal("0.01"))
+    assert result.values["03"] == expected_03, (
+        f"casilla 03 must equal registry_rate ({registry_rate}) × casilla 01 "
+        f"({_M200_CUOTA_BY_SOURCE_YEAR[2025]}) = {expected_03}; "
+        f"got {result.values['03']}"
+    )
 
 
 def test_modelo_202_2p_enrolls_two_renta_years(tmp_path: Path) -> None:

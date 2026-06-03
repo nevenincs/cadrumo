@@ -17,12 +17,17 @@ The tests drive the real Typer app end to end against an isolated
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
 
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...application.user_profile._orchestration import profile_create_storage_span
+from ...core.config import override_settings
 from ...domain.categories import SpendingCategory
+from ...tests.secure_sql import isolated_profile_storage_root
 from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -30,6 +35,35 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _RUNNER = CliRunner()
 
 _N26_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
+
+#: Profile id every test in this module creates via the CLI inside the span.
+_PROFILE_ID = "tester"
+
+
+@pytest.fixture(autouse=True)
+def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
+    """Hold an active bucket session open across this module's in-process invokes.
+
+    The active bucket session is a per-process/per-context ContextVar opened by
+    the storage master-key provider. In the real CLI each command process
+    re-opens it from persisted state; in-process ``CliRunner`` a bare
+    ``config profile create`` invoke opens and closes its own session, so a
+    subsequent ``ledger ...`` invoke finds none ("No active bucket session is
+    open"). Wrapping the test body in :func:`profile_create_storage_span`
+    activates the master-key provider for the ``tester`` profile the tests
+    create via the CLI, so every invoke shares one open session — the same
+    pattern the passing ledger-CLI suites use.
+    """
+    dispose_engine()
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        profile_create_storage_span(_PROFILE_ID),
+    ):
+        try:
+            yield
+        finally:
+            dispose_engine()
 
 
 def _create_profile() -> None:

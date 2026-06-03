@@ -32,4 +32,13 @@ def resolve_active_profile_output_language() -> str | None:
     return fact_value(record, "preferences.output_language")
 
 
-register_profile_language_resolver(resolve_active_profile_output_language)
+def register_language_resolver() -> None:
+    """Register :func:`resolve_active_profile_output_language` with ``core.i18n``.
+
+    Replaces the prior module-import side-effect registration: callers
+    now invoke this function from a known initialiser (the
+    :mod:`aeat.application.user_profile` package import) so the
+    registration point is explicit and greppable rather than hidden in
+    a noqa-protected import line.
+    """
+    register_profile_language_resolver(resolve_active_profile_output_language)

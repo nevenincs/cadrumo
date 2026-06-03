@@ -34,6 +34,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.iva import InvoiceKind
+from ...domain.transactions import BusinessClassification
 from ..transactions import LedgerImportDiagnosticKind
 from ._errors import FilterParseError
 
@@ -136,12 +137,16 @@ class LedgerReviewFilterKey(StrEnum):
         ISSUE: Filters to rows that carry an import-time diagnostic
             (``gap`` / ``duplicate`` / ``original-file`` / ``parser``).
         IMPORT: Filters to rows from a specific import-batch id.
+        CLASSIFICATION: Filters to rows with a given business classification
+            (``business`` / ``personal`` / ``mixed`` / ``not_yet_processed`` ...).
     """
 
     STATUS = "status"
     PERIOD = "period"
     ISSUE = "issue"
     IMPORT = "import"
+    CLASSIFICATION = "classification"
+    TEXT = "text"
 
 
 class LedgerReviewStatus(StrEnum):
@@ -302,6 +307,8 @@ class LedgerReviewFilterSpec(BaseModel):
     period: str | None = None
     issue: LedgerImportDiagnosticKind | None = None
     import_id: str | None = None
+    classification: BusinessClassification | None = None
+    text: str | None = None
 
     @classmethod
     def from_strings(cls, raw: Iterable[str]) -> LedgerReviewFilterSpec:
@@ -313,6 +320,8 @@ class LedgerReviewFilterSpec(BaseModel):
         period: str | None = None
         issue: LedgerImportDiagnosticKind | None = None
         import_id: str | None = None
+        classification: BusinessClassification | None = None
+        text: str | None = None
         for clause in clauses:
             if clause.key == LedgerReviewFilterKey.STATUS:
                 status = _enum_value_or_raise(
@@ -330,12 +339,22 @@ class LedgerReviewFilterSpec(BaseModel):
                 )
             elif clause.key == LedgerReviewFilterKey.IMPORT:
                 import_id = clause.value
+            elif clause.key == LedgerReviewFilterKey.CLASSIFICATION:
+                classification = _enum_value_or_raise(
+                    clause,
+                    BusinessClassification,
+                    scope="ledger-classification",
+                )
+            elif clause.key == LedgerReviewFilterKey.TEXT:
+                text = clause.value
         return cls(
             clauses=clauses,
             status=status,
             period=period,
             issue=issue,
             import_id=import_id,
+            classification=classification,
+            text=text,
         )
 
     @model_validator(mode="after")
@@ -355,6 +374,10 @@ class LedgerReviewFilterSpec(BaseModel):
             raise ValueError("clauses[issue] / issue field disagree")
         if (LedgerReviewFilterKey.IMPORT in present_keys) != (self.import_id is not None):
             raise ValueError("clauses[import] / import_id field disagree")
+        if (LedgerReviewFilterKey.CLASSIFICATION in present_keys) != (self.classification is not None):
+            raise ValueError("clauses[classification] / classification field disagree")
+        if (LedgerReviewFilterKey.TEXT in present_keys) != (self.text is not None):
+            raise ValueError("clauses[text] / text field disagree")
         return self
 
 

@@ -79,6 +79,7 @@ class ManualLedgerTransactionCommand(BaseModel):
     idempotency_key: str | None = None
     classified_by_override: str | None = None
     source_jurisdiction: str | None = None
+    group_label: str | None = Field(default=None, max_length=64)
 
     @field_validator("source_jurisdiction")
     @classmethod
@@ -216,6 +217,7 @@ class ManualLedgerTransactionPatch(BaseModel):
     iva_category: IvaCategory | None = None
     counterparty_eu_member_state: EUMemberState | None = None
     source_jurisdiction: str | None = None
+    group_label: str | None = None
 
     @field_validator("source_jurisdiction")
     @classmethod
@@ -233,6 +235,7 @@ class ManualLedgerTransactionPatch(BaseModel):
         "prorrata_reference",
         "purchase_invoice_evidence_id",
         "notes",
+        "group_label",
     )
     @classmethod
     def _trim_optional_text(cls, value: str | None) -> str | None:
@@ -564,9 +567,13 @@ class LedgerReviewQuery(BaseModel):
     status: str | None = None
     issue: str | None = None
     import_id: str | None = None
+    classification: str | None = None
+    text: str | None = None
     transaction_id: str | None = Field(default=None, min_length=64, max_length=64)
 
-    @field_validator("bucket_id", "period", "status", "issue", "import_id", "transaction_id")
+    @field_validator(
+        "bucket_id", "period", "status", "issue", "import_id", "classification", "text", "transaction_id"
+    )
     @classmethod
     def _trim_optional_query_text(cls, value: str | None) -> str | None:
         if value is None:
@@ -606,6 +613,12 @@ class LedgerStatusReport(BaseModel):
     model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
+    # Money roll-up over active business/mixed rows (period-scoped when --period
+    # is given): the readiness/year-end money picture (gross EUR, not a registry
+    # calculation). Default "0.00" for legacy reports.
+    income_total: str = "0.00"
+    expense_total: str = "0.00"
+    net_total: str = "0.00"
     total_count: int = Field(ge=0)
     active_count: int = Field(ge=0)
     archived_count: int = Field(ge=0)

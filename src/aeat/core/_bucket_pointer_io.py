@@ -81,6 +81,31 @@ def resolve_active_bucket_id() -> str | None:
     return None
 
 
+def require_active_bucket_id() -> str:
+    """Resolve the active bucket id via the precedence chain, or raise.
+
+    Companion to :func:`resolve_active_bucket_id` for call sites that require a
+    selected profile rather than tolerating its absence. Operator-initiated auth
+    session paths, the Cl@ve Móvil persistence path, the SEDE declarations-register
+    profile name, and bucket-scoped repositories all sit on flows that require a
+    profile to be selected; a missing profile is a genuine refusal, not a degraded
+    read. Reads env var > pointer file; raises
+    :class:`aeat.core.errors.NoActiveProfileError` if neither rung resolves.
+
+    Diagnostic surfaces (browser-connectivity probe, status flows) MUST NOT call
+    this helper — they call :func:`resolve_active_bucket_id` and supply their own
+    fallback label so a missing profile stays diagnosable.
+    """
+    from .errors import NoActiveProfileError
+
+    bucket_id = resolve_active_bucket_id()
+    if bucket_id is None:
+        raise NoActiveProfileError(
+            translated_message="application.workflow.errors.no_active_profile_bucket",
+        )
+    return bucket_id
+
+
 def write_pointer(root: Path, pointer: BucketPointer) -> None:
     """Atomically write the pointer file via write-then-rename.
 
@@ -99,6 +124,7 @@ def write_pointer(root: Path, pointer: BucketPointer) -> None:
 __all__ = [
     "pointer_path",
     "read_pointer",
+    "require_active_bucket_id",
     "resolve_active_bucket_id",
     "write_pointer",
 ]

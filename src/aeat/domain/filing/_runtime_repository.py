@@ -12,7 +12,7 @@ from ...core._bucket_pointer_io import resolve_active_bucket_id
 from ._errors import ModeloDraftError
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage.sql import SecureObjectRepository
+    from ...adapters.persistence.storage import SecureObjectRepository
 
 
 def resolve_filing_repository_bucket_id(bucket_id: str | None) -> str:

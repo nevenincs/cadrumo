@@ -58,6 +58,13 @@ class TransactionPayload(OutputSchema):
     lifecycle_state: str
     classified_by: str
     source_jurisdiction: str | None = None
+    # FX provenance for foreign-currency rows (ledger-fx-conversion ADR): the
+    # EUR-equivalent and applied CCY->EUR rate the application payload now emits.
+    # Declared here so the strict single-transaction read surface (ledger
+    # view/classify --id/update/archive/stash) accepts the persisted FX fields
+    # rather than rejecting them as extra_forbidden. None for EUR-native rows.
+    value_in_eur: str | None = None
+    fx_rate: str | None = None
 
 
 class BulkClassifyFailurePayload(OutputSchema):
@@ -267,10 +274,21 @@ class LedgerMergeResult(OutputSchema):
 
 @register_schema("ledger.list")
 class LedgerListResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger list``."""
+    """JSON envelope for ``aeat app ledger list``.
+
+    ``rows`` is the page actually rendered; ``total`` is the full bucket row
+    count. When ``--limit`` clips the page, ``truncated`` is ``True`` and
+    ``offset`` / ``limit`` describe the window so a large ledger is never
+    silently capped — the consumer can always see that more rows exist.
+    """
 
     bucket_id: str
     rows: list[dict]
+    total: int = 0
+    shown: int = 0
+    offset: int = 0
+    limit: int | None = None
+    truncated: bool = False
 
 
 @register_schema("ledger.view")
@@ -294,6 +312,9 @@ class LedgerStatusResult(OutputSchema):
     """
 
     bucket_id: str
+    income_total: str = "0.00"
+    expense_total: str = "0.00"
+    net_total: str = "0.00"
     total_count: int
     active_count: int
     archived_count: int

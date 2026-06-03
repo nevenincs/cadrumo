@@ -246,3 +246,48 @@ def test_list_profiles_returns_sorted_listings(secure_objects, schema) -> None:
     svc.register(RegisterProfileCommand(profile_id="a-first", display_name="First", facts=_all_required_facts(schema)))
     listing = svc.list_profiles()
     assert tuple(row.profile_id for row in listing.profiles) == ("a-first", "b-second")
+
+
+# ---------------------------------------------------------------------------
+# W74.P358.S2069 — service-contract tests for the read + validate paths
+# ---------------------------------------------------------------------------
+
+
+def test_read_returns_persisted_record(secure_objects, schema) -> None:
+    """Service-contract gate: read() loads the same record back as the
+    register() call persisted (round-trip via the secure repository)."""
+
+    svc = _service(secure_objects, schema)
+    facts = _all_required_facts(schema)
+    svc.register(RegisterProfileCommand(profile_id="rt-1", display_name="Round-trip", facts=facts))
+    loaded = svc.read("rt-1")
+    assert loaded.profile_id == "rt-1"
+    assert loaded.display_name == "Round-trip"
+    assert loaded.status is UserProfileStatus.ACTIVE
+    assert {f.path for f in loaded.facts} == {f.path for f in facts}
+
+
+def test_read_raises_on_unknown_profile(secure_objects, schema) -> None:
+    """Service-contract gate: read() refuses an unknown profile id with
+    :class:`ProfileNotFoundError`, not a silent empty record."""
+
+    svc = _service(secure_objects, schema)
+    with pytest.raises(ProfileNotFoundError):
+        svc.read("never-registered")
+
+
+def test_validator_surfaces_missing_required_field_as_issue(schema) -> None:
+    """Service-contract gate: the ProfileValidationService that the
+    lifecycle service composes surfaces a missing required field as
+    a structured issue (not a silent pass).
+
+    This pins the validator contract that ``aeat config profile
+    validate`` (W86.P415.S2354) and lifecycle.register both depend on."""
+
+    validator = ProfileValidationService(schema=schema)
+    # An empty fact tuple violates every required-field constraint.
+    report = validator.validate_facts(profile_id="empty", facts=())
+    assert report.profile_id == "empty"
+    assert len(report.issues) >= 1
+    severities = {issue.severity.value for issue in report.issues}
+    assert "error" in severities

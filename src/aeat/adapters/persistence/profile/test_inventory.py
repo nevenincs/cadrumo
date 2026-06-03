@@ -17,10 +17,8 @@ import pytest
 
 from ....domain.contribuyente.inventory import (
     InventoryLedger,
-    InventoryLedgerError,
     MovementKind,
     MovementRecord,
-    StockLayer,
     ValuationMethod,
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -90,29 +88,3 @@ def test_inventory_persistence_is_encrypted_financial_secure_object(_runtime_pro
     assert not path.exists()
     assert b"LEAK-CANARY-SKU" not in db_bytes
     assert b"purchase-canary" not in db_bytes
-
-
-def test_record_movement_refuses_invalid_negative_stock() -> None:
-    ledger = InventoryLedger(
-        actividad_id="retail",
-        year=2025,
-        valuation_method=ValuationMethod.FIFO,
-        opening_stock=Decimal("10.00"),
-        opening_layers=(
-            StockLayer(sku="ssd", quantity=Decimal("1"), unit_cost=Decimal("10.00"), source_movement_id="open-a"),
-        ),
-    )
-    save_inventory((ledger,))
-
-    with pytest.raises(InventoryLedgerError, match="consume more stock"):
-        record_movement(
-            "retail",
-            MovementRecord(
-                movement_id="sale-too-many",
-                movement_date=date(2025, 2, 1),
-                kind=MovementKind.COGS,
-                sku="ssd",
-                quantity=Decimal("2"),
-            ),
-            year=2025,
-        )

@@ -43,6 +43,7 @@ from ...domain.transactions import (
 )
 from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from . import _shared_issue_reasons
+from ._business_proportion import business_proportion
 from ._currency_predicates import effective_eur_amount, is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
@@ -459,12 +460,10 @@ def _business_amount(
     business_pct: Decimal | None,
 ) -> Decimal | None:
     amount = abs(signed_amount)
-    if classification is BusinessClassification.BUSINESS:
-        return amount
-    if classification is BusinessClassification.MIXED:
-        assert business_pct is not None
-        return amount * business_pct
-    return None
+    proportion = business_proportion(classification, business_pct)
+    if proportion is None:
+        return None
+    return amount * proportion
 
 
 def _purchase_invoice_evidence_payload(

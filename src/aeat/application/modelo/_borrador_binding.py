@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Mapping
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -38,6 +38,7 @@ from ..live import (
     LiveApplicationInputError,
     SnapshotLifecycleState,
 )
+from ._decimal_binding_value import decimal_from_string
 
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
@@ -299,12 +300,12 @@ def _borrador_capable_bindings(registry_snapshot: RegistrySnapshot) -> dict[str,
 def _decimal_value(binding_id: str, value: Decimal | str) -> Decimal:
     if isinstance(value, Decimal):
         return value
-    try:
-        return Decimal(value.strip())
-    except (InvalidOperation, ValueError) as exc:
-        raise Modelo100BorradorBindingError(
-            f"borrador value for numeric binding {binding_id!r} must be decimal-compatible; got {value!r}"
-        ) from exc
+    return decimal_from_string(
+        binding_id,
+        value,
+        error_factory=Modelo100BorradorBindingError,
+        pipeline_label="borrador value",
+    )
 
 
 __all__ = [

@@ -30,9 +30,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
-from collections.abc import AsyncIterator, Callable, Mapping
-from contextlib import asynccontextmanager
+import tempfile
+from collections.abc import AsyncIterator, Callable, Iterator, Mapping
+from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
@@ -385,7 +387,7 @@ async def _open_register_page(
             "AeatSession has no persisted auth session; run `aeat config auth status` first",
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
-    from .....application.workflow._models import require_active_bucket_id
+    from .....core import require_active_bucket_id
 
     profile = Profile(
         name=require_active_bucket_id(),
@@ -1628,6 +1630,75 @@ def _parse_modelo_303_money(raw: str, *, casilla_id: str) -> Decimal:
     return sign * (Decimal(digits) / Decimal("100"))
 
 
+def _write_all_fd(fd: int, payload: bytes) -> None:
+    remaining = memoryview(payload)
+    while remaining:
+        write_failed = False
+        try:
+            written = os.write(fd, remaining)
+        except OSError:
+            write_failed = True
+            written = 0
+        if write_failed:
+            raise SedeParseError(
+                "failed to write declaration PDF parser scratch file",
+                context={"operation": "declaration_pdf_scratch_write"},
+                translated_message=tr("adapters.sede.errors.parse_failed"),
+            )
+        if written == 0:
+            raise SedeParseError(
+                "declaration PDF parser scratch write made no progress",
+                translated_message=tr("adapters.sede.errors.parse_failed"),
+            )
+        remaining = remaining[written:]
+
+
+@contextmanager
+def _temporary_sensitive_pdf_path(body: bytes) -> Iterator[Path]:
+    create_failed = False
+    try:
+        fd, tmp_path_str = tempfile.mkstemp(prefix="aeat-declaration-pdf-", suffix=".pdf")
+    except OSError:
+        create_failed = True
+        fd = -1
+        tmp_path_str = ""
+    if create_failed:
+        raise SedeParseError(
+            "failed to create declaration PDF parser scratch file",
+            context={"operation": "declaration_pdf_scratch_create"},
+            translated_message=tr("adapters.sede.errors.parse_failed"),
+        )
+    tmp_path = Path(tmp_path_str)
+    try:
+        try:
+            _write_all_fd(fd, body)
+        finally:
+            close_failed = False
+            try:
+                os.close(fd)
+            except OSError:
+                close_failed = True
+            if close_failed:
+                raise SedeParseError(
+                    "failed to close declaration PDF parser scratch file",
+                    context={"operation": "declaration_pdf_scratch_close"},
+                    translated_message=tr("adapters.sede.errors.parse_failed"),
+                )
+        yield tmp_path
+    finally:
+        unlink_failed = False
+        try:
+            tmp_path.unlink(missing_ok=True)
+        except OSError:
+            unlink_failed = True
+        if unlink_failed:
+            raise SedeParseError(
+                "failed to remove declaration PDF parser scratch file",
+                context={"operation": "declaration_pdf_scratch_unlink"},
+                translated_message=tr("adapters.sede.errors.parse_failed"),
+            )
+
+
 def _observed_casillas_from_declaration_pdf(
     *,
     snapshot: RegistrySnapshot,
@@ -1644,14 +1715,10 @@ def _observed_casillas_from_declaration_pdf(
         for profile in snapshot.extraction_profiles.values()
         if profile.surface == "declaracion_pdf"
     )
+    parse_failed = False
     try:
         if needs_word_positions:
-            import tempfile
-
-            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-                tmp.write(body)
-                tmp_path = Path(tmp.name)
-            try:
+            with _temporary_sensitive_pdf_path(body) as tmp_path:
                 filing = parse_declaracion(
                     tmp_path,
                     modelo_override=declaration.modelo,
@@ -1659,21 +1726,29 @@ def _observed_casillas_from_declaration_pdf(
                     period_override=declaration.period,
                     registry_snapshot=snapshot,
                 )
-            finally:
-                tmp_path.unlink(missing_ok=True)
         else:
             filing = parse_declaracion_bytes(
                 body,
-                source_label=f"secure declaration PDF {declaration.expediente_id}",
+                source_label="secure declaration PDF",
                 modelo_override=declaration.modelo,
                 año_override=declaration.ejercicio,
                 period_override=declaration.period,
                 registry_snapshot=snapshot,
             )
-    except DeclaracionParseError as exc:
+    except DeclaracionParseError:
+        parse_failed = True
+        filing = None
+    if parse_failed:
         raise SedeParseError(
-            f"declaration PDF for {declaration.expediente_id!r} did not yield registry casilla observations"
-        ) from exc
+            "declaration PDF did not yield registry casilla observations",
+            context={
+                "operation": "declaration_pdf_parse",
+                "modelo": declaration.modelo,
+                "ejercicio": str(declaration.ejercicio),
+                "period": declaration.period,
+            },
+            translated_message=tr("adapters.sede.errors.parse_failed"),
+        )
 
     observations: list[ObservedCasillaValue] = []
     for casilla in filing.values:
@@ -1689,7 +1764,16 @@ def _observed_casillas_from_declaration_pdf(
             )
         )
     if not observations:
-        raise SedeParseError(f"declaration PDF for {declaration.expediente_id!r} did not yield casilla observations")
+        raise SedeParseError(
+            "declaration PDF did not yield casilla observations",
+            context={
+                "operation": "declaration_pdf_extract_observations",
+                "modelo": declaration.modelo,
+                "ejercicio": str(declaration.ejercicio),
+                "period": declaration.period,
+            },
+            translated_message=tr("adapters.sede.errors.parse_failed"),
+        )
     return tuple(observations)
 
 

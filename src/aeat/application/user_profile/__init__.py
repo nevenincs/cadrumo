@@ -32,7 +32,7 @@ from ...domain.user_profile import (
     UserProfileRecord,
     UserProfileStatus,
 )
-from . import _language_resolver as _language_resolver  # side-effect: registers the core.i18n language resolver
+from ._language_resolver import register_language_resolver as _register_language_resolver
 
 if TYPE_CHECKING:
     from ._censo_errors import (
@@ -75,6 +75,12 @@ _PROFILE_SNAPSHOT_HASH_KWARGS: dict[str, object] = {
     "max_length": 64,
     "pattern": r"^[0-9a-f]{64}$",
 }
+
+# W09.P43.S166: replace the prior side-effect import with an explicit
+# register call so the registration point is greppable rather than
+# hidden behind a noqa-protected import. Runs after all module-level
+# imports settle so the call sits in a clear initialiser slot.
+_register_language_resolver()
 
 # ---------------------------------------------------------------------------
 # Lifecycle commands

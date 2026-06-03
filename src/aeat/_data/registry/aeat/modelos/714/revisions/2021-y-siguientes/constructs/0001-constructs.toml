@@ -1,0 +1,34 @@
+# Modelo 714 (patrimonio) Phase-A construct.
+#
+# Phase-A lands the manual-casilla surface and official source grounding.
+# It intentionally does not declare FormulaDefinition entries until the
+# patrimonio calculation chain is implemented from official formula evidence.
+
+[[revisions."2021-y-siguientes".constructs]]
+id = "m714-patrimonio-calculation"
+title = "Modelo 714 Impuesto sobre el Patrimonio cuota"
+legal_refs = [
+    "ley-19-1991:art-4-9",
+    "ley-19-1991:art-28",
+    "ley-19-1991:art-30",
+    "ley-19-1991:art-31",
+]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-form", "boe-modelo-714-layout"]
+casillas = [
+    "decl.ejercicio",
+    "decl.periodo",
+    "patrimonio.base-imponible",
+    "patrimonio.base-liquidable",
+    "patrimonio.cuota-integra",
+    "patrimonio.limite-conjunto",
+    "patrimonio.reduccion-limite-80",
+    "patrimonio.total-cuota-integra",
+    "patrimonio.cuota-minorada",
+    "patrimonio.cuota-a-ingresar",
+]
+application_links = [
+    "modelo-714-filing",
+    "modelo-714-extractor",
+    "modelo-714-verification",
+    "modelo-714-deadline",
+]

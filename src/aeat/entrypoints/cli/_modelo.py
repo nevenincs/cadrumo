@@ -178,8 +178,8 @@ def _resolve_default_actor() -> str:
     fallback label keeps the audit record populated rather than raising.
     """
     with suppress(Exception):
-        from ...application.workflow._models import resolve_active_bucket_id
         from ...application.workflow._persistence import workflow_state_repository
+        from ...core import resolve_active_bucket_id
 
         state = workflow_state_repository().load()
         record = state.active_profile_record()
@@ -202,7 +202,7 @@ def _require_active_profile() -> None:
     translated ``profile create`` guidance that the ledger surface
     already gives.
     """
-    from ...application.workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
     from ...core.i18n import tr as _tr
     from ._errors import CliRefusedBoundaryError
 
@@ -297,7 +297,7 @@ def modelo_readiness(
         ModeloReadinessRequest,
         build_operator_state_projection,
     )
-    from ...application.workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
     from ...core.i18n import tr as _tr
     from ...domain.user_profile import ProfileNotFoundError
     from ._errors import CliRefusedBoundaryError
@@ -335,6 +335,11 @@ def modelo_readiness(
         f"ledger_period\t{report.ledger_period or ''}",
         f"ledger_checked\t{report.ledger_checked_transaction_count}",
         f"ledger_issues\t{len(report.ledger_issues)}",
+        # ``ready`` means the profile/source preflight passed — NOT that the AEAT
+        # filing-obligation window is open. Once the revision is verified-complete
+        # the local finish line is ``work export`` (a fichero-BOE artefact); the
+        # optional internal ``work file`` step needs an open obligation window.
+        "finish_line\texport verified-complete revision via 'aeat app modelo work export' (local finish line)",
     ]
     from ._common import _emit_envelope
     from ._modelo_payloads import (
@@ -387,6 +392,11 @@ def modelo_readiness(
         f"ledger_period\t{report.ledger_period or ''}",
         f"ledger_checked\t{report.ledger_checked_transaction_count}",
         f"ledger_issues\t{len(report.ledger_issues)}",
+        # ``ready`` means the profile/source preflight passed — NOT that the AEAT
+        # filing-obligation window is open. Once the revision is verified-complete
+        # the local finish line is ``work export`` (a fichero-BOE artefact); the
+        # optional internal ``work file`` step needs an open obligation window.
+        "finish_line\texport verified-complete revision via 'aeat app modelo work export' (local finish line)",
     ]
     for requirement in report.missing:
         lines.append(f"{requirement.section_key}.{requirement.field_key}\t{requirement.selector}")
@@ -2120,7 +2130,7 @@ def work_create(
         from ...application.overview import build_filing_obligation_advisories as _build_filing_obligation_advisories
         from ...application.user_profile._profile_repository import ProfileRepository
         from ...application.user_profile._projections import record_to_values
-        from ...application.workflow._models import resolve_active_bucket_id
+        from ...core import resolve_active_bucket_id
 
         _bucket = resolve_active_bucket_id()
         if _bucket is not None:
@@ -2149,8 +2159,15 @@ def work_list(
             help=tr("cli.app.modelo.work.include_discarded_help"),
         ),
     ] = False,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """List modelo work units. Discarded units are excluded unless asked."""
+    activate_subcommand_output_language(ctx, output_language)
     _require_active_profile()
     units = list_work_units(bucket_id=bucket_id, include_discarded=include_discarded)
     from ._common import _emit_envelope
@@ -2196,8 +2213,15 @@ def work_status(
         str,
         typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
     ],
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """View one work unit's metadata."""
+    activate_subcommand_output_language(ctx, output_language)
     work_unit_id = _validate_work_unit_id(work_unit_id)
     _require_active_profile()
     try:
@@ -3425,8 +3449,15 @@ def work_revisions(
         str | None,
         typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
     ] = None,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """List calculation revisions, optionally filtered to one work unit."""
+    activate_subcommand_output_language(ctx, output_language)
     if work_unit_id is not None:
         work_unit_id = _validate_work_unit_id(work_unit_id)
     _require_active_profile()
@@ -3461,12 +3492,19 @@ def work_revision(
         str,
         typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
     ],
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Show one stored calculation revision's persisted casilla values.
 
     Read-only: the persisted revision is rendered as-is, never
     recomputed. Use ``work revisions`` to discover a revision id.
     """
+    activate_subcommand_output_language(ctx, output_language)
     calculation_revision_id = _validate_calculation_revision_id(calculation_revision_id)
     _require_active_profile()
     try:
@@ -3524,6 +3562,12 @@ def work_history(
             ),
         ),
     ],
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Assemble the chronological event stream for one work unit.
 
@@ -3531,6 +3575,7 @@ def work_history(
     the four catalogues (work unit, calculation revision, verification
     report, filing record). Emits no bucket event.
     """
+    activate_subcommand_output_language(ctx, output_language)
     from ...application.modelo import assemble_work_unit_history
 
     work_unit_id = _validate_work_unit_id(work_unit_id)
@@ -3827,8 +3872,17 @@ def _resolve_workflow_run_id(target: str) -> str:
         ),
     ),
 )
-def work_runs(ctx: typer.Context) -> None:
+def work_runs(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
     """List persisted workflow runs so an operator can discover run ids."""
+    activate_subcommand_output_language(ctx, output_language)
     from ...application.workflow import list_runs
 
     runs = list_runs()
@@ -4350,7 +4404,7 @@ def _evidence_bundle_service():
 
 
 def _active_bucket_id() -> str:
-    from ...application.workflow._models import require_active_bucket_id
+    from ...core import require_active_bucket_id
 
     try:
         return require_active_bucket_id()
@@ -5216,7 +5270,7 @@ def modelo_project(
     # caller layer only so the profile resolver still overrides the
     # baseline.
     from ...application.modelo._profile_binding import resolve_profile_sourced_bindings
-    from ...application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id as _resolve_active_bucket_id
 
     _bucket_for_profile = _resolve_active_bucket_id()
     profile_decimal_bindings: dict[str, Decimal] = {}

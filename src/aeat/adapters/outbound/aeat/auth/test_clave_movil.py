@@ -934,7 +934,7 @@ class TestProbePersistedSession:
 
         asyncio.run(seed())
 
-        from .....application.workflow._models import require_active_bucket_id
+        from .....core import require_active_bucket_id
 
         storage_path = settings.aeat_token_dir / f"{require_active_bucket_id()}-clave-movil-storage.json"
         assert _session_store.exists(storage_path)

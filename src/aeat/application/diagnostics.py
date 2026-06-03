@@ -303,9 +303,9 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
     try:
         try:
             from ..adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
+            from ..core import resolve_active_bucket_id
             from .wizard._status import build_wizard_status
             from .workflow import workflow_state_repository
-            from .workflow._models import resolve_active_bucket_id
             from .workflow._profile_health import assess_active_profile_health
 
             if not has_active_bucket_session() and resolve_active_bucket_id() is not None:

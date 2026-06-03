@@ -38,7 +38,6 @@ from ...domain.submission import ModeloDraftStatus, SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
 from ._errors import UnhandledWorkflowError, WorkflowAbortSignalError, WorkflowError, WorkflowInputMismatchError
 from ._models import (
-    DeclaracionPointer,
     SiteHealthAlert,
     SiteHealthStatus,
     WorkflowAbortReason,
@@ -1277,55 +1276,9 @@ class WorkflowEngine:
         ) from exc
 
 
-def update_declaration_pointer(
-    state: WorkflowState,
-    *,
-    modelo: str,
-    period: str,
-    draft_id: str | None = None,
-    status: str | None = None,
-    exported_path: str | None = None,
-) -> WorkflowState:
-    """Return a copy of ``state`` with an updated declaration pointer.
-
-    Upserts a :class:`DeclaracionPointer` into the ``declarations``
-    registry. If a pointer already exists for the key, its fields are
-    updated with the supplied values.
-
-    Returns the updated :class:`WorkflowState` with the upserted pointer.
-    """
-    key = declaration_key(modelo, period)
-    current = state.declarations.get(key)
-    if current is None:
-        updated = DeclaracionPointer(
-            modelo=modelo,
-            period=period,
-            draft_id=draft_id,
-            status=status,
-            exported_path=exported_path,
-        )
-    else:
-        updated = current.model_copy(
-            update={
-                k: v
-                for k, v in {
-                    "draft_id": draft_id,
-                    "status": status,
-                    "exported_path": exported_path,
-                }.items()
-                if v is not None
-            }
-        )
-
-    new_declarations = dict(state.declarations)
-    new_declarations[key] = updated
-    return state.model_copy(update={"declarations": new_declarations})
-
-
 __all__ = [
     "ExpedientesSource",
     "NotificationsSource",
     "WorkflowEngine",
     "declaration_key",
-    "update_declaration_pointer",
 ]

@@ -17,7 +17,7 @@ from ...core.logging import get_logger
 from ...core.time import now
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage.sql import SecureObjectRepository
+    from ...adapters.persistence.storage import SecureObjectRepository
 
 from ..categories import (
     SpendingCategoryFamily,

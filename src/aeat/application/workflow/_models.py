@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING, Annotated
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
 from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
-from ...core._bucket_pointer_io import resolve_active_bucket_id
+from ...core import require_active_bucket_id, resolve_active_bucket_id
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId
 from ..auth._models import AuthState
@@ -248,34 +248,6 @@ class WorkflowState(BaseModel):
         return resolve_active_bucket_id()
 
 
-def require_active_bucket_id() -> str:
-    """Resolve the active bucket id via the precedence chain or raise.
-
-    Companion to :func:`require_active_bucket_id` for call sites that
-    do not hold a :class:`WorkflowState` reference. The auth session-
-    path helpers, the Cl@ve Móvil persistence path, the SEDE
-    declarations-register profile name, and the
-    AuthAcquisitionLockRecord construction all sit on auth flows that
-    are operator-initiated and require a profile to be selected; a
-    missing profile is a genuine refusal, not a degraded read. Reads
-    env var > pointer file; raises :class:`NoActiveProfileError` if
-    neither rung resolves.
-
-    Diagnostic surfaces (browser-connectivity probe, status flows)
-    MUST NOT call this helper — they call
-    :func:`resolve_active_bucket_id` and supply their own fallback
-    label so a missing profile remains diagnosable.
-    """
-    bucket_id = resolve_active_bucket_id()
-    if bucket_id is None:
-        from ._errors import NoActiveProfileError
-
-        raise NoActiveProfileError(
-            translated_message="application.workflow.errors.no_active_profile_bucket",
-        )
-    return bucket_id
-
-
 def active_transaction_catalogue_repository(
     state: WorkflowState,
     *,
@@ -288,8 +260,8 @@ def active_transaction_catalogue_repository(
         objects: Optional :class:`SecureObjectRepository` override passed through
             to the returned repository.
     """
+    from ...core.errors import NoActiveProfileError
     from ...domain.transactions import LedgerNoActiveBucketError, TransactionCatalogueRepository
-    from ._errors import NoActiveProfileError
 
     try:
         bucket_id = require_active_bucket_id()
@@ -307,12 +279,16 @@ def update_declaration_pointer(
     *,
     modelo: str,
     period: str,
-    draft_id: str,
-    status: str,
+    draft_id: str | None = None,
+    status: str | None = None,
     exported_path: str | None = None,
     verified: bool | None = None,
 ) -> WorkflowState:
     """Return ``state`` with the declaration pointer upserted for ``(modelo, period)``.
+
+    ``draft_id`` and ``status`` are optional: when omitted (``None``) on an update
+    they leave the existing pointer's value untouched rather than clobbering it,
+    so a partial update (e.g. recording only an ``exported_path``) is safe.
 
     Returns the updated :class:`WorkflowState` with the pointer recorded.
     """
@@ -325,11 +301,11 @@ def update_declaration_pointer(
         current = DeclaracionPointer.model_validate_json(_json.dumps(current, default=str))
 
     now = utc_now()
-    update_fields: dict[str, object] = {
-        "draft_id": draft_id,
-        "status": status,
-        "updated_at": now,
-    }
+    update_fields: dict[str, object] = {"updated_at": now}
+    if draft_id is not None:
+        update_fields["draft_id"] = draft_id
+    if status is not None:
+        update_fields["status"] = status
     if exported_path is not None:
         update_fields["exported_path"] = exported_path
     if verified is not None:

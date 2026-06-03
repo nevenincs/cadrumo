@@ -10,8 +10,8 @@ from typer.testing import CliRunner
 
 from ...application.user_profile._orchestration import profile_create_storage_span
 from ...application.user_profile._testing import register_minimal_profile
-from ...application.workflow._models import resolve_active_bucket_id
 from ...application.workflow._persistence import workflow_state_repository
+from ...core import resolve_active_bucket_id
 from ...tests.secure_sql import isolated_profile_storage_root
 from ._ledger import ratios_app
 

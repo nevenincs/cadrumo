@@ -39,8 +39,8 @@ from ....application.diagnostics import (
 from ....application.operator_surface import build_help_document as _build_help_document
 from ....application.operator_surface import render_help_text as _render_help_text
 from ....application.wizard._commands import build_wizard_command as _build_wizard_command
-from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....application.workflow._profile_bucket_scan import read_profile_bucket as _read_profile_bucket
+from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.errors import AeatError as _AeatError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
@@ -374,11 +374,11 @@ def repair_profile(
     yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.yes_help")),
 ) -> None:
     """Inspect profile health or safely repair a degraded active-profile pointer/manifest."""
-    from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
     from ....application.workflow._profile_health import (
         repair_active_profile_manifest_status,
         repair_active_profile_pointer,
     )
+    from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 
     if clear_active and repair_manifest_status:
         raise _CliRefusedBoundaryError(
@@ -762,6 +762,61 @@ def _validate_bundle_schema_version(bundle: object) -> None:
         )
 
 
+def _emit_profile_lifecycle_event(
+    *,
+    event_type: BucketEventType,
+    bucket_id: str,
+    object_id: str,
+    payload: dict[str, str],
+) -> None:
+    """Append a profile-lifecycle event to the bucket-event-history catalogue.
+
+    Closes W74.P357.S2067 for the export + import verbs: the symmetric
+    PROFILE_EXPORTED / PROFILE_IMPORTED events join the existing
+    PROFILE_BUCKET_CREATED / PROFILE_VALUES_UPDATED / PROFILE_TOMBSTONED /
+    PROFILE_DUPLICATED / PROFILE_ACTIVATED emissions already wired in the
+    application-layer ProfileLifecycleService / orchestration. Records the
+    event through the canonical derive_bucket_event_id + repository pair so
+    downstream auditors can reconstruct the sequence from the on-disk
+    catalogue.
+    """
+    from datetime import UTC, datetime
+
+    from ....domain.buckets import (
+        BucketEvent,
+        BucketEventHistoryCatalogue,
+        BucketEventHistoryRepository,
+        BucketEventObjectType,
+        derive_bucket_event_id,
+    )
+
+    occurred_at = datetime.now(UTC).replace(microsecond=0)
+    actor = "operator"
+    event_id = derive_bucket_event_id(
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=object_id,
+        payload=payload,
+    )
+    event = BucketEvent(
+        event_id=event_id,
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=object_id,
+        payload_version=1,
+        payload=payload,
+    )
+    repo = BucketEventHistoryRepository()
+    catalogue = repo.load()
+    repo.save(BucketEventHistoryCatalogue(events={**catalogue.events, event_id: event}))
+
+
 def _atomic_create_profile(*, display_name, facts, profile_id: str | None = None) -> str:
     """Provision a new profile bucket through the canonical atomic-create.
 
@@ -809,7 +864,15 @@ def _atomic_create_profile(*, display_name, facts, profile_id: str | None = None
 
 
 @profile_app.command("list", help=tr("cli.config.list.help"))
-def config_list(ctx: typer.Context) -> None:
+def config_list(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
     """List every registered profile via the manifest-scan helper.
 
     Replaces the prior behaviour that enumerated only the active
@@ -819,6 +882,7 @@ def config_list(ctx: typer.Context) -> None:
     :func:`list_profile_buckets` reads them and returns the full
     set without unlocking any bucket.
     """
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.workflow._profile_bucket_scan import list_profile_buckets
     from .._config_payloads import ConfigListResult, ProfilePointerPayload
 
@@ -851,8 +915,15 @@ def config_list(ctx: typer.Context) -> None:
 def config_profile_switch(
     ctx: typer.Context,
     name: str = typer.Argument(..., help=tr("cli.config.profile.switch_name_help")),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Select an existing profile as the active profile."""
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile._orchestration import select_profile_with_lifecycle_span
     from ....domain.user_profile import ProfileNotFoundError
 
@@ -967,7 +1038,7 @@ def _read_profile_record(*, profile_id: str, bucket_id: str):
     """Read a profile record under a bucket session scoped to that profile."""
     from ....adapters.persistence.storage import has_active_bucket_session
     from ....application.user_profile._orchestration import build_lifecycle_service, profile_storage_session
-    from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
+    from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 
     if bucket_id == _resolve_active_bucket_id() and has_active_bucket_session():
         return build_lifecycle_service(bucket_id=bucket_id).read(profile_id)
@@ -1082,13 +1153,182 @@ def config_profile_show(
         raise typer.Exit(code=2)
 
 
+@profile_app.command("preflight", help=tr("cli.config.profile.preflight_help"))
+def config_profile_preflight(
+    ctx: typer.Context,
+    modelo: str = typer.Option(..., "--modelo", help=tr("cli.config.profile.preflight_modelo_help")),
+    revision_id: str = typer.Option(
+        ..., "--revision-id", help=tr("cli.config.profile.preflight_revision_id_help")
+    ),
+    filing_year: int = typer.Option(
+        ..., "--filing-year", help=tr("cli.config.profile.preflight_filing_year_help")
+    ),
+    period: str = typer.Option(..., "--period", help=tr("cli.config.profile.preflight_period_help")),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    """Report which profile fields a given filing context requires that are missing.
+
+    Operates on the active profile. Exits with code ``2`` when any required
+    field is missing so operators discover the gap via the shell exit status.
+    """
+    _activate_subcommand_output_language(ctx, output_language)
+    from ....application.user_profile._preflight import ProfilePreflightService
+    from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
+
+    pointer = _resolve_active_profile_pointer()
+    if pointer is None:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.errors.no_active_profile",
+        )
+    try:
+        record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
+    except ProfileNotFoundError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": pointer.label or pointer.bucket_id},
+        ) from exc
+    from .._config_payloads import ConfigProfilePreflightResult, ProfilePreflightMissingPayload
+
+    report = ProfilePreflightService(schema=load_user_profile_schema()).report(
+        record=record,
+        modelo=modelo,
+        revision_id=revision_id,
+        filing_year=filing_year,
+        period=period,
+    )
+    result = ConfigProfilePreflightResult(
+        profile_id=report.profile_id,
+        modelo=report.modelo,
+        revision_id=report.revision_id,
+        filing_year=report.filing_year,
+        period=report.period,
+        ready=report.ready,
+        missing=[
+            ProfilePreflightMissingPayload(
+                selector=requirement.selector,
+                section_key=requirement.section_key,
+                field_key=requirement.field_key,
+            )
+            for requirement in report.missing
+        ],
+    )
+    lines = [
+        f"readiness\t{'ready' if report.ready else 'missing'}\tmissing={len(report.missing)}",
+        f"profile_id\t{report.profile_id}",
+        f"modelo\t{report.modelo}",
+        f"revision_id\t{report.revision_id}",
+        f"filing_year\t{report.filing_year}",
+        f"period\t{report.period}",
+    ]
+    for requirement in report.missing:
+        lines.append(f"missing\t{requirement.section_key}\t{requirement.field_key}\t{requirement.selector}")
+    _emit_envelope(ctx, command="config.profile.preflight", result=result, lines=lines)
+    if not report.ready:
+        raise typer.Exit(code=2)
+
+
+@profile_app.command("validate", help=tr("cli.config.profile.validate_help"))
+def config_profile_validate(
+    ctx: typer.Context,
+    name: str | None = typer.Argument(None, help=tr("cli.config.profile.validate_name_help")),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    """Validate a profile against the loaded schema (defaults to the active profile).
+
+    Exits with code ``2`` when blocking issues surface so operators discover
+    schema-conformance failures via the shell exit status. Report-only
+    companion to :func:`config_profile_show` — same validator, narrower
+    payload (no fact dump).
+    """
+    _activate_subcommand_output_language(ctx, output_language)
+    from ....application.user_profile import ProfileValidationService
+    from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
+
+    if name is not None:
+        try:
+            pointer = _read_profile_bucket(name, include_tombstoned=True)
+        except ValueError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.unknown_profile",
+                context={"name": name},
+            ) from exc
+        if pointer is None:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.unknown_profile",
+                context={"name": name},
+            )
+    else:
+        pointer = _resolve_active_profile_pointer()
+        if pointer is None:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.errors.no_active_profile",
+            )
+    try:
+        record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
+    except ProfileNotFoundError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": name or pointer.label or pointer.bucket_id},
+        ) from exc
+    from .._config_payloads import ConfigProfileValidateResult, ProfileIssuePayload
+
+    report = ProfileValidationService(schema=load_user_profile_schema()).validate_record(record)
+    blocking = [issue for issue in report.issues if issue.severity.value == "error"]
+    result = ConfigProfileValidateResult(
+        profile_id=record.profile_id,
+        display_name=record.display_name,
+        status=record.status.value,
+        valid=not blocking,
+        schema_version=report.schema_version,
+        issues=[
+            ProfileIssuePayload(
+                severity=issue.severity.value,
+                code=issue.code,
+                path=issue.path,
+                message=issue.message,
+            )
+            for issue in report.issues
+        ],
+    )
+    lines = [
+        f"readiness\t{'blocked' if blocking else 'ready'}\tissues={len(report.issues)}",
+        f"profile_id\t{record.profile_id}",
+        f"display_name\t{record.display_name}",
+        f"status\t{record.status.value}",
+        f"schema_version\t{report.schema_version}",
+        f"valid\t{not blocking}",
+    ]
+    for issue in report.issues:
+        lines.append(f"{issue.severity.value}\t{issue.code}\t{issue.path or '-'}\t{issue.message}")
+    _emit_envelope(ctx, command="config.profile.validate", result=result, lines=lines)
+    if blocking:
+        raise typer.Exit(code=2)
+
+
 @profile_app.command("delete", help=tr("cli.config.profile.delete_help"))
 def config_profile_delete(
     ctx: typer.Context,
     name: str = typer.Argument(..., help=tr("cli.config.profile.delete_name_help")),
     confirmed: bool = typer.Option(False, "--yes", help=tr("cli.config.profile.delete_yes_help")),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Tombstone a profile. Immutable filing snapshots are retained."""
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile._orchestration import delete_profile_with_lifecycle_span
     from ....domain.user_profile import ProfileNotFoundError
 
@@ -1143,6 +1383,12 @@ def config_profile_duplicate(
     display_name: str | None = typer.Option(
         None, "--display-name", help=tr("cli.config.profile.duplicate_display_name_help")
     ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Copy SOURCE into TARGET as a new active profile.
 
@@ -1154,6 +1400,7 @@ def config_profile_duplicate(
     bypassed the provisioner and could leave a half-copied bucket on
     a crash; the atomic provisioner rolls every write back instead.
     """
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile._orchestration import ProfileAlreadyRegisteredError
     from ....application.workflow._profile_bucket_scan import read_profile_bucket as _read_profile_bucket
     from ....domain.user_profile import ProfileNotFoundError
@@ -1242,6 +1489,12 @@ def config_profile_rename(
         ..., help=tr("cli.config.profile.rename_source_help", default="Existing profile name.")
     ),
     target: str = typer.Argument(..., help=tr("cli.config.profile.rename_target_help", default="New profile name.")),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Rename a profile by changing its operator-visible label.
 
@@ -1251,6 +1504,7 @@ def config_profile_rename(
     directory, keystore directory, secure-object key, and active-profile
     pointer are untouched.
     """
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile._orchestration import (
         ProfileAlreadyRegisteredError,
         rename_profile,
@@ -1308,6 +1562,12 @@ def config_profile_export(
         "--to",
         help=tr("cli.config.profile.export_out_help", default="Destination path for the JSON bundle."),
     ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Serialize a profile bundle to a JSON file.
 
@@ -1317,6 +1577,7 @@ def config_profile_export(
     via the atomic-create provisioner.
     """
     from ....application.user_profile._bundle import serialize_profile_bundle
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile._orchestration import profile_storage_session
     from ....domain.user_profile import ProfileNotFoundError
 
@@ -1331,7 +1592,7 @@ def config_profile_export(
             )
     try:
         from ....adapters.persistence.storage import has_active_bucket_session
-        from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
+        from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 
         if pointer.bucket_id == _resolve_active_bucket_id() and has_active_bucket_session():
             bundle = serialize_profile_bundle(bucket_id=pointer.bucket_id)
@@ -1352,6 +1613,16 @@ def config_profile_export(
         display_name=pointer.label,
         out=str(out),
         schema_version=bundle.bundle_schema_version,
+    )
+    _emit_profile_lifecycle_event(
+        event_type=BucketEventType.PROFILE_EXPORTED,
+        bucket_id=pointer.bucket_id,
+        object_id=pointer.bucket_id,
+        payload={
+            "display_name": pointer.label or "",
+            "out": str(out),
+            "schema_version": str(bundle.bundle_schema_version),
+        },
     )
     _emit_envelope(
         ctx,
@@ -1383,6 +1654,12 @@ def config_profile_import(
         "--label",
         help=tr("cli.config.profile.import_label_help"),
     ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Read a portable profile bundle from a JSON file and register it.
 
@@ -1399,6 +1676,7 @@ def config_profile_import(
     lands the second copy under a fresh, non-colliding label while
     still minting its own immutable UUID identity.
     """
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile._bundle import (
         UnsupportedBundleSchemaVersionError,
         deserialize_profile_bundle,
@@ -1482,6 +1760,17 @@ def config_profile_import(
         display_name=target_label,
         schema_version=bundle.bundle_schema_version,
     )
+    _emit_profile_lifecycle_event(
+        event_type=BucketEventType.PROFILE_IMPORTED,
+        bucket_id=target_id,
+        object_id=target_id,
+        payload={
+            "display_name": target_label,
+            "source_path": str(path),
+            "schema_version": str(bundle.bundle_schema_version),
+            "fresh_uuid_mode": str(fresh_uuid_mode).lower(),
+        },
+    )
     _emit_envelope(
         ctx,
         command="config.profile.import",
@@ -1501,8 +1790,17 @@ def config_profile_import(
         default="Sign out of the active profile by clearing the pointer file.",
     ),
 )
-def config_profile_logout(ctx: typer.Context) -> None:
+def config_profile_logout(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
     """Clear the active-profile pointer so subsequent verbs refuse without an explicit switch."""
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile._orchestration import logout_active_profile
 
     before = logout_active_profile()
@@ -1525,8 +1823,17 @@ def config_profile_logout(ctx: typer.Context) -> None:
 
 
 @profile_app.command("status", help=tr("cli.config.status.help"))
-def config_status(ctx: typer.Context) -> None:
+def config_status(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
     """Show the readiness of the current configuration profile."""
+    _activate_subcommand_output_language(ctx, output_language)
     from pydantic import ValidationError
 
     from ....application.user_profile._projections import record_to_path_values
@@ -1966,8 +2273,17 @@ def auth_clear(
     "list",
     help=tr("cli.config.auth.diagnostics.list_help", default="List encrypted Cl@ve auth diagnostics."),
 )
-def auth_diagnostics_list(ctx: typer.Context) -> None:
+def auth_diagnostics_list(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
     """List encrypted auth diagnostics without revealing captured HTML/screenshots."""
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import list_auth_diagnostics
     from .._config_payloads import AuthDiagnosticsListResult
 
@@ -2002,8 +2318,15 @@ def auth_diagnostics_list(ctx: typer.Context) -> None:
 def auth_diagnostics_show(
     ctx: typer.Context,
     diagnostic_id: str = typer.Argument(..., help=tr("cli.config.auth.diagnostics.id_help", default="Diagnostic id")),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Show one encrypted auth diagnostic by id with sensitive bodies redacted."""
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import load_auth_diagnostic
 
     detail = load_auth_diagnostic(diagnostic_id)
@@ -2082,8 +2405,15 @@ def auth_diagnostics_report(
             ),
         ),
     ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Record the human-observed Cl@ve app state for a captured diagnostic."""
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import AUTH_DIAGNOSTIC_PHONE_STATES, record_auth_diagnostic_phone_state
 
     try:
@@ -2131,7 +2461,16 @@ apoderado_app.add_typer(scopes_app, name="scopes")
 @scopes_app.command(
     "list", help=tr("cli.config.auth.apoderado.scopes.list_help", default="List accepted apoderado scopes")
 )
-def apoderado_scopes_list(ctx: typer.Context) -> None:
+def apoderado_scopes_list(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    _activate_subcommand_output_language(ctx, output_language)
     """List all available representative scopes in the vocabulary."""
     from ....application.auth._apoderado import ApoderadoService
     from .._config_payloads import ApoderadoScopesListResult
@@ -2146,7 +2485,16 @@ def apoderado_scopes_list(ctx: typer.Context) -> None:
 @apoderado_app.command(
     "status", help=tr("cli.config.auth.apoderado.status_help", default="Show active apoderado configuration")
 )
-def apoderado_status(ctx: typer.Context) -> None:
+def apoderado_status(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth._apoderado import ApoderadoService
 
     pointer = _resolve_active_profile_pointer()
@@ -2188,7 +2536,14 @@ def apoderado_configure(
         "--scope",
         help=tr("cli.config.auth.apoderado.configure.scope_help", default="Scope tokens (can be repeated)"),
     ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth._apoderado import ApoderadoService
     from ....application.workflow._persistence import workflow_state_repository
 
@@ -2221,7 +2576,16 @@ def apoderado_configure(
 @apoderado_app.command(
     "clear", help=tr("cli.config.auth.apoderado.clear_help", default="Retire the apoderado configuration")
 )
-def apoderado_clear(ctx: typer.Context) -> None:
+def apoderado_clear(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth._apoderado import ApoderadoService
     from ....application.workflow._persistence import workflow_state_repository
 
@@ -2246,7 +2610,16 @@ def apoderado_clear(ctx: typer.Context) -> None:
 
 
 @apoderado_app.command("check", help=tr("cli.config.auth.apoderado.check_help", default="Read-only live verification"))
-def apoderado_check(ctx: typer.Context) -> None:
+def apoderado_check(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth._apoderado import ApoderadoLiveCheckUnavailableError, ApoderadoService
     from ....application.workflow._persistence import workflow_state_repository
     from ....core.errors import resolve_error_message
@@ -2329,8 +2702,15 @@ def bucket_history(
             help=tr("cli.config.bucket.actor_help"),
         ),
     ] = None,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Browse the append-only bucket-event history."""
+    _activate_subcommand_output_language(ctx, output_language)
     from ....domain.buckets import BucketEventHistoryRepository
 
     selected = _parse_bucket_event_types(event_type)

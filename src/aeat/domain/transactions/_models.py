@@ -305,7 +305,7 @@ def _coerce_transaction_temporal_fields(payload: dict[str, object]) -> None:
 
 def _normalize_transaction_optional_strings(payload: dict[str, object]) -> None:
     """Trim optional id strings and collapse empty strings to None."""
-    for key in ("import_fingerprint", "purchase_invoice_evidence_id"):
+    for key in ("import_fingerprint", "purchase_invoice_evidence_id", "group_label"):
         value = payload.get(key)
         if not isinstance(value, str):
             continue
@@ -798,7 +798,21 @@ class Transaction(BaseModel):
     counterparty_eu_member_state: EUMemberState | None = None
     fx_rate: Decimal | None = None
     value_in_eur: Decimal | None = None
+    # FX provenance (ledger-fx-conversion ADR): the rate source label (e.g.
+    # "ecb_reference") and the effective rate date as an ISO-8601 string.
+    # Optional/backward-compatible; populated at import when a normalizer supplied
+    # them. Cannot exist without an fx_rate (a rate provenance with no rate is
+    # meaningless). Stored as a string (not date) to roundtrip cleanly through the
+    # strict-frozen JSON persistence boundary.
+    rate_source: str | None = None
+    rate_date: str | None = None
     source_jurisdiction: str | None = None
+    # Operator-assigned free-text grouping label (e.g. "Proyecto Acme",
+    # "Q1 viajes"). Orthogonal to category_id (the regulatory spending
+    # category): it is a personal organisational axis for working at scale
+    # over thousands of rows. ``None`` means ungrouped. Length-bounded so a
+    # grouped display stays legible.
+    group_label: str | None = Field(default=None, max_length=64)
 
     @model_validator(mode="before")
     @classmethod
@@ -930,6 +944,8 @@ class Transaction(BaseModel):
             raise TransactionValidationError("fx_rate and value_in_eur must both be set or both be absent")
         if self.raw.currency == DEFAULT_CURRENCY and (fx_set or eur_set):
             raise TransactionValidationError("fx_rate and value_in_eur must be absent for EUR-native transactions")
+        if (self.rate_source is not None or self.rate_date is not None) and not fx_set:
+            raise TransactionValidationError("rate_source/rate_date require an fx_rate (rate provenance needs a rate)")
         return self
 
 

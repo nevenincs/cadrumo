@@ -163,6 +163,7 @@ from .crypto._encrypted_columns import (
     EncryptedString,
     HashedLookup,
 )
+from .envelope import SecureBoundRepository
 from .envelope._envelope import (
     AeadAlgorithm,
     CipherEnvelope,
@@ -241,6 +242,7 @@ from .runtime import (
     inspect_storage_runtime,
 )
 from .secret_store._secret_store import SecretRecord, SecretStore
+from .sql import SecureObjectRepository, SecureObjectWrite
 from .sql.engine import create_engine_from_settings, dispose_engine, get_engine
 from .sql.records import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
 from .sql.repository import CorpusArtifactRepository, ModeloRepository, PortalRepository, SqlRecordRepository
@@ -368,8 +370,11 @@ __all__ = [
     "SecretRecord",
     "SecretStore",
     "SecretStoreError",
+    "SecureBoundRepository",
     "SecureObjectNamespaceDefinition",
+    "SecureObjectRepository",
     "SecureObjectRevisionConflictError",
+    "SecureObjectWrite",
     "SensitivityClass",
     "SqlRecordRepository",
     "StorageError",

@@ -15,7 +15,6 @@ from ...adapters.outbound.aeat.sede import (
     FiledDeclaracionObservationStore,
     parse_iva_compensation_wallet_html,
 )
-from ...core.resources import resources
 from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ...domain.iva_compensation._carry_forward import IvaCompensationPeriodState
 from ...domain.iva_compensation._reconciliation import (
@@ -115,6 +114,41 @@ def test_wallet_capture_backend_persists_reloads_reconciles_and_hides_storage_id
         database_bytes = db_path.read_bytes()
         assert _TAXPAYER_REF.encode("ascii") not in database_bytes
         assert f"{_TAXPAYER_REF}:2026:2T".encode("ascii") not in database_bytes
+
+
+def test_wallet_reconciliation_uses_runtime_bound_repository_for_decision_persistence(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path / "wallet-profile", bucket_id=_SESSION_BUCKET_ID) as profile:
+        observation_repo = CalculationObservationRepository(objects=profile.repository)
+        decision_repo = IvaWalletDecisionRepository(objects=profile.repository)
+        _store_prior_compensation(observation_repo, amount=Decimal("1200.00"))
+        observation = parse_iva_compensation_wallet_html(
+            _wallet_html(
+                total="1.200,00",
+                rows="<tr><td>2026</td><td>1T</td><td>1.200,00</td></tr>",
+                target_year=2026,
+                target_period="2T",
+            ),
+            taxpayer_nif=_TAXPAYER_REF,
+            authenticated_identity=_TAXPAYER_REF,
+            target_year=2026,
+            target_period="2T",
+            source_url=IVA_COMPENSATION_WALLET_URL,
+            captured_at=_CAPTURED_AT,
+        )
+
+        report = persist_and_reconcile_iva_compensation_wallet(
+            observation,
+            output_root=tmp_path / "wallet-evidence-bound",
+            repository=observation_repo,
+            decision_repository=decision_repo,
+            decided_at=_CAPTURED_AT,
+        )
+
+        assert report.divergence == "match"
+        assert decision_repo.load_decision(_TAXPAYER_REF, 2026, "2T") is not None
+
+    with isolated_runtime_profile(tmp_path=tmp_path / "other-profile", bucket_id="other-session"):
+        assert IvaWalletDecisionRepository().load_decision(_TAXPAYER_REF, 2026, "2T") is None
 
 
 def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_path: Path) -> None:
@@ -298,16 +332,9 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
 
         assert reloaded_wallet == wallet
         assert reloaded_history is not None
-        # Bind expected values to locals to break the hand-summed
-        # literal pattern the tautology gate detects (the natural
-        # 80+20=100 relationship between pending, generated, and
-        # available_end was being flagged as hand-summed).
-        expected_pending_for_later = Decimal("80.00")
-        expected_generated = Decimal("20.00")
-        expected_available_end = expected_pending_for_later + expected_generated
-        assert reloaded_history.pending_for_later_amount == expected_pending_for_later
-        assert reloaded_history.generated_amount == expected_generated
-        assert reloaded_history.available_end_amount == expected_available_end
+        assert reloaded_history.pending_for_later_amount == Decimal("80.00")
+        assert reloaded_history.generated_amount == Decimal("20.00")
+        assert reloaded_history.available_end_amount == Decimal("100.00")
         assert reloaded_decision is not None
         assert reloaded_decision.selected_amount == reloaded_history.available_end_amount
         assert remote_state.wallet_observation_count == 1
@@ -327,9 +354,6 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
 
 
 def _store_prior_compensation(repository: CalculationObservationRepository, *, amount: Decimal) -> None:
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
-    casilla = next(item for item in snapshot.revision.casillas if item.id == "iva.compensacion-disponible-fin-periodo")
-    formula = next(item for item in snapshot.revision.formulas if item.target == casilla.id)
     repository.save_observation(
         RegistryModeloObservation(
             modelo="303",
@@ -337,11 +361,11 @@ def _store_prior_compensation(repository: CalculationObservationRepository, *, a
             period="1T",
             observations=(
                 CasillaObservation(
-                    casilla_id=casilla.id,
+                    casilla_id="iva.compensacion-disponible-fin-periodo",
                     value=amount,
-                    formula_id=formula.id,
-                    legal_refs=tuple(casilla.legal_refs),
-                    source_refs=tuple(casilla.source_refs),
+                    formula_id="modelo-303-compensacion-disponible-fin-periodo",
+                    legal_refs=("ley-37-1992:art-99",),
+                    source_refs=("aeat-modelo-303-instructions",),
                 ),
             ),
         ),

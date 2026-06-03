@@ -173,7 +173,7 @@ def storage_state_paths(
     Returns a :class:`StorageStatePaths` carrying the resolved filesystem
     path for the provider's session-state file.
     """
-    from ..workflow._models import require_active_bucket_id
+    from ...core import require_active_bucket_id
 
     resolved = kind or AuthProviderKind.CERTIFICATE
     stem = _STEM_BY_KIND[resolved]
@@ -500,10 +500,10 @@ def _active_profile_tax_identity() -> str:
         get_master_key_provider,
         has_active_bucket_session,
     )
+    from ...core import resolve_active_bucket_id
     from ...domain.user_profile import ProfileNotFoundError
     from ..user_profile._orchestration import build_lifecycle_service
     from ..user_profile._projections import record_to_path_values, record_to_values
-    from ..workflow._models import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:

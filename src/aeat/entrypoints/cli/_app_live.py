@@ -868,7 +868,7 @@ app.add_typer(notifications_app, name="notifications")
 
 
 def _active_bucket_id() -> str:
-    from ...application.workflow._models import require_active_bucket_id
+    from ...core import require_active_bucket_id
 
     try:
         return require_active_bucket_id()

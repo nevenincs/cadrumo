@@ -238,6 +238,19 @@ class McpLaunchError(AeatError):
     """Raised when a repo-managed MCP process cannot be launched safely."""
 
 
+class NoActiveProfileError(AeatError):
+    """Raised when an operation requires an active profile bucket and none is selected.
+
+    Bucket-scoped repositories (transaction catalogue, manual ledger,
+    bucket-local aggregation) and the operator-initiated auth/sede flows refuse
+    to operate without an active profile. The active-bucket precedence chain is
+    a core concern (env var > pointer file), so the refusal that gates it lives
+    in the core error taxonomy and is raised by
+    :func:`aeat.core.require_active_bucket_id`. Callers that surface this to the
+    operator map it to the standard ``cli.common.errors.no_active_profile`` message.
+    """
+
+
 from ._not_found import CoreNotFoundError
 from ._registry import (
     ERROR_REGISTRY,
@@ -272,6 +285,7 @@ __all__ = [
     "FixtureProvisioningError",
     "McpLaunchError",
     "ModeloFixtureError",
+    "NoActiveProfileError",
     "ProfileAnswerTypeError",
     "RedactionError",
     "SiteHealthError",

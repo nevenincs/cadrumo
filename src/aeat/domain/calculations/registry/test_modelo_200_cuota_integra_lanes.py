@@ -80,7 +80,16 @@ def _cuota_for(
     result = calculate_registry_snapshot(
         _snapshot(),
         inputs={
-            "DP200014:00552": base,
+            # 00552 is computed: max(00550 - 01032 - 00547, 0); 00550 is
+            # computed: 00501 + DP200013:00417 - DP200013:00418. Supply the
+            # leaf operator-input casillas (00501 resultado contable + zero
+            # corrections + zero reserva + zero BIN aplicada) so the chain
+            # computes 00552 = base.
+            "00501": base,
+            "DP200013:00417": Decimal("0"),
+            "DP200013:00418": Decimal("0"),
+            "01032": Decimal("0"),
+            "DP200014:00547": Decimal("0"),
             "DP200014:01033": Decimal("0"),
             "DP200014:01034": Decimal("0"),
             "DP200014B:00592": Decimal("0"),
@@ -92,6 +101,9 @@ def _cuota_for(
             _NEW_ENTITY_BINDING: new_entity,
             _INCN_BINDING: incn,
             _ESTADO_PCT_BINDING: Decimal("100"),
+            # BIN-pendiente fresh-filer baseline: previous_filing binding
+            # for casilla 00670 resolves to zero with no prior filing.
+            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
         },
         relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
         date_context={"filing_period": filing_period},
@@ -437,6 +449,8 @@ def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_suppli
             _NEW_ENTITY_BINDING: Decimal("0"),
             _INCN_BINDING: Decimal("10000000"),
             _ESTADO_PCT_BINDING: Decimal("100"),
+            # BIN-pendiente fresh-filer baseline.
+            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
         },
         relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
         date_context={"filing_period": date(2024, 12, 31)},
@@ -472,6 +486,8 @@ def test_cuota_ejercicio_00599_raises_when_estado_porcentaje_binding_absent() ->
                 _NEW_ENTITY_BINDING: Decimal("0"),
                 _INCN_BINDING: Decimal("10000000"),
                 # _ESTADO_PCT_BINDING intentionally absent
+                # BIN-pendiente fresh-filer baseline (separate gate).
+                "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
             },
             relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
             date_context={"filing_period": date(2024, 12, 31)},

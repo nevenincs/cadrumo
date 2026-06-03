@@ -1,13 +1,14 @@
 """`StorageProvider` Protocol — the v1 storage backend contract.
 
-Every concrete backend (`LocalFileSystemProvider`, `GoogleDriveProvider`,
-`InMemoryDriveProvider`) implements this Protocol. The coordinator
-depends only on the Protocol surface, so swapping backends is a one-
-line settings change.
+Concrete backends implement this Protocol behind the provider factory.
+The coordinator depends only on this public surface, the provider records,
+and the typed outbound storage error hierarchy; concrete backend classes
+remain private implementation details.
 
 Bytes are the unit of payload. Encryption + classification + envelope
 handling happens above the provider layer (in the application sync
-coordinator) so providers never see plaintext domain data.
+coordinator) so providers receive opaque encrypted bytes, not plaintext
+domain data.
 """
 
 from __future__ import annotations
@@ -23,8 +24,14 @@ class StorageProvider(Protocol):
     """Bytes-in / bytes-out per-namespace object store.
 
     Implementations must be safe to instantiate from settings without
-    network IO. Network operations (login refresh, root-folder
-    creation) happen lazily on first `probe()` or first read/write.
+    network IO. Backend setup, credential refresh, remote-folder
+    creation, and filesystem root creation happen lazily on `probe()` or
+    the first read/write operation.
+
+    Provider methods translate expected backend failures into the
+    `OutboundStorageError` hierarchy at this boundary. Native backend
+    exceptions should not cross the Protocol surface except for
+    programming errors.
     """
 
     def put(
@@ -104,17 +111,20 @@ class StorageProvider(Protocol):
     def probe(self, *, read_only: bool = False) -> ProviderProbeReport:
         """Health-check the backend; return a structured report.
 
-        When ``read_only=False``, performs a sentinel-file round-trip
-        (put + get + delete in the ``_probe/`` namespace) to verify write
-        capability. When ``read_only=True``, only attempts to list namespaces.
+        When ``read_only=False``, performs provider-specific reachability
+        checks plus a sentinel payload write/delete round-trip in the
+        ``_probe/`` namespace to verify write capability. When
+        ``read_only=True``, skips the sentinel payload round-trip but may
+        still perform provider-specific root or service checks.
 
         Args:
-            read_only: When True, skips the write round-trip and only checks listing.
+            read_only: When True, skips the sentinel payload round-trip.
 
         Returns:
             A :class:`ProviderProbeReport` describing the backend's state.
-            Never raises on transient failures; failure modes surface
-            via the report's ``reachable`` / ``writable`` fields and ``detail`` string.
+            Never raises on expected backend failures; failure modes
+            surface via the report's ``reachable`` / ``writable`` fields
+            and ``detail`` string.
         """
         ...
 

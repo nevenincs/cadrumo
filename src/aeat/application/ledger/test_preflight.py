@@ -73,6 +73,7 @@ def _transaction(
     taxable_base: Decimal | None = Decimal("100.00"),
     iva_rate: Decimal | None = Decimal("0.21"),
     iva_amount: Decimal | None = Decimal("21.00"),
+    irpf_category: str | None = None,
     usage_ratio_id: str | None = None,
     booked_date: date = date(2026, 4, 5),
     currency: str = "EUR",
@@ -88,6 +89,7 @@ def _transaction(
             "taxable_base": taxable_base,
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
+            "irpf_category": irpf_category,
             "usage_ratio_id": usage_ratio_id,
             "lifecycle_state": lifecycle_state,
             "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
@@ -293,6 +295,66 @@ def test_preflight_ignores_archived_and_stashed_rows() -> None:
     assert report.checked_transaction_count == 1
     assert report.issues == ()
     assert report.ready is True
+
+
+def test_preflight_skips_iva_facts_on_trabajo_income_rows() -> None:
+    """An INCOMING transaction with ``irpf_category="trabajo"`` (nómina) is
+    IVA-exempt: the IRPF retenciones binding consumes the gross amount and
+    the IVA aggregation never reads taxable_base / iva_rate / iva_amount.
+    Preflight must NOT flag missing_taxable_base + missing_iva_amount +
+    missing_iva_rate on these rows.
+
+    Closes the R9-ANDREA-HIGH false-positive surfaced in cross-domain-
+    continuity W05.P22.S345.
+    """
+    nomina = _transaction(
+        "row-nomina",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("1850.00"),
+        irpf_category="trabajo",
+        category_id=None,
+        taxable_base=None,
+        iva_rate=None,
+        iva_amount=None,
+    )
+
+    report = preflight_transaction_catalogue(
+        bucket_id="bucket-a",
+        period="2026Q2",
+        transactions=TransactionCatalogue.from_transactions((nomina,)),
+    )
+
+    assert report.ready is True, [issue.reason for issue in report.issues]
+    assert report.issues == ()
+
+
+def test_preflight_still_flags_iva_facts_on_non_trabajo_income_rows() -> None:
+    """Anti-regression: an INCOMING row WITHOUT ``irpf_category="trabajo"``
+    still surfaces missing-IVA-fact findings. Only the nómina-shaped row
+    is exempt; the trabajo guard must not silence general income rows."""
+
+    income_no_irpf = _transaction(
+        "row-income-no-irpf",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("500.00"),
+        irpf_category=None,
+        category_id=None,
+        taxable_base=None,
+        iva_rate=None,
+        iva_amount=None,
+    )
+
+    report = preflight_transaction_catalogue(
+        bucket_id="bucket-a",
+        period="2026Q2",
+        transactions=TransactionCatalogue.from_transactions((income_no_irpf,)),
+    )
+
+    assert report.ready is False
+    surfaced = {issue.reason for issue in report.issues}
+    assert LedgerPreflightIssueReason.MISSING_TAXABLE_BASE in surfaced
+    assert LedgerPreflightIssueReason.MISSING_IVA_AMOUNT in surfaced
+    assert LedgerPreflightIssueReason.MISSING_IVA_RATE in surfaced
 
 
 def test_preflight_reports_unsupported_currency_before_modelo_aggregation() -> None:

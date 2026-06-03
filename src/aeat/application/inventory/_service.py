@@ -288,6 +288,11 @@ class InventoryService:
         updated = ledger.model_copy(
             update={"period_movements": (*ledger.period_movements, record)},
         )
+        # Domain valuation guard runs in the application layer, before persistence:
+        # a movement that would produce an invalid valuation (e.g. consuming more
+        # stock than available) raises before any write. Keeping the guard here
+        # rather than in the persistence adapter keeps the adapter calculation-free.
+        compute_inventory_valuation(updated)
         repository = self._repository_for(bucket_id)
         document = repository.load()
         document = _replace_ledger(document, updated)

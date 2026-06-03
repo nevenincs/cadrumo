@@ -26,7 +26,7 @@ import json
 # LOGGING-STDLIB-RATIONALE-SINK-HANDLER:
 # JsonlRunSink subclasses logging.Handler and accepts logging.LogRecord; stdlib
 # import is required by the ABC contract.
-import logging
+import logging  # LOGGING-STDLIB-RATIONALE-SINK-HANDLER
 import os
 import threading
 from pathlib import Path

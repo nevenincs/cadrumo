@@ -122,3 +122,78 @@ def test_auth_login_retains_output_language() -> None:
 def test_auth_test_retains_output_language() -> None:
     """``aeat config auth test`` had ``--output-language`` before S141; must keep it."""
     _assert_output_language_registered(["config", "auth", "test"])
+
+
+# ---------------------------------------------------------------------------
+# W09.P45.S316 — modelo work read-only verbs (S262/S266 broader sweep)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "verb",
+    ["list", "status", "history", "revisions", "revision", "runs"],
+)
+def test_work_read_only_verb_accepts_output_language(verb: str) -> None:
+    """Every read-only `aeat app modelo work` verb must accept ``--output-language``.
+
+    Closes the discovery3 #121 CLI completeness audit gap for the six
+    work_ verbs that previously had no language flag (S316), pinning
+    them under the parity regression gate (S262/S266 broader sweep)."""
+    _assert_output_language_registered(["app", "modelo", "work", verb])
+
+
+# ---------------------------------------------------------------------------
+# W86.P415.S2354 — config profile validate verb (lint-zero session add)
+# ---------------------------------------------------------------------------
+
+
+def test_config_profile_validate_accepts_output_language() -> None:
+    """``aeat config profile validate`` (shipped W86.P415.S2354) accepts ``--output-language``."""
+    _assert_output_language_registered(["config", "profile", "validate"])
+
+
+# ---------------------------------------------------------------------------
+# W09.P45.S232 — full config profile verb tree parity sweep
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "verb",
+    ["list", "switch", "delete", "duplicate", "rename", "export", "import", "logout", "status"],
+)
+def test_config_profile_verb_accepts_output_language(verb: str) -> None:
+    """W09.P45.S232 closure: every config-profile verb that previously
+    lacked ``--output-language`` now accepts it for parity with the rest
+    of the config noun-group."""
+    _assert_output_language_registered(["config", "profile", verb])
+
+
+# ---------------------------------------------------------------------------
+# W13.P66.S403 — sub-noun-group parity sweep
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["config", "auth", "diagnostics", "list"],
+        ["config", "auth", "diagnostics", "show"],
+        ["config", "auth", "diagnostics", "report"],
+        ["config", "auth", "apoderado", "scopes", "list"],
+        ["config", "auth", "apoderado", "status"],
+        ["config", "auth", "apoderado", "configure"],
+        ["config", "auth", "apoderado", "clear"],
+        ["config", "auth", "apoderado", "check"],
+        ["config", "bucket", "history"],
+        ["app", "ledger", "ratios", "list"],
+        ["app", "ledger", "ratios", "set"],
+        ["app", "ledger", "ratios", "unset"],
+        ["app", "ledger", "ratios", "eligible"],
+        ["app", "ledger", "ratios", "validate"],
+    ],
+)
+def test_sub_noun_group_verb_accepts_output_language(argv: list[str]) -> None:
+    """W13.P66.S403 closure: every CLI sub-noun-group verb under
+    auth_diagnostics, apoderado, bucket, and ledger ratios accepts
+    ``--output-language`` for parity with the top-level config verbs."""
+    _assert_output_language_registered(argv)

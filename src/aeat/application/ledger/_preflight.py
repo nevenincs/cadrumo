@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, computed_field, field_serializer, field_v
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import BucketId
+from ...domain.iva import IvaCategory
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -46,6 +47,10 @@ class LedgerPreflightIssueReason(StrEnum):
     MISSING_IVA_RATE = "missing_iva_rate"
     MISSING_PROPORTIONALITY_REFERENCE = "missing_proportionality_reference"
     UNSUPPORTED_CURRENCY = "unsupported_currency"
+    # Anomaly channel: present-but-suspicious rows (distinct from missing-fact),
+    # so an asesor sees real anomalies without first classifying every row.
+    ANOMALY_NON_DECLARABLE_IVA_CATEGORY = "anomaly_non_declarable_iva_category"
+    ANOMALY_RECARGO_ON_NON_RETAILER = "anomaly_recargo_on_non_retailer"
 
 
 class LedgerPreflightIssue(BaseModel):
@@ -172,6 +177,23 @@ def _transaction_needs_expense_category(transaction: Transaction) -> bool:
     )
 
 
+_ANOMALY_IVA_REASONS: dict[IvaCategory, tuple[LedgerPreflightIssueReason, str]] = {
+    IvaCategory.UNKNOWN: (
+        LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
+        "iva_category 'unknown' is not declarable; classify the row or query the source",
+    ),
+    IvaCategory.ERRONEOUS_INVOICE: (
+        LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
+        "iva_category 'erroneous_invoice' marks a rectified/void row; not declarable",
+    ),
+    IvaCategory.RECARGO_EQUIVALENCIA: (
+        LedgerPreflightIssueReason.ANOMALY_RECARGO_ON_NON_RETAILER,
+        "recargo equivalencia on a purchase implies the retailer regime; IVA+RE is "
+        "non-deductible cost — query the supplier if this is not a retailer activity",
+    ),
+}
+
+
 def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIssue, ...]:
     issues: list[LedgerPreflightIssue] = []
     common = {"transaction_id": transaction.transaction_id}
@@ -193,7 +215,13 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
         )
     if transaction.business_classification is BusinessClassification.PERSONAL:
         return ()
-    if transaction.raw.currency != DEFAULT_CURRENCY:
+    anomaly = _ANOMALY_IVA_REASONS.get(transaction.iva_category)
+    if anomaly is not None:
+        reason, detail = anomaly
+        return (LedgerPreflightIssue(**common, reason=reason, detail=detail),)
+    # A foreign row is only unsupported when no EUR conversion was applied at
+    # import; a converted row (value_in_eur set) aggregates normally.
+    if transaction.raw.currency != DEFAULT_CURRENCY and transaction.value_in_eur is None:
         issues.append(
             LedgerPreflightIssue(
                 **common,
@@ -218,6 +246,14 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
                 detail="mixed ledger transaction has no usage_ratio_id proportionality reference",
             )
         )
+    # Trabajo (nómina) incoming rows are IVA-exempt by definition: an
+    # employer-paid wage/salary carries no taxable_base / iva_rate /
+    # iva_amount because the IRPF retenciones flow consumes the row,
+    # not the IVA aggregation. Skip the IVA-fact preflight on these
+    # rows so a payroll-receipt entry does not surface as three false-
+    # positive missing_iva_* findings every period.
+    if _transaction_is_trabajo_income(transaction):
+        return tuple(issues)
     for reason in iva_ledger_missing_fact_reasons(transaction):
         issues.append(
             LedgerPreflightIssue(
@@ -227,6 +263,23 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
             )
         )
     return tuple(issues)
+
+
+def _transaction_is_trabajo_income(transaction: Transaction) -> bool:
+    """Return whether the transaction is a nómina (trabajo) income row.
+
+    AEAT classifies an IRPF rendimiento del trabajo (wage/salary)
+    received from an employer as an income flow that never carries an
+    IVA component; the row's IRPF-side retenciones binding consumes
+    the gross amount and the IVA aggregation never reads it. The
+    preflight must therefore skip the IVA-fact checks on these rows.
+    """
+    if transaction.direction is not TransactionDirection.INCOMING:
+        return False
+    irpf_category = transaction.irpf_category
+    if not isinstance(irpf_category, str):
+        return False
+    return irpf_category.strip().lower() == "trabajo"
 
 
 def _preflight_reason_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> LedgerPreflightIssueReason:

@@ -20,6 +20,10 @@ class ExportSerializationFormat(StrEnum):
 
     CSV = "csv"
     JSONL = "jsonl"
+    XLSX = "xlsx"
+
+
+_XLSX_MIME_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
 class TabularExportResult(BaseModel):
@@ -76,6 +80,10 @@ def serialize_tabular_rows(
         payload = _serialize_jsonl(normalized_rows, fieldnames=normalized_fields)
         media_type = "application/x-ndjson"
         extension = "jsonl"
+    elif export_format is ExportSerializationFormat.XLSX:
+        payload = _serialize_xlsx(normalized_rows, fieldnames=normalized_fields)
+        media_type = _XLSX_MIME_TYPE
+        extension = "xlsx"
     else:  # pragma: no cover - closed enum defensive guard
         raise ExportFormatError(f"unsupported export format: {export_format!r}")
     return TabularExportResult(
@@ -120,3 +128,26 @@ def _serialize_jsonl(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str,
     del fieldnames
     text = "".join(json.dumps(row, ensure_ascii=True, sort_keys=True, separators=(",", ":")) + "\n" for row in rows)
     return text.encode("utf-8")
+
+
+def _serialize_xlsx(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str, ...]) -> bytes:
+    """Serialize rows into a single-worksheet XLSX workbook (header + data rows).
+
+    Every cell is written as text so a deterministic, locale-independent
+    round-trip is preserved; the workbook re-reads through
+    :class:`aeat.adapters.inbound.financial.providers._xlsx.XlsxProvider`,
+    which shares the CSV bank-layout catalogue.
+    """
+    from io import BytesIO
+
+    from openpyxl import Workbook
+
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = "ledger"
+    worksheet.append(list(fieldnames))
+    for row in rows:
+        worksheet.append([row.get(field, "") for field in fieldnames])
+    buffer = BytesIO()
+    workbook.save(buffer)
+    return buffer.getvalue()

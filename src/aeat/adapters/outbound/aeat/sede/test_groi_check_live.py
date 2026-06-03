@@ -23,7 +23,7 @@ import asyncio
 
 import pytest
 
-from .....application.workflow._models import require_active_bucket_id
+from .....core import require_active_bucket_id
 from .....core.config import Settings
 from .....tests.live_gate import requires_live_enabled
 from ..browser import default_browser_session_factory

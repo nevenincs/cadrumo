@@ -34,10 +34,12 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
+from ..core import resolve_active_bucket_id
 from ..core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.errors import AeatError
 from ..core.identity import ProfileId
 from ..core.logging import get_logger
+from ..domain.calculations.registry import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
 from ..domain.deadlines import (
     DeadlineEngine,
     ObligationStatus,
@@ -54,7 +56,7 @@ from ..domain.transactions import TransactionCatalogueRepository
 from .auth import AuthProviderKind, select_provider
 from .ledger import LedgerPreflightIssue, preflight_ledger_tax_readiness
 from .user_profile import ProfilePreflightRequirement
-from .workflow._models import WorkflowState, resolve_active_bucket_id
+from .workflow._models import WorkflowState
 from .workflow._persistence import workflow_state_repository
 from .workflow._profile_health import ActiveProfileHealth, assess_active_profile_health
 
@@ -596,12 +598,9 @@ def _build_modelo_readiness(
     return tuple(reports)
 
 
-_LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
-    {
-        "ledger_iva_aggregation",
-        "ledger_renta_expense_aggregation",
-    }
-)
+# W09.P44.S167: the ledger-preflight binding source set is single-sourced
+# in aeat.domain.calculations.registry.LEDGER_BINDING_SOURCE_KINDS; the
+# import is at the top of the module (no more frozenset literal here).
 _ANNUAL_REGISTRY_PERIODS = frozenset(("0A",))
 
 
