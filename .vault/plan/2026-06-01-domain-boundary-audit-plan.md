@@ -192,7 +192,7 @@ Move the asset and inventory/amortization error families to their inventory/asse
 
 Rename domain/profile to its true subject and repoint all 23+ importers in one atomic move.
 
-- [ ] `W06.P17.S63` - Rename domain/profile to its true subject (e.g. domain/renta_profile) covering tax-residence plus renta/Modelo-100 family facts; `repoint all 23+ production importers plus tests in one atomic move with collect-only clean (DB-01; tag relocation:domain.profile); `src/aeat/domain/profile/`.
+- [x] `W06.P17.S63` - Rename domain/profile to its true subject (e.g. domain/renta_profile) covering tax-residence plus renta/Modelo-100 family facts; `repoint all 23+ production importers plus tests in one atomic move with collect-only clean (DB-01; tag relocation:domain.profile); `src/aeat/domain/profile/`.
 
 ### Phase `W06.P18` - Remove the domain-to-application inversion and rename core profile modules
 

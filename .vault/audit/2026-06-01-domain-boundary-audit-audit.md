@@ -1875,6 +1875,34 @@ remediation is currently HELD at audit-only per the active action policy.
   masking S55's correctness — fixing the test-isolation bug first was the right
   order.
 
+- 2026-06-03: **S63 EXECUTED — `relocation:domain.profile`, domain/profile ->
+  domain/contribuyente (ADR `2026-06-03-domain-profile-rename`, target name
+  operator-confirmed).** The campaign's highest-blast-radius rename: the whole
+  `domain/profile` package (submodules `assets`, `inventory`, family/`_ccaa`/
+  `_keys`/`_errors`/`_normalise`/`_constants`/`_renta_codes` + records) moved to
+  `domain/contribuyente`. Seized a fully-quiescent (0/90-WIP) window; `git mv` of the
+  package + scripted token replacement repointed every `aeat.domain.profile` import,
+  relative `from ..profile`, core error-registry path strings, and `:mod:` docstring
+  cross-refs across all importers in one atomic move. The source rename committed via a
+  shared-index sweep carried by peer commit `bd66a84eb` (the shared single index
+  committed my fully-staged rename); the docs stub tree was regenerated separately in
+  `adb073c23` (removed orphan `aeat.domain.profile.*.rst`, added
+  `aeat.domain.contribuyente.*.rst`, repointed the `aeat.domain.rst` toctree) once the
+  shared-index commit was observed to have landed the source without the stubs.
+  Discharges ADR D7. Operator then directed a comprehensive post-rename reference
+  sweep (rg/fd across all file types); it found `domain.profile` / `profile_catalogue`
+  / `application.topics` at **zero** production references in `.py`/`.md`/`.rst`/docs,
+  and three stale path-string/prose stragglers the import-token scripts could not reach
+  (two marker tests + the `.importlinter` explanatory comment) — fixed in commit
+  `01a515606`. The `core.profile.errors.*` locale-key namespace was intentionally left
+  (a stable translation identifier consistent across source + all four locales, not a
+  module path; renaming it is a CLI-driven 4-locale cascade out of scope for a
+  stale-reference fix). Verified: `domain/profile` gone from HEAD, collect-only clean,
+  `apidocs scaffold --check` conformant, affected marker tests green, all four
+  import-linter contracts at their prior status (DB-01 "Domain must not import
+  application" KEPT). With S63 landed the domain-boundary campaign's structural rename
+  work (S54/S61/S62/S63/S64/S65/S66) is complete.
+
 ## Codification candidates
 
 
