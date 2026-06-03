@@ -96,11 +96,10 @@ def test_work_calculate_accepts_registry_number_as_casilla_alias() -> None:
     the namespace prefix). Supplying that number resolves to the canonical
     id: the engine does not reject it as an unknown casilla.
 
-    Modelo 303 also requires prior-period compensation data (binding
-    ``modelo-303-compensacion-pendiente-anteriores``) which is not
-    supplied here; the test confirms alias resolution succeeded by
-    observing that the error names the missing binding, not an unknown
-    casilla. Alias resolution is the pre-engine step under test.
+    Alias resolution is the pre-engine step under test. The calculation
+    succeeds because compensacion-pendiente-anteriores defaults to zero
+    for fresh-filer scenarios; the alias resolution surface is
+    confirmed by the calculation completing with a draft revision.
     """
 
     _create_profile()
@@ -111,11 +110,12 @@ def test_work_calculate_accepts_registry_number_as_casilla_alias() -> None:
             "--casilla", "regularizacion-inversiones=10.00",
         ]
     )  # fmt: skip
-    # The alias was resolved: the error is the missing binding, not "unknown casilla".
-    assert result.exit_code != 0, result.output
+    # The alias was resolved: the calculation succeeded with a draft revision.
+    # An alias-rejection regression would produce "unknown casilla" before reaching the engine.
+    assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    assert "regularizacion-inversiones" not in result.output or "unknown" not in result.output.lower()
-    assert "modelo-303-compensacion-pendiente-anteriores" in result.output
+    assert "unknown casilla" not in result.output.lower(), result.output
+    assert "borrador" in result.output
 
 
 def test_work_calculate_rejects_a_genuinely_unknown_casilla_number() -> None:
