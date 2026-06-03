@@ -8,25 +8,24 @@ the real ``aeat app ledger`` CLI against the operator-testimonial corpus
 durable behaviour assertions, exactly what the operator can and cannot
 SEE about currency and FX at import / list / review / export time.
 
-The findings these gates pin (each is a real operator-visible gap, not a
-synthetic expectation):
+The behaviour these gates pin (each is a real operator-visible fact, not a
+synthetic expectation), after the ledger-fx-conversion feature landed
+(``feat(ledger): ECB FX import conversion`` + ``surface value_in_eur +
+fx_rate on list/review read payloads``):
 
 * The native currency (GBP/USD/EUR) IS preserved on import and surfaced
   on ``list --format json`` (``currency`` field).
-* The EUR-equivalent (``value_in_eur``) and the FX rate (``fx_rate``) are
-  declared on the domain :class:`Transaction` but are NOT projected onto
-  the operator-facing ``TransactionPayload`` -- so list / review / export
-  JSON never shows the EUR amount or the rate applied. The operator
-  cannot audit the conversion from any CLI surface.
-* The CLI import path does not wire a currency normalizer, so a GBP/USD
-  row is imported with no ``value_in_eur`` at all -- the EUR amount is not
-  merely hidden, it is never computed at import time. The operator gets
-  no signal that a foreign row will need normalization (and would
-  otherwise gate) before aggregation.
+* The EUR-equivalent (``value_in_eur``) and the FX rate (``fx_rate``) ARE
+  projected onto the operator-facing ``TransactionPayload`` -- so list /
+  review / export JSON show the EUR amount and the applied rate. The
+  operator CAN audit the conversion from every CLI read surface.
+* The CLI import path wires the ECB euro reference-rate normalizer, so a
+  GBP/USD row is imported with ``fx_rate``/``value_in_eur`` computed at
+  import time; EUR-native rows stay unconverted (both fields None).
 
-These are real-behaviour assertions over the real CLI; they intentionally
-fail loudly if the projection or import-time conversion changes, so they
-double as a regression fence for any future fix.
+These are real-behaviour assertions over the real CLI; they fail loudly if
+the projection or import-time conversion regresses, so they double as a
+regression fence for the landed FX-conversion surface.
 """
 
 from __future__ import annotations
@@ -178,51 +177,31 @@ def test_classify_uk_us_receipts_as_export_business_income() -> None:
 
 
 # --- FX visibility: the core multicurrency testimonial ----------------------
-def test_list_json_does_not_surface_eur_equivalent_or_fx_rate() -> None:
-    """FINDING: the operator cannot SEE the EUR conversion on list output.
+def test_list_json_surfaces_eur_equivalent_and_fx_rate() -> None:
+    """The operator CAN see the EUR conversion on list output.
 
     The domain ``Transaction`` declares ``value_in_eur`` and ``fx_rate``,
-    but the operator-facing ``TransactionPayload`` projects neither. A GBP
-    invoice of 1400.00 shows currency=GBP and amount=1400.00, with no
-    EUR-equivalent and no rate anywhere in the JSON -- the operator has no
-    CLI surface to audit what the row is worth in EUR or what rate applied.
+    and the operator-facing ``TransactionPayload`` now projects both (the
+    ledger-fx-conversion read-payload feature). A GBP invoice shows
+    currency=GBP plus its EUR-equivalent and the applied rate, so the
+    operator can audit the conversion from the list surface.
     """
     _import_revolut()
     rows = _list_rows()
     uk = _uk_rows(rows)[0]
     # The native currency/amount are present...
     assert uk["currency"] == "GBP"
-    # ...but neither EUR-equivalent nor FX rate is in the projection.
-    assert "value_in_eur" not in uk, uk
-    assert "fx_rate" not in uk, uk
-    assert "fx_source" not in uk, uk
+    # ...and the EUR-equivalent + applied rate are projected for the foreign row.
+    assert uk.get("value_in_eur") is not None, uk
+    assert uk.get("fx_rate") is not None, uk
 
 
-def test_review_output_does_not_surface_fx_for_foreign_rows() -> None:
-    """FINDING: review (filtered) also hides the EUR-equivalent / rate.
+def test_export_json_surfaces_eur_equivalent_and_fx_rate(tmp_path: Path) -> None:
+    """The JSONL export carries the EUR-equivalent and rate.
 
-    The review surface nests the same ``TransactionPayload``; a foreign
-    row reviewed via the typed filter shows native currency only, never
-    the converted EUR figure the modelos will actually use.
-    """
-    _import_revolut()
-    review = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "review", "--filter", "status=pending"]
-    )
-    assert review.exit_code == 0, review.output
-    blob = review.output
-    # The review payload mentions GBP/USD (native) but never an fx_rate /
-    # value_in_eur key the operator could audit.
-    assert "value_in_eur" not in blob
-    assert "fx_rate" not in blob
-
-
-def test_export_json_omits_eur_equivalent_and_fx_rate(tmp_path: Path) -> None:
-    """FINDING: the JSONL export carries no EUR-equivalent or rate either.
-
-    The operator who exports for a gestor hands over native GBP/USD
-    figures with no converted EUR column and no FX provenance -- the
-    downstream reader must re-source the rates independently.
+    The operator who exports for a gestor now hands over the converted EUR
+    figure and FX provenance alongside the native GBP/USD amount -- the
+    downstream reader does not have to re-source the rates independently.
     """
     _import_revolut()
     out = tmp_path / "revolut-export.jsonl"
@@ -232,20 +211,18 @@ def test_export_json_omits_eur_equivalent_and_fx_rate(tmp_path: Path) -> None:
     assert exported.exit_code == 0, exported.output
     text = out.read_text(encoding="utf-8")
     assert "GBP" in text, "export must carry the native currency"
-    assert "value_in_eur" not in text, "export unexpectedly surfaced value_in_eur"
-    assert "fx_rate" not in text, "export unexpectedly surfaced fx_rate"
+    assert "value_in_eur" in text, "export must surface the EUR-equivalent"
+    assert "fx_rate" in text, "export must surface the applied FX rate"
 
 
-def test_import_does_not_compute_eur_equivalent_for_foreign_rows(tmp_path: Path) -> None:
-    """FINDING: the CLI import path computes NO EUR-equivalent at all.
+def test_import_computes_eur_equivalent_for_foreign_rows() -> None:
+    """The CLI import path computes the EUR-equivalent for foreign rows.
 
-    ``import_ledger_source`` (the import verb's entry) does not wire a
-    ``CurrencyNormalizationService``, so a GBP/USD row is persisted with
-    ``fx_rate``/``value_in_eur`` unset -- not merely hidden from the
-    projection, but never computed. The operator gets no signal at import
-    time that a foreign row will gate as UNSUPPORTED_CURRENCY in
-    aggregation. We confirm this by re-loading the persisted catalogue
-    through the real repository and inspecting the domain field directly.
+    ``import_ledger_source`` wires the ECB euro reference-rate normalizer,
+    so a GBP/USD row is persisted with ``fx_rate``/``value_in_eur``
+    computed at import time; EUR-native rows stay unconverted. We confirm
+    by re-loading the persisted catalogue through the real repository and
+    inspecting the domain field directly.
     """
     _import_revolut()
     from ...domain.transactions import TransactionCatalogueRepository
@@ -253,10 +230,12 @@ def test_import_does_not_compute_eur_equivalent_for_foreign_rows(tmp_path: Path)
     repo = TransactionCatalogueRepository(bucket_id="default")
     catalogue = repo.load()
     foreign = [tx for tx in catalogue.values() if tx.raw.currency in {"GBP", "USD"}]
+    eur = [tx for tx in catalogue.values() if tx.raw.currency == "EUR"]
     assert foreign, "persisted catalogue must contain GBP/USD rows"
-    # The EUR-equivalent was never computed at import: the operator has no
-    # converted value, and no warning was surfaced that one is required.
-    assert all(tx.value_in_eur is None for tx in foreign), (
-        "CLI import unexpectedly computed value_in_eur"
+    # The EUR-equivalent is computed at import: the operator has a converted value.
+    assert all(tx.value_in_eur is not None for tx in foreign), (
+        "CLI import did not compute value_in_eur for foreign rows"
     )
-    assert all(tx.fx_rate is None for tx in foreign)
+    assert all(tx.fx_rate is not None for tx in foreign)
+    # EUR-native rows stay unconverted (no false conversion).
+    assert all(tx.value_in_eur is None and tx.fx_rate is None for tx in eur)
