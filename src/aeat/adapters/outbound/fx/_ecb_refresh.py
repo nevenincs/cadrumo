@@ -15,6 +15,7 @@ import urllib.request
 from pathlib import Path
 
 from aeat.core.external_constants import UTF_8_ENCODING
+
 from ._ecb_provider import _BUNDLED_RATES, _parse_eurofxref
 
 ECB_HIST_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml"

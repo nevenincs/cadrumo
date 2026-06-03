@@ -230,5 +230,5 @@ def test_parse_decimal_invalid_raw_includes_field_id_in_error() -> None:
     parse the field object as a decimal string.
     """
     field = _decimal_field("casilla.0501")
-    with pytest.raises(RegistryValidationError, match="casilla.0501"):
+    with pytest.raises(RegistryValidationError, match=r"casilla\.0501"):
         _parse_decimal("invalid", field)

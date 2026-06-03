@@ -275,7 +275,7 @@ class TestValidateM347Threshold:
 
         Oracle: RD 1065/2007 art. 31.1 — 'supere' (exceed), not 'iguale'."""
         rows = (Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("3005.06")),)
-        with pytest.raises(typer.BadParameter, match="3005.06"):
+        with pytest.raises(typer.BadParameter, match=r"3005\.06"):
             _validate_m347_threshold(rows)
 
     def test_below_threshold_rejected(self) -> None:
