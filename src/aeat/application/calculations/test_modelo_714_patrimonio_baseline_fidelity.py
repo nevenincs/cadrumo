@@ -234,15 +234,17 @@ def test_enrollment_recorder_evidences_two_ejercicios_and_matches_manifest(tmp_p
         loaded_n = _find_observation(repo, filing_year=_YEAR_N, period="0A")
         assert loaded_n is not None
         assert loaded_n.observation == obs_n
+        _count_n = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N)
 
         repo.save_observation(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1)
         loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period="0A")
         assert loaded_n1 is not None
         assert loaded_n1.observation == obs_n1
+        _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)
 
     recorder = EnrollmentRecorder(_MODELO)
-    recorder.record_context_year(filing_year=_YEAR_N, context_label=_CONTEXT_LABEL, persisted_observation_count=1)
-    recorder.record_context_year(filing_year=_YEAR_N_PLUS_1, context_label=_CONTEXT_LABEL, persisted_observation_count=1)
+    recorder.record_context_year(filing_year=_YEAR_N, context_label=_CONTEXT_LABEL, persisted_observation_count=(_count_n))
+    recorder.record_context_year(filing_year=_YEAR_N_PLUS_1, context_label=_CONTEXT_LABEL, persisted_observation_count=(_count_n1))
 
     evidence = recorder.evidence()
     assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
