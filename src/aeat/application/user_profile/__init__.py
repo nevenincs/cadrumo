@@ -380,6 +380,10 @@ def __getattr__(name: str):
         from . import _repository
 
         return getattr(_repository, name)
+    if name == "ProfileRepository":
+        from ._profile_repository import ProfileRepository
+
+        return ProfileRepository
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -411,6 +415,7 @@ __all__ = [
     "ProfilePreflightReport",
     "ProfilePreflightRequirement",
     "ProfilePreflightService",
+    "ProfileRepository",
     "ProfileSnapshot",
     "ProfileSnapshotRequest",
     "ProfileStaleCheckReport",

@@ -74,7 +74,7 @@ from ._models import (
     ReviewItem,
     TransactionReviewItem,
 )
-from ._operator import ReviewQueueReport, project_review_item, project_review_queue
+from ._operator import ReviewQueueReport, ReviewQueueRow, project_review_item, project_review_queue
 
 __all__ = [
     "DeclaracionEditSpec",
@@ -106,6 +106,7 @@ __all__ = [
     "ReviewKindReservedError",
     "ReviewQueue",
     "ReviewQueueReport",
+    "ReviewQueueRow",
     "ReviewSeverity",
     "ReviewSourceLoadError",
     "ReviewState",

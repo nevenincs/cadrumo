@@ -247,8 +247,8 @@ def _overview_calendar_all_profiles(
         projection_for_taxpayer,
         record_to_values,
     )
-    from ...application.user_profile._profile_repository import ProfileRepository
-    from ...application.workflow._profile_bucket_scan import list_profile_buckets
+    from ...application.user_profile import ProfileRepository
+    from ...application.workflow import list_profile_buckets
 
     today = _date.today()
     buckets = list_profile_buckets()

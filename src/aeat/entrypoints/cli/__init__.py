@@ -214,7 +214,7 @@ def _root(
 
 def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
     """Resolve ``--profile`` to a bucket id and set the active-profile override."""
-    from ...application.workflow._profile_bucket_scan import read_profile_bucket, read_profile_bucket_by_id
+    from ...application.workflow import read_profile_bucket, read_profile_bucket_by_id
     from ...core.config import override_settings
     from ._errors import CliRefusedBoundaryError
 
