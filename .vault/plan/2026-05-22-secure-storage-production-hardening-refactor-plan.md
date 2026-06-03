@@ -339,7 +339,7 @@ Current register count: `293` production candidate files.
 | `AFR-047` | `src/aeat/adapters/persistence/storage/__init__.py` | `runtime, master-key` | `runtime-default` | `W12.P21.S86` | closed |
 | `AFR-048` | `src/aeat/adapters/persistence/storage/_path_safety.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-049` | `src/aeat/adapters/persistence/storage/_rotation.py` | `master-key, plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
-| `AFR-050` | `src/aeat/adapters/persistence/storage/attachment.py` | `secure-object, plain-file` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-050` | `src/aeat/adapters/persistence/storage/attachment.py` | `secure-object, plain-file` | `runtime-default` | `W12.P21.S86` | closed |
 | `AFR-051` | `src/aeat/adapters/persistence/storage/blob_store/_blob_store.py` | `master-key, plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-052` | `src/aeat/adapters/persistence/storage/blob_store/_materialisation.py` | `master-key, plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-053` | `src/aeat/adapters/persistence/storage/bucket/__init__.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
@@ -692,7 +692,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S149` - Close `AFR-047` for `src/aeat/adapters/persistence/storage/__init__.py` with signals `runtime, master-key`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/__init__.py`.
 - [x] `W12.P26.S150` - Close `AFR-048` for `src/aeat/adapters/persistence/storage/_path_safety.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/persistence/storage/_path_safety.py`.
 - [x] `W12.P26.S151` - Close `AFR-049` for `src/aeat/adapters/persistence/storage/_rotation.py` with signals `master-key, plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/persistence/storage/_rotation.py`.
-- [ ] `W12.P26.S152` - Close `AFR-050` for `src/aeat/adapters/persistence/storage/attachment.py` with signals `secure-object, plain-file`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/attachment.py`.
+- [x] `W12.P26.S152` - Close `AFR-050` for `src/aeat/adapters/persistence/storage/attachment.py` with signals `secure-object, plain-file`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/attachment.py`.
 - [ ] `W12.P26.S153` - Close `AFR-051` for `src/aeat/adapters/persistence/storage/blob_store/_blob_store.py` with signals `master-key, plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/persistence/storage/blob_store/_blob_store.py`.
 - [ ] `W12.P26.S154` - Close `AFR-052` for `src/aeat/adapters/persistence/storage/blob_store/_materialisation.py` with signals `master-key, plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/persistence/storage/blob_store/_materialisation.py`.
 - [ ] `W12.P26.S155` - Close `AFR-053` for `src/aeat/adapters/persistence/storage/bucket/__init__.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/persistence/storage/bucket/__init__.py`.
