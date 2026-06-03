@@ -54,6 +54,7 @@ _SUPPORTED_OPS: Final[frozenset[str]] = frozenset(
         "lookup_parameter",
         "lookup_bracket",
         "lookup_bracket_by_ccaa",
+        "lookup_bracket_by_entity_type",
         "lookup_parameter_by_entity_type",
         "previous_period_value",
         "previous_period_sum",
@@ -99,8 +100,8 @@ def _translate(expression: FormulaExpression, *, layout: SheetLayout) -> str:
     # expansions instead).
     if op == "lookup_bracket":
         return _translate_lookup_bracket(expression, layout=layout)
-    if op == "lookup_bracket_by_ccaa":
-        return _translate_lookup_bracket_by_ccaa(expression, layout=layout)
+    if op in ("lookup_bracket_by_ccaa", "lookup_bracket_by_entity_type"):
+        return _translate_lookup_bracket_by_binding(expression, layout=layout, op=op)
     if op == "lookup_parameter_by_entity_type":
         return _translate_lookup_parameter_by_entity_type(expression, layout=layout)
     args = [_translate(arg, layout=layout) for arg in expression.args]
@@ -243,37 +244,40 @@ def _translate_lookup_bracket(expression: FormulaExpression, *, layout: SheetLay
     return _bracket_lookup_formula(base_a1=base_a1, parameter=bracket_arg.parameter, layout=layout)
 
 
-def _translate_lookup_bracket_by_ccaa(
+def _translate_lookup_bracket_by_binding(
     expression: FormulaExpression,
     *,
     layout: SheetLayout,
+    op: str,
 ) -> str:
-    """Emit a SWITCH that dispatches a bracket lookup by CCAA binding.
+    """Emit a SWITCH that dispatches a bracket lookup by an enum/CCAA binding.
 
-    Runtime semantics: the CCAA binding's value selects one of the
-    bracket-table parameters from the dispatch_table mapping; the
-    selected bracket parameter then runs through the same
-    `_resolve_bracket` path as `lookup_bracket`. The closed Sheets
-    form is a `SWITCH` over the binding cell whose branches are one
-    full INDEX/MATCH bracket expansion each. Without a default branch
-    `SWITCH` returns `#N/A` for an unmapped CCAA — that mirrors the
-    runtime's `RegistryValidationError` for missing dispatch keys.
+    Shared by ``lookup_bracket_by_ccaa`` (dispatch by the CCAA binding) and
+    ``lookup_bracket_by_entity_type`` (dispatch by an entity-type / legal-form
+    enum binding, e.g. the LIS Art. 29.1 micro-empresa two-tranche scale on
+    Modelo 200). Both carry args (base, binding, dispatch_table): the binding's
+    value selects one of the bracket-table parameters from the dispatch_table,
+    and the selected bracket runs the same ``_resolve_bracket`` path as
+    ``lookup_bracket``. The closed Sheets form is a ``SWITCH`` over the binding
+    cell whose branches are one full INDEX/MATCH bracket expansion each. Without
+    a default branch ``SWITCH`` returns ``#N/A`` for an unmapped key — mirroring
+    the runtime's ``RegistryValidationError`` for missing dispatch keys.
     """
     if len(expression.args) != 3:
         raise TranslationError(
-            "lookup_bracket_by_ccaa expects 3 args (base, ccaa_binding, dispatch_table)",
-            op="lookup_bracket_by_ccaa",
+            f"{op} expects 3 args (base, binding, dispatch_table)",
+            op=op,
         )
     base_expr, binding_arg, dispatch_arg = expression.args
     if binding_arg.binding is None:
         raise TranslationError(
-            "lookup_bracket_by_ccaa args[1] must be a binding leaf",
-            op="lookup_bracket_by_ccaa",
+            f"{op} args[1] must be a binding leaf",
+            op=op,
         )
     if dispatch_arg.dispatch_table is None:
         raise TranslationError(
-            "lookup_bracket_by_ccaa args[2] must be a dispatch_table leaf",
-            op="lookup_bracket_by_ccaa",
+            f"{op} args[2] must be a dispatch_table leaf",
+            op=op,
         )
     base_a1 = _translate(base_expr, layout=layout)
     binding_a1 = _binding_reference(binding_arg.binding, layout=layout)
