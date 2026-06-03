@@ -17,19 +17,33 @@ strand the bucket; the lazy reclaim is documented under the plan's
 from __future__ import annotations
 
 import atexit
-import contextlib
 import os
 import time
+from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .....core.config import load_settings as _load_settings
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.logging import get_logger
 from .._namespace_registry import BUCKET_LOCK_FILENAME
-from ._errors import BucketBusyError
+from ._errors import BucketBusyError, BucketValidationError
 
 if TYPE_CHECKING:
     from ._layout import BucketPaths
+
+_log = get_logger(__name__)
+_LOCKFILE_MODE = 0o600
+_LOCKFILE_VALIDATION_SURFACE = "bucket_lockfile"
+
+
+class _PidReadState(Enum):
+    MISSING = "missing"
+    UNREADABLE = "unreadable"
+    INVALID = "invalid"
+
+
+_PidReadResult = int | _PidReadState
 
 
 def _poll_interval_seconds() -> float:
@@ -48,18 +62,23 @@ def lock_path(paths: BucketPaths) -> Path:
     return paths.bucket_dir / BUCKET_LOCK_FILENAME
 
 
-def _read_pid(target: Path) -> int | None:
-    """Read the recorded PID from the lockfile, ``None`` on any IO failure."""
+def _read_pid(target: Path) -> _PidReadResult:
+    """Read the recorded PID from the lockfile with explicit failure states."""
     try:
         text = target.read_text(encoding=UTF_8_ENCODING).strip()
-    except (FileNotFoundError, PermissionError):
-        return None
+    except FileNotFoundError:
+        return _PidReadState.MISSING
+    except PermissionError:
+        _log.debug("bucket lockfile pid unreadable; treating lock as non-reclaimable unknown holder")
+        return _PidReadState.UNREADABLE
     if not text:
-        return None
+        _log.debug("bucket lockfile pid empty; treating lock as stale")
+        return _PidReadState.INVALID
     try:
         return int(text)
     except ValueError:
-        return None
+        _log.debug("bucket lockfile pid malformed; treating lock as stale")
+        return _PidReadState.INVALID
 
 
 def _pid_is_alive(pid: int) -> bool:
@@ -90,7 +109,10 @@ def _pid_is_alive(pid: int) -> bool:
             # no longer exists; any other failure is treated as alive so
             # we never delete a foreign-user lockfile.
             last_error = ctypes.get_last_error()
-            return last_error != 87
+            missing = last_error == 87
+            if not missing:
+                _log.debug("bucket lockfile pid liveness probe unavailable; treating holder as alive")
+            return not missing
         try:
             code = wintypes.DWORD()
             ok = kernel32.GetExitCodeProcess(handle, ctypes.byref(code))
@@ -104,8 +126,24 @@ def _pid_is_alive(pid: int) -> bool:
     except ProcessLookupError:
         return False
     except PermissionError:
+        _log.debug("bucket lockfile pid liveness probe denied; treating holder as alive")
         return True
     return True
+
+
+def _holding_pid_for_error(pid: _PidReadResult) -> int:
+    """Return the PID exposed on `BucketBusyError` without leaking read-state details."""
+    if isinstance(pid, int):
+        return pid
+    return 0
+
+
+def _unlink_lockfile_if_present(target: Path, *, reason: str) -> None:
+    """Remove a lockfile and log if a race already removed it."""
+    try:
+        target.unlink()
+    except FileNotFoundError:
+        _log.debug("bucket lockfile unlink skipped missing file reason=%s", reason)
 
 
 def _try_create_lock(target: Path, pid: int) -> bool:
@@ -116,11 +154,18 @@ def _try_create_lock(target: Path, pid: int) -> bool:
     """
     flags = os.O_CREAT | os.O_EXCL | os.O_WRONLY
     try:
-        fd = os.open(target, flags, 0o644)
+        fd = os.open(target, flags, _LOCKFILE_MODE)
     except FileExistsError:
         return False
     try:
-        os.write(fd, f"{pid}\n".encode("ascii"))
+        payload = f"{pid}\n".encode("ascii")
+        view = memoryview(payload)
+        offset = 0
+        while offset < len(view):
+            written = os.write(fd, view[offset:])
+            if written <= 0:
+                raise OSError("bucket lockfile pid write made no progress")
+            offset += written
     finally:
         os.close(fd)
     return True
@@ -129,9 +174,12 @@ def _try_create_lock(target: Path, pid: int) -> bool:
 def _reclaim_if_stale(target: Path) -> None:
     """Remove the lockfile if the recorded PID is no longer a live process."""
     pid = _read_pid(target)
-    if pid is None or not _pid_is_alive(pid):
-        with contextlib.suppress(FileNotFoundError):
-            target.unlink()
+    if pid is _PidReadState.UNREADABLE:
+        _log.debug("bucket lockfile stale reclaim skipped unreadable lockfile")
+        return
+    should_reclaim = pid is _PidReadState.INVALID or (isinstance(pid, int) and not _pid_is_alive(pid))
+    if should_reclaim:
+        _unlink_lockfile_if_present(target, reason="stale_reclaim")
 
 
 def acquire_lock(paths: BucketPaths, *, wait_seconds: float = 0.0) -> None:
@@ -148,7 +196,16 @@ def acquire_lock(paths: BucketPaths, *, wait_seconds: float = 0.0) -> None:
             the wait window expires.
     """
     target = lock_path(paths)
-    paths.bucket_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        paths.bucket_dir.mkdir(parents=True, exist_ok=True)
+    except FileExistsError as exc:
+        raise BucketValidationError(
+            "bucket lock directory path is not a directory",
+            context={
+                "reason": "bucket_dir_not_directory",
+                "surface": _LOCKFILE_VALIDATION_SURFACE,
+            },
+        ) from exc
     pid = os.getpid()
 
     deadline = time.monotonic() + max(wait_seconds, 0.0)
@@ -158,7 +215,8 @@ def acquire_lock(paths: BucketPaths, *, wait_seconds: float = 0.0) -> None:
             _ATEXIT_REGISTRY.add(target)
             return
         if time.monotonic() >= deadline:
-            holding_pid = _read_pid(target) or 0
+            pid_read = _read_pid(target)
+            holding_pid = _holding_pid_for_error(pid_read)
             raise BucketBusyError(bucket_id=paths.bucket_id, holding_pid=holding_pid)
         time.sleep(_poll_interval_seconds())
 
@@ -172,13 +230,19 @@ def release_lock(paths: BucketPaths) -> None:
     """
     target = lock_path(paths)
     pid = _read_pid(target)
-    if pid is None:
+    if pid is _PidReadState.MISSING:
+        _log.debug("bucket lockfile release skipped missing lockfile")
         _ATEXIT_REGISTRY.discard(target)
+        return
+    if pid is _PidReadState.INVALID:
+        _ATEXIT_REGISTRY.discard(target)
+        return
+    if pid is _PidReadState.UNREADABLE:
+        _log.debug("bucket lockfile release skipped unreadable lockfile")
         return
     if pid != os.getpid():
         return
-    with contextlib.suppress(FileNotFoundError):
-        target.unlink()
+    _unlink_lockfile_if_present(target, reason="release")
     _ATEXIT_REGISTRY.discard(target)
 
 
@@ -205,8 +269,7 @@ class _AtexitRegistry:
         for target in list(self._targets):
             pid = _read_pid(target)
             if pid == own_pid:
-                with contextlib.suppress(FileNotFoundError):
-                    target.unlink()
+                _unlink_lockfile_if_present(target, reason="atexit")
             self._targets.discard(target)
 
 
