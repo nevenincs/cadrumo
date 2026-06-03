@@ -63,6 +63,18 @@ _VAULT_FOLDER_NAME: Final[str] = _Settings().aeat_google_drive_vault_folder_name
 _CALC_SHEETS_FOLDER_NAME: Final[str] = "calc-sheets"
 _OWNERSHIP_KEY: Final[str] = "aeat_vault_app"
 _OWNERSHIP_VALUE: Final[str] = "aeat"
+_RELATION_METADATA_PREFIX: Final[str] = "aeat_relation:"
+_MANAGED_DEVELOPER_METADATA_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "aeat_engine_version",
+        "aeat_registry_sha",
+        "aeat_modelo_id",
+        "aeat_revision_id",
+        "aeat_filing_year",
+        "aeat_period",
+        "aeat_exported_at",
+    }
+)
 
 
 class CalcSheetsApplyResult(BaseModel):
@@ -89,7 +101,7 @@ class CalcSheetsApplyResult(BaseModel):
 # ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY:
 # googleapiclient.discovery.build() returns an untyped Resource object; no stub
 # narrows the concrete type.
-def _drive_service(credentials: object) -> Any:
+def _drive_service(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
@@ -104,7 +116,7 @@ def _drive_service(credentials: object) -> Any:
 # ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY:
 # googleapiclient.discovery.build() returns an untyped Resource object; no stub
 # narrows the concrete type.
-def _sheets_service(credentials: object) -> Any:
+def _sheets_service(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
@@ -565,9 +577,7 @@ def _input_message_for_constraint(constraint: SheetCellConstraint) -> str:
     return f"Casilla {constraint.casilla}: {bounds}. Refs: {refs}."
 
 
-def _build_developer_metadata_requests(
-    plan: SheetExportPlan,
-) -> list[dict[str, Any]]:
+def _developer_metadata_pairs(plan: SheetExportPlan) -> list[tuple[str, str]]:
     metadata = plan.metadata
     pairs: list[tuple[str, str]] = [
         ("aeat_engine_version", metadata.engine_version),
@@ -597,6 +607,12 @@ def _build_developer_metadata_requests(
                     "; ".join(f"{k}={v}" for k, v in payload.items() if v),
                 )
             )
+    return pairs
+
+
+def _build_developer_metadata_requests(
+    plan: SheetExportPlan,
+) -> list[dict[str, Any]]:
     return [
         {
             "createDeveloperMetadata": {
@@ -608,8 +624,86 @@ def _build_developer_metadata_requests(
                 }
             }
         }
-        for key, value in pairs
+        for key, value in _developer_metadata_pairs(plan)
     ]
+
+
+def _managed_developer_metadata_key(key: object) -> bool:
+    return isinstance(key, str) and (
+        key in _MANAGED_DEVELOPER_METADATA_KEYS or key.startswith(_RELATION_METADATA_PREFIX)
+    )
+
+
+def _build_developer_metadata_cleanup_requests(
+    spreadsheet: Mapping[str, Any],
+) -> list[dict[str, Any]]:
+    """Delete previously emitted AEAT developer metadata before recreating it.
+
+    Google Sheets developer metadata keys are not unique. Re-applying a
+    workbook by repeatedly creating the same `aeat_*` keys leaves duplicate
+    identity stamps whose read order is API-defined, not a stable contract.
+    Delete only entries with metadata IDs the API returned and only for keys
+    this adapter owns.
+    """
+    requests: list[dict[str, Any]] = []
+    seen_ids: set[int] = set()
+    for entry in spreadsheet.get("developerMetadata", []) or []:
+        if not isinstance(entry, Mapping):
+            continue
+        if not _managed_developer_metadata_key(entry.get("metadataKey")):
+            continue
+        metadata_id = entry.get("metadataId")
+        if not isinstance(metadata_id, int) or metadata_id in seen_ids:
+            continue
+        seen_ids.add(metadata_id)
+        requests.append(
+            {
+                "deleteDeveloperMetadata": {
+                    "dataFilter": {
+                        "developerMetadataLookup": {
+                            "metadataId": metadata_id,
+                        }
+                    }
+                }
+            }
+        )
+    return requests
+
+
+def _build_protected_range_cleanup_requests(
+    spreadsheet: Mapping[str, Any],
+    plan: SheetExportPlan,
+) -> list[dict[str, Any]]:
+    """Delete app-managed protected ranges before recreating current ranges."""
+    managed_descriptions = {region.description for region in plan.protected_ranges}
+    if not managed_descriptions:
+        return []
+    requests: list[dict[str, Any]] = []
+    seen_ids: set[int] = set()
+    for sheet in spreadsheet.get("sheets", []) or []:
+        if not isinstance(sheet, Mapping):
+            continue
+        for protected in sheet.get("protectedRanges", []) or []:
+            if not isinstance(protected, Mapping):
+                continue
+            if protected.get("description") not in managed_descriptions:
+                continue
+            protected_range_id = protected.get("protectedRangeId")
+            if not isinstance(protected_range_id, int) or protected_range_id in seen_ids:
+                continue
+            seen_ids.add(protected_range_id)
+            requests.append({"deleteProtectedRange": {"protectedRangeId": protected_range_id}})
+    return requests
+
+
+def _build_structural_cleanup_requests(
+    spreadsheet: Mapping[str, Any],
+    plan: SheetExportPlan,
+) -> list[dict[str, Any]]:
+    return _build_developer_metadata_cleanup_requests(spreadsheet) + _build_protected_range_cleanup_requests(
+        spreadsheet,
+        plan,
+    )
 
 
 def _build_cell_note_requests(
@@ -734,7 +828,12 @@ def apply_export_plan(
         spreadsheet = execute_request(
             sheets.spreadsheets().get(
                 spreadsheetId=existing["id"],
-                fields="spreadsheetId,spreadsheetUrl,sheets.properties",
+                fields=(
+                    "spreadsheetId,spreadsheetUrl,"
+                    "developerMetadata(metadataId,metadataKey,metadataValue,location),"
+                    "sheets.properties,"
+                    "sheets.protectedRanges(protectedRangeId,description,range,warningOnly)"
+                ),
             ),
             action="sheets.spreadsheets.get",
         )
@@ -838,6 +937,7 @@ def apply_export_plan(
     # constraint validation rules + cell notes carrying the
     # constraint and its legal grounding.
     metadata_requests = _build_developer_metadata_requests(plan)
+    cleanup_requests = _build_structural_cleanup_requests(spreadsheet, plan)
     protected_requests = _build_protected_range_requests(
         plan.protected_ranges,
         sheet_id_by_tab=sheet_id_by_tab,
@@ -850,7 +950,13 @@ def apply_export_plan(
         plan.value_cells,
         sheet_id_by_tab=sheet_id_by_tab,
     )
-    structural_requests = metadata_requests + protected_requests + constraint_requests + note_requests
+    structural_requests = (
+        cleanup_requests
+        + metadata_requests
+        + protected_requests
+        + constraint_requests
+        + note_requests
+    )
     if structural_requests:
         execute_request(
             sheets.spreadsheets().batchUpdate(
