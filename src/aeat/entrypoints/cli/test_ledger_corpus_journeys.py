@@ -564,3 +564,32 @@ def test_batch_transform_recategorize_relabel_reallocate_at_scale() -> None:
         assert final[tx_id]["business_classification"] == "MIXED"
         # The group label survives an unrelated batch reallocation.
         assert final[tx_id]["group_label"] == "Cierre 2025"
+
+
+# --- W03.P10.S33: transfer reclassification ----------------------------------
+def test_transfer_row_reclassified_to_internal_transfer_and_locked_out_of_tax() -> None:
+    """Import lands a transfer as OUTGOING/NOT_YET_PROCESSED; the operator
+    reclassifies it to INTERNAL_TRANSFER, after which it cannot be marked
+    tax-relevant (BUSINESS) — the gated-transfer guarantee.
+    """
+    _import_bbva()
+    rows = _list_rows()
+    transfer = _find(rows, "Transferencia a cuenta personal CaixaBank")
+    tx = transfer["transaction_id"]
+    # Import resolves direction from the amount sign — never INTERNAL_TRANSFER.
+    assert transfer["direction"] == "OUTGOING"
+    assert transfer["business_classification"] == "NOT_YET_PROCESSED"
+
+    reclass = _RUNNER.invoke(
+        app, ["app", "ledger", "update", "--id", tx, "--direction", "INTERNAL_TRANSFER"]
+    )
+    assert reclass.exit_code == 0, reclass.output
+    after = {r["transaction_id"]: r for r in _list_rows()}[tx]
+    assert after["direction"] == "INTERNAL_TRANSFER"
+
+    # A transfer must not be promotable to a tax-relevant BUSINESS row.
+    refused = _RUNNER.invoke(
+        app, ["app", "ledger", "update", "--id", tx, "--classification", "BUSINESS"]
+    )
+    assert refused.exit_code != 0, refused.output
+    assert after["business_classification"] != "BUSINESS"
