@@ -12,7 +12,7 @@ import pytest
 from pydantic import AnyUrl
 
 from ....core.resources import bundled_path
-from ... import renta as _renta_snapshot_checks
+from ... import renta as _renta_snapshot_checks  # noqa: F401  # snapshot-check registration side effect
 from ...contribuyente import PROFILE_KEYS, TaxResidenceProfile
 from ...contribuyente.family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 from . import (
