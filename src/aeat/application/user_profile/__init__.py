@@ -328,7 +328,13 @@ def __getattr__(name: str):
         from . import _censo_sync
 
         return getattr(_censo_sync, name)
-    if name in ("facts_to_values", "projection_for_taxpayer", "record_to_values", "snapshot_to_values"):
+    if name in (
+        "facts_to_values",
+        "projection_for_taxpayer",
+        "record_to_path_values",
+        "record_to_values",
+        "snapshot_to_values",
+    ):
         from . import _projections
 
         return getattr(_projections, name)
@@ -438,6 +444,7 @@ __all__ = [
     "profile_storage_session",
     "projection_for_taxpayer",
     "read_active_profile",
+    "record_to_path_values",
     "record_to_values",
     "register_active_profile",
     "remove_active_profile",
