@@ -71,3 +71,26 @@ def test_cli_import_converts_foreign_rows_to_eur() -> None:
     for t in eur:
         assert t.fx_rate is None
         assert t.value_in_eur is None
+
+
+def test_list_surfaces_eur_value_and_fx_rate_for_foreign_rows() -> None:
+    import json
+
+    result = _RUNNER.invoke(
+        app, ["app", "ledger", "import", str(_CORPUS / "revolut-multi.csv"), "--provider", "csv"]
+    )
+    assert result.exit_code == 0, result.output
+    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    assert listed.exit_code == 0, listed.output
+    rows = json.loads(listed.output)["result"]["rows"]
+    foreign = [r for r in rows if r.get("currency") in {"GBP", "USD"}]
+    eur = [r for r in rows if r.get("currency") == "EUR"]
+    assert foreign
+    # Finding #2: the EUR-equivalent and FX rate are now visible on the read
+    # surface, not only computed silently at aggregation.
+    for r in foreign:
+        assert r.get("value_in_eur") is not None, r
+        assert r.get("fx_rate") is not None, r
+    for r in eur:
+        assert r.get("value_in_eur") is None
+        assert r.get("fx_rate") is None

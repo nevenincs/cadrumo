@@ -1152,6 +1152,8 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         lifecycle_state=transaction.lifecycle_state.value,
         classified_by=transaction.classified_by,
         source_jurisdiction=transaction.source_jurisdiction,
+        value_in_eur=_display_decimal(transaction.value_in_eur) if transaction.value_in_eur is not None else None,
+        fx_rate=_display_decimal(transaction.fx_rate) if transaction.fx_rate is not None else None,
     )
 
 
@@ -1188,6 +1190,8 @@ def ledger_transaction_review_payload(transaction: Transaction) -> LedgerTransac
         review_status=ledger_transaction_review_status(transaction),
         classified_by=transaction.classified_by,
         source_jurisdiction=transaction.source_jurisdiction,
+        value_in_eur=_display_decimal(transaction.value_in_eur) if transaction.value_in_eur is not None else None,
+        fx_rate=_display_decimal(transaction.fx_rate) if transaction.fx_rate is not None else None,
     )
 
 
