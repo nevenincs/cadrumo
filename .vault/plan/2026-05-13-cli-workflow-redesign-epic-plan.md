@@ -4169,7 +4169,7 @@ Add CLI surface and end-to-end tests for the reconciled grammar.
 
 Validate help vocabulary and update apex cross-references.
 
-- [ ] `W72.P349.S2024` - Validate aeat app modelo help and aeat app ledger help enumerate canonical CRUD plus ratified axes; `src/aeat/entrypoints/cli`.
+- [x] `W72.P349.S2024` - Validate aeat app modelo help and aeat app ledger help enumerate canonical CRUD plus ratified axes; `src/aeat/entrypoints/cli`.
 - [x] `W72.P349.S2025` - Validate i18n translations align across es/en/ca/hu; `src/aeat/core/i18n`.
 - [x] `W72.P349.S2026` - Update apex ADR §4.3 to ratify the reconciled grammar and mark R02 and R03 closed by W72; `.vault/adr`.
 - [x] `W72.P349.S2027` - Update plan rows for W23, W46, W58 with cross-references where prior rows are now superseded by W72; `.vault/plan`.
