@@ -32,10 +32,10 @@ The version command prints a single line, such as `aeat 0.1.0`. To list the avai
 `aeat` keeps your tax identity and settings in a profile. Create your first one:
 
 ```bash
-aeat config profile create
+aeat config profile create my-profile
 ```
 
-The command asks for your details, including your tax identity and region. When it finishes, your profile is active.
+The command takes a name for the profile, then runs a short wizard for your details — your name and surnames, your tax identity (NIF or NIE), and your region. When it finishes, your profile is active. Enter your name and surnames when asked: the tool needs them later to export a filing.
 
 ## Build your first filing
 
@@ -44,7 +44,7 @@ A filing moves through four steps: create, calculate, verify, and export. This e
 First, find the revision for the form. A revision is the rule version a modelo follows. List the revisions the modelo offers:
 
 ```bash
-aeat app modelo describe --modelo 130
+aeat app modelo describe 130
 ```
 
 The output lists the available revisions, each with an identifier such as `2019-y-siguientes`. Copy the identifier that covers your filing period, then use it wherever the next command shows `<revision>`.
