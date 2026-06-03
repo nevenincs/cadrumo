@@ -22,9 +22,9 @@ from typing import TYPE_CHECKING
 from ._schemas import OutputSchema, register_schema
 
 if TYPE_CHECKING:
-    from ...application.inventory._service import InventoryValuationPreviewResult as _AppInventoryValuationPreviewResult
-    from ...application.ledger._models import LedgerExportResult as _AppLedgerExportResult
-    from ...application.ledger._models import LedgerSourceImportResult as _AppLedgerSourceImportResult
+    from ...application.inventory import InventoryValuationPreviewResult as _AppInventoryValuationPreviewResult
+    from ...application.ledger import LedgerExportResult as _AppLedgerExportResult
+    from ...application.ledger import LedgerSourceImportResult as _AppLedgerSourceImportResult
 
 # ---------------------------------------------------------------------------
 # Shared sub-models (not registered — used as nested types)
@@ -184,6 +184,17 @@ class LedgerClassifyResult(OutputSchema):
     applied: int | None = None
     skipped: int | None = None
     failures: list[BulkClassifyFailurePayload] | None = None
+    # LLM suggest path fields (--llm without --apply): the proposed decision is
+    # surfaced for operator review; nothing is persisted. ``applied`` stays
+    # False until the operator re-runs with ``--apply``.
+    llm: bool | None = None
+    provider: str | None = None
+    classification: str | None = None
+    category: str | None = None
+    confidence: str | None = None
+    reason: str | None = None
+    provenance: str | None = None
+    persisted: bool | None = None
 
 
 @register_schema("ledger.allocate")
@@ -888,3 +899,19 @@ class RuleApplyResult(OutputSchema):
     skipped_already_classified: int | None = None
     no_match: int | None = None
     applied: list[dict] | None = None
+
+
+class LLMProviderAvailabilityPayload(OutputSchema):
+    """One subprocess LLM provider's PATH availability (nested)."""
+
+    provider: str
+    cli_binary: str
+    available: bool
+    resolved_path: str | None = None
+
+
+@register_schema("ledger.providers")
+class LedgerProvidersResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger providers``."""
+
+    providers: list[LLMProviderAvailabilityPayload]
