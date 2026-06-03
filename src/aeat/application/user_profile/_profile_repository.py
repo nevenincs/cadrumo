@@ -46,7 +46,7 @@ from ...adapters.persistence.storage.bucket import (
     write_manifest,
 )
 from ...adapters.persistence.storage.errors import StorageValidationError
-from ...adapters.persistence.storage.master_key._kdf_params import KdfParams
+from ...adapters.persistence.storage.master_key import KdfParams
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import pointer_path, write_pointer

@@ -17,6 +17,8 @@ helper, and the BIP-39 recovery primitives
 
 from __future__ import annotations
 
+from ._active_session import NoActiveBucketSessionError, activate_session
+from ._kdf_params import KdfParams
 from ._master_key import (
     EphemeralMasterKeyProvider,
     FileFallbackMasterKeyProvider,
@@ -44,12 +46,15 @@ from ._recovery import (
 __all__ = [
     "EphemeralMasterKeyProvider",
     "FileFallbackMasterKeyProvider",
+    "KdfParams",
     "KeyringMasterKeyProvider",
     "MasterKeyProvider",
+    "NoActiveBucketSessionError",
     "RecoveryKey",
     "UnsecuredMasterKeyProvider",
     "WrappedMasterKey",
     "activate_master_key_provider",
+    "activate_session",
     "atomic_write_secure_bytes",
     "decode_mnemonic",
     "encode_mnemonic",
