@@ -287,3 +287,22 @@ def test_review_filter_text_search() -> None:
     rows = json.loads(res.output)["result"]["rows"]
     assert rows
     assert all("ACME" in r["description"] for r in rows)
+
+
+def test_import_records_fx_rate_provenance_through_persistence() -> None:
+    """Foreign rows persist rate_source + rate_date provenance (survives roundtrip)."""
+    res = _RUNNER.invoke(
+        app, ["app", "ledger", "import", str(_CORPUS / "revolut-multi.csv"), "--provider", "csv"]
+    )
+    assert res.exit_code == 0, res.output
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    catalogue = TransactionCatalogueRepository(bucket_id=bucket_id).load()
+    foreign = [t for t in catalogue.values() if t.raw.currency in {"GBP", "USD"}]
+    assert foreign
+    for t in foreign:
+        assert t.rate_source is not None, t.raw.description
+        assert t.rate_date is not None and len(t.rate_date) == 10, t.rate_date
+    # EUR rows carry no FX provenance.
+    for t in (x for x in catalogue.values() if x.raw.currency == "EUR"):
+        assert t.rate_source is None and t.rate_date is None

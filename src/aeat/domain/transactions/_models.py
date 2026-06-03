@@ -798,6 +798,14 @@ class Transaction(BaseModel):
     counterparty_eu_member_state: EUMemberState | None = None
     fx_rate: Decimal | None = None
     value_in_eur: Decimal | None = None
+    # FX provenance (ledger-fx-conversion ADR): the rate source label (e.g.
+    # "ecb_reference") and the effective rate date as an ISO-8601 string.
+    # Optional/backward-compatible; populated at import when a normalizer supplied
+    # them. Cannot exist without an fx_rate (a rate provenance with no rate is
+    # meaningless). Stored as a string (not date) to roundtrip cleanly through the
+    # strict-frozen JSON persistence boundary.
+    rate_source: str | None = None
+    rate_date: str | None = None
     source_jurisdiction: str | None = None
 
     @model_validator(mode="before")
@@ -930,6 +938,8 @@ class Transaction(BaseModel):
             raise TransactionValidationError("fx_rate and value_in_eur must both be set or both be absent")
         if self.raw.currency == DEFAULT_CURRENCY and (fx_set or eur_set):
             raise TransactionValidationError("fx_rate and value_in_eur must be absent for EUR-native transactions")
+        if (self.rate_source is not None or self.rate_date is not None) and not fx_set:
+            raise TransactionValidationError("rate_source/rate_date require an fx_rate (rate provenance needs a rate)")
         return self
 
 

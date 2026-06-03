@@ -331,22 +331,22 @@ class _ImportRowPlan(NamedTuple):
 def _apply_fx_conversion(
     raw: RawTransaction,
     currency_normalizer: CurrencyNormalizationService | None,
-) -> tuple[Decimal | None, Decimal | None]:
-    """Return ``(fx_rate, value_in_eur)`` for a raw row, or ``(None, None)``.
+) -> tuple[Decimal | None, Decimal | None, str | None, str | None]:
+    """Return ``(fx_rate, value_in_eur, rate_source, rate_date_iso)`` for a raw row.
 
-    EUR-native rows always yield ``(None, None)``.  Non-EUR rows with no
-    normalizer or a missing rate also yield ``(None, None)``, preserving the
-    coupling invariant on :class:`Transaction`.
+    EUR-native rows and non-EUR rows with no normalizer / a missing rate yield
+    all ``None``, preserving the coupling invariant on :class:`Transaction`.
     """
     if raw.currency == DEFAULT_CURRENCY or currency_normalizer is None:
-        return (None, None)
+        return (None, None, None, None)
     rate_date = raw.value_date or raw.booked_date
     result = currency_normalizer.normalize(MonetaryAmount(amount=raw.amount, currency=raw.currency), rate_date)
     if result.status is not CurrencyNormalizationStatus.NORMALIZED or result.rate is None:
-        return (None, None)
+        return (None, None, None, None)
     # value_in_eur is the non-negative EUR magnitude; the sign is carried by
     # raw.amount + direction (Transaction.value_in_eur rejects negatives).
-    return (result.rate, abs(result.eur_amount))
+    rate_date_iso = result.rate_date.isoformat() if result.rate_date is not None else None
+    return (result.rate, abs(result.eur_amount), result.rate_source, rate_date_iso)
 
 
 def _evaluate_import_rows(
@@ -376,7 +376,7 @@ def _evaluate_import_rows(
         if fingerprint in existing_fingerprints or fingerprint in batch_fingerprints:
             skipped_refs.append(BucketTransactionRef(bucket_id=bucket_id, transaction_id=derive_transaction_id(raw)))
             continue
-        fx_rate, value_in_eur = _apply_fx_conversion(raw, currency_normalizer)
+        fx_rate, value_in_eur, rate_source, rate_date = _apply_fx_conversion(raw, currency_normalizer)
         transaction = Transaction.model_validate(
             {
                 "raw": raw,
@@ -384,6 +384,8 @@ def _evaluate_import_rows(
                 "import_fingerprint": fingerprint,
                 "fx_rate": fx_rate,
                 "value_in_eur": value_in_eur,
+                "rate_source": rate_source,
+                "rate_date": rate_date,
             }
         )
         batch_fingerprints.add(fingerprint)
