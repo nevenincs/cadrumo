@@ -95,6 +95,9 @@ class ProfileSourceResolver:
 # Concrete type is a pydantic model registered at runtime via the aggregation
 # source registry; helper duck-types via hasattr(model_dump_json) to avoid
 # cross-domain import.
+# ANY-RETURN-RATIONALE-SOURCE-PROFILE-FINGERPRINT: profile_record is a duck-typed
+# aggregation-source pydantic model resolved at runtime via hasattr(model_dump_json);
+# the concrete type lives across a domain boundary that cannot be imported here.
 def _profile_fingerprint(profile_record: Any) -> str | None:
     if profile_record is None:
         return None

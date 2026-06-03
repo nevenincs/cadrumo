@@ -212,6 +212,9 @@ class BrowserSession:
             context_kwargs.update(dict(provisioner.build_context_kwargs()))
         return context_kwargs
 
+    # ADAPTER-INTERNAL-ALIAS-RATIONALE-PLAYWRIGHT-CONTEXT-KWARGS: context_kwargs
+    # is Playwright's free-shape new_context payload (storage_state, certs, etc.);
+    # the upstream stubs do not export a TypedDict for the assembled kwargs.
     async def _create_playwright_context(self, browser: Browser, context_kwargs: dict[str, Any]) -> BrowserContext:
         """Wrap ``browser.new_context(...)`` with the typed BrowserError envelope.
 
