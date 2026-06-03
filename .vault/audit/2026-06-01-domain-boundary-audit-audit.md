@@ -1948,6 +1948,25 @@ remediation is currently HELD at audit-only per the active action policy.
   committed, just under this campaign's message); pathspec discipline reaffirmed for
   all subsequent commits on this shared worktree.
 
+- 2026-06-03: **S57 EXECUTED — inventory valuation guard moved from persistence
+  adapter to application service (commit `dc6c40c38`).** DB-32 B-3: the
+  `InventoryLedgerRepository.record_movement` adapter ran the domain calculation
+  `compute_inventory_valuation` in its write path. Investigation surfaced a second,
+  larger problem: the real production write path —
+  `InventoryService.movement_add` — does its own load/append/save and never calls the
+  adapter's guarded `record_movement`, so `movement_add` persisted with **no valuation
+  guard at all** (the guard was exercised only by the adapter's own test, not by
+  production). Fix: run `compute_inventory_valuation(updated)` inside `movement_add`
+  before `repository.save` (rejects a movement that would yield an invalid valuation —
+  e.g. consuming more stock than available — before any write), and drop the call (plus
+  its now-orphaned import) from the adapter, leaving it storage-only. Relocated the
+  guard's coverage to the owning layer: removed the adapter-level
+  `test_record_movement_refuses_invalid_negative_stock`, added
+  `test_movement_add_refuses_invalid_negative_stock` to the service suite (PURCHASE 1
+  then COGS 2 → "consume more stock" raised by the service before persistence).
+  Verified: 27 inventory adapter+service tests pass, ty clean. Net effect: DB-32 closed
+  *and* a real production under-guard gap closed.
+
 ## Codification candidates
 
 
