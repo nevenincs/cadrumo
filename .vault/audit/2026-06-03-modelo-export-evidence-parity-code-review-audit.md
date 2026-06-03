@@ -30,3 +30,7 @@ Status: PASS. Reviewed `W01.P01.S04` against the encrypted-persistence and no-ta
 ## S05-REVIEW-001 | PASS | Evidence contributor coverage is guarded
 
 Status: PASS. Reviewed `W01.P01.S05` against the no-silent-omission requirement. `assert_evidence_covers_snapshot` compares the exact contributor id sets from `LedgerFilingSnapshot.rows` and `LedgerFilingEvidence.rows`, raising `ModeloValidationError` with missing/extra ids on divergence. Aggregation tests cover missing-contributor failure and complete-bundle success. The staged `_actions.py` guard call is limited to importing this helper and invoking it before persisting the verified revision. No Critical or High issues found.
+
+## S06-REVIEW-001 | PASS | SheetExportPlan evidence facet is typed and renderer-neutral
+
+Status: PASS. Reviewed `W02.P02.S06` against the export evidence ADR and workbook parity ADR. The plan now has strict frozen evidence records for per-casilla ledger contributors and manual fact-basis entries, plus an empty default evidence facet on `SheetExportPlan`. The change is renderer-neutral: it only extends the shared plan contract and leaves workbook tab rendering and sidecar emission to S07/S08. Tests cover strict JSON roundtrip, default shape, and snapshot-fingerprint validation. No Critical or High issues found.
