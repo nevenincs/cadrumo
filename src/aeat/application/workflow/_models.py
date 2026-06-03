@@ -307,12 +307,16 @@ def update_declaration_pointer(
     *,
     modelo: str,
     period: str,
-    draft_id: str,
-    status: str,
+    draft_id: str | None = None,
+    status: str | None = None,
     exported_path: str | None = None,
     verified: bool | None = None,
 ) -> WorkflowState:
     """Return ``state`` with the declaration pointer upserted for ``(modelo, period)``.
+
+    ``draft_id`` and ``status`` are optional: when omitted (``None``) on an update
+    they leave the existing pointer's value untouched rather than clobbering it,
+    so a partial update (e.g. recording only an ``exported_path``) is safe.
 
     Returns the updated :class:`WorkflowState` with the pointer recorded.
     """
@@ -325,11 +329,11 @@ def update_declaration_pointer(
         current = DeclaracionPointer.model_validate_json(_json.dumps(current, default=str))
 
     now = utc_now()
-    update_fields: dict[str, object] = {
-        "draft_id": draft_id,
-        "status": status,
-        "updated_at": now,
-    }
+    update_fields: dict[str, object] = {"updated_at": now}
+    if draft_id is not None:
+        update_fields["draft_id"] = draft_id
+    if status is not None:
+        update_fields["status"] = status
     if exported_path is not None:
         update_fields["exported_path"] = exported_path
     if verified is not None:
