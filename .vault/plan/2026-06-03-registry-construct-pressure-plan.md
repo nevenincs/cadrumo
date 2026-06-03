@@ -16,7 +16,7 @@ related:
 
 Confirm the remaining M200 construct pressure shape before moving any registry data.
 
-- [ ] `P01.S01` - Audit M200 construct fragment split boundaries; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records`.
+- [x] `P01.S01` - Audit M200 construct fragment split boundaries; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records`.
 
 ### Phase `P02` - M200 construct pressure split
 
