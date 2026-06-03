@@ -74,8 +74,8 @@ Use these when you manage more than one profile:
 - Copy a profile under a new id: `aeat config profile duplicate <source> <target>`.
 - Rename a profile, moving the active pointer with it:
   `aeat config profile rename <source> <target>`.
-- Remove a profile and its local state: `aeat config profile delete <name> --yes`.
-- Re-run the wizard over an existing profile: `aeat config profile edit <name>`.
+- Remove a profile and **all** its local state: `aeat config profile delete <name> --yes`. This is irreversible and deletes everything under the profile, including its imported ledger and any modelo work units and drafts. To change a detail rather than start over, edit the profile instead of deleting it.
+- Re-run the wizard over an existing profile to change its details: `aeat config profile edit <name>` (interactive). To change a single field non-interactively, re-run `edit` with the matching flag, for example `aeat config profile edit <name> --quiet --name "..." --surnames "..."`.
 
 ## Your profile and your financial data
 
