@@ -912,6 +912,18 @@ def test_file_still_refuses_a_closed_past_period_no_pending_obligation(repos) ->
     )
     assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
 
+    # Discoverability: the refusal is not a dead end. The operator-facing
+    # render signposts the local finish line (`work export`) — exporting a
+    # verified-complete revision to a fichero-BOE artefact needs neither an
+    # open filing-obligation window nor this `file` step — and the refusal
+    # summary states why the gate refused (the obligation window is not open).
+    from ...core.errors import render_error_text
+
+    rendered = render_error_text(gate_error.value)
+    assert "aeat app modelo work export" in rendered
+    assert gate_error.value.suggestion == "aeat app modelo work export <work-unit-id> --output <path>"
+    assert "filing-obligation window is not open" in gate_error.value.result.summary
+
 
 def test_filing_record_supersession_preserves_audit_history(repos) -> None:
     """Re-filing a later verified revision supersedes the prior
