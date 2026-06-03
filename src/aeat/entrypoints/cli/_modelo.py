@@ -913,10 +913,7 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
         }
         if row_type == "miembro":
             return Modelo184MemberRow(
-                row_type="miembro", **kv_pairs
-            # CAST-RATIONALE-WIRE-PAYLOAD-MODELO184-ROW:
-            # kv_pairs is dict[str, str|Decimal]; splat matches
-            # Modelo184MemberRow fields after decimal coercion at this parse boundary.
+                row_type="miembro", **kv_pairs  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO184-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo184MemberRow fields after decimal coercion at parse boundary.
             )  # type: ignore[arg-type]
         elif row_type == "vinculada":
             return Modelo232VinculadaRow(

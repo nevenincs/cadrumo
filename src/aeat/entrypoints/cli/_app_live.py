@@ -1078,11 +1078,7 @@ def portals_list(
     result = PortalsListResult(
         count=len(rows),
         rows=[
-            PortalEntryPayload(**row) for row in rows
-        # CAST-RATIONALE-WIRE-PAYLOAD-PORTAL-ENTRY:
-        # _portal_row / _verify_row / _expedientes_row / _borrador_row return
-        # Mapping[str, object]; splat matches PortalEntryPayload fields exactly at this
-        # boundary.
+            PortalEntryPayload(**row) for row in rows  # CAST-RATIONALE-WIRE-PAYLOAD-PORTAL-ENTRY: _portal_row returns Mapping[str, object]; splat matches PortalEntryPayload fields at this boundary.
         ],  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-PORTAL-ENTRY-MAPPING-SPLAT
     )
     lines = [f"count\t{len(rows)}"]
