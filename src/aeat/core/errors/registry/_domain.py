@@ -103,6 +103,50 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.adapters.persistence.storage.bucket._sealed_archive_errors.SealedArchiveLayoutError",
+        ErrorCode(
+            code="REFUSED_ADAPTER_SEALED_ARCHIVE_LAYOUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_storage_bucket",
+            default_suggestion="aeat config bucket import --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.persistence.storage.bucket._sealed_archive_errors.SealedArchiveHeaderError",
+        ErrorCode(
+            code="REFUSED_ADAPTER_SEALED_ARCHIVE_HEADER",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_storage_bucket",
+            default_suggestion="aeat config bucket import --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.persistence.storage.bucket._sealed_archive_errors.SealedArchivePayloadError",
+        ErrorCode(
+            code="REFUSED_ADAPTER_SEALED_ARCHIVE_PAYLOAD",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_storage_bucket",
+            default_suggestion="aeat config bucket import --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.persistence.storage.bucket._sealed_archive_errors.SealedArchiveWriteError",
+        ErrorCode(
+            code="FAIL_ADAPTER_SEALED_ARCHIVE_WRITE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.error.error_storage_bucket",
+            default_suggestion="aeat config bucket export --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.live._notifications.NotificationsSnapshotNotFoundError",
         ErrorCode(
             code="REFUSED_LIVE_NOTIFICATIONS_SNAPSHOT_NOT_FOUND",
