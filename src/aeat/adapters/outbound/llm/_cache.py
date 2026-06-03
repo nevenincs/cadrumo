@@ -14,7 +14,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from ....core.config import PROJECT_ROOT
+from ....core.config import load_settings
 from ....core.logging import get_logger
 from ....core.time import now
 from ._errors import LLMCacheError
@@ -41,7 +41,7 @@ class LLMCache:
     """
 
     def __init__(self, root_dir: Path | None = None) -> None:
-        self.root_dir = root_dir or (PROJECT_ROOT / "var" / "llm-cache")
+        self.root_dir = root_dir or load_settings().aeat_llm_cache_dir
 
     def build_key(self, request: LLMRequest, provider: LLMProvider, model: str) -> CacheKey:
         """Derive a :class:`CacheKey` from the content-addressed request.
