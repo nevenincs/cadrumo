@@ -23,6 +23,8 @@ from typing import cast
 import pytest
 
 from .....tests.secure_sql import isolated_runtime_profile
+from ....persistence.storage import AEAT_BROWSER_SESSION_NAMESPACE
+from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from . import _session_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
@@ -83,12 +85,26 @@ def test_persisted_browser_session_roundtrips_under_real_encryption(
             metadata=metadata,
         )
         loaded = _session_store.load(logical_path)
+        repo = secure_object_repository_for_active_bucket()
+        raw_records = tuple(
+            record
+            for record in repo.iter_all_records_raw()
+            if record.namespace == AEAT_BROWSER_SESSION_NAMESPACE.namespace
+        )
 
         assert loaded is not None
+        assert _session_store.exists(logical_path) is True
         # Strict equality on the typed envelope: schema_version,
         # storage_state, metadata, written_at must all survive.
+        assert loaded.schema_version == AEAT_BROWSER_SESSION_NAMESPACE.schema_version
         assert loaded.storage_state == storage_state
         assert loaded.metadata == metadata
+        assert len(raw_records) == 1
+        raw_record = raw_records[0]
+        assert raw_record.classification == AEAT_BROWSER_SESSION_NAMESPACE.sensitivity.value
+        assert raw_record.schema_version == AEAT_BROWSER_SESSION_NAMESPACE.schema_version
+        assert raw_record.object_key != logical_path.as_posix().encode("utf-8")
+        assert len(raw_record.object_key) == 32
         # Cookie list preserves its inner shape: lists round-trip
         # through JSON as lists (not tuples), so the assertion
         # checks list identity rather than tuple.

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ...domain.profile import normalise_key
+from ...domain.contribuyente import normalise_key
 from ..workflow._models import WorkflowEvent, WorkflowState
 from ..workflow._utils import utc_now
 from ._errors import ReviewError

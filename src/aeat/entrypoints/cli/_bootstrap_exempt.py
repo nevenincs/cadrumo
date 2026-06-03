@@ -65,20 +65,25 @@ def is_bootstrap_exempt(verb_path: str | None) -> bool:
 
     Args:
         verb_path: Space-separated verb path or ``None`` for the
-            bare invocation. ``None`` is treated as non-exempt
-            because the bare-invocation landing page reads the
-            workflow state and therefore requires a session when
-            an active profile resolves.
+            bare invocation. ``None`` is treated as exempt per
+            ADR ``2026-06-03-bare-invocation-bucket-session-gate``:
+            bare invocation (no subcommand, only top-level flags
+            like ``--language``, ``--format``, ``--help``,
+            ``--version``) is a metadata-emitting introspection
+            surface analogous to ``--help``, and does not require
+            an active bucket session. The render layer's resolution
+            chain handles ``--language`` from the explicit CLI flag
+            without needing the profile envelope to be unlocked.
 
     Returns:
-        ``True`` if ``verb_path`` matches a bootstrap-exempt prefix,
-        ``False`` otherwise.
+        ``True`` if ``verb_path`` is ``None`` (bare invocation) or
+        matches a bootstrap-exempt prefix, ``False`` otherwise.
     """
     if verb_path is None:
-        return False
+        return True
     normalised = verb_path.strip()
     if not normalised:
-        return False
+        return True
     return any(normalised == exempt or normalised.startswith(f"{exempt} ") for exempt in BOOTSTRAP_EXEMPT_VERB_PATHS)
 
 

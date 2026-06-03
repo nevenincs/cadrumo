@@ -239,6 +239,10 @@ class UserProfileSnapshot(BaseModel):
 
         Args:
             profile: The :class:`UserProfileRecord` to snapshot.
+            snapshot_id: Optional explicit snapshot identifier; when ``None``
+                a deterministic id is derived from the profile state.
+            created_at: Optional UTC timestamp stamped on the snapshot;
+                defaults to :func:`utc_now` when ``None``.
 
         Returns:
             An immutable :class:`UserProfileSnapshot` for the given profile.

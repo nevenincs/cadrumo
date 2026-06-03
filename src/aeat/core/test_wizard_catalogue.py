@@ -7,7 +7,7 @@ These tests assert:
    same objects that _catalogue exposes as SETUP_FLOW / WIZARD_FLOWS.
 
 2. No deferred lazy upward imports from aeat.application.wizard._catalogue
-   remain in aeat.domain.deadlines._profiles or aeat.domain.profile._keys.
+   remain in aeat.domain.deadlines._profiles or aeat.domain.contribuyente._keys.
    The check reads the source text and greps for the bypass pattern, which
    is the real enforcement surface — static analysis on the source file is
    independent of import order.
@@ -107,16 +107,16 @@ def test_no_deferred_upward_import_in_deadlines_profiles() -> None:
 
 
 def test_no_deferred_upward_import_in_profile_keys() -> None:
-    """aeat.domain.profile._keys must not import from _catalogue (lazy or top-level)."""
+    """aeat.domain.contribuyente._keys must not import from _catalogue (lazy or top-level)."""
 
-    source = _source_of("aeat.domain.profile._keys")
+    source = _source_of("aeat.domain.contribuyente._keys")
     assert _UPWARD_PATTERN not in source, (
-        "aeat.domain.profile._keys still contains a direct import from "
+        "aeat.domain.contribuyente._keys still contains a direct import from "
         "aeat.application.wizard._catalogue. Remove it and use get_wizard_flows() from "
         "aeat.core.wizard_catalogue instead."
     )
     assert _ALT_UPWARD_PATTERN not in source, (
-        "aeat.domain.profile._keys still contains an absolute import from "
+        "aeat.domain.contribuyente._keys still contains an absolute import from "
         "aeat.application.wizard._catalogue. Remove it and use get_wizard_flows() from "
         "aeat.core.wizard_catalogue instead."
     )

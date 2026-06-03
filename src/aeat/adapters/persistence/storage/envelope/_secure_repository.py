@@ -251,13 +251,17 @@ class SecureBoundRepository[T: BaseModel]:
         correct pattern for full-scan enumeration.
         """
         envelope_cls = self._envelope_cls()
+        records: list[tuple[str, T]] = []
         for record in self._objects.list_records(
             self.namespace,
             expected_class=self.sensitivity,
             max_supported_version=self.schema_version,
         ):
             envelope = envelope_cls.model_validate_json(record.payload.decode("utf-8"))
-            yield cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
+            payload = cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
+            records.append((self.extract_identifier(payload), payload))
+        for _, payload in sorted(records, key=lambda item: item[0]):
+            yield payload
 
     # ------------------------------------------------------------------
     # Internals

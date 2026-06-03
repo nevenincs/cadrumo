@@ -270,6 +270,34 @@ def test_currency_inline_sign_blank_magnitude_rejected_at_decode() -> None:
         deserialise(blank_payload, specs=specs, encoding=LATIN_1_ENCODING, total_length=12)
 
 
+def test_currency_invalid_wire_bytes_raise_redacted_export_format_error() -> None:
+    """Invalid CURRENCY wire bytes must not be echoed in parser errors."""
+
+    specs = (
+        record_field(
+            offset=1,
+            length=12,
+            field_id="AMOUNT",
+            casilla_id="01",
+            kind=FieldKind.CURRENCY,
+        ),
+    )
+    validate_record_specs(specs, total_length=12)
+
+    canary = b"12345678Z999"
+    with pytest.raises(AeatExportFormatError) as exc_info:
+        deserialise(canary + b"\r\n", specs=specs, encoding=LATIN_1_ENCODING, total_length=12)
+
+    message = str(exc_info.value)
+    assert "CURRENCY field 'AMOUNT' has invalid wire bytes" in message
+    assert "length=12" in message
+    assert "digest=sha256:" in message
+    assert "12345678Z" not in message
+    assert canary.decode("ascii") not in message
+    assert exc_info.value.__cause__ is None
+    assert exc_info.value.__context__ is None
+
+
 def test_cp1252_encoded_field_round_trips_non_ascii() -> None:
     """CP1252-encoded ALPHANUMERIC field carries a Spanish-language byte intact.
 
@@ -345,6 +373,32 @@ def test_reserved_field_corruption_rejected_at_decode() -> None:
 
     with pytest.raises(AeatExportFormatError, match="RESERVED"):
         deserialise(corrupted, specs=specs, encoding=LATIN_1_ENCODING, total_length=4)
+
+
+def test_reserved_field_corruption_error_redacts_wire_bytes() -> None:
+    """RESERVED mismatch errors must describe corrupted bytes by digest only."""
+
+    specs = (
+        record_field(
+            offset=1,
+            length=9,
+            field_id="ENVELOPE_TAG",
+            kind=FieldKind.RESERVED,
+            literal_value="SAFE-TAG!",
+        ),
+    )
+    validate_record_specs(specs, total_length=9)
+
+    canary = b"12345678Z"
+    with pytest.raises(AeatExportFormatError) as exc_info:
+        deserialise(canary + b"\r\n", specs=specs, encoding=LATIN_1_ENCODING, total_length=9)
+
+    message = str(exc_info.value)
+    assert "RESERVED field 'ENVELOPE_TAG'" in message
+    assert "length=9" in message
+    assert "digest=sha256:" in message
+    assert "12345678Z" not in message
+    assert canary.decode("ascii") not in message
 
 
 # ---------------------------------------------------------------------------

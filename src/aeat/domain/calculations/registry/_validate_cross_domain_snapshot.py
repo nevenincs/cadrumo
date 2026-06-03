@@ -64,6 +64,9 @@ def check_cross_domain_snapshot_routing(
     via :func:`register_cross_domain_snapshot_check`.
 
     Args:
+        checker: Snapshot reference checker that accumulates per-prefix
+            ``failures`` and exposes the casilla id set against which
+            registered cross-domain checks evaluate routing references.
         snapshot: The :class:`RegistrySnapshot` to run peer-domain checks against.
 
     Modelo 100 has a known-required cross-domain gate -- the renta

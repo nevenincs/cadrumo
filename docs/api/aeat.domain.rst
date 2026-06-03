@@ -18,6 +18,7 @@ Subpackages
    aeat.domain.buckets
    aeat.domain.calculations
    aeat.domain.categories
+   aeat.domain.contribuyente
    aeat.domain.currency
    aeat.domain.deadlines
    aeat.domain.filing
@@ -30,7 +31,6 @@ Subpackages
    aeat.domain.modelos
    aeat.domain.normatives
    aeat.domain.portals
-   aeat.domain.profile
    aeat.domain.renta
    aeat.domain.submission
    aeat.domain.transactions

@@ -1,7 +1,7 @@
 """Encrypted SQL persistence for actividad economica asset and amortizacion ledgers.
 
-:class:`aeat.domain.profile.assets.AssetRecord` and
-:class:`aeat.domain.profile.assets.AmortizacionLedger` payloads are stored
+:class:`aeat.domain.contribuyente.assets.AssetRecord` and
+:class:`aeat.domain.contribuyente.assets.AmortizacionLedger` payloads are stored
 as :class:`SensitivityClass` FINANCIAL secure objects in the primary database
 through :class:`SecureObjectRepository`.
 """
@@ -13,7 +13,7 @@ from pathlib import Path
 from ....core.errors import AeatError
 from ....core.logging import get_logger
 from ....core.time import now
-from ....domain.profile.assets import (
+from ....domain.contribuyente.assets import (
     AmortizacionLedger,
     AssetRecord,
     AssetRecordError,
@@ -189,7 +189,7 @@ class AmortizacionLedgerRepository:
     """Governed repository for the encrypted amortizacion ledger.
 
     Mirrors :class:`AssetsLedgerRepository` for amortizacion entries; the
-    payload type is :class:`aeat.domain.profile.assets.AmortizacionLedger`.
+    payload type is :class:`aeat.domain.contribuyente.assets.AmortizacionLedger`.
     """
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:

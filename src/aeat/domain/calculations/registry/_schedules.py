@@ -33,6 +33,11 @@ def applicable_filing_schedules(
 
     Args:
         revision: The :class:`ModeloRevision` whose filing schedules to evaluate.
+        profile_facts: Profile facts (mapping or aggregate) consulted by each
+            schedule's :class:`ProfilePredicateDefinition` set.
+        period: Optional period token; when supplied, schedules whose
+            ``periods`` set excludes it are filtered out before predicate
+            evaluation.
     """
     matched: list[ModeloScheduleDefinition] = []
     for schedule in revision.filing_schedules:

@@ -46,13 +46,13 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import tr
 from ....core.logging import default_log_file_path as _default_log_file_path
-from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from ....core.redaction import (
     CLI_BUCKET_ID_PLACEHOLDER,
     CLI_PROFILE_ID_PLACEHOLDER,
     redact_for_cli_output,
     redact_structured_for_cli_output,
 )
+from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from .._command_suggestions import AeatTyperGroup as _AeatTyperGroup
 from .._common import _emit, _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language

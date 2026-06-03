@@ -314,6 +314,12 @@ def verify_modelo_parity(
 
     Args:
         snapshot: The :class:`RegistrySnapshot` whose calculation surface is verified.
+        scenario: :class:`OperatorInputScenario` supplying operator inputs and
+            relation overrides for the run.
+        credentials: Google API credentials used by the calc-sheets apply path
+            to read/write the per-modelo spreadsheet.
+        root_folder_id: Google Drive folder id under which the parity
+            spreadsheet is created or updated.
 
     Returns a :class:`ParityReport`.
 

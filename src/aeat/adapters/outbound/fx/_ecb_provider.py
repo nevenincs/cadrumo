@@ -24,6 +24,9 @@ from pathlib import Path
 
 from defusedxml import ElementTree as ET  # noqa: N817  # ElementTree-as-ET is the conventional alias
 
+from aeat.core.external_constants import UTF_8_ENCODING
+from aeat.core.parsing import _parse_iso8601_date
+
 _BUNDLED_RATES = Path(__file__).resolve().parents[3] / "_data" / "fx" / "eurofxref-bundled.xml"
 
 
@@ -69,7 +72,7 @@ def _parse_eurofxref(path: Path) -> dict[date, dict[str, Decimal]]:
     elements are matched by the local ``Cube`` tag name rather than a fixed
     qualified name.
     """
-    root = ET.fromstring(path.read_text(encoding="utf-8"))
+    root = ET.fromstring(path.read_text(encoding=UTF_8_ENCODING))
     by_date: dict[date, dict[str, Decimal]] = {}
     for node in root.iter():
         if not node.tag.endswith("Cube"):
@@ -77,7 +80,7 @@ def _parse_eurofxref(path: Path) -> dict[date, dict[str, Decimal]]:
         time_attr = node.get("time")
         if time_attr is None:
             continue
-        day = date.fromisoformat(time_attr)
+        day = _parse_iso8601_date(time_attr)
         rates: dict[str, Decimal] = {}
         for child in node:
             if not child.tag.endswith("Cube"):

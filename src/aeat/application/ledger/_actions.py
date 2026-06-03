@@ -179,6 +179,8 @@ _LEDGER_EXPORT_FIELDNAMES = (
     "notes",
     "created_by",
     "created_source_command",
+    "value_in_eur",
+    "fx_rate",
 )
 _REMOVAL_BLOCKING_REVISION_STATES = frozenset(
     {
@@ -929,7 +931,13 @@ def export_ledger_transactions(
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
     event_repository = bucket_event_repository or BucketEventHistoryRepository()
     catalogue = repository.load()
-    rows = _ledger_export_rows(catalogue, bucket_id=command.bucket_id, include_inactive=command.include_inactive)
+    export_period = Period.model_validate(command.period) if command.period else None
+    rows = _ledger_export_rows(
+        catalogue,
+        bucket_id=command.bucket_id,
+        include_inactive=command.include_inactive,
+        period=export_period,
+    )
     serialized = serialize_tabular_rows(
         tuple(row.model_dump(mode="json") for row in rows),
         fieldnames=_LEDGER_EXPORT_FIELDNAMES,
@@ -1152,6 +1160,8 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         lifecycle_state=transaction.lifecycle_state.value,
         classified_by=transaction.classified_by,
         source_jurisdiction=transaction.source_jurisdiction,
+        value_in_eur=_display_decimal(transaction.value_in_eur) if transaction.value_in_eur is not None else None,
+        fx_rate=_display_decimal(transaction.fx_rate) if transaction.fx_rate is not None else None,
     )
 
 
@@ -1188,6 +1198,8 @@ def ledger_transaction_review_payload(transaction: Transaction) -> LedgerTransac
         review_status=ledger_transaction_review_status(transaction),
         classified_by=transaction.classified_by,
         source_jurisdiction=transaction.source_jurisdiction,
+        value_in_eur=_display_decimal(transaction.value_in_eur) if transaction.value_in_eur is not None else None,
+        fx_rate=_display_decimal(transaction.fx_rate) if transaction.fx_rate is not None else None,
     )
 
 
@@ -2585,11 +2597,13 @@ def _ledger_export_rows(
     *,
     bucket_id: str,
     include_inactive: bool,
+    period: Period | None = None,
 ) -> tuple[LedgerExportRow, ...]:
     transactions = tuple(
         transaction
         for transaction in catalogue.values()
-        if include_inactive or transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
+        if (include_inactive or transaction.lifecycle_state is TransactionLifecycleState.ACTIVE)
+        and (period is None or period.contains(transaction.raw.value_date or transaction.raw.booked_date))
     )
     return tuple(
         _ledger_export_row(bucket_id=bucket_id, transaction=transaction)
@@ -2632,6 +2646,8 @@ def _ledger_export_row(*, bucket_id: str, transaction: Transaction) -> LedgerExp
         notes=transaction.notes,
         created_by=transaction.created_by or "",
         created_source_command=transaction.source_command or "",
+        value_in_eur=_optional_decimal(transaction.value_in_eur),
+        fx_rate=_optional_decimal(transaction.fx_rate),
     )
 
 
@@ -3531,6 +3547,7 @@ def bulk_classify_from_csv(
         patch = ManualLedgerTransactionPatch(
             business_classification=row.classification,
             category_id=row.category_id,
+            business_pct=row.business_pct,
         )
         try:
             result = update_manual_transaction_fields(

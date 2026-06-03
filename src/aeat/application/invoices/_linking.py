@@ -53,6 +53,9 @@ def link_invoice_transaction_catalogues(
     Args:
         invoices: The :class:`InvoiceCatalogue` to update with the new link.
         transactions: The :class:`TransactionCatalogue` to update with the new link.
+        invoice_id: Identifier of the invoice to link.
+        transaction_id: Identifier of the transaction to link; resolved to its
+            canonical form against ``transactions`` before linking.
     """
     canonical_transaction_id = _canonical_transaction_id(transactions, transaction_id)
     updated_invoices = link_transaction(invoices, invoice_id, canonical_transaction_id)

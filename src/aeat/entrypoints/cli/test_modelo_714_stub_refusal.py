@@ -71,13 +71,23 @@ def test_work_create_714_refuses_with_legal_authority_message(
 def test_work_create_714_has_no_placeholder_registry_definition(
     _isolated_cli_backend: Path,
 ) -> None:
-    """The normal registry must not carry an empty M714 definition."""
+    """M714 Phase-A registry presence must be legally grounded.
+
+    Phase-A Patrimonio landed M714 alongside M151 (commit bc7a80df5).
+    The work-create refusal still fires (sibling test
+    test_work_create_714_refuses_with_legal_authority_message proves
+    that) — Phase-A carries the registry definition but the calculation
+    engine and form-flow are out of scope until Phase-B. The contract
+    this test defends: when M714 IS in the registry, it MUST be
+    grounded by the binding legal authority (Ley 19/1991 Art. 28
+    Patrimonio + the form-approval order corpus).
+    """
 
     from ...core.resources import bundled_path
     from ...domain.calculations.registry import load_registry_tree
 
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    assert "714" not in {modelo.id for modelo in modelos}
+    assert "714" in {modelo.id for modelo in modelos}
     assert "ley-19-1991:art-28" in catalogues.legal
     assert "boe-modelo-714-form" in catalogues.sources
 

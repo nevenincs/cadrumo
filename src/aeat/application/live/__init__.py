@@ -907,16 +907,7 @@ async def _capture_iva_compensation_history_with_session(
                     )
                 except (TimeoutError, _AeatError, OSError) as exc:
                     failed_declarations.append(_failed_declaration_ref(declaration, exc))
-                    return _iva_compensation_history_capture_report(
-                        output_root=output_root,
-                        year_from=year_from,
-                        year_to=year_to,
-                        observation_paths=tuple(observation_paths),
-                        artefact_refs=tuple(artefact_refs),
-                        casilla_count=casilla_count,
-                        observations_for_calculation=tuple(observations_for_calculation),
-                        failed_declarations=tuple(failed_declarations),
-                    )
+                    continue
                 manifest_path = store.persist_observation(observation)
                 observation_paths.append(_capture_report_path(manifest_path, output_root=output_root))
                 artefact_refs.extend(

@@ -51,6 +51,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     """
     from ..application.wizard._catalogue import WIZARD_FLOWS
     from ..core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+    from ..domain.contribuyente._ccaa import CCAA
     from ..domain.deadlines._models import (
         EntityType,
         FiscalResidency,
@@ -59,7 +60,6 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         IrpfSpecialRegime,
         LegalEntityForm,
     )
-    from ..domain.profile._ccaa import CCAA
 
     return (
         FStringKeyRegistration(

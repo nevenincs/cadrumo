@@ -25,6 +25,7 @@ from datetime import date
 
 import pytest
 
+from .._errors import AeatExportFormatError
 from ._deserialise import _decode_date
 from ._record_spec import DateFmt, encode_date
 
@@ -67,8 +68,20 @@ class TestDateDecodeRejection:
         ids=["alpha", "bad_month", "bad_day_dec", "bad_day_feb_leap_off", "non_numeric", "space_padded"],
     )
     def test_yyyymmdd_rejects_garbage(self, bad: bytes) -> None:
-        with pytest.raises(ValueError, match=r"time data|does not match|unconverted|out of range"):
+        with pytest.raises(AeatExportFormatError, match=r"DATE field"):
             _decode_date(bad, DateFmt.YYYYMMDD)
+
+    def test_yyyymmdd_error_redacts_payload_and_has_no_chained_context(self) -> None:
+        bad = b"12345678Z"
+        with pytest.raises(AeatExportFormatError) as exc_info:
+            _decode_date(bad, DateFmt.YYYYMMDD)
+
+        message = str(exc_info.value)
+        assert "DATE field" in message
+        assert "digest=sha256:" in message
+        assert "12345678Z" not in message
+        assert exc_info.value.__cause__ is None
+        assert exc_info.value.__context__ is None
 
     @pytest.mark.parametrize(
         "bad",
@@ -76,7 +89,7 @@ class TestDateDecodeRejection:
         ids=["alpha", "day_32", "day_00", "feb_31"],
     )
     def test_ddmmyyyy_rejects_garbage(self, bad: bytes) -> None:
-        with pytest.raises(ValueError, match=r"time data|does not match|unconverted|out of range"):
+        with pytest.raises(AeatExportFormatError, match=r"DATE field"):
             _decode_date(bad, DateFmt.DDMMYYYY)
 
 
@@ -87,5 +100,5 @@ class TestDateFormatsAreNotInterchangeable:
         must pass the correct format."""
         encoded = encode_date(date(2024, 3, 15), DateFmt.YYYYMMDD, encoding="cp1252")  # b"20240315"
         # Decoded as DDMMYYYY: day=20, month=24 → ValueError (out of range or unconverted).
-        with pytest.raises(ValueError, match=r"unconverted|out of range|does not match"):
+        with pytest.raises(AeatExportFormatError, match=r"DATE field"):
             _decode_date(encoded, DateFmt.DDMMYYYY)

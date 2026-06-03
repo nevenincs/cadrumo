@@ -124,10 +124,7 @@ def _collect_import_pairs() -> list[tuple[Path, str, str]]:
             # diagnostic surface; let other gates report it.
             continue
         for node in _walk_import_from(tree):
-            if node.level > 0:
-                resolved = _resolve_relative_module(source, node.level, node.module)
-            else:
-                resolved = node.module
+            resolved = _resolve_relative_module(source, node.level, node.module) if node.level > 0 else node.module
             if not resolved or not resolved.startswith("aeat"):
                 continue
             for alias in node.names:

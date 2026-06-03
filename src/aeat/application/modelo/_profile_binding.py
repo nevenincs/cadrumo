@@ -43,8 +43,8 @@ from ...domain.calculations.registry import (
     expression_binding_refs,
     expression_date_binding_refs,
 )
+from ...domain.contribuyente import marriage_full_year, marriage_month_start
 from ...domain.modelos._errors import ModeloError
-from ...domain.profile import marriage_full_year, marriage_month_start
 from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSchemaDefinition,

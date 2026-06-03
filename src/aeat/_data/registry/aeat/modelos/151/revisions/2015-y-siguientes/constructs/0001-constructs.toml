@@ -1,0 +1,28 @@
+# Modelo 151 (régimen impatriados — Ley Beckham) Phase-A construct.
+#
+# Phase-A landed the cuota chain formulas + manual-casilla schema. The
+# construct authoritatively groups them so the formula-modelo registry
+# parity gate accepts M151 as a graduated modelo. The construct names
+# all six workflow surfaces (calculation, verification, review,
+# approval, reconciliation, workflow, plus the M151 filing + deadline
+# surfaces) so test_formula_revisions_are_owned_by_constructs_with_
+# snapshot_workflow_surfaces accepts the wiring.
+
+[[revisions."2015-y-siguientes".constructs]]
+id = "m151-impatriado-calculation"
+title = "Modelo 151 IRPF régimen impatriados cuota"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-form"]
+formulas = [
+    "modelo-151-cuota-integra-general",
+    "modelo-151-cuota-diferencial",
+]
+application_links = [
+    "modelo-151-calculation",
+    "modelo-151-filing",
+    "modelo-151-verification",
+    "modelo-151-review",
+    "modelo-151-approval",
+    "modelo-151-reconciliation",
+    "modelo-151-workflow",
+]

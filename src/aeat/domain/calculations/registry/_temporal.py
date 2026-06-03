@@ -24,6 +24,14 @@ def select_revision(
 
     Args:
         modelo: The :class:`ModeloDefinition` to select a revision from.
+        filing_year: AEAT filing year used to narrow revisions by
+            ``period_selector``.
+        period: Period token (e.g. ``"1T"``, ``"0A"``, ``"ALTA"``);
+            case-insensitive against the revision's declared periods.
+        on: Optional reference date that must fall within the revision's
+            ``valid_from`` / ``valid_to`` window.
+        revision_id: Optional explicit revision id; restricts candidates to
+            the matching revision when supplied.
     """
     candidates = []
     for revision in modelo.revisions.values():

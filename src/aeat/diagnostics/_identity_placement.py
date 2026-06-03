@@ -287,10 +287,7 @@ def _extract_shape_from_annotated_value(value_node: ast.expr | None, literals: d
         return ConstraintShape()
     slice_node = value_node.slice
     elements: list[ast.expr]
-    if isinstance(slice_node, ast.Tuple):
-        elements = list(slice_node.elts)
-    else:
-        elements = [slice_node]
+    elements = list(slice_node.elts) if isinstance(slice_node, ast.Tuple) else [slice_node]
     for element in elements:
         if isinstance(element, ast.Call) and _call_name(element) in _CONSTRAINT_CALL_NAMES:
             return _extract_constraint_shape_from_call(element, literals)

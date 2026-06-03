@@ -44,7 +44,7 @@ from .family import DescendantInfo, RentaAscendantProfile, RentaDescendantProfil
 if TYPE_CHECKING:
     # ``PROFILE_KEYS`` is defined lazily via ``__getattr__`` below so the
     # wizard catalogue (the source of truth) can import the leaf modules
-    # under ``aeat.domain.profile`` without triggering the catalogue-driven
+    # under ``aeat.domain.contribuyente`` without triggering the catalogue-driven
     # build. Type checkers see the same tuple-of-``ProfileKey`` contract as
     # an eager export would expose.
     from ._keys import PROFILE_KEYS as PROFILE_KEYS
@@ -136,7 +136,7 @@ class TaxResidenceProfile(BaseModel, frozen=True, strict=True):
 
 
 def parse_tax_region(raw: str) -> CCAA:
-    """Parse a CLI/user tax-region token into the closed :class:`~aeat.domain.profile._ccaa.CCAA` enum."""
+    """Parse a CLI/user tax-region token into the closed :class:`~aeat.domain.contribuyente._ccaa.CCAA` enum."""
     normalized = _normalize_region_token(raw)
     if normalized in _FORAL_ALIASES:
         raise ForalRegimeError(raw)

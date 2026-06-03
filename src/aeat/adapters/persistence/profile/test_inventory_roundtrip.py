@@ -21,7 +21,7 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from ....domain.profile.inventory import (
+from ....domain.contribuyente.inventory import (
     InventoryLedger,
     InventoryLedgerDocument,
     MovementKind,

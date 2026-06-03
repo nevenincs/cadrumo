@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...domain.profile import PROFILE_KEYS
+from ...domain.contribuyente import PROFILE_KEYS
 from ._catalogue import SETUP_FLOW, WIZARD_FLOWS
 from ._compiler import compile_profile_keys
 from ._models import WizardQuestion, iter_conditions

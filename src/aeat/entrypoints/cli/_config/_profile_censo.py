@@ -21,7 +21,7 @@ import typer
 from ....core.errors import resolve_error_message
 from ....core.i18n import tr
 from ....core.time import now
-from ....domain.profile._constants import ProfileName
+from ....domain.contribuyente._constants import ProfileName
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
 from ._profile_censo_payloads import (

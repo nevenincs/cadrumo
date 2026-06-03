@@ -27,7 +27,7 @@ CANONICAL_LAYOUT_PACKAGES: tuple[str, ...] = (
     "aeat.domain.normatives",
     "aeat.domain.portals",
     "aeat.domain.deadlines",
-    "aeat.domain.profile",
+    "aeat.domain.contribuyente",
     "aeat.domain.fincas",
     "aeat.domain.filing",
     "aeat.domain.filing.reconciliation",

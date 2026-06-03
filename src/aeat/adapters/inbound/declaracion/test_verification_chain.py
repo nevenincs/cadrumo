@@ -775,7 +775,7 @@ def test_verification_chain_m303_engine_recomputes_box_64_suma_resultados(
     Verdict: VERIFIED — engine box 64 == extracted box 64 for all 8 new-template
     specimens (2023-2024). Closure DAG (Orden HAC/819/2024 art. 1).
     """
-    extracted, engine_values, inputs = _build_m303_engine_result(pdf_stem, year, period)
+    extracted, engine_values, _inputs = _build_m303_engine_result(pdf_stem, year, period)
 
     engine_64 = engine_values.get("64")
     assert engine_64 is not None, f"VERIFIED-FAIL [{pdf_stem}]: '64' (suma de resultados) absent from engine result"
@@ -808,7 +808,7 @@ def test_verification_chain_m303_engine_recomputes_box_66_atribuible_estado(
     Verdict: VERIFIED — engine box 66 == extracted box 66 for all 8 new-template
     specimens (2023-2024). Closure DAG (Orden HAC/819/2024 art. 1).
     """
-    extracted, engine_values, inputs = _build_m303_engine_result(pdf_stem, year, period)
+    extracted, engine_values, _inputs = _build_m303_engine_result(pdf_stem, year, period)
 
     engine_66 = engine_values.get("66")
     assert engine_66 is not None, f"VERIFIED-FAIL [{pdf_stem}]: '66' (atribuible Estado) absent from engine result"
@@ -841,7 +841,7 @@ def test_verification_chain_m303_engine_recomputes_box_69_resultado_autoliquidac
     Verdict: VERIFIED — engine box 69 == extracted box 69 for all 8 new-template
     specimens (2023-2024). Closure DAG (Orden HAC/819/2024 art. 1).
     """
-    extracted, engine_values, inputs = _build_m303_engine_result(pdf_stem, year, period)
+    extracted, engine_values, _inputs = _build_m303_engine_result(pdf_stem, year, period)
 
     engine_69 = engine_values.get("iva.resultado")
     assert engine_69 is not None, f"VERIFIED-FAIL [{pdf_stem}]: 'iva.resultado' (box 69) absent from engine result"
@@ -874,7 +874,7 @@ def test_verification_chain_m303_engine_recomputes_box_71_resultado_final(
     Verdict: VERIFIED — engine box 71 == extracted box 71 for all 8 new-template
     specimens (2023-2024). Closure DAG (Orden HAC/819/2024 art. 1).
     """
-    extracted, engine_values, inputs = _build_m303_engine_result(pdf_stem, year, period)
+    extracted, engine_values, _inputs = _build_m303_engine_result(pdf_stem, year, period)
 
     engine_71 = engine_values.get("71")
     assert engine_71 is not None, f"VERIFIED-FAIL [{pdf_stem}]: '71' (resultado final) absent from engine result"

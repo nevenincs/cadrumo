@@ -52,6 +52,10 @@ def relation_source_requirements(
 
     Args:
         revision: The :class:`ModeloRevision` whose relation declarations to inspect.
+        filing_year: Target filing year; combined with each relation's source
+            offset to derive the expected source-modelo filing year.
+        period: Target period token; filters relations by ``target_periods``
+            and seeds the source-period derivation.
     """
     classifications_by_source = {
         classification.source_modelo: classification for classification in revision.dependency_classifications
@@ -125,6 +129,11 @@ def resolve_relation_values(
     Args:
         revision: The :class:`ModeloRevision` whose relation definitions are
             resolved against the supplied external outputs.
+        external_outputs: Caller-supplied per-relation values keyed by
+            ``relation.id``; a Decimal under ``copy`` aggregation or a tuple
+            of Decimals under ``sum``.
+        period: Optional period token; restricts active relations to those
+            whose ``target_periods`` set contains it.
     """
     relations = tuple(_active_relations(revision, period=period))
     relation_ids = {relation.id for relation in relations}
@@ -161,6 +170,12 @@ def resolve_relation_values_from_observations(
 
     Args:
         revision: The :class:`ModeloRevision` whose relation declarations to resolve.
+        observations: Filed-declaration :class:`RegistryModeloObservation`
+            rows that supply the source values each relation consumes.
+        filing_year: Target filing year; combined with each relation's source
+            offset to match observation rows.
+        period: Target period token whose relation requirements drive
+            observation matching.
     """
     available = tuple(observations)
     external_outputs: dict[str, Decimal | tuple[Decimal, ...]] = {}
@@ -197,6 +212,8 @@ def materialize_relation_binding_values(
         revision: The :class:`ModeloRevision` whose relation-to-binding
             mappings are used to populate the returned dict.
         relation_values: Already-resolved relation id to Decimal mapping.
+        period: Optional period token; restricts active relations to those
+            whose ``target_periods`` set contains it.
     """
     values: dict[str, Decimal] = {}
     for relation in _active_relations(revision, period=period):

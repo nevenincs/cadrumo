@@ -1,7 +1,7 @@
-aeat.domain.profile._renta_codes module
+aeat.domain.contribuyente.family module
 =======================================
 
-.. automodule:: aeat.domain.profile._renta_codes
+.. automodule:: aeat.domain.contribuyente.family
    :members:
    :show-inheritance:
    :ignore-module-all:

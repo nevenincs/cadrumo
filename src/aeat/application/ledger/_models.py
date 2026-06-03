@@ -301,6 +301,11 @@ class LedgerTransactionPayload(BaseModel):
     lifecycle_state: str = Field(min_length=1)
     classified_by: str = Field(min_length=1)
     source_jurisdiction: str | None = None
+    # FX provenance for foreign-currency rows (ledger-fx-conversion ADR): the
+    # EUR-equivalent and the applied CCY->EUR rate, so list/review/export surface
+    # the converted value rather than only the native amount. None for EUR rows.
+    value_in_eur: str | None = None
+    fx_rate: str | None = None
 
     @field_validator("source_jurisdiction")
     @classmethod
@@ -343,6 +348,10 @@ class LedgerTransactionReviewPayload(BaseModel):
     review_status: LedgerReviewStatus
     classified_by: str = Field(min_length=1)
     source_jurisdiction: str | None = None
+    # FX provenance (ledger-fx-conversion ADR): EUR-equivalent + applied
+    # CCY->EUR rate for foreign rows; None for EUR-native rows.
+    value_in_eur: str | None = None
+    fx_rate: str | None = None
 
     @field_validator("source_jurisdiction")
     @classmethod
@@ -667,6 +676,10 @@ class LedgerExportCommand(BaseModel):
     export_format: ExportSerializationFormat = ExportSerializationFormat.CSV
     include_inactive: bool = False
     output_path: Path | None = None
+    # Optional period filter (e.g. "2025Q1", "2025"): restrict the export to rows
+    # whose effective date falls in the period, so an operator can hand a gestor
+    # just the quarter/year. None exports the whole bucket.
+    period: str | None = None
     actor: str = Field(default="operator", min_length=1, max_length=64)
     source_command: str = Field(default="aeat app ledger export", min_length=1, max_length=128)
 
@@ -693,6 +706,7 @@ class BulkClassifyRow(BaseModel):
     transaction_id: str = Field(min_length=1)
     classification: BusinessClassification
     category_id: str | None = None
+    business_pct: Decimal | None = None
 
 
 class BulkClassifyFailure(BaseModel):
@@ -722,7 +736,9 @@ class BulkClassifyResult(BaseModel):
     bucket_event_ids: tuple[str, ...] = ()
 
 
-BULK_CLASSIFY_ALLOWED_COLUMNS: frozenset[str] = frozenset({"transaction_id", "classification", "category_id"})
+BULK_CLASSIFY_ALLOWED_COLUMNS: frozenset[str] = frozenset(
+    {"transaction_id", "classification", "category_id", "business_pct"}
+)
 
 
 class ApplyRulesAppliedRow(BaseModel):
@@ -780,6 +796,10 @@ class LedgerExportRow(BaseModel):
     created_by: str = ""
     created_source_command: str = ""
     source_jurisdiction: str = ""
+    # FX provenance on the export hand-off (ledger-fx-conversion ADR): EUR
+    # magnitude + applied CCY->EUR rate for foreign rows; "" for EUR-native rows.
+    value_in_eur: str = ""
+    fx_rate: str = ""
 
 
 class LedgerExportResult(BaseModel):

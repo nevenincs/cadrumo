@@ -74,9 +74,9 @@ from ...domain.categories import (
     SpendingCategory,
     SpendingCategoryFamily,
 )
+from ...domain.contribuyente._renta_codes import FiscalResidency
 from ...domain.deadlines._models import IrpfSpecialRegime
 from ...domain.iva._schema import EUMemberState, IvaCategory
-from ...domain.profile._renta_codes import FiscalResidency
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -1538,6 +1538,11 @@ def ledger_export(
         "--include-inactive",
         help=tr("cli.ledger.export.include_inactive_help"),
     ),
+    period: str | None = typer.Option(
+        None,
+        "--period",
+        help=tr("cli.ledger.export.period_help", default="Restrict the export to one filing period (e.g. 2025Q1, 2025)."),
+    ),
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.export.actor_help")),
 ) -> None:
     """Export canonical bucket-scoped ledger rows through the backend."""
@@ -1549,6 +1554,7 @@ def ledger_export(
             export_format=export_kind,
             include_inactive=include_inactive,
             output_path=output,
+            period=_canonical_period(period) if period else None,
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command="aeat app ledger export",
         ),
@@ -3202,7 +3208,7 @@ def inventory_movement_add(
 ) -> None:
     """Append one inventory movement (purchase, sale, or adjustment) to an actividad ledger."""
     from ...application.inventory import InventoryMovementCommand
-    from ...domain.profile.inventory import MovementKind
+    from ...domain.contribuyente.inventory import MovementKind
 
     try:
         kind_enum = MovementKind(kind)

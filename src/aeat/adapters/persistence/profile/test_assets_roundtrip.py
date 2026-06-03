@@ -23,7 +23,7 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from ....domain.profile.assets import (
+from ....domain.contribuyente.assets import (
     AmortizacionEntry,
     AmortizacionLedger,
     AssetClass,

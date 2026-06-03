@@ -77,6 +77,44 @@ def test_ledger_link_check_preflight_sit_at_noun_group_root() -> None:
     )
 
 
+# W72.P348.S2022: count-side companion to the set-equality roster gate above.
+# The W71 canonical spine for `aeat app ledger` is the CRUD spine (add / view /
+# list / update / remove / archive / reset) plus the ratified orthogonal axes
+# (link / check / preflight) plus the ratified workflow axes (allocate / attach
+# / categories / classify / export / history / import / merge / review / split /
+# stash / status / track). Counting them independently of the set membership
+# catches accidental verb-count drift (e.g. a verb silently re-parented but
+# replaced by a similarly-named alias) that an exact-set match might still
+# happen to satisfy if both the missing and the extra are accounted for in the
+# expected set update.
+_W71_CRUD_SPINE_COUNT: int = 7  # add, view, list, update, remove, archive, reset
+_RATIFIED_ORTHOGONAL_AXIS_COUNT: int = 3  # link, check, preflight
+_RATIFIED_WORKFLOW_AXIS_COUNT: int = 13  # allocate attach categories classify
+# export history import merge review split stash status track
+_EXPECTED_LEDGER_VERB_COUNT: int = (
+    _W71_CRUD_SPINE_COUNT + _RATIFIED_ORTHOGONAL_AXIS_COUNT + _RATIFIED_WORKFLOW_AXIS_COUNT
+)
+
+
+def test_ledger_verb_count_matches_w71_canonical_spine() -> None:
+    """The mounted `aeat app ledger` verb count matches the W71 canonical
+    spine (CRUD + ratified orthogonal axes + ratified workflow axes).
+
+    Count-side companion to :func:`test_ledger_verb_roster_matches_canonical_spine`.
+    The two gates together pin both *which* verbs are mounted and *how many*,
+    so an accidental verb swap (one removed + one added of similar name)
+    cannot satisfy both gates without an explicit count update."""
+
+    registered_count = len(ledger_app.registered_commands)
+    assert registered_count == _EXPECTED_LEDGER_VERB_COUNT, (
+        f"ledger verb count drifted: expected {_EXPECTED_LEDGER_VERB_COUNT} "
+        f"(W71 CRUD {_W71_CRUD_SPINE_COUNT} + orthogonal axes "
+        f"{_RATIFIED_ORTHOGONAL_AXIS_COUNT} + workflow axes "
+        f"{_RATIFIED_WORKFLOW_AXIS_COUNT}); got {registered_count}: "
+        f"{sorted(cmd.name for cmd in ledger_app.registered_commands)!r}"
+    )
+
+
 @pytest.mark.parametrize("verb", ["link", "check", "preflight"])
 def test_ledger_orthogonal_verb_help_states_local_only(
     cli_runner: CliRunner,

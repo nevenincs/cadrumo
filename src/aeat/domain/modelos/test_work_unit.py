@@ -718,7 +718,7 @@ def test_causante_ccaa_roundtrips_through_repository(repo: WorkUnitCatalogueRepo
     is not silently dropped at the persistence boundary.
     """
 
-    from ..profile._ccaa import CCAA
+    from ..contribuyente._ccaa import CCAA
 
     unit = create_work_unit(
         bucket_id="default",
@@ -746,7 +746,7 @@ def test_causante_ccaa_does_not_affect_work_unit_identity(repo: WorkUnitCatalogu
     call is not overwritten.
     """
 
-    from ..profile._ccaa import CCAA
+    from ..contribuyente._ccaa import CCAA
 
     first = create_work_unit(
         bucket_id="default",

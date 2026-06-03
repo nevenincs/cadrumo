@@ -40,10 +40,10 @@ if TYPE_CHECKING:
     from ...application.auth import AuthProviderListing
     from ...application.workflow import WorkflowState
     from ...domain.calculations.registry import ModeloRevision
+    from ...domain.contribuyente import ProfileKey
     from ...domain.deadlines import TaxpayerProfile
     from ...domain.filing import ModeloDraft, ModeloDraftRepository
     from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
-    from ...domain.profile import ProfileKey
     from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 
 # ---------------------------------------------------------------------

@@ -28,7 +28,7 @@ import asyncio
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Final
 
 from .....core.logging import get_logger
 from .profile import Profile
@@ -41,6 +41,22 @@ if TYPE_CHECKING:
 
 
 logger = get_logger(__name__)
+
+_DIAGNOSTIC_PROFILE_BUCKET_ID: Final = "diagnostic-probe"
+_PLAYWRIGHT_RUNTIME_LABEL: Final = "<playwright-runtime>"
+_BROWSER_CONTEXT_LABEL: Final = "<browser-context>"
+
+
+def _log_teardown_failure(
+    *,
+    message: str,
+    resource: str,
+    exc: BaseException,
+    warning: bool = False,
+) -> None:
+    """Log teardown degradation without serialising exception payloads."""
+    log = logger.warning if warning else logger.debug
+    log("%s resource=%s failure=%s", message, resource, type(exc).__name__)
 
 
 class DefaultBrowserSession:
@@ -116,8 +132,13 @@ class DefaultBrowserSession:
             finally:
                 try:
                     await self._playwright.stop()
-                except Exception:  # Playwright stop() exception surface is undocumented; teardown must not abort
-                    logger.warning("default_browser_session: playwright stop failed", exc_info=True)
+                except Exception as exc:  # Playwright stop() exception surface is undocumented; teardown must not abort
+                    _log_teardown_failure(
+                        message="default_browser_session: playwright stop failed",
+                        resource=_PLAYWRIGHT_RUNTIME_LABEL,
+                        exc=exc,
+                        warning=True,
+                    )
                 self._closed = True
 
 
@@ -138,7 +159,7 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
     # diagnose a missing-profile condition. The sentinel label keeps
     # the Profile model satisfied without pretending to be a real
     # profile.
-    bucket_id = resolve_active_bucket_id() or "diagnostic-probe"
+    bucket_id = resolve_active_bucket_id() or _DIAGNOSTIC_PROFILE_BUCKET_ID
     # Profile.storage_state_path is superseded by every auth-provider
     # passing an explicit kind-namespaced storage_state_path to
     # BrowserSession.create_context(). The value here is a fallback
@@ -172,10 +193,10 @@ async def create_browser_session(settings: Settings, profile: Profile) -> Defaul
         try:
             await playwright.stop()
         except Exception as stop_exc:
-            logger.debug(
-                "browser factory: playwright.stop() during error teardown failed (%s)",
-                stop_exc,
-                exc_info=True,
+            _log_teardown_failure(
+                message="browser factory: playwright.stop() during error teardown failed",
+                resource=_PLAYWRIGHT_RUNTIME_LABEL,
+                exc=stop_exc,
             )
         raise
 
@@ -190,10 +211,10 @@ async def shared_playwright_runtime() -> AsyncIterator[Playwright]:
         try:
             await playwright.stop()
         except Exception as stop_exc:
-            logger.debug(
-                "browser factory: playwright.stop() during runtime teardown failed (%s)",
-                stop_exc,
-                exc_info=True,
+            _log_teardown_failure(
+                message="browser factory: playwright.stop() during runtime teardown failed",
+                resource=_PLAYWRIGHT_RUNTIME_LABEL,
+                exc=stop_exc,
             )
 
 
@@ -221,10 +242,10 @@ async def opened_browser_page(
         try:
             await context.close()
         except Exception as close_exc:
-            logger.debug(
-                "browser factory: context.close() during teardown failed (%s)",
-                close_exc,
-                exc_info=True,
+            _log_teardown_failure(
+                message="browser factory: context.close() during teardown failed",
+                resource=_BROWSER_CONTEXT_LABEL,
+                exc=close_exc,
             )
         await browser_session.close()
 

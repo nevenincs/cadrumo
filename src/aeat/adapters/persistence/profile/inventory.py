@@ -1,6 +1,6 @@
 """Encrypted SQL persistence for actividad economica inventory ledgers.
 
-:class:`aeat.domain.profile.inventory.InventoryLedger` payloads are stored
+:class:`aeat.domain.contribuyente.inventory.InventoryLedger` payloads are stored
 as FINANCIAL-class secure objects in the primary database.
 """
 
@@ -11,7 +11,7 @@ from pathlib import Path
 from ....core.errors import AeatError
 from ....core.logging import get_logger
 from ....core.time import now
-from ....domain.profile.inventory import (
+from ....domain.contribuyente.inventory import (
     InventoryLedger,
     InventoryLedgerDocument,
     InventoryLedgerError,
@@ -178,7 +178,7 @@ class InventoryLedgerRepository:
         """Atomically append ``movement`` after validating the new valuation.
 
         The replacement ledger is fully revalidated via
-        :func:`aeat.domain.profile.inventory.compute_inventory_valuation`
+        :func:`aeat.domain.contribuyente.inventory.compute_inventory_valuation`
         before being persisted, so any rule violation aborts the write.
 
         Args:

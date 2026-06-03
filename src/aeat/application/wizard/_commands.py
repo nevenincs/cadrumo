@@ -58,7 +58,7 @@ def _ccaa_choice_values() -> list[str]:
     localised redirect rather than a generic "not one of" error, but they
     are refused by the wizard persistence layer via ``ForalRegimeError``.
     """
-    from ...domain.profile._ccaa import CCAA
+    from ...domain.contribuyente._ccaa import CCAA
 
     common = [member.value for member in CCAA]
     foral = ["pais_vasco", "navarra"]
@@ -119,8 +119,8 @@ def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
     ``--situacion-familiar`` flag choices never drift from the values
     the wizard catalogue and the profile schema validate against.
     """
+    from ...domain.contribuyente import SituacionFamiliar
     from ...domain.deadlines._models import IrpfSpecialRegime
-    from ...domain.profile import SituacionFamiliar
 
     return (
         [member.value for member in IrpfSpecialRegime],
@@ -840,7 +840,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
         # error) but are not valid AEAT-jurisdiction residence CCAAs.
         _ccaa_token = canonical.get("tax-residence-ccaa") or explicit_flags.get("tax-residence-ccaa")
         if _ccaa_token is not None:
-            from ...domain.profile import ForalRegimeError, parse_tax_region
+            from ...domain.contribuyente import ForalRegimeError, parse_tax_region
 
             try:
                 parse_tax_region(_ccaa_token)

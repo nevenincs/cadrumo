@@ -17,9 +17,9 @@ from __future__ import annotations
 import pytest
 
 from ...core.setup_answers import SetupAnswers
+from ...domain.contribuyente._ccaa import CCAA
+from ...domain.contribuyente._renta_codes import SituacionFamiliar
 from ...domain.deadlines._models import IVARegime
-from ...domain.profile._ccaa import CCAA
-from ...domain.profile._renta_codes import SituacionFamiliar
 from ._verifier import (
     WizardCheckSeverity,
     verify_setup_answers,

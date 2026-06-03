@@ -156,7 +156,7 @@ def test_s611_no_local_file_fingerprint_in_caller_sites() -> None:
     former_sites = [
         "domain/categories/_registry.py",
         "domain/iva/_catalogue.py",
-        "application/topics/__init__.py",
+        "core/topics/__init__.py",
         "domain/normatives/_loader.py",
     ]
     for rel in former_sites:
@@ -171,7 +171,7 @@ def test_s611_caller_sites_import_file_stat_fingerprint() -> None:
     sites = [
         "domain/categories/_registry.py",
         "domain/iva/_catalogue.py",
-        "application/topics/__init__.py",
+        "core/topics/__init__.py",
         "domain/normatives/_loader.py",
     ]
     for rel in sites:

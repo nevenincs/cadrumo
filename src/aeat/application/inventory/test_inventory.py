@@ -12,7 +12,7 @@ import pytest
 from ...adapters.persistence.storage import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ...adapters.persistence.storage.errors import StorageValidationError
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
-from ...domain.profile.inventory import MovementKind, ValuationMethod
+from ...domain.contribuyente.inventory import MovementKind, ValuationMethod
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from . import (
     InventoryActividadConflictError,

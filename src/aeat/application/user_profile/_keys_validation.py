@@ -24,12 +24,12 @@ from collections.abc import Mapping
 from pydantic import BaseModel
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...domain.profile import (
+from ...domain.contribuyente import (
     ProfileKey,
     ProfileKeyRequirement,
     optional_profile_keys,
 )
-from ...domain.profile._keys import _profile_keys as _get_profile_keys
+from ...domain.contribuyente._keys import _profile_keys as _get_profile_keys
 
 
 class ProfileValidationResult(BaseModel):
