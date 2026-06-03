@@ -347,7 +347,7 @@ Classification lens + search + period-scoped JSON.
 
 Anomaly channel + readiness dashboard + annual roll-up.
 
-- [ ] `W12.P23.S80` - Anomaly channel in check/preflight distinct from missing-fact reasons (recargo/erroneous/foreign), with severity; `src/aeat/application/ledger/_preflight.py`.
+- [x] `W12.P23.S80` - Anomaly channel in check/preflight distinct from missing-fact reasons (recargo/erroneous/foreign), with severity; `src/aeat/application/ledger/_preflight.py`.
 - [ ] `W12.P23.S81` - Consolidated readiness dashboard (rows, pending, anomalies, ready-to-file) for sign-off; `src/aeat/application/ledger/_summary.py`.
 - [ ] `W12.P23.S82` - Annual roll-up / M100-readiness money totals (ingresos/gastos/net activity per year); `src/aeat/application/ledger/_summary.py`.
 

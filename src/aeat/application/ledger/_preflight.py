@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, computed_field, field_serializer, field_v
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import BucketId
+from ...domain.iva import IvaCategory
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -46,6 +47,10 @@ class LedgerPreflightIssueReason(StrEnum):
     MISSING_IVA_RATE = "missing_iva_rate"
     MISSING_PROPORTIONALITY_REFERENCE = "missing_proportionality_reference"
     UNSUPPORTED_CURRENCY = "unsupported_currency"
+    # Anomaly channel: present-but-suspicious rows (distinct from missing-fact),
+    # so an asesor sees real anomalies without first classifying every row.
+    ANOMALY_NON_DECLARABLE_IVA_CATEGORY = "anomaly_non_declarable_iva_category"
+    ANOMALY_RECARGO_ON_NON_RETAILER = "anomaly_recargo_on_non_retailer"
 
 
 class LedgerPreflightIssue(BaseModel):
@@ -172,6 +177,23 @@ def _transaction_needs_expense_category(transaction: Transaction) -> bool:
     )
 
 
+_ANOMALY_IVA_REASONS: dict[IvaCategory, tuple[LedgerPreflightIssueReason, str]] = {
+    IvaCategory.UNKNOWN: (
+        LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
+        "iva_category 'unknown' is not declarable; classify the row or query the source",
+    ),
+    IvaCategory.ERRONEOUS_INVOICE: (
+        LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
+        "iva_category 'erroneous_invoice' marks a rectified/void row; not declarable",
+    ),
+    IvaCategory.RECARGO_EQUIVALENCIA: (
+        LedgerPreflightIssueReason.ANOMALY_RECARGO_ON_NON_RETAILER,
+        "recargo equivalencia on a purchase implies the retailer regime; IVA+RE is "
+        "non-deductible cost — query the supplier if this is not a retailer activity",
+    ),
+}
+
+
 def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIssue, ...]:
     issues: list[LedgerPreflightIssue] = []
     common = {"transaction_id": transaction.transaction_id}
@@ -193,7 +215,13 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
         )
     if transaction.business_classification is BusinessClassification.PERSONAL:
         return ()
-    if transaction.raw.currency != DEFAULT_CURRENCY:
+    anomaly = _ANOMALY_IVA_REASONS.get(transaction.iva_category)
+    if anomaly is not None:
+        reason, detail = anomaly
+        return (LedgerPreflightIssue(**common, reason=reason, detail=detail),)
+    # A foreign row is only unsupported when no EUR conversion was applied at
+    # import; a converted row (value_in_eur set) aggregates normally.
+    if transaction.raw.currency != DEFAULT_CURRENCY and transaction.value_in_eur is None:
         issues.append(
             LedgerPreflightIssue(
                 **common,
