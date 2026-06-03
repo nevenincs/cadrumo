@@ -1099,7 +1099,7 @@ def _filter_ledger_review_rows(
             transaction
             for transaction in rows
             if needle in transaction.raw.description.casefold()
-            or needle in (transaction.raw.counterparty or "").casefold()
+            or needle in transaction.raw.display_counterparty.casefold()
             or needle in (transaction.category_id or "").casefold()
         )
     if query.import_id is not None or query.issue is not None:
