@@ -1807,12 +1807,30 @@ def ledger_track(
                 "tracking": ledger_transaction_tracking_payload(result.transaction).model_dump(mode="json"),
             }
         ),
-        lines=[
-            f"{tr('cli.ledger.labels.id')}\t{result.ref.transaction_id}",
-            f"{tr('cli.ledger.labels.lifecycle_state')}\t{result.transaction.lifecycle_state.value}",
-            f"{tr('cli.ledger.labels.created_event_id')}\t{result.transaction.created_event_id or '-'}",
-        ],
+        lines=_ledger_track_lines(result.ref.transaction_id, result.transaction),
     )
+
+
+def _ledger_track_lines(transaction_id: str, transaction: Transaction) -> list[str]:
+    """Track lines, naming the import-batch provenance for imported rows.
+
+    Imported transactions carry no ``created_event_id`` (set only by
+    ``ledger add``); rather than render a bare ``-``, surface the import
+    provenance the row already carries (provider, source file, ingest time,
+    fingerprint) so an asesor can defend a row's origin from ``track`` alone.
+    """
+    lines = [
+        f"{tr('cli.ledger.labels.id')}\t{transaction_id}",
+        f"{tr('cli.ledger.labels.lifecycle_state')}\t{transaction.lifecycle_state.value}",
+        f"{tr('cli.ledger.labels.created_event_id')}\t{transaction.created_event_id or '-'}",
+    ]
+    if transaction.created_event_id is None:
+        provenance = transaction.raw.provenance
+        lines.append(f"import_provider\t{provenance.provider_name}")
+        lines.append(f"import_source\t{provenance.source_path.name}")
+        lines.append(f"import_ingested_at\t{provenance.ingested_at.isoformat()}")
+        lines.append(f"import_fingerprint\t{transaction.import_fingerprint or '-'}")
+    return lines
 
 
 @app.command("import", help=tr("cli.ledger.import.help"))
