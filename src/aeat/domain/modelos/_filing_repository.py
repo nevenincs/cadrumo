@@ -17,7 +17,7 @@ from ._filing_record import ModeloRecord, ModeloRecordCatalogue
 from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage.sql import SecureObjectRepository
+    from ...adapters.persistence.storage import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
 # namespace string preserved across rename to avoid orphaning persisted envelopes

@@ -16,7 +16,7 @@ from ...core.logging import get_logger
 from ...core.time import now
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage.sql import SecureObjectRepository
+    from ...adapters.persistence.storage import SecureObjectRepository
 from ._errors import ModeloError
 from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 from ._work_unit import WorkUnit, WorkUnitCatalogue

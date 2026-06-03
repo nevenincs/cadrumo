@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...adapters.persistence.storage import SecureObjectRepository
 from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     RawProvenance,

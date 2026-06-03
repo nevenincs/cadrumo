@@ -11,8 +11,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from typing import TYPE_CHECKING, ClassVar
 
-from ...adapters.persistence.storage import SensitivityClass
-from ...adapters.persistence.storage.envelope import SecureBoundRepository
+from ...adapters.persistence.storage import SecureBoundRepository, SensitivityClass
 from ...core.logging import get_logger
 from ._models import ModeloPresentado
 

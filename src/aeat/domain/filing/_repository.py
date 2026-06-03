@@ -11,13 +11,12 @@ from __future__ import annotations
 from collections.abc import Iterator
 from typing import TYPE_CHECKING, ClassVar
 
-from ...adapters.persistence.storage import SensitivityClass
-from ...adapters.persistence.storage.envelope import SecureBoundRepository
+from ...adapters.persistence.storage import SecureBoundRepository, SensitivityClass
 from ._runtime_repository import resolve_filing_repository_bucket_id, secure_objects_for_filing_bucket
 from ._schema import ModeloDraft
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage.sql import SecureObjectRepository
+    from ...adapters.persistence.storage import SecureObjectRepository
 
 
 class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
