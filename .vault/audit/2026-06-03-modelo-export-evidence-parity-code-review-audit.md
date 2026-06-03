@@ -42,3 +42,7 @@ Status: PASS. Reviewed `W02.P02.S07` against the export evidence ADR and workboo
 ## S08-REVIEW-001 | PASS | Offline export emits hash-bound machine-readable evidence sidecar
 
 Status: PASS. Reviewed `W02.P02.S08` against the export evidence ADR. The offline export result now carries XLSX bytes plus canonical JSON evidence sidecar bytes generated from `SheetExportPlan.metadata` and the typed `SheetExportPlan.evidence` facet. The sidecar includes a schema version and the actual workbook SHA-256, so it is bound to the workbook artefact rather than a parallel unverified dump. Tests parse the sidecar JSON and verify media types, payload hashes, metadata, contributor rows, and manual basis entries. No Critical or High issues found.
+
+## S09-REVIEW-001 | PASS | Ledger-derived exports require evidence or snapshot reference
+
+Status: PASS. Reviewed `W02.P02.S09` against the export evidence ADR. `export_modelo_revision` now refuses ledger-derived revisions when `source_transaction_ids` is non-empty and both `ledger_filing_evidence` and `ledger_filing_snapshot` are absent. The gate runs immediately after revision load and before any work-unit lookup, draft build, temporary file write, or bucket event emission. The new refusal is registered in the stable error registry. Tests cover the helper shape and a real export-service call that seeds an active profile plus revision repository and asserts no output file is written. No Critical or High issues found.
