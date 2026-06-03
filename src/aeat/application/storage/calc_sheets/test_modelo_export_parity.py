@@ -33,19 +33,9 @@ _COVERED = [
     ("390", 2025, "0A", date(2026, 1, 20)),  # IVA resumen anual
     ("111", 2025, "1T", date(2025, 4, 1)),  # retenciones trabajo
     ("115", 2025, "1T", date(2025, 4, 1)),  # retenciones arrendamientos
-    ("200", 2025, "0A", date(2026, 7, 1)),  # sociedades (bracket-by-entity-type now translated)
+    ("200", 2025, "0A", date(2026, 7, 1)),  # sociedades (bracket-by-entity-type translated)
+    ("100", 2025, "0A", date(2025, 5, 1)),  # renta IRPF anual (age_at_year_end translated)
 ]
-
-# Modelos with a registry snapshot + completeness manifest that are NOT YET
-# export-capable: ``build_export_plan`` raises ``TranslationError`` because a
-# registry formula op has no closed-form Sheets translation yet. Enrolling M100
-# is W04.S19, blocked on translating the ``age_at_year_end`` date-binding op
-# (needs a date_binding input cell in the layout + the filing_year threaded into
-# the translator). Listed here so the coverage gap is explicit, never silently
-# implied as parity.
-_EXPORT_TRANSLATION_GAP = (
-    ("100", "renta IRPF anual — age_at_year_end date-binding op untranslated"),
-)
 
 
 def _snapshot(modelo: str, year: int, period: str, on: date):
@@ -75,25 +65,6 @@ def test_export_plan_covers_completeness_manifest(modelo: str, year: int, period
     missing = sorted(required - emitted)
     # Every official-manifest casilla must appear in the exported workbook.
     assert not missing, f"modelo {modelo} export omits official casillas: {missing}"
-
-
-@pytest.mark.parametrize(("modelo", "reason"), _EXPORT_TRANSLATION_GAP)
-def test_export_translation_gap_is_explicit(modelo: str, reason: str) -> None:
-    """Witness the known export-translation gap for M100 / M200.
-
-    These modelos carry a registry snapshot but ``build_export_plan`` cannot yet
-    render them: a formula op has no closed-form Sheets translation. This test
-    pins the gap honestly (no xfail/skip): when the translator is extended so the
-    plan builds, this test FAILS loudly — the signal to enrol the modelo in
-    ``_COVERED`` and close W04.S19 / W04.S20.
-    """
-    from ._translator import TranslationError
-
-    on = date(2025, 5, 1) if modelo == "100" else date(2026, 7, 1)
-    snapshot = _snapshot(modelo, 2025, "0A", on)
-    with pytest.raises(TranslationError):
-        build_export_plan(snapshot)
-    assert reason  # documented rationale travels with the witness
 
 
 @pytest.mark.parametrize(("modelo", "year", "period", "on"), _COVERED)

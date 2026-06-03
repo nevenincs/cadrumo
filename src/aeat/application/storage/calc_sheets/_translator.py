@@ -56,6 +56,7 @@ _SUPPORTED_OPS: Final[frozenset[str]] = frozenset(
         "lookup_bracket_by_ccaa",
         "lookup_bracket_by_entity_type",
         "lookup_parameter_by_entity_type",
+        "age_at_year_end",
         "previous_period_value",
         "previous_period_sum",
         "cross_model_sum",
@@ -104,6 +105,8 @@ def _translate(expression: FormulaExpression, *, layout: SheetLayout) -> str:
         return _translate_lookup_bracket_by_binding(expression, layout=layout, op=op)
     if op == "lookup_parameter_by_entity_type":
         return _translate_lookup_parameter_by_entity_type(expression, layout=layout)
+    if op == "age_at_year_end":
+        return _translate_age_at_year_end(expression, layout=layout)
     args = [_translate(arg, layout=layout) for arg in expression.args]
     builder = _ARG_OP_BUILDERS.get(op)
     if builder is None:
@@ -339,6 +342,37 @@ def _translate_lookup_parameter_by_entity_type(
         safe_key = enum_key.replace('"', '""')
         branches.append(f'"{safe_key}",{param_cell.anchor.qualified()}')
     return f"SWITCH({binding_a1},{','.join(branches)})"
+
+
+def _translate_age_at_year_end(expression: FormulaExpression, *, layout: SheetLayout) -> str:
+    """Emit ``(filing_year - YEAR(date_binding_cell))``.
+
+    Mirrors the runtime ``age_at_year_end`` (Art. 57.1.b LIRPF ages the taxpayer
+    at 31 December of the tax year, so ``filing_year - birth_year`` is exact): the
+    single arg is a ``date_binding`` leaf (a date-valued profile fact such as
+    birth_date) whose Entradas cell holds the operator-entered date. The filing
+    year is the constant carried on the layout from the snapshot.
+    """
+    if len(expression.args) != 1:
+        raise TranslationError("age_at_year_end expects 1 arg (date_binding)", op="age_at_year_end")
+    arg = expression.args[0]
+    if arg.date_binding is None:
+        raise TranslationError("age_at_year_end args[0] must be a date_binding leaf", op="age_at_year_end")
+    if layout.filing_year <= 0:
+        raise TranslationError(
+            "age_at_year_end requires a non-zero filing_year on the layout",
+            op="age_at_year_end",
+            hint="plan_layout must be called with a bracket_filter_date so the filing year is known",
+        )
+    try:
+        cell = layout.address_for_date_binding(arg.date_binding)
+    except KeyError as exc:
+        raise TranslationError(
+            f"date_binding {arg.date_binding!r} has no anchor cell in the layout",
+            op="age_at_year_end",
+            hint="the layout planner must reserve an Entradas cell for every referenced date_binding",
+        ) from exc
+    return f"({layout.filing_year}-YEAR({cell.qualified()}))"
 
 
 def _casilla_reference(casilla: CasillaId, *, layout: SheetLayout) -> str:
