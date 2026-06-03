@@ -28,8 +28,8 @@ from ._layout import SheetLayout, plan_layout
 from ._records import (
     OperatorInputs,
     RelationValues,
-    SheetCellAddress,
     SheetAnchor,
+    SheetCellAddress,
     SheetCellConstraint,
     SheetExportMetadata,
     SheetExportPlan,
@@ -37,16 +37,17 @@ from ._records import (
     SheetGuideContent,
     SheetNumberFormat,
     SheetProtectedRange,
-    SheetSectionHeader,
     SheetProvenanceRow,
     SheetRowSet,
     SheetRowSetColumn,
+    SheetSectionHeader,
     SheetTariffTable,
     SheetTariffTableRow,
     SheetValueCell,
     TabName,
     _utc_now,
 )
+from ._styling import compute_styling
 from ._translator import translate_formula
 
 _ENGINE_VERSION: Final[str] = "calc-sheets/0.1.0"
@@ -145,15 +146,23 @@ def _value_cells_for_entradas(
             role="label",
         )
     )
+    previous_section: tuple[str, ...] | None = None
     for row in layout.entradas_rows:
         casilla = by_id[row.casilla]
-        cells.append(
-            SheetValueCell(
-                address=SheetCellAddress.at(TabName.ENTRADAS, row.row, 1),
-                value=" › ".join(casilla.section),
-                role="label",
+        # Show the section label once, on the row where the section changes
+        # (rendered as a banner); intervening rows leave column A blank so the
+        # tab reads like the official modelo rather than repeating the long
+        # section id on every line.
+        section = tuple(casilla.section)
+        if section and section != previous_section:
+            cells.append(
+                SheetValueCell(
+                    address=SheetCellAddress.at(TabName.ENTRADAS, row.row, 1),
+                    value=" › ".join(section),
+                    role="label",
+                )
             )
-        )
+            previous_section = section
         cells.append(
             SheetValueCell(
                 address=SheetCellAddress.at(TabName.ENTRADAS, row.row, 2),
@@ -250,15 +259,19 @@ def _label_cells_for_calculos(
             role="label",
         )
     )
+    previous_section: tuple[str, ...] | None = None
     for row in layout.calculos_rows:
         casilla = by_id[row.casilla]
-        cells.append(
-            SheetValueCell(
-                address=SheetCellAddress.at(TabName.CALCULOS, row.row, 1),
-                value=" › ".join(casilla.section),
-                role="label",
+        section = tuple(casilla.section)
+        if section and section != previous_section:
+            cells.append(
+                SheetValueCell(
+                    address=SheetCellAddress.at(TabName.CALCULOS, row.row, 1),
+                    value=" › ".join(section),
+                    role="label",
+                )
             )
-        )
+            previous_section = section
         cells.append(
             SheetValueCell(
                 address=SheetCellAddress.at(TabName.CALCULOS, row.row, 2),
@@ -856,13 +869,22 @@ def build_export_plan(
     row_sets = collect_row_sets(revision)
 
     metadata = _stamp_registry_metadata(snapshot)
+    guide_paragraphs = _guide_paragraphs(snapshot)
     guide = SheetGuideContent(
         title=f"{snapshot.modelo.title} — {snapshot.period}/{snapshot.filing_year}",
-        paragraphs=_guide_paragraphs(snapshot),
+        paragraphs=guide_paragraphs,
     )
 
     value_cells = (
         entradas + calculos_labels + tariff_values + relation_value_cells + provenance_values + anchor_value_cells
+    )
+
+    styled_ranges, column_widths, frozen_views, auto_filters = compute_styling(
+        layout=layout,
+        section_headers=section_headers,
+        anchors=anchors,
+        provenance=provenance,
+        guide_paragraphs=len(guide_paragraphs),
     )
 
     return SheetExportPlan(
@@ -878,6 +900,10 @@ def build_export_plan(
         cell_constraints=cell_constraints,
         relation_provenance=relations,
         row_sets=row_sets,
+        styled_ranges=styled_ranges,
+        column_widths=column_widths,
+        frozen_views=frozen_views,
+        auto_filters=auto_filters,
         guide=guide,
     )
 

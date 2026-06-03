@@ -42,6 +42,7 @@ from ....domain.calculations.registry import (
 )
 from ....domain.calculations.registry import DecimalValue as _RegistryDecimalValue
 from ._errors import CalcSheetsRecordError
+from ._theme import WORKBOOK_FONT_FAMILY, StyleRole
 
 # `DecimalValue` is the registry's annotated `Decimal` with a
 # BeforeValidator that coerces int / str inputs through `Decimal(...)`.
@@ -343,6 +344,97 @@ class SheetAnchor(BaseModel):
     label: str = Field(min_length=1)
 
 
+class SheetStyledRange(BaseModel):
+    """A contiguous range tagged with a presentation role.
+
+    The engine emits one styled range per role-region (the header band, each
+    section banner, the operator-input column, the computed column, the result
+    cell, wrapped body columns). Both transports resolve ``role`` to a concrete
+    fill / font / alignment through the shared ``_theme`` palette, so the offline
+    xls and online Sheets render the same look from the same declaration. Later
+    ranges win on overlap, so a narrow accent range (e.g. ``result``) may be
+    emitted after the broad column range it refines.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    tab: TabName
+    start_row: int = Field(ge=1)
+    end_row: int = Field(ge=1)
+    start_column: int = Field(ge=1)
+    end_column: int = Field(ge=1)
+    role: StyleRole
+    wrap: bool = False
+
+    @model_validator(mode="after")
+    def _range_well_formed(self) -> SheetStyledRange:
+        if self.end_row < self.start_row:
+            raise ValueError("end_row must be on or after start_row")
+        if self.end_column < self.start_column:
+            raise ValueError("end_column must be on or after start_column")
+        return self
+
+
+class SheetColumnWidth(BaseModel):
+    """A per-tab column width in approximate character units.
+
+    The offline renderer applies it as an openpyxl ``column_dimensions`` width;
+    the online renderer converts it to a pixel size (``~7 px`` per character)
+    for ``updateDimensionProperties``. Sized so concept labels and legal-ref
+    columns read without clipping.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    tab: TabName
+    column: int = Field(ge=1)
+    width: int = Field(ge=1, le=255)
+
+
+class SheetFrozenView(BaseModel):
+    """Per-tab frozen header rows / leading columns.
+
+    Freezes the column-title row (and, where useful, the leading label columns)
+    so the header stays visible while an operator scrolls a long modelo.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    tab: TabName
+    frozen_rows: int = Field(ge=0, default=0)
+    frozen_columns: int = Field(ge=0, default=0)
+
+    @model_validator(mode="after")
+    def _at_least_one(self) -> SheetFrozenView:
+        if self.frozen_rows == 0 and self.frozen_columns == 0:
+            raise ValueError("a frozen view must freeze at least one row or column")
+        return self
+
+
+class SheetAutoFilter(BaseModel):
+    """A per-tab basic-filter range over the header row plus its data rows.
+
+    Lets the operator sort / filter the tab by section or concept. Offline maps
+    it to ``worksheet.auto_filter.ref``; online to ``setBasicFilter``.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    tab: TabName
+    start_row: int = Field(ge=1)
+    end_row: int = Field(ge=1)
+    start_column: int = Field(ge=1)
+    end_column: int = Field(ge=1)
+
+    @model_validator(mode="after")
+    def _range_well_formed(self) -> SheetAutoFilter:
+        if self.end_row < self.start_row:
+            raise ValueError("end_row must be on or after start_row")
+        if self.end_column < self.start_column:
+            raise ValueError("end_column must be on or after start_column")
+        return self
+
+
 class SheetProvenanceRow(BaseModel):
     """One row of the `Procedencia` audit tab.
 
@@ -602,6 +694,11 @@ class SheetExportPlan(BaseModel):
     row_sets: tuple[SheetRowSet, ...] = ()
     relation_provenance: RelationValues | None = None
     evidence: SheetEvidenceFacet = Field(default_factory=SheetEvidenceFacet)
+    font_family: str = Field(default=WORKBOOK_FONT_FAMILY, min_length=1)
+    styled_ranges: tuple[SheetStyledRange, ...] = ()
+    column_widths: tuple[SheetColumnWidth, ...] = ()
+    frozen_views: tuple[SheetFrozenView, ...] = ()
+    auto_filters: tuple[SheetAutoFilter, ...] = ()
     guide: SheetGuideContent
 
     def all_addresses(self) -> tuple[SheetCellAddress, ...]:
@@ -628,22 +725,26 @@ __all__ = [
     "ParameterCell",
     "RelationValue",
     "RelationValues",
+    "SheetAnchor",
+    "SheetAutoFilter",
     "SheetCellAddress",
     "SheetCellConstraint",
+    "SheetColumnWidth",
     "SheetEvidenceContributorRow",
     "SheetEvidenceFacet",
     "SheetEvidenceManualEntry",
     "SheetExportMetadata",
     "SheetExportPlan",
     "SheetFormulaCell",
+    "SheetFrozenView",
     "SheetGuideContent",
-    "SheetAnchor",
     "SheetNumberFormat",
-    "SheetSectionHeader",
     "SheetProtectedRange",
     "SheetProvenanceRow",
     "SheetRowSet",
     "SheetRowSetColumn",
+    "SheetSectionHeader",
+    "SheetStyledRange",
     "SheetTariffTable",
     "SheetTariffTableRow",
     "SheetValueCell",
