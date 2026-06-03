@@ -17,6 +17,7 @@ Submodules
    aeat.application.ledger._business_operation_invoice
    aeat.application.ledger._evidence
    aeat.application.ledger._id_resolution
+   aeat.application.ledger._llm_classification
    aeat.application.ledger._models
    aeat.application.ledger._preflight
    aeat.application.ledger._protocols
