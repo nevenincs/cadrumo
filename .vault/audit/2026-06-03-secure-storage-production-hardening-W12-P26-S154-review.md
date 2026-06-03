@@ -10,33 +10,50 @@ related:
 
 # `secure-storage-production-hardening` `W12.P26.S154` Review
 
-## S154-001 | PASS | Secret materialisation is an explicit plaintext bridge
+## S154-001 | PASS | Plaintext exception is explicit and bounded
 
-`src/aeat/adapters/persistence/storage/blob_store/_materialisation.py` exists for third-party APIs that require a filesystem path rather than in-memory bytes. It reads secret bytes from `SecretStore`, writes them to a short-lived tempfile through the `mkstemp` file descriptor, yields or returns the path, and removes the file during cleanup.
+`materialise_secret()` and `export_to_temp_path()` still materialise decrypted secret bytes only because downstream consumers require a real path. The helpers create private temp files through `mkstemp`, write through the returned descriptor, and either unlink on context exit or return an explicit cleanup callback.
 
-This is a `plaintext-exception`, not an alternate persistence backend: the secret source remains the encrypted blob/secret store, and the plaintext file is temporary consumer interop.
+## S154-002 | FIXED BEFORE COMMIT | Secure tempfile writes now handle short writes
 
-## S154-002 | PASS | Settings and master-key resolution stay centralized
+`_write_bytes_secure_fd()` previously called `os.write()` once. Low-level writes return the number of bytes written, so a single call is not a durable complete-write contract.
 
-The singleton factory resolves directories from `load_settings()` or a caller-supplied `Settings` object. It constructs `EncryptedBlobStore` and `SecretStore` from those centralized settings paths and does not read environment variables directly or construct settings ad hoc.
+Resolution: `_write_bytes_secure_fd()` now loops over a `memoryview` until all bytes are written and raises localized `StorageValidationError` if a write makes no progress. A real large-payload materialisation test verifies the full payload is read back.
 
-Master-key access stays below the store layer: `EncryptedBlobStore` falls through to the active bucket session when no provider is injected.
+## S154-003 | FIXED BEFORE COMMIT | Tempfile affixes cannot reshape paths
 
-## S154-003 | PASS | Cleanup suppressions are narrow and tested
+The helper accepted caller-supplied `prefix` and `suffix` values directly into `tempfile.mkstemp()`.
 
-The only suppressions are `contextlib.suppress(FileNotFoundError)` around cleanup unlink calls. They make cleanup idempotent and tolerate a caller or consumer already removing the temp file; they do not hide secret-store, write, or read failures.
+Resolution: prefix and suffix values are validated before secret lookup and temp-file creation. Separators, NUL bytes, and dot path tokens raise localized `StorageValidationError` with structured context. Real context-managed and explicit-export tests cover the rejection path.
 
-## S154-004 | PASS | Export parity ADRs do not widen the materialisation authority
+## S154-004 | FIXED BEFORE COMMIT | Cleanup misses are no longer silent
 
-The 2026-06-03 export ADRs require ledger-derived modelo exports to carry bundled or resolvable evidence, offline and Sheets exports to share one typed export plan with registry-grounded parity gates, documentary parity to avoid fake executable runners for layout-only modelos, and BOE fichero exports to pair golden SHA with DR-shape assertions.
+Cleanup previously used silent `FileNotFoundError` suppression. That made idempotent cleanup safe but invisible when another process or earlier caller removed the temp file.
 
-Those constraints do not change `AFR-052`'s storage disposition. The helper is only a path-shaped transport bridge for already-stored secret bytes; it is not a calculation/export authority, evidence source, workbook builder, or parity oracle. Future export work must keep export content grounded in the encrypted revision/evidence envelope and the shared plan builder, not in this temporary plaintext path.
+Resolution: already-missing temp paths now emit debug-level evidence. Real tests exercise both context-managed and explicit cleanup misses.
+
+## S154-005 | FIXED BEFORE COMMIT | Write failures unlink plaintext temp files
+
+Review found that write/setup failures before the context or cleanup callback was returned could leave partially written plaintext temp files behind.
+
+Resolution: temp-file creation is now centralized. Any failure while writing or closing the descriptor before handoff closes the descriptor when possible, unlinks the materialised temp path, and re-raises the original failure.
+
+## S154-006 | FIXED BEFORE COMMIT | Explicit cleanup retry is preserved after unlink errors
+
+Review found that `export_to_temp_path()` marked cleanup complete before `Path.unlink()` succeeded. A real unlink failure could therefore prevent a later cleanup retry from removing plaintext.
+
+Resolution: cleanup now marks completion only after unlink succeeds or the path is already missing. A real filesystem test replaces the exported file path with a directory, verifies cleanup raises, removes the directory, and verifies a later cleanup call still completes.
+
+## S154-007 | PASS | Plan state matches the AFR register
+
+The plan CLI again mutated adjacent rows while reporting success. The plan has been repaired so `AFR-052` / `W12.P26.S154` are closed and `AFR-053` through `AFR-055` / `W12.P26.S155` through `W12.P26.S157` remain pending.
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/blob_store/test_materialisation.py` passed with 10 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/blob_store/_materialisation.py src/aeat/adapters/persistence/storage/blob_store/test_materialisation.py` passed.
-- Case-sensitive touched-file hygiene scan found no broad exception catches, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, raw UTF-8 literals, local secure-object marker construction, direct settings construction, or direct environment access.
-- Suppression scan found only `FileNotFoundError` cleanup suppressions after `mkstemp` materialisation paths.
+- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/blob_store/test_materialisation.py src/aeat/adapters/persistence/storage/test_sensitive_persistence_policy.py -k "materialise or export or sensitive_direct_write"` passed with 26 selected tests.
+- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/blob_store/_materialisation.py src/aeat/adapters/persistence/storage/blob_store/test_materialisation.py src/aeat/adapters/persistence/storage/test_sensitive_persistence_policy.py` passed.
+- `uv run --no-sync -q python -m aeat.locales audit` passed.
+- Case-sensitive touched-file hygiene scan found no broad exception catches, suppressing pragmas, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, raw UTF-8 literals, local `Path("db://secure_objects")` construction, direct settings construction, or direct environment access.
+- Final S154 code review returned no findings. Residual risk is limited to direct OS write-failure injection being covered by inspection rather than patched fault injection, consistent with the no fake/monkeypatch test constraint.
 
 Disposition: close `AFR-052` as `plaintext-exception`.
