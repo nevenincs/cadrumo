@@ -21,5 +21,6 @@ semantic_role_cardinality_reason = "The art. 26.1 BIN compensation ceiling is th
 required = false
 input_kind = "computed"
 formula = "modelo-200-2024-bin-aplicada-maxima"
+internal_only = true
 legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-25"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
