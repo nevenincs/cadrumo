@@ -66,18 +66,22 @@ class ProfileValidationError(TaxResidenceProfileError, ValueError):
 
 
 class ProfileKeysRegistrationError(CoreError):
-    """Raised when profile keys are registered a second time with a conflicting tuple.
+    """Raised on a profile-key registry invariant violation.
 
-    The profile-key registry is single-writer: the first registration wins.
-    A second call that supplies a different tuple is a programming error;
-    this typed exception replaces the bare ``RuntimeError`` so callers can
-    catch it precisely and the error surfaces in the central registry.
+    Two cases share this typed exception (registered once centrally): a second
+    registration with a conflicting tuple (the registry is single-writer, first
+    registration wins), or an access before any registration — a programming /
+    import-order error meaning the wizard catalogue
+    (:mod:`aeat.application.wizard`) was not imported at startup to push the
+    compiled keys via :func:`register_profile_keys`. Replaces a bare
+    ``RuntimeError`` so callers can catch it precisely and the failure surfaces
+    in the central registry.
     """
 
-    def __init__(self) -> None:
-        """Build the profile-keys-already-registered error."""
+    def __init__(self, message: str = "profile keys already registered with a different tuple") -> None:
+        """Build the profile-keys registry-invariant error."""
         super().__init__(
-            "profile keys already registered with a different tuple",
+            message,
             context={"registry": "profile._keys"},
         )
 

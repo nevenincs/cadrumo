@@ -1,17 +1,20 @@
 """Schema-backed registry of editable taxpayer-profile keys.
 
-The registry is a tuple of strict :class:`ProfileKey` records derived
-at module-import time from the wizard descriptor catalogue
-(``aeat.application.wizard._catalogue.WIZARD_FLOWS``). Each entry
-carries the canonical key path (dot-separated), a requirement flag
-(required vs optional for declaration export), and a short
-multilingual description rendered in operator-facing surfaces.
+The registry is a tuple of strict :class:`ProfileKey` records compiled
+from the wizard descriptor catalogue
+(``aeat.application.wizard._catalogue.WIZARD_FLOWS``) and pushed into this
+domain registry via :func:`register_profile_keys` when the wizard package is
+imported (its ``__init__`` eagerly runs the compiler's registration). The
+domain never pulls upward into the application layer (DB-17): reading the
+registry before the push raises :class:`ProfileKeysRegistrationError`. Each
+entry carries the canonical key path (dot-separated), a requirement flag
+(required vs optional for declaration export), and a short multilingual
+description rendered in operator-facing surfaces.
 
-Adding a new key means appending a :class:`WizardQuestion` to the
-relevant flow in the wizard catalogue; ``PROFILE_KEYS`` re-derives
-on the next import. The :class:`ProfileKey` class itself remains the
-canonical schema record consumed by ``validate_profile`` and every
-profile editor surface.
+Adding a new key means appending a :class:`WizardQuestion` to the relevant
+flow in the wizard catalogue. The :class:`ProfileKey` class itself remains the
+canonical schema record consumed by ``validate_profile`` and every profile
+editor surface.
 """
 
 from __future__ import annotations
@@ -22,7 +25,6 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...core.i18n import Translatable as tr
-from ...core.wizard_catalogue import get_wizard_flows
 from ._errors import ProfileKeysRegistrationError, ProfileValidationError
 from ._normalise import normalise_key
 
@@ -130,24 +132,13 @@ def register_profile_keys(keys: tuple[ProfileKey, ...]) -> None:
     _BY_KEY_CACHE.append({entry.key: entry for entry in keys})
 
 
-def _build_profile_keys() -> tuple[ProfileKey, ...]:
-    """Compile ``PROFILE_KEYS`` from the wizard descriptor catalogue.
-
-    The compile is deferred until first access so the import cycle
-    between ``aeat.domain.profile._keys`` and
-    ``aeat.application.wizard._catalogue`` cannot deadlock at module-
-    load time. The result is cached for the lifetime of the process.
-    """
-    from ...application.wizard._compiler import compile_profile_keys
-
-    return compile_profile_keys(get_wizard_flows())
-
-
 def _profile_keys() -> tuple[ProfileKey, ...]:
     if not _PROFILE_KEYS_CACHE:
-        compiled = _build_profile_keys()
-        _PROFILE_KEYS_CACHE.append(compiled)
-        _BY_KEY_CACHE.append({entry.key: entry for entry in compiled})
+        raise ProfileKeysRegistrationError(
+            "profile keys are not registered; import the wizard catalogue "
+            "(aeat.application.wizard) so the compiled keys are pushed via "
+            "register_profile_keys before the profile-key registry is read"
+        )
     return _PROFILE_KEYS_CACHE[0]
 
 
