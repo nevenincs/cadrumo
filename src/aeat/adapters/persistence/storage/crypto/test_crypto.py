@@ -140,6 +140,16 @@ class TestKeySizeValidation:
         with pytest.raises(EncryptionError):
             decrypt_record(blob, key=secrets.token_bytes(invalid_size))
 
+    def test_encrypt_wraps_invalid_plaintext_type_as_encryption_error(self) -> None:
+        with pytest.raises(EncryptionError):
+            encrypt_record("payload", key=_fresh_key())  # type: ignore[arg-type]
+
+    def test_decrypt_wraps_invalid_associated_data_type_as_decryption_error(self) -> None:
+        key = _fresh_key()
+        blob = encrypt_record(b"payload", key=key, associated_data=b"context")
+        with pytest.raises(DecryptionError):
+            decrypt_record(blob, key=key, associated_data="context")  # type: ignore[arg-type]
+
 
 class TestEncryptedBlobShape:
     """The frozen pydantic record validates its own size invariants."""
@@ -231,6 +241,14 @@ class TestHkdfDerivation:
                 salt=b"salt",
                 context=b"aeat.context.v1",
                 length=-1,
+            )
+
+    def test_invalid_context_type_is_wrapped_as_key_derivation_error(self) -> None:
+        with pytest.raises(KeyDerivationError):
+            derive_key(
+                key_material=b"ikm",
+                salt=b"salt",
+                context="aeat.context.v1",  # type: ignore[arg-type]
             )
 
     def test_derived_key_can_drive_encrypt_round_trip(self) -> None:
