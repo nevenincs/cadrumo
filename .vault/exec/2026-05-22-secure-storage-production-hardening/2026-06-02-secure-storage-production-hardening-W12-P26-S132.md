@@ -22,14 +22,16 @@ related:
 
 ## Outcome
 
-Disposition checkpoint recorded.
+Closed.
 
 Evidence:
 
 - `uv run --no-sync ruff check src/aeat/adapters/outbound/google/_oauth_flow.py src/aeat/adapters/outbound/google/_errors.py src/aeat/adapters/outbound/google/test_package_module_allowlist.py` passed.
 - `uv run --no-sync pytest src/aeat/adapters/outbound/google/test_package_module_allowlist.py src/aeat/adapters/outbound/google/test_records.py -q` passed with 21 tests.
+- `uv run --no-sync pytest -q src/aeat/adapters/outbound/google/test_records.py src/aeat/adapters/outbound/google/test_package_module_allowlist.py src/aeat/entrypoints/cli/_config/test_google_error_localisation.py` passed with 24 tests on 2026-06-03.
+- `uv run --no-sync ruff check src/aeat/adapters/outbound/google/_oauth_flow.py src/aeat/adapters/outbound/google/_errors.py src/aeat/adapters/outbound/google/test_records.py src/aeat/adapters/outbound/google/test_package_module_allowlist.py src/aeat/entrypoints/cli/_config/test_google_error_localisation.py` passed on 2026-06-03.
 
 ## Notes
 
 - No code change was required in `_oauth_flow.py`; the remote-mirror enforcement point is the session-store / sync-push boundary hardened under `W12.P24.S98`.
-- The plan checkbox remains open until the shared dirty plan file can be updated without pulling unrelated concurrent edits into this commit.
+- The plan checkbox was closed on 2026-06-03 after the shared plan file stabilised for this row. The live OAuth browser consent probe remains opt-in live evidence and was not counted as the offline ledger closure.

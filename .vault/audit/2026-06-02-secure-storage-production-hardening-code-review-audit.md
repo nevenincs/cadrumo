@@ -142,3 +142,9 @@ Focused pull/apply tests passed with 38 tests, including stale and missing metad
 The `W12.P26.S131` review closed `AFR-029` for `_errors.py`. The active-profile signal came from error descriptions for missing profile binding, not profile or manifest implementation. The module only declares Google OAuth exception classes rooted at `AeatError`.
 
 Registry enforcement, Google package allowlist, Google records, and CLI Google localisation tests passed with 28 total tests across the focused commands. Targeted Ruff passed. No source edits were required.
+
+## S132-022 | PASS | OAuth flow defers persistence to secure session-store boundary
+
+The `W12.P26.S132` review closed `AFR-030` for `_oauth_flow.py`. The flow resolves active profile/tax-id state for unsecured-mode refusal, runs the Google loopback OAuth flow, and returns strict OAuth records; it does not persist records or construct storage backends itself.
+
+Focused Google records, package allowlist, and CLI Google localisation tests passed with 24 tests, targeted Ruff passed, and the source scan found no DB route, naked environment, secure-object constructor, local storage constructor, or local file read/write matches. Live OAuth consent remains opt-in evidence outside this offline ledger closure.
