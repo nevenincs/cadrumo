@@ -985,7 +985,9 @@ cli:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         list_help: Llistar els bindings requerits i disponibles per a un model / exercici
           / període
-        missing_help: 'Filtrar als bindings encara pendents: descarta els de valor constant i els que el perfil actiu ja resol. Sense perfil actiu es mostren tots els bindings no constants (la resposta conservadora).'
+        missing_help: 'Filtrar als bindings encara pendents: descarta els de valor
+          constant i els que el perfil actiu ja resol. Sense perfil actiu es mostren
+          tots els bindings no constants (la resposta conservadora).'
         missing_required_options: 'Falten opcions obligatòries: %{options}'
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         override_help: Sobreescriptura temporal de binding amb sintaxi KEY=VALUE (repetible)
@@ -1105,6 +1107,22 @@ cli:
         seed_period_help: Període de l'import inicial (p. ex. 2024N4).
       list:
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
+      m036:
+        alta_help: Registra una declaració M036 d'alta (inscripció censal inicial)
+          presentada a seu.
+        baja_help: Registra una declaració M036 de baixa (cancel·lació censal) presentada
+          a seu.
+        declared_on_help: Data ISO (AAAA-MM-DD) en què l'operador va presentar el
+          M036 a seu.
+        errors:
+          bad_declared_on: '--declared-on ha de ser una data ISO (AAAA-MM-DD); rebut {value}.'
+        group_help: Registra una declaració M036 presentada a seu (alta / modificacion
+          / baja). L'aplicació local mai presenta; AEAT és l'autoritat.
+        justificante_help: Identificador opcional de l'acús de recepció emès per seu
+          per a la presentació.
+        modificacion_help: Registra una declaració M036 de modificació (actualització
+          censal) presentada a seu.
+        note_help: Nota opcional de l'operador (fins a 512 caràcters).
       project:
         binding_help: Valor d'enllaç amb la sintaxi KEY=VALUE (repetible).
         casilla_help: Valor de casilla amb la sintaxi CASILLA=DECIMAL (repetible).
@@ -1293,6 +1311,10 @@ cli:
           de treball
         history_work_unit_id_help: Id d'unitat de treball el cicle de vida de la qual
           vols veure
+        id_is_work_unit_not_calc_revision: Aquest id és un id d'unitat de treball,
+          però verify/file necessiten un id de revisió de càlcul. Executa 'aeat app
+          modelo work calculate %{work_unit_id}' per generar l'id de revisió de càlcul
+          i després passa'l.
         include_discarded_help: Incloure les unitats descartades en el llistat (excloses
           per defecte)
         invalid_amendment_kind: --kind ha de ser un de {choices}; s'ha rebut {kind}.
@@ -1474,7 +1496,6 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
-        id_is_work_unit_not_calc_revision: 'Aquest id és un id d''unitat de treball, però verify/file necessiten un id de revisió de càlcul. Executa ''aeat app modelo work calculate %{work_unit_id}'' per generar l''id de revisió de càlcul i després passa''l.'
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat
@@ -2046,7 +2067,8 @@ cli:
         període que els moviments toquin. Local; mai contacta amb AEAT.
     classify:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
-      apply_help: 'Persisteix el suggeriment de l''LLM amb procedencia llm: en lloc de nomes previsualitzar-lo.'
+      apply_help: 'Persisteix el suggeriment de l''LLM amb procedencia llm: en lloc
+        de nomes previsualitzar-lo.'
       bulk_summary: 'classificació massiva: %{total} files, %{applied} aplicades,
         %{skipped} omeses, %{fail} fallides'
       business_pct_help: Percentatge d'ús professional de 0 a 1; obligatori amb --classification
@@ -2073,15 +2095,22 @@ cli:
       iva_category_help: Categoria d'IVA explícita per a aquesta transacció (p. ex.
         intra_community_supply, export_third_country_zero_rated, domestic_not_subject)
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
-      llm_classified_by_label: 'classificat-per'
-      llm_confidence_label: 'confianca'
-      llm_exclusive: '--llm no es pot combinar amb --classification ni --from-csv; la ruta manual es l''anul-lacio explicita de l''operador.'
+      llm_classified_by_label: classificat-per
+      llm_confidence_label: confianca
+      llm_exclusive: --llm no es pot combinar amb --classification ni --from-csv;
+        la ruta manual es l'anul-lacio explicita de l'operador.
       llm_failed: 'La classificacio per LLM ha fallat: {reason}'
-      llm_help: 'Demana a un proveidor LLM local (claude/gemini/codex) que classifiqui la transaccio; vista previa per defecte, persisteix amb --apply.'
-      llm_provider_unavailable: 'El proveidor LLM ''{provider}'' no esta disponible: el seu CLI no es al PATH. Instal-la el CLI de ''{provider}'' i assegura''t que sigui al PATH, o executa ''aeat app ledger providers'' per llistar els proveidors disponibles.'
-      llm_reason_label: 'motiu'
-      llm_review_hint: 'Revisa el suggeriment anterior. Torna a executar amb --apply per acceptar-lo, amb --classification per anul-lar-lo manualment, o no facis res per rebutjar-lo.'
-      llm_suggestion_label: 'suggeriment-llm'
+      llm_help: Demana a un proveidor LLM local (claude/gemini/codex) que classifiqui
+        la transaccio; vista previa per defecte, persisteix amb --apply.
+      llm_provider_unavailable: 'El proveidor LLM ''{provider}'' no esta disponible:
+        el seu CLI no es al PATH. Instal-la el CLI de ''{provider}'' i assegura''t
+        que sigui al PATH, o executa ''aeat app ledger providers'' per llistar els
+        proveidors disponibles.'
+      llm_reason_label: motiu
+      llm_review_hint: Revisa el suggeriment anterior. Torna a executar amb --apply
+        per acceptar-lo, amb --classification per anul-lar-lo manualment, o no facis
+        res per rebutjar-lo.
+      llm_suggestion_label: suggeriment-llm
       mixed_requires_business_pct: Rebutjat. --classification MIXED necessita un percentatge
         professional. Passa --business-pct amb un valor de 0 a 1, o classifica la
         fila com a BUSINESS o PERSONAL.
@@ -2089,12 +2118,14 @@ cli:
       reaffirmed: Classificació reafirmada.
       taxable_base_help: Import de base imposable
     doclink:
-      actor_help: 'Etiqueta de l''operador.'
-      bad_source: 'l''origen de l''enllaç ha de ser un de: gmail, google_drive, url (rebut ''{source}'').'
-      help: 'Registra un enllaç a un document de Gmail/Drive/URL en una fila del llibre major (mai descarregat).'
-      id_help: 'Identificador de transacció del llibre major.'
-      note_help: 'Nota opcional.'
-      reference_help: 'Referència de l''enllaç al document.'
+      actor_help: Etiqueta de l'operador.
+      bad_source: 'l''origen de l''enllaç ha de ser un de: gmail, google_drive, url
+        (rebut ''{source}'').'
+      help: Registra un enllaç a un document de Gmail/Drive/URL en una fila del llibre
+        major (mai descarregat).
+      id_help: Identificador de transacció del llibre major.
+      note_help: Nota opcional.
+      reference_help: Referència de l'enllaç al document.
       source_help: 'Origen de l''enllaç: gmail, google_drive o url.'
     errors:
       command_input_invalid: 'Rebutjat. La transacció no és vàlida: {details}'
@@ -2224,7 +2255,9 @@ cli:
       invoice_id_help: Id de la factura a vincular bidireccionalment amb el moviment.
     list:
       by_group_help: Agrupa el llistat per etiqueta de grup.
-      filter_help: 'Filtra files per estat, període (incl. AAAA per a un any), classificació, incidència, importació, direcció (ingreso/gasto) o text. Per filtrar per etiqueta de grup organitzatiu usa l''opció --group per separat.'
+      filter_help: Filtra files per estat, període (incl. AAAA per a un any), classificació,
+        incidència, importació, direcció (ingreso/gasto) o text. Per filtrar per etiqueta
+        de grup organitzatiu usa l'opció --group per separat.
       footer_truncated: Mostrant files {start}-{end} de {total} (desplacament {offset}).
         Feu servir --offset/--limit per paginar.
       group_filter_help: Mostra nomes les files d'aquesta etiqueta de grup.
@@ -2247,7 +2280,7 @@ cli:
         bucket actiu en un període donat. Local; mai contacta amb AEAT.
       period_help: Període canònic (p. ex. 2026Q1, 2026-03, 2026).
     providers:
-      help: 'Llista els proveïdors LLM en subprocés amb CLI disponible al PATH.'
+      help: Llista els proveïdors LLM en subprocés amb CLI disponible al PATH.
     remove:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       dry_run_help: Informar els efectes sense eliminar el moviment del llibre
