@@ -49,7 +49,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     stays import-error-safe. If a domain import fails, ``get_registered_keys``
     will propagate the error with full context rather than a silent empty set.
     """
-    from ..application.wizard._catalogue import WIZARD_FLOWS
+    from ..application.wizard import WIZARD_FLOWS
     from ..core.i18n import SUPPORTED_OUTPUT_LANGUAGES
     from ..domain.contribuyente._ccaa import CCAA
     from ..domain.deadlines._models import (

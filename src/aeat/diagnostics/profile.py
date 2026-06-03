@@ -23,9 +23,7 @@ from ..application.user_profile import (
     profile_storage_session,
     set_active_field,
 )
-from ..application.wizard._catalogue import WIZARD_FLOWS
-from ..application.wizard._errors import WizardValidationError
-from ..application.wizard._widgets import validate_widget_answer
+from ..application.wizard import WIZARD_FLOWS, WizardValidationError, validate_widget_answer
 from ..application.workflow import workflow_state_repository
 from ..core import resolve_active_bucket_id
 from ..core.i18n import tr
