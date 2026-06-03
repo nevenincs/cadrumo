@@ -1580,21 +1580,34 @@ def ledger_export(
 
 
 @app.command("list", help=tr("cli.ledger.list.help"))
-def ledger_list(ctx: typer.Context) -> None:
-    """List bucket-scoped ledger transactions through the backend read service."""
+def ledger_list(
+    ctx: typer.Context,
+    limit: int | None = typer.Option(None, "--limit", min=1, help=tr("cli.ledger.list.limit_help")),
+    offset: int = typer.Option(0, "--offset", min=0, help=tr("cli.ledger.list.offset_help")),
+) -> None:
+    """List bucket-scoped ledger transactions through the backend read service.
+
+    ``--limit`` / ``--offset`` page the result. The page is clipped honestly:
+    when more rows exist beyond the window a truncation footer states the full
+    total, so a large ledger is never silently capped.
+    """
     # S09 doc-note: `ledger list` is a read-only query; ValidationError cannot
     # originate here from operator input. Stored-data drift (a persisted record
     # that no longer deserialises) surfaces as a CliStoredDataValidationBoundaryError
     # raised by _state() / _tx_repo() — handled by S05, not this verb.
     state = _state()
     transaction_repository = _tx_repo(state)
-    results = list_manual_transactions(
+    all_results = list_manual_transactions(
         bucket_id=transaction_repository.bucket_id,
         transaction_repository=transaction_repository,
     )
+    total = len(all_results)
+    window_end = total if limit is None else min(offset + limit, total)
+    results = all_results[offset:window_end]
+    truncated = (offset > 0) or (window_end < total)
     rows: list[dict[str, object]] = []
     lines = [tr("cli.ledger.list.header")]
-    full_ids = tuple(result.transaction.transaction_id for result in results)
+    full_ids = tuple(result.transaction.transaction_id for result in all_results)
     display_width = compute_display_id_width(full_ids)
     for result in results:
         transaction = result.transaction
@@ -1611,12 +1624,33 @@ def ledger_list(ctx: typer.Context) -> None:
             f"{display_id}\t{transaction.transaction_id}\t{review_payload.date}\t"
             f"{review_payload.amount}\t{review_payload.description}\t{review_status}"
         )
+    if truncated:
+        start = offset + 1 if rows else offset
+        lines.append(
+            tr(
+                "cli.ledger.list.footer_truncated",
+                start=start,
+                end=offset + len(rows),
+                total=total,
+                offset=offset,
+            )
+        )
     from ._ledger_payloads import LedgerListResult
 
     _emit_envelope(
         ctx,
         command="ledger.list",
-        result=LedgerListResult.model_validate({"bucket_id": transaction_repository.bucket_id, "rows": rows}),
+        result=LedgerListResult.model_validate(
+            {
+                "bucket_id": transaction_repository.bucket_id,
+                "rows": rows,
+                "total": total,
+                "shown": len(rows),
+                "offset": offset,
+                "limit": limit,
+                "truncated": truncated,
+            }
+        ),
         lines=lines,
     )
 

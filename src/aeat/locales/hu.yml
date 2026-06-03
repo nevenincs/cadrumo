@@ -2072,6 +2072,8 @@ cli:
       header: KÖNYVELÉSI FŐKÖNYVI TRANZAKCIÓK
       help: Főkönyvi tranzakciók listázása az aktív profilmappában.
       footer_truncated: '{start}-{end}. sor megjelenitese, osszesen {total} (eltolas {offset}). Lapozashoz hasznalja a --offset/--limit kapcsolot.'
+      limit_help: 'Megjelenitendo sorok maximalis szama (alapertelmezett: az osszes).'
+      offset_help: 'Ennyi sor kihagyasa a listazas elott (alapertelmezett: 0).'
     merge:
       actor_help: Az üzemeltető neve, amelyet a LEDGER_TRANSACTION_MERGED eseményen
         rögzítenek.
