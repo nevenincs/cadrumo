@@ -1851,9 +1851,11 @@ def ledger_list(
     surfaces share one closed-key catalogue: ``period`` (``YYYY-Qn`` / ``YYYYQn``
     / ``YYYY-MM`` / bare ``YYYY`` for a whole year), ``status`` (pending /
     reviewed / skipped), ``classification`` (business / personal / mixed / ...),
-    ``issue`` (gap / duplicate / ...), ``import``, and ``text`` free-text. Filters
-    apply before paging and grouping, so an operator can scope a large ledger to
-    one period/year/class instead of dumping every row and grepping.
+    ``issue`` (gap / duplicate / ...), ``import``, ``direction`` (ingreso /
+    gasto), and ``text`` free-text. Filters apply before paging and grouping, so
+    an operator can scope a large ledger to one period/year/class instead of
+    dumping every row and grepping. Filtering by organisational group label is the
+    separate ``--group`` option, not a ``--filter`` key.
 
     ``--limit`` / ``--offset`` page the (filtered) result. The page is clipped
     honestly: when more rows exist beyond the window a truncation footer states
@@ -1889,6 +1891,7 @@ def ledger_list(
                 import_id=spec.import_id,
                 classification=spec.classification.value if spec.classification is not None else None,
                 text=spec.text,
+                direction=spec.direction.value if spec.direction is not None else None,
             ),
             transaction_repository=transaction_repository,
         )
@@ -2417,6 +2420,7 @@ def ledger_review(
             import_id=spec.import_id,
             classification=spec.classification.value if spec.classification is not None else None,
             text=spec.text,
+            direction=spec.direction.value if spec.direction is not None else None,
         ),
         transaction_repository=transaction_repository,
     )

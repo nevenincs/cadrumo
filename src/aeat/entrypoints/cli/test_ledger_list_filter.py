@@ -139,6 +139,50 @@ def test_combined_filters_compose_as_intersection() -> None:
     assert len(combined) < len(full)
 
 
+def test_direction_filter_narrows_to_one_money_flow() -> None:
+    """A ``direction`` filter returns only rows of that money-flow direction.
+
+    The corpus carries both incoming (credits) and outgoing (debits) rows. A
+    ``direction=incoming`` filter must return a strict, non-empty subset of the
+    full ledger whose every row is incoming, and the incoming + outgoing subsets
+    must partition the directional rows — proving the CLI forwards the parsed
+    direction into the shared query rather than passing the full set through.
+    The lowercase value exercises the case-insensitive parse the shared spec
+    added for the natural ``incoming`` / ``outgoing`` operator spelling.
+    """
+    _import_corpus()
+    full = _list_rows()
+    directions = {r["direction"] for r in full}
+    assert {"INCOMING", "OUTGOING"} <= directions, f"corpus must carry both directions, got {directions}"
+
+    incoming = _list_rows("direction=incoming")
+    outgoing = _list_rows("direction=outgoing")
+    assert incoming, "direction=incoming must match the credited rows"
+    assert outgoing, "direction=outgoing must match the debited rows"
+    assert len(incoming) < len(full), "a single-direction filter must be a strict subset of the full ledger"
+    assert all(r["direction"] == "INCOMING" for r in incoming)
+    assert all(r["direction"] == "OUTGOING" for r in outgoing)
+    # The two directional subsets are disjoint and exactly cover the full set's
+    # INCOMING/OUTGOING rows (the corpus has no INTERNAL_TRANSFER on raw import).
+    expected_incoming = {r["full_id"] for r in full if r["direction"] == "INCOMING"}
+    assert {r["full_id"] for r in incoming} == expected_incoming
+
+
+def test_direction_filter_uppercase_value_matches_too() -> None:
+    """The canonical uppercase enum value resolves identically to lowercase.
+
+    ``direction=INCOMING`` (the raw :class:`TransactionDirection` member value)
+    and ``direction=incoming`` must select the same rows, confirming the
+    case-insensitive parse accepts both the natural operator spelling and the
+    canonical form rather than silently rejecting one.
+    """
+    _import_corpus()
+    lower = {r["full_id"] for r in _list_rows("direction=incoming")}
+    upper = {r["full_id"] for r in _list_rows("direction=INCOMING")}
+    assert lower == upper
+    assert lower, "direction filter must match a non-empty incoming set"
+
+
 def test_unknown_filter_key_is_rejected() -> None:
     """An out-of-catalogue filter key fails loudly at the CLI boundary.
 
