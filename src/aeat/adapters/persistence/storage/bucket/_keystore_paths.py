@@ -23,6 +23,8 @@ from .._namespace_registry import BUCKETS_DIRNAME, KEYSTORE_DIRNAME
 from ._errors import BucketValidationError
 from ._layout import BucketPaths, bucket_paths
 
+_KEYSTORE_VALIDATION_SURFACE = "bucket_keystore"
+
 
 def keystore_root(root: Path) -> Path:
     """Return the keystore parent ``<root>/keystore/`` (no IO)."""
@@ -93,13 +95,21 @@ def validate_keystore_separation(
     target = configured_keystore if configured_keystore is not None else keystore_path(root, bucket_id)
 
     buckets_parent = root / BUCKETS_DIRNAME
-    if _is_under(target, buckets_parent):
-        raise BucketValidationError(
-            f"keystore path {target!s} resolves under buckets parent {buckets_parent!s}",
-        )
     if _is_under(target, paths.db_dir):
         raise BucketValidationError(
-            f"keystore path {target!s} resolves under bucket db dir {paths.db_dir!s}",
+            "keystore path resolves under bucket db dir",
+            context={
+                "reason": "under_bucket_db_dir",
+                "surface": _KEYSTORE_VALIDATION_SURFACE,
+            },
+        )
+    if _is_under(target, buckets_parent):
+        raise BucketValidationError(
+            "keystore path resolves under buckets parent",
+            context={
+                "reason": "under_buckets_parent",
+                "surface": _KEYSTORE_VALIDATION_SURFACE,
+            },
         )
 
 
