@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from ....core.external_constants import UTF_8_ENCODING
+
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 _ROOT = Path(__file__).resolve().parents[5]
@@ -60,7 +62,7 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "src/aeat/adapters/persistence/storage/blob_store/_blob_store.py",
         "_atomic_write_bytes",
         "tempfile.NamedTemporaryFile",
-    ): "blob storage backend writes encrypted wire payloads or caller-requested materialisations",
+    ): "blob storage backend writes CORPUS plaintext only; all non-CORPUS blobs are ciphertext",
     (
         "src/aeat/adapters/persistence/storage/blob_store/_materialisation.py",
         "_write_bytes_secure_fd",
@@ -407,7 +409,7 @@ class _FileWriteVisitor(ast.NodeVisitor):
 
 @cache
 def _function_spans(path: Path) -> tuple[tuple[int, int, str], ...]:
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    tree = ast.parse(path.read_text(encoding=UTF_8_ENCODING), filename=str(path))
     spans: list[tuple[int, int, str]] = []
     for node in ast.walk(tree):
         if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
@@ -439,7 +441,7 @@ def test_sensitive_financial_surfaces_do_not_bypass_secure_object_backend() -> N
 
 def _sensitive_surface_violations(path: Path) -> list[str]:
     """Return every forbidden-text + forbidden-call offence in one source file."""
-    text = path.read_text(encoding="utf-8")
+    text = path.read_text(encoding=UTF_8_ENCODING)
     relative = path.relative_to(_ROOT).as_posix()
     violations = [f"{relative}: contains {token!r}" for token in _FORBIDDEN_TEXT if token in text]
     tree = ast.parse(text, filename=str(path))
@@ -468,7 +470,7 @@ def test_production_file_write_inventory_is_reviewed() -> None:
 
     observed: set[tuple[str, str, str]] = set()
     for path in _iter_production_python_files():
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        tree = ast.parse(path.read_text(encoding=UTF_8_ENCODING), filename=str(path))
         visitor = _FileWriteVisitor(path)
         visitor.visit(tree)
         observed.update(visitor.calls)

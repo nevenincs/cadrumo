@@ -15,10 +15,10 @@ Two layouts are supported:
 - **Ciphertext** (every other class): the substrate mints a 32-byte
   data-encryption key (DEK), encrypts the blob with AES-256-GCM keyed
   by the DEK, wraps the DEK using the :class:`MasterKeyProvider` (also
-  AES-256-GCM), and writes the ciphertext under
-  ``blobs/<hex[:2]>/<hex>.enc`` where ``<hex>`` is the ciphertext SHA-256.
-  The manifest records the wrapped DEK plus the AEAD nonces; the master
-  key never touches disk.
+  AES-256-GCM), and writes the ciphertext under the plaintext digest path
+  ``blobs/<hex[:2]>/<hex>.enc``. The manifest records the ciphertext
+  SHA-256, the wrapped DEK, and the AEAD nonces; the master key never
+  touches disk.
 
 The repository's public read API returns plaintext bytes; the
 sensitivity class drives whether decryption is performed under the
@@ -40,7 +40,7 @@ import tempfile
 from collections.abc import Iterator
 from pathlib import Path
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
@@ -50,7 +50,7 @@ from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.locks import fsync_parent_dir
 from .....core.logging import get_logger
 from .....core.time import now
-from .._namespace_registry import BLOB_MANIFEST_SCHEMA_VERSION
+from .._namespace_registry import BLOB_MANIFEST_SCHEMA_VERSION, STORAGE_NAMESPACE_REGISTRY
 from ..crypto._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
 from ..envelope._envelope import EncryptionMetadata, Envelope, load_envelope, save_envelope
 from ..errors import (
@@ -68,6 +68,19 @@ _log = get_logger(__name__)
 
 _BLOB_AAD = b"aeat.blob.payload.v1"
 _DEK_AAD = b"aeat.blob.dek-wrap.v1"
+_BLOB_ERROR_CONTEXT = {"surface": "encrypted_blob_store"}
+_BLOB_MANIFEST_PATH_KEY = "blob_manifest"
+_BLOB_MANIFEST_PATH_DEFINITION = STORAGE_NAMESPACE_REGISTRY.path_by_key(_BLOB_MANIFEST_PATH_KEY)
+_BLOB_STORE_DIRNAME = _BLOB_MANIFEST_PATH_DEFINITION.grammar.removeprefix("<root>/").split("/", maxsplit=1)[0]
+_BLOB_MANIFEST_SUFFIX = _BLOB_MANIFEST_PATH_DEFINITION.grammar.rsplit("<sha256>", maxsplit=1)[1]
+_BLOB_CIPHERTEXT_SUFFIX = ".enc"
+_HEX_DIGITS = frozenset("0123456789abcdef")
+
+
+def _validate_sha256_hex(value: str) -> str:
+    if len(value) != 64 or any(char not in _HEX_DIGITS for char in value):
+        raise ValueError("value must be a 64-character lowercase SHA-256 hex digest")
+    return value
 
 
 class BlobManifest(BaseModel):
@@ -106,6 +119,13 @@ class BlobManifest(BaseModel):
     wrapped_dek: EncryptionMetadata | None = None
     payload_metadata: EncryptionMetadata | None = None
 
+    @field_validator("sha256_plaintext_hex", "sha256_ciphertext_hex")
+    @classmethod
+    def _validate_digest_fields(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return _validate_sha256_hex(value)
+
 
 class BlobReference(BaseModel):
     """Frozen public handle for one blob.
@@ -124,9 +144,66 @@ class BlobReference(BaseModel):
     sha256_plaintext_hex: str = Field(min_length=64, max_length=64)
     classification: SensitivityClass
 
+    @field_validator("sha256_plaintext_hex")
+    @classmethod
+    def _validate_plaintext_digest(cls, value: str) -> str:
+        return _validate_sha256_hex(value)
+
 
 def _hex_digest(data: bytes) -> str:
     return _sha256_hex(data)
+
+
+def _path_log_marker(path: Path) -> str:
+    try:
+        resolved = path.expanduser().resolve(strict=False)
+    except OSError:
+        resolved = path.absolute()
+    return _hex_digest(str(resolved).encode(_UTF_8_ENCODING))[:16]
+
+
+def _blob_not_found_error(message: str, *, object_kind: str) -> BlobNotFoundError:
+    return BlobNotFoundError(
+        message,
+        context={**_BLOB_ERROR_CONTEXT, "object_kind": object_kind},
+        translated_message="errors.fail.fail_storage_blob_not_found",
+    )
+
+
+def _blob_integrity_error(message: str, *, violation: str, object_kind: str = "blob") -> BlobIntegrityError:
+    return BlobIntegrityError(
+        message,
+        context={**_BLOB_ERROR_CONTEXT, "object_kind": object_kind, "violation": violation},
+        translated_message="errors.integrity.integrity_storage_blob",
+    )
+
+
+def _load_blob_manifest_envelope(path: Path, *, expected_class: SensitivityClass) -> Envelope[BlobManifest]:
+    try:
+        return load_envelope(
+            path,
+            Envelope[BlobManifest],
+            expected_class=expected_class,
+            max_supported_version=BLOB_MANIFEST_SCHEMA_VERSION,
+        )
+    except ClassificationError as exc:
+        raise _blob_integrity_error(
+            "invalid blob manifest classification",
+            violation="manifest_classification",
+            object_kind="manifest",
+        ) from exc
+    except EnvelopeVersionError as exc:
+        raise _blob_integrity_error(
+            "unsupported blob manifest schema version",
+            violation="manifest_schema_version",
+            object_kind="manifest",
+        ) from exc
+    except (OSError, ValueError, ValidationError) as exc:
+        raise _blob_integrity_error(
+            "invalid blob manifest",
+            violation="manifest_payload",
+            object_kind="manifest",
+        ) from exc
 
 
 class EncryptedBlobStore:
@@ -144,7 +221,7 @@ class EncryptedBlobStore:
             root_dir: Directory containing the ``blobs/`` subtree. The
                 directory is created on first write.
             master_key_provider: Optional override. When ``None``, the
-                process-wide :func:`get_master_key_provider` is used.
+                currently active bucket session's data-encryption key is used.
         """
         self._root_dir = Path(root_dir)
         self._master_key_provider = master_key_provider
@@ -160,16 +237,16 @@ class EncryptedBlobStore:
         return get_active_master_key()
 
     def _shard_dir_for(self, hex_digest: str) -> Path:
-        return self._root_dir / "blobs" / hex_digest[:2]
+        return self._root_dir / _BLOB_STORE_DIRNAME / hex_digest[:2]
 
     def _plaintext_path_for(self, hex_digest: str) -> Path:
         return self._shard_dir_for(hex_digest) / hex_digest
 
     def _ciphertext_path_for(self, hex_digest: str) -> Path:
-        return self._shard_dir_for(hex_digest) / f"{hex_digest}.enc"
+        return self._shard_dir_for(hex_digest) / f"{hex_digest}{_BLOB_CIPHERTEXT_SUFFIX}"
 
     def _manifest_path_for(self, hex_digest: str) -> Path:
-        return self._shard_dir_for(hex_digest) / f"{hex_digest}.manifest.json"
+        return self._shard_dir_for(hex_digest) / f"{hex_digest}{_BLOB_MANIFEST_SUFFIX}"
 
     def put(
         self,
@@ -267,15 +344,8 @@ class EncryptedBlobStore:
         """
         manifest_path = self._manifest_path_for(reference.sha256_plaintext_hex)
         if not manifest_path.exists():
-            raise BlobNotFoundError(
-                f"no manifest at {manifest_path} for blob {reference.sha256_plaintext_hex}",
-            )
-        envelope = load_envelope(
-            manifest_path,
-            Envelope[BlobManifest],
-            expected_class=reference.classification,
-            max_supported_version=BLOB_MANIFEST_SCHEMA_VERSION,
-        )
+            raise _blob_not_found_error("blob manifest not found", object_kind="manifest")
+        envelope = _load_blob_manifest_envelope(manifest_path, expected_class=reference.classification)
         manifest = envelope.payload
         if manifest.classification is SensitivityClass.CORPUS:
             return self._read_plaintext_blob(manifest)
@@ -293,21 +363,18 @@ class EncryptedBlobStore:
         sha_hex = reference.sha256_plaintext_hex
         manifest_path = self._manifest_path_for(sha_hex)
         if not manifest_path.exists():
-            raise BlobNotFoundError(
-                f"no manifest at {manifest_path} for blob {sha_hex}",
-            )
+            raise _blob_not_found_error("blob manifest not found", object_kind="manifest")
         # Payload first: any error here leaves the manifest intact so
         # the inconsistency is observable on the next read.
         for payload_path in (self._plaintext_path_for(sha_hex), self._ciphertext_path_for(sha_hex)):
             if payload_path.exists():
                 try:
                     payload_path.unlink()
-                except OSError:
+                except OSError as exc:
                     _log.error(
-                        "blob_store delete: failed to remove payload %s sha256=%s",
-                        payload_path,
-                        sha_hex[:16],
-                        exc_info=True,
+                        "blob_store delete: failed to remove payload path_marker=%s error_type=%s",
+                        _path_log_marker(payload_path),
+                        type(exc).__name__,
                     )
                     raise
         # Manifest last; only its removal surface is allowed to be
@@ -327,9 +394,8 @@ class EncryptedBlobStore:
         The walk is shallow: only the canonical
         ``blobs/<hex[:2]>/<hex>.manifest.json`` files are visited.
         Each manifest is loaded through a single-read + inline
-        version-gate path; corrupted or unparseable manifests are
-        logged and skipped so a single broken file cannot break the
-        iteration for every other blob.
+        version-gate path; corrupted or unparseable manifests fail
+        closed so corruption does not disappear from audit flows.
         """
         for path, payload in self._iter_manifests_with_paths():
             del path
@@ -342,7 +408,7 @@ class EncryptedBlobStore:
         blob-store rotation path (which needs the path to atomically
         rewrite the manifest under the new master key).
         """
-        blobs_dir = self._root_dir / "blobs"
+        blobs_dir = self._root_dir / _BLOB_STORE_DIRNAME
         if not blobs_dir.exists():
             return
         for shard_dir in sorted(blobs_dir.iterdir()):
@@ -356,19 +422,20 @@ class EncryptedBlobStore:
                     envelope = Envelope[BlobManifest].model_validate_json(
                         manifest_path.read_text(encoding=_UTF_8_ENCODING),
                     )
-                except (OSError, ValueError, ValidationError):
-                    # A single corrupted manifest must not break the
-                    # whole iteration. Log and skip; the operator can
-                    # surface the broken file via filesystem inspection.
+                except (OSError, ValueError, ValidationError) as exc:
                     _log.warning(
-                        "blob_store: skipping unparseable manifest %s",
-                        manifest_path,
-                        exc_info=True,
+                        "blob_store: invalid manifest path_marker=%s error_type=%s",
+                        _path_log_marker(manifest_path),
+                        type(exc).__name__,
                     )
-                    continue
+                    raise _blob_integrity_error(
+                        "invalid blob manifest",
+                        violation="manifest_payload",
+                        object_kind="manifest",
+                    ) from exc
                 if envelope.schema_version > BLOB_MANIFEST_SCHEMA_VERSION:
                     raise EnvelopeVersionError(
-                        f"envelope at {manifest_path} is at version {envelope.schema_version}; "
+                        f"blob manifest is at version {envelope.schema_version}; "
                         f"consumer supports up to {BLOB_MANIFEST_SCHEMA_VERSION}",
                     )
                 yield manifest_path, envelope.payload
@@ -421,17 +488,16 @@ class EncryptedBlobStore:
                 _log.debug(
                     "blob_store rotate_master_key: new key cannot decrypt wrapped_dek for %s; "
                     "falling back to old key (%s)",
-                    manifest_path,
-                    exc,
+                    _path_log_marker(manifest_path),
+                    type(exc).__name__,
                 )
             # Fall back to the old key.
             try:
                 dek = decrypt_record(wrapped_blob, key=old_master_key, associated_data=_DEK_AAD)
             except (DecryptionError, EncryptionError):
                 _log.warning(
-                    "blob_store rotate_master_key: cannot decrypt wrapped_dek for %s",
-                    manifest_path,
-                    exc_info=True,
+                    "blob_store rotate_master_key: cannot decrypt wrapped_dek path_marker=%s",
+                    _path_log_marker(manifest_path),
                 )
                 errors += 1
                 continue
@@ -448,19 +514,18 @@ class EncryptedBlobStore:
                 save_envelope(new_envelope, manifest_path)
             except OSError:
                 _log.warning(
-                    "blob_store rotate_master_key: failed to atomic-write %s",
-                    manifest_path,
-                    exc_info=True,
+                    "blob_store rotate_master_key: failed to atomic-write path_marker=%s",
+                    _path_log_marker(manifest_path),
                 )
                 errors += 1
                 continue
             rotated += 1
         _log.info(
-            "blob_store rotate_master_key: rotated=%d skipped=%d errors=%d (root=%s)",
+            "blob_store rotate_master_key: rotated=%d skipped=%d errors=%d root_marker=%s",
             rotated,
             skipped,
             errors,
-            self._root_dir,
+            _path_log_marker(self._root_dir),
         )
         return rotated, skipped, errors
 
@@ -490,40 +555,32 @@ class EncryptedBlobStore:
     def _read_plaintext_blob(self, manifest: BlobManifest) -> bytes:
         target = self._plaintext_path_for(manifest.sha256_plaintext_hex)
         if not target.exists():
-            raise BlobNotFoundError(f"no plaintext payload at {target}")
+            raise _blob_not_found_error("blob payload not found", object_kind="payload")
         data = target.read_bytes()
         if _hex_digest(data) != manifest.sha256_plaintext_hex:
-            raise BlobIntegrityError(
-                f"plaintext blob digest mismatch at {target}: expected "
-                f"{manifest.sha256_plaintext_hex}, got {_hex_digest(data)}",
-            )
+            raise _blob_integrity_error("plaintext blob digest mismatch", violation="plaintext_digest")
         return data
 
     def _read_ciphertext_blob(self, manifest: BlobManifest) -> bytes:
         if manifest.wrapped_dek is None or manifest.sha256_ciphertext_hex is None or manifest.payload_metadata is None:
-            raise BlobIntegrityError(
-                f"ciphertext manifest for {manifest.sha256_plaintext_hex} "
-                "missing wrapped_dek, sha256_ciphertext_hex, or payload_metadata",
+            raise _blob_integrity_error(
+                "ciphertext manifest missing encryption metadata",
+                violation="ciphertext_manifest_metadata",
+                object_kind="manifest",
             )
         target = self._ciphertext_path_for(manifest.sha256_plaintext_hex)
         if not target.exists():
-            raise BlobNotFoundError(f"no ciphertext payload at {target}")
+            raise _blob_not_found_error("blob payload not found", object_kind="payload")
         wire = target.read_bytes()
         if _hex_digest(wire) != manifest.sha256_ciphertext_hex:
-            raise BlobIntegrityError(
-                f"ciphertext blob digest mismatch at {target}: expected "
-                f"{manifest.sha256_ciphertext_hex}, got {_hex_digest(wire)}",
-            )
+            raise _blob_integrity_error("ciphertext blob digest mismatch", violation="ciphertext_digest")
         master_key = self._master_key()
         wrapped_blob = manifest.wrapped_dek.to_blob()
         dek = decrypt_record(wrapped_blob, key=master_key, associated_data=_DEK_AAD)
         payload_blob = EncryptedBlob.from_wire(wire)
         plaintext = decrypt_record(payload_blob, key=dek, associated_data=_BLOB_AAD)
         if _hex_digest(plaintext) != manifest.sha256_plaintext_hex:
-            raise BlobIntegrityError(
-                f"decrypted blob digest mismatch: expected "
-                f"{manifest.sha256_plaintext_hex}, got {_hex_digest(plaintext)}",
-            )
+            raise _blob_integrity_error("decrypted blob digest mismatch", violation="decrypted_digest")
         return plaintext
 
     @staticmethod
@@ -550,9 +607,8 @@ class EncryptedBlobStore:
             if tmp_path is not None:
                 tmp_path.unlink(missing_ok=True)
             _log.error(
-                "blob_store: atomic write failed target=%s",
-                target,
-                exc_info=True,
+                "blob_store: atomic write failed path_marker=%s",
+                _path_log_marker(target),
             )
             raise
 
