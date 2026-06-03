@@ -4260,7 +4260,7 @@ Retire setup-profile path and wire bucket events.
 - [x] `W74.P357.S2064` - Remove aeat setup profile from public help and reroute via mistype-suggestion footer to aeat config profile; `src/aeat/core/i18n`.
 - [x] `W74.P357.S2065` - Update the no-active-profile error recovery hint to point at aeat config profile use NAME; `src/aeat/entrypoints/cli/_common.py`.
 - [x] `W74.P357.S2066` - Remove deprecated profile command spellings from help text and i18n; `src/aeat/core/i18n`.
-- [ ] `W74.P357.S2067` - Wire bucket events for every mutating verb (profile.created, profile.removed, profile.updated, profile.duplicated, profile.exported, profile.imported, profile.activated); `src/aeat/domain/buckets`.
+- [x] `W74.P357.S2067` - Wire bucket events for every mutating verb (profile.created, profile.removed, profile.updated, profile.duplicated, profile.exported, profile.imported, profile.activated); `src/aeat/domain/buckets`.
 - [x] `W74.P357.S2068` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W74.P358` - real behavior verification

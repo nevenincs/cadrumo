@@ -39,8 +39,8 @@ from ....application.diagnostics import (
 from ....application.operator_surface import build_help_document as _build_help_document
 from ....application.operator_surface import render_help_text as _render_help_text
 from ....application.wizard._commands import build_wizard_command as _build_wizard_command
-from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....application.workflow._profile_bucket_scan import read_profile_bucket as _read_profile_bucket
+from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.errors import AeatError as _AeatError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
@@ -374,11 +374,11 @@ def repair_profile(
     yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.yes_help")),
 ) -> None:
     """Inspect profile health or safely repair a degraded active-profile pointer/manifest."""
-    from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
     from ....application.workflow._profile_health import (
         repair_active_profile_manifest_status,
         repair_active_profile_pointer,
     )
+    from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 
     if clear_active and repair_manifest_status:
         raise _CliRefusedBoundaryError(
@@ -762,6 +762,61 @@ def _validate_bundle_schema_version(bundle: object) -> None:
         )
 
 
+def _emit_profile_lifecycle_event(
+    *,
+    event_type: BucketEventType,
+    bucket_id: str,
+    object_id: str,
+    payload: dict[str, str],
+) -> None:
+    """Append a profile-lifecycle event to the bucket-event-history catalogue.
+
+    Closes W74.P357.S2067 for the export + import verbs: the symmetric
+    PROFILE_EXPORTED / PROFILE_IMPORTED events join the existing
+    PROFILE_BUCKET_CREATED / PROFILE_VALUES_UPDATED / PROFILE_TOMBSTONED /
+    PROFILE_DUPLICATED / PROFILE_ACTIVATED emissions already wired in the
+    application-layer ProfileLifecycleService / orchestration. Records the
+    event through the canonical derive_bucket_event_id + repository pair so
+    downstream auditors can reconstruct the sequence from the on-disk
+    catalogue.
+    """
+    from datetime import UTC, datetime
+
+    from ....domain.buckets import (
+        BucketEvent,
+        BucketEventHistoryCatalogue,
+        BucketEventHistoryRepository,
+        BucketEventObjectType,
+        derive_bucket_event_id,
+    )
+
+    occurred_at = datetime.now(UTC).replace(microsecond=0)
+    actor = "operator"
+    event_id = derive_bucket_event_id(
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=object_id,
+        payload=payload,
+    )
+    event = BucketEvent(
+        event_id=event_id,
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=object_id,
+        payload_version=1,
+        payload=payload,
+    )
+    repo = BucketEventHistoryRepository()
+    catalogue = repo.load()
+    repo.save(BucketEventHistoryCatalogue(events={**catalogue.events, event_id: event}))
+
+
 def _atomic_create_profile(*, display_name, facts, profile_id: str | None = None) -> str:
     """Provision a new profile bucket through the canonical atomic-create.
 
@@ -967,7 +1022,7 @@ def _read_profile_record(*, profile_id: str, bucket_id: str):
     """Read a profile record under a bucket session scoped to that profile."""
     from ....adapters.persistence.storage import has_active_bucket_session
     from ....application.user_profile._orchestration import build_lifecycle_service, profile_storage_session
-    from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
+    from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 
     if bucket_id == _resolve_active_bucket_id() and has_active_bucket_session():
         return build_lifecycle_service(bucket_id=bucket_id).read(profile_id)
@@ -1493,7 +1548,7 @@ def config_profile_export(
             )
     try:
         from ....adapters.persistence.storage import has_active_bucket_session
-        from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
+        from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 
         if pointer.bucket_id == _resolve_active_bucket_id() and has_active_bucket_session():
             bundle = serialize_profile_bundle(bucket_id=pointer.bucket_id)
@@ -1514,6 +1569,16 @@ def config_profile_export(
         display_name=pointer.label,
         out=str(out),
         schema_version=bundle.bundle_schema_version,
+    )
+    _emit_profile_lifecycle_event(
+        event_type=BucketEventType.PROFILE_EXPORTED,
+        bucket_id=pointer.bucket_id,
+        object_id=pointer.bucket_id,
+        payload={
+            "display_name": pointer.label or "",
+            "out": str(out),
+            "schema_version": str(bundle.bundle_schema_version),
+        },
     )
     _emit_envelope(
         ctx,
@@ -1643,6 +1708,17 @@ def config_profile_import(
         profile_id=target_id,
         display_name=target_label,
         schema_version=bundle.bundle_schema_version,
+    )
+    _emit_profile_lifecycle_event(
+        event_type=BucketEventType.PROFILE_IMPORTED,
+        bucket_id=target_id,
+        object_id=target_id,
+        payload={
+            "display_name": target_label,
+            "source_path": str(path),
+            "schema_version": str(bundle.bundle_schema_version),
+            "fresh_uuid_mode": str(fresh_uuid_mode).lower(),
+        },
     )
     _emit_envelope(
         ctx,
