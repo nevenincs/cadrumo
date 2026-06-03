@@ -391,7 +391,7 @@ Local, no-network deliverables: an XLSX/Sheets-shaped workbook export of the buc
 
 - [x] `W15.P28.S93` - XLSX / Google-Sheets-shaped workbook export of the bucket ledger to a local file; `src/aeat/application/ledger/_workbook_export.py`.
 - [x] `W15.P28.S94` - Offline roundtrip gate: exported workbook re-imports back through the ledger with row fidelity; `src/aeat/entrypoints/cli/test_ledger_workbook_export.py`.
-- [ ] `W15.P28.S95` - Attach Gmail/Drive document-link references as local ledger-row metadata (recorded, never fetched); `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W15.P28.S95` - Attach Gmail/Drive document-link references as local ledger-row metadata (recorded, never fetched); `src/aeat/entrypoints/cli/_ledger.py`.
 
 ## Description
 

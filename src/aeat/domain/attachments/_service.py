@@ -89,6 +89,51 @@ def add_attachment(
     return attachment
 
 
+def add_link_attachment(
+    store: AttachmentStoreProtocol,
+    *,
+    kind: AttachmentKind,
+    source: AttachmentSource,
+    source_reference: str,
+    captured_at: datetime,
+    bucket_id: str | None = None,
+    link_transaction_ids: tuple[str, ...] = (),
+    link_invoice_ids: tuple[str, ...] = (),
+    metadata: Mapping[str, str] | None = None,
+    notes: str = "",
+) -> Attachment:
+    """Record a document *link* (Gmail/Drive/URL) as a local attachment manifest.
+
+    Unlike :func:`add_attachment`, this never fetches or stores remote bytes: the
+    locally-stored payload is the link reference itself (``text/uri-list``), so a
+    Gmail message link or Drive file link is recorded as ledger evidence metadata
+    without any network access. The content-addressed id is the digest of the
+    reference text, so the same link deduplicates naturally.
+    """
+    payload = source_reference.encode("utf-8")
+    sha256 = store.put_bytes(payload)
+    attachment = Attachment.model_validate(
+        {
+            "attachment_id": sha256,
+            "kind": kind,
+            "source": source,
+            "source_reference": source_reference,
+            "sha256": sha256,
+            "mime_type": "text/uri-list",
+            "bytes_size": len(payload),
+            "captured_at": captured_at,
+            "linked_transaction_ids": link_transaction_ids,
+            "linked_invoice_ids": link_invoice_ids,
+            "bucket_id": bucket_id,
+            "metadata": metadata or {},
+            "notes": notes,
+        }
+    )
+    store.write_manifest(attachment)
+    _logger.info("recorded link attachment kind=%s source=%s", kind.value, source.value)
+    return attachment
+
+
 def load_attachment(store: AttachmentStoreProtocol, attachment_id: str) -> Attachment:
     """Load one attachment manifest from the store.
 
