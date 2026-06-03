@@ -55,6 +55,10 @@ Status: PASS. Reviewed `W02.P02.S10` against the export evidence ADR and plan. T
 
 Status: PASS. Reviewed `W03.P03.S11` against the plan. The change adds a strict `SheetNumberFormat` record and derives `SheetExportPlan.number_formats` from `CasillaDefinition.data_type` for money, integer, and ratio-as-percentage casillas. The regression is grounded in real registry snapshots for every covered modelo and compares plan facets to registry data types rather than a hand-authored expected casilla list. Rendering is intentionally left to later offline/online renderer steps. Gates run: ruff on touched calc-sheets files, focused parity/records tests, and full `src/aeat/application/storage/calc_sheets`. No Critical or High issues found.
 
+## S12-S13-REVIEW-001 | PASS | Section headers and start/final anchors are typed plan facets
+
+Status: PASS. Reviewed landed commit `e725047b5` against `W03.P03.S12` and `W03.P03.S13`. The implementation adds strict `SheetSectionHeader` and `SheetAnchor` records, derives section headers from registry section paths, emits explicit start/final anchors as real value cells, and renders both surfaces bold in the offline workbook. The tests use a real M130 registry snapshot and validate both plan facets and offline XLSX styling. No Critical or High issues found.
+
 ## S14-S15-REVIEW-001 | PASS | Registry-grounded offline parity gates are non-tautological
 
 Status: PASS. Reviewed landed commit `db1f5e593` against `W03.P04.S14` and `W03.P04.S15`. The parity test uses bundled registry snapshots and completeness manifests, not a duplicated hand-authored casilla list. S14 compares emitted `(number, segmento)` keys to official manifest keys; S15 compares registry computed casilla ids to actual workbook formula cells. Current full calc-sheets gate passed. No Critical or High issues found.
@@ -82,6 +86,10 @@ Status: PASS. Reviewed landed commit `be0ebb08c` against `W04.P05.S21`. The curr
 ## S22-REVIEW-001 | HIGH | Step was closed before number-format and start/final rendering existed
 
 Status: REOPENED. Reviewed landed commit `81f4ceeb1` against `W05.P06.S22`. The commit correctly renders the `Evidencia` surface online, but S22 also requires number formats plus start/final anchors to render identically to the offline XLSX. Those facets are not fully implemented yet (`S11` adds only the number-format plan facet; `S12`/`S13` remain open), so S22 was reopened via the vault CLI. Required follow-up: implement renderer parity after S12/S13 land.
+
+## S22-REVIEW-002 | PASS | Online renderer now covers number formats and emphasis
+
+Status: PASS. Reviewed landed commit `ceddb187c` against `W05.P06.S22`. The online apply adapter now emits number-format repeatCell requests from `SheetNumberFormat` and bold emphasis repeatCell requests from section headers plus start/final anchors, while the evidence value surface remains shared with the offline workbook. The conformance tests cover number-format and emphasis request shapes. No Critical or High issues found.
 
 ## S23-S24-REVIEW-001 | PASS | Evidence identity and live-write deferral are correctly bounded
 
