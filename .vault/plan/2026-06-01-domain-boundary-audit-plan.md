@@ -291,6 +291,72 @@ Once stale ignores are cleaned and violations resolved, return unmatched_ignore_
 
 - [x] `W09.P28.S94` - Resolve unmatched-ignore alerting policy: KEEP unmatched_ignore_imports_alerting = warn rather than restoring the implicit error default. error is what blinded the gate originally (one stale ignore aborted the whole run); `under warn a new production violation still reds the gate (broken contract exits non-zero regardless of mode) while stale ignores from test churn degrade gracefully. Gate verified 4 kept / 0 broken / exit 0; `.importlinter`.
 
+## Wave `W10` - Active-bucket context resolution consolidated in core (S60/DB-31 B-4)
+
+Eliminate every adapter->application and underscore-private reach-in for active-bucket resolution. Relocate require_active_bucket_id + NoActiveProfileError from application/workflow to a public aeat.core surface alongside the already-core resolve_active_bucket_id, then repoint all ~60 consumers (adapters, application, entrypoints, domain, tests) to import inward from the public core surface. Supersedes S53's infeasible TYPE_CHECKING approach and discharges the hexagonal-purity intent of S60.
+
+### Phase `W10.P29` - Core public surface for active-bucket context
+
+Relocate require_active_bucket_id and NoActiveProfileError into core beside resolve_active_bucket_id; expose all three from a public aeat.core surface; update the error-registry path string.
+
+- [ ] `W10.P29.S95` - Relocate require_active_bucket_id (application/workflow/_models.py:251) and NoActiveProfileError (application/workflow/_errors.py:42, WorkflowError subclass) into core beside resolve_active_bucket_id; `expose resolve+require+NoActiveProfileError from a public aeat.core surface (promote core/_bucket_pointer_io.py to a public core module and/or re-export via core/__init__); update the error-registry path string core/errors/registry/_application.py:326; keep the locale key application.workflow.errors.no_active_profile_bucket stable; `src/aeat/core/_bucket_pointer_io.py`.
+- [ ] `W10.P29.S96` - Repoint application/workflow/_models.py:33 import and remove the application-owned require_active_bucket_id definition; `update workflow/__init__.py re-exports (lines 40,66,113,142) to re-export from core or drop in favour of direct core imports by callers; `src/aeat/application/workflow/_models.py`.
+
+### Phase `W10.P30` - Repoint adapter consumers to the core surface
+
+The aeat outbound adapters (browser/_factory, auth/_clave_movil, auth/_authenticator, sede/_declarations) and their live tests import from the public core surface, removing the adapter->application edges.
+
+- [ ] `W10.P30.S97` - Repoint the four aeat outbound adapter sites off application.workflow._models to the public core surface: browser/_factory.py:154 (resolve), auth/_clave_movil.py:754 (resolve) + :866 (require), auth/_authenticator.py:1241 (require), sede/_declarations.py:390 (require); `src/aeat/adapters/outbound/aeat/`.
+- [ ] `W10.P30.S98` - Repoint the adapter live tests off application.workflow._models: sede/test_groi_check_live.py:26, auth/test_clave_movil_live.py:73, auth/test_clave_movil.py:937; `src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py`.
+
+### Phase `W10.P31` - Repoint application-layer consumers to the core surface
+
+Application modules that reach into workflow._models for the resolvers import from the public core surface instead.
+
+- [ ] `W10.P31.S99` - Repoint application-layer consumers off workflow._models to the public core surface: wizard/_status.py:23, user_profile/_orchestration.py:305/325/563/602, auth/_sessions.py:176/506, auth/_operator.py:263, auth/_acquisition_lock.py:78/168, review/_operator.py:221, state_projection.py:57, diagnostics.py:308, modelo/_export.py:410; `src/aeat/application/`.
+- [ ] `W10.P31.S100` - Repoint application tests: user_profile/test_orchestration.py:9/168, live/test_iva_wallet_live.py:21, workflow/test_active_profile_resolution.py:26; `src/aeat/application/workflow/test_active_profile_resolution.py`.
+
+### Phase `W10.P32` - Repoint entrypoint/CLI consumers to the core surface
+
+CLI entrypoint modules and their tests import the resolvers and NoActiveProfileError from the public core surface.
+
+- [ ] `W10.P32.S101` - Repoint CLI entrypoint consumers off workflow._models to the public core surface: cli/__init__.py:264, _overview.py:64, _modelo.py:181/205/300/2133/4407/5273, _ledger.py:62/2148/2165/3663/3714/3787, _config/__init__.py:42/377/970/1496, _config/_profile_censo.py:36, _common.py:135/149/233, _app_live.py:871, diagnostics/profile.py:29; `NoActiveProfileError catchers _ledger.py:2147/2164/3662 + _common.py:233; `src/aeat/entrypoints/cli/`.
+- [ ] `W10.P32.S102` - Repoint CLI tests off workflow._models: test_cli_surface.py:89, test_ledger_fx_import.py:21, test_profile_lifecycle_verbs.py:405/432/955/996, test_profile_censo_verbs.py:55/172, test_modelo_source_mesh_calculate.py:130, test_repair_privacy_contract.py:19, test_ratios_verbs.py:13, test_ledger_exception_propagation.py; `src/aeat/entrypoints/cli/test_cli_surface.py`.
+
+### Phase `W10.P33` - Verification: zero adapter-to-application active-bucket edges
+
+Assert no module outside the workflow package imports the resolvers from application.workflow._models; suite green; import-linter contracts unchanged.
+
+- [ ] `W10.P33.S103` - Verify: rg confirms no module outside application/workflow imports resolve_active_bucket_id/require_active_bucket_id from application.workflow._models; `full pytest suite + ty + lint-imports green; the AEAT-layered import-linter warning count does not regress; `src/aeat/`.
+
+## Wave `W11` - Secure-storage public-surface import purity (D4/D5)
+
+Domain and application repositories must import secure-storage primitives (SecureBoundRepository, SecureObjectRepository, SecureObjectWrite, ClassificationError, EnvelopeVersionError, StorageError) from the storage package public surface, never from underscore-private submodules. Establish the public storage/__init__ export set, eliminate the double-private envelope._envelope reach-in (domain/transactions/_repository), and repoint the ~15 domain repository import sites. Ratifies D4 (existing domain-co-located repos accepted as managed debt) while cleaning their import surface per the operator top-level-import directive.
+
+### Phase `W11.P34` - Establish the storage public export surface
+
+Export the secure-storage primitives that domain repositories consume (SecureBoundRepository, SecureObjectRepository, SecureObjectWrite, ClassificationError, EnvelopeVersionError, StorageError) from adapters/persistence/storage/__init__ so consumers import the top-level package.
+
+- [ ] `W11.P34.S104` - Audit storage/__init__ __all__ (currently namespace constants only); `export the secure-storage primitives domain repos consume from adapters/persistence/storage/__init__.py: SecureBoundRepository (envelope/_secure_repository), SecureObjectRepository + SecureObjectWrite (sql), ClassificationError + EnvelopeVersionError + StorageError (errors); `src/aeat/adapters/persistence/storage/__init__.py`.
+
+### Phase `W11.P35` - Eliminate the double-private envelope._envelope reach-in
+
+domain/transactions/_repository imports Envelope from the underscore-private storage.envelope._envelope module; repoint to a public surface or remove the reach-in.
+
+- [ ] `W11.P35.S105` - Repoint domain/transactions/_repository.py off the underscore-private storage.envelope._envelope module (Envelope import) to a public surface, or remove the reach-in if Envelope need not be referenced directly; `src/aeat/domain/transactions/_repository.py`.
+
+### Phase `W11.P36` - Repoint domain repository import sites to the public surface
+
+The ~15 domain repositories importing from storage.sql/.errors/.envelope submodules import from the top-level storage package instead.
+
+- [ ] `W11.P36.S106` - Repoint the domain repositories from storage.sql/.errors/.envelope submodule imports to the top-level storage package: buckets/_event_repository, filing/_repository + _complementaria_repository, justificante/_repository, submission/_repository, invoices/_repository, transactions/_repository, modelos/_calculation_repository + _filing_repository + _repository + _verification_repository, usage_ratios/_service, fincas/_repository (sql._orm stays a fincas-internal ORM detail unless publicly exposed); `src/aeat/domain/`.
+
+### Phase `W11.P37` - Verification: domain storage imports use the public surface
+
+Assert domain modules import secure-storage primitives only from the storage package top-level (no underscore-private submodule reach-ins); suite green.
+
+- [ ] `W11.P37.S107` - Verify: rg confirms domain modules import secure-storage primitives only from the top-level storage package (no .sql/.errors/.envelope/_envelope underscore reach-ins beyond sanctioned ones); full pytest suite + ty green; D4 ratified in the ADR with these import-surface cleanups recorded; `src/aeat/domain/`.
+
 ## Description
 
 This plan executes the AEAT hexagonal ownership and layering contract decided in the
