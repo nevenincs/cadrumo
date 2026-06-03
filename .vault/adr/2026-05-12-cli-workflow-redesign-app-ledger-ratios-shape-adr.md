@@ -148,3 +148,39 @@ write to `usage_ratios` storage without emitting.
 
 The `eligible` and `validate` verbs from the 2026-05-13 extension
 remain read-only and do not emit events.
+
+## 2026-06-03 amendment — composition-pattern alignment
+
+The W77.P370.S2131 BucketMaintenanceService landing established the
+composition pattern locked by `[[2026-06-03-cli-workflow-redesign-adr]]`:
+new application-layer services delegate cross-store writes to
+existing single-writer primitives and consume those primitives
+through the top-level package `__all__` re-export, never through
+internal submodule imports. The ratios service surface MUST align
+with this discipline at the next maintenance edit:
+
+- The `ratios_set` / `ratios_unset` paths route their writes
+  through a single application-layer entry point that delegates to
+  the existing `save_usage_ratios` domain primitive and emits the
+  matching `LEDGER_RATIOS_SET` / `LEDGER_RATIOS_UNSET` event in
+  the same call. This is the per-domain analogue of the
+  bucket-maintenance two-event co-emission (a domain mutation event
+  alongside the surface-invocation event); for ratios there is no
+  separate "lifecycle" event so the surface event is the sole
+  emission.
+
+- The `eligible` and `validate` read-only verbs consume
+  `load_usage_ratios`, `effective_usage_ratio`, and
+  `resolve_category_profiles` through the
+  `aeat.domain.usage_ratios` / `aeat.domain.categories` package
+  boundaries (already top-level `__all__` re-exports).
+  `_ratios.py:list_eligible_ratios_for_bucket` already follows this
+  shape.
+
+Codified by:
+- `composition-service-no-parallel-write-path` — the ratios
+  service MUST NOT re-implement `save_usage_ratios`; it
+  delegates and emits.
+- `service-imports-via-top-level-reexports` — every domain
+  primitive is consumed through the package `__all__`, never
+  via a `from aeat.domain.usage_ratios._foo import bar` dot-in.
