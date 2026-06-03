@@ -5,17 +5,21 @@ from __future__ import annotations
 import asyncio
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from .....core.config import Settings
+from .....core.external_constants import UTF_8_ENCODING
 from .....domain.calculations.registry import RegistryValidationError
+from ..browser import Profile, opened_browser_page, shared_playwright_runtime
 from ._errors import SedeParseError
 from ._iva_compensation_wallet import (
     IVA_COMPENSATION_WALLET_URL,
     PRE303_PRESENTATION_SERVICE_URL,
     _assert_read_browser_action,
     _assert_read_http,
+    _dump_wallet_diagnostic,
     _parse_spanish_decimal,
     _wait_for_wallet_execute_initial_shape,
     _wallet_execute_gate_status,
@@ -244,7 +248,7 @@ def test_parse_iva_compensation_wallet_html_refuses_execute_shell_as_empty_walle
         )
 
 
-def test_parse_iva_compensation_wallet_html_accepts_executed_empty_wallet_shell_only_when_authorized() -> None:
+def test_parse_iva_compensation_wallet_html_refuses_executed_empty_wallet_shell_without_zero_aggregate() -> None:
     html = f"""
     <html>
       <head><title>Cartera de cuotas a compensar</title></head>
@@ -257,19 +261,35 @@ def test_parse_iva_compensation_wallet_html_accepts_executed_empty_wallet_shell_
     </html>
     """
 
-    observation = parse_iva_compensation_wallet_html(
-        html,
-        taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
-        authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
-        target_year=2026,
-        target_period="2T",
-        source_url=IVA_COMPENSATION_WALLET_URL,
-        captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
-        allow_empty_wallet_shell=True,
+    with pytest.raises(SedeParseError, match="explicit zero aggregate"):
+        parse_iva_compensation_wallet_html(
+            html,
+            taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
+            authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
+            target_year=2026,
+            target_period="2T",
+            source_url=IVA_COMPENSATION_WALLET_URL,
+            captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+            allow_empty_wallet_shell=True,
+        )
+
+
+def test_parse_iva_compensation_wallet_html_refuses_wrong_rendered_target_period() -> None:
+    html = _cartera_results_html(
+        total="123,45",
+        rows='<tr><td>2024</td><td>4T</td><td>123,45</td></tr>',
     )
 
-    assert observation.rows == ()
-    assert observation.total_pending == Decimal("0")
+    with pytest.raises(SedeParseError, match="does not match requested period"):
+        parse_iva_compensation_wallet_html(
+            html,
+            taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
+            authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
+            target_year=2026,
+            target_period="1T",
+            source_url=IVA_COMPENSATION_WALLET_URL,
+            captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+        )
 
 
 def test_parse_iva_compensation_wallet_html_refuses_authorized_empty_wallet_shell_with_execute_control() -> None:
@@ -351,15 +371,15 @@ def test_iva_wallet_read_guard_rejects_unclassified_browser_action() -> None:
 
 
 def test_iva_wallet_read_guard_allows_own_name_representation_gate() -> None:
-    _assert_read_browser_action("representation-gate-own-name-continue")
+    _assert_read_browser_action(_EXTERNAL.aeat.pre303.representation_own_name_action_label)
 
 
 def test_iva_wallet_read_guard_allows_wallet_execute_read_query() -> None:
-    _assert_read_browser_action("wallet-execute-read-query")
+    _assert_read_browser_action(_EXTERNAL.aeat.pre303.wallet_execute_read_action_label)
 
 
 def test_iva_wallet_read_guard_allows_discovered_entrypoint_open() -> None:
-    _assert_read_browser_action("wallet-discovered-entrypoint-open")
+    _assert_read_browser_action(_EXTERNAL.aeat.pre303.wallet_discovered_entrypoint_action_label)
 
 
 def test_discover_iva_compensation_wallet_entrypoint_from_pre303_link() -> None:
@@ -462,6 +482,36 @@ def test_wallet_shape_context_reports_discovered_wallet_entrypoints_without_quer
         _EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
     )
     assert "QUERY-CANARY" not in str(context)
+
+
+@pytest.mark.asyncio
+async def test_wallet_diagnostic_dump_writes_only_redacted_structural_summary(tmp_path: Path) -> None:
+    html = f"""
+    <html><body>
+      <form id="Form" method="post" action="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
+        <input id="session" name="session" type="hidden" value="QUERY-CANARY" />
+      </form>
+      <table>
+        <tr><th>Ejercicio</th><th>Período</th><th>Cuota Disponible</th></tr>
+        <tr><td>2026</td><td>2T</td><td>123,45</td></tr>
+      </table>
+    </body></html>
+    """
+    settings = Settings(aeat_token_dir=tmp_path)
+    profile = Profile(name="wallet-diagnostic", storage_state_path=tmp_path / "state.json")
+
+    async with (
+        shared_playwright_runtime() as playwright,
+        opened_browser_page(playwright, settings, profile) as (page, _context),
+    ):
+        await page.set_content(html)
+        await _dump_wallet_diagnostic(page, label="unit", dump_dir=tmp_path / "diagnostics")
+
+    summary = (tmp_path / "diagnostics" / "unit-summary.txt").read_text(encoding=UTF_8_ENCODING)
+    assert "raw_sha256=" in summary
+    assert "QUERY-CANARY" not in summary
+    assert "123,45" not in summary
+    assert "Cuota Disponible" not in summary
 
 
 def test_iva_wallet_live_routes_are_centralized_external_constants() -> None:

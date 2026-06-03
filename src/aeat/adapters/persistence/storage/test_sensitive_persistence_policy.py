@@ -243,9 +243,32 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
     ): "local-filesystem storage adapter writes the non-sensitive object-metadata sidecar",
     (
         "src/aeat/adapters/outbound/aeat/sede/_declarations.py",
-        "_observed_casillas_from_declaration_pdf",
-        "tempfile.NamedTemporaryFile",
-    ): "short-lived declaration-PDF parser bridge for bbox extraction; file is unlinked immediately after parsing",
+        "_write_all_fd",
+        "os.write",
+    ): "declaration-PDF parser bridge writes through a pre-created private fd",
+    (
+        "src/aeat/adapters/outbound/aeat/sede/_declarations.py",
+        "_temporary_sensitive_pdf_path",
+        "tempfile.mkstemp",
+    ): (
+        "short-lived declaration-PDF parser bridge for bbox extraction; private tempfile is unlinked immediately "
+        "after parsing"
+    ),
+    (
+        "src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py",
+        "_dump_wallet_diagnostic",
+        "write_text",
+    ): "operator-enabled IVA wallet diagnostic writes redacted structural metadata only",
+    (
+        "src/aeat/adapters/outbound/fx/_ecb_refresh.py",
+        "refresh_bundled_ecb_rates",
+        "tmp.write_text",
+    ): "ECB refresh utility writes a temporary official reference-rate snapshot before validation",
+    (
+        "src/aeat/adapters/outbound/fx/_ecb_refresh.py",
+        "refresh_bundled_ecb_rates",
+        "target.write_text",
+    ): "ECB refresh utility writes bundled non-user reference-rate data after parser validation",
     (
         "src/aeat/apidocs/manager.py",
         "scaffold",
