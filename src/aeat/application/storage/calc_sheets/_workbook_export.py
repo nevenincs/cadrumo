@@ -14,6 +14,7 @@ from openpyxl.comments import Comment
 from pydantic import BaseModel, Field
 
 from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.external_constants import UTF_8_ENCODING
 from ._records import (
     SheetEvidenceContributorRow,
     SheetEvidenceFacet,
@@ -116,7 +117,7 @@ def serialize_evidence_sidecar(sidecar: OfflineWorkbookEvidenceSidecar) -> bytes
     """Serialize an evidence sidecar as canonical UTF-8 JSON bytes."""
     payload = sidecar.model_dump(mode="json")
     text = json.dumps(payload, ensure_ascii=True, sort_keys=True, separators=(",", ":"))
-    return text.encode("utf-8")
+    return text.encode(UTF_8_ENCODING)
 
 
 def serialize_offline_workbook(plan: SheetExportPlan) -> bytes:
