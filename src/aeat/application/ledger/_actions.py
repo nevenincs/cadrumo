@@ -1366,6 +1366,50 @@ def update_manual_transaction(
             transaction_ids=_transaction_modelo_source_ids(current),
             blockers=blockers,
         )
+    prepared = _prepare_manual_transaction_update(
+        current=current,
+        command=command,
+        previous_transaction_id=transaction_id,
+        now=now,
+        invoice_repository=invoice_repository,
+        attachment_store=attachment_store,
+        usage_ratio_profile=usage_ratio_profile,
+    )
+    if prepared is None:
+        raise TransactionValidationError(
+            "manual ledger update must change at least one ledger field",
+            context={"transaction_id": transaction_id},
+        )
+    replacement, events = prepared
+    _save_transaction_catalogue_and_events(
+        transaction_repository=repository,
+        event_repository=event_repository,
+        catalogue=_replace_transaction(catalogue, old_transaction_id=transaction_id, replacement=replacement),
+        events=events,
+    )
+    return _result(command.bucket_id, replacement, tuple(event.event_id for event in events))
+
+
+def _prepare_manual_transaction_update(
+    *,
+    current: Transaction,
+    command: ManualLedgerTransactionCommand,
+    previous_transaction_id: str,
+    now: datetime,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    attachment_store: _AttachmentStoreProtocol | None = None,
+    usage_ratio_profile: UsageRatioProfile | None = None,
+) -> tuple[Transaction, tuple[BucketEvent, ...]] | None:
+    """Build the replacement transaction + bucket events for one in-memory edit.
+
+    Returns ``None`` when the command is a field-for-field no-op (the caller
+    decides whether that is an error or a skip). Verifies evidence and usage-ratio
+    references but performs **no** persistence and **no** catalogue load — the
+    caller owns a single load/save so a batch re-encrypts the catalogue once
+    rather than per row (the ``bulk_classify_from_csv`` load-once/save-once
+    contract). Lifecycle and blocking-modelo guards remain the caller's
+    responsibility before invoking this builder.
+    """
     replacement = _transaction_from_command(
         command,
         occurred_at=now,
@@ -1380,10 +1424,7 @@ def update_manual_transaction(
         import_fingerprint=current.import_fingerprint,
     )
     if _mutation_signature(current) == _mutation_signature(replacement):
-        raise TransactionValidationError(
-            "manual ledger update must change at least one ledger field",
-            context={"transaction_id": transaction_id},
-        )
+        return None
     _verify_evidence_references(
         command,
         transaction_id=replacement.transaction_id,
@@ -1395,7 +1436,7 @@ def update_manual_transaction(
         current=current,
         replacement=replacement,
         command=command,
-        previous_transaction_id=transaction_id,
+        previous_transaction_id=previous_transaction_id,
     )
     events = tuple(
         _build_bucket_event(
@@ -1423,7 +1464,7 @@ def update_manual_transaction(
         lifecycle_state=current.lifecycle_state,
         lifecycle_lineage=current.lifecycle_lineage,
         edit_lineage_entry=TransactionEditLineageEntry(
-            previous_transaction_id=transaction_id,
+            previous_transaction_id=previous_transaction_id,
             actor=command.actor,
             source_command=command.source_command,
             edited_at=now,
@@ -1433,13 +1474,7 @@ def update_manual_transaction(
         evidence_event_ids=evidence_event_ids,
         import_fingerprint=current.import_fingerprint,
     )
-    _save_transaction_catalogue_and_events(
-        transaction_repository=repository,
-        event_repository=event_repository,
-        catalogue=_replace_transaction(catalogue, old_transaction_id=transaction_id, replacement=replacement),
-        events=events,
-    )
-    return _result(command.bucket_id, replacement, tuple(event.event_id for event in events))
+    return replacement, events
 
 
 def update_manual_transaction_fields(
@@ -2614,6 +2649,40 @@ def _blocking_modelo_references(
     )
 
 
+def _blockers_by_source_transaction_id(
+    *,
+    bucket_id: str,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+) -> dict[str, tuple[LedgerRemovalBlocker, ...]]:
+    """Map each source transaction id to the finalized-modelo blockers referencing it.
+
+    Computed once so a batch edit can look up the finalized-modelo guard per row
+    without reloading the work-unit and calculation repositories on every row
+    (the load-once half of the ``bulk_classify_from_csv`` S31 contract).
+    """
+    work_units = (work_unit_repository or WorkUnitCatalogueRepository()).load()
+    revisions = (calculation_repository or CalculationRevisionCatalogueRepository()).load()
+    out: dict[str, list[LedgerRemovalBlocker]] = {}
+    for revision in revisions.values():
+        if revision.state not in _REMOVAL_BLOCKING_REVISION_STATES:
+            continue
+        work_unit = work_units.get(revision.work_unit_id)
+        if work_unit is None or work_unit.bucket_id != bucket_id:
+            continue
+        blocker = LedgerRemovalBlocker(
+            work_unit_id=work_unit.work_unit_id,
+            calculation_revision_id=revision.calculation_revision_id,
+            revision_state=revision.state.value,
+            modelo=work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+        )
+        for txid in revision.source_transaction_ids:
+            out.setdefault(txid, []).append(blocker)
+    return {txid: tuple(found) for txid, found in out.items()}
+
+
 def _transaction_modelo_source_ids(transaction: Transaction) -> tuple[str, ...]:
     return tuple(
         sorted({transaction.transaction_id, *(entry.previous_transaction_id for entry in transaction.edit_lineage)})
@@ -3532,6 +3601,8 @@ def bulk_classify_from_csv(
     source_command: str = "aeat app ledger classify",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
 ) -> BulkClassifyResult:
     """Apply batch classifications from a CSV string.
 
@@ -3586,6 +3657,20 @@ def bulk_classify_from_csv(
     applied = 0
     skipped = 0
 
+    # Load-once/save-once (S31): the per-row path re-encrypted the whole
+    # catalogue on every update, so a 270-row batch cost ~400s of O(n)
+    # re-encryption. Load the catalogue and the finalized-modelo blocker map
+    # once, mutate an in-memory working catalogue, accumulate events, and
+    # persist a single atomic write at the end.
+    now = _normalise_timestamp(None)
+    working = repository.load()
+    all_events: list[BucketEvent] = []
+    blockers_by_txid = _blockers_by_source_transaction_id(
+        bucket_id=bucket_id,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
+
     for idx, row in enumerate(parsed_rows):
         patch = ManualLedgerTransactionPatch(
             business_classification=row.classification,
@@ -3593,23 +3678,48 @@ def bulk_classify_from_csv(
             business_pct=row.business_pct,
         )
         try:
-            result = update_manual_transaction_fields(
+            current = _require_transaction(working, row.transaction_id)
+            if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+                raise TransactionValidationError(
+                    "only active ledger transactions can be edited; archived, stashed, "
+                    "and split-parent rows are immutable",
+                    context={
+                        "transaction_id": row.transaction_id,
+                        "lifecycle_state": current.lifecycle_state.value,
+                    },
+                )
+            source_ids = _transaction_modelo_source_ids(current)
+            blockers = tuple(b for txid in source_ids for b in blockers_by_txid.get(txid, ()))
+            if blockers:
+                _raise_finalized_modelo_blocked(
+                    operation="ledger transaction update",
+                    transaction_ids=source_ids,
+                    blockers=blockers,
+                )
+            command = _command_from_patch(
                 bucket_id=bucket_id,
-                transaction_id=row.transaction_id,
+                current=current,
                 patch=patch,
                 actor=actor,
                 source_command=source_command,
-                reaffirm=False,
-                transaction_repository=repository,
-                bucket_event_repository=event_repo,
             )
-            all_event_ids.extend(result.bucket_event_ids)
-            if result.bucket_event_ids:
-                applied += 1
-            else:
-                # update_manual_transaction_fields returned without events:
-                # classification was already identical — treat as skipped.
+            prepared = _prepare_manual_transaction_update(
+                current=current,
+                command=command,
+                previous_transaction_id=row.transaction_id,
+                now=now,
+            )
+            if prepared is None:
+                # field-for-field identical — classification already applied.
                 skipped += 1
+                continue
+            replacement, events = prepared
+            working = _replace_transaction(
+                working, old_transaction_id=row.transaction_id, replacement=replacement
+            )
+            all_events.extend(events)
+            all_event_ids.extend(event.event_id for event in events)
+            applied += 1
         except (AeatError, ValidationError) as exc:
             apply_failures.append(
                 BulkClassifyFailure(
@@ -3618,6 +3728,14 @@ def bulk_classify_from_csv(
                     reason=str(exc),
                 )
             )
+
+    if all_events:
+        _save_transaction_catalogue_and_events(
+            transaction_repository=repository,
+            event_repository=event_repo,
+            catalogue=working,
+            events=tuple(all_events),
+        )
 
     all_failures = parse_failures + apply_failures
     return BulkClassifyResult(

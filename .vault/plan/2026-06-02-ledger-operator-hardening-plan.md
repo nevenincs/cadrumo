@@ -187,7 +187,7 @@ Fresh-context honesty review; turn findings into hardening Steps with gates.
 
 - [x] `W03.P10.S27` - Fresh-context honesty review of campaign close; `.vault/audit/`.
 - [x] `W03.P10.S28` - Absorb testimonial findings as hardening Steps with verification gates; `.vault/plan/2026-06-02-ledger-operator-hardening-plan.md`.
-- [ ] `W03.P10.S31` - Harden bulk classify --from-csv to load-once/save-once (O(n) re-encryption: 270 rows = 404s); `perf gate 270 rows under 30s; `src/aeat/application/ledger/_actions.py`.
+- [x] `W03.P10.S31` - Harden bulk classify --from-csv to load-once/save-once (O(n) re-encryption: 270 rows = 404s); `perf gate 270 rows under 30s; `src/aeat/application/ledger/_actions.py`.
 - [ ] `W03.P10.S32` - Add an XLSX/Google-Sheets export path for the Drive goal (export surface is csv/jsonl only, no xlsx verb); `src/aeat/adapters/outbound/google/`.
 - [ ] `W03.P10.S33` - Provide a transfer-reclassification helper/journey (import never emits INTERNAL_TRANSFER; `transfers land OUTGOING/INCOMING NOT_YET_PROCESSED); `src/aeat/entrypoints/cli/_ledger.py`.
 - [x] `W03.P10.S60` - HIGH: wire CurrencyNormalizationService into the CLI import path so GBP/USD rows convert (value_in_eur/fx_rate) at import instead of silently gating at aggregation; `src/aeat/application/ledger/_actions.py`.
