@@ -16,6 +16,7 @@ from __future__ import annotations
 import hashlib
 
 from ...adapters.persistence.storage.bucket._manifest import BucketManifest
+from ...core.external_constants import UTF_8_ENCODING
 
 
 def compute_manifest_digest(manifest: BucketManifest) -> str:
@@ -30,7 +31,7 @@ def compute_manifest_digest(manifest: BucketManifest) -> str:
     The output is a 64-character lowercase hex string matching the
     :class:`ExportArchiveHeader.manifest_digest` field constraint.
     """
-    serialised = manifest.model_dump_json().encode("utf-8")
+    serialised = manifest.model_dump_json().encode(UTF_8_ENCODING)
     return hashlib.sha256(serialised).hexdigest()
 
 

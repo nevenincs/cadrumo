@@ -180,10 +180,12 @@ def test_s627_dynamic_classvar_probe_rationale_marker_present() -> None:
 
 
 def test_s628_no_pytest_skip_in_test_profile() -> None:
-    source_path = _SRC_ROOT / "core" / "test_profile.py"
+    # The core profile test file moved to core/identity/test_profile.py during
+    # the M349 identity relocation; the S628 contract follows the file.
+    source_path = _SRC_ROOT / "core" / "identity" / "test_profile.py"
     source = source_path.read_text(encoding="utf-8")
     hits = [i + 1 for i, line in enumerate(source.splitlines()) if "pytest.skip(" in line]
-    assert not hits, f"pytest.skip( found in core/test_profile.py at lines {hits}"
+    assert not hits, f"pytest.skip( found in core/identity/test_profile.py at lines {hits}"
 
 
 # ---------------------------------------------------------------------------

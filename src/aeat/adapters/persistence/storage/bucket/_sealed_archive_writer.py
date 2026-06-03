@@ -17,6 +17,7 @@ import tarfile
 from datetime import datetime
 from pathlib import Path
 
+from .....core.external_constants import UTF_8_ENCODING
 from ._export_header import ExportArchiveHeader
 from ._sealed_archive_errors import SealedArchiveWriteError
 
@@ -103,7 +104,7 @@ def write_sealed_archive(
             f"remove it first if a re-export is intended",
         )
 
-    header_bytes = header.model_dump_json().encode("utf-8")
+    header_bytes = header.model_dump_json().encode(UTF_8_ENCODING)
     instant = header.created_at
     try:
         with tarfile.open(target_path, mode="w:gz") as archive:
