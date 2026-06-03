@@ -298,3 +298,21 @@ def test_rule_priority_order_first_match_wins(tmp_path: Path) -> None:
     by_id = {r["transaction_id"]: r for r in _list_transactions()}
     # Priority 1 rule (BUSINESS) should have fired before priority 100 rule (PERSONAL)
     assert by_id[tx1]["business_classification"] == "BUSINESS"
+
+
+def test_classify_from_csv_accepts_business_pct_for_mixed(tmp_path: Path) -> None:
+    """MIXED rows classify in bulk via --from-csv with a business_pct column."""
+    tx1, _tx2 = _import_two_transactions(tmp_path)
+    csv_file = tmp_path / "mixed.csv"
+    csv_file.write_text(
+        f"transaction_id,classification,category_id,business_pct\n{tx1},MIXED,telefonia_movil,0.50\n",
+        encoding="utf-8",
+    )
+    result = _RUNNER.invoke(
+        app, ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)]
+    )
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.output)["result"]["applied"] == 1
+    row = {r["transaction_id"]: r for r in _list_transactions()}[tx1]
+    assert row["business_classification"] == "MIXED"
+    assert row["business_pct"] is not None and row["business_pct"].startswith("0.5")
