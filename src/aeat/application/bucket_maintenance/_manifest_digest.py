@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import hashlib
 
-from ...adapters.persistence.storage.bucket._manifest import BucketManifest
+from ...adapters.persistence.storage.bucket import BucketManifest
 from ...core.external_constants import UTF_8_ENCODING
 
 

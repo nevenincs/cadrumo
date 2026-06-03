@@ -21,7 +21,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...adapters.persistence.storage.bucket._manifest import ManifestKdfParams
+from ...adapters.persistence.storage.bucket import ManifestKdfParams
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import ProfileId as _ProfileId
 from ...core.time._utc import validate_utc_aware
