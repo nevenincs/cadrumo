@@ -76,6 +76,13 @@ from ._persistence import (
     workflow_state_repository,
 )
 
+# ---- profile-bucket scan (depends on _models only) --------------------------
+from ._profile_bucket_scan import (
+    list_profile_buckets,
+    read_profile_bucket,
+    read_profile_bucket_by_id,
+)
+
 # ---- protocols (no application deps) ----------------------------------------
 from ._protocols import (
     CertificateBundleProtocol,
@@ -134,8 +141,11 @@ __all__ = [
     "declaration_key",
     "default_engine",
     "find_latest_run_for_period",
+    "list_profile_buckets",
     "list_runs",
     "load_run",
+    "read_profile_bucket",
+    "read_profile_bucket_by_id",
     "resume_modelo_workflow",
     "save_run",
     "update_declaration_pointer",

@@ -86,7 +86,7 @@ def _resolve_target_profile(profile: str | None):
     UUID) resolves directly. Returns a ``ProfileBucketPointer`` carrying
     the immutable UUID ``bucket_id`` and the operator ``label``.
     """
-    from ..application.workflow._profile_bucket_scan import (
+    from ..application.workflow import (
         read_profile_bucket,
         read_profile_bucket_by_id,
     )
