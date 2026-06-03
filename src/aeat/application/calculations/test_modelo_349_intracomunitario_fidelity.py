@@ -211,8 +211,8 @@ def test_modelo_349_intracomunitario_fidelity_enrolls_two_renta_years(tmp_path: 
         assert loaded_n1 is not None and loaded_n1.observation == obs_n1
 
     recorder = EnrollmentRecorder(_MODELO)
-    recorder.record_context_year(filing_year=_YEAR_N, context_label=_CONTEXT_LABEL)
-    recorder.record_context_year(filing_year=_YEAR_N_PLUS_1, context_label=_CONTEXT_LABEL)
+    recorder.record_context_year(filing_year=_YEAR_N, context_label=_CONTEXT_LABEL, persisted_observation_count=1)
+    recorder.record_context_year(filing_year=_YEAR_N_PLUS_1, context_label=_CONTEXT_LABEL, persisted_observation_count=1)
 
     evidence = recorder.evidence()
     assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
