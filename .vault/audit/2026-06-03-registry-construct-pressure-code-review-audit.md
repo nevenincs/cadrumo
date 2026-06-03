@@ -45,3 +45,14 @@ loader, schema, validation, inheritance, delta, or modelo-specific code changes.
 Focused tests passed for construct fragment merge behavior, committed registry
 reviewability, registry fragment reviewability, reviewability baseline, and the
 committed registry corpus.
+
+## CONSTRUCT-007 | PASS | S03 headroom audit proves hard-cap relief
+
+Reviewed the post-split headroom audit. The corpus has zero TOML files over
+1,500 lines and zero rows over 600 characters after the M200 construct split.
+
+## CONSTRUCT-008 | LOW | M123 remains a soft-band follow-up candidate
+
+`M123` 2024-and-later `revision.toml` is 1,218 lines. This is below the hard
+pressure cap used for the current split campaign, but it should stay visible if
+the 1,200-line review band becomes a hard threshold.

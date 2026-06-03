@@ -28,7 +28,7 @@ Split only confirmed construct pressure using existing generic fragment merge se
 
 Re-measure the registry corpus and close the pressure slice with tests and vault evidence.
 
-- [ ] `P03.S03` - Re-run construct-pressure corpus headroom audit; `.vault/audit`.
+- [x] `P03.S03` - Re-run construct-pressure corpus headroom audit; `.vault/audit`.
 
 ## Description
 
