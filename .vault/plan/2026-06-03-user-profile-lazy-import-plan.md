@@ -9,12 +9,15 @@ related:
   - '[[2026-06-03-user-profile-lazy-import-research]]'
 ---
 
-
-
-
-
-
-
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `user-profile-lazy-import` `Lazy user_profile package boundary via PEP 562` plan
 
@@ -22,19 +25,17 @@ related:
 
 Establish the structural baseline before relocating any symbol: confirm the 69-submodule registry pull comes from aeat.application.user_profile importing aeat.domain.user_profile, capture the current red set in test_lazy_command_tree.py for a clean before/after diff, and land a producer-side probe that asserts import aeat.application.user_profile does not place aeat.domain.calculations.registry in sys.modules. The probe is the producer-side counterpart to the existing consumer-side gate and prevents future eager-import regressions at the boundary itself.
 
-
-
-- [ ] `P01.S01` - Capture the current red set from the lazy-loading discipline gate; `src/aeat/entrypoints/cli/test_lazy_command_tree.py`.
-- [ ] `P01.S02` - Trace the registry-pull chain from the application boundary down to aeat.domain.user_profile._registry_contract; `src/aeat/application/user_profile/__init__.py, src/aeat/domain/user_profile/__init__.py`.
-- [ ] `P01.S03` - Author a producer-side regression probe asserting import aeat.application.user_profile does not place aeat.domain.calculations.registry in sys.modules; `src/aeat/application/user_profile/test_lazy_boundary.py`.
+- [x] `P01.S01` - Capture the current red set from the lazy-loading discipline gate; `src/aeat/entrypoints/cli/test_lazy_command_tree.py`.
+- [x] `P01.S02` - Trace the registry-pull chain from the application boundary down to aeat.domain.user_profile._registry_contract; `src/aeat/application/user_profile/__init__.py, src/aeat/domain/user_profile/__init__.py`.
+- [x] `P01.S03` - Author a producer-side regression probe asserting import aeat.application.user_profile does not place aeat.domain.calculations.registry in sys.modules; `src/aeat/application/user_profile/test_lazy_boundary.py`.
 
 ### Phase `P02` - Lazy-thunk landing and verification
 
 Relocate the Pydantic command and result models out of aeat.application.user_profile/__init__.py into a sibling _commands.py module, strip the top-level domain import from __init__.py, and extend the existing PEP 562 __getattr__ block to resolve the relocated classes and the four domain records on demand. The relocation lands in one atomic explicit-path commit per the aeat-architecture-boundaries symbol-relocation discipline. Verification confirms all five red tests in test_lazy_command_tree.py turn green, test_dispatching_a_subcommand_loads_its_module stays green, the producer-side probe added in P01 stays green, and no consumer of aeat.application.user_profile.* needs to change.
 
-- [ ] `P02.S04` - Relocate the Pydantic command and result classes plus the _PROFILE_SNAPSHOT_HASH_KWARGS constant into a new sibling module; `src/aeat/application/user_profile/_commands.py`.
-- [ ] `P02.S05` - Strip the top-level aeat.domain.user_profile import and the Pydantic model declarations from the package __init__.py while keeping the docstring, _register_language_resolver call, and __all__ intact; `src/aeat/application/user_profile/__init__.py`.
-- [ ] `P02.S06` - Extend the existing PEP 562 __getattr__ block to resolve the relocated command and result classes and the four domain records (UserProfileFact, UserProfileFactValue, UserProfileRecord, UserProfileStatus) on demand; `src/aeat/application/user_profile/__init__.py`.
+- [x] `P02.S04` - Relocate the Pydantic command and result classes plus the _PROFILE_SNAPSHOT_HASH_KWARGS constant into a new sibling module; `src/aeat/application/user_profile/_commands.py`.
+- [x] `P02.S05` - Strip the top-level aeat.domain.user_profile import and the Pydantic model declarations from the package __init__.py while keeping the docstring, _register_language_resolver call, and __all__ intact; `src/aeat/application/user_profile/__init__.py`.
+- [x] `P02.S06` - Extend the existing PEP 562 __getattr__ block to resolve the relocated command and result classes and the four domain records (UserProfileFact, UserProfileFactValue, UserProfileRecord, UserProfileStatus) on demand; `src/aeat/application/user_profile/__init__.py`.
 - [ ] `P02.S07` - Verify the lazy-loading gate is green end-to-end and no consumer required adjustment; `src/aeat/entrypoints/cli/test_lazy_command_tree.py, src/aeat/application/user_profile/test_lazy_boundary.py`.
 
 ## Description
