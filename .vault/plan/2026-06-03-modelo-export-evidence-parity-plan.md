@@ -143,8 +143,8 @@ Number formats, section headers, start/final anchors as typed plan facets.
 
 Registry-grounded structural parity + live-formula + offline/online conformance.
 
-- [ ] `W03.P04.S14` - Parity gate: exported casilla set equals completeness-manifest required set (number + segmento) and section order follows registry declaration; `src/aeat/application/storage/calc_sheets/test_modelo_export_parity.py`.
-- [ ] `W03.P04.S15` - Assert every computed casilla carries a live spreadsheet formula; `src/aeat/application/storage/calc_sheets/test_modelo_export_parity.py`.
+- [x] `W03.P04.S14` - Parity gate: exported casilla set equals completeness-manifest required set (number + segmento) and section order follows registry declaration; `src/aeat/application/storage/calc_sheets/test_modelo_export_parity.py`.
+- [x] `W03.P04.S15` - Assert every computed casilla carries a live spreadsheet formula; `src/aeat/application/storage/calc_sheets/test_modelo_export_parity.py`.
 - [ ] `W03.P04.S16` - Offline/online renderer conformance: one plan renders structurally identical xls + Sheets grids; `src/aeat/application/storage/calc_sheets/test_modelo_export_parity.py`.
 
 ## Wave `W04` - Per-modelo coverage rollout
@@ -155,8 +155,8 @@ Enroll each supported ledger-fed modelo (M303/M390, M130, M100, M200, ...) into 
 
 Per-modelo evidence + parity coverage with honest reporting.
 
-- [ ] `W04.P05.S17` - Enroll M303 + M390 (IVA) into evidence-bundling + parity; `src/aeat/application/storage/calc_sheets/`.
-- [ ] `W04.P05.S18` - Enroll M130 (pagos fraccionados actividad) into evidence-bundling + parity; `src/aeat/application/storage/calc_sheets/`.
+- [x] `W04.P05.S17` - Enroll M303 + M390 (IVA) into evidence-bundling + parity; `src/aeat/application/storage/calc_sheets/`.
+- [x] `W04.P05.S18` - Enroll M130 (pagos fraccionados actividad) into evidence-bundling + parity; `src/aeat/application/storage/calc_sheets/`.
 - [ ] `W04.P05.S19` - Enroll M100 (renta) into evidence-bundling + parity; `src/aeat/application/storage/calc_sheets/`.
 - [ ] `W04.P05.S20` - Enroll M200 (sociedades) into evidence-bundling + parity; `src/aeat/application/storage/calc_sheets/`.
 - [ ] `W04.P05.S21` - Honest per-modelo coverage report (parity/evidence status; `no implied parity beyond manifest backing); `src/aeat/application/storage/calc_sheets/`.
