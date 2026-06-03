@@ -23,6 +23,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ......core.hashing import sha256_hex as _sha256_hex
 from ......core.money import round_to_cents as _round_to_cents
 from .._errors import AeatExportFormatError
 from ._record_spec import (
@@ -69,6 +70,11 @@ class ParsedRecord(BaseModel):
 _CRLF = b"\r\n"
 
 
+def _wire_digest(raw: bytes) -> str:
+    """Return a short digest for malformed wire bytes without exposing them."""
+    return f"sha256:{_sha256_hex(raw)[:8]}"
+
+
 def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
     """Decode a zero-padded cents string into a 2-decimal :class:`Decimal`.
 
@@ -112,12 +118,34 @@ def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
 
 def _decode_date(raw: bytes, fmt: DateFmt) -> date:
     """Decode a fixed-width ASCII date payload per ``fmt``."""
-    text = raw.decode("ascii").strip()
-    match fmt:
-        case DateFmt.YYYYMMDD:
-            return datetime.strptime(text, "%Y%m%d").date()
-        case DateFmt.DDMMYYYY:
-            return datetime.strptime(text, "%d%m%Y").date()
+    try:
+        text = raw.decode("ascii").strip()
+    except UnicodeDecodeError as exc:
+        failure = type(exc).__name__
+    else:
+        failure = None
+    if failure is not None:
+        raise AeatExportFormatError(
+            f"DATE field contains non-ASCII wire bytes; length={len(raw)} "
+            f"digest={_wire_digest(raw)} failure={failure}"
+        )
+    try:
+        match fmt:
+            case DateFmt.YYYYMMDD:
+                return datetime.strptime(text, "%Y%m%d").date()
+            case DateFmt.DDMMYYYY:
+                return datetime.strptime(text, "%d%m%Y").date()
+            case _:
+                raise AeatExportFormatError(f"unsupported DATE format {fmt!s}")
+    except ValueError as exc:
+        failure = type(exc).__name__
+    else:
+        failure = None
+    if failure is not None:
+        raise AeatExportFormatError(
+            f"DATE field does not match {fmt.value}; length={len(raw)} "
+            f"digest={_wire_digest(raw)} failure={failure}"
+        )
 
 
 def deserialise(
@@ -223,7 +251,8 @@ def _decode_reserved_field(
     expected = spec.literal_value.encode(encoding).ljust(spec.length, b" ")
     if raw != expected and raw != spec.literal_value.encode(encoding):
         raise AeatExportFormatError(
-            f"RESERVED field {spec.field_id!r} expected {spec.literal_value!r}; got {raw!r}",
+            f"RESERVED field {spec.field_id!r} expected literal length {spec.length}; "
+            f"got length={len(raw)} digest={_wire_digest(raw)}",
         )
     field_values[spec.field_id] = spec.literal_value
 
@@ -236,7 +265,19 @@ def _decode_currency_field(
 ) -> None:
     """Decode a CURRENCY field and mirror the value into casilla_values when bound."""
     inline_sign = spec.signed_mode is SignedMode.INLINE_SIGN
-    value = _decode_currency(raw, inline_sign=inline_sign)
+    try:
+        value = _decode_currency(raw, inline_sign=inline_sign)
+    except AeatExportFormatError:
+        raise
+    except (UnicodeDecodeError, ValueError) as exc:
+        failure = type(exc).__name__
+    else:
+        failure = None
+    if failure is not None:
+        raise AeatExportFormatError(
+            f"CURRENCY field {spec.field_id!r} has invalid wire bytes; "
+            f"length={len(raw)} digest={_wire_digest(raw)} failure={failure}"
+        )
     field_values[spec.field_id] = value
     if spec.casilla_id is not None:
         casilla_values[spec.casilla_id] = value
@@ -251,7 +292,17 @@ def _decode_text_field(spec: RecordFieldSpec, raw: bytes, encoding: FicheroBoeEn
     needs the padded form. This mirrors :func:`_decode_currency` which
     also collapses all-zero CURRENCY fields to ``Decimal("0.00")``.
     """
-    text = raw.decode(encoding)
+    try:
+        text = raw.decode(encoding)
+    except UnicodeDecodeError as exc:
+        failure = type(exc).__name__
+    else:
+        failure = None
+    if failure is not None:
+        raise AeatExportFormatError(
+            f"{spec.kind.value} field {spec.field_id!r} cannot be decoded with {encoding}; "
+            f"length={len(raw)} digest={_wire_digest(raw)} failure={failure}"
+        )
     if spec.pad_char == " ":
         return text.rstrip(" ") if spec.justification.value == "left" else text.lstrip(" ")
     if spec.pad_char == "0":
@@ -353,16 +404,14 @@ def deserialise_envelope(
             if cid in merged and merged[cid] != value:
                 raise AeatExportFormatError(
                     f"casilla {cid!r} appears with divergent values across "
-                    f"segments (got {merged[cid]} then {value}); record spec "
-                    f"must not duplicate casilla_id across pages."
+                    f"segments; record spec must not duplicate casilla_id across pages."
                 )
             merged[cid] = value
         for fid, fvalue in record.field_values.items():
             if fid in merged_fields and merged_fields[fid] != fvalue:
                 raise AeatExportFormatError(
                     f"field {fid!r} appears with divergent values across "
-                    f"segments (got {merged_fields[fid]!r} then {fvalue!r}); "
-                    f"record spec must not duplicate field_id across pages "
+                    f"segments; record spec must not duplicate field_id across pages "
                     f"unless the fields carry identical values."
                 )
             merged_fields[fid] = fvalue
