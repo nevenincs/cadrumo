@@ -51,7 +51,7 @@ def _poll_interval_seconds() -> float:
 
     Resolved per-call via :func:`load_settings` so an
     :func:`override_settings` block (test scope) is honoured. Replaces a
-    module-level constant that snapshotted ``Settings()`` at import time
+    module-level constant that snapshotted settings at import time
     and could not be overridden after the module had loaded.
     """
     return _load_settings().aeat_bucket_lock_poll_interval_s
@@ -146,6 +146,30 @@ def _unlink_lockfile_if_present(target: Path, *, reason: str) -> None:
         _log.debug("bucket lockfile unlink skipped missing file reason=%s", reason)
 
 
+def _cleanup_created_lockfile(target: Path, *, reason: str) -> None:
+    """Best-effort cleanup for a lockfile that was created but not acquired."""
+    try:
+        _unlink_lockfile_if_present(target, reason=reason)
+    except OSError as exc:
+        _log.debug(
+            "bucket lockfile create cleanup failed reason=%s error=%s",
+            reason,
+            type(exc).__name__,
+        )
+
+
+def _write_lockfile_pid(fd: int, pid: int) -> None:
+    """Write the PID payload fully to an already-created lockfile descriptor."""
+    payload = f"{pid}\n".encode("ascii")
+    view = memoryview(payload)
+    offset = 0
+    while offset < len(view):
+        written = os.write(fd, view[offset:])
+        if written <= 0:
+            raise OSError("bucket lockfile pid write made no progress")
+        offset += written
+
+
 def _try_create_lock(target: Path, pid: int) -> bool:
     """Attempt the atomic ``O_EXCL`` lockfile creation.
 
@@ -157,17 +181,21 @@ def _try_create_lock(target: Path, pid: int) -> bool:
         fd = os.open(target, flags, _LOCKFILE_MODE)
     except FileExistsError:
         return False
+    write_failed = False
     try:
-        payload = f"{pid}\n".encode("ascii")
-        view = memoryview(payload)
-        offset = 0
-        while offset < len(view):
-            written = os.write(fd, view[offset:])
-            if written <= 0:
-                raise OSError("bucket lockfile pid write made no progress")
-            offset += written
+        _write_lockfile_pid(fd, pid)
+    except OSError:
+        write_failed = True
+        _cleanup_created_lockfile(target, reason="pid_write_failure")
+        raise
     finally:
-        os.close(fd)
+        try:
+            os.close(fd)
+        except OSError as exc:
+            _log.debug("bucket lockfile close failed after create error=%s", type(exc).__name__)
+            if not write_failed:
+                _cleanup_created_lockfile(target, reason="pid_close_failure")
+                raise
     return True
 
 
