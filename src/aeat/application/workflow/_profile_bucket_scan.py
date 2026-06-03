@@ -138,6 +138,45 @@ def read_profile_bucket_by_id(profile_id: str, *, root: Path | None = None) -> P
     return ProfileBucketPointer(bucket_id=manifest.bucket_id, label=manifest.label, status=manifest.status)
 
 
+def resolve_profile_bucket(
+    identifier: str, *, root: Path | None = None, include_tombstoned: bool = False
+) -> ProfileBucketPointer | None:
+    """Resolve a profile identifier that may be a UUID bucket id OR a display label.
+
+    The active-profile precedence chain (``AEAT_ACTIVE_PROFILE`` env var, the
+    ``active-profile`` pointer file) and operator input both carry whichever
+    identifier the operator knows. An operator addresses a profile by the
+    label they chose at ``profile create`` — they never see the immutable
+    UUIDv4 bucket id — so ``AEAT_ACTIVE_PROFILE=<label>`` is a natural,
+    intended operator action. Resolving the value as a UUID bucket directory
+    only would hard-miss on a label (``buckets/<label>`` does not exist),
+    refusing every profile-scoped command with a "no manifest" error.
+
+    This resolver tries the UUID-direct lookup first (the canonical bucket
+    directory key), then falls back to the manifest-scan-by-label. A label is
+    unique among live profiles (the name-uniqueness guard), so the fallback is
+    unambiguous. Returns ``None`` when the identifier matches neither a bucket
+    UUID nor a live profile label.
+
+    Args:
+        identifier: A profile UUID bucket id or an operator display label.
+        root: Optional AEAT root override. When ``None``, resolves
+            ``Settings.aeat_local_storage_root`` via ``load_settings``.
+        include_tombstoned: Forwarded to the label fallback so inspect
+            surfaces can resolve a deleted profile by name; the UUID-direct
+            lookup already resolves regardless of status.
+
+    Returns:
+        A :class:`ProfileBucketPointer` for the resolved profile, or ``None``.
+    """
+    if not identifier or not identifier.strip():
+        return None
+    by_id = read_profile_bucket_by_id(identifier, root=root)
+    if by_id is not None:
+        return by_id
+    return read_profile_bucket(identifier, root=root, include_tombstoned=include_tombstoned)
+
+
 def list_profile_buckets(
     *, root: Path | None = None, include_tombstoned: bool = False
 ) -> dict[str, ProfileBucketPointer]:
@@ -276,4 +315,5 @@ __all__ = [
     "list_profile_buckets",
     "read_profile_bucket",
     "read_profile_bucket_by_id",
+    "resolve_profile_bucket",
 ]
