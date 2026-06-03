@@ -72,7 +72,7 @@ def resolve_active_tax_id(profile_id: str) -> str:
     identity tax-id fact. Used by the orchestrator to feed
     `check_unsecured_mode_safety`.
     """
-    from ....application.user_profile._orchestration import build_lifecycle_service, fact_value
+    from ....application.user_profile import build_lifecycle_service, fact_value
     from ....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
 
     pointer = read_profile_bucket_by_id(profile_id)
