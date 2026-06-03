@@ -19,7 +19,8 @@ Closed `AFR-054` for the bucket error hierarchy.
 - Verified all bucket errors derive from the secure-storage AEAT exception hierarchy.
 - Verified bucket lifecycle and recovery errors use registry-backed translated message keys.
 - Verified the module is an error type surface only and does not perform manifest IO, master-key access, settings/env lookup, or exception swallowing.
-- Closed `S156` through `vaultspec-core vault plan step check`.
+- Hardened the bucket error registry tests so `BucketValidationError` is covered by the same inheritance, registered-code, and distinct-code assertions as the other exported bucket errors.
+- Closed `S156` through `vaultspec-core vault plan step check`, then manually repaired `AFR-054` to `closed` after the CLI updated the checkbox but left the AFR register row pending.
 
 ## Outcome
 
