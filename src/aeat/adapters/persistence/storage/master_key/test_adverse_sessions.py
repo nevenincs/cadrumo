@@ -25,7 +25,12 @@ from . import (
     FileFallbackMasterKeyProvider,
     activate_master_key_provider,
 )
-from ._active_session import activate_session, get_active_master_key, has_active_bucket_session
+from ._active_session import (
+    NoActiveBucketSessionError,
+    activate_session,
+    get_active_master_key,
+    has_active_bucket_session,
+)
 from ._bucket_session import BucketSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -33,6 +38,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 _OPENED_AT = datetime(2026, 6, 2, 8, 0, 0, tzinfo=UTC)
 _KEK = bytes(range(32))
 _DEK = bytes(range(32, 64))
+
+
+def test_missing_bucket_session_raises_translated_storage_error() -> None:
+    with pytest.raises(NoActiveBucketSessionError) as exc_info:
+        get_active_master_key()
+
+    assert exc_info.value.translated_message == "errors.refused.refused_storage_master_key_no_active_session"
+    assert "aeat config profile switch NAME" in str(exc_info.value)
 
 
 def test_locked_bucket_session_refuses_active_master_key_reads() -> None:
