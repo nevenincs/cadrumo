@@ -74,9 +74,9 @@ from ...domain.categories import (
     SpendingCategory,
     SpendingCategoryFamily,
 )
+from ...domain.contribuyente._renta_codes import FiscalResidency
 from ...domain.deadlines._models import IrpfSpecialRegime
 from ...domain.iva._schema import EUMemberState, IvaCategory
-from ...domain.profile._renta_codes import FiscalResidency
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -3202,7 +3202,7 @@ def inventory_movement_add(
 ) -> None:
     """Append one inventory movement (purchase, sale, or adjustment) to an actividad ledger."""
     from ...application.inventory import InventoryMovementCommand
-    from ...domain.profile.inventory import MovementKind
+    from ...domain.contribuyente.inventory import MovementKind
 
     try:
         kind_enum = MovementKind(kind)

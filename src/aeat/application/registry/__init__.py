@@ -27,7 +27,7 @@ from ...core.resources import bundled_path as _bundled_path
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check required by Modelo 100 snapshots.
-from ...domain import renta as _renta_snapshot_checks  # noqa: F401
+from ...domain import renta as _renta_snapshot_checks
 from ...domain.calculations.registry import AeatNifIvaCheckerOracle as _AeatNifIvaCheckerOracle
 from ...domain.calculations.registry import (
     CrossReferenceApplicabilityDeclaracion as _CrossReferenceApplicabilityDeclaracion,

@@ -1,6 +1,6 @@
 """Inventory noun-group application service.
 
-Wraps the rich :mod:`aeat.domain.profile.inventory` substrate (FIFO /
+Wraps the rich :mod:`aeat.domain.contribuyente.inventory` substrate (FIFO /
 PMP valuation per LIS art. 17.1) with a bucket-scoped persistence
 layer and canonical operator verbs:
 

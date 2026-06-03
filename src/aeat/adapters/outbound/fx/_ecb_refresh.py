@@ -14,6 +14,7 @@ from __future__ import annotations
 import urllib.request
 from pathlib import Path
 
+from ...core.external_constants import UTF_8_ENCODING
 from ._ecb_provider import _BUNDLED_RATES, _parse_eurofxref
 
 ECB_HIST_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml"
@@ -37,12 +38,12 @@ def refresh_bundled_ecb_rates(
     # Validate by parsing before persisting; a malformed download must not
     # clobber a working bundle.
     tmp = target.with_suffix(".xml.tmp")
-    tmp.write_text(xml, encoding="utf-8")
+    tmp.write_text(xml, encoding=UTF_8_ENCODING)
     parsed = _parse_eurofxref(tmp)
     if not parsed:
         tmp.unlink(missing_ok=True)
         raise ValueError("refreshed ECB document contained no dated rate sets")
-    target.write_text(xml, encoding="utf-8")
+    target.write_text(xml, encoding=UTF_8_ENCODING)
     tmp.unlink(missing_ok=True)
     return len(parsed)
 
@@ -50,8 +51,8 @@ def refresh_bundled_ecb_rates(
 def _fetch(url: str) -> str:
     if not url.startswith("https://"):
         raise ValueError(f"refusing non-https ECB url: {url!r}")
-    with urllib.request.urlopen(url, timeout=30) as response:  # noqa: S310 - fixed https ECB host
-        return response.read().decode("utf-8")
+    with urllib.request.urlopen(url, timeout=30) as response:
+        return response.read().decode(UTF_8_ENCODING)
 
 
 __all__ = ["ECB_HIST_URL", "refresh_bundled_ecb_rates"]

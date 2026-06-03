@@ -3,8 +3,8 @@
 Defines :class:`TaxResidenceProfileError` and its concrete failures
 surfaced to RENTA verification, plus :class:`ProfileKeysRegistrationError`
 for the profile-key registry. The ledger error hierarchies live with their
-records in :mod:`aeat.domain.profile.assets` (asset) and
-:mod:`aeat.domain.profile.inventory` (inventory and amortizacion). Every
+records in :mod:`aeat.domain.contribuyente.assets` (asset) and
+:mod:`aeat.domain.contribuyente.inventory` (inventory and amortizacion). Every
 class derives from :class:`aeat.core.errors.AeatError` so the shared
 error-code registration hook applies.
 """

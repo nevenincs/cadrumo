@@ -65,6 +65,7 @@ from ...domain.calculations.registry import (
     input_casilla_alias_map,
     materialize_relation_binding_values,
 )
+from ...domain.contribuyente._ccaa import CCAA
 from ...domain.deadlines import DeadlineEngine, FiscalResidency, IVARegime, TaxpayerProfile
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import (
@@ -120,7 +121,6 @@ from ...domain.modelos._work_unit import (
     derive_work_unit_id,
 )
 from ...domain.period import parse_canonical_period, period_end_date
-from ...domain.contribuyente._ccaa import CCAA
 from ...domain.submission import ModeloDraftStatus, SubmissionEngine
 from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 from ..aggregation._ledger_filing_snapshot import compute_ledger_filing_snapshot

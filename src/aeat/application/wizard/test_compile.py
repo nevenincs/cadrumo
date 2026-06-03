@@ -15,7 +15,7 @@ import pytest
 from pydantic import BaseModel, ConfigDict
 
 from ...core.i18n import Translatable as tr
-from ...domain.profile._keys import ProfileKeyRequirement
+from ...domain.contribuyente._keys import ProfileKeyRequirement
 from ._catalogue import WIZARD_FLOWS
 from ._compiler import compile_profile_keys
 from ._errors import WizardCompileError

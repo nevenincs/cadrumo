@@ -23,7 +23,7 @@ from ...domain.buckets import (
     append_bucket_event,
 )
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.profile.inventory import (
+from ...domain.contribuyente.inventory import (
     InventoryLedger,
     InventoryLedgerDocument,
     InventoryValuationResult,

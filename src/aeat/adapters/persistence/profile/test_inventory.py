@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.profile.inventory import (
+from ....domain.contribuyente.inventory import (
     InventoryLedger,
     InventoryLedgerError,
     MovementKind,

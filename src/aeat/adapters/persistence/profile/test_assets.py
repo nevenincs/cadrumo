@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.profile.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
+from ....domain.contribuyente.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
 

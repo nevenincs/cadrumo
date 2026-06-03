@@ -6,8 +6,8 @@ removals surface as test failures.  Mirrors the
 :mod:`aeat.domain.iva.test_categories` pattern.
 
 The former ``RentaCCAA`` enum has been removed; the canonical CCAA type is
-:class:`aeat.domain.profile.CCAA`.  Tests for that enum (including the
-ISO-code mapping) live in :mod:`aeat.domain.profile.test_model`.
+:class:`aeat.domain.contribuyente.CCAA`.  Tests for that enum (including the
+ISO-code mapping) live in :mod:`aeat.domain.contribuyente.test_model`.
 """
 
 from __future__ import annotations

@@ -43,6 +43,8 @@ from ....domain.buckets import (
 )
 from ....domain.calculations.registry import RegistryModeloObservation, RegistrySnapshotRef
 from ....domain.categories import SpendingCategory
+from ....domain.contribuyente.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
+from ....domain.contribuyente.inventory import InventoryLedger, ValuationMethod
 from ....domain.filing import (
     AmendmentKind,
     CasillaChange,
@@ -89,8 +91,6 @@ from ....domain.modelos._verification_report import (
 )
 from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ....domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
-from ....domain.profile.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
-from ....domain.profile.inventory import InventoryLedger, ValuationMethod
 from ....domain.submission import (
     ModeloDraftStatus,
     ModeloPresentado,

@@ -851,7 +851,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile._errors.TaxResidenceProfileError",
+        "aeat.domain.contribuyente._errors.TaxResidenceProfileError",
         ErrorCode(
             code="ERROR_PROFILE_TAX_RESIDENCE",
             category=ErrorCategory.ERROR,
@@ -862,7 +862,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile._errors.ProfileNotConfiguredError",
+        "aeat.domain.contribuyente._errors.ProfileNotConfiguredError",
         ErrorCode(
             code="REFUSED_PROFILE_NOT_CONFIGURED",
             category=ErrorCategory.REFUSED,
@@ -873,7 +873,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile._errors.ForalRegimeError",
+        "aeat.domain.contribuyente._errors.ForalRegimeError",
         ErrorCode(
             code="REFUSED_PROFILE_FORAL_REGIME",
             category=ErrorCategory.REFUSED,
@@ -1337,7 +1337,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile._errors.ProfileValidationError",
+        "aeat.domain.contribuyente._errors.ProfileValidationError",
         ErrorCode(
             code="ERROR_PROFILE_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -1348,7 +1348,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile._errors.ProfileKeysRegistrationError",
+        "aeat.domain.contribuyente._errors.ProfileKeysRegistrationError",
         ErrorCode(
             code="INTERNAL_PROFILE_KEYS_REGISTRATION",
             category=ErrorCategory.INTERNAL,
@@ -1799,7 +1799,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.assets.AssetRecordError",
+        "aeat.domain.contribuyente.assets.AssetRecordError",
         ErrorCode(
             code="ERROR_PROFILE_ASSET_RECORD",
             category=ErrorCategory.ERROR,
@@ -1810,7 +1810,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.assets.AssetValidationError",
+        "aeat.domain.contribuyente.assets.AssetValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_ASSET_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -1821,7 +1821,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.inventory.AmortizacionLedgerError",
+        "aeat.domain.contribuyente.inventory.AmortizacionLedgerError",
         ErrorCode(
             code="ERROR_PROFILE_AMORTIZATION_LEDGER",
             category=ErrorCategory.ERROR,
@@ -1832,7 +1832,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.inventory.InventoryLedgerError",
+        "aeat.domain.contribuyente.inventory.InventoryLedgerError",
         ErrorCode(
             code="ERROR_PROFILE_INVENTORY_LEDGER",
             category=ErrorCategory.ERROR,
@@ -1843,7 +1843,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.inventory.InventoryValidationError",
+        "aeat.domain.contribuyente.inventory.InventoryValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_INVENTORY_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -1854,7 +1854,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.inventory.LIFOForbiddenError",
+        "aeat.domain.contribuyente.inventory.LIFOForbiddenError",
         ErrorCode(
             code="REFUSED_PROFILE_LIFO_FORBIDDEN",
             category=ErrorCategory.REFUSED,
@@ -1865,7 +1865,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.inventory.BasisCapExceededError",
+        "aeat.domain.contribuyente.inventory.BasisCapExceededError",
         ErrorCode(
             code="REFUSED_PROFILE_BASIS_CAP_EXCEEDED",
             category=ErrorCategory.REFUSED,

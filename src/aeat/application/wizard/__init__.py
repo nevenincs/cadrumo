@@ -19,4 +19,4 @@ seeded before first access. The domain therefore never pulls upward into the
 application layer to compile its keys.
 """
 
-from . import _compiler as _compiler  # noqa: F401  (eager registration side-effect)
+from . import _compiler as _compiler
