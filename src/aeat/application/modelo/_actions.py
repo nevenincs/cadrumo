@@ -343,12 +343,13 @@ class ModeloWorkflowGateError(ModeloError):
         # a verified-complete revision whose AEAT filing-obligation window is not
         # open at the current clock cannot be marked internally filed. The generic
         # gate suggestion (`work list`) does not signpost the local finish line, so
-        # for this abort code the suggestion points at `work export` — exporting the
-        # verified-complete revision to a fichero-BOE artefact is the local finish
-        # line and does NOT require an open filing window or this `file` step.
+        # for this abort code the suggestion points at `modelo export` (a sibling of
+        # `work`, NOT a `work` subcommand) — exporting the verified-complete revision
+        # to a fichero-BOE artefact is the local finish line and does NOT require an
+        # open filing window or this `file` step.
         suggestion: str | None = None
         if result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION:
-            suggestion = "aeat app modelo work export <work-unit-id> --output <path>"
+            suggestion = "aeat app modelo export <work-unit-id> --output <path>"
         super().__init__(
             summary,
             context={

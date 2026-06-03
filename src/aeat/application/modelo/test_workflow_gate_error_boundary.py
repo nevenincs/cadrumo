@@ -81,11 +81,13 @@ def test_gate_error_text_carries_no_raw_python_repr() -> None:
 
     # The clean operator refusal and next-step hint survive. For a
     # NO_PENDING_OBLIGATION abort the next-step hint signposts the local
-    # finish line (`work export`) rather than the generic `work list`, so a
+    # finish line — the real verb `aeat app modelo export` (a sibling of `work`,
+    # NOT a `work` subcommand) rather than the generic `work list` — so a
     # newcomer who cannot file a verified-complete revision is told how to
-    # finish locally instead of dead-ending.
+    # finish locally instead of dead-ending on a non-existent command.
     assert "Refused. No pending filing obligation for this profile" in rendered
-    assert "aeat app modelo work export" in rendered
+    assert "aeat app modelo export" in rendered
+    assert "aeat app modelo work export" not in rendered
 
     # No raw Python object repr of any shape reaches the operator.
     for leak in (

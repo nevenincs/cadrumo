@@ -527,7 +527,7 @@ class WorkflowEngine:
                 "No pending filing obligation for this modelo/period at the current date "
                 "(the AEAT filing-obligation window is not open). Filing-to-fichero does "
                 "not require this step: export the verified-complete revision with "
-                "'aeat app modelo work export' — that is the local finish line. 'work file' "
+                "'aeat app modelo export' — that is the local finish line. 'work file' "
                 "is the optional internal mark-as-filed step for when the obligation window is open."
             )
             steps.append(
