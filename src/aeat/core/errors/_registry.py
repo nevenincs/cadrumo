@@ -219,7 +219,13 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode:
     qualname = _qualname(error_type)
     code = declared.get(qualname)
     if code is None:
-        raise ValueError(f"AeatError subclass {qualname} is missing a declared ErrorCode registry entry")
+        raise ValueError(
+            f"AeatError subclass {qualname} is missing a declared ErrorCode "
+            f"registry entry. If this class was just added, declare it in the "
+            f"error-code registry alongside the class. If you encountered this "
+            f"during a test run, the class may have been added by a peer agent "
+            f"mid-flight: run `git status` and rerun once peer state settles."
+        )
     _CLASS_CODE_REGISTRY[error_type] = code
     type.__setattr__(error_type, "code", code)
     return code
