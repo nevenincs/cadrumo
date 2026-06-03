@@ -43,6 +43,9 @@ def resolve_export_layout(snapshot: RegistrySnapshot, layout_id: str | None = No
 
     Args:
         snapshot: The :class:`RegistrySnapshot` to resolve the layout from.
+        layout_id: Identifier of the export layout to resolve. May be ``None``
+            when the revision declares exactly one layout; otherwise required
+            to disambiguate.
 
     Returns:
         The :class:`ResolvedExportLayout` for the selected layout.
