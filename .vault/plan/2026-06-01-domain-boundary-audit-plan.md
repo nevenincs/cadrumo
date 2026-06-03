@@ -328,6 +328,7 @@ CLI entrypoint modules and their tests import the resolvers and NoActiveProfileE
 Assert no module outside the workflow package imports the resolvers from application.workflow._models; suite green; import-linter contracts unchanged.
 
 - [x] `W10.P33.S103` - Verify: rg confirms no module outside application/workflow imports resolve_active_bucket_id/require_active_bucket_id from application.workflow._models; `full pytest suite + ty + lint-imports green; the AEAT-layered import-linter warning count does not regress; `src/aeat/`.
+- [ ] `W10.P33.S109` - Investigate the 13 pre-existing test_cli_surface ledger-lifecycle 'No active bucket session is open' failures (test_app_ledger_lifecycle_reset_*, test_app_ledger_import_reimport_*). Proven unrelated to W10 (fail identically on the old import) but only 1 of 13 individually confirmed; confirm the shared root cause (master-key session not seen by ledger storage in the lifecycle round-trip helper) and either fix or file as a tracked storage-runtime/session-setup flake; `src/aeat/entrypoints/cli/test_cli_surface.py`.
 
 ## Wave `W11` - Secure-storage public-surface import purity (D4/D5)
 
@@ -356,6 +357,7 @@ The ~15 domain repositories importing from storage.sql/.errors/.envelope submodu
 Assert domain modules import secure-storage primitives only from the storage package top-level (no underscore-private submodule reach-ins); suite green.
 
 - [x] `W11.P37.S107` - Verify: rg confirms domain modules import secure-storage primitives only from the top-level storage package (no .sql/.errors/.envelope/_envelope underscore reach-ins beyond sanctioned ones); `full pytest suite + ty green; D4 ratified in the ADR with these import-surface cleanups recorded; `src/aeat/domain/`.
+- [ ] `W11.P37.S108` - Prune/update the stale .importlinter ignore entries that W11's repoint left unmatched: the domain repo edges now target the top-level package, so entries naming aeat.adapters.persistence.storage.envelope / .sql / .envelope._envelope for filing/justificante/submission/buckets/transactions/invoices _repository are unmatched (the 15->22 unmatched-ignore warning bump). Update each to the current '-> aeat.adapters.persistence.storage' edge (or delete if the new edge is deferred/unflagged); `verify lint-imports warning count drops with no new violation. Delicate shared-file edit — verify per-edge and avoid peer-WIP collision; `.importlinter`.
 
 ## Description
 
