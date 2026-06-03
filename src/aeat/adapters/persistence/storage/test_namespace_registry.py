@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from ....core.classification import SensitivityClass
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.paths import PROJECT_ROOT
 from . import (
     AEAT_BROWSER_SESSION_NAMESPACE,
@@ -53,7 +54,7 @@ from . import (
     StorageNamespaceScope,
     StorageRemoteMirrorPolicy,
 )
-from ._namespace_registry import StoragePathDefinition, StoragePathKind
+from ._namespace_registry import StoragePathDefinition, StoragePathKind, secure_object_logical_path
 from .errors import NamespaceRegistryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -364,7 +365,7 @@ def _make_namespace_definition(**overrides: object) -> SecureObjectNamespaceDefi
         "scope": StorageNamespaceScope.PROFILE_LOCAL,
     }
     defaults.update(overrides)
-    return SecureObjectNamespaceDefinition(**defaults)  # type: ignore[arg-type]
+    return SecureObjectNamespaceDefinition.model_validate(defaults)
 
 
 def test_namespace_key_with_surrounding_whitespace_raises_namespace_registry_error() -> None:
@@ -438,7 +439,7 @@ def _make_path_definition(**overrides: object) -> StoragePathDefinition:
         "owner": "aeat.test",
     }
     defaults.update(overrides)
-    return StoragePathDefinition(**defaults)  # type: ignore[arg-type]
+    return StoragePathDefinition.model_validate(defaults)
 
 
 def test_path_key_with_whitespace_raises_namespace_registry_error() -> None:
@@ -499,6 +500,16 @@ def test_duplicate_path_keys_raise_namespace_registry_error() -> None:
     assert any("duplicate storage path registry key" in str(e) for e in errors)
 
 
+def test_secure_object_logical_path_uses_registered_sql_grammar() -> None:
+    path_definition = STORAGE_NAMESPACE_REGISTRY.path_by_key("secure_objects_table")
+
+    marker = secure_object_logical_path("aeat.persistence.profile.assets", "default")
+
+    assert path_definition.kind is StoragePathKind.LOGICAL_SQL
+    assert path_definition.grammar == "db://secure_objects/<namespace>/<object_key>"
+    assert marker.as_posix() == "db:/secure_objects/aeat.persistence.profile.assets/default"
+
+
 def test_every_discovered_production_secure_object_namespace_is_registered() -> None:
     registered = {definition.namespace for definition in STORAGE_NAMESPACE_REGISTRY.namespaces}
     discovered = _discover_production_secure_object_namespaces()
@@ -539,7 +550,7 @@ _SECURE_BOUND_CLASS_NAMES = {
 def _discover_production_secure_object_namespaces() -> set[str]:
     namespaces: set[str] = set()
     for path in _iter_aeat_production_sources():
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        tree = ast.parse(path.read_text(encoding=UTF_8_ENCODING), filename=str(path))
         bindings = _collect_namespace_value_bindings(tree)
         namespaces.update(_namespace_values_from_assignments(tree, bindings))
         for node in ast.walk(tree):

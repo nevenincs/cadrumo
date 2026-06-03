@@ -127,6 +127,7 @@ from ._namespace_registry import (
     StoragePathDefinition,
     StoragePathKind,
     StorageRemoteMirrorPolicy,
+    secure_object_logical_path,
 )
 from ._path_safety import safe_record_path, safe_repository_id, safe_subpath
 from ._rotation import (
@@ -444,6 +445,7 @@ __all__ = [
     "save_encrypted_envelope",
     "save_envelope",
     "save_wrapped_master_key",
+    "secure_object_logical_path",
     "session_scope",
     "unwrap_master_key",
     "verify_corpus_manifest",

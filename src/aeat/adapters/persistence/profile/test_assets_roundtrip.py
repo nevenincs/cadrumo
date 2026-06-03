@@ -23,6 +23,7 @@ from pathlib import Path
 import pydantic
 import pytest
 
+from ....core.external_constants import UTF_8_ENCODING
 from ....domain.contribuyente.assets import (
     AmortizacionEntry,
     AmortizacionLedger,
@@ -133,7 +134,7 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
 
     from ...persistence.storage.sql._orm import SecureObjectRow
     from ...persistence.storage.sql.session import session_scope
-    from .assets import _ASSETS_NAMESPACE, _LEDGER_OBJECT_KEY
+    from .assets import _ASSETS_NAMESPACE, _ASSETS_OBJECT_KEY
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-rt-dropped") as profile:
         engine = get_engine(profile.settings)
@@ -144,10 +145,10 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
         with session_scope(engine) as session:
             stmt = select(SecureObjectRow).where(
                 SecureObjectRow.namespace == _ASSETS_NAMESPACE,
-                SecureObjectRow.object_key == _LEDGER_OBJECT_KEY,
+                SecureObjectRow.object_key == _ASSETS_OBJECT_KEY,
             )
             row = session.execute(stmt).scalar_one()
-            document = _json.loads(row.payload.decode("utf-8"))
+            document = _json.loads(row.payload.decode(UTF_8_ENCODING))
             asset_dict = document["assets"][0]
             assert asset_dict.get("cost_basis"), (
                 "fixture must serialise cost_basis onto the asset for this proof test to be meaningful"
@@ -156,7 +157,7 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
             # check fails ("cost_basis must equal taxable_base plus
             # non-deductible IVA").
             asset_dict["cost_basis"] = "5525.00"
-            row.payload = _json.dumps(document).encode("utf-8")
+            row.payload = _json.dumps(document).encode(UTF_8_ENCODING)
 
         with pytest.raises(
             pydantic.ValidationError,
@@ -185,7 +186,7 @@ def test_assets_ledger_missing_cost_basis_surfaces_at_load(
 
     from ...persistence.storage.sql._orm import SecureObjectRow
     from ...persistence.storage.sql.session import session_scope
-    from .assets import _ASSETS_NAMESPACE, _LEDGER_OBJECT_KEY
+    from .assets import _ASSETS_NAMESPACE, _ASSETS_OBJECT_KEY
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-rt-missing") as profile:
         engine = get_engine(profile.settings)
@@ -195,14 +196,14 @@ def test_assets_ledger_missing_cost_basis_surfaces_at_load(
         with session_scope(engine) as session:
             stmt = select(SecureObjectRow).where(
                 SecureObjectRow.namespace == _ASSETS_NAMESPACE,
-                SecureObjectRow.object_key == _LEDGER_OBJECT_KEY,
+                SecureObjectRow.object_key == _ASSETS_OBJECT_KEY,
             )
             row = session.execute(stmt).scalar_one()
-            document = _json.loads(row.payload.decode("utf-8"))
+            document = _json.loads(row.payload.decode(UTF_8_ENCODING))
             asset_dict = document["assets"][0]
             assert "cost_basis" in asset_dict
             del asset_dict["cost_basis"]
-            row.payload = _json.dumps(document).encode("utf-8")
+            row.payload = _json.dumps(document).encode(UTF_8_ENCODING)
 
         with pytest.raises(pydantic.ValidationError, match="cost_basis"):
             assets_repo.load()
