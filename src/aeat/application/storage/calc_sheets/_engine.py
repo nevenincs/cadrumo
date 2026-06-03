@@ -29,12 +29,15 @@ from ._records import (
     OperatorInputs,
     RelationValues,
     SheetCellAddress,
+    SheetAnchor,
     SheetCellConstraint,
     SheetExportMetadata,
     SheetExportPlan,
     SheetFormulaCell,
     SheetGuideContent,
+    SheetNumberFormat,
     SheetProtectedRange,
+    SheetSectionHeader,
     SheetProvenanceRow,
     SheetRowSet,
     SheetRowSetColumn,
@@ -196,9 +199,16 @@ def _value_cells_for_entradas(
                 role="label",
             )
         )
+        binding = binding_row.binding
+        # Numeric bindings live in ``binding_cells``; date bindings (consumed by
+        # the ``age_at_year_end`` op) live in ``date_binding_cells``. Both render
+        # as an operator-input Entradas cell.
+        binding_address = (
+            layout.binding_cells[binding] if binding in layout.binding_cells else layout.date_binding_cells[binding]
+        )
         cells.append(
             SheetValueCell(
-                address=layout.binding_cells[binding_row.binding],
+                address=binding_address,
                 value=None,
                 role="operator_input",
             )
@@ -680,6 +690,95 @@ def _protected_ranges(layout: SheetLayout) -> tuple[SheetProtectedRange, ...]:
     )
 
 
+def _number_format_pattern(data_type: str) -> tuple[Literal["money", "integer", "percentage"], str] | None:
+    if data_type == "money":
+        return ("money", "#,##0.00")
+    if data_type == "integer":
+        return ("integer", "0")
+    if data_type == "ratio":
+        return ("percentage", "0.00%")
+    return None
+
+
+def _number_formats(
+    revision: ModeloRevision,
+    layout: SheetLayout,
+) -> tuple[SheetNumberFormat, ...]:
+    formats: list[SheetNumberFormat] = []
+    for casilla in revision.casillas:
+        pattern = _number_format_pattern(casilla.data_type)
+        if pattern is None:
+            continue
+        data_type, format_pattern = pattern
+        if casilla.input_kind == InputKind.COMPUTED:
+            address = layout.calculos_cells.get(casilla.id)
+        else:
+            address = layout.entradas_cells.get(casilla.id)
+        if address is None:
+            continue
+        formats.append(
+            SheetNumberFormat(
+                address=address,
+                casilla=casilla.id,
+                data_type=data_type,
+                pattern=format_pattern,
+            )
+        )
+    return tuple(formats)
+
+
+def _section_headers(layout: SheetLayout) -> tuple[SheetSectionHeader, ...]:
+    """Mark the first label cell of each casilla section for bold styling.
+
+    Walks the Entradas + Cálculos rows; whenever the section path changes, the
+    column-A cell of that first row becomes a section header (the label text is
+    already written by the value-cell pass — the facet only drives the styling).
+    """
+    headers: list[SheetSectionHeader] = []
+    for rows in (layout.entradas_rows, layout.calculos_rows):
+        previous: tuple[str, ...] | None = None
+        for row in rows:
+            section = tuple(row.section_path)
+            if section and section != previous:
+                headers.append(
+                    SheetSectionHeader(
+                        address=SheetCellAddress.at(row.tab, row.row, 1),
+                        text=" › ".join(section),
+                    )
+                )
+                previous = section
+    return tuple(headers)
+
+
+def _anchors(layout: SheetLayout) -> tuple[SheetAnchor, ...]:
+    """Emit explicit start (Entradas opening) + final (resultado) anchors.
+
+    The start anchor marks the first operator-input row; the final anchor marks
+    the last computed row (the filing result). Both land in a spare column beyond
+    the data grid so they orient the inputs→resultado flow without colliding.
+    """
+    anchors: list[SheetAnchor] = []
+    if layout.entradas_rows:
+        first = layout.entradas_rows[0]
+        anchors.append(
+            SheetAnchor(
+                address=SheetCellAddress.at(first.tab, first.row, 6),
+                kind="start",
+                label="INICIO: Entradas",
+            )
+        )
+    if layout.calculos_rows:
+        last = layout.calculos_rows[-1]
+        anchors.append(
+            SheetAnchor(
+                address=SheetCellAddress.at(last.tab, last.row, 6),
+                kind="final",
+                label="RESULTADO",
+            )
+        )
+    return tuple(anchors)
+
+
 RelationResolver = Callable[[RegistrySnapshot], RelationValues]
 
 
@@ -747,6 +846,12 @@ def build_export_plan(
     provenance = _provenance_rows(revision, layout)
     provenance_values = _provenance_value_cells(provenance)
     protected = _protected_ranges(layout)
+    number_formats = _number_formats(revision, layout)
+    section_headers = _section_headers(layout)
+    anchors = _anchors(layout)
+    anchor_value_cells = tuple(
+        SheetValueCell(address=anchor.address, value=anchor.label, role="label") for anchor in anchors
+    )
     cell_constraints = _collect_cell_constraints(revision, layout)
     row_sets = collect_row_sets(revision)
 
@@ -756,7 +861,9 @@ def build_export_plan(
         paragraphs=_guide_paragraphs(snapshot),
     )
 
-    value_cells = entradas + calculos_labels + tariff_values + relation_value_cells + provenance_values
+    value_cells = (
+        entradas + calculos_labels + tariff_values + relation_value_cells + provenance_values + anchor_value_cells
+    )
 
     return SheetExportPlan(
         metadata=metadata,
@@ -765,6 +872,9 @@ def build_export_plan(
         tariffs=tariff_tables,
         provenance=provenance,
         protected_ranges=protected,
+        number_formats=number_formats,
+        section_headers=section_headers,
+        anchors=anchors,
         cell_constraints=cell_constraints,
         relation_provenance=relations,
         row_sets=row_sets,

@@ -19,6 +19,7 @@ from ._errors import (
     UserProfileSchemaLoadError,
 )
 from ._loader import load_user_profile_schema
+from ._portable_export import UserProfilePortableExport
 from ._registry_contract import (
     UserProfileRegistryContractIssue,
     UserProfileRegistryContractReport,
@@ -62,6 +63,7 @@ __all__ = [
     "StoredProfileDriftError",
     "UserProfileFact",
     "UserProfileFactValue",
+    "UserProfilePortableExport",
     "UserProfileRecord",
     "UserProfileRegistryContractIssue",
     "UserProfileRegistryContractReport",

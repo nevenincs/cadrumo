@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from .....core.classification import SensitivityClass
-from ..errors import SecretNotFoundError
+from ..errors import SecretNotFoundError, StorageValidationError
 from ..master_key import EphemeralMasterKeyProvider
 from ..secret_store import SecretRecord, SecretStore
 from . import EncryptedBlobStore
@@ -121,6 +121,56 @@ class TestMaterialiseSecret:
         with materialise_secret("aeat:test:json", suffix=".json") as path:
             assert path.suffix == ".json"
 
+    def test_large_secret_payload_is_fully_written(self, secret_store: SecretStore) -> None:
+        payload = (b"large-secret-materialisation" * 8192) + b"tail"
+        _put_secret(secret_store, "aeat:test:large", payload)
+
+        with materialise_secret("aeat:test:large") as path:
+            assert path.read_bytes() == payload
+
+    @pytest.mark.parametrize(
+        ("prefix", "suffix"),
+        (
+            ("../aeat-secret", ""),
+            ("aeat\\secret", ""),
+            (".", ""),
+            ("aeat-secret", "../secret"),
+            ("aeat-secret", "secret\\json"),
+            ("aeat-secret", ".."),
+        ),
+    )
+    def test_rejects_path_bearing_tempfile_affixes(
+        self,
+        secret_store: SecretStore,
+        prefix: str,
+        suffix: str,
+    ) -> None:
+        _put_secret(secret_store, "aeat:test:affix", b"payload")
+
+        with (
+            pytest.raises(StorageValidationError) as excinfo,
+            materialise_secret("aeat:test:affix", prefix=prefix, suffix=suffix),
+        ):
+            raise AssertionError("materialisation should reject unsafe affix before yielding")
+
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
+        assert excinfo.value.context == {
+            "field": "prefix" if prefix in {"../aeat-secret", "aeat\\secret", "."} else "suffix",
+            "surface": "secret_materialisation",
+        }
+
+    def test_context_cleanup_missing_path_is_logged_at_debug(
+        self,
+        secret_store: SecretStore,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        _put_secret(secret_store, "aeat:test:context-cleanup", b"payload")
+
+        with caplog.at_level("DEBUG"), materialise_secret("aeat:test:context-cleanup") as path:
+            path.unlink()
+
+        assert "secret materialisation cleanup skipped missing temp path" in caplog.text
+
 
 class TestExportToTempPath:
     """Explicit-cleanup variant for non-context-managed consumers."""
@@ -145,3 +195,60 @@ class TestExportToTempPath:
     def test_missing_key_raises(self, secret_store: SecretStore) -> None:
         with pytest.raises(SecretNotFoundError):
             export_to_temp_path("never-stored")
+
+    @pytest.mark.parametrize(
+        ("prefix", "suffix"),
+        (
+            ("../aeat-secret", ""),
+            ("aeat\\secret", ""),
+            (".", ""),
+            ("aeat-secret", "../secret"),
+            ("aeat-secret", "secret\\json"),
+            ("aeat-secret", ".."),
+        ),
+    )
+    def test_rejects_path_bearing_tempfile_affixes(
+        self,
+        secret_store: SecretStore,
+        prefix: str,
+        suffix: str,
+    ) -> None:
+        _put_secret(secret_store, "aeat:test:export-affix", b"payload")
+
+        with pytest.raises(StorageValidationError) as excinfo:
+            export_to_temp_path("aeat:test:export-affix", prefix=prefix, suffix=suffix)
+
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
+        assert excinfo.value.context == {
+            "field": "prefix" if prefix in {"../aeat-secret", "aeat\\secret", "."} else "suffix",
+            "surface": "secret_materialisation",
+        }
+
+    def test_cleanup_missing_path_is_logged_at_debug(
+        self,
+        secret_store: SecretStore,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        _put_secret(secret_store, "aeat:test:cleanup-log", b"payload")
+        path, cleanup = export_to_temp_path("aeat:test:cleanup-log")
+        path.unlink()
+
+        with caplog.at_level("DEBUG"):
+            cleanup()
+
+        assert "secret materialisation cleanup skipped missing temp path" in caplog.text
+
+    def test_cleanup_retries_after_unlink_failure(self, secret_store: SecretStore) -> None:
+        _put_secret(secret_store, "aeat:test:cleanup-retry", b"payload")
+        path, cleanup = export_to_temp_path("aeat:test:cleanup-retry")
+        path.unlink()
+        path.mkdir()
+
+        with pytest.raises(OSError):
+            cleanup()
+
+        assert path.is_dir()
+        path.rmdir()
+        cleanup()
+        cleanup()
+        assert not path.exists()

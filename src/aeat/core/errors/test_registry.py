@@ -141,6 +141,38 @@ def test_deferred_bind_flushes_on_get_registered_error_code() -> None:
         _DEFERRED_BIND.discard(UnmatchedPlaceholderError)
 
 
+def test_bind_error_code_refusal_carries_diagnostic_hints() -> None:
+    """The bind-refusal message tells the operator how to act on it.
+
+    Authority: 2026-06-03-cross-domain-continuity-audit Finding 1.
+    During the lint-zero session three peer-WIP collisions surfaced
+    the bare ``AeatError subclass ... is missing a declared ErrorCode
+    registry entry`` ValueError. The original text gave no signal that
+    the state could be transient (a peer mid-edit), so an operator
+    could chase it as a defect in their own working tree. This test
+    pins the two hints the refusal MUST carry: a registry-side fix
+    direction for the genuine-new-class case, and a peer-WIP signal
+    pointing the operator at ``git status`` for the collision case.
+    """
+
+    from . import AeatError
+
+    # bind_error_code fires from __init_subclass__ during class
+    # creation, so the diagnostic ValueError lands on the ``class``
+    # statement itself. Wrap the declaration in pytest.raises.
+    with pytest.raises(ValueError) as exc_info:
+
+        class _UnregisteredDiagnosticTestError(AeatError):
+            """Synthetic subclass with no registry entry; used by this test only."""
+
+        del _UnregisteredDiagnosticTestError  # unreachable when ValueError fires
+
+    message = str(exc_info.value)
+    assert "missing a declared ErrorCode registry entry" in message
+    assert "git status" in message, "the peer-WIP hint must be present"
+    assert "peer agent" in message, "the peer-WIP context must be explicit"
+
+
 def test_core_error_prefixes_are_grep_stable() -> None:
     """Stable upper-case category identifiers survive in JSON; rendered text uses sentence case."""
 

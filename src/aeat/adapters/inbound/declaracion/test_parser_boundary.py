@@ -624,6 +624,14 @@ def test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy(
     # Decimal and the profile correctly locates the label on the correct line.
     values = {value.casilla_id: value.printed_value for value in filing.values}
     assert set(values.keys()) == {
+        # Primitive cuota leaves (Route A of parser-engine-totals-impedance ADR).
+        "iva.repercutido.general",
+        "iva.repercutido.reducido",
+        "iva.repercutido.super-reducido",
+        "iva.autorepercutido.intracomunitaria",
+        "iva.soportado.interiores",
+        "iva.autoconsumo.promotor.base",
+        # Form-page totals.
         "27",
         "29",
         "37",
@@ -802,8 +810,16 @@ def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, y
 
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
-    # All 12 profile casillas must be present
+    # All 18 profile casillas (6 primitives + 12 form-page totals) must be present.
     assert set(values.keys()) == {
+        # Primitive cuota leaves (Route A of parser-engine-totals-impedance ADR).
+        "iva.repercutido.general",
+        "iva.repercutido.reducido",
+        "iva.repercutido.super-reducido",
+        "iva.autorepercutido.intracomunitaria",
+        "iva.soportado.interiores",
+        "iva.autoconsumo.promotor.base",
+        # Form-page totals.
         "27",
         "29",
         "37",
@@ -929,8 +945,17 @@ def test_parser_extracts_modelo_303_old_template_profile_targets_from_corpus(
 
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
-    # All 4 covered casillas must be present for every 2021-2022 specimen.
+    # All 9 covered casillas (5 primitives + 4 form-page totals) must be present
+    # for every 2021-2022 specimen. The legacy 2009-y-siguientes revision has no
+    # iva.autoconsumo.promotor.base casilla — only five primitives are extracted.
     assert set(values.keys()) == {
+        # Primitive cuota leaves (Route A of parser-engine-totals-impedance ADR).
+        "iva.repercutido.general",
+        "iva.repercutido.reducido",
+        "iva.repercutido.super-reducido",
+        "iva.autorepercutido.intracomunitaria",
+        "iva.soportado.interiores",
+        # Form-page totals.
         "27",
         "29",
         "45",

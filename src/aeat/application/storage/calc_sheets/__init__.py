@@ -22,6 +22,7 @@ domain and application logic only.
 """
 
 from ._engine import build_export_plan, collect_row_sets, registry_sha
+from ._evidence import sheet_evidence_from_ledger_filing
 from ._layout import BracketRanges, SheetLayout, plan_layout
 from ._records import (
     OperatorInput,
@@ -31,12 +32,18 @@ from ._records import (
     RelationValues,
     SheetCellAddress,
     SheetCellConstraint,
+    SheetEvidenceContributorRow,
+    SheetEvidenceFacet,
+    SheetEvidenceManualEntry,
     SheetExportMetadata,
     SheetExportPlan,
+    SheetAnchor,
     SheetFormulaCell,
     SheetGuideContent,
+    SheetNumberFormat,
     SheetProtectedRange,
     SheetProvenanceRow,
+    SheetSectionHeader,
     SheetRowSet,
     SheetRowSetColumn,
     SheetTariffTable,
@@ -45,9 +52,21 @@ from ._records import (
     TabName,
 )
 from ._translator import TranslationError, translate_formula
+from ._workbook_export import (
+    OfflineWorkbookEvidenceSidecar,
+    OfflineWorkbookExportResult,
+    build_evidence_sidecar,
+    build_offline_workbook,
+    evidence_table,
+    serialize_evidence_sidecar,
+    serialize_offline_export,
+    serialize_offline_workbook,
+)
 
 __all__ = [
     "BracketRanges",
+    "OfflineWorkbookEvidenceSidecar",
+    "OfflineWorkbookExportResult",
     "OperatorInput",
     "OperatorInputs",
     "ParameterCell",
@@ -55,11 +74,17 @@ __all__ = [
     "RelationValues",
     "SheetCellAddress",
     "SheetCellConstraint",
+    "SheetEvidenceContributorRow",
+    "SheetEvidenceFacet",
+    "SheetEvidenceManualEntry",
     "SheetExportMetadata",
     "SheetExportPlan",
     "SheetFormulaCell",
     "SheetGuideContent",
     "SheetLayout",
+    "SheetAnchor",
+    "SheetNumberFormat",
+    "SheetSectionHeader",
     "SheetProtectedRange",
     "SheetProvenanceRow",
     "SheetRowSet",
@@ -69,9 +94,16 @@ __all__ = [
     "SheetValueCell",
     "TabName",
     "TranslationError",
+    "build_evidence_sidecar",
     "build_export_plan",
+    "build_offline_workbook",
     "collect_row_sets",
+    "evidence_table",
     "plan_layout",
     "registry_sha",
+    "serialize_evidence_sidecar",
+    "serialize_offline_export",
+    "serialize_offline_workbook",
+    "sheet_evidence_from_ledger_filing",
     "translate_formula",
 ]

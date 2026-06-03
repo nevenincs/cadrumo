@@ -24,6 +24,13 @@ from ..core.config import Settings, load_settings, override_settings
 
 _TEST_KEK = b"t" * 32
 _TEST_DEK = b"r" * 32
+# Distinct test KEK/DEK for the secondary bucket in the
+# multi-bucket fixture. Authored per
+# ``2026-06-03-multi-bucket-test-fixture-adr`` so an accidental
+# cross-bucket key reuse in production code surfaces as a test
+# failure rather than a same-key collision.
+_TEST_KEK_SECONDARY = b"u" * 32
+_TEST_DEK_SECONDARY = b"s" * 32
 
 
 @dataclass(frozen=True)
@@ -177,6 +184,155 @@ def isolated_runtime_profile(
                 dispose_engine(settings)
 
 
+@dataclass(frozen=True)
+class MultiBucketTestRuntime:
+    """Two co-existing test runtime profiles for active-vs-target scenarios.
+
+    ``primary`` is ``aeat_active_profile`` when the fixture yields.
+    ``secondary`` is provisioned with its own bucket directory,
+    manifest, keystore, and secure-object repository but its
+    session is held in this dataclass for the
+    :meth:`switch_to_secondary` context manager to activate
+    on demand. Authority: ``2026-06-03-multi-bucket-test-fixture-adr``.
+    """
+
+    __test__: ClassVar[bool] = False
+
+    primary: TestRuntimeProfile
+    secondary: TestRuntimeProfile
+    _secondary_session: BucketSession
+
+    @contextmanager
+    def switch_to_secondary(self) -> Iterator[None]:
+        """Swap the active profile to ``secondary`` for the block's duration.
+
+        Restores ``primary`` as active on exit so the outer test
+        scope sees the same active profile it started with. Tests
+        that operate against the secondary via
+        ``BucketMaintenanceService`` do NOT need this — the service
+        opens its own scoped session through
+        ``profile_storage_session``; this helper is for tests that
+        need direct repository access against the secondary.
+        """
+        with (
+            override_settings(aeat_active_profile=self.secondary.bucket_id),
+            activate_session(self._secondary_session),
+        ):
+            yield
+
+
+@contextmanager
+def isolated_two_bucket_runtime(
+    *,
+    tmp_path: Path,
+    primary_bucket_id: str = "primary-test-runtime",
+    secondary_bucket_id: str = "secondary-test-runtime",
+    primary_label: str = "Primary test runtime",
+    secondary_label: str = "Secondary test runtime",
+) -> Iterator[MultiBucketTestRuntime]:
+    """Provision two buckets sharing a storage root; primary is active.
+
+    The fixture is the operator-active-vs-target distinction that
+    :class:`BucketMaintenanceService.delete` requires (the service's
+    active-bucket guard refuses self-deletion by design), and the
+    cross-host-migration distinction that the sealed-archive
+    export/import round-trip requires. See
+    ``2026-06-03-multi-bucket-test-fixture-adr`` for the design
+    rationale.
+
+    Both buckets carry distinct test KEK/DEK material
+    (``_TEST_KEK`` / ``_TEST_KEK_SECONDARY``) so an accidental
+    cross-bucket key reuse in production code surfaces as a test
+    failure rather than a same-key collision.
+    """
+    storage_root = tmp_path / "aeat-storage"
+    opened_at = datetime.now(UTC).replace(microsecond=0)
+
+    primary_paths = provision_bucket_directory(storage_root, primary_bucket_id)
+    write_manifest(
+        primary_paths,
+        BucketManifest(
+            bucket_id=primary_bucket_id,
+            label=primary_label,
+            created_at=opened_at,
+            last_unlocked_at=opened_at,
+            kdf_params=KdfParams.default().to_manifest_params(),
+            recovery_enrolled=False,
+            schema_version=1,
+            status=BucketLifecycleStatus.ACTIVE,
+        ),
+    )
+    primary_session = BucketSession.open(
+        bucket_id=primary_bucket_id,
+        kek=_TEST_KEK,
+        dek=_TEST_DEK,
+        idle_minutes=15,
+        opened_at=opened_at,
+    )
+
+    secondary_paths = provision_bucket_directory(storage_root, secondary_bucket_id)
+    write_manifest(
+        secondary_paths,
+        BucketManifest(
+            bucket_id=secondary_bucket_id,
+            label=secondary_label,
+            created_at=opened_at,
+            last_unlocked_at=opened_at,
+            kdf_params=KdfParams.default().to_manifest_params(),
+            recovery_enrolled=False,
+            schema_version=1,
+            status=BucketLifecycleStatus.ACTIVE,
+        ),
+    )
+    secondary_session = BucketSession.open(
+        bucket_id=secondary_bucket_id,
+        kek=_TEST_KEK_SECONDARY,
+        dek=_TEST_DEK_SECONDARY,
+        idle_minutes=15,
+        opened_at=opened_at,
+    )
+
+    with override_settings(
+        aeat_local_storage_root=storage_root,
+        aeat_active_profile=primary_bucket_id,
+    ) as settings:
+        dispose_engine(settings)
+        with activate_session(primary_session):
+            runtime = inspect_storage_runtime(settings)
+            primary_repository = secure_object_repository_for_active_bucket()
+            primary_profile = TestRuntimeProfile(
+                storage_root=storage_root,
+                bucket_id=primary_bucket_id,
+                paths=primary_paths,
+                settings=settings,
+                runtime=runtime,
+                repository=primary_repository,
+            )
+            # Resolve the secondary's repository under its session so
+            # tests can hold a direct handle without re-activating.
+            with override_settings(aeat_active_profile=secondary_bucket_id) as secondary_settings:
+                dispose_engine(secondary_settings)
+                with activate_session(secondary_session):
+                    secondary_runtime = inspect_storage_runtime(secondary_settings)
+                    secondary_repository = secure_object_repository_for_active_bucket()
+            secondary_profile = TestRuntimeProfile(
+                storage_root=storage_root,
+                bucket_id=secondary_bucket_id,
+                paths=secondary_paths,
+                settings=settings,
+                runtime=secondary_runtime,
+                repository=secondary_repository,
+            )
+            try:
+                yield MultiBucketTestRuntime(
+                    primary=primary_profile,
+                    secondary=secondary_profile,
+                    _secondary_session=secondary_session,
+                )
+            finally:
+                dispose_engine(settings)
+
+
 @contextmanager
 def isolated_cli_runtime_profile(
     *,
@@ -211,6 +367,7 @@ def isolated_cli_runtime_profile(
 
 
 __all__ = [
+    "MultiBucketTestRuntime",
     "TestRuntimeProfile",
     "dev_test_database_password",
     "isolated_cli_runtime_profile",
@@ -218,4 +375,5 @@ __all__ = [
     "isolated_profile_storage_root",
     "isolated_runtime_profile",
     "isolated_sessionless_storage_root",
+    "isolated_two_bucket_runtime",
 ]

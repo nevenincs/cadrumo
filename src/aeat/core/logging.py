@@ -160,6 +160,9 @@ def _scrub_value(value: object, *, key: str | None = None) -> Any:  # ANY-RETURN
     return value
 
 
+# ANY-RETURN-RATIONALE-LOGGING-POSITIONAL-ARGS: args/return mirror the stdlib
+# logging.LogRecord positional-args tuple, whose element types are arbitrary
+# %-formatting operands.
 def _scrub_positional_args(message: str, args: tuple[Any, ...]) -> tuple[Any, ...]:
     """Scrub tuple-style logging args using keys inferred from ``message``."""
     placeholders = list(_PERCENT_PLACEHOLDER_RE.finditer(message))
@@ -229,6 +232,9 @@ def _install_run_context_record_factory() -> None:
     # logging subsystem.
     cached_vars: tuple[ContextVar[RunContextInfo | None], ContextVar[str | None]] | None = None
 
+    # KWARGS-ANY-RATIONALE-LOG-RECORD-FACTORY: signature mirrors the stdlib
+    # logging.setLogRecordFactory contract whose *args/**kwargs are the raw
+    # LogRecord constructor arguments.
     def _factory(*args: Any, **kwargs: Any) -> logging.LogRecord:
         nonlocal cached_vars
         record = previous_factory(*args, **kwargs)

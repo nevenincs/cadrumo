@@ -790,6 +790,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._export.ModeloExportEvidenceMissingError",
+        ErrorCode(
+            code="REFUSED_MODELO_EXPORT_EVIDENCE_MISSING",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.fail.modelo_export",
+            default_suggestion="aeat app modelo work verify <work-unit-id>",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._export.ModeloExportNoActiveBucketError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_NO_ACTIVE_BUCKET",

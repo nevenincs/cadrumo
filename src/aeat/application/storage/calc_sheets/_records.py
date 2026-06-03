@@ -68,6 +68,7 @@ class TabName(StrEnum):
     PROVENANCE = "Procedencia"
     TARIFFS = "Tarifas"
     DETALLE = "Detalle"
+    EVIDENCIA = "Evidencia"
     GUIDE = "Guía"
 
 
@@ -301,6 +302,47 @@ class SheetProtectedRange(BaseModel):
         return self
 
 
+class SheetNumberFormat(BaseModel):
+    """Display-format directive for a numeric workbook cell."""
+
+    model_config = _STRICT_FROZEN
+
+    address: SheetCellAddress
+    casilla: CasillaId
+    data_type: Literal["money", "integer", "percentage"]
+    pattern: str = Field(min_length=1)
+
+
+class SheetSectionHeader(BaseModel):
+    """Section-header styling directive for a section's first label cell.
+
+    Marks the column-A cell where a casilla section first appears so both
+    transports render it as a bold section header — the official AEAT workbooks
+    group casillas under bold section banners for operator orientation.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    address: SheetCellAddress
+    text: str = Field(min_length=1)
+
+
+class SheetAnchor(BaseModel):
+    """An explicit labelled start / final anchor on the calculation flow.
+
+    ``start`` marks the opening of the operator-input region (Entradas); ``final``
+    marks the filing result (resultado / cuota) on Cálculos. Rendered as a
+    labelled cell in both transports so the inputs→resultado flow is
+    unambiguously oriented, mirroring the published workbook layout.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    address: SheetCellAddress
+    kind: Literal["start", "final"]
+    label: str = Field(min_length=1)
+
+
 class SheetProvenanceRow(BaseModel):
     """One row of the `Procedencia` audit tab.
 
@@ -320,6 +362,48 @@ class SheetProvenanceRow(BaseModel):
     legal_refs: tuple[str, ...] = Field(min_length=1)
     source_refs: tuple[str, ...] = Field(min_length=1)
     target_address: SheetCellAddress
+
+
+class SheetEvidenceContributorRow(BaseModel):
+    """One ledger contributor rendered into the workbook evidence surface."""
+
+    model_config = _STRICT_FROZEN
+
+    casilla_id: CasillaId
+    transaction_id: str = Field(min_length=1)
+    amount: Decimal
+    currency: str = Field(min_length=1)
+    taxable_base: Decimal | None = None
+    iva_rate: Decimal | None = None
+    iva_amount: Decimal | None = None
+    counterparty: str | None = None
+    attachment_ids: tuple[str, ...] = ()
+    document_link_ids: tuple[str, ...] = ()
+    legal_refs: tuple[str, ...] = ()
+    source_refs: tuple[str, ...] = ()
+
+
+class SheetEvidenceManualEntry(BaseModel):
+    """One non-ledger fact basis entry rendered into the evidence surface."""
+
+    model_config = _STRICT_FROZEN
+
+    casilla_id: CasillaId
+    value: str = Field(min_length=1)
+    kind: str = Field(min_length=1)
+    note: str = ""
+    legal_refs: tuple[str, ...] = ()
+    source_refs: tuple[str, ...] = ()
+
+
+class SheetEvidenceFacet(BaseModel):
+    """Evidence rows attached to a workbook export plan."""
+
+    model_config = _STRICT_FROZEN
+
+    snapshot_fingerprint: str | None = Field(default=None, min_length=64, max_length=64)
+    contributor_rows: tuple[SheetEvidenceContributorRow, ...] = ()
+    manual_entries: tuple[SheetEvidenceManualEntry, ...] = ()
 
 
 class SheetTariffTableRow(BaseModel):
@@ -511,9 +595,13 @@ class SheetExportPlan(BaseModel):
     tariffs: tuple[SheetTariffTable, ...] = ()
     provenance: tuple[SheetProvenanceRow, ...] = ()
     protected_ranges: tuple[SheetProtectedRange, ...] = ()
+    number_formats: tuple[SheetNumberFormat, ...] = ()
+    section_headers: tuple[SheetSectionHeader, ...] = ()
+    anchors: tuple[SheetAnchor, ...] = ()
     cell_constraints: tuple[SheetCellConstraint, ...] = ()
     row_sets: tuple[SheetRowSet, ...] = ()
     relation_provenance: RelationValues | None = None
+    evidence: SheetEvidenceFacet = Field(default_factory=SheetEvidenceFacet)
     guide: SheetGuideContent
 
     def all_addresses(self) -> tuple[SheetCellAddress, ...]:
@@ -542,10 +630,16 @@ __all__ = [
     "RelationValues",
     "SheetCellAddress",
     "SheetCellConstraint",
+    "SheetEvidenceContributorRow",
+    "SheetEvidenceFacet",
+    "SheetEvidenceManualEntry",
     "SheetExportMetadata",
     "SheetExportPlan",
     "SheetFormulaCell",
     "SheetGuideContent",
+    "SheetAnchor",
+    "SheetNumberFormat",
+    "SheetSectionHeader",
     "SheetProtectedRange",
     "SheetProvenanceRow",
     "SheetRowSet",

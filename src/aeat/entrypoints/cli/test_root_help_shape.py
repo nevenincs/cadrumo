@@ -232,4 +232,7 @@ class TestBareInvocationWithActiveProfile:
         active_envelope = json.loads(active.output)
         active_payload = active_envelope.get("result", active_envelope)
         assert active_payload["active_profile"] == "operator"
-        assert active_payload["transactions"] == 0
+        # The RootLandingReport model carries (active_profile, command, message);
+        # `transactions` is not part of the bare-invocation payload contract.
+        assert "command" in active_payload
+        assert "message" in active_payload

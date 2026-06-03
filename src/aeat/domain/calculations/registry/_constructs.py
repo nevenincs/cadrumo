@@ -68,6 +68,9 @@ class ResolvedConstruct:
 type _RevisionIndex = Callable[[ModeloRevision], Mapping[str, object]]
 
 
+# ANY-RETURN-RATIONALE-REGISTRY-CONSTRUCT-INDEX: values is a heterogeneous
+# tuple of registry construct members (casillas, formulas, rules, ...) whose
+# concrete element type varies per call site.
 def _index(values: tuple[Any, ...]) -> Mapping[str, object]:
     return {str(value.id): value for value in values}
 

@@ -424,6 +424,8 @@ def _scan_xlsx_contents(
     return sheets, formulas, references
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-OPENPYXL-WORKSHEET: openpyxl ships incomplete
+# stubs for Worksheet; the loose-typed alias keeps the scan helper callable.
 def _scan_worksheet_cells(
     worksheet: Any,  # openpyxl Worksheet; loose-typed because openpyxl ships incomplete stubs
     *,

@@ -514,10 +514,9 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
 
     # ---- SnapshotService[CensoSnapshot] hooks ---------------------------
 
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH:
-    # **kwargs: Any is required by the SnapshotService[T] abstract hook contract.
-    # Concrete subclasses accept caller-specific keyword arguments without a
-    # shared typed parameter set; narrowing is done by direct key access.
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: SnapshotService[T] abstract hook
+    # contract uses **kwargs to allow concrete subclasses to accept caller-
+    # specific keyword arguments without a shared typed parameter set.
     def _derive_snapshot_id(self, **kwargs: Any) -> str:
         return derive_censo_snapshot_id(
             profile_id=kwargs["profile_id"],
@@ -526,8 +525,7 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
             censo_facts=kwargs["censo_facts"],
         )
 
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD:
-    # **kwargs: Any is required by the SnapshotService[T] abstract
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD: SnapshotService[T] abstract
     # _build_active_payload hook; concrete subclasses accept caller-specific
     # keyword arguments without a shared typed parameter set.
     def _build_active_payload(self, *, snapshot_id: str, **kwargs: Any) -> CensoSnapshot:

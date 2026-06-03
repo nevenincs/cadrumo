@@ -127,7 +127,7 @@ def encrypt_record(
     nonce = secrets.token_bytes(NONCE_SIZE)
     try:
         ciphertext = cipher.encrypt(nonce, plaintext, associated_data)
-    except Exception as exc:  # pragma: no cover - defensive
+    except (TypeError, ValueError) as exc:
         raise EncryptionError(f"AES-256-GCM encryption failed: {exc}") from exc
     return EncryptedBlob(nonce=nonce, ciphertext=ciphertext)
 
@@ -164,7 +164,7 @@ def decrypt_record(
         return cipher.decrypt(blob.nonce, blob.ciphertext, associated_data)
     except InvalidTag as exc:
         raise DecryptionError("AES-256-GCM tag verification failed") from exc
-    except Exception as exc:  # pragma: no cover - defensive
+    except (TypeError, ValueError) as exc:
         raise DecryptionError(f"AES-256-GCM decryption failed: {exc}") from exc
 
 
@@ -206,5 +206,5 @@ def derive_key(
     try:
         hkdf = HKDF(algorithm=hashes.SHA256(), length=length, salt=salt, info=context)
         return hkdf.derive(key_material)
-    except Exception as exc:  # pragma: no cover - defensive
+    except (TypeError, ValueError) as exc:
         raise KeyDerivationError(f"HKDF-SHA256 derivation failed: {exc}") from exc

@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import typer
 
-from ..application.user_profile._orchestration import (
+from ..application.user_profile import (
     build_lifecycle_service,
     fact_value,
     profile_storage_session,

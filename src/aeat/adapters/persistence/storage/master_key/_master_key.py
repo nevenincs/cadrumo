@@ -1108,14 +1108,14 @@ def _bucket_key_schedule(*, storage_root: Path, bucket_id: str):
     opened to allow the repair command to backfill the missing field.
     """
     from ..bucket._layout import bucket_paths
-    from ..bucket._manifest_io import read_manifest
+    from ..bucket._manifest_io import MISSING_BUCKET_MANIFEST_MESSAGE, read_manifest
     from ..errors import StorageValidationError
 
     try:
         return read_manifest(bucket_paths(storage_root, bucket_id)).key_schedule
-    except FileNotFoundError:
-        return None
     except StorageValidationError as exc:
+        if str(exc) == MISSING_BUCKET_MANIFEST_MESSAGE:
+            return None
         if "missing required lifecycle status" in str(exc):
             # Legacy manifest without status; parse key_schedule directly so
             # the session can open and the repair command can backfill status.
@@ -1179,12 +1179,15 @@ def _write_wrapped_bucket_dek(path: Path, wrapped) -> None:
 def _idle_minutes_for_bucket(*, storage_root: Path, bucket_id: str, default_minutes: int) -> int:
     """Resolve the idle window from the bucket manifest, falling back to settings."""
     from ..bucket._layout import bucket_paths
-    from ..bucket._manifest_io import read_manifest
+    from ..bucket._manifest_io import MISSING_BUCKET_MANIFEST_MESSAGE, read_manifest
+    from ..errors import StorageValidationError
 
     try:
         manifest = read_manifest(bucket_paths(storage_root, bucket_id))
-    except FileNotFoundError:
-        return default_minutes
+    except StorageValidationError as exc:
+        if str(exc) == MISSING_BUCKET_MANIFEST_MESSAGE:
+            return default_minutes
+        raise
     configured = manifest.idle_lock_minutes
     return configured if configured is not None else default_minutes
 

@@ -341,6 +341,35 @@ def __getattr__(name: str):
 
         return ProfileValidationService
     if name in (
+        "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
+        "deserialize_profile_bundle",
+        "serialize_profile_bundle",
+    ):
+        from . import _bundle
+
+        return getattr(_bundle, name)
+    if name in (
+        "ProfileAlreadyRegisteredError",
+        "build_lifecycle_service",
+        "delete_profile_with_lifecycle_span",
+        "fact_value",
+        "logout_active_profile",
+        "profile_create_storage_span",
+        "profile_storage_session",
+        "read_active_profile",
+        "register_active_profile",
+        "remove_active_profile",
+        "remove_profile_bucket_directory",
+        "rename_profile",
+        "select_profile",
+        "select_profile_with_lifecycle_span",
+        "set_active_field",
+        "set_active_fields",
+    ):
+        from . import _orchestration
+
+        return getattr(_orchestration, name)
+    if name in (
         "USER_PROFILE_SNAPSHOT_NAMESPACE",
         "USER_PROFILE_VALUE_NAMESPACE",
         "UserProfileLifecycleRepository",
@@ -356,6 +385,7 @@ def __getattr__(name: str):
 
 __all__ = [
     "CENSO_SOURCE_TAG",
+    "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
     "USER_PROFILE_VALUE_NAMESPACE",
     "CensoApplyConflictError",
@@ -371,6 +401,7 @@ __all__ = [
     "DuplicateProfileCommand",
     "EditProfileFieldCommand",
     "EditProfileSectionCommand",
+    "ProfileAlreadyRegisteredError",
     "ProfileId",
     "ProfileImportResult",
     "ProfileLifecycleResult",
@@ -392,9 +423,26 @@ __all__ = [
     "UserProfileFactValue",
     "UserProfileLifecycleRepository",
     "UserProfileSnapshotRepository",
+    "build_lifecycle_service",
+    "delete_profile_with_lifecycle_span",
+    "deserialize_profile_bundle",
+    "fact_value",
     "facts_to_values",
+    "logout_active_profile",
+    "profile_create_storage_span",
+    "profile_storage_session",
     "projection_for_taxpayer",
+    "read_active_profile",
     "record_to_values",
+    "register_active_profile",
+    "remove_active_profile",
+    "remove_profile_bucket_directory",
+    "rename_profile",
+    "select_profile",
+    "select_profile_with_lifecycle_span",
+    "serialize_profile_bundle",
+    "set_active_field",
+    "set_active_fields",
     "snapshot_to_values",
     "user_profile_snapshot_object_key",
     "user_profile_value_object_key",

@@ -16,16 +16,26 @@ from pathlib import Path
 
 from .....core._toml import parse_toml_text
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.logging import get_logger
 from .._namespace_registry import BUCKET_MANIFEST_FILENAME
 from ..errors import StorageValidationError
 from ._errors import BucketValidationError
 from ._layout import BucketPaths
 from ._manifest import BucketManifest
 
+MISSING_BUCKET_MANIFEST_MESSAGE = "bucket manifest is missing"
+_BUCKET_VALIDATION_MESSAGE_KEY = "errors.integrity.integrity_storage_bucket_validation"
+_log = get_logger(__name__)
+
 
 def manifest_path(paths: BucketPaths) -> Path:
     """Return the canonical manifest path for the bucket."""
     return paths.bucket_dir / BUCKET_MANIFEST_FILENAME
+
+
+def manifest_validation_error(message: str) -> StorageValidationError:
+    """Build the typed, localized validation error used by manifest I/O."""
+    return StorageValidationError(message, translated_message=_BUCKET_VALIDATION_MESSAGE_KEY)
 
 
 def _format_scalar(value: object) -> str:
@@ -98,8 +108,12 @@ def write_manifest(paths: BucketPaths, manifest: BucketManifest) -> None:
     target = manifest_path(paths)
     tmp = target.with_suffix(target.suffix + ".tmp")
     payload = _serialise_manifest(manifest)
-    tmp.write_text(payload, encoding=_UTF_8_ENCODING)
-    os.replace(tmp, target)
+    try:
+        tmp.write_text(payload, encoding=_UTF_8_ENCODING)
+        os.replace(tmp, target)
+    except OSError as exc:
+        _unlink_tmp_manifest(tmp)
+        raise manifest_validation_error("bucket manifest cannot be written") from exc
 
 
 def read_manifest(paths: BucketPaths) -> BucketManifest:
@@ -112,19 +126,40 @@ def read_manifest(paths: BucketPaths) -> BucketManifest:
         A strict-validated :class:`BucketManifest`.
 
     Raises:
-        StorageValidationError: When the manifest TOML is missing the lifecycle status key.
+        StorageValidationError: When the manifest cannot be read, cannot be parsed, or
+            is missing the lifecycle status key.
     """
     target = manifest_path(paths)
-    text = target.read_text(encoding=_UTF_8_ENCODING)
-    payload: dict[str, object] = parse_toml_text(text, error_factory=StorageValidationError)
+    try:
+        text = target.read_text(encoding=_UTF_8_ENCODING)
+    except FileNotFoundError as exc:
+        raise manifest_validation_error(MISSING_BUCKET_MANIFEST_MESSAGE) from exc
+    except OSError as exc:
+        raise manifest_validation_error("bucket manifest cannot be read") from exc
+    payload: dict[str, object] = parse_toml_text(text, error_factory=manifest_validation_error)
     # TOML carries no native null; an absent ``last_unlocked_at`` key on disk
     # signals "never unlocked" and is hydrated to ``None`` at the boundary so
     # the strict pydantic model still rejects unknown keys.
     payload.setdefault("last_unlocked_at", None)
     payload.setdefault("idle_lock_minutes", None)
     if "status" not in payload:
-        raise StorageValidationError("bucket manifest is missing required lifecycle status")
+        raise manifest_validation_error("bucket manifest is missing required lifecycle status")
     return BucketManifest.model_validate(payload)
 
 
-__all__ = ["manifest_path", "read_manifest", "write_manifest"]
+def _unlink_tmp_manifest(tmp: Path) -> None:
+    try:
+        tmp.unlink()
+    except FileNotFoundError:
+        _log.debug("bucket manifest temp cleanup skipped because temp file is absent")
+    except OSError as exc:
+        _log.debug("bucket manifest temp cleanup failed error_type=%s", type(exc).__name__)
+
+
+__all__ = [
+    "MISSING_BUCKET_MANIFEST_MESSAGE",
+    "manifest_path",
+    "manifest_validation_error",
+    "read_manifest",
+    "write_manifest",
+]

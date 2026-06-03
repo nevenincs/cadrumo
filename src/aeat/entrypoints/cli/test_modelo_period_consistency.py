@@ -90,6 +90,8 @@ def test_work_verify_accepts_modelo_202_pago_fraccionado_periods(period: str) ->
             work_unit_id,
             "--binding",
             "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
+            "--binding",
+            "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior=0",
         ],
     )
     assert calc_result.exit_code == 0, calc_result.output
@@ -132,6 +134,8 @@ def test_create_calculate_verify_agree_on_period_token(period: str) -> None:
             work_unit_id,
             "--binding",
             "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
+            "--binding",
+            "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior=0",
         ],
     )
     assert calc_result.exit_code == 0, calc_result.output

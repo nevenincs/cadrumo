@@ -314,12 +314,9 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
 
     # ---- SnapshotService[Borrador100Snapshot] hooks ----------------------
 
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: **kwargs: Any is required
-    # by the SnapshotService[T] abstract hook contract whose base signature
-    # uses **kwargs to allow concrete subclasses to accept caller-specific
-    # keyword arguments without a shared typed parameter set.  Narrowing is
-    # done via direct key access inside the body; the abstract boundary cannot
-    # be tightened without breaking the polymorphic dispatch chain.
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: SnapshotService[T] abstract hook
+    # contract uses **kwargs to allow concrete subclasses to accept caller-
+    # specific keyword arguments without a shared typed parameter set.
     def _derive_snapshot_id(self, **kwargs: Any) -> str:
         return derive_borrador_100_snapshot_id(
             filing_year=kwargs["filing_year"],
@@ -329,6 +326,9 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
             binding_values=kwargs["binding_values"],
         )
 
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD: SnapshotService[T] abstract
+    # _build_active_payload hook carries **kwargs: Any so concrete subclasses
+    # accept caller-specific keyword arguments without a shared typed set.
     def _build_active_payload(self, *, snapshot_id: str, **kwargs: Any) -> Borrador100Snapshot:
         return Borrador100Snapshot(
             snapshot_id=snapshot_id,

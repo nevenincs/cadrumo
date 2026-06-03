@@ -100,7 +100,7 @@ into income/expense rows.
 | `operacion_no_subjeta` → `operacion_no_sujeta` | non-subject operation |
 | `unknown` / `erroneous_invoice` | a malformed/rectified row (gated, not declarable) |
 
-**SpendingCategory** — all 43, spread by family: social_security
+**SpendingCategory** — all 41, spread by family: social_security
 (`cuotas_autonomos_ss`, `mutualidad_alternativa`, `cuotas_colegiales`),
 premises (`arrendamiento_local`, `ibi_local_afecto`,
 `arrendamiento_vivienda_afecto`…), home_office_suministros (luz/agua/gas/internet

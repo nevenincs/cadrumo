@@ -16,6 +16,7 @@ service.
 
 from __future__ import annotations
 
+import hashlib
 from datetime import date, datetime
 from pathlib import Path
 
@@ -32,6 +33,7 @@ from ...domain.buckets import (
 )
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.deadlines import TaxpayerProfile
+from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._calculation_revision import (
     CalculationRevision,
@@ -62,7 +64,7 @@ from ._actions import (
     CalculationRevisionStateError,
     WorkUnitNotFoundError,
     _emit_bucket_event,
-    _raise_if_persisted_iva_compensation_decision_blocks_work_unit,
+    _require_persisted_iva_compensation_decision_matches_revision,
 )
 
 #: AEAT-assigned program-identifier code stamped into the optional
@@ -83,6 +85,26 @@ _PROFILE_SURNAMES_PATH = "identity.surnames"
 _PROFILE_NAME_PATH = "identity.name"
 
 
+class ModeloIvaWalletDecisionProvenance(BaseModel):
+    """Redacted audit join for the Modelo 303 IVA wallet authority decision.
+
+    This intentionally excludes taxpayer identifiers, wallet amounts, and local
+    recurrence amounts. The fingerprint lets audits join back to encrypted
+    secure-object storage without copying live fiscal values into export events
+    or result payloads.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    decision_ref: str = Field(min_length=71, max_length=71)
+    selected_authority: str = Field(min_length=1, max_length=64)
+    divergence: str = Field(min_length=1, max_length=64)
+    target_year: int = Field(ge=2000, le=2099)
+    target_period: str = Field(min_length=1, max_length=8)
+    authority_source_kinds: tuple[str, ...] = Field(default_factory=tuple)
+    authority_source_refs: tuple[str, ...] = Field(default_factory=tuple)
+
+
 class ModeloExportCrossBucketRefusedError(ModeloError):
     """Raised when the addressed revision's parent work unit belongs to a bucket other than the active profile bucket.
 
@@ -99,6 +121,10 @@ class ModeloExportNoActiveBucketError(ModeloError):
     event is scoped to a bucket id and the work-unit lookup is
     bucket-bound.
     """
+
+
+class ModeloExportEvidenceMissingError(ModeloExportError):
+    """Raised when a ledger-derived revision lacks exportable evidence."""
 
 
 class ModeloExportCommand(BaseModel):
@@ -167,6 +193,42 @@ class ModeloExportResult(BaseModel):
     actor: str = Field(min_length=1, max_length=128)
     bucket_event_id: str = Field(min_length=1, max_length=128)
     casilla_provenance: tuple[filing_domain.ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
+    iva_wallet_decision_provenance: ModeloIvaWalletDecisionProvenance | None = None
+
+
+def _sha256_ref(value: str) -> str:
+    return f"sha256:{hashlib.sha256(value.encode('utf-8')).hexdigest()}"
+
+
+def _iva_wallet_decision_export_provenance(
+    decision: IvaCompensationReconciliationDecision | None,
+) -> ModeloIvaWalletDecisionProvenance | None:
+    if decision is None:
+        return None
+    return ModeloIvaWalletDecisionProvenance(
+        decision_ref=_sha256_ref(decision.model_dump_json()),
+        selected_authority=str(decision.selected_authority),
+        divergence=str(decision.divergence),
+        target_year=decision.target_year,
+        target_period=decision.target_period,
+        authority_source_kinds=tuple(str(source.source_kind) for source in decision.authority_sources),
+        authority_source_refs=tuple(_sha256_ref(source.source_locator) for source in decision.authority_sources),
+    )
+
+
+def _raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> None:
+    """Refuse ledger-derived exports that lack bundled evidence or a reference."""
+    if not revision.source_transaction_ids:
+        return
+    if revision.ledger_filing_evidence is not None:
+        return
+    if revision.ledger_filing_snapshot is not None:
+        return
+    raise ModeloExportEvidenceMissingError(
+        f"calculation revision {revision.calculation_revision_id!r} was derived from "
+        "ledger transactions but carries neither bundled ledger_filing_evidence nor "
+        "a ledger_filing_snapshot reference; verify the revision again before exporting",
+    )
 
 
 def _load_revision_for_export(
@@ -364,7 +426,7 @@ def export_modelo_revision(
     with the calculation revision id, work unit id, output path,
     byte size, and file digest captured in the payload.
     """
-    from ..workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
 
     active_bucket_id = resolve_active_bucket_id()
     if active_bucket_id is None:
@@ -378,6 +440,7 @@ def export_modelo_revision(
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
 
     revision = _load_revision_for_export(command.calculation_revision_id, repo=cr_repo)
+    _raise_if_ledger_export_evidence_missing(revision)
     work_unit = wu_repo.load().get(revision.work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
@@ -390,10 +453,12 @@ def export_modelo_revision(
             f"{work_unit.bucket_id!r} but the active profile bucket is "
             f"{active_bucket_id!r}; switch profile before exporting",
         )
-    _raise_if_persisted_iva_compensation_decision_blocks_work_unit(
+    iva_wallet_decision = _require_persisted_iva_compensation_decision_matches_revision(
         work_unit,
+        revision,
         repository=iva_compensation_decision_repository,
     )
+    iva_wallet_provenance = _iva_wallet_decision_export_provenance(iva_wallet_decision)
 
     now = clock or _utc_now()
     filing_year, registry_period, canonical_period = _resolve_export_period(work_unit)
@@ -471,6 +536,18 @@ def export_modelo_revision(
         "filing_year": str(work_unit.filing_year),
         "period": work_unit.period,
     }
+    if iva_wallet_provenance is not None:
+        event_payload.update(
+            {
+                "iva_wallet_decision_ref": iva_wallet_provenance.decision_ref,
+                "iva_wallet_selected_authority": iva_wallet_provenance.selected_authority,
+                "iva_wallet_divergence": iva_wallet_provenance.divergence,
+                "iva_wallet_target_year": str(iva_wallet_provenance.target_year),
+                "iva_wallet_target_period": iva_wallet_provenance.target_period,
+                "iva_wallet_authority_source_kinds": ",".join(iva_wallet_provenance.authority_source_kinds),
+                "iva_wallet_authority_source_refs": ",".join(iva_wallet_provenance.authority_source_refs),
+            }
+        )
     try:
         event = _emit_bucket_event(
             repository=bv_repo,
@@ -503,13 +580,17 @@ def export_modelo_revision(
         actor=command.actor,
         bucket_event_id=event.event_id,
         casilla_provenance=receipt.casilla_provenance,
+        iva_wallet_decision_provenance=iva_wallet_provenance,
     )
 
 
 __all__ = [
     "ModeloExportCommand",
     "ModeloExportCrossBucketRefusedError",
+    "ModeloExportEvidenceMissingError",
     "ModeloExportNoActiveBucketError",
     "ModeloExportResult",
+    "ModeloIvaWalletDecisionProvenance",
+    "_raise_if_ledger_export_evidence_missing",
     "export_modelo_revision",
 ]

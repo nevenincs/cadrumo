@@ -191,14 +191,14 @@ class SnapshotService[TPayload: BaseModel](ABC):
 
     # ---- subclass hooks ----------------------------------------------------
 
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH:
-    # **kwargs: Any is required by this abstract hook contract so concrete
-    # subclasses can accept caller-specific keyword arguments without a shared
-    # typed parameter set. Each implementation narrows via direct key access.
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: abstract hook accepts **kwargs to
+    # let concrete subclasses pass caller-specific arguments without a shared set.
     @abstractmethod
     def _derive_snapshot_id(self, **kwargs: Any) -> str:
         """Derive a content-addressed id from capture kwargs."""
 
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD: abstract hook accepts **kwargs to
+    # let concrete subclasses pass caller-specific arguments without a shared set.
     @abstractmethod
     def _build_active_payload(self, *, snapshot_id: str, **kwargs: Any) -> TPayload:
         """Construct an ACTIVE snapshot payload for fresh captures."""
@@ -225,6 +225,9 @@ class SnapshotService[TPayload: BaseModel](ABC):
 
     # ---- template methods --------------------------------------------------
 
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: template method threads
+    # subclass-specific keyword arguments through the abstract hook contract;
+    # concrete subclasses expose a typed wrapper that calls into this base.
     def _capture_with_lifecycle(self, **kwargs: Any) -> TPayload:
         """Template method: subclasses expose a typed ``capture`` wrapper.
 
@@ -325,16 +328,18 @@ class StatelessSnapshotService[TPayload: BaseModel](ABC):
             )
         return repository
 
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH:
-    # **kwargs: Any is required by this abstract hook contract so concrete
-    # subclasses can accept caller-specific keyword arguments without a shared
-    # typed parameter set. Each implementation narrows via direct key access.
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: abstract hook accepts **kwargs to
+    # let concrete subclasses pass caller-specific arguments without a shared set.
     @abstractmethod
     def _derive_snapshot_id(self, **kwargs: Any) -> str: ...
 
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD: abstract hook accepts **kwargs to
+    # let concrete subclasses pass caller-specific arguments without a shared set.
     @abstractmethod
     def _build_payload(self, *, snapshot_id: str, bucket_id: str, **kwargs: Any) -> TPayload: ...
 
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: template method threads
+    # subclass-specific keyword arguments through the abstract hook contract.
     def _capture_stateless(self, *, bucket_id: str, **kwargs: Any) -> TPayload:
         repository = self._repository_for(bucket_id)
         snapshot_id = self._derive_snapshot_id(**kwargs)

@@ -151,13 +151,15 @@ class ExpedientesService(StatelessSnapshotService[PersistedExpedientesSnapshot])
             return None
         return max(snapshots, key=lambda s: s.captured_at)
 
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH:
-    # **kwargs: Any is required by the SnapshotService[T] abstract hook contract.
-    # Concrete subclasses accept caller-specific keyword arguments without a
-    # shared typed parameter set; narrowing is done by direct key access.
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: SnapshotService[T] abstract hook
+    # contract uses **kwargs to allow concrete subclasses to accept caller-
+    # specific keyword arguments without a shared typed parameter set.
     def _derive_snapshot_id(self, **kwargs: Any) -> str:
         return _derive_snapshot_id(kwargs["capture"])
 
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD: StatelessSnapshotService[T]
+    # abstract _build_payload hook carries **kwargs: Any so concrete subclasses
+    # accept caller-specific keyword arguments without a shared typed set.
     def _build_payload(self, *, snapshot_id: str, bucket_id: str, **kwargs: Any) -> PersistedExpedientesSnapshot:
         capture: ExpedientesCapture = kwargs["capture"]
         return PersistedExpedientesSnapshot(

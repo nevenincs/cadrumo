@@ -178,7 +178,7 @@ def _resolve_default_actor() -> str:
     fallback label keeps the audit record populated rather than raising.
     """
     with suppress(Exception):
-        from ...application.workflow._persistence import workflow_state_repository
+        from ...application.workflow import workflow_state_repository
         from ...core import resolve_active_bucket_id
 
         state = workflow_state_repository().load()
@@ -224,8 +224,8 @@ def _guard_foral_profile_ccaa() -> None:
     not a foral error; :func:`_require_active_profile` handles the
     unconfigured-profile case separately.
     """
-    from ...application.user_profile._orchestration import fact_value
-    from ...application.workflow._persistence import workflow_state_repository
+    from ...application.user_profile import fact_value
+    from ...application.workflow import workflow_state_repository
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()
@@ -911,18 +911,15 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
         kv_pairs: dict[str, str | Decimal] = {
             k: Decimal(v) if k in _ROW_DECIMAL_FIELDS else v for k, v in kv_raw.items()
         }
+        # CAST-RATIONALE-WIRE-PAYLOAD-MODELO-ROW: kv_pairs is dict[str, str|Decimal]; the
+        # splat matches each row dataclass's fields after decimal coercion at the parse
+        # boundary. type: ignore[arg-type] documents the splat-to-field-types narrowing.
         if row_type == "miembro":
-            return Modelo184MemberRow(
-                row_type="miembro", **kv_pairs  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO184-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo184MemberRow fields after decimal coercion at parse boundary.
-            )  # type: ignore[arg-type]
+            return Modelo184MemberRow(row_type="miembro", **kv_pairs)  # type: ignore[arg-type]
         elif row_type == "vinculada":
-            return Modelo232VinculadaRow(
-                row_type="vinculada", **kv_pairs  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO232-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo232VinculadaRow fields after decimal coercion at parse boundary.
-            )  # type: ignore[arg-type]
+            return Modelo232VinculadaRow(row_type="vinculada", **kv_pairs)  # type: ignore[arg-type]
         elif row_type == "operador":
-            row_m349 = Modelo349OperadorRow(
-                row_type="operador", **kv_pairs  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO349-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo349OperadorRow fields after decimal coercion at parse boundary.
-            )  # type: ignore[arg-type]
+            row_m349 = Modelo349OperadorRow(row_type="operador", **kv_pairs)  # type: ignore[arg-type]
             # NIF format check is advisory at parse time — invalid format raises BadParameter.
             nif = str(kv_pairs.get("nif_comunitario", ""))
             pais = str(kv_pairs.get("codigo_pais", ""))
@@ -941,9 +938,8 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
                 )
             return row_m349
         else:
-            return Modelo347ContraparteRow(
-                row_type="contraparte", **kv_pairs  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO347-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo347ContraparteRow fields after decimal coercion at parse boundary.
-            )  # type: ignore[arg-type]
+            # Same splat-to-field-types narrowing rationale as the rows above.
+            return Modelo347ContraparteRow(row_type="contraparte", **kv_pairs)  # type: ignore[arg-type]
     except typer.BadParameter:
         raise
     except (ValidationError, TypeError, ValueError, ArithmeticError) as exc:
@@ -1702,7 +1698,7 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
     in the create payload so the audit trail shows the guard was
     bypassed deliberately.
     """
-    from ...application.workflow._persistence import workflow_state_repository
+    from ...application.workflow import workflow_state_repository
     from ...domain.calculations.registry.applicability import (
         ApplicabilityVerdict,
         derive_modelo_applicability,
@@ -2116,8 +2112,8 @@ def work_create(
     # different DEK whenever the substrate binds key material out of band.
     if modelo == "100":
         from ...application.overview import build_filing_obligation_advisories as _build_filing_obligation_advisories
+        from ...application.user_profile import record_to_values
         from ...application.user_profile._profile_repository import ProfileRepository
-        from ...application.user_profile._projections import record_to_values
         from ...core import resolve_active_bucket_id
 
         _bucket = resolve_active_bucket_id()
@@ -3285,7 +3281,7 @@ def work_calculate(
     modality_lines: list[str] = []
     unit_for_modality = get_work_unit(revision.work_unit_id)
     if str(unit_for_modality.modelo) == "202":
-        from ...application.workflow._persistence import workflow_state_repository
+        from ...application.workflow import workflow_state_repository
         from ...domain.calculations.registry.applicability import derive_modelo_202_modality
 
         _wf_state = workflow_state_repository().load()
@@ -3503,7 +3499,7 @@ def work_revision(
     modality_lines_r: list[str] = []
     unit_for_modality_r = get_work_unit(revision.work_unit_id)
     if str(unit_for_modality_r.modelo) == "202":
-        from ...application.workflow._persistence import workflow_state_repository
+        from ...application.workflow import workflow_state_repository
         from ...domain.calculations.registry.applicability import derive_modelo_202_modality
 
         _wf_state_r = workflow_state_repository().load()
@@ -3711,7 +3707,7 @@ def work_verify(
     # registered REFUSED code rather than a Click "Invalid value:"
     # header that misframes a workflow gate as a bad CLI argument.
     try:
-        from ...application.workflow._persistence import workflow_state_repository
+        from ...application.workflow import workflow_state_repository
 
         workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
         report = verify_modelo_revision(
@@ -3767,7 +3763,7 @@ def work_file(
     # so it renders through its registered REFUSED code rather than a
     # Click "Invalid value:" header.
     try:
-        from ...application.workflow._persistence import workflow_state_repository
+        from ...application.workflow import workflow_state_repository
 
         workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
         record = file_modelo_revision(
@@ -4949,7 +4945,7 @@ def modelo_export_verb(
         ModeloExportNoActiveBucketError,
         export_modelo_revision,
     )
-    from ...application.workflow._persistence import workflow_state_repository
+    from ...application.workflow import workflow_state_repository
 
     workflow_state = workflow_state_repository().load()
     workflow_profile = _profile_to_taxpayer(workflow_state)
@@ -5898,8 +5894,8 @@ def _maritime_facts_from_active_profile():
     ``None`` / ``False`` per the dataclass contract so a profile
     without any maritime fact resolves cleanly (no pathway eligible).
     """
-    from ...application.user_profile._orchestration import fact_value
-    from ...application.workflow._persistence import workflow_state_repository
+    from ...application.user_profile import fact_value
+    from ...application.workflow import workflow_state_repository
     from ...domain.renta import MaritimeWorkerFacts
 
     state = workflow_state_repository().load()

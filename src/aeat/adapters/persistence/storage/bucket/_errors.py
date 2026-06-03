@@ -10,6 +10,8 @@ from :class:`aeat.core.errors.AeatError`; the project error registry's
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from ..errors import SecureStorageError
 
 
@@ -19,6 +21,18 @@ class BucketError(SecureStorageError):
 
 class BucketValidationError(BucketError):
     """Raised when a bucket parameter or manifest field fails validation."""
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+    ) -> None:
+        super().__init__(
+            message,
+            context=context,
+            translated_message="errors.integrity.integrity_storage_bucket_validation",
+        )
 
 
 class NoActiveBucketError(BucketError):

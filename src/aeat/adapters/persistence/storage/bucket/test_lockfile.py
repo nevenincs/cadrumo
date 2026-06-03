@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import subprocess
 import sys
@@ -11,8 +12,11 @@ from pathlib import Path
 
 import pytest
 
-from ._errors import BucketBusyError
+from .....core.errors import build_error_envelope
+from .....core.external_constants import UTF_8_ENCODING
+from ._errors import BucketBusyError, BucketValidationError
 from ._layout import (
+    bucket_paths,
     provision_bucket_directory,
 )
 from ._lockfile import (
@@ -40,7 +44,7 @@ def _holder_script(bucket_dir: Path, hold_seconds: float, ready_path: Path) -> s
 
         paths = bucket_paths(Path({str(bucket_dir.parent.parent)!r}), {bucket_dir.name!r})
         acquire_lock(paths)
-        Path({str(ready_path)!r}).write_text("ready", encoding="utf-8")
+        Path({str(ready_path)!r}).write_text("ready", encoding={UTF_8_ENCODING!r})
         time.sleep({hold_seconds!r})
         release_lock(paths)
         """,
@@ -63,7 +67,9 @@ def test_acquire_then_release_round_trip(tmp_path: Path) -> None:
     try:
         target = lock_path(paths)
         assert target.is_file()
-        assert int(target.read_text(encoding="utf-8").strip()) == os.getpid()
+        assert int(target.read_text(encoding=UTF_8_ENCODING).strip()) == os.getpid()
+        if os.name == "posix":
+            assert target.stat().st_mode & 0o777 == 0o600
     finally:
         release_lock(paths)
 
@@ -96,7 +102,7 @@ def test_cross_process_busy_detection(tmp_path: Path) -> None:
     holder = subprocess.Popen([sys.executable, "-c", script])
     try:
         _wait_for_ready(ready)
-        recorded_pid = int(lock_path(paths).read_text(encoding="utf-8").strip())
+        recorded_pid = int(lock_path(paths).read_text(encoding=UTF_8_ENCODING).strip())
         with pytest.raises(BucketBusyError) as excinfo:
             acquire_lock(paths)
         assert excinfo.value.bucket_id == "alpha"
@@ -141,21 +147,48 @@ def test_stale_lock_with_dead_pid_is_reclaimed(tmp_path: Path) -> None:
     dead_pid = proc.pid
 
     target = lock_path(paths)
-    target.write_text(f"{dead_pid}\n", encoding="utf-8")
+    target.write_text(f"{dead_pid}\n", encoding=UTF_8_ENCODING)
 
     # Acquisition must succeed: the stale-reclaim path unlinks the dead
     # PID's lockfile, then O_EXCL succeeds.
     acquire_lock(paths)
     try:
-        assert int(target.read_text(encoding="utf-8").strip()) == os.getpid()
+        assert int(target.read_text(encoding=UTF_8_ENCODING).strip()) == os.getpid()
     finally:
         release_lock(paths)
 
 
-def test_release_is_idempotent_when_lock_absent(tmp_path: Path) -> None:
+def test_malformed_lockfile_pid_is_reclaimed_with_debug_log(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    paths = provision_bucket_directory(tmp_path, "alpha")
+    target = lock_path(paths)
+    target.write_text("not-a-pid\n", encoding=UTF_8_ENCODING)
+
+    with caplog.at_level(logging.DEBUG, logger="aeat.adapters.persistence.storage.bucket._lockfile"):
+        acquire_lock(paths)
+    try:
+        assert int(target.read_text(encoding=UTF_8_ENCODING).strip()) == os.getpid()
+    finally:
+        release_lock(paths)
+
+    assert "bucket lockfile pid malformed; treating lock as stale" in caplog.text
+    assert str(target) not in caplog.text
+    assert str(tmp_path) not in caplog.text
+
+
+def test_release_is_idempotent_when_lock_absent(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     paths = provision_bucket_directory(tmp_path, "alpha")
 
-    release_lock(paths)  # No-op; must not raise.
+    with caplog.at_level(logging.DEBUG, logger="aeat.adapters.persistence.storage.bucket._lockfile"):
+        release_lock(paths)  # No-op; must not raise.
+
+    assert "bucket lockfile release skipped missing lockfile" in caplog.text
+    assert str(tmp_path) not in caplog.text
 
 
 def test_release_leaves_foreign_lockfile_alone(tmp_path: Path) -> None:
@@ -164,9 +197,28 @@ def test_release_leaves_foreign_lockfile_alone(tmp_path: Path) -> None:
     paths = provision_bucket_directory(tmp_path, "alpha")
     target = lock_path(paths)
     foreign_pid = os.getpid() + 1
-    target.write_text(f"{foreign_pid}\n", encoding="utf-8")
+    target.write_text(f"{foreign_pid}\n", encoding=UTF_8_ENCODING)
 
     release_lock(paths)
     assert target.is_file()
     # Cleanup: remove manually since the PID is foreign.
     target.unlink()
+
+
+def test_bucket_dir_file_collision_is_typed_and_redacted(tmp_path: Path) -> None:
+    paths = bucket_paths(tmp_path, "alpha")
+    paths.bucket_dir.parent.mkdir(parents=True)
+    paths.bucket_dir.write_text("not a directory", encoding=UTF_8_ENCODING)
+
+    with pytest.raises(BucketValidationError) as excinfo:
+        acquire_lock(paths)
+
+    assert excinfo.value.context == {
+        "reason": "bucket_dir_not_directory",
+        "surface": "bucket_lockfile",
+    }
+    assert str(tmp_path) not in str(excinfo.value)
+    assert isinstance(excinfo.value.__cause__, FileExistsError)
+    envelope = build_error_envelope(excinfo.value)
+    assert envelope.code == "INTEGRITY_STORAGE_BUCKET_VALIDATION"
+    assert str(tmp_path) not in envelope.model_dump_json()

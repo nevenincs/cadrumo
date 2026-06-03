@@ -17,11 +17,11 @@ import pytest
 from sqlalchemy import Engine, create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
-from ..errors import DecryptionError
+from ..errors import DecryptionError, StorageValidationError
 from ..master_key import EphemeralMasterKeyProvider
 from . import KEY_SIZE, EncryptedBytes, EncryptedJSON, EncryptedPayload, EncryptedString, HashedLookup
 from ._crypto import encrypt_record
-from ._encrypted_columns import _AAD_STRING, decrypt_encrypted_string_column
+from ._encrypted_columns import _AAD_JSON, _AAD_STRING, decrypt_encrypted_string_column
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -167,6 +167,21 @@ class TestEncryptedJSON:
         with pytest.raises(StatementError):
             session.flush()
 
+    def test_invalid_bind_value_carries_storage_validation_locale_key(self, engine: Engine) -> None:
+        with pytest.raises(StorageValidationError) as excinfo:
+            EncryptedJSON().process_bind_param({object(): "not-json"}, engine.dialect)
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
+
+    def test_invalid_stored_json_is_decryption_error(self, engine: Engine, fixed_master_key: bytes) -> None:
+        wire = encrypt_record(
+            b"{",
+            key=fixed_master_key,
+            associated_data=_AAD_JSON,
+        ).to_wire()
+
+        with pytest.raises(DecryptionError):
+            EncryptedJSON().process_result_value(wire, engine.dialect)
+
 
 class TestCrossTypeReplayPrevention:
     """Ciphertext minted for one column-type AAD must refuse to decrypt as another."""
@@ -202,6 +217,16 @@ class TestCrossTypeReplayPrevention:
 
         with pytest.raises(DecryptionError):
             decrypt_encrypted_string_column(wire)
+
+    def test_encrypted_string_result_rejects_invalid_utf8(self, engine: Engine, fixed_master_key: bytes) -> None:
+        wire = encrypt_record(
+            b"\xff\xfe",
+            key=fixed_master_key,
+            associated_data=_AAD_STRING,
+        ).to_wire()
+
+        with pytest.raises(DecryptionError):
+            EncryptedString().process_result_value(wire, engine.dialect)
 
 
 class TestHashedLookup:
@@ -265,6 +290,11 @@ class TestHashedLookup:
         with EphemeralMasterKeyProvider():
             digest_b = HashedLookup.compute("payload")
         assert digest_a != digest_b
+
+    def test_invalid_plaintext_type_carries_storage_validation_locale_key(self) -> None:
+        with pytest.raises(StorageValidationError) as excinfo:
+            HashedLookup.compute(b"not-str")  # type: ignore[arg-type]
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
 
 
 class TestEncryptedPayload:

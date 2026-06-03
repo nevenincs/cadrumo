@@ -7,7 +7,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ._errors import BucketValidationError
+from .....core.errors import build_error_envelope
+from ._errors import BucketAlreadyPresentError, BucketValidationError
 from ._layout import (
     BucketPaths,
     bucket_paths,
@@ -32,8 +33,40 @@ def test_provision_creates_three_subdirectories(tmp_path: Path) -> None:
 def test_provision_is_fail_closed_on_existing_bucket(tmp_path: Path) -> None:
     provision_bucket_directory(tmp_path, "alpha")
 
-    with pytest.raises(FileExistsError):
+    with pytest.raises(BucketAlreadyPresentError) as excinfo:
         provision_bucket_directory(tmp_path, "alpha")
+
+    assert excinfo.value.bucket_id == "alpha"
+    assert excinfo.value.context == {"bucket_id": "alpha"}
+    assert str(tmp_path) not in str(excinfo.value)
+    assert isinstance(excinfo.value.__cause__, FileExistsError)
+
+
+def test_existing_bucket_error_envelope_is_localized_and_redacted(tmp_path: Path) -> None:
+    provision_bucket_directory(tmp_path, "alpha")
+
+    with pytest.raises(BucketAlreadyPresentError) as excinfo:
+        provision_bucket_directory(tmp_path, "alpha")
+
+    envelope = build_error_envelope(excinfo.value)
+    assert envelope.code == "REFUSED_STORAGE_BUCKET_ALREADY_PRESENT"
+    assert envelope.message
+    assert envelope.context == {"bucket_id": "alpha"}
+    assert str(tmp_path) not in envelope.model_dump_json()
+
+
+def test_buckets_parent_file_collision_is_typed_and_redacted(tmp_path: Path) -> None:
+    (tmp_path / "buckets").write_text("not a directory")
+
+    with pytest.raises(BucketAlreadyPresentError) as excinfo:
+        provision_bucket_directory(tmp_path, "alpha")
+
+    assert excinfo.value.bucket_id == "alpha"
+    assert str(tmp_path) not in str(excinfo.value)
+    assert isinstance(excinfo.value.__cause__, FileExistsError)
+    envelope = build_error_envelope(excinfo.value)
+    assert envelope.code == "REFUSED_STORAGE_BUCKET_ALREADY_PRESENT"
+    assert str(tmp_path) not in envelope.model_dump_json()
 
 
 def test_provision_rejects_empty_bucket_id(tmp_path: Path) -> None:

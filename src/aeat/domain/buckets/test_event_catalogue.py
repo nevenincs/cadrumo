@@ -374,6 +374,25 @@ def test_bucket_event_type_includes_bucket_maintenance_kinds() -> None:
     assert BucketEventType.BUCKET_DELETED.value == "bucket.deleted"
 
 
+def test_bucket_event_object_type_includes_bucket_container() -> None:
+    """``BucketEventObjectType`` carries a ``BUCKET`` value so the four
+    bucket-maintenance events (``BUCKET_EXPORTED`` / ``BUCKET_IMPORTED``
+    / ``BUCKET_RENAMED`` / ``BUCKET_DELETED``) can reference the
+    container itself as their ``object_type``. Reusing the ``PROFILE``
+    value would conflate the operator's verb invocation on the bucket
+    with the lifecycle change on the encrypted profile record, blurring
+    the audit-trail distinction the maintenance events exist to make.
+
+    Authority: 2026-06-03-cli-workflow-redesign-adr (composition pattern
+    preconditions Step) and the 2026-05-15 amendment to
+    2026-05-12-cli-workflow-redesign-bucket-adr.
+    """
+
+    from ._event import BucketEventObjectType
+
+    assert BucketEventObjectType.BUCKET.value == "bucket"
+
+
 def test_bucket_event_type_includes_ledger_ratios_mutation_kinds() -> None:
     """Usage-ratio set / unset mutations have canonical enum slots
     so the ratios CLI handlers can route emissions through the

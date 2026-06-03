@@ -91,6 +91,11 @@ from ...domain.modelos._filing_repository import (
     ModeloRecordCatalogueRepository,
     upsert_filing_record,
 )
+from ...domain.modelos._ledger_filing_snapshot import (
+    LedgerFilingEvidence,
+    LedgerFilingSnapshot,
+    ManualFactBasisEntry,
+)
 from ...domain.modelos._protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -124,10 +129,8 @@ from ...domain.period import parse_canonical_period, period_end_date
 from ...domain.submission import ModeloDraftStatus, SubmissionEngine
 from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 from ..aggregation._ledger_filing_snapshot import (
-    assert_evidence_covers_snapshot,
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
-    project_manual_fact_basis_entries,
 )
 from ..filing import (
     approve_draft,
@@ -140,6 +143,7 @@ from ..workflow import (
     DeadlineEngineAdapter,
     ModeloInputs,
     RegistryModeloDraftProtocol,
+    WorkflowAbortReason,
     WorkflowEngine,
     WorkflowInputMismatchError,
     WorkflowPurpose,
@@ -172,6 +176,9 @@ the borrador participation triple (``borrador_participated``,
 audit tools reading the event log alone can detect grounding-loss
 regressions without joining against the encrypted revision catalogue.
 """
+
+_M303_PRIOR_COMPENSATION_BINDING_ID = "modelo-303-compensacion-pendiente-anteriores"
+_M303_PRIOR_COMPENSATION_CASILLA_ID = "iva.compensacion-pendiente-periodos-anteriores"
 
 
 def _emit_bucket_event(
@@ -332,12 +339,23 @@ class ModeloWorkflowGateError(ModeloError):
         self._result = result
         reason = result.aborted_reason.value if result.aborted_reason is not None else "unknown"
         summary = result.summary.strip() or "the workflow gate aborted this transition"
+        # NO_PENDING_OBLIGATION is the gate's most-hit dead end for a newcomer:
+        # a verified-complete revision whose AEAT filing-obligation window is not
+        # open at the current clock cannot be marked internally filed. The generic
+        # gate suggestion (`work list`) does not signpost the local finish line, so
+        # for this abort code the suggestion points at `work export` — exporting the
+        # verified-complete revision to a fichero-BOE artefact is the local finish
+        # line and does NOT require an open filing window or this `file` step.
+        suggestion: str | None = None
+        if result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION:
+            suggestion = "aeat app modelo work export <work-unit-id> --output <path>"
         super().__init__(
             summary,
             context={
                 "abort_code": reason,
                 "stage": result.final_stage.value,
             },
+            suggestion=suggestion,
         )
 
     @property
@@ -1005,6 +1023,23 @@ def calculate_modelo_revision(
             work_unit,
             repository=iva_compensation_decision_repository,
         )
+        if iva_compensation_decision is None and not _caller_supplied_prior_compensation_value(
+            binding_values=binding_values,
+            backend_binding_values=backend_binding_values,
+            casilla_inputs=casilla_inputs,
+            backend_casilla_inputs=backend_casilla_inputs,
+        ):
+            # Lazy-derive the local decision ONLY for the implicit path (operator
+            # supplied no prior-compensation value). When the operator EXPLICITLY
+            # asserts a prior-compensation binding/casilla, that value must be
+            # reconciled against a real wallet/seed decision first, so the
+            # existing seed-verb guidance (via _apply_iva_compensation_decision_
+            # binding with decision=None) is preserved for that case.
+            iva_compensation_decision = _lazily_reconcile_local_iva_compensation_for_work_unit(
+                work_unit,
+                snapshot=snapshot,
+                repository=iva_compensation_decision_repository,
+            )
     else:
         iva_compensation_decision = _require_persisted_iva_compensation_decision_for_work_unit(
             work_unit,
@@ -1235,8 +1270,8 @@ def _apply_iva_compensation_decision_binding(
     """Apply a non-blocking IVA wallet decision to Modelo 303 binding values."""
     if modelo != "303":
         return
-    binding_id = "modelo-303-compensacion-pendiente-anteriores"
-    bound_casilla_id = "iva.compensacion-pendiente-periodos-anteriores"
+    binding_id = _M303_PRIOR_COMPENSATION_BINDING_ID
+    bound_casilla_id = _M303_PRIOR_COMPENSATION_CASILLA_ID
     caller_casilla_value = dict(casilla_inputs or {}).get(bound_casilla_id)
     backend_casilla_value = dict(backend_casilla_inputs or {}).get(bound_casilla_id)
     if decision is None:
@@ -1349,28 +1384,155 @@ def _load_persisted_iva_compensation_decision_for_work_unit(
     )
 
 
-def _persisted_blocked_iva_compensation_decision_for_work_unit(
+def _caller_supplied_prior_compensation_value(
+    *,
+    binding_values: Mapping[str, Decimal] | None,
+    backend_binding_values: Mapping[str, Decimal] | None,
+    casilla_inputs: Mapping[str, Decimal] | None,
+    backend_casilla_inputs: Mapping[str, Decimal] | None,
+) -> bool:
+    """Return whether a Modelo 303 prior-compensation value was explicitly supplied.
+
+    The lazy local reconciliation must NOT fire when the operator (caller) or a
+    backend resolver explicitly asserts the prior-compensation binding/casilla:
+    that value needs reconciliation against a real wallet/seed decision, and the
+    existing seed-verb guidance must surface. This mirrors the value-presence
+    check inside :func:`_apply_iva_compensation_decision_binding`.
+    """
+    binding_id = _M303_PRIOR_COMPENSATION_BINDING_ID
+    casilla_id = _M303_PRIOR_COMPENSATION_CASILLA_ID
+    return (
+        dict(binding_values or {}).get(binding_id) is not None
+        or dict(backend_binding_values or {}).get(binding_id) is not None
+        or dict(casilla_inputs or {}).get(casilla_id) is not None
+        or dict(backend_casilla_inputs or {}).get(casilla_id) is not None
+    )
+
+
+def _lazily_reconcile_local_iva_compensation_for_work_unit(
     work_unit: WorkUnit,
+    *,
+    snapshot: RegistrySnapshot,
+    repository: IvaWalletDecisionRepository | None = None,
+) -> IvaCompensationReconciliationDecision | None:
+    """Auto-derive and persist the local-authority Modelo 303 compensation decision.
+
+    Calculate's prior-compensation gate requires a persisted
+    :class:`IvaCompensationReconciliationDecision`. When none exists and no live
+    AEAT wallet is reconciled, the operator was forced into a circular dead-end:
+    ``iva-wallet seed`` writes the compensation HISTORY (a different record), but
+    calculate kept demanding the decision and pointing back at the seed verb. The
+    seed-only / no-live-wallet flow is the local-authority case: the local
+    Modelo 303 recurrence (carried forward from prior filings, or seeded) IS the
+    authority, so derive the decision from it here rather than refuse.
+
+    This fires ONLY when no decision is persisted (guardrail: a live-wallet flow
+    persists its decision via the Sede reconciliation path BEFORE calculate, so a
+    persisted decision is present and this branch is skipped — the strict
+    live-wallet-discrepancy gate is untouched). The derived decision is NON-blocking
+    with ``selected_amount`` equal to the real local recurrence (zero only when the
+    local history is genuinely zero — never an auto-zero of a real prior balance);
+    :func:`reconcile_modelo_303_iva_compensation` owns that logic. The persisted
+    decision then flows through :func:`_apply_iva_compensation_decision_binding`
+    into casilla 110 (``iva.compensacion-pendiente-periodos-anteriores``), so the
+    carried amount is surfaced on the calculation result with its registry
+    legal_refs (LIVA art. 99) rather than silently applied.
+
+    Returns the derived :class:`IvaCompensationReconciliationDecision`, or ``None``
+    for non-303 work units / when no taxpayer identity is resolvable.
+    """
+    if work_unit.modelo != "303":
+        return None
+    taxpayer_nif = _taxpayer_nif_for_bucket(work_unit.bucket_id)
+    if taxpayer_nif is None:
+        return None
+    from ..calculations._iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
+
+    report = reconcile_modelo_303_iva_compensation(
+        snapshot,
+        taxpayer_nif=taxpayer_nif,
+        wallet=None,
+        decision_repository=repository,
+        # No caller-supplied prior-compensation value reached this point (the
+        # call site guards on that) and no live wallet is configured. When there
+        # is also no prior local recurrence, this is the taxpayer's first IVA
+        # period: casilla 110 is a legally-certain zero (LIVA art. 99.5), so
+        # derive the non-blocking first-period decision rather than dead-end. A
+        # real prior recurrence (filed history) still flows through and stays
+        # gated pending operator confirmation; it is never auto-zeroed.
+        treat_absent_recurrence_as_first_period=True,
+        persist=True,
+    )
+    return report.decision
+
+
+def _require_persisted_iva_compensation_decision_matches_revision(
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
     *,
     repository: IvaWalletDecisionRepository | None = None,
 ) -> IvaCompensationReconciliationDecision | None:
+    if work_unit.modelo != "303":
+        return None
     decision = _load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
-    if decision is not None and bool(decision.blocked):
-        return decision
-    return None
-
-
-def _raise_if_persisted_iva_compensation_decision_blocks_work_unit(
-    work_unit: WorkUnit,
-    *,
-    repository: IvaWalletDecisionRepository | None = None,
-) -> None:
-    decision = _persisted_blocked_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
-    if decision is not None:
+    if decision is None:
+        raise ModeloIvaWalletReconciliationBlocked(
+            translated_message="application.modelo.errors.iva_wallet_not_seeded",
+            suggestion="aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm",
+        )
+    if decision.blocked:
         raise ModeloIvaWalletReconciliationBlocked(
             _iva_wallet_blocked_message(decision),
             translated_message="application.modelo.errors.iva_wallet_blocked",
         )
+    if decision.target_year != work_unit.filing_year or decision.target_period != work_unit.period:
+        raise ModeloIvaWalletReconciliationBlocked(
+            tr(
+                "application.modelo.errors.iva_wallet_blocked",
+                divergence="authority_target_mismatch",
+                reason="persisted IVA wallet decision target does not match the Modelo 303 work unit",
+            ),
+            translated_message="application.modelo.errors.iva_wallet_blocked",
+        )
+    if decision.selected_amount is None:
+        raise ModeloIvaWalletReconciliationBlocked(
+            tr(
+                "application.modelo.errors.iva_wallet_blocked",
+                divergence="authority_missing_amount",
+                reason="persisted IVA wallet decision has no selected amount",
+            ),
+            translated_message="application.modelo.errors.iva_wallet_blocked",
+        )
+    revision_amount = _revision_iva_compensation_amount(revision)
+    if revision_amount is None:
+        raise ModeloIvaWalletReconciliationBlocked(
+            tr(
+                "application.modelo.errors.iva_wallet_blocked",
+                divergence="authority_revision_missing_amount",
+                reason="calculation revision does not carry the Modelo 303 prior-compensation amount",
+            ),
+            translated_message="application.modelo.errors.iva_wallet_blocked",
+        )
+    if Decimal(decision.selected_amount) != revision_amount:
+        raise ModeloIvaWalletReconciliationBlocked(
+            tr(
+                "application.modelo.errors.iva_wallet_blocked",
+                divergence="authority_amount_mismatch",
+                reason="persisted IVA wallet decision does not match the calculation revision",
+            ),
+            translated_message="application.modelo.errors.iva_wallet_blocked",
+        )
+    return decision
+
+
+def _revision_iva_compensation_amount(revision: CalculationRevision) -> Decimal | None:
+    casilla_value = dict(revision.casilla_values).get(_M303_PRIOR_COMPENSATION_CASILLA_ID)
+    if casilla_value is not None:
+        return Decimal(casilla_value)
+    binding_value = dict(revision.binding_overrides).get(_M303_PRIOR_COMPENSATION_BINDING_ID)
+    if binding_value is not None:
+        return Decimal(binding_value)
+    return None
 
 
 # ANY-RETURN-RATIONALE-ACTIONS-IVA-WALLET-DECISION:
@@ -2873,6 +3035,42 @@ def _evaluate_verification_predicates(
     return findings
 
 
+def _manual_fact_basis_entries(inputs_snapshot: Mapping[str, str]) -> tuple[ManualFactBasisEntry, ...]:
+    """Project a revision's operator casilla inputs into manual fact-basis entries.
+
+    The ``inputs_snapshot`` holds the caller-supplied (operator-entered) casilla
+    values that are not ledger-derived; each non-empty entry is part of the fact
+    basis a filing artefact must explain. Blank values are skipped (they carry no
+    fact).
+    """
+    return tuple(
+        ManualFactBasisEntry(casilla=casilla, value=value)
+        for casilla, value in sorted(inputs_snapshot.items())
+        if value.strip()
+    )
+
+
+def _assert_evidence_covers_snapshot(
+    snapshot: LedgerFilingSnapshot, evidence: LedgerFilingEvidence
+) -> None:
+    """Guarantee the bundled evidence covers every fingerprinted contributor.
+
+    The evidence and the fingerprint snapshot are projected from the same
+    ``source_transaction_ids``; this invariant assertion makes a silent
+    contributor omission impossible to ship — the evidence row set MUST equal the
+    fingerprint row set.
+    """
+    snapshot_ids = {row.transaction_id for row in snapshot.rows}
+    evidence_ids = {row.transaction_id for row in evidence.rows}
+    if snapshot_ids != evidence_ids:
+        missing = sorted(snapshot_ids - evidence_ids)
+        extra = sorted(evidence_ids - snapshot_ids)
+        raise ModeloError(
+            "ledger filing evidence does not cover the fingerprint snapshot: "
+            f"missing={missing} extra={extra}",
+        )
+
+
 def verify_modelo_revision(
     calculation_revision_id: str,
     *,
@@ -2999,12 +3197,14 @@ def verify_modelo_revision(
         target=target,
         profile=workflow_profile,
     )
-    blocked_iva_wallet_decision = _persisted_blocked_iva_compensation_decision_for_work_unit(
-        work_unit,
-        repository=iva_compensation_decision_repository,
-    )
-    if blocked_iva_wallet_decision is not None:
-        findings.append(_iva_wallet_blocking_verification_finding(blocked_iva_wallet_decision))
+    try:
+        _require_persisted_iva_compensation_decision_matches_revision(
+            work_unit,
+            target,
+            repository=iva_compensation_decision_repository,
+        )
+    except ModeloIvaWalletReconciliationBlocked as exc:
+        findings.append(_iva_wallet_error_verification_finding(exc))
     completeness, granted = _classify_verification_outcome(
         findings=findings,
         missing_required=missing_required,
@@ -3063,14 +3263,19 @@ def verify_modelo_revision(
             catalogue=catalogue,
             captured_at=now,
         )
+        # Bundle the fact basis behind the revision (modelo-export-evidence-parity
+        # ADR): the typed contributing-row evidence + the operator manual inputs,
+        # pegged to the snapshot fingerprint. Reuses the single catalogue load.
         filing_evidence = compute_ledger_filing_evidence(
             source_transaction_ids=target.source_transaction_ids,
             catalogue=catalogue,
             snapshot_fingerprint=filing_snapshot.snapshot_fingerprint,
             captured_at=now,
-            manual_entries=project_manual_fact_basis_entries(target.inputs_snapshot),
+            manual_entries=_manual_fact_basis_entries(target.inputs_snapshot),
         )
-        assert_evidence_covers_snapshot(filing_snapshot, filing_evidence)
+        # No-silent-omission guard: every fingerprinted contributor must appear in
+        # the bundled evidence.
+        _assert_evidence_covers_snapshot(filing_snapshot, filing_evidence)
         verified = target.model_copy(
             update={
                 "state": CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -3270,6 +3475,22 @@ def _iva_wallet_blocking_verification_finding(decision: object) -> ModeloVerific
         message=_iva_wallet_blocked_message(decision),
         next_action=tr("application.modelo.findings.iva_wallet_next_action"),
     )
+
+
+def _iva_wallet_error_verification_finding(error: ModeloIvaWalletReconciliationBlocked) -> ModeloVerificationFinding:
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message=_translated_exception_message(error),
+        next_action=tr("application.modelo.findings.iva_wallet_next_action"),
+    )
+
+
+def _translated_exception_message(error: ModeloIvaWalletReconciliationBlocked) -> str:
+    key = getattr(error, "translated_message", None)
+    if isinstance(key, str) and key.strip() and key != "application.modelo.errors.iva_wallet_blocked":
+        return tr(key)
+    return str(error)
 
 
 def _classify_verification_outcome(
@@ -3563,8 +3784,9 @@ def file_modelo_revision(
         raise WorkUnitNotFoundError(
             f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}"
         )
-    _raise_if_persisted_iva_compensation_decision_blocks_work_unit(
+    _require_persisted_iva_compensation_decision_matches_revision(
         work_unit,
+        target,
         repository=iva_compensation_decision_repository,
     )
 

@@ -45,6 +45,8 @@ from ..errors import DecryptionError, StorageValidationError
 from ..master_key._active_session import get_active_master_key
 from ._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 
+_STORAGE_VALIDATION_MESSAGE_KEY = "errors.integrity.integrity_storage_validation"
+
 
 class EncryptedPayload(BaseModel):
     """Validated wrapper for a value decrypted from an :class:`EncryptedJSON` column.
@@ -65,6 +67,10 @@ _AAD_STRING = b"aeat.column.encrypted_string.v1"
 _AAD_BYTES = b"aeat.column.encrypted_bytes.v1"
 _AAD_JSON = b"aeat.column.encrypted_json.v1"
 _HKDF_CONTEXT_COLUMN_LOOKUP = b"aeat.column.hashed_lookup.v1"
+
+
+def _storage_validation_error(message: str) -> StorageValidationError:
+    return StorageValidationError(message, translated_message=_STORAGE_VALIDATION_MESSAGE_KEY)
 
 
 def decrypt_encrypted_bytes_column(wire: bytes) -> bytes:
@@ -136,7 +142,7 @@ class EncryptedString(TypeDecorator[str]):
         if value is None:
             return None
         if not isinstance(value, str):
-            raise StorageValidationError(f"EncryptedString expects str; got {type(value).__name__}")
+            raise _storage_validation_error(f"EncryptedString expects str; got {type(value).__name__}")
         key = _resolve_master_key()
         blob = encrypt_record(value.encode("utf-8"), key=key, associated_data=_AAD_STRING)
         return blob.to_wire()
@@ -147,7 +153,10 @@ class EncryptedString(TypeDecorator[str]):
         key = _resolve_master_key()
         blob = EncryptedBlob.from_wire(bytes(value))
         plaintext = decrypt_record(blob, key=key, associated_data=_AAD_STRING)
-        return plaintext.decode("utf-8")
+        try:
+            return plaintext.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise DecryptionError("EncryptedString payload is not valid UTF-8") from exc
 
 
 class EncryptedBytes(TypeDecorator[bytes]):
@@ -165,7 +174,7 @@ class EncryptedBytes(TypeDecorator[bytes]):
         if value is None:
             return None
         if not isinstance(value, bytes | bytearray | memoryview):
-            raise StorageValidationError(f"EncryptedBytes expects bytes-like; got {type(value).__name__}")
+            raise _storage_validation_error(f"EncryptedBytes expects bytes-like; got {type(value).__name__}")
         key = _resolve_master_key()
         blob = encrypt_record(bytes(value), key=key, associated_data=_AAD_BYTES)
         return blob.to_wire()
@@ -201,7 +210,7 @@ class EncryptedJSON(TypeDecorator[object]):
                 sort_keys=True,
             ).encode("utf-8")
         except (TypeError, ValueError) as exc:
-            raise StorageValidationError(f"EncryptedJSON expects a JSON-serialisable value: {exc}") from exc
+            raise _storage_validation_error(f"EncryptedJSON expects a JSON-serialisable value: {exc}") from exc
         key = _resolve_master_key()
         blob = encrypt_record(serialised, key=key, associated_data=_AAD_JSON)
         return blob.to_wire()
@@ -212,7 +221,11 @@ class EncryptedJSON(TypeDecorator[object]):
         key = _resolve_master_key()
         blob = EncryptedBlob.from_wire(bytes(value))
         plaintext = decrypt_record(blob, key=key, associated_data=_AAD_JSON)
-        return EncryptedPayload(data=json.loads(plaintext.decode("utf-8"))).data
+        try:
+            decoded = plaintext.decode("utf-8")
+            return EncryptedPayload(data=json.loads(decoded)).data
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise DecryptionError("EncryptedJSON payload is not valid JSON") from exc
 
 
 class HashedLookup(TypeDecorator[bytes]):
@@ -271,7 +284,7 @@ class HashedLookup(TypeDecorator[bytes]):
             StorageValidationError: When ``plaintext`` is not a string.
         """
         if not isinstance(plaintext, str):
-            raise StorageValidationError(f"HashedLookup.compute expects str; got {type(plaintext).__name__}")
+            raise _storage_validation_error(f"HashedLookup.compute expects str; got {type(plaintext).__name__}")
         key = _resolve_master_key()
         sub_key = cls._derive_lookup_key(key)
         return hmac.new(sub_key, plaintext.encode("utf-8"), hashlib.sha256).digest()
@@ -284,11 +297,11 @@ class HashedLookup(TypeDecorator[bytes]):
         if isinstance(value, bytes | bytearray | memoryview):
             digest = bytes(value)
             if len(digest) != _HASHED_LOOKUP_DIGEST_SIZE:
-                raise StorageValidationError(
+                raise _storage_validation_error(
                     f"HashedLookup pre-computed digest must be {_HASHED_LOOKUP_DIGEST_SIZE} bytes; got {len(digest)}",
                 )
             return digest
-        raise StorageValidationError(
+        raise _storage_validation_error(
             f"HashedLookup expects str or bytes; got {type(value).__name__}",
         )
 
@@ -299,7 +312,7 @@ class HashedLookup(TypeDecorator[bytes]):
         # the raw digest so callers can compare it against another
         # ``compute()`` result.
         if len(value) != _HASHED_LOOKUP_DIGEST_SIZE:
-            raise StorageValidationError(
+            raise _storage_validation_error(
                 f"HashedLookup expects {_HASHED_LOOKUP_DIGEST_SIZE}-byte digests; got {len(value)}",
             )
         return bytes(value)

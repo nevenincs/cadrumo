@@ -48,6 +48,7 @@ from ....application.storage.calc_sheets import (
     SheetRowSet,
     SheetValueCell,
     TabName,
+    evidence_table,
 )
 from ....core.config import Settings as _Settings
 from ...outbound.storage._errors import (
@@ -364,6 +365,108 @@ def _build_row_set_header_data(row_sets: Iterable[SheetRowSet]) -> list[dict[str
     return data
 
 
+def _build_evidence_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
+    """Build the Evidencia tab value writes, mirroring the offline workbook.
+
+    Consumes the shared ``evidence_table`` single source so the online Sheets
+    Evidencia surface is byte-identical to the offline xls one
+    (modelo-export-evidence-parity ADR W05): fingerprint at A1/B1, headers at
+    row 3, contributor + manual rows from row 4.
+    """
+    fingerprint, header, body = evidence_table(plan)
+    tab = TabName.EVIDENCIA.value
+    data: list[dict[str, Any]] = [
+        {"range": f"'{tab}'!A1", "values": [["Snapshot fingerprint", fingerprint]]},
+        {"range": f"'{tab}'!A3", "values": [list(header)]},
+    ]
+    for offset, row in enumerate(body):
+        data.append({"range": f"'{tab}'!A{4 + offset}", "values": [list(row)]})
+    return data
+
+
+_NUMBER_FORMAT_TYPE: Final[Mapping[str, str]] = {
+    "money": "NUMBER",
+    "integer": "NUMBER",
+    "percentage": "PERCENT",
+}
+
+
+def _build_number_format_requests(
+    plan: SheetExportPlan,
+    *,
+    sheet_id_by_tab: Mapping[str, int],
+) -> list[dict[str, Any]]:
+    """Apply each numeric casilla's display format, mirroring the offline workbook.
+
+    Money/integer cells render as NUMBER with the casilla's pattern; ratio cells
+    as PERCENT — so the online Sheet shows the same money/percentage presentation
+    as the offline xls and the official AEAT workbook.
+    """
+    requests: list[dict[str, Any]] = []
+    for number_format in plan.number_formats:
+        sheet_id = sheet_id_by_tab.get(number_format.address.tab.value)
+        if sheet_id is None:
+            continue
+        requests.append(
+            {
+                "repeatCell": {
+                    "range": {
+                        "sheetId": sheet_id,
+                        "startRowIndex": number_format.address.row - 1,
+                        "endRowIndex": number_format.address.row,
+                        "startColumnIndex": number_format.address.column - 1,
+                        "endColumnIndex": number_format.address.column,
+                    },
+                    "cell": {
+                        "userEnteredFormat": {
+                            "numberFormat": {
+                                "type": _NUMBER_FORMAT_TYPE[number_format.data_type],
+                                "pattern": number_format.pattern,
+                            }
+                        }
+                    },
+                    "fields": "userEnteredFormat.numberFormat",
+                }
+            }
+        )
+    return requests
+
+
+def _build_emphasis_format_requests(
+    plan: SheetExportPlan,
+    *,
+    sheet_id_by_tab: Mapping[str, int],
+) -> list[dict[str, Any]]:
+    """Bold the section-header cells and start/final anchor labels.
+
+    Mirrors the offline workbook's section-header + anchor styling so the two
+    transports present the same official-workbook orientation. The label text is
+    written by the value batch; this only sets the bold weight.
+    """
+    requests: list[dict[str, Any]] = []
+    addresses = [header.address for header in plan.section_headers] + [anchor.address for anchor in plan.anchors]
+    for address in addresses:
+        sheet_id = sheet_id_by_tab.get(address.tab.value)
+        if sheet_id is None:
+            continue
+        requests.append(
+            {
+                "repeatCell": {
+                    "range": {
+                        "sheetId": sheet_id,
+                        "startRowIndex": address.row - 1,
+                        "endRowIndex": address.row,
+                        "startColumnIndex": address.column - 1,
+                        "endColumnIndex": address.column,
+                    },
+                    "cell": {"userEnteredFormat": {"textFormat": {"bold": True}}},
+                    "fields": "userEnteredFormat.textFormat.bold",
+                }
+            }
+        )
+    return requests
+
+
 def _build_grid_resize_requests(
     plan: SheetExportPlan,
     *,
@@ -634,6 +737,9 @@ def _managed_developer_metadata_key(key: object) -> bool:
     )
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-SHEETS-API-PAYLOAD: spreadsheet is the
+# free-shape JSON payload returned by the Google Sheets API; the googleapiclient
+# discovery client ships no typed model for the response.
 def _build_developer_metadata_cleanup_requests(
     spreadsheet: Mapping[str, Any],
 ) -> list[dict[str, Any]]:
@@ -670,6 +776,8 @@ def _build_developer_metadata_cleanup_requests(
     return requests
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-SHEETS-API-PAYLOAD: spreadsheet is the
+# free-shape JSON payload returned by the Google Sheets API.
 def _build_protected_range_cleanup_requests(
     spreadsheet: Mapping[str, Any],
     plan: SheetExportPlan,
@@ -696,6 +804,8 @@ def _build_protected_range_cleanup_requests(
     return requests
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-SHEETS-API-PAYLOAD: spreadsheet is the
+# free-shape JSON payload returned by the Google Sheets API.
 def _build_structural_cleanup_requests(
     spreadsheet: Mapping[str, Any],
     plan: SheetExportPlan,
@@ -915,7 +1025,10 @@ def apply_export_plan(
     # Write values and formulas as USER_ENTERED so Sheets parses
     # formula strings starting with "=".
     value_data = (
-        _build_value_data(plan.value_cells) + _build_guide_value_data(plan) + _build_row_set_header_data(plan.row_sets)
+        _build_value_data(plan.value_cells)
+        + _build_guide_value_data(plan)
+        + _build_row_set_header_data(plan.row_sets)
+        + _build_evidence_value_data(plan)
     )
     formula_data = _build_formula_data(plan.formula_cells)
     update_body = {
@@ -950,12 +1063,16 @@ def apply_export_plan(
         plan.value_cells,
         sheet_id_by_tab=sheet_id_by_tab,
     )
+    emphasis_requests = _build_emphasis_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+    number_format_requests = _build_number_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
     structural_requests = (
         cleanup_requests
         + metadata_requests
         + protected_requests
         + constraint_requests
         + note_requests
+        + emphasis_requests
+        + number_format_requests
     )
     if structural_requests:
         execute_request(
