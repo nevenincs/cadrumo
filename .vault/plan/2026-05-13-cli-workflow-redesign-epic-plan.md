@@ -4277,7 +4277,7 @@ Test the full verb tree and the dual-axis contract.
 
 Register the profile verb tree and update apex cross-references.
 
-- [ ] `W74.P359.S2074` - Register the full profile verb tree under aeat config profile and render every command via _emit; `src/aeat/entrypoints/cli/_config`.
+- [x] `W74.P359.S2074` - Register the full profile verb tree under aeat config profile and render every command via _emit; `src/aeat/entrypoints/cli/_config`.
 - [x] `W74.P359.S2075` - Apply central command error boundary; `src/aeat/entrypoints/cli`.
 - [x] `W74.P359.S2076` - Wire help text and i18n and validate canonical vocabulary; `src/aeat/core/i18n`.
 - [x] `W74.P359.S2077` - Update apex ADR §3.2 to reflect dual-axis grammar and mark R05 closed by W74; `.vault/adr`.
