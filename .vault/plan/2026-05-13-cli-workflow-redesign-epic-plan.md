@@ -4149,8 +4149,8 @@ Retire legacy verbs and migrate internal callers.
 
 Ship missing locked verbs and clean help/i18n surfaces.
 
-- [ ] `W72.P347.S2014` - Ship link, check, preflight verbs in aeat app ledger wired to existing backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W72.P347.S2015` - Ship reconcile and history verbs in aeat app modelo wired to existing application services; `src/aeat/entrypoints/cli`.
+- [x] `W72.P347.S2014` - Ship link, check, preflight verbs in aeat app ledger wired to existing backend services; `src/aeat/entrypoints/cli`.
+- [x] `W72.P347.S2015` - Ship reconcile and history verbs in aeat app modelo wired to existing application services; `src/aeat/entrypoints/cli`.
 - [x] `W72.P347.S2016` - Remove legacy verb spellings from help text and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
 - [x] `W72.P347.S2017` - Remove legacy verb references from refusal-message strings; `src/aeat/core/i18n`.
 - [x] `W72.P347.S2018` - Record the removed shim surfaces in the boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
