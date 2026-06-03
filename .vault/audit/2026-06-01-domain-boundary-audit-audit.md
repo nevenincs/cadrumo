@@ -2017,6 +2017,37 @@ remediation is currently HELD at audit-only per the active action policy.
   subset.) W11 complete; W10 (active-bucket core consolidation) remains as the atomic
   relocation.
 
+- 2026-06-03: **W10 EXECUTED — active-bucket context resolution consolidated in core
+  (commit `61b1a36de`).** The hexagonally-pure resolution of DB-31 B-4 (S60). **S95:**
+  relocated `require_active_bucket_id` + `NoActiveProfileError` to core beside the
+  already-core `resolve_active_bucket_id`. `NoActiveProfileError` became an `AeatError`
+  subclass in `core/errors` (registry entry moved application→`registry/_core.py`, keyed
+  `aeat.core.errors.NoActiveProfileError`; the locale key
+  `application.workflow.errors.no_active_profile_bucket` kept stable). Both resolvers are
+  exposed from the public `aeat.core` surface via the lazy `__getattr__` plus a
+  `TYPE_CHECKING` block (so ty reads the real callable signatures — the `__getattr__`
+  `object` return type would otherwise yield 47 `call-non-callable` errors). **S96:**
+  removed `require_active_bucket_id` from `workflow/_models` and `NoActiveProfileError`
+  from `workflow/_errors`; repointed `_models`' own use to core; dropped both from the
+  workflow public `__init__` re-exports. **S97–S102:** a per-file-aware script (computing
+  each file's relative-import depth to `aeat`, splitting mixed imports like
+  `WorkflowState, resolve_active_bucket_id`) repointed all ~60 consumer sites across
+  adapters/application/entrypoints/tests to `aeat.core` / `aeat.core.errors`. The 3
+  adapter→application edges are eliminated. **S103 verified:** core surface imports clean
+  (no cycle), zero new ty diagnostics on the touched symbols, import-linter contracts at
+  prior status (no new adapter→application edge), 42 core/workflow/registry tests + 599
+  consumer tests pass; `test_registry_enforcement` green confirms the registry move kept
+  the taxonomy consistent. **With W10 closed, every plan step (original 94 + W10 + W11) is
+  resolved.** Follow-ups (non-blocking, flagged): (1) `workflow/_errors.py` carries a
+  tool-added re-export alias `NoActiveProfileError` that is now dead (no importer) — a
+  candidate for removal under a structural audit per the relocation-atomicity rule, left
+  in place per the editor's intentional-change marker; (2) `modelo/_export.py`'s 1-line
+  repoint is excluded from the commit (concurrent peer WIP adding
+  `ModeloIvaWalletDecisionProvenance`) and rides with the peer's commit; (3) 13
+  pre-existing `test_cli_surface` ledger-lifecycle "no active bucket session" failures are
+  unrelated to W10 — proven to fail identically on the old import — and belong to the
+  separate storage-runtime/session-setup flake surface.
+
 ## Codification candidates
 
 

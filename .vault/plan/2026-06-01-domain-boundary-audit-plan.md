@@ -299,35 +299,35 @@ Eliminate every adapter->application and underscore-private reach-in for active-
 
 Relocate require_active_bucket_id and NoActiveProfileError into core beside resolve_active_bucket_id; expose all three from a public aeat.core surface; update the error-registry path string.
 
-- [ ] `W10.P29.S95` - Relocate require_active_bucket_id (application/workflow/_models.py:251) and NoActiveProfileError (application/workflow/_errors.py:42, WorkflowError subclass) into core beside resolve_active_bucket_id; `expose resolve+require+NoActiveProfileError from a public aeat.core surface (promote core/_bucket_pointer_io.py to a public core module and/or re-export via core/__init__); update the error-registry path string core/errors/registry/_application.py:326; keep the locale key application.workflow.errors.no_active_profile_bucket stable; `src/aeat/core/_bucket_pointer_io.py`.
-- [ ] `W10.P29.S96` - Repoint application/workflow/_models.py:33 import and remove the application-owned require_active_bucket_id definition; `update workflow/__init__.py re-exports (lines 40,66,113,142) to re-export from core or drop in favour of direct core imports by callers; `src/aeat/application/workflow/_models.py`.
+- [x] `W10.P29.S95` - Relocate require_active_bucket_id (application/workflow/_models.py:251) and NoActiveProfileError (application/workflow/_errors.py:42, WorkflowError subclass) into core beside resolve_active_bucket_id; `expose resolve+require+NoActiveProfileError from a public aeat.core surface (promote core/_bucket_pointer_io.py to a public core module and/or re-export via core/__init__); update the error-registry path string core/errors/registry/_application.py:326; keep the locale key application.workflow.errors.no_active_profile_bucket stable; `src/aeat/core/_bucket_pointer_io.py`.
+- [x] `W10.P29.S96` - Repoint application/workflow/_models.py:33 import and remove the application-owned require_active_bucket_id definition; `update workflow/__init__.py re-exports (lines 40,66,113,142) to re-export from core or drop in favour of direct core imports by callers; `src/aeat/application/workflow/_models.py`.
 
 ### Phase `W10.P30` - Repoint adapter consumers to the core surface
 
 The aeat outbound adapters (browser/_factory, auth/_clave_movil, auth/_authenticator, sede/_declarations) and their live tests import from the public core surface, removing the adapter->application edges.
 
-- [ ] `W10.P30.S97` - Repoint the four aeat outbound adapter sites off application.workflow._models to the public core surface: browser/_factory.py:154 (resolve), auth/_clave_movil.py:754 (resolve) + :866 (require), auth/_authenticator.py:1241 (require), sede/_declarations.py:390 (require); `src/aeat/adapters/outbound/aeat/`.
-- [ ] `W10.P30.S98` - Repoint the adapter live tests off application.workflow._models: sede/test_groi_check_live.py:26, auth/test_clave_movil_live.py:73, auth/test_clave_movil.py:937; `src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py`.
+- [x] `W10.P30.S97` - Repoint the four aeat outbound adapter sites off application.workflow._models to the public core surface: browser/_factory.py:154 (resolve), auth/_clave_movil.py:754 (resolve) + :866 (require), auth/_authenticator.py:1241 (require), sede/_declarations.py:390 (require); `src/aeat/adapters/outbound/aeat/`.
+- [x] `W10.P30.S98` - Repoint the adapter live tests off application.workflow._models: sede/test_groi_check_live.py:26, auth/test_clave_movil_live.py:73, auth/test_clave_movil.py:937; `src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py`.
 
 ### Phase `W10.P31` - Repoint application-layer consumers to the core surface
 
 Application modules that reach into workflow._models for the resolvers import from the public core surface instead.
 
-- [ ] `W10.P31.S99` - Repoint application-layer consumers off workflow._models to the public core surface: wizard/_status.py:23, user_profile/_orchestration.py:305/325/563/602, auth/_sessions.py:176/506, auth/_operator.py:263, auth/_acquisition_lock.py:78/168, review/_operator.py:221, state_projection.py:57, diagnostics.py:308, modelo/_export.py:410; `src/aeat/application/`.
-- [ ] `W10.P31.S100` - Repoint application tests: user_profile/test_orchestration.py:9/168, live/test_iva_wallet_live.py:21, workflow/test_active_profile_resolution.py:26; `src/aeat/application/workflow/test_active_profile_resolution.py`.
+- [x] `W10.P31.S99` - Repoint application-layer consumers off workflow._models to the public core surface: wizard/_status.py:23, user_profile/_orchestration.py:305/325/563/602, auth/_sessions.py:176/506, auth/_operator.py:263, auth/_acquisition_lock.py:78/168, review/_operator.py:221, state_projection.py:57, diagnostics.py:308, modelo/_export.py:410; `src/aeat/application/`.
+- [x] `W10.P31.S100` - Repoint application tests: user_profile/test_orchestration.py:9/168, live/test_iva_wallet_live.py:21, workflow/test_active_profile_resolution.py:26; `src/aeat/application/workflow/test_active_profile_resolution.py`.
 
 ### Phase `W10.P32` - Repoint entrypoint/CLI consumers to the core surface
 
 CLI entrypoint modules and their tests import the resolvers and NoActiveProfileError from the public core surface.
 
-- [ ] `W10.P32.S101` - Repoint CLI entrypoint consumers off workflow._models to the public core surface: cli/__init__.py:264, _overview.py:64, _modelo.py:181/205/300/2133/4407/5273, _ledger.py:62/2148/2165/3663/3714/3787, _config/__init__.py:42/377/970/1496, _config/_profile_censo.py:36, _common.py:135/149/233, _app_live.py:871, diagnostics/profile.py:29; `NoActiveProfileError catchers _ledger.py:2147/2164/3662 + _common.py:233; `src/aeat/entrypoints/cli/`.
-- [ ] `W10.P32.S102` - Repoint CLI tests off workflow._models: test_cli_surface.py:89, test_ledger_fx_import.py:21, test_profile_lifecycle_verbs.py:405/432/955/996, test_profile_censo_verbs.py:55/172, test_modelo_source_mesh_calculate.py:130, test_repair_privacy_contract.py:19, test_ratios_verbs.py:13, test_ledger_exception_propagation.py; `src/aeat/entrypoints/cli/test_cli_surface.py`.
+- [x] `W10.P32.S101` - Repoint CLI entrypoint consumers off workflow._models to the public core surface: cli/__init__.py:264, _overview.py:64, _modelo.py:181/205/300/2133/4407/5273, _ledger.py:62/2148/2165/3663/3714/3787, _config/__init__.py:42/377/970/1496, _config/_profile_censo.py:36, _common.py:135/149/233, _app_live.py:871, diagnostics/profile.py:29; `NoActiveProfileError catchers _ledger.py:2147/2164/3662 + _common.py:233; `src/aeat/entrypoints/cli/`.
+- [x] `W10.P32.S102` - Repoint CLI tests off workflow._models: test_cli_surface.py:89, test_ledger_fx_import.py:21, test_profile_lifecycle_verbs.py:405/432/955/996, test_profile_censo_verbs.py:55/172, test_modelo_source_mesh_calculate.py:130, test_repair_privacy_contract.py:19, test_ratios_verbs.py:13, test_ledger_exception_propagation.py; `src/aeat/entrypoints/cli/test_cli_surface.py`.
 
 ### Phase `W10.P33` - Verification: zero adapter-to-application active-bucket edges
 
 Assert no module outside the workflow package imports the resolvers from application.workflow._models; suite green; import-linter contracts unchanged.
 
-- [ ] `W10.P33.S103` - Verify: rg confirms no module outside application/workflow imports resolve_active_bucket_id/require_active_bucket_id from application.workflow._models; `full pytest suite + ty + lint-imports green; the AEAT-layered import-linter warning count does not regress; `src/aeat/`.
+- [x] `W10.P33.S103` - Verify: rg confirms no module outside application/workflow imports resolve_active_bucket_id/require_active_bucket_id from application.workflow._models; `full pytest suite + ty + lint-imports green; the AEAT-layered import-linter warning count does not regress; `src/aeat/`.
 
 ## Wave `W11` - Secure-storage public-surface import purity (D4/D5)
 
