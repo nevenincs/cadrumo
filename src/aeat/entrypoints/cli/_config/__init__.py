@@ -2887,4 +2887,8 @@ from ._google import google_app as _google_app
 
 app.add_typer(_google_app, name="google")
 
+from ._init import register as _register_init
+
+_register_init(app)
+
 __all__ = ["app", "tr"]
