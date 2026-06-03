@@ -61,3 +61,11 @@ public function signatures. The module now has 203 `splitlines()` lines, matchin
 the existing baseline instead of raising it. Gates run: ruff on the touched
 validator/reviewability files, full `test_registry_reviewability.py`, and
 `test_committed_registry.py`. No Critical or High issues found.
+
+## REVIEWABILITY-GATE-006 | PASS | S40 verifies reviewability gates after validator repair
+
+Reviewed `W04.P08.S40`. The final verification passes the full reviewability
+test module, the directory-mode committed TOML reviewability gate, the committed
+registry load suite, and ruff on the touched registry files. The TOML caps and
+validator-module baseline are now both enforced by passing tests. No Critical
+or High issues found.
