@@ -4648,8 +4648,8 @@ Test festivos integration, carve-out, agenda payload, CLI surface.
 - [x] `W81.P393.S2244` - Add tests asserting shift_deadline is invoked when assembling OverviewCalendarEntry and output carries adjusted dates and shift reason; `tests/application/overview`.
 - [x] `W81.P393.S2245` - Add tests asserting Modelo 369 carve-out MODELOS_WITHOUT_SHIFT is respected; `tests/application/overview`.
 - [x] `W81.P393.S2246` - Add tests asserting next_due appears in agenda payload; `tests/application/overview`.
-- [ ] `W81.P393.S2247` - Add CLI surface tests for every overview verb per the adjudicated grammar; `tests/entrypoints/cli`.
-- [ ] `W81.P393.S2248` - Add negative tests asserting aeat deadlines verbs are unknown; `tests/entrypoints/cli`.
+- [x] `W81.P393.S2247` - Add CLI surface tests for every overview verb per the adjudicated grammar; `tests/entrypoints/cli`.
+- [x] `W81.P393.S2248` - Add negative tests asserting aeat deadlines verbs are unknown; `tests/entrypoints/cli`.
 
 ### Phase `W81.P394` - thin cli exposure
 
