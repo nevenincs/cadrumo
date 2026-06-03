@@ -564,9 +564,10 @@ class LedgerReviewQuery(BaseModel):
     status: str | None = None
     issue: str | None = None
     import_id: str | None = None
+    classification: str | None = None
     transaction_id: str | None = Field(default=None, min_length=64, max_length=64)
 
-    @field_validator("bucket_id", "period", "status", "issue", "import_id", "transaction_id")
+    @field_validator("bucket_id", "period", "status", "issue", "import_id", "classification", "transaction_id")
     @classmethod
     def _trim_optional_query_text(cls, value: str | None) -> str | None:
         if value is None:
