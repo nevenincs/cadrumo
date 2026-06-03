@@ -221,9 +221,17 @@ adapters:
     profile:
       assets:
         errors:
-          asset_already_exists: 'Ez az eszköz már szerepel a titkosított eszköznyilvántartásban.'
-          load_amortizacion_ledger_failed: 'A titkosított amortizációs nyilvántartás nem tölthető be.'
-          load_asset_ledger_failed: 'A titkosított eszköznyilvántartás nem tölthető be.'
+          asset_already_exists: Ez az eszköz már szerepel a titkosított eszköznyilvántartásban.
+          load_amortizacion_ledger_failed: A titkosított amortizációs nyilvántartás
+            nem tölthető be.
+          load_asset_ledger_failed: A titkosított eszköznyilvántartás nem tölthető
+            be.
+      inventory:
+        errors:
+          inventory_ledger_already_exists: 'Ez a készletnyilvántartás már létezik.'
+          inventory_ledger_not_found: 'A kért készletnyilvántartás nem található.'
+          load_inventory_ledger_failed: 'A titkosított készletnyilvántartás nem tölthető be.'
+          movement_already_exists: 'Ez a készletmozgás már létezik.'
   sede:
     errors:
       cotejo_nav_failed: Az AEAT cotejo oldalra való navigáció sikertelen volt; a
@@ -3454,7 +3462,8 @@ errors:
       Csak egyiket használja: --quiet, --verbose vagy --debug.'
     refused_cli_non_tty: Ez a parancs interaktív bemenetet igényel, de a szabványos
       bemenet csőbe van irányítva. Futtassa interaktív terminálban.
-    refused_cli_validation_boundary: 'A parancs bemenete nem ment át az érvényesítésen. Ellenőrizze az argumentumokat, vagy futtassa az `aeat --help` parancsot.'
+    refused_cli_validation_boundary: A parancs bemenete nem ment át az érvényesítésen.
+      Ellenőrizze az argumentumokat, vagy futtassa az `aeat --help` parancsot.
     refused_config_reset_unconfirmed: A konfigurációs visszaállítást nem erősítette
       meg. Futtassa újra a parancsot, megerősítve a műveletet.
     refused_diagnostic_model_invariant: A DiagnosticCheck konstrukciós invariánsa

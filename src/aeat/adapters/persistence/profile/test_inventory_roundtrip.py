@@ -21,6 +21,7 @@ from pathlib import Path
 import pydantic
 import pytest
 
+from ....core.external_constants import UTF_8_ENCODING
 from ....domain.contribuyente.inventory import (
     InventoryLedger,
     InventoryLedgerDocument,
@@ -140,7 +141,7 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
 
     from ...persistence.storage.sql._orm import SecureObjectRow
     from ...persistence.storage.sql.session import session_scope
-    from .inventory import _INVENTORY_NAMESPACE, _LEDGER_OBJECT_KEY
+    from .inventory import _INVENTORY_NAMESPACE, _INVENTORY_OBJECT_KEY
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         engine = get_engine(profile.settings)
@@ -151,10 +152,10 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
         with session_scope(engine) as session:
             stmt = select(SecureObjectRow).where(
                 SecureObjectRow.namespace == _INVENTORY_NAMESPACE,
-                SecureObjectRow.object_key == _LEDGER_OBJECT_KEY,
+                SecureObjectRow.object_key == _INVENTORY_OBJECT_KEY,
             )
             row = session.execute(stmt).scalar_one()
-            document = _json.loads(row.payload.decode("utf-8"))
+            document = _json.loads(row.payload.decode(UTF_8_ENCODING))
             ledger_dict = document["ledgers"][0]
             assert ledger_dict.get("opening_stock"), (
                 "fixture must serialise opening_stock onto the ledger for this proof test to be meaningful"
@@ -162,7 +163,7 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
             # Halve the opening_stock so the layer-balance check fails
             # (sum of layers no longer matches the declared aggregate).
             ledger_dict["opening_stock"] = "750.00"
-            row.payload = _json.dumps(document).encode("utf-8")
+            row.payload = _json.dumps(document).encode(UTF_8_ENCODING)
 
         with pytest.raises(pydantic.ValidationError, match="opening_stock must equal the value of opening_layers"):
             repo.load()

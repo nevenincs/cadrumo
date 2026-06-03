@@ -9,6 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from ....core.errors import AeatError
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.contribuyente.inventory import (
@@ -17,7 +18,7 @@ from ....domain.contribuyente.inventory import (
     InventoryLedgerError,
     MovementRecord,
 )
-from ..storage import PROFILE_INVENTORY_LEDGER_NAMESPACE
+from ..storage import PROFILE_INVENTORY_LEDGER_NAMESPACE, secure_object_logical_path
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..storage.sql import SecureObjectRepository
 
@@ -27,7 +28,11 @@ INVENTORY_LEDGER_FILENAME = "inventory-ledger.secure-object"
 _SECURE_OBJECT_VERSION = PROFILE_INVENTORY_LEDGER_NAMESPACE.schema_version
 _INVENTORY_NAMESPACE = PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace
 _INVENTORY_SENSITIVITY = PROFILE_INVENTORY_LEDGER_NAMESPACE.sensitivity
-_LEDGER_OBJECT_KEY = PROFILE_INVENTORY_LEDGER_NAMESPACE.require_default_object_key()
+_INVENTORY_OBJECT_KEY = PROFILE_INVENTORY_LEDGER_NAMESPACE.require_default_object_key()
+
+
+def _secure_object_marker(namespace: str, filename: str) -> Path:
+    return secure_object_logical_path(namespace, filename)
 
 
 def load_inventory() -> tuple[InventoryLedger, ...]:
@@ -109,12 +114,12 @@ class InventoryLedgerRepository:
     @property
     def envelope_path(self) -> Path:
         """Logical path retained for callers that display the storage target."""
-        return Path("db://secure_objects") / _INVENTORY_NAMESPACE / INVENTORY_LEDGER_FILENAME
+        return _secure_object_marker(_INVENTORY_NAMESPACE, INVENTORY_LEDGER_FILENAME)
 
     @property
     def lock_target(self) -> Path:
         """Logical lock marker; SQL transactions govern writes."""
-        return Path("db://secure_objects") / _INVENTORY_NAMESPACE / "inventory-ledger.lock"
+        return _secure_object_marker(_INVENTORY_NAMESPACE, "inventory-ledger.lock")
 
     def load(self) -> InventoryLedgerDocument:
         """Load the ledger, returning an empty document when absent.
@@ -134,9 +139,21 @@ class InventoryLedgerRepository:
             )
             if record is None:
                 return InventoryLedgerDocument()
-            return InventoryLedgerDocument.model_validate_json(record.payload.decode("utf-8"))
+            return InventoryLedgerDocument.model_validate_json(record.payload.decode(UTF_8_ENCODING))
         except (OSError, AeatError) as exc:
-            raise InventoryLedgerError(f"unable to load inventory ledger: {self._object_key}") from exc
+            _log.debug(
+                "inventory ledger load failed",
+                extra={
+                    "namespace": _INVENTORY_NAMESPACE,
+                    "object_key": self._object_key,
+                    "error_type": type(exc).__name__,
+                },
+            )
+            raise InventoryLedgerError(
+                f"unable to load inventory ledger: {self._object_key}",
+                context={"namespace": _INVENTORY_NAMESPACE, "object_key": self._object_key},
+                translated_message="adapters.persistence.profile.inventory.errors.load_inventory_ledger_failed",
+            ) from exc
 
     def save(self, document: InventoryLedgerDocument) -> None:
         """Persist ``document`` as FINANCIAL-class ciphertext.
@@ -168,6 +185,7 @@ class InventoryLedgerRepository:
                 f"inventory ledger already exists for {ledger.actividad_id!r} in {ledger.year}",
                 context={"actividad_id": ledger.actividad_id, "year": ledger.year},
                 suggestion="aeat app ledger inventory list",
+                translated_message="adapters.persistence.profile.inventory.errors.inventory_ledger_already_exists",
             )
         updated = InventoryLedgerDocument(ledgers=(*current.ledgers, ledger))
         self._save_unlocked(updated)
@@ -201,6 +219,7 @@ class InventoryLedgerRepository:
                         f"movement {movement.movement_id!r} already exists",
                         context={"movement_id": movement.movement_id},
                         suggestion="aeat app ledger inventory valuation preview",
+                        translated_message="adapters.persistence.profile.inventory.errors.movement_already_exists",
                     )
                 updated = ledger.model_copy(update={"period_movements": (*ledger.period_movements, movement)})
                 ledgers[index] = updated
@@ -209,25 +228,25 @@ class InventoryLedgerRepository:
         raise InventoryLedgerError(
             f"inventory ledger not found for {actividad_id!r} in {year}",
             context={"actividad_id": actividad_id, "year": year},
+            translated_message="adapters.persistence.profile.inventory.errors.inventory_ledger_not_found",
         )
 
     def _load_unlocked(self) -> InventoryLedgerDocument:
         return self.load()
 
     def _save_unlocked(self, document: InventoryLedgerDocument) -> None:
-
         self._objects.save(
             namespace=_INVENTORY_NAMESPACE,
             object_key=self._object_key,
             classification=_INVENTORY_SENSITIVITY,
             schema_version=_SECURE_OBJECT_VERSION,
             written_at=now(),
-            payload=document.model_dump_json().encode("utf-8"),
+            payload=document.model_dump_json().encode(UTF_8_ENCODING),
         )
 
     @property
     def _object_key(self) -> str:
-        return _LEDGER_OBJECT_KEY
+        return _INVENTORY_OBJECT_KEY
 
 
 __all__ = [
