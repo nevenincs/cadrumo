@@ -4162,7 +4162,7 @@ Add CLI surface and end-to-end tests for the reconciled grammar.
 - [ ] `W72.P348.S2019` - Add CLI surface tests for link, check, preflight, reconcile, history exercising real backend services; `tests/entrypoints/cli`.
 - [x] `W72.P348.S2020` - Add negative tests proving retired verbs are unknown commands; `tests/entrypoints/cli`.
 - [x] `W72.P348.S2021` - Add an end-to-end test exercising the full modelo lifecycle through the reconciled verb tree; `tests`.
-- [ ] `W72.P348.S2022` - Add a regression test asserting the reconciled aeat app ledger verb count matches the W71 canonical spine plus ratified axes; `tests/entrypoints/cli`.
+- [x] `W72.P348.S2022` - Add a regression test asserting the reconciled aeat app ledger verb count matches the W71 canonical spine plus ratified axes; `tests/entrypoints/cli`.
 - [x] `W72.P348.S2023` - Run the W71 contract-conformance harness and assert app modelo and app ledger noun-groups pass; `tests/entrypoints/cli`.
 
 ### Phase `W72.P349` - thin cli exposure
