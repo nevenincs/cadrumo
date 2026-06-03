@@ -20,6 +20,7 @@ from .....core.identity import BucketId
 from .....core.time._utc import validate_utc_aware
 
 _SHA256_HEX_LEN = 64
+_LOWER_HEX_DIGITS = frozenset("0123456789abcdef")
 
 
 class ExportArchiveHeader(BaseModel):
@@ -39,11 +40,7 @@ class ExportArchiveHeader(BaseModel):
         """Reject anything other than a lowercase hex SHA-256 digest."""
         if len(value) != _SHA256_HEX_LEN:
             raise ValueError("manifest_digest must be a 64-char SHA-256 hex string")
-        try:
-            int(value, 16)
-        except ValueError as exc:
-            raise ValueError("manifest_digest must be hex") from exc
-        if value != value.lower():
+        if any(char not in _LOWER_HEX_DIGITS for char in value):
             raise ValueError("manifest_digest must be lowercase hex")
         return value
 
