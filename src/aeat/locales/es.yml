@@ -113,6 +113,9 @@ adapters:
     profile_binding:
       errors:
         no_active_profile: No hay ningún perfil AEAT activo enlazado para Google OAuth.
+      suggestions:
+        create_profile: Ejecuta `aeat config profile create NAME --tax-id <NIF>`
+          y vuelve a intentar el comando de Google.
   inbound:
     declaracion:
       errors:
@@ -2108,6 +2111,9 @@ cli:
     list:
       header: MOVIMIENTOS DEL LIBRO CONTABLE
       help: Listar movimientos del libro en el bucket del perfil activo
+      footer_truncated: 'Mostrando filas {start}-{end} de {total} (desplazamiento {offset}). Use --offset/--limit para paginar.'
+      limit_help: 'Numero maximo de filas a mostrar (por defecto: todas).'
+      offset_help: 'Omitir este numero de filas antes de listar (por defecto: 0).'
     merge:
       actor_help: Nombre del operador registrado en el evento del bucket
       child_id_help: Id de transacción hija que quieres fusionar; se puede repetir

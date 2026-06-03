@@ -105,6 +105,9 @@ adapters:
     profile_binding:
       errors:
         no_active_profile: No active AEAT profile is bound for Google OAuth.
+      suggestions:
+        create_profile: Run `aeat config profile create NAME --tax-id <NIF>` and
+          then retry the Google command.
   inbound:
     declaracion:
       errors:
@@ -1979,6 +1982,9 @@ cli:
     list:
       header: ACCOUNTING LEDGER TRANSACTIONS
       help: List ledger transactions in the active profile bucket
+      footer_truncated: 'Showing rows {start}-{end} of {total} (offset {offset}). Use --offset/--limit to page.'
+      limit_help: 'Maximum rows to show (default: all rows).'
+      offset_help: 'Skip this many rows before listing (default: 0).'
     merge:
       actor_help: Operator name recorded on the LEDGER_TRANSACTION_MERGED event
       child_id_help: One child id (or unambiguous prefix) to merge. Repeat for every
