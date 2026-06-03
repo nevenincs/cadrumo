@@ -31,6 +31,9 @@ from ._records import (
     RelationValues,
     SheetCellAddress,
     SheetCellConstraint,
+    SheetEvidenceContributorRow,
+    SheetEvidenceFacet,
+    SheetEvidenceManualEntry,
     SheetExportMetadata,
     SheetExportPlan,
     SheetFormulaCell,
@@ -45,6 +48,7 @@ from ._records import (
     TabName,
 )
 from ._translator import TranslationError, translate_formula
+from ._workbook_export import build_offline_workbook, serialize_offline_workbook
 
 __all__ = [
     "BracketRanges",
@@ -55,6 +59,9 @@ __all__ = [
     "RelationValues",
     "SheetCellAddress",
     "SheetCellConstraint",
+    "SheetEvidenceContributorRow",
+    "SheetEvidenceFacet",
+    "SheetEvidenceManualEntry",
     "SheetExportMetadata",
     "SheetExportPlan",
     "SheetFormulaCell",
@@ -70,8 +77,10 @@ __all__ = [
     "TabName",
     "TranslationError",
     "build_export_plan",
+    "build_offline_workbook",
     "collect_row_sets",
     "plan_layout",
     "registry_sha",
+    "serialize_offline_workbook",
     "translate_formula",
 ]

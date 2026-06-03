@@ -34,3 +34,7 @@ Status: PASS. Reviewed `W01.P01.S05` against the no-silent-omission requirement.
 ## S06-REVIEW-001 | PASS | SheetExportPlan evidence facet is typed and renderer-neutral
 
 Status: PASS. Reviewed `W02.P02.S06` against the export evidence ADR and workbook parity ADR. The plan now has strict frozen evidence records for per-casilla ledger contributors and manual fact-basis entries, plus an empty default evidence facet on `SheetExportPlan`. The change is renderer-neutral: it only extends the shared plan contract and leaves workbook tab rendering and sidecar emission to S07/S08. Tests cover strict JSON roundtrip, default shape, and snapshot-fingerprint validation. No Critical or High issues found.
+
+## S07-REVIEW-001 | PASS | Offline workbook renders protected evidence tab from the shared plan
+
+Status: PASS. Reviewed `W02.P02.S07` against the export evidence ADR and workbook parity ADR. The offline openpyxl materializer lives beside `SheetExportPlan`, preserves value cells, formula cells, row-set headers, guide metadata, and renders `SheetExportPlan.evidence` into a fixed protected `Evidencia` tab. The implementation does not create a modelo-specific schema path and keeps sidecar emission/reconstitution for S08/S10. Tests serialize a real XLSX payload, load it back through openpyxl, and assert the evidence contributor and manual-basis rows survive with exact string decimal values. No Critical or High issues found.
