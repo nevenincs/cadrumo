@@ -1836,3 +1836,53 @@ obligation step rather than a bare `NO_PENDING_OBLIGATION` refusal.
 - R17 owner: `[[2026-05-12-cli-workflow-redesign-app-overview-shape-adr]]`
 - verify owner: `[[2026-05-12-cli-workflow-redesign-modelo-verify-adr]]`
 - evidence owner: `[[2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr]]`
+
+## 2026-06-03 amendment — R08 progression and composition pattern
+
+The W77 `BucketMaintenanceService` work resumed under the composition
+pattern locked by `[[2026-06-03-cli-workflow-redesign-adr]]`. The
+service is now operational for three of the six bucket-maintenance
+verbs against the existing single-writer primitives. The 2026-05-15
+audit correction reopened R08; this amendment records the current
+state honestly so a future closure pass has the inventory to verify
+against.
+
+### R08 — partial closure progression
+
+| Verb | State | Composition |
+|---|---|---|
+| `rename` | ✅ landed | Delegates to top-level `rename_profile`; emits `BUCKET_RENAMED` alongside the inner `PROFILE_RENAMED`. |
+| `delete` | ✅ landed | Composes `delete_profile_with_lifecycle_span` + `remove_profile_bucket_directory`; service-side `confirmed=True` + active-bucket refusals. |
+| `browse` | ✅ landed | Namespace-level inventory via `SecureObjectRepository.list_namespaces` + per-namespace `list_keys`. Key-level browse with `SensitivityClass` redaction is a follow-up. |
+| `export` | ⏳ pending | Composes `serialize_profile_bundle` + `ExportArchiveHeader`. Sealed-archive write is the remaining new code. |
+| `import` | ⏳ pending | Composes sealed-archive parse + two-tier collision guard + `deserialize_profile_bundle`. |
+| `search` | 🔍 scoped | Search scoping decided in `[[2026-06-03-bucket-search-adr]]`: per-domain repository dispatch via a closed `BucketSearchScope` enum, recency-first ranking MVP. |
+
+Bucket maintenance verbs are intentionally lifecycle operations, not
+CRUD, per W71's contract — the `browse` / `search` axes are key-value
+queries on container contents, and the `export` / `import` / `rename`
+/ `delete` axes operate on the container itself. The maintenance
+events `BUCKET_RENAMED` / `BUCKET_DELETED` / `BUCKET_EXPORTED` /
+`BUCKET_IMPORTED` are intentionally distinct from the lifecycle
+events the inner primitives emit; two-event co-emission per operator
+action is the audit shape.
+
+### CLI mount deferred
+
+Mounting the three operational verbs (`rename`, `delete`, `browse`)
+under `aeat config bucket` requires editing
+`src/aeat/entrypoints/cli/_config/__init__.py` (Step `W77.P374.S2150`).
+That file has been under peer-WIP throughout the composition-pattern
+landing, so the mount stays deferred until the file settles. The
+pre-landing pin
+`test_bucket_app_verb_roster_pins_pre_s2150_state` fires the moment
+the mount lands, forcing an explicit roster update.
+
+### R08 closure target
+
+R08 closes when the remaining three verbs ship (`export`, `import`,
+`search`) AND the CLI mount lands AND the child ADRs
+(`app-ledger-ratios-shape`, bucket ADR) carry the composition-pattern
+amendment named in `W77.P374.S2153`. The progression above is not a
+closure claim — it is an honest inventory recording the partial
+landing per the campaign-close honesty-review discipline.
