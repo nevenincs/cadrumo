@@ -674,7 +674,7 @@ def _store_test_session(
 def _store_raw_session_payload(path: Path, payload: bytes) -> None:
     secure_object_repository_for_active_bucket().save(
         namespace=AEAT_BROWSER_SESSION_NAMESPACE.namespace,
-        object_key=path.as_posix(),
+        object_key=_session_store.logical_object_key(path),
         classification=AEAT_BROWSER_SESSION_NAMESPACE.sensitivity,
         schema_version=AEAT_BROWSER_SESSION_NAMESPACE.schema_version,
         written_at=datetime.now(UTC),
