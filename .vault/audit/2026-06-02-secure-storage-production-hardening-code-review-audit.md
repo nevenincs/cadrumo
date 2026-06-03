@@ -124,3 +124,9 @@ Evidence: the full production sensitive persistence policy passed with 2 tests, 
 ## S121-S128-018 | PASS | AEAT export/Sede/verify affected-file slice closed
 
 `W12.P26.S121` through `W12.P26.S128` are now checked, and `AFR-019` through `AFR-026` are marked `closed` in the affected-file register. No HIGH or CRITICAL findings remain for this slice; the medium findings above were resolved with code/test changes and current validation.
+
+## S129-019 | PASS | Calc-sheets apply remains a one-way remote mirror
+
+The `W12.P26.S129` review closed `AFR-027` for `_calc_sheets_apply.py`. The adapter materialises a pure `SheetExportPlan` into app-owned Google Drive folders and a Google Sheets workbook, then returns a typed result. It does not select local storage, construct secure-object repositories, route SQL storage, write local files, or consume Google Sheets edits into local state.
+
+The reviewed settings signal uses `Settings` for the Drive vault folder name rather than naked environment access. Focused calc-sheets apply/pull tests passed with 19 tests, targeted Ruff passed, and the source scan found no DB route, naked environment, secure-object constructor, local storage constructor, or local file read/write matches.
