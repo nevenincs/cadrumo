@@ -10,6 +10,7 @@ from ._errors import (
     BucketBusyError,
     BucketError,
     BucketLockedError,
+    BucketValidationError,
     NoActiveBucketError,
     RecoveryUnavailableError,
     RecoveryVerificationError,
@@ -21,6 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 def test_every_class_inherits_from_aeat_error() -> None:
     for cls in (
         BucketError,
+        BucketValidationError,
         NoActiveBucketError,
         BucketBusyError,
         BucketAlreadyPresentError,
@@ -34,6 +36,7 @@ def test_every_class_inherits_from_aeat_error() -> None:
 def test_every_class_has_a_registered_code() -> None:
     for cls in (
         BucketError,
+        BucketValidationError,
         NoActiveBucketError,
         BucketBusyError,
         BucketAlreadyPresentError,
@@ -85,6 +88,7 @@ def test_each_registry_code_is_distinct() -> None:
         get_registered_error_code(cls).code
         for cls in (
             BucketError,
+            BucketValidationError,
             NoActiveBucketError,
             BucketBusyError,
             BucketAlreadyPresentError,
@@ -93,4 +97,4 @@ def test_each_registry_code_is_distinct() -> None:
             RecoveryVerificationError,
         )
     }
-    assert len(codes) == 7
+    assert len(codes) == 8
