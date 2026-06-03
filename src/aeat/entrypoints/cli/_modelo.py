@@ -178,7 +178,7 @@ def _resolve_default_actor() -> str:
     fallback label keeps the audit record populated rather than raising.
     """
     with suppress(Exception):
-        from ...application.workflow._persistence import workflow_state_repository
+        from ...application.workflow import workflow_state_repository
         from ...core import resolve_active_bucket_id
 
         state = workflow_state_repository().load()
@@ -225,7 +225,7 @@ def _guard_foral_profile_ccaa() -> None:
     unconfigured-profile case separately.
     """
     from ...application.user_profile import fact_value
-    from ...application.workflow._persistence import workflow_state_repository
+    from ...application.workflow import workflow_state_repository
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()
@@ -1698,7 +1698,7 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
     in the create payload so the audit trail shows the guard was
     bypassed deliberately.
     """
-    from ...application.workflow._persistence import workflow_state_repository
+    from ...application.workflow import workflow_state_repository
     from ...domain.calculations.registry.applicability import (
         ApplicabilityVerdict,
         derive_modelo_applicability,
@@ -3281,7 +3281,7 @@ def work_calculate(
     modality_lines: list[str] = []
     unit_for_modality = get_work_unit(revision.work_unit_id)
     if str(unit_for_modality.modelo) == "202":
-        from ...application.workflow._persistence import workflow_state_repository
+        from ...application.workflow import workflow_state_repository
         from ...domain.calculations.registry.applicability import derive_modelo_202_modality
 
         _wf_state = workflow_state_repository().load()
@@ -3499,7 +3499,7 @@ def work_revision(
     modality_lines_r: list[str] = []
     unit_for_modality_r = get_work_unit(revision.work_unit_id)
     if str(unit_for_modality_r.modelo) == "202":
-        from ...application.workflow._persistence import workflow_state_repository
+        from ...application.workflow import workflow_state_repository
         from ...domain.calculations.registry.applicability import derive_modelo_202_modality
 
         _wf_state_r = workflow_state_repository().load()
@@ -3707,7 +3707,7 @@ def work_verify(
     # registered REFUSED code rather than a Click "Invalid value:"
     # header that misframes a workflow gate as a bad CLI argument.
     try:
-        from ...application.workflow._persistence import workflow_state_repository
+        from ...application.workflow import workflow_state_repository
 
         workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
         report = verify_modelo_revision(
@@ -3763,7 +3763,7 @@ def work_file(
     # so it renders through its registered REFUSED code rather than a
     # Click "Invalid value:" header.
     try:
-        from ...application.workflow._persistence import workflow_state_repository
+        from ...application.workflow import workflow_state_repository
 
         workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
         record = file_modelo_revision(
@@ -4945,7 +4945,7 @@ def modelo_export_verb(
         ModeloExportNoActiveBucketError,
         export_modelo_revision,
     )
-    from ...application.workflow._persistence import workflow_state_repository
+    from ...application.workflow import workflow_state_repository
 
     workflow_state = workflow_state_repository().load()
     workflow_profile = _profile_to_taxpayer(workflow_state)
@@ -5895,7 +5895,7 @@ def _maritime_facts_from_active_profile():
     without any maritime fact resolves cleanly (no pathway eligible).
     """
     from ...application.user_profile import fact_value
-    from ...application.workflow._persistence import workflow_state_repository
+    from ...application.workflow import workflow_state_repository
     from ...domain.renta import MaritimeWorkerFacts
 
     state = workflow_state_repository().load()

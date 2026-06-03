@@ -525,7 +525,7 @@ def overview_explain(
     ),
 ) -> None:
     """Explain why a modelo does or does not apply to the active profile."""
-    from ...application.overview._errors import OverviewExplainError
+    from ...application.overview import OverviewExplainError
     from ...application.overview._explain import build_overview_explain
 
     current = _state()
