@@ -1568,6 +1568,31 @@ remediation is currently HELD at audit-only per the active action policy.
   marker gaps + pre-existing inline catalogue-slot gaps) is not introduced by the
   content-identical move.
 
+- 2026-06-03: **S63 (W06.P17, `domain/profile` package rename) scoped — the campaign's
+  final, highest-blast-radius step; two prerequisites recorded.** Measured the true
+  footprint: **89 files** reference `domain.profile` (vs the step's "23+ production"),
+  because it is a whole *package* rename (every submodule — `_keys`, `_errors`, `assets`,
+  `inventory`, `_ccaa`, `_normalise`, `__init__`, family records — and every importer +
+  the entire `docs/api/aeat.domain.profile.*` stub tree). Two prerequisites block a clean
+  execution:
+  - **(1) Target name undecided.** ADR **D7** mandates "rename to its true subject" but
+    left it as "e.g. `domain/renta_profile`". The package is genuinely three-concern
+    (tax-residence + renta/Modelo-100 family facts + the model records whose errors S61/S62
+    relocated), so `renta_profile` under-describes it; `taxpayer_profile`/`contribuyente_*`
+    are candidates, and the `aeat-spanish-stem-naming` rule favours a Spanish stem
+    (`contribuyente`). This is a deliberate naming decision that should be pinned (an ADR
+    addendum) BEFORE the 89-file sweep — renaming to the wrong name is worse than waiting.
+  - **(2) Tree quiescence.** An 89-file atomic move needs all 89 targets simultaneously
+    non-peer-WIP through the script + verify + commit window; on this high-churn shared
+    worktree (single-file peer collisions observed repeatedly, e.g. the S51 T8 abort) that
+    is unrealistic mid-campaign. D7/plan correctly sequence S63 **last** for this reason —
+    it is the quiesce-the-tree final step once the other drifts are closed.
+  The proven scripted-rename pattern + the codified 6-point module-rename checklist
+  (imports / registry paths / `:mod:` refs / hardcoded marker-test paths / `.importlinter`
+  fixture ignores / apidocs) is the exact tool; S63 is execution-ready *given* a decided
+  name + a quiesced tree. S64 (the DB-17 registration-bootstrap half of D7) and S63 are
+  the only remaining drifts.
+
 - 2026-06-02 (cont.): **DB-01 concern C / W06.P16 (S61+S62) EXECUTED — ledger error
   hierarchies relocated out of the catch-all `domain/profile/_errors.py`.** Two atomic
   explicit-path moves co-locating each ledger's errors with its records:
