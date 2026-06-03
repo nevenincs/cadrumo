@@ -302,6 +302,17 @@ class SheetProtectedRange(BaseModel):
         return self
 
 
+class SheetNumberFormat(BaseModel):
+    """Display-format directive for a numeric workbook cell."""
+
+    model_config = _STRICT_FROZEN
+
+    address: SheetCellAddress
+    casilla: CasillaId
+    data_type: Literal["money", "integer", "percentage"]
+    pattern: str = Field(min_length=1)
+
+
 class SheetProvenanceRow(BaseModel):
     """One row of the `Procedencia` audit tab.
 
@@ -554,6 +565,7 @@ class SheetExportPlan(BaseModel):
     tariffs: tuple[SheetTariffTable, ...] = ()
     provenance: tuple[SheetProvenanceRow, ...] = ()
     protected_ranges: tuple[SheetProtectedRange, ...] = ()
+    number_formats: tuple[SheetNumberFormat, ...] = ()
     cell_constraints: tuple[SheetCellConstraint, ...] = ()
     row_sets: tuple[SheetRowSet, ...] = ()
     relation_provenance: RelationValues | None = None
@@ -593,6 +605,7 @@ __all__ = [
     "SheetExportPlan",
     "SheetFormulaCell",
     "SheetGuideContent",
+    "SheetNumberFormat",
     "SheetProtectedRange",
     "SheetProvenanceRow",
     "SheetRowSet",

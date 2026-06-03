@@ -51,6 +51,10 @@ Status: PASS. Reviewed `W02.P02.S09` against the export evidence ADR. `export_mo
 
 Status: PASS. Reviewed `W02.P02.S10` against the export evidence ADR and plan. The new adapter is generic: it projects bundled `LedgerFilingEvidence` into the workbook `SheetEvidenceFacet` only when the caller supplies transaction-to-casilla attribution, and refuses missing attribution instead of inferring modelo-specific tax semantics. The regression serializes the real offline workbook export, reads the XLSX `Evidencia` tab with openpyxl, validates the JSON sidecar through `OfflineWorkbookEvidenceSidecar`, checks the workbook SHA binding, and asserts contributor/manual casilla basis preservation. No Critical or High issues found.
 
+## S11-REVIEW-001 | PASS | Number-format facet is renderer-neutral and registry-grounded
+
+Status: PASS. Reviewed `W03.P03.S11` against the plan. The change adds a strict `SheetNumberFormat` record and derives `SheetExportPlan.number_formats` from `CasillaDefinition.data_type` for money, integer, and ratio-as-percentage casillas. The regression is grounded in real registry snapshots for every covered modelo and compares plan facets to registry data types rather than a hand-authored expected casilla list. Rendering is intentionally left to later offline/online renderer steps. Gates run: ruff on touched calc-sheets files, focused parity/records tests, and full `src/aeat/application/storage/calc_sheets`. No Critical or High issues found.
+
 ## S14-S15-REVIEW-001 | PASS | Registry-grounded offline parity gates are non-tautological
 
 Status: PASS. Reviewed landed commit `db1f5e593` against `W03.P04.S14` and `W03.P04.S15`. The parity test uses bundled registry snapshots and completeness manifests, not a duplicated hand-authored casilla list. S14 compares emitted `(number, segmento)` keys to official manifest keys; S15 compares registry computed casilla ids to actual workbook formula cells. Current full calc-sheets gate passed. No Critical or High issues found.

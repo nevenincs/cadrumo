@@ -77,3 +77,31 @@ def test_every_computed_casilla_has_a_live_formula(modelo: str, year: int, perio
     missing = sorted(computed_ids - formula_ids)
     # Every computed casilla must carry a live spreadsheet formula in the export.
     assert not missing, f"modelo {modelo} computed casillas without a live formula cell: {missing}"
+
+
+_FORMAT_BY_REGISTRY_TYPE = {
+    "money": ("money", "#,##0.00"),
+    "integer": ("integer", "0"),
+    "ratio": ("percentage", "0.00%"),
+}
+
+
+@pytest.mark.parametrize(("modelo", "year", "period", "on"), _COVERED)
+def test_numeric_casillas_carry_number_format_facet(modelo: str, year: int, period: str, on: date) -> None:
+    snapshot = _snapshot(modelo, year, period, on)
+    plan = build_export_plan(snapshot)
+    formats = {item.casilla: item for item in plan.number_formats}
+    expected = {
+        casilla.id: _FORMAT_BY_REGISTRY_TYPE[casilla.data_type]
+        for casilla in snapshot.revision.casillas
+        if casilla.data_type in _FORMAT_BY_REGISTRY_TYPE
+    }
+
+    missing = sorted(set(expected) - set(formats))
+    assert not missing, f"modelo {modelo} numeric casillas without number format facet: {missing}"
+    mismatched = {
+        casilla_id: (formats[casilla_id].data_type, formats[casilla_id].pattern, expected_format)
+        for casilla_id, expected_format in expected.items()
+        if (formats[casilla_id].data_type, formats[casilla_id].pattern) != expected_format
+    }
+    assert not mismatched, f"modelo {modelo} numeric casilla format drift: {mismatched}"

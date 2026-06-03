@@ -135,7 +135,7 @@ Typed presentation facets (number formats by data_type, section-header styling, 
 
 Number formats, section headers, start/final anchors as typed plan facets.
 
-- [ ] `W03.P03.S11` - Number-format plan facet by CasillaDefinition.data_type (money/integer/percentage); `src/aeat/application/storage/calc_sheets/_records.py`.
+- [x] `W03.P03.S11` - Number-format plan facet by CasillaDefinition.data_type (money/integer/percentage); `src/aeat/application/storage/calc_sheets/_records.py`.
 - [ ] `W03.P03.S12` - Section-header styling facet derived from CasillaDefinition.section; `src/aeat/application/storage/calc_sheets/_engine.py`.
 - [ ] `W03.P03.S13` - Explicit labelled start (Entradas opening) and final (resultado/cuota) anchor cells; `src/aeat/application/storage/calc_sheets/_engine.py`.
 
