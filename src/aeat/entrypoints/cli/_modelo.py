@@ -5932,7 +5932,7 @@ def _maritime_facts_from_active_profile():
     # validated by MaritimeWorkerFacts dataclass at construction.
     return MaritimeWorkerFacts(
         worker_class=_enum("maritime_worker.worker_class"),
-        vessel_flag=_enum("maritime_worker.vessel_flag"),  # type: ignore[arg-type]
+        vessel_flag=_enum("maritime_worker.vessel_flag"),  # type: ignore[arg-type]  # CAST-RATIONALE-MARITIME-LITERAL-FIELD
         waters_type=_enum(
             "maritime_worker.waters_type"
         ),  # CAST-RATIONALE-MARITIME-LITERAL-FIELD: same as vessel_flag  # type: ignore[arg-type]

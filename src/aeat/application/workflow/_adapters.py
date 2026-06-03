@@ -110,12 +110,12 @@ class ModeloDraftBuilderAdapter:
         draft: ModeloDraft = build_draft(
             modelo=modelo,
             period=period,
-            profile=profile,  # type: ignore[arg-type]
+            profile=profile,  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-TAXPAYER-PROFILE-PROTOCOL-BRIDGE
             inputs=inputs,
             schema_provider=self._schema_provider,
             fail_on_warning=fail_on_warning,
         )
-        return draft  # type: ignore[return-value]
+        return draft  # type: ignore[return-value]  # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-MODELO-DRAFT-PROTOCOL-BRIDGE
 
 
 class SubmissionEngineAdapter:

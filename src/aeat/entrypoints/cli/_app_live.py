@@ -1083,7 +1083,7 @@ def portals_list(
         # _portal_row / _verify_row / _expedientes_row / _borrador_row return
         # Mapping[str, object]; splat matches PortalEntryPayload fields exactly at this
         # boundary.
-        ],  # type: ignore[arg-type]
+        ],  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-PORTAL-ENTRY-MAPPING-SPLAT
     )
     lines = [f"count\t{len(rows)}"]
     for row in rows:
@@ -1116,7 +1116,7 @@ def portals_show(
     # _portal_row / _verify_row / _expedientes_row / _borrador_row return
     # Mapping[str, object]; splat matches PortalsViewResult fields exactly at this
     # boundary.
-    )  # type: ignore[arg-type]
+    )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-PORTAL-VIEW-MAPPING-SPLAT
     lines = [f"{key}\t{value}" for key, value in payload.items() if value != ""]
     _emit_envelope(ctx, command="app.live.portals.view", result=result, lines=lines)
 
@@ -1212,7 +1212,7 @@ def expedientes_list(ctx: typer.Context) -> None:
         # _portal_row / _verify_row / _expedientes_row / _borrador_row return
         # Mapping[str, object]; splat matches ExpedienteSnapshotSummaryPayload fields exactly at this
         # boundary.
-        ],  # type: ignore[arg-type]
+        ],  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-EXPEDIENTES-ROW-MAPPING-SPLAT
     )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
@@ -1407,7 +1407,7 @@ def verify_list(
         # _portal_row / _verify_row / _expedientes_row / _borrador_row return
         # Mapping[str, object]; splat matches VerifyObservationSummaryPayload fields exactly at this
         # boundary.
-        ],  # type: ignore[arg-type]
+        ],  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-LIST-MAPPING-SPLAT
     )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
@@ -1444,7 +1444,7 @@ def verify_show(
     # _portal_row / _verify_row / _expedientes_row / _borrador_row return
     # Mapping[str, object]; splat matches VerifyViewResult fields exactly at this
     # boundary.
-    )  # type: ignore[arg-type]
+    )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-VIEW-MAPPING-SPLAT
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
     _emit_envelope(ctx, command="app.live.verify.view", result=result, lines=lines)
 
@@ -1515,7 +1515,7 @@ def verify_latest(
     # _portal_row / _verify_row / _expedientes_row / _borrador_row return
     # Mapping[str, object]; splat matches VerifyLatestResult fields exactly at this
     # boundary.
-    )  # type: ignore[arg-type]
+    )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-LATEST-MAPPING-SPLAT
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
     _emit_envelope(ctx, command="app.live.verify.latest", result=result, lines=lines)
 
@@ -1574,7 +1574,7 @@ def verify_nif_iva(
     # _portal_row / _verify_row / _expedientes_row / _borrador_row return
     # Mapping[str, object]; splat matches VerifyNifIvaResult fields exactly at this
     # boundary.
-    )  # type: ignore[arg-type]
+    )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-NIF-IVA-MAPPING-SPLAT
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
     _emit_envelope(ctx, command="app.live.verify.nif_iva", result=result, lines=lines)
 
@@ -1632,7 +1632,7 @@ def verify_tgvi(
     # _portal_row / _verify_row / _expedientes_row / _borrador_row return
     # Mapping[str, object]; splat matches VerifyTgviResult fields exactly at this
     # boundary.
-    )  # type: ignore[arg-type]
+    )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-TGVI-MAPPING-SPLAT
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
     _emit_envelope(ctx, command="app.live.verify.tgvi", result=result, lines=lines)
 
@@ -1715,7 +1715,7 @@ def borrador_100_list(
         # _portal_row / _verify_row / _expedientes_row / _borrador_row return
         # Mapping[str, object]; splat matches Borrador100SnapshotSummaryPayload fields exactly at this
         # boundary.
-        ],  # type: ignore[arg-type]
+        ],  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-BORRADOR-LIST-MAPPING-SPLAT
     )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
@@ -1763,7 +1763,7 @@ def borrador_100_show(
     # Borrador100ViewResult model refactor required. Successor epic required.
     result = Borrador100ViewResult(
         bucket_id=bucket_id,
-        **_borrador_row(record),  # type: ignore[arg-type]
+        **_borrador_row(record),  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-BORRADOR-VIEW-MAPPING-SPLAT
         binding_values=binding_values_str,
     )
     lines = [
