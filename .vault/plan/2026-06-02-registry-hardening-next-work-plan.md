@@ -111,7 +111,7 @@ Measure current registry TOML headroom and tighten committed reviewability tests
 
 - [x] `W03.P07.S35` - Audit current committed registry TOML file-size and row-width headroom; `.vault/audit`.
 - [x] `W03.P07.S36` - Tighten committed registry TOML file-size and row-width regression gates; `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
-- [ ] `W03.P07.S37` - Verify tightened reviewability gates against the committed registry corpus; `src/aeat/domain/calculations/registry`.
+- [x] `W03.P07.S37` - Verify tightened reviewability gates against the committed registry corpus; `src/aeat/domain/calculations/registry`.
 
 ## Description
 

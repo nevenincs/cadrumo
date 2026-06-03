@@ -30,6 +30,16 @@ focused TOML reviewability tests and ruff on the touched test file. No Critical
 or High issues found.
 
 Residual edge: running the full `test_registry_reviewability.py` file also
-exposes `_validate_relation_periods.py` at 240 lines against its prior 203-line
-validator-module baseline. That is outside this TOML gate step and should be
-tracked as validator decomposition follow-up rather than hidden in S36.
+exposes `_validate_relation_periods.py` above its prior 203-line
+validator-module baseline; the current measurement is 212 lines. That is
+outside this TOML gate step and should be tracked as validator decomposition
+follow-up rather than hidden in S36.
+
+## REVIEWABILITY-GATE-003 | PASS | S37 verifies tightened corpus gates and registry loading
+
+Reviewed `W03.P07.S37`. The verification ran the tightened TOML gate tests,
+the committed directory-mode TOML reviewability gate, the committed registry
+load suite, and ruff on the touched reviewability test file. The committed
+modelo corpus remains below the new 1,500-line and 600-character hard caps, and
+the registry still loads after the gate tightening. No Critical or High issues
+found.
