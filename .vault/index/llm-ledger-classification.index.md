@@ -1,0 +1,29 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#llm-ledger-classification'
+date: '2026-06-03'
+related:
+  - '[[2026-06-03-llm-ledger-classification-adr]]'
+  - '[[2026-06-03-llm-ledger-classification-plan]]'
+  - '[[2026-06-03-llm-ledger-classification-research]]'
+---
+
+# `llm-ledger-classification` feature index
+
+Auto-generated index of all documents tagged with `#llm-ledger-classification`.
+
+## Documents
+
+### adr
+
+- `2026-06-03-llm-ledger-classification-adr` - `llm-ledger-classification` adr: `Wire LLM-assisted ledger classification into an operator suggest/confirm/reject loop (MVP)` | (**status:** `accepted`)
+
+### plan
+
+- `2026-06-03-llm-ledger-classification-plan` - `llm-ledger-classification` `Wire LLM-assisted ledger classification (MVP): application use case, CLI surface, tests, docs` plan
+
+### research
+
+- `2026-06-03-llm-ledger-classification-research` - `llm-ledger-classification` research: `LLM transaction classification: built-but-unwired investigation`
