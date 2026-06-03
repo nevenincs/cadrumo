@@ -54,7 +54,12 @@ from . import (
     StorageNamespaceScope,
     StorageRemoteMirrorPolicy,
 )
-from ._namespace_registry import StoragePathDefinition, StoragePathKind, secure_object_logical_path
+from ._namespace_registry import (
+    StoragePathDefinition,
+    StoragePathKind,
+    secure_object_logical_path,
+    secure_object_namespace_logical_path,
+)
 from .errors import NamespaceRegistryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -508,6 +513,16 @@ def test_secure_object_logical_path_uses_registered_sql_grammar() -> None:
     assert path_definition.kind is StoragePathKind.LOGICAL_SQL
     assert path_definition.grammar == "db://secure_objects/<namespace>/<object_key>"
     assert marker.as_posix() == "db:/secure_objects/aeat.persistence.profile.assets/default"
+
+
+def test_secure_object_namespace_logical_path_uses_registered_sql_grammar() -> None:
+    path_definition = STORAGE_NAMESPACE_REGISTRY.path_by_key("secure_objects_table")
+
+    marker = secure_object_namespace_logical_path("aeat.domain.attachments.blobs")
+
+    assert path_definition.kind is StoragePathKind.LOGICAL_SQL
+    assert path_definition.grammar == "db://secure_objects/<namespace>/<object_key>"
+    assert marker.as_posix() == "db:/secure_objects/aeat.domain.attachments.blobs"
 
 
 def test_every_discovered_production_secure_object_namespace_is_registered() -> None:

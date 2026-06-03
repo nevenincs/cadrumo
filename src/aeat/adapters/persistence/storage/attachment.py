@@ -42,9 +42,8 @@ from ._namespace_registry import (
 from ._namespace_registry import (
     ATTACHMENT_MANIFEST_NAMESPACE as ATTACHMENT_MANIFEST_STORAGE_NAMESPACE,
 )
-from ._namespace_registry import secure_object_logical_path
+from ._namespace_registry import secure_object_namespace_logical_path
 from .envelope import Envelope
-from .errors import ClassificationError, EnvelopeVersionError
 from .runtime_repository import secure_object_repository_for_active_bucket
 from .sql import SecureObjectRepository
 
@@ -85,6 +84,44 @@ def _attachment_persistence_error(message: str, *, operation: str) -> Attachment
     )
 
 
+def _validate_manifest_envelope(envelope: Envelope[Attachment]) -> None:
+    if envelope.classification != _ATTACHMENT_MANIFEST_SENSITIVITY:
+        raise _attachment_validation_error(
+            "invalid attachment manifest",
+            violation="manifest_classification",
+        )
+    if envelope.schema_version != _ATTACHMENT_MANIFEST_VERSION:
+        raise _attachment_validation_error(
+            "invalid attachment manifest",
+            violation="manifest_schema_version",
+        )
+
+
+def _decode_manifest_envelope(payload: bytes, *, attachment_id: str | None = None) -> Envelope[Attachment]:
+    try:
+        payload_dict = json.loads(payload.decode(UTF_8_ENCODING))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload") from exc
+    if not isinstance(payload_dict, dict):
+        raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload")
+    manifest_payload = payload_dict.get("payload")
+    if not isinstance(manifest_payload, dict):
+        raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload")
+    if attachment_id is None:
+        manifest_sha256 = manifest_payload.get("sha256")
+        if not isinstance(manifest_sha256, str):
+            raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload")
+        attachment_id = _require_digest(manifest_sha256, field_name="sha256")
+    manifest_payload["attachment_id"] = attachment_id
+    try:
+        envelope_json = json.dumps(payload_dict)
+        envelope = Envelope[Attachment].model_validate_json(envelope_json)
+    except ValidationError as exc:
+        raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload") from exc
+    _validate_manifest_envelope(envelope)
+    return envelope
+
+
 def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
     """Reject any digest input that is not a 64-char lowercase hex string."""
     if not isinstance(value, str):
@@ -116,12 +153,12 @@ class AttachmentStore(BaseModel):
     @property
     def blobs_dir(self) -> Path:
         """Return the logical byte-object namespace marker."""
-        return secure_object_logical_path(_ATTACHMENT_BLOB_NAMESPACE, "_namespace_marker").parent
+        return secure_object_namespace_logical_path(_ATTACHMENT_BLOB_NAMESPACE)
 
     @property
     def manifests_dir(self) -> Path:
         """Return the logical manifest-object namespace marker."""
-        return secure_object_logical_path(_ATTACHMENT_MANIFEST_NAMESPACE, "_namespace_marker").parent
+        return secure_object_namespace_logical_path(_ATTACHMENT_MANIFEST_NAMESPACE)
 
     def blob_path(self, sha256: str) -> Path:
         """Return a logical object marker for ``sha256``."""
@@ -244,15 +281,7 @@ class AttachmentStore(BaseModel):
         )
         if record is None:
             raise _attachment_not_found_error("attachment manifest not found", object_kind="manifest")
-        try:
-            payload_dict = json.loads(record.payload.decode(UTF_8_ENCODING))
-            payload_dict["payload"]["attachment_id"] = digest
-            envelope_json = json.dumps(payload_dict)
-            envelope = Envelope[Attachment].model_validate_json(envelope_json)
-        except (ClassificationError, EnvelopeVersionError) as exc:
-            raise _attachment_validation_error("invalid attachment manifest", violation="manifest_envelope") from exc
-        except (ValidationError, json.JSONDecodeError, KeyError) as exc:
-            raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload") from exc
+        envelope = _decode_manifest_envelope(record.payload, attachment_id=digest)
         attachment = envelope.payload
         if attachment.attachment_id != digest:
             raise _attachment_validation_error(
@@ -270,14 +299,7 @@ class AttachmentStore(BaseModel):
             expected_class=_ATTACHMENT_MANIFEST_SENSITIVITY,
             max_supported_version=_ATTACHMENT_MANIFEST_VERSION,
         ):
-            try:
-                payload_json = record.payload.decode(UTF_8_ENCODING)
-                envelope_dict = json.loads(payload_json)
-                envelope_dict["payload"]["attachment_id"] = record.object_key
-                envelope_json = json.dumps(envelope_dict)
-                envelope = Envelope[Attachment].model_validate_json(envelope_json)
-            except (ValidationError, json.JSONDecodeError, KeyError) as exc:
-                raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload") from exc
+            envelope = _decode_manifest_envelope(record.payload)
             manifests.append(envelope.payload)
         yield from sorted(manifests, key=lambda attachment: attachment.attachment_id)
 

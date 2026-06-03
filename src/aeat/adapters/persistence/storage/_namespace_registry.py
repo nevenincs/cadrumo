@@ -206,6 +206,13 @@ def secure_object_logical_path(namespace: str, object_key: str) -> Path:
     return Path(marker_root) / namespace / object_key
 
 
+def secure_object_namespace_logical_path(namespace: str) -> Path:
+    """Return the registry-defined logical SQL marker for one secure-object namespace."""
+    definition = STORAGE_NAMESPACE_REGISTRY.path_by_key(_SECURE_OBJECTS_TABLE_PATH_KEY)
+    marker_root = definition.grammar.removesuffix("/<namespace>/<object_key>")
+    return Path(marker_root) / namespace
+
+
 WORKFLOW_STATE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="workflow_state",
     namespace="aeat.workflow",
@@ -896,4 +903,5 @@ __all__ = [
     "StoragePathKind",
     "StorageRemoteMirrorPolicy",
     "secure_object_logical_path",
+    "secure_object_namespace_logical_path",
 ]
