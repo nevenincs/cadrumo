@@ -4159,7 +4159,7 @@ Ship missing locked verbs and clean help/i18n surfaces.
 
 Add CLI surface and end-to-end tests for the reconciled grammar.
 
-- [ ] `W72.P348.S2019` - Add CLI surface tests for link, check, preflight, reconcile, history exercising real backend services; `tests/entrypoints/cli`.
+- [x] `W72.P348.S2019` - Add CLI surface tests for link, check, preflight, reconcile, history exercising real backend services; `tests/entrypoints/cli`.
 - [x] `W72.P348.S2020` - Add negative tests proving retired verbs are unknown commands; `tests/entrypoints/cli`.
 - [x] `W72.P348.S2021` - Add an end-to-end test exercising the full modelo lifecycle through the reconciled verb tree; `tests`.
 - [x] `W72.P348.S2022` - Add a regression test asserting the reconciled aeat app ledger verb count matches the W71 canonical spine plus ratified axes; `tests/entrypoints/cli`.
@@ -4896,4 +4896,4 @@ Drive the surface-design ambiguities surfaced this session to ADR closure (S1853
 - [ ] `W86.P416.S2357` - Author ADR resolving S1853 declaration-verification canonical surface ambiguity: app modelo verify + reconcile vs current work_app subgroup mount, including verify is currently work_app.command('verify') at _modelo.py:3647 not top-level; `.vault/adr/`.
 - [ ] `W86.P416.S2358` - Author ADR resolving S1913 export-surface 'only' constraint scope: top-level export at _modelo.py:4847 + _ledger.py:1527 already canonical; `clarify whether audit_app.command('export') at _modelo.py:4456 is a co-existing subgroup variant or a violation; `.vault/adr/`.
 - [ ] `W86.P416.S2359` - Author ADR pinning canonical period rendering form (registry-native 1T vs display 2026Q1) so S233 (overview backlog M111 inconsistency) can land without breaking the 5+ test_engine.py expectations on the 2026Q1 form; `.vault/adr/`.
-- [ ] `W86.P416.S2360` - Add aeat app modelo history dedicated CLI surface test (5th of 5 S2019 verbs; `link/check/preflight/reconcile already have test_ledger_link_check_verbs.py + test_ledger_preflight_verb.py + test_modelo_reconcile_verb.py + test_modelo_reconcile_from_justificante_verb.py); `src/aeat/entrypoints/cli/`.
+- [x] `W86.P416.S2360` - Add aeat app modelo history dedicated CLI surface test (5th of 5 S2019 verbs; `link/check/preflight/reconcile already have test_ledger_link_check_verbs.py + test_ledger_preflight_verb.py + test_modelo_reconcile_verb.py + test_modelo_reconcile_from_justificante_verb.py); `src/aeat/entrypoints/cli/`.
