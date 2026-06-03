@@ -75,3 +75,42 @@ class DeleteBucketResult(BaseModel):
     bucket_id: BucketId
     previous_label: str = Field(min_length=1, max_length=160)
     occurred_at: datetime
+
+
+class BrowseBucketCommand(BaseModel):
+    """Operator request to enumerate a bucket's namespace inventory.
+
+    The current shape is namespace-level only: it returns each
+    namespace and its row count without decrypting payloads. Key-level
+    browse requires decryption and a ``SensitivityClass`` redaction
+    policy, both deferred to a follow-up Step under the
+    composition-pattern ADR.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    bucket_id: BucketId
+    namespace_filter: str | None = Field(default=None, min_length=1, max_length=128)
+
+
+class BucketNamespaceInventoryRow(BaseModel):
+    """One row of the namespace-inventory browse result."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    namespace: str = Field(min_length=1)
+    row_count: int = Field(ge=0)
+
+
+class BrowseBucketResult(BaseModel):
+    """Namespace-level browse outcome.
+
+    Returns one row per namespace present in the bucket (optionally
+    substring-filtered by ``namespace_filter``), each carrying the
+    stored-row count. Read-only; emits no bucket event.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    bucket_id: BucketId
+    rows: tuple[BucketNamespaceInventoryRow, ...]
