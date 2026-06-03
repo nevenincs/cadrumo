@@ -18,6 +18,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Mapping
 from datetime import datetime
+from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
@@ -119,10 +120,97 @@ def diff_ledger_fingerprints(
     )
 
 
+class LedgerEvidenceRow(BaseModel):
+    """Typed evidence projection of one contributing ledger transaction.
+
+    Where :class:`LedgerRowFingerprint` records only the content hash (for
+    staleness detection), this record carries the actual tax-relevant facts that
+    moved a casilla, plus its regulatory grounding and evidence references, so the
+    fact basis can be reconstituted from the revision and rendered into a filing
+    artefact. ``fingerprint`` binds this row to the matching
+    :class:`LedgerRowFingerprint`, so an evidence/fingerprint mismatch is
+    detectable.
+
+    Enum-valued facts are stored as their canonical string ``value`` (and dates as
+    ISO-8601 strings) so the record roundtrips cleanly through the strict
+    persistence boundary and the domain stays free of the ledger-read dependency;
+    the application capture layer projects the typed ``Transaction`` into this
+    primitive shape.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    transaction_id: str = Field(min_length=1)
+    fingerprint: str = Field(min_length=64, max_length=64)
+    booked_date: str = Field(min_length=1)
+    value_date: str | None = None
+    amount: Decimal
+    currency: str = Field(min_length=1)
+    direction: str = Field(min_length=1)
+    business_classification: str = Field(min_length=1)
+    business_pct: Decimal | None = None
+    taxable_base: Decimal | None = None
+    iva_rate: Decimal | None = None
+    iva_amount: Decimal | None = None
+    iva_category: str | None = None
+    category_id: str | None = None
+    irpf_category: str | None = None
+    counterparty_eu_member_state: str | None = None
+    fx_rate: Decimal | None = None
+    value_in_eur: Decimal | None = None
+    lifecycle_state: str = Field(min_length=1)
+    counterparty: str | None = None
+    description: str = ""
+    purchase_invoice_evidence_id: str | None = None
+    attachment_ids: tuple[str, ...] = ()
+    document_link_ids: tuple[str, ...] = ()
+    legal_refs: tuple[str, ...] = ()
+    source_refs: tuple[str, ...] = ()
+
+
+class ManualFactBasisEntry(BaseModel):
+    """One operator-entered fact behind a revision that is not ledger-derived.
+
+    Manual casilla inputs and binding overrides have no contributing ledger row;
+    they are nonetheless part of the fact basis a filing artefact must explain.
+    ``value`` is the rendered canonical string of the operator-entered value.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    casilla: str = Field(min_length=1)
+    value: str = Field(min_length=1)
+    kind: str = Field(default="casilla_input", min_length=1)
+    note: str = ""
+
+
+class LedgerFilingEvidence(BaseModel):
+    """The bundled fact basis behind one ledger-derived filing revision.
+
+    Pegged to the revision's :class:`LedgerFilingSnapshot` via
+    ``snapshot_fingerprint`` so evidence and the staleness fingerprint share one
+    content address. Empty ``rows`` + empty ``manual_entries`` is valid for a
+    non-ledger, non-manual revision; a ledger-derived revision MUST carry one
+    ``LedgerEvidenceRow`` per fingerprint contributor (the application capture
+    asserts the sets match, so no contributor is silently dropped from the
+    evidence).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    snapshot_fingerprint: str = Field(min_length=64, max_length=64)
+    rows: tuple[LedgerEvidenceRow, ...] = ()
+    manual_entries: tuple[ManualFactBasisEntry, ...] = ()
+    captured_at: datetime
+
+
 __all__ = [
+    "LedgerEvidenceRow",
+    "LedgerFilingEvidence",
     "LedgerFilingSnapshot",
     "LedgerFilingStalenessVerdict",
     "LedgerRowFingerprint",
+    "ManualFactBasisEntry",
     "diff_ledger_fingerprints",
     "snapshot_fingerprint",
 ]
