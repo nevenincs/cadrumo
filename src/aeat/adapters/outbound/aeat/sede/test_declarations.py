@@ -1166,6 +1166,32 @@ class TestDeclaracionPdfObservation:
 
         assert {item.casilla_id: Decimal(item.value) for item in observed} == values
 
+    def test_declaration_pdf_parse_failure_redacts_identifier_and_chained_error(self) -> None:
+        snapshot = _modelo_130_snapshot()
+        declaration = Declaracion(
+            modelo="130",
+            ejercicio=2026,
+            period="1T",
+            expediente_id="EXPEDIENTE-CANARY-123",
+            estado="ALTA",
+            presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+            justificante_link_text="Ver",
+            declaration_copy_link_text="Ver",
+        )
+
+        with pytest.raises(SedeParseError) as exc_info:
+            _observed_casillas_from_declaration_pdf(
+                snapshot=snapshot,
+                declaration=declaration,
+                body=b"not a declaration PDF",
+            )
+
+        err = exc_info.value
+        assert err.__cause__ is None
+        assert err.__context__ is None
+        assert "EXPEDIENTE-CANARY-123" not in str(err)
+        assert "EXPEDIENTE-CANARY-123" not in str(getattr(err, "context", {}))
+
     def test_modelo_111_declaration_pdf_values_become_observed_casillas(self) -> None:
         snapshot = _modelo_snapshot("111", filing_year=2025, period="1T")
         profile = snapshot.extraction_profiles["modelo-111-declaracion-pdf"]
