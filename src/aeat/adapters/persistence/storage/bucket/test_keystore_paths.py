@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core.errors import build_error_envelope
 from ._errors import BucketValidationError
 from ._keystore_paths import (
     keystore_path,
@@ -43,16 +44,50 @@ def test_default_separation_validates(tmp_path: Path) -> None:
 
 def test_rejects_nesting_under_buckets_parent(tmp_path: Path) -> None:
     bad = tmp_path / "buckets" / "alpha" / "stowaway"
-    with pytest.raises(BucketValidationError, match="buckets parent"):
+    with pytest.raises(BucketValidationError, match="buckets parent") as excinfo:
         validate_keystore_separation(tmp_path, "alpha", configured_keystore=bad)
+
+    message = str(excinfo.value)
+    assert str(bad) not in message
+    assert str(tmp_path) not in message
+    assert excinfo.value.context == {
+        "reason": "under_buckets_parent",
+        "surface": "bucket_keystore",
+    }
+    assert excinfo.value.translated_message == "errors.integrity.integrity_storage_bucket_validation"
 
 
 def test_rejects_nesting_under_bucket_db_dir(tmp_path: Path) -> None:
     bad = tmp_path / "buckets" / "alpha" / "db" / "stowaway"
-    with pytest.raises(BucketValidationError, match=r"buckets parent|db dir"):
+    with pytest.raises(BucketValidationError, match=r"buckets parent|db dir") as excinfo:
         validate_keystore_separation(tmp_path, "alpha", configured_keystore=bad)
+
+    message = str(excinfo.value)
+    assert str(bad) not in message
+    assert str(tmp_path) not in message
+    assert excinfo.value.context == {
+        "reason": "under_bucket_db_dir",
+        "surface": "bucket_keystore",
+    }
+    assert excinfo.value.translated_message == "errors.integrity.integrity_storage_bucket_validation"
 
 
 def test_external_path_passes_validation(tmp_path: Path) -> None:
     external = tmp_path / "elsewhere" / "alpha"
     validate_keystore_separation(tmp_path, "alpha", configured_keystore=external)
+
+
+def test_keystore_validation_error_envelope_is_localized_and_redacted(tmp_path: Path) -> None:
+    bad = tmp_path / "buckets" / "alpha" / "stowaway"
+    with pytest.raises(BucketValidationError) as excinfo:
+        validate_keystore_separation(tmp_path, "alpha", configured_keystore=bad)
+
+    envelope = build_error_envelope(excinfo.value)
+    assert envelope.code == "INTEGRITY_STORAGE_BUCKET_VALIDATION"
+    assert envelope.message
+    assert envelope.context == {
+        "reason": "under_buckets_parent",
+        "surface": "bucket_keystore",
+    }
+    assert str(bad) not in envelope.model_dump_json()
+    assert str(tmp_path) not in envelope.model_dump_json()
