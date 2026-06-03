@@ -9,6 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.errors import build_error_envelope
+from .....core.external_constants import UTF_8_ENCODING
 from ..errors import StorageValidationError
 from ._layout import bucket_paths, provision_bucket_directory
 from ._manifest import (
@@ -63,7 +64,7 @@ def test_write_emits_datetime_fields_as_toml_offset_datetimes(tmp_path: Path) ->
     manifest = _fixture_manifest()
 
     write_manifest(paths, manifest)
-    text = manifest_path(paths).read_text(encoding="utf-8")
+    text = manifest_path(paths).read_text(encoding=UTF_8_ENCODING)
 
     assert "created_at = 2026-05-14T12:00:00+00:00\n" in text
     assert "last_unlocked_at = 2026-05-14T13:30:00+00:00\n" in text
@@ -108,8 +109,8 @@ def test_read_rejects_unknown_key(tmp_path: Path) -> None:
     write_manifest(paths, _fixture_manifest())
 
     target = manifest_path(paths)
-    text = target.read_text(encoding="utf-8")
-    target.write_text(text + 'stowaway = "x"\n', encoding="utf-8")
+    text = target.read_text(encoding=UTF_8_ENCODING)
+    target.write_text(text + 'stowaway = "x"\n', encoding=UTF_8_ENCODING)
 
     with pytest.raises(ValidationError):
         read_manifest(paths)
@@ -120,10 +121,10 @@ def test_read_rejects_missing_status_key(tmp_path: Path) -> None:
     write_manifest(paths, _fixture_manifest())
 
     target = manifest_path(paths)
-    text = target.read_text(encoding="utf-8")
+    text = target.read_text(encoding=UTF_8_ENCODING)
     target.write_text(
         "\n".join(line for line in text.splitlines() if not line.startswith("status = ")) + "\n",
-        encoding="utf-8",
+        encoding=UTF_8_ENCODING,
     )
 
     with pytest.raises(StorageValidationError, match="lifecycle status"):
@@ -168,7 +169,7 @@ def test_torn_write_does_not_corrupt_existing_manifest(tmp_path: Path) -> None:
 
     target = manifest_path(paths)
     tmp = target.with_suffix(target.suffix + ".tmp")
-    tmp.write_text('bucket_id = "partial', encoding="utf-8")
+    tmp.write_text('bucket_id = "partial', encoding=UTF_8_ENCODING)
 
     loaded = read_manifest(paths)
     assert loaded == good
@@ -193,7 +194,7 @@ def test_manifest_datetimes_are_written_as_rfc3339_offset_datetimes(tmp_path: Pa
     manifest = _fixture_manifest()
     write_manifest(paths, manifest)
 
-    text = manifest_path(paths).read_text(encoding="utf-8")
+    text = manifest_path(paths).read_text(encoding=UTF_8_ENCODING)
     lines = {
         key: value.strip()
         for key, _, value in (line.partition(" = ") for line in text.splitlines())

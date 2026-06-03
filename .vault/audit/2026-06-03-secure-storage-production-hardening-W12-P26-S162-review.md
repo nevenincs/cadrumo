@@ -30,13 +30,15 @@ The two master-key fallback callers that intentionally treated an absent manifes
 
 The hunk in `src/aeat/adapters/persistence/storage/master_key/_master_key.py` does not introduce broad catches, suppression, environment access, or monkeypatch patterns. A file-level hygiene scan still reports pre-existing broad exception/suppression patterns elsewhere in `_master_key.py`; that file is already tracked by `AFR-075` / `W12.P26.S177` for `bootstrap-custody`, so it should be cleared in that row rather than folded into the manifest I/O closure.
 
+The reviewed bucket manifest I/O tests now route text reads and writes through `UTF_8_ENCODING`, so the touched test surface no longer carries direct encoding literals.
+
 Validation:
 
 - `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/bucket/test_manifest_io.py src/aeat/adapters/persistence/storage/bucket/test_manifest_roundtrip.py src/aeat/adapters/persistence/storage/master_key/test_master_key.py src/aeat/adapters/persistence/storage/master_key/test_adverse_sessions.py` passed with 76 tests.
 - `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/bucket/_manifest_io.py src/aeat/adapters/persistence/storage/bucket/test_manifest_io.py src/aeat/adapters/persistence/storage/master_key/_master_key.py` passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
-- Scoped hunk review found no broad exception catch, suppression, direct environment access, direct settings construction, fake/stub test, monkeypatch, skip, xfail, or path-bearing error context introduced by this row.
+- Scoped hunk review found no broad exception catch, suppression, direct environment access, direct settings construction, direct encoding literals, fake/stub test, monkeypatch, skip, xfail, or path-bearing error context introduced by this row.
 
-Review-agent note: spawning `vaultspec-code-reviewer` for this row failed with the current agent thread limit, so the formal review was completed locally using the same checklist.
+Review-agent note: a reviewer subagent was unavailable in this session due the current usage limit, so the supervisor completed the same checklist locally.
 
 Disposition: close `AFR-060` as `manifest-discovery`.
