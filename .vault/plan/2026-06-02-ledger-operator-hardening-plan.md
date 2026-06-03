@@ -201,9 +201,9 @@ Fresh-context honesty review; turn findings into hardening Steps with gates.
 - [x] `W03.P10.S73` - Allow importing multiple statement files / a directory in one ledger import invocation (bulk/folder import); `src/aeat/entrypoints/cli/_ledger.py`.
 - [x] `W03.P10.S74` - Enrich ledger track lineage for imported rows (name the import-batch provenance instead of a bare '-' created bucket event); `src/aeat/entrypoints/cli/_ledger.py`.
 
-## Wave `W04` - Deferred live Google export
+## Wave `W04` - Google ledger export — online/live (network, deferred pending authorization)
 
-Parked until explicit operator go-ahead: live Drive/Gmail export and manual review.
+The network half of the Google export goal: live Drive/Sheets upload, manual-review-in-Drive, and live Gmail/Drive document-link resolution. Separated from the offline/local export wave (W15) so cloud writes are tracked and gated independently; parked until explicit operator authorization and OAuth credentials are available in the environment.
 
 ### Phase `W04.P11` - Live Drive and Gmail export
 
@@ -380,6 +380,18 @@ Render 1000s of rows; label/group; bulk amend.
 - [x] `W14.P26.S87` - Render/list 1000s of rows with stable columns and honest paging/truncation (no silent cap); `src/aeat/entrypoints/cli/_ledger.py`.
 - [x] `W14.P26.S88` - Grouping/labelling of transactions (label/tag/group surface) and grouped display; `src/aeat/domain/transactions/_models.py`.
 - [x] `W14.P26.S89` - Batch transform/amend journey: iterative refinement (relabel/recategorize/reallocate) over hundreds of rows; `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
+
+## Wave `W15` - Google ledger export — offline/local (no network)
+
+The no-network half of the Google export goal: serialize the bucket ledger into an XLSX / Google-Sheets-shaped workbook on local disk, roundtrip it back through import for fidelity, and attach Gmail/Drive document-link references as local row metadata — all without contacting any external service. The online counterpart (live Drive/Sheets/Gmail) is tracked separately in Wave W04.
+
+### Phase `W15.P28` - Offline workbook export and local document links
+
+Local, no-network deliverables: an XLSX/Sheets-shaped workbook export of the bucket ledger with an offline roundtrip-through-import fidelity gate, and Gmail/Drive document-link references attached as local ledger-row metadata (link strings recorded, never fetched).
+
+- [ ] `W15.P28.S93` - XLSX / Google-Sheets-shaped workbook export of the bucket ledger to a local file; `src/aeat/application/ledger/_workbook_export.py`.
+- [ ] `W15.P28.S94` - Offline roundtrip gate: exported workbook re-imports back through the ledger with row fidelity; `src/aeat/entrypoints/cli/test_ledger_workbook_export.py`.
+- [ ] `W15.P28.S95` - Attach Gmail/Drive document-link references as local ledger-row metadata (recorded, never fetched); `src/aeat/entrypoints/cli/_ledger.py`.
 
 ## Description
 
