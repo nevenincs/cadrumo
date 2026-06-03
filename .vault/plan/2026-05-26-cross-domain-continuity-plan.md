@@ -585,7 +585,7 @@ active_bucket_id_or_raise and require_active_bucket_id have identical bodies. Me
 
 _language_resolver import for side-effect under private name; replace with explicit register_language_resolver call.
 
-- [ ] `W09.P43.S166` - replace side-effect _language_resolver import with explicit register_language_resolver call in known initialiser; `src/aeat/application/user_profile/__init__.py`.
+- [x] `W09.P43.S166` - replace side-effect _language_resolver import with explicit register_language_resolver call in known initialiser; `src/aeat/application/user_profile/__init__.py`.
 
 ### Phase `W09.P44` - hardcoded preflight binding-source set
 
