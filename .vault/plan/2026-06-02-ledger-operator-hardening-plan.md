@@ -212,6 +212,14 @@ Deferred: live Drive upload, manual review, Gmail/Drive document links.
 - [ ] `W04.P11.S29` - Live Drive export plus manual review (deferred, on go-ahead); `src/aeat/adapters/outbound/google/`.
 - [ ] `W04.P11.S30` - Gmail/Drive document-link workflow (deferred, on go-ahead); `src/aeat/adapters/outbound/google/`.
 
+### Phase `W04.P27` - Google Sheets/Drive export + document links
+
+Sheets/XLSX to Drive, manual review, Gmail/Drive doc-links.
+
+- [ ] `W04.P27.S90` - Export the ledger to Google Sheets/XLSX in Drive (outbound adapter) for manual review; `src/aeat/adapters/outbound/google/`.
+- [ ] `W04.P27.S91` - Operator manual-review-in-Drive workflow (open exported sheet, annotate, re-pull); `src/aeat/adapters/outbound/google/`.
+- [ ] `W04.P27.S92` - Gmail/Drive document-link workflow: attach justificante/invoice links from Gmail + Drive to ledger rows; `src/aeat/adapters/outbound/google/`.
+
 ## Wave `W05` - LLM classification testing
 
 Drive the LLM auto-classifier over the corpus and score predictions against the ground-truth oracle.
@@ -315,6 +323,63 @@ Bundled eurofxref history + provider with date fallback and EUR-base inversion.
 - [x] `W11.P20.S68` - Wire the normalizer into the CLI import path so foreign rows persist fx_rate+value_in_eur; `corpus-fidelity + journey assert Revolut GBP/USD convert (no UNSUPPORTED_CURRENCY); `src/aeat/application/ledger/_actions.py`.
 - [ ] `W11.P20.S69` - Record rate source + rate-date provenance on the conversion, dovetailing with the filing snapshot; `src/aeat/domain/transactions/_models.py`.
 - [x] `W11.P20.S70` - Add an ECB-history refresh utility (re-acquire eurofxref-hist.xml on release; `runtime stays offline); `src/aeat/adapters/outbound/fx/_ecb_refresh.py`.
+
+## Wave `W12` - CLI operator-ergonomics restructuring
+
+Restructuring-scale CLI surfaces the personas flagged: folder import with envelope aggregation, multi-file review filtering/search, and a consolidated readiness/anomaly surface.
+
+### Phase `W12.P21` - Import surface restructuring
+
+Folder/multi-file import + import-batch lineage.
+
+- [ ] `W12.P21.S75` - Folder/multi-file ledger import in one invocation with envelope-aggregated rows/imported/skipped counts across files; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W12.P21.S76` - Enrich ledger track lineage to name the import-batch provenance for imported rows (not a bare '-'); `src/aeat/entrypoints/cli/_ledger.py`.
+
+### Phase `W12.P22` - Review, filter and search surface
+
+Classification lens + search + period-scoped JSON.
+
+- [ ] `W12.P22.S77` - review --filter classification=business|personal|gated (typed key across filter spec + query); `src/aeat/application/review/_filter.py`.
+- [ ] `W12.P22.S78` - Search across description/counterparty/category from the CLI (review/list search); `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W12.P22.S79` - Period-scoped JSON row list (list --period or review --filter period --format json) for building classify CSVs; `src/aeat/entrypoints/cli/_ledger.py`.
+
+### Phase `W12.P23` - Readiness and anomaly surface
+
+Anomaly channel + readiness dashboard + annual roll-up.
+
+- [ ] `W12.P23.S80` - Anomaly channel in check/preflight distinct from missing-fact reasons (recargo/erroneous/foreign), with severity; `src/aeat/application/ledger/_preflight.py`.
+- [ ] `W12.P23.S81` - Consolidated readiness dashboard (rows, pending, anomalies, ready-to-file) for sign-off; `src/aeat/application/ledger/_summary.py`.
+- [ ] `W12.P23.S82` - Annual roll-up / M100-readiness money totals (ingresos/gastos/net activity per year); `src/aeat/application/ledger/_summary.py`.
+
+## Wave `W13` - Cross-profile runtime-pegged ledger domain
+
+The cross-profile goal: a second taxpayer bucket (recargo-equivalencia retailer) with its own corpus+oracle, per-bucket isolation, switching, and the RE regime modelled end-to-end (not as an anomaly).
+
+### Phase `W13.P24` - Second taxpayer profile + corpus
+
+Recargo-equivalencia retailer bucket with corpus+oracle; isolation.
+
+- [ ] `W13.P24.S83` - Author a recargo-equivalencia retailer profile corpus + ground-truth oracle in a separate bucket; `src/aeat/tests/fixtures/financial/ledger-corpus-retailer/`.
+- [ ] `W13.P24.S84` - Cross-profile isolation test: each bucket's ledger is independent (no cross-bucket leakage); `src/aeat/entrypoints/cli/test_ledger_cross_profile.py`.
+
+### Phase `W13.P25` - Recargo-equivalencia regime end-to-end + switching
+
+Model RE as a real regime; operate across profiles.
+
+- [ ] `W13.P25.S85` - Model recargo equivalencia as a real regime for the retailer (IVA+RE non-deductible cost; `repercutido RE on sales), not an anomaly; `src/aeat/application/aggregation/_iva_ledger.py`.
+- [ ] `W13.P25.S86` - Cross-profile switching journey: operate the ledger across two profiles in one session; `src/aeat/entrypoints/cli/test_ledger_cross_profile.py`.
+
+## Wave `W14` - UX and rendering of the profile-bound ledger at scale
+
+Operating-scale rendering, grouping/labelling, and batch transform/amend over 1000s of rows.
+
+### Phase `W14.P26` - Operating-scale rendering, grouping, batch transform
+
+Render 1000s of rows; label/group; bulk amend.
+
+- [ ] `W14.P26.S87` - Render/list 1000s of rows with stable columns and honest paging/truncation (no silent cap); `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W14.P26.S88` - Grouping/labelling of transactions (label/tag/group surface) and grouped display; `src/aeat/domain/transactions/_models.py`.
+- [ ] `W14.P26.S89` - Batch transform/amend journey: iterative refinement (relabel/recategorize/reallocate) over hundreds of rows; `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
 
 ## Description
 
