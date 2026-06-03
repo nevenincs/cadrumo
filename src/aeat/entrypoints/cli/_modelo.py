@@ -5688,7 +5688,7 @@ def iva_wallet_balance_cmd(
     ],
 ) -> None:
     """Report the aggregated IVA wallet balance without contacting AEAT."""
-    from ...application.calculations._iva_wallet_balance import query_iva_wallet_balance
+    from ...application.calculations import query_iva_wallet_balance
 
     report = query_iva_wallet_balance(as_of_year=as_of_year)
     from ._common import _emit_envelope
