@@ -157,23 +157,59 @@ adapters:
             one of {expected}.
       google_drive:
         errors:
-          content_hash_blank: 'Google Drive content hash must not be blank.'
-          content_hash_mismatch: 'Google Drive content hash mismatch; downloaded payload integrity check failed.'
-          create_namespace_no_id: 'Google Drive did not return an id when creating a namespace folder.'
-          create_vault_folder_no_id: 'Google Drive did not return an id when creating the vault folder.'
-          folder_not_owned: 'Drive folder {folder_name} is not marked as owned by this app; refusing to write to protect operator data.'
-          googleapiclient_import_failed: 'The google-api-python-client dependency is not importable; run `uv sync` and retry.'
-          media_non_bytes: 'Google Drive media download returned {payload_type} instead of bytes.'
-          namespace_blank: 'Google Drive storage namespace must not be blank.'
-          namespace_forbidden_characters: 'Google Drive storage namespace {namespace} contains forbidden path characters.'
-          namespace_not_found: 'Google Drive namespace {namespace} was not found.'
-          object_key_hmac_blank: 'Google Drive object key HMAC must not be blank.'
-          object_not_found: 'Google Drive object {object_key_hmac} was not found in namespace {namespace}.'
-          request_failed: 'Google Drive request {action} failed with status {status}.'
-          root_folder_id_blank: 'Google Drive root folder id must not be blank.'
-          vault_entry_not_folder: 'The configured Drive root contains {vault_folder_name}, but that entry is not a folder.'
-          vault_folder_name_blank: 'Google Drive vault folder name must not be blank.'
-          write_non_dict_response: 'Google Drive write response for {action} had an unexpected shape.'
+          content_hash_blank: Google Drive content hash must not be blank.
+          content_hash_mismatch: Google Drive content hash mismatch; downloaded payload
+            integrity check failed.
+          create_namespace_no_id: Google Drive did not return an id when creating
+            a namespace folder.
+          create_vault_folder_no_id: Google Drive did not return an id when creating
+            the vault folder.
+          folder_not_owned: Drive folder {folder_name} is not marked as owned by this
+            app; refusing to write to protect operator data.
+          googleapiclient_import_failed: The google-api-python-client dependency is
+            not importable; run `uv sync` and retry.
+          media_non_bytes: Google Drive media download returned {payload_type} instead
+            of bytes.
+          namespace_blank: Google Drive storage namespace must not be blank.
+          namespace_forbidden_characters: Google Drive storage namespace {namespace}
+            contains forbidden path characters.
+          namespace_not_found: Google Drive namespace {namespace} was not found.
+          object_key_hmac_blank: Google Drive object key HMAC must not be blank.
+          object_not_found: Google Drive object {object_key_hmac} was not found in
+            namespace {namespace}.
+          request_failed: Google Drive request {action} failed with status {status}.
+          root_folder_id_blank: Google Drive root folder id must not be blank.
+          vault_entry_not_folder: The configured Drive root contains {vault_folder_name},
+            but that entry is not a folder.
+          vault_folder_name_blank: Google Drive vault folder name must not be blank.
+          write_non_dict_response: Google Drive write response for {action} had an
+            unexpected shape.
+      local:
+        errors:
+          byte_length_invalid: Local storage sidecar byte_length has invalid type
+            {actual_type}.
+          content_hash_blank: Local storage content hash must not be blank.
+          content_hash_mismatch: Local storage content hash mismatch; payload integrity
+            check failed.
+          namespace_blank: Local storage namespace must not be blank.
+          namespace_create_permission: Local storage could not create namespace {namespace}.
+          namespace_forbidden_characters: Local storage namespace {namespace} contains
+            forbidden path characters.
+          namespace_not_found: Local storage namespace {namespace} was not found.
+          object_delete_permission: Local storage could not delete object payload.
+          object_key_hmac_blank: Local storage object key HMAC must not be blank.
+          object_key_hmac_forbidden_characters: Local storage object key HMAC {object_key_hmac}
+            contains forbidden characters.
+          object_not_found: Local storage object {object_key_hmac} was not found in
+            namespace {namespace}.
+          payload_commit_failed: Local storage could not commit object payload atomically.
+          payload_read_permission: Local storage could not read object payload.
+          payload_write_permission: Local storage could not write object payload.
+          sidecar_malformed: Local storage sidecar {sidecar_path} is unreadable or
+            malformed.
+          sidecar_missing: Local storage object sidecar is missing.
+          sidecar_not_object: Local storage sidecar {sidecar_path} is not a JSON object.
+          sidecar_write_failed: Local storage could not write the object sidecar.
   sede:
     errors:
       cotejo_nav_failed: Navigation to the AEAT cotejo page failed; session may have
@@ -1901,6 +1937,14 @@ cli:
       reaffirm_help: Reaffirm the classification of an already-classified transaction.
       reaffirmed: Classification reaffirmed.
       taxable_base_help: Taxable base amount
+    doclink:
+      actor_help: cli.ledger.doclink.actor_help
+      bad_source: cli.ledger.doclink.bad_source
+      help: cli.ledger.doclink.help
+      id_help: cli.ledger.doclink.id_help
+      note_help: cli.ledger.doclink.note_help
+      reference_help: cli.ledger.doclink.reference_help
+      source_help: cli.ledger.doclink.source_help
     errors:
       command_input_invalid: 'Refused. The transaction is invalid: {details}'
       command_input_invalid_fallback: one or more fields failed validation
@@ -2023,6 +2067,8 @@ cli:
       invoice_id_help: Invoice id to bind bidirectionally to the transaction.
     list:
       by_group_help: Section the listing by group label.
+      filter_help: Filter rows by status, period (incl. bare YYYY for a year), classification,
+        issue, import, or text.
       footer_truncated: Showing rows {start}-{end} of {total} (offset {offset}). Use
         --offset/--limit to page.
       group_filter_help: Show only rows in this group label.

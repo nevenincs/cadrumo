@@ -13,7 +13,6 @@ layer. The provider treats every payload as opaque bytes.
 
 from __future__ import annotations
 
-import contextlib
 import hashlib
 import json
 import os
@@ -47,11 +46,15 @@ _DEFAULT_LABEL = "object"
 def _validate_namespace(namespace: str) -> str:
     cleaned = namespace.strip()
     if not cleaned:
-        raise OutboundStorageValidationError("namespace must not be blank")
+        raise OutboundStorageValidationError(
+            "namespace must not be blank",
+            translated_message="adapters.outbound.storage.local.errors.namespace_blank",
+        )
     if "/" in cleaned or "\\" in cleaned or cleaned.startswith("."):
         raise OutboundStorageValidationError(
             f"namespace {namespace!r} contains forbidden characters",
             context={"namespace": namespace},
+            translated_message="adapters.outbound.storage.local.errors.namespace_forbidden_characters",
         )
     return cleaned
 
@@ -59,11 +62,15 @@ def _validate_namespace(namespace: str) -> str:
 def _validate_hmac(object_key_hmac: str) -> str:
     cleaned = object_key_hmac.strip()
     if not cleaned:
-        raise OutboundStorageValidationError("object_key_hmac must not be blank")
+        raise OutboundStorageValidationError(
+            "object_key_hmac must not be blank",
+            translated_message="adapters.outbound.storage.local.errors.object_key_hmac_blank",
+        )
     if not all(c.isalnum() or c == "-" or c == "_" for c in cleaned):
         raise OutboundStorageValidationError(
             f"object_key_hmac {object_key_hmac!r} contains forbidden characters",
             context={"object_key_hmac": object_key_hmac},
+            translated_message="adapters.outbound.storage.local.errors.object_key_hmac_forbidden_characters",
         )
     return cleaned
 
@@ -111,7 +118,8 @@ class LocalFileSystemProvider:
             raise OutboundStoragePermissionError(
                 f"cannot create namespace directory {target}: {exc}",
                 context={"namespace": namespace, "path": str(target)},
-            ) from exc
+                translated_message="adapters.outbound.storage.local.errors.namespace_create_permission",
+            ) from None
         return target
 
     def _resolve_object_path(self, namespace: str, object_key_hmac: str) -> Path | None:
@@ -137,11 +145,13 @@ class LocalFileSystemProvider:
             raise OutboundStorageIntegrityError(
                 f"sidecar {sidecar_path} is unreadable or malformed: {exc}",
                 context={"sidecar_path": str(sidecar_path)},
-            ) from exc
+                translated_message="adapters.outbound.storage.local.errors.sidecar_malformed",
+            ) from None
         if not isinstance(raw, dict):
             raise OutboundStorageIntegrityError(
                 f"sidecar {sidecar_path} is not a JSON object",
                 context={"sidecar_path": str(sidecar_path)},
+                translated_message="adapters.outbound.storage.local.errors.sidecar_not_object",
             )
         # CAST-RATIONALE-SIDECAR-MAPPING: json.loads returns Any; isinstance
         # guard above confirms dict shape; cast narrows the static type to
@@ -168,7 +178,10 @@ class LocalFileSystemProvider:
         hmac_clean = _validate_hmac(object_key_hmac)
         label_clean = _validate_label(label)
         if not content_hash.strip():
-            raise OutboundStorageValidationError("content_hash must not be blank")
+            raise OutboundStorageValidationError(
+                "content_hash must not be blank",
+                translated_message="adapters.outbound.storage.local.errors.content_hash_blank",
+            )
 
         namespace_dir = self._ensure_namespace_dir(namespace_clean)
         existing_path = self._resolve_object_path(namespace_clean, hmac_clean)
@@ -194,13 +207,15 @@ class LocalFileSystemProvider:
             raise OutboundStoragePermissionError(
                 f"cannot write object payload to {target_path}: {exc}",
                 context={"path": str(target_path)},
-            ) from exc
+                translated_message="adapters.outbound.storage.local.errors.payload_write_permission",
+            ) from None
         except OSError as exc:
             tmp_path.unlink(missing_ok=True)
             raise OutboundStorageConflictError(
                 f"failed to commit object payload to {target_path}: {exc}",
                 context={"path": str(target_path)},
-            ) from exc
+                translated_message="adapters.outbound.storage.local.errors.payload_commit_failed",
+            ) from None
 
         written_at = now()
         sidecar_payload = {
@@ -218,7 +233,8 @@ class LocalFileSystemProvider:
             raise OutboundStoragePermissionError(
                 f"failed to write sidecar {sidecar_path}: {exc}",
                 context={"path": str(sidecar_path)},
-            ) from exc
+                translated_message="adapters.outbound.storage.local.errors.sidecar_write_failed",
+            ) from None
 
         return ProviderObjectMetadata(
             namespace=namespace_clean,
@@ -265,12 +281,14 @@ class LocalFileSystemProvider:
             raise OutboundStorageNotFoundError(
                 f"object {hmac_clean!r} not found in namespace {namespace_clean!r}",
                 context={"namespace": namespace_clean, "object_key_hmac": hmac_clean},
+                translated_message="adapters.outbound.storage.local.errors.object_not_found",
             )
         sidecar_path = target_path.with_name(target_path.stem + _SIDECAR_EXTENSION)
         if not sidecar_path.is_file():
             raise OutboundStorageIntegrityError(
                 f"object {target_path.name} has no sidecar; storage corrupt",
                 context={"path": str(target_path)},
+                translated_message="adapters.outbound.storage.local.errors.sidecar_missing",
             )
         sidecar = self._load_sidecar(sidecar_path)
 
@@ -280,7 +298,8 @@ class LocalFileSystemProvider:
             raise OutboundStoragePermissionError(
                 f"cannot read object payload from {target_path}: {exc}",
                 context={"path": str(target_path)},
-            ) from exc
+                translated_message="adapters.outbound.storage.local.errors.payload_read_permission",
+            ) from None
 
         actual_hash = hashlib.sha256(payload).hexdigest()
         stored_hash = str(sidecar.get("content_hash", ""))
@@ -292,6 +311,7 @@ class LocalFileSystemProvider:
             raise OutboundStorageIntegrityError(
                 f"content_hash mismatch for {target_path.name}: stored={stored_hash!r} actual_sha256={actual_hash!r}",
                 context={"path": str(target_path), "stored_hash": stored_hash, "actual_sha256": actual_hash},
+                translated_message="adapters.outbound.storage.local.errors.content_hash_mismatch",
             )
 
         written_at_raw = str(sidecar.get("written_at", ""))
@@ -309,6 +329,7 @@ class LocalFileSystemProvider:
             raise StorageCorruptionError(
                 f"sidecar byte_length has unexpected type: {type(_byte_length_raw)!r}",
                 context={"actual_type": repr(type(_byte_length_raw))},
+                translated_message="adapters.outbound.storage.local.errors.byte_length_invalid",
             )
         metadata = ProviderObjectMetadata(
             namespace=namespace_clean,
@@ -356,7 +377,8 @@ class LocalFileSystemProvider:
             raise OutboundStoragePermissionError(
                 f"cannot delete object {target_path}: {exc}",
                 context={"path": str(target_path)},
-            ) from exc
+                translated_message="adapters.outbound.storage.local.errors.object_delete_permission",
+            ) from None
         return True
 
     def iter_namespaces(self) -> Iterator[str]:
@@ -403,6 +425,7 @@ class LocalFileSystemProvider:
             raise OutboundStorageNotFoundError(
                 f"namespace {namespace_clean!r} does not exist",
                 context={"namespace": namespace_clean},
+                translated_message="adapters.outbound.storage.local.errors.namespace_not_found",
             )
         for entry in sorted(namespace_dir.iterdir()):
             if not entry.is_file() or entry.suffix != _FILE_EXTENSION:
@@ -427,6 +450,7 @@ class LocalFileSystemProvider:
                 raise StorageCorruptionError(
                     f"sidecar byte_length has unexpected type: {type(_byte_length_raw)!r}",
                     context={"actual_type": repr(type(_byte_length_raw))},
+                    translated_message="adapters.outbound.storage.local.errors.byte_length_invalid",
                 )
             yield ProviderObjectMetadata(
                 namespace=namespace_clean,
@@ -458,13 +482,13 @@ class LocalFileSystemProvider:
         if not self._root.exists():
             try:
                 self._root.mkdir(parents=True, exist_ok=True)
-            except (PermissionError, OSError) as exc:
+            except (PermissionError, OSError):
                 return ProviderProbeReport(
                     provider_kind=ProviderKind.LOCAL_FILESYSTEM,
                     read_only=read_only,
                     reachable=False,
                     writable=False,
-                    detail=f"root {self._root} unreachable: {exc}",
+                    detail="root unreachable",
                 )
 
         if read_only:
@@ -473,7 +497,7 @@ class LocalFileSystemProvider:
                 read_only=read_only,
                 reachable=True,
                 writable=False,
-                detail=f"read_only probe; root {self._root} is reachable",
+                detail="read_only probe; root is reachable",
             )
 
         # Sentinel-file round-trip in `_probe/`.
@@ -485,23 +509,28 @@ class LocalFileSystemProvider:
                 content_hash="sha256-empty",
                 label="sentinel",
             )
-        except (PermissionError, OSError, OutboundStoragePermissionError, OutboundStorageConflictError) as exc:
+        except (PermissionError, OSError, OutboundStoragePermissionError, OutboundStorageConflictError):
             return ProviderProbeReport(
                 provider_kind=ProviderKind.LOCAL_FILESYSTEM,
                 read_only=read_only,
                 reachable=True,
                 writable=False,
-                detail=f"sentinel write refused: {exc}",
+                detail="sentinel write refused",
             )
-        with contextlib.suppress(PermissionError, OSError, OutboundStoragePermissionError):
+        try:
             self.delete(_PROBE_NAMESPACE, "00000000probe")
+        except (PermissionError, OSError, OutboundStoragePermissionError) as exc:
+            _logger.debug(
+                "local storage probe cleanup failed with error_type=%s",
+                type(exc).__name__,
+            )
         del metadata
         return ProviderProbeReport(
             provider_kind=ProviderKind.LOCAL_FILESYSTEM,
             read_only=read_only,
             reachable=True,
             writable=True,
-            detail=f"sentinel round-trip ok in {self._root}",
+            detail="sentinel round-trip ok",
         )
 
 

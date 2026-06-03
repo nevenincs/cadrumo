@@ -15,7 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core.errors import ERROR_REGISTRY, build_error_envelope
+from ....core.errors import ERROR_REGISTRY, build_error_envelope, resolve_error_message
+from ....core.i18n import tr
 from . import (
     OutboundStorageIntegrityError,
     OutboundStorageNotFoundError,
@@ -206,18 +207,46 @@ def test_put_with_relabel_replaces_existing_file(provider: LocalFileSystemProvid
 
 
 def test_put_rejects_blank_namespace(provider: LocalFileSystemProvider) -> None:
-    with pytest.raises(OutboundStorageValidationError, match="namespace must not be blank"):
+    with pytest.raises(OutboundStorageValidationError, match="namespace must not be blank") as raised:
         provider.put("", "abcdef0123456789", b"x", content_hash="sha256-x", label="x")
+    assert raised.value.translated_message == "adapters.outbound.storage.local.errors.namespace_blank"
+    assert resolve_error_message(raised.value) == tr(raised.value.translated_message)
 
 
 def test_put_rejects_namespace_with_slash(provider: LocalFileSystemProvider) -> None:
-    with pytest.raises(OutboundStorageValidationError, match="forbidden characters"):
+    with pytest.raises(OutboundStorageValidationError, match="forbidden characters") as raised:
         provider.put("with/slash", "abcdef0123456789", b"x", content_hash="sha256-x", label="x")
+    assert raised.value.translated_message == "adapters.outbound.storage.local.errors.namespace_forbidden_characters"
+    assert raised.value.context == {"namespace": "with/slash"}
+    assert resolve_error_message(raised.value) == tr(raised.value.translated_message, **(raised.value.context or {}))
 
 
 def test_put_rejects_blank_content_hash(provider: LocalFileSystemProvider) -> None:
-    with pytest.raises(OutboundStorageValidationError, match="content_hash"):
+    with pytest.raises(OutboundStorageValidationError, match="content_hash") as raised:
         provider.put("ledger_transaction", "abcdef0123456789", b"x", content_hash="", label="x")
+    assert raised.value.translated_message == "adapters.outbound.storage.local.errors.content_hash_blank"
+    assert resolve_error_message(raised.value) == tr(raised.value.translated_message)
+
+
+def test_get_rejects_non_object_sidecar_with_localized_integrity_error(provider: LocalFileSystemProvider) -> None:
+    payload = b"sidecar-shape"
+    metadata = provider.put(
+        "ledger_transaction",
+        "11223344aabbccdd",
+        payload,
+        content_hash=_hash(payload),
+        label="sidecar-shape",
+    )
+    obj_path = Path(metadata.provider_object_id)
+    sidecar_path = obj_path.with_name(obj_path.stem + ".meta.json")
+    sidecar_path.write_text(json.dumps(["not", "an", "object"]), encoding="utf-8")
+
+    with pytest.raises(OutboundStorageIntegrityError) as raised:
+        provider.get("ledger_transaction", "11223344aabbccdd")
+
+    assert raised.value.translated_message == "adapters.outbound.storage.local.errors.sidecar_not_object"
+    assert raised.value.context == {"sidecar_path": str(sidecar_path)}
+    assert resolve_error_message(raised.value) == tr(raised.value.translated_message, **(raised.value.context or {}))
 
 
 # ---------------------------------------------------------------------------
@@ -262,5 +291,7 @@ def test_get_raises_storage_corruption_error_when_sidecar_byte_length_is_wrong_t
     sidecar["byte_length"] = [42]  # unexpected type: list
     sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
 
-    with pytest.raises(StorageCorruptionError):
+    with pytest.raises(StorageCorruptionError) as raised:
         provider.get("ledger_transaction", "aabbccdd00112233")
+    assert raised.value.translated_message == "adapters.outbound.storage.local.errors.byte_length_invalid"
+    assert resolve_error_message(raised.value) == tr(raised.value.translated_message, **(raised.value.context or {}))

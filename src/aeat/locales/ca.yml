@@ -169,23 +169,70 @@ adapters:
             s esperava un de {expected}.
       google_drive:
         errors:
-          content_hash_blank: 'El hash de contingut de Google Drive no pot estar buit.'
-          content_hash_mismatch: 'El hash de contingut de Google Drive no coincideix; ha fallat la comprovacio d integritat.'
-          create_namespace_no_id: 'Google Drive no ha retornat cap id en crear la carpeta d espai de noms.'
-          create_vault_folder_no_id: 'Google Drive no ha retornat cap id en crear la carpeta vault.'
-          folder_not_owned: 'La carpeta de Drive {folder_name} no esta marcada com a propietat d aquesta app; es rebutja l escriptura per protegir dades de l operador.'
-          googleapiclient_import_failed: 'La dependencia google-api-python-client no es pot importar; executa `uv sync` i torna-ho a provar.'
-          media_non_bytes: 'La descarrega de mitjans de Google Drive ha retornat {payload_type} en lloc de bytes.'
-          namespace_blank: 'L espai de noms d emmagatzematge de Google Drive no pot estar buit.'
-          namespace_forbidden_characters: 'L espai de noms de Google Drive {namespace} conte caracters de ruta prohibits.'
-          namespace_not_found: 'No s ha trobat l espai de noms de Google Drive {namespace}.'
-          object_key_hmac_blank: 'L HMAC de clau d objecte de Google Drive no pot estar buit.'
-          object_not_found: 'No s ha trobat l objecte de Google Drive {object_key_hmac} a l espai {namespace}.'
-          request_failed: 'La peticio de Google Drive {action} ha fallat amb estat {status}.'
-          root_folder_id_blank: 'L id de carpeta arrel de Google Drive no pot estar buit.'
-          vault_entry_not_folder: 'L arrel configurada de Drive conte {vault_folder_name}, pero aquesta entrada no es una carpeta.'
-          vault_folder_name_blank: 'El nom de carpeta vault de Google Drive no pot estar buit.'
-          write_non_dict_response: 'La resposta d escriptura de Google Drive per a {action} tenia una forma inesperada.'
+          content_hash_blank: El hash de contingut de Google Drive no pot estar buit.
+          content_hash_mismatch: El hash de contingut de Google Drive no coincideix;
+            ha fallat la comprovacio d integritat.
+          create_namespace_no_id: Google Drive no ha retornat cap id en crear la carpeta
+            d espai de noms.
+          create_vault_folder_no_id: Google Drive no ha retornat cap id en crear la
+            carpeta vault.
+          folder_not_owned: La carpeta de Drive {folder_name} no esta marcada com
+            a propietat d aquesta app; es rebutja l escriptura per protegir dades
+            de l operador.
+          googleapiclient_import_failed: La dependencia google-api-python-client no
+            es pot importar; executa `uv sync` i torna-ho a provar.
+          media_non_bytes: La descarrega de mitjans de Google Drive ha retornat {payload_type}
+            en lloc de bytes.
+          namespace_blank: L espai de noms d emmagatzematge de Google Drive no pot
+            estar buit.
+          namespace_forbidden_characters: L espai de noms de Google Drive {namespace}
+            conte caracters de ruta prohibits.
+          namespace_not_found: No s ha trobat l espai de noms de Google Drive {namespace}.
+          object_key_hmac_blank: L HMAC de clau d objecte de Google Drive no pot estar
+            buit.
+          object_not_found: No s ha trobat l objecte de Google Drive {object_key_hmac}
+            a l espai {namespace}.
+          request_failed: La peticio de Google Drive {action} ha fallat amb estat
+            {status}.
+          root_folder_id_blank: L id de carpeta arrel de Google Drive no pot estar
+            buit.
+          vault_entry_not_folder: L arrel configurada de Drive conte {vault_folder_name},
+            pero aquesta entrada no es una carpeta.
+          vault_folder_name_blank: El nom de carpeta vault de Google Drive no pot
+            estar buit.
+          write_non_dict_response: La resposta d escriptura de Google Drive per a
+            {action} tenia una forma inesperada.
+      local:
+        errors:
+          byte_length_invalid: El byte_length del sidecar local te tipus invalid {actual_type}.
+          content_hash_blank: El hash de contingut local no pot estar buit.
+          content_hash_mismatch: El hash de contingut local no coincideix; ha fallat
+            la comprovacio d integritat.
+          namespace_blank: L espai de noms d emmagatzematge local no pot estar buit.
+          namespace_create_permission: L emmagatzematge local no ha pogut crear l
+            espai de noms {namespace}.
+          namespace_forbidden_characters: L espai de noms local {namespace} conte
+            caracters de ruta prohibits.
+          namespace_not_found: No s ha trobat l espai de noms local {namespace}.
+          object_delete_permission: L emmagatzematge local no ha pogut esborrar el
+            payload de l objecte.
+          object_key_hmac_blank: L HMAC de clau d objecte local no pot estar buit.
+          object_key_hmac_forbidden_characters: L HMAC de clau d objecte local {object_key_hmac}
+            conte caracters prohibits.
+          object_not_found: No s ha trobat l objecte local {object_key_hmac} a l espai
+            {namespace}.
+          payload_commit_failed: L emmagatzematge local no ha pogut confirmar atomicament
+            el payload de l objecte.
+          payload_read_permission: L emmagatzematge local no ha pogut llegir el payload
+            de l objecte.
+          payload_write_permission: L emmagatzematge local no ha pogut escriure el
+            payload de l objecte.
+          sidecar_malformed: El sidecar local {sidecar_path} no es pot llegir o esta
+            mal format.
+          sidecar_missing: Falta el sidecar de l objecte local.
+          sidecar_not_object: El sidecar local {sidecar_path} no es un objecte JSON.
+          sidecar_write_failed: L emmagatzematge local no ha pogut escriure el sidecar
+            de l objecte.
   sede:
     errors:
       cotejo_nav_failed: La navegació a la pàgina de cotejo d'AEAT ha fallat; la sessió
@@ -1991,6 +2038,14 @@ cli:
       reaffirm_help: Reafirmar la classificació d'una transacció ja classificada.
       reaffirmed: Classificació reafirmada.
       taxable_base_help: Import de base imposable
+    doclink:
+      actor_help: 'Etiqueta de l''operador registrada als esdeveniments del bucket.'
+      bad_source: 'l''origen de l''enllac de document ha de ser un de: gmail, google_drive, url (rebut ''{source}'').'
+      help: 'Registra un enllac de document de Gmail/Drive/URL com a evidencia local en una fila del llibre (el document remot mai es descarrega).'
+      id_help: 'Id de transaccio del llibre (SHA-256 o prefix inequivoc).'
+      note_help: 'Nota opcional registrada amb l''enllac.'
+      reference_help: 'La referencia de l''enllac del document (enllac de Gmail, enllac de fitxer de Drive o URL).'
+      source_help: 'Origen de l''enllac: gmail, google_drive o url.'
     errors:
       command_input_invalid: 'Rebutjat. La transacció no és vàlida: {details}'
       command_input_invalid_fallback: un o més camps no han superat la validació
@@ -2114,10 +2169,12 @@ cli:
       help: Vincula un moviment del llibre amb una factura i/o amb un registre d'evidència
         de factura de compra en una única crida canònica. Rebutja vincles entre buckets.
         Local; mai contacta amb AEAT.
-      id_help: Id del moviment del llibre (SHA-256 o prefix inequívoc).
+      id_help: Id de transaccio del llibre (SHA-256 o prefix inequivoc).
       invoice_id_help: Id de la factura a vincular bidireccionalment amb el moviment.
     list:
       by_group_help: Agrupa el llistat per etiqueta de grup.
+      filter_help: Filtra les files per estat, període (incl. YYYY per a un any),
+        classificació, incidència, importació o text.
       footer_truncated: Mostrant files {start}-{end} de {total} (desplacament {offset}).
         Feu servir --offset/--limit per paginar.
       group_filter_help: Mostra nomes les files d'aquesta etiqueta de grup.
