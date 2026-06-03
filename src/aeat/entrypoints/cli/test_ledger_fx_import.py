@@ -18,8 +18,8 @@ from typer.testing import CliRunner
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.user_profile._orchestration import profile_create_storage_span
 from ...application.user_profile._testing import register_minimal_profile
-from ...application.workflow._models import resolve_active_bucket_id
 from ...application.workflow._persistence import workflow_state_repository
+from ...core import resolve_active_bucket_id
 from ...core.config import override_settings
 from ...domain.transactions import TransactionCatalogueRepository
 from ...tests.secure_sql import isolated_profile_storage_root
@@ -236,7 +236,10 @@ def test_review_filter_by_classification() -> None:
     )
     assert after.exit_code == 0, after.output
     matched = json.loads(after.output)["result"]["rows"]
-    assert any(r.get("id") == tx or r.get("full_id") == tx or tx.startswith(str(r.get("id", ""))) for r in matched) or len(matched) >= 1
+    assert any(
+        r.get("id") == tx or r.get("full_id") == tx or tx.startswith(str(r.get("id", "")))
+        for r in matched
+    ) or len(matched) >= 1
 
 
 def test_track_surfaces_import_provenance_for_imported_rows() -> None:
@@ -268,7 +271,10 @@ def test_status_surfaces_income_expense_net_rollup() -> None:
     income = next(r.get("full_id") or r["transaction_id"] for r in rows if "ACME" in r["description"])
     expense = next(r.get("full_id") or r["transaction_id"] for r in rows if "Gestoria" in r["description"])
     for tx in (income, expense):
-        assert _RUNNER.invoke(app, ["app", "ledger", "classify", "--id", tx, "--classification", "BUSINESS"]).exit_code == 0
+        classify_result = _RUNNER.invoke(
+            app, ["app", "ledger", "classify", "--id", tx, "--classification", "BUSINESS"]
+        )
+        assert classify_result.exit_code == 0
     report = json.loads(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "status"]).output)["result"]
     assert report["income_total"] != "0.00"
     assert report["expense_total"] != "0.00"
