@@ -59,6 +59,10 @@ Status: PASS. Reviewed `W03.P03.S11` against the plan. The change adds a strict 
 
 Status: PASS. Reviewed landed commit `db1f5e593` against `W03.P04.S14` and `W03.P04.S15`. The parity test uses bundled registry snapshots and completeness manifests, not a duplicated hand-authored casilla list. S14 compares emitted `(number, segmento)` keys to official manifest keys; S15 compares registry computed casilla ids to actual workbook formula cells. Current full calc-sheets gate passed. No Critical or High issues found.
 
+## S16-REVIEW-001 | PASS | Offline and online renderer cells are compared without network writes
+
+Status: PASS. Reviewed landed commit `efe297f9d` against `W03.P04.S16`. The new conformance test builds one `SheetExportPlan`, serializes the offline openpyxl workbook, and compares the online adapter's generated value/formula/evidence write payloads to the corresponding offline cells. This proves renderer structural conformance without a live Google dependency. Gates run: `test_calc_sheets_offline_online_conformance.py`, `test_calc_sheets_apply_evidence.py`, and ruff on those test surfaces. No Critical or High issues found.
+
 ## S17-S18-REVIEW-001 | PASS | IVA and M130 modelos are enrolled in the shared parity gate
 
 Status: PASS. Reviewed landed commit `db1f5e593` against `W04.P05.S17` and `W04.P05.S18`. M303, M390, and M130 are covered through the same parametrized registry-grounded parity test as the other export-capable modelos, with no modelo-specific expected-output table. Current full calc-sheets gate passed. No Critical or High issues found.
@@ -74,3 +78,11 @@ Status: PASS. Reviewed landed commit `4550b9d9d` against `W04.P05.S20`. The tran
 ## S21-REVIEW-001 | PASS | Per-modelo coverage is explicit and bounded
 
 Status: PASS. Reviewed landed commit `be0ebb08c` against `W04.P05.S21`. The current coverage report is the explicit parametrized parity set in `test_modelo_export_parity`: M130, M303, M390, M111, M115, M200, and M100. The stale translation-gap witness was removed only after M100 and M200 built successfully, so parity is not implied beyond covered registry-backed modelos. No Critical or High issues found.
+
+## S22-REVIEW-001 | HIGH | Step was closed before number-format and start/final rendering existed
+
+Status: REOPENED. Reviewed landed commit `81f4ceeb1` against `W05.P06.S22`. The commit correctly renders the `Evidencia` surface online, but S22 also requires number formats plus start/final anchors to render identically to the offline XLSX. Those facets are not fully implemented yet (`S11` adds only the number-format plan facet; `S12`/`S13` remain open), so S22 was reopened via the vault CLI. Required follow-up: implement renderer parity after S12/S13 land.
+
+## S23-S24-REVIEW-001 | PASS | Evidence identity and live-write deferral are correctly bounded
+
+Status: PASS. Reviewed landed commit `81f4ceeb1` against `W05.P06.S23` and `W05.P06.S24`. The online adapter consumes the shared `evidence_table` projection and tests assert online value writes match offline evidence cells for the same plan. Live Google network write verification remains delegated to the linked follow-up plan, keeping this campaign offline. Gates run: `test_calc_sheets_apply_evidence.py`, `test_package_module_allowlist.py`, full calc-sheets package, and ruff on touched calc-sheets/google surfaces. No Critical or High issues found for S23/S24.
