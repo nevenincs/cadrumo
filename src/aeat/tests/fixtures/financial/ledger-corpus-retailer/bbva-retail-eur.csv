@@ -1,0 +1,45 @@
+Fecha operación;Fecha valor;Concepto;Importe;Saldo;Moneda;Referencia
+03/01/2025;03/01/2025;Cobro ventas TPV semana 1 enero;1815,00;4815,00;EUR;RT-2025-0001
+07/01/2025;07/01/2025;Cuota autonomos RETA enero 2025;-320,45;4494,55;EUR;RT-2025-0002
+09/01/2025;09/01/2025;Compra mercaderia proveedor mayorista con recargo;-1262,00;3232,55;EUR;RT-2025-0003
+10/01/2025;10/01/2025;Alquiler local comercial enero;-726,00;2506,55;EUR;RT-2025-0004
+13/01/2025;13/01/2025;Cobro ventas TPV semana 2 enero;2057,00;4563,55;EUR;RT-2025-0005
+15/01/2025;15/01/2025;Factura luz local comercial enero;-145,20;4418,35;EUR;RT-2025-0006
+20/01/2025;20/01/2025;Cobro ventas TPV semana 3 enero;1936,00;6354,35;EUR;RT-2025-0007
+27/01/2025;27/01/2025;Cobro ventas TPV semana 4 enero;1694,00;8048,35;EUR;RT-2025-0008
+03/02/2025;03/02/2025;Cobro ventas TPV semana 1 febrero;1573,00;9621,35;EUR;RT-2025-0009
+05/02/2025;05/02/2025;Gestoria asesoria fiscal trimestral;-181,50;9439,85;EUR;RT-2025-0010
+07/02/2025;07/02/2025;Cuota autonomos RETA febrero 2025;-320,45;9119,40;EUR;RT-2025-0011
+10/02/2025;10/02/2025;Compra mercaderia proveedor mayorista con recargo;-1514,40;7605,00;EUR;RT-2025-0012
+10/02/2025;10/02/2025;Alquiler local comercial febrero;-726,00;6879,00;EUR;RT-2025-0013
+17/02/2025;17/02/2025;Cobro ventas TPV semana 2 febrero;2178,00;9057,00;EUR;RT-2025-0014
+24/02/2025;24/02/2025;Cobro ventas TPV semana 3 febrero;1452,00;10509,00;EUR;RT-2025-0015
+03/03/2025;03/03/2025;Cobro ventas TPV semana 1 marzo;1936,00;12445,00;EUR;RT-2025-0016
+07/03/2025;07/03/2025;Cuota autonomos RETA marzo 2025;-320,45;12124,55;EUR;RT-2025-0017
+10/03/2025;10/03/2025;Compra mercaderia proveedor mayorista con recargo;-1893,00;10231,55;EUR;RT-2025-0018
+10/03/2025;10/03/2025;Alquiler local comercial marzo;-726,00;9505,55;EUR;RT-2025-0019
+14/03/2025;14/03/2025;Factura luz local comercial marzo;-151,25;9354,30;EUR;RT-2025-0020
+17/03/2025;17/03/2025;Cobro ventas TPV semana 2 marzo;2299,00;11653,30;EUR;RT-2025-0021
+24/03/2025;24/03/2025;Cobro ventas TPV semana 3 marzo;1815,00;13468,30;EUR;RT-2025-0022
+31/03/2025;31/03/2025;Cobro ventas TPV semana 4 marzo;2057,00;15525,30;EUR;RT-2025-0023
+03/04/2025;03/04/2025;Cobro ventas TPV semana 1 abril;1694,00;17219,30;EUR;RT-2025-0024
+07/04/2025;07/04/2025;Cuota autonomos RETA abril 2025;-320,45;16898,85;EUR;RT-2025-0025
+09/04/2025;09/04/2025;Compra mercaderia proveedor mayorista con recargo;-1262,00;15636,85;EUR;RT-2025-0026
+10/04/2025;10/04/2025;Alquiler local comercial abril;-726,00;14910,85;EUR;RT-2025-0027
+21/04/2025;21/04/2025;Cobro ventas TPV semana 2 abril;1573,00;16483,85;EUR;RT-2025-0028
+28/04/2025;28/04/2025;Cobro ventas TPV semana 3 abril;1936,00;18419,85;EUR;RT-2025-0029
+05/05/2025;05/05/2025;Cobro ventas TPV semana 1 mayo;2178,00;20597,85;EUR;RT-2025-0030
+07/05/2025;07/05/2025;Cuota autonomos RETA mayo 2025;-320,45;20277,40;EUR;RT-2025-0031
+09/05/2025;09/05/2025;Compra mercaderia proveedor mayorista con recargo;-1514,40;18763,00;EUR;RT-2025-0032
+12/05/2025;12/05/2025;Alquiler local comercial mayo;-726,00;18037,00;EUR;RT-2025-0033
+13/05/2025;13/05/2025;Gestoria asesoria fiscal trimestral;-181,50;17855,50;EUR;RT-2025-0034
+19/05/2025;19/05/2025;Cobro ventas TPV semana 2 mayo;1815,00;19670,50;EUR;RT-2025-0035
+26/05/2025;26/05/2025;Cobro ventas TPV semana 3 mayo;2057,00;21727,50;EUR;RT-2025-0036
+03/06/2025;03/06/2025;Cobro ventas TPV semana 1 junio;1936,00;23663,50;EUR;RT-2025-0037
+07/06/2025;07/06/2025;Cuota autonomos RETA junio 2025;-320,45;23343,05;EUR;RT-2025-0038
+09/06/2025;09/06/2025;Compra mercaderia proveedor mayorista con recargo;-1893,00;21450,05;EUR;RT-2025-0039
+10/06/2025;10/06/2025;Alquiler local comercial junio;-726,00;20724,05;EUR;RT-2025-0040
+16/06/2025;16/06/2025;Factura luz local comercial junio;-138,20;20585,85;EUR;RT-2025-0041
+23/06/2025;23/06/2025;Cobro ventas TPV semana 2 junio;2299,00;22884,85;EUR;RT-2025-0042
+30/06/2025;30/06/2025;Cobro ventas TPV semana 3 junio;1694,00;24578,85;EUR;RT-2025-0043
+30/06/2025;30/06/2025;Seguro responsabilidad civil local anual;-180,00;24398,85;EUR;RT-2025-0044
