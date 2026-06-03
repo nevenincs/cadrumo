@@ -4618,8 +4618,8 @@ Adjudicate overview shape and wire festivos.
 - [x] `W81.P390.S2229` - Read the app-overview-shape and festivos-deadline-shift ADRs and adjudicate the flag-on-status vs separate-verbs decision; `.vault/adr`.
 - [x] `W81.P390.S2230` - Implement the per-verdict shape in application overview either expanding the status calendar flag into a discrete calendar verb or ratifying the flag pattern; `src/aeat/application/overview`.
 - [x] `W81.P390.S2231` - Wire domain deadlines _festivos shift_deadline into OverviewCalendarEntry and add adjusted_closes_on, shift_reason, holiday_refs, jurisdictions fields; `src/aeat/application/overview`.
-- [ ] `W81.P390.S2232` - Add next_due field to agenda payload per apex §4.1; `src/aeat/application/overview`.
-- [ ] `W81.P390.S2233` - Implement backlog and explain verbs per the adjudication; `src/aeat/application/overview`.
+- [x] `W81.P390.S2232` - Add next_due field to agenda payload per apex §4.1; `src/aeat/application/overview`.
+- [x] `W81.P390.S2233` - Implement backlog and explain verbs per the adjudication; `src/aeat/application/overview`.
 
 ### Phase `W81.P391` - shadow duplicate removal
 
@@ -4655,7 +4655,7 @@ Test festivos integration, carve-out, agenda payload, CLI surface.
 
 Register overview verb tree and update apex cross-references.
 
-- [ ] `W81.P394.S2249` - Register the reconciled overview verb tree; `src/aeat/entrypoints/cli`.
+- [x] `W81.P394.S2249` - Register the reconciled overview verb tree; `src/aeat/entrypoints/cli`.
 - [x] `W81.P394.S2250` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
 - [x] `W81.P394.S2251` - Wire help text and i18n; `src/aeat/core/i18n`.
 - [x] `W81.P394.S2252` - Update apex ADR §4.1 to reflect the reconciled grammar and mark R17, R18 closed by W81; `.vault/adr`.
