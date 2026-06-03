@@ -101,6 +101,18 @@ Audit and extract cohesive validator responsibilities behind the existing public
 - [x] `W02.P06.S34` - Extract cross-revision strict continuity helpers; `src/aeat/domain/calculations/registry/_validate_cross_revision.py`.
 - [x] `W02.P06.S32` - Verify validator decomposition regression surface; `src/aeat/domain/calculations/registry`.
 
+## Wave `W03` - reviewability gate tightening
+
+Convert the achieved post-fragmentation registry corpus shape into explicit regression gates so future modelo work cannot drift back toward monolithic TOML artifacts.
+
+### Phase `W03.P07` - post-fragmentation hard-cap enforcement
+
+Measure current registry TOML headroom and tighten committed reviewability tests around the achieved corpus baseline without changing loader or schema semantics.
+
+- [ ] `W03.P07.S35` - Audit current committed registry TOML file-size and row-width headroom; `.vault/audit`.
+- [ ] `W03.P07.S36` - Tighten committed registry TOML file-size and row-width regression gates; `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
+- [ ] `W03.P07.S37` - Verify tightened reviewability gates against the committed registry corpus; `src/aeat/domain/calculations/registry`.
+
 ## Description
 
 The next work should protect reviewability first, then extend continuity data
