@@ -68,6 +68,7 @@ class TabName(StrEnum):
     PROVENANCE = "Procedencia"
     TARIFFS = "Tarifas"
     DETALLE = "Detalle"
+    EVIDENCIA = "Evidencia"
     GUIDE = "Guía"
 
 
