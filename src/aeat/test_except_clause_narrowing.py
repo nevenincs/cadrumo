@@ -303,7 +303,11 @@ class TestAuthenticatorDescribeNarrowing:
         with pytest.raises(AuthValidationError) as exc_info:
             auth.describe()
 
-        assert "Unexpected error" in str(exc_info.value)
+        # The error message is locale-translated; the structural contract is
+        # the typed exception class itself. Assert the type and that the
+        # message is non-empty (translations carry the diagnostic context).
+        assert isinstance(exc_info.value, AuthValidationError)
+        assert str(exc_info.value)  # translated diagnostic text, not blank
 
     def test_certificate_error_returns_unavailable_description(self, tmp_path) -> None:
         """CertificateError (expected) returns available=False description, not re-raises."""
@@ -328,7 +332,10 @@ class TestAuthenticatorDescribeNarrowing:
         desc = auth.describe()
 
         assert desc.available is False
-        assert "CertificateError" in (desc.health_summary or "")
+        # health_summary is locale-translated; the structural contract is
+        # available=False plus a non-empty diagnostic string. The exception
+        # class name is intentionally not embedded in user-facing text.
+        assert desc.health_summary, "CertificateError must surface a translated health summary"
 
 
 # ---------------------------------------------------------------------------
