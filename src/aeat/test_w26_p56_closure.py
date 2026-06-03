@@ -23,24 +23,24 @@ _PAID_DOWN_MARKER = "TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR"
 # Marker must appear within 3 lines before each type: ignore site.
 # These are the marker-comment line numbers placed by S658.
 _S658_MARKER_SITES: list[tuple[str, int]] = [
-    # _overview_payloads.py — 5 sites
+    # _overview_payloads.py — 5 sites (line numbers track current source after peer edits)
     ("entrypoints/cli/_overview_payloads.py", 80),
-    ("entrypoints/cli/_overview_payloads.py", 102),
-    ("entrypoints/cli/_overview_payloads.py", 112),
-    ("entrypoints/cli/_overview_payloads.py", 120),
-    ("entrypoints/cli/_overview_payloads.py", 131),
+    ("entrypoints/cli/_overview_payloads.py", 104),
+    ("entrypoints/cli/_overview_payloads.py", 116),
+    ("entrypoints/cli/_overview_payloads.py", 126),
+    ("entrypoints/cli/_overview_payloads.py", 139),
     # _registry_corpus_payloads.py — 7 sites
     ("entrypoints/cli/_registry_corpus_payloads.py", 83),
-    ("entrypoints/cli/_registry_corpus_payloads.py", 95),
-    ("entrypoints/cli/_registry_corpus_payloads.py", 109),
-    ("entrypoints/cli/_registry_corpus_payloads.py", 123),
-    ("entrypoints/cli/_registry_corpus_payloads.py", 142),
-    ("entrypoints/cli/_registry_corpus_payloads.py", 159),
-    ("entrypoints/cli/_registry_corpus_payloads.py", 177),
+    ("entrypoints/cli/_registry_corpus_payloads.py", 97),
+    ("entrypoints/cli/_registry_corpus_payloads.py", 113),
+    ("entrypoints/cli/_registry_corpus_payloads.py", 129),
+    ("entrypoints/cli/_registry_corpus_payloads.py", 150),
+    ("entrypoints/cli/_registry_corpus_payloads.py", 169),
+    ("entrypoints/cli/_registry_corpus_payloads.py", 189),
     # _registry_payloads.py — 3 sites
     ("entrypoints/cli/_registry_payloads.py", 34),
-    ("entrypoints/cli/_registry_payloads.py", 56),
-    ("entrypoints/cli/_registry_payloads.py", 76),
+    ("entrypoints/cli/_registry_payloads.py", 58),
+    ("entrypoints/cli/_registry_payloads.py", 80),
 ]
 
 _EXPECTED_ALLOWLIST_SIZE = 7  # 99 original; later campaigns paid down further
