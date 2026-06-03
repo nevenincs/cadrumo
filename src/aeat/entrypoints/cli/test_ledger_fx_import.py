@@ -96,6 +96,81 @@ def test_list_surfaces_eur_value_and_fx_rate_for_foreign_rows() -> None:
         assert r.get("fx_rate") is None
 
 
+def test_view_single_foreign_row_surfaces_value_in_eur_and_fx_rate() -> None:
+    """`ledger view <id>` on a foreign row round-trips the persisted FX fields.
+
+    Regression for the single-transaction read-model BLOCKER: the importer
+    persists value_in_eur/fx_rate on every foreign row and the application
+    LedgerTransactionPayload emits them, but the strict CLI TransactionPayload
+    (extra=forbid) previously omitted the two fields, so
+    ``LedgerViewResult.model_validate(result_payload.model_dump(...))`` raised
+    ValidationError(extra_forbidden) for any GBP/USD row — making the entire
+    single-transaction correction surface (view/classify --id/update/archive/
+    stash, all of which nest TransactionPayload) unreachable. Before the field
+    declaration this view exits non-zero with extra_forbidden; after, it exits 0
+    and surfaces the persisted EUR-equivalent and applied rate.
+    """
+    import json
+
+    assert (
+        _RUNNER.invoke(
+            app, ["app", "ledger", "import", str(_CORPUS / "revolut-multi.csv"), "--provider", "csv"]
+        ).exit_code
+        == 0
+    )
+
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    catalogue = TransactionCatalogueRepository(bucket_id=bucket_id).load()
+    foreign = [t for t in catalogue.values() if t.raw.currency in {"GBP", "USD"}]
+    assert foreign, "revolut corpus must contain a GBP/USD row to view"
+    target = foreign[0]
+    assert target.value_in_eur is not None and target.fx_rate is not None
+
+    viewed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", target.transaction_id])
+    # Before the fix this exits non-zero: the strict CLI payload rejects the
+    # persisted FX fields as extra_forbidden. The exit-0 assertion fails loudly
+    # then and passes once the fields are declared.
+    assert viewed.exit_code == 0, viewed.output
+
+    transaction = json.loads(viewed.output)["result"]["transaction"]
+    assert transaction["currency"] in {"GBP", "USD"}
+    # The persisted FX provenance round-trips through the single-transaction
+    # read surface, not only the list/export surfaces. The view payload renders
+    # each Decimal via the production display transform (``format(value
+    # .normalize(), "f")``), so assert against that same rendering of the stored
+    # value rather than the raw repr — a save-drops-field regression still
+    # surfaces (the field would be absent/None, not merely formatted differently).
+    assert transaction["value_in_eur"] == format(target.value_in_eur.normalize(), "f")
+    assert transaction["fx_rate"] == format(target.fx_rate.normalize(), "f")
+
+
+def test_view_single_eur_row_keeps_fx_fields_null() -> None:
+    """`ledger view <id>` on an EUR-native row surfaces null FX fields (no false conversion)."""
+    import json
+
+    assert (
+        _RUNNER.invoke(
+            app, ["app", "ledger", "import", str(_CORPUS / "revolut-multi.csv"), "--provider", "csv"]
+        ).exit_code
+        == 0
+    )
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    catalogue = TransactionCatalogueRepository(bucket_id=bucket_id).load()
+    eur = [t for t in catalogue.values() if t.raw.currency == "EUR"]
+    assert eur, "revolut corpus must contain an EUR row"
+    target = eur[0]
+    assert target.value_in_eur is None and target.fx_rate is None
+
+    viewed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", target.transaction_id])
+    assert viewed.exit_code == 0, viewed.output
+    transaction = json.loads(viewed.output)["result"]["transaction"]
+    assert transaction["currency"] == "EUR"
+    assert transaction["value_in_eur"] is None
+    assert transaction["fx_rate"] is None
+
+
 def test_export_period_filters_to_the_quarter(tmp_path: Path) -> None:
     """export --period restricts the hand-off to one quarter's rows."""
     import csv
@@ -106,11 +181,34 @@ def test_export_period_filters_to_the_quarter(tmp_path: Path) -> None:
     assert res.exit_code == 0, res.output
     full = tmp_path / "full.csv"
     q1 = tmp_path / "q1.csv"
-    assert _RUNNER.invoke(app, ["app", "ledger", "export", "--output", str(full), "--export-format", "csv"]).exit_code == 0
-    r = _RUNNER.invoke(app, ["app", "ledger", "export", "--output", str(q1), "--export-format", "csv", "--period", "2025Q1"])
+    full_res = _RUNNER.invoke(
+        app, ["app", "ledger", "export", "--output", str(full), "--export-format", "csv"]
+    )
+    assert full_res.exit_code == 0, full_res.output
+    r = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "export", "--output", str(q1), "--export-format", "csv", "--period", "2025Q1"],
+    )
     assert r.exit_code == 0, r.output
     full_rows = list(csv.DictReader(full.read_text(encoding="utf-8").splitlines()))
     q1_rows = list(csv.DictReader(q1.read_text(encoding="utf-8").splitlines()))
     assert 0 < len(q1_rows) < len(full_rows)
     for row in q1_rows:
         assert row["effective_date"][:7] in {"2025-01", "2025-02", "2025-03"}, row["effective_date"]
+
+
+def test_folder_import_aggregates_all_statement_files() -> None:
+    """Importing a directory imports every supported file with aggregated counts."""
+    import json
+
+    result = _RUNNER.invoke(
+        app, ["--format", "json", "app", "ledger", "import", str(_CORPUS), "--provider", "csv"]
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)["result"]
+    # The four corpus CSVs (manifest.json / README.md are skipped by extension).
+    assert payload["rows"] >= 500, payload
+    assert payload["imported"] >= 500, payload
+    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    assert listed.exit_code == 0
+    assert len(json.loads(listed.output)["result"]["rows"]) == payload["imported"]

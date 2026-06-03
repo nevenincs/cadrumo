@@ -1858,21 +1858,30 @@ def ledger_import(
     from ...domain.currency import CurrencyNormalizationService
 
     currency_normalizer = CurrencyNormalizationService(rate_provider=default_ecb_rate_provider())
-    result = import_ledger_source(
-        LedgerSourceImportCommand(
-            bucket_id=bucket_id,
-            path=path,
-            provider=normalised_provider,
-            dry_run=dry_run,
-            verify=verify,
-            source=source,
-            period=_canonical_period(period) if period else None,
-            actor=actor,
-            source_command="aeat app ledger import",
-        ),
-        transaction_repository=transaction_repository,
-        currency_normalizer=currency_normalizer,
-    )
+    canonical_period = _canonical_period(period) if period else None
+    # Folder/multi-file import: a directory imports every supported statement
+    # file in one invocation, sequentially (so later files dedup against earlier
+    # ones), with the envelope counts aggregated across files.
+    import_paths = _resolve_import_paths(path)
+    file_results = [
+        import_ledger_source(
+            LedgerSourceImportCommand(
+                bucket_id=bucket_id,
+                path=file_path,
+                provider=normalised_provider,
+                dry_run=dry_run,
+                verify=verify,
+                source=source,
+                period=canonical_period,
+                actor=actor,
+                source_command="aeat app ledger import",
+            ),
+            transaction_repository=transaction_repository,
+            currency_normalizer=currency_normalizer,
+        )
+        for file_path in import_paths
+    ]
+    result = file_results[0] if len(file_results) == 1 else _aggregate_import_results(file_results)
     lines = [
         f"{tr('cli.ledger.labels.rows')}\t{result.rows}",
         f"{tr('cli.ledger.labels.imported')}\t{result.imported}",
@@ -1913,6 +1922,64 @@ def ledger_import(
             likely_duplicate_notice=likely_duplicate_notice,
         ),
         lines=lines,
+    )
+
+
+_IMPORT_DIR_EXTENSIONS = frozenset({".csv", ".xlsx", ".xls", ".ofx", ".qfx", ".tsv"})
+
+
+def _resolve_import_paths(path: Path) -> list[Path]:
+    """Return the statement files to import.
+
+    A regular file imports itself; a directory imports every supported statement
+    file inside it (non-recursive, sorted) so an operator can drop a folder of
+    bank exports and import them in one invocation.
+    """
+    if not path.is_dir():
+        return [path]
+    files = sorted(
+        child
+        for child in path.iterdir()
+        if child.is_file() and child.suffix.lower() in _IMPORT_DIR_EXTENSIONS
+    )
+    if not files:
+        raise _bad(
+            tr(
+                "cli.ledger.import.empty_directory",
+                path=str(path),
+                default=f"No importable statement files found in directory: {path}",
+            )
+        )
+    return files
+
+
+def _aggregate_import_results(results: list[LedgerSourceImportResult]) -> LedgerSourceImportResult:
+    """Sum per-file import results into one envelope for a folder import."""
+    first = results[0]
+
+    def _concat(attr: str) -> tuple:
+        out: list = []
+        for result in results:
+            out.extend(getattr(result, attr))
+        return tuple(out)
+
+    return LedgerSourceImportResult(
+        rows=sum(r.rows for r in results),
+        imported=sum(r.imported for r in results),
+        skipped=sum(r.skipped for r in results),
+        likely_duplicates=sum(r.likely_duplicates for r in results),
+        dry_run=first.dry_run,
+        verify=first.verify,
+        period=first.period,
+        bucket_id=first.bucket_id,
+        import_batch_id=first.import_batch_id,
+        bucket_event_ids=_concat("bucket_event_ids"),
+        imported_transaction_refs=_concat("imported_transaction_refs"),
+        skipped_transaction_refs=_concat("skipped_transaction_refs"),
+        likely_duplicate_transaction_refs=_concat("likely_duplicate_transaction_refs"),
+        validation=first.validation,
+        source=first.source,
+        diagnostics=_concat("diagnostics"),
     )
 
 
