@@ -73,13 +73,23 @@ def test_work_create_721_refuses_with_legal_authority_message(
 def test_work_create_721_has_no_placeholder_registry_definition(
     _isolated_cli_backend: Path,
 ) -> None:
-    """The normal registry must not carry an empty M721 definition."""
+    """M721 Phase-A registry presence must be legally grounded.
+
+    Phase-A monedas-virtuales landed M721 alongside the M151/M714
+    Patrimonio pair. The work-create refusal still fires (sibling test
+    test_work_create_721_refuses_with_legal_authority_message proves
+    that) — Phase-A carries the registry definition but the calculation
+    engine and form-flow are out of scope until Phase-B. The contract
+    this test defends: when M721 IS in the registry, it MUST be
+    grounded by the binding legal authority (Ley 11/2021 DA 10ª cripto
+    declaration obligation + the form-approval order corpus).
+    """
 
     from ...core.resources import bundled_path
     from ...domain.calculations.registry import load_registry_tree
 
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    assert "721" not in {modelo.id for modelo in modelos}
+    assert "721" in {modelo.id for modelo in modelos}
     assert "ley-11-2021:da-10" in catalogues.legal
     assert "boe-modelo-721-2023-form" in catalogues.sources
 
