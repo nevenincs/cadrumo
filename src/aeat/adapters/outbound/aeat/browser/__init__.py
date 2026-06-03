@@ -1,4 +1,21 @@
-"""Central browser automation surface for AEAT outbound adapters."""
+"""Central browser-automation surface for AEAT outbound adapters.
+
+Owns the Playwright-backed browser sessions every outbound AEAT adapter
+shares, plus the site-health probing that classifies whether the Sede is
+reachable, rate-limiting, under maintenance, or serving a WAF challenge.
+
+Major declarations:
+
+* :class:`BrowserSession` and :class:`DefaultBrowserSession`, with
+  :func:`create_browser_session` and :func:`default_browser_session_factory`
+  — the session abstraction and its factories.
+* :func:`run_health_check` with :class:`SiteHealthStatus` and
+  :class:`SiteHealthState` — the reachability probe and its verdict.
+* :class:`EvasionStrategy` and :class:`PlaywrightStealthEvasion` — the
+  bot-detection evasion seam.
+* :class:`BrowserError`, :class:`BrowserValidationError`, and
+  :class:`BrowserFailureMode` — the failure taxonomy.
+"""
 
 from __future__ import annotations
 
