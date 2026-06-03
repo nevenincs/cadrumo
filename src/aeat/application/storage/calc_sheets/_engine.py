@@ -34,6 +34,7 @@ from ._records import (
     SheetExportPlan,
     SheetFormulaCell,
     SheetGuideContent,
+    SheetNumberFormat,
     SheetProtectedRange,
     SheetProvenanceRow,
     SheetRowSet,
@@ -687,6 +688,43 @@ def _protected_ranges(layout: SheetLayout) -> tuple[SheetProtectedRange, ...]:
     )
 
 
+def _number_format_pattern(data_type: str) -> tuple[Literal["money", "integer", "percentage"], str] | None:
+    if data_type == "money":
+        return ("money", "#,##0.00")
+    if data_type == "integer":
+        return ("integer", "0")
+    if data_type == "ratio":
+        return ("percentage", "0.00%")
+    return None
+
+
+def _number_formats(
+    revision: ModeloRevision,
+    layout: SheetLayout,
+) -> tuple[SheetNumberFormat, ...]:
+    formats: list[SheetNumberFormat] = []
+    for casilla in revision.casillas:
+        pattern = _number_format_pattern(casilla.data_type)
+        if pattern is None:
+            continue
+        data_type, format_pattern = pattern
+        if casilla.input_kind == InputKind.COMPUTED:
+            address = layout.calculos_cells.get(casilla.id)
+        else:
+            address = layout.entradas_cells.get(casilla.id)
+        if address is None:
+            continue
+        formats.append(
+            SheetNumberFormat(
+                address=address,
+                casilla=casilla.id,
+                data_type=data_type,
+                pattern=format_pattern,
+            )
+        )
+    return tuple(formats)
+
+
 RelationResolver = Callable[[RegistrySnapshot], RelationValues]
 
 
@@ -754,6 +792,7 @@ def build_export_plan(
     provenance = _provenance_rows(revision, layout)
     provenance_values = _provenance_value_cells(provenance)
     protected = _protected_ranges(layout)
+    number_formats = _number_formats(revision, layout)
     cell_constraints = _collect_cell_constraints(revision, layout)
     row_sets = collect_row_sets(revision)
 
@@ -772,6 +811,7 @@ def build_export_plan(
         tariffs=tariff_tables,
         provenance=provenance,
         protected_ranges=protected,
+        number_formats=number_formats,
         cell_constraints=cell_constraints,
         relation_provenance=relations,
         row_sets=row_sets,
