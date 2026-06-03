@@ -79,6 +79,7 @@ class ManualLedgerTransactionCommand(BaseModel):
     idempotency_key: str | None = None
     classified_by_override: str | None = None
     source_jurisdiction: str | None = None
+    group_label: str | None = Field(default=None, max_length=64)
 
     @field_validator("source_jurisdiction")
     @classmethod
@@ -216,6 +217,7 @@ class ManualLedgerTransactionPatch(BaseModel):
     iva_category: IvaCategory | None = None
     counterparty_eu_member_state: EUMemberState | None = None
     source_jurisdiction: str | None = None
+    group_label: str | None = None
 
     @field_validator("source_jurisdiction")
     @classmethod
@@ -233,6 +235,7 @@ class ManualLedgerTransactionPatch(BaseModel):
         "prorrata_reference",
         "purchase_invoice_evidence_id",
         "notes",
+        "group_label",
     )
     @classmethod
     def _trim_optional_text(cls, value: str | None) -> str | None:

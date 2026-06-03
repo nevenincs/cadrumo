@@ -281,3 +281,93 @@ def test_transaction_catalogue_grandfathers_missing_source_jurisdiction_key(
         # the model boundary, so the grandfathered catalogue must NOT
         # equal the original ES-bearing catalogue.
         assert loaded != original
+
+
+def test_transaction_catalogue_preserves_group_label_through_encrypted_storage(
+    tmp_path: Path,
+) -> None:
+    """group_label must survive the encrypted-envelope roundtrip.
+
+    Anchors the operator-assigned organisational grouping axis (W14.S88) at
+    the persistence boundary: a Transaction carrying a non-default
+    ``group_label`` saved through the repository must load back equal (strict
+    pydantic equality), with the label preserved verbatim. A save-drops /
+    load-re-defaults regression would otherwise silently lose every operator
+    grouping made over thousands of rows.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        labelled = Transaction.model_validate(
+            {
+                "raw": _raw("provider-row-grp", Decimal("-90.00"), "Billete tren Proyecto Acme"),
+                "direction": TransactionDirection.OUTGOING,
+                "business_classification": BusinessClassification.BUSINESS,
+                "group_label": "Proyecto Acme",
+            }
+        )
+        original = TransactionCatalogue.from_transactions([labelled])
+        repo.save(original)
+        loaded = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+
+    assert loaded == original
+    loaded_txn = loaded.transactions[labelled.transaction_id]
+    assert loaded_txn.group_label == "Proyecto Acme"
+
+
+def test_transaction_catalogue_grandfathers_missing_group_label_key(
+    tmp_path: Path,
+) -> None:
+    """A persisted envelope lacking group_label must load with None.
+
+    Anti-tautology proof for the grandfather contract: surgically delete the
+    group_label key from a previously-persisted envelope and reload. The load
+    must succeed with ``loaded.group_label is None`` (None default), and the
+    labelled catalogue must NOT equal the deleted-key version, locking the
+    field's identity contribution at the model boundary.
+    """
+
+    import json as _json
+
+    from ._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        labelled = Transaction.model_validate(
+            {
+                "raw": _raw("provider-row-grp", Decimal("-90.00"), "Billete tren Proyecto Acme"),
+                "direction": TransactionDirection.OUTGOING,
+                "business_classification": BusinessClassification.BUSINESS,
+                "group_label": "Proyecto Acme",
+            }
+        )
+        original = TransactionCatalogue.from_transactions([labelled])
+        repo.save(original)
+
+        object_key = transaction_catalogue_object_key(profile.bucket_id)
+        record = profile.repository.load(
+            TX_BUCKET_NAMESPACE,
+            object_key,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_TX_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        txn_dict = envelope["payload"]["transactions"][labelled.transaction_id]
+        assert txn_dict.get("group_label") == "Proyecto Acme", (
+            "fixture must serialise group_label into the envelope for the grandfather proof to be meaningful"
+        )
+        del txn_dict["group_label"]
+        profile.repository.save(
+            namespace=TX_BUCKET_NAMESPACE,
+            object_key=object_key,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
+
+        loaded = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+        loaded_txn = loaded.transactions[labelled.transaction_id]
+        assert loaded_txn.group_label is None
+        assert loaded != original

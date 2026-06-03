@@ -305,7 +305,7 @@ def _coerce_transaction_temporal_fields(payload: dict[str, object]) -> None:
 
 def _normalize_transaction_optional_strings(payload: dict[str, object]) -> None:
     """Trim optional id strings and collapse empty strings to None."""
-    for key in ("import_fingerprint", "purchase_invoice_evidence_id"):
+    for key in ("import_fingerprint", "purchase_invoice_evidence_id", "group_label"):
         value = payload.get(key)
         if not isinstance(value, str):
             continue
@@ -807,6 +807,12 @@ class Transaction(BaseModel):
     rate_source: str | None = None
     rate_date: str | None = None
     source_jurisdiction: str | None = None
+    # Operator-assigned free-text grouping label (e.g. "Proyecto Acme",
+    # "Q1 viajes"). Orthogonal to category_id (the regulatory spending
+    # category): it is a personal organisational axis for working at scale
+    # over thousands of rows. ``None`` means ungrouped. Length-bounded so a
+    # grouped display stays legible.
+    group_label: str | None = Field(default=None, max_length=64)
 
     @model_validator(mode="before")
     @classmethod

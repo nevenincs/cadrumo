@@ -2443,6 +2443,7 @@ def _command_from_patch(
     counterparty_eu_member_state = _optional_patched(
         patch, patch_fields, "counterparty_eu_member_state", current.counterparty_eu_member_state
     )
+    group_label = _optional_patched(patch, patch_fields, "group_label", current.group_label)
     return ManualLedgerTransactionCommand(
         bucket_id=bucket_id,
         booked_date=booked_date,
@@ -2470,6 +2471,7 @@ def _command_from_patch(
         notes=notes,
         iva_category=iva_category,
         counterparty_eu_member_state=counterparty_eu_member_state,
+        group_label=group_label,
         actor=actor,
         source_command=source_command,
         classified_by_override=classified_by_override,
@@ -3204,6 +3206,7 @@ def _transaction_from_command(
         "iva_category": command.iva_category,
         "counterparty_eu_member_state": command.counterparty_eu_member_state,
         "source_jurisdiction": command.source_jurisdiction,
+        "group_label": command.group_label,
     }
     if command.business_classification is not BusinessClassification.NOT_YET_PROCESSED:
         payload.update(
@@ -3362,6 +3365,7 @@ def _mutation_signature(transaction: Transaction) -> tuple[object, ...]:
         transaction.purchase_invoice_evidence_id,
         transaction.attachment_ids,
         transaction.notes,
+        transaction.group_label,
     )
 
 
@@ -3394,6 +3398,7 @@ def _command_matches_current(command: ManualLedgerTransactionCommand, current: T
         # tuple[str, ...] on both sides — Python tuple equality is value-equal, not identity-equal.
         and command.attachment_ids == current.attachment_ids
         and command.notes == current.notes
+        and command.group_label == current.group_label
     )
 
 

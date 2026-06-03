@@ -448,3 +448,54 @@ def test_list_truncation_footer_states_the_full_total() -> None:
     # The human footer names the full total so the cap is never silent.
     assert str(total) in listed.output
     assert "1-5" in listed.output
+
+
+# --- W14.P26.S88: grouping / labelling + grouped display ---------------------
+def _set_group(tx_id: str, label: str) -> None:
+    res = _RUNNER.invoke(app, ["app", "ledger", "update", "--id", tx_id, "--group", label])
+    assert res.exit_code == 0, res.output
+
+
+def test_group_label_assign_filter_and_grouped_display() -> None:
+    _import_bbva()
+    rows = _list_rows()
+    a = _find(rows, "Material oficina Papeleria Gomez")
+    b = _find(rows, "Comida de trabajo Restaurante El Olivo")
+    _set_group(a["transaction_id"], "Proyecto Acme")
+    _set_group(b["transaction_id"], "Proyecto Acme")
+
+    # --group filters to exactly the labelled rows.
+    filtered = _list_payload("--group", "Proyecto Acme")
+    ids = {r["transaction_id"] for r in filtered["rows"]}
+    assert ids == {a["transaction_id"], b["transaction_id"]}
+    assert all(r["group_label"] == "Proyecto Acme" for r in filtered["rows"])
+
+    # Every row carries the group_label key (None when ungrouped).
+    full = _list_payload()
+    labels = {r["group_label"] for r in full["rows"]}
+    assert "Proyecto Acme" in labels and None in labels
+
+    # --by-group renders a section header naming the group.
+    grouped = _RUNNER.invoke(app, ["app", "ledger", "list", "--by-group"])
+    assert grouped.exit_code == 0, grouped.output
+    assert "# Proyecto Acme" in grouped.output
+
+
+def test_unrelated_update_preserves_group_label() -> None:
+    _import_bbva()
+    rows = _list_rows()
+    row = _find(rows, "Material oficina Papeleria Gomez")
+    _set_group(row["transaction_id"], "Q1 viajes")
+    # An edit to an unrelated field must NOT wipe the operator's grouping.
+    res = _RUNNER.invoke(
+        app, ["app", "ledger", "update", "--id", row["transaction_id"], "--notes", "revisado"]
+    )
+    assert res.exit_code == 0, res.output
+    after = {r["transaction_id"]: r for r in _list_rows()}[row["transaction_id"]]
+    assert after["group_label"] == "Q1 viajes"
+
+    # Passing an empty --group clears the label.
+    cleared = _RUNNER.invoke(app, ["app", "ledger", "update", "--id", row["transaction_id"], "--group", ""])
+    assert cleared.exit_code == 0, cleared.output
+    final = {r["transaction_id"]: r for r in _list_rows()}[row["transaction_id"]]
+    assert final["group_label"] is None

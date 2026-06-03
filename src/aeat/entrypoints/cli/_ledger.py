@@ -463,6 +463,7 @@ def ledger_update(
     iva_amount: str | None = typer.Option(None, "--iva-amount", help=tr("cli.ledger.update.iva_amount_help")),
     irpf_category: str | None = typer.Option(None, "--irpf-category", help=tr("cli.ledger.update.irpf_category_help")),
     notes: str | None = typer.Option(None, "--notes", help=tr("cli.ledger.update.notes_help")),
+    group: str | None = typer.Option(None, "--group", help=tr("cli.ledger.update.group_help")),
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.update.actor_help")),
 ) -> None:
     """Correct editable transaction facts through the bucket-scoped backend."""
@@ -490,6 +491,7 @@ def ledger_update(
                 iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
                 irpf_category=irpf_category,
                 notes=notes,
+                group_label=group,
             ),
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command="aeat app ledger update",
@@ -1584,12 +1586,16 @@ def ledger_list(
     ctx: typer.Context,
     limit: int | None = typer.Option(None, "--limit", min=1, help=tr("cli.ledger.list.limit_help")),
     offset: int = typer.Option(0, "--offset", min=0, help=tr("cli.ledger.list.offset_help")),
+    group: str | None = typer.Option(None, "--group", help=tr("cli.ledger.list.group_filter_help")),
+    by_group: bool = typer.Option(False, "--by-group", help=tr("cli.ledger.list.by_group_help")),
 ) -> None:
     """List bucket-scoped ledger transactions through the backend read service.
 
     ``--limit`` / ``--offset`` page the result. The page is clipped honestly:
     when more rows exist beyond the window a truncation footer states the full
-    total, so a large ledger is never silently capped.
+    total, so a large ledger is never silently capped. ``--group`` filters to one
+    organisational :attr:`group_label`; ``--by-group`` sections the listing under
+    a header per label so thousands of rows stay legible.
     """
     # S09 doc-note: `ledger list` is a read-only query; ValidationError cannot
     # originate here from operator input. Stored-data drift (a persisted record
@@ -1601,6 +1607,14 @@ def ledger_list(
         bucket_id=transaction_repository.bucket_id,
         transaction_repository=transaction_repository,
     )
+    if group is not None:
+        wanted = group.strip() or None
+        all_results = tuple(r for r in all_results if r.transaction.group_label == wanted)
+    if by_group:
+        ungrouped = tr("cli.ledger.list.ungrouped_label")
+        all_results = tuple(
+            sorted(all_results, key=lambda r: (r.transaction.group_label or "￿", r.transaction.transaction_id))
+        )
     total = len(all_results)
     window_end = total if limit is None else min(offset + limit, total)
     results = all_results[offset:window_end]
@@ -1609,8 +1623,14 @@ def ledger_list(
     lines = [tr("cli.ledger.list.header")]
     full_ids = tuple(result.transaction.transaction_id for result in all_results)
     display_width = compute_display_id_width(full_ids)
+    current_group: str | None = None
+    first_group_seen = False
     for result in results:
         transaction = result.transaction
+        if by_group and (not first_group_seen or transaction.group_label != current_group):
+            current_group = transaction.group_label
+            first_group_seen = True
+            lines.append(f"# {current_group or ungrouped}")
         review_status = ledger_transaction_review_status(transaction)
         review_payload = ledger_transaction_review_payload(transaction)
         display_id = transaction.transaction_id[:display_width]
@@ -1618,6 +1638,7 @@ def ledger_list(
             **review_payload.model_dump(mode="python"),
             "full_id": transaction.transaction_id,
             "display_id": display_id,
+            "group_label": transaction.group_label,
         }
         rows.append(row)
         lines.append(
