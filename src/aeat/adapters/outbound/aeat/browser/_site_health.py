@@ -15,6 +15,7 @@ frozen models per project convention.
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Final
 
 from pydantic import (
     AnyHttpUrl,
@@ -26,7 +27,10 @@ from pydantic import (
     field_validator,
 )
 
+from .....core.redaction import redact_for_log
 from ._errors import BrowserValidationError
+
+_MAX_HTML_FRAGMENT_CHARS: Final = 4096
 
 
 class SiteHealthState(StrEnum):
@@ -77,9 +81,9 @@ class SiteHealthEvidence(_SiteHealthRecord):
         http_status: HTTP status observed on the response. Bounded to
             ``[100, 599]``; transport-level failures use ``599`` as a
             sentinel and annotate ``detected_markers`` accordingly.
-        html_fragment: At most 4096 characters of the response body,
-            captured for diagnostic logs. The bound keeps error logs
-            sane and avoids leaking full response bodies.
+        html_fragment: At most 4096 characters of redacted response
+            body, captured for diagnostic logs. The bound keeps error
+            logs sane and avoids leaking full response bodies.
         detected_markers: Frozen tuple of the substrings (or
             structured keys such as ``retry-after:30``) that led the
             parser to its verdict. Each marker is bounded between 1
@@ -88,8 +92,14 @@ class SiteHealthEvidence(_SiteHealthRecord):
 
     url: AnyHttpUrl
     http_status: int = Field(ge=100, le=599)
-    html_fragment: str = Field(max_length=4096)
+    html_fragment: str = Field(max_length=_MAX_HTML_FRAGMENT_CHARS)
     detected_markers: tuple[str, ...]
+
+    @field_validator("html_fragment")
+    @classmethod
+    def _redact_html_fragment(cls, value: str) -> str:
+        """Apply the central log redaction policy to diagnostic HTML."""
+        return redact_for_log(value)[:_MAX_HTML_FRAGMENT_CHARS]
 
     @field_validator("detected_markers")
     @classmethod
