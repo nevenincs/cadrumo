@@ -26,18 +26,18 @@ Load rejects wrong outer classification before master-key access, rejects AAD dr
 
 Filesystem paths were removed from envelope classification, version, AAD, and corrupted-inner-envelope messages. Write failure logs record only the exception type. The re-encrypt path still treats non-cipher JSON as a plaintext migration candidate, but it records the parse failure at debug level before continuing.
 
+The implementation and direct tests now route text encoding and decoding through `UTF_8_ENCODING`. The generic envelope factory no longer carries `type: ignore`; it uses an explicit `cast` with a local rationale that names the pydantic generic runtime contract.
+
 The tests exercise real filesystem writes, parent-file write failures, missing-file loads, real pydantic validation, real AES-GCM encryption/decryption, real key mismatch failures, and persisted metadata tampering. They do not use fake/stub classes, mocks, monkeypatching, skip, or xfail shortcuts.
 
 Validation:
 
 - `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/envelope/test_envelope.py src/aeat/adapters/persistence/storage/envelope/test_envelope_ciphertext.py` passed.
 - `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/envelope/_envelope.py src/aeat/adapters/persistence/storage/envelope/test_envelope.py src/aeat/adapters/persistence/storage/envelope/test_envelope_ciphertext.py` passed.
+- `uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` passed with the known `PLAN022` ordering warning.
-- `uv run --no-sync vaultspec-core vault check links` passed with existing stem-collision warnings.
-- `uv run --no-sync -q python -m aeat.locales audit` failed on pre-existing `cli.config.init.*` missing keys in `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`. The missing keys are owned by CLI init translation work outside this envelope row and were not changed here.
-- `uv run --no-sync vaultspec-core vault check body-links` and `uv run --no-sync vaultspec-core vault check dangling` failed on existing vault-wide unrelated records; this row's audit and exec documents contain wiki-links only in `related:` frontmatter.
-- Touched-surface hygiene scan found no broad exception catches, unlogged suppressions, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, local secure-object marker construction, direct settings construction, or direct environment access.
+- Touched-surface hygiene scan found no broad exception catches, suppressions, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, direct encoding literals, pragma/noqa/type-ignore directives, local secure-object marker construction, direct settings construction, or direct environment access.
 
-Review-agent note: spawning `vaultspec-code-reviewer` failed with `agent thread limit reached`, so the supervisor completed the same checklist locally.
+Review-agent note: a reviewer subagent was unavailable in this session due the current usage limit, so the supervisor completed the same checklist locally.
 
 Disposition: close `AFR-065` as `plaintext-exception`.
