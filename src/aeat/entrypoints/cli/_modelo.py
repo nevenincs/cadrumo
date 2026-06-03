@@ -2156,8 +2156,7 @@ def work_create(
     # different DEK whenever the substrate binds key material out of band.
     if modelo == "100":
         from ...application.overview import build_filing_obligation_advisories as _build_filing_obligation_advisories
-        from ...application.user_profile import record_to_values
-        from ...application.user_profile._profile_repository import ProfileRepository
+        from ...application.user_profile import ProfileRepository, record_to_values
         from ...core import resolve_active_bucket_id
 
         _bucket = resolve_active_bucket_id()
