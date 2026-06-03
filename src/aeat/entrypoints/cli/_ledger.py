@@ -55,7 +55,7 @@ from ...application.ledger import (
     summarize_manual_transactions,
     update_manual_transaction_fields,
 )
-from ...application.ledger._llm_classification import (
+from ...application.ledger import (
     LLMProvider,
     apply_llm_classification,
     available_llm_providers,
