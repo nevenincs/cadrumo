@@ -114,8 +114,8 @@ adapters:
       errors:
         no_active_profile: No hay ningún perfil AEAT activo enlazado para Google OAuth.
       suggestions:
-        create_profile: Ejecuta `aeat config profile create NAME --tax-id <NIF>`
-          y vuelve a intentar el comando de Google.
+        create_profile: Ejecuta `aeat config profile create NAME --tax-id <NIF>` y
+          vuelve a intentar el comando de Google.
   inbound:
     declaracion:
       errors:
@@ -147,10 +147,22 @@ adapters:
               se ha ocultado en los diagnósticos.
     justificante:
       errors:
-        parse_failed: 'No se pudo analizar el PDF del justificante. La ruta de origen se ha ocultado en los diagnósticos.'
+        parse_failed: No se pudo analizar el PDF del justificante. La ruta de origen
+          se ha ocultado en los diagnósticos.
     pdf:
       errors:
-        hash_failed: 'No se pudo calcular la huella del PDF.'
+        hash_failed: No se pudo calcular la huella del PDF.
+  outbound:
+    storage:
+      factory:
+        errors:
+          drive_root_missing: 'No hay ningun id de carpeta raiz de Google Drive configurado para el perfil activo. Ejecuta `aeat config google folder set <id>` primero.'
+          google_auth_import_failed: 'La dependencia google-auth no se puede importar; ejecuta `uv sync` y reintentalo.'
+          google_client_missing: 'No hay ningun cliente OAuth de Google registrado para el perfil activo. Ejecuta `aeat config google register --client-json <path>` primero.'
+          google_token_missing: 'No hay ningun token OAuth de Google persistido para el perfil activo. Ejecuta `aeat config google login` primero.'
+          kind_empty: 'AEAT_STORAGE_PROVIDER_KIND esta vacio.'
+          kind_unhandled: 'El tipo de proveedor de almacenamiento {kind} no esta gestionado por la factoria.'
+          kind_unknown: 'El tipo de proveedor de almacenamiento {value} no se reconoce; se esperaba uno de {expected}.'
   sede:
     errors:
       cotejo_nav_failed: La navegación a la página de cotejo de AEAT falló; la sesión
@@ -172,6 +184,8 @@ adapters:
         de listado esperado; la estructura de la página puede haber cambiado.
       listing_nav_failed: La navegación al listado de declaraciones de AEAT falló.
         Compruebe la conectividad de red y vuelva a intentarlo.
+      modelo_unavailable: El registro de declaraciones de la AEAT no ofrece el modelo
+        solicitado.
       no_auth_session: La sesión de autenticación de AEAT no existe o no está persistida;
         ejecute primero `aeat config auth status`.
       parse_failed: No se pudo analizar la respuesta de declaraciones de AEAT; la
@@ -185,7 +199,6 @@ adapters:
       session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
         la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
         a intentarlo.
-      modelo_unavailable: 'El registro de declaraciones de la AEAT no ofrece el modelo solicitado.'
 aggregation:
   grouping:
     errors:
@@ -280,7 +293,8 @@ application:
           --file RUTA' con una ruta válida.
         path_unset: No se ha seleccionado un archivo de certificado. Ejecuta 'aeat
           config auth configure --provider certificate --file RUTA' para indicarlo.
-        unavailable: 'El estado del certificado no está disponible; consulta los registros de depuración para los detalles de diagnóstico.'
+        unavailable: El estado del certificado no está disponible; consulta los registros
+          de depuración para los detalles de diagnóstico.
       load:
         password_unset: No hay contraseña de certificado configurada. Configura la
           contraseña del certificado antes de continuar.
@@ -1080,15 +1094,15 @@ cli:
           prioridad.
         bucket_id_help: Identificador del bucket al que pertenece la unidad de trabajo
         calculate_help: Calcular una nueva revisión draft para la unidad de trabajo
-        calculate_unauthorized_advisory: 'AVISO: el backend de cálculo del modelo
-          %{modelo} NO está autorizado — todavía no se ha probado con un test integral
-          a lo largo de al menos dos ejercicios de renta (puerta de autorización
-          multi-ejercicio). El resultado se ha calculado y guardado, pero trátalo como
-          provisional hasta que el modelo esté autorizado.'
         calculate_saved: 'Guardado como revisión de cálculo en borrador %{revision_id}
           (estado: %{state}). Está persistido y puede retomarse más tarde; lista las
           revisiones con `aeat app modelo work revisions %{work_unit_id}` y vuelve
           a consultar esta con `aeat app modelo work revision %{revision_id}`.'
+        calculate_unauthorized_advisory: 'AVISO: el backend de cálculo del modelo
+          %{modelo} NO está autorizado — todavía no se ha probado con un test integral
+          a lo largo de al menos dos ejercicios de renta (puerta de autorización multi-ejercicio).
+          El resultado se ha calculado y guardado, pero trátalo como provisional hasta
+          que el modelo esté autorizado.'
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caracteres)
           de una revisión de cálculo
         casilla_bare_numeric_ambiguous: '--casilla {key} coincide con varias casillas
@@ -1658,10 +1672,13 @@ cli:
         y vuelvas a seleccionar).
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
-      preflight_help: 'Informa qué campos del perfil faltan para un contexto de presentación (modelo, revisión, ejercicio, periodo).'
-      preflight_modelo_help: 'Identificador numérico del modelo (p. ej. 303).'
-      preflight_period_help: 'Código de periodo (p. ej. 1T, 1P, 0A, 01).'
+      preflight_filing_year_help: Ejercicio de presentación (cuatro dígitos).
+      preflight_help: Informa qué campos del perfil faltan para un contexto de presentación
+        (modelo, revisión, ejercicio, periodo).
+      preflight_modelo_help: Identificador numérico del modelo (p. ej. 303).
+      preflight_period_help: Código de periodo (p. ej. 1T, 1P, 0A, 01).
       preflight_revision_help: Registry revision id.
+      preflight_revision_id_help: Identificador de revisión del registro (p. ej. 2024-0A).
       preflight_year_help: Filing year.
       remove_help: Marcar un perfil como retirado (las snapshots inmutables se conservan)
       remove_name_help: Id del perfil a retirar
@@ -1681,11 +1698,11 @@ cli:
         list'' para ver los perfiles registrados.'
       use_help: Seleccionar un perfil existente como perfil activo
       use_name_help: Id del perfil que se activará
-      validate_help: 'Valida un perfil contra el esquema cargado (por defecto el perfil activo).'
+      validate_help: Valida un perfil contra el esquema cargado (por defecto el perfil
+        activo).
+      validate_name_help: Etiqueta opcional del perfil a validar; por defecto el perfil
+        activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
-      validate_name_help: 'Etiqueta opcional del perfil a validar; por defecto el perfil activo.'
-      preflight_revision_id_help: 'Identificador de revisión del registro (p. ej. 2024-0A).'
-      preflight_filing_year_help: 'Ejercicio de presentación (cuatro dígitos).'
     repair:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
       connectivity_target_help: Objetivo de conectividad que se debe comprobar
@@ -2012,7 +2029,8 @@ cli:
       help: Exportar movimientos canónicos del libro desde el bucket del perfil activo
       include_inactive_help: Incluir movimientos archivados y apartados
       output_help: Ruta donde escribir el archivo exportado del libro
-      period_help: 'Limita la exportación a un único periodo de presentación (p. ej. 2025T1, 2025).'
+      period_help: Limita la exportación a un único periodo de presentación (p. ej.
+        2025T1, 2025).
     history:
       help: Muestra la cadena cronológica de eventos de una transacción
       id_help: Id de la transacción (o prefijo no ambiguo)
@@ -2024,6 +2042,8 @@ cli:
       dry_run_help: Ejecutar la importación en modo de prueba (sin guardar)
       dry_run_preview: 'Modo de prueba: no se guardó ninguna fila. Los recuentos anteriores
         son una vista previa de lo que una importación real añadiría y omitiría.'
+      empty_directory: 'No se encontraron ficheros de extracto importables en el directorio:
+        {path}'
       help: Importar extractos bancarios o registros al libro contable
       likely_duplicates: '{count} fila(s) importada(s) comparten fecha e importe con
         una transacción que ya está en el libro pero tienen una descripción distinta:
@@ -2039,7 +2059,6 @@ cli:
       source_help: Archivo original para verificar las filas importadas
       verbose_help: Mostrar información detallada durante la importación
       verify_help: Verificar las entradas después de la importación
-      empty_directory: 'No se encontraron ficheros de extracto importables en el directorio: {path}'
     labels:
       active: Activas
       amount: Importe
@@ -2109,14 +2128,15 @@ cli:
       id_help: Id del movimiento contable (SHA-256 o prefijo inequívoco).
       invoice_id_help: Id de la factura a vincular bidireccionalmente con el movimiento.
     list:
+      by_group_help: Agrupar el listado por etiqueta de grupo.
+      footer_truncated: Mostrando filas {start}-{end} de {total} (desplazamiento {offset}).
+        Use --offset/--limit para paginar.
+      group_filter_help: Mostrar solo las filas de esta etiqueta de grupo.
       header: MOVIMIENTOS DEL LIBRO CONTABLE
       help: Listar movimientos del libro en el bucket del perfil activo
-      footer_truncated: 'Mostrando filas {start}-{end} de {total} (desplazamiento {offset}). Use --offset/--limit para paginar.'
       limit_help: 'Numero maximo de filas a mostrar (por defecto: todas).'
       offset_help: 'Omitir este numero de filas antes de listar (por defecto: 0).'
-      by_group_help: 'Agrupar el listado por etiqueta de grupo.'
-      group_filter_help: 'Mostrar solo las filas de esta etiqueta de grupo.'
-      ungrouped_label: '(sin grupo)'
+      ungrouped_label: (sin grupo)
     merge:
       actor_help: Nombre del operador registrado en el evento del bucket
       child_id_help: Id de transacción hija que quieres fusionar; se puede repetir
@@ -2182,6 +2202,7 @@ cli:
       date_help: Nueva fecha contable (AAAA-MM-DD)
       description_help: Nueva descripción de la transacción
       direction_help: Nuevo sentido de la transacción
+      group_help: Asignar una etiqueta de grupo organizativa (cadena vacia para borrarla).
       help: Actualiza los datos editables de una transacción del libro
       id_help: Id de la transacción que quieres actualizar
       irpf_category_help: Nueva categoría de IRPF para cálculos de modelos
@@ -2190,7 +2211,6 @@ cli:
       notes_help: Nuevas notas del operador
       taxable_base_help: Nuevo importe de base imponible
       value_date_help: Nueva fecha valor (AAAA-MM-DD)
-      group_help: 'Asignar una etiqueta de grupo organizativa (cadena vacia para borrarla).'
     view:
       help: Muestra una transacción del libro
       transaction_id_help: Id de la transacción (o prefijo no ambiguo)
@@ -3044,7 +3064,8 @@ errors:
       importada. Comprueba los valores de las casillas y la referencia de evidencia.
     error_modelo_filing_record_not_found: No se encontró la declaración registrada
       solicitada.
-    error_modelo_iva_wallet_reconciliation_blocked: 'El cálculo del Modelo 303 está bloqueado: se requiere la reconciliación del wallet de IVA'
+    error_modelo_iva_wallet_reconciliation_blocked: 'El cálculo del Modelo 303 está
+      bloqueado: se requiere la reconciliación del wallet de IVA'
     error_modelo_verification_report_not_found: No se encontró el informe de verificación
       solicitado.
     error_modelo_work_unit_already_discarded: La unidad de trabajo ya está descartada.
@@ -3128,12 +3149,13 @@ errors:
     error_workflow_component: Un componente del flujo de trabajo lanzó una excepción
       inesperada.
   fail:
-    fail_access_gate_authorization_manifest: No se pudo cargar el manifiesto de autorización de modelos o contiene una entrada de habilitación no válida.
     censo_sync: La sincronización del censo del Modelo 036 falló.
     currency_error: Falló la normalización de la moneda.
     declaration_parse: No se pudo interpretar la exportación de la declaración presentada
       para la conciliación.
     exchange_rate_provider: El proveedor de tipos de cambio no respondió.
+    fail_access_gate_authorization_manifest: No se pudo cargar el manifiesto de autorización
+      de modelos o contiene una entrada de habilitación no válida.
     fail_borrador_parse: No se pudo interpretar el PDF del borrador de Modelo 100
       como una declaración.
     fail_browser_evasion: No se pudo aplicar la configuración de evasión del navegador.
@@ -3397,8 +3419,10 @@ errors:
       del Modelo 036 sin un alta previa.
     modelo_036_terminal_state: El registro del Modelo 036 ya está en estado de baja;
       no admite más operaciones.
-    modelo_184_share_sum: 'Los porcentajes de participación de los miembros del Modelo 184 deben sumar exactamente el 100 %.'
-    modelo_347_threshold: 'Las operaciones del Modelo 347 por encima del umbral informativo requieren cobertura declarativa explícita.'
+    modelo_184_share_sum: Los porcentajes de participación de los miembros del Modelo
+      184 deben sumar exactamente el 100 %.
+    modelo_347_threshold: Las operaciones del Modelo 347 por encima del umbral informativo
+      requieren cobertura declarativa explícita.
     modelo_censo_stale: 'La operación se rechaza porque aplicaste un censo nuevo después
       de generar este trabajo. La AEAT es la fuente legal vinculante: vuelve a generarlo
       con el censo actual.'
@@ -3870,8 +3894,8 @@ wizard:
     simplificado: Simplified
   commands:
     status:
-      created: 'creado'
-      updated: 'actualizado'
+      created: creado
+      updated: actualizado
   demo:
     description: A demonstration section to test wizard functionality
     section:

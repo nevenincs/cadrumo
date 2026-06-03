@@ -329,7 +329,7 @@ Current register count: `293` production candidate files.
 | `AFR-037` | `src/aeat/adapters/outbound/llm/_usage.py` | `secure-object, plain-file` | `runtime-default` | `W12.P21.S86` | closed |
 | `AFR-038` | `src/aeat/adapters/outbound/storage/__init__.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-039` | `src/aeat/adapters/outbound/storage/_errors.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
-| `AFR-040` | `src/aeat/adapters/outbound/storage/_factory.py` | `active-profile, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-040` | `src/aeat/adapters/outbound/storage/_factory.py` | `active-profile, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-041` | `src/aeat/adapters/outbound/storage/_google_drive.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-042` | `src/aeat/adapters/outbound/storage/_local.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-043` | `src/aeat/adapters/outbound/storage/_protocol.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
@@ -682,7 +682,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S139` - Close `AFR-037` for `src/aeat/adapters/outbound/llm/_usage.py` with signals `secure-object, plain-file`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/outbound/llm/_usage.py`.
 - [x] `W12.P26.S140` - Close `AFR-038` for `src/aeat/adapters/outbound/storage/__init__.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/storage/__init__.py`.
 - [x] `W12.P26.S141` - Close `AFR-039` for `src/aeat/adapters/outbound/storage/_errors.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/storage/_errors.py`.
-- [ ] `W12.P26.S142` - Close `AFR-040` for `src/aeat/adapters/outbound/storage/_factory.py` with signals `active-profile, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/storage/_factory.py`.
+- [x] `W12.P26.S142` - Close `AFR-040` for `src/aeat/adapters/outbound/storage/_factory.py` with signals `active-profile, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/storage/_factory.py`.
 - [ ] `W12.P26.S143` - Close `AFR-041` for `src/aeat/adapters/outbound/storage/_google_drive.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/storage/_google_drive.py`.
 - [ ] `W12.P26.S144` - Close `AFR-042` for `src/aeat/adapters/outbound/storage/_local.py` with signals `plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/storage/_local.py`.
 - [ ] `W12.P26.S145` - Close `AFR-043` for `src/aeat/adapters/outbound/storage/_protocol.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/storage/_protocol.py`.

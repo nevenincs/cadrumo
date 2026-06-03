@@ -32,8 +32,6 @@ if TYPE_CHECKING:
 
 from ....core.config import Settings, load_settings
 from ._errors import OutboundStorageError, OutboundStorageValidationError
-from ._google_drive import GoogleDriveProvider
-from ._local import LocalFileSystemProvider
 from ._protocol import StorageProvider
 from ._records import ProviderKind
 
@@ -44,14 +42,16 @@ def _parse_kind(raw: str) -> ProviderKind:
         raise OutboundStorageValidationError(
             "aeat_storage_provider_kind is empty",
             context={"value": raw},
+            translated_message="adapters.outbound.storage.factory.errors.kind_empty",
         )
     try:
         return ProviderKind(cleaned)
     except ValueError as exc:
         valid = sorted(kind.value for kind in ProviderKind)
         raise OutboundStorageValidationError(
-            f"aeat_storage_provider_kind={raw!r} is not a recognised ProviderKind; expected one of {valid!r}",
-            context={"value": raw, "expected": valid},
+            "aeat_storage_provider_kind is not a recognised ProviderKind",
+            context={"value": raw, "expected": ", ".join(valid)},
+            translated_message="adapters.outbound.storage.factory.errors.kind_unknown",
         ) from exc
 
 
@@ -66,22 +66,27 @@ def _build_google_credentials(*, profile: str) -> Credentials:
     client = load_client(profile)
     if client is None:
         raise OutboundStorageValidationError(
-            f"no Google OAuth client registered for profile {profile!r}; "
-            "run `aeat config google register --client-json <path>` first",
+            "no Google OAuth client registered for this profile",
             context={"profile": profile},
+            suggestion="aeat config google register --client-json <path>",
+            translated_message="adapters.outbound.storage.factory.errors.google_client_missing",
         )
     token = load_token(profile)
     if token is None:
         raise OutboundStorageValidationError(
-            f"no Google OAuth token persisted for profile {profile!r}; run `aeat config google login` first",
+            "no Google OAuth token persisted for this profile",
             context={"profile": profile},
+            suggestion="aeat config google login",
+            translated_message="adapters.outbound.storage.factory.errors.google_token_missing",
         )
     try:
         from google.oauth2.credentials import Credentials
     except ImportError as exc:
         raise OutboundStorageError(
-            f"google-auth not importable: {exc}",
+            "google-auth is not importable",
+            context={"dependency": "google-auth"},
             suggestion="uv sync",
+            translated_message="adapters.outbound.storage.factory.errors.google_auth_import_failed",
         ) from exc
     return Credentials(
         token=None,  # access token is rebuilt by first refresh
@@ -151,26 +156,30 @@ def get_storage_provider(
 
     if kind is ProviderKind.LOCAL_FILESYSTEM:
         from ...persistence.storage.bucket import bucket_paths
+        from ._local import LocalFileSystemProvider
 
         root = bucket_paths(settings_resolved.aeat_local_storage_root, profile).blobs_dir
         return LocalFileSystemProvider(root)
 
     if kind is ProviderKind.GOOGLE_DRIVE:
+        from ._google_drive import GoogleDriveProvider
+
         root_folder_id = _resolve_drive_root_folder_id(profile=profile, settings=settings_resolved)
         if not root_folder_id:
             raise OutboundStorageValidationError(
-                "no Drive root folder id is configured for this profile; "
-                "set it via `aeat config google folder set <id>` "
-                "(or the AEAT_GOOGLE_DRIVE_ROOT_FOLDER_ID env var for one-off runs)",
+                "no Drive root folder id is configured for this profile",
                 context={"profile": profile},
+                suggestion="aeat config google folder set <id>",
+                translated_message="adapters.outbound.storage.factory.errors.drive_root_missing",
             )
         credentials = _build_google_credentials(profile=profile)
         return GoogleDriveProvider(credentials=credentials, root_folder_id=root_folder_id)
 
     # Should never be reached — _parse_kind already refused unknown kinds.
     raise OutboundStorageValidationError(
-        f"unhandled ProviderKind {kind!r}",
+        "unhandled ProviderKind",
         context={"kind": kind.value},
+        translated_message="adapters.outbound.storage.factory.errors.kind_unhandled",
     )
 
 
