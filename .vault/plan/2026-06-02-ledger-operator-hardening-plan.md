@@ -192,7 +192,7 @@ Fresh-context honesty review; turn findings into hardening Steps with gates.
 - [ ] `W03.P10.S33` - Provide a transfer-reclassification helper/journey (import never emits INTERNAL_TRANSFER; `transfers land OUTGOING/INCOMING NOT_YET_PROCESSED); `src/aeat/entrypoints/cli/_ledger.py`.
 - [x] `W03.P10.S60` - HIGH: wire CurrencyNormalizationService into the CLI import path so GBP/USD rows convert (value_in_eur/fx_rate) at import instead of silently gating at aggregation; `src/aeat/application/ledger/_actions.py`.
 - [x] `W03.P10.S61` - HIGH: project value_in_eur and fx_rate (and rate source) on TransactionPayload so list/review/export surface the EUR-equivalent and FX provenance; `src/aeat/entrypoints/cli/_ledger_payloads.py`.
-- [ ] `W03.P10.S62` - Add ledger export --period and a period-scoped JSON row list so an operator can hand a gestor just the quarter; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W03.P10.S62` - Add ledger export --period and a period-scoped JSON row list so an operator can hand a gestor just the quarter; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W03.P10.S63` - HIGH: give check/preflight an anomaly channel separate from missing-fact reasons, and a 'non-classification' filtered view, so real anomalies (recargo, gated, foreign) surface without first hand-classifying every row; `src/aeat/application/ledger/_preflight.py`.
 - [ ] `W03.P10.S64` - Add review --filter classification=business|personal and a readiness dashboard consolidating check + preflight for sign-off; `src/aeat/application/review/_filter.py`.
 - [ ] `W03.P10.S65` - Add an annual roll-up / M100-readiness surface (full-year ingresos/gastos/net activity totals) and a devengo-vs-caja cross-year reconciliation view; `src/aeat/application/ledger/_preflight.py`.

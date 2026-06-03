@@ -931,7 +931,13 @@ def export_ledger_transactions(
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
     event_repository = bucket_event_repository or BucketEventHistoryRepository()
     catalogue = repository.load()
-    rows = _ledger_export_rows(catalogue, bucket_id=command.bucket_id, include_inactive=command.include_inactive)
+    export_period = Period.model_validate(command.period) if command.period else None
+    rows = _ledger_export_rows(
+        catalogue,
+        bucket_id=command.bucket_id,
+        include_inactive=command.include_inactive,
+        period=export_period,
+    )
     serialized = serialize_tabular_rows(
         tuple(row.model_dump(mode="json") for row in rows),
         fieldnames=_LEDGER_EXPORT_FIELDNAMES,
@@ -2591,11 +2597,13 @@ def _ledger_export_rows(
     *,
     bucket_id: str,
     include_inactive: bool,
+    period: Period | None = None,
 ) -> tuple[LedgerExportRow, ...]:
     transactions = tuple(
         transaction
         for transaction in catalogue.values()
-        if include_inactive or transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
+        if (include_inactive or transaction.lifecycle_state is TransactionLifecycleState.ACTIVE)
+        and (period is None or period.contains(transaction.raw.value_date or transaction.raw.booked_date))
     )
     return tuple(
         _ledger_export_row(bucket_id=bucket_id, transaction=transaction)

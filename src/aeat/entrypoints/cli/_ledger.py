@@ -1538,6 +1538,11 @@ def ledger_export(
         "--include-inactive",
         help=tr("cli.ledger.export.include_inactive_help"),
     ),
+    period: str | None = typer.Option(
+        None,
+        "--period",
+        help=tr("cli.ledger.export.period_help", default="Restrict the export to one filing period (e.g. 2025Q1, 2025)."),
+    ),
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.export.actor_help")),
 ) -> None:
     """Export canonical bucket-scoped ledger rows through the backend."""
@@ -1549,6 +1554,7 @@ def ledger_export(
             export_format=export_kind,
             include_inactive=include_inactive,
             output_path=output,
+            period=_canonical_period(period) if period else None,
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command="aeat app ledger export",
         ),
