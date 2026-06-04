@@ -195,7 +195,7 @@ Close the plan only after exact-match semantic and file-discovery audits prove e
 - [x] `W05.P17.S120` - run semantic raw-ID leakage audit over source locales and docs; `vaultspec-rag`.
 - [x] `W05.P17.S121` - run file-discovery blast-radius audit for modelo work and revision surfaces; `fd blast-radius inventory`.
 - [x] `W05.P17.S122` - persist the final blast-radius classification matrix and closure evidence; `.vault/exec/2026-06-04-modelo-addressing-ux`.
-- [ ] `W05.P17.S123` - verify internal service coverage for action export reconcile history taxation result-summary and state-projection ID linkage; `src/aeat/application`.
+- [x] `W05.P17.S123` - verify internal service coverage for action export reconcile history taxation result-summary and state-projection ID linkage; `src/aeat/application`.
 - [ ] `W05.P17.S124` - verify external CLI abstraction coverage for modelo command handlers payload schemas and work group help; `src/aeat/entrypoints/cli`.
 - [ ] `W05.P17.S125` - verify narrative and generated documentation coverage for all raw-ID workflow references; `docs`.
 - [ ] `W05.P17.S126` - verify locale and translation guard coverage for all raw-ID workflow references; `src/aeat/locales`.
@@ -226,6 +226,7 @@ localized operator messages render clearly without stale ID-routing
 guidance, the affected documentation no longer teaches pasted-ID routing
 for the common path, and the feature surface gate reports only relevant
 pass/fail results for this change set.
+
 
 
 
