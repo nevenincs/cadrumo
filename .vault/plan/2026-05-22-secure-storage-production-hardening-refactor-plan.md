@@ -436,7 +436,7 @@ Current register count: `293` production candidate files.
 | `AFR-145` | `src/aeat/application/repair_integrity.py` | `secure-object, secure-bound, active-profile, manifest-bucket, master-key` | `runtime-default` | `W12.P21.S85` | closed |
 | `AFR-146` | `src/aeat/application/review/_adapters.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-147` | `src/aeat/application/review/_aggregator.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
-| `AFR-148` | `src/aeat/application/review/_edit.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-148` | `src/aeat/application/review/_edit.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-149` | `src/aeat/application/review/_filter.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-150` | `src/aeat/application/review/_operator.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-151` | `src/aeat/application/setup/_contracts.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
