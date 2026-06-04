@@ -128,7 +128,7 @@ class ApoderadoService:
         safe_bucket_id = safe_repository_id(bucket_id, context="bucket_id")
         repository = self._repository_instances.get(safe_bucket_id)
         if repository is None:
-            repository = _ApoderadoConfigRepository(bucket_id=safe_bucket_id)
+            repository = _ApoderadoConfigRepository(bucket_id=safe_bucket_id, settings=self._settings)
             self._repository_instances[safe_bucket_id] = repository
         return repository
 

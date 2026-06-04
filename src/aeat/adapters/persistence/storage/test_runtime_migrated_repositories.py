@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....application.auth._apoderado import ApoderadoService
 from ....application.auth._diagnostics import list_auth_diagnostics
 from ....application.calculations._iva_compensation_history import (
     IvaCompensationHistoryRepository,
@@ -712,6 +713,7 @@ def _save_diagnostic_probe_row(label: str) -> None:
         ("workflow_runs", lambda: WorkflowRunRepository().list()),
         ("bucket_events", lambda: BucketEventHistoryRepository().load()),
         ("auth_diagnostics", list_auth_diagnostics),
+        ("auth_apoderado", lambda: ApoderadoService().status(bucket_id="bucket-a")),
         ("auth_session", lambda: _session_store.load(Path("/profile/active/aeat-session"))),
         ("google_oauth_client", lambda: google_session_store.load_client("operator-google")),
         ("google_oauth_token", lambda: google_session_store.load_token("operator-google")),
@@ -774,6 +776,7 @@ def test_migrated_runtime_defaults_refuse_missing_session(
         ("workflow_runs", lambda: WorkflowRunRepository().list()),
         ("bucket_events", lambda: BucketEventHistoryRepository().load()),
         ("auth_diagnostics", list_auth_diagnostics),
+        ("auth_apoderado", lambda: ApoderadoService().status(bucket_id="bucket-a")),
         ("auth_session", lambda: _session_store.load(Path("/profile/active/aeat-session"))),
         ("google_oauth_client", lambda: google_session_store.load_client("operator-google")),
         ("google_oauth_token", lambda: google_session_store.load_token("operator-google")),
