@@ -179,7 +179,7 @@ Separate noisy advisory findings into durable policies and ratchets only after s
 
 Split security scan policy by production, tests, mirrored data, and live site authority before treating counts as gates.
 
-- [ ] `W05.P15.S51` - Add Semgrep include and exclude policy; `.semgrepignore`.
+- [x] `W05.P15.S51` - Add Semgrep include and exclude policy; `.semgrepignore`.
 - [ ] `W05.P15.S52` - Document mirrored official data security disposition; `src/aeat/_data`.
 - [ ] `W05.P15.S53` - Add URL authority conformance gate; `src/aeat/domain/portals`.
 - [ ] `W05.P15.S54` - Add remote-state planned-operation conformance gate; `src/aeat/domain/calculations/registry/_remote_state_guard.py`.
