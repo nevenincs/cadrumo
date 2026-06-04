@@ -100,7 +100,7 @@ def test_create_rejects_unknown_revision_with_helpful_list(repos) -> None:
 
 def test_history_for_missing_work_unit_raises(repos) -> None:
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
-    with pytest.raises(WorkUnitNotFoundError):
+    with pytest.raises(WorkUnitNotFoundError) as exc_info:
         assemble_work_unit_history(
             "no-such-work-unit",
             work_unit_repository=wu_repo,
@@ -109,6 +109,8 @@ def test_history_for_missing_work_unit_raises(repos) -> None:
             verification_repository=vr_repo,
             bucket_event_repository=bv_repo,
         )
+    assert exc_info.value.translated_message == "application.modelo.errors.work_unit_not_found"
+    assert exc_info.value.context == {"work_unit_id": "no-such-work-unit"}
 
 
 def test_history_records_creation_event(repos) -> None:

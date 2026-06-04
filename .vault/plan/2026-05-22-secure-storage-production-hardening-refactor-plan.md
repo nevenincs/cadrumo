@@ -29,6 +29,16 @@ related:
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 <!-- RETIRED: S422, S423 -->
 
 # `secure-storage-production-hardening` `refactor` plan
@@ -413,7 +423,7 @@ Current register count: `293` production candidate files.
 | `AFR-132` | `src/aeat/application/modelo/_binding_readiness.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-133` | `src/aeat/application/modelo/_borrador_binding.py` | `secure-object, manifest-bucket, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-134` | `src/aeat/application/modelo/_export.py` | `active-profile, manifest-bucket, plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
-| `AFR-135` | `src/aeat/application/modelo/_history.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-135` | `src/aeat/application/modelo/_history.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-136` | `src/aeat/application/modelo/_profile_binding.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-137` | `src/aeat/application/modelo/_reconcile.py` | `secure-object, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S85` | migrated |
 | `AFR-138` | `src/aeat/application/operator_surface/_contract.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
