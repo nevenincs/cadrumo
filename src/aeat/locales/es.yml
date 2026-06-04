@@ -880,11 +880,15 @@ application:
         extraida para {manual_key}.
   repair_integrity:
     errors:
-      conflicting_list_filters: 'Los filtros de lista de reparacion son mutuamente excluyentes: {filters}. Usa un filtro o ninguno.'
-      decision_id_mismatch_list: 'El id de la decision de reparacion no coincide con el id recalculado desde su contenido; se rechaza la entrada de la lista.'
-      decision_id_mismatch_load: 'El id del contenido de la decision de reparacion no coincide con el solicitado o recalculado; se rechaza la carga.'
-      decision_id_mismatch_save: 'El id de la decision de reparacion no coincide con el id recalculado desde su contenido; se rechaza el guardado.'
-      decision_not_found: 'La decision de reparacion {decision_id} no existe.'
+      conflicting_list_filters: 'Los filtros de lista de reparacion son mutuamente
+        excluyentes: {filters}. Usa un filtro o ninguno.'
+      decision_id_mismatch_list: El id de la decision de reparacion no coincide con
+        el id recalculado desde su contenido; se rechaza la entrada de la lista.
+      decision_id_mismatch_load: El id del contenido de la decision de reparacion
+        no coincide con el solicitado o recalculado; se rechaza la carga.
+      decision_id_mismatch_save: El id de la decision de reparacion no coincide con
+        el id recalculado desde su contenido; se rechaza el guardado.
+      decision_not_found: La decision de reparacion {decision_id} no existe.
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
@@ -4189,9 +4193,13 @@ profile:
 review:
   adapters:
     errors:
-      drafts_load_failed: 'No se pudieron cargar los borradores de presentacion desde el backend seguro.'
+      drafts_load_failed: No se pudieron cargar los borradores de presentacion desde
+        el backend seguro.
       invoices_load_failed: No se pudieron cargar las facturas del adaptador.
       transactions_load_failed: No se pudieron cargar las transacciones del adaptador.
+  edit:
+    errors:
+      parse_failed: 'No se pudo interpretar el token de edición. El valor suministrado se ha ocultado.'
   filing:
     draft_placeholder_summary: Borrador pendiente
     finding_summary: Incidencia detectada en el borrador

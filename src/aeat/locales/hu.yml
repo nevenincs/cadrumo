@@ -818,11 +818,15 @@ application:
         igenyel ehhez: {manual_key}.'
   repair_integrity:
     errors:
-      conflicting_list_filters: 'A javitasi lista szuroi kizarjak egymast: {filters}. Egy szurot adj meg, vagy egyet sem.'
-      decision_id_mismatch_list: 'A javitasi dontes azonositoja nem egyezik az ujraszamitott tartalmi azonositoval; a listaelem elutasitva.'
-      decision_id_mismatch_load: 'A javitasi dontes hasznos terhenek azonositoja nem egyezik a kert vagy ujraszamitott tartalmi azonositoval; a betoltes elutasitva.'
-      decision_id_mismatch_save: 'A javitasi dontes azonositoja nem egyezik az ujraszamitott tartalmi azonositoval; a mentes elutasitva.'
-      decision_not_found: 'A(z) {decision_id} javitasi dontes nem letezik.'
+      conflicting_list_filters: 'A javitasi lista szuroi kizarjak egymast: {filters}.
+        Egy szurot adj meg, vagy egyet sem.'
+      decision_id_mismatch_list: A javitasi dontes azonositoja nem egyezik az ujraszamitott
+        tartalmi azonositoval; a listaelem elutasitva.
+      decision_id_mismatch_load: A javitasi dontes hasznos terhenek azonositoja nem
+        egyezik a kert vagy ujraszamitott tartalmi azonositoval; a betoltes elutasitva.
+      decision_id_mismatch_save: A javitasi dontes azonositoja nem egyezik az ujraszamitott
+        tartalmi azonositoval; a mentes elutasitva.
+      decision_not_found: A(z) {decision_id} javitasi dontes nem letezik.
   user_profile:
     errors:
       duplicate_tax_id: A(z) "%{tax_id}" adóazonosítót már a(z) "%{profile}" profil
@@ -1238,8 +1242,9 @@ cli:
       export:
         actor_help: A MODELO_EXPORTED eseményen rögzített üzemeltetői felirat.
         errors:
-          output_required: 'Adja meg a --output PATH erteket a fichero-BOE artefaktumhoz.'
-          revision_not_exportable: 'A kivalasztott {revision_id} revizio allapota {state}; az exporthoz teljesen ellenorzott vagy beadott revizio kell.'
+          output_required: Adja meg a --output PATH erteket a fichero-BOE artefaktumhoz.
+          revision_not_exportable: A kivalasztott {revision_id} revizio allapota {state};
+            az exporthoz teljesen ellenorzott vagy beadott revizio kell.
         help: Hitelesített-teljes vagy benyújtott nyomtatvány-revízió exportálása
           helyi AEAT-kompatibilis fichero-BOE fájlba. Csak helyi; soha nem lép kapcsolatba
           az AEAT-tal.
@@ -1495,7 +1500,8 @@ cli:
         dt12_computation_error: 'DT12 számítási hiba: %{message}'
         file_help: Hitelesített revízió megjelölése belső benyújtottként. NEM nyújt
           be az AEAT-hoz.
-        file_requires_verified: 'A kivalasztott {revision_id} revizio allapota {state}; a beadashoz teljesen ellenorzott revizio kell.'
+        file_requires_verified: A kivalasztott {revision_id} revizio allapota {state};
+          a beadashoz teljesen ellenorzott revizio kell.
         from_filing_record_help: A módosítandó alap-benyújtási rekord stabil azonosítója.
           Importált külső bizonyítékot (justificante / CSV-nyilvántartás / élő rögzítés)
           kell tartalmaznia.
@@ -4034,9 +4040,13 @@ profile:
 review:
   adapters:
     errors:
-      drafts_load_failed: 'Nem sikerult betolteni a bevallasi piszkozatokat a biztonsagos hattertarbol.'
+      drafts_load_failed: Nem sikerult betolteni a bevallasi piszkozatokat a biztonsagos
+        hattertarbol.
       invoices_load_failed: review.adapters.errors.invoices_load_failed
       transactions_load_failed: review.adapters.errors.transactions_load_failed
+  edit:
+    errors:
+      parse_failed: 'A szerkesztési token nem értelmezhető. A megadott érték el lett rejtve.'
   filing:
     draft_placeholder_summary: Tervezet függőben
     finding_summary: Érvényesítési megállapítás a tervezeten

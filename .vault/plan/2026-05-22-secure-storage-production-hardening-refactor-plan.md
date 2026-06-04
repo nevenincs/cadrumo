@@ -29,6 +29,16 @@ related:
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 <!-- RETIRED: S422, S423 -->
 
 # `secure-storage-production-hardening` `refactor` plan
@@ -779,7 +789,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S247` - Close `AFR-145` for `src/aeat/application/repair_integrity.py` with signals `secure-object, secure-bound, active-profile, manifest-bucket, master-key`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/repair_integrity.py`.
 - [x] `W12.P26.S248` - Close `AFR-146` for `src/aeat/application/review/_adapters.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/review/_adapters.py`.
 - [x] `W12.P26.S249` - Close `AFR-147` for `src/aeat/application/review/_aggregator.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/review/_aggregator.py`.
-- [ ] `W12.P26.S250` - Close `AFR-148` for `src/aeat/application/review/_edit.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/review/_edit.py`.
+- [x] `W12.P26.S250` - Close `AFR-148` for `src/aeat/application/review/_edit.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/review/_edit.py`.
 - [ ] `W12.P26.S251` - Close `AFR-149` for `src/aeat/application/review/_filter.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/review/_filter.py`.
 - [ ] `W12.P26.S252` - Close `AFR-150` for `src/aeat/application/review/_operator.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/review/_operator.py`.
 - [ ] `W12.P26.S253` - Close `AFR-151` for `src/aeat/application/setup/_contracts.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/setup/_contracts.py`.

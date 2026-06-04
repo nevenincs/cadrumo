@@ -804,11 +804,15 @@ application:
         for {manual_key}.
   repair_integrity:
     errors:
-      conflicting_list_filters: 'Repair list filters are mutually exclusive: {filters}. Pass one filter or neither.'
-      decision_id_mismatch_list: 'Repair decision id does not match its re-derived content id; refusing to list the decision entry.'
-      decision_id_mismatch_load: 'Repair decision payload id does not match the requested or re-derived content id; refusing to load the decision.'
-      decision_id_mismatch_save: 'Repair decision id does not match its re-derived content id; refusing to save the decision.'
-      decision_not_found: 'Repair decision {decision_id} does not exist.'
+      conflicting_list_filters: 'Repair list filters are mutually exclusive: {filters}.
+        Pass one filter or neither.'
+      decision_id_mismatch_list: Repair decision id does not match its re-derived
+        content id; refusing to list the decision entry.
+      decision_id_mismatch_load: Repair decision payload id does not match the requested
+        or re-derived content id; refusing to load the decision.
+      decision_id_mismatch_save: Repair decision id does not match its re-derived
+        content id; refusing to save the decision.
+      decision_not_found: Repair decision {decision_id} does not exist.
   user_profile:
     errors:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
@@ -3916,10 +3920,13 @@ profile:
 review:
   adapters:
     errors:
-      drafts_load_failed: 'Failed to load filing drafts from secure backend.'
+      drafts_load_failed: Failed to load filing drafts from secure backend.
       invoices_load_failed: Failed to load invoices catalogue from secure backend.
       transactions_load_failed: Failed to load transactions catalogue from secure
         backend.
+  edit:
+    errors:
+      parse_failed: 'Could not parse the edit token. The supplied value has been redacted.'
   filing:
     draft_placeholder_summary: Draft pending
     finding_summary: Validation finding on draft
