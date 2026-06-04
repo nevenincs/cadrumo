@@ -770,11 +770,16 @@ application:
           IRNR filers to declare a representative for AEAT communications.
     profile_binding:
       errors:
-        date_value_type_invalid: 'Profile fact for date-channel binding %{binding_id} must be a date; got %{value_type}.'
-        decimal_value_invalid: 'Profile fact for numeric binding %{binding_id} must be decimal-compatible.'
-        decimal_value_type_invalid: 'Profile fact for Decimal-channel binding %{binding_id} has unsupported value type %{value_type}.'
-        enum_boolean_invalid: 'Profile fact for enum-channel binding %{binding_id} resolved to a boolean; boolean facts are not valid enum dispatch keys.'
-        source_trace_mismatch: 'Profile-sourced binding trace does not match the resolved binding keys.'
+        date_value_type_invalid: Profile fact for date-channel binding %{binding_id}
+          must be a date; got %{value_type}.
+        decimal_value_invalid: Profile fact for numeric binding %{binding_id} must
+          be decimal-compatible.
+        decimal_value_type_invalid: Profile fact for Decimal-channel binding %{binding_id}
+          has unsupported value type %{value_type}.
+        enum_boolean_invalid: Profile fact for enum-channel binding %{binding_id}
+          resolved to a boolean; boolean facts are not valid enum dispatch keys.
+        source_trace_mismatch: Profile-sourced binding trace does not match the resolved
+          binding keys.
   overview:
     explain:
       errors:
@@ -2466,6 +2471,7 @@ cli:
         auth_providers: List supported authentication providers.
         auth_status: Show configured authentication state.
         auth_test: Check local authentication readiness.
+        bucket_history: 'Inspect append-only bucket event history.'
         diagnostics_logs: Show the configured log path and recent lines.
         diagnostics_quarantine: Quarantine unreadable secure objects.
         diagnostics_repair: Diagnose local configuration and storage health.
@@ -2484,6 +2490,7 @@ cli:
         profile_status: Show active profile readiness.
         profile_switch: Switch the active profile.
         section_authentication: Authentication
+        section_bucket_inspection: 'Bucket inspection'
         section_diagnostics: Diagnostics
         section_first_run: First run
         section_profile_inspection: Profile inspection

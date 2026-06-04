@@ -846,11 +846,16 @@ application:
           para comunicaciones con la AEAT.
     profile_binding:
       errors:
-        date_value_type_invalid: 'El dato de perfil para el binding de fecha %{binding_id} debe ser una fecha; se recibio %{value_type}.'
-        decimal_value_invalid: 'El dato de perfil para el binding numerico %{binding_id} debe ser compatible con decimal.'
-        decimal_value_type_invalid: 'El dato de perfil para el binding de canal decimal %{binding_id} tiene un tipo no soportado: %{value_type}.'
-        enum_boolean_invalid: 'El dato de perfil para el binding enum %{binding_id} resolvio a booleano; los booleanos no son claves validas de despacho enum.'
-        source_trace_mismatch: 'La traza de bindings del perfil no coincide con los bindings resueltos.'
+        date_value_type_invalid: El dato de perfil para el binding de fecha %{binding_id}
+          debe ser una fecha; se recibio %{value_type}.
+        decimal_value_invalid: El dato de perfil para el binding numerico %{binding_id}
+          debe ser compatible con decimal.
+        decimal_value_type_invalid: 'El dato de perfil para el binding de canal decimal
+          %{binding_id} tiene un tipo no soportado: %{value_type}.'
+        enum_boolean_invalid: El dato de perfil para el binding enum %{binding_id}
+          resolvio a booleano; los booleanos no son claves validas de despacho enum.
+        source_trace_mismatch: La traza de bindings del perfil no coincide con los
+          bindings resueltos.
   overview:
     explain:
       errors:
@@ -2629,6 +2634,7 @@ cli:
         auth_providers: Listar los proveedores de autenticacion disponibles.
         auth_status: Mostrar el estado actual de la autenticacion con la AEAT.
         auth_test: Probar la autenticacion con la AEAT.
+        bucket_history: 'Inspecciona el historial append-only de eventos del bucket.'
         diagnostics_logs: Consultar los registros de diagnostico de la aplicacion.
         diagnostics_quarantine: Gestionar los elementos en cuarentena.
         diagnostics_repair: Ejecutar comprobaciones de salud y reparar el estado de
@@ -2650,6 +2656,7 @@ cli:
         profile_status: Mostrar el estado del perfil activo.
         profile_switch: Cambiar al perfil de contribuyente indicado.
         section_authentication: Autenticacion AEAT
+        section_bucket_inspection: 'Inspeccion de bucket'
         section_diagnostics: Diagnostico
         section_first_run: Primera ejecucion
         section_profile_inspection: Inspeccion de perfil
