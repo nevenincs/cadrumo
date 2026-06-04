@@ -14,7 +14,8 @@ from ..adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
     has_active_bucket_session,
 )
-from ..adapters.persistence.storage.master_key._active_session import _active_session
+from ..adapters.persistence.storage.master_key._active_session import _active_session, activate_session
+from ..adapters.persistence.storage.master_key._bucket_session import BucketSession
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..adapters.persistence.storage.sql import dispose_engine
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -68,6 +69,16 @@ def _save_probe_row(namespace: str, object_key: str, payload: bytes) -> None:
         schema_version=1,
         written_at=datetime.now(UTC),
         payload=payload,
+    )
+
+
+def _bucket_session(bucket_id: str) -> BucketSession:
+    return BucketSession.open(
+        bucket_id=bucket_id,
+        kek=b"k" * 32,
+        dek=b"d" * 32,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
     )
 
 
@@ -301,6 +312,49 @@ def test_secure_object_unreadable_total_is_zero_on_clean_database(
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         assert secure_object_unreadable_total() == 0
+
+
+def test_secure_object_unreadable_total_logs_missing_active_bucket_session(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Diagnostics degrade to an empty report and log unavailable storage runtime."""
+
+    caplog.set_level("DEBUG", logger="aeat.application.diagnostics")
+
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="bucket-a") as settings:
+        dispose_engine(settings)
+        try:
+            assert secure_object_unreadable_total() == 0
+        finally:
+            dispose_engine(settings)
+
+    assert "secure objects engine unreachable for repair probe" in caplog.text
+    assert "StorageValidationError" in caplog.text
+    assert "no active bucket session" in caplog.text
+
+
+def test_secure_object_unreadable_total_logs_route_session_mismatch(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Diagnostics do not silently swallow active-session route mismatches."""
+
+    caplog.set_level("DEBUG", logger="aeat.application.diagnostics")
+
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="bucket-a") as settings,
+        activate_session(_bucket_session("bucket-b")),
+    ):
+        dispose_engine(settings)
+        try:
+            assert secure_object_unreadable_total() == 0
+        finally:
+            dispose_engine(settings)
+
+    assert "secure objects engine unreachable for repair probe" in caplog.text
+    assert "StorageValidationError" in caplog.text
+    assert "route does not match the active bucket session" in caplog.text
 
 
 def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path) -> None:
