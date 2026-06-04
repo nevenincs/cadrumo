@@ -617,6 +617,14 @@ application:
           listájához futtassa az `aeat app live borrador 100 list` parancsot.
         source_trace_mismatch: A tervezet forrás-nyomkövetésének egyeznie kell a feloldott
           kötési azonosítókkal.
+        unsupported_modelo: 'A tervezetkotes nem tamogatott a(z) %{modelo} modellhez; a regiszter manifesztjenek deklaralnia kell a tervezet kepesseget.'
+        snapshot_load_failed: 'A kivalasztott tervezet-pillanatkep nem toltheto be; az aktiv pillanatkepek listazhatok ezzel: aeat app live borrador 100 list.'
+        forbidden_bindings: 'A tervezet-pillanatkep olyan ertekeket tartalmaz, amelyeket a regiszter nem jelolt AEAT-prefilled ertekkent: %{bindings}.'
+        snapshot_bucket_mismatch: 'A tervezet-pillanatkep nem az aktiv buckethez tartozik.'
+        snapshot_axis_mismatch: 'A tervezet-pillanatkep tengelye nem egyezik a szamitas tengelyevel: pillanatkep ev=%{snapshot_year} idoszak=%{snapshot_period}; szamitas ev=%{filing_year} idoszak=%{period}.'
+        registry_snapshot_modelo_mismatch: 'A regiszter-pillanatkep modellje nem egyezik a tervezetkotes parancsaval: pillanatkep modell=%{snapshot_modelo}; parancs modell=%{command_modelo}.'
+        registry_snapshot_axis_mismatch: 'A regiszter-pillanatkep tengelye nem egyezik a tervezetkotes parancsaval: pillanatkep ev=%{snapshot_year} idoszak=%{snapshot_period}; parancs ev=%{filing_year} idoszak=%{period}.'
+        decimal_value_invalid: 'A(z) %{binding_id} numerikus kotes tervezetertekenek decimaliskompatibilisnek kell lennie.'
     errors:
       amendment_verification_refused_missing_casillas: 'A módosítás hiányos: a szükséges
         casilla-azonosítók hiányoznak a javított térképből.'

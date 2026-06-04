@@ -674,6 +674,14 @@ application:
           activos con `aeat app live borrador 100 list`.
         source_trace_mismatch: La traza de origen del borrador debe coincidir con
           los identificadores de binding resueltos.
+        unsupported_modelo: 'El binding de borrador no está soportado para el modelo %{modelo}; el manifiesto del registro debe declarar la capacidad de borrador.'
+        snapshot_load_failed: 'No se puede cargar el snapshot de borrador seleccionado; lista los snapshots activos con aeat app live borrador 100 list.'
+        forbidden_bindings: 'El snapshot de borrador contiene valores que el registro no ha marcado como AEAT-prefilled: %{bindings}.'
+        snapshot_bucket_mismatch: 'El snapshot de borrador no pertenece al bucket activo.'
+        snapshot_axis_mismatch: 'El snapshot de borrador no coincide con el eje del calculo: anio del snapshot=%{snapshot_year} periodo=%{snapshot_period}; anio del calculo=%{filing_year} periodo=%{period}.'
+        registry_snapshot_modelo_mismatch: 'El modelo del snapshot de registro no coincide con el comando de binding de borrador: modelo del snapshot=%{snapshot_modelo}; modelo del comando=%{command_modelo}.'
+        registry_snapshot_axis_mismatch: 'El eje del snapshot de registro no coincide con el comando de binding de borrador: anio del snapshot=%{snapshot_year} periodo=%{snapshot_period}; anio del comando=%{filing_year} periodo=%{period}.'
+        decimal_value_invalid: 'El valor de borrador para el binding numerico %{binding_id} debe ser compatible con decimal.'
     errors:
       amendment_verification_refused_missing_casillas: 'La enmienda está incompleta:
         faltan identificadores de casilla requeridos en el mapa corregido.'
