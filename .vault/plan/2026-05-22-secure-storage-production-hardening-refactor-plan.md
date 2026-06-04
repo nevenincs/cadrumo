@@ -382,7 +382,7 @@ Current register count: `293` production candidate files.
 | `AFR-101` | `src/aeat/application/diagnostics.py` | `secure-object, active-profile, manifest-bucket, master-key, sql-route, plain-file` | `runtime-default` | `W12.P21.S85` | closed |
 | `AFR-102` | `src/aeat/application/evidence/_models.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-103` | `src/aeat/application/evidence/_service.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | closed |
-| `AFR-104` | `src/aeat/application/export/_tabular.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-104` | `src/aeat/application/export/_tabular.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-105` | `src/aeat/application/filing/__init__.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-106` | `src/aeat/application/filing/_history_repository.py` | `secure-object, secure-bound, manifest-bucket` | `runtime-default` | `W12.P21.S85` | pending |
 | `AFR-107` | `src/aeat/application/filing/_review.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S85` | pending |
@@ -735,7 +735,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S203` - Close `AFR-101` for `src/aeat/application/diagnostics.py` with signals `secure-object, active-profile, manifest-bucket, master-key, sql-route, plain-file`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/diagnostics.py`.
 - [x] `W12.P26.S204` - Close `AFR-102` for `src/aeat/application/evidence/_models.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/evidence/_models.py`.
 - [x] `W12.P26.S205` - Close `AFR-103` for `src/aeat/application/evidence/_service.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/evidence/_service.py`.
-- [ ] `W12.P26.S206` - Close `AFR-104` for `src/aeat/application/export/_tabular.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/export/_tabular.py`.
+- [x] `W12.P26.S206` - Close `AFR-104` for `src/aeat/application/export/_tabular.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/export/_tabular.py`.
 - [ ] `W12.P26.S207` - Close `AFR-105` for `src/aeat/application/filing/__init__.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/filing/__init__.py`.
 - [ ] `W12.P26.S208` - Close `AFR-106` for `src/aeat/application/filing/_history_repository.py` with signals `secure-object, secure-bound, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/filing/_history_repository.py`.
 - [ ] `W12.P26.S209` - Close `AFR-107` for `src/aeat/application/filing/_review.py` with signals `secure-object, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/filing/_review.py`.
