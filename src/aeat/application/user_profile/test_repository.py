@@ -138,8 +138,10 @@ def test_default_lifecycle_repository_requires_ready_runtime(tmp_path: Path) -> 
 
 def test_lifecycle_load_missing_raises_profile_not_found(secure_objects: SecureObjectRepository) -> None:
     repo = UserProfileLifecycleRepository(bucket_id="bucket-a", objects=secure_objects)
-    with pytest.raises(ProfileNotFoundError, match="operator"):
+    with pytest.raises(ProfileNotFoundError) as excinfo:
         repo.load("operator")
+    assert excinfo.value.translated_message == "errors.refused.refused_profile_not_found"
+    assert excinfo.value.context == {"profile_id": "operator", "bucket_id": "bucket-a"}
 
 
 def test_snapshot_round_trip_carries_canonical_hash(secure_objects: SecureObjectRepository) -> None:
@@ -161,8 +163,10 @@ def test_snapshot_round_trip_carries_canonical_hash(secure_objects: SecureObject
 
 def test_snapshot_load_missing_raises_snapshot_not_found(secure_objects: SecureObjectRepository) -> None:
     repo = UserProfileSnapshotRepository(bucket_id="bucket-a", objects=secure_objects)
-    with pytest.raises(ProfileSnapshotNotFoundError, match="missing"):
+    with pytest.raises(ProfileSnapshotNotFoundError) as excinfo:
         repo.load("missing")
+    assert excinfo.value.translated_message == "errors.integrity.integrity_profile_snapshot_not_found"
+    assert excinfo.value.context == {"snapshot_id": "missing", "bucket_id": "bucket-a"}
 
 
 def test_lifecycle_namespace_uses_storage_registry() -> None:
