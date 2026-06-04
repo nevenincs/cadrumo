@@ -31,13 +31,13 @@ _RATE_LIMIT_MARKERS = {
 class _ExecutableRequest(Protocol):
     """Structural type for google-api-python-client request objects.
 
-    ``google-api-python-client-stubs`` types the concrete
-    ``HttpRequest`` class; any object with an ``execute()`` callable
-    satisfies this protocol, which keeps the adapter decoupled from
-    the concrete stub type while still narrowing away bare ``Any``.
+    ``google-api-python-client-stubs`` types the concrete ``HttpRequest``
+    class. Keeping this as a variadic structural protocol avoids binding the
+    adapter to that concrete stub while still allowing ``execute_request`` to
+    pass the Google client's supported ``num_retries`` keyword.
     """
 
-    def execute(self, http: object = None, num_retries: int = 0) -> Any: ...
+    def execute(self, *_args: object, **_kwargs: object) -> Any: ...
 
 
 # The google-api-python-client wire protocol returns JSON-decoded dicts whose

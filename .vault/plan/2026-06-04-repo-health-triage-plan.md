@@ -157,7 +157,7 @@ Resolve the six Deptry findings by declaring runtime imports explicitly or docum
 
 Review and close the 15 Vulture candidates without deleting side-effect or protocol surfaces blindly.
 
-- [ ] `W04.P13.S43` - Remove or justify unused Google API protocol variables; `src/aeat/adapters/outbound/google/_api.py`.
+- [x] `W04.P13.S43` - Remove or justify unused Google API protocol variables; `src/aeat/adapters/outbound/google/_api.py`.
 - [ ] `W04.P13.S44` - Remove unused secure SQL CursorResult import; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
 - [ ] `W04.P13.S45` - Resolve submission draft-path Vulture candidate; `src/aeat/domain/submission/_protocols.py`.
 - [ ] `W04.P13.S46` - Convert CLI doc-reference payload imports to explicit registration or allowlist; `src/aeat/entrypoints/cli/_doc_reference.py`.
