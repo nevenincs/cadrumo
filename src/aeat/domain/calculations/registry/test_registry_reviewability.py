@@ -30,6 +30,7 @@ _VALIDATOR_MODULE_LINE_BASELINES = {
     "_validate_semantic_role_axes.py": 188,
     "_validate_dependency_sections.py": 182,
 }
+_WORKBOOK_PARITY_MODULE_LINE_BASELINE = 1_336
 
 
 @dataclass(frozen=True)
@@ -87,3 +88,13 @@ def test_registry_validator_modules_stay_below_p05_reviewability_baseline() -> N
             oversize.append(f"{path.name}: {line_count} lines exceeds {ceiling}")
 
     assert oversize == []
+
+
+def test_registry_workbook_parity_module_does_not_grow_past_reviewed_baseline() -> None:
+    path = _REGISTRY_PACKAGE_ROOT / "_workbook_parity.py"
+    line_count = len(path.read_text(encoding="utf-8").splitlines())
+
+    assert line_count <= _WORKBOOK_PARITY_MODULE_LINE_BASELINE, (
+        f"{path.name}: {line_count} lines exceeds reviewed baseline "
+        f"{_WORKBOOK_PARITY_MODULE_LINE_BASELINE}"
+    )
