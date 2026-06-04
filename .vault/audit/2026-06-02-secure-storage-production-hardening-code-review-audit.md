@@ -581,3 +581,24 @@ the config help now advertises the already-enrolled `aeat config bucket history`
 read-only bucket inspection path.
 
 Closure assessment: `W12.P26.S242` can close as `manifest-discovery`.
+
+## S244-055 | PASS | Overview runtime-default closeout verified
+
+The `W12.P26.S244` review found that
+`src/aeat/application/overview/__init__.py` builds in-memory overview calendar,
+applicability, and filing-advisory projections. It does not contact remote
+providers or create a remote mirror. Status reads persisted facts by delegating
+to the canonical runtime-backed `build_operator_state_projection`, so the
+affected-file register correctly closes the row as `runtime-default`.
+
+Vaultspec RAG semantic searches were used for duplication review. Overview
+clusters with agenda, backlog, CLI overview, and operator-state projection
+surfaces; runtime state aggregation remains delegated through
+`build_operator_state_projection` instead of duplicated in overview.
+
+Narrow graceful-degradation paths now emit debug diagnostics before continuing,
+invalid profile facts used for filing-obligation advisories are logged by field
+name and error type without echoing raw operator-provided values, and central
+decimal coercion no longer logs raw malformed values.
+
+Closure assessment: `W12.P26.S244` can close as `runtime-default`.
