@@ -31,7 +31,7 @@ pressure plan.
 - [x] `S03` - Convert the M100 2020 inline `constraints` row to an equivalent nested TOML table with loaded M100 equality proof; `src/aeat/_data/registry/aeat/modelos/100/revisions/2020/casillas/0146-0153.toml`.
 - [x] `S04` - Tighten the TOML row-width baseline if the post-format corpus permits; `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
 - [x] `S05` - Verify registry reviewability, loader, committed registry, and plan gates; `src/aeat/domain/calculations/registry`.
-- [ ] `S06` - Review and close the M100 row-width deferral slice; `.vault/audit`.
+- [x] `S06` - Review and close the M100 row-width deferral slice; `.vault/audit`.
 ## Description
 
 The row-width pressure plan reduced the registry TOML row baseline to 555
