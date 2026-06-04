@@ -62,13 +62,17 @@ class TestCreate:
     def test_create_refuses_duplicate_actividad_year(self, secure_engine: TestRuntimeProfile) -> None:
         svc = _make_svc(secure_engine)
         svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="fifo")
-        with pytest.raises(InventoryActividadConflictError):
+        with pytest.raises(InventoryActividadConflictError) as exc_info:
             svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="pmp")
+        assert exc_info.value.translated_message == "application.inventory.service.errors.actividad_conflict"
+        assert exc_info.value.context == {"actividad_id": "A1", "year": "2025"}
 
     def test_create_refuses_invalid_valuation_method(self, secure_engine: TestRuntimeProfile) -> None:
         svc = _make_svc(secure_engine)
-        with pytest.raises(InventoryServiceInputError, match="invalid valuation_method"):
+        with pytest.raises(InventoryServiceInputError) as exc_info:
             svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="lifo")
+        assert exc_info.value.translated_message == "application.inventory.service.errors.invalid_valuation_method"
+        assert exc_info.value.context == {"valuation_method": "lifo"}
 
     def test_create_persists_across_service_instances(self, secure_engine: TestRuntimeProfile) -> None:
         _make_svc(secure_engine).create(
@@ -121,8 +125,10 @@ class TestShow:
 
     def test_show_refuses_on_missing_actividad(self, secure_engine: TestRuntimeProfile) -> None:
         svc = _make_svc(secure_engine)
-        with pytest.raises(InventoryActividadNotFoundError):
+        with pytest.raises(InventoryActividadNotFoundError) as exc_info:
             svc.show(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025)
+        assert exc_info.value.translated_message == "application.inventory.service.errors.actividad_not_found"
+        assert exc_info.value.context == {"actividad_id": "A1", "year": "2025"}
 
 
 class TestMovementAdd:
@@ -169,8 +175,10 @@ class TestMovementAdd:
             unit_cost=Decimal("100.00"),
         )
         svc.movement_add(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, movement=cmd)
-        with pytest.raises(InventoryServiceInputError, match="already present"):
+        with pytest.raises(InventoryServiceInputError) as exc_info:
             svc.movement_add(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, movement=cmd)
+        assert exc_info.value.translated_message == "application.inventory.service.errors.duplicate_movement_id"
+        assert exc_info.value.context == {"movement_id": "DUP"}
 
     def test_movement_add_refuses_when_actividad_missing(self, secure_engine: TestRuntimeProfile) -> None:
         svc = _make_svc(secure_engine)
@@ -260,8 +268,10 @@ class TestRemove:
 
     def test_remove_refuses_on_missing_actividad(self, secure_engine: TestRuntimeProfile) -> None:
         svc = _make_svc(secure_engine)
-        with pytest.raises(InventoryActividadNotFoundError):
+        with pytest.raises(InventoryActividadNotFoundError) as exc_info:
             svc.remove(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025)
+        assert exc_info.value.translated_message == "application.inventory.service.errors.actividad_not_found"
+        assert exc_info.value.context == {"actividad_id": "A1", "year": "2025"}
 
 
 class TestInventoryEventEmission:

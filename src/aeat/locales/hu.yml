@@ -537,15 +537,27 @@ application:
     runtime:
       errors:
         active_profile_load_failed: 'Az aktiv bevallasi profil nem toltheto be: %{reason}.'
-        blank_modelo_selection: 'A kert modellvalasztas nem tartalmazhat ures modellazonositokat.'
-        filing_year_period_pair: 'A filing_year es a period ertekeket egyutt kell megadni.'
-        modelo_not_in_registry: 'A(z) %{modelo} modelo nem szerepel a szamitasi nyilvantartasban.'
-        modelo_revision_missing: 'A(z) %{modelo} modellnek nincsenek revizioi.'
-        provider_year_missing: 'A(z) %{modelo} modell %{revision} reviziojahoz nincs szolgaltatoi ev.'
-        registry_empty: 'A(z) %{registry_root_name} registry gyokerben nincsenek modell definiciok.'
-        registry_empty_for_period: 'A nyilvantartasi gyokerben nincs modell definicio a(z) %{filing_year} ev %{period} idoszakahoz.'
-        registry_missing_requested_modelos: 'A nyilvantartasi gyokerbol hianyoznak a kert modell definiciok: %{modelos}.'
-        unsupported_casilla_data_type: 'Nem tamogatott nyilvantartasi casilla adattipus: %{data_type}.'
+        blank_modelo_selection: A kert modellvalasztas nem tartalmazhat ures modellazonositokat.
+        filing_year_period_pair: A filing_year es a period ertekeket egyutt kell megadni.
+        modelo_not_in_registry: A(z) %{modelo} modelo nem szerepel a szamitasi nyilvantartasban.
+        modelo_revision_missing: A(z) %{modelo} modellnek nincsenek revizioi.
+        provider_year_missing: A(z) %{modelo} modell %{revision} reviziojahoz nincs
+          szolgaltatoi ev.
+        registry_empty: A(z) %{registry_root_name} registry gyokerben nincsenek modell
+          definiciok.
+        registry_empty_for_period: A nyilvantartasi gyokerben nincs modell definicio
+          a(z) %{filing_year} ev %{period} idoszakahoz.
+        registry_missing_requested_modelos: 'A nyilvantartasi gyokerbol hianyoznak
+          a kert modell definiciok: %{modelos}.'
+        unsupported_casilla_data_type: 'Nem tamogatott nyilvantartasi casilla adattipus:
+          %{data_type}.'
+  inventory:
+    service:
+      errors:
+        actividad_conflict: 'Mar letezik keszletnaplo a(z) %{actividad_id} tevekenyseghez es a(z) %{year} evhez.'
+        actividad_not_found: 'Nincs keszletnaplo a(z) %{actividad_id} tevekenyseghez es a(z) %{year} evhez.'
+        duplicate_movement_id: 'A keszletnaplo mar tartalmazza a(z) %{movement_id} mozgast.'
+        invalid_valuation_method: 'A keszlet ertekelesi mod nem tamogatott: %{valuation_method}.'
   ledger:
     errors:
       evidence_attachment_requires_ids: A főkönyvi bizonylat csatolásához vásárlási

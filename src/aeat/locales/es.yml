@@ -581,16 +581,31 @@ application:
         unknown: '%{reason}'
     runtime:
       errors:
-        active_profile_load_failed: 'No se pudo cargar el perfil activo de presentacion: %{reason}.'
-        blank_modelo_selection: 'La seleccion de modelos solicitada no puede contener identificadores vacios.'
-        filing_year_period_pair: 'filing_year y period deben indicarse juntos.'
-        modelo_not_in_registry: 'El modelo %{modelo} no esta presente en el registro de calculo.'
-        modelo_revision_missing: 'El modelo %{modelo} no tiene revisiones.'
-        provider_year_missing: 'El modelo %{modelo} revision %{revision} no tiene ejercicio de proveedor.'
-        registry_empty: 'La raiz del registro %{registry_root_name} no tiene definiciones de modelo.'
-        registry_empty_for_period: 'La raiz del registro no tiene definiciones de modelo para el ejercicio %{filing_year} periodo %{period}.'
-        registry_missing_requested_modelos: 'La raiz del registro no contiene las definiciones de modelo solicitadas: %{modelos}.'
-        unsupported_casilla_data_type: 'Tipo de dato de casilla del registro no admitido: %{data_type}.'
+        active_profile_load_failed: 'No se pudo cargar el perfil activo de presentacion:
+          %{reason}.'
+        blank_modelo_selection: La seleccion de modelos solicitada no puede contener
+          identificadores vacios.
+        filing_year_period_pair: filing_year y period deben indicarse juntos.
+        modelo_not_in_registry: El modelo %{modelo} no esta presente en el registro
+          de calculo.
+        modelo_revision_missing: El modelo %{modelo} no tiene revisiones.
+        provider_year_missing: El modelo %{modelo} revision %{revision} no tiene ejercicio
+          de proveedor.
+        registry_empty: La raiz del registro %{registry_root_name} no tiene definiciones
+          de modelo.
+        registry_empty_for_period: La raiz del registro no tiene definiciones de modelo
+          para el ejercicio %{filing_year} periodo %{period}.
+        registry_missing_requested_modelos: 'La raiz del registro no contiene las
+          definiciones de modelo solicitadas: %{modelos}.'
+        unsupported_casilla_data_type: 'Tipo de dato de casilla del registro no admitido:
+          %{data_type}.'
+  inventory:
+    service:
+      errors:
+        actividad_conflict: 'Ya existe un libro de inventario para la actividad %{actividad_id} y el ejercicio %{year}.'
+        actividad_not_found: 'No existe ningun libro de inventario para la actividad %{actividad_id} y el ejercicio %{year}.'
+        duplicate_movement_id: 'El libro de inventario ya contiene el movimiento %{movement_id}.'
+        invalid_valuation_method: 'El metodo de valoracion de inventario no esta admitido: %{valuation_method}.'
   ledger:
     errors:
       evidence_attachment_requires_ids: El adjunto de evidencia del libro mayor requiere
