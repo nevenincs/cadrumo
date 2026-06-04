@@ -35,10 +35,10 @@ skips, xfails, or duplicated business logic are used.
 
 ## S230-004 | PASS | Validation
 
-- `uv run --no-sync -q ruff check src/aeat/application/live/_snapshot_base.py src/aeat/application/live/test_snapshot_base.py` passed.
-- `uv run --no-sync -q pytest -q src/aeat/application/live/test_snapshot_base.py` passed with 27 tests.
-- `uv run --no-sync -q pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "borrador or censo or expedientes or notifications or s85_runtime"` passed with 3 selected runtime-migration tests.
+- `uv run --no-sync ruff check src/aeat/application/live/_snapshot_base.py src/aeat/application/live/test_snapshot_base.py` passed.
+- `uv run --no-sync pytest -q src/aeat/application/live/test_snapshot_base.py` passed with 27 tests.
+- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "borrador or censo or expedientes or notifications or s85_runtime"` passed with 3 selected runtime-migration tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
-- `uvx vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` returned only the existing `PLAN022` warning.
+- `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` returned only the existing `PLAN022` warning.
 
 Disposition: close `AFR-128` as `runtime-default`.

@@ -35,15 +35,15 @@ misrouted rows.
 
 Validation passed:
 
-- `uv run --no-sync -q ruff check src/aeat/application/live/_snapshot_base.py src/aeat/application/live/test_snapshot_base.py`
-- `uv run --no-sync -q pytest -q src/aeat/application/live/test_snapshot_base.py`
-- `uv run --no-sync -q pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "borrador or censo or expedientes or notifications or s85_runtime"`
+- `uv run --no-sync ruff check src/aeat/application/live/_snapshot_base.py src/aeat/application/live/test_snapshot_base.py`
+- `uv run --no-sync pytest -q src/aeat/application/live/test_snapshot_base.py`
+- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "borrador or censo or expedientes or notifications or s85_runtime"`
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit`
-- `uvx vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md`
+- `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md`
 
 ## Notes
 
 Locale catalogue updates were performed through `python -m aeat.locales`
-(`scaffold`, `set`, and `audit`). No naked environment access, settings bypass,
+(`set` and `audit`). No naked environment access, settings bypass,
 silent exception swallowing, `noqa`, `pragma`, monkeypatch, fake, mock, skip,
 xfail, or tautological test was introduced.
