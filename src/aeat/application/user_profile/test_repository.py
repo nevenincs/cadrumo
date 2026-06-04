@@ -14,11 +14,16 @@ from ...adapters.persistence.storage import (
     USER_PROFILE_VALUE_NAMESPACE as USER_PROFILE_VALUE_STORAGE_NAMESPACE,
 )
 from ...adapters.persistence.storage import (
+    Envelope,
+    SensitivityClass,
     StorageValidationError,
 )
 from ...adapters.persistence.storage.bucket._errors import BucketValidationError
+from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.config import override_settings
+from ...core.i18n import tr
+from ...core.time import now
 from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSnapshotNotFoundError,
@@ -140,8 +145,91 @@ def test_lifecycle_load_missing_raises_profile_not_found(secure_objects: SecureO
     repo = UserProfileLifecycleRepository(bucket_id="bucket-a", objects=secure_objects)
     with pytest.raises(ProfileNotFoundError) as excinfo:
         repo.load("operator")
-    assert excinfo.value.translated_message == "errors.refused.refused_profile_not_found"
+    assert str(excinfo.value) == "profile record not found in secure storage"
+    assert excinfo.value.translated_message == "application.user_profile.errors.repository_profile_record_missing"
+    assert tr(excinfo.value.translated_message, locale="en") != excinfo.value.translated_message
     assert excinfo.value.context == {"profile_id": "operator", "bucket_id": "bucket-a"}
+    assert "operator" not in str(excinfo.value)
+
+
+def test_lifecycle_load_rejects_inner_classification_without_identifier_leak(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    profile_id = "a4f1c2e0-1111-4222-8333-444455556666"
+    profile = UserProfileRecord(
+        profile_id=profile_id,
+        display_name="Operator",
+        facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+    )
+    envelope = Envelope[UserProfileRecord](
+        schema_version=USER_PROFILE_VALUE_STORAGE_NAMESPACE.schema_version,
+        written_at=now(),
+        classification=SensitivityClass.FINANCIAL,
+        payload=profile,
+    )
+    secure_objects.save(
+        namespace=USER_PROFILE_VALUE_NAMESPACE,
+        object_key=user_profile_value_object_key(profile_id),
+        classification=USER_PROFILE_VALUE_STORAGE_NAMESPACE.sensitivity,
+        schema_version=USER_PROFILE_VALUE_STORAGE_NAMESPACE.schema_version,
+        written_at=envelope.written_at,
+        payload=envelope.model_dump_json().encode("utf-8"),
+    )
+
+    with pytest.raises(ClassificationError) as excinfo:
+        UserProfileLifecycleRepository(bucket_id="bucket-a", objects=secure_objects).load(profile_id)
+
+    assert str(excinfo.value) == "profile record classification is incompatible with this repository"
+    assert (
+        excinfo.value.translated_message
+        == "application.user_profile.errors.repository_profile_record_classification_mismatch"
+    )
+    assert excinfo.value.context == {
+        "profile_id": profile_id,
+        "classification": SensitivityClass.FINANCIAL.value,
+        "expected": USER_PROFILE_VALUE_STORAGE_NAMESPACE.sensitivity.value,
+    }
+    assert profile_id not in str(excinfo.value)
+
+
+def test_lifecycle_load_rejects_inner_version_without_identifier_leak(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    profile_id = "a4f1c2e0-1111-4222-8333-444455556666"
+    profile = UserProfileRecord(
+        profile_id=profile_id,
+        display_name="Operator",
+        facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+    )
+    envelope = Envelope[UserProfileRecord](
+        schema_version=USER_PROFILE_VALUE_STORAGE_NAMESPACE.schema_version + 1,
+        written_at=now(),
+        classification=USER_PROFILE_VALUE_STORAGE_NAMESPACE.sensitivity,
+        payload=profile,
+    )
+    secure_objects.save(
+        namespace=USER_PROFILE_VALUE_NAMESPACE,
+        object_key=user_profile_value_object_key(profile_id),
+        classification=USER_PROFILE_VALUE_STORAGE_NAMESPACE.sensitivity,
+        schema_version=USER_PROFILE_VALUE_STORAGE_NAMESPACE.schema_version,
+        written_at=envelope.written_at,
+        payload=envelope.model_dump_json().encode("utf-8"),
+    )
+
+    with pytest.raises(EnvelopeVersionError) as excinfo:
+        UserProfileLifecycleRepository(bucket_id="bucket-a", objects=secure_objects).load(profile_id)
+
+    assert str(excinfo.value) == "profile record schema version is not supported"
+    assert (
+        excinfo.value.translated_message
+        == "application.user_profile.errors.repository_profile_record_version_unsupported"
+    )
+    assert excinfo.value.context == {
+        "profile_id": profile_id,
+        "schema_version": USER_PROFILE_VALUE_STORAGE_NAMESPACE.schema_version + 1,
+        "max_supported_version": USER_PROFILE_VALUE_STORAGE_NAMESPACE.schema_version,
+    }
+    assert profile_id not in str(excinfo.value)
 
 
 def test_snapshot_round_trip_carries_canonical_hash(secure_objects: SecureObjectRepository) -> None:
@@ -165,8 +253,91 @@ def test_snapshot_load_missing_raises_snapshot_not_found(secure_objects: SecureO
     repo = UserProfileSnapshotRepository(bucket_id="bucket-a", objects=secure_objects)
     with pytest.raises(ProfileSnapshotNotFoundError) as excinfo:
         repo.load("missing")
-    assert excinfo.value.translated_message == "errors.integrity.integrity_profile_snapshot_not_found"
+    assert str(excinfo.value) == "profile snapshot not found in secure storage"
+    assert excinfo.value.translated_message == "application.user_profile.errors.repository_profile_snapshot_missing"
+    assert tr(excinfo.value.translated_message, locale="en") != excinfo.value.translated_message
     assert excinfo.value.context == {"snapshot_id": "missing", "bucket_id": "bucket-a"}
+    assert "missing" not in str(excinfo.value)
+
+
+def test_snapshot_load_rejects_inner_classification_without_identifier_leak(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    profile = UserProfileRecord(
+        profile_id="a4f1c2e0-1111-4222-8333-444455556666",
+        display_name="Operator",
+        facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+    )
+    snapshot = UserProfileSnapshot.from_profile(profile, snapshot_id=new_profile_snapshot_id(profile.profile_id))
+    envelope = Envelope[UserProfileSnapshot](
+        schema_version=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.schema_version,
+        written_at=now(),
+        classification=SensitivityClass.FINANCIAL,
+        payload=snapshot,
+    )
+    secure_objects.save(
+        namespace=USER_PROFILE_SNAPSHOT_NAMESPACE,
+        object_key=user_profile_snapshot_object_key("bucket-a", snapshot.snapshot_id),
+        classification=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.sensitivity,
+        schema_version=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.schema_version,
+        written_at=envelope.written_at,
+        payload=envelope.model_dump_json().encode("utf-8"),
+    )
+
+    with pytest.raises(ClassificationError) as excinfo:
+        UserProfileSnapshotRepository(bucket_id="bucket-a", objects=secure_objects).load(snapshot.snapshot_id)
+
+    assert str(excinfo.value) == "profile snapshot classification is incompatible with this repository"
+    assert (
+        excinfo.value.translated_message
+        == "application.user_profile.errors.repository_profile_snapshot_classification_mismatch"
+    )
+    assert excinfo.value.context == {
+        "snapshot_id": snapshot.snapshot_id,
+        "classification": SensitivityClass.FINANCIAL.value,
+        "expected": USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.sensitivity.value,
+    }
+    assert snapshot.snapshot_id not in str(excinfo.value)
+
+
+def test_snapshot_load_rejects_inner_version_without_identifier_leak(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    profile = UserProfileRecord(
+        profile_id="a4f1c2e0-1111-4222-8333-444455556666",
+        display_name="Operator",
+        facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+    )
+    snapshot = UserProfileSnapshot.from_profile(profile, snapshot_id=new_profile_snapshot_id(profile.profile_id))
+    envelope = Envelope[UserProfileSnapshot](
+        schema_version=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.schema_version + 1,
+        written_at=now(),
+        classification=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.sensitivity,
+        payload=snapshot,
+    )
+    secure_objects.save(
+        namespace=USER_PROFILE_SNAPSHOT_NAMESPACE,
+        object_key=user_profile_snapshot_object_key("bucket-a", snapshot.snapshot_id),
+        classification=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.sensitivity,
+        schema_version=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.schema_version,
+        written_at=envelope.written_at,
+        payload=envelope.model_dump_json().encode("utf-8"),
+    )
+
+    with pytest.raises(EnvelopeVersionError) as excinfo:
+        UserProfileSnapshotRepository(bucket_id="bucket-a", objects=secure_objects).load(snapshot.snapshot_id)
+
+    assert str(excinfo.value) == "profile snapshot schema version is not supported"
+    assert (
+        excinfo.value.translated_message
+        == "application.user_profile.errors.repository_profile_snapshot_version_unsupported"
+    )
+    assert excinfo.value.context == {
+        "snapshot_id": snapshot.snapshot_id,
+        "schema_version": USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.schema_version + 1,
+        "max_supported_version": USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.schema_version,
+    }
+    assert snapshot.snapshot_id not in str(excinfo.value)
 
 
 def test_lifecycle_namespace_uses_storage_registry() -> None:
