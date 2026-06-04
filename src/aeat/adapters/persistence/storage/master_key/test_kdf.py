@@ -30,6 +30,7 @@ deliberate parameter change):
 from __future__ import annotations
 
 import pytest
+from argon2.exceptions import HashingError
 
 from .....core.errors import build_error_envelope
 from ..bucket._manifest import ManifestKdfParams
@@ -142,4 +143,4 @@ def test_derive_kek_wraps_argon2_parameter_failure() -> None:
         derive_kek(_REFERENCE_PASSPHRASE, bad_params)
 
     assert exc_info.value.translated_message == "errors.integrity.integrity_storage_key_derivation"
-    assert type(exc_info.value.__cause__).__name__ == "HashingError"
+    assert isinstance(exc_info.value.__cause__, HashingError)
