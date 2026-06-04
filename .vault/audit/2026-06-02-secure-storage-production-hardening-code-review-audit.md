@@ -349,3 +349,16 @@ metadata, and the linking locale leaves were set through `python -m
 aeat.locales`.
 
 Closure assessment: `W12.P26.S215` can close as `runtime-default`.
+
+## S216-040 | PASS | Invoice query runtime-default closeout verified
+
+The `W12.P26.S216` review found that invoice query projections read durable
+invoice and transaction catalogue state through runtime-backed repositories.
+The plan target for `AFR-114` is corrected to `runtime-default`.
+
+`verify_invoice_repository_links(bucket_id=...)` now passes the requested
+bucket to `InvoiceCatalogueRepository`, matching the transaction repository
+binding. The new real-runtime test persists linked catalogues and verifies the
+repository-backed consistency query against the requested bucket.
+
+Closure assessment: `W12.P26.S216` can close as `runtime-default`.
