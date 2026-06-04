@@ -878,6 +878,13 @@ application:
         {year} {part}.
       manual_section_requires_structure: La seccion del manual requiere estructura
         extraida para {manual_key}.
+  repair_integrity:
+    errors:
+      conflicting_list_filters: 'Los filtros de lista de reparacion son mutuamente excluyentes: {filters}. Usa un filtro o ninguno.'
+      decision_id_mismatch_list: 'El id de la decision de reparacion no coincide con el id recalculado desde su contenido; se rechaza la entrada de la lista.'
+      decision_id_mismatch_load: 'El id del contenido de la decision de reparacion no coincide con el solicitado o recalculado; se rechaza la carga.'
+      decision_id_mismatch_save: 'El id de la decision de reparacion no coincide con el id recalculado desde su contenido; se rechaza el guardado.'
+      decision_not_found: 'La decision de reparacion {decision_id} no existe.'
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
@@ -1292,8 +1299,9 @@ cli:
       export:
         actor_help: Etiqueta del operador registrada en el evento MODELO_EXPORTED.
         errors:
-          no_exportable_revision: 'No hay revisión exportable: la unidad de trabajo
-            no tiene ninguna revisión verificada-completa o presentada.'
+          output_required: Proporcione --output PATH para el artefacto fichero-BOE.
+          revision_not_exportable: La revision seleccionada {revision_id} esta en
+            estado {state}; exportar requiere una revision verificada completa o presentada.
         help: Exporta una revisión de modelo verificada o presentada a un fichero
           local compatible con AEAT (fichero-BOE). Local; nunca contacta con AEAT.
         output_help: Ruta donde escribir el artefacto fichero-BOE.
@@ -1559,6 +1567,8 @@ cli:
         dt12_computation_error: 'Error de cómputo DT12: %{message}'
         file_help: Marcar una revisión verificada como internamente presentada. NO
           envía a la AEAT
+        file_requires_verified: La revision seleccionada {revision_id} esta en estado
+          {state}; presentar requiere una revision verificada completa.
         from_filing_record_help: Identificador estable del filing record base a amendar.
           Debe llevar evidencia externa importada (justificante / CSV / captura en
           vivo)
@@ -1579,7 +1589,8 @@ cli:
           hex en minúsculas de 64 caracteres (resumen SHA-256)
         invalid_casilla_key: 'La clave --casilla no es un CasillaId válido (alfanumérico
           más separadores . _ : -, máx. 64 caracteres)'
-        invalid_revision_selector: 'Selector de revision desconocido {value}; elija uno de {choices}.'
+        invalid_revision_selector: Selector de revision desconocido {value}; elija
+          uno de {choices}.
         invalid_work_unit_id: work_unit_id debe ser una cadena hex en minúsculas de
           64 caracteres (resumen SHA-256)
         kv_empty_key_error: La clave de {flag} no puede estar vacía; se recibió {spec}.
@@ -1604,7 +1615,9 @@ cli:
           el cálculo todavía necesita.'
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         name_help: Nombre de visualización opcional de la unidad de trabajo
-        natural_target_required: 'Pase un id exacto de unidad de trabajo, o indique la declaracion con --modelo, --year y --period.'
+        name_required: Proporcione --name.
+        natural_target_required: Pase un id exacto de unidad de trabajo, o indique
+          la declaracion con --modelo, --year y --period.
         notes_help: Notas opcionales asociadas al filing record
         output_language_help: Idioma de salida para los mensajes renderizados.
         override_help: Valor de binding con sintaxis KEY=VALUE (repetible); ejecuta
@@ -1690,7 +1703,9 @@ cli:
           ejecución). Ejecuta `aeat app modelo work runs` para listar los ids de ejecución.
         revision_help: Identificador estable de la revisión registrada del modelo;
           ejecuta `aeat app modelo describe MODELO` para ver los ids de revisión disponibles.
-        revision_selector_ambiguous: 'Mas de una revision de calculo coincide con este selector. Elija una explicitamente. {candidates}'
+        revision_selector_ambiguous: Mas de una revision de calculo coincide con este
+          selector. Elija una explicitamente. {candidates}
+        revision_selector_help: Selector de revision.
         revision_show_help: Mostrar los valores de casilla guardados de una revisión
           de cálculo concreta (sin recalcular)
         revision_year_mismatch: La revisión %{revision} del modelo %{modelo} no cubre
@@ -1742,9 +1757,15 @@ cli:
         sal_reserva_incomplete: --sal-beneficio-neto, --sal-reserva-dotada y --sal-capital-social
           deben suministrarse conjuntamente.
         sal_reserva_not_decimal: Los valores --sal-* deben ser importes decimales.
-        selector_ambiguous: 'Mas de una unidad de trabajo activa coincide con este modelo/ano/periodo. Elija una revision del registro o pase un id de unidad de trabajo explicito. {candidates}'
-        selector_not_found: 'Ninguna unidad de trabajo activa coincide con este modelo, ano y periodo. Ejecute primero aeat app modelo work create.'
-        selector_revision_conflict: 'Ya existe una unidad de trabajo activa para este modelo/ano/periodo con revision de registro {existing_revision}; se solicito {requested_revision}. Reanude la unidad existente, descartela explicitamente o pase un id exacto.'
+        selector_ambiguous: Mas de una unidad de trabajo activa coincide con este
+          modelo/ano/periodo. Elija una revision del registro o pase un id de unidad
+          de trabajo explicito. {candidates}
+        selector_not_found: Ninguna unidad de trabajo activa coincide con este modelo,
+          ano y periodo. Ejecute primero aeat app modelo work create.
+        selector_revision_conflict: Ya existe una unidad de trabajo activa para este
+          modelo/ano/periodo con revision de registro {existing_revision}; se solicito
+          {requested_revision}. Reanude la unidad existente, descartela explicitamente
+          o pase un id exacto.
         set_not_decimal: El valor de --set debe ser un decimal; se recibió {value}.
         set_override_help: Valor de casilla corregido con sintaxis CASILLA=DECIMAL
           (repetible; al menos uno requerido)
@@ -1754,6 +1775,8 @@ cli:
         unknown_revision: 'Revisión desconocida %{revision} para el modelo %{modelo};
           revisiones declaradas: %{declared}.'
         verify_help: Verificar una revisión draft contra el contrato verified-complete
+        verify_requires_draft: La revision seleccionada {revision_id} esta en estado
+          {state}; verificar requiere una revision borrador.
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)

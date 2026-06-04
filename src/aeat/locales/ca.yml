@@ -867,6 +867,13 @@ application:
         {part}.
       manual_section_requires_structure: La seccio del manual requereix estructura
         extreta per a {manual_key}.
+  repair_integrity:
+    errors:
+      conflicting_list_filters: 'Els filtres de llista de reparacio son excloents: {filters}. Fes servir un filtre o cap.'
+      decision_id_mismatch_list: 'L id de la decisio de reparacio no coincideix amb l id recalculat des del contingut; es rebutja l entrada de la llista.'
+      decision_id_mismatch_load: 'L''id del contingut de la decisio de reparacio no coincideix amb el sol.licitat o recalculat; es rebutja la carrega.'
+      decision_id_mismatch_save: 'L''id de la decisio de reparacio no coincideix amb l''id recalculat des del contingut; es rebutja el desament.'
+      decision_not_found: 'La decisio de reparacio {decision_id} no existeix.'
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
@@ -1270,8 +1277,9 @@ cli:
       export:
         actor_help: Etiqueta de l'operador registrada a l'esdeveniment MODELO_EXPORTED.
         errors:
-          no_exportable_revision: 'No hi ha cap revisió exportable: la unitat de treball
-            no té cap revisió verificada-completa o presentada.'
+          output_required: Proporcioneu --output PATH per a l artefacte fichero-BOE.
+          revision_not_exportable: La revisio seleccionada {revision_id} esta en estat
+            {state}; exportar requereix una revisio verificada completa o presentada.
         help: Exporta una revisió de modelo verificada o presentada a un fitxer local
           compatible amb AEAT (fichero-BOE). Local; mai contacta amb AEAT.
         output_help: Ruta on escriure l'artefacte fichero-BOE.
@@ -1530,6 +1538,8 @@ cli:
         dt12_computation_error: 'Error de càlcul DT12: %{message}'
         file_help: Marcar una revisió verificada com a internament presentada. NO
           envia a l'AEAT
+        file_requires_verified: La revisio seleccionada {revision_id} esta en estat
+          {state}; presentar requereix una revisio verificada completa.
         from_filing_record_help: Identificador estable del filing record base a amendar.
           Ha de portar evidència externa importada (justificant / CSV / captura en
           viu)
@@ -1550,7 +1560,8 @@ cli:
           hexadecimal en minúscules de 64 caràcters (resum SHA-256)
         invalid_casilla_key: 'La clau --casilla no és un CasillaId vàlid (alfanumèric
           més separadors . _ : -, màx. 64 caràcters)'
-        invalid_revision_selector: 'Selector de revisio desconegut {value}; trieu un de: {choices}.'
+        invalid_revision_selector: 'Selector de revisio desconegut {value}; trieu
+          un de: {choices}.'
         invalid_work_unit_id: work_unit_id ha de ser una cadena hex en minúscules
           de 64 caràcters (resum SHA-256)
         kv_empty_key_error: La clau de {flag} no pot estar buida; s'ha rebut {spec}.
@@ -1574,7 +1585,9 @@ cli:
           el càlcul encara necessita.'
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         name_help: Nom de visualització opcional de la unitat de treball
-        natural_target_required: 'Passeu un id exacte d unitat de treball, o indiqueu la declaracio amb --modelo, --year i --period.'
+        name_required: Proporcioneu --name.
+        natural_target_required: Passeu un id exacte d unitat de treball, o indiqueu
+          la declaracio amb --modelo, --year i --period.
         notes_help: Notes opcionals associades al filing record
         output_language_help: Idioma de sortida per als missatges renderitzats.
         override_help: Valor de binding amb sintaxi KEY=VALUE (repetible); executa
@@ -1659,7 +1672,9 @@ cli:
           Executa `aeat app modelo work runs` per llistar els ids d'execució.
         revision_help: Identificador estable de la revisió registrada del model; executa
           `aeat app modelo describe MODEL` per veure els ids de revisió disponibles.
-        revision_selector_ambiguous: 'Mes d una revisio de calcul coincideix amb aquest selector. Trieu-ne una explicitament. {candidates}'
+        revision_selector_ambiguous: Mes d una revisio de calcul coincideix amb aquest
+          selector. Trieu-ne una explicitament. {candidates}
+        revision_selector_help: Selector de revisio.
         revision_show_help: Mostrar els valors de casella desats d'una revisió de
           càlcul concreta (sense recalcular)
         revision_year_mismatch: La revisió %{revision} del model %{modelo} no cobreix
@@ -1711,9 +1726,15 @@ cli:
         sal_reserva_incomplete: --sal-beneficio-neto, --sal-reserva-dotada i --sal-capital-social
           s'han de subministrar conjuntament.
         sal_reserva_not_decimal: Els valors --sal-* han de ser imports decimals.
-        selector_ambiguous: 'Mes d una unitat de treball activa coincideix amb aquest modelo/any/periode. Trieu una revisio del registre o passeu un id explicit d unitat de treball. {candidates}'
-        selector_not_found: 'Cap unitat de treball activa coincideix amb aquest modelo/any/periode. Executeu aeat app modelo work create primer.'
-        selector_revision_conflict: 'Ja existeix una unitat de treball activa per a aquest modelo/any/periode amb revisio de registre {existing_revision}; s ha sol licitat {requested_revision}. Repreneu la unitat existent, descarteu-la explicitament o passeu un id exacte.'
+        selector_ambiguous: Mes d una unitat de treball activa coincideix amb aquest
+          modelo/any/periode. Trieu una revisio del registre o passeu un id explicit
+          d unitat de treball. {candidates}
+        selector_not_found: Cap unitat de treball activa coincideix amb aquest modelo/any/periode.
+          Executeu aeat app modelo work create primer.
+        selector_revision_conflict: Ja existeix una unitat de treball activa per a
+          aquest modelo/any/periode amb revisio de registre {existing_revision}; s
+          ha sol licitat {requested_revision}. Repreneu la unitat existent, descarteu-la
+          explicitament o passeu un id exacte.
         set_not_decimal: El valor de --set ha de ser un decimal; s'ha rebut {value}.
         set_override_help: Valor de casella corregit amb sintaxi CASILLA=DECIMAL (repetible;
           almenys un requerit)
@@ -1723,6 +1744,8 @@ cli:
         unknown_revision: 'Revisió desconeguda %{revision} per al model %{modelo};
           revisions declarades: %{declared}.'
         verify_help: Verificar una revisió draft contra el contracte verified-complete
+        verify_requires_draft: La revisio seleccionada {revision_id} esta en estat
+          {state}; verificar requereix una revisio esborrany.
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)

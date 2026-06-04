@@ -802,6 +802,13 @@ application:
         {year} {part}.
       manual_section_requires_structure: Manual section requires extracted structure
         for {manual_key}.
+  repair_integrity:
+    errors:
+      conflicting_list_filters: 'Repair list filters are mutually exclusive: {filters}. Pass one filter or neither.'
+      decision_id_mismatch_list: 'Repair decision id does not match its re-derived content id; refusing to list the decision entry.'
+      decision_id_mismatch_load: 'Repair decision payload id does not match the requested or re-derived content id; refusing to load the decision.'
+      decision_id_mismatch_save: 'Repair decision id does not match its re-derived content id; refusing to save the decision.'
+      decision_not_found: 'Repair decision {decision_id} does not exist.'
   user_profile:
     errors:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
@@ -1188,8 +1195,9 @@ cli:
       export:
         actor_help: Operator label recorded into the MODELO_EXPORTED event.
         errors:
-          no_exportable_revision: 'No exportable revision: the work unit has no verified-complete
-            or submitted revision.'
+          output_required: Supply --output PATH for the fichero-BOE artefact.
+          revision_not_exportable: Selected revision {revision_id} is in state {state};
+            export requires a verified-complete or filed revision.
         help: Export a verified-complete or filed modelo revision to a local AEAT-compatible
           fichero-BOE file. Local-only; never contacts AEAT.
         output_help: Path to write the fichero-BOE artefact to.
@@ -1441,6 +1449,8 @@ cli:
         dt12_computation_error: 'DT12 computation error: %{message}'
         file_help: Mark a verified revision as internally filed. Does NOT submit to
           AEAT
+        file_requires_verified: Selected revision {revision_id} is in state {state};
+          file requires a verified-complete revision.
         from_filing_record_help: Stable id of the baseline filing record to amend.
           Must carry imported external evidence (justificante / CSV register / live
           capture)
@@ -1458,7 +1468,8 @@ cli:
           lowercase hex string (SHA-256 digest)
         invalid_casilla_key: '--casilla key is not a valid CasillaId (alphanumeric
           plus . _ : - separators, max 64 chars)'
-        invalid_revision_selector: 'Unknown revision selector {value}; choose one of {choices}.'
+        invalid_revision_selector: Unknown revision selector {value}; choose one of
+          {choices}.
         invalid_work_unit_id: work_unit_id must be a 64-character lowercase hex string
           (SHA-256 digest)
         kv_empty_key_error: '{flag} key must not be empty; got {spec}.'
@@ -1480,7 +1491,9 @@ cli:
           still needs.'
         modelo_help: Tax form code (e.g. 303, 130, 100)
         name_help: Optional display name for the work unit
-        natural_target_required: 'Pass an exact work-unit id, or address the filing with modelo, year, and period.'
+        name_required: Supply --name.
+        natural_target_required: Pass an exact work-unit id, or address the filing
+          with modelo, year, and period.
         notes_help: Optional notes attached to the filing record
         output_language_help: Output language for rendered messages.
         override_help: Binding value with KEY=VALUE syntax (repeatable); run `aeat
@@ -1562,7 +1575,9 @@ cli:
           runs` to list run ids.
         revision_help: Stable id of the targeted registry modelo revision; run `aeat
           app modelo describe MODELO` to see the available revision ids.
-        revision_selector_ambiguous: 'More than one calculation revision matches this selector. Choose one explicitly. {candidates}'
+        revision_selector_ambiguous: More than one calculation revision matches this
+          selector. Choose one explicitly. {candidates}
+        revision_selector_help: Revision selector.
         revision_show_help: Show one stored calculation revision's persisted casilla
           values (without recomputing)
         revision_year_mismatch: Revision %{revision} of modelo %{modelo} does not
@@ -1613,9 +1628,13 @@ cli:
         sal_reserva_incomplete: --sal-beneficio-neto, --sal-reserva-dotada, and --sal-capital-social
           must all be supplied together.
         sal_reserva_not_decimal: --sal-* values must be decimal amounts.
-        selector_ambiguous: 'More than one active work unit matches this modelo/year/period. Choose a registry revision or pass an explicit work-unit id. {candidates}'
-        selector_not_found: 'No active work unit matches this modelo, year, and period. Run aeat app modelo work create first.'
-        selector_revision_conflict: 'An active work unit already exists for this modelo/year/period with registry revision {existing_revision}; requested {requested_revision}. Resume the existing work unit, discard it explicitly, or pass an exact id.'
+        selector_ambiguous: More than one active work unit matches this modelo/year/period.
+          Choose a registry revision or pass an explicit work-unit id. {candidates}
+        selector_not_found: No active work unit matches this modelo, year, and period.
+          Run aeat app modelo work create first.
+        selector_revision_conflict: An active work unit already exists for this modelo/year/period
+          with registry revision {existing_revision}; requested {requested_revision}.
+          Resume the existing work unit, discard it explicitly, or pass an exact id.
         set_not_decimal: The --set value must be a decimal; got {value}.
         set_override_help: Corrected casilla value with CASILLA=DECIMAL syntax (repeatable;
           at least one required)
@@ -1626,6 +1645,8 @@ cli:
           revisions: %{declared}.'
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
+        verify_requires_draft: Selected revision {revision_id} is in state {state};
+          verify requires a draft revision.
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
