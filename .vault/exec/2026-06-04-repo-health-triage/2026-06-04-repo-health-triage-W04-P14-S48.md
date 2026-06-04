@@ -35,3 +35,7 @@ The worktree already contained adapter live-driver docstring edits under
 adapter WIP uncommitted. `just audit-duplication` dropped the domain oracle
 flow clones but still reports an import-block clone between the two oracle
 modules and adapter live-driver clones outside this slice.
+
+Follow-up test hardening adds direct coverage for `_checker_oracle_flow.py`
+using the real `GroiObservation` model, alongside the existing GROI/NIF-IVA
+oracle-suite coverage.
