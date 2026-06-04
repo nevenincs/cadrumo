@@ -310,7 +310,7 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
         bucket_id="bucket-a",
         objects=secure_objects,
     )
-    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id="bucket-a", objects=secure_objects)
     initial = _renta_transaction("renta-linked", purchase_invoice_evidence_id=None)
     invoice = _invoice(initial.transaction_id)
     linked = _renta_transaction("renta-linked", purchase_invoice_evidence_id=invoice.invoice_id)

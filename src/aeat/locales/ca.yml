@@ -377,6 +377,10 @@ aggregation:
         duplicat a la malla de fonts.'
       duplicate_relation_owner: 'Error intern: propietari de relacio duplicat a la
         malla de fonts.'
+      owned_sources_blank: 'Les fonts propietat de la malla de fonts no poden contenir tipus de font en blanc.'
+      owned_sources_duplicate: 'Les fonts propietat de la malla de fonts han de ser úniques.'
+      source_transaction_ids_blank: 'Els identificadors de transacció de la malla de fonts no poden contenir blancs.'
+      source_transaction_ids_duplicate: 'Els identificadors de transacció de la malla de fonts han de ser únics.'
 application:
   auth:
     acquisition_lock:

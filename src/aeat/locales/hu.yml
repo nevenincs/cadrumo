@@ -353,6 +353,10 @@ aggregation:
       duplicate_bound_casilla_owner: 'Belső hiba: ismétlődő mező-kötési tulajdonos
         a forráshálon.'
       duplicate_relation_owner: 'Belső hiba: ismétlődő kapcsolati tulajdonos a forráshálon.'
+      owned_sources_blank: 'A forrásháló saját forrásai nem tartalmazhatnak üres forrástípusokat.'
+      owned_sources_duplicate: 'A forrásháló saját forrásainak egyedinek kell lenniük.'
+      source_transaction_ids_blank: 'A forrásháló tranzakcióazonosítói nem tartalmazhatnak üres értékeket.'
+      source_transaction_ids_duplicate: 'A forrásháló tranzakcióazonosítóinak egyedinek kell lenniük.'
 application:
   auth:
     acquisition_lock:

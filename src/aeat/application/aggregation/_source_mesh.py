@@ -29,11 +29,14 @@ class SourceMeshError(CoreValidationError):
 
     Replaces bare :exc:`ValueError` at the ``owned_sources`` uniqueness / blank
     guards and the ``source_transaction_ids`` uniqueness / blank guards so
-    callers receive a typed, registry-bound error.  Inherits from
+    callers receive a typed, registry-bound, localized error.  Inherits from
     :class:`~aeat.core.errors.CoreValidationError` (which inherits from
     :exc:`ValueError`) so pydantic field validators surface it through
     ``ValidationError`` without special handling.
     """
+
+    def __init__(self, message_key: str) -> None:
+        super().__init__(message_key, translated_message=message_key)
 
 
 _log = get_logger(__name__)
@@ -105,9 +108,9 @@ class CalculationSourceResolution(BaseModel):
     def _owned_sources_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         normalized = tuple(source.strip() for source in value)
         if any(not source for source in normalized):
-            raise SourceMeshError("owned_sources must not contain blank source kinds")
+            raise SourceMeshError("aggregation.source_mesh.errors.owned_sources_blank")
         if len(normalized) != len(set(normalized)):
-            raise SourceMeshError("owned_sources must be unique")
+            raise SourceMeshError("aggregation.source_mesh.errors.owned_sources_duplicate")
         return tuple(sorted(normalized))
 
     @field_validator("binding_values")
@@ -135,9 +138,9 @@ class CalculationSourceResolution(BaseModel):
     def _freeze_source_transaction_ids(cls, value: Sequence[str]) -> tuple[str, ...]:
         normalized = tuple(item.strip() for item in value)
         if any(not item for item in normalized):
-            raise SourceMeshError("source_transaction_ids must not contain blanks")
+            raise SourceMeshError("aggregation.source_mesh.errors.source_transaction_ids_blank")
         if len(normalized) != len(set(normalized)):
-            raise SourceMeshError("source_transaction_ids must be unique")
+            raise SourceMeshError("aggregation.source_mesh.errors.source_transaction_ids_duplicate")
         return tuple(sorted(normalized))
 
     @field_serializer("binding_values")
