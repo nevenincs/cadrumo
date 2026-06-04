@@ -167,7 +167,7 @@ Replace copy-paste ID routing in narrative docs only after the implementation is
 
 - [x] `W04.P06.S67` - rewrite the tutorial lifecycle path around natural-key modelo work commands; `docs/tutorials/index.md`.
 - [x] `W04.P06.S68` - rewrite the getting-started lifecycle path around natural-key modelo work commands; `docs/getting-started.md`.
-- [ ] `W04.P06.S69` - rewrite the quickstart lifecycle path around natural-key modelo work commands; `docs/how-to/quickstart.md`.
+- [x] `W04.P06.S69` - rewrite the quickstart lifecycle path around natural-key modelo work commands; `docs/how-to/quickstart.md`.
 - [ ] `W04.P06.S70` - rewrite the Modelo 303 how-to lifecycle path around natural-key modelo work commands; `docs/how-to/modelo-303.md`.
 - [ ] `W04.P06.S71` - rewrite the Modelo 390 how-to lifecycle path around natural-key modelo work commands; `docs/how-to/modelo-390.md`.
 - [ ] `W04.P06.S72` - audit the reconciliation workflow and document natural-key or exact-ID rationale; `docs/how-to/reconcile.md`.
