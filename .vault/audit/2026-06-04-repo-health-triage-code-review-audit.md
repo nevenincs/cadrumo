@@ -394,6 +394,10 @@ import-block clone between the two oracle modules and adapter live-driver clones
 outside this domain slice. Adapter live-driver docstring edits already present
 in the worktree were left outside the S48 commit.
 
+Follow-up coverage added direct tests for `_checker_oracle_flow.py` with the
+real `GroiObservation` model, so the helper contract is now covered directly as
+well as through the sibling oracle suites.
+
 ## W04-009 | INFO | CLI doc-reference payload registration review found no defects
 
 Status: verified clean.
