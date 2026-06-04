@@ -5,7 +5,7 @@ captures `tr("…")` and `t("…")` literal call sites. Two surfaces slip
 past that contract:
 
 * Programmatic errors that pass a translation key to an exception
-  constructor through a ``message_key=`` kwarg rather than a
+  constructor through a ``message_key=`` / ``translation_key=`` kwarg rather than a
   :func:`tr` call (for example
   ``WizardValidationError("wizard.errors.select_unknown")``).
 * f-string call sites whose JoinedStr starts with a literal
@@ -95,12 +95,12 @@ def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
 
     Collects positional translation keys passed to classes whose name
     ends with ``Error``/``Exception``, ``message_key=``/
-    ``translated_message=`` dotted-literal kwargs on any callee
+    ``translation_key=`` / ``translated_message=`` dotted-literal kwargs on any callee
     (exception constructors, ``ErrorCode`` registry rows,
     ``WizardCheckFinding`` verifier findings), direct
     ``tr("dotted.key")``/``t("dotted.key")`` calls, ``build_entry``
     portal-catalogue keys, and dotted-literal defaults for kw-only
-    ``translated_message``/``message_key`` parameters.
+    ``translated_message``/``message_key``/``translation_key`` parameters.
     """
     findings: set[str] = set()
     for node in ast.walk(tree):
@@ -112,9 +112,9 @@ def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
 
 
 def _collect_kwonly_default_keys(node: ast.FunctionDef, findings: set[str]) -> None:
-    """Pick up dotted-literal defaults for ``translated_message`` / ``message_key`` kwonly args."""
+    """Pick up dotted-literal defaults for translation-key kwonly args."""
     for arg, default in zip(node.args.kwonlyargs, node.args.kw_defaults, strict=False):
-        if default is None or arg.arg not in {"translated_message", "message_key"}:
+        if default is None or arg.arg not in {"translated_message", "message_key", "translation_key"}:
             continue
         value = _dotted_literal_value(default)
         if value is not None:
@@ -126,10 +126,10 @@ def _collect_call_site_keys(node: ast.Call, findings: set[str]) -> None:
 
     Handles ``tr(...)`` / ``t(...)`` direct calls, ``*Error``/``*Exception``
     constructor translation keys, ``build_entry(...)`` portal-catalogue
-    translation keys, and ``message_key=`` / ``translated_message=``
+    translation keys, and ``message_key=`` / ``translation_key=`` / ``translated_message=``
     dotted-literal kwargs on any callee.
 
-    The translation-key kwargs (``message_key=`` / ``translated_message=``)
+    The translation-key kwargs (``message_key=`` / ``translation_key=`` / ``translated_message=``)
     are collected callee-agnostically: any call that names one of those
     kwargs with a dotted-literal value declares a live operator-facing
     translation key. This covers the ``ErrorCode(message_key=...)``
@@ -151,7 +151,7 @@ def _collect_call_site_keys(node: ast.Call, findings: set[str]) -> None:
 
 
 def _collect_translation_key_kwargs(node: ast.Call, findings: set[str]) -> None:
-    """Collect ``message_key=`` / ``translated_message=`` dotted-literal kwargs.
+    """Collect translation-key dotted-literal kwargs.
 
     The kwarg name alone identifies a translation key, so this is
     callee-agnostic: it covers exception constructors,
@@ -160,7 +160,7 @@ def _collect_translation_key_kwargs(node: ast.Call, findings: set[str]) -> None:
     alike.
     """
     for kw in node.keywords:
-        if kw.arg not in {"message_key", "translated_message"}:
+        if kw.arg not in {"message_key", "translation_key", "translated_message"}:
             continue
         value = _dotted_literal_value(kw.value)
         if value is not None:

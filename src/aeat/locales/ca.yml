@@ -3595,6 +3595,12 @@ errors:
     modelo_calculation_revision_selector: La seleccio de revisio de calcul ha fallat.
     modelo_calculation_revision_selector_not_found: Cap revisio de calcul coincideix
       amb el selector indicat.
+    modelo_compare_no_revisions: 'No s''han trobat revisions de càlcul comparables.'
+    modelo_compare_no_usable_revisions: 'Hi ha revisions comparables, però cap es pot utilitzar per a aquesta comparació.'
+    modelo_compare_no_work_units: 'No s''han trobat unitats de treball de model comparables.'
+    modelo_project_no_m130_revisions: 'No hi ha revisions de càlcul del Model 130 per a l''exercici sol·licitat.'
+    modelo_project_no_m130_units: 'No hi ha unitats de treball del Model 130 per a l''exercici sol·licitat.'
+    modelo_projection: 'Ha fallat la projecció del model.'
     modelo_work_selector: El selector de treball de modelo ha fallat.
     modelo_work_selector_unit_not_found: No s'ha trobat la unitat de treball de modelo
       seleccionada.
@@ -3897,10 +3903,12 @@ errors:
     modelo_censo_stale: 'L''operació es rebutja perquè has aplicat un cens nou després
       de generar aquesta feina. L''AEAT és la font legal vinculant: torna a generar-la
       amb el cens actual.'
+    modelo_compare_need_two_years: 'La comparació requereix dos exercicis fiscals diferents.'
     modelo_export_cross_bucket: La revisió apuntada pertany a un bucket diferent del
       perfil actiu. L'exportació només opera dins el bucket del perfil actiu.
     modelo_export_no_active_bucket: L'exportació necessita un perfil actiu. Crea o
       selecciona un perfil i torna-ho a provar.
+    modelo_project_invalid_decimal_override: 'Una sobrescriptura de projecció no és un import decimal vàlid.'
     modelo_work_selector_ambiguous: Mes d'una unitat de treball de modelo coincideix
       amb el selector.
     modelo_work_selector_contradiction: Els arguments del selector de treball de modelo
@@ -4954,4 +4962,6 @@ wizard:
       prompt: Pregunta de prova d'exemple
     main:
       title: Prova principal
+    section:
+      title: Secció de prova
     title: Prova

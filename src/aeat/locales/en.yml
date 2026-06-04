@@ -3411,6 +3411,12 @@ errors:
     modelo_calculation_revision_selector: Calculation revision selection failed.
     modelo_calculation_revision_selector_not_found: No calculation revision matched
       the requested selector.
+    modelo_compare_no_revisions: 'No comparable calculation revisions were found.'
+    modelo_compare_no_usable_revisions: 'Comparable revisions exist, but none can be used for this comparison.'
+    modelo_compare_no_work_units: 'No comparable modelo work units were found.'
+    modelo_project_no_m130_revisions: 'No Modelo 130 calculation revisions exist for the requested year.'
+    modelo_project_no_m130_units: 'No Modelo 130 work units exist for the requested year.'
+    modelo_projection: 'Modelo projection failed.'
     modelo_work_selector: The modelo work selector failed.
     modelo_work_selector_unit_not_found: The selected modelo work unit was not found.
   fail:
@@ -3690,10 +3696,12 @@ errors:
     modelo_censo_stale: 'The operation is refused because you applied a new censo
       after this work was produced. The AEAT is the binding legal source: regenerate
       it against the current censo.'
+    modelo_compare_need_two_years: 'Comparison requires two different filing years.'
     modelo_export_cross_bucket: The addressed revision belongs to a bucket other than
       the active profile's. Export only operates within the active profile bucket.
     modelo_export_no_active_bucket: Export requires an active profile. Create or select
       a profile and try again.
+    modelo_project_invalid_decimal_override: 'A projection override is not a valid decimal amount.'
     modelo_work_selector_ambiguous: More than one modelo work unit matches the selector.
     modelo_work_selector_contradiction: The modelo work selector arguments contradict
       each other.
@@ -4717,4 +4725,6 @@ wizard:
       prompt: Example test question
     main:
       title: Main test
+    section:
+      title: Test section
     title: Test

@@ -178,6 +178,21 @@ def test_ast_scanner_ignores_dynamic_domain_fact_keys(tmp_path: Path) -> None:
     assert "renta_family.descendiente.*" not in scan_namespace_markers(tmp_path)
 
 
+def test_ast_scanner_collects_translation_key_kwargs(tmp_path: Path) -> None:
+    """Helper APIs that name `translation_key` still declare live locale keys."""
+
+    (tmp_path / "helper_surface.py").write_text(
+        "def helper(*, translation_key: str):\n"
+        "    return translation_key\n"
+        "\n"
+        "def render():\n"
+        "    return helper(translation_key='cli.app.modelo.work.sal_reserva_not_decimal')\n",
+        encoding="utf-8",
+    )
+
+    assert "cli.app.modelo.work.sal_reserva_not_decimal" in scan_source_tree(tmp_path)
+
+
 def _namespace_covers(key: str, prefix: str) -> bool:
     """Return True when ``key`` carries ``prefix`` as a dot-bounded sub-path.
 

@@ -3525,6 +3525,12 @@ errors:
     modelo_calculation_revision_selector: A szamitasi revizio kivalasztasa sikertelen.
     modelo_calculation_revision_selector_not_found: Nincs a megadott valasztonak megfelelo
       szamitasi revizio.
+    modelo_compare_no_revisions: 'Nem találhatók összehasonlítható számítási revíziók.'
+    modelo_compare_no_usable_revisions: 'Vannak összehasonlítható revíziók, de egyik sem használható ehhez az összehasonlításhoz.'
+    modelo_compare_no_work_units: 'Nem találhatók összehasonlítható nyomtatvány-munkaegységek.'
+    modelo_project_no_m130_revisions: 'Nincs Modelo 130 számítási revízió a kért évhez.'
+    modelo_project_no_m130_units: 'Nincs Modelo 130 munkaegység a kért évhez.'
+    modelo_projection: 'A nyomtatvány-előrejelzés sikertelen.'
     modelo_work_selector: A modelo munkavalaszto hibazott.
     modelo_work_selector_unit_not_found: A kivalasztott modelo munkaegyseg nem talalhato.
   fail:
@@ -3799,11 +3805,13 @@ errors:
     modelo_censo_stale: 'A műveletet elutasítottuk, mert új censot alkalmazott az
       után, hogy ez a munka elkészült. Az AEAT a kötelező jogi forrás: generálja újra
       a legfrissebb censo alapján.'
+    modelo_compare_need_two_years: 'Az összehasonlításhoz két különböző benyújtási év szükséges.'
     modelo_export_cross_bucket: A megcímzett revízió egy másik bucket-hez tartozik,
       nem az aktív profil bucket-jéhez. Az export csak az aktív profil bucket-en belül
       működik.
     modelo_export_no_active_bucket: Az exportáláshoz aktív profil szükséges. Hozzon
       létre vagy válasszon ki egy profilt, és próbálja újra.
+    modelo_project_invalid_decimal_override: 'Egy előrejelzési felülírás nem érvényes decimális összeg.'
     modelo_work_selector_ambiguous: Tobb modelo munkaegyseg is illeszkedik a valasztora.
     modelo_work_selector_contradiction: A modelo munkavalaszto argumentumai ellentmondanak
       egymasnak.
@@ -4862,4 +4870,6 @@ wizard:
       prompt: Példa tesztkérdés
     main:
       title: Fő teszt
+    section:
+      title: Teszt szakasz
     title: Teszt
