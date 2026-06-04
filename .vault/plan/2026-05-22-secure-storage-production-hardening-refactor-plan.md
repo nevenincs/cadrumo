@@ -580,7 +580,7 @@ Current register count: `293` production candidate files.
 | `AFR-289` | `src/aeat/entrypoints/cli/_tty.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-290` | `src/aeat/entrypoints/cli/registry.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-291` | `src/aeat/locales/_ast_scanner.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
-| `AFR-292` | `src/aeat/locales/cli.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-292` | `src/aeat/locales/cli.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-293` | `src/aeat/locales/manager.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 
 ### Phase `W12.P20` - adoption register and classification
