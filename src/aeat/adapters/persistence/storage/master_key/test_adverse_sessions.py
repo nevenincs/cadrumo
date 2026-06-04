@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
 
 from .....core.config import SecretStoreBackend, Settings, override_settings
+from .....core.external_constants import UTF_8_ENCODING
 from ..bucket._errors import BucketLockedError
 from ..bucket._layout import provision_bucket_directory
 from ..bucket._manifest import (
@@ -111,7 +113,7 @@ def test_wrong_passphrase_activation_fails_without_opening_bucket_session(tmp_pa
 def test_torn_bucket_manifest_activation_fails_without_opening_bucket_session(tmp_path: Path) -> None:
     settings = _settings_with_store(tmp_path)
     paths = provision_bucket_directory(settings.aeat_local_storage_root, "torn")
-    manifest_path(paths).write_text('bucket_id = "torn', encoding="utf-8")
+    manifest_path(paths).write_text('bucket_id = "torn', encoding=UTF_8_ENCODING)
     provider = FileFallbackMasterKeyProvider(
         store_dir=settings.aeat_secret_store_dir,
         passphrase_callback=lambda: "right-passphrase",
@@ -133,12 +135,40 @@ def test_torn_bucket_manifest_activation_fails_without_opening_bucket_session(tm
     assert has_active_bucket_session() is False
 
 
+def test_bucket_session_close_falls_back_when_explicit_database_url_blocks_target_route(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    session = BucketSession.open(
+        bucket_id="explicit-route",
+        kek=_KEK,
+        dek=_DEK,
+        idle_minutes=15,
+        opened_at=_OPENED_AT,
+    )
+    explicit_db = tmp_path / "explicit.db"
+
+    with (
+        override_settings(
+            aeat_local_storage_root=tmp_path / "state",
+            aeat_database_url=f"sqlite:///{explicit_db.as_posix()}",
+        ),
+        caplog.at_level(logging.DEBUG, logger="aeat.adapters.persistence.storage.master_key._bucket_session"),
+    ):
+        session.close()
+
+    assert session.sealed is True
+    assert "bucket session targeted engine eviction unavailable" in caplog.text
+    assert str(tmp_path) not in caplog.text
+
+
 def _settings_with_store(tmp_path: Path) -> Settings:
-    return Settings(
+    with override_settings(
         aeat_local_storage_root=tmp_path / "state",
         aeat_secret_store_dir=tmp_path / "secrets",
         aeat_secret_store_backend=SecretStoreBackend.FILE,
-    )
+    ) as settings:
+        return settings
 
 
 def _write_registered_bucket(root: Path, bucket_id: str) -> None:
