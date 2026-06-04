@@ -303,3 +303,34 @@ non-sensitive context payloads for the reviewed missing-registry/profile/modelo
 selection/revision/provider/year-period/casilla-type failures.
 
 Closure assessment: `W12.P26.S212` can close as `manifest-discovery`.
+
+## S213-037 | PASS | Inventory service runtime-default closeout verified
+
+The `W12.P26.S213` review found that the inventory application service is
+runtime-backed secure storage rather than manifest-only discovery.
+`InventoryService` resolves inventory ledgers through
+`secure_object_repository_for_bucket()` and `InventoryLedgerRepository`, and it
+emits mutating audit events through `BucketEventHistoryRepository`.
+
+The plan target for `AFR-111` is corrected to `runtime-default`, matching the
+W12 side-store classification that records inventory ledgers as secure-object
+migration completed. The service uses settings-backed runtime resolution,
+typed AEAT exception boundaries with locale metadata, and real-runtime tests
+for bucket isolation, route mismatch refusal, encrypted persistence, and
+legacy JSON side-store absence.
+
+Closure assessment: `W12.P26.S213` can close as `runtime-default`.
+
+## S214-038 | PASS | Invoice importing plaintext exception closeout verified
+
+The `W12.P26.S214` review found that invoice importing reads only the
+operator-supplied CSV/JSON import source as plaintext. Non-dry-run durable
+invoice catalogue state goes through `InvoiceCatalogueRepository`, which
+persists FINANCIAL secure-object payloads through the active bucket runtime.
+
+Malformed JSON, invalid JSON shape, invalid flat `base_total`, invalid invoice
+kind, and import file read failures now raise localized `InvoiceValidationError`
+instances. The file-read failure path records debug evidence with file name and
+error type before chaining the original `OSError`.
+
+Closure assessment: `W12.P26.S214` can close as `plaintext-exception`.

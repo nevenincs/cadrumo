@@ -29,9 +29,9 @@ Closed `AFR-111` for the inventory application service.
 - Updated existing real-behavior inventory tests to assert typed
   `translated_message` keys and structured context instead of matching raw
   English strings.
-- Enrolled locale strings through `python -m aeat.locales scaffold` and
-  `python -m aeat.locales set`; the Catalan scaffold placeholder required a
-  one-leaf manual repair after the CLI could not rewrite that generated value.
+- Verified the inventory-service locale keys already populated through the
+  centralized locale surface and retained locale validation through
+  `python -m aeat.locales audit`.
 
 ## Outcome
 
