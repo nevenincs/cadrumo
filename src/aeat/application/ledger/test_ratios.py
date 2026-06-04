@@ -3,16 +3,23 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
+from ...adapters.persistence.storage.errors import StorageValidationError
 from ...domain.categories import SpendingCategory
 from ...domain.usage_ratios import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioProfile,
 )
+from ...tests.secure_sql import isolated_runtime_profile
 from ._ratios import (
     eligible_ratio_categories,
+    list_eligible_ratios_for_bucket,
+    set_usage_ratio,
+    unset_usage_ratio,
+    validate_ratios_for_bucket,
     validate_ratios_profile,
 )
 
@@ -123,3 +130,39 @@ class TestReportFields:
     def test_report_eligible_count_matches_domain_set(self) -> None:
         report = validate_ratios_profile(bucket_id="b1", profile=UsageRatioProfile())
         assert report.eligible_count == len(ELIGIBLE_USAGE_RATIO_CATEGORIES)
+
+
+class TestRuntimeFacade:
+    def test_bucket_wrappers_round_trip_through_active_runtime_bucket(self, tmp_path: Path) -> None:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+            prior = set_usage_ratio(
+                bucket_id=profile.bucket_id,
+                category=SpendingCategory.TELEFONIA_MOVIL,
+                ratio=Decimal("0.42"),
+            )
+
+            assert prior is None
+
+            report = validate_ratios_for_bucket(bucket_id=profile.bucket_id)
+            assert report.profile_present is True
+            assert report.overrides_count == 1
+
+            rows = list_eligible_ratios_for_bucket(bucket_id=profile.bucket_id)
+            targeted = next(row for row in rows if row.category is SpendingCategory.TELEFONIA_MOVIL)
+            assert targeted.override_present is True
+
+            cleared = unset_usage_ratio(bucket_id=profile.bucket_id, category=SpendingCategory.TELEFONIA_MOVIL)
+            assert cleared == Decimal("0.42")
+            assert validate_ratios_for_bucket(bucket_id=profile.bucket_id).profile_present is False
+
+    def test_bucket_wrappers_fail_closed_for_inactive_runtime_bucket(self, tmp_path: Path) -> None:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a"):
+            with pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"):
+                set_usage_ratio(
+                    bucket_id="bucket-b",
+                    category=SpendingCategory.TELEFONIA_MOVIL,
+                    ratio=Decimal("0.42"),
+                )
+
+            with pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"):
+                validate_ratios_for_bucket(bucket_id="bucket-b")
