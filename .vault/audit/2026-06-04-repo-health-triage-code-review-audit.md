@@ -245,3 +245,21 @@ declares `rich>=13.8.0`, root CLI command materialisation succeeds, and
 `uv run --no-sync deptry .` no longer reports `rich`. Deptry still reports
 planned residual findings for `torch`, `playwright_stealth`, and
 `prompt_toolkit`, which remain open under W04.P12.S40-S42.
+
+## W04-003 | INFO | Torch runtime dependency removal review found no defects
+
+Status: verified with scoped residual.
+
+The W04.P12.S40 review found no behavioral defect in removing `torch` from the
+application runtime dependency set. No production or script code imports
+`torch`, the previous direct dependency pulled CUDA PyTorch wheels through a
+dedicated index, and the existing supply-chain audit had already identified
+that default runtime shape as over-broad without an owning feature.
+
+Focused verification confirmed no Python import of `torch`, the PyTorch CUDA
+index/source metadata is removed from `pyproject.toml`, and
+`uv run --no-sync deptry .` no longer reports `torch`. The lockfile can still
+contain PyPI `torch` transitively through dev tooling, but the application no
+longer declares it directly. Deptry still reports planned residual findings for
+`playwright_stealth` and `prompt_toolkit`, which remain open under
+W04.P12.S41-S42.
