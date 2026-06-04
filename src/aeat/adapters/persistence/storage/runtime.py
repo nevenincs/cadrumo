@@ -12,7 +12,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
 
@@ -23,6 +23,8 @@ from ....core.config import (
     load_settings,
     settings_for_active_profile_bucket,
 )
+from ....core.external_constants import DEFAULT_OUTPUT_LANGUAGE
+from ....core.logging import get_logger
 from ....core.time import now as _utc_now
 from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .errors import StorageValidationError
@@ -34,6 +36,8 @@ if TYPE_CHECKING:
 from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _SYNTHETIC_SESSION_BUCKET_IDS = frozenset({"ephemeral"})
+_STORAGE_VALIDATION_MESSAGE_KEY: Final[str] = "errors.integrity.integrity_storage_validation"
+_log = get_logger(__name__)
 
 
 class StorageRuntimeReadinessCode(StrEnum):
@@ -174,6 +178,10 @@ def _runtime_not_ready_error(message: str, *, message_key: str) -> StorageValida
     )
 
 
+def _storage_validation_error(message: str) -> StorageValidationError:
+    return StorageValidationError(message, translated_message=_STORAGE_VALIDATION_MESSAGE_KEY)
+
+
 def _readiness_issue(
     *,
     code: StorageRuntimeReadinessCode,
@@ -196,9 +204,11 @@ def _render_readiness_details(issues: tuple[StorageRuntimeReadinessIssue, ...]) 
 def _settings_output_language() -> str:
     """Resolve locale without consulting active-profile storage."""
     try:
-        return load_settings().aeat_output_language
+        language = load_settings().aeat_output_language or DEFAULT_OUTPUT_LANGUAGE
     except (AttributeError, KeyError, ValueError):
-        return "es"
+        _log.debug("storage runtime could not resolve output language; using default", exc_info=True)
+        return DEFAULT_OUTPUT_LANGUAGE.value
+    return getattr(language, "value", str(language))
 
 
 def inspect_storage_runtime(
@@ -320,7 +330,7 @@ def inspect_bucket_storage_runtime(
     """
     trimmed = bucket_id.strip()
     if not trimmed:
-        raise StorageValidationError("bucket_id must not be blank")
+        raise _storage_validation_error("bucket_id must not be blank")
     resolved = settings or load_settings()
     current_route = classify_storage_route(resolved)
     if (
