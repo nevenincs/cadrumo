@@ -39,9 +39,16 @@ Vaultspec RAG clustered this slice with workflow error registry rows, active-pro
 health, profile-bucket scan, and master-key storage errors. No duplicate workflow
 error hierarchy requiring consolidation was found in this slice.
 
+## S280-005 | PASS | Registry suggestion contract repair
+
+The registry contract gate found two newly-invalid `default_suggestion` values in
+the application error registry. Both were prose strings rather than parseable `aeat`
+commands. The repair changed them to live CLI help commands while leaving localized
+error messages unchanged.
+
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/workflow/_errors.py src/aeat/application/workflow/test_engine.py src/aeat/application/workflow/test_active_profile_resolution.py src/aeat/entrypoints/cli/test_error_registry_contract.py src/aeat/test_locale_coverage_hardened_errors.py`
+- `uv run --no-sync ruff check src/aeat/application/workflow/_errors.py src/aeat/core/errors/registry/_application.py src/aeat/application/workflow/test_engine.py src/aeat/application/workflow/test_active_profile_resolution.py src/aeat/entrypoints/cli/test_error_registry_contract.py src/aeat/test_locale_coverage_hardened_errors.py`
 - `uv run --no-sync pytest -q src/aeat/application/workflow/test_engine.py src/aeat/application/workflow/test_active_profile_resolution.py src/aeat/entrypoints/cli/test_error_registry_contract.py src/aeat/test_locale_coverage_hardened_errors.py`
 - `uv run --no-sync python -c "from aeat.application.workflow._errors import WorkflowError, WorkflowInputMismatchError; from aeat.core.errors import AeatError, CoreValidationError, get_registered_error_code; assert issubclass(WorkflowError, AeatError); assert issubclass(WorkflowInputMismatchError, CoreValidationError); assert get_registered_error_code(WorkflowError) is not None; assert get_registered_error_code(WorkflowInputMismatchError) is not None"`
 - `uv run --no-sync vaultspec-rag search "workflow errors exception hierarchy active profile manifest bucket master key registry" --type code --port 8766 --max-results 8`
