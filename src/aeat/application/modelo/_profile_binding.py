@@ -26,6 +26,7 @@ may carry ``typed_enum`` yet still be consumed as a Decimal operand.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
@@ -33,6 +34,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, model_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.logging import get_logger
 from ...core.parsing._dates import _parse_iso8601_date
 from ...core.parsing._utils import _parse_bool
@@ -75,6 +77,7 @@ class ProfileSourcedBindingResult(BaseModel):
     enum_binding_values: Mapping[str, str] = Field(default_factory=dict)
     date_binding_values: Mapping[str, date] = Field(default_factory=dict)
     bindings_sourced_from_profile: tuple[str, ...] = ()
+    profile_record_fingerprint: str | None = Field(default=None, min_length=1)
 
     @model_validator(mode="after")
     def _enforce_trace(self) -> ProfileSourcedBindingResult:
@@ -84,6 +87,19 @@ class ProfileSourcedBindingResult(BaseModel):
                 "profile-sourced binding trace does not match the resolved binding keys"
             )
         return self
+
+
+def _profile_record_fingerprint(profile_record: object | None) -> str | None:
+    """Return a stable provenance fingerprint for the loaded profile record."""
+    if profile_record is None:
+        return None
+    payload = (
+        profile_record.model_dump_json()
+        if hasattr(profile_record, "model_dump_json")
+        else repr(profile_record)
+    )
+    digest = hashlib.sha256(payload.encode(UTF_8_ENCODING)).hexdigest()
+    return f"sha256:{digest}"
 
 
 def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict[str, UserProfileFactValue]:
@@ -327,6 +343,7 @@ def resolve_profile_sourced_bindings(
             record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
         except ProfileNotFoundError:
             return ProfileSourcedBindingResult()
+    profile_record_fingerprint = _profile_record_fingerprint(record)
 
     resolved_schema = schema if schema is not None else load_user_profile_schema()
     fact_index = _profile_fact_index(record, resolved_schema)
@@ -396,6 +413,7 @@ def resolve_profile_sourced_bindings(
         enum_binding_values=enum_values,
         date_binding_values=date_values,
         bindings_sourced_from_profile=sourced,
+        profile_record_fingerprint=profile_record_fingerprint if sourced else None,
     )
 
 

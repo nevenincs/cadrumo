@@ -7,9 +7,7 @@ authority at resolution time.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Iterable
-from typing import Any
 
 from ...domain.calculations.registry import RegistrySnapshot
 from ._source_mesh import (
@@ -73,7 +71,6 @@ class ProfileSourceResolver:
             profile_record=self._profile_record,
             caller_binding_ids=self._caller_binding_ids,
         )
-        fingerprint = _profile_fingerprint(self._profile_record)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -84,25 +81,11 @@ class ProfileSourceResolver:
                 CalculationSourceProvenance(
                     source_kind="profile",
                     source_ref=f"profile:{context.bucket_id}:binding:{binding_id}",
-                    fingerprint=fingerprint,
+                    fingerprint=result.profile_record_fingerprint,
                 )
                 for binding_id in result.bindings_sourced_from_profile
             ),
         )
-
-
-# ANY-RETURN-RATIONALE-SOURCE-PROFILE-FINGERPRINT:
-# Concrete type is a pydantic model registered at runtime via the aggregation
-# source registry; helper duck-types via hasattr(model_dump_json) to avoid
-# cross-domain import.
-# ANY-RETURN-RATIONALE-SOURCE-PROFILE-FINGERPRINT: profile_record is a duck-typed
-# aggregation-source pydantic model resolved at runtime via hasattr(model_dump_json);
-# the concrete type lives across a domain boundary that cannot be imported here.
-def _profile_fingerprint(profile_record: Any) -> str | None:
-    if profile_record is None:
-        return None
-    payload = profile_record.model_dump_json() if hasattr(profile_record, "model_dump_json") else repr(profile_record)
-    return f"sha256:{hashlib.sha256(payload.encode('utf-8')).hexdigest()}"
 
 
 __all__ = ["ProfileSourceResolver"]
