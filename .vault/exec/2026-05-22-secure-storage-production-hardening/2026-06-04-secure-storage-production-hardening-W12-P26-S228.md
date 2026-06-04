@@ -38,9 +38,9 @@ reviewed refusal boundaries now follow the locale-backed error convention.
 
 Validation passed:
 
-- `uv run --no-sync -q ruff check src/aeat/application/live/_expedientes.py src/aeat/application/live/test_expedientes.py`
-- `uv run --no-sync -q pytest -q src/aeat/application/live/test_expedientes.py`
-- `uv run --no-sync -q pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "expedientes or s85_runtime"`
+- `uv run --no-sync ruff check src/aeat/application/live/_expedientes.py src/aeat/application/live/test_expedientes.py`
+- `uv run --no-sync pytest -q src/aeat/application/live/test_expedientes.py`
+- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "expedientes or s85_runtime"`
 - `uv run --no-sync python -m aeat.locales audit`
 
 ## Notes

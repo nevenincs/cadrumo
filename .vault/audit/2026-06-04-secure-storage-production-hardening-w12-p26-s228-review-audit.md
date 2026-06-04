@@ -33,9 +33,9 @@ The locale leaves were scaffolded and set with `python -m aeat.locales`.
 
 ## S228-004 | PASS | Validation
 
-- `uv run --no-sync -q ruff check src/aeat/application/live/_expedientes.py src/aeat/application/live/test_expedientes.py` passed.
-- `uv run --no-sync -q pytest -q src/aeat/application/live/test_expedientes.py` passed with 14 tests.
-- `uv run --no-sync -q pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "expedientes or s85_runtime"` passed with 1 selected runtime-migration test.
+- `uv run --no-sync ruff check src/aeat/application/live/_expedientes.py src/aeat/application/live/test_expedientes.py` passed.
+- `uv run --no-sync pytest -q src/aeat/application/live/test_expedientes.py` passed with 14 tests.
+- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "expedientes or s85_runtime"` passed with 1 selected runtime-migration test.
 - `uv run --no-sync python -m aeat.locales audit` passed.
 
 Reviewer note: locale catalogue updates were performed through
