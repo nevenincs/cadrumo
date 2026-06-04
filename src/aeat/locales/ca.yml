@@ -614,10 +614,8 @@ application:
         invalid_kind: 'El tipus de factura no esta admes: %{kind}.'
     linking:
       errors:
-        linked_invoice_not_found: No s ha trobat la factura %{invoice_id} despres
-          d aplicar l enllac.
-        transaction_not_found: No s ha trobat la transaccio %{transaction_id} al cataleg
-          de transaccions.
+        linked_invoice_not_found: 'No s ha trobat la factura %{invoice_id} despres d aplicar l enllac.'
+        transaction_not_found: 'No s ha trobat la transaccio %{transaction_id} al cataleg de transaccions.'
   ledger:
     errors:
       evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix
