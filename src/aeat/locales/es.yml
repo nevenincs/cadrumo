@@ -1814,8 +1814,7 @@ cli:
           importe=10000''. Ejemplo M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
           clave_operacion=E importe=50000''.'
         row_kv_format_error: El campo --row {token} debe tener el formato CLAVE=VALOR.
-        row_m184_share_sum_error: 'Modelo 184, filas de miembro: los porcentajes de participacion deben sumar exactamente 100%; se obtuvo %{total} en %{count} filas'
-        row_m347_threshold_error: 'Modelo 347, fila de contraparte (NIF=%{nif}): el importe total %{total} no supera el umbral de %{threshold} EUR exigido por el RD 1065/2007 art. 31.1'        row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincide con
+        row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincide con
           el formato NIF-IVA esperado para el país {pais} (Directiva 2006/112/CE Anexo
           XI)'
         row_unknown_type: 'Tipo de fila --row {row_type!r} no reconocido; tipos soportados:
@@ -5013,4 +5012,3 @@ wizard:
     section:
       title: Sección de prueba
     title: Test
-
