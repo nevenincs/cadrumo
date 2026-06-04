@@ -29,16 +29,6 @@ related:
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 <!-- RETIRED: S422, S423 -->
 
 # `secure-storage-production-hardening` `refactor` plan
@@ -397,7 +387,7 @@ Current register count: `293` production candidate files.
 | `AFR-106` | `src/aeat/application/filing/_history_repository.py` | `secure-object, secure-bound, manifest-bucket` | `runtime-default` | `W12.P21.S85` | closed |
 | `AFR-107` | `src/aeat/application/filing/_review.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S85` | closed |
 | `AFR-108` | `src/aeat/application/filing/_runtime_repository.py` | `secure-object, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S85` | closed |
-| `AFR-109` | `src/aeat/application/filing/_testing_registry.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-109` | `src/aeat/application/filing/_testing_registry.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-110` | `src/aeat/application/filing/runtime.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-111` | `src/aeat/application/inventory/_service.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-112` | `src/aeat/application/invoices/_importing.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
@@ -750,7 +740,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S208` - Close `AFR-106` for `src/aeat/application/filing/_history_repository.py` with signals `secure-object, secure-bound, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/filing/_history_repository.py`.
 - [x] `W12.P26.S209` - Close `AFR-107` for `src/aeat/application/filing/_review.py` with signals `secure-object, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/filing/_review.py`.
 - [x] `W12.P26.S210` - Close `AFR-108` for `src/aeat/application/filing/_runtime_repository.py` with signals `secure-object, active-profile, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/filing/_runtime_repository.py`.
-- [ ] `W12.P26.S211` - Close `AFR-109` for `src/aeat/application/filing/_testing_registry.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/filing/_testing_registry.py`.
+- [x] `W12.P26.S211` - Close `AFR-109` for `src/aeat/application/filing/_testing_registry.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/filing/_testing_registry.py`.
 - [ ] `W12.P26.S212` - Close `AFR-110` for `src/aeat/application/filing/runtime.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/filing/runtime.py`.
 - [ ] `W12.P26.S213` - Close `AFR-111` for `src/aeat/application/inventory/_service.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/inventory/_service.py`.
 - [ ] `W12.P26.S214` - Close `AFR-112` for `src/aeat/application/invoices/_importing.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/invoices/_importing.py`.

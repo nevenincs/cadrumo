@@ -274,3 +274,16 @@ runtime matrix remains the scoped consumer gate for the filing-history path
 using this helper.
 
 Closure assessment: `W12.P26.S210` can close as `runtime-default`.
+
+## S211-035 | PASS | Filing testing registry helper closeout verified
+
+The `W12.P26.S211` review found no storage-routing defect in the
+registry-backed filing test helper.
+
+The helper resolves bundled registry snapshot metadata through the runtime
+schema provider and uses an explicit empty `TransactionCatalogue` when it calls
+`approve_draft()`. It does not construct storage repositories, route SQL, read
+or write files, inspect active sessions, or read settings/environment state
+directly.
+
+Closure assessment: `W12.P26.S211` can close as `manifest-discovery`.
