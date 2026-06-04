@@ -386,6 +386,10 @@ aggregation:
         duplicado en la malla de fuentes.'
       duplicate_relation_owner: 'Error interno: propietario de relacion duplicado
         en la malla de fuentes.'
+      owned_sources_blank: 'Las fuentes propiedad del mallado de fuentes no pueden contener tipos de fuente en blanco.'
+      owned_sources_duplicate: 'Las fuentes propiedad del mallado de fuentes deben ser únicas.'
+      source_transaction_ids_blank: 'Los identificadores de transacción del mallado de fuentes no pueden contener blancos.'
+      source_transaction_ids_duplicate: 'Los identificadores de transacción del mallado de fuentes deben ser únicos.'
 application:
   auth:
     acquisition_lock:

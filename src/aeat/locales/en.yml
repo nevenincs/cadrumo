@@ -347,6 +347,10 @@ aggregation:
         in source mesh.'
       duplicate_relation_owner: 'Internal error: duplicate relation owner in source
         mesh.'
+      owned_sources_blank: 'Source mesh owned sources must not contain blank source kinds.'
+      source_transaction_ids_blank: 'Source mesh transaction ids must not contain blanks.'
+      owned_sources_duplicate: 'Source mesh owned sources must be unique.'
+      source_transaction_ids_duplicate: 'Source mesh transaction ids must be unique.'
 application:
   auth:
     acquisition_lock:
