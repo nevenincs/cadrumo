@@ -884,13 +884,19 @@ application:
             amelyek nincsenek a nyilvántartási pillanatképben.
       records:
         errors:
-          address_mismatch: 'A táblázatcella címe nem egyezik a sorával és oszlopával.'
-          duplicate_write_address: 'Az exportterv egynél több hasznos terhet ír ugyanabba a cellába.'
-          frozen_view_empty: 'A rögzített nézetnek legalább egy sort vagy oszlopot rögzítenie kell.'
-          invalid_column_index: 'A táblázatrekord oszlopindexének egytől kell indulnia és pozitívnak kell lennie.'
-          invalid_column_letters: 'A táblázatrekord oszlopbetűi érvénytelenek.'
-          range_malformed: 'A táblázattartomány határai érvénytelenek.'
-          tariff_shape_invalid: 'A tarifa táblázat alakja érvénytelen.'
+          address_mismatch: A táblázatcella címe nem egyezik a sorával és oszlopával.
+          duplicate_write_address: Az exportterv egynél több hasznos terhet ír ugyanabba
+            a cellába.
+          frozen_view_empty: A rögzített nézetnek legalább egy sort vagy oszlopot
+            rögzítenie kell.
+          invalid_column_index: A táblázatrekord oszlopindexének egytől kell indulnia
+            és pozitívnak kell lennie.
+          invalid_column_letters: A táblázatrekord oszlopbetűi érvénytelenek.
+          range_malformed: A táblázattartomány határai érvénytelenek.
+          tariff_shape_invalid: A tarifa táblázat alakja érvénytelen.
+      translator:
+        errors:
+          translation_failed: 'A nyilvántartási képlet nem fordítható táblázatképletté.'
   user_profile:
     errors:
       duplicate_tax_id: A(z) "%{tax_id}" adóazonosítót már a(z) "%{profile}" profil

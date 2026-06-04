@@ -34,8 +34,17 @@ class TranslationError(AeatError):
     """A registry expression has no closed-form Sheets equivalent."""
 
     def __init__(self, message: str, *, op: str | None = None, hint: str | None = None) -> None:
-        super().__init__(message)
-        self.op = op
+        context: dict[str, object] = {"reason": "formula_translation_failed"}
+        if op is not None and op in _SUPPORTED_OPS:
+            context["op"] = op
+        elif op is not None:
+            context["unsupported_op"] = True
+        super().__init__(
+            "formula expression cannot be translated to a spreadsheet formula",
+            context=context,
+            translated_message="application.storage.calc_sheets.translator.errors.translation_failed",
+        )
+        self.op = op if op is not None and op in _SUPPORTED_OPS else None
         self.hint = hint
 
 

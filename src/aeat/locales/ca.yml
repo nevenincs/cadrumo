@@ -935,13 +935,22 @@ application:
             que no són a la instantània del registre.
       records:
         errors:
-          address_mismatch: 'La direcció de cel·la del full de càlcul no coincideix amb la seva fila i columna.'
-          duplicate_write_address: 'El pla exportador del full de càlcul escriu més d''una càrrega a la mateixa cel·la.'
-          frozen_view_empty: 'La vista immobilitzada ha de fixar almenys una fila o una columna.'
-          invalid_column_index: 'L''índex de columna del registre del full de càlcul ha de començar en u i ser positiu.'
-          invalid_column_letters: 'Les lletres de columna del registre del full de càlcul no són vàlides.'
-          range_malformed: 'Els límits de l''interval del full de càlcul no són vàlids.'
-          tariff_shape_invalid: 'La forma de la taula de tarifes del full de càlcul no és vàlida.'
+          address_mismatch: La direcció de cel·la del full de càlcul no coincideix
+            amb la seva fila i columna.
+          duplicate_write_address: El pla exportador del full de càlcul escriu més
+            d'una càrrega a la mateixa cel·la.
+          frozen_view_empty: La vista immobilitzada ha de fixar almenys una fila o
+            una columna.
+          invalid_column_index: L'índex de columna del registre del full de càlcul
+            ha de començar en u i ser positiu.
+          invalid_column_letters: Les lletres de columna del registre del full de
+            càlcul no són vàlides.
+          range_malformed: Els límits de l'interval del full de càlcul no són vàlids.
+          tariff_shape_invalid: La forma de la taula de tarifes del full de càlcul
+            no és vàlida.
+      translator:
+        errors:
+          translation_failed: 'La fórmula del registre no es pot traduir a una fórmula de full de càlcul.'
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
