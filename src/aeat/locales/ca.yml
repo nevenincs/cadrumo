@@ -636,10 +636,17 @@ application:
           amb diverses instantànies.
     notifications:
       errors:
-        bucket_id_blank: 'L''identificador del bucket de notificacions no pot estar buit.'
-        snapshot_id_blank: 'L''identificador de la instantània de notificacions no pot estar buit.'
-        snapshot_not_found: 'Cap instantània de notificacions no coincideix amb l''identificador sol·licitat.'
-        snapshot_prefix_ambiguous: 'El prefix de la instantània de notificacions coincideix amb diverses instantànies.'
+        bucket_id_blank: L'identificador del bucket de notificacions no pot estar
+          buit.
+        snapshot_id_blank: L'identificador de la instantània de notificacions no pot
+          estar buit.
+        snapshot_not_found: Cap instantània de notificacions no coincideix amb l'identificador
+          sol·licitat.
+        snapshot_prefix_ambiguous: El prefix de la instantània de notificacions coincideix
+          amb diverses instantànies.
+    snapshot_base:
+      errors:
+        snapshot_bucket_mismatch: 'El bucket de la carrega de la instantania no coincideix amb el bucket del repositori.'
   modelo:
     borrador_binding:
       errors:
