@@ -18,6 +18,7 @@ from ....core.i18n import Translatable as tr
 from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._errors import PortalValidationError
+from .._hosts import portal_host_origin
 from .._metadata import PortalMetadata
 
 _URL_ADAPTER: TypeAdapter[HttpUrl] = TypeAdapter(HttpUrl)
@@ -30,22 +31,16 @@ def _to_httpurl(value: str) -> HttpUrl:
 
 def _resolve_host(subdomain: PortalHost) -> str:
     """Return the absolute origin (``https://host``) for a portal subdomain."""
-    domains = Settings.external_constants().aeat.domains
-    if subdomain is PortalHost.SEDE:
-        return domains.sede
-    if subdomain is PortalHost.WWW1:
-        return domains.www1
-    if subdomain is PortalHost.WWW2:
-        return domains.www2
-    if subdomain is PortalHost.WWW3:
-        return domains.www3
-    if subdomain is PortalHost.AGENCIATRIBUTARIA_GOB:
-        return domains.aeat_gob
-    if subdomain is PortalHost.AGENCIATRIBUTARIA_ES:
-        return domains.legacy_www
-    if subdomain is PortalHost.CLAVE_GOB:
-        return domains.clave
-    raise PortalValidationError(f"unsupported AEAT portal subdomain {subdomain!r}")
+    return portal_host_origin(subdomain)
+
+
+def portal_path(portal: Portal) -> str:
+    """Return the centralized relative path for a portal catalogue entry."""
+    paths = Settings.external_constants().aeat.portal_paths.paths
+    try:
+        return paths[portal.value]
+    except KeyError as exc:
+        raise PortalValidationError(f"portal path registry lacks {portal.value!r}") from exc
 
 
 def build_entry(
@@ -115,4 +110,4 @@ def build_entry(
     )
 
 
-__all__ = ("build_entry",)
+__all__ = ("build_entry", "portal_path")

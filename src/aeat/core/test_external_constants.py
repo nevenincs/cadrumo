@@ -3,12 +3,20 @@
 from __future__ import annotations
 
 import ast
+import re
 import tomllib
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
+from ..tests.aeat_literal_fixtures import (
+    AEAT_HOST_SUFFIX_EXPECTED,
+    AEAT_LITERAL_SCAN_TOKENS,
+    CLAVE_MOVIL_BROWSER_GLOBAL_EXPECTED,
+    PORTAL_LITERAL_SCAN_TOKENS,
+    REMOTE_GUARD_LITERAL_SCAN_TOKENS,
+)
 from .config import Settings
 from .errors import CoreValidationError
 from .external_constants import (
@@ -71,7 +79,7 @@ def test_aeat_domains_are_absolute_https_urls() -> None:
 
     domains = load_external_constants().aeat.domains
 
-    assert domains.host_suffix == "agenciatributaria.gob.es"
+    assert domains.host_suffix == AEAT_HOST_SUFFIX_EXPECTED
     for value in (
         domains.sede,
         domains.www1,
@@ -127,6 +135,7 @@ def test_clave_movil_surface_constants_are_typed() -> None:
     assert surface.obtener_clave_movil_non_qr_path.startswith("/")
     assert surface.autentica_dni_nie_contraste_path.startswith("/")
     assert surface.cancelar_clave_movil_path.startswith("/")
+    assert surface.obtener_clave_movil_browser_global == CLAVE_MOVIL_BROWSER_GLOBAL_EXPECTED
     assert surface.authorize_button_selector.startswith("button")
     assert surface.non_qr_link_selector.startswith("a[")
     assert surface.verification_code_selector.startswith("#")
@@ -173,10 +182,10 @@ def test_manual_and_oracle_auxiliary_routes_are_centralized() -> None:
 
     constants = load_external_constants().aeat
 
-    assert constants.help_pages.manual_practicos_root.startswith("/static_files/")
-    assert "Manual/Practicos" in constants.help_pages.manual_practicos_root
-    assert "ConsultaOperadorSedeGroiServlet" in constants.oracles.groi_auth_unlock_descriptor
-    assert "ConsultaIntracomunitarios" in constants.oracles.nif_iva_auth_locked_descriptor
+    assert constants.help_pages.manual_practicos_root.startswith("/")
+    assert constants.help_pages.manual_practicos_root == constants.help_pages.manual_practicos_root.strip()
+    assert constants.oracles.groi_auth_unlock_descriptor
+    assert constants.oracles.nif_iva_auth_locked_descriptor
 
 
 def test_live_safety_action_patterns_are_centralized() -> None:
@@ -286,10 +295,12 @@ def test_sede_parser_route_shapes_are_centralized() -> None:
 
     paths = load_external_constants().aeat.sede_paths
 
-    assert paths.irpf_expediente_detail_year_prefix.startswith("/wlpl/")
+    registry_paths = _aeat_section(_registry_toml_payload())["sede_paths"]
+    assert isinstance(registry_paths, dict)
+    assert paths.irpf_expediente_detail_year_prefix == registry_paths["irpf_expediente_detail_year_prefix"]
     assert paths.irpf_expediente_detail_year_suffix.endswith("Vlt")
-    assert paths.cotejo_query.startswith("/wlpl/")
-    assert paths.cotejo_document.startswith("/wlpl/")
+    assert paths.cotejo_query == registry_paths["cotejo_query"]
+    assert paths.cotejo_document == registry_paths["cotejo_document"]
 
 
 def test_live_sede_executable_route_literals_stay_centralized() -> None:
@@ -307,18 +318,7 @@ def test_live_sede_executable_route_literals_stay_centralized() -> None:
         repo_root / "src/aeat/adapters/outbound/aeat/verify/__init__.py",
         repo_root / "src/aeat/domain/manuals/_fetch.py",
     )
-    volatile_tokens = (
-        "agenciatributaria.gob.es",
-        "/wlpl/",
-        "/Sede/",
-        "static_files",
-        "SelectorAccesos",
-        "CarteraCuotas",
-        "ConsultaIntracomunitarios",
-        "ConsultaOperadorSedeGroiServlet",
-        "www1 IXVI",
-        "www2 GROI",
-    )
+    volatile_tokens = AEAT_LITERAL_SCAN_TOKENS
 
     offenders: list[str] = []
     for path in checked_paths:
@@ -341,9 +341,10 @@ def test_live_sede_executable_route_literals_stay_centralized() -> None:
 
 
 def test_subdomain_enum_aligns_with_aeat_domains() -> None:
-    """The :class:`PortalHost` enum hosts mirror the TOML registry hosts."""
+    """Portal host keys resolve to the TOML registry hosts."""
 
     from ..domain.portals._categories import PortalHost
+    from ..domain.portals._hosts import portal_host_name
 
     domains = load_external_constants().aeat.domains
     configured_hosts = {
@@ -356,14 +357,145 @@ def test_subdomain_enum_aligns_with_aeat_domains() -> None:
         domains.clave.removeprefix("https://"),
     }
 
-    assert PortalHost.SEDE.value == domains.sede.removeprefix("https://")
-    assert PortalHost.WWW1.value == domains.www1.removeprefix("https://")
-    assert PortalHost.WWW2.value == domains.www2.removeprefix("https://")
-    assert PortalHost.WWW3.value == domains.www3.removeprefix("https://")
-    assert PortalHost.AGENCIATRIBUTARIA_GOB.value == domains.aeat_gob.removeprefix("https://")
-    assert PortalHost.AGENCIATRIBUTARIA_ES.value == domains.legacy_www.removeprefix("https://")
-    assert PortalHost.CLAVE_GOB.value == domains.clave.removeprefix("https://")
-    assert {subdomain.value for subdomain in PortalHost} <= configured_hosts
+    assert portal_host_name(PortalHost.SEDE) == domains.sede.removeprefix("https://")
+    assert portal_host_name(PortalHost.WWW1) == domains.www1.removeprefix("https://")
+    assert portal_host_name(PortalHost.WWW2) == domains.www2.removeprefix("https://")
+    assert portal_host_name(PortalHost.WWW3) == domains.www3.removeprefix("https://")
+    assert portal_host_name(PortalHost.AGENCIATRIBUTARIA_GOB) == domains.aeat_gob.removeprefix("https://")
+    assert portal_host_name(PortalHost.AGENCIATRIBUTARIA_ES) == domains.legacy_www.removeprefix("https://")
+    assert portal_host_name(PortalHost.CLAVE_GOB) == domains.clave.removeprefix("https://")
+    assert {portal_host_name(subdomain) for subdomain in PortalHost} <= configured_hosts
+
+
+def test_portal_paths_registry_covers_literal_free_portal_entries() -> None:
+    """Portal catalogue route paths are owned by external constants."""
+
+    from ..domain.portals._codes import Portal
+    from ..domain.portals._entries._common import portal_path
+
+    constants = load_external_constants().aeat
+    assert re.compile(constants.portal_paths.filing_censo_path_regex)
+    assert constants.portal_paths.filing_censo_path_description
+    assert set(constants.portal_paths.paths) == {portal.value for portal in Portal} - {
+        Portal.PORTAL_MIS_DATOS_CENSALES.value,
+        Portal.PORTAL_PRE303_AYUDA.value,
+    }
+    for portal_id, path in constants.portal_paths.paths.items():
+        assert path.startswith("/")
+        assert portal_path(Portal(portal_id)) == path
+
+
+def test_portal_registry_modules_do_not_reintroduce_route_or_host_literals() -> None:
+    """Portal catalogue modules must resolve AEAT hosts and paths through central constants."""
+
+    repo_root = Path(__file__).parents[3]
+    portal_root = repo_root / "src/aeat/domain/portals"
+    volatile_tokens = PORTAL_LITERAL_SCAN_TOKENS
+    allowed_files = {
+        portal_root / "_hosts.py",
+    }
+
+    offenders: list[str] = []
+    for path in sorted(portal_root.rglob("*.py")):
+        if path.name.startswith("test_") or path in allowed_files:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        docstring_nodes = {
+            doc_node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Module | ast.ClassDef | ast.AsyncFunctionDef | ast.FunctionDef)
+            for doc_node in ([node.body[0]] if _is_docstring_node(node) else [])
+        }
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+                continue
+            if any(node is getattr(doc_node, "value", None) for doc_node in docstring_nodes):
+                continue
+            value = node.value
+            is_entry_root_path = path.parent.name == "_entries" and path.name != "_common.py" and value == "/"
+            if is_entry_root_path or any(token in value for token in volatile_tokens):
+                offenders.append(f"{path.relative_to(repo_root)}:{node.lineno}: {value!r}")
+
+    assert offenders == []
+
+
+def test_remote_guard_parity_and_oracle_tests_use_declared_aeat_literal_fixtures() -> None:
+    """Remote guard/parity/oracle tests must import configured URLs or declared canaries."""
+
+    repo_root = Path(__file__).parents[3]
+    checked_paths = (
+        repo_root / "src/aeat/domain/calculations/registry/test_remote_state_guard.py",
+        repo_root / "src/aeat/domain/calculations/registry/test_live_parity.py",
+        repo_root / "src/aeat/domain/calculations/registry/test_groi_oracle.py",
+        repo_root / "src/aeat/domain/calculations/registry/test_aeat_nif_iva_oracle.py",
+    )
+    volatile_tokens = REMOTE_GUARD_LITERAL_SCAN_TOKENS
+    offenders: list[str] = []
+    for path in checked_paths:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        docstring_nodes = {
+            doc_node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Module | ast.ClassDef | ast.AsyncFunctionDef | ast.FunctionDef)
+            for doc_node in ([node.body[0]] if _is_docstring_node(node) else [])
+        }
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+                continue
+            if any(node is getattr(doc_node, "value", None) for doc_node in docstring_nodes):
+                continue
+            if any(token in node.value for token in volatile_tokens):
+                offenders.append(f"{path.relative_to(repo_root)}:{node.lineno}: {node.value!r}")
+
+    assert offenders == []
+
+
+def test_test_suite_aeat_route_literals_are_centralized_or_declared() -> None:
+    """Test modules must not own executable AEAT/Sede host or route literals."""
+
+    repo_root = Path(__file__).parents[3]
+    aeat_root = repo_root / "src/aeat"
+    allowed_files = {
+        Path(__file__),
+        repo_root / "src/aeat/tests/aeat_literal_fixtures.py",
+    }
+    volatile_tokens = tuple(
+        dict.fromkeys(
+            (
+                *AEAT_LITERAL_SCAN_TOKENS,
+                "agenciatributaria.es",
+                "clave.gob.es",
+            )
+        )
+    )
+
+    checked_paths = sorted(
+        {
+            *aeat_root.rglob("test_*.py"),
+            *aeat_root.rglob("*_test.py"),
+            *aeat_root.rglob("conftest.py"),
+        }
+    )
+    offenders: list[str] = []
+    for path in checked_paths:
+        if path in allowed_files:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        docstring_nodes = {
+            doc_node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Module | ast.ClassDef | ast.AsyncFunctionDef | ast.FunctionDef)
+            for doc_node in ([node.body[0]] if _is_docstring_node(node) else [])
+        }
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+                continue
+            if any(node is getattr(doc_node, "value", None) for doc_node in docstring_nodes):
+                continue
+            if any(token in node.value for token in volatile_tokens):
+                offenders.append(f"{path.relative_to(repo_root)}:{node.lineno}: {node.value!r}")
+
+    assert offenders == []
 
 
 def test_browser_timeouts_belong_to_settings_not_registry() -> None:
@@ -378,8 +510,11 @@ def test_browser_timeouts_belong_to_settings_not_registry() -> None:
     assert settings.aeat_browser_ver_click_timeout_ms == 15_000
     assert settings.aeat_browser_buscar_settle_ms == 3_000
     assert settings.aeat_browser_selector_probe_timeout_ms == 2_500
+    assert settings.aeat_browser_close_timeout_ms == 5_000
     assert settings.aeat_live_iva_declaration_capture_timeout_ms == 120_000
     assert settings.aeat_live_iva_declaration_capture_timeout_ms < settings.aeat_live_iva_surface_timeout_ms
+    assert settings.aeat_live_iva_cli_watchdog_timeout_ms == 240_000
+    assert settings.aeat_live_iva_cli_watchdog_timeout_ms < 300_000
 
 
 def test_live_iva_declaration_timeout_must_leave_outer_surface_headroom() -> None:

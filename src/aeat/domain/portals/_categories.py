@@ -72,16 +72,18 @@ class UrlStability(StrEnum):
 class PortalHost(StrEnum):
     """AEAT-family hosts the scraper must navigate.
 
-    Values are the exact hostnames the ``PortalMetadata.url`` field
-    is validated against. ``CLAVE_GOB`` is the whole-of-government
-    identity provider; it sits adjacent to AEAT but is in scope
-    because the scraper hands off to it during Cl@ve flows.
+    Values are stable registry keys, not hostnames. The hostname
+    authority lives in :mod:`aeat.core.external_constants`, and portal
+    validation resolves these keys through that central registry.
+    ``CLAVE_GOB`` is the whole-of-government identity provider; it sits
+    adjacent to AEAT but is in scope because the scraper hands off to it
+    during Cl@ve flows.
     """
 
-    SEDE = "sede.agenciatributaria.gob.es"
-    WWW1 = "www1.agenciatributaria.gob.es"
-    WWW2 = "www2.agenciatributaria.gob.es"
-    WWW3 = "www3.agenciatributaria.gob.es"
-    AGENCIATRIBUTARIA_GOB = "agenciatributaria.gob.es"
-    AGENCIATRIBUTARIA_ES = "www.agenciatributaria.es"
-    CLAVE_GOB = "clave.gob.es"
+    SEDE = "sede"
+    WWW1 = "www1"
+    WWW2 = "www2"
+    WWW3 = "www3"
+    AGENCIATRIBUTARIA_GOB = "aeat_gob"
+    AGENCIATRIBUTARIA_ES = "legacy_www"
+    CLAVE_GOB = "clave"

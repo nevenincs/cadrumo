@@ -482,6 +482,22 @@ input parsing.
 
 Focused verification passed the corpus provenance gate and reran the scoped
 Semgrep production lane. The scan still reports 11 findings while scanning 891
-tracked files and skipping 17,240 files through `.semgrepignore`. Existing
+tracked files and skipping 17,241 files through `.semgrepignore`. Existing
 concurrent registry TOML edits under `src/aeat/_data` were not modified by this
 documentation slice.
+
+## W05-003 | INFO | Portal URL authority conformance review found no defects
+
+Status: verified.
+
+The W05.P15.S53 review found no defect in centralizing portal host and route
+authority through external constants. Portal host enum values are now stable
+registry keys, `_hosts.py` resolves those keys through configured AEAT domains,
+portal entry paths come from `aeat.portal_paths`, and `PortalMetadata` validates
+host and active filing/censo path shape against the same central registry.
+
+Focused verification passed Ruff for the touched authority surfaces, passed the
+portal suite, and passed the external-constants literal-centralization gate plus
+overview calendar CLI tests. The gate caught residual bare Sede URL literals in
+overview tests; those tests now use declared fixture helpers instead of raw
+host strings.

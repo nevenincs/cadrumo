@@ -181,7 +181,7 @@ Split security scan policy by production, tests, mirrored data, and live site au
 
 - [x] `W05.P15.S51` - Add Semgrep include and exclude policy; `.semgrepignore`.
 - [x] `W05.P15.S52` - Document mirrored official data security disposition; `src/aeat/_data`.
-- [ ] `W05.P15.S53` - Add URL authority conformance gate; `src/aeat/domain/portals`.
+- [x] `W05.P15.S53` - Add URL authority conformance gate; `src/aeat/domain/portals`.
 - [ ] `W05.P15.S54` - Add remote-state planned-operation conformance gate; `src/aeat/domain/calculations/registry/_remote_state_guard.py`.
 
 ### Phase `W05.P16` - Ruff and shim ratchets
