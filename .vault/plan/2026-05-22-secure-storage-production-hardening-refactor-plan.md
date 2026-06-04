@@ -17,28 +17,18 @@ related:
   - '[[2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-adr]]'
   - '[[2026-05-22-secure-object-integrity-attribution-plan]]'
   - '[[2026-05-22-secure-object-backlog-drain-r3-plan]]'
-  - '[[2026-05-22-secure-object-backlog-drain-r3-P03-summary]]'
   - '[[2026-05-28-centralized-output-redaction-plan]]'
   - '[[2026-06-02-centralized-output-redaction-audit]]'
   - '[[2026-05-21-fresh-cli-persona-testimonials-audit]]'
-  - '[[2026-05-21-fresh-cli-persona-findings-inventory]]'
-  - '[[2026-05-21-fresh-cli-persona-capability-gap-design]]'
+  - '[[2026-05-21-fresh-cli-persona-findings-inventory-audit]]'
+  - '[[2026-05-21-fresh-cli-persona-capability-gap-design-research]]'
   - '[[2026-05-26-active-profile-storage-runtime-discovery-audit]]'
   - '[[2026-05-26-secure-storage-settings-env-audit]]'
-  - '[[2026-05-26-secure-storage-migration-review]]'
-  - '[[2026-05-26-secure-storage-convention-regrounding-plan-expansion]]'
+  - '[[2026-05-26-secure-storage-migration-review-audit]]'
+  - '[[2026-05-26-secure-storage-convention-regrounding-audit]]'
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 <!-- RETIRED: S422, S423 -->
 
@@ -372,7 +362,7 @@ Current register count: `293` production candidate files.
 | `AFR-080` | `src/aeat/adapters/persistence/storage/runtime.py` | `secure-object, runtime, active-profile, manifest-bucket, master-key, sql-route` | `runtime-default` | `W12.P21.S86` | closed |
 | `AFR-081` | `src/aeat/adapters/persistence/storage/runtime_repository.py` | `secure-object, runtime, manifest-bucket` | `runtime-default` | `W12.P21.S86` | closed |
 | `AFR-082` | `src/aeat/adapters/persistence/storage/secret_store/_secret_store.py` | `master-key, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
-| `AFR-083` | `src/aeat/adapters/persistence/storage/sql/__init__.py` | `secure-object` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-083` | `src/aeat/adapters/persistence/storage/sql/__init__.py` | `secure-object` | `runtime-default` | `W12.P21.S86` | closed |
 | `AFR-084` | `src/aeat/adapters/persistence/storage/sql/_orm.py` | `secure-object` | `runtime-default` | `W12.P21.S86` | pending |
 | `AFR-085` | `src/aeat/adapters/persistence/storage/sql/engine.py` | `sql-route, plain-file` | `runtime-default` | `W12.P21.S86` | pending |
 | `AFR-086` | `src/aeat/adapters/persistence/storage/sql/secure_objects.py` | `secure-object, manifest-bucket, master-key, sql-route, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
@@ -725,7 +715,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S182` - Close `AFR-080` for runtime readiness, localized blank-bucket validation, runtime tests, and convention-guard enrollment; `src/aeat/adapters/persistence/storage/runtime.py`.
 - [x] `W12.P26.S183` - Close `AFR-081` for `src/aeat/adapters/persistence/storage/runtime_repository.py` with signals `secure-object, runtime, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/runtime_repository.py`.
 - [x] `W12.P26.S184` - Close `AFR-082` for `src/aeat/adapters/persistence/storage/secret_store/_secret_store.py` with signals `master-key, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/persistence/storage/secret_store/_secret_store.py`.
-- [ ] `W12.P26.S185` - Close `AFR-083` for `src/aeat/adapters/persistence/storage/sql/__init__.py` with signals `secure-object`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/sql/__init__.py`.
+- [x] `W12.P26.S185` - Close `AFR-083` for `src/aeat/adapters/persistence/storage/sql/__init__.py` with signals `secure-object`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/sql/__init__.py`.
 - [ ] `W12.P26.S186` - Close `AFR-084` for `src/aeat/adapters/persistence/storage/sql/_orm.py` with signals `secure-object`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/sql/_orm.py`.
 - [ ] `W12.P26.S187` - Close `AFR-085` for `src/aeat/adapters/persistence/storage/sql/engine.py` with signals `sql-route, plain-file`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/sql/engine.py`.
 - [ ] `W12.P26.S188` - Close `AFR-086` for `src/aeat/adapters/persistence/storage/sql/secure_objects.py` with signals `secure-object, manifest-bucket, master-key, sql-route, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
