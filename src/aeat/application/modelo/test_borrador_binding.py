@@ -17,6 +17,7 @@ from ...domain.modelos._calculation_repository import CalculationRevisionCatalog
 from ...domain.modelos._calculation_revision import derive_calculation_revision_id
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.user_profile import UserProfileFact, UserProfileRecord
+from ...tests.aeat_literal_fixtures import aeat_url, configured_path
 from ...tests.secure_sql import isolated_runtime_profile
 from ..aggregation import CalculationSourceContext
 from ..live import Borrador100Snapshot, Borrador100SnapshotRepository, SnapshotLifecycleState
@@ -39,6 +40,7 @@ _PERIOD = "0A"
 _DECIMAL_BINDING = "renta-2025-modelo-111-retenciones-periodicas"
 _ENUM_BINDING = "renta-2025-profile-tax-residence-ccaa"
 _UNMARKED_BINDING = "renta-2025-ledger-expense-0186-deductible"
+_R210_SIMULATOR_URL = aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax"))
 
 
 @pytest.fixture
@@ -82,7 +84,7 @@ def _save_snapshot(
         filing_year=_YEAR,
         period=_PERIOD,
         captured_at=datetime(2026, 4, 3, 10, 0, tzinfo=UTC),
-        source_url="https://www2.agenciatributaria.gob.es/wlpl/PRET-R210/SimuladorOpenAjax",
+        source_url=_R210_SIMULATOR_URL,
         state=state,
         binding_values=values,
         superseded_by_snapshot_id=superseded_by_snapshot_id,
