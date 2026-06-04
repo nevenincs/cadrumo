@@ -151,7 +151,7 @@ Resolve the six Deptry findings by declaring runtime imports explicitly or docum
 - [x] `W04.P12.S39` - Decide rich runtime optional or stale ownership; `pyproject.toml`.
 - [x] `W04.P12.S40` - Decide torch runtime optional or stale ownership; `pyproject.toml`.
 - [x] `W04.P12.S41` - Declare or optionalize playwright-stealth consistently; `pyproject.toml`.
-- [ ] `W04.P12.S42` - Declare or optionalize prompt-toolkit consistently; `pyproject.toml`.
+- [x] `W04.P12.S42` - Declare or optionalize prompt-toolkit consistently; `pyproject.toml`.
 
 ### Phase `W04.P13` - dead-code candidate triage
 

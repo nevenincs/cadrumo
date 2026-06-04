@@ -279,3 +279,18 @@ clean-export lock checks, and Deptry no longer reports `playwright_stealth`.
 Deptry remains red for planned residual dependency findings and unrelated scan
 noise, including an unrelated syntax warning in
 `src/aeat/application/modelo/__init__.py`; those are outside S41.
+
+## W04-005 | INFO | Prompt toolkit runtime declaration review found no defects
+
+Status: verified with scoped residual.
+
+The W04.P12.S42 review found no behavioral defect in adding a direct
+`prompt-toolkit` runtime dependency. Wizard production code imports
+`prompt_toolkit` directly for console validation and typed input/output
+construction, so relying only on `questionary`'s transitive dependency left the
+runtime declaration under-specified.
+
+Focused verification passed the wizard dependency/import and prompt round-trip
+tests, both live and clean-export lock checks, and Deptry no longer reports
+`prompt_toolkit`. The W04.P12 original dependency findings are closed; Deptry
+still reports broader transitive scan noise outside this phase.
