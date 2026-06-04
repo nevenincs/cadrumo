@@ -20,15 +20,14 @@ related:
 
 ## S186-003 | PASS | Validation exercised table metadata and secure-object behavior
 
-The import check confirmed the `secure_objects` table is present in `Base.metadata` and the SQL tests exercised engine table creation plus secure-object repository behavior against the ORM.
+The SQL constraint tests create a real SQLite schema from ORM metadata and issue raw SQL inserts that bypass pydantic model validation. The new checks reject `schema_version < 1` and malformed revision/hash metadata before those rows can become persisted secure-object state.
 
 Validation:
 
-- `$env:PYTHONPATH='src'; uv run --no-sync python -c "from aeat.adapters.persistence.storage.sql._orm import Base, SecureObjectRow; assert 'secure_objects' in Base.metadata.tables; assert SecureObjectRow.__tablename__ == 'secure_objects'; print('orm secure object table ok')"` passed.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/sql/_orm.py` passed.
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/sql/test_engine.py src/aeat/adapters/persistence/storage/sql/test_secure_objects.py` passed with 45 tests and existing SQLAlchemy datetime-adapter warnings.
+- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/sql/test_constraints.py src/aeat/adapters/persistence/storage/sql/test_secure_objects.py::test_peek_metadata_reflects_on_disk_schema_version_drift` passed with 8 tests and existing SQLAlchemy datetime-adapter warnings.
+- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/sql/_orm.py src/aeat/adapters/persistence/storage/sql/test_constraints.py` passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 
-Reviewer note: `vaultspec-code-reviewer` Locke found no issues. The reviewer confirmed `_orm.py` only defines declarative schema rows, keeps `SecureObjectRow.object_key` on `HashedLookup()`, keeps `SecureObjectRow.payload` on `EncryptedBytes()`, and has no repository, engine, session, settings, environment, file, raise, catch, print, repr, or logging surface requiring remediation.
+Reviewer note: supervisor review found no critical or high issues in the S186 slice. The constraints align the database schema with existing repository/pydantic invariants, preserve future positive schema-version drift behavior, add no exception swallowing, and add no pragma/noqa suppression.
 
 Disposition: close `AFR-084`.

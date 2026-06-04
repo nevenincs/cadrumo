@@ -18,20 +18,21 @@ Closed `AFR-084` for the SQL ORM schema module.
 - Reviewed `src/aeat/adapters/persistence/storage/sql/_orm.py` against the `runtime-default` secure-object classification.
 - Confirmed the module is schema metadata only and does not create runtime storage access.
 - Verified `SecureObjectRow` keeps hashed lookup keys and encrypted payload columns.
-- Validated ORM metadata import and the SQL engine/secure-object behavior slice.
+- Added database-level `secure_objects` checks for positive schema versions and 64-character revision/hash metadata.
+- Added real SQLite raw-insert constraint coverage in `src/aeat/adapters/persistence/storage/sql/test_constraints.py`.
+- Validated the SQL constraint slice and secure-object schema-version drift behavior.
 - Closed `AFR-084` and `W12.P26.S186`.
 
 ## Outcome
 
-`AFR-084` is closed as an evidence-only ORM schema closure. No production code changes were required for this step.
+`AFR-084` is closed as a hardened ORM schema closure. Raw SQL writers can no longer persist impossible secure-object schema versions or malformed revision/hash metadata into newly created `secure_objects` tables.
 
 Validation passed:
 
-- `$env:PYTHONPATH='src'; uv run --no-sync python -c "from aeat.adapters.persistence.storage.sql._orm import Base, SecureObjectRow; assert 'secure_objects' in Base.metadata.tables; assert SecureObjectRow.__tablename__ == 'secure_objects'; print('orm secure object table ok')"`
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/sql/_orm.py`
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/sql/test_engine.py src/aeat/adapters/persistence/storage/sql/test_secure_objects.py`
+- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/sql/test_constraints.py src/aeat/adapters/persistence/storage/sql/test_secure_objects.py::test_peek_metadata_reflects_on_disk_schema_version_drift`
+- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/sql/_orm.py src/aeat/adapters/persistence/storage/sql/test_constraints.py`
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit`
 
 ## Notes
 
-The SQL package tests emitted existing SQLAlchemy sqlite datetime-adapter deprecation warnings.
+The SQL constraint tests emitted existing SQLAlchemy sqlite datetime-adapter deprecation warnings for raw datetime parameters. No pragma/noqa suppressions were added.

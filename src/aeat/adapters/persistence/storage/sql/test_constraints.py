@@ -8,6 +8,8 @@ layer rather than at the pydantic record layer:
 - ``portals.auth_method`` rejects unknown values at the database layer.
 - ``corpus_artifacts`` enforces ``(year, modelo_id, file_path)``
   uniqueness.
+- ``secure_objects`` rejects impossible schema versions and malformed
+  revision/hash metadata at the database layer.
 - Repository ``upsert`` resolves by natural key when ``id`` is omitted.
 - Repository ``upsert`` wraps :exc:`sqlalchemy.exc.IntegrityError` as
   :exc:`aeat.adapters.persistence.storage.errors.RepositoryError`.
@@ -130,6 +132,54 @@ def test_corpus_artifact_unique_identity(tmp_path: Path) -> None:
             listed = CorpusArtifactRepository(session).list_all()
         assert len(listed) == 1
         assert listed[0].sha256 == "c" * 64
+    finally:
+        engine.dispose()
+
+
+def test_secure_object_schema_version_check_constraint(tmp_path: Path) -> None:
+    """A raw secure-object insert with schema_version < 1 is rejected."""
+    engine = _schema_engine(tmp_path, "secure-object-schema-version.db")
+    try:
+        with (
+            pytest.raises(IntegrityError, match=r"CHECK constraint failed: ck_secure_objects_schema_version_positive"),
+            session_scope(engine) as session,
+        ):
+            session.execute(
+                text(
+                    "insert into secure_objects "
+                    "(namespace, object_key, classification, schema_version, written_at, payload) "
+                    "values ('aeat.test.raw', :object_key, 'financial', 0, :written_at, :payload)"
+                ),
+                {
+                    "object_key": b"raw-key",
+                    "written_at": datetime(2026, 6, 4, tzinfo=UTC),
+                    "payload": b"ciphertext",
+                },
+            )
+    finally:
+        engine.dispose()
+
+
+def test_secure_object_revision_hash_check_constraints(tmp_path: Path) -> None:
+    """Raw secure-object revision/hash metadata must use 64-character digests."""
+    engine = _schema_engine(tmp_path, "secure-object-revision-hash.db")
+    try:
+        with (
+            pytest.raises(IntegrityError, match=r"CHECK constraint failed: ck_secure_objects_revision_id_len"),
+            session_scope(engine) as session,
+        ):
+            session.execute(
+                text(
+                    "insert into secure_objects "
+                    "(namespace, object_key, classification, schema_version, written_at, revision_id, payload) "
+                    "values ('aeat.test.raw', :object_key, 'financial', 1, :written_at, 'short', :payload)"
+                ),
+                {
+                    "object_key": b"raw-key",
+                    "written_at": datetime(2026, 6, 4, tzinfo=UTC),
+                    "payload": b"ciphertext",
+                },
+            )
     finally:
         engine.dispose()
 
