@@ -39,7 +39,8 @@ def iva_compensation_period_key(filing_year: int, period: str) -> str:
     safe_repository_id(period, context="period")
     if not 2000 <= filing_year <= 2099:
         raise IvaCompensationYearRangeError(
-            f"IVA compensation filing_year {filing_year} out of supported range [2000, 2099]"
+            translated_message="errors.refused.refused_iva_compensation_year_range",
+            context={"filing_year": filing_year, "min_year": 2000, "max_year": 2099},
         )
     return f"303:{filing_year}:{period}"
 
@@ -102,8 +103,8 @@ def seed_iva_compensation_period(
     existing = repo.load_period(filing_year, period)
     if existing is not None:
         raise IvaCompensationSeedConflictError(
-            f"IVA compensation state for {filing_year}/{period} already exists "
-            f"(status={existing.status!r}); seeding would overwrite it"
+            translated_message="application.calculations.iva_compensation.errors.seed_conflict",
+            context={"filing_year": filing_year, "period": period, "existing_status": existing.status},
         )
     when = seeded_at if seeded_at is not None else now()
     state = IvaCompensationPeriodState(
@@ -132,7 +133,10 @@ def iva_compensation_state_from_filed_observation(
 ) -> IvaCompensationPeriodState:
     """Build and return an :class:`IvaCompensationPeriodState` from a filed Modelo 303 observation."""
     if observation.modelo != "303":
-        raise IvaCompensationModeloError("IVA compensation history only accepts Modelo 303 observations")
+        raise IvaCompensationModeloError(
+            translated_message="application.calculations.iva_compensation.errors.modelo_303_only",
+            context={"modelo": observation.modelo},
+        )
     values = _decimal_casilla_values(observation)
     result = _casilla_value(values, "69", "iva.resultado")
     posterior = _casilla_value(values, "87", "iva.compensacion-pendiente-periodos-posteriores")
@@ -172,7 +176,8 @@ def _decimal_casilla_values(observation: FiledDeclaracionObservationProtocol) ->
             values[casilla.casilla_id] = Decimal(casilla.value)
         except InvalidOperation as exc:
             raise IvaCompensationDecimalParseError(
-                f"observed casilla {casilla.casilla_id!r} is not decimal-valued"
+                translated_message="errors.refused.refused_iva_compensation_decimal_parse",
+                context={"casilla_id": casilla.casilla_id},
             ) from exc
     return values
 
