@@ -9,15 +9,24 @@ related:
   - '[[2026-06-04-registry-row-width-pressure-plan]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `registry-validator-baseline-repair` `implementation` plan
 
 Repair the dirty validator-module line-count regression that blocks the
 registry reviewability gate without raising module baselines.
 
-- [ ] `S01` - Compress `_validate_relation_periods.py` docstrings without changing validator semantics; `src/aeat/domain/calculations/registry/_validate_relation_periods.py`.
+- [x] `S01` - Compress `_validate_relation_periods.py` docstrings without changing validator semantics; `src/aeat/domain/calculations/registry/_validate_relation_periods.py`.
 - [ ] `S02` - Verify registry reviewability and row-width plan gates after the validator baseline repair; `src/aeat/domain/calculations/registry`.
 - [ ] `S03` - Review and close the validator-baseline repair slice; `.vault/audit`.
-
 ## Description
 
 The row-width pressure plan is open at final verification because
