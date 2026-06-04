@@ -1480,12 +1480,6 @@ cli:
           authorized.'
         calculation_revision_id_help: Stable 64-character SHA-256 id of a calculation
           revision
-        casilla_bare_numeric_ambiguous: '--casilla {key} matches multiple casillas
-          in this revision: {candidates}. Supply the qualified PREFIX:NNNNN form to
-          disambiguate.'
-        casilla_bare_numeric_unknown: --casilla {key} does not match any casilla number
-          in this revision.{prefix_hint} Use `aeat app modelo casillas <MODELO>` to
-          list valid casilla IDs.
         casilla_help: Casilla value with CASILLA=DECIMAL syntax (repeatable). CASILLA
           accepts the casilla id, the registry number, or the BOE printed casilla
           number shown by `aeat app modelo casillas`.
@@ -4118,9 +4112,9 @@ topic:
       in some cases, the prior year.
     title: IRPF advance payment
   profile:
-    body: The local profile carries your tax id (NIF), main activity, IVA/IRPF regime,
-      and optional enrolments (SII, Verifactu, intracomunitario). Edit it with 'aeat
-      config profile edit NAME'.
+    body: The local profile carries your tax identifier (DNI/NIE/NIF/CIF), main activity,
+      IVA/IRPF regime, and optional enrolments (SII, Verifactu, intracomunitario).
+      Edit it with 'aeat config profile edit NAME'.
     title: Taxpayer profile
   providers:
     body: Supported authentication providers; each has distinct prerequisites. 'aeat
@@ -4710,8 +4704,8 @@ wizard:
       spouse_consistency_missing: 'Joint taxation: the spouse''s tax identification
         is missing. Add it to file jointly.'
       spouse_consistency_ok: 'Joint taxation: the spouse details are consistent.'
-      tax_id_present: 'Tax identification: check that the profile carries a NIF or
-        NIE.'
+      tax_id_present: 'Tax identification: check that the profile carries a DNI, NIE,
+        NIF, or CIF.'
   test:
     description: Test your configuration and connectivity
     example:

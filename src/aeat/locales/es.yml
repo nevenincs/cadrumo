@@ -1595,12 +1595,6 @@ cli:
           que el modelo esté autorizado.'
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caracteres)
           de una revisión de cálculo
-        casilla_bare_numeric_ambiguous: '--casilla {key} coincide con varias casillas
-          en esta revisión: {candidates}. Usa la forma cualificada PREFIJO:NNNNN para
-          desambiguar.'
-        casilla_bare_numeric_unknown: --casilla {key} no coincide con ningún número
-          de casilla en esta revisión.{prefix_hint} Usa `aeat app modelo casillas
-          <MODELO>` para listar los identificadores de casilla válidos.
         casilla_help: Valor de casilla con sintaxis CASILLA=DECIMAL (repetible). CASILLA
           admite el id de casilla, el número del registro o el número de casilla impreso
           en el BOE mostrados por `aeat app modelo casillas`.
@@ -4395,8 +4389,8 @@ topic:
       los datos del trimestre y, para algunos casos, los del ejercicio anterior.
     title: Pago fraccionado IRPF
   profile:
-    body: El perfil local contiene tu identificación fiscal (NIF), actividad principal,
-      régimen IVA / IRPF y enrolamientos opcionales (SII, Verifactu, intracomunitario).
+    body: El perfil local contiene tu identificador fiscal (DNI/NIE/NIF/CIF), actividad
+      principal, régimen IVA / IRPF y enrolamientos opcionales (SII, Verifactu, intracomunitario).
       Edítalo con 'aeat config profile edit NAME'.
     title: Perfil del contribuyente
   providers:
@@ -5003,7 +4997,7 @@ wizard:
         del cónyuge. Añádela para poder presentar en conjunto.'
       spouse_consistency_ok: 'Tributación conjunta: los datos del cónyuge son coherentes.'
       tax_id_present: 'Identificación fiscal: comprobación de que el perfil tiene
-        un NIF o NIE.'
+        un DNI, NIE, NIF o CIF.'
   test:
     description: Test your configuration and connectivity
     example:
