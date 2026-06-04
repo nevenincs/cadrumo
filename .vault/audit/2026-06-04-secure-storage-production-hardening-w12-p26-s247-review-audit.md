@@ -32,7 +32,7 @@ The active bucket session fallback logs debug metadata before allowing diagnosti
 
 ## S247-006 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/repair_integrity.py src/aeat/application/test_repair_integrity.py` passed.
+- `uv run --no-sync ruff check src/aeat/application/repair_integrity.py src/aeat/application/test_repair_integrity.py src/aeat/entrypoints/cli/_config/__init__.py` passed.
 - `uv run --no-sync pytest -q src/aeat/application/test_repair_integrity.py` passed with 13 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
