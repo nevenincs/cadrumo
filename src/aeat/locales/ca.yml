@@ -348,13 +348,14 @@ aggregation:
         llibre de Renda.
       bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
         bucket sol·licitat del llibre de Renda.
+      invoice_bucket_mismatch: El bucket del repositori de factures no coincideix
+        amb el bucket sol·licitat del llibre de Renda.
       modelo_mismatch: El model tributari no coincideix amb el model esperat del llibre
         de Renda.
       period_mismatch: El període no coincideix amb el període esperat del llibre
         de Renda.
       quarterly_period_required: Es requereix un període trimestral per a l'agregació
         d'ingressos del Model 130 (p.ex. 2024Q1).
-      invoice_bucket_mismatch: 'El bucket del repositori de factures no coincideix amb el bucket sol·licitat del llibre de Renda.'
   service:
     errors:
       envelope_modelo_mismatch: El model de l'embolcall no coincideix amb el model
@@ -377,17 +378,25 @@ aggregation:
         duplicat a la malla de fonts.'
       duplicate_relation_owner: 'Error intern: propietari de relacio duplicat a la
         malla de fonts.'
-      owned_sources_blank: 'Les fonts propietat de la malla de fonts no poden contenir tipus de font en blanc.'
-      owned_sources_duplicate: 'Les fonts propietat de la malla de fonts han de ser úniques.'
-      source_transaction_ids_blank: 'Els identificadors de transacció de la malla de fonts no poden contenir blancs.'
-      source_transaction_ids_duplicate: 'Els identificadors de transacció de la malla de fonts han de ser únics.'
+      owned_sources_blank: Les fonts propietat de la malla de fonts no poden contenir
+        tipus de font en blanc.
+      owned_sources_duplicate: Les fonts propietat de la malla de fonts han de ser
+        úniques.
+      source_transaction_ids_blank: Els identificadors de transacció de la malla de
+        fonts no poden contenir blancs.
+      source_transaction_ids_duplicate: Els identificadors de transacció de la malla
+        de fonts han de ser únics.
 application:
   auth:
     acquisition_lock:
       errors:
-        acquire_failed: 'No s''ha pogut adquirir el bloqueig d''autenticació AEAT després de la recuperació del bloqueig obsolet.'
-        lock_held: 'Ja hi ha una altra operació d''autenticació AEAT en curs per a aquest perfil. No iniciïs una segona petició de Cl@ve; espera que acabi el procés en curs o deixa expirar el bloqueig si aquest procés ha fallat.'
-        lock_held_suggestion: 'Executa `aeat config auth status --format json` per inspeccionar el bloqueig d''autenticació actiu.'
+        acquire_failed: No s'ha pogut adquirir el bloqueig d'autenticació AEAT després
+          de la recuperació del bloqueig obsolet.
+        lock_held: Ja hi ha una altra operació d'autenticació AEAT en curs per a aquest
+          perfil. No iniciïs una segona petició de Cl@ve; espera que acabi el procés
+          en curs o deixa expirar el bloqueig si aquest procés ha fallat.
+        lock_held_suggestion: Executa `aeat config auth status --format json` per
+          inspeccionar el bloqueig d'autenticació actiu.
     certificate:
       health:
         file_missing: El fitxer de certificat configurat (%{path}) no existeix. Recupera
@@ -538,6 +547,11 @@ application:
     errors:
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
+  calculations:
+    iva_compensation:
+      errors:
+        modelo_303_only: 'L''historial de compensació d''IVA només accepta observacions del Model 303.'
+        seed_conflict: 'Ja existeix un estat de compensació d''IVA per a aquest període; la llavor sobreescriuria l''historial emmagatzemat.'
   ledger:
     errors:
       evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix
@@ -1116,7 +1130,8 @@ cli:
         declared_on_help: Data ISO (AAAA-MM-DD) en què l'operador va presentar el
           M036 a seu.
         errors:
-          bad_declared_on: '--declared-on ha de ser una data ISO (AAAA-MM-DD); rebut {value}.'
+          bad_declared_on: --declared-on ha de ser una data ISO (AAAA-MM-DD); rebut
+            {value}.
         group_help: Registra una declaració M036 presentada a seu (alta / modificacion
           / baja). L'aplicació local mai presenta; AEAT és l'autoritat.
         justificante_help: Identificador opcional de l'acús de recepció emès per seu
@@ -3357,6 +3372,8 @@ errors:
       de secrets.
     fail_storage_secure_object_revision_conflict: L'objecte segur ha canviat per una
       altra escriptura; torna'l a carregar i reintenta-ho amb la revisió actual.
+    fail_storage_secure_object_upsert: No s'ha pogut persistir l'objecte segur. Reviseu
+      la ruta d'emmagatzematge i torneu-ho a provar.
     fail_user_profile_not_found: No s'ha trobat la secció o el camp sol·licitat del
       perfil d'usuari.
     fail_user_profile_schema_load: No s'ha pogut carregar l'esquema del perfil d'usuari.
@@ -3383,7 +3400,6 @@ errors:
       amb el resum anual.
     stale_exchange_rate: L'únic tipus de canvi disponible està fora del marge de frescor
       acceptable.
-    fail_storage_secure_object_upsert: 'No s''ha pogut persistir l''objecte segur. Reviseu la ruta d''emmagatzematge i torneu-ho a provar.'
   financial:
     source_file_is_symlink: 'El camí del fitxer origen és un enllaç simbòlic, la qual
       cosa no està permesa per a la ingesta de dades fiscals: {path}'
@@ -3476,6 +3492,16 @@ errors:
       configurat.
     integrity_storage_retention_policy: Les metadades de retenció d'un registre infringeixen
       la política de la seva classificació.
+    integrity_storage_secure_object_batch_size: La mida del lot d'iteració d'objectes
+      segurs ha de ser com a mínim 1; s'ha rebut %{batch_size}.
+    integrity_storage_secure_object_hashed_key_length: 'La clau hash de l''objecte
+      segur té una longitud no vàlida: %{length} bytes.'
+    integrity_storage_secure_object_raw_bytes: 'Les metadades de bytes sense processar
+      de l''objecte segur tenen un tipus no admès: %{value_type}.'
+    integrity_storage_secure_object_revision_ancestry_json: El camp d'ascendència
+      de revisió d'un objecte segur emmagatzemat no conté JSON vàlid.
+    integrity_storage_secure_object_revision_ancestry_shape: El camp d'ascendència
+      de revisió d'un objecte segur emmagatzemat té una forma d'identificador no vàlida.
     integrity_storage_secure_object_unreadable: Un objecte segur emmagatzemat no s'ha
       pogut desxifrar amb la clau mestra actual.
     integrity_storage_validation: Un paràmetre d'emmagatzematge no ha superat la validació.
@@ -3483,11 +3509,6 @@ errors:
       dades de referència o el motor de càlcul poden estar malmesos.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
-    integrity_storage_secure_object_raw_bytes: 'Les metadades de bytes sense processar de l''objecte segur tenen un tipus no admès: %{value_type}.'
-    integrity_storage_secure_object_revision_ancestry_json: 'El camp d''ascendència de revisió d''un objecte segur emmagatzemat no conté JSON vàlid.'
-    integrity_storage_secure_object_revision_ancestry_shape: 'El camp d''ascendència de revisió d''un objecte segur emmagatzemat té una forma d''identificador no vàlida.'
-    integrity_storage_secure_object_hashed_key_length: 'La clau hash de l''objecte segur té una longitud no vàlida: %{length} bytes.'
-    integrity_storage_secure_object_batch_size: 'La mida del lot d''iteració d''objectes segurs ha de ser com a mínim 1; s''ha rebut %{batch_size}.'
   internal:
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
@@ -3803,9 +3824,10 @@ errors:
         amb sensibilitat %{expected}, però el cridador ha usat %{classification}.
       schema_mismatch: L'espai de noms d'objecte segur %{namespace} està registrat
         amb esquema %{expected}, però el cridador ha usat l'esquema %{schema_version}.
+      unknown_classification: 'L''espai de noms d''objectes segurs %{namespace} conté
+        una sensibilitat desconeguda: %{classification}.'
       unregistered: L'espai de noms d'objecte segur %{namespace} no està registrat
         per a l'emmagatzematge runtime.
-      unknown_classification: 'L''espai de noms d''objectes segurs %{namespace} conté una sensibilitat desconeguda: %{classification}.'
     runtime:
       cold_bootstrap_active_profile_refused: L'emmagatzematge d'arrencada en fred
         només està disponible abans de seleccionar un bucket de perfil actiu.
