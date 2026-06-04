@@ -168,7 +168,7 @@ Persist the remaining and previously out-of-scope registry/schema hardening dire
 
 Turn the discovered remaining directions into an auditable sequence, separating immediate gates from future ADR/plan work.
 
-- [ ] `W08.P12.S49` - Persist the remaining registry/schema hardening execution wireframe and next-slice ordering; `.vault/audit`.
+- [x] `W08.P12.S49` - Persist the remaining registry/schema hardening execution wireframe and next-slice ordering; `.vault/audit`.
 
 ## Description
 
