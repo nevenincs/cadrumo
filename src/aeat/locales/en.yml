@@ -768,6 +768,10 @@ application:
         next_action: Designate a fiscal representative in Spain by setting profile.representante_fiscal_nif
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
+    iva_wallet:
+      seed_negative_amount: The seed amount cannot be negative.
+      seed_no_nif: No NIF defined for the seed operation; associate one with the active
+        profile before seeding.
     profile_binding:
       errors:
         date_value_type_invalid: Profile fact for date-channel binding %{binding_id}
@@ -1375,9 +1379,6 @@ cli:
           \ tool or directly with AEAT. X is the compensacion pendiente de periodos\
           \ posteriores from the last filed M303."
         seed_invalid_amount: The seed amount must be a valid, non-negative decimal.
-        seed_negative_amount: The seed amount cannot be negative.
-        seed_no_nif: No NIF defined for the seed operation; associate one with the
-          active profile.
         seed_period_help: Period of the seed amount (e.g. 2024N4).
       list:
         year_help: Filter the modelo catalogue to a single fiscal year
@@ -1692,8 +1693,11 @@ cli:
           importe=10000''. M349 example: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
           clave_operacion=E importe=50000''.'
         row_kv_format_error: --row field {token} must be in KEY=VALUE format.
-        row_m184_share_sum_error: Modelo 184 share rows must add up to 100%.
-        row_m347_threshold_error: Modelo 347 rows are below the reportable threshold.
+        row_m184_share_sum_error: 'M184 miembro rows: share percentages must sum to
+          exactly 100%; got %{total} across %{count} rows'
+        row_m347_threshold_error: 'M347 contraparte row (nif=%{nif}): total amount
+          %{total} does not exceed the EUR %{threshold} threshold required by RD 1065/2007
+          art. 31.1'
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} does not match
           the expected NIF-IVA format for country {pais} (Council Directive 2006/112/EC
           Annex XI)'
@@ -1947,7 +1951,7 @@ cli:
       submissions_dir_help: Directory to store submitted filing receipts
       success:
         next_step: 'Próximo paso: ejecuta `aeat app overview status`'
-      tax_id_help: Spanish tax identifier (NIF/NIE/CIF)
+      tax_id_help: Spanish tax identifier (DNI/NIE/NIF/CIF)
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: List every registered profile and mark the active one
@@ -3115,7 +3119,7 @@ errors:
       URL provided.
     auth_auth_certificate_load: The PKCS#12 certificate data could not be parsed.
       Check that the file is not corrupted.
-    auth_auth_certificate_nif_parse: No NIF or NIE could be extracted from the certificate
+    auth_auth_certificate_nif_parse: No DNI, NIF, or NIE could be extracted from the certificate
       subject. Check that the certificate belongs to an individual.
     auth_auth_certificate_password: The certificate password is missing or wrong.
       Set the environment variable to the correct password.
@@ -4011,7 +4015,7 @@ profile:
   keys:
     description: Profile configuration keys and their descriptions
     tax:
-      id: Tax identifier (NIF/NIE/CIF)
+      id: Tax identifier (DNI/NIE/NIF/CIF)
 review:
   adapters:
     errors:
@@ -4179,7 +4183,7 @@ wizard:
     invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
     invalid_postcode: 'Invalid postcode for %{prompt_key}: %{raw}. A Spanish postcode
       is 5 digits (province code 01-52 followed by three digits).'
-    invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}'
+    invalid_tax_id: 'Invalid DNI/NIE/NIF/CIF for %{prompt_key}: %{raw}. %{detail}'
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
@@ -4366,7 +4370,7 @@ wizard:
       surnames:
         help: Surnames or company name for export headers
       tax-id:
-        help: Tax identifier (NIF/NIE) for the active profile
+        help: Tax identifier (DNI/NIE/NIF/CIF) for the active profile
       tax-residence-ccaa:
         help: 'Tax-residence autonomous community. One of: %{choices}.'
       taxation-type:
@@ -4396,7 +4400,7 @@ wizard:
       This prepares the local profile the app uses for ledger work and tax-form checks.
       Expect %{section_total} sections. Only %{required_total} answers are required
       to start; the rest can be left blank when you do not know them yet. Have your
-      NIF/NIE/CIF, a short activity description, IVA/IRPF regime details, tax residence,
+      DNI/NIE/NIF/CIF, a short activity description, IVA/IRPF regime details, tax residence,
       and family details if they apply. After saving, check progress with `aeat config
       profile status`.'
     iva:
@@ -4502,7 +4506,7 @@ wizard:
       surnames:
         prompt: Surnames or company name for export headers
       tax-id:
-        prompt: Tax identifier (NIF/NIE) for the active profile
+        prompt: Tax identifier (DNI/NIE/NIF/CIF) for the active profile
       taxation-type:
         choices:
           individual:

@@ -783,6 +783,10 @@ application:
           beallitasaval az `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
           megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
+    iva_wallet:
+      seed_negative_amount: A vetőösszeg nem lehet negatív.
+      seed_no_nif: Nincs NIF meghatarozva a vetoosszeg-muvelethez; rendelje hozza
+        az aktiv profilhoz a vetoosszeg letrehozasa elott.
     profile_binding:
       errors:
         date_value_type_invalid: 'A(z) %{binding_id} datumcsatornas kotes profiladata
@@ -1404,9 +1408,6 @@ cli:
           pénztárca-egyenleg inicializálásához.
         seed_invalid_amount: A vetőösszegnek érvényes, nem negatív decimálisnak kell
           lennie.
-        seed_negative_amount: A vetőösszeg nem lehet negatív.
-        seed_no_nif: Nincs NIF meghatározva a vetőösszeg-művelethez; kapcsolja az
-          aktív profilhoz.
         seed_period_help: A vetőösszeg időszaka (pl. 2024N4).
       list:
         year_help: A nyomtatványkatalógus szűrése egyetlen adóévre.
@@ -1738,9 +1739,11 @@ cli:
           clave_operacion=E importe=50000''.'
         row_kv_format_error: A --row {token} mezőnek KULCS=ÉRTÉK formátumúnak kell
           lennie.
-        row_m184_share_sum_error: A Modelo 184 sorok osszesitett aranyanak 100%-nak
-          kell lennie.
-        row_m347_threshold_error: A Modelo 347 sorok nem erik el a bejelentesi kuszobot.
+        row_m184_share_sum_error: 'M184 miembro sorok: a reszesedesi szazalekok osszege
+          pontosan 100% kell legyen; kapott ertek: %{total}, sorok: %{count}'
+        row_m347_threshold_error: 'M347 contraparte sor (NIF=%{nif}): a teljes osszeg
+          %{total} nem haladja meg az RD 1065/2007 31.1 cikke szerinti %{threshold}
+          EUR kuszobot'
         row_m349_invalid_nif: '--row operador: a nif_comunitario {nif} nem felel meg
           {pais} ország elvárt NIF-IVA formátumának (2006/112/EK irányelv XI. melléklet)'
         row_unknown_type: 'Ismeretlen --row típus: {row_type!r}; támogatott típusok:
@@ -2016,7 +2019,7 @@ cli:
       submissions_dir_help: A benyújtott adóbevallás-visszaigazolások tárolási könyvtára.
       success:
         next_step: 'Következő lépés: futtassa: `aeat app overview status`'
-      tax_id_help: Spanyol adóazonosító (NIF/NIE/CIF).
+      tax_id_help: Spanyol adóazonosító (DNI/NIE/NIF/CIF).
       tax_residence_ccaa_help: Az adóilletékesség autonóm közössége.
     list:
       help: Minden regisztrált profil listázása és az aktív megjelölése.
@@ -4117,7 +4120,7 @@ profile:
   keys:
     description: Profilkonfigurációs kulcsok és leírásaik
     tax:
-      id: Adóazonosító (NIF/NIE/CIF)
+      id: Adóazonosító (DNI/NIE/NIF/CIF)
 review:
   adapters:
     errors:
@@ -4293,7 +4296,7 @@ wizard:
     invalid_integer: 'Érvénytelen egész szám a következőhöz: %{prompt_key}: %{raw}.'
     invalid_postcode: 'Érvénytelen irányítószám a következőhöz: %{prompt_key}: %{raw}.
       A spanyol irányítószám 5 jegyű (01-52 tartományKód, majd három számjegy).'
-    invalid_tax_id: 'Érvénytelen NIF/NIE/CIF a következőhöz: %{prompt_key}: %{raw}.
+    invalid_tax_id: 'Érvénytelen DNI/NIE/NIF/CIF a következőhöz: %{prompt_key}: %{raw}.
       %{detail}'
     select_unknown: 'Ismeretlen érték a következőhöz: %{prompt_key}: %{raw}. Érvényes
       lehetőségek: %{choices}.'
@@ -4499,7 +4502,7 @@ wizard:
       surnames:
         help: Vezetéknevei vagy cégneve az exportfejlécekhez
       tax-id:
-        help: Adóazonosító (NIF/NIE) az aktív profilhoz
+        help: Adóazonosító (DNI/NIE/NIF/CIF) az aktív profilhoz
       tax-residence-ccaa:
         help: 'Adóügyi illetőség szerinti autonóm közösség. Az alábbiak egyike: %{choices}.'
       taxation-type:
@@ -4529,7 +4532,7 @@ wizard:
 
       Ez előkészíti a helyi profilt, amelyet az alkalmazás a könyveléshez és az adóűrlap-ellenőrzésekhez
       használ. Várható %{section_total} szekció. Csak %{required_total} válasz kötelező
-      a kezdéshez; a többi üresen hagyható, ha még nem ismeri. Legyen kéznél a NIF/NIE/CIF
+      a kezdéshez; a többi üresen hagyható, ha még nem ismeri. Legyen kéznél a DNI/NIE/NIF/CIF
       azonosítója, egy rövid tevékenységleírás, IVA/IRPF adózási rend adatai, adóügyi
       lakóhely és családi adatok, ha relevánsak. Mentés után ellenőrizze az előrehaladást
       a következővel: .'
@@ -4637,7 +4640,7 @@ wizard:
       surnames:
         prompt: Vezetéknevei vagy cégneve az exportfejlécekhez
       tax-id:
-        prompt: Adóazonosító (NIF/NIE) a bevallásokhoz
+        prompt: Adóazonosító (DNI/NIE/NIF/CIF) a bevallásokhoz
       taxation-type:
         choices:
           individual:
