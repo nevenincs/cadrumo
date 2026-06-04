@@ -130,7 +130,7 @@ adapters:
       errors:
         no_active_profile: Nincs aktív AEAT-profil kötve a Google OAuth-hoz.
       suggestions:
-        create_profile: Futtassa az `aeat config profile create NAME --tax-id <NIF>`
+        create_profile: Futtassa az `aeat config profile create NAME --tax-id <DNI/NIE/NIF/CIF>`
           parancsot, majd próbálja újra a Google-parancsot.
   inbound:
     declaracion:
@@ -783,6 +783,10 @@ application:
           beallitasaval az `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
           megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
+    iva_wallet:
+      seed_negative_amount: A vetőösszeg nem lehet negatív.
+      seed_no_nif: Nincs NIF meghatarozva a vetoosszeg-muvelethez; rendelje hozza
+        az aktiv profilhoz a vetoosszeg letrehozasa elott.
     profile_binding:
       errors:
         date_value_type_invalid: 'A(z) %{binding_id} datumcsatornas kotes profiladata
@@ -896,19 +900,33 @@ application:
           tariff_shape_invalid: A tarifa táblázat alakja érvénytelen.
       translator:
         errors:
-          translation_failed: 'A nyilvántartási képlet nem fordítható táblázatképletté.'
+          translation_failed: A nyilvántartási képlet nem fordítható táblázatképletté.
   user_profile:
     errors:
+      aggregate_label_mismatch: 'A profiltárolás inkonzisztens: a manifest címkéje
+        nem egyezik a biztonságos rekorddal.'
+      aggregate_profile_id_mismatch: 'A profiltárolás inkonzisztens: a manifest profilazonossága
+        nem egyezik a biztonságos rekorddal.'
+      aggregate_status_mismatch: 'A profiltárolás inkonzisztens: a manifest életciklus-állapota
+        nem egyezik a biztonságos rekorddal.'
       duplicate_tax_id: A(z) "%{tax_id}" adóazonosítót már a(z) "%{profile}" profil
         használja; egy adózónak egy profilja lehet.
+      lifecycle_profile_already_exists: Már létezik profil az aktív bucketben.
+      lifecycle_profile_tombstoned_duplicate: Törölt profil nem duplikálható.
+      lifecycle_profile_tombstoned_rename: Törölt profil nem nevezhető át.
+      lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználóiprofil-sémának.
       no_active_profile_selected: Nincs kiválasztva aktív profil.
       profile_already_exists: A(z) "%{profile}" profil már létezik; aktiváláshoz futtassa
         az `aeat config profile switch NÉV` parancsot, vagy törölje az `aeat config
         profile delete NÉV` paranccsal.
+      profile_bucket_directory_removal_failed: A profil konyvtara nem tavolithato
+        el.
       profile_create_route_mismatch: A profil létrehozási útvonala ("%{route}") nem
         egyezik a profil azonosítójával ("%{profile}").
-      profile_integrity_identity_mismatch: 'A profiltárolás inkonzisztens: a fizikai tárolók profilazonossága eltér.'
-      profile_integrity_status_mismatch: 'A profiltárolás inkonzisztens: a manifest életciklus-állapota nem egyezik a biztonságos rekorddal.'
+      profile_integrity_identity_mismatch: 'A profiltárolás inkonzisztens: a fizikai
+        tárolók profilazonossága eltér.'
+      profile_integrity_status_mismatch: 'A profiltárolás inkonzisztens: a manifest
+        életciklus-állapota nem egyezik a biztonságos rekorddal.'
       profile_label_blank: A profil-felirat nem lehet üres.
       profile_manifest_already_registered: 'A(z) "%{profile}" profilhoz már regisztrált
         bucket-manifeszt van itt: %{bucket_dir}.'
@@ -918,20 +936,31 @@ application:
         futtassa az `aeat config profile create NÉV` parancsot.
       profile_tombstoned_not_selectable: A(z) "%{profile}" profil törölve van és nem
         választható ki.
+      repository_profile_record_classification_mismatch: A profilrekord besorolása
+        nem egyezik a repository szerződésével.
+      repository_profile_record_missing: Az aktív bucketben nem található profilrekord.
+      repository_profile_record_version_unsupported: A profilrekord sémaverzióját
+        ez az alkalmazás nem támogatja.
+      repository_profile_snapshot_classification_mismatch: A profil-pillanatkép besorolása
+        nem egyezik a repository szerződésével.
+      repository_profile_snapshot_missing: Az aktív bucketben nem található profil-pillanatkép.
+      repository_profile_snapshot_version_unsupported: A profil-pillanatkép sémaverzióját
+        ez az alkalmazás nem támogatja.
       unsupported_bundle_schema_version: A csomag sémaverziója nem támogatott ebben
         az alkalmazásverzióban.
-      aggregate_profile_id_mismatch: 'A profiltárolás inkonzisztens: a manifest profilazonossága nem egyezik a biztonságos rekorddal.'
-      aggregate_label_mismatch: 'A profiltárolás inkonzisztens: a manifest címkéje nem egyezik a biztonságos rekorddal.'
-      aggregate_status_mismatch: 'A profiltárolás inkonzisztens: a manifest életciklus-állapota nem egyezik a biztonságos rekorddal.'
-      lifecycle_profile_already_exists: 'Már létezik profil az aktív bucketben.'
-      lifecycle_profile_tombstoned_rename: 'Törölt profil nem nevezhető át.'
-      lifecycle_profile_tombstoned_duplicate: 'Törölt profil nem duplikálható.'
-      lifecycle_schema_validation_failed: 'A profiladatok nem felelnek meg a felhasználóiprofil-sémának.'
-      profile_bucket_directory_removal_failed: 'A profil konyvtara nem tavolithato el.'
+  verification:
+    errors:
+      missing_binding_values: A registry-ellenőrzéshez külső kötési értékek szükségesek.
+      period_mapping_failed: A bevallási időszak nem képezhető le registry-időszakra.
+      registry_policy_invalid: A registry ellenőrzési házirendje nem tölthető be.
+      registry_snapshot_invalid: A bevallás ellenőrzéséhez szükséges registry-pillanatkép
+        nem tölthető be.
   wizard:
     errors:
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
         requires supplied_question_ids — edit is a patch, not a full rewrite.
+      persist_patch_unknown_question_id: A varázsló javítása ismeretlen kérdésazonosítóra
+        hivatkozik.
       profile_flag_required: A varázslóhoz --profile NÉV szükséges (nincs implicit
         "default" tartalék).
       quiet_missing_flags: 'Ennek a --quiet futtatásnak hiányoznak a kötelező adatok.
@@ -1138,6 +1167,9 @@ cli:
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
         view_help: Expediente pillanatkép megjelenítése.
       filed:
+        capture_all_help: Az összes benyújtott bevallási adat rögzítése az AEAT-ból.
+          Csak olvasás; nem nyújt be bevallást.
+        capture_all_modelo_help: A capture-all korlátozása erre a nyomtatványra.
         capture_help: Benyújtott bevallási adatok rögzítése az AEAT-ból.
         capture_sources_help: Egy célbenyújtáshoz szükséges benyújtott megfigyelések
           rögzítése.
@@ -1323,8 +1355,6 @@ cli:
         actor_help: A MODELO_EXPORTED eseményen rögzített üzemeltetői felirat.
         errors:
           output_required: Adja meg a --output PATH erteket a fichero-BOE artefaktumhoz.
-          revision_not_exportable: A kivalasztott {revision_id} revizio allapota {state};
-            az exporthoz teljesen ellenorzott vagy beadott revizio kell.
         help: Hitelesített-teljes vagy benyújtott nyomtatvány-revízió exportálása
           helyi AEAT-kompatibilis fichero-BOE fájlba. Csak helyi; soha nem lép kapcsolatba
           az AEAT-tal.
@@ -1378,9 +1408,6 @@ cli:
           pénztárca-egyenleg inicializálásához.
         seed_invalid_amount: A vetőösszegnek érvényes, nem negatív decimálisnak kell
           lennie.
-        seed_negative_amount: A vetőösszeg nem lehet negatív.
-        seed_no_nif: Nincs NIF meghatározva a vetőösszeg-művelethez; kapcsolja az
-          aktív profilhoz.
         seed_period_help: A vetőösszeg időszaka (pl. 2024N4).
       list:
         year_help: A nyomtatványkatalógus szűrése egyetlen adóévre.
@@ -1486,12 +1513,6 @@ cli:
           nem lesz.'
         calculation_revision_id_help: Stabil 64 karakteres SHA-256 azonosító egy számítási
           revízióhoz.
-        casilla_bare_numeric_ambiguous: 'A --casilla {key} több casillára illeszkedik
-          ebben a revízióban: {candidates}. Az egyértelműsítéshez használd a ELŐTAG:NNNNN
-          minősített formát.'
-        casilla_bare_numeric_unknown: A --casilla {key} nem illeszkedik egyetlen casilla-számra
-          sem ebben a revízióban.{prefix_hint} Az érvényes casilla-azonosítók listájához
-          használd az `aeat app modelo casillas <MODELO>` parancsot.
         casilla_help: Mezőérték CASILLA=DECIMAL szintaxissal (ismételhető). A CASILLA
           elfogadja a mező azonosítóját, a nyilvántartási számot vagy az `aeat app
           modelo casillas` által megjelenített BOE-n nyomtatott mezőszámot.
@@ -1528,55 +1549,37 @@ cli:
         create_reused_renamed: 'Meglévő munkaegység visszaadva (idempotens nyomtatvány/év/időszak/revízió
           kombinációra); nem jött létre semmi új. A megadott --name alkalmazva lett
           átnevezésként: %{name}.'
-        create_stub_modelo_151_refused: 'A(z) %{modelo} nyomtatvány (különleges külföldi
-          lakóhelyű adózói rendszer, „Beckham-törvény") nem támogatott munkaterv-egység
-          létrehozásához ebben a CLI-ban. Jogalap: 35/2006. sz. törvény 93. cikk LIRPF,
-          439/2007. sz. királyi rendelet 113. cikk, EHA/2887/2008. rendelet. Nyújtsd
-          be a bevallást a sede.agenciatributaria.gob.es oldalon.'
-        create_stub_modelo_210_refused: 'A(z) %{modelo} nyomtatvány (IRNR — nem rezidensek
-          jövedelemadója) nem támogatott munkaterv-egység létrehozásához ebben a CLI-ban.
-          Jogalap: 5/2004. sz. törvényerejű rendelet (TRLIRNR), TRLIRNR 28. cikk (negyedéves
-          határidők: 1N/2N/3N/4N). Általános adókulcs: 19 % EU/EGT-rezidensek, 24
-          % egyéb. Nyújtsd be a bevallást a sede.agenciatributaria.gob.es/Sede/procedimientoini/G320.shtml
-          oldalon.'
-        create_stub_modelo_600_refused: A(z) %{modelo} nyomtatvány (ITP-AJD — vagyonátruházási
-          illeték és okiratbélyeg) nem támogatott munkaterv-egység létrehozásához
-          ebben a CLI-ban. Ez az adó a spanyol autonóm közösségekre átruházott (28/1990.
-          sz. törvény, ITPyAJD). Az önadózást az átruházott vagyontárgy helye szerinti
-          autonóm közösség adóhatóságánál kell benyújtani.
-        create_stub_modelo_620_refused: A(z) %{modelo} nyomtatvány (ITP-AJD — használt
-          járművek átruházása) nem támogatott munkaterv-egység létrehozásához ebben
-          a CLI-ban. Ez az adó a spanyol autonóm közösségekre átruházott (28/1990.
-          sz. törvény, ITPyAJD). Az önadózást az átruházott vagyontárgy helye szerinti
-          autonóm közösség adóhatóságánál kell benyújtani.
-        create_stub_modelo_650_refused: 'A(z) %{modelo} nyomtatvány (ISD — örökösödési
-          illeték, öröklés útján szerzett vagyontárgyak bevallása) nem támogatott
-          munkaterv-egység létrehozásához ebben a CLI-ban. Jogalap: 29/1987. sz. törvény
-          (LISyD). Határidő: 6 hónap az elhunyt halálától, további 6 hónappal meghosszabbítható
-          (RISD 67. cikk). A bevallást annál az autonóm közösségnél kell benyújtani,
-          ahol az elhunytnak szokásos lakóhelye volt (22/2009. sz. törvény, 32. cikk).
-          Fordulj az illetékes regionális adóhatósághoz.'
-        create_stub_modelo_660_refused: 'A(z) %{modelo} nyomtatvány (ISD — hagyatéki
-          leltár tájékoztató bevallása, a 650-es nyomtatvánnyal együtt nyújtandó be)
-          nem támogatott munkaterv-egység létrehozásához ebben a CLI-ban. Jogalap:
-          29/1987. sz. törvény (LISyD), határidő 6 hónap (RISD 67. cikk). A bevallást
-          annál az autonóm közösségnél kell benyújtani, ahol az elhunytnak szokásos
-          lakóhelye volt (22/2009. sz. törvény, 32. cikk). Fordulj az illetékes regionális
-          adóhatósághoz.'
-        create_stub_modelo_714_refused: 'A(z) %{modelo} nyomtatvány (vagyonadó) nem
-          támogatott munkaterv-egység létrehozásához ebben a CLI-ban. Jogalap: 19/1991.
-          sz. törvény 28. cikk, HAC/1023/2021. rendelet. Nyújtsd be a bevallást a
-          sede.agenciatributaria.gob.es oldalon.'
+        create_stub_modelo_151_refused: 'A(z) %{modelo} nyomtatvany (kulonleges kulfoldi
+          munkavallaloi rendszer, Beckham-torveny) munkafeladat-letrehozasa ebben
+          a CLI-ben nem tamogatott. Jogi alap: Ley 35/2006 93. cikk LIRPF, RD 439/2007
+          113. cikk, Orden EHA/2887/2008. A bevallast az AEAT Sede feluleten kell
+          benyujtani.'
+        create_stub_modelo_210_refused: 'A(z) %{modelo} nyomtatvány (IRNR, nem rezidensek
+          jövedelemadója) munkafeladat-létrehozása ebben a CLI-ben nem támogatott.
+          Jogi alap: RD Legislativo 5/2004 TRLIRNR és Art. 28 TRLIRNR. A bevallást
+          az AEAT Sede G320 eljárásán keresztül kell benyújtani: sede.agenciatributaria.gob.es.'
+        create_stub_modelo_600_refused: A(z) %{modelo} nyomtatvany (ITP-AJD, vagyonatruhazasi
+          ado es okirati illetek) munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott.
+          Ezt az adot az autonom kozossegek kezelik; az onadozast az illetekes regionalis
+          adohatosagnal kell benyujtani.
+        create_stub_modelo_620_refused: A(z) %{modelo} nyomtatvany (ITP-AJD, hasznalt
+          jarmuvek atadasa) munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott.
+          Az onadozast az illetekes regionalis adohatosagnal kell benyujtani.
+        create_stub_modelo_650_refused: 'A(z) %{modelo} nyomtatvany (ISD oroklesek)
+          munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott. Jogi alap: Ley
+          29/1987 LISyD; az altalanos hatarido a halalozastol szamitott hat honap.
+          A bevallast az illetekes regionalis adohatosagnal kell benyujtani.'
+        create_stub_modelo_660_refused: A(z) %{modelo} nyomtatvany (ISD hagyateki
+          leltar, a Modelo 650 melleklete) munkafeladat-letrehozasa ebben a CLI-ben
+          nem tamogatott. A bevallast az illetekes regionalis adohatosagnal kell benyujtani.
+        create_stub_modelo_714_refused: 'A(z) %{modelo} nyomtatvany (vagyonado) munkafeladat-letrehozasa
+          ebben a CLI-ben nem tamogatott. Jogi alap: Ley 19/1991 28. cikk es Orden
+          HAC/1023/2021. A bevallast az AEAT Sede feluleten kell benyujtani.'
         create_stub_modelo_refused: 'A(z) %{modelo} nyomtatvány (külföldön tartott
-          kriptovaluta-eszközökről szóló tájékoztató bevallás) nem támogatott munkaterv-egység
-          létrehozásához ebben a CLI-ban. Kötelezettség: december 31-i külföldi egyenleg
-          meghaladja az 50 000 €-t (11/2021. sz. törvény 13. cikk, HFP/887/2023. rendelet,
-          1065/2007. sz. KR 42/c cikk). Nyújtsd be a bevallást a sede.agenciatributaria.gob.es
-          oldalon.'
-        deduccion_maternidad_casilla_not_found: A --meses-trabajo-con-hijo-menor-3
-          nem támogatott ennél a nyomtatvány-revíziónál; nincs LIRPF 81. cikk szerinti
-          anyasági levonási mező deklarálva. Használja a --casilla kapcsolót a közvetlen
-          bevitelhez.
+          virtuális pénznemek informatív bevallása) munkafeladat-létrehozása ebben
+          a CLI-ben nem támogatott. Jogi alap: Orden HFP/887/2023 és RD 1065/2007
+          Art. 42 quater; a jelentési küszöb 50 000 EUR december 31-én. Jogszabályi
+          kötelezettség esetén az AEAT Sede felületén kell benyújtani.'
         discard_help: Munkaegység eldobottként megjelölése (auditálható állapotváltás).
         discard_requires_yes: 'Az eldobás auditálható állapotváltás. Futtassa újra:
           `aeat app modelo work discard %{work_unit_id} --yes` a megerősítéshez.'
@@ -1584,8 +1587,6 @@ cli:
         dt12_computation_error: 'DT12 számítási hiba: %{message}'
         file_help: Hitelesített revízió megjelölése belső benyújtottként. NEM nyújt
           be az AEAT-hoz.
-        file_requires_verified: A kivalasztott {revision_id} revizio allapota {state};
-          a beadashoz teljesen ellenorzott revizio kell.
         from_filing_record_help: A módosítandó alap-benyújtási rekord stabil azonosítója.
           Importált külső bizonyítékot (justificante / CSV-nyilvántartás / élő rögzítés)
           kell tartalmaznia.
@@ -1653,9 +1654,6 @@ cli:
         plazo_days_remaining: "hátralévő_napok\t{days_remaining}"
         plazo_vencido_warning: 'FIGYELMEZTETÉS: Az önkéntes benyújtási határidő lejárt
           (LGT 27. cikk). Nyújtsa be pótdíjjal az AEAT-értesítés kézhezvétele előtt.'
-        prestacion_inss_exenta_casilla_not_found: --prestacion-inss-exenta nem támogatott
-          ehhez a modell-revízióhoz; nincs Art. 7.h alóli INSS-mentes mezőszám deklarálva.
-          Használja a --casilla opciót az értékek közvetlen megadásához.
         prestacion_inss_exenta_help: Az SZJA alól mentes anyasági/apasági INSS-járadék
           teljes összege (Art. 7.h LIRPF). A revízióhoz tartozó mentességi mezőbe
           kerül rögzítésre, és levonásra kerül a számítható jövedelmek összesítéséből.
@@ -1687,8 +1685,6 @@ cli:
         relation_help: Korábbi időszaki kapcsolati érték KEY=VALUE formátumban. A
           KEY egy nyilvántartási kapcsolat-azonosító; az VALUE egy decimális. Több
           kapcsolat megadásához ismételje meg.
-        relation_not_decimal: 'A(z) {key} kapcsolat --relation értéke nem decimális:
-          {value}.'
         rename_help: Egy munkaegység megjelenítési nevének frissítése.
         rescate_plan_pensiones_aportaciones_pre_2007_help: A nyugdíjtervbe 2006. dec.
           31-ig befizetett hozzájárulások (a LIRPF 12. átmeneti rendelkezés szerinti
@@ -1702,12 +1698,6 @@ cli:
           bruttó összege (LIRPF 12. átmeneti rendelkezés). Használd együtt a --rescate-plan-pensiones-aportaciones-pre-2007
           és --rescate-plan-pensiones-aportaciones-totales opciókkal, hogy az asszisztens
           kiszámítsa a 40%-os csökkentést és a 0011-es mezőbe írja.
-        rescate_plan_pensiones_casilla_not_found: A --rescate-plan-pensiones-capital
-          nem támogatott ennél a modelo-revíziónál; nincs deklarált LIRPF 12. átmeneti
-          rendelkezés szerinti munkajövedelem-csökkentési casilla. Add meg az értékeket
-          közvetlenül a --casilla opcióval.
-        rescate_plan_pensiones_incomplete: A --rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007
-          és --rescate-plan-pensiones-aportaciones-totales opciókat együtt kell megadni.
         rescate_plan_pensiones_not_decimal: A --rescate-plan-pensiones-* értékeknek
           decimális összegeknek kell lenniük.
         result_summary_header: eredmény-összefoglaló  Modelo %{modelo} %{year} %{period}
@@ -1729,10 +1719,6 @@ cli:
         revision_selector_help: Revizio valaszto.
         revision_show_help: Egy tárolt számítási revízió megőrzött mezőértékeinek
           megjelenítése (újraszámítás nélkül).
-        revision_year_mismatch: A(z) %{revision} revízió a(z) %{modelo} nyomtatványhoz
-          nem fedi a(z) %{filing_year} benyújtási évet. Az arra az évre vonatkozó
-          revíziók%{applicable}.
-        revision_year_mismatch_no_match: Egyik revízió sem fedi azt a benyújtási évet.
         revisions_help: Számítási revíziók listázása, opcionálisan egy munkaegységre
           szűrve.
         row_empty_key: Üres mezőkulcs a --row {token} mezőben; minden mezőnek KULCS=ÉRTÉK
@@ -1747,10 +1733,6 @@ cli:
           clave_operacion=E importe=50000''.'
         row_kv_format_error: A --row {token} mezőnek KULCS=ÉRTÉK formátumúnak kell
           lennie.
-        row_m184_shares_not_100: 'M184 tagsorok: a részesedési arányok összegének
-          pontosan 100%-nak kell lennie; {count} sorból {total} jött ki.'
-        row_m347_below_threshold: 'M347 contraparte sor (nif={nif}): {total} összimport
-          nem haladja meg a RD 1065/2007 art. 31.1 által előírt €{threshold} küszöböt'
         row_m349_invalid_nif: '--row operador: a nif_comunitario {nif} nem felel meg
           {pais} ország elvárt NIF-IVA formátumának (2006/112/EK irányelv XI. melléklet)'
         row_unknown_type: 'Ismeretlen --row típus: {row_type!r}; támogatott típusok:
@@ -1769,15 +1751,10 @@ cli:
           amikor a felhalmozott tartalék eléri a jegyzett tőke 50%-át. Szükséges a
           --sal-beneficio-neto és --sal-reserva-dotada opciókkal együtt.'
         sal_computation_error: 'SAL számítási hiba: %{message}'
-        sal_reserva_casilla_not_found: A --sal-beneficio-neto nem támogatott ennél
-          a modelo-revíziónál; nincs deklarált munkavállalói tulajdonú társasági külön
-          tartalék casilla. Add meg az értékeket közvetlenül a --casilla opcióval.
         sal_reserva_dotada_help: Korábbi években felhalmozott külön tartalék (44/2015.
           törvény 14. cikk). Annak ellenőrzésére szolgál, hogy a tartalék már elérte-e
           a jegyzett tőke 50%-át. Szükséges a --sal-beneficio-neto és --sal-capital-social
           opciókkal együtt.
-        sal_reserva_incomplete: A --sal-beneficio-neto, --sal-reserva-dotada és --sal-capital-social
-          opciókat együtt kell megadni.
         sal_reserva_not_decimal: A --sal-* értékeknek decimális összegeknek kell lenniük.
         selector_ambiguous: Tobb aktiv munkaegyseg illeszkedik erre a modelo/ev/idoszak
           parosra. Valasszon nyilvantartasi reviziot vagy adjon meg pontos munkaegyseg-azonositot.
@@ -1792,14 +1769,8 @@ cli:
         set_override_help: Javított mezőérték CASILLA=DECIMAL szintaxissal (ismételhető;
           legalább egy szükséges).
         status_help: Egy munkaegység metaadatainak megjelenítése.
-        unknown_modelo: 'Ismeretlen nyomtatvány: %{modelo}; a számítási nyilvántartás
-          ezeket a nyomtatványokat ismeri: %{known}.'
-        unknown_revision: 'Ismeretlen revízió: %{revision} a(z) %{modelo} nyomtatványhoz;
-          deklarált revíziók: %{declared}.'
         verify_help: Tervezet számítási revízió hitelesítése a hitelesített-teljes
           szerződéssel szemben.
-        verify_requires_draft: A kivalasztott {revision_id} revizio allapota {state};
-          az ellenorzeshez piszkozat revizio kell.
         work_unit_id_help: A munkaegység stabil 64 karakteres SHA-256 azonosítója.
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
@@ -1901,7 +1872,7 @@ cli:
     errors:
       invalid_value: 'Érvénytelen érték a(z) %{name} mezőhöz: %{value}'
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
-        NÉV --tax-id <NIF>`.'
+        NÉV --tax-id <DNI/NIE/NIF/CIF>`.'
       unknown_key: 'Ismeretlen konfigurációs kulcs: %{name}. Futtassa: `aeat config
         profile list` az elérhető kulcsok megjelenítéséhez.'
     get:
@@ -2037,7 +2008,7 @@ cli:
       submissions_dir_help: A benyújtott adóbevallás-visszaigazolások tárolási könyvtára.
       success:
         next_step: 'Következő lépés: futtassa: `aeat app overview status`'
-      tax_id_help: Spanyol adóazonosító (NIF/NIE/CIF).
+      tax_id_help: Spanyol adóazonosító (DNI/NIE/NIF/CIF).
       tax_residence_ccaa_help: Az adóilletékesség autonóm közössége.
     list:
       help: Minden regisztrált profil listázása és az aktív megjelölése.
@@ -2054,7 +2025,8 @@ cli:
           a profilra.
         snapshot_id_help: Konkrét pillanatkép-azonosító (előtagok elfogadva).
       create_epilog: 'Minimális önálló vállalkozói profil: --entity-type natural_person
-        --tax-id <NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
+        --tax-id <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet
+        --accept-defaults'
       create_help: Új aktív profil és konfigurációs bucket inicializálása.
       delete_active_cleared: 'A törölt profil volt az aktív; az aktív-profil-mutató
         törölve. Futtassa: `aeat config profile switch NÉV` vagy `aeat config profile
@@ -2093,7 +2065,7 @@ cli:
         el, amíg nem futtatja: `aeat config profile switch NÉV` (vagy nyit egy új
         terminált és újra kiválaszt).'
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
-        NÉV --tax-id <NIF>`.'
+        NÉV --tax-id <DNI/NIE/NIF/CIF>`.'
       preflight_filing_year_help: Bevallási év (négy számjegy).
       preflight_help: Jelenti, mely profilmezők hiányoznak adott (modelo, revízió,
         év, időszak) bevallási kontextushoz.
@@ -3337,7 +3309,7 @@ errors:
     unsupported_comparison_op: Nem tamogatott osszehasonlito muvelet.
     unsupported_op: Nem tamogatott muvelet.
   censo:
-    bucket_id_blank: 'A censo-szinkronizálási szolgáltatáshoz profil-bucket szükséges.'
+    bucket_id_blank: A censo-szinkronizálási szolgáltatáshoz profil-bucket szükséges.
     no_snapshot_captured: Nem sikerült censo-pillanatképet rögzíteni a(z) {profile_id}
       profilhoz.
     profile_not_found: A(z) {profile_id} profil nem létezik; censo alkalmazása előtt
@@ -3532,6 +3504,15 @@ errors:
     modelo_calculation_revision_selector: A szamitasi revizio kivalasztasa sikertelen.
     modelo_calculation_revision_selector_not_found: Nincs a megadott valasztonak megfelelo
       szamitasi revizio.
+    modelo_compare_no_revisions: Nem találhatók összehasonlítható számítási revíziók.
+    modelo_compare_no_usable_revisions: Vannak összehasonlítható revíziók, de egyik
+      sem használható ehhez az összehasonlításhoz.
+    modelo_compare_no_work_units: Nem találhatók összehasonlítható nyomtatvány-munkaegységek.
+    modelo_project_no_m130_revisions: Nincs Modelo 130 számítási revízió a kért évhez.
+    modelo_project_no_m130_units: Nincs Modelo 130 munkaegység a kért évhez.
+    modelo_projection: A nyomtatvány-előrejelzés sikertelen.
+    modelo_work_address_not_found: Nincs aktív nyomtatvány-munkaegység a kért nyomtatványhoz,
+      évhez és időszakhoz.
     modelo_work_selector: A modelo munkavalaszto hibazott.
     modelo_work_selector_unit_not_found: A kivalasztott modelo munkaegyseg nem talalhato.
   fail:
@@ -3806,11 +3787,17 @@ errors:
     modelo_censo_stale: 'A műveletet elutasítottuk, mert új censot alkalmazott az
       után, hogy ez a munka elkészült. Az AEAT a kötelező jogi forrás: generálja újra
       a legfrissebb censo alapján.'
+    modelo_compare_need_two_years: Az összehasonlításhoz két különböző benyújtási
+      év szükséges.
     modelo_export_cross_bucket: A megcímzett revízió egy másik bucket-hez tartozik,
       nem az aktív profil bucket-jéhez. Az export csak az aktív profil bucket-en belül
       működik.
     modelo_export_no_active_bucket: Az exportáláshoz aktív profil szükséges. Hozzon
       létre vagy válasszon ki egy profilt, és próbálja újra.
+    modelo_project_invalid_decimal_override: Egy előrejelzési felülírás nem érvényes
+      decimális összeg.
+    modelo_work_registry_year_mismatch: A kiválasztott nyilvántartási revízió nem
+      fedi le a kért benyújtási évet.
     modelo_work_selector_ambiguous: Tobb modelo munkaegyseg is illeszkedik a valasztora.
     modelo_work_selector_contradiction: A modelo munkavalaszto argumentumai ellentmondanak
       egymasnak.
@@ -4123,7 +4110,7 @@ profile:
   keys:
     description: Profilkonfigurációs kulcsok és leírásaik
     tax:
-      id: Adóazonosító (NIF/NIE/CIF)
+      id: Adóazonosító (DNI/NIE/NIF/CIF)
 review:
   adapters:
     errors:
@@ -4235,7 +4222,7 @@ topic:
       a negyedév adatait és bizonyos esetekben az előző évet veszi alapul.
     title: IRPF-előlegfizetés
   profile:
-    body: 'A helyi profil tartalmazza az adóazonosítót (NIF), a fő tevékenységet,
+    body: 'A helyi profil tartalmazza az adóazonosítót (DNI/NIE/NIF/CIF), a fő tevékenységet,
       az IVA/IRPF-rezsimet és az opcionális regisztrációkat (SII, Verifactu, intrakomunitáris).
       Szerkessze: `aeat config profile edit NÉV`.'
     title: Adóalany profilja
@@ -4299,7 +4286,7 @@ wizard:
     invalid_integer: 'Érvénytelen egész szám a következőhöz: %{prompt_key}: %{raw}.'
     invalid_postcode: 'Érvénytelen irányítószám a következőhöz: %{prompt_key}: %{raw}.
       A spanyol irányítószám 5 jegyű (01-52 tartományKód, majd három számjegy).'
-    invalid_tax_id: 'Érvénytelen NIF/NIE/CIF a következőhöz: %{prompt_key}: %{raw}.
+    invalid_tax_id: 'Érvénytelen DNI/NIE/NIF/CIF a következőhöz: %{prompt_key}: %{raw}.
       %{detail}'
     select_unknown: 'Ismeretlen érték a következőhöz: %{prompt_key}: %{raw}. Érvényes
       lehetőségek: %{choices}.'
@@ -4314,7 +4301,7 @@ wizard:
       használatához: aeat config profile create NAME
 
       2. Vagy hozza létre egyetlen lépéssel, a szükséges adatokat kapcsolókként megadva:
-      aeat config profile create NAME --quiet --tax-id NIF'
+      aeat config profile create NAME --quiet --tax-id DNI/NIE/NIF/CIF'
     unsupported_console_edit: 'Az irányított beállítás nem tudott interaktív promptot
       megnyitni ebben a futtatásban. Még semmi nem lett mentve.
 
@@ -4505,7 +4492,7 @@ wizard:
       surnames:
         help: Vezetéknevei vagy cégneve az exportfejlécekhez
       tax-id:
-        help: Adóazonosító (NIF/NIE) az aktív profilhoz
+        help: Adóazonosító (DNI/NIE/NIF/CIF) az aktív profilhoz
       tax-residence-ccaa:
         help: 'Adóügyi illetőség szerinti autonóm közösség. Az alábbiak egyike: %{choices}.'
       taxation-type:
@@ -4535,7 +4522,7 @@ wizard:
 
       Ez előkészíti a helyi profilt, amelyet az alkalmazás a könyveléshez és az adóűrlap-ellenőrzésekhez
       használ. Várható %{section_total} szekció. Csak %{required_total} válasz kötelező
-      a kezdéshez; a többi üresen hagyható, ha még nem ismeri. Legyen kéznél a NIF/NIE/CIF
+      a kezdéshez; a többi üresen hagyható, ha még nem ismeri. Legyen kéznél a DNI/NIE/NIF/CIF
       azonosítója, egy rövid tevékenységleírás, IVA/IRPF adózási rend adatai, adóügyi
       lakóhely és családi adatok, ha relevánsak. Mentés után ellenőrizze az előrehaladást
       a következővel: .'
@@ -4643,7 +4630,7 @@ wizard:
       surnames:
         prompt: Vezetéknevei vagy cégneve az exportfejlécekhez
       tax-id:
-        prompt: Adóazonosító (NIF/NIE) a bevallásokhoz
+        prompt: Adóazonosító (DNI/NIE/NIF/CIF) a bevallásokhoz
       taxation-type:
         choices:
           individual:
@@ -4856,8 +4843,8 @@ wizard:
       spouse_consistency_missing: 'Közös adóbevallás: a házastárs adóazonosítója hiányzik.
         Adja meg a közös bevalláshoz.'
       spouse_consistency_ok: 'Közös adóbevallás: a házastárs adatai összhangban vannak.'
-      tax_id_present: 'Adóazonosítás: ellenőrzi, hogy a profil tartalmaz-e NIF vagy
-        NIE azonosítót.'
+      tax_id_present: 'Adóazonosítás: ellenőrzi, hogy a profil tartalmaz-e DNI, NIE,
+        NIF vagy CIF azonosítót.'
   test:
     description: Tesztelje a konfigurációt és a csatlakozást
     example:
@@ -4869,4 +4856,6 @@ wizard:
       prompt: Példa tesztkérdés
     main:
       title: Fő teszt
+    section:
+      title: Teszt szakasz
     title: Teszt

@@ -336,7 +336,6 @@ class TestRevisionViewSurfacesDetailRows:
         code = f"""
             import os, sys
             os.environ["AEAT_LOCAL_STORAGE_ROOT"] = {str(storage_root)!r}
-            os.environ["AEAT_LIVE_TESTS_ENABLED"] = "0"
             from click.testing import CliRunner
             from typer.main import get_command
             from aeat.entrypoints.cli import app

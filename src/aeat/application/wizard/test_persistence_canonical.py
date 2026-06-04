@@ -26,10 +26,13 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import BaseModel
 
 from ...core.i18n import Translatable as tr
-from ._models import WizardChoice, WizardQuestion, WizardWidget
-from ._persistence import _canonicalise, _parse_canonical, _resolve_canonical
+from ..workflow._errors import WorkflowInputMismatchError
+from ..workflow._models import WorkflowState
+from ._models import WizardChoice, WizardFlow, WizardQuestion, WizardSection, WizardWidget
+from ._persistence import _canonicalise, _parse_canonical, _resolve_canonical, persist_patch
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -51,6 +54,26 @@ def _question(
         choices=choices,
         default=default,
         answer_type=answer_type,
+    )
+
+
+class _PatchAnswers(BaseModel):
+    example: str = ""
+
+
+def _flow(question: WizardQuestion) -> WizardFlow:
+    return WizardFlow(
+        id="test",
+        title=tr("wizard.test.title"),
+        description=tr("wizard.test.description"),
+        sections=(
+            WizardSection(
+                id="section",
+                title=tr("wizard.test.section.title"),
+                questions=(question,),
+            ),
+        ),
+        answers_model=_PatchAnswers,
     )
 
 
@@ -252,3 +275,18 @@ def test_canonicalise_blank_string_for_optional_bool_stays_blank() -> None:
         answer_type=bool,
     )
     assert _canonicalise(question, "") == ""
+
+
+def test_persist_patch_rejects_unknown_question_id() -> None:
+    """A supplied patch flag that is not declared by the flow must fail closed."""
+
+    flow = _flow(_question(profile_key="tax.id"))
+
+    with pytest.raises(WorkflowInputMismatchError) as excinfo:
+        persist_patch(flow, {"missing-question": "12345678Z"}, state=WorkflowState())
+
+    assert (
+        excinfo.value.translated_message
+        == "application.wizard.errors.persist_patch_unknown_question_id"
+    )
+    assert excinfo.value.context == {"question_id": "missing-question"}

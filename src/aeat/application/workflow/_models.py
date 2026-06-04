@@ -33,6 +33,7 @@ from ...adapters.persistence.storage.bucket import BucketLifecycleStatus
 from ...core import require_active_bucket_id, resolve_active_bucket_id
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId
+from ...core.logging import get_logger
 from ..auth._models import AuthState
 from ._utils import utc_now
 
@@ -41,6 +42,8 @@ if TYPE_CHECKING:
     from ...domain.transactions import TransactionCatalogueRepository
     from ...domain.user_profile import UserProfileRecord
     from ..review._models import InvoiceReviewRecord, LedgerReviewRecord
+
+_log = get_logger(__name__)
 
 
 class WorkflowEvent(BaseModel):
@@ -240,7 +243,8 @@ class WorkflowState(BaseModel):
         service = build_lifecycle_service(bucket_id=bucket_id)
         try:
             return service.read(bucket_id)
-        except ProfileNotFoundError:
+        except ProfileNotFoundError as exc:
+            _log.debug("active profile record resolution returned no profile record: %s", type(exc).__name__)
             return None
 
     def active_profile_bucket_id(self) -> str | None:

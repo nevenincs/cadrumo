@@ -48,7 +48,7 @@ from ...domain.modelos._calculation_repository import CalculationRevisionCatalog
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos._filing_record import ModeloRecordStatus
 from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ...domain.modelos._repository import WorkUnitCatalogueRepository
+from ...domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ...domain.modelos._verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -96,6 +96,7 @@ from . import (
     mark_revision_verificado_completo,
     verify_modelo_revision,
 )
+from ._actions import workflow_period_for_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -208,14 +209,7 @@ def _workflow_profile() -> TaxpayerProfile:
 
 
 def _canonical_work_unit_period(work_unit: WorkUnit) -> str:
-    if work_unit.period.endswith("T") and len(work_unit.period) == 2:
-        return f"{work_unit.filing_year}Q{work_unit.period[0]}"
-    if work_unit.period == "0A":
-        return str(work_unit.filing_year)
-    if len(work_unit.period) == 2 and work_unit.period.isdigit():
-        return f"{work_unit.filing_year}-{work_unit.period}"
-    parse_canonical_period(work_unit.period)
-    return work_unit.period
+    return workflow_period_for_work_unit(work_unit)
 
 
 class _RevisionInputsProvider:
@@ -519,6 +513,43 @@ def test_calculate_is_idempotent_on_identical_inputs(repos) -> None:
     assert len(revisions) == 1
 
 
+def test_duplicate_draft_calculation_reuse_advances_current_pointer(repos) -> None:
+    """Reusing an existing draft revision still restores it as current."""
+
+    wu_repo, cr_repo, _, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+
+    first = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs={"01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+    stale_work_unit = get_work_unit(work_unit.work_unit_id, repository=wu_repo).model_copy(
+        update={"current_calculation_revision_id": None}
+    )
+    wu_repo.save(upsert_work_unit(wu_repo.load(), stale_work_unit))
+
+    duplicate = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs={"01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T2,
+    )
+
+    assert duplicate.calculation_revision_id == first.calculation_revision_id
+    refreshed = get_work_unit(work_unit.work_unit_id, repository=wu_repo)
+    assert refreshed.current_calculation_revision_id == first.calculation_revision_id
+    assert refreshed.filed_calculation_revision_id is None
+    assert refreshed.current_filing_record_id is None
+
+
 def test_mark_verificado_completo_requires_borrador_state(repos) -> None:
     """A revision in any state other than BORRADOR cannot be marked
     verificado-completo."""
@@ -636,6 +667,7 @@ def test_file_creates_filing_record_and_advances_pointers(repos) -> None:
         work_unit.work_unit_id,
         repository=wu_repo,
     )
+    assert refreshed_wu.current_calculation_revision_id == revision.calculation_revision_id
     assert refreshed_wu.filed_calculation_revision_id == revision.calculation_revision_id
     assert refreshed_wu.current_filing_record_id == filing.filing_record_id
 

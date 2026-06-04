@@ -46,6 +46,14 @@ from typing import Literal, Protocol
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator
 
 from ....core.config import Settings
+from ._checker_oracle_flow import (
+    compare_verdict_field,
+    decode_replay_observation,
+    normalize_expected_verdicts,
+    normalize_verdict_mapping,
+    observed_verdict,
+    replay_parse_operation,
+)
 from ._errors import RegistryValidationError
 from ._live_parity import (
     BaseCheckerOracle,
@@ -53,7 +61,6 @@ from ._live_parity import (
     OracleEnvironment,
     OracleSurfaceKind,
     ParityFieldComparison,
-    decode_replay_json_payload,
 )
 from ._remote_state_guard import RemoteOperation
 
@@ -79,14 +86,10 @@ class GroiObservation(_GroiModel):
     @field_validator("values")
     @classmethod
     def _trimmed(cls, value: dict[str, str]) -> dict[str, str]:
-        cleaned: dict[str, str] = {}
-        for nif, verdict in value.items():
-            normalized_nif = nif.strip().upper()
-            normalized_verdict = verdict.strip().lower()
-            if not normalized_nif or not normalized_verdict:
-                raise RegistryValidationError("GROI observations must not contain blank keys or values")
-            cleaned[normalized_nif] = normalized_verdict
-        return cleaned
+        return normalize_verdict_mapping(
+            value,
+            blank_message="GROI observations must not contain blank keys or values",
+        )
 
 
 class GroiDriver(Protocol):
@@ -129,7 +132,7 @@ class GroiDriver(Protocol):
                 register of operators cleared for intra-EU trade.
 
         Returns:
-            The ordered ``RemoteOperation`` tuple this driver would emit.
+            The ordered :class:`RemoteOperation` tuple this driver would emit.
         """
         ...
 
@@ -148,7 +151,7 @@ class GroiDriver(Protocol):
                 query.
 
         Returns:
-            A ``GroiObservation`` whose ``values`` map upper-cased NIFs to
+            A :class:`GroiObservation` whose ``values`` map upper-cased NIFs to
             lowercase verdict tokens (``valid`` / ``invalid`` / ``unknown``).
         """
         ...
@@ -188,7 +191,7 @@ class GroiReplayDriver:
 
         Both arguments are ignored: a replay reads a fixed captured document
         and performs no network or browser action, so it returns exactly one
-        ``RemoteOperation`` of kind ``local_workbook`` with action
+        :class:`RemoteOperation` of kind ``local_workbook`` with action
         ``parse-groi-replay``. The remote-state guard still pre-flights this
         list for uniformity with the live path.
 
@@ -197,10 +200,10 @@ class GroiReplayDriver:
             expected: Expected NIF-to-verdict mapping; ignored.
 
         Returns:
-            A one-element tuple naming the local replay-parse operation.
+            A one-element tuple naming the local replay-parse :class:`RemoteOperation`.
         """
         del payload, expected
-        return (RemoteOperation(kind="local_workbook", action="parse-groi-replay"),)
+        return replay_parse_operation("parse-groi-replay")
 
     def collect_observation(
         self,
@@ -220,7 +223,7 @@ class GroiReplayDriver:
             expected: Expected NIF-to-verdict mapping; ignored.
 
         Returns:
-            A ``GroiObservation`` carrying the captured verdicts and evidence
+            A :class:`GroiObservation` carrying the captured verdicts and evidence
             locator.
 
         Raises:
@@ -228,8 +231,11 @@ class GroiReplayDriver:
                 blank NIF keys or verdict values.
         """
         del expected
-        document = decode_replay_json_payload(payload, surface_label="GROI replay")
-        return GroiObservation(values=dict(document.observed), raw_evidence_locator=document.raw_evidence_locator)
+        return decode_replay_observation(
+            payload,
+            surface_label="GROI replay",
+            observation_type=GroiObservation,
+        )
 
 
 class GroiOracle(BaseCheckerOracle[GroiObservation]):
@@ -302,7 +308,7 @@ class GroiOracle(BaseCheckerOracle[GroiObservation]):
                 identifier and ROI is the AEAT register of intra-EU operators.
 
         Returns:
-            The ordered ``RemoteOperation`` tuple for this verification.
+            The ordered :class:`RemoteOperation` tuple for this verification.
 
         Raises:
             RegistryValidationError: If ``expected`` is empty, or if any NIF
@@ -325,28 +331,16 @@ class GroiOracle(BaseCheckerOracle[GroiObservation]):
         return tuple(operations)
 
     def _expected_values(self, expected: Mapping[str, object]) -> dict[str, str]:
-        values: dict[str, str] = {}
-        for nif, verdict in expected.items():
-            normalized_nif = str(nif).strip().upper()
-            normalized_verdict = str(verdict).strip().lower()
-            if not normalized_nif or not normalized_verdict:
-                raise RegistryValidationError("GROI expected values must not contain blanks")
-            values[normalized_nif] = normalized_verdict
-        return values
+        return normalize_expected_verdicts(
+            expected,
+            blank_message="GROI expected values must not contain blanks",
+        )
 
     def _observed_for(self, observation: GroiObservation, key: str) -> str | None:
-        return observation.values.get(key.upper())
+        return observed_verdict(observation.values, key)
 
     def _compare_field(self, key: str, expected: str, *, observed: str | None) -> ParityFieldComparison:
-        if observed is None:
-            return ParityFieldComparison(name=key, expected=expected, observed="<missing>", verdict="mismatch")
-        normalized_observed = observed.strip().lower()
-        return ParityFieldComparison(
-            name=key,
-            expected=expected,
-            observed=normalized_observed,
-            verdict="match" if normalized_observed == expected else "mismatch",
-        )
+        return compare_verdict_field(key, expected, observed=observed)
 
     def _observation_locator(self, observation: GroiObservation) -> str | None:
         return observation.raw_evidence_locator

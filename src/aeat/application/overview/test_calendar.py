@@ -6,7 +6,10 @@ import logging
 from datetime import UTC, date, datetime
 
 import pytest
+from pydantic import AnyHttpUrl
 
+from ...adapters.outbound.aeat.sede._declarations import Declaracion
+from ...adapters.outbound.aeat.sede._notifications import RemoteNotification
 from ...domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,
@@ -16,17 +19,26 @@ from ...domain.deadlines import (
     Schedule,
     TaxpayerProfile,
 )
+from ...tests.aeat_literal_fixtures import aeat_url
+from ..live._expedientes import PersistedExpedientesSnapshot
+from ..live._notifications import PersistedNotificationsSnapshot
 from . import (
     OverviewCalendar,
     OverviewCalendarEntry,
+    OverviewCalendarEventType,
     OverviewCalendarRange,
     OverviewPeriodState,
     build_filing_obligation_advisories,
     build_overview_calendar,
+    build_overview_calendar_events,
+    calendar_events_from_expedientes_snapshots,
+    calendar_events_from_notification_snapshots,
     user_state_for,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+_SOURCE_URL = aeat_url("sede", "/")
 
 
 def _profile() -> TaxpayerProfile:
@@ -245,6 +257,119 @@ def test_entry_is_frozen() -> None:
     entry = _entry()
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         entry.modelo = "303"
+
+
+# ---------------------------------------------------------------------
+# OverviewCalendarEvent
+# ---------------------------------------------------------------------
+
+
+def test_expedientes_snapshots_project_filing_events_inside_range() -> None:
+    snapshot = PersistedExpedientesSnapshot(
+        snapshot_id="e" * 64,
+        bucket_id="bucket-1",
+        captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
+        source_url=_SOURCE_URL,
+        declarations=(
+            Declaracion(
+                modelo="303",
+                ejercicio=2025,
+                period="1T",
+                expediente_id="12345678901234567890",
+                estado="ALTA",
+                presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+            ),
+        ),
+        persisted_at=datetime(2025, 4, 16, 10, 5, tzinfo=UTC),
+    )
+
+    events = calendar_events_from_expedientes_snapshots(
+        (snapshot,),
+        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+    )
+
+    assert len(events) == 1
+    event = events[0]
+    assert event.event_type is OverviewCalendarEventType.FILING
+    assert event.event_date == date(2025, 4, 15)
+    assert event.modelo == "303"
+    assert event.filing_year == 2025
+    assert event.period == "1T"
+    assert event.reference_id == "12345678901234567890"
+
+
+def test_notification_snapshots_project_message_events_on_notification_date() -> None:
+    row = RemoteNotification(
+        certificado_id="2596230606502",
+        tipo="notificacion",
+        concepto="Requerimiento censal",
+        titular_nif="B12345678",
+        titular_nombre="Test S.L.",
+        destinatario_nif="B12345678",
+        destinatario_nombre="Test S.L.",
+        fecha_emision=date(2025, 3, 10),
+        fecha_notificacion=date(2025, 3, 12),
+        modo_notificacion="DEHú",
+        leida=False,
+        source_url=AnyHttpUrl(_SOURCE_URL),
+    )
+    snapshot = PersistedNotificationsSnapshot(
+        snapshot_id="a" * 64,
+        bucket_id="bucket-1",
+        captured_at=datetime(2025, 3, 13, 10, 0, tzinfo=UTC),
+        source_url=_SOURCE_URL,
+        rows=(row,),
+        persisted_at=datetime(2025, 3, 13, 10, 5, tzinfo=UTC),
+    )
+
+    events = calendar_events_from_notification_snapshots(
+        (snapshot,),
+        OverviewCalendarRange(from_date=date(2025, 3, 1), to_date=date(2025, 3, 31)),
+    )
+
+    assert len(events) == 1
+    assert events[0].event_type is OverviewCalendarEventType.MESSAGE
+    assert events[0].event_date == date(2025, 3, 12)
+    assert events[0].reference_id == "2596230606502"
+    assert events[0].status == "unread"
+
+
+def test_build_overview_calendar_accepts_observed_events() -> None:
+    event = build_overview_calendar_events(
+        calendar_range=OverviewCalendarRange(from_date=date(2025, 3, 1), to_date=date(2025, 3, 31)),
+        notification_snapshots=(
+            PersistedNotificationsSnapshot(
+                snapshot_id="a" * 64,
+                bucket_id="bucket-1",
+                captured_at=datetime(2025, 3, 13, 10, 0, tzinfo=UTC),
+                source_url=_SOURCE_URL,
+                rows=(
+                    RemoteNotification(
+                        certificado_id="2596230606502",
+                        tipo="comunicacion",
+                        concepto="Comunicacion informativa",
+                        titular_nif="B12345678",
+                        titular_nombre="Test S.L.",
+                        destinatario_nif="B12345678",
+                        destinatario_nombre="Test S.L.",
+                        fecha_emision=date(2025, 3, 10),
+                        leida=True,
+                        source_url=AnyHttpUrl(_SOURCE_URL),
+                    ),
+                ),
+                persisted_at=datetime(2025, 3, 13, 10, 5, tzinfo=UTC),
+            ),
+        ),
+    )
+
+    calendar = build_overview_calendar(
+        _profile(),
+        OverviewCalendarRange(from_date=date(2025, 3, 1), to_date=date(2025, 3, 31)),
+        today=date(2025, 3, 15),
+        events=event,
+    )
+
+    assert tuple(observed.reference_id for observed in calendar.events) == ("2596230606502",)
 
 
 # ---------------------------------------------------------------------

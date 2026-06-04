@@ -203,8 +203,9 @@ class LedgerAllocateResult(_LedgerMutationResult):
 
 
 @register_schema("ledger.attach")
+@register_schema("ledger.doclink")
 class LedgerAttachResult(_LedgerMutationResult):
-    """JSON envelope for ``aeat app ledger attach``."""
+    """JSON envelope for ``aeat app ledger attach`` and ``ledger doclink``."""
 
 
 @register_schema("ledger.archive")
@@ -390,7 +391,7 @@ class LedgerExportPayload(OutputSchema):
 
     @classmethod
     def from_result(cls, result: _AppLedgerExportResult, *, output_path: str) -> LedgerExportPayload:
-        """Project the application export result into this CLI envelope.
+        """Project the application export result into this CLI :class:`LedgerExportPayload` envelope.
 
         The raw ``payload`` bytes are excluded — the JSON envelope carries
         export metadata and the row projection, not the binary artefact (that
@@ -444,7 +445,7 @@ class LedgerImportPayload(OutputSchema):
         empty_import_notice: str | None = None,
         likely_duplicate_notice: str | None = None,
     ) -> LedgerImportPayload:
-        """Project the application import result into this CLI envelope.
+        """Project the application import result into this CLI :class:`LedgerImportPayload` envelope.
 
         ``model_dump(mode="json")`` coerces the typed members (typed-ids, nested
         validation/source/diagnostic reports) to the JSON shape this envelope
@@ -769,7 +770,7 @@ class InventoryValuationPreviewPayload(OutputSchema):
 
     @classmethod
     def from_result(cls, result: _AppInventoryValuationPreviewResult) -> InventoryValuationPreviewPayload:
-        """Flatten the application preview wrapper into this CLI envelope.
+        """Flatten the application preview wrapper into this CLI :class:`InventoryValuationPreviewPayload` envelope.
 
         The wrapper carries an inner ``preview`` plus ``bucket_event_ids``;
         ``model_dump(mode="json")`` on the inner preview performs the

@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from ._doc_reference import generate_cli_reference
+from ._doc_reference import generate_cli_reference_in_subprocess
 
 pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.domain_persistence]
 
@@ -28,12 +28,12 @@ _DOCS_ROOT = Path("docs")
 def test_committed_cli_reference_matches_regenerated_output(tmp_path: Path) -> None:
     """The committed docs/cli/ subtree must match a fresh regeneration.
 
-    Calls :func:`generate_cli_reference` against a tmp output root,
-    then diffs every emitted page against its committed counterpart
-    under ``docs/``. Generator returns paths relative to ``docs/``
-    (e.g. ``cli/app.rst``), so the diff anchors at the docs root.
-    Any drift fails with a per-file listing so the operator can
-    re-run the CLI reference regeneration to restore parity.
+    Calls :func:`generate_cli_reference_in_subprocess` against a tmp output
+    root, then diffs every emitted page against its committed counterpart under
+    ``docs/``. Generator returns paths relative to ``docs/`` (e.g.
+    ``cli/app.rst``), so the diff anchors at the docs root. Any drift fails
+    with a per-file listing so the operator can re-run the CLI reference
+    regeneration to restore parity.
 
     Note: the CLI reference is generated at build time per the
     ``docs(build): generate the CLI reference at build time``
@@ -47,7 +47,7 @@ def test_committed_cli_reference_matches_regenerated_output(tmp_path: Path) -> N
     # a hard test failure rather than a silent green.
     assert _DOCS_ROOT.is_dir(), f"docs/ directory required at {_DOCS_ROOT}"
 
-    regenerated = generate_cli_reference(tmp_path)
+    regenerated = generate_cli_reference_in_subprocess(tmp_path)
     docs_cli_root = _DOCS_ROOT / "cli"
     drift: list[str] = []
     for relative_path, rendered in regenerated.items():
@@ -57,6 +57,9 @@ def test_committed_cli_reference_matches_regenerated_output(tmp_path: Path) -> N
             continue
         committed = committed_path.read_text(encoding="utf-8")
         if committed != rendered:
+            import difflib
+            print("DIFF FOR", relative_path)
+            print("\n".join(difflib.unified_diff(committed.splitlines(), rendered.splitlines())))
             drift.append(
                 f"docs/{relative_path} drifted from generator output "
                 f"(committed {len(committed)} chars; regenerated "

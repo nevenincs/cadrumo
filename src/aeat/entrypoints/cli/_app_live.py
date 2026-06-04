@@ -7,7 +7,15 @@ whose valid values are drawn from :class:`PortalCategory`.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+import json
+import os
+import platform
+import re
+import shutil
+import signal
+import subprocess
+from collections.abc import Awaitable, Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
@@ -19,6 +27,7 @@ from ...application.live import (
     IvaRemoteStateAcquisitionReport,
     IvaWalletCaptureReport,
     capture_filed_data,
+    capture_filed_data_bulk,
     capture_source_filed_data,
     list_filed_data,
 )
@@ -194,9 +203,9 @@ def iva_wallet_pull_cmd(
 ) -> None:
     """Pull the authenticated AEAT IVA compensation wallet.
 
-    This is a live read. It refuses unless `AEAT_LIVE_TESTS_ENABLED=1`
-    is set and can trigger the configured authentication provider,
-    including Cl@ve Móvil manual approval.
+    This is a live read. It can trigger the configured authentication
+    provider, including Cl@ve Móvil manual approval. Under pytest, the
+    shared live-read gate still requires the live-test opt-in.
     """
     from ...application.live import capture_iva_compensation_wallet
 
@@ -523,13 +532,15 @@ def iva_wallet_capture_remote_state_cmd(
 
     _emit_live_auth_preflight()
     report = asyncio.run(
-        capture_iva_remote_state(
-            year_from=year_from,
-            year_to=year_to,
-            target_year=target_year,
-            target_period=target_period,
-            taxpayer_nif=taxpayer_nif,
-            output_root=output_root,
+        _run_live_iva_remote_state_command(
+            capture_iva_remote_state(
+                year_from=year_from,
+                year_to=year_to,
+                target_year=target_year,
+                target_period=target_period,
+                taxpayer_nif=taxpayer_nif,
+                output_root=output_root,
+            )
         )
     )
     from ._app_live_payloads import (
@@ -621,6 +632,123 @@ def _iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> 
             )
         )
     return tuple(lines)
+
+
+async def _run_live_iva_remote_state_command[T](
+    awaitable: Awaitable[T],
+    *,
+    timeout_ms: int | None = None,
+) -> T:
+    """Run the combined IVA remote-state read under a CLI-level watchdog."""
+    from ...application.live import LiveIvaReadSurface, LiveIvaSurfaceTimeoutError
+    from ...core.config import load_settings
+
+    resolved_timeout_ms = (
+        timeout_ms if timeout_ms is not None else load_settings().aeat_live_iva_cli_watchdog_timeout_ms
+    )
+    preexisting_profiles = _playwright_profile_tokens(_process_command_inventory())
+    try:
+        return await asyncio.wait_for(awaitable, timeout=resolved_timeout_ms / 1000)
+    except TimeoutError as exc:
+        _reap_new_playwright_profile_processes(preexisting_profiles=preexisting_profiles)
+        raise LiveIvaSurfaceTimeoutError(
+            f"live IVA remote-state command did not complete within {resolved_timeout_ms} ms",
+            surface="remote_state_command",
+            timeout_ms=resolved_timeout_ms,
+            progress_context={"phase": "cli_watchdog", "surface": LiveIvaReadSurface.FILED_HISTORY.value},
+        ) from exc
+
+
+@dataclass(frozen=True, slots=True)
+class _ProcessCommand:
+    pid: int
+    command_line: str
+
+
+_PLAYWRIGHT_PROFILE_RE = re.compile(r"playwright_chromiumdev_profile-[A-Za-z0-9_-]+")
+
+
+def _process_command_inventory() -> tuple[_ProcessCommand, ...]:
+    """Return local process command lines for watchdog cleanup."""
+    try:
+        if platform.system() == "Windows":
+            powershell = shutil.which("powershell") or shutil.which("pwsh")
+            if powershell is None:
+                return ()
+            script = (
+                "Get-CimInstance Win32_Process | "
+                "Select-Object ProcessId,CommandLine | "
+                "ConvertTo-Json -Compress"
+            )
+            completed = subprocess.run(  # noqa: S603 - fixed process-inventory command
+                [powershell, "-NoProfile", "-Command", script],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            payload = completed.stdout.strip()
+            if not payload:
+                return ()
+            decoded = json.loads(payload)
+            rows = [decoded] if isinstance(decoded, dict) else decoded
+            return tuple(
+                _ProcessCommand(pid=int(row["ProcessId"]), command_line=str(row.get("CommandLine") or ""))
+                for row in rows
+            )
+
+        ps = shutil.which("ps")
+        if ps is None:
+            return ()
+        completed = subprocess.run(  # noqa: S603 - fixed process-inventory command
+            [ps, "-axo", "pid=,args="],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError, json.JSONDecodeError, KeyError, TypeError, ValueError):
+        return ()
+
+    rows: list[_ProcessCommand] = []
+    for raw_line in completed.stdout.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        pid, _, command_line = line.partition(" ")
+        if pid.isdigit():
+            rows.append(_ProcessCommand(pid=int(pid), command_line=command_line))
+    return tuple(rows)
+
+
+def _playwright_profile_tokens(processes: tuple[_ProcessCommand, ...]) -> frozenset[str]:
+    """Return Playwright temp profile tokens visible in process command lines."""
+    tokens: set[str] = set()
+    for process in processes:
+        tokens.update(_PLAYWRIGHT_PROFILE_RE.findall(process.command_line))
+    return frozenset(tokens)
+
+
+def _reap_new_playwright_profile_processes(*, preexisting_profiles: frozenset[str]) -> int:
+    """Terminate processes tied to Playwright temp profiles created by this command."""
+    processes = _process_command_inventory()
+    new_profiles = _playwright_profile_tokens(processes) - preexisting_profiles
+    if not new_profiles:
+        return 0
+
+    killed = 0
+    current_pid = os.getpid()
+    for process in processes:
+        if process.pid == current_pid:
+            continue
+        if not any(profile in process.command_line for profile in new_profiles):
+            continue
+        try:
+            os.kill(process.pid, signal.SIGTERM)
+        except OSError:
+            continue
+        killed += 1
+    return killed
 
 
 def _compact_failure_context(context: dict[str, object] | None) -> str:
@@ -777,6 +905,114 @@ def filed_capture_cmd(
     _emit_envelope(ctx, command="app.live.filed.capture", result=result, lines=lines)
 
 
+@filed_app.command(
+    "capture-all",
+    help=tr(
+        "cli.app.live.filed.capture_all_help",
+        default=(
+            "Live-capture filed declarations and justificantes for every requested registry modelo "
+            "across a year range. Read-only; reports per-modelo failures explicitly."
+        ),
+    ),
+)
+def filed_capture_all_cmd(
+    ctx: typer.Context,
+    year_from: Annotated[
+        int,
+        typer.Option("--from-year", min=2000, max=2099, help=tr("cli.app.live.from_year_help")),
+    ],
+    year_to: Annotated[
+        int,
+        typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
+    ],
+    output_root: Annotated[
+        Path,
+        typer.Option(
+            "--output-root",
+            file_okay=False,
+            dir_okay=True,
+            writable=True,
+            help=tr("cli.app.live.output_root_help"),
+        ),
+    ] = Path("var/aeat/filed-declarations"),
+    modelos: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--modelo",
+            help=tr(
+                "cli.app.live.filed.capture_all_modelo_help",
+                default="Modelo code to include. Repeat to limit the run; omit to query all registry modelos.",
+            ),
+        ),
+    ] = None,
+) -> None:
+    """Capture filed-declaration artefacts for many modelos and years."""
+    from ._app_live_payloads import FiledCaptureAllResult, FiledCaptureFailurePayload
+
+    _emit_live_auth_preflight()
+    report = asyncio.run(
+        capture_filed_data_bulk(
+            year_from=year_from,
+            year_to=year_to,
+            output_root=output_root,
+            modelos=tuple(modelos) if modelos else None,
+        )
+    )
+    lines = (
+        _metric_line("modelo_count", len(report.modelos)),
+        _metric_line("year_from", report.year_from),
+        _metric_line("year_to", report.year_to),
+        _metric_line("captured_count", report.captured_count),
+        _metric_line("failed_count", report.failed_count),
+        _metric_line("casilla_count", report.casilla_count),
+        _metric_line("calculation_observation_count", report.calculation_observation_count),
+        _metric_line("calculation_observation_keys", ",".join(report.calculation_observation_keys)),
+        _metric_line("observation_paths", ",".join(report.observation_paths)),
+        _metric_line("artefact_refs", ",".join(report.artefact_refs)),
+        *(
+            _metric_line(
+                "failure",
+                "\t".join(
+                    (
+                        failure.modelo,
+                        str(failure.year),
+                        failure.period or "",
+                        failure.expediente_id or "",
+                        failure.error_type,
+                        failure.message,
+                    )
+                ),
+            )
+            for failure in report.failures
+        ),
+    )
+    result = FiledCaptureAllResult(
+        output_root=report.output_root,
+        modelos=list(report.modelos),
+        year_from=report.year_from,
+        year_to=report.year_to,
+        captured_count=report.captured_count,
+        failed_count=report.failed_count,
+        observation_paths=list(report.observation_paths),
+        artefact_refs=list(report.artefact_refs),
+        casilla_count=report.casilla_count,
+        calculation_observation_count=report.calculation_observation_count,
+        calculation_observation_keys=list(report.calculation_observation_keys),
+        failures=[
+            FiledCaptureFailurePayload(
+                modelo=failure.modelo,
+                year=failure.year,
+                period=failure.period,
+                expediente_id=failure.expediente_id,
+                error_type=failure.error_type,
+                message=failure.message,
+            )
+            for failure in report.failures
+        ],
+    )
+    _emit_envelope(ctx, command="app.live.filed.capture_all", result=result, lines=lines)
+
+
 @filed_app.command("capture-sources", help=tr("cli.app.live.filed.capture_sources_help"))
 def filed_capture_sources_cmd(
     ctx: typer.Context,
@@ -886,9 +1122,9 @@ def _active_bucket_id() -> str:
 def notifications_capture(ctx: typer.Context) -> None:
     """Drive the live DEHú fetch + persist flow.
 
-    Refuses unless ``AEAT_LIVE_TESTS_ENABLED=1`` is set in the operator's
-    shell. Will trigger the configured auth provider (e.g. Cl@ve Móvil push
-    or certificate handshake) when no live session is present.
+    Will trigger the configured auth provider (e.g. Cl@ve Móvil push or
+    certificate handshake) when no live session is present. Under pytest,
+    the shared live-read gate still requires the live-test opt-in.
     """
     from ...application.live import capture_notifications
 
@@ -1022,6 +1258,8 @@ app.add_typer(portals_app, name="portals")
 
 
 def _portal_row(metadata) -> Mapping[str, object]:
+    from ...domain.portals._hosts import portal_host_name
+
     # `metadata.label` and `metadata.purpose` are Translatable
     # translation keys (e.g. `entries.portal_sede_root.label`). A bare
     # `str()` dumps the raw key path at the operator; route them
@@ -1029,7 +1267,7 @@ def _portal_row(metadata) -> Mapping[str, object]:
     return {
         "portal": metadata.portal.value,
         "category": metadata.category.value,
-        "subdomain": metadata.subdomain.value,
+        "subdomain": portal_host_name(metadata.subdomain),
         "url": str(metadata.url),
         "auth_methods": ",".join(sorted(method.value for method in metadata.auth_methods)),
         "url_stability": metadata.url_stability.value,
@@ -1060,7 +1298,7 @@ def portals_list(
         ),
     ] = None,
 ) -> None:
-    """List entries from the local AEAT portal registry, optionally filtered by ``PortalCategory`` or modelo code."""
+    """List local AEAT portal registry entries, optionally filtered by category or modelo."""
     from ...domain.portals import PORTAL_REGISTRY, portals_by_category, portals_for_modelo
 
     if category and modelo:
@@ -1078,7 +1316,10 @@ def portals_list(
     result = PortalsListResult(
         count=len(rows),
         rows=[
-            PortalEntryPayload(**row) for row in rows  # CAST-RATIONALE-WIRE-PAYLOAD-PORTAL-ENTRY: _portal_row returns Mapping[str, object]; splat matches PortalEntryPayload fields at this boundary.
+            # CAST-RATIONALE-WIRE-PAYLOAD-PORTAL-ENTRY:
+            # _portal_row returns Mapping[str, object]; splat matches PortalEntryPayload fields here.
+            PortalEntryPayload(**row)
+            for row in rows
         ],  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-PORTAL-ENTRY-MAPPING-SPLAT
     )
     lines = [f"count\t{len(rows)}"]
@@ -1107,7 +1348,9 @@ def portals_show(
     from ._app_live_payloads import PortalsViewResult
 
     result = PortalsViewResult(
-        **payload  # CAST-RATIONALE-WIRE-PAYLOAD-PORTAL-VIEW: _portal_row returns Mapping[str, object]; splat matches PortalsViewResult fields at this boundary.
+        **payload
+        # CAST-RATIONALE-WIRE-PAYLOAD-PORTAL-VIEW:
+        # _portal_row returns Mapping[str, object]; splat matches PortalsViewResult fields here.
     )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-PORTAL-VIEW-MAPPING-SPLAT
     lines = [f"{key}\t{value}" for key, value in payload.items() if value != ""]
     _emit_envelope(ctx, command="app.live.portals.view", result=result, lines=lines)
@@ -1199,7 +1442,10 @@ def expedientes_list(ctx: typer.Context) -> None:
         bucket_id=bucket_id,
         count=len(rows),
         rows=[
-            ExpedienteSnapshotSummaryPayload(**_expedientes_row(r)) for r in rows  # CAST-RATIONALE-WIRE-PAYLOAD-EXPEDIENTES-ROW: _expedientes_row returns Mapping[str, object]; splat matches payload fields at boundary.
+            # CAST-RATIONALE-WIRE-PAYLOAD-EXPEDIENTES-ROW:
+            # _expedientes_row returns Mapping[str, object]; splat matches payload fields here.
+            ExpedienteSnapshotSummaryPayload(**_expedientes_row(r))
+            for r in rows
         ],  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-EXPEDIENTES-ROW-MAPPING-SPLAT
     )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
@@ -1390,7 +1636,10 @@ def verify_list(
         bucket_id=bucket_id,
         count=len(rows),
         rows=[
-            VerifyObservationSummaryPayload(**_verify_row(r)) for r in rows  # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-LIST: _verify_row returns Mapping[str, object]; splat matches payload fields at boundary.
+            # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-LIST:
+            # _verify_row returns Mapping[str, object]; splat matches payload fields here.
+            VerifyObservationSummaryPayload(**_verify_row(r))
+            for r in rows
         ],  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-LIST-MAPPING-SPLAT
     )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
@@ -1423,7 +1672,10 @@ def verify_show(
     from ._app_live_payloads import VerifyViewResult
 
     result = VerifyViewResult(
-        bucket_id=bucket_id, **_verify_row(record)  # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-VIEW: _verify_row returns Mapping[str, object]; splat matches VerifyViewResult fields at boundary.
+        bucket_id=bucket_id,
+        **_verify_row(record)
+        # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-VIEW:
+        # _verify_row returns Mapping[str, object]; splat matches VerifyViewResult fields here.
     )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-VIEW-MAPPING-SPLAT
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
     _emit_envelope(ctx, command="app.live.verify.view", result=result, lines=lines)
@@ -1490,7 +1742,10 @@ def verify_latest(
         )
         return
     result = VerifyLatestResult(
-        bucket_id=bucket_id, **_verify_row(record)  # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-LATEST: _verify_row returns Mapping[str, object]; splat matches VerifyLatestResult fields at boundary.
+        bucket_id=bucket_id,
+        **_verify_row(record)
+        # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-LATEST:
+        # _verify_row returns Mapping[str, object]; splat matches VerifyLatestResult fields here.
     )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-LATEST-MAPPING-SPLAT
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
     _emit_envelope(ctx, command="app.live.verify.latest", result=result, lines=lines)
@@ -1545,7 +1800,10 @@ def verify_nif_iva(
     from ._app_live_payloads import VerifyNifIvaResult
 
     result = VerifyNifIvaResult(
-        bucket_id=bucket_id, **_verify_row(record)  # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-NIF-IVA: _verify_row returns Mapping[str, object]; splat matches VerifyNifIvaResult fields at boundary.
+        bucket_id=bucket_id,
+        **_verify_row(record)
+        # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-NIF-IVA:
+        # _verify_row returns Mapping[str, object]; splat matches VerifyNifIvaResult fields here.
     )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-NIF-IVA-MAPPING-SPLAT
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
     _emit_envelope(ctx, command="app.live.verify.nif_iva", result=result, lines=lines)
@@ -1599,7 +1857,10 @@ def verify_tgvi(
     from ._app_live_payloads import VerifyTgviResult
 
     result = VerifyTgviResult(
-        bucket_id=bucket_id, **_verify_row(record)  # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-TGVI: _verify_row returns Mapping[str, object]; splat matches VerifyTgviResult fields at boundary.
+        bucket_id=bucket_id,
+        **_verify_row(record)
+        # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-TGVI:
+        # _verify_row returns Mapping[str, object]; splat matches VerifyTgviResult fields here.
     )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-TGVI-MAPPING-SPLAT
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
     _emit_envelope(ctx, command="app.live.verify.tgvi", result=result, lines=lines)
@@ -1678,7 +1939,10 @@ def borrador_100_list(
         bucket_id=bucket_id,
         count=len(rows),
         rows=[
-            Borrador100SnapshotSummaryPayload(**_borrador_row(r)) for r in rows  # CAST-RATIONALE-WIRE-PAYLOAD-BORRADOR-LIST: _borrador_row returns Mapping[str, object]; splat matches payload fields at boundary.
+            # CAST-RATIONALE-WIRE-PAYLOAD-BORRADOR-LIST:
+            # _borrador_row returns Mapping[str, object]; splat matches payload fields here.
+            Borrador100SnapshotSummaryPayload(**_borrador_row(r))
+            for r in rows
         ],  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-BORRADOR-LIST-MAPPING-SPLAT
     )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]

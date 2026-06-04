@@ -101,7 +101,14 @@ def verify_declaracion(
     try:
         policy = snapshot.verification_policy()
     except RegistryValidationError as exc:
-        raise VerificationError(str(exc)) from exc
+        raise VerificationError(
+            translated_message="application.verification.errors.registry_policy_invalid",
+            context={
+                "modelo": declaracion.modelo,
+                "period": declaracion.period,
+                "error_type": type(exc).__name__,
+            },
+        ) from exc
     extracted = _decimal_extracted_values(declaracion)
     inputs = {
         casilla.id: extracted[casilla.id]
@@ -124,8 +131,15 @@ def verify_declaracion(
         if binding.id not in supplied_bindings and binding.id not in bound_casilla_binding_ids
     )
     if missing_bindings:
-        missing = ", ".join(missing_bindings)
-        raise VerificationError(f"registry verification requires external binding values: {missing}")
+        raise VerificationError(
+            translated_message="application.verification.errors.missing_binding_values",
+            context={
+                "bindings": tuple(missing_bindings),
+                "count": len(missing_bindings),
+                "modelo": declaracion.modelo,
+                "period": declaracion.period,
+            },
+        )
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -190,7 +204,15 @@ def _load_snapshot(declaracion: DeclaracionObservation, *, registry_root: Path |
             period=registry_period,
         )
     except RegistrySnapshotError as exc:
-        raise VerificationError(f"declaracion verification failed registry snapshot validation: {exc}") from exc
+        raise VerificationError(
+            translated_message="application.verification.errors.registry_snapshot_invalid",
+            context={
+                "modelo": declaracion.modelo,
+                "period": declaracion.period,
+                "ejercicio": declaracion.ejercicio or "",
+                "error_type": type(exc).__name__,
+            },
+        ) from exc
 
 
 def _decimal_extracted_values(declaracion: DeclaracionObservation) -> dict[str, Decimal]:
@@ -208,7 +230,10 @@ def _registry_period(period: str, ejercicio: str | None) -> tuple[int, str]:
     try:
         return parse_canonical_period(period, ejercicio=ejercicio)
     except PeriodValidationError as exc:
-        raise RegistrySnapshotError(f"cannot map declaracion period {period!r}") from exc
+        raise RegistrySnapshotError(
+            translated_message="application.verification.errors.period_mapping_failed",
+            context={"period": period, "ejercicio": ejercicio or ""},
+        ) from exc
 
 
 def _filing_period_date(period: str, ejercicio: str | None) -> date:

@@ -28,6 +28,7 @@ from ...domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ...domain.user_profile import UserProfileFact
 from ...tests.secure_sql import isolated_profile_storage_root
 from . import app
+from ._test_envelope import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -113,6 +114,93 @@ _MODELO_111_INPUTS: dict[str, str] = {
 }
 
 
+def _set_export_profile_name() -> None:
+    workflow_state_repository().update(
+        lambda state: set_active_fields(
+            state,
+            (
+                UserProfileFact(path="identity.name", value="Ana"),
+                UserProfileFact(path="identity.surnames", value="Export Test"),
+            ),
+        ),
+    )
+
+
+def _seed_modelo_111_revisions(
+    *,
+    states: tuple[CalculationRevisionState, ...],
+    current_index: int | None = None,
+    filed_index: int | None = None,
+    filing_year: int = 2026,
+    period: str = "1T",
+) -> tuple[str, tuple[str, ...]]:
+    state = workflow_state_repository().load()
+    bucket_id = state.active_profile_bucket_id()
+    assert bucket_id is not None
+    registry_revision_id = "r" + "1" * 63
+    work_unit_id = derive_work_unit_id(
+        bucket_id=bucket_id,
+        modelo="111",
+        filing_year=filing_year,
+        period=period,
+        revision_id=registry_revision_id,
+    )
+    now = datetime.now(UTC)
+    revision_ids: list[str] = []
+    revisions: list[CalculationRevision] = []
+    for index, state_value in enumerate(states):
+        inputs = {**_MODELO_111_INPUTS, "03": f"{180 + index}.25"}
+        calculation_revision_id = derive_calculation_revision_id(
+            work_unit_id=work_unit_id,
+            inputs_snapshot=inputs,
+            binding_overrides={},
+            casilla_values={},
+        )
+        revision_ids.append(calculation_revision_id)
+        revisions.append(
+            CalculationRevision(
+                calculation_revision_id=calculation_revision_id,
+                work_unit_id=work_unit_id,
+                state=state_value,
+                inputs_snapshot=inputs,
+                created_at=now,
+                updated_at=now,
+                verified_at=now
+                if state_value
+                in {CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.PRESENTADO}
+                else None,
+                verified_by="operator"
+                if state_value
+                in {CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.PRESENTADO}
+                else None,
+                filed_at=now if state_value is CalculationRevisionState.PRESENTADO else None,
+                filed_by="operator" if state_value is CalculationRevisionState.PRESENTADO else None,
+            )
+        )
+
+    work_unit = WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=bucket_id,
+        modelo=ModeloCode("111"),
+        filing_year=filing_year,
+        period=period,
+        revision_id=registry_revision_id,
+        name=f"111-{filing_year}-{period}",
+        created_at=now,
+        updated_at=now,
+        current_calculation_revision_id=revision_ids[current_index] if current_index is not None else None,
+        filed_calculation_revision_id=revision_ids[filed_index] if filed_index is not None else None,
+    )
+    wu_repo = WorkUnitCatalogueRepository()
+    wu_repo.save(upsert_work_unit(wu_repo.load(), work_unit))
+    cr_repo = CalculationRevisionCatalogueRepository()
+    catalogue = cr_repo.load()
+    for revision in revisions:
+        catalogue = upsert_calculation_revision(catalogue, revision)
+    cr_repo.save(catalogue)
+    return work_unit_id, tuple(revision_ids)
+
+
 def _seed_exportable_modelo_111_revision(
     *, modelo: str = "111", filing_year: int = 2026, period: str = "2026Q1",
 ) -> tuple[str, str]:
@@ -184,15 +272,7 @@ def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
     export of a non-130 modelo succeeds.
     """
 
-    workflow_state_repository().update(
-        lambda state: set_active_fields(
-            state,
-            (
-                UserProfileFact(path="identity.name", value="Ana"),
-                UserProfileFact(path="identity.surnames", value="Export Test"),
-            ),
-        ),
-    )
+    _set_export_profile_name()
     work_unit_id, _ = _seed_exportable_modelo_111_revision()
     out = tmp_path / "modelo-111.txt"
 
@@ -204,6 +284,87 @@ def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
     assert result.exit_code == 0, result.output
     assert out.exists()
     assert out.stat().st_size > 0
+
+
+def test_export_resolves_visible_target_to_current_verified_revision(
+    cli_runner: CliRunner, tmp_path: Path,
+) -> None:
+    """Natural-key export defaults to the current verified-complete revision."""
+
+    _set_export_profile_name()
+    _, (calculation_revision_id,) = _seed_modelo_111_revisions(
+        states=(CalculationRevisionState.VERIFICADO_COMPLETO,),
+        current_index=0,
+    )
+    out = tmp_path / "modelo-111-current.txt"
+
+    result = cli_runner.invoke(
+        app,
+        [
+            "--format", "json",
+            "app", "modelo", "export",
+            "--modelo", "111", "--year", "2026", "--period", "1T",
+            "--output", str(out),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = _payload(result.output)
+    assert payload["calculation_revision_id"] == calculation_revision_id
+    assert out.exists()
+
+
+def test_export_prefers_filed_pointer_over_current_verified_revision(
+    cli_runner: CliRunner, tmp_path: Path,
+) -> None:
+    """Natural-key export prefers filed pointer before current verified pointer."""
+
+    _set_export_profile_name()
+    _, revision_ids = _seed_modelo_111_revisions(
+        states=(CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.PRESENTADO),
+        current_index=0,
+        filed_index=1,
+    )
+    out = tmp_path / "modelo-111-filed.txt"
+
+    result = cli_runner.invoke(
+        app,
+        [
+            "--format", "json",
+            "app", "modelo", "export",
+            "--modelo", "111", "--year", "2026", "--period", "1T",
+            "--output", str(out),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = _payload(result.output)
+    assert payload["calculation_revision_id"] == revision_ids[1]
+    assert out.exists()
+
+
+def test_export_refuses_ambiguous_verified_revisions_without_pointer(
+    cli_runner: CliRunner, tmp_path: Path,
+) -> None:
+    """Natural-key export refuses multiple verified candidates without a pointer."""
+
+    _seed_modelo_111_revisions(
+        states=(CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.VERIFICADO_COMPLETO),
+    )
+    out = tmp_path / "modelo-111-ambiguous.txt"
+
+    result = cli_runner.invoke(
+        app,
+        [
+            "app", "modelo", "export",
+            "--modelo", "111", "--year", "2026", "--period", "1T",
+            "--output", str(out),
+        ],
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "ambiguous" in result.output.lower() or "more than one" in result.output.lower()
+    assert not out.exists()
 
 
 def test_export_modelo_111_refuses_when_profile_name_missing(

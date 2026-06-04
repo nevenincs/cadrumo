@@ -10,10 +10,8 @@ matching CSV downloads.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
-from datetime import date
-from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -31,9 +29,6 @@ from ._base import (
     build_raw_transaction,
     coerce_cell_text,
     default_currency,
-    parse_amount_value,
-    parse_date_value,
-    synthesize_transaction_id,
 )
 from ._constants import XLSX_EXTENSION
 from ._csv import (
@@ -42,9 +37,8 @@ from ._csv import (
     _find_column,
     _header_lookup,
     _layout_score,
-    _required_value,
+    _parse_tabular_transaction_row,
     _row_is_blank,
-    _value_from_aliases,
 )
 
 _logger = get_logger(__name__)
@@ -142,16 +136,27 @@ class XlsxProvider(FinancialProvider):
                 cell_lookup = _row_to_cells(headers, row)
                 if _row_is_blank(raw_fields):
                     continue
-                parsed = _parse_xlsx_row(
-                    layout=layout,
-                    lookup=lookup,
-                    raw_fields=raw_fields,
-                    cell_lookup=cell_lookup,
-                    sheet_name=sheet_name,
-                    source_sha256=source_sha256,
-                    source_row_index=source_row_index,
-                    path=path,
-                )
+                try:
+                    parsed = _parse_tabular_transaction_row(
+                        layout=layout,
+                        lookup=lookup,
+                        raw_fields=raw_fields,
+                        typed_fields=cell_lookup,
+                        synthetic_provider_name=f"{layout.bank_name}-{sheet_name}",
+                        source_sha256=source_sha256,
+                        source_row_index=source_row_index,
+                        required_field_context="worksheet row",
+                    )
+                except (ValueError, FinancialValidationError) as exc:
+                    _logger.warning(
+                        "xlsx_provider: parse error row=%d file=%s",
+                        source_row_index,
+                        path.name,
+                        exc_info=True,
+                    )
+                    raise InvalidFinancialSourceError(
+                        f"worksheet row {source_row_index} could not be parsed: {exc}",
+                    ) from exc
                 yield build_raw_transaction(
                     provider=self,
                     path=path,
@@ -305,89 +310,6 @@ def _best_layout_match_for_worksheet(
     return best
 
 
-@dataclass(frozen=True, slots=True)
-class _ParsedXlsxRow:
-    """Per-row projection used by XlsxProvider.ingest.
-
-    Holds the seven typed fields the build_raw_transaction call
-    needs. Constructed inside _parse_xlsx_row so the per-column
-    parse + the bank-layout-specific defaulting (synthetic
-    transaction ids, default currency, optional value_date) all
-    happen in one place.
-    """
-
-    transaction_id: str
-    booked_date: date
-    value_date: date | None
-    amount: Decimal
-    currency: str
-    description: str
-    counterparty: str | None
-
-
-def _parse_xlsx_row(
-    *,
-    layout: CsvBankLayout,
-    lookup: dict[str, str],
-    raw_fields: dict[str, str],
-    cell_lookup: dict[str, object],
-    sheet_name: str,
-    source_sha256: str,
-    source_row_index: int,
-    path: Path,
-) -> _ParsedXlsxRow:
-    """Project one worksheet row into the typed ``_ParsedXlsxRow`` envelope.
-
-    Re-wraps any ``ValueError`` produced by the per-column parsers
-    as :class:`InvalidFinancialSourceError` so the caller sees one
-    typed envelope per malformed row. Falls back to
-    :func:`synthesize_transaction_id` when the bank does not
-    publish an external id; defaults the currency to
-    :func:`default_currency` when the bank layout does not declare
-    a currency column or the cell is blank.
-    """
-    try:
-        transaction_id = _value_from_aliases(raw_fields, lookup, layout.columns.external_id)
-        if not transaction_id:
-            transaction_id = synthesize_transaction_id(
-                provider_name=f"{layout.bank_name}-{sheet_name}",
-                source_sha256=source_sha256,
-                source_row_index=source_row_index,
-            )
-        booked_date = parse_date_value(
-            _required_cell_value(cell_lookup, lookup, layout.columns.booked_date, "booked_date"),
-            day_first=layout.day_first_dates,
-        )
-        value_raw = _cell_value_from_aliases(cell_lookup, lookup, layout.columns.value_date)
-        value_date = parse_date_value(value_raw, day_first=layout.day_first_dates) if value_raw is not None else None
-        amount = parse_amount_value(
-            _required_cell_value(cell_lookup, lookup, layout.columns.amount, "amount"),
-            decimal_separator=layout.decimal_separator,
-        )
-        currency = _value_from_aliases(raw_fields, lookup, layout.columns.currency) or default_currency()
-        description = _required_value(raw_fields, lookup, layout.columns.description, "description")
-        counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
-    except (ValueError, FinancialValidationError) as exc:
-        _logger.warning(
-            "xlsx_provider: parse error row=%d file=%s",
-            source_row_index,
-            path.name,
-            exc_info=True,
-        )
-        raise InvalidFinancialSourceError(
-            f"worksheet row {source_row_index} could not be parsed: {exc}",
-        ) from exc
-    return _ParsedXlsxRow(
-        transaction_id=transaction_id,
-        booked_date=booked_date,
-        value_date=value_date,
-        amount=amount,
-        currency=currency,
-        description=description,
-        counterparty=counterparty,
-    )
-
-
 def _row_to_mapping(headers: Sequence[str], row: Sequence[object]) -> dict[str, str]:
     """Convert one worksheet row into the stored raw-field mapping."""
     return {header: coerce_cell_text(row[index]) if index < len(row) else "" for index, header in enumerate(headers)}
@@ -396,29 +318,3 @@ def _row_to_mapping(headers: Sequence[str], row: Sequence[object]) -> dict[str, 
 def _row_to_cells(headers: Sequence[str], row: Sequence[object]) -> dict[str, object]:
     """Map worksheet headers to the original cell values for typed parsing."""
     return {header: row[index] if index < len(row) else "" for index, header in enumerate(headers)}
-
-
-def _cell_value_from_aliases(
-    raw_cells: Mapping[str, object],
-    lookup: Mapping[str, str],
-    aliases: tuple[str, ...],
-) -> object | None:
-    """Resolve and read the first non-empty cell value for a logical column."""
-    header = _find_column(lookup, aliases)
-    if header is None:
-        return None
-    value = raw_cells.get(header, "")
-    return value if coerce_cell_text(value) else None
-
-
-def _required_cell_value(
-    raw_cells: Mapping[str, object],
-    lookup: Mapping[str, str],
-    aliases: tuple[str, ...],
-    field_name: str,
-) -> object:
-    """Resolve a required logical column from typed worksheet cell values."""
-    value = _cell_value_from_aliases(raw_cells, lookup, aliases)
-    if value is None:
-        raise InvalidFinancialSourceError(f"worksheet row is missing required field {field_name!r}")
-    return value

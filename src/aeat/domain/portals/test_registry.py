@@ -10,6 +10,7 @@ import pytest
 from ._categories import PortalCategory
 from ._codes import Portal
 from ._errors import PortalIntegrityError, UnknownPortalError
+from ._metadata import PortalMetadata
 from ._registry import (
     PORTAL_REGISTRY,
     _finalise_registry,
@@ -24,6 +25,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 def test_registry_is_frozen_mappingproxy() -> None:
     """The public registry is a :class:`MappingProxyType`."""
     assert isinstance(PORTAL_REGISTRY, MappingProxyType)
+
+
+def test_registry_is_typed_schema_authority_for_portal_route_metadata() -> None:
+    """Portal route literals live inside frozen ``PortalMetadata`` schema records."""
+    for metadata in PORTAL_REGISTRY.values():
+        assert isinstance(metadata, PortalMetadata)
+        assert metadata.model_config.get("frozen") is True
+        assert metadata.url.scheme == "https"
 
 
 def test_registry_mutation_rejected() -> None:

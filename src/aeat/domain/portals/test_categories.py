@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from ...core.external_constants import load_external_constants
 from ._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
+from ._hosts import portal_host_name
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -52,18 +54,33 @@ def test_url_stability_has_exactly_4_members() -> None:
 
 
 def test_subdomain_has_exactly_7_members() -> None:
-    """The subdomain enum exposes exactly 7 hosts."""
+    """The subdomain enum exposes exactly 7 central-registry keys."""
     expected_values = {
-        "sede.agenciatributaria.gob.es",
-        "www1.agenciatributaria.gob.es",
-        "www2.agenciatributaria.gob.es",
-        "www3.agenciatributaria.gob.es",
-        "agenciatributaria.gob.es",
-        "www.agenciatributaria.es",
-        "clave.gob.es",
+        "sede",
+        "www1",
+        "www2",
+        "www3",
+        "aeat_gob",
+        "legacy_www",
+        "clave",
     }
     assert {s.value for s in PortalHost} == expected_values
     assert len(list(PortalHost)) == 7
+
+
+def test_subdomain_hosts_resolve_from_external_constants() -> None:
+    """Portal hostnames come from the external constants registry."""
+    domains = load_external_constants().aeat.domains
+    expected_hosts = {
+        domains.sede.removeprefix("https://"),
+        domains.www1.removeprefix("https://"),
+        domains.www2.removeprefix("https://"),
+        domains.www3.removeprefix("https://"),
+        domains.aeat_gob.removeprefix("https://"),
+        domains.legacy_www.removeprefix("https://"),
+        domains.clave.removeprefix("https://"),
+    }
+    assert {portal_host_name(subdomain) for subdomain in PortalHost} == expected_hosts
 
 
 @pytest.mark.parametrize(

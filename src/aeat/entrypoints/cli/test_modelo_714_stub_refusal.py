@@ -22,10 +22,12 @@ from pathlib import Path
 
 import pytest
 
+from ...tests.aeat_literal_fixtures import aeat_host
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+_SEDE_HOST = aeat_host("sede")
 
 
 @pytest.fixture(autouse=True)
@@ -62,7 +64,7 @@ def test_work_create_714_refuses_with_legal_authority_message(
     # Must cite the form-approval order.
     assert "HAC/1023/2021" in result.output or "1023" in result.output
     # Must redirect to AEAT Sede, not imply local-CLI filing support.
-    assert "sede.agenciatributaria.gob.es" in result.output or "Sede" in result.output
+    assert _SEDE_HOST in result.output or "Sede" in result.output
     # Generic crash / unrouted error messages are forbidden.
     assert "could not evaluate" not in result.output
     assert "Modelo desconocido" not in result.output

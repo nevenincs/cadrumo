@@ -280,6 +280,9 @@ def test_error_carries_prompt_key_context() -> None:
     assert error.context["prompt_key"] == _tr(str(_TEXT_PROMPT))
     assert "prompt_key_path" not in error.context
     assert error.context["question_id"] == "probe"
+    assert "raw" not in error.context
+    assert error.context["raw_redacted"] is True
+    assert error.context["raw_length"] == len("maybe")
 
 
 def test_invalid_tax_id_error_does_not_leak_internal_key_path() -> None:
@@ -308,6 +311,10 @@ def test_invalid_tax_id_error_does_not_leak_internal_key_path() -> None:
     assert "wizard.setup.profile.tax-id.prompt" not in error.translated_message
     assert error.context is not None
     assert error.context["prompt_key"] != "wizard.setup.profile.tax-id.prompt"
+    assert "raw" not in error.context
+    assert "detail" not in error.context
+    assert error.context["raw_redacted"] is True
+    assert error.context["detail_redacted"] is True
 
 
 def test_invalid_tax_id_refusal_names_correct_check_letter() -> None:

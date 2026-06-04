@@ -12,10 +12,13 @@ from ...application.user_profile._orchestration import profile_create_storage_sp
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
 from ...core import resolve_active_bucket_id
+from ...core.config import Settings
 from ...tests.secure_sql import isolated_profile_storage_root
 from ._ledger import ratios_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+_AEAT = Settings.external_constants().aeat
+_G313_URL = f"{_AEAT.domains.sede}{_AEAT.sede_paths.censo_g313_launcher}"
 
 
 @pytest.fixture(autouse=True)
@@ -141,7 +144,7 @@ def _capture_censo_with_vivienda_office(office_m2: str, total_m2: str) -> None:
     service.capture(
         profile_id=bucket_id,
         captured_at=datetime.now(UTC),
-        source_url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml",
+        source_url=_G313_URL,
         censo_facts={
             "vivienda_office.total_m2": total_m2,
             "vivienda_office.office_m2": office_m2,

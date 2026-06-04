@@ -3,15 +3,27 @@
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
 
+from ...core.external_constants import load_external_constants
 from ...core.i18n import Translatable as tr
 from ._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from ._codes import Portal
 from ._errors import PortalValidationError
+from ._hosts import portal_host_name
 
-_G_CODE_PATH_RE: re.Pattern[str] = re.compile(r"^/Sede/procedimientoini/G[A-Z0-9]{3}\.shtml$")
+
+@lru_cache(maxsize=1)
+def _filing_censo_path_re() -> re.Pattern[str]:
+    """Return the centralized AEAT filing/censo portal path pattern."""
+    return re.compile(load_external_constants().aeat.portal_paths.filing_censo_path_regex)
+
+
+def _filing_censo_path_description() -> str:
+    """Return the centralized human-readable filing/censo portal path shape."""
+    return load_external_constants().aeat.portal_paths.filing_censo_path_description
 
 
 class PortalMetadata(BaseModel):
@@ -93,16 +105,17 @@ class PortalMetadata(BaseModel):
 
         # PortalHost must match URL host.
         host = self.url.host
-        if host != self.subdomain.value:
-            raise PortalValidationError(f"url host {host!r} does not match subdomain {self.subdomain.value!r}")
+        expected_host = portal_host_name(self.subdomain)
+        if host != expected_host:
+            raise PortalValidationError(f"url host {host!r} does not match subdomain {expected_host!r}")
 
         # G-code path check for active FILING / CENSO entries.
         if self.active and self.category in {PortalCategory.FILING, PortalCategory.CENSO}:
             path = self.url.path or ""
-            if not _G_CODE_PATH_RE.match(path):
+            if not _filing_censo_path_re().match(path):
                 raise PortalValidationError(
                     f"active {self.category.value} portal url path must match "
-                    f"/Sede/procedimientoini/G<code>.shtml, got {path!r}"
+                    f"{_filing_censo_path_description()}, got {path!r}"
                 )
 
         # Retired-without-replacement fallback.

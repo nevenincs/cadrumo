@@ -36,6 +36,17 @@ class FiledListingRowPayload(OutputSchema):
     has_justificante: bool
 
 
+class FiledCaptureFailurePayload(OutputSchema):
+    """One failed declaration capture row in a filed capture-all result."""
+
+    modelo: str
+    year: int
+    period: str | None = None
+    expediente_id: str | None = None
+    error_type: str
+    message: str
+
+
 # ---------------------------------------------------------------------------
 # Registered schemas
 # ---------------------------------------------------------------------------
@@ -65,6 +76,24 @@ class FiledCaptureResult(OutputSchema):
     casilla_count: int
     calculation_observation_count: int
     calculation_observation_keys: list[str]
+
+
+@register_schema("app.live.filed.capture_all")
+class FiledCaptureAllResult(OutputSchema):
+    """Payload for ``aeat app live filed capture-all``."""
+
+    output_root: str
+    modelos: list[str]
+    year_from: int
+    year_to: int
+    captured_count: int
+    failed_count: int
+    observation_paths: list[str]
+    artefact_refs: list[str]
+    casilla_count: int
+    calculation_observation_count: int
+    calculation_observation_keys: list[str]
+    failures: list[FiledCaptureFailurePayload]
 
 
 @register_schema("app.live.filed.capture_sources")

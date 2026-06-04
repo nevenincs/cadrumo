@@ -23,10 +23,12 @@ from pathlib import Path
 
 import pytest
 
+from ...tests.aeat_literal_fixtures import aeat_host
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+_SEDE_HOST = aeat_host("sede")
 
 
 @pytest.fixture(autouse=True)
@@ -66,7 +68,7 @@ def test_work_create_210_refuses_with_legal_authority_message(
     # Must cite the governing statute (TRLIRNR / RD 5/2004).
     assert "5/2004" in result.output or "TRLIRNR" in result.output
     # Must redirect to AEAT Sede G320 procedure, not imply local-CLI support.
-    assert "G320" in result.output or "sede.agenciatributaria.gob.es" in result.output
+    assert "G320" in result.output or _SEDE_HOST in result.output
     # Generic crash / unknown-modelo messages are forbidden.
     assert "Modelo desconocido" not in result.output
     assert "could not evaluate" not in result.output

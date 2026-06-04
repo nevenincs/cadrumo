@@ -171,7 +171,12 @@ def persist_patch(
     facts: list[UserProfileFact] = []
     for question_id, raw in supplied.items():
         question = questions.get(question_id)
-        if question is None or question.profile_key is None:
+        if question is None:
+            raise WorkflowInputMismatchError(
+                translated_message="application.wizard.errors.persist_patch_unknown_question_id",
+                context={"question_id": question_id},
+            )
+        if question.profile_key is None:
             continue
         validated = validate_widget_answer(question, raw)
         if not validated:

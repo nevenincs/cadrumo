@@ -34,6 +34,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.bucket import BucketValidationError
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.user_profile import (
     ProfileNotFoundError,
@@ -49,6 +50,13 @@ _USER_PROFILE_VALUE_VERSION = USER_PROFILE_VALUE_STORAGE_NAMESPACE.schema_versio
 _USER_PROFILE_VALUE_SENSITIVITY = USER_PROFILE_VALUE_STORAGE_NAMESPACE.sensitivity
 _USER_PROFILE_SNAPSHOT_VERSION = USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.schema_version
 _USER_PROFILE_SNAPSHOT_SENSITIVITY = USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.sensitivity
+_PROFILE_RECORD_MISSING_MESSAGE = "profile record not found in secure storage"
+_PROFILE_RECORD_CLASSIFICATION_MESSAGE = "profile record classification is incompatible with this repository"
+_PROFILE_RECORD_VERSION_MESSAGE = "profile record schema version is not supported"
+_PROFILE_SNAPSHOT_MISSING_MESSAGE = "profile snapshot not found in secure storage"
+_PROFILE_SNAPSHOT_CLASSIFICATION_MESSAGE = "profile snapshot classification is incompatible with this repository"
+_PROFILE_SNAPSHOT_VERSION_MESSAGE = "profile snapshot schema version is not supported"
+_log = get_logger(__name__)
 
 
 def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
@@ -80,7 +88,8 @@ def _clear_output_language_cache() -> None:
     """
     try:
         from ...core.i18n._render import clear_output_language_cache
-    except Exception:  # pragma: no cover - cache invalidation must never block persistence
+    except ImportError:  # pragma: no cover - cache invalidation must never block persistence
+        _log.debug("user-profile output-language cache invalidation import failed", exc_info=True)
         return
     clear_output_language_cache()
 
@@ -176,7 +185,7 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
 
         Reads the encrypted ``Envelope`` (the stored container that holds the
         encrypted payload plus its metadata) for the single live profile
-        record in this bucket, validates it back into a ``UserProfileRecord``,
+        record in this bucket, validates it back into a :class:`UserProfileRecord`,
         and enforces two storage-contract checks before returning the payload.
         First, the envelope's classification (its declared sensitivity level)
         must match the level expected for profile data. Second, the schema
@@ -187,7 +196,7 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
             profile_id: The immutable UUIDv4 identifying the profile.
 
         Returns:
-            The decrypted ``UserProfileRecord`` carried by the envelope.
+            The decrypted :class:`UserProfileRecord` carried by the envelope.
 
         Raises:
             ProfileNotFoundError: No record is stored under ``profile_id``
@@ -206,27 +215,41 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
             max_supported_version=_USER_PROFILE_VALUE_VERSION,
         )
         if record is None:
-            raise ProfileNotFoundError(f"profile {profile_id!r} not found in bucket {self._bucket_id!r}")
+            raise ProfileNotFoundError(
+                _PROFILE_RECORD_MISSING_MESSAGE,
+                translated_message="application.user_profile.errors.repository_profile_record_missing",
+                context={"profile_id": profile_id, "bucket_id": self._bucket_id},
+            )
         try:
             envelope = Envelope[UserProfileRecord].model_validate_json(record.payload.decode("utf-8"))
         except ValidationError as exc:
             raise StoredProfileDriftError(profile_id, exc) from exc
         if envelope.classification is not _USER_PROFILE_VALUE_SENSITIVITY:
             raise ClassificationError(
-                f"profile {profile_id!r} has classification {envelope.classification}; "
-                f"consumer expected {_USER_PROFILE_VALUE_SENSITIVITY}",
+                _PROFILE_RECORD_CLASSIFICATION_MESSAGE,
+                translated_message="application.user_profile.errors.repository_profile_record_classification_mismatch",
+                context={
+                    "profile_id": profile_id,
+                    "classification": envelope.classification.value,
+                    "expected": _USER_PROFILE_VALUE_SENSITIVITY.value,
+                },
             )
         if envelope.schema_version > _USER_PROFILE_VALUE_VERSION:
             raise EnvelopeVersionError(
-                f"profile {profile_id!r} is at version {envelope.schema_version}; "
-                f"consumer supports up to {_USER_PROFILE_VALUE_VERSION}",
+                _PROFILE_RECORD_VERSION_MESSAGE,
+                translated_message="application.user_profile.errors.repository_profile_record_version_unsupported",
+                context={
+                    "profile_id": profile_id,
+                    "schema_version": envelope.schema_version,
+                    "max_supported_version": _USER_PROFILE_VALUE_VERSION,
+                },
             )
         return envelope.payload
 
     def save(self, record: UserProfileRecord) -> None:
         """Persist ``record`` as this bucket's single live profile aggregate.
 
-        Wraps the ``UserProfileRecord`` in an encrypted ``Envelope`` (the
+        Wraps the :class:`UserProfileRecord` in an encrypted ``Envelope`` (the
         stored container holding the encrypted payload plus its metadata)
         stamped with the current schema version, the write timestamp, and the
         sensitivity classification for profile data, then stores it under the
@@ -237,7 +260,7 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
         preferred language for command-line output.
 
         Args:
-            record: The live profile aggregate to encrypt and store.
+            record: The live :class:`UserProfileRecord` aggregate to encrypt and store.
         """
         envelope = Envelope[UserProfileRecord](
             schema_version=_USER_PROFILE_VALUE_VERSION,
@@ -347,7 +370,7 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
         prepared. Reads the encrypted ``Envelope`` (the stored container that
         holds the encrypted payload plus its metadata) for the immutable
         snapshot keyed by this bucket and ``snapshot_id``, validates it into a
-        ``UserProfileSnapshot``, and enforces two storage-contract checks
+        :class:`UserProfileSnapshot`, and enforces two storage-contract checks
         before returning the payload. First, the envelope's classification
         (its declared sensitivity level) must match the level expected for
         snapshot data. Second, the schema version recorded on the envelope
@@ -358,7 +381,7 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
                 within this bucket.
 
         Returns:
-            The decrypted ``UserProfileSnapshot`` carried by the envelope.
+            The decrypted :class:`UserProfileSnapshot` carried by the envelope.
 
         Raises:
             ProfileSnapshotNotFoundError: No snapshot is stored under
@@ -375,17 +398,31 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
             max_supported_version=_USER_PROFILE_SNAPSHOT_VERSION,
         )
         if record is None:
-            raise ProfileSnapshotNotFoundError(f"snapshot {snapshot_id!r} not found in bucket {self._bucket_id!r}")
+            raise ProfileSnapshotNotFoundError(
+                _PROFILE_SNAPSHOT_MISSING_MESSAGE,
+                translated_message="application.user_profile.errors.repository_profile_snapshot_missing",
+                context={"snapshot_id": snapshot_id, "bucket_id": self._bucket_id},
+            )
         envelope = Envelope[UserProfileSnapshot].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not _USER_PROFILE_SNAPSHOT_SENSITIVITY:
             raise ClassificationError(
-                f"snapshot {snapshot_id!r} has classification {envelope.classification}; "
-                f"consumer expected {_USER_PROFILE_SNAPSHOT_SENSITIVITY}",
+                _PROFILE_SNAPSHOT_CLASSIFICATION_MESSAGE,
+                translated_message="application.user_profile.errors.repository_profile_snapshot_classification_mismatch",
+                context={
+                    "snapshot_id": snapshot_id,
+                    "classification": envelope.classification.value,
+                    "expected": _USER_PROFILE_SNAPSHOT_SENSITIVITY.value,
+                },
             )
         if envelope.schema_version > _USER_PROFILE_SNAPSHOT_VERSION:
             raise EnvelopeVersionError(
-                f"snapshot {snapshot_id!r} is at version {envelope.schema_version}; "
-                f"consumer supports up to {_USER_PROFILE_SNAPSHOT_VERSION}",
+                _PROFILE_SNAPSHOT_VERSION_MESSAGE,
+                translated_message="application.user_profile.errors.repository_profile_snapshot_version_unsupported",
+                context={
+                    "snapshot_id": snapshot_id,
+                    "schema_version": envelope.schema_version,
+                    "max_supported_version": _USER_PROFILE_SNAPSHOT_VERSION,
+                },
             )
         return envelope.payload
 

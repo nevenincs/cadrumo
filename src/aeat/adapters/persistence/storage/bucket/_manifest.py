@@ -18,7 +18,6 @@ together.
 
 from __future__ import annotations
 
-import base64
 from datetime import datetime
 from enum import StrEnum
 from typing import Annotated
@@ -27,8 +26,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.time._utc import validate_utc_aware
-
-_SALT_BYTES = 16
+from .._kdf_salt import decode_kdf_salt, encode_kdf_salt, require_kdf_salt_length
 
 
 class ManifestKdfParams(BaseModel):
@@ -53,22 +51,16 @@ class ManifestKdfParams(BaseModel):
     @field_validator("salt")
     @classmethod
     def _check_salt_length(cls, value: bytes) -> bytes:
-        if len(value) != _SALT_BYTES:
-            raise ValueError(f"salt must be exactly {_SALT_BYTES} bytes")
-        return value
+        return require_kdf_salt_length(value)
 
     @field_serializer("salt")
     def _serialise_salt(self, value: bytes) -> str:
-        return base64.b64encode(value).decode("ascii")
+        return encode_kdf_salt(value)
 
     @field_validator("salt", mode="before")
     @classmethod
     def _decode_salt(cls, value: object) -> bytes:
-        if isinstance(value, bytes):
-            return value
-        if isinstance(value, str):
-            return base64.b64decode(value.encode("ascii"), validate=True)
-        raise ValueError("salt must be bytes or base64 string")
+        return decode_kdf_salt(value)
 
 
 class BucketLifecycleStatus(StrEnum):

@@ -10,6 +10,7 @@ at import time.
 
 from __future__ import annotations
 
+import re
 import tomllib
 from decimal import Decimal
 from enum import StrEnum
@@ -84,6 +85,10 @@ class AeatSedePaths(_Frozen):
     notifications_query: str
     certificate_selector: str
     censo_g313_launcher: str
+    r210_simulator_open_ajax: str
+    borrador_100_detail_template: str
+    declaracion_consult: str
+    clave_movil_login: str
     expediente_detail_template: str
     irpf_expediente_detail_year_prefix: str
     irpf_expediente_detail_year_suffix: str
@@ -105,6 +110,7 @@ class AeatClaveMovilSurface(_Frozen):
     obtener_clave_movil_non_qr_path: str = Field(min_length=1)
     autentica_dni_nie_contraste_path: str = Field(min_length=1)
     cancelar_clave_movil_path: str = Field(min_length=1)
+    obtener_clave_movil_browser_global: str = Field(min_length=1)
     authorize_button_selector: str = Field(min_length=1)
     non_qr_link_selector: str = Field(min_length=1)
     nif_input_selector: str = Field(min_length=1)
@@ -217,6 +223,30 @@ class AeatLiveSafety(_Frozen):
         return value
 
 
+class AeatPortalPaths(_Frozen):
+    """Centralized AEAT portal catalogue paths keyed by :class:`Portal` id."""
+
+    filing_censo_path_regex: str = Field(min_length=1)
+    filing_censo_path_description: str = Field(min_length=1)
+    paths: dict[str, str] = Field(min_length=1)
+
+    @field_validator("filing_censo_path_regex")
+    @classmethod
+    def _filing_censo_path_regex_is_valid(cls, value: str) -> str:
+        re.compile(value)
+        return value
+
+    @field_validator("paths")
+    @classmethod
+    def _paths_are_relative_urls(cls, value: dict[str, str]) -> dict[str, str]:
+        for key, path in value.items():
+            if not key.strip():
+                raise ValueError("portal path keys must not be blank")
+            if not path.startswith("/"):
+                raise ValueError(f"portal path for {key!r} must start with '/'")
+        return value
+
+
 class AeatSection(_Frozen):
     """Aggregates every AEAT-flavoured constant subsection.
 
@@ -247,6 +277,7 @@ class AeatSection(_Frozen):
     help_pages: AeatHelpPages
     oracles: AeatOracles
     live_safety: AeatLiveSafety
+    portal_paths: AeatPortalPaths
 
     @cached_property
     def pre303(self) -> AeatPre303Surface:

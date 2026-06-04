@@ -170,7 +170,8 @@ def record_m036_declaration(
     of :attr:`BucketEventType.CENSO_DECLARATION_ALTA` /
     :attr:`~.CENSO_DECLARATION_MODIFICACION` /
     :attr:`~.CENSO_DECLARATION_BAJA`) carries the audit-trail entry the
-    composition-service rule requires alongside the data write.
+    composition-service rule requires alongside the data write, saved via the
+    :class:`BucketEventHistoryRepository`.
 
     The persisted :class:`M036DeclarationResult` is encrypted into the
     bucket-local :data:`LIVE_M036_DECLARATION_NAMESPACE` row keyed by

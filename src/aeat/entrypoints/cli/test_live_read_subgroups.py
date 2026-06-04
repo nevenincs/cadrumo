@@ -2,10 +2,18 @@
 
 from __future__ import annotations
 
+import asyncio
+import json
+import platform
+import shutil
+import subprocess
+import sys
+import textwrap
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from time import sleep
 
 import pytest
 from typer.testing import CliRunner
@@ -19,17 +27,23 @@ from ...application.live import (
     LiveIvaReadOutcome,
     LiveIvaReadStatus,
     LiveIvaReadSurface,
+    LiveIvaSurfaceTimeoutError,
 )
 from ...application.live._verify import VerifyService, VerifySurface
 from ...application.user_profile._orchestration import profile_create_storage_span
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
 from ...core.config import override_settings
+from ...tests.aeat_literal_fixtures import aeat_url, configured_path
 from ...tests.secure_sql import isolated_profile_storage_root
 from ._app_live import (
     _iva_remote_state_capture_lines,
     _live_auth_preflight_lines,
     _live_iva_outcome_label,
+    _playwright_profile_tokens,
+    _process_command_inventory,
+    _reap_new_playwright_profile_processes,
+    _run_live_iva_remote_state_command,
     borrador_100_app,
     expedientes_app,
     iva_wallet_app,
@@ -153,7 +167,7 @@ class TestBorrador100Subgroup:
             filing_year=2024,
             period="0A",
             captured_at=datetime(2025, 3, 15, tzinfo=UTC),
-            source_url="https://www2.agenciatributaria.gob.es/wlpl/PRET-R210/SimuladorOpenAjax",
+            source_url=aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax")),
             binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("1000.00")},
         )
 
@@ -194,6 +208,86 @@ class TestReadOnlyStructuralInvariants:
 
 
 class TestIvaRemoteStateCliSurface:
+    def test_remote_state_command_watchdog_reports_typed_timeout(self) -> None:
+        async def slow_read() -> str:
+            await asyncio.sleep(0.05)
+            return "unreachable"
+
+        async def run() -> None:
+            with pytest.raises(LiveIvaSurfaceTimeoutError) as raised:
+                await _run_live_iva_remote_state_command(slow_read(), timeout_ms=1)
+
+            assert raised.value.surface == "remote_state_command"
+            assert raised.value.timeout_ms == 1
+            assert raised.value.context == {
+                "surface": "remote_state_command",
+                "timeout_ms": 1,
+                "progress": {
+                    "phase": "cli_watchdog",
+                    "surface": LiveIvaReadSurface.FILED_HISTORY.value,
+                },
+            }
+
+        asyncio.run(run())
+
+    def test_remote_state_watchdog_subprocess_leaves_no_canary_process(self) -> None:
+        canary = "aeat-s92-watchdog-timeout-canary"
+        code = """
+            import asyncio
+            import sys
+
+            from aeat.application.live import LiveIvaSurfaceTimeoutError
+            from aeat.entrypoints.cli._app_live import _run_live_iva_remote_state_command
+
+            async def slow_read():
+                await asyncio.sleep(30)
+
+            try:
+                asyncio.run(_run_live_iva_remote_state_command(slow_read(), timeout_ms=1))
+            except LiveIvaSurfaceTimeoutError:
+                sys.exit(0)
+            sys.exit(2)
+            """
+        completed = subprocess.run(  # noqa: S603 - fixed interpreter args for subprocess cleanup regression
+            [sys.executable, "-c", textwrap.dedent(code), canary],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            check=False,
+        )
+
+        assert completed.returncode == 0, completed.stderr
+        assert canary not in _live_process_command_lines()
+
+    def test_watchdog_reaps_new_playwright_temp_profile_process(self) -> None:
+        preexisting = _playwright_profile_tokens(_process_command_inventory())
+        profile_canary = "playwright_chromiumdev_profile-aeatS92Canary"
+        proc = subprocess.Popen(  # noqa: S603 - fixed interpreter args for process-reaper regression
+            [
+                sys.executable,
+                "-c",
+                "import time; time.sleep(60)",
+                f"--user-data-dir={profile_canary}",
+            ]
+        )
+        try:
+            deadline = datetime.now(UTC).timestamp() + 10
+            while datetime.now(UTC).timestamp() < deadline:
+                if profile_canary in _live_process_command_lines():
+                    break
+                sleep(0.1)
+            else:
+                raise AssertionError("canary process command line was not visible to process inventory")
+
+            killed = _reap_new_playwright_profile_processes(preexisting_profiles=preexisting)
+            assert killed >= 1
+            proc.wait(timeout=10)
+            assert proc.returncode is not None
+        finally:
+            if proc.poll() is None:
+                proc.kill()
+                proc.wait(timeout=10)
+
     def test_every_live_iva_outcome_has_operator_label(self) -> None:
         for mode in LiveIvaAcquisitionFailureMode:
             label = _live_iva_outcome_label(mode)
@@ -266,3 +360,40 @@ class TestIvaRemoteStateCliSurface:
         assert any(
             line.startswith("surface_outcome=wallet_cartera\tstatus=failed\toutcome=no_clave_prompt") for line in lines
         )
+
+
+def _live_process_command_lines() -> str:
+    """Return process command lines for local stale-process assertions."""
+    if platform.system() == "Windows":
+        powershell = shutil.which("powershell") or shutil.which("pwsh")
+        if powershell is None:
+            pytest.skip("PowerShell is required for Windows process inventory")
+        script = (
+            "Get-CimInstance Win32_Process | "
+            "Select-Object -ExpandProperty CommandLine | "
+            "ConvertTo-Json -Compress"
+        )
+        completed = subprocess.run(  # noqa: S603 - fixed PowerShell process-inventory command
+            [powershell, "-NoProfile", "-Command", script],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        payload = completed.stdout.strip()
+        if not payload:
+            return ""
+        decoded = json.loads(payload)
+        if isinstance(decoded, str):
+            return decoded
+        return "\n".join(str(item or "") for item in decoded)
+
+    ps = shutil.which("ps")
+    if ps is None:
+        pytest.skip("ps is required for process inventory")
+    completed = subprocess.run(  # noqa: S603 - fixed ps process-inventory command
+        [ps, "-axo", "args="],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return completed.stdout

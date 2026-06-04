@@ -79,5 +79,8 @@ class CensoApplyPayload(OutputSchema):
 
         ``model_dump(mode="json")`` performs the typed-field coercion; ``extra=allow``
         forwards any additional fields the application result carries.
+
+        Returns:
+            The projected :class:`CensoApplyPayload` instance.
         """
         return cls.model_validate(result.model_dump(mode="json"))

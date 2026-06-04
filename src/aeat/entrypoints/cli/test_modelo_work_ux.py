@@ -43,9 +43,9 @@ from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import isolated_profile_storage_root
 from ._test_envelope import unwrap_schema_envelope as _payload
 
-_WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
-
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+_WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
 
 #: Profile id every test in this module creates via the CLI inside the span.
 _PROFILE_ID = "operator"
@@ -174,6 +174,168 @@ def test_work_revisions_accepts_a_positional_work_unit_id(_isolated_cli_backend:
     assert payload["work_unit_id_filter"] == work_unit_id
 
 
+def test_work_status_resolves_a_visible_filing_target(_isolated_cli_backend: Path) -> None:
+    """`work status` accepts the operator-facing modelo/year/period target."""
+
+    _create_profile()
+    work_unit_id = _create_work_unit()
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "status",
+            "--modelo", "130", "--year", "2025", "--period", "1T",
+        ]
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    payload = _payload(result.output)
+    assert payload["work_unit_id"] == work_unit_id
+    assert payload["short_work_unit_id"] == work_unit_id[-12:]
+    assert "current_calculation_revision_id" in payload
+    assert "filed_calculation_revision_id" in payload
+
+
+def test_work_list_surfaces_revision_pointer_fields(_isolated_cli_backend: Path) -> None:
+    """`work list` exposes current/filed calculation pointers for discovery."""
+
+    _create_profile()
+    work_unit_id = _create_calculable_work_unit()
+    calculated = _invoke(
+        ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
+    )
+    assert calculated.exit_code == 0, calculated.output
+    revision_id = _payload(calculated.output)["calculation_revision_id"]
+
+    result = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    assert result.exit_code == 0, result.output
+    payload = _payload(result.output)
+    matching = [unit for unit in payload["work_units"] if unit["work_unit_id"] == work_unit_id]
+    assert len(matching) == 1
+    unit = matching[0]
+    assert unit["current_calculation_revision_id"] == revision_id
+    assert unit["short_current_calculation_revision_id"] == revision_id[-12:]
+    assert unit["filed_calculation_revision_id"] is None
+
+
+def test_work_revisions_resolves_a_visible_filing_target(_isolated_cli_backend: Path) -> None:
+    """`work revisions` can filter by modelo/year/period instead of raw id."""
+
+    _create_profile()
+    work_unit_id = _create_calculable_work_unit()
+    calculated = _invoke(
+        ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
+    )
+    assert calculated.exit_code == 0, calculated.output
+    revision_id = _payload(calculated.output)["calculation_revision_id"]
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "revisions",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+        ]
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    payload = _payload(result.output)
+    assert payload["work_unit_id_filter"] == work_unit_id
+    assert [revision["calculation_revision_id"] for revision in payload["revisions"]] == [revision_id]
+
+
+def test_work_calculate_resolves_a_visible_filing_target(_isolated_cli_backend: Path) -> None:
+    """`work calculate` can use modelo/year/period instead of a work-unit id."""
+
+    _create_profile()
+    work_unit_id = _create_calculable_work_unit()
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+        ]
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    payload = _payload(result.output)
+    assert payload["work_unit_id"] == work_unit_id
+    assert payload["saved"] is True
+
+
+def test_work_verify_defaults_to_current_draft_for_visible_target(_isolated_cli_backend: Path) -> None:
+    """`work verify` defaults to the current draft under a natural target."""
+
+    _create_profile()
+    work_unit_id = _create_calculable_work_unit()
+    calculated = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+        ]
+    )  # fmt: skip
+    assert calculated.exit_code == 0, calculated.output
+    revision_id = _payload(calculated.output)["calculation_revision_id"]
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "verify",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+        ]
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    payload = _payload(result.output)
+    assert payload["calculation_revision_id"] == revision_id
+    assert payload["granted_verificado_completo"] is True
+
+    status = _invoke(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
+    assert status.exit_code == 0, status.output
+    assert _payload(status.output)["current_calculation_revision_id"] == revision_id
+
+
+def test_work_file_defaults_to_current_verified_for_visible_target(_isolated_cli_backend: Path) -> None:
+    """`work file` selects the current verified revision before workflow gating."""
+
+    _create_profile()
+    _create_calculable_work_unit()
+    calculated = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+        ]
+    )  # fmt: skip
+    assert calculated.exit_code == 0, calculated.output
+
+    verified = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "verify",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+        ]
+    )  # fmt: skip
+    assert verified.exit_code == 0, verified.output
+    revision_id = _payload(verified.output)["calculation_revision_id"]
+    status = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "status",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+        ]
+    )  # fmt: skip
+    assert status.exit_code == 0, status.output
+    assert _payload(status.output)["current_calculation_revision_id"] == revision_id
+
+    result = _invoke(
+        [
+            "app", "modelo", "work", "file",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+        ]
+    )  # fmt: skip
+    assert result.exit_code != 0
+    assert "file requires a verified-complete revision" not in result.output
+    assert "filing-obligation window is not open" in result.output or "NO_PENDING_OBLIGATION" in result.output
+
+
 def test_work_calculate_confirms_the_draft_was_saved(_isolated_cli_backend: Path) -> None:
     """After `work calculate` the operator is told the result was
     persisted as a draft revision and how to resume / re-inspect it -
@@ -190,6 +352,10 @@ def test_work_calculate_confirms_the_draft_was_saved(_isolated_cli_backend: Path
     assert payload["saved"] is True
     confirmation = payload["saved_confirmation"]
     assert payload["calculation_revision_id"] in confirmation
+    assert "--modelo 111" in confirmation
+    assert "--year 2025" in confirmation
+    assert "--period 1T" in confirmation
+    assert f"work revisions {work_unit_id}" not in confirmation
     assert "work revision" in confirmation
 
 
@@ -263,6 +429,35 @@ def test_idempotent_work_create_reports_reuse(_isolated_cli_backend: Path) -> No
     assert second_payload["operation"] == "modelo.work.reuse"
     assert second_payload["work_unit_id"] == first_payload["work_unit_id"]
     assert second_payload["name_applied"] is None
+
+
+def test_work_create_without_revision_resumes_existing_visible_target(_isolated_cli_backend: Path) -> None:
+    """A natural-key create searches by visible filing target before revision defaults."""
+
+    _create_profile()
+    first = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--revision", "2019-y-siguientes",
+        ]
+    )  # fmt: skip
+    assert first.exit_code == 0, first.output
+    first_payload = _payload(first.output)
+
+    second = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "130", "--year", "2025", "--period", "1T",
+        ]
+    )  # fmt: skip
+    assert second.exit_code == 0, second.output
+    second_payload = _payload(second.output)
+    assert second_payload["status"] == "reused"
+    assert second_payload["operation"] == "modelo.work.reuse"
+    assert second_payload["work_unit_id"] == first_payload["work_unit_id"]
 
 
 def test_idempotent_work_create_applies_a_new_name_as_a_rename(_isolated_cli_backend: Path) -> None:

@@ -322,3 +322,13 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
         date_binding_values=resolution.date_binding_values or None,
         date_context={"filing_period": period_date},
     )
+
+
+def compare_taxation_for_work_address(address: object) -> TaxationComparisonResult:
+    """Run conjunta-vs-individual comparison for a natural or exact work address."""
+    from ._work_addressing import ModeloWorkAddress, resolve_modelo_work_address_unit
+
+    if not isinstance(address, ModeloWorkAddress):
+        raise TypeError(f"expected ModeloWorkAddress, got {type(address).__name__}")
+    work_unit = resolve_modelo_work_address_unit(address)
+    return compare_taxation_for_work_unit(work_unit.work_unit_id)

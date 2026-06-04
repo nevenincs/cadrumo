@@ -5,7 +5,7 @@ captures `tr("…")` and `t("…")` literal call sites. Two surfaces slip
 past that contract:
 
 * Programmatic errors that pass a translation key to an exception
-  constructor through a ``message_key=`` kwarg rather than a
+  constructor through a ``message_key=`` / ``translation_key=`` kwarg rather than a
   :func:`tr` call (for example
   ``WizardValidationError("wizard.errors.select_unknown")``).
 * f-string call sites whose JoinedStr starts with a literal
@@ -14,6 +14,10 @@ past that contract:
   but cannot tell what follows. The scanner emits a
   ``<prefix>.*`` marker that the parity check treats as a namespace
   declaration rather than a single key.
+* Bounded locale-key registries exposed as module constants whose names
+  end in ``_LOCALE_KEY`` or ``_LOCALE_KEYS``. These constants centralize
+  key selection for application policies that return translation keys
+  to a later caller instead of calling :func:`tr` locally.
 
 Both findings feed into
 :meth:`aeat.locales.manager.LocaleManager.get_codebase_keys` so the
@@ -24,6 +28,7 @@ from __future__ import annotations
 
 import ast
 import re
+from collections.abc import Iterator
 from pathlib import Path
 
 from ..core.logging import get_logger
@@ -95,12 +100,12 @@ def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
 
     Collects positional translation keys passed to classes whose name
     ends with ``Error``/``Exception``, ``message_key=``/
-    ``translated_message=`` dotted-literal kwargs on any callee
+    ``translation_key=`` / ``translated_message=`` dotted-literal kwargs on any callee
     (exception constructors, ``ErrorCode`` registry rows,
     ``WizardCheckFinding`` verifier findings), direct
     ``tr("dotted.key")``/``t("dotted.key")`` calls, ``build_entry``
     portal-catalogue keys, and dotted-literal defaults for kw-only
-    ``translated_message``/``message_key`` parameters.
+    ``translated_message``/``message_key``/``translation_key`` parameters.
     """
     findings: set[str] = set()
     for node in ast.walk(tree):
@@ -111,10 +116,42 @@ def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
     return findings
 
 
+def _extract_locale_constant_keys(tree: ast.AST) -> set[str]:
+    """Find dotted locale keys declared in explicit locale-key constants."""
+    findings: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            if any(_declares_locale_key_constant(target) for target in node.targets):
+                _collect_dotted_literals(node.value, findings)
+        elif isinstance(node, ast.AnnAssign) and _declares_locale_key_constant(node.target):
+            _collect_dotted_literals(node.value, findings)
+    return findings
+
+
+def _declares_locale_key_constant(target: ast.expr) -> bool:
+    """Return True when ``target`` names an explicit locale-key registry."""
+    if not isinstance(target, ast.Name):
+        return False
+    return target.id.endswith(("_LOCALE_KEY", "_LOCALE_KEYS"))
+
+
+def _collect_dotted_literals(node: ast.expr | None, findings: set[str]) -> None:
+    """Collect dotted string literals nested under ``node``."""
+    if node is None:
+        return
+    value = _dotted_literal_value(node)
+    if value is not None:
+        findings.add(value)
+        return
+    for child in ast.iter_child_nodes(node):
+        if isinstance(child, ast.expr):
+            _collect_dotted_literals(child, findings)
+
+
 def _collect_kwonly_default_keys(node: ast.FunctionDef, findings: set[str]) -> None:
-    """Pick up dotted-literal defaults for ``translated_message`` / ``message_key`` kwonly args."""
+    """Pick up dotted-literal defaults for translation-key kwonly args."""
     for arg, default in zip(node.args.kwonlyargs, node.args.kw_defaults, strict=False):
-        if default is None or arg.arg not in {"translated_message", "message_key"}:
+        if default is None or arg.arg not in {"translated_message", "message_key", "translation_key"}:
             continue
         value = _dotted_literal_value(default)
         if value is not None:
@@ -126,10 +163,10 @@ def _collect_call_site_keys(node: ast.Call, findings: set[str]) -> None:
 
     Handles ``tr(...)`` / ``t(...)`` direct calls, ``*Error``/``*Exception``
     constructor translation keys, ``build_entry(...)`` portal-catalogue
-    translation keys, and ``message_key=`` / ``translated_message=``
+    translation keys, and ``message_key=`` / ``translation_key=`` / ``translated_message=``
     dotted-literal kwargs on any callee.
 
-    The translation-key kwargs (``message_key=`` / ``translated_message=``)
+    The translation-key kwargs (``message_key=`` / ``translation_key=`` / ``translated_message=``)
     are collected callee-agnostically: any call that names one of those
     kwargs with a dotted-literal value declares a live operator-facing
     translation key. This covers the ``ErrorCode(message_key=...)``
@@ -151,7 +188,7 @@ def _collect_call_site_keys(node: ast.Call, findings: set[str]) -> None:
 
 
 def _collect_translation_key_kwargs(node: ast.Call, findings: set[str]) -> None:
-    """Collect ``message_key=`` / ``translated_message=`` dotted-literal kwargs.
+    """Collect translation-key dotted-literal kwargs.
 
     The kwarg name alone identifies a translation key, so this is
     callee-agnostic: it covers exception constructors,
@@ -160,7 +197,7 @@ def _collect_translation_key_kwargs(node: ast.Call, findings: set[str]) -> None:
     alike.
     """
     for kw in node.keywords:
-        if kw.arg not in {"message_key", "translated_message"}:
+        if kw.arg not in {"message_key", "translation_key", "translated_message"}:
             continue
         value = _dotted_literal_value(kw.value)
         if value is not None:
@@ -298,17 +335,8 @@ def _concat_prefix_marker(argument: ast.expr) -> str | None:
     return f"{literal}.*"
 
 
-def scan_source_tree(root: Path) -> set[str]:
-    """Walk ``root`` for `.py` files and emit concrete dotted locale keys.
-
-    Concrete keys are literal translation keys passed to error
-    constructors (positional first argument or ``message_key=`` kwarg).
-    Dynamic namespaces (f-string and concatenation patterns) are
-    returned by :func:`scan_namespace_markers` and routed through a
-    separate parity check that asserts at least one concrete locale
-    entry exists under each declared namespace prefix.
-    """
-    findings: set[str] = set()
+def _iter_parseable_python_modules(root: Path) -> Iterator[ast.Module]:
+    """Yield parseable Python ASTs under ``root`` for locale discovery."""
     for module in root.rglob("*.py"):
         if module.name in {"test_parity.py", "manager.py", "_ast_scanner.py"}:
             continue
@@ -320,11 +348,25 @@ def scan_source_tree(root: Path) -> set[str]:
             _log.debug("locale ast scan: skipping %s (%s)", module, exc)
             continue
         try:
-            tree = ast.parse(source, filename=str(module))
+            yield ast.parse(source, filename=str(module))
         except SyntaxError as exc:
             _log.debug("locale ast scan: parse failure %s (%s)", module, exc)
-            continue
+
+
+def scan_source_tree(root: Path) -> set[str]:
+    """Walk ``root`` for `.py` files and emit concrete dotted locale keys.
+
+    Concrete keys are literal translation keys passed to error
+    constructors (positional first argument or ``message_key=`` kwarg).
+    Dynamic namespaces (f-string and concatenation patterns) are
+    returned by :func:`scan_namespace_markers` and routed through a
+    separate parity check that asserts at least one concrete locale
+    entry exists under each declared namespace prefix.
+    """
+    findings: set[str] = set()
+    for tree in _iter_parseable_python_modules(root):
         findings.update(_extract_error_constructor_keys(tree))
+        findings.update(_extract_locale_constant_keys(tree))
     return findings
 
 
@@ -338,21 +380,7 @@ def scan_namespace_markers(root: Path) -> set[str]:
     its prefix.
     """
     findings: set[str] = set()
-    for module in root.rglob("*.py"):
-        if module.name in {"test_parity.py", "manager.py", "_ast_scanner.py"}:
-            continue
-        if module.name.startswith("test_") or module.name.startswith("_test_") or "/tests/" in module.as_posix():
-            continue
-        try:
-            source = module.read_text(encoding="utf-8", errors="ignore")
-        except OSError as exc:
-            _log.debug("locale ast scan: skipping %s (%s)", module, exc)
-            continue
-        try:
-            tree = ast.parse(source, filename=str(module))
-        except SyntaxError as exc:
-            _log.debug("locale ast scan: parse failure %s (%s)", module, exc)
-            continue
+    for tree in _iter_parseable_python_modules(root):
         findings.update(_extract_fstring_prefixes(tree))
         findings.update(_extract_concat_prefixes(tree))
     return findings

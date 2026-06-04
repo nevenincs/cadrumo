@@ -105,8 +105,10 @@ def test_verify_with_work_unit_id_hints_at_calculate(cli_runner: CliRunner) -> N
     collapsed = " ".join(result.output.split())
     assert "work-unit-id" in collapsed
     assert "calculation-revision-id" in collapsed
-    assert "work calculate" in collapsed
-    assert work_unit_id in collapsed
+    assert "--modelo" in collapsed and "130" in collapsed
+    assert "--year" in collapsed and "2026" in collapsed
+    assert "--period" in collapsed and "Q1" in collapsed
+    assert f"work calculate {work_unit_id}" not in collapsed
 
 
 def test_file_with_work_unit_id_hints_at_calculate(cli_runner: CliRunner) -> None:
@@ -118,7 +120,10 @@ def test_file_with_work_unit_id_hints_at_calculate(cli_runner: CliRunner) -> Non
     collapsed = " ".join(result.output.split())
     assert "work-unit-id" in collapsed
     assert "calculation-revision-id" in collapsed
-    assert "work calculate" in collapsed
+    assert "--modelo" in collapsed and "130" in collapsed
+    assert "--year" in collapsed and "2026" in collapsed
+    assert "--period" in collapsed and "Q1" in collapsed
+    assert f"work calculate {work_unit_id}" not in collapsed
 
 
 def test_verify_with_unknown_id_keeps_plain_not_found(cli_runner: CliRunner) -> None:

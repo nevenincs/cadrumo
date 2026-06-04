@@ -324,6 +324,9 @@ class AuthConfigurePayload(OutputSchema):
         Explicit field projection (DB-26 S50): the envelope derives its values from
         the application result instead of the command handler re-declaring the field
         map inline. ``status`` is a CLI-only display field left to its default.
+
+        Returns:
+            The projected :class:`AuthConfigurePayload` instance.
         """
         return cls(
             provider=result.provider,
@@ -397,7 +400,11 @@ class AuthClearPayload(OutputSchema):
 
     @classmethod
     def from_result(cls, result: AuthClearResult) -> AuthClearPayload:
-        """Project the application :class:`AuthClearResult` (1:1) into this CLI envelope."""
+        """Project the application :class:`AuthClearResult` (1:1) into this CLI envelope.
+
+        Returns:
+            The projected :class:`AuthClearPayload` instance.
+        """
         return cls(
             removed_sessions=result.removed_sessions,
             cleared_workflow_state=result.cleared_workflow_state,

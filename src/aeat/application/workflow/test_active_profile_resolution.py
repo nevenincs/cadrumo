@@ -16,6 +16,7 @@ that surface it to the operator can refuse with a typed
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import pytest
@@ -25,6 +26,8 @@ from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import write_pointer
 from ...core.config import override_settings
 from ...core.errors import NoActiveProfileError, get_registered_error_code
+from ...tests.secure_sql import isolated_runtime_profile
+from ._models import WorkflowState
 from ._profile_bucket_scan import resolve_profile_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -70,6 +73,19 @@ def test_no_active_profile_error_has_registered_error_code() -> None:
     code = get_registered_error_code(NoActiveProfileError)
     assert code.code == "REFUSED_NO_ACTIVE_PROFILE"
     assert code.message_key == "errors.refused.refused_no_active_profile"
+
+
+def test_active_profile_record_logs_missing_secure_record(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+    """A missing active secure profile record returns None but is not silent."""
+
+    bucket_id = "missing-record-profile"
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
+        caplog.set_level(logging.DEBUG, logger="aeat.application.workflow._models")
+
+        assert WorkflowState().active_profile_record() is None
+
+    assert "active profile record resolution returned no profile record: ProfileNotFoundError" in caplog.text
+    assert bucket_id not in caplog.text
 
 
 def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:

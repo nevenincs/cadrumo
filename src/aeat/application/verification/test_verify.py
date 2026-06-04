@@ -210,8 +210,43 @@ def test_verify_declaracion_uses_modelo_123_historical_registry_snapshot() -> No
 def test_verify_declaracion_fails_without_registry_snapshot() -> None:
     filing = _build_filing(values=(("01", Decimal("0")),), modelo="999")
 
-    with pytest.raises(VerificationError, match="not present in the calculation registry"):
+    with pytest.raises(VerificationError) as raised:
         verify_declaracion(filing)
+
+    error = raised.value
+    assert error.translated_message == "application.verification.errors.registry_snapshot_invalid"
+    assert error.context == {
+        "modelo": "999",
+        "period": "2025Q1",
+        "ejercicio": "2025",
+        "error_type": "RegistrySnapshotError",
+    }
+
+
+def test_verify_declaracion_reports_missing_registry_bindings_as_locale_error() -> None:
+    filing = _build_filing(
+        values=(
+            ("01", Decimal("10000")),
+            ("02", Decimal("4000")),
+            ("19", Decimal("880.00")),
+        )
+    )
+
+    with pytest.raises(VerificationError) as raised:
+        verify_declaracion(filing)
+
+    error = raised.value
+    assert error.translated_message == "application.verification.errors.missing_binding_values"
+    assert error.context == {
+        "bindings": (
+            "irpf.previous_year_economic_activity_net_income",
+            "modelo-130-actividad-economica-ingresos-taxable-base-cumulative",
+            "modelo-130-actividad-economica-rendimiento-neto-cumulative",
+        ),
+        "count": 3,
+        "modelo": "130",
+        "period": "2025Q1",
+    }
 
 
 class TestVerdictJsonRoundTrip:

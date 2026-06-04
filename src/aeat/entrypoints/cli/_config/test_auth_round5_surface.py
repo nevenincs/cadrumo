@@ -192,6 +192,20 @@ def test_login_refuses_when_certificate_path_unset(
     assert "configure" in message.lower() or "certificat" in message.lower()
 
 
+def test_operator_login_without_pytest_context_does_not_require_live_test_gate(
+    _isolated_application_layer: None,
+) -> None:
+    """Operational auth login is not gated by the pytest live-test environment variable."""
+
+    import asyncio
+
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID))
+    configure_operator_auth("certificate")
+
+    with pytest.raises(AuthLoginPreconditionError):
+        asyncio.run(login_operator_auth("certificate", pytest_current_test=""))
+
+
 # ── B3: --output-language parity on status / test / login ──────────────────
 
 

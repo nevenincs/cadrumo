@@ -1,6 +1,7 @@
 """Locale file management: loading, scaffolding, and structural health checks."""
 
 import re
+from collections.abc import Iterator
 from pathlib import Path
 
 import yaml
@@ -13,6 +14,7 @@ from ..core.logging import get_logger
 type LocaleNode = str | dict[str, "LocaleNode"]
 
 _log = get_logger(__name__)
+_YAML_KEY_PATTERN = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):(?P<rest>.*)$")
 
 
 class LocaleError(AeatError):
@@ -290,23 +292,20 @@ def _yaml_single_quoted(value: str) -> str:
 def _yaml_leaf_end(lines: list[str], start: int, indent: int) -> int:
     """Return the slice end for a scalar leaf and its indented continuation."""
     end = start + 1
-    key_pattern = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):")
     while end < len(lines):
-        match = key_pattern.match(lines[end])
+        match = _YAML_KEY_PATTERN.match(lines[end])
         if match is not None and len(match.group("indent")) <= indent:
             break
         end += 1
     return end
 
 
-def _replace_existing_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
-    """Replace a single existing leaf line without rebuilding the whole YAML file."""
-    lines = path.read_text(encoding=UTF_8_ENCODING).splitlines(keepends=True)
+def _iter_yaml_key_matches(lines: list[str]) -> Iterator[tuple[int, re.Match[str], int, str, str, list[str]]]:
+    """Yield YAML key lines with their active dotted path parts."""
     stack: list[tuple[int, str]] = []
-    key_pattern = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):(?P<rest>.*)$")
 
     for index, line in enumerate(lines):
-        match = key_pattern.match(line)
+        match = _YAML_KEY_PATTERN.match(line)
         if match is None:
             continue
 
@@ -316,16 +315,24 @@ def _replace_existing_yaml_leaf(path: Path, parts: list[str], value: str) -> Non
         while stack and stack[-1][0] >= indent:
             stack.pop()
 
-        current_parts = [item for _, item in stack] + [key]
+        yield index, match, indent, key, rest, [item for _, item in stack] + [key]
+
+        if not rest.strip():
+            stack.append((indent, key))
+
+
+def _replace_existing_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
+    """Replace a single existing leaf line without rebuilding the whole YAML file."""
+    lines = path.read_text(encoding=UTF_8_ENCODING).splitlines(keepends=True)
+
+    for index, match, indent, key, _rest, current_parts in _iter_yaml_key_matches(lines):
         if current_parts == parts:
+            line = lines[index]
             newline = "\r\n" if line.endswith("\r\n") else "\n"
             replacement = match.group("indent") + key + ": " + _yaml_single_quoted(value) + newline
             lines[index : _yaml_leaf_end(lines, index, indent)] = [replacement]
             path.write_text("".join(lines), encoding=UTF_8_ENCODING)
             return
-
-        if not rest.strip():
-            stack.append((indent, key))
 
     raise LocaleError(f"Locale key not found in YAML text: {'.'.join(parts)!r}")
 
@@ -338,21 +345,8 @@ def _append_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
     parent_parts = parts[:-1]
     leaf = parts[-1]
     lines = path.read_text(encoding=UTF_8_ENCODING).splitlines(keepends=True)
-    stack: list[tuple[int, str]] = []
-    key_pattern = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):(?P<rest>.*)$")
 
-    for index, line in enumerate(lines):
-        match = key_pattern.match(line)
-        if match is None:
-            continue
-
-        indent = len(match.group("indent"))
-        key = match.group("key")
-        rest = match.group("rest")
-        while stack and stack[-1][0] >= indent:
-            stack.pop()
-
-        current_parts = [item for _, item in stack] + [key]
+    for index, _match, indent, _key, rest, current_parts in _iter_yaml_key_matches(lines):
         if current_parts == parent_parts:
             if rest.strip():
                 raise LocaleError(f"Cannot append {'.'.join(parts)!r}: parent resolves to a leaf")
@@ -365,39 +359,20 @@ def _append_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
             path.write_text("".join(lines), encoding=UTF_8_ENCODING)
             return
 
-        if not rest.strip():
-            stack.append((indent, key))
-
     raise LocaleError(f"Locale parent key not found in YAML text: {'.'.join(parent_parts)!r}")
 
 
 def _remove_existing_yaml_leaf(path: Path, parts: list[str]) -> None:
     """Remove a single existing leaf line without rebuilding the whole YAML file."""
     lines = path.read_text(encoding=UTF_8_ENCODING).splitlines(keepends=True)
-    stack: list[tuple[int, str]] = []
-    key_pattern = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):(?P<rest>.*)$")
 
-    for index, line in enumerate(lines):
-        match = key_pattern.match(line)
-        if match is None:
-            continue
-
-        indent = len(match.group("indent"))
-        key = match.group("key")
-        rest = match.group("rest")
-        while stack and stack[-1][0] >= indent:
-            stack.pop()
-
-        current_parts = [item for _, item in stack] + [key]
+    for index, _match, indent, _key, rest, current_parts in _iter_yaml_key_matches(lines):
         if current_parts == parts:
             if not rest.strip():
                 raise LocaleError(f"Cannot remove {'.'.join(parts)!r}: it resolves to a namespace")
             del lines[index : _yaml_leaf_end(lines, index, indent)]
             path.write_text("".join(lines), encoding=UTF_8_ENCODING)
             return
-
-        if not rest.strip():
-            stack.append((indent, key))
 
     raise LocaleError(f"Locale key not found in YAML text: {'.'.join(parts)!r}")
 

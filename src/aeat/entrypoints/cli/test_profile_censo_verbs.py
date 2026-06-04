@@ -19,13 +19,15 @@ from typer.testing import CliRunner
 
 from ...application.live._censo import CensoSnapshotService
 from ...application.user_profile._orchestration import profile_create_storage_span
+from ...core.config import Settings
 from ...tests.secure_sql import isolated_profile_storage_root
 from ._config import profile_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-_G313 = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml"
+_AEAT = Settings.external_constants().aeat
+_G313 = f"{_AEAT.domains.sede}{_AEAT.sede_paths.censo_g313_launcher}"
 
 
 @pytest.fixture(autouse=True)

@@ -94,7 +94,8 @@ class ScriptedPrompter:
     deque raises :class:`WizardScriptUnderflowError`. Calling
     :meth:`close` after the runtime finishes raises
     :class:`WizardScriptOverflowError` if any scripted token went
-    unconsumed, surfacing test-fixture drift loudly.
+    unconsumed, surfacing test-fixture drift loudly without exposing
+    token values in diagnostics.
     """
 
     def __init__(self, answers: deque[str] | list[str] | tuple[str, ...]) -> None:
@@ -122,7 +123,7 @@ class ScriptedPrompter:
         if not self._answers:
             context = {"question_id": question.id, "prompt_key": str(question.prompt)}
             raise WizardScriptUnderflowError(
-                "scripted prompter exhausted",
+                translated_message="errors.internal.internal_wizard_script_underflow",
                 context=context,
             )
         self._asked.append(question.id)
@@ -133,12 +134,17 @@ class ScriptedPrompter:
 
         Raises:
             WizardScriptOverflowError: When the deque holds unconsumed
-                canonical tokens at flow end.
+                canonical tokens at flow end. The exception context
+                reports counts only because scripted tokens can contain
+                secrets.
         """
         if self._answers:
-            context = {"remaining": tuple(self._answers)}
+            context = {
+                "remaining_count": len(self._answers),
+                "asked_count": len(self._asked),
+            }
             raise WizardScriptOverflowError(
-                "scripted prompter closed with unconsumed answers",
+                translated_message="errors.internal.internal_wizard_script_overflow",
                 context=context,
             )
 

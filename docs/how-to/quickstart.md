@@ -1,77 +1,70 @@
-# Quickstart: produce a modelo file
+# How to run the shortest Modelo lifecycle
 
-This is the shortest path to an exported modelo (a Spanish tax form) file. It
-assumes you've already installed `aeat`, have an active profile, and have
-imported and classified your ledger. The calculation draws its figures from that
-ledger. If you're missing a piece:
+This is the shortest path from a ready local workspace to an exported modelo
+file. It assumes you already have `aeat` installed, an active profile, and an
+imported and classified ledger.
 
-- No profile yet? See [Set up your taxpayer profile](profile-setup.md) to create
-  one and switch between several.
+- No profile yet? See [Set up your taxpayer profile](profile-setup.md).
 - Not installed, or no ledger yet? [Get started](../getting-started.md) installs
-  the tool, and the [tutorial](../tutorials/index.md) walks through importing and
-  classifying your ledger.
+  the tool, and the [tutorial](../tutorials/index.md) walks through a sample
+  ledger.
 
 `aeat` produces a local file and never submits it. You upload it yourself to the
 Agencia Estatal de Administración Tributaria (AEAT).
 
 ## Produce the file
 
-This example builds Modelo 130, the quarterly income-tax instalment, for the
-first quarter of 2024.
+This example builds Modelo 130 for the first quarter of 2024.
 
-First, find the revision - the rule version the form follows. List the revisions
-and copy the identifier that covers your period:
+1. Create or reuse the work unit for the filing:
 
-```
-aeat app modelo describe 130
-```
-
-Then run these four steps. Each step prints one identifier you paste into the
-next.
-
-1. Create the work unit, the handle for one form, year, and period. Use the
-   revision id from describe:
-
-   ```
-   aeat app modelo work create --modelo 130 --year 2024 --period 1T --revision <revision>
+   ```bash
+   aeat app modelo work create --modelo 130 --year 2024 --period 1T
    ```
 
-   It prints a work-unit id.
+   The command prints the visible target and internal audit IDs. Use `--revision`
+   only when you need an exact registry revision instead of the default selected
+   from the year and period.
 
-2. Calculate the figures. This pulls them from your classified ledger and fills
-   the casillas, the numbered fields on the form:
+2. Calculate the figures for the same filing:
 
-   ```
-   aeat app modelo work calculate <work-unit-id>
-   ```
-
-   On success it prints the casilla table and a new calculation-revision id. If it
-   reports missing figures instead, find the field numbers with
-   `aeat app modelo casillas 130`, then supply each one and run it again:
-
-   ```
-   aeat app modelo work calculate <work-unit-id> --casilla NUMBER=VALUE
+   ```bash
+   aeat app modelo work calculate --modelo 130 --year 2024 --period 1T
    ```
 
-   A value you pass with `--casilla` overrides the ledger-derived value for that
+   On success, the command prints the casilla table and saves a calculation
+   revision under the work unit. If it reports missing figures, find the field
+   numbers with `aeat app modelo casillas 130`, then supply each value and run
+   the same visible target again:
+
+   ```bash
+   aeat app modelo work calculate --modelo 130 --year 2024 --period 1T --casilla NUMBER=VALUE
+   ```
+
+   A value passed with `--casilla` overrides the ledger-derived value for that
    field.
 
-3. Verify the calculation against the form's rules. Pass the calculation-revision
-   id, not the work-unit id:
+3. Verify the selected calculation revision for the filing:
 
-   ```
-   aeat app modelo work verify <calculation-revision-id>
+   ```bash
+   aeat app modelo work verify --modelo 130 --year 2024 --period 1T
    ```
 
-4. Export the file. Pass the work-unit id and an output path:
+   Verification uses the command's revision selector default for this filing
+   target. It does not mean "latest" for every command.
 
-   ```
-   aeat app modelo export <work-unit-id> --output ./modelo-130-2024-1T.txt
+4. Export the verified filing:
+
+   ```bash
+   aeat app modelo export --modelo 130 --year 2024 --period 1T --output ./modelo-130-2024-1T.txt
    ```
 
    `aeat` writes the file and prints its path, size, and content hash.
 
-Upload that file yourself at the AEAT electronic portal (the sede electrónica).
+Pass exact work-unit or calculation-revision IDs only when an automation already
+has them, or when you need to resolve an ambiguity explicitly.
+
+Upload the exported file yourself at the AEAT electronic portal.
 
 ## Where next
 
@@ -79,10 +72,9 @@ Upload that file yourself at the AEAT electronic portal (the sede electrónica).
   between them.
 - [Common filing recipes](index.md) - other modelos and tasks, such as 303, 390,
   and the censo update.
-- [Pipeline explanation](../explanation/index.md) - how figures trace to the law,
-  and why `aeat` never files.
-- [CLI reference](../cli/index.rst) - every flag and exit code.
-- [Glossary](../glossary.md) - the Spanish terms used here, including *modelo*,
-  *casilla*, *revision*, and *work unit*.
+- [How filings, work units, and calculation revisions fit
+  together](filing-spine.md) - the filing target and revision model.
+- [Command reference](../cli/index.rst) - every flag and exit code.
+- [Glossary](../glossary.md) - the Spanish terms used here.
 - Report a problem or ask a question on the
   [issue tracker](https://github.com/wgergely/aeat/issues).
