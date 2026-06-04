@@ -1327,8 +1327,12 @@ cli:
         casilla_help: Mezőérték CASILLA=DECIMAL szintaxissal (ismételhető).
         ccaa_help: Autonóm közösség kódja a területi vetítéshez.
         m100_calculation_error: 'Belső hiba: Modelo 100 számítás sikertelen.'
-        no_m130_revisions: Nincs M130-revízió a megadott évre.
-        no_m130_units: Nincs M130 munkaegység a megadott évre és időszakra.
+        no_m130_revisions: 'Nincs M130-revízió a megadott évre. Először futtasd minden
+          negyedévre: `aeat app modelo work calculate --modelo 130 --year %{year}
+          --period 1T`.'
+        no_m130_units: 'Nincs M130 munkaegység a megadott évre. Először hozz létre
+          és számolj M130 munkaegységeket: `aeat app modelo work create --modelo
+          130 --year %{year} --period 1T`.'
         year_help: Adóév a vetítéshez.
       project_help: Nyomtatvány-összesítő vetítések futtatása (pl. éves Modelo 130
         összesítés).
@@ -1393,8 +1397,8 @@ cli:
         calculate_help: Új tervezet számítási revízió megőrzése a munkaegységhez.
         calculate_saved: 'Mentve tervezet számítási revízióként: %{revision_id} (állapot:
           %{state}). Megőrzött és később folytatható; revíziók listázása: `aeat app
-          modelo work revisions %{work_unit_id}`, ezt az egyet újra megtekintheti:
-          `aeat app modelo work revision %{revision_id}`.'
+          modelo work revisions --modelo %{modelo} --year %{year} --period %{period}`,
+          ezt az egyet újra megtekintheti: `aeat app modelo work revision %{revision_id}`.'
         calculate_unauthorized_advisory: 'FIGYELMEZTETÉS: a(z) %{modelo} modelo számítási
           háttere NEM ENGEDÉLYEZETT — még nem bizonyította end-to-end teszt legalább
           két renta-éven át (többéves renta engedélyezési kapu). Az eredmény kiszámításra
@@ -4059,6 +4063,7 @@ review:
       item_not_found: A felülvizsgálati elem nem található.
       unknown_kind: Ismeretlen felülvizsgálati elemtípus.
       unsupported_item_type: 'Nem támogatott felülvizsgálati elemtípus: %{item_type}.'
+      reserved_kind: 'A felülvizsgálati típus fenntartott, és nem kibocsátott felülvizsgálati elem.'
   transaction:
     summary: Tranzakció besorolásra vár
 sheets:

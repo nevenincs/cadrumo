@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from ...application.user_profile._orchestration import profile_create_storage_span
+from ...core.config import Settings, override_settings
 from ...core.errors import resolve_error_message
-from ...core.config import Settings
 from ._errors import ReviewError, ReviewKindReservedError
 from ._operator import _resolve_internal_kinds, project_review_item
 
@@ -39,10 +39,12 @@ def test_project_review_item_not_found_error_omits_raw_item_id() -> None:
 
 def test_reserved_review_kind_error_omits_raw_operator_value() -> None:
     sensitive_kind = "client-tax-id-12345678Z-private-note"
-    error = ReviewKindReservedError(sensitive_kind, "classification decisions are not emitted review items")
+    with override_settings(aeat_output_language="en"):
+        error = ReviewKindReservedError(sensitive_kind, "classification decisions are not emitted review items")
+        rendered = resolve_error_message(error)
 
     assert error.translated_message == "review.operator.errors.reserved_kind"
     assert error.context == {"reason": "classification decisions are not emitted review items"}
-    assert resolve_error_message(error) == "Review kind is reserved and is not an emitted review item."
+    assert rendered == "Review kind is reserved and is not an emitted review item."
     assert sensitive_kind not in str(error)
     assert sensitive_kind not in repr(error.context)
