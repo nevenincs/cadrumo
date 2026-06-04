@@ -25,7 +25,7 @@ Close the M100-specific row-width deferrals left by the completed row-width
 pressure plan.
 
 - [x] `S01` - Audit clean M100 deferred row-width targets and unrelated dirty M100 files; `.vault/audit`.
-- [ ] `S02` - Wrap M100 2021-2024 completeness-manifest `legal_refs` arrays without changing TOML values; `src/aeat/_data/registry/aeat/modelos/100/revisions`.
+- [x] `S02` - Wrap M100 2021-2024 completeness-manifest `legal_refs` arrays without changing TOML values; `src/aeat/_data/registry/aeat/modelos/100/revisions`.
 - [ ] `S03` - Convert the M100 2020 inline `constraints` row to an equivalent nested TOML table with loaded M100 equality proof; `src/aeat/_data/registry/aeat/modelos/100/revisions/2020/casillas/0146-0153.toml`.
 - [ ] `S04` - Tighten the TOML row-width baseline if the post-format corpus permits; `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
 - [ ] `S05` - Verify registry reviewability, loader, committed registry, and plan gates; `src/aeat/domain/calculations/registry`.
