@@ -1508,10 +1508,7 @@ cli:
         history_help: Egy munkaegység minden életciklus-eseményének megjelenítése.
         history_work_unit_id_help: Annak a munkaegységnek az azonosítója, amelynek
           életciklusát meg szeretné tekinteni.
-        id_is_work_unit_not_calc_revision: Ez az azonosító egy munkaegység-azonosító,
-          de a verify/file számítási-revízió-azonosítót igényel. Futtasd az 'aeat
-          app modelo work calculate %{work_unit_id}' parancsot a számítási-revízió-azonosító
-          előállításához, majd add át azt.
+        id_is_work_unit_not_calc_revision_natural: 'Ez az azonosító munkaegység-azonosító, de a verify/file műveletekhez számítási revízióazonosító kell. A szokásos útvonalhoz futtasd: ''aeat app modelo work calculate --modelo %{modelo} --year %{year} --period %{period}'', majd futtasd újra a verify/file műveletet ugyanarra a modellre/évre/időszakra. A pontos azonosítók továbbra is elérhetők haladó menekülőútként.'
         include_discarded_help: Eldobott munkaegységek bevonása a listába (alapértelmezés
           szerint kizárva).
         invalid_amendment_kind: 'A --kind értéke csak {choices} egyike lehet; kapott:
@@ -4046,21 +4043,22 @@ review:
       transactions_load_failed: review.adapters.errors.transactions_load_failed
   edit:
     errors:
-      parse_failed: 'A szerkesztési token nem értelmezhető. A megadott érték el lett rejtve.'
+      parse_failed: A szerkesztési token nem értelmezhető. A megadott érték el lett
+        rejtve.
   filing:
     draft_placeholder_summary: Tervezet függőben
     finding_summary: Érvényesítési megállapítás a tervezeten
     stale_approval_summary: A tervezet jóváhagyása elavult.
   filter:
     errors:
-      parse_failed: 'A szűrőtoken nem értelmezhető. A megadott érték el lett rejtve.'
+      parse_failed: A szűrőtoken nem értelmezhető. A megadott érték el lett rejtve.
   invoice:
     summary: Számla felülvizsgálatra vár
   operator:
     errors:
-      item_not_found: review.operator.errors.item_not_found
-      unknown_kind: review.operator.errors.unknown_kind
-      unsupported_item_type: review.operator.errors.unsupported_item_type
+      item_not_found: A felülvizsgálati elem nem található.
+      unknown_kind: Ismeretlen felülvizsgálati elemtípus.
+      unsupported_item_type: 'Nem támogatott felülvizsgálati elemtípus: %{item_type}.'
   transaction:
     summary: Tranzakció besorolásra vár
 sheets:

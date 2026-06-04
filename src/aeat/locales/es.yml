@@ -1580,10 +1580,7 @@ cli:
           trabajo
         history_work_unit_id_help: Id de unidad de trabajo cuyo ciclo de vida quieres
           ver
-        id_is_work_unit_not_calc_revision: Este id es un id de unidad de trabajo,
-          pero verify/file necesitan un id de revisión de cálculo. Ejecuta 'aeat app
-          modelo work calculate %{work_unit_id}' para generar el id de revisión de
-          cálculo y luego pásalo.
+        id_is_work_unit_not_calc_revision_natural: 'Este id es un id de unidad de trabajo, pero verify/file necesitan un id de revisión de cálculo. Para la ruta habitual, ejecuta ''aeat app modelo work calculate --modelo %{modelo} --year %{year} --period %{period}'' y vuelve a ejecutar verify/file para ese mismo modelo/año/periodo. Los ids exactos siguen disponibles como vía avanzada.'
         include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
           por defecto)
         invalid_amendment_kind: --kind debe ser uno de {choices}; se recibió {kind}.
@@ -4199,20 +4196,22 @@ review:
       transactions_load_failed: No se pudieron cargar las transacciones del adaptador.
   edit:
     errors:
-      parse_failed: 'No se pudo interpretar el token de edición. El valor suministrado se ha ocultado.'
+      parse_failed: No se pudo interpretar el token de edición. El valor suministrado
+        se ha ocultado.
   filing:
     draft_placeholder_summary: Borrador pendiente
     finding_summary: Incidencia detectada en el borrador
     stale_approval_summary: Aprobación obsoleta del borrador
   filter:
     errors:
-      parse_failed: 'No se pudo interpretar el token de filtro. El valor suministrado se ha ocultado.'
+      parse_failed: No se pudo interpretar el token de filtro. El valor suministrado
+        se ha ocultado.
   invoice:
     summary: Justificante pendiente de revisión
   operator:
     errors:
       item_not_found: No se encontro el elemento solicitado en la cola de revision.
-      unknown_kind: 'Tipo de elemento de revision desconocido: %{kind}.'
+      unknown_kind: Tipo de elemento de revisión desconocido.
       unsupported_item_type: 'Tipo de elemento de revision no admitido: %{item_type}.'
   transaction:
     summary: Transacción pendiente de clasificación

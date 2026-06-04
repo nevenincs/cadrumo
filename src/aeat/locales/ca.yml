@@ -1551,10 +1551,7 @@ cli:
           de treball
         history_work_unit_id_help: Id d'unitat de treball el cicle de vida de la qual
           vols veure
-        id_is_work_unit_not_calc_revision: Aquest id és un id d'unitat de treball,
-          però verify/file necessiten un id de revisió de càlcul. Executa 'aeat app
-          modelo work calculate %{work_unit_id}' per generar l'id de revisió de càlcul
-          i després passa'l.
+        id_is_work_unit_not_calc_revision_natural: 'Aquest id és un id d''unitat de treball, però verify/file necessiten un id de revisió de càlcul. Per a la ruta habitual, executa ''aeat app modelo work calculate --modelo %{modelo} --year %{year} --period %{period}'' i torna a executar verify/file per al mateix model/any/període. Els ids exactes continuen disponibles com a via avançada.'
         include_discarded_help: Incloure les unitats descartades en el llistat (excloses
           per defecte)
         invalid_amendment_kind: --kind ha de ser un de {choices}; s'ha rebut {kind}.
@@ -4150,20 +4147,22 @@ review:
       transactions_load_failed: No s'han pogut carregar les transaccions de l'adaptador.
   edit:
     errors:
-      parse_failed: 'No s''ha pogut interpretar el token d''edició. El valor indicat s''ha ocultat.'
+      parse_failed: No s'ha pogut interpretar el token d'edició. El valor indicat
+        s'ha ocultat.
   filing:
     draft_placeholder_summary: Esborrany pendent
     finding_summary: Incidència detectada a l'esborrany
     stale_approval_summary: L'aprovació de l'esborrany ha caducat
   filter:
     errors:
-      parse_failed: 'No s''ha pogut interpretar el token de filtre. El valor indicat s''ha ocultat.'
+      parse_failed: No s'ha pogut interpretar el token de filtre. El valor indicat
+        s'ha ocultat.
   invoice:
     summary: Justificant pendent de revisió
   operator:
     errors:
       item_not_found: No s'ha trobat l'element sol.licitat a la cua de revisio.
-      unknown_kind: 'Tipus d''element de revisio desconegut: %{kind}.'
+      unknown_kind: Tipus d'element de revisió desconegut.
       unsupported_item_type: 'Tipus d''element de revisio no ames: %{item_type}.'
   transaction:
     summary: Transacció pendent de classificació

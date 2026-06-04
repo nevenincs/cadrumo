@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import datetime
+from types import MappingProxyType
 
 from pydantic import BaseModel, Field
 
@@ -56,7 +57,8 @@ class ReviewQueueReport(BaseModel):
     rows: tuple[ReviewQueueRow, ...]
 
 
-_ACCEPTED_KIND_TO_INTERNAL: dict[str, frozenset[ReviewItemKind]] = {
+_ACCEPTED_KIND_TO_INTERNAL: Mapping[str, frozenset[ReviewItemKind]] = MappingProxyType(
+    {
     AggregationSourceKind.LEDGER_TRANSACTION: frozenset({ReviewItemKind.TRANSACTION}),
     AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE: frozenset({ReviewItemKind.INVOICE}),
     AggregationSourceKind.PAYABLE_INVOICE: frozenset({ReviewItemKind.INVOICE}),
@@ -64,7 +66,8 @@ _ACCEPTED_KIND_TO_INTERNAL: dict[str, frozenset[ReviewItemKind]] = {
     "modelo_finding": frozenset({ReviewItemKind.FINDING}),
     "live_notification": frozenset(),
     "sync_divergence": frozenset(),
-}
+    }
+)
 
 
 def project_review_queue(
@@ -108,9 +111,8 @@ def project_review_item(item_id: str, *, settings: Settings | None = None) -> Re
         if row.item_id == item_id:
             return row
     raise ReviewError(
-        message=f"review item not found: {item_id}",
+        message="review item not found",
         translated_message="review.operator.errors.item_not_found",
-        context={"item_id": str(item_id)},
     )
 
 
@@ -123,9 +125,9 @@ def _resolve_internal_kinds(kinds: Iterable[str]) -> frozenset[ReviewItemKind] |
         mapped = _ACCEPTED_KIND_TO_INTERNAL.get(kind)
         if mapped is None:
             raise ReviewError(
-                message=f"unknown review kind: {kind}",
+                message="unknown review kind",
                 translated_message="review.operator.errors.unknown_kind",
-                context={"kind": kind},
+                context={"accepted_kinds": tuple(sorted(str(kind) for kind in _ACCEPTED_KIND_TO_INTERNAL))},
             )
         internal.update(mapped)
     return frozenset(internal)
