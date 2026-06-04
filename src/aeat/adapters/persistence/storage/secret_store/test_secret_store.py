@@ -24,6 +24,7 @@ from ..errors import (
     RetentionPolicyError,
     SecretAlreadyExistsError,
     SecretNotFoundError,
+    StorageValidationError,
 )
 from ..master_key import EphemeralMasterKeyProvider
 from ._secret_store import SecretRecord, SecretStore
@@ -123,8 +124,24 @@ class TestPutAndGet:
         assert store.get(record.key).value == record.value
 
     def test_missing_key_raises(self, store: SecretStore) -> None:
-        with pytest.raises(SecretNotFoundError):
+        with pytest.raises(SecretNotFoundError) as excinfo:
             store.get("never-stored")
+        assert "digest" not in str(excinfo.value)
+
+    def test_malformed_index_raises_localized_storage_validation(
+        self,
+        tmp_path: Path,
+        store: SecretStore,
+    ) -> None:
+        index_path = tmp_path / "secrets" / "index.json"
+        index_path.parent.mkdir(parents=True, exist_ok=True)
+        index_path.write_text("{not-json", encoding="utf-8")
+
+        with pytest.raises(StorageValidationError, match="secret-store index") as excinfo:
+            store.get("aeat:test:index-corrupt")
+
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
+        assert "index-corrupt" not in str(excinfo.value)
 
     def test_index_does_not_leak_key(self, tmp_path: Path, store: SecretStore) -> None:
         record = _make_record(key="aeat:test:plaintext-key")
@@ -196,8 +213,10 @@ class TestOverwrite:
     def test_collision_without_overwrite_raises(self, store: SecretStore) -> None:
         first = _make_record(key="aeat:test:dup", value=b"first")
         store.put(first)
-        with pytest.raises(SecretAlreadyExistsError):
+        with pytest.raises(SecretAlreadyExistsError) as excinfo:
             store.put(_make_record(key="aeat:test:dup", value=b"second"))
+        assert "digest" not in str(excinfo.value)
+        assert first.key not in str(excinfo.value)
 
     def test_overwrite_replaces_value(self, store: SecretStore) -> None:
         first = _make_record(key="aeat:test:upd", value=b"first")
@@ -234,6 +253,7 @@ class TestOverwrite:
         messages = tuple(record.getMessage() for record in caplog.records if record.name == _STORE_LOGGER_NAME)
         assert any("stale secret-store blob cleanup skipped because blob is already absent" in msg for msg in messages)
         assert all(first.key not in msg for msg in messages)
+        assert all(first_ref.sha256_plaintext_hex not in msg for msg in messages)
 
 
 class TestDelete:
@@ -245,8 +265,9 @@ class TestDelete:
             store.get(record.key)
 
     def test_delete_missing_raises(self, store: SecretStore) -> None:
-        with pytest.raises(SecretNotFoundError):
+        with pytest.raises(SecretNotFoundError) as excinfo:
             store.delete("never-stored")
+        assert "digest" not in str(excinfo.value)
 
     def test_delete_logs_already_missing_blob(self, caplog: pytest.LogCaptureFixture, store: SecretStore) -> None:
         record = _make_record(key="aeat:test:delete-already-gone")
@@ -261,6 +282,7 @@ class TestDelete:
             "secret-store blob cleanup on delete skipped because blob is already absent" in msg for msg in messages
         )
         assert all(record.key not in msg for msg in messages)
+        assert all(blob_ref.sha256_plaintext_hex not in msg for msg in messages)
         with pytest.raises(SecretNotFoundError):
             store.get(record.key)
 

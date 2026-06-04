@@ -70,14 +70,14 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
     ): "secure temp materialisation writes through a pre-created private fd",
     (
         "src/aeat/adapters/persistence/storage/blob_store/_materialisation.py",
-        "materialise_secret",
+        "_create_materialised_temp_path",
         "tempfile.mkstemp",
-    ): "explicit secret materialisation uses private temp files",
+    ): "explicit secret/export materialisation uses private temp files",
     (
-        "src/aeat/adapters/persistence/storage/blob_store/_materialisation.py",
-        "export_to_temp_path",
-        "tempfile.mkstemp",
-    ): "explicit export materialisation uses private temp files",
+        "src/aeat/adapters/persistence/storage/bucket/_sealed_archive_writer.py",
+        "write_sealed_archive",
+        "tarfile.open",
+    ): "sealed bucket archive writer emits encrypted archive payloads",
     (
         "src/aeat/adapters/persistence/storage/envelope/_envelope.py",
         "save_envelope",
@@ -210,7 +210,7 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
     ): "per-bucket concurrency lockfile; non-sensitive O_EXCL lock metadata only",
     (
         "src/aeat/adapters/persistence/storage/bucket/_lockfile.py",
-        "_try_create_lock",
+        "_write_lockfile_pid",
         "os.write",
     ): "per-bucket concurrency lockfile writes the holding PID, not sensitive data",
     (
