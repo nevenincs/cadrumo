@@ -463,3 +463,20 @@ remaining `_actions.py` compatibility alias points at the extracted gate helper
 and does not duplicate business logic.
 
 Closure assessment: `W12.P26.S233` can close as `remote-mirror`.
+
+## S234-048 | PASS | Modelo binding-readiness manifest-discovery closeout verified
+
+The `W12.P26.S234` review found that `src/aeat/application/modelo/_binding_readiness.py`
+is a query helper for the `bindings list --missing` surface. It resolves the
+registry scope and delegates profile fact projection to `_profile_binding.py`;
+it does not construct storage repositories, select secure storage backends,
+write plaintext side stores, inspect environment variables, or own durable
+object state.
+
+Vaultspec RAG semantic searches were used for duplication review. The binding
+readiness query clusters in `_binding_readiness.py`, profile projection clusters
+in `_profile_binding.py`, and the CLI caller remains a presentation/filter
+surface. Conservative registry/profile fallback branches now log debug
+diagnostics before returning the empty resolved-binding set.
+
+Closure assessment: `W12.P26.S234` can close as `manifest-discovery`.
