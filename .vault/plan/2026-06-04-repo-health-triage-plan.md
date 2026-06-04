@@ -211,7 +211,7 @@ Drive every diagnostic class from advisory red to explicit green or documented r
 Drive Ty and scoped Pyright findings down by cohesive diagnostic class, recording every remaining exception as an explicit ratchet rather than an untracked red baseline.
 
 - [x] `W06.P18.S63` - Classify current Ty and Pyright diagnostics into executable finding buckets; `.vault/audit/2026-06-04-full-repo-health-diagnostics-audit.md`.
-- [ ] `W06.P18.S64` - Repair Declaracion parser boundary test typing; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+- [x] `W06.P18.S64` - Repair Declaracion parser boundary test typing; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
 - [ ] `W06.P18.S65` - Repair exception-hygiene AST location narrowing; `src/aeat/adapters/inbound/declaracion/test_exception_hygiene.py`.
 - [ ] `W06.P18.S66` - Normalize auth Settings test constructor values; `src/aeat/adapters/outbound/aeat/auth`.
 - [ ] `W06.P18.S67` - Repair aggregation error constructor and optional narrowing findings; `src/aeat/application/aggregation`.
