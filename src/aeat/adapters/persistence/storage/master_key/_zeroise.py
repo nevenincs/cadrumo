@@ -22,7 +22,19 @@ would tighten this guarantee but is out of scope for this module.
 
 from __future__ import annotations
 
+from typing import Final
+
 from ._errors import MasterKeyTypeError
+
+_MASTER_KEY_TYPE_MESSAGE_KEY: Final[str] = "errors.internal.internal_master_key_type"
+
+
+def _master_key_type_error(buffer: object) -> MasterKeyTypeError:
+    return MasterKeyTypeError(
+        "zeroise() requires a mutable bytearray buffer",
+        context={"received_type": type(buffer).__name__},
+        translated_message=_MASTER_KEY_TYPE_MESSAGE_KEY,
+    )
 
 
 def zeroise(buffer: object) -> None:
@@ -41,10 +53,7 @@ def zeroise(buffer: object) -> None:
         MasterKeyTypeError: When ``buffer`` is not a ``bytearray``.
     """
     if not isinstance(buffer, bytearray):
-        raise MasterKeyTypeError(
-            f"zeroise() requires a bytearray; got {type(buffer).__name__}. "
-            "Python's immutable bytes cannot be overwritten in place.",
-        )
+        raise _master_key_type_error(buffer)
     for index in range(len(buffer)):
         buffer[index] = 0
 
