@@ -560,8 +560,10 @@ application:
         invalid_kind: 'The invoice kind is not supported: %{kind}.'
     linking:
       errors:
-        linked_invoice_not_found: 'Invoice %{invoice_id} was not found after applying the link update.'
-        transaction_not_found: 'Transaction %{transaction_id} was not found in the transaction catalogue.'
+        linked_invoice_not_found: Invoice %{invoice_id} was not found after applying
+          the link update.
+        transaction_not_found: Transaction %{transaction_id} was not found in the
+          transaction catalogue.
   ledger:
     errors:
       evidence_attachment_requires_ids: Ledger evidence attachment requires purchase
@@ -571,10 +573,17 @@ application:
   live:
     expedientes:
       errors:
-        bucket_id_blank: 'Expedientes bucket id must not be blank.'
-        snapshot_id_blank: 'Expedientes snapshot id must not be blank.'
-        snapshot_not_found: 'No expedientes snapshot matches the requested id.'
-        snapshot_prefix_ambiguous: 'The expedientes snapshot prefix matches multiple snapshots.'
+        bucket_id_blank: Expedientes bucket id must not be blank.
+        snapshot_id_blank: Expedientes snapshot id must not be blank.
+        snapshot_not_found: No expedientes snapshot matches the requested id.
+        snapshot_prefix_ambiguous: The expedientes snapshot prefix matches multiple
+          snapshots.
+    notifications:
+      errors:
+        bucket_id_blank: 'Notifications bucket id must not be blank.'
+        snapshot_id_blank: 'Notifications snapshot id must not be blank.'
+        snapshot_not_found: 'No notifications snapshot matches the requested id.'
+        snapshot_prefix_ambiguous: 'The notifications snapshot prefix matches multiple snapshots.'
   modelo:
     borrador_binding:
       errors:

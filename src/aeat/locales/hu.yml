@@ -572,8 +572,10 @@ application:
         invalid_kind: 'A szamla tipusa nem tamogatott: %{kind}.'
     linking:
       errors:
-        linked_invoice_not_found: 'A(z) %{invoice_id} szamla nem talalhato a kapcsolas alkalmazasa utan.'
-        transaction_not_found: 'A(z) %{transaction_id} tranzakcio nem talalhato a tranzakcios katalogusban.'
+        linked_invoice_not_found: A(z) %{invoice_id} szamla nem talalhato a kapcsolas
+          alkalmazasa utan.
+        transaction_not_found: A(z) %{transaction_id} tranzakcio nem talalhato a tranzakcios
+          katalogusban.
   ledger:
     errors:
       evidence_attachment_requires_ids: A főkönyvi bizonylat csatolásához vásárlási
@@ -583,10 +585,17 @@ application:
   live:
     expedientes:
       errors:
-        bucket_id_blank: 'Az expedientes bucket azonosítója nem lehet üres.'
-        snapshot_id_blank: 'Az expedientes pillanatkép azonosítója nem lehet üres.'
-        snapshot_not_found: 'Nem található expedientes-pillanatkép a kért azonosítóhoz.'
-        snapshot_prefix_ambiguous: 'Az expedientes pillanatkép előtag több pillanatképre illeszkedik.'
+        bucket_id_blank: Az expedientes bucket azonosítója nem lehet üres.
+        snapshot_id_blank: Az expedientes pillanatkép azonosítója nem lehet üres.
+        snapshot_not_found: Nem található expedientes-pillanatkép a kért azonosítóhoz.
+        snapshot_prefix_ambiguous: Az expedientes pillanatkép előtag több pillanatképre
+          illeszkedik.
+    notifications:
+      errors:
+        bucket_id_blank: 'A notifications bucket azonositoja nem lehet ures.'
+        snapshot_id_blank: 'A notifications pillanatkep azonositoja nem lehet ures.'
+        snapshot_not_found: 'Nem talalhato notifications-pillanatkep a kert azonositohoz.'
+        snapshot_prefix_ambiguous: 'A notifications pillanatkep elotag tobb pillanatkepre illeszkedik.'
   modelo:
     borrador_binding:
       errors:
