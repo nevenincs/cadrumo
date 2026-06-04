@@ -25,7 +25,6 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
     namespace: ClassVar[str] = "aeat.domain.filing.drafts"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.FINANCIAL
     schema_version: ClassVar[int] = 1
-    payload_type: ClassVar[type[ModeloDraft]] = ModeloDraft
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
@@ -33,6 +32,11 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
             self._bucket_id = resolve_filing_repository_bucket_id(bucket_id)
             objects = secure_objects_for_filing_bucket(self._bucket_id)
         super().__init__(objects=objects)
+
+    @classmethod
+    def payload_model(cls) -> type[ModeloDraft]:
+        """Return the encrypted payload model for filing drafts."""
+        return ModeloDraft
 
     @property
     def bucket_id(self) -> str | None:
