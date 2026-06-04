@@ -869,11 +869,15 @@ application:
         extreta per a {manual_key}.
   repair_integrity:
     errors:
-      conflicting_list_filters: 'Els filtres de llista de reparacio son excloents: {filters}. Fes servir un filtre o cap.'
-      decision_id_mismatch_list: 'L id de la decisio de reparacio no coincideix amb l id recalculat des del contingut; es rebutja l entrada de la llista.'
-      decision_id_mismatch_load: 'L''id del contingut de la decisio de reparacio no coincideix amb el sol.licitat o recalculat; es rebutja la carrega.'
-      decision_id_mismatch_save: 'L''id de la decisio de reparacio no coincideix amb l''id recalculat des del contingut; es rebutja el desament.'
-      decision_not_found: 'La decisio de reparacio {decision_id} no existeix.'
+      conflicting_list_filters: 'Els filtres de llista de reparacio son excloents:
+        {filters}. Fes servir un filtre o cap.'
+      decision_id_mismatch_list: L id de la decisio de reparacio no coincideix amb
+        l id recalculat des del contingut; es rebutja l entrada de la llista.
+      decision_id_mismatch_load: L'id del contingut de la decisio de reparacio no
+        coincideix amb el sol.licitat o recalculat; es rebutja la carrega.
+      decision_id_mismatch_save: L'id de la decisio de reparacio no coincideix amb
+        l'id recalculat des del contingut; es rebutja el desament.
+      decision_not_found: La decisio de reparacio {decision_id} no existeix.
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
@@ -4140,9 +4144,13 @@ profile:
 review:
   adapters:
     errors:
-      drafts_load_failed: 'No s han pogut carregar els esborranys de presentacio des del backend segur.'
+      drafts_load_failed: No s han pogut carregar els esborranys de presentacio des
+        del backend segur.
       invoices_load_failed: No s'han pogut carregar les factures de l'adaptador.
       transactions_load_failed: No s'han pogut carregar les transaccions de l'adaptador.
+  edit:
+    errors:
+      parse_failed: 'No s''ha pogut interpretar el token d''edició. El valor indicat s''ha ocultat.'
   filing:
     draft_placeholder_summary: Esborrany pendent
     finding_summary: Incidència detectada a l'esborrany
