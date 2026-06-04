@@ -51,4 +51,4 @@ weakening production security scanning. Existing dirty registry TOML work under
 
 The corpus provenance gate passed with 2 tests. The production Semgrep lane
 completed successfully and still reports 11 findings while scanning 891 tracked
-files and skipping 17,240 files through `.semgrepignore`.
+files and skipping 17,241 files through `.semgrepignore`.
