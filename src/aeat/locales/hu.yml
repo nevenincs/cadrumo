@@ -554,10 +554,22 @@ application:
   inventory:
     service:
       errors:
-        actividad_conflict: 'Mar letezik keszletnaplo a(z) %{actividad_id} tevekenyseghez es a(z) %{year} evhez.'
-        actividad_not_found: 'Nincs keszletnaplo a(z) %{actividad_id} tevekenyseghez es a(z) %{year} evhez.'
-        duplicate_movement_id: 'A keszletnaplo mar tartalmazza a(z) %{movement_id} mozgast.'
+        actividad_conflict: Mar letezik keszletnaplo a(z) %{actividad_id} tevekenyseghez
+          es a(z) %{year} evhez.
+        actividad_not_found: Nincs keszletnaplo a(z) %{actividad_id} tevekenyseghez
+          es a(z) %{year} evhez.
+        duplicate_movement_id: A keszletnaplo mar tartalmazza a(z) %{movement_id}
+          mozgast.
         invalid_valuation_method: 'A keszlet ertekelesi mod nem tamogatott: %{valuation_method}.'
+  invoices:
+    importing:
+      errors:
+        import_file_read_failed: 'A szamlaimport fajl nem olvashato: %{path_name}.'
+        invalid_base_total: 'A szamla base_total erteke nem decimalis: %{base_total}.'
+        invalid_json: 'A szamla JSON nem ervenyes a(z) %{line}. sor %{column}. oszlopaban.'
+        invalid_json_shape: A szamla JSON tartalma objektum vagy objektumlista kell
+          legyen.
+        invalid_kind: 'A szamla tipusa nem tamogatott: %{kind}.'
   ledger:
     errors:
       evidence_attachment_requires_ids: A főkönyvi bizonylat csatolásához vásárlási

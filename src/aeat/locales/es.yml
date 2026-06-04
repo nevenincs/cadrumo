@@ -602,10 +602,24 @@ application:
   inventory:
     service:
       errors:
-        actividad_conflict: 'Ya existe un libro de inventario para la actividad %{actividad_id} y el ejercicio %{year}.'
-        actividad_not_found: 'No existe ningun libro de inventario para la actividad %{actividad_id} y el ejercicio %{year}.'
-        duplicate_movement_id: 'El libro de inventario ya contiene el movimiento %{movement_id}.'
-        invalid_valuation_method: 'El metodo de valoracion de inventario no esta admitido: %{valuation_method}.'
+        actividad_conflict: Ya existe un libro de inventario para la actividad %{actividad_id}
+          y el ejercicio %{year}.
+        actividad_not_found: No existe ningun libro de inventario para la actividad
+          %{actividad_id} y el ejercicio %{year}.
+        duplicate_movement_id: El libro de inventario ya contiene el movimiento %{movement_id}.
+        invalid_valuation_method: 'El metodo de valoracion de inventario no esta admitido:
+          %{valuation_method}.'
+  invoices:
+    importing:
+      errors:
+        import_file_read_failed: 'No se pudo leer el archivo de importacion de facturas:
+          %{path_name}.'
+        invalid_base_total: 'El valor base_total de la factura no es decimal: %{base_total}.'
+        invalid_json: El contenido JSON de facturas no es valido en la linea %{line},
+          columna %{column}.
+        invalid_json_shape: El contenido JSON de facturas debe ser un objeto o una
+          lista de objetos.
+        invalid_kind: 'El tipo de factura no esta admitido: %{kind}.'
   ledger:
     errors:
       evidence_attachment_requires_ids: El adjunto de evidencia del libro mayor requiere
