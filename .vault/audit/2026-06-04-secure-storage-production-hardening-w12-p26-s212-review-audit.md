@@ -26,22 +26,27 @@ environment variables directly.
 status surface. It does not create repository instances directly or bypass the
 runtime-owned workflow persistence path.
 
-## S212-003 | TRACKED | Filing runtime raw builder messages remain convention debt
+## S212-003 | PASS | Filing runtime builder errors are localized
 
-The reviewed module still raises several `ModeloBuilderError` instances with
-raw English messages. They derive from the AEAT exception hierarchy, but many do
-not yet carry `translated_message` keys. This is not a storage-routing defect
-for S212; it remains tracked with the broader filing localization remediation
-debt already logged by S207.
+The reviewed module now raises filing-runtime `ModeloBuilderError` instances
+with `translated_message` keys and structured contexts. Covered surfaces include
+absent modelo lookups, active profile load failures, empty registry roots,
+missing requested modelos, empty period-filtered registry selections, blank
+modelo selections, partial filing-year/period selectors, provider-year gaps,
+revision gaps, and unsupported casilla data types.
+
+The empty-registry context intentionally carries only the registry root name,
+not the absolute path, so user-facing formatting has useful context without
+leaking local filesystem layout.
 
 ## S212-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/filing/runtime.py src/aeat/application/filing/test_runtime.py src/aeat/application/filing/test_testing_registry.py` passed.
-- `uv run --no-sync pytest src/aeat/application/filing/test_runtime.py src/aeat/application/filing/test_testing_registry.py -q` passed.
+- `uv run --no-sync pytest -q src/aeat/application/filing/test_runtime.py` passed.
+- `uv run --no-sync ruff check src/aeat/application/filing/runtime.py src/aeat/application/filing/test_runtime.py` passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low storage-routing findings
-remain for the S212 slice. The raw filing-runtime error-message issue is
-tracked above as broader convention debt, not closed.
+remain for the S212 slice. The raw filing-runtime error-message issue found
+during review was fixed in this step rather than deferred.
 
 Disposition: close `AFR-110` as `manifest-discovery`.

@@ -515,22 +515,37 @@ application:
       errors:
         modelo_303_only: Az IVA-kompenzációs előzmények csak Modelo 303 megfigyeléseket
           fogadnak el.
+        modelo_390_only: Az éves áfa-kompenzációs összesítő csak Modelo 390 megfigyeléseket
+          fogad el.
         seed_conflict: Ehhez az időszakhoz már létezik IVA-kompenzációs állapot; a
           kezdőérték felülírná a tárolt előzményeket.
   filing:
     review:
       errors:
-        approved_by_blank: 'A jovahagyo azonositoja nem lehet ures.'
-        draft_not_ready: 'Csak benyujtasra kesz tervezetek hagyhatoak jova.'
-        registry_review_mismatch: 'A tervezet nem egyezik a nyilvantartasi ellenorzesi felulettel: %{codes}.'
+        approved_by_blank: A jovahagyo azonositoja nem lehet ures.
+        draft_not_ready: Csak benyujtasra kesz tervezetek hagyhatoak jova.
+        registry_review_mismatch: 'A tervezet nem egyezik a nyilvantartasi ellenorzesi
+          felulettel: %{codes}.'
       stale_reasons:
-        approval_basis_version_changed: 'a jovahagyasi alap verzioja megvaltozott'
-        category_profiles_changed: 'a kategoriaprofilok megvaltoztak'
-        draft_payload_changed: 'a tervezet tartalma megvaltozott'
-        draft_review_changed: 'a tervezet ellenorzesi felulete megvaltozott'
-        schema_formula_changed: 'a sema vagy keplet eredete megvaltozott'
-        transaction_catalogue_changed: 'a tranzakcios katalogus megvaltozott'
+        approval_basis_version_changed: a jovahagyasi alap verzioja megvaltozott
+        category_profiles_changed: a kategoriaprofilok megvaltoztak
+        draft_payload_changed: a tervezet tartalma megvaltozott
+        draft_review_changed: a tervezet ellenorzesi felulete megvaltozott
+        schema_formula_changed: a sema vagy keplet eredete megvaltozott
+        transaction_catalogue_changed: a tranzakcios katalogus megvaltozott
         unknown: '%{reason}'
+    runtime:
+      errors:
+        active_profile_load_failed: 'Az aktiv bevallasi profil nem toltheto be: %{reason}.'
+        blank_modelo_selection: 'A kert modellvalasztas nem tartalmazhat ures modellazonositokat.'
+        filing_year_period_pair: 'A filing_year es a period ertekeket egyutt kell megadni.'
+        modelo_not_in_registry: 'A(z) %{modelo} modelo nem szerepel a szamitasi nyilvantartasban.'
+        modelo_revision_missing: 'A(z) %{modelo} modellnek nincsenek revizioi.'
+        provider_year_missing: 'A(z) %{modelo} modell %{revision} reviziojahoz nincs szolgaltatoi ev.'
+        registry_empty: 'A(z) %{registry_root_name} registry gyokerben nincsenek modell definiciok.'
+        registry_empty_for_period: 'A nyilvantartasi gyokerben nincs modell definicio a(z) %{filing_year} ev %{period} idoszakahoz.'
+        registry_missing_requested_modelos: 'A nyilvantartasi gyokerbol hianyoznak a kert modell definiciok: %{modelos}.'
+        unsupported_casilla_data_type: 'Nem tamogatott nyilvantartasi casilla adattipus: %{data_type}.'
   ledger:
     errors:
       evidence_attachment_requires_ids: A főkönyvi bizonylat csatolásához vásárlási
