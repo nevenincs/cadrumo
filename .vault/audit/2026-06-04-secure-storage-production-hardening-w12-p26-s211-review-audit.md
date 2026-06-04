@@ -10,32 +10,32 @@ related:
 
 # `secure-storage-production-hardening` `W12.P26.S211` Review
 
-## S211-001 | PASS | Testing registry helper is manifest-discovery only
+## S211-001 | PASS | Testing registry is not a storage authority
 
-`_testing_registry.py` builds filing drafts through
-`build_runtime_schema_provider()` and `build_draft()`, which resolve bundled
-registry snapshot metadata. It does not read or write local files, construct
-storage repositories, derive SQL routes, inspect active sessions, or access
-settings/environment state directly.
+`src/aeat/application/filing/_testing_registry.py` builds filing drafts through
+the production registry runtime and supplies an empty `TransactionCatalogue`
+when approving deterministic test drafts. It does not inspect bucket manifests,
+read active-profile settings, open files, construct secure-object repositories,
+or write any persistence surface.
 
-## S211-002 | PASS | Approval helper avoids storage defaults intentionally
+## S211-002 | PASS | Test-only bucket id is named
 
-When an approved draft is requested, the helper calls `approve_draft()` with an
-explicit empty `TransactionCatalogue`. This keeps test fixtures deterministic
-and prevents the helper from using the default transaction repository or active
-bucket secure-object runtime.
+The approval helper now uses `_REGISTRY_TEST_BUCKET_ID` instead of an inline
+`"registry-test"` literal. The value is still intentionally test-only, but its
+role is now visible at module scope rather than buried in the approval call.
 
-## S211-003 | PASS | Existing helper tests cover the boundary
+## S211-003 | PASS | Existing tests are real helper behavior
 
-`test_testing_registry.py` covers registry-backed draft construction,
-application approval stamping, non-approved approval-field clearing,
-unsupported modelo refusal, duplicate input refusal, registry-projected sorted
-values, deterministic draft ids, and decimal coercion rejection.
+`test_testing_registry.py` exercises the actual helper and production registry
+builder path. It checks frozen draft construction, approved and non-approved
+metadata, unsupported-modelo refusal, duplicate input refusal, registry value
+projection, deterministic draft ids, and decimal coercion without mocks,
+patches, skips, xfails, fake repositories, or mirrored calculation logic.
 
 ## S211-004 | PASS | Validation
 
+- `uv run --no-sync pytest -q src/aeat/application/filing/test_testing_registry.py` passed with 11 tests.
 - `uv run --no-sync ruff check src/aeat/application/filing/_testing_registry.py src/aeat/application/filing/test_testing_registry.py` passed.
-- `uv run --no-sync pytest src/aeat/application/filing/test_testing_registry.py -q` passed with 11 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for the S211
