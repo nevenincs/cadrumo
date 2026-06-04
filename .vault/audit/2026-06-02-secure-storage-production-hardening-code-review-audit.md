@@ -602,3 +602,23 @@ name and error type without echoing raw operator-provided values, and central
 decimal coercion no longer logs raw malformed values.
 
 Closure assessment: `W12.P26.S244` can close as `runtime-default`.
+
+## S245-056 | PASS | Registry plaintext-exception closeout verified
+
+The `W12.P26.S245` review found that
+`src/aeat/application/registry/__init__.py` reads registry roots, source roots,
+workbook reports, scenario files, and parity tapes selected by the operator or
+resolved from bundled resources. Its plaintext writes are explicit workbook
+verification and parity artifacts, not profile bucket state.
+
+Filed-state verification delegates captured filed observation reads to
+`FiledDeclaracionObservationStore`, which routes through the active-bucket
+secure-object repository. The stale application-layer `master_key_provider`
+parameter was removed from registry verification because this layer does not
+own master-key selection.
+
+Invalid oracle environment refusals now use `RegistryApplicationInputError`
+with a locale key and structured context, and registry CLI tests use
+centralized configured AEAT URL helpers instead of a literal host string.
+
+Closure assessment: `W12.P26.S245` can close as `plaintext-exception`.
