@@ -131,7 +131,11 @@ def test_runner_close_overflow_is_caught() -> None:
     with pytest.raises(WizardScriptOverflowError) as excinfo:
         run_flow(SETUP_FLOW, prompter)
     assert excinfo.value.translated_message == "errors.internal.internal_wizard_script_overflow"
-    assert excinfo.value.context == {"remaining": ("orphan",)}
+    assert excinfo.value.context == {
+        "remaining_count": 1,
+        "asked_count": len(_scripted_answers_for_individual_declaration()),
+    }
+    assert "orphan" not in str(excinfo.value.context)
 
 
 def test_persist_answers_round_trip_via_project_answers() -> None:

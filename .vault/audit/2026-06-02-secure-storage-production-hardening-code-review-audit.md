@@ -821,3 +821,23 @@ command orchestration. Focused prompter, setup-runtime, and questionary smoke te
 passed.
 
 Closure assessment: `W12.P26.S275` can close as `plaintext-exception`.
+
+## S276-067 | PASS | Wizard status manifest-discovery closeout verified
+
+The `W12.P26.S276` review found that
+`src/aeat/application/wizard/_status.py` projects workflow/profile readiness and does
+not own secure-storage persistence. It does not construct repositories, write bucket
+manifests, manage master-key material, read environment variables, or persist plaintext
+side files.
+
+Active profile resolution delegates to `WorkflowState.active_profile_record()` and
+`resolve_active_bucket_id()`, while manifest discovery remains in workflow/core profile
+bucket helpers. The status module consumes the active-profile contract and does not
+duplicate manifest scanning.
+
+Projection failures are wrapped in `WizardStatusError` with locale keys and bounded
+context. The only local `except` catches `pydantic.ValidationError`, preserves the cause,
+and surfaces a localized refusal. Focused status, active-profile resolution, and
+profile-bucket scan tests passed.
+
+Closure assessment: `W12.P26.S276` can close as `manifest-discovery`.
