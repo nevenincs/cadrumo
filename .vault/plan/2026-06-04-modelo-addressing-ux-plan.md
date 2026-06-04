@@ -101,7 +101,7 @@ Make provisioning resume one active visible-target work unit and refuse conflict
 Wire command-specific revision defaults into calculate verify and file after provisioning and discovery resolution are stable.
 
 - [x] `W02.P04.S20` - allow work calculate to accept modelo year and period instead of a positional work-unit ID; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W02.P04.S21` - allow work verify to accept modelo year period and a revision selector; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W02.P04.S21` - allow work verify to accept modelo year period and a revision selector; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W02.P04.S22` - allow work file to default to the current verified-complete revision under a natural target; `src/aeat/entrypoints/cli/_modelo.py`.
 
 ### Phase `W02.P09` - wire export and end-to-end lifecycle assertions
@@ -226,6 +226,7 @@ localized operator messages render clearly without stale ID-routing
 guidance, the affected documentation no longer teaches pasted-ID routing
 for the common path, and the feature surface gate reports only relevant
 pass/fail results for this change set.
+
 
 
 
