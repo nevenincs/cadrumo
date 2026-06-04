@@ -326,3 +326,20 @@ for the exact S44 commit-candidate repository blob. Live worktree Ruff remains
 blocked by a pre-existing line-length issue in the same file's unrelated
 docstring edit. Remaining Vulture findings are the planned W04.P13.S45-S46
 residuals.
+
+## W04-008 | INFO | Submission draft-loader protocol dead-code review found no defects
+
+Status: verified with scoped residual.
+
+The W04.P13.S45 review found no behavioral defect in making
+`ModeloDraftLoader.load()` use a positional-only, underscore-prefixed draft path
+parameter. The protocol still requires one `Path` argument and returns
+`ModeloDraftLike`, while no discovered call site relies on a `draft_path=`
+keyword contract.
+
+Focused verification confirmed Vulture no longer reports the submission
+protocol parameter, the submission protocol file passes Ruff, and the domain
+submission tests pass. A broader adapter repository compatibility run exposed an
+unrelated `ClassificationError` empty-message assertion failure outside the
+protocol change. Remaining Vulture findings are the planned W04.P13.S46 CLI
+documentation payload imports.

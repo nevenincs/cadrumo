@@ -196,7 +196,7 @@ class ModeloDraftLike(Protocol):
 class ModeloDraftLoader(Protocol):
     """Loads a :class:`ModeloDraftLike` from a draft path on disk."""
 
-    def load(self, draft_path: Path) -> ModeloDraftLike:
+    def load(self, _draft_path: Path, /) -> ModeloDraftLike:
         """Load and return the :class:`ModeloDraftLike` at ``draft_path``."""
         ...
 
