@@ -889,6 +889,49 @@ application:
       decision_id_mismatch_save: El id de la decision de reparacion no coincide con
         el id recalculado desde su contenido; se rechaza el guardado.
       decision_not_found: La decision de reparacion {decision_id} no existe.
+  storage:
+    calc_sheets:
+      engine:
+        anchors:
+          final: 'RESULTADO'
+          start: 'INICIO: Entradas'
+        errors:
+          parameter_no_dated_value: El motor de exportación de hojas de cálculo no
+            encontró un valor de parámetro vigente para la fecha de devengo.
+          parameter_not_scalar: El motor de exportación de hojas de cálculo esperaba
+            un parámetro escalar, pero recibió un parámetro de tabla.
+          unsupported_rounding: El motor de exportación de hojas de cálculo encontró
+            una regla de redondeo del registro no admitida.
+        guide:
+          editable_cells: 'Edite únicamente las celdas de la pestaña ''Entradas''.
+            El resto de pestañas están protegidas: ''Cálculos'' contiene las casillas
+            derivadas con fórmulas, ''Procedencia'' audita cada casilla calculada
+            y ''Tarifas'' refleja los parámetros vigentes consultados por las fórmulas.'
+          period: '%{modelo_title} - período %{period} / %{filing_year}.'
+          pull_command: Para recoger sus ediciones en el almacenamiento local, ejecute
+            'aeat config google sync calc pull' desde la CLI.
+          title: '%{modelo_title} - %{period}/%{filing_year}'
+        labels:
+          casilla: 'Casilla'
+          cell: 'Celda'
+          concept: 'Concepto'
+          fixed_quota: 'Cuota fija'
+          formula: 'Fórmula'
+          legal_refs: 'Ref. legales'
+          marginal_rate: 'Tipo marginal'
+          maximum_base: 'Base máxima'
+          minimum_base: 'Base mínima'
+          number: 'Nº'
+          rounding: 'Redondeo'
+          section: 'Sección'
+          source: 'Origen'
+          source_refs: 'Ref. fuentes'
+          value: 'Valor'
+        protected:
+          calculos: 'Cálculos derivados - protegido para preservar paridad'
+          guide: 'Guía - protegido'
+          provenance: 'Procedencia / pista de auditoría - protegido'
+          tariffs: 'Tarifas / parámetros vigentes - protegido'
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
@@ -1397,9 +1440,12 @@ cli:
         casilla_help: Valor de casilla con la sintaxis CASILLA=DECIMAL (repetible).
         ccaa_help: Código de comunidad autónoma para la proyección territorial.
         m100_calculation_error: 'Error interno: el cálculo del Modelo 100 ha fallado.'
-        no_m130_revisions: No hay revisiones M130 para el ejercicio indicado.
-        no_m130_units: No hay unidades de trabajo M130 para el ejercicio y período
-          indicados.
+        no_m130_revisions: No hay revisiones M130 para el ejercicio indicado. Ejecuta
+          `aeat app modelo work calculate --modelo 130 --year %{year} --period 1T`
+          para cada trimestre primero.
+        no_m130_units: No hay unidades de trabajo M130 para el ejercicio indicado.
+          Crea y calcula unidades M130 primero con `aeat app modelo work create --modelo
+          130 --year %{year} --period 1T`.
         year_help: Ejercicio fiscal para la proyección.
       project_help: Ejecutar proyecciones agregadas de modelos (p. ej. agregación
         anual del Modelo 130).
@@ -1467,8 +1513,9 @@ cli:
         calculate_help: Calcular una nueva revisión draft para la unidad de trabajo
         calculate_saved: 'Guardado como revisión de cálculo en borrador %{revision_id}
           (estado: %{state}). Está persistido y puede retomarse más tarde; lista las
-          revisiones con `aeat app modelo work revisions %{work_unit_id}` y vuelve
-          a consultar esta con `aeat app modelo work revision %{revision_id}`.'
+          revisiones con `aeat app modelo work revisions --modelo %{modelo} --year
+          %{year} --period %{period}` y vuelve a consultar esta con `aeat app modelo
+          work revision %{revision_id}`.'
         calculate_unauthorized_advisory: 'AVISO: el backend de cálculo del modelo
           %{modelo} NO está autorizado — todavía no se ha probado con un test integral
           a lo largo de al menos dos ejercicios de renta (puerta de autorización multi-ejercicio).
@@ -1580,7 +1627,11 @@ cli:
           trabajo
         history_work_unit_id_help: Id de unidad de trabajo cuyo ciclo de vida quieres
           ver
-        id_is_work_unit_not_calc_revision_natural: 'Este id es un id de unidad de trabajo, pero verify/file necesitan un id de revisión de cálculo. Para la ruta habitual, ejecuta ''aeat app modelo work calculate --modelo %{modelo} --year %{year} --period %{period}'' y vuelve a ejecutar verify/file para ese mismo modelo/año/periodo. Los ids exactos siguen disponibles como vía avanzada.'
+        id_is_work_unit_not_calc_revision_natural: Este id es un id de unidad de trabajo,
+          pero verify/file necesitan un id de revisión de cálculo. Para la ruta habitual,
+          ejecuta 'aeat app modelo work calculate --modelo %{modelo} --year %{year}
+          --period %{period}' y vuelve a ejecutar verify/file para ese mismo modelo/año/periodo.
+          Los ids exactos siguen disponibles como vía avanzada.
         include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
           por defecto)
         invalid_amendment_kind: --kind debe ser uno de {choices}; se recibió {kind}.
@@ -4211,9 +4262,10 @@ review:
   operator:
     errors:
       item_not_found: No se encontro el elemento solicitado en la cola de revision.
+      reserved_kind: El tipo de revisión está reservado y no es un elemento de revisión
+        emitido.
       unknown_kind: Tipo de elemento de revisión desconocido.
       unsupported_item_type: 'Tipo de elemento de revision no admitido: %{item_type}.'
-      reserved_kind: 'El tipo de revisión está reservado y no es un elemento de revisión emitido.'
   transaction:
     summary: Transacción pendiente de clasificación
 sheets:

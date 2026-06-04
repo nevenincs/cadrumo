@@ -827,6 +827,49 @@ application:
       decision_id_mismatch_save: A javitasi dontes azonositoja nem egyezik az ujraszamitott
         tartalmi azonositoval; a mentes elutasitva.
       decision_not_found: A(z) {decision_id} javitasi dontes nem letezik.
+  storage:
+    calc_sheets:
+      engine:
+        anchors:
+          final: 'EREDMÉNY'
+          start: 'KEZDET: Entradas'
+        errors:
+          parameter_no_dated_value: A táblázatexportáló motor nem talált az elszámolási
+            dátumra érvényes paraméterértéket.
+          parameter_not_scalar: A táblázatexportáló motor skalár paramétert várt,
+            de táblázatos paramétert kapott.
+          unsupported_rounding: A táblázatexportáló motor nem támogatott nyilvántartási
+            kerekítési szabályt talált.
+        guide:
+          editable_cells: 'Csak az ''Entradas'' munkalap celláit szerkessze. A többi
+            munkalap védett: a ''Cálculos'' a képletekkel számított cellákat, a ''Procedencia''
+            az egyes számított mezők auditját, a ''Tarifas'' pedig a képletek által
+            használt érvényes paramétereket tartalmazza.'
+          period: '%{modelo_title} - időszak %{period} / %{filing_year}.'
+          pull_command: A módosítások helyi tárba húzásához futtassa az 'aeat config
+            google sync calc pull' parancsot a CLI-ből.
+          title: '%{modelo_title} - %{period}/%{filing_year}'
+        labels:
+          casilla: 'Casilla'
+          cell: 'Cella'
+          concept: 'Fogalom'
+          fixed_quota: 'Fix kvóta'
+          formula: 'Képlet'
+          legal_refs: 'Jogi hivatk.'
+          marginal_rate: 'Határkulcs'
+          maximum_base: 'Maximum alap'
+          minimum_base: 'Minimum alap'
+          number: 'Sz.'
+          rounding: 'Kerekítés'
+          section: 'Szakasz'
+          source: 'Forrás'
+          source_refs: 'Forráshivatk.'
+          value: 'Érték'
+        protected:
+          calculos: 'Származtatott számítások - védett a paritás megőrzéséhez'
+          guide: 'Útmutató - védett'
+          provenance: 'Eredet / audit trail - védett'
+          tariffs: 'Tarifák / aktív paraméterek - védett'
   user_profile:
     errors:
       duplicate_tax_id: A(z) "%{tax_id}" adóazonosítót már a(z) "%{profile}" profil
@@ -1331,8 +1374,8 @@ cli:
           negyedévre: `aeat app modelo work calculate --modelo 130 --year %{year}
           --period 1T`.'
         no_m130_units: 'Nincs M130 munkaegység a megadott évre. Először hozz létre
-          és számolj M130 munkaegységeket: `aeat app modelo work create --modelo
-          130 --year %{year} --period 1T`.'
+          és számolj M130 munkaegységeket: `aeat app modelo work create --modelo 130
+          --year %{year} --period 1T`.'
         year_help: Adóév a vetítéshez.
       project_help: Nyomtatvány-összesítő vetítések futtatása (pl. éves Modelo 130
         összesítés).
@@ -1512,7 +1555,12 @@ cli:
         history_help: Egy munkaegység minden életciklus-eseményének megjelenítése.
         history_work_unit_id_help: Annak a munkaegységnek az azonosítója, amelynek
           életciklusát meg szeretné tekinteni.
-        id_is_work_unit_not_calc_revision_natural: 'Ez az azonosító munkaegység-azonosító, de a verify/file műveletekhez számítási revízióazonosító kell. A szokásos útvonalhoz futtasd: ''aeat app modelo work calculate --modelo %{modelo} --year %{year} --period %{period}'', majd futtasd újra a verify/file műveletet ugyanarra a modellre/évre/időszakra. A pontos azonosítók továbbra is elérhetők haladó menekülőútként.'
+        id_is_work_unit_not_calc_revision_natural: 'Ez az azonosító munkaegység-azonosító,
+          de a verify/file műveletekhez számítási revízióazonosító kell. A szokásos
+          útvonalhoz futtasd: ''aeat app modelo work calculate --modelo %{modelo}
+          --year %{year} --period %{period}'', majd futtasd újra a verify/file műveletet
+          ugyanarra a modellre/évre/időszakra. A pontos azonosítók továbbra is elérhetők
+          haladó menekülőútként.'
         include_discarded_help: Eldobott munkaegységek bevonása a listába (alapértelmezés
           szerint kizárva).
         invalid_amendment_kind: 'A --kind értéke csak {choices} egyike lehet; kapott:
@@ -4061,9 +4109,10 @@ review:
   operator:
     errors:
       item_not_found: A felülvizsgálati elem nem található.
+      reserved_kind: A felülvizsgálati típus fenntartott, és nem kibocsátott felülvizsgálati
+        elem.
       unknown_kind: Ismeretlen felülvizsgálati elemtípus.
       unsupported_item_type: 'Nem támogatott felülvizsgálati elemtípus: %{item_type}.'
-      reserved_kind: 'A felülvizsgálati típus fenntartott, és nem kibocsátott felülvizsgálati elem.'
   transaction:
     summary: Tranzakció besorolásra vár
 sheets:

@@ -813,6 +813,49 @@ application:
       decision_id_mismatch_save: Repair decision id does not match its re-derived
         content id; refusing to save the decision.
       decision_not_found: Repair decision {decision_id} does not exist.
+  storage:
+    calc_sheets:
+      engine:
+        anchors:
+          final: 'RESULT'
+          start: 'START: Entradas'
+        errors:
+          parameter_no_dated_value: The spreadsheet export engine could not find a
+            parameter value valid for the filing date.
+          parameter_not_scalar: The spreadsheet export engine expected a scalar parameter
+            but received a table parameter.
+          unsupported_rounding: The spreadsheet export engine found an unsupported
+            registry rounding rule.
+        guide:
+          editable_cells: 'Edit only the cells in the ''Entradas'' tab. The other
+            tabs are protected: ''Cálculos'' contains derived formula cells, ''Procedencia''
+            audits each calculated casilla, and ''Tarifas'' mirrors the active parameters
+            used by formulas.'
+          period: '%{modelo_title} - period %{period} / %{filing_year}.'
+          pull_command: To pull your edits into local storage, run 'aeat config google
+            sync calc pull' from the CLI.
+          title: '%{modelo_title} - %{period}/%{filing_year}'
+        labels:
+          casilla: 'Casilla'
+          cell: 'Cell'
+          concept: 'Concept'
+          fixed_quota: 'Fixed quota'
+          formula: 'Formula'
+          legal_refs: 'Legal refs'
+          marginal_rate: 'Marginal rate'
+          maximum_base: 'Maximum base'
+          minimum_base: 'Minimum base'
+          number: 'No.'
+          rounding: 'Rounding'
+          section: 'Section'
+          source: 'Source'
+          source_refs: 'Source refs'
+          value: 'Value'
+        protected:
+          calculos: 'Derived calculations - protected to preserve parity'
+          guide: 'Guide - protected'
+          provenance: 'Provenance / audit trail - protected'
+          tariffs: 'Tariffs / active parameters - protected'
   user_profile:
     errors:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
@@ -1292,8 +1335,12 @@ cli:
         ccaa_help: Autonomous community tax residence key for the M100 autonomic scale
           (e.g. cataluna, comunidad-valenciana). Must match the registry enum.
         m100_calculation_error: 'Internal error: Modelo 100 calculation failed.'
-        no_m130_revisions: No M130 revisions for the specified year.
-        no_m130_units: No M130 work units for the specified year and period.
+        no_m130_revisions: No M130 revisions for the specified year. Run `aeat app
+          modelo work calculate --modelo 130 --year %{year} --period 1T` for each
+          quarter first.
+        no_m130_units: No M130 work units for the specified year. Create and calculate
+          M130 work units first with `aeat app modelo work create --modelo 130 --year
+          %{year} --period 1T`.
         year_help: Filing year (e.g. 2024).
       project_help: Run modelo aggregate projections (e.g. year-end Modelo 130 aggregation).
       readiness:
@@ -1354,8 +1401,8 @@ cli:
         calculate_help: Persist a new draft calculation revision for the work unit
         calculate_saved: 'Saved as draft calculation revision %{revision_id} (state:
           %{state}). It is persisted and can be resumed later; list revisions with
-          `aeat app modelo work revisions %{work_unit_id}` and re-inspect this one
-          with `aeat app modelo work revision %{revision_id}`.'
+          `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period
+          %{period}` and re-inspect this one with `aeat app modelo work revision %{revision_id}`.'
         calculate_unauthorized_advisory: 'ADVISORY: modelo %{modelo} calculation backend
           is UNAUTHORIZED — it has not yet been proven by an end-to-end test across
           at least two renta years (multi-year-renta authorization gate). The result
@@ -3942,9 +3989,9 @@ review:
   operator:
     errors:
       item_not_found: Review item not found.
+      reserved_kind: Review kind is reserved and is not an emitted review item.
       unknown_kind: Unknown review kind.
       unsupported_item_type: Unsupported review item type.
-      reserved_kind: 'Review kind is reserved and is not an emitted review item.'
   transaction:
     summary: Transaction pending classification
 sheets:
