@@ -29,6 +29,15 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from ..crypto._encrypted_columns import EncryptedBytes, EncryptedString, HashedLookup
 
+_HASH_HEX_LENGTH = 64
+
+
+def _nullable_fixed_length_check(column_name: str, expected_length: int) -> CheckConstraint:
+    return CheckConstraint(
+        f"{column_name} IS NULL OR length({column_name}) = {expected_length}",
+        name=f"ck_secure_objects_{column_name}_len",
+    )
+
 
 class Base(DeclarativeBase):
     """Declarative base for every ORM mapper class in this package."""
@@ -137,6 +146,15 @@ class SecureObjectRow(Base):
             "object_key",
             name="uq_secure_objects_identity",
         ),
+        CheckConstraint(
+            "schema_version >= 1",
+            name="ck_secure_objects_schema_version_positive",
+        ),
+        _nullable_fixed_length_check("revision_id", _HASH_HEX_LENGTH),
+        _nullable_fixed_length_check("previous_revision_id", _HASH_HEX_LENGTH),
+        _nullable_fixed_length_check("previous_payload_hash", _HASH_HEX_LENGTH),
+        _nullable_fixed_length_check("payload_hash", _HASH_HEX_LENGTH),
+        _nullable_fixed_length_check("ciphertext_hash", _HASH_HEX_LENGTH),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
