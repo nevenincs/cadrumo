@@ -40,7 +40,7 @@ class InvoiceCatalogueSourceResolver:
         if not active_sources:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
 
-        repository = self._invoice_repository or InvoiceCatalogueRepository()
+        repository = self._invoice_repository or InvoiceCatalogueRepository(bucket_id=context.bucket_id)
         try:
             catalogue = repository.load()
         except _STORAGE_DEGRADATION_ERRORS as exc:
