@@ -27,4 +27,4 @@ Scope: verify registry reviewability, loader, committed registry, and plan gates
 
 ## Notes
 
-- Post-format TOML row-width baseline is 535 characters; the current widest row is 528 characters.
+- Post-format TOML row-width baseline is 530 characters; the current widest row is 528 characters.
