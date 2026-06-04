@@ -20,6 +20,7 @@ from ...adapters.outbound.aeat.browser._site_health import (
     SiteHealthState,
     SiteHealthStatus,
 )
+from ...tests.aeat_literal_fixtures import aeat_url
 from . import (
     SiteHealthAlert,
     WorkflowAbortReason,
@@ -97,7 +98,7 @@ class TestSiteHealthAlert:
 
     def _status(self) -> SiteHealthStatus:
         evidence = SiteHealthEvidence(
-            url=_URL_ADAPTER.validate_python("https://sede.agenciatributaria.gob.es/"),
+            url=_URL_ADAPTER.validate_python(aeat_url("sede", "/")),
             http_status=503,
             html_fragment="<html>mantenimiento</html>",
             detected_markers=("mantenimiento",),
