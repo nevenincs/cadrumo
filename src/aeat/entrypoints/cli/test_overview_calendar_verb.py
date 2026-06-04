@@ -17,10 +17,13 @@ from ...application.live import ExpedientesCapture, ExpedientesService, Notifica
 from ...application.user_profile._orchestration import profile_create_storage_span
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
+from ...tests.aeat_literal_fixtures import aeat_url
 from ...tests.secure_sql import isolated_profile_storage_root
 from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+_SOURCE_URL = AnyHttpUrl(aeat_url("sede", "/"))
 
 
 @pytest.fixture(autouse=True)
@@ -146,11 +149,11 @@ def test_calendar_json_includes_local_live_snapshot_events(cli_runner: CliRunner
                     fecha_emision=date(2025, 4, 14),
                     fecha_notificacion=None,
                     leida=False,
-                    source_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/"),
+                    source_url=_SOURCE_URL,
                 ),
             ),
             captured_at=datetime(2025, 4, 14, 10, 0, tzinfo=UTC),
-            source_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/"),
+            source_url=_SOURCE_URL,
         ),
     )
 

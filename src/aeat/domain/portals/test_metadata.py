@@ -5,6 +5,14 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from ...core.external_constants import load_external_constants
+from ...tests.aeat_literal_fixtures import (
+    PORTAL_CENSO_NON_GCODE_PATH_CANARY,
+    PORTAL_NON_GCODE_PATH_CANARY,
+    PORTAL_RETIRED_PATH_CANARY,
+    PORTAL_RETIRED_WITH_NOTES_PATH_CANARY,
+    portal_path,
+)
 from ._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from ._codes import Portal
 from ._metadata import PortalMetadata
@@ -12,11 +20,19 @@ from ._metadata import PortalMetadata
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
+def _sede_url(path: str) -> str:
+    return f"{load_external_constants().aeat.domains.sede}{path}"
+
+
+def _www1_url(path: str) -> str:
+    return f"{load_external_constants().aeat.domains.www1}{path}"
+
+
 def _base_kwargs(**overrides: object) -> dict[str, object]:
     """Return a valid FILING portal kwargs dict for use with overrides."""
     base: dict[str, object] = {
         "portal": Portal.PORTAL_M303_IVA_AUTOLIQUIDACION,
-        "url": "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G414.shtml",
+        "url": _sede_url(portal_path("portal_m303_iva_autoliquidacion")),
         "subdomain": PortalHost.SEDE,
         "category": PortalCategory.FILING,
         "auth_methods": frozenset({AuthMethod.CERTIFICATE}),
@@ -41,7 +57,9 @@ def test_url_scheme_must_be_https() -> None:
     """Non-HTTPS URLs are rejected."""
     with pytest.raises(ValidationError, match=r"url scheme must be https"):
         PortalMetadata.model_validate(
-            _base_kwargs(url="http://sede.agenciatributaria.gob.es/Sede/procedimientoini/G414.shtml")
+            _base_kwargs(
+                url=_sede_url(portal_path("portal_m303_iva_autoliquidacion")).replace("https://", "http://", 1)
+            )
         )
 
 
@@ -49,7 +67,7 @@ def test_url_host_must_match_subdomain() -> None:
     """A mismatch between URL host and declared subdomain fails."""
     with pytest.raises(ValidationError, match=r"does not match subdomain"):
         PortalMetadata.model_validate(
-            _base_kwargs(url="https://www1.agenciatributaria.gob.es/Sede/procedimientoini/G414.shtml")
+            _base_kwargs(url=_www1_url(portal_path("portal_m303_iva_autoliquidacion")))
         )
 
 
@@ -57,7 +75,7 @@ def test_filing_url_must_match_gcode_pattern() -> None:
     """Active FILING URL path must match the G-code regex."""
     with pytest.raises(ValidationError, match=r"url path must match"):
         PortalMetadata.model_validate(
-            _base_kwargs(url="https://sede.agenciatributaria.gob.es/Sede/something-else.html")
+            _base_kwargs(url=_sede_url(PORTAL_NON_GCODE_PATH_CANARY))
         )
 
 
@@ -68,7 +86,7 @@ def test_censo_url_must_match_gcode_pattern() -> None:
             _base_kwargs(
                 portal=Portal.PORTAL_M036_CENSAL,
                 category=PortalCategory.CENSO,
-                url="https://sede.agenciatributaria.gob.es/Sede/censal.html",
+                url=_sede_url(PORTAL_CENSO_NON_GCODE_PATH_CANARY),
             )
         )
 
@@ -80,7 +98,7 @@ def test_retired_filing_skips_gcode_check() -> None:
         _base_kwargs(
             portal=Portal.PORTAL_M037_CENSAL_SIMPLIFICADA,
             category=PortalCategory.CENSO,
-            url="https://sede.agenciatributaria.gob.es/Sede/retired-path.html",
+            url=_sede_url(PORTAL_RETIRED_PATH_CANARY),
             url_stability=UrlStability.RETIRED,
             active=False,
             replaced_by=Portal.PORTAL_M036_CENSAL,
@@ -160,7 +178,7 @@ def test_retired_without_replacement_with_notes_is_valid() -> None:
         _base_kwargs(
             portal=Portal.PORTAL_M037_CENSAL_SIMPLIFICADA,
             category=PortalCategory.CENSO,
-            url="https://sede.agenciatributaria.gob.es/Sede/retired.html",
+            url=_sede_url(PORTAL_RETIRED_WITH_NOTES_PATH_CANARY),
             url_stability=UrlStability.RETIRED,
             active=False,
             replaced_by=None,
