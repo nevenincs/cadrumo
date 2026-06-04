@@ -149,3 +149,19 @@ pre-helper failures where Renta expense source resolution raises
 `aggregation.renta_ledger.errors.invoice_bucket_mismatch` before binding
 resolution is reached; that edge is outside this extraction and remains tracked
 as a source-mesh preflight ordering issue.
+
+## W03-006 | INFO | Modelo IVA wallet gate extraction review found no defects
+
+Status: verified.
+
+The W03.P08.S28 review found no behavioral defect in the extraction. The
+calculation action now delegates Modelo 303 IVA wallet decision resolution,
+binding application, persisted-decision replay checks, blocked-message rendering,
+and taxpayer NIF lookup to `_iva_wallet_gate.py`, while preserving the existing
+private `_actions.py` import surface used by export, CLI, and tests.
+
+Focused verification passed for IVA wallet binding behavior, blocked-message
+localisation, export refusal checks, the closure token, the IVA wallet engine
+integration file, and Ruff on the touched action/gate/error-registry surfaces.
+One attempted export pytest command used stale node ids and collected no tests;
+the corrected export refusal node ids passed.

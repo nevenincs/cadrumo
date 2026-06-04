@@ -113,7 +113,7 @@ Turn the modelo CLI hotspot into command-family modules that parse, call applica
 Split modelo application orchestration into typed binding, wallet, and persistence services without changing revision semantics.
 
 - [x] `W03.P08.S27` - Extract modelo binding-resolution service; `src/aeat/application/modelo/_binding_resolution.py`.
-- [ ] `W03.P08.S28` - Extract modelo IVA wallet gate service; `src/aeat/application/modelo/_iva_wallet_gate.py`.
+- [x] `W03.P08.S28` - Extract modelo IVA wallet gate service; `src/aeat/application/modelo/_iva_wallet_gate.py`.
 - [ ] `W03.P08.S29` - Extract modelo revision-persistence service; `src/aeat/application/modelo/_revision_persistence.py`.
 
 ### Phase `W03.P09` - registry runtime decomposition
