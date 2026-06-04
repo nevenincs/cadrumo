@@ -172,7 +172,7 @@ Replace copy-paste ID routing in narrative docs only after the implementation is
 - [x] `W04.P06.S71` - rewrite the Modelo 390 how-to lifecycle path around natural-key modelo work commands; `docs/how-to/modelo-390.md`.
 - [x] `W04.P06.S72` - audit the reconciliation workflow and document natural-key or exact-ID rationale; `docs/how-to/reconcile.md`.
 - [x] `W04.P06.S73` - update the filing spine explanation for work units revisions current pointers and selectors; `docs/how-to/filing-spine.md`.
-- [ ] `W04.P06.S74` - regenerate the CLI reference after command signature changes; `docs/cli`.
+- [x] `W04.P06.S74` - regenerate the CLI reference after command signature changes; `docs/cli`.
 
 ## Wave `W05` - verification gates
 
@@ -226,5 +226,6 @@ localized operator messages render clearly without stale ID-routing
 guidance, the affected documentation no longer teaches pasted-ID routing
 for the common path, and the feature surface gate reports only relevant
 pass/fail results for this change set.
+
 
 
