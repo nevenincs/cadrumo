@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import hashlib
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 from pydantic import AnyHttpUrl
@@ -16,8 +17,10 @@ from ...adapters.outbound.aeat.sede import (
 )
 from ...core.resources import resources
 from ...domain.user_profile import UserProfileFact, UserProfileRecord
+from ...tests.secure_sql import isolated_runtime_profile
 from ..calculations import IvaWalletDecisionSourceResolver, reconcile_iva_compensation_wallet
 from ..modelo._profile_binding import resolve_profile_sourced_bindings
+from ..user_profile import UserProfileLifecycleRepository
 from . import CalculationSourceContext, ProfileSourceResolver
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -25,6 +28,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "operator"
 _CCAA_BINDING = "renta-2025-profile-tax-residence-ccaa"
+_PROFILE_FINGERPRINT = "sha256:df8074c27d781e6413d624ab561a331d6d8d453660636d69a63a2300ad39e35f"
+
+
+@pytest.fixture
+def secure_profile_backend(tmp_path: Path) -> Iterator[None]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        yield
 
 
 def _modelo_100_snapshot():
@@ -34,9 +44,9 @@ def _modelo_100_snapshot():
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
     return UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Renta profile taxpayer",
+        display_name="Renta perfil Ñandú",
         facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="identity.tax_id", value="12345678Ñ"),
             UserProfileFact(path="tax_residence.ccaa", value=ccaa),
         ),
         created_at=_CLOCK,
@@ -96,9 +106,30 @@ def test_profile_source_resolver_matches_existing_profile_binding_resolution() -
     assert {item.source_ref for item in resolution.provenance if item.source_kind == "profile"} == {
         f"profile:{_BUCKET_ID}:binding:{_CCAA_BINDING}"
     }
-    profile_fingerprint = f"sha256:{hashlib.sha256(profile_record.model_dump_json().encode('utf-8')).hexdigest()}"
     assert {item.fingerprint for item in resolution.provenance if item.source_kind == "profile"} == {
-        profile_fingerprint
+        _PROFILE_FINGERPRINT
+    }
+
+
+def test_profile_source_resolver_fingerprints_storage_loaded_profile(
+    secure_profile_backend: None,
+) -> None:
+    snapshot = _modelo_100_snapshot()
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(_profile_with_ccaa("madrid"))
+
+    resolution = ProfileSourceResolver(registry_snapshot=snapshot).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="100",
+            filing_year=2025,
+            period="0A",
+            revision=snapshot.revision,
+        )
+    )
+
+    assert resolution.enum_binding_values[_CCAA_BINDING] == "madrid"
+    assert {item.fingerprint for item in resolution.provenance if item.source_kind == "profile"} == {
+        _PROFILE_FINGERPRINT
     }
 
 
