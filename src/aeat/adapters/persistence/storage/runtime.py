@@ -168,7 +168,8 @@ class StorageRuntime(BaseModel):
             )
 
 
-def _runtime_not_ready_error(message: str, *, message_key: str) -> StorageValidationError:
+def runtime_not_ready_error(message: str, *, message_key: str) -> StorageValidationError:
+    """Build a localized storage-runtime readiness failure."""
     from ....core.i18n import tr
 
     return StorageValidationError(
@@ -176,6 +177,9 @@ def _runtime_not_ready_error(message: str, *, message_key: str) -> StorageValida
         context={"details": tr(message_key, locale=_settings_output_language())},
         translated_message="errors.storage.runtime.not_ready",
     )
+
+
+_runtime_not_ready_error = runtime_not_ready_error
 
 
 def _storage_validation_error(message: str) -> StorageValidationError:
@@ -350,4 +354,5 @@ __all__ = [
     "StorageRuntimeSession",
     "inspect_bucket_storage_runtime",
     "inspect_storage_runtime",
+    "runtime_not_ready_error",
 ]
