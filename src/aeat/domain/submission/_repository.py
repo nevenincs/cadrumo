@@ -27,7 +27,10 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
     namespace: ClassVar[str] = "aeat.domain.submission.records"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
     schema_version: ClassVar[int] = 1
-    payload_type: ClassVar[type[ModeloPresentado]] = ModeloPresentado
+
+    @classmethod
+    def payload_model(cls) -> type[ModeloPresentado]:
+        return ModeloPresentado
 
     def extract_identifier(self, payload: ModeloPresentado) -> str:
         return payload.submission_id

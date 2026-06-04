@@ -213,6 +213,7 @@ ignore_imports =
     aeat.application.aggregation.test_renta_ledger -> aeat.tests.secure_sql
     aeat.application.aggregation.test_source_mesh -> aeat.adapters.persistence.storage.errors
     aeat.application.aggregation.test_source_mesh_profile_live -> aeat.adapters.outbound.aeat.sede
+    aeat.application.aggregation.test_source_mesh_profile_live -> aeat.tests.secure_sql
     aeat.application.auth.test_apoderado -> aeat.tests.secure_sql
     aeat.application.auth.test_diagnostics -> aeat.adapters.persistence.storage
     aeat.application.auth.test_diagnostics -> aeat.tests.secure_sql
@@ -221,6 +222,7 @@ ignore_imports =
     aeat.application.auth.test_ensure_session -> aeat.tests.secure_sql
     aeat.application.auth.test_operator -> aeat.adapters.persistence.storage.runtime_repository
     aeat.application.auth.test_operator -> aeat.tests.secure_sql
+    aeat.application.auth.test_operator_storage_session -> aeat.tests.secure_sql
     aeat.application.auth.test_persisted_session_metadata -> aeat.adapters.outbound.aeat.auth._session_store
     aeat.application.auth.test_persisted_session_metadata -> aeat.tests.secure_sql
     aeat.application.calculations.test_binding_prefill -> aeat.tests.secure_sql

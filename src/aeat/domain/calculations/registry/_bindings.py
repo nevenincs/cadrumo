@@ -5,11 +5,16 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
-from typing import Literal, Protocol, cast
+from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ....core.aggregation import AggregationSourceKind, RowSetGroupingKind
+from ....core.aggregation import (
+    COUNTERPART_SOURCE_KINDS,
+    AggregationSourceKind,
+    CounterpartSourceKind,
+    RowSetGroupingKind,
+)
 from ....core.external_constants import DEFAULT_CURRENCY
 from ...iva import (
     EUMemberState,
@@ -1738,22 +1743,7 @@ def resolve_ledger_renta_income_aggregation_binding_values(
     return resolved
 
 
-CounterpartSourceKind = Literal[
-    AggregationSourceKind.INVOICE,
-    AggregationSourceKind.LEDGER_TRANSACTION,
-    AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
-    AggregationSourceKind.PAYABLE_INVOICE,
-    AggregationSourceKind.COLLECTIBLE_INVOICE,
-]
-COUNTERPART_BINDING_SOURCE_KINDS: frozenset[CounterpartSourceKind] = frozenset(
-    {
-        AggregationSourceKind.INVOICE,
-        AggregationSourceKind.LEDGER_TRANSACTION,
-        AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
-        AggregationSourceKind.PAYABLE_INVOICE,
-        AggregationSourceKind.COLLECTIBLE_INVOICE,
-    }
-)
+COUNTERPART_BINDING_SOURCE_KINDS: frozenset[CounterpartSourceKind] = COUNTERPART_SOURCE_KINDS
 
 
 class CounterpartAggregationObservation(BaseModel):
@@ -1765,12 +1755,8 @@ class CounterpartAggregationObservation(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    # CAST-RATIONALE-LEDGER-COUNTERPART-SOURCEKIND:
-    # bridging AggregationSourceKind StrEnum value to CounterpartSourceKind
-    # Literal alias; runtime value is identical but the type system cannot
-    # infer the Literal subset.
     source_kind: CounterpartSourceKind = Field(
-        default=cast(CounterpartSourceKind, AggregationSourceKind.LEDGER_TRANSACTION),  # CAST-RATIONALE-COUNTERPART-SOURCE-KIND-LITERAL-SUBSET
+        default=AggregationSourceKind.LEDGER_TRANSACTION,
     )
     source_id: str = Field(min_length=1, max_length=128)
     party_tax_id: str = Field(min_length=1, max_length=64)

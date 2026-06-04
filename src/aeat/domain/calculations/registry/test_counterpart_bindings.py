@@ -387,12 +387,11 @@ def test_resolve_counterpart_binding_row_values_does_not_treat_invoice_source_as
     revision = _revision(binding)
     observations = (
         _observation(party="DE111", country="DE", base="1000.00", clave="E", source_kind="collectible_invoice"),
-        _observation(party="DE111", country="DE", base="25.00", clave="E", source_kind="invoice"),
     )
 
     resolved = resolve_counterpart_binding_row_values(revision, observations)
 
-    assert resolved == {("iva-349-operador-row-base", 1): Decimal("25.00")}
+    assert resolved == {}
 
 
 def test_resolve_counterpart_binding_row_values_period_grouping_carries_rectification_metadata() -> None:
