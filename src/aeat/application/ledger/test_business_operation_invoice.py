@@ -200,6 +200,23 @@ class TestPayableInvoiceEventEmission:
         assert event.object_id == result.record.invoice_id
         assert event.bucket_id == "bucket-001"
 
+    def test_default_event_repository_uses_active_runtime_bucket(
+        self, isolated_settings: Settings, secure_objects: SecureObjectRepository
+    ) -> None:
+        svc = PayableInvoiceService(settings=isolated_settings)
+
+        result = svc.add(
+            bucket_id="bucket-001",
+            counterparty_nif="B99999999",
+            invoice_number="INV-EVENT-DEFAULT",
+            invoice_date="2025-04-01",
+        )
+
+        catalogue = self._event_repo(secure_objects).load()
+        event = catalogue.events[result.bucket_event_ids[0]]
+        assert event.event_type is BucketEventType.PAYABLE_INVOICE_CREATED
+        assert event.bucket_id == "bucket-001"
+
     def test_update_emits_payable_invoice_updated(
         self, isolated_settings: Settings, secure_objects: SecureObjectRepository
     ) -> None:

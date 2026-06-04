@@ -396,7 +396,7 @@ Current register count: `293` production candidate files.
 | `AFR-115` | `src/aeat/application/invoices/_reconciliation.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S84` | closed |
 | `AFR-116` | `src/aeat/application/invoices/_source_resolver.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S84` | closed |
 | `AFR-117` | `src/aeat/application/ledger/_actions.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S85` | closed |
-| `AFR-118` | `src/aeat/application/ledger/_business_operation_invoice.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-118` | `src/aeat/application/ledger/_business_operation_invoice.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S85` | closed |
 | `AFR-119` | `src/aeat/application/ledger/_evidence.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-120` | `src/aeat/application/ledger/_models.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-121` | `src/aeat/application/ledger/_preflight.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
@@ -749,7 +749,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S217` - Close `AFR-115` for `src/aeat/application/invoices/_reconciliation.py` with signals `secure-object, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/application/invoices/_reconciliation.py`.
 - [x] `W12.P26.S218` - Close `AFR-116` for `src/aeat/application/invoices/_source_resolver.py` with signals `secure-object, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/application/invoices/_source_resolver.py`.
 - [x] `W12.P26.S219` - Close `AFR-117` for `src/aeat/application/ledger/_actions.py` with signals `secure-object, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/ledger/_actions.py`.
-- [ ] `W12.P26.S220` - Close `AFR-118` for `src/aeat/application/ledger/_business_operation_invoice.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/ledger/_business_operation_invoice.py`.
+- [x] `W12.P26.S220` - Close `AFR-118` for `src/aeat/application/ledger/_business_operation_invoice.py` with signals `secure-object, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/ledger/_business_operation_invoice.py`.
 - [ ] `W12.P26.S221` - Close `AFR-119` for `src/aeat/application/ledger/_evidence.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/ledger/_evidence.py`.
 - [ ] `W12.P26.S222` - Close `AFR-120` for `src/aeat/application/ledger/_models.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/ledger/_models.py`.
 - [ ] `W12.P26.S223` - Close `AFR-121` for `src/aeat/application/ledger/_preflight.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/ledger/_preflight.py`.
