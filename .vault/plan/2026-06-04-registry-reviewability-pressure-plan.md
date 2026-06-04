@@ -40,7 +40,7 @@ Apply only audit-authorised layout changes that preserve schema semantics and
 loaded `ModeloDefinition` objects.
 
 - [x] `P02.S03` - Split M123 inline-only revision directories into reviewable revision fragments if S02 authorises it; `src/aeat/_data/registry/aeat/modelos/123`.
-- [ ] `P02.S04` - Split M369 inline-only revision directories into reviewable revision fragments if S02 authorises it; `src/aeat/_data/registry/aeat/modelos/369`.
+- [x] `P02.S04` - Split M369 inline-only revision directories into reviewable revision fragments if S02 authorises it; `src/aeat/_data/registry/aeat/modelos/369`.
 - [ ] `P02.S05` - Tighten reviewability regression gates only after corpus pressure headroom is improved; `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
 
 ### Phase `P03` - verification and closure
