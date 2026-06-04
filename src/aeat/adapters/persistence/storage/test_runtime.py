@@ -21,6 +21,7 @@ from .runtime import (
     inspect_storage_runtime,
 )
 from .runtime_repository import (
+    secure_object_repository_for_active_bucket,
     secure_object_repository_for_active_bucket_or_default_route,
     secure_object_repository_for_cold_bootstrap_state,
 )
@@ -507,6 +508,22 @@ def test_default_route_repository_carries_namespace_registry_before_profile_sele
 
     assert isinstance(repository, SecureObjectRepository)
     assert repository.namespace_registry is STORAGE_NAMESPACE_REGISTRY
+
+
+def test_active_bucket_repository_refusal_carries_localized_details(tmp_path: Path) -> None:
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile=None,
+        aeat_output_language="en",
+    ):
+        with pytest.raises(StorageValidationError) as raised:
+            secure_object_repository_for_active_bucket()
+        rendered = resolve_error_message(raised.value)
+
+    assert raised.value.translated_message == "errors.storage.runtime.not_ready"
+    assert raised.value.context is not None
+    assert "No active bucket session" in str(raised.value.context["details"])
+    assert "No active bucket session" in rendered
 
 
 def test_cold_bootstrap_repository_refuses_active_profile(tmp_path: Path) -> None:

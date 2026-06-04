@@ -10,7 +10,7 @@ from __future__ import annotations
 from ....core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
 from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .errors import StorageValidationError
-from .runtime import inspect_bucket_storage_runtime
+from .runtime import inspect_bucket_storage_runtime, runtime_not_ready_error
 from .sql import SecureObjectRepository
 
 
@@ -47,8 +47,9 @@ def secure_object_repository_for_active_bucket() -> SecureObjectRepository:
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
-        raise StorageValidationError(
-            translated_message="errors.storage.runtime.not_ready",
+        raise runtime_not_ready_error(
+            "storage runtime is not ready for profile-bound storage: no active profile bucket is selected.",
+            message_key="errors.storage.runtime.no_active_session",
         )
     return secure_object_repository_for_bucket(bucket_id)
 
