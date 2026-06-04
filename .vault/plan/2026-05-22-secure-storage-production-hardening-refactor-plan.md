@@ -457,7 +457,7 @@ Current register count: `301` production candidate files.
 | `AFR-176` | `src/aeat/application/wizard/_widgets.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-177` | `src/aeat/application/workflow/__init__.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-178` | `src/aeat/application/workflow/_errors.py` | `active-profile, manifest-bucket, master-key` | `manifest-discovery` | `W12.P22.S90` | closed |
-| `AFR-179` | `src/aeat/application/workflow/_events.py` | `manifest-bucket, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-179` | `src/aeat/application/workflow/_events.py` | `manifest-bucket, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-180` | `src/aeat/application/workflow/_models.py` | `secure-object, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S85` | pending |
 | `AFR-181` | `src/aeat/application/workflow/_persistence.py` | `secure-object, runtime, active-profile, manifest-bucket, master-key, sql-route` | `runtime-default` | `W12.P21.S85` | migrated |
 | `AFR-182` | `src/aeat/application/workflow/_profile_bucket_scan.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
@@ -818,7 +818,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S278` - Close `AFR-176` for `src/aeat/application/wizard/_widgets.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/wizard/_widgets.py`.
 - [x] `W12.P26.S279` - Close `AFR-177` for `src/aeat/application/workflow/__init__.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/workflow/__init__.py`.
 - [x] `W12.P26.S280` - Close `AFR-178` for `src/aeat/application/workflow/_errors.py` with signals `active-profile, manifest-bucket, master-key`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/workflow/_errors.py`.
-- [ ] `W12.P26.S281` - Close `AFR-179` for `src/aeat/application/workflow/_events.py` with signals `manifest-bucket, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/workflow/_events.py`.
+- [x] `W12.P26.S281` - Close `AFR-179` for `src/aeat/application/workflow/_events.py` with signals `manifest-bucket, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/workflow/_events.py`.
 - [ ] `W12.P26.S282` - Close `AFR-180` for `src/aeat/application/workflow/_models.py` with signals `secure-object, active-profile, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/workflow/_models.py`.
 - [x] `W12.P26.S283` - Close `AFR-181` for `src/aeat/application/workflow/_persistence.py` with signals `secure-object, runtime, active-profile, manifest-bucket, master-key, sql-route`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/workflow/_persistence.py`.
 - [ ] `W12.P26.S284` - Close `AFR-182` for `src/aeat/application/workflow/_profile_bucket_scan.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/workflow/_profile_bucket_scan.py`.
