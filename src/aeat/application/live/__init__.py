@@ -10,8 +10,9 @@ to the correct revision.
 from __future__ import annotations
 
 import asyncio
+import re
 from collections.abc import Awaitable, Mapping
-from contextlib import asynccontextmanager, contextmanager, nullcontext
+from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -90,10 +91,13 @@ from ...application.calculations import (
 )
 from ...core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ...core.access_gate import AeatAccessGate as _AeatAccessGate
+from ...core.classification import SensitivityClass as _SensitivityClass
 from ...core.config import Settings as _Settings
 from ...core.config import load_settings as _load_settings
 from ...core.errors import AeatError as _AeatError
 from ...core.hashing import sha256_hex as _sha256_hex
+from ...core.redaction import default_rules_for_class as _default_redaction_rules_for_class
+from ...core.redaction import redact as _redact
 from ...core.resources import bundled_path as _bundled_path
 from ...core.resources import resources as _resources
 from ...core.time import now
@@ -865,14 +869,15 @@ async def capture_iva_compensation_history(
             translated_message="live.errors.year_range_invalid",
         )
 
-    session, settings = await _active_verified_session()
-    return await _capture_iva_compensation_history_with_session(
-        session,
-        settings=settings,
-        year_from=year_from,
-        year_to=year_to,
-        output_root=output_root,
-    )
+    with _active_profile_storage_span():
+        session, settings = await _active_verified_session()
+        return await _capture_iva_compensation_history_with_session(
+            session,
+            settings=settings,
+            year_from=year_from,
+            year_to=year_to,
+            output_root=output_root,
+        )
 
 
 async def _capture_iva_compensation_history_with_session(
@@ -1158,8 +1163,8 @@ def _persist_iva_compensation_history_observations_strict(
     for observation in observations:
         if observation.modelo != "303":
             raise LiveApplicationInputError(
-                message="IVA compensation history capture only accepts Modelo 303 observations",
                 translated_message="live.errors.iva_history_modelo_303_only",
+                context={"modelo": observation.modelo},
             )
         key = (observation.ejercicio, observation.period)
         current = latest.get(key)
@@ -1414,18 +1419,19 @@ async def capture_iva_compensation_wallet(
 
     Returns an :class:`IvaWalletCaptureReport`.
     """
-    session, settings = await _active_verified_session(
-        operation="live-iva-wallet-read",
-        target_url=_PRE303_PRESENTATION_SERVICE_URL,
-    )
-    return await _capture_iva_compensation_wallet_with_session(
-        session,
-        settings=settings,
-        target_year=target_year,
-        target_period=target_period,
-        taxpayer_nif=taxpayer_nif,
-        output_root=output_root,
-    )
+    with _active_profile_storage_span():
+        session, settings = await _active_verified_session(
+            operation="live-iva-wallet-read",
+            target_url=_PRE303_PRESENTATION_SERVICE_URL,
+        )
+        return await _capture_iva_compensation_wallet_with_session(
+            session,
+            settings=settings,
+            target_year=target_year,
+            target_period=target_period,
+            taxpayer_nif=taxpayer_nif,
+            output_root=output_root,
+        )
 
 
 async def _capture_iva_compensation_wallet_with_session(
@@ -1472,9 +1478,7 @@ async def capture_iva_remote_state(
     Returns an :class:`IvaRemoteStateAcquisitionReport` with the acquired
     state, compensation history, and any acquisition issues.
     """
-    active_bucket_id = _resolve_active_bucket_id()
-    storage_span = _profile_storage_session(active_bucket_id) if active_bucket_id else nullcontext()
-    with storage_span:
+    with _active_profile_storage_span():
         return await _capture_iva_remote_state_for_active_storage(
             year_from=year_from,
             year_to=year_to,
@@ -1904,6 +1908,8 @@ def _redacted_context_mapping(context: Mapping[object, object]) -> dict[str, obj
 
 
 def _redacted_context_value(value: object, *, key: str) -> object | None:
+    if _is_sensitive_failure_context_key(key):
+        return _redacted_sensitive_context_value(value, key=key)
     if isinstance(value, bool | int | float):
         return value
     if isinstance(value, str):
@@ -1913,14 +1919,142 @@ def _redacted_context_value(value: object, *, key: str) -> object | None:
         return _redacted_context_mapping(value)
     if isinstance(value, tuple | list):
         items = tuple(
-            item for item in (_redacted_context_value(entry, key=key) for entry in value[:8]) if item is not None
+            item
+            for item in (_redacted_sequence_context_value(entry, key=key) for entry in value[:8])
+            if item is not None
         )
         return items
     return _bounded_context_text(value)
 
 
+_DIAGNOSTIC_CONTEXT_REDACTION_RULES = _default_redaction_rules_for_class(_SensitivityClass.DIAGNOSTIC)
+_SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS = frozenset(
+    {
+        "active_profile_id",
+        "active_profile_ref",
+        "authorization",
+        "bucket_id",
+        "certificate_nif",
+        "credential",
+        "diagnostic_id",
+        "dni_nie",
+        "identity_nif",
+        "nif",
+        "nie",
+        "num_soporte",
+        "object_key",
+        "profile_id",
+        "profile_ref",
+        "secure_object_key",
+        "storage_object_key",
+        "tax_id",
+    }
+)
+_SENSITIVE_FAILURE_CONTEXT_KEY_PARTS = frozenset(
+    {
+        "authorization",
+        "bearer",
+        "bucket",
+        "certificate",
+        "cookie",
+        "credential",
+        "dni",
+        "nif",
+        "nie",
+        "object",
+        "passphrase",
+        "pkcs12",
+        "profile",
+        "secret",
+        "soporte",
+        "support",
+        "token",
+    }
+)
+_SAFE_FAILURE_CONTEXT_KEYS = frozenset(
+    {
+        "actual_type",
+        "auth_mode",
+        "captured_at",
+        "cause_type",
+        "description",
+        "ejercicio",
+        "expected",
+        "failure_type",
+        "modelo",
+        "operation",
+        "period",
+        "phase",
+        "phone_state",
+        "reason",
+        "stage",
+        "target_period",
+        "target_year",
+        "timeout_ms",
+    }
+)
+
+
+def _normalised_context_key(key: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", key.casefold()).strip("_")
+
+
+def _is_sensitive_failure_context_key(key: str) -> bool:
+    normalised = _normalised_context_key(key)
+    if not normalised or normalised in _SAFE_FAILURE_CONTEXT_KEYS:
+        return False
+    if normalised in _SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS:
+        return True
+    parts = frozenset(part for part in normalised.split("_") if part)
+    return any(
+        part == sensitive or part.startswith(f"{sensitive}s")
+        for part in parts
+        for sensitive in _SENSITIVE_FAILURE_CONTEXT_KEY_PARTS
+    )
+
+
+def _redacted_sensitive_context_value(value: object, *, key: str) -> object | None:
+    if isinstance(value, bool | int | float):
+        return value
+    if isinstance(value, str):
+        text = _redact_diagnostic_context_text(value)
+        return _evidence_ref(text) if text else None
+    if isinstance(value, Mapping):
+        redacted = _redacted_sensitive_context_mapping(value)
+        return redacted or None
+    if isinstance(value, tuple | list):
+        items = tuple(
+            item
+            for item in (_redacted_sensitive_context_value(entry, key=key) for entry in value[:8])
+            if item is not None
+        )
+        return items
+    return _evidence_ref(_bounded_context_text(value))
+
+
+def _redacted_sensitive_context_mapping(context: Mapping[object, object]) -> dict[str, object]:
+    redacted: dict[str, object] = {}
+    for raw_key, raw_value in context.items():
+        key = str(raw_key)
+        if not key or key.startswith("_"):
+            continue
+        value = _redacted_sensitive_context_value(raw_value, key=key)
+        if value is not None:
+            redacted[key] = value
+    return redacted
+
+
+def _redacted_sequence_context_value(value: object, *, key: str) -> object | None:
+    if isinstance(value, bool | int | float):
+        return value
+    if isinstance(value, str):
+        text = _redact_diagnostic_context_text(value)
+        return _evidence_ref(text) if text else None
+    return _redacted_context_value(value, key=key)
+
+
 def _redact_url_like_context_value(value: str, *, key: str) -> str:
-    text = _bounded_context_text(value)
+    text = _redact_diagnostic_context_text(value)
     if "url" not in key.casefold():
         return text
     from urllib.parse import urlsplit
@@ -1932,6 +2066,10 @@ def _redact_url_like_context_value(value: str, *, key: str) -> str:
     if not parsed.scheme and not parsed.netloc:
         return parsed.path
     return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+
+
+def _redact_diagnostic_context_text(value: object) -> str:
+    return _bounded_context_text(_redact(str(value), rules=_DIAGNOSTIC_CONTEXT_REDACTION_RULES))
 
 
 def _bounded_context_text(value: object, *, max_length: int = 160) -> str:
