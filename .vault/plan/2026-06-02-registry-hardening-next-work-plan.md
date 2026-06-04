@@ -146,7 +146,7 @@ Close the Modelo 303 manifest-only completeness drift that blocks the full recor
 Audit and repair stale M303 completeness-manifest rows for totals that no longer participate in the calculation closure.
 
 - [x] `W06.P10.S44` - Audit M303 manifest-only completeness drift for totals 27 and 45 across both revisions; `.vault/audit`.
-- [ ] `W06.P10.S45` - Remove stale M303 total rows from completeness manifests after closure derivation proves they are no longer calculated; `src/aeat/_data/registry/aeat/modelos/303`.
+- [x] `W06.P10.S45` - Remove stale M303 total rows from completeness manifests after closure derivation proves they are no longer calculated; `src/aeat/_data/registry/aeat/modelos/303`.
 - [ ] `W06.P10.S46` - Verify full record-design completeness and committed-registry gates after the M303 cleanup; `src/aeat/domain/calculations/registry/test_record_design.py`.
 
 ## Description
