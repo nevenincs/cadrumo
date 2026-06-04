@@ -30,8 +30,12 @@ Closed `AFR-096` for operator auth.
   is active.
 - Verified the local persisted-session probe degrades only with a debug
   `exc_info=True` record; mutating login/clear storage failures still surface.
+- Threaded explicit `Settings` through live-auth preflight status, local-session,
+  certificate, and Cl@ve probes so centralized settings drive the whole report.
 - Added real-behavior regression coverage for clearing operator auth after the
   profile-create storage span has closed.
+- Added real-behavior preflight coverage for an explicit certificate path supplied
+  via `Settings` while the ambient process settings carry no certificate path.
 
 ## Outcome
 
@@ -43,8 +47,10 @@ operation.
 
 Validation passed:
 
+- `uv run --no-sync pytest src/aeat/application/auth/test_operator.py src/aeat/entrypoints/cli/_config/test_auth_round5_surface.py -q`
 - `$env:PYTHONPATH='src'; uv run --no-sync pytest -q src/aeat/application/auth/test_operator_storage_session.py src/aeat/application/auth/test_operator.py`
-- `$env:PYTHONPATH='src'; uv run --no-sync ruff check src/aeat/application/auth/_operator.py src/aeat/application/auth/test_operator_storage_session.py src/aeat/application/auth/test_operator.py`
+- `$env:PYTHONPATH='src'; uv run --no-sync ruff check src/aeat/application/auth/_operator.py src/aeat/application/auth/test_operator_storage_session.py src/aeat/application/auth/test_operator.py src/aeat/entrypoints/cli/_config/test_auth_round5_surface.py`
+- `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit`
 
 ## Notes
 
