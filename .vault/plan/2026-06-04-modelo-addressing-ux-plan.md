@@ -58,7 +58,7 @@ Build the shared selector and revision-currentness contract before any CLI comma
 Create the shared application contract that resolves operator-visible filing targets before any CLI command creates or selects internal work-unit identity.
 
 - [x] `W01.P01.S01` - add typed selector request result ambiguity and error objects; `src/aeat/application/modelo/_selectors.py`.
-- [ ] `W01.P01.S02` - implement active-bucket and explicit-bucket resolution for modelo work selectors; `src/aeat/application/modelo/_selectors.py`.
+- [x] `W01.P01.S02` - implement active-bucket and explicit-bucket resolution for modelo work selectors; `src/aeat/application/modelo/_selectors.py`.
 - [ ] `W01.P01.S03` - implement visible-target-first work-unit lookup by bucket modelo filing year and period; `src/aeat/application/modelo/_selectors.py`.
 - [ ] `W01.P01.S04` - implement explicit work-unit ID validation against supplied natural-key flags; `src/aeat/application/modelo/_selectors.py`.
 - [ ] `W01.P01.S05` - implement registry revision conflict refusal before exact-target creation; `src/aeat/application/modelo/_selectors.py`.
@@ -226,6 +226,7 @@ localized operator messages render clearly without stale ID-routing
 guidance, the affected documentation no longer teaches pasted-ID routing
 for the common path, and the feature surface gate reports only relevant
 pass/fail results for this change set.
+
 
 
 
