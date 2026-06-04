@@ -52,7 +52,6 @@ from typing import TYPE_CHECKING, Final, Literal, Protocol, runtime_checkable
 
 from argon2.low_level import Type as _Argon2Type
 from argon2.low_level import hash_secret_raw as _argon2_hash_secret_raw
-from cryptography.exceptions import InvalidTag
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -148,6 +147,22 @@ _KDF_PARAMS_VERSION: Final[int] = 2
 
 * v2: Argon2id (memory_cost=19 MiB, time_cost=2, parallelism=1).
 """
+
+_MASTER_KEY_UNAVAILABLE_MESSAGE_KEY: Final[str] = "errors.auth.auth_storage_master_key_unavailable"
+_MASTER_KEY_PASSPHRASE_MISMATCH_MESSAGE_KEY: Final[str] = (
+    "errors.auth.auth_storage_master_key_passphrase_mismatch"
+)
+
+
+def _master_key_unavailable_error(message: str) -> MasterKeyUnavailableError:
+    return MasterKeyUnavailableError(message, translated_message=_MASTER_KEY_UNAVAILABLE_MESSAGE_KEY)
+
+
+def _master_key_passphrase_mismatch_error(message: str) -> MasterKeyPassphraseMismatchError:
+    return MasterKeyPassphraseMismatchError(
+        message,
+        translated_message=_MASTER_KEY_PASSPHRASE_MISMATCH_MESSAGE_KEY,
+    )
 
 
 @runtime_checkable
@@ -276,8 +291,13 @@ def atomic_write_secure_bytes(target: Path, payload: bytes) -> None:
         fsync_parent_dir(target)
     except BaseException:
         _log.error("master_key: atomic write failed target=%s", target, exc_info=True)
-        with contextlib.suppress(OSError):
+        try:
             os.unlink(tmp_path)
+        except OSError as cleanup_exc:
+            _log.debug(
+                "master_key: atomic write tempfile cleanup failed error_type=%s",
+                type(cleanup_exc).__name__,
+            )
         raise
 
 
@@ -364,8 +384,8 @@ class KeyringClient(Protocol):
     The real implementation wraps the third-party :mod:`keyring`
     module's ``get_password`` / ``set_password`` calls plus the
     backend probe that rejects ``fail.Keyring`` and ``null.Keyring``.
-    Tests inject a real fake implementation rather than patching the
-    third-party module at runtime.
+    Tests inject a real in-memory implementation rather than mutating
+    the third-party module at runtime.
     """
 
     def probe_backend(self) -> None:
@@ -387,13 +407,14 @@ class _RealKeyringClient:
     def probe_backend(self) -> None:
         try:
             import keyring
-        except ImportError as exc:  # pragma: no cover - keyring is a hard dep
+        except ImportError as exc:
             raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
         try:
             from keyring.backends import fail as _fail_backend
 
             backend = keyring.get_keyring()
-        except Exception as exc:  # pragma: no cover - defensive
+        except Exception as exc:
+            _log.debug("keyring backend probe failed error_type=%s", type(exc).__name__)
             raise KeyringUnavailableError(f"unable to inspect OS keychain backend: {exc}") from exc
         if isinstance(backend, _fail_backend.Keyring):
             raise KeyringUnavailableError(
@@ -409,14 +430,14 @@ class _RealKeyringClient:
     def get_password(self, service: str, username: str) -> str | None:
         try:
             import keyring
-        except ImportError as exc:  # pragma: no cover - keyring is a hard dep
+        except ImportError as exc:
             raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
         return keyring.get_password(service, username)
 
     def set_password(self, service: str, username: str, password: str) -> None:
         try:
             import keyring
-        except ImportError as exc:  # pragma: no cover - keyring is a hard dep
+        except ImportError as exc:
             raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
         keyring.set_password(service, username, password)
 
@@ -438,8 +459,8 @@ class KeyringMasterKeyProvider:
 
     The optional ``client`` argument injects a :class:`KeyringClient`
     implementation so tests exercise the provider's contract against a
-    real fake type rather than monkeypatching the third-party
-    ``keyring`` module.
+    real in-memory implementation rather than mutating the third-party
+    ``keyring`` module at runtime.
     """
 
     def __init__(
@@ -504,7 +525,7 @@ class KeyringMasterKeyProvider:
         """
         try:
             from keyring.errors import KeyringError
-        except ImportError as exc:  # pragma: no cover - keyring is a hard dep
+        except ImportError as exc:
             raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
         self._probe_backend()
         stored = self._read_stored_master_key(KeyringError)
@@ -520,7 +541,7 @@ class KeyringMasterKeyProvider:
         """Mint and persist a new keychain master key for explicit enrollment."""
         try:
             from keyring.errors import KeyringError
-        except ImportError as exc:  # pragma: no cover - keyring is a hard dep
+        except ImportError as exc:
             raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
         from .....core.config import load_settings
 
@@ -561,7 +582,8 @@ class KeyringMasterKeyProvider:
             ) from exc
         except KeyringUnavailableError:
             raise
-        except Exception as exc:  # pragma: no cover - defensive
+        except Exception as exc:
+            _log.debug("keyring get_password failed unexpectedly error_type=%s", type(exc).__name__)
             raise KeyringUnavailableError(f"OS keychain raised unexpectedly: {exc}") from exc
 
     @staticmethod
@@ -594,7 +616,8 @@ class KeyringMasterKeyProvider:
             raise KeyringUnavailableError(f"OS keychain refused set_password: {exc}") from exc
         except KeyringUnavailableError:
             raise
-        except Exception as exc:  # pragma: no cover - defensive
+        except Exception as exc:
+            _log.debug("keyring set_password failed unexpectedly error_type=%s", type(exc).__name__)
             raise KeyringUnavailableError(f"OS keychain raised unexpectedly: {exc}") from exc
         try:
             roundtrip = self._client.get_password(self._service, self._username)
@@ -796,9 +819,7 @@ class FileFallbackMasterKeyProvider:
         try:
             preview = _KdfVersionEnvelope.model_validate_json(raw_text)
         except ValidationError as exc:
-            raise MasterKeyUnavailableError(
-                f"master.kdf at {self._kdf_params_path} must be a JSON object: {exc}",
-            ) from exc
+            raise _master_key_unavailable_error("master.kdf must be a JSON object.") from exc
         on_disk_version = preview.version
         if on_disk_version != _KDF_PARAMS_VERSION:
             raise MasterKeyKdfVersionError(
@@ -808,21 +829,17 @@ class FileFallbackMasterKeyProvider:
         try:
             params = _KdfParameters.model_validate_json(raw_text)
         except (ValueError, ValidationError) as exc:
-            raise MasterKeyUnavailableError(
-                f"failed to parse KDF parameters at {self._kdf_params_path}: {exc}",
-            ) from exc
+            raise _master_key_unavailable_error("failed to parse KDF parameters.") from exc
         try:
             salt = _b64decode(params.salt_b64)
         except (ValueError, binascii.Error) as exc:
-            raise MasterKeyUnavailableError("KDF parameters carry malformed salt.") from exc
+            raise _master_key_unavailable_error("KDF parameters carry malformed salt.") from exc
         kek = self._derive_kek_with_params(passphrase, salt, params)
         try:
             wire = base64.b64decode(self._master_key_path.read_bytes(), validate=True)
             blob = EncryptedBlob.from_wire(wire)
         except (OSError, ValueError, binascii.Error) as exc:
-            raise MasterKeyUnavailableError(
-                f"failed to read wrapped master key at {self._master_key_path}: {exc}",
-            ) from exc
+            raise _master_key_unavailable_error("failed to read wrapped master key.") from exc
         try:
             return decrypt_record(blob, key=kek, associated_data=b"aeat.master-key.v1")
         except (DecryptionError, EncryptionError) as exc:
@@ -831,9 +848,8 @@ class FileFallbackMasterKeyProvider:
             # (profile recovery flow for forgotten
             # passphrase vs `aeat config profile create NAME` for absent
             # material).
-            raise MasterKeyPassphraseMismatchError(
-                "passphrase did not unlock the master key at "
-                f"{self._master_key_path}; verify the passphrase or use "
+            raise _master_key_passphrase_mismatch_error(
+                "passphrase did not unlock the master key; verify the passphrase or use "
                 "the profile recovery flow.",
             ) from exc
 
@@ -952,7 +968,7 @@ class FileFallbackMasterKeyProvider:
         if os.name == "posix":
             try:
                 os.chmod(target, 0o700)
-            except OSError:  # pragma: no cover - best-effort
+            except OSError:
                 _log.debug("chmod 0o700 failed on %s; continuing", target)
 
     @staticmethod
@@ -1141,11 +1157,11 @@ def _wrapped_dek_from_document(document: _WrappedBucketDekDocument):
         ciphertext = _b64decode(document.ciphertext_b64)
         tag = _b64decode(document.tag_b64)
     except (ValueError, binascii.Error) as exc:
-        raise MasterKeyUnavailableError("bucket DEK document carries malformed base64.") from exc
+        raise _master_key_unavailable_error("bucket DEK document carries malformed base64.") from exc
     try:
         return WrappedDek(nonce=nonce, ciphertext=ciphertext, tag=tag)
     except ValidationError as exc:
-        raise MasterKeyUnavailableError("bucket DEK document carries malformed field lengths.") from exc
+        raise _master_key_unavailable_error("bucket DEK document carries malformed field lengths.") from exc
 
 
 def _document_from_wrapped_dek(wrapped) -> _WrappedBucketDekDocument:
@@ -1160,9 +1176,7 @@ def _read_wrapped_bucket_dek(path: Path):
     try:
         document = _WrappedBucketDekDocument.model_validate_json(path.read_text(encoding=_UTF_8_ENCODING))
     except (OSError, ValueError, ValidationError) as exc:
-        raise MasterKeyUnavailableError(
-            f"failed to read bucket DEK document at {path}: {exc}",
-        ) from exc
+        raise _master_key_unavailable_error("failed to read bucket DEK document.") from exc
     return _wrapped_dek_from_document(document)
 
 
@@ -1239,7 +1253,7 @@ def _refuse_unsecured_active_bucket_with_real_profile(session: BucketSession) ->
     for (payload_wire,) in rows:
         try:
             payload_plain = decrypt_encrypted_bytes_column(bytes(payload_wire))
-        except Exception as exc:
+        except (DecryptionError, TypeError, ValueError) as exc:
             raise UnsecuredModeRefusedError(
                 "unsecured master-key backend cannot prove the active profile is synthetic; "
                 "use the file or keyring backend before decrypting or persisting records.",
@@ -1280,9 +1294,9 @@ def _load_or_mint_bucket_dek(
                 wrapped = _read_wrapped_bucket_dek(path)
                 try:
                     return unwrap_dek(kek=kek, wrapped=wrapped, bucket_id=bucket_id)
-                except InvalidTag as exc:
-                    raise MasterKeyUnavailableError(
-                        f"staged bucket DEK at {path} did not authenticate under the active master key; "
+                except DecryptionError as exc:
+                    raise _master_key_unavailable_error(
+                        "staged bucket DEK did not authenticate under the active master key; "
                         "verify the selected profile, passphrase, and secret-store backend.",
                     ) from exc
             dek = secrets.token_bytes(KEY_SIZE)
@@ -1312,9 +1326,9 @@ def _load_or_mint_bucket_dek(
         wrapped = _read_wrapped_bucket_dek(path)
         try:
             return unwrap_dek(kek=kek, wrapped=wrapped, bucket_id=bucket_id)
-        except InvalidTag as exc:
-            raise MasterKeyUnavailableError(
-                f"bucket DEK at {path} did not authenticate under the active master key; "
+        except DecryptionError as exc:
+            raise _master_key_unavailable_error(
+                "bucket DEK did not authenticate under the active master key; "
                 "verify the selected profile, passphrase, and secret-store backend.",
             ) from exc
 
