@@ -29,16 +29,6 @@ related:
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 <!-- RETIRED: S422, S423 -->
 
 # `secure-storage-production-hardening` `refactor` plan
@@ -463,7 +453,7 @@ Current register count: `293` production candidate files.
 | `AFR-172` | `src/aeat/application/wizard/_persistence.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-173` | `src/aeat/application/wizard/_prompter.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-174` | `src/aeat/application/wizard/_status.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
-| `AFR-175` | `src/aeat/application/wizard/_translations.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-175` | `src/aeat/application/wizard/_translations.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-176` | `src/aeat/application/wizard/_widgets.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-177` | `src/aeat/application/workflow/__init__.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-178` | `src/aeat/application/workflow/_errors.py` | `active-profile, manifest-bucket, master-key` | `manifest-discovery` | `W12.P22.S90` | pending |
@@ -480,7 +470,7 @@ Current register count: `293` production candidate files.
 | `AFR-189` | `src/aeat/core/corpus_manifest/__init__.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-190` | `src/aeat/core/env_io.py` | `master-key, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-191` | `src/aeat/core/errors/registry/_adapters.py` | `master-key` | `runtime-default` | `W12.P20.S78` | pending |
-| `AFR-192` | `src/aeat/core/errors/registry/_application.py` | `active-profile` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-192` | `src/aeat/core/errors/registry/_application.py` | `active-profile` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-193` | `src/aeat/core/errors/registry/_core.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-194` | `src/aeat/core/external_constants.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-195` | `src/aeat/core/file_permissions.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
@@ -569,8 +559,8 @@ Current register count: `293` production candidate files.
 | `AFR-278` | `src/aeat/entrypoints/cli/_config/_profile_census.py` | `active-profile, manifest-bucket` | `bootstrap-custody` | `W12.P22.S89` | pending |
 | `AFR-279` | `src/aeat/entrypoints/cli/_errors.py` | `master-key` | `runtime-default` | `W12.P20.S78` | pending |
 | `AFR-280` | `src/aeat/entrypoints/cli/_ledger.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
-| `AFR-281` | `src/aeat/entrypoints/cli/_modelo.py` | `active-profile, manifest-bucket, sql-route, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
-| `AFR-282` | `src/aeat/entrypoints/cli/_modelo_payloads.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-281` | `src/aeat/entrypoints/cli/_modelo.py` | `active-profile, manifest-bucket, sql-route, plain-file` | `manifest-discovery` | `W12.P22.S90` | closed |
+| `AFR-282` | `src/aeat/entrypoints/cli/_modelo_payloads.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-283` | `src/aeat/entrypoints/cli/_overview.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-284` | `src/aeat/entrypoints/cli/_overview_rendering.py` | `active-profile` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-285` | `src/aeat/entrypoints/cli/_review.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
@@ -581,7 +571,7 @@ Current register count: `293` production candidate files.
 | `AFR-290` | `src/aeat/entrypoints/cli/registry.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-291` | `src/aeat/locales/_ast_scanner.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-292` | `src/aeat/locales/cli.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
-| `AFR-293` | `src/aeat/locales/manager.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-293` | `src/aeat/locales/manager.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 
 ### Phase `W12.P20` - adoption register and classification
 
@@ -816,7 +806,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S274` - Close `AFR-172` for `src/aeat/application/wizard/_persistence.py` with signals `active-profile, manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/wizard/_persistence.py`.
 - [x] `W12.P26.S275` - Close `AFR-173` for `src/aeat/application/wizard/_prompter.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/wizard/_prompter.py`.
 - [x] `W12.P26.S276` - Close `AFR-174` for `src/aeat/application/wizard/_status.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/wizard/_status.py`.
-- [ ] `W12.P26.S277` - Close `AFR-175` for `src/aeat/application/wizard/_translations.py` with signals `plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/wizard/_translations.py`.
+- [x] `W12.P26.S277` - Close `AFR-175` for `src/aeat/application/wizard/_translations.py` with signals `plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/wizard/_translations.py`.
 - [ ] `W12.P26.S278` - Close `AFR-176` for `src/aeat/application/wizard/_widgets.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/wizard/_widgets.py`.
 - [ ] `W12.P26.S279` - Close `AFR-177` for `src/aeat/application/workflow/__init__.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/workflow/__init__.py`.
 - [ ] `W12.P26.S280` - Close `AFR-178` for `src/aeat/application/workflow/_errors.py` with signals `active-profile, manifest-bucket, master-key`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/workflow/_errors.py`.
@@ -833,7 +823,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [ ] `W12.P26.S291` - Close `AFR-189` for `src/aeat/core/corpus_manifest/__init__.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/corpus_manifest/__init__.py`.
 - [ ] `W12.P26.S292` - Close `AFR-190` for `src/aeat/core/env_io.py` with signals `master-key, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/core/env_io.py`.
 - [ ] `W12.P26.S293` - Close `AFR-191` for `src/aeat/core/errors/registry/_adapters.py` with signals `master-key`, target `runtime-default`, and owner `W12.P20.S78`; `src/aeat/core/errors/registry/_adapters.py`.
-- [ ] `W12.P26.S294` - Close `AFR-192` for `src/aeat/core/errors/registry/_application.py` with signals `active-profile`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/core/errors/registry/_application.py`.
+- [x] `W12.P26.S294` - Close `AFR-192` for `src/aeat/core/errors/registry/_application.py` with signals `active-profile`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/core/errors/registry/_application.py`.
 - [ ] `W12.P26.S295` - Close `AFR-193` for `src/aeat/core/errors/registry/_core.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/errors/registry/_core.py`.
 - [ ] `W12.P26.S296` - Close `AFR-194` for `src/aeat/core/external_constants.py` with signals `plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/core/external_constants.py`.
 - [ ] `W12.P26.S297` - Close `AFR-195` for `src/aeat/core/file_permissions.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/file_permissions.py`.
@@ -922,8 +912,8 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [ ] `W12.P26.S380` - Close `AFR-278` for `src/aeat/entrypoints/cli/_config/_profile_census.py` with signals `active-profile, manifest-bucket`, target `bootstrap-custody`, and owner `W12.P22.S89`; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
 - [ ] `W12.P26.S381` - Close `AFR-279` for `src/aeat/entrypoints/cli/_errors.py` with signals `master-key`, target `runtime-default`, and owner `W12.P20.S78`; `src/aeat/entrypoints/cli/_errors.py`.
 - [ ] `W12.P26.S382` - Close `AFR-280` for `src/aeat/entrypoints/cli/_ledger.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W12.P26.S383` - Close `AFR-281` for `src/aeat/entrypoints/cli/_modelo.py` with signals `active-profile, manifest-bucket, sql-route, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W12.P26.S384` - Close `AFR-282` for `src/aeat/entrypoints/cli/_modelo_payloads.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W12.P26.S383` - Close `AFR-281` for `src/aeat/entrypoints/cli/_modelo.py` with signals `active-profile, manifest-bucket, sql-route, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W12.P26.S384` - Close `AFR-282` for `src/aeat/entrypoints/cli/_modelo_payloads.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
 - [ ] `W12.P26.S385` - Close `AFR-283` for `src/aeat/entrypoints/cli/_overview.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/entrypoints/cli/_overview.py`.
 - [ ] `W12.P26.S386` - Close `AFR-284` for `src/aeat/entrypoints/cli/_overview_rendering.py` with signals `active-profile`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/entrypoints/cli/_overview_rendering.py`.
 - [ ] `W12.P26.S387` - Close `AFR-285` for `src/aeat/entrypoints/cli/_review.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/entrypoints/cli/_review.py`.

@@ -1219,6 +1219,9 @@ cli:
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
         view_help: Mostra un snapshot d'expedients
       filed:
+        capture_all_help: Captura totes les dades de declaracions presentades des
+          de l'AEAT. Només lectura; no presenta declaracions.
+        capture_all_modelo_help: Limita capture-all a aquest model.
         capture_help: Capturar dades de declaracions presentades des d'AEAT
         capture_sources_help: Capturar observacions presentades requerides per una
           declaració objectiu
@@ -1607,46 +1610,14 @@ cli:
         create_reused_renamed: S'ha retornat la unitat de treball existent (idempotent
           sobre model/exercici/període/revisió); no s'ha creat res nou. El --name
           indicat s'ha aplicat com a reanomenament a %{name}.
-        create_stub_modelo_151_refused: 'El model %{modelo} (règim especial d''impatriats
-          "Llei Beckham") no és compatible amb la creació d''unitats de treball en
-          aquest CLI. Base legal: Llei 35/2006 Art. 93 LIRPF, RD 439/2007 Art. 113,
-          Ordre EHA/2887/2008. Presenta la declaració a sede.agenciatributaria.gob.es.'
-        create_stub_modelo_210_refused: 'El model %{modelo} (IRNR — Impost sobre la
-          Renda de No Residents) no és compatible amb la creació d''unitats de treball
-          en aquest CLI. Base legal: RD Legislatiu 5/2004 TRLIRNR, Art. 28 TRLIRNR
-          (termini trimestral: 1T/2T/3T/4T). Tipus general: 19 % UE/EEE, 24 % resta.
-          Presenta la declaració a sede.agenciatributaria.gob.es/Sede/procedimientoini/G320.shtml'
-        create_stub_modelo_600_refused: El model %{modelo} (ITP-AJD — Impost sobre
-          Transmissions Patrimonials i Actes Jurídics Documentats) no és compatible
-          amb la creació d'unitats de treball en aquest CLI. És un impost cedit a
-          les comunitats autònomes (Llei 28/1990 ITPyAJD). Presenta l'autoliquidació
-          a la Hisenda de la CA on es troba el bé transmès.
-        create_stub_modelo_620_refused: El model %{modelo} (ITP-AJD — transmissions
-          específiques de vehicles de motor usats) no és compatible amb la creació
-          d'unitats de treball en aquest CLI. És un impost cedit a les comunitats
-          autònomes (Llei 28/1990 ITPyAJD). Presenta l'autoliquidació a la Hisenda
-          de la CA on es troba el bé transmès.
-        create_stub_modelo_650_refused: 'El model %{modelo} (ISD Successions — declaració
-          de béns adquirits per herència) no és compatible amb la creació d''unitats
-          de treball en aquest CLI. Base legal: Llei 29/1987 LISyD. Termini: 6 mesos
-          des de la defunció, prorrogable 6 mesos més (Art. 67 RISD). Presenta la
-          declaració a la Hisenda de la CA on el causant tenia la residència habitual
-          (Llei 22/2009 Art. 32). Consulta la Hisenda autonòmica corresponent.'
-        create_stub_modelo_660_refused: 'El model %{modelo} (ISD — declaració informativa
-          del cabal relicte, acompanya el model 650) no és compatible amb la creació
-          d''unitats de treball en aquest CLI. Base legal: Llei 29/1987 LISyD, termini
-          6 mesos (Art. 67 RISD). Presenta la declaració a la Hisenda de la CA on
-          el causant tenia la residència habitual (Llei 22/2009 Art. 32). Consulta
-          la Hisenda autonòmica corresponent.'
-        create_stub_modelo_714_refused: 'El model %{modelo} (Impost sobre el Patrimoni)
-          no és compatible amb la creació d''unitats de treball en aquest CLI. Base
-          legal: Llei 19/1991 Art. 28, Ordre HAC/1023/2021. Presenta la declaració
-          a sede.agenciatributaria.gob.es.'
-        create_stub_modelo_refused: 'El model %{modelo} (declaració informativa sobre
-          monedes virtuals situades a l''estranger) no és compatible amb la creació
-          d''unitats de treball en aquest CLI. Obligació: saldos superiors a 50.000
-          € a 31 de desembre (Llei 11/2021 Art. 13, Ordre HFP/887/2023, RD 1065/2007
-          Art. 42 quáter). Presenta la declaració a sede.agenciatributaria.gob.es.'
+        create_stub_modelo_151_refused: 'El model %{modelo} (regim especial d impatriats, Llei Beckham) no esta suportat per crear unitats de treball en aquest CLI. Base legal: Llei 35/2006 art. 93 LIRPF, RD 439/2007 art. 113, Ordre EHA/2887/2008. Presenta la declaracio a la Seu de l AEAT.'
+        create_stub_modelo_210_refused: 'El model %{modelo} (IRNR, impost sobre la renda de no residents) no està suportat per crear unitats de treball en aquest CLI. Base legal: RD legislatiu 5/2004 TRLIRNR i art. 28 TRLIRNR. Presenta la declaració mitjançant el tràmit G320 de la Seu de l AEAT a sede.agenciatributaria.gob.es.'
+        create_stub_modelo_600_refused: 'El model %{modelo} (ITP-AJD, transmissions patrimonials i actes juridics documentats) no esta suportat per crear unitats de treball en aquest CLI. Aquest impost el gestionen les comunitats autonomes; presenta l autoliquidacio davant l administracio autonomica competent.'
+        create_stub_modelo_620_refused: 'El model %{modelo} (ITP-AJD, transmissions de vehicles usats) no esta suportat per crear unitats de treball en aquest CLI. Presenta l autoliquidacio davant l administracio autonomica competent.'
+        create_stub_modelo_650_refused: 'El model %{modelo} (ISD successions) no esta suportat per crear unitats de treball en aquest CLI. Base legal: Llei 29/1987 LISyD; el termini ordinari es de sis mesos des de la defuncio. Presenta la declaracio davant l administracio autonomica competent.'
+        create_stub_modelo_660_refused: 'El model %{modelo} (ISD cabal relicte, que acompanya el Model 650) no esta suportat per crear unitats de treball en aquest CLI. Presenta la declaracio davant l administracio autonomica competent.'
+        create_stub_modelo_714_refused: 'El model %{modelo} (impost sobre el patrimoni) no esta suportat per crear unitats de treball en aquest CLI. Base legal: Llei 19/1991 art. 28 i Ordre HAC/1023/2021. Presenta la declaracio a la Seu de l AEAT.'
+        create_stub_modelo_refused: 'El model %{modelo} (declaració informativa sobre monedes virtuals situades a l estranger) no està suportat per crear unitats de treball en aquest CLI. Autoritat legal: Ordre HFP/887/2023 i RD 1065/2007 art. 42 quàter; el llindar informatiu és de 50.000 EUR a 31 de desembre. Presenta la declaració a la Seu de l AEAT quan hi hagi obligació legal.'
         discard_help: Marcar una unitat de treball com descartada (transició d'estat
           auditable)
         discard_requires_yes: El descart és una transició d'estat auditable. Torneu
@@ -1753,8 +1724,6 @@ cli:
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
         relation_help: Valor de relació de període anterior amb sintaxi KEY=VALUE.
           KEY és un id de relació del registry; VALUE és un decimal. Repetible.
-        relation_not_decimal: 'El valor de --relation per a {key} no és un decimal:
-          {value}.'
         rename_help: Actualitzar el nom de visualització d'una unitat de treball
         rescate_plan_pensiones_aportaciones_pre_2007_help: Aportacions fetes al pla
           de pensions fins al 31-des-2006 (base de prorrateig DT 12a LIRPF). Necessari
@@ -3595,12 +3564,17 @@ errors:
     modelo_calculation_revision_selector: La seleccio de revisio de calcul ha fallat.
     modelo_calculation_revision_selector_not_found: Cap revisio de calcul coincideix
       amb el selector indicat.
-    modelo_compare_no_revisions: 'No s''han trobat revisions de càlcul comparables.'
-    modelo_compare_no_usable_revisions: 'Hi ha revisions comparables, però cap es pot utilitzar per a aquesta comparació.'
-    modelo_compare_no_work_units: 'No s''han trobat unitats de treball de model comparables.'
-    modelo_project_no_m130_revisions: 'No hi ha revisions de càlcul del Model 130 per a l''exercici sol·licitat.'
-    modelo_project_no_m130_units: 'No hi ha unitats de treball del Model 130 per a l''exercici sol·licitat.'
-    modelo_projection: 'Ha fallat la projecció del model.'
+    modelo_compare_no_revisions: No s'han trobat revisions de càlcul comparables.
+    modelo_compare_no_usable_revisions: Hi ha revisions comparables, però cap es pot
+      utilitzar per a aquesta comparació.
+    modelo_compare_no_work_units: No s'han trobat unitats de treball de model comparables.
+    modelo_project_no_m130_revisions: No hi ha revisions de càlcul del Model 130 per
+      a l'exercici sol·licitat.
+    modelo_project_no_m130_units: No hi ha unitats de treball del Model 130 per a
+      l'exercici sol·licitat.
+    modelo_projection: Ha fallat la projecció del model.
+    modelo_work_address_not_found: No hi ha cap unitat de treball de model activa
+      que coincideixi amb el model, l'exercici i el període sol·licitats.
     modelo_work_selector: El selector de treball de modelo ha fallat.
     modelo_work_selector_unit_not_found: No s'ha trobat la unitat de treball de modelo
       seleccionada.
@@ -3903,12 +3877,15 @@ errors:
     modelo_censo_stale: 'L''operació es rebutja perquè has aplicat un cens nou després
       de generar aquesta feina. L''AEAT és la font legal vinculant: torna a generar-la
       amb el cens actual.'
-    modelo_compare_need_two_years: 'La comparació requereix dos exercicis fiscals diferents.'
+    modelo_compare_need_two_years: La comparació requereix dos exercicis fiscals diferents.
     modelo_export_cross_bucket: La revisió apuntada pertany a un bucket diferent del
       perfil actiu. L'exportació només opera dins el bucket del perfil actiu.
     modelo_export_no_active_bucket: L'exportació necessita un perfil actiu. Crea o
       selecciona un perfil i torna-ho a provar.
-    modelo_project_invalid_decimal_override: 'Una sobrescriptura de projecció no és un import decimal vàlid.'
+    modelo_project_invalid_decimal_override: Una sobrescriptura de projecció no és
+      un import decimal vàlid.
+    modelo_work_registry_year_mismatch: La revisió de registre seleccionada no cobreix
+      l'exercici fiscal sol·licitat.
     modelo_work_selector_ambiguous: Mes d'una unitat de treball de modelo coincideix
       amb el selector.
     modelo_work_selector_contradiction: Els arguments del selector de treball de modelo

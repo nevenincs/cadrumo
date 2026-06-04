@@ -193,6 +193,24 @@ def test_ast_scanner_collects_translation_key_kwargs(tmp_path: Path) -> None:
     assert "cli.app.modelo.work.sal_reserva_not_decimal" in scan_source_tree(tmp_path)
 
 
+def test_ast_scanner_collects_locale_key_constant_registries(tmp_path: Path) -> None:
+    """Policy registries that select locale keys for later callers must be visible."""
+
+    (tmp_path / "policy_surface.py").write_text(
+        "REFUSAL_LOCALE_KEYS = {\n"
+        "    '151': 'cli.app.modelo.work.create_stub_modelo_151_refused',\n"
+        "    '721': 'cli.app.modelo.work.create_stub_modelo_refused',\n"
+        "}\n"
+        "PLAIN_VALUES = {'not-a-locale-key': 'cli.app.modelo.work.dead_extra'}\n",
+        encoding="utf-8",
+    )
+
+    keys = scan_source_tree(tmp_path)
+    assert "cli.app.modelo.work.create_stub_modelo_151_refused" in keys
+    assert "cli.app.modelo.work.create_stub_modelo_refused" in keys
+    assert "cli.app.modelo.work.dead_extra" not in keys
+
+
 def _namespace_covers(key: str, prefix: str) -> bool:
     """Return True when ``key`` carries ``prefix`` as a dot-bounded sub-path.
 
