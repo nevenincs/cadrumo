@@ -16,7 +16,7 @@ related:
 
 ## S187-002 | PASS | Engine diagnostics avoid configured path disclosure
 
-Engine creation logs use `_route_marker()` rather than the database URL or database path. Engine creation failures carry `route_marker` and `error_type` context only, so private local storage paths are not emitted by this slice.
+Engine creation logs now use `_route_marker()` rather than the database URL or database path. Engine creation failures carry `route_marker` and `error_type` context only, so private local storage paths are not emitted by this slice.
 
 ## S187-003 | PASS | SQL route filesystem behavior remains anchored and tested
 
@@ -33,6 +33,6 @@ Validation:
 - `if (rg "monkeypatch|pytest\\.MonkeyPatch" src/aeat/adapters/persistence/storage/sql/test_engine.py) { exit 1 }` passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 
-Reviewer note: supervisor review found no critical or high issues in the S187 slice. The code path is already settings-derived, uses centralized path normalization, preserves hashed route diagnostics, and does not swallow exceptions.
+Reviewer note: Gauss review found no issues in the S187 slice. The code path is settings-derived, uses centralized path normalization, preserves hashed route diagnostics, and does not swallow exceptions. Residual risk is limited to the focused slice scope; the reviewer did not run tests, but supervisor validation did.
 
 Disposition: close `AFR-085`.

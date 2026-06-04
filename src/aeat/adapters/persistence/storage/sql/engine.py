@@ -13,6 +13,7 @@ Tests can dispose the cached engines between runs via
 
 from __future__ import annotations
 
+from hashlib import sha256
 from pathlib import Path
 from threading import Lock
 
@@ -22,6 +23,7 @@ from sqlalchemy.engine.url import URL, make_url
 from sqlalchemy.pool import ConnectionPoolEntry
 
 from .....core.config import Settings, load_settings
+from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.paths import resolve_project_path
 from ..errors import StorageError
@@ -29,6 +31,11 @@ from ..errors import StorageError
 _log = get_logger(__name__)
 _engines: dict[str, Engine] = {}
 _lock = Lock()
+
+
+def _route_marker(url: str) -> str:
+    """Return a stable non-reversible marker for a configured database route."""
+    return sha256(url.encode(UTF_8_ENCODING)).hexdigest()[:16]
 
 
 def _normalize_sqlite_url(url: str) -> str:
@@ -123,13 +130,14 @@ def create_engine_from_settings(settings: Settings) -> Engine:
         normalized_url = _normalize_sqlite_url(url)
         _ensure_sqlite_parent(normalized_url)
         engine = create_engine(normalized_url, future=True)
-    except Exception as exc:  # pragma: no cover - defensive
+    except Exception as exc:
         raise StorageError(
-            f"Failed to create engine for {url!r}: {exc}",
+            "failed to create storage engine.",
+            context={"route_marker": _route_marker(url), "error_type": type(exc).__name__},
             translated_message="errors.storage.engine.create_failed",
         ) from exc
     _enable_sqlite_foreign_keys(engine)
-    _log.debug("created engine for url=%s", url)
+    _log.debug("created engine route_marker=%s", _route_marker(url))
     return engine
 
 

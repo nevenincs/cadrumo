@@ -16,13 +16,14 @@ Closed `AFR-085` for the SQL engine factory route.
 ## Description
 
 - Reviewed `src/aeat/adapters/persistence/storage/sql/engine.py` against the `runtime-default` SQL-route and plain-file classification.
-- Confirmed the engine factory derives configuration through `Settings`, normalizes relative SQLite paths through the core project-path helper, creates SQLite parents, enables SQLite foreign keys, and logs only a hashed route marker.
+- Replaced configured database URL diagnostics with a stable hashed route marker for engine creation logs and creation-failure context.
+- Confirmed the engine factory derives configuration through `Settings`, normalizes relative SQLite paths through the core project-path helper, creates SQLite parents, enables SQLite foreign keys, and raises `StorageError` with translated message keys.
 - Repaired `src/aeat/adapters/persistence/storage/sql/test_engine.py` so the relative-cwd adversity test no longer uses `monkeypatch`.
 - Closed `AFR-085` and `W12.P26.S187`.
 
 ## Outcome
 
-`AFR-085` is closed as an engine-route hardening and convention-compliance slice. No production change was required; the existing engine route already used centralized settings, redacted logging, and core path resolution.
+`AFR-085` is closed as an engine-route hardening and convention-compliance slice. The engine route still uses centralized settings and core path resolution, and it now avoids disclosing configured SQL routes in debug logs or creation-failure messages.
 
 Validation passed:
 
