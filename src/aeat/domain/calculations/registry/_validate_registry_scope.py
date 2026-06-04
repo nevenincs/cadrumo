@@ -20,10 +20,10 @@ from ._validate_relation_sources import (
 )
 from ._validate_revision_identity import _duplicates
 from ._validate_semantic_roles import (
-    _emit_semantic_role_typo_twin_warnings,
     _validate_required_role_declarations,
     _validate_semantic_role_cardinality,
     _validate_semantic_role_consistency,
+    _validate_semantic_role_typo_twins,
 )
 
 
@@ -53,7 +53,7 @@ def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, .
     # but does not replace, the overlap-aware repeated-id hard gate above.
     failures.extend(_validate_strict_cross_revision_casilla_continuity(modelo_tuple))
     failures.extend(validate_no_label_artifacts(modelo_tuple))
-    _emit_semantic_role_typo_twin_warnings(modelo_tuple)
+    failures.extend(_validate_semantic_role_typo_twins(modelo_tuple))
     return tuple(failures)
 
 
