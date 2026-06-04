@@ -1733,7 +1733,8 @@ cli:
           clave_operacion=E importe=50000''.'
         row_kv_format_error: A --row {token} mezőnek KULCS=ÉRTÉK formátumúnak kell
           lennie.
-        row_m349_invalid_nif: '--row operador: a nif_comunitario {nif} nem felel meg
+        row_m184_share_sum_error: 'M184 miembro sorok: a reszesedesi szazalekok osszege pontosan 100% kell legyen; kapott ertek: %{total}, sorok: %{count}'
+        row_m347_threshold_error: 'M347 contraparte sor (NIF=%{nif}): a teljes osszeg %{total} nem haladja meg az RD 1065/2007 31.1 cikke szerinti %{threshold} EUR kuszobot'        row_m349_invalid_nif: '--row operador: a nif_comunitario {nif} nem felel meg
           {pais} ország elvárt NIF-IVA formátumának (2006/112/EK irányelv XI. melléklet)'
         row_unknown_type: 'Ismeretlen --row típus: {row_type!r}; támogatott típusok:
           {supported}.'
@@ -4859,3 +4860,4 @@ wizard:
     section:
       title: Teszt szakasz
     title: Teszt
+
