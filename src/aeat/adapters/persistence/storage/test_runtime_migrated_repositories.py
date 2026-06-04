@@ -23,7 +23,7 @@ from ....application.calculations._observations_repository import (
     IvaWalletDecisionRepository,
 )
 from ....application.config_reset import ConfigResetScope, reset_config
-from ....application.diagnostics import preview_quarantine_unreadable_secure_objects
+from ....application.diagnostics import preview_quarantine_unreadable_secure_objects, secure_object_unreadable_total
 from ....application.filing import ModeloHistory, ModeloHistoryEntry
 from ....application.filing._history_repository import ModeloHistoryRepository
 from ....application.live._borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
@@ -873,6 +873,35 @@ def test_migrated_runtime_defaults_refuse_route_session_mismatch(
         pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"),
     ):
         operation()
+
+
+def test_diagnostics_secure_object_total_degrades_on_missing_session(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level("DEBUG", logger="aeat.application.diagnostics")
+
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="bucket-a"):
+        assert secure_object_unreadable_total() == 0
+
+    assert "secure objects engine unreachable for repair probe" in caplog.text
+    assert "no active bucket session" in caplog.text
+
+
+def test_diagnostics_secure_object_total_degrades_on_route_session_mismatch(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level("DEBUG", logger="aeat.application.diagnostics")
+
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="bucket-a"),
+        activate_session(_session("bucket-b")),
+    ):
+        assert secure_object_unreadable_total() == 0
+
+    assert "secure objects engine unreachable for repair probe" in caplog.text
+    assert "route does not match the active bucket session" in caplog.text
 
 
 def test_workflow_state_default_isolates_active_profile_writes(tmp_path: Path) -> None:

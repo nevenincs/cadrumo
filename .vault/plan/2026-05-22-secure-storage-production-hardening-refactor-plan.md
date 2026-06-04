@@ -29,16 +29,6 @@ related:
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 <!-- RETIRED: S422, S423 -->
 
 # `secure-storage-production-hardening` `refactor` plan
@@ -390,8 +380,8 @@ Current register count: `293` production candidate files.
 | `AFR-099` | `src/aeat/application/calculations/_observations_repository.py` | `secure-object, secure-bound` | `runtime-default` | `W12.P21.S85` | closed |
 | `AFR-100` | `src/aeat/application/config_reset.py` | `secure-object, manifest-bucket, sql-route` | `runtime-default` | `W12.P21.S85` | closed |
 | `AFR-101` | `src/aeat/application/diagnostics.py` | `secure-object, active-profile, manifest-bucket, master-key, sql-route, plain-file` | `runtime-default` | `W12.P21.S85` | closed |
-| `AFR-102` | `src/aeat/application/evidence/_models.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
-| `AFR-103` | `src/aeat/application/evidence/_service.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-102` | `src/aeat/application/evidence/_models.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
+| `AFR-103` | `src/aeat/application/evidence/_service.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-104` | `src/aeat/application/export/_tabular.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-105` | `src/aeat/application/filing/__init__.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-106` | `src/aeat/application/filing/_history_repository.py` | `secure-object, secure-bound, manifest-bucket` | `runtime-default` | `W12.P21.S85` | pending |

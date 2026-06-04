@@ -75,6 +75,14 @@ The evidence is real validation rather than assumed coverage: storage/runtime pa
 
 Resolved process issues are tracked in the S101 review: the timed-out combined CLI run is not counted as evidence, and the stale `src/aeat/domain/filing/test_repository.py` path was replaced with current repository and secure-storage roundtrip files before closure.
 
+## S203-012 | PASS | Diagnostics runtime degradation follow-up verified
+
+The final `W12.P26.S203` follow-up review found no new defects in the scoped diagnostics test and tracking diff after the prior reviewer findings were addressed.
+
+The review verified that diagnostics secure-object aggregate degradation is covered for missing active bucket sessions and active-session route mismatches, both cases assert debug logging with route-specific failure detail, and the migrated-runtime gate now carries explicit diagnostics degradation coverage beside the raises-only refusal matrix. The plan ledger is aligned with recorded `AFR-101`, `AFR-102`, and `AFR-103` closures, and the generated `LINK RULES` block is removed from the plan diff.
+
+Closure assessment: `W12.P26.S203` remains closed. No production code changed in this follow-up, and the test additions do not introduce fakes, mocks, monkeypatches, skips, xfails, tautological assertions, naked environment access, or mirrored business logic.
+
 ## S102-011 | HIGH | OPEN | Final runtime rollout disposition proof still has unchecked W12.P26 rows
 
 The `W12.P25.S102` review cannot close. After the S119-S136 continuation, the plan still has 217 unchecked W12.P26 affected-file closeout rows, and the affected-file register still has 220 rows marked `pending`.
