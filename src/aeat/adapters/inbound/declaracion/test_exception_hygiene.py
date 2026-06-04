@@ -97,7 +97,9 @@ def _location(path: Path, node: ast.AST) -> str:
         relative = path.relative_to(_DECLARACION_PACKAGE.parent)
     except ValueError:
         relative = path
-    return f"{relative}:{node.lineno}"
+    line_number = getattr(node, "lineno", None)
+    assert isinstance(line_number, int)
+    return f"{relative}:{line_number}"
 
 
 def _is_suppress_reference(node: ast.expr) -> bool:
