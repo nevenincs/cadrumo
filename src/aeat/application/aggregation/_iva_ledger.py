@@ -464,13 +464,14 @@ def _classify_iva_transaction(
                 ),
             )
         )
-    if transaction.iva_category in _NON_DECLARABLE_IVA_CATEGORIES:
+    iva_category = transaction.iva_category
+    if iva_category is not None and iva_category in _NON_DECLARABLE_IVA_CATEGORIES:
         return _IvaTransactionOutcome(
             gate_issue=IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
                 reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_CATEGORY,
                 detail=(
-                    f"iva_category {transaction.iva_category.value!r} does not produce a declarable IVA "
+                    f"iva_category {iva_category.value!r} does not produce a declarable IVA "
                     "observation (recargo-equivalencia is non-deductible cost; unknown/erroneous are sentinels)"
                 ),
             )

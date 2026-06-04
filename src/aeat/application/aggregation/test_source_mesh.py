@@ -85,7 +85,9 @@ def test_source_resolution_validator_errors_are_localized(
     with pytest.raises(ValidationError) as exc_info:
         CalculationSourceResolution.model_validate(payload)
 
-    error = exc_info.value.errors()[0]["ctx"]["error"]
+    context = exc_info.value.errors()[0].get("ctx")
+    assert context is not None
+    error = context["error"]
     assert isinstance(error, SourceMeshError)
     assert str(error) == message_key
     assert error.translated_message == message_key

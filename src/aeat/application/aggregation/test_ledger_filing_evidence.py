@@ -26,8 +26,8 @@ from ...domain.modelos._calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ...domain.modelos._work_unit import derive_work_unit_id
 from ...domain.modelos._ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
+from ...domain.modelos._work_unit import derive_work_unit_id
 from ...domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -169,7 +169,9 @@ def test_evidence_roundtrips_through_encrypted_revision(_objects: SecureObjectRe
     # Strict equality across the encrypted boundary: the bundled evidence survives.
     assert loaded_revision == original
     assert loaded_revision.ledger_filing_evidence == evidence
-    assert loaded_revision.ledger_filing_evidence.rows[0].iva_category == "domestic_general_21"
+    loaded_evidence = loaded_revision.ledger_filing_evidence
+    assert loaded_evidence is not None
+    assert loaded_evidence.rows[0].iva_category == "domestic_general_21"
 
     # Anti-tautology: a revision with evidence must NOT equal the same revision
     # with its evidence stripped — the field carries real state.
