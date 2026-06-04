@@ -205,3 +205,21 @@ Closure assessment: `W12.P26.S206` can close as `plaintext-exception`. The
 2026-06-03 modelo export ADRs were considered, and this row does not claim
 modelo workbook parity, evidence bundling, visual styling, official-layout
 parity, or BOE fichero byte-shape coverage.
+
+## S207-031 | PASS | Filing package init manifest-discovery closeout verified
+
+The `W12.P26.S207` review found no storage-routing defect in
+`src/aeat/application/filing/__init__.py`.
+
+The source scan found no direct file read/write, storage-path helper, settings
+load, naked environment read, SQL route, secure-object repository construction,
+or runtime repository factory call in the reviewed file. The manifest-bucket
+signal is registry/resource discovery through the bundled model authority and
+registry snapshot references. Re-exported filing operations do not execute
+persistence or export writes at import time and remain owned by their specific
+affected-file rows.
+
+Closure assessment: `W12.P26.S207` can close as `manifest-discovery`. The
+review also logged broader raw filing builder/calculation message debt for the
+plan's W16 observation pool; that convention issue is tracked, not resolved by
+this storage-disposition row.
