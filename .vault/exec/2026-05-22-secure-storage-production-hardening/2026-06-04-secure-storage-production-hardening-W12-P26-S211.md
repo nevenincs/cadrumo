@@ -16,30 +16,32 @@ Closed `AFR-109` for the registry-backed filing test helper.
 ## Description
 
 - Reviewed `src/aeat/application/filing/_testing_registry.py` against the
-  `manifest-discovery` classification for manifest-bucket signals.
-- Verified the helper only builds registry-backed drafts through the runtime
-  schema provider and bundled registry metadata.
-- Verified the approval path passes an explicit empty `TransactionCatalogue`,
-  avoiding default secure-object repository access and active bucket storage.
-- Re-ran the existing helper tests and locale audit.
+  `manifest-discovery` classification for registry-runtime signals.
+- Verified the helper builds drafts through `build_runtime_schema_provider()`
+  and does not read manifests, open storage files, construct secure-object
+  repositories, or resolve active profile buckets.
+- Replaced the inline approval bucket id with `_REGISTRY_TEST_BUCKET_ID` so the
+  deterministic test-only approval namespace is explicit.
+- Verified the existing helper tests cover approved/unapproved draft states,
+  registry projection, duplicate input rejection, and decimal coercion.
 - Closed the plan step through the vaultspec CLI and aligned the AFR register
   entry with the recorded closure.
 
 ## Outcome
 
-`AFR-109` is closed as `manifest-discovery`. No production code or test change
-was required; the existing helper shape and tests already support the storage
-disposition.
+`AFR-109` is closed as `manifest-discovery`. The file remains a test-helper
+builder over the production registry runtime, with deterministic empty
+transaction-catalogue approval basis and no production storage authority.
 
 Validation passed:
 
+- `uv run --no-sync pytest -q src/aeat/application/filing/test_testing_registry.py`
 - `uv run --no-sync ruff check src/aeat/application/filing/_testing_registry.py src/aeat/application/filing/test_testing_registry.py`
-- `uv run --no-sync pytest src/aeat/application/filing/test_testing_registry.py -q`
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit`
 
 ## Notes
 
 No direct production `SecureObjectRepository` construction, naked environment
-access, settings bypass, silent exception swallowing, raw user-facing filing
-testing string, `noqa`, `pragma`, monkeypatch, fake, mock, skip, xfail, or
+access, settings bypass, silent exception swallowing, raw production
+user-facing string, `noqa`, `pragma`, monkeypatch, fake, mock, skip, xfail, or
 tautological test was introduced.
