@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from ...adapters.persistence.storage import StorageValidationError
 from ...core.resources import resources
 from ...domain.invoices import (
     Invoice,
@@ -19,7 +20,7 @@ from ...domain.invoices import (
     PaymentStatus,
 )
 from ...domain.iva import InvoiceKind, IvaCategory
-from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, isolated_two_bucket_runtime
 from ..aggregation import CalculationSourceContext
 from . import InvoiceCatalogueSourceResolver
 
@@ -120,3 +121,25 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
     assert {item.source_kind for item in resolution.provenance} == {"collectible_invoice"}
     assert {item.source_ref for item in resolution.provenance} == {f"collectible_invoice:{declarable.invoice_id}"}
     assert all(item.fingerprint and item.fingerprint.startswith("sha256:") for item in resolution.provenance)
+
+
+def test_invoice_catalogue_source_resolver_fails_closed_when_context_bucket_is_not_active(
+    tmp_path: Path,
+) -> None:
+    with isolated_two_bucket_runtime(
+        tmp_path=tmp_path,
+        primary_bucket_id="invoice-source-primary",
+        secondary_bucket_id="invoice-source-secondary",
+    ) as runtime:
+        snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
+
+        with pytest.raises(StorageValidationError):
+            InvoiceCatalogueSourceResolver().resolve(
+                CalculationSourceContext(
+                    bucket_id=runtime.secondary.bucket_id,
+                    modelo="349",
+                    filing_year=2026,
+                    period="1T",
+                    revision=snapshot.revision,
+                )
+            )
