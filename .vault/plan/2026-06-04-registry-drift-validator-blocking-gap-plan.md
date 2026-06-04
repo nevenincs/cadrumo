@@ -40,7 +40,7 @@ selects a concrete gap.
 - [x] `S02` - Add a focused regression that proves the selected drift gap is not currently blocked; `src/aeat/domain/calculations/registry`.
 - [x] `S03` - Convert the selected drift gap into a `RegistryValidationError` without changing unrelated validator semantics; `src/aeat/domain/calculations/registry`.
 - [x] `S04` - Verify drift, committed-registry, loader, reviewability, and plan gates; `src/aeat/domain/calculations/registry`.
-- [ ] `S05` - Review and close the drift-validator blocking-gap slice; `.vault/audit`.
+- [x] `S05` - Review and close the drift-validator blocking-gap slice; `.vault/audit`.
 ## Parallelization
 
 S01 must land first. S02 and S03 are ordered because the regression must prove
