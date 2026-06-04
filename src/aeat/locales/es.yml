@@ -357,13 +357,14 @@ aggregation:
         libro de Renta.
       bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
         bucket solicitado del libro de Renta.
+      invoice_bucket_mismatch: El bucket del repositorio de facturas no coincide con
+        el bucket solicitado del libro de Renta.
       modelo_mismatch: El modelo tributario no coincide con el modelo esperado del
         libro de Renta.
       period_mismatch: El periodo no coincide con el periodo esperado del libro de
         Renta.
       quarterly_period_required: Se requiere un periodo trimestral para la agregación
         de ingresos del Modelo 130 (p.ej. 2024Q1).
-      invoice_bucket_mismatch: 'El bucket del repositorio de facturas no coincide con el bucket solicitado del libro de Renta.'
   service:
     errors:
       envelope_modelo_mismatch: El modelo del envoltorio no coincide con el modelo
@@ -386,17 +387,25 @@ aggregation:
         duplicado en la malla de fuentes.'
       duplicate_relation_owner: 'Error interno: propietario de relacion duplicado
         en la malla de fuentes.'
-      owned_sources_blank: 'Las fuentes propiedad del mallado de fuentes no pueden contener tipos de fuente en blanco.'
-      owned_sources_duplicate: 'Las fuentes propiedad del mallado de fuentes deben ser únicas.'
-      source_transaction_ids_blank: 'Los identificadores de transacción del mallado de fuentes no pueden contener blancos.'
-      source_transaction_ids_duplicate: 'Los identificadores de transacción del mallado de fuentes deben ser únicos.'
+      owned_sources_blank: Las fuentes propiedad del mallado de fuentes no pueden
+        contener tipos de fuente en blanco.
+      owned_sources_duplicate: Las fuentes propiedad del mallado de fuentes deben
+        ser únicas.
+      source_transaction_ids_blank: Los identificadores de transacción del mallado
+        de fuentes no pueden contener blancos.
+      source_transaction_ids_duplicate: Los identificadores de transacción del mallado
+        de fuentes deben ser únicos.
 application:
   auth:
     acquisition_lock:
       errors:
-        acquire_failed: 'No se pudo adquirir el bloqueo de autenticación AEAT tras la recuperación del bloqueo obsoleto.'
-        lock_held: 'Ya hay otra operación de autenticación AEAT en curso para este perfil. No inicies una segunda petición de Cl@ve; espera a que termine el proceso en curso o deja expirar el bloqueo si ese proceso ha fallado.'
-        lock_held_suggestion: 'Ejecuta `aeat config auth status --format json` para inspeccionar el bloqueo de autenticación activo.'
+        acquire_failed: No se pudo adquirir el bloqueo de autenticación AEAT tras
+          la recuperación del bloqueo obsoleto.
+        lock_held: Ya hay otra operación de autenticación AEAT en curso para este
+          perfil. No inicies una segunda petición de Cl@ve; espera a que termine el
+          proceso en curso o deja expirar el bloqueo si ese proceso ha fallado.
+        lock_held_suggestion: Ejecuta `aeat config auth status --format json` para
+          inspeccionar el bloqueo de autenticación activo.
     certificate:
       health:
         file_missing: El archivo de certificado configurado (%{path}) no existe. Recupera
@@ -546,6 +555,11 @@ application:
     errors:
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
+  calculations:
+    iva_compensation:
+      errors:
+        modelo_303_only: 'El historial de compensación de IVA solo acepta observaciones del Modelo 303.'
+        seed_conflict: 'Ya existe un estado de compensación de IVA para este periodo; la semilla sobrescribiría el historial almacenado.'
   ledger:
     errors:
       evidence_attachment_requires_ids: El adjunto de evidencia del libro mayor requiere
@@ -1145,7 +1159,8 @@ cli:
         declared_on_help: Fecha ISO (AAAA-MM-DD) en que el operador presentó el M036
           en sede.
         errors:
-          bad_declared_on: '--declared-on debe ser una fecha ISO (AAAA-MM-DD); recibido {value}.'
+          bad_declared_on: --declared-on debe ser una fecha ISO (AAAA-MM-DD); recibido
+            {value}.
         group_help: Registra una declaración M036 presentada en sede (alta / modificacion
           / baja). La aplicación local nunca presenta; AEAT es la autoridad.
         justificante_help: Identificador opcional del acuse de recibo emitido por
@@ -3404,6 +3419,8 @@ errors:
       de secretos.
     fail_storage_secure_object_revision_conflict: El objeto seguro cambió por otra
       escritura; vuelve a cargarlo e inténtalo de nuevo con la revisión actual.
+    fail_storage_secure_object_upsert: No se pudo persistir el objeto seguro. Revise
+      la ruta de almacenamiento y vuelva a intentarlo.
     fail_user_profile_not_found: No se encontró la sección o el campo solicitado del
       perfil de usuario.
     fail_user_profile_schema_load: No se pudo cargar el esquema del perfil de usuario.
@@ -3429,7 +3446,6 @@ errors:
       con el resumen anual.
     stale_exchange_rate: El único tipo de cambio disponible está fuera del margen
       de frescura aceptable.
-    fail_storage_secure_object_upsert: 'No se pudo persistir el objeto seguro. Revise la ruta de almacenamiento y vuelva a intentarlo.'
   financial:
     source_file_is_symlink: 'La ruta del archivo origen es un enlace simbólico, lo
       cual no está permitido para la ingesta de datos fiscales: {path}'
@@ -3520,6 +3536,17 @@ errors:
       raíz configurado.
     integrity_storage_retention_policy: Los metadatos de retención de un registro
       infringen la política de su clasificación.
+    integrity_storage_secure_object_batch_size: El tamaño de lote de iteración de
+      objetos seguros debe ser al menos 1; se recibió %{batch_size}.
+    integrity_storage_secure_object_hashed_key_length: El digest de búsqueda sin procesar
+      del objeto seguro debe tener 32 bytes; se recibieron %{length}.
+    integrity_storage_secure_object_raw_bytes: 'Los metadatos de bytes sin procesar
+      del objeto seguro tienen un tipo no admitido: %{value_type}.'
+    integrity_storage_secure_object_revision_ancestry_json: El campo de ascendencia
+      de revisión de un objeto seguro almacenado no contiene JSON válido.
+    integrity_storage_secure_object_revision_ancestry_shape: El campo de ascendencia
+      de revisión de un objeto seguro almacenado tiene una forma de identificador
+      no válida.
     integrity_storage_secure_object_unreadable: Un objeto seguro almacenado no se
       pudo descifrar con la clave maestra actual.
     integrity_storage_validation: Un parámetro de almacenamiento no superó la validación.
@@ -3527,11 +3554,6 @@ errors:
       de referencia o el motor de cálculo pueden estar dañados.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
-    integrity_storage_secure_object_raw_bytes: 'Los metadatos de bytes sin procesar del objeto seguro tienen un tipo no admitido: %{value_type}.'
-    integrity_storage_secure_object_revision_ancestry_json: 'El campo de ascendencia de revisión de un objeto seguro almacenado no contiene JSON válido.'
-    integrity_storage_secure_object_revision_ancestry_shape: 'El campo de ascendencia de revisión de un objeto seguro almacenado tiene una forma de identificador no válida.'
-    integrity_storage_secure_object_hashed_key_length: 'El digest de búsqueda sin procesar del objeto seguro debe tener 32 bytes; se recibieron %{length}.'
-    integrity_storage_secure_object_batch_size: 'El tamaño de lote de iteración de objetos seguros debe ser al menos 1; se recibió %{batch_size}.'
   internal:
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
@@ -3851,9 +3873,10 @@ errors:
         está registrado con sensibilidad %{expected}, pero el llamador usó %{classification}.
       schema_mismatch: El espacio de nombres de objeto seguro %{namespace} está registrado
         con esquema %{expected}, pero el llamador usó el esquema %{schema_version}.
+      unknown_classification: 'El espacio de nombres de objetos seguros %{namespace}
+        contiene una sensibilidad desconocida: %{classification}.'
       unregistered: El espacio de nombres de objeto seguro %{namespace} no está registrado
         para almacenamiento runtime.
-      unknown_classification: 'El espacio de nombres de objetos seguros %{namespace} contiene una sensibilidad desconocida: %{classification}.'
     runtime:
       cold_bootstrap_active_profile_refused: El almacenamiento de arranque en frío
         solo está disponible antes de seleccionar un bucket de perfil activo.

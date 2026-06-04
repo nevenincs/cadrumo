@@ -321,11 +321,12 @@ aggregation:
       annual_period_required: Annual period is required for Renta ledger aggregation.
       bucket_mismatch: Transaction repository bucket does not match the requested
         Renta ledger bucket.
+      invoice_bucket_mismatch: Invoice repository bucket does not match the requested
+        Renta ledger bucket.
       modelo_mismatch: Tax model does not match the expected Renta ledger model.
       period_mismatch: Period does not match the expected Renta ledger period.
       quarterly_period_required: Quarterly period is required for M130 income aggregation
         (e.g. 2024Q1).
-      invoice_bucket_mismatch: 'Invoice repository bucket does not match the requested Renta ledger bucket.'
   service:
     errors:
       envelope_modelo_mismatch: Aggregation modelo does not match result modelo.
@@ -347,17 +348,21 @@ aggregation:
         in source mesh.'
       duplicate_relation_owner: 'Internal error: duplicate relation owner in source
         mesh.'
-      owned_sources_blank: 'Source mesh owned sources must not contain blank source kinds.'
-      source_transaction_ids_blank: 'Source mesh transaction ids must not contain blanks.'
-      owned_sources_duplicate: 'Source mesh owned sources must be unique.'
-      source_transaction_ids_duplicate: 'Source mesh transaction ids must be unique.'
+      owned_sources_blank: Source mesh owned sources must not contain blank source
+        kinds.
+      owned_sources_duplicate: Source mesh owned sources must be unique.
+      source_transaction_ids_blank: Source mesh transaction ids must not contain blanks.
+      source_transaction_ids_duplicate: Source mesh transaction ids must be unique.
 application:
   auth:
     acquisition_lock:
       errors:
-        acquire_failed: 'AEAT auth lock could not be acquired after stale-lock recovery.'
-        lock_held: 'Another AEAT auth operation is already in progress for this profile. Do not start a second Cl@ve request; wait for the running process to finish or let the lock expire if that process crashed.'
-        lock_held_suggestion: 'Run `aeat config auth status --format json` to inspect the active auth lock.'
+        acquire_failed: AEAT auth lock could not be acquired after stale-lock recovery.
+        lock_held: Another AEAT auth operation is already in progress for this profile.
+          Do not start a second Cl@ve request; wait for the running process to finish
+          or let the lock expire if that process crashed.
+        lock_held_suggestion: Run `aeat config auth status --format json` to inspect
+          the active auth lock.
     certificate:
       health:
         file_missing: The configured certificate file (%{path}) does not exist. Restore
@@ -493,6 +498,11 @@ application:
     errors:
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
+  calculations:
+    iva_compensation:
+      errors:
+        modelo_303_only: 'IVA compensation history only accepts Modelo 303 observations.'
+        seed_conflict: 'An IVA compensation state already exists for this period; seeding would overwrite stored history.'
   ledger:
     errors:
       evidence_attachment_requires_ids: Ledger evidence attachment requires purchase
@@ -1055,7 +1065,7 @@ cli:
           sede.
         declared_on_help: ISO date (YYYY-MM-DD) the operator filed the M036 at sede.
         errors:
-          bad_declared_on: '--declared-on must be an ISO date (YYYY-MM-DD); got {value}.'
+          bad_declared_on: --declared-on must be an ISO date (YYYY-MM-DD); got {value}.
         group_help: Record an M036 declaration filed at sede (alta / modificacion
           / baja). The local app never files; AEAT is the authority.
         justificante_help: Optional AEAT acuse de recibo identifier emitted by sede
@@ -3188,6 +3198,8 @@ errors:
     fail_storage_secret_store: An input/output error occurred in the secret store.
     fail_storage_secure_object_revision_conflict: The secure object was changed by
       another writer; reload it and retry with the current revision.
+    fail_storage_secure_object_upsert: The secure object could not be persisted. Check
+      the storage route and retry.
     fail_user_profile_not_found: The requested user profile section or field was not
       found.
     fail_user_profile_schema_load: The user-profile schema could not be loaded.
@@ -3211,7 +3223,6 @@ errors:
       the annual summary.
     stale_exchange_rate: The only available exchange rate is outside the acceptable
       freshness window.
-    fail_storage_secure_object_upsert: 'The secure object could not be persisted. Check the storage route and retry.'
   financial:
     source_file_is_symlink: 'Source file path is a symbolic link, which is not allowed
       for tax-data ingest: {path}'
@@ -3294,6 +3305,16 @@ errors:
       directory.
     integrity_storage_retention_policy: A record's retention metadata violates its
       classification policy.
+    integrity_storage_secure_object_batch_size: Secure-object iteration batch size
+      must be at least 1; got %{batch_size}.
+    integrity_storage_secure_object_hashed_key_length: Secure-object raw lookup digest
+      must be 32 bytes; got %{length}.
+    integrity_storage_secure_object_raw_bytes: 'Secure-object raw byte metadata has
+      an unsupported type: %{value_type}.'
+    integrity_storage_secure_object_revision_ancestry_json: Secure-object revision
+      ancestry metadata is malformed JSON.
+    integrity_storage_secure_object_revision_ancestry_shape: Secure-object revision
+      ancestry metadata must be a list of 64-character revision ids.
     integrity_storage_secure_object_unreadable: A stored secure object could not be
       decrypted under the current master key.
     integrity_storage_validation: A storage parameter failed validation.
@@ -3301,11 +3322,6 @@ errors:
       or the calculation engine may be corrupted.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
-    integrity_storage_secure_object_raw_bytes: 'Secure-object raw byte metadata has an unsupported type: %{value_type}.'
-    integrity_storage_secure_object_revision_ancestry_json: 'Secure-object revision ancestry metadata is malformed JSON.'
-    integrity_storage_secure_object_revision_ancestry_shape: 'Secure-object revision ancestry metadata must be a list of 64-character revision ids.'
-    integrity_storage_secure_object_hashed_key_length: 'Secure-object raw lookup digest must be 32 bytes; got %{length}.'
-    integrity_storage_secure_object_batch_size: 'Secure-object iteration batch size must be at least 1; got %{batch_size}.'
   internal:
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
       error.
@@ -3602,9 +3618,10 @@ errors:
         for sensitivity %{expected}, but the caller used %{classification}.
       schema_mismatch: Secure-object namespace %{namespace} is registered for schema
         %{expected}, but the caller used schema %{schema_version}.
+      unknown_classification: Secure-object namespace %{namespace} contains unknown
+        sensitivity %{classification}.
       unregistered: Secure-object namespace %{namespace} is not registered for runtime
         storage.
-      unknown_classification: 'Secure-object namespace %{namespace} contains unknown sensitivity %{classification}.'
     runtime:
       cold_bootstrap_active_profile_refused: Cold-bootstrap storage is only available
         before an active profile bucket is selected.

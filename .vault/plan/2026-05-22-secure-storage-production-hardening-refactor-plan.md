@@ -378,7 +378,7 @@ Current register count: `293` production candidate files.
 | `AFR-096` | `src/aeat/application/auth/_operator.py` | `secure-object, active-profile, manifest-bucket, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-097` | `src/aeat/application/auth/_sessions.py` | `active-profile, manifest-bucket, master-key, plain-file` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-098` | `src/aeat/application/calculations/_iva_compensation_history.py` | `secure-bound` | `runtime-default` | `W12.P21.S85` | closed |
-| `AFR-099` | `src/aeat/application/calculations/_observations_repository.py` | `secure-object, secure-bound` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-099` | `src/aeat/application/calculations/_observations_repository.py` | `secure-object, secure-bound` | `runtime-default` | `W12.P21.S85` | closed |
 | `AFR-100` | `src/aeat/application/config_reset.py` | `secure-object, manifest-bucket, sql-route` | `runtime-default` | `W12.P21.S85` | pending |
 | `AFR-101` | `src/aeat/application/diagnostics.py` | `secure-object, active-profile, manifest-bucket, master-key, sql-route, plain-file` | `runtime-default` | `W12.P21.S85` | pending |
 | `AFR-102` | `src/aeat/application/evidence/_models.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
@@ -731,7 +731,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S198` - Close `AFR-096` for `src/aeat/application/auth/_operator.py` with signals `secure-object, active-profile, manifest-bucket, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/auth/_operator.py`.
 - [x] `W12.P26.S199` - Close `AFR-097` for `src/aeat/application/auth/_sessions.py` with signals `active-profile, manifest-bucket, master-key, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/auth/_sessions.py`.
 - [x] `W12.P26.S200` - Close `AFR-098` for `src/aeat/application/calculations/_iva_compensation_history.py` with signals `secure-bound`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/calculations/_iva_compensation_history.py`.
-- [ ] `W12.P26.S201` - Close `AFR-099` for `src/aeat/application/calculations/_observations_repository.py` with signals `secure-object, secure-bound`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/calculations/_observations_repository.py`.
+- [x] `W12.P26.S201` - Close `AFR-099` for `src/aeat/application/calculations/_observations_repository.py` with signals `secure-object, secure-bound`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/calculations/_observations_repository.py`.
 - [ ] `W12.P26.S202` - Close `AFR-100` for `src/aeat/application/config_reset.py` with signals `secure-object, manifest-bucket, sql-route`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/config_reset.py`.
 - [ ] `W12.P26.S203` - Close `AFR-101` for `src/aeat/application/diagnostics.py` with signals `secure-object, active-profile, manifest-bucket, master-key, sql-route, plain-file`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/diagnostics.py`.
 - [ ] `W12.P26.S204` - Close `AFR-102` for `src/aeat/application/evidence/_models.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/evidence/_models.py`.
