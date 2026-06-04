@@ -122,7 +122,7 @@ class ScriptedPrompter:
         if not self._answers:
             context = {"question_id": question.id, "prompt_key": str(question.prompt)}
             raise WizardScriptUnderflowError(
-                "scripted prompter exhausted",
+                translated_message="errors.internal.internal_wizard_script_underflow",
                 context=context,
             )
         self._asked.append(question.id)
@@ -138,7 +138,7 @@ class ScriptedPrompter:
         if self._answers:
             context = {"remaining": tuple(self._answers)}
             raise WizardScriptOverflowError(
-                "scripted prompter closed with unconsumed answers",
+                translated_message="errors.internal.internal_wizard_script_overflow",
                 context=context,
             )
 

@@ -128,8 +128,10 @@ def test_runner_close_overflow_is_caught() -> None:
     extras = _scripted_answers_for_individual_declaration()
     extras.append("orphan")
     prompter = ScriptedPrompter(extras)
-    with pytest.raises(WizardScriptOverflowError, match=r"overflow|orphan|script|unused"):
+    with pytest.raises(WizardScriptOverflowError) as excinfo:
         run_flow(SETUP_FLOW, prompter)
+    assert excinfo.value.translated_message == "errors.internal.internal_wizard_script_overflow"
+    assert excinfo.value.context == {"remaining": ("orphan",)}
 
 
 def test_persist_answers_round_trip_via_project_answers() -> None:

@@ -29,6 +29,16 @@ related:
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 <!-- RETIRED: S422, S423 -->
 
 # `secure-storage-production-hardening` `refactor` plan
@@ -451,7 +461,7 @@ Current register count: `293` production candidate files.
 | `AFR-170` | `src/aeat/application/verification/_verify.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-171` | `src/aeat/application/wizard/_commands.py` | `active-profile, manifest-bucket, master-key` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-172` | `src/aeat/application/wizard/_persistence.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | closed |
-| `AFR-173` | `src/aeat/application/wizard/_prompter.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-173` | `src/aeat/application/wizard/_prompter.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-174` | `src/aeat/application/wizard/_status.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-175` | `src/aeat/application/wizard/_translations.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-176` | `src/aeat/application/wizard/_widgets.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
@@ -804,7 +814,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S272` - Close `AFR-170` for `src/aeat/application/verification/_verify.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/verification/_verify.py`.
 - [x] `W12.P26.S273` - Close `AFR-171` for `src/aeat/application/wizard/_commands.py` with signals `active-profile, manifest-bucket, master-key`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/wizard/_commands.py`.
 - [x] `W12.P26.S274` - Close `AFR-172` for `src/aeat/application/wizard/_persistence.py` with signals `active-profile, manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/wizard/_persistence.py`.
-- [ ] `W12.P26.S275` - Close `AFR-173` for `src/aeat/application/wizard/_prompter.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/wizard/_prompter.py`.
+- [x] `W12.P26.S275` - Close `AFR-173` for `src/aeat/application/wizard/_prompter.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/wizard/_prompter.py`.
 - [ ] `W12.P26.S276` - Close `AFR-174` for `src/aeat/application/wizard/_status.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/wizard/_status.py`.
 - [ ] `W12.P26.S277` - Close `AFR-175` for `src/aeat/application/wizard/_translations.py` with signals `plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/wizard/_translations.py`.
 - [ ] `W12.P26.S278` - Close `AFR-176` for `src/aeat/application/wizard/_widgets.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/wizard/_widgets.py`.

@@ -800,3 +800,24 @@ registration helpers, and pointer-atomicity tests. Focused persistence and setup
 runtime tests passed.
 
 Closure assessment: `W12.P26.S274` can close as `manifest-discovery`.
+
+## S275-066 | PASS | Wizard prompter plaintext-exception closeout verified
+
+The `W12.P26.S275` review found that
+`src/aeat/application/wizard/_prompter.py` owns prompt rendering only. It dispatches
+wizard widgets to questionary primitives, returns canonical-token strings, and routes
+progress through structured logging. It does not construct storage repositories, write
+bucket manifests, manage master-key material, read environment variables, or persist
+plaintext side files.
+
+Interactive unsupported-console failures already raise `WizardUnsupportedConsoleError`
+with locale keys and preserve the prompt-toolkit exception as the diagnostic cause.
+Scripted prompter underflow and overflow paths now also raise registered AEAT wizard
+exceptions with locale keys and bounded context rather than raw English messages.
+
+Vaultspec RAG semantic search was used for duplication review and clustered the slice
+with wizard prompter errors, questionary smoke tests, locale registry keys, and wizard
+command orchestration. Focused prompter, setup-runtime, and questionary smoke tests
+passed.
+
+Closure assessment: `W12.P26.S275` can close as `plaintext-exception`.
