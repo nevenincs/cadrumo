@@ -24,8 +24,8 @@ from pathlib import Path
 
 from defusedxml import ElementTree as ET  # noqa: N817  # ElementTree-as-ET is the conventional alias
 
-from aeat.core.external_constants import UTF_8_ENCODING
-from aeat.core.parsing import parse_iso8601_date
+from ....core.external_constants import UTF_8_ENCODING
+from ....core.parsing import parse_iso8601_date
 
 _BUNDLED_RATES = Path(__file__).resolve().parents[3] / "_data" / "fx" / "eurofxref-bundled.xml"
 

@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.application.workflow import declaration_key
+from . import declaration_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

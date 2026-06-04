@@ -21,7 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 def test_application_package_reexports_bundle_serialiser() -> None:
     """`aeat.application.user_profile` exposes the bundle serialiser."""
-    import aeat.application.user_profile as package
+    from .. import user_profile as package
 
     assert "serialize_profile_bundle" in package.__all__
     assert callable(package.serialize_profile_bundle)
@@ -29,7 +29,7 @@ def test_application_package_reexports_bundle_serialiser() -> None:
 
 def test_application_package_reexports_bundle_deserialiser() -> None:
     """`aeat.application.user_profile` exposes the bundle deserialiser."""
-    import aeat.application.user_profile as package
+    from .. import user_profile as package
 
     assert "deserialize_profile_bundle" in package.__all__
     assert callable(package.deserialize_profile_bundle)
@@ -37,7 +37,7 @@ def test_application_package_reexports_bundle_deserialiser() -> None:
 
 def test_application_package_reexports_supported_bundle_schema_versions() -> None:
     """The frozen set of accepted bundle schema versions is package-visible."""
-    import aeat.application.user_profile as package
+    from .. import user_profile as package
 
     assert "SUPPORTED_BUNDLE_SCHEMA_VERSIONS" in package.__all__
     supported = package.SUPPORTED_BUNDLE_SCHEMA_VERSIONS
@@ -47,7 +47,7 @@ def test_application_package_reexports_supported_bundle_schema_versions() -> Non
 
 def test_application_package_reexports_rename_orchestration() -> None:
     """`rename_profile` is the top-level coordinator for the cross-store relabel."""
-    import aeat.application.user_profile as package
+    from .. import user_profile as package
 
     assert "rename_profile" in package.__all__
     assert callable(package.rename_profile)
@@ -55,7 +55,7 @@ def test_application_package_reexports_rename_orchestration() -> None:
 
 def test_application_package_reexports_delete_orchestration() -> None:
     """`delete_profile_with_lifecycle_span` is the top-level soft-tombstone coordinator."""
-    import aeat.application.user_profile as package
+    from .. import user_profile as package
 
     assert "delete_profile_with_lifecycle_span" in package.__all__
     assert callable(package.delete_profile_with_lifecycle_span)
@@ -63,7 +63,7 @@ def test_application_package_reexports_delete_orchestration() -> None:
 
 def test_application_package_reexports_bucket_directory_removal() -> None:
     """`remove_profile_bucket_directory` is the top-level hard-erase primitive."""
-    import aeat.application.user_profile as package
+    from .. import user_profile as package
 
     assert "remove_profile_bucket_directory" in package.__all__
     assert callable(package.remove_profile_bucket_directory)
@@ -77,8 +77,8 @@ def test_application_package_reexports_orchestration_full_surface() -> None:
     top-level re-export, forcing consumers to dot into the private
     submodule. Codified by service-imports-via-top-level-reexports.
     """
-    import aeat.application.user_profile as package
-    from aeat.application.user_profile import _orchestration
+    from .. import user_profile as package
+    from . import _orchestration
 
     missing = sorted(name for name in _orchestration.__all__ if name not in package.__all__)
     assert not missing, (
@@ -89,7 +89,7 @@ def test_application_package_reexports_orchestration_full_surface() -> None:
 
 def test_domain_package_reexports_portable_export_record() -> None:
     """`aeat.domain.user_profile` exposes the portable-export domain record."""
-    import aeat.domain.user_profile as package
+    from ...domain import user_profile as package
 
     assert "UserProfilePortableExport" in package.__all__
     from pydantic import BaseModel
