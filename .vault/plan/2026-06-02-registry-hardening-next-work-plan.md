@@ -160,6 +160,16 @@ Audit the completed completeness repairs against the registry legal/source catal
 - [ ] `W07.P11.S47` - Audit M200 and M303 completeness repairs for legal refs, source refs, official Diseño/export backing, and calculation-closure consistency; `.vault/audit`.
 - [ ] `W07.P11.S48` - Verify legal-grounding audit with registry gates and close the post-repair legal-sensitivity check; `src/aeat/domain/calculations/registry`.
 
+## Wave `W08` - remaining registry hardening wireframe
+
+Persist the remaining and previously out-of-scope registry/schema hardening directions as an ordered execution wireframe before selecting the next implementation slice.
+
+### Phase `W08.P12` - sequential follow-up map
+
+Turn the discovered remaining directions into an auditable sequence, separating immediate gates from future ADR/plan work.
+
+- [ ] `W08.P12.S49` - Persist the remaining registry/schema hardening execution wireframe and next-slice ordering; `.vault/audit`.
+
 ## Description
 
 The next work should protect reviewability first, then extend continuity data
