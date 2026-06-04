@@ -1460,9 +1460,11 @@ cli:
           capture)
         history_help: Show every lifecycle event for one work unit
         history_work_unit_id_help: Work unit id whose lifecycle you want to view
-        id_is_work_unit_not_calc_revision: This id is a work-unit-id, but verify/file
-          need a calculation-revision-id. Run 'aeat app modelo work calculate %{work_unit_id}'
-          to produce the calculation-revision-id, then pass that.
+        id_is_work_unit_not_calc_revision_natural: This id is a work-unit-id, but
+          verify/file need a calculation-revision-id. For the common path, run 'aeat
+          app modelo work calculate --modelo %{modelo} --year %{year} --period %{period}'
+          and then rerun verify/file for that same modelo/year/period. Exact ids remain
+          available as an advanced escape hatch.
         include_discarded_help: Include discarded work units in the listing (excluded
           by default)
         invalid_amendment_kind: --kind must be one of {choices}; got {kind}.
@@ -3926,14 +3928,15 @@ review:
         backend.
   edit:
     errors:
-      parse_failed: 'Could not parse the edit token. The supplied value has been redacted.'
+      parse_failed: Could not parse the edit token. The supplied value has been redacted.
   filing:
     draft_placeholder_summary: Draft pending
     finding_summary: Validation finding on draft
     stale_approval_summary: Draft approval is stale
   filter:
     errors:
-      parse_failed: 'Could not parse the filter token. The supplied value has been redacted.'
+      parse_failed: Could not parse the filter token. The supplied value has been
+        redacted.
   invoice:
     summary: Invoice pending review
   operator:
