@@ -896,19 +896,33 @@ application:
           tariff_shape_invalid: A tarifa táblázat alakja érvénytelen.
       translator:
         errors:
-          translation_failed: 'A nyilvántartási képlet nem fordítható táblázatképletté.'
+          translation_failed: A nyilvántartási képlet nem fordítható táblázatképletté.
   user_profile:
     errors:
+      aggregate_label_mismatch: 'A profiltárolás inkonzisztens: a manifest címkéje
+        nem egyezik a biztonságos rekorddal.'
+      aggregate_profile_id_mismatch: 'A profiltárolás inkonzisztens: a manifest profilazonossága
+        nem egyezik a biztonságos rekorddal.'
+      aggregate_status_mismatch: 'A profiltárolás inkonzisztens: a manifest életciklus-állapota
+        nem egyezik a biztonságos rekorddal.'
       duplicate_tax_id: A(z) "%{tax_id}" adóazonosítót már a(z) "%{profile}" profil
         használja; egy adózónak egy profilja lehet.
+      lifecycle_profile_already_exists: Már létezik profil az aktív bucketben.
+      lifecycle_profile_tombstoned_duplicate: Törölt profil nem duplikálható.
+      lifecycle_profile_tombstoned_rename: Törölt profil nem nevezhető át.
+      lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználóiprofil-sémának.
       no_active_profile_selected: Nincs kiválasztva aktív profil.
       profile_already_exists: A(z) "%{profile}" profil már létezik; aktiváláshoz futtassa
         az `aeat config profile switch NÉV` parancsot, vagy törölje az `aeat config
         profile delete NÉV` paranccsal.
+      profile_bucket_directory_removal_failed: A profil konyvtara nem tavolithato
+        el.
       profile_create_route_mismatch: A profil létrehozási útvonala ("%{route}") nem
         egyezik a profil azonosítójával ("%{profile}").
-      profile_integrity_identity_mismatch: 'A profiltárolás inkonzisztens: a fizikai tárolók profilazonossága eltér.'
-      profile_integrity_status_mismatch: 'A profiltárolás inkonzisztens: a manifest életciklus-állapota nem egyezik a biztonságos rekorddal.'
+      profile_integrity_identity_mismatch: 'A profiltárolás inkonzisztens: a fizikai
+        tárolók profilazonossága eltér.'
+      profile_integrity_status_mismatch: 'A profiltárolás inkonzisztens: a manifest
+        életciklus-állapota nem egyezik a biztonságos rekorddal.'
       profile_label_blank: A profil-felirat nem lehet üres.
       profile_manifest_already_registered: 'A(z) "%{profile}" profilhoz már regisztrált
         bucket-manifeszt van itt: %{bucket_dir}.'
@@ -918,16 +932,25 @@ application:
         futtassa az `aeat config profile create NÉV` parancsot.
       profile_tombstoned_not_selectable: A(z) "%{profile}" profil törölve van és nem
         választható ki.
+      repository_profile_record_classification_mismatch: A profilrekord besorolása
+        nem egyezik a repository szerződésével.
+      repository_profile_record_missing: Az aktív bucketben nem található profilrekord.
+      repository_profile_record_version_unsupported: A profilrekord sémaverzióját
+        ez az alkalmazás nem támogatja.
+      repository_profile_snapshot_classification_mismatch: A profil-pillanatkép besorolása
+        nem egyezik a repository szerződésével.
+      repository_profile_snapshot_missing: Az aktív bucketben nem található profil-pillanatkép.
+      repository_profile_snapshot_version_unsupported: A profil-pillanatkép sémaverzióját
+        ez az alkalmazás nem támogatja.
       unsupported_bundle_schema_version: A csomag sémaverziója nem támogatott ebben
         az alkalmazásverzióban.
-      aggregate_profile_id_mismatch: 'A profiltárolás inkonzisztens: a manifest profilazonossága nem egyezik a biztonságos rekorddal.'
-      aggregate_label_mismatch: 'A profiltárolás inkonzisztens: a manifest címkéje nem egyezik a biztonságos rekorddal.'
-      aggregate_status_mismatch: 'A profiltárolás inkonzisztens: a manifest életciklus-állapota nem egyezik a biztonságos rekorddal.'
-      lifecycle_profile_already_exists: 'Már létezik profil az aktív bucketben.'
-      lifecycle_profile_tombstoned_rename: 'Törölt profil nem nevezhető át.'
-      lifecycle_profile_tombstoned_duplicate: 'Törölt profil nem duplikálható.'
-      lifecycle_schema_validation_failed: 'A profiladatok nem felelnek meg a felhasználóiprofil-sémának.'
-      profile_bucket_directory_removal_failed: 'A profil konyvtara nem tavolithato el.'
+  verification:
+    errors:
+      missing_binding_values: A registry-ellenőrzéshez külső kötési értékek szükségesek.
+      period_mapping_failed: A bevallási időszak nem képezhető le registry-időszakra.
+      registry_policy_invalid: A registry ellenőrzési házirendje nem tölthető be.
+      registry_snapshot_invalid: A bevallás ellenőrzéséhez szükséges registry-pillanatkép
+        nem tölthető be.
   wizard:
     errors:
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
@@ -1323,8 +1346,6 @@ cli:
         actor_help: A MODELO_EXPORTED eseményen rögzített üzemeltetői felirat.
         errors:
           output_required: Adja meg a --output PATH erteket a fichero-BOE artefaktumhoz.
-          revision_not_exportable: A kivalasztott {revision_id} revizio allapota {state};
-            az exporthoz teljesen ellenorzott vagy beadott revizio kell.
         help: Hitelesített-teljes vagy benyújtott nyomtatvány-revízió exportálása
           helyi AEAT-kompatibilis fichero-BOE fájlba. Csak helyi; soha nem lép kapcsolatba
           az AEAT-tal.
@@ -1573,10 +1594,6 @@ cli:
           meghaladja az 50 000 €-t (11/2021. sz. törvény 13. cikk, HFP/887/2023. rendelet,
           1065/2007. sz. KR 42/c cikk). Nyújtsd be a bevallást a sede.agenciatributaria.gob.es
           oldalon.'
-        deduccion_maternidad_casilla_not_found: A --meses-trabajo-con-hijo-menor-3
-          nem támogatott ennél a nyomtatvány-revíziónál; nincs LIRPF 81. cikk szerinti
-          anyasági levonási mező deklarálva. Használja a --casilla kapcsolót a közvetlen
-          bevitelhez.
         discard_help: Munkaegység eldobottként megjelölése (auditálható állapotváltás).
         discard_requires_yes: 'Az eldobás auditálható állapotváltás. Futtassa újra:
           `aeat app modelo work discard %{work_unit_id} --yes` a megerősítéshez.'
@@ -1584,8 +1601,6 @@ cli:
         dt12_computation_error: 'DT12 számítási hiba: %{message}'
         file_help: Hitelesített revízió megjelölése belső benyújtottként. NEM nyújt
           be az AEAT-hoz.
-        file_requires_verified: A kivalasztott {revision_id} revizio allapota {state};
-          a beadashoz teljesen ellenorzott revizio kell.
         from_filing_record_help: A módosítandó alap-benyújtási rekord stabil azonosítója.
           Importált külső bizonyítékot (justificante / CSV-nyilvántartás / élő rögzítés)
           kell tartalmaznia.
@@ -1653,9 +1668,6 @@ cli:
         plazo_days_remaining: "hátralévő_napok\t{days_remaining}"
         plazo_vencido_warning: 'FIGYELMEZTETÉS: Az önkéntes benyújtási határidő lejárt
           (LGT 27. cikk). Nyújtsa be pótdíjjal az AEAT-értesítés kézhezvétele előtt.'
-        prestacion_inss_exenta_casilla_not_found: --prestacion-inss-exenta nem támogatott
-          ehhez a modell-revízióhoz; nincs Art. 7.h alóli INSS-mentes mezőszám deklarálva.
-          Használja a --casilla opciót az értékek közvetlen megadásához.
         prestacion_inss_exenta_help: Az SZJA alól mentes anyasági/apasági INSS-járadék
           teljes összege (Art. 7.h LIRPF). A revízióhoz tartozó mentességi mezőbe
           kerül rögzítésre, és levonásra kerül a számítható jövedelmek összesítéséből.
@@ -1702,12 +1714,6 @@ cli:
           bruttó összege (LIRPF 12. átmeneti rendelkezés). Használd együtt a --rescate-plan-pensiones-aportaciones-pre-2007
           és --rescate-plan-pensiones-aportaciones-totales opciókkal, hogy az asszisztens
           kiszámítsa a 40%-os csökkentést és a 0011-es mezőbe írja.
-        rescate_plan_pensiones_casilla_not_found: A --rescate-plan-pensiones-capital
-          nem támogatott ennél a modelo-revíziónál; nincs deklarált LIRPF 12. átmeneti
-          rendelkezés szerinti munkajövedelem-csökkentési casilla. Add meg az értékeket
-          közvetlenül a --casilla opcióval.
-        rescate_plan_pensiones_incomplete: A --rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007
-          és --rescate-plan-pensiones-aportaciones-totales opciókat együtt kell megadni.
         rescate_plan_pensiones_not_decimal: A --rescate-plan-pensiones-* értékeknek
           decimális összegeknek kell lenniük.
         result_summary_header: eredmény-összefoglaló  Modelo %{modelo} %{year} %{period}
@@ -1729,10 +1735,6 @@ cli:
         revision_selector_help: Revizio valaszto.
         revision_show_help: Egy tárolt számítási revízió megőrzött mezőértékeinek
           megjelenítése (újraszámítás nélkül).
-        revision_year_mismatch: A(z) %{revision} revízió a(z) %{modelo} nyomtatványhoz
-          nem fedi a(z) %{filing_year} benyújtási évet. Az arra az évre vonatkozó
-          revíziók%{applicable}.
-        revision_year_mismatch_no_match: Egyik revízió sem fedi azt a benyújtási évet.
         revisions_help: Számítási revíziók listázása, opcionálisan egy munkaegységre
           szűrve.
         row_empty_key: Üres mezőkulcs a --row {token} mezőben; minden mezőnek KULCS=ÉRTÉK
@@ -1769,15 +1771,10 @@ cli:
           amikor a felhalmozott tartalék eléri a jegyzett tőke 50%-át. Szükséges a
           --sal-beneficio-neto és --sal-reserva-dotada opciókkal együtt.'
         sal_computation_error: 'SAL számítási hiba: %{message}'
-        sal_reserva_casilla_not_found: A --sal-beneficio-neto nem támogatott ennél
-          a modelo-revíziónál; nincs deklarált munkavállalói tulajdonú társasági külön
-          tartalék casilla. Add meg az értékeket közvetlenül a --casilla opcióval.
         sal_reserva_dotada_help: Korábbi években felhalmozott külön tartalék (44/2015.
           törvény 14. cikk). Annak ellenőrzésére szolgál, hogy a tartalék már elérte-e
           a jegyzett tőke 50%-át. Szükséges a --sal-beneficio-neto és --sal-capital-social
           opciókkal együtt.
-        sal_reserva_incomplete: A --sal-beneficio-neto, --sal-reserva-dotada és --sal-capital-social
-          opciókat együtt kell megadni.
         sal_reserva_not_decimal: A --sal-* értékeknek decimális összegeknek kell lenniük.
         selector_ambiguous: Tobb aktiv munkaegyseg illeszkedik erre a modelo/ev/idoszak
           parosra. Valasszon nyilvantartasi reviziot vagy adjon meg pontos munkaegyseg-azonositot.
@@ -1792,14 +1789,8 @@ cli:
         set_override_help: Javított mezőérték CASILLA=DECIMAL szintaxissal (ismételhető;
           legalább egy szükséges).
         status_help: Egy munkaegység metaadatainak megjelenítése.
-        unknown_modelo: 'Ismeretlen nyomtatvány: %{modelo}; a számítási nyilvántartás
-          ezeket a nyomtatványokat ismeri: %{known}.'
-        unknown_revision: 'Ismeretlen revízió: %{revision} a(z) %{modelo} nyomtatványhoz;
-          deklarált revíziók: %{declared}.'
         verify_help: Tervezet számítási revízió hitelesítése a hitelesített-teljes
           szerződéssel szemben.
-        verify_requires_draft: A kivalasztott {revision_id} revizio allapota {state};
-          az ellenorzeshez piszkozat revizio kell.
         work_unit_id_help: A munkaegység stabil 64 karakteres SHA-256 azonosítója.
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
@@ -3337,7 +3328,7 @@ errors:
     unsupported_comparison_op: Nem tamogatott osszehasonlito muvelet.
     unsupported_op: Nem tamogatott muvelet.
   censo:
-    bucket_id_blank: 'A censo-szinkronizálási szolgáltatáshoz profil-bucket szükséges.'
+    bucket_id_blank: A censo-szinkronizálási szolgáltatáshoz profil-bucket szükséges.
     no_snapshot_captured: Nem sikerült censo-pillanatképet rögzíteni a(z) {profile_id}
       profilhoz.
     profile_not_found: A(z) {profile_id} profil nem létezik; censo alkalmazása előtt

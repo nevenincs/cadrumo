@@ -883,18 +883,34 @@ application:
           tariff_shape_invalid: The spreadsheet tariff-table record shape is invalid.
       translator:
         errors:
-          translation_failed: 'The registry formula cannot be translated to a spreadsheet formula.'
+          translation_failed: The registry formula cannot be translated to a spreadsheet
+            formula.
   user_profile:
     errors:
+      aggregate_label_mismatch: 'Profile storage is inconsistent: the manifest label
+        does not match the secure record.'
+      aggregate_profile_id_mismatch: 'Profile storage is inconsistent: the manifest
+        profile identity does not match the secure record.'
+      aggregate_status_mismatch: 'Profile storage is inconsistent: the manifest lifecycle
+        status does not match the secure record.'
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
         one taxpayer must have one profile.
+      lifecycle_profile_already_exists: A profile already exists in the active bucket.
+      lifecycle_profile_tombstoned_duplicate: A removed profile cannot be duplicated.
+      lifecycle_profile_tombstoned_rename: A removed profile cannot be renamed.
+      lifecycle_schema_validation_failed: The profile data does not match the user-profile
+        schema.
       no_active_profile_selected: No active profile selected.
       profile_already_exists: Profile '%{profile}' already exists; run `aeat config
         profile switch NAME` to activate it or `aeat config profile delete NAME` first.
+      profile_bucket_directory_removal_failed: Profile bucket directory could not
+        be removed.
       profile_create_route_mismatch: Profile create route '%{route}' does not match
         profile id '%{profile}'.
-      profile_integrity_identity_mismatch: 'Profile storage is inconsistent: physical stores disagree on profile identity.'
-      profile_integrity_status_mismatch: 'Profile storage is inconsistent: the manifest lifecycle status does not match the secure record.'
+      profile_integrity_identity_mismatch: 'Profile storage is inconsistent: physical
+        stores disagree on profile identity.'
+      profile_integrity_status_mismatch: 'Profile storage is inconsistent: the manifest
+        lifecycle status does not match the secure record.'
       profile_label_blank: Profile label must not be blank.
       profile_manifest_already_registered: Profile '%{profile}' already has a registered
         bucket manifest at %{bucket_dir}.
@@ -904,16 +920,28 @@ application:
         profile create NAME` to create it.
       profile_tombstoned_not_selectable: Profile '%{profile}' is tombstoned and cannot
         be selected.
+      repository_profile_record_classification_mismatch: Profile record classification
+        does not match the repository contract.
+      repository_profile_record_missing: Profile record was not found in the active
+        bucket.
+      repository_profile_record_version_unsupported: Profile record schema version
+        is not supported by this application.
+      repository_profile_snapshot_classification_mismatch: Profile snapshot classification
+        does not match the repository contract.
+      repository_profile_snapshot_missing: Profile snapshot was not found in the active
+        bucket.
+      repository_profile_snapshot_version_unsupported: Profile snapshot schema version
+        is newer than this application supports.
       unsupported_bundle_schema_version: The bundle schema version is not supported
         by this application version.
-      aggregate_profile_id_mismatch: 'Profile storage is inconsistent: the manifest profile identity does not match the secure record.'
-      aggregate_label_mismatch: 'Profile storage is inconsistent: the manifest label does not match the secure record.'
-      aggregate_status_mismatch: 'Profile storage is inconsistent: the manifest lifecycle status does not match the secure record.'
-      lifecycle_profile_already_exists: 'A profile already exists in the active bucket.'
-      lifecycle_profile_tombstoned_rename: 'A removed profile cannot be renamed.'
-      lifecycle_profile_tombstoned_duplicate: 'A removed profile cannot be duplicated.'
-      lifecycle_schema_validation_failed: 'The profile data does not match the user-profile schema.'
-      profile_bucket_directory_removal_failed: 'Profile bucket directory could not be removed.'
+  verification:
+    errors:
+      missing_binding_values: Registry verification requires external binding values.
+      period_mapping_failed: The declaration period could not be mapped to a registry
+        period.
+      registry_policy_invalid: Registry verification policy could not be loaded.
+      registry_snapshot_invalid: The registry snapshot could not be loaded for declaration
+        verification.
   wizard:
     errors:
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
@@ -1281,8 +1309,6 @@ cli:
         actor_help: Operator label recorded into the MODELO_EXPORTED event.
         errors:
           output_required: Supply --output PATH for the fichero-BOE artefact.
-          revision_not_exportable: Selected revision {revision_id} is in state {state};
-            export requires a verified-complete or filed revision.
         help: Export a verified-complete or filed modelo revision to a local AEAT-compatible
           fichero-BOE file. Local-only; never contacts AEAT.
         output_help: Path to write the fichero-BOE artefact to.
@@ -1528,9 +1554,6 @@ cli:
           in this CLI. Obligation: aggregate holdings exceeding €50,000 at 31 December
           (Ley 11/2021 Art. 13, Orden HFP/887/2023, RD 1065/2007 Art. 42 quáter).
           File the return at sede.agenciatributaria.gob.es.'
-        deduccion_maternidad_casilla_not_found: --meses-trabajo-con-hijo-menor-3 is
-          not supported for this modelo revision; no Art. 81 deducción maternidad
-          casilla is declared. Use --casilla to supply inputs directly.
         discard_help: Mark a work unit as discarded (auditable state transition)
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
           app modelo work discard %{work_unit_id} --yes' to confirm.
@@ -1538,8 +1561,6 @@ cli:
         dt12_computation_error: 'DT12 computation error: %{message}'
         file_help: Mark a verified revision as internally filed. Does NOT submit to
           AEAT
-        file_requires_verified: Selected revision {revision_id} is in state {state};
-          file requires a verified-complete revision.
         from_filing_record_help: Stable id of the baseline filing record to amend.
           Must carry imported external evidence (justificante / CSV register / live
           capture)
@@ -1603,9 +1624,6 @@ cli:
         plazo_days_remaining: "days_remaining\t{days_remaining}"
         plazo_vencido_warning: 'WARNING: voluntary filing period expired (Art. 27
           LGT). File with surcharge before receiving an AEAT notice.'
-        prestacion_inss_exenta_casilla_not_found: --prestacion-inss-exenta is not
-          supported for this modelo revision; no Art. 7.h exempt-INSS casilla is declared.
-          Use --casilla to supply inputs directly.
         prestacion_inss_exenta_help: Gross amount of INSS maternity/paternity benefit
           exempt from IRPF (Art. 7.h LIRPF). Recorded in the revision-specific exempt
           casilla and subtracted from total computable income. Enter the gross amount
@@ -1647,12 +1665,6 @@ cli:
           amount (LIRPF transitional provision 12). Use it with --rescate-plan-pensiones-aportaciones-pre-2007
           and --rescate-plan-pensiones-aportaciones-totales so the assistant calculates
           the 40% reduction and injects it into casilla 0011.
-        rescate_plan_pensiones_casilla_not_found: --rescate-plan-pensiones-capital
-          is not supported for this modelo revision; no LIRPF transitional provision
-          12 work-income reduction casilla is declared. Use --casilla to supply inputs
-          directly.
-        rescate_plan_pensiones_incomplete: --rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007,
-          and --rescate-plan-pensiones-aportaciones-totales must all be supplied together.
         rescate_plan_pensiones_not_decimal: --rescate-plan-pensiones-* values must
           be decimal amounts.
         result_summary_header: result summary  Modelo %{modelo} %{year} %{period}
@@ -1671,9 +1683,6 @@ cli:
         revision_selector_help: Revision selector.
         revision_show_help: Show one stored calculation revision's persisted casilla
           values (without recomputing)
-        revision_year_mismatch: Revision %{revision} of modelo %{modelo} does not
-          cover filing year %{filing_year}. Revisions applicable to that year%{applicable}.
-        revision_year_mismatch_no_match: no revision covers that filing year
         revisions_help: List calculation revisions, optionally filtered to one work
           unit
         row_empty_key: Empty field key in --row {token}; each field must be in KEY=VALUE
@@ -1710,14 +1719,9 @@ cli:
           reserve reaches 50% of share capital. Required with --sal-beneficio-neto
           and --sal-reserva-dotada.'
         sal_computation_error: 'SAL computation error: %{message}'
-        sal_reserva_casilla_not_found: --sal-beneficio-neto is not supported for this
-          modelo revision; no worker-owned company special reserve casilla is declared.
-          Use --casilla to supply inputs directly.
         sal_reserva_dotada_help: Special reserve accumulated in previous fiscal years
           (Law 44/2015 Art. 14). Used to check whether the reserve has already reached
           50% of share capital. Required with --sal-beneficio-neto and --sal-capital-social.
-        sal_reserva_incomplete: --sal-beneficio-neto, --sal-reserva-dotada, and --sal-capital-social
-          must all be supplied together.
         sal_reserva_not_decimal: --sal-* values must be decimal amounts.
         selector_ambiguous: More than one active work unit matches this modelo/year/period.
           Choose a registry revision or pass an explicit work-unit id. {candidates}
@@ -1730,14 +1734,8 @@ cli:
         set_override_help: Corrected casilla value with CASILLA=DECIMAL syntax (repeatable;
           at least one required)
         status_help: Show the metadata of one work unit
-        unknown_modelo: 'Unknown modelo %{modelo}; the calculation registry knows
-          these modelos: %{known}.'
-        unknown_revision: 'Unknown revision %{revision} for modelo %{modelo}; declared
-          revisions: %{declared}.'
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
-        verify_requires_draft: Selected revision {revision_id} is in state {state};
-          verify requires a draft revision.
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
@@ -3213,7 +3211,7 @@ errors:
     unsupported_comparison_op: 'Unsupported comparison operator: %{op}.'
     unsupported_op: 'Unsupported formula operator: %{op}.'
   censo:
-    bucket_id_blank: 'The censo sync service requires a profile bucket.'
+    bucket_id_blank: The censo sync service requires a profile bucket.
     no_snapshot_captured: No censo snapshot has been captured for profile {profile_id}.
     profile_not_found: Profile {profile_id} does not exist; create it before applying
       censo.

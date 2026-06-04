@@ -960,18 +960,34 @@ application:
           tariff_shape_invalid: La forma de la tabla de tarifas no es válida.
       translator:
         errors:
-          translation_failed: 'La fórmula del registro no se puede traducir a una fórmula de hoja de cálculo.'
+          translation_failed: La fórmula del registro no se puede traducir a una fórmula
+            de hoja de cálculo.
   user_profile:
     errors:
+      aggregate_label_mismatch: 'El almacenamiento del perfil no es coherente: la
+        etiqueta del manifiesto no coincide con el registro seguro.'
+      aggregate_profile_id_mismatch: 'El almacenamiento del perfil no es coherente:
+        la identidad del manifiesto no coincide con el registro seguro.'
+      aggregate_status_mismatch: 'El almacenamiento del perfil no es coherente: el
+        estado de ciclo de vida del manifiesto no coincide con el registro seguro.'
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
         debe tener un solo perfil.
+      lifecycle_profile_already_exists: Ya existe un perfil en el bucket activo.
+      lifecycle_profile_tombstoned_duplicate: No se puede duplicar un perfil eliminado.
+      lifecycle_profile_tombstoned_rename: No se puede renombrar un perfil eliminado.
+      lifecycle_schema_validation_failed: Los datos del perfil no coinciden con el
+        esquema de perfil de usuario.
       no_active_profile_selected: No hay un perfil activo seleccionado.
       profile_already_exists: El perfil '%{profile}' ya existe; ejecuta `aeat config
         profile switch NAME` para activarlo o `aeat config profile delete NAME` primero.
+      profile_bucket_directory_removal_failed: No se pudo eliminar el directorio del
+        perfil.
       profile_create_route_mismatch: La ruta de creación de perfil '%{route}' no coincide
         con el id de perfil '%{profile}'.
-      profile_integrity_identity_mismatch: 'El almacenamiento del perfil no es coherente: los almacenes físicos no coinciden en la identidad del perfil.'
-      profile_integrity_status_mismatch: 'El almacenamiento del perfil no es coherente: el estado de ciclo de vida del manifiesto no coincide con el registro seguro.'
+      profile_integrity_identity_mismatch: 'El almacenamiento del perfil no es coherente:
+        los almacenes físicos no coinciden en la identidad del perfil.'
+      profile_integrity_status_mismatch: 'El almacenamiento del perfil no es coherente:
+        el estado de ciclo de vida del manifiesto no coincide con el registro seguro.'
       profile_label_blank: La etiqueta del perfil no puede estar vacía.
       profile_manifest_already_registered: El perfil '%{profile}' ya tiene un manifiesto
         de bucket registrado en %{bucket_dir}.
@@ -981,16 +997,29 @@ application:
         profile create NAME` para crearlo.
       profile_tombstoned_not_selectable: El perfil '%{profile}' está eliminado y no
         puede seleccionarse.
+      repository_profile_record_classification_mismatch: La clasificación del registro
+        de perfil no coincide con el contrato del repositorio.
+      repository_profile_record_missing: No se encontró el registro de perfil en el
+        bucket activo.
+      repository_profile_record_version_unsupported: La versión del esquema del registro
+        de perfil no es compatible con esta aplicación.
+      repository_profile_snapshot_classification_mismatch: La clasificación de la
+        instantánea de perfil no coincide con el contrato del repositorio.
+      repository_profile_snapshot_missing: No se encontró la instantánea de perfil
+        en el bucket activo.
+      repository_profile_snapshot_version_unsupported: La versión del esquema de la
+        instantánea de perfil es más reciente de lo que admite esta aplicación.
       unsupported_bundle_schema_version: La versión del esquema del paquete no es
         compatible con esta versión de la aplicación.
-      aggregate_profile_id_mismatch: 'El almacenamiento del perfil no es coherente: la identidad del manifiesto no coincide con el registro seguro.'
-      aggregate_label_mismatch: 'El almacenamiento del perfil no es coherente: la etiqueta del manifiesto no coincide con el registro seguro.'
-      aggregate_status_mismatch: 'El almacenamiento del perfil no es coherente: el estado de ciclo de vida del manifiesto no coincide con el registro seguro.'
-      lifecycle_profile_already_exists: 'Ya existe un perfil en el bucket activo.'
-      lifecycle_profile_tombstoned_rename: 'No se puede renombrar un perfil eliminado.'
-      lifecycle_profile_tombstoned_duplicate: 'No se puede duplicar un perfil eliminado.'
-      lifecycle_schema_validation_failed: 'Los datos del perfil no coinciden con el esquema de perfil de usuario.'
-      profile_bucket_directory_removal_failed: 'No se pudo eliminar el directorio del perfil.'
+  verification:
+    errors:
+      missing_binding_values: La verificación del registro requiere valores de vinculación
+        externos.
+      period_mapping_failed: El periodo de la declaración no se pudo asignar a un
+        periodo del registro.
+      registry_policy_invalid: No se pudo cargar la política de verificación del registro.
+      registry_snapshot_invalid: No se pudo cargar el snapshot del registro para verificar
+        la declaración.
   wizard:
     errors:
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
@@ -1386,8 +1415,6 @@ cli:
         actor_help: Etiqueta del operador registrada en el evento MODELO_EXPORTED.
         errors:
           output_required: Proporcione --output PATH para el artefacto fichero-BOE.
-          revision_not_exportable: La revision seleccionada {revision_id} esta en
-            estado {state}; exportar requiere una revision verificada completa o presentada.
         help: Exporta una revisión de modelo verificada o presentada a un fichero
           local compatible con AEAT (fichero-BOE). Local; nunca contacta con AEAT.
         output_help: Ruta donde escribir el artefacto fichero-BOE.
@@ -1645,10 +1672,6 @@ cli:
           unidades de trabajo en este CLI. Obligación: saldos superiores a 50.000
           € a 31 de diciembre (Ley 11/2021 Art. 13, Orden HFP/887/2023, RD 1065/2007
           Art. 42 quáter). Presenta la declaración en sede.agenciatributaria.gob.es.'
-        deduccion_maternidad_casilla_not_found: --meses-trabajo-con-hijo-menor-3 no
-          está soportado para esta revisión; no se ha declarado ninguna casilla de
-          deducción maternidad (Art. 81 LIRPF). Usa --casilla para suministrar los
-          valores directamente.
         discard_help: Marcar una unidad de trabajo como descartada (transición de
           estado auditable)
         discard_requires_yes: El descarte es una transición de estado auditable. Vuelva
@@ -1657,8 +1680,6 @@ cli:
         dt12_computation_error: 'Error de cómputo DT12: %{message}'
         file_help: Marcar una revisión verificada como internamente presentada. NO
           envía a la AEAT
-        file_requires_verified: La revision seleccionada {revision_id} esta en estado
-          {state}; presentar requiere una revision verificada completa.
         from_filing_record_help: Identificador estable del filing record base a amendar.
           Debe llevar evidencia externa importada (justificante / CSV / captura en
           vivo)
@@ -1727,10 +1748,6 @@ cli:
         plazo_days_remaining: "days_remaining\t{days_remaining}"
         plazo_vencido_warning: 'AVISO: plazo voluntario vencido (Art. 27 LGT). Presenta
           con recargo antes de recibir requerimiento de la AEAT.'
-        prestacion_inss_exenta_casilla_not_found: --prestacion-inss-exenta no está
-          soportado para el modelo %{modelo} en esta revisión; no se ha declarado
-          ninguna casilla exenta de prestaciones INSS (Art. 7.h). Usa --casilla para
-          suministrar los valores directamente.
         prestacion_inss_exenta_help: Importe íntegro de prestaciones INSS maternidad/paternidad
           exentas (Art. 7.h LIRPF). Se registra en la casilla de exención correspondiente
           a la revisión y se descuenta del total de ingresos computables. Introduce
@@ -1773,12 +1790,6 @@ cli:
           pensiones en forma de capital (DT 12ª LIRPF). Úsalo junto con --rescate-plan-pensiones-aportaciones-pre-2007
           y --rescate-plan-pensiones-aportaciones-totales para que el asistente calcule
           automáticamente la reducción del 40% y la inyecte en casilla 0011.
-        rescate_plan_pensiones_casilla_not_found: --rescate-plan-pensiones-capital
-          no está soportado para esta revisión de modelo; no se ha declarado ninguna
-          casilla de reducción del rendimiento del trabajo por DT 12ª LIRPF. Usa --casilla
-          para suministrar los valores directamente.
-        rescate_plan_pensiones_incomplete: --rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007
-          y --rescate-plan-pensiones-aportaciones-totales deben suministrarse conjuntamente.
         rescate_plan_pensiones_not_decimal: Los valores --rescate-plan-pensiones-*
           deben ser importes decimales.
         result_summary_header: resumen del resultado  Modelo %{modelo} %{year} %{period}
@@ -1799,9 +1810,6 @@ cli:
         revision_selector_help: Selector de revision.
         revision_show_help: Mostrar los valores de casilla guardados de una revisión
           de cálculo concreta (sin recalcular)
-        revision_year_mismatch: La revisión %{revision} del modelo %{modelo} no cubre
-          el ejercicio %{filing_year}. Revisiones aplicables a ese ejercicio%{applicable}.
-        revision_year_mismatch_no_match: ninguna revisión cubre ese ejercicio
         revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas
           por unidad de trabajo
         row_empty_key: Clave de campo --row vacía en {token}; cada campo debe tener
@@ -1839,14 +1847,9 @@ cli:
           acumulada alcanza el 50% del capital social. Necesario junto con --sal-beneficio-neto
           y --sal-reserva-dotada.'
         sal_computation_error: 'Error de cómputo SAL: %{message}'
-        sal_reserva_casilla_not_found: --sal-beneficio-neto no está soportado para
-          esta revisión de modelo; no se ha declarado ninguna casilla de reserva especial
-          de Sociedad Laboral. Usa --casilla para suministrar los valores directamente.
         sal_reserva_dotada_help: Reserva especial acumulada en ejercicios anteriores
           (Ley 44/2015 Art. 14). Se usa para comprobar si ya se ha alcanzado el límite
           del 50% del capital social. Necesario junto con --sal-beneficio-neto y --sal-capital-social.
-        sal_reserva_incomplete: --sal-beneficio-neto, --sal-reserva-dotada y --sal-capital-social
-          deben suministrarse conjuntamente.
         sal_reserva_not_decimal: Los valores --sal-* deben ser importes decimales.
         selector_ambiguous: Mas de una unidad de trabajo activa coincide con este
           modelo/ano/periodo. Elija una revision del registro o pase un id de unidad
@@ -1861,13 +1864,7 @@ cli:
         set_override_help: Valor de casilla corregido con sintaxis CASILLA=DECIMAL
           (repetible; al menos uno requerido)
         status_help: Mostrar los metadatos de una unidad de trabajo
-        unknown_modelo: 'Modelo desconocido %{modelo}; el registro de cálculo conoce
-          estos modelos: %{known}.'
-        unknown_revision: 'Revisión desconocida %{revision} para el modelo %{modelo};
-          revisiones declaradas: %{declared}.'
         verify_help: Verificar una revisión draft contra el contrato verified-complete
-        verify_requires_draft: La revision seleccionada {revision_id} esta en estado
-          {state}; verificar requiere una revision borrador.
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
@@ -3417,7 +3414,7 @@ errors:
     unsupported_comparison_op: 'Operador de comparacion no admitido: %{op}.'
     unsupported_op: 'Operador de formula no admitido: %{op}.'
   censo:
-    bucket_id_blank: 'El servicio de sincronización censal requiere un bucket de perfil.'
+    bucket_id_blank: El servicio de sincronización censal requiere un bucket de perfil.
     no_snapshot_captured: No se ha capturado ninguna instantánea del censo para el
       perfil {profile_id}.
     profile_not_found: El perfil {profile_id} no existe; créalo antes de aplicar el
