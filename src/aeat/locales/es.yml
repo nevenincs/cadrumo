@@ -622,14 +622,23 @@ application:
         invalid_kind: 'El tipo de factura no esta admitido: %{kind}.'
     linking:
       errors:
-        linked_invoice_not_found: 'No se encontro la factura %{invoice_id} despues de aplicar el enlace.'
-        transaction_not_found: 'No se encontro la transaccion %{transaction_id} en el catalogo de transacciones.'
+        linked_invoice_not_found: No se encontro la factura %{invoice_id} despues
+          de aplicar el enlace.
+        transaction_not_found: No se encontro la transaccion %{transaction_id} en
+          el catalogo de transacciones.
   ledger:
     errors:
       evidence_attachment_requires_ids: El adjunto de evidencia del libro mayor requiere
         evidencia de compra o identificadores de adjunto.
       purchase_evidence_already_set: La transacción del libro mayor ya tiene un purchase_invoice_evidence_id;
         elimine o reemplace a través del flujo de adjuntos.
+  live:
+    expedientes:
+      errors:
+        bucket_id_blank: 'El identificador del bucket de expedientes no puede estar vacío.'
+        snapshot_id_blank: 'El identificador de la instantánea de expedientes no puede estar vacío.'
+        snapshot_not_found: 'No hay ninguna instantánea de expedientes que coincida con el identificador solicitado.'
+        snapshot_prefix_ambiguous: 'El prefijo de la instantánea de expedientes coincide con varias instantáneas.'
   modelo:
     borrador_binding:
       errors:
@@ -1316,9 +1325,7 @@ cli:
           que el modelo esté autorizado.'
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caracteres)
           de una revisión de cálculo
-        casilla_bare_numeric_ambiguous: '--casilla {key} coincide con varias casillas
-          en esta revisión: {candidates}. Usa la forma cualificada PREFIJO:NNNNN para
-          desambiguar.'
+        casilla_bare_numeric_ambiguous: '--casilla {key} coincide con varias casillas en esta revisión: {candidates}. Usa la forma cualificada PREFIJO:NNNNN para desambiguar.'
         casilla_bare_numeric_unknown: --casilla {key} no coincide con ningún número
           de casilla en esta revisión.{prefix_hint} Usa `aeat app modelo casillas
           <MODELO>` para listar los identificadores de casilla válidos.
