@@ -449,3 +449,21 @@ parity suite. `just audit-duplication` no longer reports the locale AST or
 YAML traversal clone groups; 19 clone groups remain outside this S50 slice,
 including a newly visible `_modelo_m036_cli.py` clone from shifted shared-tree
 state.
+
+## W05-001 | INFO | Semgrep scan-scope policy review found no defects
+
+Status: verified with production residuals.
+
+The W05.P15.S51 review found no defect in adding a root `.semgrepignore` that
+excludes colocated test modules, test package trees, explicit test-support
+fixture modules, and mirrored official data under `src/aeat/_data/` from the
+existing production Semgrep lane. The policy does not suppress production
+source paths and leaves the `just audit-security` command unchanged.
+
+Focused verification confirmed Semgrep 1.165.0 is available and `just
+audit-security` completes successfully. The scan skipped 17,238 files through
+`.semgrepignore`, scanned 890 tracked files, and still reports 11 production
+findings for later W05/W06 rows. The separate project-regression rule lane is
+blocked before scanning by invalid YAML in `.semgrep/rules/no-any-annotation.yml`;
+that pre-existing rule-file defect is outside this `.semgrepignore` policy
+slice.
