@@ -225,7 +225,7 @@ Separate production complexity from ratchet-test complexity, then decompose the 
 
 - [x] `W06.P19.S71` - Split production-only complexity lane from package test ratchets; `justfile`.
 - [x] `W06.P19.S72` - Add ratchet-test complexity lane for top-level package tests; `justfile`.
-- [ ] `W06.P19.S73` - Reduce wizard command catalogue cognitive complexity; `src/aeat/application/wizard/_commands.py`.
+- [x] `W06.P19.S73` - Reduce wizard command catalogue cognitive complexity; `src/aeat/application/wizard/_commands.py`.
 - [ ] `W06.P19.S74` - Reduce remaining modelo CLI command cognitive complexity; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W06.P19.S75` - Reduce registry formula initial-value cognitive complexity; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
 - [ ] `W06.P19.S76` - Reduce ledger list and review projection cognitive complexity; `src/aeat/entrypoints/cli/_ledger.py`.
@@ -266,3 +266,4 @@ The plan is complete when every Step row is closed, scoped execution records exi
 for each Step, `just tooling-doctor` still passes, structural gates pass, focused
 type checks for touched packages pass, and `just quality-audit` has an updated
 baseline document explaining remaining advisory findings.
+

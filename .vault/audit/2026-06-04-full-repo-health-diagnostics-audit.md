@@ -487,6 +487,38 @@ Residual:
   continues under S73-S77, and top-level ratchet-test simplification can be
   scheduled separately.
 
+## HEALTH-016 | CLOSED | Wizard command factory cognitive hotspot removed
+
+`W06.P19.S73` extracted `build_wizard_command` responsibilities into focused
+helpers for output-language override handling, translated error freezing,
+profile-name validation, profile-id resolution, environment language seeding,
+foral CCAA refusal, persistence-path dispatch, and success emission.
+
+Verification:
+
+- Focused Complexipy check on
+  `src/aeat/application/wizard/_commands.py` now reports
+  `build_wizard_command` at cognitive complexity 1. No function in the module is
+  above 15.
+- `just audit-complexity-production` no longer lists
+  `src/aeat/application/wizard/_commands.py::build_wizard_command`; the
+  production lane still fails on remaining non-wizard hotspots.
+- `uv run --no-sync ruff check src/aeat/application/wizard/_commands.py src/aeat/application/wizard/test_commands.py src/aeat/application/wizard/test_commands_helpers.py`
+  passed.
+- `uv run --no-sync ty check src/aeat/application/wizard/_commands.py src/aeat/application/wizard/test_commands.py src/aeat/application/wizard/test_commands_helpers.py --output-format concise`
+  passed.
+- `uv run --no-sync pytest src/aeat/application/wizard/test_commands.py src/aeat/application/wizard/test_commands_helpers.py src/aeat/application/wizard/test_wizard_translations_resolve.py -q`
+  passed with 29 tests.
+
+Residual:
+
+- Scoped Pyright reports 0 errors and 14 warnings, all in the existing
+  private-helper/test-reach-in class.
+- A wider wizard/root verification run failed outside the S73 surface because
+  the shared worktree currently has a modelo import break:
+  `_require_persisted_iva_compensation_decision_matches_revision` is imported
+  from `aeat.application.modelo._actions` but not present there.
+
 ## Suggested Workstreams
 
 1. Repair packaging environment deterministically: schedule a clean `uv sync` window
