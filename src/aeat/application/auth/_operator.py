@@ -7,7 +7,8 @@ session renewal is reflected in the audit trail.
 
 from __future__ import annotations
 
-from contextlib import nullcontext
+from collections.abc import Iterator
+from contextlib import contextmanager, nullcontext
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -33,6 +34,27 @@ from ._sessions import (
 
 _log = get_logger(__name__)
 
+_AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS = (
+    "aeat_local_storage_root",
+    "aeat_active_profile",
+    "aeat_secret_store_backend",
+    "aeat_secret_store_dir",
+    "aeat_secret_passphrase",
+    "aeat_auth_provider",
+    "aeat_live_tests_enabled",
+    "aeat_certificate_path",
+    "aeat_certificate_password_secret",
+    "aeat_certificate_friendly_name",
+    "aeat_certificate_backend",
+    "aeat_cert_warn_days",
+    "aeat_cert_critical_days",
+    "aeat_clave_movil_dni_nie",
+    "aeat_clave_movil_dni_fecha",
+    "aeat_clave_movil_nie_soporte",
+    "aeat_clave_prefer_non_qr",
+    "aeat_clave_movil_timeout_ms",
+)
+
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth.certificate import LoadedCertificate
     from ..state_projection import OperatorStateProjection
@@ -40,15 +62,55 @@ if TYPE_CHECKING:
     from ..workflow._persistence import WorkflowStateRepository
 
 
-def _active_profile_storage_span():
+@contextmanager
+def _auth_operator_settings_scope(settings: Settings | None) -> Iterator[Settings]:
+    """Run auth-operator probes against an explicit Settings object when supplied."""
+    from ...core.config import override_settings
+
+    if settings is None:
+        yield load_settings()
+        return
+    overrides = {
+        field: getattr(settings, field)
+        for field in _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS
+        if field in settings.model_fields_set
+    }
+    for route_field in ("aeat_local_storage_root", "aeat_active_profile"):
+        if route_field not in overrides:
+            overrides[route_field] = getattr(load_settings(), route_field)
+    with override_settings(**overrides) as scoped:
+        yield scoped
+
+
+def _active_bucket_id_from_settings(settings: Settings) -> str | None:
+    """Resolve the active bucket for ``settings`` without falling through to process globals."""
+    from ...core._bucket_pointer_io import read_pointer
+
+    override = (settings.aeat_active_profile or "").strip()
+    if override:
+        return override
+    pointer = read_pointer(settings.aeat_local_storage_root)
+    return pointer.bucket_id if pointer is not None else None
+
+
+@contextmanager
+def _active_profile_storage_span(settings: Settings | None = None):
     """Return a storage context for the active profile, or a no-op when absent."""
-    from ...core import resolve_active_bucket_id
+    from ...adapters.persistence.storage import has_active_bucket_session
     from ..user_profile._orchestration import profile_storage_session
 
-    bucket_id = resolve_active_bucket_id()
-    if bucket_id is None:
-        return nullcontext()
-    return profile_storage_session(bucket_id)
+    with _auth_operator_settings_scope(settings) as resolved_settings:
+        bucket_id = _active_bucket_id_from_settings(resolved_settings)
+        if bucket_id is None:
+            with nullcontext():
+                yield None
+            return
+        if has_active_bucket_session():
+            with nullcontext():
+                yield bucket_id
+            return
+        with profile_storage_session(bucket_id) as active:
+            yield active
 
 
 class AuthProviderReservedError(AeatError, ValueError):
@@ -544,7 +606,7 @@ def _certificate_completeness(
     return True, ""
 
 
-def test_operator_auth(provider: str | None = None) -> AuthTestResult:
+def test_operator_auth(provider: str | None = None, *, settings: Settings | None = None) -> AuthTestResult:
     """Return auth readiness plus a deeper local session-token probe.
 
     ``auth test`` and ``auth status`` (:func:`inspect_operator_auth`)
@@ -570,27 +632,32 @@ def test_operator_auth(provider: str | None = None) -> AuthTestResult:
     ``auth status`` reports no provider at all. Both surfaces report the
     same "no provider configured" state on the same state.
     """
-    provider_kind = _provider_kind_or_none(provider)
-    requested_provider = provider_kind.value if provider_kind is not None else None
+    with _auth_operator_settings_scope(settings) as resolved_settings:
+        provider_kind = _provider_kind_or_none(provider)
+        requested_provider = provider_kind.value if provider_kind is not None else None
 
-    from ..state_projection import build_operator_state_projection
+        from ..state_projection import build_operator_state_projection
 
-    projection = build_operator_state_projection(
-        requested_provider=requested_provider,
-        probe_live_backend=True,
-        include_workspace_summary=False,
-        include_pending_obligations=False,
-    )
-    status = _auth_status_from_projection(projection)
-    session_probe = _probe_local_session(status.provider)
-    provider_probe = _probe_configured_provider(status.provider, status.certificate_path)
-    return AuthTestResult(
-        **status.model_dump(),
-        persisted_session_present=session_probe.present,
-        persisted_session_expired=session_probe.expired,
-        probe_summary=provider_probe.summary or session_probe.summary,
-        probe_result=provider_probe.result,
-    )
+        projection = build_operator_state_projection(
+            requested_provider=requested_provider,
+            probe_live_backend=True,
+            include_workspace_summary=False,
+            include_pending_obligations=False,
+        )
+        status = _auth_status_from_projection(projection)
+        session_probe = _probe_local_session(status.provider, settings=resolved_settings)
+        provider_probe = _probe_configured_provider(
+            status.provider,
+            status.certificate_path,
+            settings=resolved_settings,
+        )
+        return AuthTestResult(
+            **status.model_dump(),
+            persisted_session_present=session_probe.present,
+            persisted_session_expired=session_probe.expired,
+            probe_summary=provider_probe.summary or session_probe.summary,
+            probe_result=provider_probe.result,
+        )
 
 
 def build_live_auth_preflight_report(
@@ -610,7 +677,10 @@ def build_live_auth_preflight_report(
             provider_kind = _configured_or_default_provider(resolved_settings)
         except ValueError:
             provider_kind = None
-    probe = test_operator_auth(provider_kind.value if provider_kind is not None else provider)
+    probe = test_operator_auth(
+        provider_kind.value if provider_kind is not None else provider,
+        settings=resolved_settings,
+    )
     profile_tax_id_present, provider_identity_present, identity_alignment = _live_auth_identity_state(
         provider_kind,
         settings=resolved_settings,
@@ -715,7 +785,7 @@ class _LocalSessionProbe(BaseModel):
     summary: str = ""
 
 
-def _probe_local_session(provider: str) -> _LocalSessionProbe:
+def _probe_local_session(provider: str, *, settings: Settings | None = None) -> _LocalSessionProbe:
     """Inspect the persisted AEAT session token for ``provider`` on disk.
 
     A pure local read — it never opens a browser or contacts AEAT. It
@@ -737,8 +807,13 @@ def _probe_local_session(provider: str) -> _LocalSessionProbe:
             summary=tr("application.auth.operator.probe.no_provider"),
         )
 
-    with _active_profile_storage_span():
-        session = load_persisted_session(load_settings(), kind)
+    resolved_settings = settings or load_settings()
+    try:
+        with _active_profile_storage_span(resolved_settings):
+            session = load_persisted_session(resolved_settings, kind)
+    except (AeatError, OSError):
+        _log.debug("local auth session probe failed; treating persisted session as absent", exc_info=True)
+        session = None
     if session is None:
         return _LocalSessionProbe(
             present=False,
@@ -781,7 +856,12 @@ class _ProviderProbeOutcome(BaseModel):
     summary: str = ""
 
 
-def _probe_configured_provider(provider: str, certificate_path: str) -> _ProviderProbeOutcome:
+def _probe_configured_provider(
+    provider: str,
+    certificate_path: str,
+    *,
+    settings: Settings | None = None,
+) -> _ProviderProbeOutcome:
     """Run a real per-provider local probe and return a typed verdict.
 
     For the certificate provider this opens the ``.p12`` file, parses
@@ -804,13 +884,17 @@ def _probe_configured_provider(provider: str, certificate_path: str) -> _Provide
         )
 
     if kind is AuthProviderKind.CERTIFICATE:
-        return _probe_certificate_bundle(certificate_path)
+        return _probe_certificate_bundle(certificate_path, settings=settings)
     if kind is AuthProviderKind.CLAVE_MOVIL:
-        return _probe_clave_movil_identity()
+        return _probe_clave_movil_identity(settings=settings)
     return _ProviderProbeOutcome()
 
 
-def _probe_certificate_bundle(certificate_path: str) -> _ProviderProbeOutcome:
+def _probe_certificate_bundle(
+    certificate_path: str,
+    *,
+    settings: Settings | None = None,
+) -> _ProviderProbeOutcome:
     """Open the configured ``.p12`` and classify the certificate's health.
 
     Resolves the three certificate-state cases distinctly: no path,
@@ -824,11 +908,10 @@ def _probe_certificate_bundle(certificate_path: str) -> _ProviderProbeOutcome:
         CertificateHealthSeverity,
         evaluate_loaded_certificate_health,
     )
-    from ...core.config import load_settings
 
-    settings = load_settings()
+    resolved_settings = settings or load_settings()
     raw = (certificate_path or "").strip() or (
-        str(settings.aeat_certificate_path) if settings.aeat_certificate_path is not None else ""
+        str(resolved_settings.aeat_certificate_path) if resolved_settings.aeat_certificate_path is not None else ""
     )
     if not raw:
         return _ProviderProbeOutcome(
@@ -858,7 +941,7 @@ def _probe_certificate_bundle(certificate_path: str) -> _ProviderProbeOutcome:
                 error=type(exc).__name__,
             ),
         )
-    loaded = _try_load_certificate_metadata(path, bundle_bytes, settings)
+    loaded = _try_load_certificate_metadata(path, bundle_bytes, resolved_settings)
     if loaded is None:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.CORRUPT,
@@ -867,8 +950,8 @@ def _probe_certificate_bundle(certificate_path: str) -> _ProviderProbeOutcome:
     try:
         health = evaluate_loaded_certificate_health(
             loaded,
-            warn_days=settings.aeat_cert_warn_days,
-            critical_days=settings.aeat_cert_critical_days,
+            warn_days=resolved_settings.aeat_cert_warn_days,
+            critical_days=resolved_settings.aeat_cert_critical_days,
         )
     except CertificateError as exc:
         return _ProviderProbeOutcome(
@@ -935,7 +1018,7 @@ def _try_load_certificate_metadata(
         return None
 
 
-def _probe_clave_movil_identity() -> _ProviderProbeOutcome:
+def _probe_clave_movil_identity(*, settings: Settings | None = None) -> _ProviderProbeOutcome:
     """Classify the configured Cl@ve Móvil DNI/NIE through the real classifier.
 
     A well-formed identity surfaces as ``ok``; a malformed identity as
@@ -947,7 +1030,8 @@ def _probe_clave_movil_identity() -> _ProviderProbeOutcome:
         _classify_identity,
     )
 
-    raw = unwrap_optional_secret(load_settings().aeat_clave_movil_dni_nie).strip()
+    resolved_settings = settings or load_settings()
+    raw = unwrap_optional_secret(resolved_settings.aeat_clave_movil_dni_nie).strip()
     if not raw:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.IDENTITY_UNSET,
@@ -1005,7 +1089,16 @@ async def login_operator_auth(
     is off, or (b) the configured provider is locally incomplete
     (certificate path unset / file missing / unreadable). Round-5 B2.
     """
-    resolved_settings = settings or load_settings()
+    if settings is not None:
+        with _auth_operator_settings_scope(settings):
+            return await login_operator_auth(
+                provider,
+                fresh=fresh,
+                reset_lock=reset_lock,
+                target_url=target_url,
+                settings=None,
+            )
+    resolved_settings = load_settings()
     provider_kind = _provider_kind_or_none(provider)
     if provider_kind is None:
         provider_kind = _configured_or_default_provider(resolved_settings)
@@ -1026,7 +1119,7 @@ async def login_operator_auth(
     # the raw bundle-load exception escape.
     _assert_login_precondition(resolved_settings, provider_kind)
 
-    with _active_profile_storage_span():
+    with _active_profile_storage_span(resolved_settings):
         result = await ensure_authenticated_aeat_session(
             resolved_settings,
             kind=provider_kind,
@@ -1036,20 +1129,20 @@ async def login_operator_auth(
             target_url=target_url,
         )
 
-    from ..workflow._persistence import workflow_state_repository
+        from ..workflow._persistence import workflow_state_repository
 
-    repository = workflow_state_repository()
-    repository.update(
-        lambda current: _append_bucket_event(
-            update_auth(
-                current,
-                provider=provider_kind.value,
-                authenticated=True,
-            ),
-            action="auth.session.verified",
-            object_id=provider_kind.value,
+        repository = workflow_state_repository()
+        repository.update(
+            lambda current: _append_bucket_event(
+                update_auth(
+                    current,
+                    provider=provider_kind.value,
+                    authenticated=True,
+                ),
+                action="auth.session.verified",
+                object_id=provider_kind.value,
+            )
         )
-    )
 
     return AuthLoginResult(
         provider=provider_kind.value,
@@ -1072,12 +1165,21 @@ def clear_operator_auth(
     settings: Settings | None = None,
 ) -> AuthClearResult:
     """Clear workflow auth state, persisted sessions, and acquisition locks."""
+    if settings is not None:
+        with _auth_operator_settings_scope(settings):
+            return clear_operator_auth(
+                provider=provider,
+                all_providers=all_providers,
+                sessions=sessions,
+                locks=locks,
+                settings=None,
+            )
     provider_kind = _provider_kind_or_none(provider)
-    resolved_settings = settings or load_settings()
+    resolved_settings = load_settings()
     removed_sessions: list[Path] = []
     session_event_count = 0
     if sessions or all_providers:
-        with _active_profile_storage_span():
+        with _active_profile_storage_span(resolved_settings):
             removed_sessions = delete_persisted_session(
                 resolved_settings,
                 kind=None if all_providers else provider_kind,
@@ -1091,19 +1193,20 @@ def clear_operator_auth(
         locks_requested=locks,
     )
 
-    from ..workflow._persistence import workflow_state_repository
+    with _active_profile_storage_span(resolved_settings):
+        from ..workflow._persistence import workflow_state_repository
 
-    repository = workflow_state_repository()
-    current_provider = repository.load().auth.provider
-    should_clear_workflow_state = provider_kind is None or all_providers or current_provider == provider_kind.value
-    _apply_auth_clear_to_repository(
-        repository=repository,
-        provider_kind=provider_kind,
-        current_provider=current_provider,
-        should_clear_workflow_state=should_clear_workflow_state,
-        session_event_count=session_event_count,
-        cleared_locks=cleared_locks,
-    )
+        repository = workflow_state_repository()
+        current_provider = repository.load().auth.provider
+        should_clear_workflow_state = provider_kind is None or all_providers or current_provider == provider_kind.value
+        _apply_auth_clear_to_repository(
+            repository=repository,
+            provider_kind=provider_kind,
+            current_provider=current_provider,
+            should_clear_workflow_state=should_clear_workflow_state,
+            session_event_count=session_event_count,
+            cleared_locks=cleared_locks,
+        )
 
     return AuthClearResult(
         removed_sessions=len(removed_sessions),
