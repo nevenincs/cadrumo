@@ -929,8 +929,19 @@ application:
             per a un element referenciat.
       parity:
         errors:
-          seed_anchor_missing: 'L''entrada de l''escenari de paritat no té cap cel·la del full de càlcul on sembrar-se.'
-          unknown_casilla_numbers: 'L''escenari de paritat referencia números de casella que no són a la instantània del registre.'
+          seed_anchor_missing: L'entrada de l'escenari de paritat no té cap cel·la
+            del full de càlcul on sembrar-se.
+          unknown_casilla_numbers: L'escenari de paritat referencia números de casella
+            que no són a la instantània del registre.
+      records:
+        errors:
+          address_mismatch: 'L adreça de cel·la del full de càlcul no coincideix amb la seva fila i columna.'
+          duplicate_write_address: 'El pla d exportació escriu més d una càrrega a la mateixa cel·la.'
+          frozen_view_empty: 'La vista immobilitzada ha dimmobilitzar almenys una fila o una columna.'
+          invalid_column_index: 'L índex de columna del registre del full de càlcul ha de començar en u i ser positiu.'
+          invalid_column_letters: 'Les lletres de columna del registre del full de càlcul no són vàlides.'
+          range_malformed: 'Els límits del rang del full de càlcul no són vàlids.'
+          tariff_shape_invalid: 'La forma de la taula de tarifes no és vàlida.'
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un

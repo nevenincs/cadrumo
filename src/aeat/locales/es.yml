@@ -940,8 +940,19 @@ application:
             para un elemento referenciado.
       parity:
         errors:
-          seed_anchor_missing: 'La entrada del escenario de paridad no tiene una celda de hoja de cálculo donde sembrarse.'
-          unknown_casilla_numbers: 'El escenario de paridad referencia números de casilla que no están en la instantánea del registro.'
+          seed_anchor_missing: La entrada del escenario de paridad no tiene una celda
+            de hoja de cálculo donde sembrarse.
+          unknown_casilla_numbers: El escenario de paridad referencia números de casilla
+            que no están en la instantánea del registro.
+      records:
+        errors:
+          address_mismatch: 'La dirección de celda de la hoja de cálculo no coincide con su fila y columna.'
+          duplicate_write_address: 'El plan de exportación de hoja de cálculo escribe más de una carga en la misma celda.'
+          frozen_view_empty: 'La vista inmovilizada debe inmovilizar al menos una fila o una columna.'
+          invalid_column_index: 'El índice de columna del registro de hoja de cálculo debe empezar en uno y ser positivo.'
+          invalid_column_letters: 'Las letras de columna del registro de hoja de cálculo no son válidas.'
+          range_malformed: 'Los límites del rango de la hoja de cálculo no son válidos.'
+          tariff_shape_invalid: 'La forma de la tabla de tarifas no es válida.'
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
