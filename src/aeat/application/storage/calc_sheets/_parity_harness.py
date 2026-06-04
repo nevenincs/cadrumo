@@ -52,7 +52,7 @@ if TYPE_CHECKING:
 from pydantic import BaseModel, Field
 
 from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core.config import Settings as _Settings
+from ....core.config import load_settings
 from ....core.decimal import coerce_decimal
 from ....domain.calculations.registry import (
     CasillaDefinition,
@@ -72,8 +72,6 @@ from ._records import (
     RelationValues,
     SheetExportPlan,
 )
-
-_SHEETS_RECALC_DELAY_SECONDS = _Settings().aeat_calc_sheets_recalc_delay_s
 
 
 class CasillaParity(BaseModel):
@@ -157,7 +155,9 @@ def _build_operator_inputs(
         inputs_by_id[casilla_id] = value
     if unknown:
         raise CalcSheetsParityError(
-            f"scenario references unknown casilla numbers in modelo {snapshot.modelo.id!r}: {sorted(unknown)!r}"
+            "scenario references unknown casilla numbers",
+            context={"unknown_count": len(unknown), "modelo": snapshot.modelo.id},
+            translated_message="application.storage.calc_sheets.parity.errors.unknown_casilla_numbers",
         )
     return OperatorInputs(values=tuple(operator_input_records)), inputs_by_id
 
@@ -203,22 +203,22 @@ def _seed_inputs_into_sheet(
     for number, value in scenario.inputs_by_number.items():
         casilla_id = by_number.get(number)
         if casilla_id is None:
-            continue
+            raise _missing_seed_anchor("casilla")
         address = address_by_casilla.get(casilla_id)
         if address is None:
-            continue
+            raise _missing_seed_anchor("casilla")
         data.append({"range": address.qualified(), "values": [[format(value, "f")]]})
 
     for binding_id, value in scenario.bindings.items():
         address = layout.binding_cells.get(binding_id)
         if address is None:
-            continue
+            raise _missing_seed_anchor("binding")
         data.append({"range": address.qualified(), "values": [[format(value, "f")]]})
 
     for binding_id, text in scenario.enum_bindings.items():
         address = layout.binding_cells.get(binding_id)
         if address is None:
-            continue
+            raise _missing_seed_anchor("enum_binding")
         data.append({"range": address.qualified(), "values": [[text]]})
 
     if data:
@@ -227,6 +227,18 @@ def _seed_inputs_into_sheet(
             spreadsheetId=spreadsheet_id,
             body=batch_body,
         ).execute()
+
+
+def _missing_seed_anchor(input_kind: str) -> CalcSheetsParityError:
+    return CalcSheetsParityError(
+        "parity scenario input has no seed cell",
+        context={"input_kind": input_kind},
+        translated_message="application.storage.calc_sheets.parity.errors.seed_anchor_missing",
+    )
+
+
+def _sheets_recalc_delay_seconds() -> float:
+    return load_settings().aeat_calc_sheets_recalc_delay_s
 
 
 def _read_sheets_computed(
@@ -364,7 +376,7 @@ def verify_modelo_parity(
     # Give Sheets time to propagate dependent-cell recalculation.
     # Sheets recalcs are synchronous in practice but a small delay
     # keeps the harness honest under network jitter.
-    time.sleep(_SHEETS_RECALC_DELAY_SECONDS)
+    time.sleep(_sheets_recalc_delay_seconds())
 
     sheets_values = _read_sheets_computed(sheets_service, apply_result.spreadsheet_id, plan)
     local_values = _compute_local(snapshot, inputs_by_id, scenario)

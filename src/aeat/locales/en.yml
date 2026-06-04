@@ -858,9 +858,14 @@ application:
           tariffs: Tariffs / active parameters - protected
       layout:
         errors:
-          undeclared_reference: 'The spreadsheet layout references an item not declared by the revision.'
+          undeclared_reference: The spreadsheet layout references an item not declared
+            by the revision.
           unresolved_reference: The spreadsheet layout does not contain a cell for
             a referenced item.
+      parity:
+        errors:
+          seed_anchor_missing: 'The parity scenario input has no spreadsheet cell to seed.'
+          unknown_casilla_numbers: 'The parity scenario references casilla numbers that are not in the registry snapshot.'
   user_profile:
     errors:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';

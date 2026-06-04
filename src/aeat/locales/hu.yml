@@ -872,9 +872,14 @@ application:
           tariffs: Tarifák / aktív paraméterek - védett
       layout:
         errors:
-          undeclared_reference: 'A táblázatelrendezés olyan elemre hivatkozik, amelyet a revízió nem deklarál.'
+          undeclared_reference: A táblázatelrendezés olyan elemre hivatkozik, amelyet
+            a revízió nem deklarál.
           unresolved_reference: A táblázatelrendezés nem tartalmaz cellát a hivatkozott
             elemhez.
+      parity:
+        errors:
+          seed_anchor_missing: 'A paritási forgatókönyv bemenetéhez nincs kitölthető táblázatcella.'
+          unknown_casilla_numbers: 'A paritási forgatókönyv olyan mezőszámokra hivatkozik, amelyek nincsenek a nyilvántartási pillanatképben.'
   user_profile:
     errors:
       duplicate_tax_id: A(z) "%{tax_id}" adóazonosítót már a(z) "%{profile}" profil

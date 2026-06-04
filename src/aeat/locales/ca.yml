@@ -923,9 +923,14 @@ application:
           tariffs: Tarifes / paràmetres vigents - protegit
       layout:
         errors:
-          undeclared_reference: 'El disseny del full de càlcul referencia un element no declarat per la revisió.'
+          undeclared_reference: El disseny del full de càlcul referencia un element
+            no declarat per la revisió.
           unresolved_reference: El disseny del full de càlcul no conté cap cel·la
             per a un element referenciat.
+      parity:
+        errors:
+          seed_anchor_missing: 'L''entrada de l''escenari de paritat no té cap cel·la del full de càlcul on sembrar-se.'
+          unknown_casilla_numbers: 'L''escenari de paritat referencia números de casella que no són a la instantània del registre.'
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
