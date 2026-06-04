@@ -135,7 +135,7 @@ Audit and repair M200 calculation closure identities so every calculated casilla
 
 - [x] `W05.P09.S41` - Audit M200 closure-only calculation completeness drift and segment ownership; `.vault/audit`.
 - [x] `W05.P09.S42` - Repair M200 calculation completeness declarations for the audited closure-only identities; `src/aeat/_data/registry/aeat/modelos/200`.
-- [ ] `W05.P09.S43` - Verify M200 record-design completeness after the repair and record the remaining cross-modelo gate blocker; `src/aeat/domain/calculations/registry/test_record_design.py`.
+- [x] `W05.P09.S43` - Verify M200 record-design completeness after the repair and record the remaining cross-modelo gate blocker; `src/aeat/domain/calculations/registry/test_record_design.py`.
 
 ## Wave `W06` - M303 completeness manifest blocker
 
