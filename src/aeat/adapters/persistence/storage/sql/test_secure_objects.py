@@ -416,15 +416,140 @@ def test_secure_object_record_schema_version_mutation_breaks_roundtrip(tmp_path:
                     "UPDATE secure_objects SET schema_version = ? WHERE namespace = ?",
                     (4, namespace),
                 )
+                (stored_lookup_digest,) = con.execute(
+                    "SELECT hex(object_key) FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
                 con.commit()
 
-            with pytest.raises(EnvelopeVersionError, match="supports up to 3"):
+            with pytest.raises(EnvelopeVersionError) as raised:
                 repo.load(
                     namespace,
                     natural_key,
                     expected_class=SensitivityClass.FINANCIAL,
                     max_supported_version=3,
                 )
+            rendered = str(raised.value)
+            assert raised.value.translated_message == "errors.storage.namespace.schema_mismatch"
+            assert raised.value.context == {
+                "namespace": namespace,
+                "schema_version": 4,
+                "expected": 3,
+            }
+            assert natural_key not in rendered
+            assert str(stored_lookup_digest).lower() not in rendered.lower()
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_load_classification_error_is_localized_and_redacted(tmp_path: Path) -> None:
+    """Load-time classification failures do not expose natural or lookup keys."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "load-classification-redaction.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.test.load.classification"
+        natural_key = "classification-secret-key"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key=natural_key,
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=b"classification-redaction",
+            )
+            with sqlite3.connect(db_path) as con:
+                con.execute(
+                    "UPDATE secure_objects SET classification = ? WHERE namespace = ?",
+                    (SensitivityClass.AUDIT.value, namespace),
+                )
+                (stored_lookup_digest,) = con.execute(
+                    "SELECT hex(object_key) FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+                con.commit()
+
+            with pytest.raises(ClassificationError) as raised:
+                repo.load(
+                    namespace,
+                    natural_key,
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=1,
+                )
+            rendered = str(raised.value)
+            assert raised.value.translated_message == "errors.storage.namespace.classification_mismatch"
+            assert raised.value.context == {
+                "namespace": namespace,
+                "classification": SensitivityClass.AUDIT.value,
+                "expected": SensitivityClass.FINANCIAL.value,
+            }
+            assert natural_key not in rendered
+            assert str(stored_lookup_digest).lower() not in rendered.lower()
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_raw_key_validation_errors_are_localized(tmp_path: Path) -> None:
+    """Raw-key public helpers reject malformed digests with translated errors."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "raw-key-localized.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            with pytest.raises(StorageValidationError) as exists_raised:
+                repo.exists_by_raw_key("aeat.test.raw", b"short")
+            assert (
+                exists_raised.value.translated_message
+                == "errors.integrity.integrity_storage_secure_object_hashed_key_length"
+            )
+            assert exists_raised.value.context == {"length": 5}
+
+            with pytest.raises(StorageValidationError) as save_raised:
+                repo.save_with_raw_key(
+                    namespace="aeat.test.raw",
+                    hashed_object_key=b"short",
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=b"payload",
+                )
+            assert (
+                save_raised.value.translated_message
+                == "errors.integrity.integrity_storage_secure_object_hashed_key_length"
+            )
+            assert save_raised.value.context == {"length": 5}
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_batch_size_validation_error_is_localized(tmp_path: Path) -> None:
+    """Batch-size validation uses the translated storage-validation key."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "batch-size-localized.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            with pytest.raises(StorageValidationError) as raised:
+                list(
+                    repo.iter_records_with_failures(
+                        "aeat.test.batch",
+                        expected_class=SensitivityClass.FINANCIAL,
+                        max_supported_version=1,
+                        batch_size=0,
+                    )
+                )
+            assert (
+                raised.value.translated_message
+                == "errors.integrity.integrity_storage_secure_object_batch_size"
+            )
+            assert raised.value.context == {"batch_size": 0}
         finally:
             engine.dispose()
 
@@ -882,7 +1007,7 @@ def test_iter_records_with_failures_rejects_invalid_batch_size(tmp_path: Path) -
         try:
             repo = SecureObjectRepository(engine=engine)
 
-            with pytest.raises(StorageValidationError, match="batch_size"):
+            with pytest.raises(StorageValidationError) as raised:
                 list(
                     repo.iter_records_with_failures(
                         "aeat.test.invalid.batch",
@@ -891,6 +1016,11 @@ def test_iter_records_with_failures_rejects_invalid_batch_size(tmp_path: Path) -
                         batch_size=0,
                     )
                 )
+            assert (
+                raised.value.translated_message
+                == "errors.integrity.integrity_storage_secure_object_batch_size"
+            )
+            assert raised.value.context == {"batch_size": 0}
         finally:
             engine.dispose()
 

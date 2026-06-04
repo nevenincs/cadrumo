@@ -3209,6 +3209,7 @@ errors:
       the annual summary.
     stale_exchange_rate: The only available exchange rate is outside the acceptable
       freshness window.
+    fail_storage_secure_object_upsert: 'The secure object could not be persisted. Check the storage route and retry.'
   financial:
     source_file_is_symlink: 'Source file path is a symbolic link, which is not allowed
       for tax-data ingest: {path}'
@@ -3298,6 +3299,11 @@ errors:
       or the calculation engine may be corrupted.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
+    integrity_storage_secure_object_raw_bytes: 'Secure-object raw byte metadata has an unsupported type: %{value_type}.'
+    integrity_storage_secure_object_revision_ancestry_json: 'Secure-object revision ancestry metadata is malformed JSON.'
+    integrity_storage_secure_object_revision_ancestry_shape: 'Secure-object revision ancestry metadata must be a list of 64-character revision ids.'
+    integrity_storage_secure_object_hashed_key_length: 'Secure-object raw lookup digest must be 32 bytes; got %{length}.'
+    integrity_storage_secure_object_batch_size: 'Secure-object iteration batch size must be at least 1; got %{batch_size}.'
   internal:
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
       error.
@@ -3596,6 +3602,7 @@ errors:
         %{expected}, but the caller used schema %{schema_version}.
       unregistered: Secure-object namespace %{namespace} is not registered for runtime
         storage.
+      unknown_classification: 'Secure-object namespace %{namespace} contains unknown sensitivity %{classification}.'
     runtime:
       cold_bootstrap_active_profile_refused: Cold-bootstrap storage is only available
         before an active profile bucket is selected.

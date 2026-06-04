@@ -3428,6 +3428,7 @@ errors:
       con el resumen anual.
     stale_exchange_rate: El único tipo de cambio disponible está fuera del margen
       de frescura aceptable.
+    fail_storage_secure_object_upsert: 'No se pudo persistir el objeto seguro. Revise la ruta de almacenamiento y vuelva a intentarlo.'
   financial:
     source_file_is_symlink: 'La ruta del archivo origen es un enlace simbólico, lo
       cual no está permitido para la ingesta de datos fiscales: {path}'
@@ -3525,6 +3526,11 @@ errors:
       de referencia o el motor de cálculo pueden estar dañados.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
+    integrity_storage_secure_object_raw_bytes: 'Los metadatos de bytes sin procesar del objeto seguro tienen un tipo no admitido: %{value_type}.'
+    integrity_storage_secure_object_revision_ancestry_json: 'El campo de ascendencia de revisión de un objeto seguro almacenado no contiene JSON válido.'
+    integrity_storage_secure_object_revision_ancestry_shape: 'El campo de ascendencia de revisión de un objeto seguro almacenado tiene una forma de identificador no válida.'
+    integrity_storage_secure_object_hashed_key_length: 'El digest de búsqueda sin procesar del objeto seguro debe tener 32 bytes; se recibieron %{length}.'
+    integrity_storage_secure_object_batch_size: 'El tamaño de lote de iteración de objetos seguros debe ser al menos 1; se recibió %{batch_size}.'
   internal:
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
@@ -3846,6 +3852,7 @@ errors:
         con esquema %{expected}, pero el llamador usó el esquema %{schema_version}.
       unregistered: El espacio de nombres de objeto seguro %{namespace} no está registrado
         para almacenamiento runtime.
+      unknown_classification: 'El espacio de nombres de objetos seguros %{namespace} contiene una sensibilidad desconocida: %{classification}.'
     runtime:
       cold_bootstrap_active_profile_refused: El almacenamiento de arranque en frío
         solo está disponible antes de seleccionar un bucket de perfil activo.

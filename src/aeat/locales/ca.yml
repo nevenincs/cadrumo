@@ -3382,6 +3382,7 @@ errors:
       amb el resum anual.
     stale_exchange_rate: L'únic tipus de canvi disponible està fora del marge de frescor
       acceptable.
+    fail_storage_secure_object_upsert: 'No s''ha pogut persistir l''objecte segur. Reviseu la ruta d''emmagatzematge i torneu-ho a provar.'
   financial:
     source_file_is_symlink: 'El camí del fitxer origen és un enllaç simbòlic, la qual
       cosa no està permesa per a la ingesta de dades fiscals: {path}'
@@ -3481,6 +3482,11 @@ errors:
       dades de referència o el motor de càlcul poden estar malmesos.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
+    integrity_storage_secure_object_raw_bytes: 'Les metadades de bytes sense processar de l''objecte segur tenen un tipus no admès: %{value_type}.'
+    integrity_storage_secure_object_revision_ancestry_json: 'El camp d''ascendència de revisió d''un objecte segur emmagatzemat no conté JSON vàlid.'
+    integrity_storage_secure_object_revision_ancestry_shape: 'El camp d''ascendència de revisió d''un objecte segur emmagatzemat té una forma d''identificador no vàlida.'
+    integrity_storage_secure_object_hashed_key_length: 'La clau hash de l''objecte segur té una longitud no vàlida: %{length} bytes.'
+    integrity_storage_secure_object_batch_size: 'La mida del lot d''iteració d''objectes segurs ha de ser com a mínim 1; s''ha rebut %{batch_size}.'
   internal:
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
@@ -3798,6 +3804,7 @@ errors:
         amb esquema %{expected}, però el cridador ha usat l'esquema %{schema_version}.
       unregistered: L'espai de noms d'objecte segur %{namespace} no està registrat
         per a l'emmagatzematge runtime.
+      unknown_classification: 'L''espai de noms d''objectes segurs %{namespace} conté una sensibilitat desconeguda: %{classification}.'
     runtime:
       cold_bootstrap_active_profile_refused: L'emmagatzematge d'arrencada en fred
         només està disponible abans de seleccionar un bucket de perfil actiu.
