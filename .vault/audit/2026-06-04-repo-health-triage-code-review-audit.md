@@ -467,3 +467,21 @@ findings for later W05/W06 rows. The separate project-regression rule lane is
 blocked before scanning by invalid YAML in `.semgrep/rules/no-any-annotation.yml`;
 that pre-existing rule-file defect is outside this `.semgrepignore` policy
 slice.
+
+## W05-002 | INFO | Mirrored data security disposition review found no defects
+
+Status: verified with scoped residual.
+
+The W05.P15.S52 review found no defect in adding a top-level
+`src/aeat/_data/SECURITY.md` disposition for bundled data. The document keeps
+the S51 Semgrep exclusion narrow: `_data` is outside the production source
+security lane because mirrored official HTML/XML/PDF text and fixture literals
+produce stock-rule noise, but the tree remains governed by provenance,
+source-reference integrity metadata, no-private-data constraints, and untrusted
+input parsing.
+
+Focused verification passed the corpus provenance gate and reran the scoped
+Semgrep production lane. The scan still reports 11 findings while scanning 891
+tracked files and skipping 17,240 files through `.semgrepignore`. Existing
+concurrent registry TOML edits under `src/aeat/_data` were not modified by this
+documentation slice.
