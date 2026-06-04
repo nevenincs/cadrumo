@@ -85,7 +85,7 @@ Wire the tested selector contract into the common operator lifecycle and discove
 Give list, status, and revisions surfaces enough human-readable state to explain what the resolver selected or why it refused.
 
 - [x] `W02.P03.S14` - add current filed and filing pointer fields to work-unit CLI payloads; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W02.P03.S15` - render work-unit list rows with registry revision current revision filed state and short IDs; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W02.P03.S15` - render work-unit list rows with registry revision current revision filed state and short IDs; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W02.P03.S16` - allow work status to resolve a natural filing target; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W02.P03.S17` - allow work revisions to resolve a natural filing target; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W02.P03.S18` - cover natural-key list status and revisions discovery output; `src/aeat/entrypoints/cli/test_modelo_work_ux.py`.
@@ -226,6 +226,7 @@ localized operator messages render clearly without stale ID-routing
 guidance, the affected documentation no longer teaches pasted-ID routing
 for the common path, and the feature surface gate reports only relevant
 pass/fail results for this change set.
+
 
 
 
