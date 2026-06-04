@@ -113,7 +113,7 @@ Extract registry binding and formula-runtime families one at a time while preser
 
 - [x] `W03.P09.S30` - Extract previous-filing binding family; `src/aeat/domain/calculations/registry/_bindings_previous_filing.py`.
 - [x] `W03.P09.S31` - Extract formula initial-value materialization; `src/aeat/domain/calculations/registry/_formula_initial_values.py`.
-- [ ] `W03.P09.S32` - Verify registry workbook parity complexity baseline; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
+- [x] `W03.P09.S32` - Verify registry workbook parity complexity baseline; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
 
 ### Phase `W03.P10` - ledger and diagnostics decomposition
 
