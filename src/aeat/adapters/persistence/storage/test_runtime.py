@@ -212,6 +212,15 @@ def test_named_bucket_runtime_refuses_live_explicit_database_url(tmp_path: Path)
     assert _issue_codes(runtime) == (StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET,)
 
 
+def test_named_bucket_runtime_rejects_blank_bucket_with_localized_validation(tmp_path: Path) -> None:
+    settings = Settings(aeat_local_storage_root=tmp_path)
+
+    with pytest.raises(StorageValidationError, match="bucket_id must not be blank") as excinfo:
+        inspect_bucket_storage_runtime("   ", settings, now=_NOW)
+
+    assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
+
+
 def test_runtime_creates_bucket_attached_secure_object_repository(tmp_path: Path) -> None:
     settings = _settings_for_bucket(tmp_path, "bucket-a")
 
