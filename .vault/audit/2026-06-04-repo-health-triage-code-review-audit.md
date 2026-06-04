@@ -165,3 +165,22 @@ localisation, export refusal checks, the closure token, the IVA wallet engine
 integration file, and Ruff on the touched action/gate/error-registry surfaces.
 One attempted export pytest command used stale node ids and collected no tests;
 the corrected export refusal node ids passed.
+
+## W03-007 | INFO | Modelo revision-persistence extraction review found no defects
+
+Status: verified.
+
+The W03.P08.S29 review found no behavioral defect in the extraction. The
+calculation action now delegates bucket-event emission, draft revision
+persistence, calculation-created event emission, verified-complete filing
+transitions, supersession state updates, filing-record writes, and work-unit
+pointer advancement to `_revision_persistence.py`.
+
+Focused verification passed for calculate idempotency, calculation-created
+events, verify/file workflow gates, filing pointer updates, filing and
+supersession events, Modelo 303 wallet pre-mutation refusal, and Ruff on the
+touched action/persistence/test surfaces.
+
+A dedicated `vaultspec-code-reviewer` delegation was attempted for this slice,
+but the active subagent pool returned a thread-limit failure; the review was
+completed locally against the mandatory code-review checklist.

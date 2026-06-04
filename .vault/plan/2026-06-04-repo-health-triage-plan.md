@@ -114,7 +114,7 @@ Split modelo application orchestration into typed binding, wallet, and persisten
 
 - [x] `W03.P08.S27` - Extract modelo binding-resolution service; `src/aeat/application/modelo/_binding_resolution.py`.
 - [x] `W03.P08.S28` - Extract modelo IVA wallet gate service; `src/aeat/application/modelo/_iva_wallet_gate.py`.
-- [ ] `W03.P08.S29` - Extract modelo revision-persistence service; `src/aeat/application/modelo/_revision_persistence.py`.
+- [x] `W03.P08.S29` - Extract modelo revision-persistence service; `src/aeat/application/modelo/_revision_persistence.py`.
 
 ### Phase `W03.P09` - registry runtime decomposition
 
