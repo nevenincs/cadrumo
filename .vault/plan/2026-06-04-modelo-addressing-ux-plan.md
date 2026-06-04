@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#modelo-addressing-ux'
 date: '2026-06-04'
-tier: L2
+tier: L3
 related:
   - '[[2026-06-04-modelo-addressing-ux-adr]]'
   - '[[2026-06-04-modelo-addressing-ux-research]]'
@@ -20,6 +20,8 @@ related:
        footers do not exist.
      - NEVER use [[wiki-links]] or markdown links in the
        document body. -->
+
+<!-- RETIRED: P13, P14, P15, P16, S29, S30, S31, S32, S33, S34, S35, S36, S37, S38, S39, S40, S41, S42, S55, S56, S57, S58, S59, S60, S79, S80, S81, S82, S83, S84, S85, S86, S87, S88, S89, S90, S91, S92, S93, S94, S95, S96, S97, S98, S99, S100, S101, S102, S103, S104, S105, S106, S107, S108, S109, S110, S111, S112, S113, S114, S115, S116, S117, S118 -->
 
 # `modelo-addressing-ux` implementation plan
 
@@ -40,102 +42,183 @@ available for audit, exact replay, and advanced support workflows.
 The plan is grounded in vaultspec RAG discovery and direct code-site
 review. The relevant implementation surfaces are the modelo application
 actions, work-unit identity, calculation revision persistence, export
-selection, CLI command handlers, CLI payload rendering, locale messages,
-real-behavior CLI tests, and the narrative docs that currently teach
-copy-paste ID routing.
+selection, CLI command handlers, adjacent work-unit and revision
+consumers, CLI payload rendering, locale messages, real-behavior CLI
+tests, and the narrative docs that currently teach copy-paste ID
+routing.
 
 ## Steps
 
-### Phase `P01` - build the application selector boundary
+## Wave `W01` - application selector and pointer semantics
+
+Build the shared selector and revision-currentness contract before any CLI command depends on natural-key addressing.
+
+### Phase `W01.P01` - build the application selector boundary
 
 Create the shared application contract that resolves operator-visible filing targets before any CLI command creates or selects internal work-unit identity.
 
-- [ ] `P01.S01` - add typed selector request result ambiguity and error objects; `src/aeat/application/modelo/_selectors.py`.
-- [ ] `P01.S02` - implement active-bucket and explicit-bucket resolution for modelo work selectors; `src/aeat/application/modelo/_selectors.py`.
-- [ ] `P01.S03` - implement visible-target-first work-unit lookup by bucket modelo filing year and period; `src/aeat/application/modelo/_selectors.py`.
-- [ ] `P01.S04` - implement explicit work-unit ID validation against supplied natural-key flags; `src/aeat/application/modelo/_selectors.py`.
-- [ ] `P01.S05` - implement registry revision conflict refusal before exact-target creation; `src/aeat/application/modelo/_selectors.py`.
-- [ ] `P01.S06` - export the selector boundary from the modelo application package; `src/aeat/application/modelo/__init__.py`.
-- [ ] `P01.S07` - cover absent existing discarded ambiguous and revision-conflict work-unit resolution; `src/aeat/application/modelo/test_selectors.py`.
+- [ ] `W01.P01.S01` - add typed selector request result ambiguity and error objects; `src/aeat/application/modelo/_selectors.py`.
+- [ ] `W01.P01.S02` - implement active-bucket and explicit-bucket resolution for modelo work selectors; `src/aeat/application/modelo/_selectors.py`.
+- [ ] `W01.P01.S03` - implement visible-target-first work-unit lookup by bucket modelo filing year and period; `src/aeat/application/modelo/_selectors.py`.
+- [ ] `W01.P01.S04` - implement explicit work-unit ID validation against supplied natural-key flags; `src/aeat/application/modelo/_selectors.py`.
+- [ ] `W01.P01.S05` - implement registry revision conflict refusal before exact-target creation; `src/aeat/application/modelo/_selectors.py`.
+- [ ] `W01.P01.S06` - export the selector boundary from the modelo application package; `src/aeat/application/modelo/__init__.py`.
+- [ ] `W01.P01.S07` - cover absent existing discarded ambiguous and revision-conflict work-unit resolution; `src/aeat/application/modelo/test_selectors.py`.
 
-### Phase `P02` - define revision selector semantics and pointer correctness
+### Phase `W01.P02` - define revision selector semantics and pointer correctness
 
 Make calculation revision defaults command-specific and close current-pointer gaps so later commands operate on the revision the user just produced or selected.
 
-- [ ] `P02.S08` - add command-specific calculation revision selector operations; `src/aeat/application/modelo/_selectors.py`.
-- [ ] `P02.S09` - advance current calculation pointers when duplicate draft revisions are reused; `src/aeat/application/modelo/_revision_persistence.py`.
-- [ ] `P02.S10` - preserve filed pointers while making filed revision selection explicit; `src/aeat/application/modelo/_revision_persistence.py`.
-- [ ] `P02.S11` - cover current latest-draft latest-verified filed and explicit revision selection; `src/aeat/application/modelo/test_selectors.py`.
-- [ ] `P02.S12` - cover duplicate calculation revision current-pointer behavior; `src/aeat/application/modelo/test_file_flow.py`.
-- [ ] `P02.S13` - cover exportable revision preference without arbitrary latest fallback; `src/aeat/application/modelo/test_export.py`.
+- [ ] `W01.P02.S08` - add command-specific filed current and exportable calculation revision selector operations; `src/aeat/application/modelo/_selectors.py`.
+- [ ] `W01.P02.S09` - advance current calculation pointers when duplicate draft revisions are reused; `src/aeat/application/modelo/_revision_persistence.py`.
+- [ ] `W01.P02.S10` - preserve filed and current filing pointer persistence invariants; `src/aeat/application/modelo/_revision_persistence.py`.
+- [ ] `W01.P02.S11` - cover current latest-draft latest-verified filed and explicit revision selection; `src/aeat/application/modelo/test_selectors.py`.
+- [ ] `W01.P02.S12` - cover duplicate calculation revision current-pointer behavior; `src/aeat/application/modelo/test_file_flow.py`.
+- [ ] `W01.P02.S13` - cover exportable revision preference without arbitrary latest fallback; `src/aeat/application/modelo/test_export.py`.
 
-### Phase `P03` - expose readable work discovery payloads
+## Wave `W02` - CLI lifecycle and discovery
+
+Wire the tested selector contract into the common operator lifecycle and discovery surfaces without widening raw-ID exposure.
+
+### Phase `W02.P03` - expose readable work discovery payloads
 
 Give list, status, and revisions surfaces enough human-readable state to explain what the resolver selected or why it refused.
 
-- [ ] `P03.S14` - add current filed and filing pointer fields to work-unit CLI payloads; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `P03.S15` - render work-unit list rows with registry revision current revision filed state and short IDs; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `P03.S16` - allow work status to resolve a natural filing target; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `P03.S17` - allow work revisions to resolve a natural filing target; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `P03.S18` - cover natural-key list status and revisions discovery output; `src/aeat/entrypoints/cli/test_modelo_work_ux.py`.
+- [ ] `W02.P03.S14` - add current filed and filing pointer fields to work-unit CLI payloads; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [ ] `W02.P03.S15` - render work-unit list rows with registry revision current revision filed state and short IDs; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W02.P03.S16` - allow work status to resolve a natural filing target; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W02.P03.S17` - allow work revisions to resolve a natural filing target; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W02.P03.S18` - cover natural-key list status and revisions discovery output; `src/aeat/entrypoints/cli/test_modelo_work_ux.py`.
 
-### Phase `P04` - wire natural-key lifecycle commands
+### Phase `W02.P08` - wire provisioning and duplicate prevention commands
 
-Allow the common work create, calculate, verify, file, and export path to use modelo, year, and period while preserving raw IDs as explicit exact-addressing escape hatches.
+Make provisioning resume one active visible-target work unit and refuse conflicting active workspaces before calculation begins.
 
-- [ ] `P04.S19` - make work create idempotently resume an existing visible-target work unit; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `P04.S20` - allow work calculate to accept modelo year and period instead of a positional work-unit ID; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `P04.S21` - allow work verify to accept modelo year period and a revision selector; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `P04.S22` - allow work file to accept modelo year period and a revision selector; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `P04.S23` - allow modelo export to accept modelo year period and a revision selector; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `P04.S24` - cover the basic Modelo 130 lifecycle without copied IDs; `src/aeat/entrypoints/cli/test_modelo_work_natural_key.py`.
-- [ ] `P04.S25` - cover refusal when a visible target has conflicting active registry revisions; `src/aeat/entrypoints/cli/test_modelo_work_natural_key.py`.
-- [ ] `P04.S26` - cover export defaults for filed verified and ambiguous revision states; `src/aeat/entrypoints/cli/test_modelo_export_verb.py`.
+- [ ] `W02.P08.S19` - make work create idempotently resume an existing visible-target work unit; `src/aeat/entrypoints/cli/_modelo.py`.
 
-### Phase `P05` - localize and preserve legacy compatibility
+### Phase `W02.P04` - wire calculate verify and file lifecycle commands
 
-Keep existing ID-driven scripts working and render ambiguity, conflict, and selector errors in localized operator language.
+Wire command-specific revision defaults into calculate verify and file after provisioning and discovery resolution are stable.
 
-- [ ] `P05.S27` - keep positional work-unit and calculation-revision IDs as exact addressing inputs; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `P05.S28` - render ID type hints alongside the new natural-key guidance; `src/aeat/entrypoints/cli/test_modelo_work_id_type_hint.py`.
-- [ ] `P05.S29` - add English messages for resumed work ambiguity conflicts and selector refusals; `src/aeat/locales/en.yml`.
-- [ ] `P05.S30` - add Spanish messages for resumed work ambiguity conflicts and selector refusals; `src/aeat/locales/es.yml`.
-- [ ] `P05.S31` - add Catalan messages for resumed work ambiguity conflicts and selector refusals; `src/aeat/locales/ca.yml`.
-- [ ] `P05.S32` - add Hungarian messages for resumed work ambiguity conflicts and selector refusals; `src/aeat/locales/hu.yml`.
+- [ ] `W02.P04.S20` - allow work calculate to accept modelo year and period instead of a positional work-unit ID; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W02.P04.S21` - allow work verify to accept modelo year period and a revision selector; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W02.P04.S22` - allow work file to default to the current verified-complete revision under a natural target; `src/aeat/entrypoints/cli/_modelo.py`.
 
-### Phase `P06` - update user documentation after tested behavior lands
+### Phase `W02.P09` - wire export and end-to-end lifecycle assertions
+
+Make export select filed and verified-complete revisions through the selector contract and prove the end-to-end lifecycle refusal behavior.
+
+- [ ] `W02.P09.S23` - allow modelo export to default to filed then current verified-complete revision under a natural target; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W02.P09.S24` - cover the basic Modelo 130 lifecycle without copied IDs; `src/aeat/entrypoints/cli/test_modelo_work_natural_key.py`.
+- [ ] `W02.P09.S25` - cover refusal when a visible target has conflicting active registry revisions; `src/aeat/entrypoints/cli/test_modelo_work_natural_key.py`.
+- [ ] `W02.P09.S26` - cover export defaults for filed verified and ambiguous revision states; `src/aeat/entrypoints/cli/test_modelo_export_verb.py`.
+
+## Wave `W03` - adjacent command compatibility audit
+
+Classify every nearby work-unit or calculation-revision consumer as natural-key now exact-ID advanced only or deferred with a documented rationale.
+
+### Phase `W03.P12` - preserve exact-ID compatibility and help rendering
+
+Keep raw IDs as advanced exact-addressing inputs while retiring stale help that makes them the common operator path.
+
+- [ ] `W03.P12.S27` - keep positional work-unit and calculation-revision IDs as advanced exact addressing inputs; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W03.P12.S28` - cover ID type hints and stale positional-ID help replacement in CLI output tests; `src/aeat/entrypoints/cli/test_modelo_work_id_type_hint.py`.
+
+### Phase `W03.P10` - classify adjacent work-unit commands
+
+Decide which nearby work-unit commands join the natural-key first slice and which remain exact-ID advanced surfaces with documented rationale.
+
+- [ ] `W03.P10.S43` - record the adjacent command classification matrix; `.vault/exec/2026-06-04-modelo-addressing-ux`.
+- [ ] `W03.P10.S44` - classify and implement the work rename addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W03.P10.S45` - classify and implement the work discard addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W03.P10.S46` - classify and implement the work history addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W03.P10.S47` - classify and implement the work compare-taxation addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W03.P10.S48` - classify and implement the work amend addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
+
+### Phase `W03.P11` - classify adjacent revision and modelo commands
+
+Decide how adjacent calculation-revision and modelo-level consumers avoid accidental continued ID leakage in operator workflows.
+
+- [ ] `W03.P11.S49` - classify and implement the work revision addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W03.P11.S50` - classify and implement the modelo reconcile addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W03.P11.S51` - classify and implement the modelo reconcile-from-justificante addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W03.P11.S52` - classify and implement the modelo project addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W03.P11.S53` - classify and implement the modelo compare addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W03.P11.S54` - cover adjacent command decisions with focused CLI regression tests; `src/aeat/entrypoints/cli/test_modelo_work_natural_key.py`.
+
+## Wave `W04` - documentation reference and locales
+
+Update user-facing docs generated reference help text and localization only after behavior and compatibility decisions are explicit.
+
+### Phase `W04.P05` - localize natural-key operator guidance
+
+Render resumed work ambiguity conflict and selector guidance in each supported locale without reintroducing raw-ID routing as the normal workflow.
+
+- [ ] `W04.P05.S61` - inventory stale localized help that routes common workflows through raw IDs; `src/aeat/locales`.
+- [ ] `W04.P05.S62` - add English messages for resumed work ambiguity conflicts and selector refusals; `src/aeat/locales/en.yml`.
+- [ ] `W04.P05.S63` - add Spanish messages for resumed work ambiguity conflicts and selector refusals; `src/aeat/locales/es.yml`.
+- [ ] `W04.P05.S64` - add Catalan messages for resumed work ambiguity conflicts and selector refusals; `src/aeat/locales/ca.yml`.
+- [ ] `W04.P05.S65` - add Hungarian messages for resumed work ambiguity conflicts and selector refusals; `src/aeat/locales/hu.yml`.
+- [ ] `W04.P05.S66` - cover retired ID-routing help messages in CLI output tests; `src/aeat/entrypoints/cli/test_modelo_work_ux.py`.
+
+### Phase `W04.P06` - update user documentation after tested behavior lands
 
 Replace copy-paste ID routing in narrative docs only after the implementation is backed by real-behavior tests and live CLI help.
 
-- [ ] `P06.S33` - rewrite the tutorial lifecycle path around natural-key modelo work commands; `docs/tutorials/index.md`.
-- [ ] `P06.S34` - rewrite the getting-started lifecycle path around natural-key modelo work commands; `docs/getting-started.md`.
-- [ ] `P06.S35` - rewrite the quickstart lifecycle path around natural-key modelo work commands; `docs/how-to/quickstart.md`.
-- [ ] `P06.S36` - update the filing spine explanation for work units revisions current pointers and selectors; `docs/how-to/filing-spine.md`.
-- [ ] `P06.S37` - regenerate the CLI reference after command signature changes; `docs/cli`.
+- [ ] `W04.P06.S67` - rewrite the tutorial lifecycle path around natural-key modelo work commands; `docs/tutorials/index.md`.
+- [ ] `W04.P06.S68` - rewrite the getting-started lifecycle path around natural-key modelo work commands; `docs/getting-started.md`.
+- [ ] `W04.P06.S69` - rewrite the quickstart lifecycle path around natural-key modelo work commands; `docs/how-to/quickstart.md`.
+- [ ] `W04.P06.S70` - rewrite the Modelo 303 how-to lifecycle path around natural-key modelo work commands; `docs/how-to/modelo-303.md`.
+- [ ] `W04.P06.S71` - rewrite the Modelo 390 how-to lifecycle path around natural-key modelo work commands; `docs/how-to/modelo-390.md`.
+- [ ] `W04.P06.S72` - audit the reconciliation workflow and document natural-key or exact-ID rationale; `docs/how-to/reconcile.md`.
+- [ ] `W04.P06.S73` - update the filing spine explanation for work units revisions current pointers and selectors; `docs/how-to/filing-spine.md`.
+- [ ] `W04.P06.S74` - regenerate the CLI reference after command signature changes; `docs/cli`.
 
-### Phase `P07` - run focused verification gates
+## Wave `W05` - verification gates
+
+Run focused application CLI documentation and feature-surface gates against the revised L3 scope.
+
+### Phase `W05.P07` - run focused verification gates
 
 Validate the selector, lifecycle, documentation, and feature-surface behavior with targeted checks before the plan can close.
 
-- [ ] `P07.S38` - run focused application selector and lifecycle tests; `src/aeat/application/modelo`.
-- [ ] `P07.S39` - run focused modelo CLI natural-key and legacy-ID tests; `src/aeat/entrypoints/cli`.
-- [ ] `P07.S40` - run docs conformance for updated narrative and generated CLI surfaces; `docs conformance lane`.
-- [ ] `P07.S41` - run the feature surface gate for changed modelo addressing files; `feature-surface-gate`.
+- [ ] `W05.P07.S75` - run focused application selector and lifecycle tests; `src/aeat/application/modelo`.
+- [ ] `W05.P07.S76` - run focused modelo CLI natural-key and legacy-ID tests; `src/aeat/entrypoints/cli`.
+- [ ] `W05.P07.S77` - run docs conformance for updated narrative and generated CLI surfaces; `docs conformance lane`.
+- [ ] `W05.P07.S78` - run the feature surface gate for changed modelo addressing files; `feature-surface-gate`.
+
+### Phase `W05.P17` - run raw-ID leakage and semantic coverage gates
+
+Close the plan only after exact-match semantic and file-discovery audits prove every raw work-unit or calculation-revision operator surface is standardized or intentionally retained as exact-ID advanced behavior.
+
+- [ ] `W05.P17.S119` - run exact raw-ID leakage audit over source locales and docs; `rg raw-id leakage audit`.
+- [ ] `W05.P17.S120` - run semantic raw-ID leakage audit over source locales and docs; `vaultspec-rag`.
+- [ ] `W05.P17.S121` - run file-discovery blast-radius audit for modelo work and revision surfaces; `fd blast-radius inventory`.
+- [ ] `W05.P17.S122` - persist the final blast-radius classification matrix and closure evidence; `.vault/exec/2026-06-04-modelo-addressing-ux`.
 
 ## Parallelization
 
-Application selector tests and selector implementation should land before
-CLI verb wiring. Payload and read-only rendering can proceed in parallel
-with the revision selector work after the selector result contract is
-stable. Documentation must wait until the real-behavior CLI tests prove
-the tutorial path no longer requires manual copying of work-unit or
-calculation-revision IDs.
+`W01` must land before CLI command wiring because every visible-target
+command depends on the shared selector and revision-default contract.
+Within `W02`, provisioning and discovery can proceed in parallel after
+`W01`, while calculate verify file and export should wait for the
+selector invariants they exercise. `W03` can classify adjacent commands
+in parallel with `W02` implementation work, but any compatibility
+decision that changes command signatures must settle before `W04`
+updates generated reference docs, locale strings, or narrative guides.
+`W04` documentation changes must use the documentation workflow and must
+wait until real-behavior CLI tests prove the common lifecycle path no
+longer requires manually copying work-unit or calculation-revision IDs.
+`W05` runs last.
 
 ## Verification
 
-The plan is complete when every Step is closed, focused application and
-CLI tests prove visible-target-first resolution, duplicate prevention,
-revision selector defaults, export selection, and legacy ID compatibility,
-localized operator messages render clearly, the affected documentation no
-longer teaches pasted-ID routing for the common path, and the feature
-surface gate reports only relevant pass/fail results for this change set.
+The plan is complete when every Step is closed, the plan status reports
+five waves with no open structural validation findings, focused
+application and CLI tests prove visible-target-first resolution,
+duplicate prevention, revision selector defaults, export selection,
+adjacent-command compatibility decisions, and legacy ID compatibility,
+localized operator messages render clearly without stale ID-routing
+guidance, the affected documentation no longer teaches pasted-ID routing
+for the common path, and the feature surface gate reports only relevant
+pass/fail results for this change set.
