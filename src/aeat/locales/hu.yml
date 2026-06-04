@@ -592,10 +592,10 @@ application:
           illeszkedik.
     notifications:
       errors:
-        bucket_id_blank: 'A notifications bucket azonositoja nem lehet ures.'
-        snapshot_id_blank: 'A notifications pillanatkep azonositoja nem lehet ures.'
-        snapshot_not_found: 'Nem talalhato notifications-pillanatkep a kert azonositohoz.'
-        snapshot_prefix_ambiguous: 'A notifications pillanatkep elotag tobb pillanatkepre illeszkedik.'
+        bucket_id_blank: 'A notifications bucket azonosítója nem lehet üres.'
+        snapshot_id_blank: 'A notifications pillanatkép azonosítója nem lehet üres.'
+        snapshot_not_found: 'Nem található notifications pillanatkép a kért azonosítóhoz.'
+        snapshot_prefix_ambiguous: 'A notifications pillanatkép előtag több pillanatképre illeszkedik.'
   modelo:
     borrador_binding:
       errors:
