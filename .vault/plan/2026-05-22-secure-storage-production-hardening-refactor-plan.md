@@ -375,7 +375,7 @@ Current register count: `293` production candidate files.
 | `AFR-084` | `src/aeat/adapters/persistence/storage/sql/_orm.py` | `secure-object` | `runtime-default` | `W12.P21.S86` | closed |
 | `AFR-085` | `src/aeat/adapters/persistence/storage/sql/engine.py` | `sql-route, plain-file` | `runtime-default` | `W12.P21.S86` | closed |
 | `AFR-086` | `src/aeat/adapters/persistence/storage/sql/secure_objects.py` | `secure-object, manifest-bucket, master-key, sql-route, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
-| `AFR-087` | `src/aeat/adapters/persistence/storage/sql/session.py` | `sql-route` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-087` | `src/aeat/adapters/persistence/storage/sql/session.py` | `sql-route` | `runtime-default` | `W12.P21.S86` | closed |
 | `AFR-088` | `src/aeat/application/aggregation/_iva_ledger.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-089` | `src/aeat/application/aggregation/_modelo_bindings.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-090` | `src/aeat/application/aggregation/_renta_ledger.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
@@ -728,7 +728,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S186` - Close `AFR-084` for `src/aeat/adapters/persistence/storage/sql/_orm.py` with signals `secure-object`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/sql/_orm.py`.
 - [x] `W12.P26.S187` - Close `AFR-085` for `src/aeat/adapters/persistence/storage/sql/engine.py` with signals `sql-route, plain-file`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/sql/engine.py`.
 - [x] `W12.P26.S188` - Close `AFR-086` for `src/aeat/adapters/persistence/storage/sql/secure_objects.py` with signals `secure-object, manifest-bucket, master-key, sql-route, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
-- [ ] `W12.P26.S189` - Close `AFR-087` for `src/aeat/adapters/persistence/storage/sql/session.py` with signals `sql-route`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/sql/session.py`.
+- [x] `W12.P26.S189` - Close `AFR-087` for `src/aeat/adapters/persistence/storage/sql/session.py` with signals `sql-route`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/sql/session.py`.
 - [ ] `W12.P26.S190` - Close `AFR-088` for `src/aeat/application/aggregation/_iva_ledger.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/aggregation/_iva_ledger.py`.
 - [ ] `W12.P26.S191` - Close `AFR-089` for `src/aeat/application/aggregation/_modelo_bindings.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/aggregation/_modelo_bindings.py`.
 - [ ] `W12.P26.S192` - Close `AFR-090` for `src/aeat/application/aggregation/_renta_ledger.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/aggregation/_renta_ledger.py`.
