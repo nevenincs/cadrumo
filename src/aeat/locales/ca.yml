@@ -647,6 +647,14 @@ application:
     snapshot_base:
       errors:
         snapshot_bucket_mismatch: 'El bucket de la carrega de la instantania no coincideix amb el bucket del repositori.'
+    verify:
+      errors:
+        bucket_id_blank: 'L identificador del bucket de verificacio no pot estar buit.'
+        observation_bucket_mismatch: 'El bucket de l observacio de verificacio no coincideix amb el bucket del repositori.'
+        observation_id_blank: 'L identificador de l observacio de verificacio no pot estar buit.'
+        observation_not_found: 'No hi ha cap observacio de verificacio que coincideixi amb l identificador sol.licitat.'
+        observation_prefix_ambiguous: 'El prefix de l observacio de verificacio coincideix amb diverses observacions.'
+        observation_id_mismatch: 'L identificador de l observacio de verificacio no coincideix amb l observacio sol.licitada.'
   modelo:
     borrador_binding:
       errors:

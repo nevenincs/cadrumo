@@ -96,9 +96,15 @@ def verify_observation_object_key(bucket_id: str, observation_id: str) -> str:
     trimmed_bucket = bucket_id.strip()
     trimmed_observation = observation_id.strip()
     if not trimmed_bucket:
-        raise LiveApplicationInputError("bucket_id must not be blank")
+        raise LiveApplicationInputError(
+            "bucket_id must not be blank",
+            translated_message="application.live.verify.errors.bucket_id_blank",
+        )
     if not trimmed_observation:
-        raise LiveApplicationInputError("observation_id must not be blank")
+        raise LiveApplicationInputError(
+            "observation_id must not be blank",
+            translated_message="application.live.verify.errors.observation_id_blank",
+        )
     return f"verify-observation:{trimmed_bucket}:{trimmed_observation}"
 
 
@@ -119,7 +125,10 @@ class VerifyObservationRepository:
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
         trimmed = bucket_id.strip()
         if not trimmed:
-            raise LiveApplicationInputError("bucket_id must not be blank")
+            raise LiveApplicationInputError(
+                "bucket_id must not be blank",
+                translated_message="application.live.verify.errors.bucket_id_blank",
+            )
         self._bucket_id = trimmed
         self._objects = objects if objects is not None else secure_object_repository_for_bucket(trimmed)
 
@@ -149,28 +158,43 @@ class VerifyObservationRepository:
         observation = self._observation_from_record(record, requested_observation_id=observation_id)
         if observation.bucket_id != self._bucket_id:
             raise LiveApplicationInputError(
-                f"verify observation bucket_id={observation.bucket_id!r} "
-                f"does not match repository bucket {self._bucket_id!r}"
+                "verify observation bucket does not match repository bucket",
+                translated_message="application.live.verify.errors.observation_bucket_mismatch",
+                context={
+                    "observation_bucket": observation.bucket_id,
+                    "repository_bucket": self._bucket_id,
+                },
             )
         if observation.observation_id != observation_id:
             raise LiveApplicationInputError(
-                f"verify observation id={observation.observation_id!r} "
-                f"does not match requested observation {observation_id!r}"
+                "verify observation id does not match requested observation",
+                translated_message="application.live.verify.errors.observation_id_mismatch",
+                context={
+                    "observation_id": observation.observation_id,
+                    "requested_observation_id": observation_id,
+                },
             )
         return observation
 
     def list_observations(self) -> tuple[VerifyObservation, ...]:
         """Return all stored observations as a tuple of :class:`VerifyObservation` sorted by check time."""
-        observations = [
-            observation
-            for record in self._objects.list_records(
-                LIVE_VERIFY_OBSERVATION_NAMESPACE.namespace,
-                expected_class=LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity,
-                max_supported_version=LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
-            )
-            for observation in (self._observation_from_record(record),)
-            if observation.bucket_id == self._bucket_id
-        ]
+        observations: list[VerifyObservation] = []
+        for record in self._objects.list_records(
+            LIVE_VERIFY_OBSERVATION_NAMESPACE.namespace,
+            expected_class=LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity,
+            max_supported_version=LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
+        ):
+            observation = self._observation_from_record(record)
+            if observation.bucket_id != self._bucket_id:
+                raise LiveApplicationInputError(
+                    "verify observation bucket does not match repository bucket",
+                    translated_message="application.live.verify.errors.observation_bucket_mismatch",
+                    context={
+                        "observation_bucket": observation.bucket_id,
+                        "repository_bucket": self._bucket_id,
+                    },
+                )
+            observations.append(observation)
         return tuple(sorted(observations, key=lambda item: (item.checked_at, item.observation_id)))
 
     def save(self, observation: VerifyObservation) -> None:
@@ -186,8 +210,12 @@ class VerifyObservationRepository:
         """
         if observation.bucket_id != self._bucket_id:
             raise LiveApplicationInputError(
-                f"verify observation bucket_id={observation.bucket_id!r} "
-                f"does not match repository bucket {self._bucket_id!r}"
+                "verify observation bucket does not match repository bucket",
+                translated_message="application.live.verify.errors.observation_bucket_mismatch",
+                context={
+                    "observation_bucket": observation.bucket_id,
+                    "repository_bucket": self._bucket_id,
+                },
             )
         envelope = Envelope[VerifyObservation](
             schema_version=LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
@@ -314,14 +342,17 @@ class VerifyService:
         ]
         if not matches:
             raise VerifyObservationNotFoundError(
-                f"no verify observation matches {observation_id!r} in bucket {bucket_id!r}",
+                "no verify observation matches the requested id",
                 suggestion="aeat app live verify nif-iva",
+                translated_message="application.live.verify.errors.observation_not_found",
+                context={"observation_id": observation_id},
             )
         if len(matches) > 1:
-            full_ids = sorted(o.observation_id for o in matches)
             raise VerifyObservationNotFoundError(
-                f"prefix {observation_id!r} is ambiguous; matches {full_ids!r}",
+                "verify observation prefix matches multiple observations",
                 suggestion="provide a longer prefix",
+                translated_message="application.live.verify.errors.observation_prefix_ambiguous",
+                context={"observation_id": observation_id, "match_count": len(matches)},
             )
         return matches[0]
 

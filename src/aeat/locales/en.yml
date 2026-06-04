@@ -588,6 +588,14 @@ application:
     snapshot_base:
       errors:
         snapshot_bucket_mismatch: 'Snapshot payload bucket does not match the repository bucket.'
+    verify:
+      errors:
+        bucket_id_blank: 'Verify bucket id must not be blank.'
+        observation_bucket_mismatch: 'Verify observation bucket does not match the repository bucket.'
+        observation_id_blank: 'Verify observation id must not be blank.'
+        observation_not_found: 'No verify observation matches the requested id.'
+        observation_prefix_ambiguous: 'The verify observation prefix matches multiple observations.'
+        observation_id_mismatch: 'Verify observation id does not match the requested observation.'
   modelo:
     borrador_binding:
       errors:
