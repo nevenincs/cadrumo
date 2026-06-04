@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...core.i18n import tr
 from ...core.resources import resources
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ...domain.user_profile import (
@@ -67,8 +68,16 @@ def _all_required_facts(schema) -> tuple[UserProfileFact, ...]:
 
 def test_register_rejects_schema_violations(secure_objects, schema) -> None:
     svc = _service(secure_objects, schema)
-    with pytest.raises(ProfileSchemaValidationError, match=r"required field .* is missing"):
+    with pytest.raises(ProfileSchemaValidationError) as exc_info:
         svc.register(RegisterProfileCommand(profile_id="operator", display_name="Op", facts=()))
+    error = exc_info.value
+    assert str(error) == "profile facts failed schema validation"
+    assert "operator" not in str(error)
+    assert error.translated_message == "application.user_profile.errors.lifecycle_schema_validation_failed"
+    assert tr(error.translated_message) != error.translated_message
+    assert error.context is not None
+    assert error.context["profile_id"] == "operator"
+    assert "required_field_missing" in error.context["issue_codes"]
 
 
 def test_register_persists_when_all_required_facts_present(secure_objects, schema) -> None:
@@ -93,7 +102,7 @@ def test_register_refuses_duplicate_profile_id(secure_objects, schema) -> None:
             facts=_all_required_facts(schema),
         )
     )
-    with pytest.raises(ProfileAlreadyExistsError):
+    with pytest.raises(ProfileAlreadyExistsError) as exc_info:
         svc.register(
             RegisterProfileCommand(
                 profile_id="operator",
@@ -101,6 +110,13 @@ def test_register_refuses_duplicate_profile_id(secure_objects, schema) -> None:
                 facts=_all_required_facts(schema),
             )
         )
+    error = exc_info.value
+    assert str(error) == "profile already exists in the active bucket"
+    assert "operator" not in str(error)
+    assert "bucket-a" not in str(error)
+    assert error.translated_message == "application.user_profile.errors.lifecycle_profile_already_exists"
+    assert tr(error.translated_message) != error.translated_message
+    assert error.context == {"profile_id": "operator", "bucket_id": "bucket-a"}
 
 
 def test_edit_field_upserts_a_fact(secure_objects, schema) -> None:
@@ -201,8 +217,41 @@ def test_rename_refuses_a_tombstoned_profile(secure_objects, schema) -> None:
     )
     svc.remove(RemoveProfileCommand(profile_id="operator"))
 
-    with pytest.raises(ProfileNotFoundError, match="tombstoned"):
+    with pytest.raises(ProfileNotFoundError) as exc_info:
         svc.rename(RenameProfileCommand(profile_id="operator", target_display_name="New Label"))
+    error = exc_info.value
+    assert str(error) == "tombstoned profile cannot be renamed"
+    assert "operator" not in str(error)
+    assert error.translated_message == "application.user_profile.errors.lifecycle_profile_tombstoned_rename"
+    assert tr(error.translated_message) != error.translated_message
+    assert error.context == {"profile_id": "operator", "action": "rename"}
+
+
+def test_duplicate_refuses_a_tombstoned_source_without_rendering_profile_id(secure_objects, schema) -> None:
+    svc = _service(secure_objects, schema)
+    svc.register(
+        RegisterProfileCommand(
+            profile_id="operator",
+            display_name="Operator",
+            facts=_all_required_facts(schema),
+        )
+    )
+    svc.remove(RemoveProfileCommand(profile_id="operator"))
+
+    with pytest.raises(ProfileNotFoundError) as exc_info:
+        svc.duplicate(
+            DuplicateProfileCommand(
+                source_profile_id="operator",
+                target_profile_id="operator-copy",
+                target_display_name="Copy",
+            )
+        )
+    error = exc_info.value
+    assert str(error) == "tombstoned profile cannot be duplicated"
+    assert "operator" not in str(error)
+    assert error.translated_message == "application.user_profile.errors.lifecycle_profile_tombstoned_duplicate"
+    assert tr(error.translated_message) != error.translated_message
+    assert error.context == {"profile_id": "operator", "action": "duplicate"}
 
 
 def test_lifecycle_emits_bucket_events(secure_objects, schema) -> None:
@@ -236,6 +285,62 @@ def test_lifecycle_emits_bucket_events(secure_objects, schema) -> None:
     assert by_type[BucketEventType.PROFILE_VALUES_CLEARED] == 1
     assert by_type[BucketEventType.PROFILE_DUPLICATED] == 1
     assert by_type[BucketEventType.PROFILE_TOMBSTONED] == 1
+
+
+def test_lifecycle_event_payload_values_are_encrypted_at_rest(tmp_path: Path, schema) -> None:
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id="user-profile-lifecycle-private-events",
+    ) as profile:
+        svc = _service(profile.repository, schema)
+        source_profile_id = "source-profile-private"
+        target_profile_id = "target-profile-private"
+        original_label = "Sensitive Operator Label"
+        renamed_label = "Renamed Sensitive Label"
+        duplicate_label = "Duplicate Sensitive Label"
+
+        svc.register(
+            RegisterProfileCommand(
+                profile_id=source_profile_id,
+                display_name=original_label,
+                facts=_all_required_facts(schema),
+            )
+        )
+        svc.rename(RenameProfileCommand(profile_id=source_profile_id, target_display_name=renamed_label))
+        svc.duplicate(
+            DuplicateProfileCommand(
+                source_profile_id=source_profile_id,
+                target_profile_id=target_profile_id,
+                target_display_name=duplicate_label,
+            )
+        )
+
+        catalogue = BucketEventHistoryRepository(objects=profile.repository).load()
+        register_events = catalogue.for_bucket(
+            "bucket-a",
+            event_types=(BucketEventType.PROFILE_BUCKET_CREATED,),
+        )
+        rename_events = catalogue.for_bucket(
+            "bucket-a",
+            event_types=(BucketEventType.PROFILE_RENAMED,),
+        )
+        duplicate_events = catalogue.for_bucket(
+            "bucket-a",
+            event_types=(BucketEventType.PROFILE_DUPLICATED,),
+        )
+        assert register_events[-1].payload["display_name"] == original_label
+        assert rename_events[-1].payload["previous_display_name"] == original_label
+        assert duplicate_events[-1].payload["source_profile_id"] == source_profile_id
+
+        database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
+        for plaintext in (
+            source_profile_id,
+            target_profile_id,
+            original_label,
+            renamed_label,
+            duplicate_label,
+        ):
+            assert plaintext.encode("utf-8") not in database_bytes
 
 
 def test_list_profiles_returns_sorted_listings(secure_objects, schema) -> None:
