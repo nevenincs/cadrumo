@@ -27,6 +27,7 @@ from typing import ClassVar, cast
 from pydantic import BaseModel
 
 from .....core.classification import SensitivityClass
+from .....core.config import Settings
 from .....core.logging import get_logger
 from .....core.time import now
 from .._path_safety import safe_repository_id
@@ -41,7 +42,7 @@ from ._envelope import Envelope
 _log = get_logger(__name__)
 
 
-def _active_bucket_objects_or_default() -> SecureObjectRepository:
+def _active_bucket_objects_or_default(settings: Settings | None = None) -> SecureObjectRepository:
     """Return active-bucket storage when selected, otherwise the process default.
 
     When an active profile bucket is available the repository is backed by
@@ -53,7 +54,7 @@ def _active_bucket_objects_or_default() -> SecureObjectRepository:
     test harnesses and bootstrap-adjacent callers. Once a bucket is
     selected, route/session failures are not swallowed.
     """
-    return secure_object_repository_for_active_bucket_or_default_route()
+    return secure_object_repository_for_active_bucket_or_default_route(settings)
 
 
 class SecureBoundRepository[T: BaseModel]:
@@ -91,13 +92,17 @@ class SecureBoundRepository[T: BaseModel]:
         *,
         bucket_id: str | None = None,
         objects: SecureObjectRepository | None = None,
+        settings: Settings | None = None,
     ) -> None:
         if objects is not None:
             self._objects = objects
         elif bucket_id is not None:
-            self._objects = secure_object_repository_for_bucket(safe_repository_id(bucket_id, context="bucket_id"))
+            self._objects = secure_object_repository_for_bucket(
+                safe_repository_id(bucket_id, context="bucket_id"),
+                settings,
+            )
         else:
-            self._objects = _active_bucket_objects_or_default()
+            self._objects = _active_bucket_objects_or_default(settings)
         cls = type(self)
         for attr in ("namespace", "payload_type", "sensitivity", "schema_version"):
             if not hasattr(cls, attr) or getattr(cls, attr, None) is None:

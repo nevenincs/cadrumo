@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ...core.config import Settings
+from ...core.config import Settings, override_settings
 from ...domain.auth.apoderamientos import UnknownScopeError
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ._apoderado import (
@@ -171,3 +171,24 @@ class TestBucketIsolation:
         assert b.granted_scopes == ("RENT",)
         assert (isolated_profile.storage_root / "buckets" / "bucket-A" / "db" / "aeat.db").is_file()
         assert (isolated_profile.storage_root / "buckets" / "bucket-B" / "db" / "aeat.db").is_file()
+
+
+class TestSettingsRouting:
+    def test_service_explicit_settings_route_survives_context_override(
+        self,
+        isolated_profile: TestRuntimeProfile,
+        tmp_path: Path,
+    ) -> None:
+        svc = ApoderadoService(settings=isolated_profile.settings)
+        wrong_root = tmp_path / "wrong-storage-root"
+
+        with override_settings(aeat_local_storage_root=wrong_root, aeat_active_profile=isolated_profile.bucket_id):
+            config = svc.configure(
+                bucket_id=isolated_profile.bucket_id,
+                represented_nif="B12345678",
+                scope_tokens=("IVA",),
+            )
+
+        assert config.bucket_id == isolated_profile.bucket_id
+        assert svc.status(bucket_id=isolated_profile.bucket_id).represented_nif == "B12345678"
+        assert not (wrong_root / "buckets" / isolated_profile.bucket_id / "db" / "aeat.db").exists()
