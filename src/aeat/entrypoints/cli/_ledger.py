@@ -26,22 +26,25 @@ from ...application.ledger import (
     LedgerSourceImportResult,
     LedgerSourceValidationReport,
     LedgerSourceVerificationReport,
+    LLMProvider,
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
     PurchaseInvoiceEvidence,
     PurchaseInvoiceEvidencePatch,
     PurchaseInvoiceEvidenceService,
     SplitChildCommand,
+    apply_llm_classification,
     archive_manual_transaction,
     attach_manual_transaction_evidence,
+    available_llm_providers,
     compute_display_id_width,
     create_manual_transaction,
     export_ledger_transactions,
     get_manual_transaction,
     import_ledger_source,
+    is_llm_provider_available,
     ledger_transaction_payload,
     ledger_transaction_result_payload,
-    ledger_transaction_review_payload,
     ledger_transaction_review_status,
     ledger_transaction_tracking_payload,
     list_manual_transactions,
@@ -52,15 +55,9 @@ from ...application.ledger import (
     resolve_transaction_id,
     split_transaction,
     stash_manual_transaction,
+    suggest_llm_classification,
     summarize_manual_transactions,
     update_manual_transaction_fields,
-)
-from ...application.ledger import (
-    LLMProvider,
-    apply_llm_classification,
-    available_llm_providers,
-    is_llm_provider_available,
-    suggest_llm_classification,
 )
 from ...application.review import (
     FilterParseError,
@@ -106,6 +103,7 @@ from ._common import (
 from ._common import (
     activate_subcommand_output_language as _activate_subcommand_output_language,
 )
+from ._ledger_list import parse_ledger_list_filter_spec, project_ledger_list
 
 _log = get_logger(__name__)
 
@@ -627,7 +625,7 @@ def ledger_classify(
         for failure in result.failures:
             # MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE:
             # tab-separated machine record (id, reason), not user-facing prose.
-            lines.append(f"  failed\t{failure.transaction_id}\t{failure.reason}")  # MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE
+            lines.append(f"  failed\t{failure.transaction_id}\t{failure.reason}")
         classify_result = LedgerClassifyResult.model_validate(
             {
                 "total": result.total,
@@ -1042,10 +1040,20 @@ def ledger_attach(
     )
 
 
-@app.command("doclink", help=tr("cli.ledger.doclink.help", default="Record a Gmail/Drive/URL document link on a ledger row (never fetched)."))
+@app.command(
+    "doclink",
+    help=tr(
+        "cli.ledger.doclink.help",
+        default="Record a Gmail/Drive/URL document link on a ledger row (never fetched).",
+    ),
+)
 def ledger_doclink(
     ctx: typer.Context,
-    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.doclink.id_help", default="Ledger transaction id.")),
+    transaction_id: str = typer.Option(
+        ...,
+        "--id",
+        help=tr("cli.ledger.doclink.id_help", default="Ledger transaction id."),
+    ),
     source: AttachmentSource = typer.Option(
         ..., "--source", help=tr("cli.ledger.doclink.source_help", default="Link source: gmail, google_drive, or url.")
     ),
@@ -1053,7 +1061,11 @@ def ledger_doclink(
         ..., "--reference", help=tr("cli.ledger.doclink.reference_help", default="The document link reference.")
     ),
     note: str = typer.Option("", "--note", help=tr("cli.ledger.doclink.note_help", default="Optional note.")),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.doclink.actor_help", default="Operator label.")),
+    actor: str | None = typer.Option(
+        None,
+        "--actor",
+        help=tr("cli.ledger.doclink.actor_help", default="Operator label."),
+    ),
 ) -> None:
     """Record a Gmail/Drive/URL document link as local evidence on a ledger row.
 
@@ -1867,85 +1879,20 @@ def ledger_list(
     # originate here from operator input. Stored-data drift (a persisted record
     # that no longer deserialises) surfaces as a CliStoredDataValidationBoundaryError
     # raised by _state() / _tx_repo() — handled by S05, not this verb.
-    try:
-        spec = LedgerReviewFilterSpec.from_strings(filters)
-    except FilterParseError as exc:
-        raise _bad(tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.raw_token)) from exc
     state = _state()
     transaction_repository = _tx_repo(state)
-    all_results = list_manual_transactions(
-        bucket_id=transaction_repository.bucket_id,
+    try:
+        spec = parse_ledger_list_filter_spec(filters)
+    except FilterParseError as exc:
+        raise _bad(tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.raw_token)) from exc
+    projection = project_ledger_list(
         transaction_repository=transaction_repository,
+        spec=spec,
+        group=group,
+        by_group=by_group,
+        limit=limit,
+        offset=offset,
     )
-    if spec.clauses:
-        # Reuse the canonical review-row filter (one shared filter
-        # implementation with `ledger review`) to resolve the matching
-        # transaction-id set, then keep the list rows in that set so list's
-        # own paging / grouping / rendering are preserved unchanged.
-        matching = query_ledger_review_rows(
-            LedgerReviewQuery(
-                bucket_id=transaction_repository.bucket_id,
-                period=_canonical_period(spec.period) if spec.period else None,
-                status=spec.status.value if spec.status is not None else None,
-                issue=spec.issue.value if spec.issue is not None else None,
-                import_id=spec.import_id,
-                classification=spec.classification.value if spec.classification is not None else None,
-                text=spec.text,
-                direction=spec.direction.value if spec.direction is not None else None,
-            ),
-            transaction_repository=transaction_repository,
-        )
-        matching_ids = {row.id for row in matching.rows}
-        all_results = tuple(r for r in all_results if r.transaction.transaction_id in matching_ids)
-    if group is not None:
-        wanted = group.strip() or None
-        all_results = tuple(r for r in all_results if r.transaction.group_label == wanted)
-    if by_group:
-        ungrouped = tr("cli.ledger.list.ungrouped_label")
-        all_results = tuple(
-            sorted(all_results, key=lambda r: (r.transaction.group_label or "￿", r.transaction.transaction_id))
-        )
-    total = len(all_results)
-    window_end = total if limit is None else min(offset + limit, total)
-    results = all_results[offset:window_end]
-    truncated = (offset > 0) or (window_end < total)
-    rows: list[dict[str, object]] = []
-    lines = [tr("cli.ledger.list.header")]
-    full_ids = tuple(result.transaction.transaction_id for result in all_results)
-    display_width = compute_display_id_width(full_ids)
-    current_group: str | None = None
-    first_group_seen = False
-    for result in results:
-        transaction = result.transaction
-        if by_group and (not first_group_seen or transaction.group_label != current_group):
-            current_group = transaction.group_label
-            first_group_seen = True
-            lines.append(f"# {current_group or ungrouped}")
-        review_status = ledger_transaction_review_status(transaction)
-        review_payload = ledger_transaction_review_payload(transaction)
-        display_id = transaction.transaction_id[:display_width]
-        row: dict[str, object] = {
-            **review_payload.model_dump(mode="python"),
-            "full_id": transaction.transaction_id,
-            "display_id": display_id,
-            "group_label": transaction.group_label,
-        }
-        rows.append(row)
-        lines.append(
-            f"{display_id}\t{transaction.transaction_id}\t{review_payload.date}\t"
-            f"{review_payload.amount}\t{review_payload.description}\t{review_status}"
-        )
-    if truncated:
-        start = offset + 1 if rows else offset
-        lines.append(
-            tr(
-                "cli.ledger.list.footer_truncated",
-                start=start,
-                end=offset + len(rows),
-                total=total,
-                offset=offset,
-            )
-        )
     from ._ledger_payloads import LedgerListResult
 
     _emit_envelope(
@@ -1953,16 +1900,16 @@ def ledger_list(
         command="ledger.list",
         result=LedgerListResult.model_validate(
             {
-                "bucket_id": transaction_repository.bucket_id,
-                "rows": rows,
-                "total": total,
-                "shown": len(rows),
-                "offset": offset,
-                "limit": limit,
-                "truncated": truncated,
+                "bucket_id": projection.bucket_id,
+                "rows": projection.rows,
+                "total": projection.total,
+                "shown": projection.shown,
+                "offset": projection.offset,
+                "limit": projection.limit,
+                "truncated": projection.truncated,
             }
         ),
-        lines=lines,
+        lines=projection.lines,
     )
 
 

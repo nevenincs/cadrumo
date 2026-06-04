@@ -184,3 +184,19 @@ touched action/persistence/test surfaces.
 A dedicated `vaultspec-code-reviewer` delegation was attempted for this slice,
 but the active subagent pool returned a thread-limit failure; the review was
 completed locally against the mandatory code-review checklist.
+
+## W03-009 | INFO | Ledger list CLI extraction review found no defects
+
+Status: verified with scoped residual.
+
+The W03.P10.S34 review found no behavioral defect in the extraction. The
+`ledger list` command now delegates filter parsing, shared review-query
+matching, group filtering, group ordering, paging, truncation footer
+construction, row payload construction, and text-line rendering to
+`_ledger_list.py`, while `_ledger.py` keeps Typer option wiring, repository
+resolution, parse-error translation, and envelope emission.
+
+Focused verification passed for list filters, cold-start no-profile refusal,
+review-filter help wording, and Ruff on the touched ledger CLI surfaces. A
+broader lifecycle CLI test currently fails before the list path on an unrelated
+`ledger update` taxable-base plus IVA gross-validation refusal.
