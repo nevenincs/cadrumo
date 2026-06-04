@@ -732,3 +732,24 @@ duplication review and clustered the helper with real profile-registration call 
 Focused pointer and output-language tests passed.
 
 Closure assessment: `W12.P26.S271` can close as `runtime-default`.
+
+## S272-063 | PASS | Verification plaintext-exception closeout verified
+
+The `W12.P26.S272` review found that
+`src/aeat/application/verification/_verify.py` loads calculation registry snapshots
+through the bundled resources authority or a caller-supplied registry-root override. It
+does not persist declaration state, profile state, secure objects, master-key material,
+or remote provider mirrors.
+
+Registry policy, missing-binding, snapshot-load, and declaration-period mapping
+failures now use AEAT exception classes with locale keys and bounded structured context
+instead of raw English `str(exc)` wrappers or formatted plaintext exception messages.
+The locale catalogue entries were added through `python -m aeat.locales`, and the
+focused tests exercise the real bundled registry behavior without monkeypatching or
+duplicating calculation logic.
+
+Vaultspec RAG semantic search was used for duplication review and clustered the slice
+with the verification boundary and its tests only. Focused verification tests, ruff,
+and locale audit passed.
+
+Closure assessment: `W12.P26.S272` can close as `plaintext-exception`.
