@@ -4140,6 +4140,7 @@ profile:
 review:
   adapters:
     errors:
+      drafts_load_failed: 'No s han pogut carregar els esborranys de presentacio des del backend segur.'
       invoices_load_failed: No s'han pogut carregar les factures de l'adaptador.
       transactions_load_failed: No s'han pogut carregar les transaccions de l'adaptador.
   filing:

@@ -20,12 +20,12 @@ Transaction, invoice, and filing draft source-load wrappers now use stable local
 
 ## S248-003 | PASS | Tests exercise real secure-object storage
 
-The new invoice load-failure test writes malformed encrypted catalogue payload bytes through the active bucket secure-object repository, then verifies the adapter's localized error metadata. No fake repository, monkeypatch, or mirrored business logic was added.
+The new invoice and draft load-failure tests write malformed encrypted payload bytes through active bucket secure-object repositories, then verify the adapters' localized error metadata. No fake repository, monkeypatch, or mirrored business logic was added.
 
 ## S248-004 | PASS | Validation
 
 - `uv run --no-sync ruff check src/aeat/application/review/_adapters.py src/aeat/application/review/test_adapters.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/review/test_adapters.py` passed with 23 tests.
+- `uv run --no-sync pytest -q src/aeat/application/review/test_adapters.py` passed with 24 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-146` as `manifest-discovery`.

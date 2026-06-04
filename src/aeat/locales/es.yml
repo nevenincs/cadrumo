@@ -4189,6 +4189,7 @@ profile:
 review:
   adapters:
     errors:
+      drafts_load_failed: 'No se pudieron cargar los borradores de presentacion desde el backend seguro.'
       invoices_load_failed: No se pudieron cargar las facturas del adaptador.
       transactions_load_failed: No se pudieron cargar las transacciones del adaptador.
   filing:

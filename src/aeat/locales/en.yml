@@ -3916,6 +3916,7 @@ profile:
 review:
   adapters:
     errors:
+      drafts_load_failed: 'Failed to load filing drafts from secure backend.'
       invoices_load_failed: Failed to load invoices catalogue from secure backend.
       transactions_load_failed: Failed to load transactions catalogue from secure
         backend.
