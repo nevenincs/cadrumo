@@ -11,6 +11,15 @@ related:
   - '[[2026-06-04-registry-row-width-pressure-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `registry-row-width-pressure` `implementation` plan
 
@@ -30,7 +39,7 @@ Mechanically reformat only clean TOML rows, preserving parsed registry values
 and loaded modelo objects.
 
 - [x] `P02.S02` - Reformat clean near-threshold M100 casilla TOML rows without changing TOML values; `src/aeat/_data/registry/aeat/modelos/100`.
-- [ ] `P02.S03` - Reformat clean non-M100 near-threshold TOML rows if S01 authorises them; `src/aeat/_data/registry/aeat/modelos`.
+- [x] `P02.S03` - Reformat clean non-M100 near-threshold TOML rows if S01 authorises them; `src/aeat/_data/registry/aeat/modelos`.
 - [ ] `P02.S04` - Defer dirty concurrent near-threshold TOML rows with exact paths and owners; `.vault/audit`.
 - [ ] `P02.S05` - Tighten the reviewability row-width baseline only as far as the post-format corpus permits; `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
 
