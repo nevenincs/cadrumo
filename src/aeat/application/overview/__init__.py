@@ -35,14 +35,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date, datetime
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.decimal import coerce_decimal as _coerce_decimal
 from ...core.i18n import tr as _tr
+from ...core.logging import get_logger as _get_logger
 from ...core.time import now
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
@@ -106,6 +107,8 @@ if TYPE_CHECKING:
     from ..workflow import WorkflowState
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+
+_log = _get_logger(__name__)
 
 
 class OverviewPeriodState(StrEnum):
@@ -664,7 +667,7 @@ def build_overview_calendar(
     for year in calendar_range.covered_years():
         try:
             schedules.append(deadline_engine.compute(profile, year, today=today))
-        except _NoDeadlineWindowsError:
+        except _NoDeadlineWindowsError as exc:
             # A year inside the range with no registered deadline
             # windows is a normal "no data yet" state, not an error
             # (registry-track gap R1). The year contributes zero
@@ -677,6 +680,10 @@ def build_overview_calendar(
             # it here would silently hide a corrupt registry. This
             # mirrors the graceful degradation ``overview explain``
             # applies via the same narrow catch.
+            _log.debug(
+                "overview calendar ignored covered year with no registered deadline windows",
+                extra={"year": year, "error_type": type(exc).__name__},
+            )
             continue
 
     entries: list[OverviewCalendarEntry] = []
@@ -720,11 +727,19 @@ def build_overview_calendar(
                 reason = shift.shift_reason
                 holiday_refs = shift.holiday_refs
                 jurisdictions = shift.jurisdictions
-            except _DeadlineValidationError:
+            except _DeadlineValidationError as exc:
                 # Holiday calendar not registered for this year; degrade
                 # gracefully — surface the original close date and an
                 # explicit reason so renderers can show that no shift
                 # was applied.
+                _log.debug(
+                    "overview calendar ignored deadline shift validation error",
+                    extra={
+                        "modelo": obligation.modelo,
+                        "period": obligation.period,
+                        "error_type": type(exc).__name__,
+                    },
+                )
                 adjusted = obligation.closes_on
                 reason = "calendar_unavailable"
                 holiday_refs = ()
@@ -776,21 +791,32 @@ def build_filing_obligation_advisories(
     if raw_values is None:
         return ()
 
-    def _to_int(v: object) -> int | None:
+    def _to_int(field_name: str, v: object) -> int | None:
         if v is None or str(v).strip() == "":
             return None
         try:
             return int(str(v).strip())
-        except ValueError:
+        except ValueError as exc:
+            _log.debug(
+                "overview filing obligation advisory ignored invalid integer profile value",
+                extra={"profile_field": field_name, "error_type": type(exc).__name__},
+            )
             return None
 
-    def _to_decimal(v: object) -> object | None:
+    def _to_decimal(field_name: str, v: object) -> Decimal | None:
         if v is None or str(v).strip() == "":
             return None
-        return _coerce_decimal(str(v).strip())
+        try:
+            return Decimal(str(v).strip())
+        except (InvalidOperation, ValueError) as exc:
+            _log.debug(
+                "overview filing obligation advisory ignored invalid decimal profile value",
+                extra={"profile_field": field_name, "error_type": type(exc).__name__},
+            )
+            return None
 
-    pagadores_count = _to_int(raw_values.get("irpf.pagadores_count"))
-    secondary_income = _to_decimal(raw_values.get("irpf.pagadores_secondary_income"))
+    pagadores_count = _to_int("irpf.pagadores_count", raw_values.get("irpf.pagadores_count"))
+    secondary_income = _to_decimal("irpf.pagadores_secondary_income", raw_values.get("irpf.pagadores_secondary_income"))
 
     if _evaluate_multiple_pagadores_obligation(pagadores_count, secondary_income):
         return ("cli.overview.status.filing_obligation_multiple_pagadores",)
@@ -851,23 +877,6 @@ def build_overview_status_report(
     return overview_status_report_from_projection(projection, raw_values=raw_values)
 
 
-def render_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...]:
-    """Render ``OverviewStatusReport`` as stable tab-separated text rows."""
-    lines = [
-        f"profile\t{report.active_profile_name or report.active_profile or ''}",
-        f"profile_id\t{report.active_profile or ''}",
-        f"transactions\t{report.transactions}",
-        f"invoices\t{report.invoices}",
-        f"drafts\t{report.drafts}",
-        f"work_units\t{report.work_units}",
-        f"discarded_work_units\t{report.discarded_work_units}",
-        f"calculation_revisions\t{report.calculation_revisions}",
-    ]
-    if report.unreadable_rows > 0:
-        lines.append(f"integrity-warning\tunreadable_rows={report.unreadable_rows}")
-    return tuple(lines)
-
-
 __all__ = [
     "CalendarCompleteness",
     "CalendarWarning",
@@ -891,7 +900,6 @@ __all__ = [
     "build_overview_status_report",
     "derive_modelo_applicability",
     "overview_status_report_from_projection",
-    "render_overview_status_lines",
     "user_state_for",
 ]
 
