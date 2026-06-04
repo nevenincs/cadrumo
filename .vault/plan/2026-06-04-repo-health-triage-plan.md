@@ -168,7 +168,7 @@ Reduce residual clone groups behind existing boundaries rather than introducing 
 
 - [x] `W04.P14.S47` - Consolidate CSV and XLSX financial provider tabular extraction; `src/aeat/adapters/inbound/financial/providers`.
 - [x] `W04.P14.S48` - Consolidate GROi and NIF IVA oracle driver flow; `src/aeat/domain/calculations/registry`.
-- [ ] `W04.P14.S49` - Review storage manifest and KDF schema overlap; `src/aeat/adapters/persistence/storage`.
+- [x] `W04.P14.S49` - Review storage manifest and KDF schema overlap; `src/aeat/adapters/persistence/storage`.
 - [ ] `W04.P14.S50` - Consolidate locale traversal helpers; `src/aeat/locales`.
 
 ## Wave `W05` - promote policy ratchets
