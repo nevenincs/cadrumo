@@ -12,8 +12,6 @@ Asserts that the following ratchet and marker changes are in place:
 (d) _stdio.py stdlib-logger rationale present in
     test_any_return_rationale_markers.py.
 
-(e) diagnostics/secure_objects.py:53 machine-format rationale marker present.
-
 No mocks, no skips, no tautological assertions.
 """
 
@@ -132,27 +130,3 @@ def test_stdio_logger_rationale_enrolled_in_inventory() -> None:
         "test_any_return_rationale_markers.py: _stdio.py logger rationale test not found"
     )
     assert "_STDIO_MODULE" in src, "test_any_return_rationale_markers.py: _STDIO_MODULE path constant not found"
-
-
-# ---------------------------------------------------------------------------
-# (e) diagnostics/secure_objects.py machine-format rationale marker
-# ---------------------------------------------------------------------------
-
-_SECURE_OBJECTS = _SRC / "diagnostics/secure_objects.py"
-_MACHINE_FORMAT_TOKEN = "MACHINE-FORMAT-RATIONALE-SECURE-OBJECTS-ROW"
-
-
-def test_secure_objects_machine_format_rationale_present() -> None:
-    """diagnostics/secure_objects.py:53 tab-pair echo must carry the machine-format rationale marker."""
-    src = _source(_SECURE_OBJECTS)
-    assert _MACHINE_FORMAT_TOKEN in src, (
-        f"diagnostics/secure_objects.py: missing {_MACHINE_FORMAT_TOKEN!r} on the tab-separated row echo"
-    )
-    # Verify the marker is on the row-format line specifically.
-    lines_with_token = [(i + 1, ln.strip()) for i, ln in enumerate(src.splitlines()) if _MACHINE_FORMAT_TOKEN in ln]
-    assert lines_with_token, f"Token {_MACHINE_FORMAT_TOKEN!r} present in source but no matching line found"
-    # The line must also contain the tab-pair format.
-    row_line_no, row_line = lines_with_token[0]
-    assert "object_key_digest" in row_line or "namespace" in row_line, (
-        f"diagnostics/secure_objects.py:{row_line_no}: rationale token found but not on the expected tab-pair echo line"
-    )

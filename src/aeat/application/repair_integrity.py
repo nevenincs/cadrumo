@@ -115,7 +115,7 @@ class RepairIntegrityReport(BaseModel):
 
 
 class RepairListRow(BaseModel):
-    """One row in ``python -m aeat.diagnostics secure-objects list``."""
+    """One row in the secure-object repair inventory."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -130,7 +130,7 @@ class RepairListRow(BaseModel):
 
 
 class RepairListReport(BaseModel):
-    """Output of ``python -m aeat.diagnostics secure-objects list``."""
+    """Output of the secure-object repair inventory."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 

@@ -167,7 +167,7 @@ def test_drifted_stored_profile_boundary_is_distinct_from_unexpected_error(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
     """The stored-data boundary path must not fall through to the
-    ``CliUnexpectedBoundaryError`` path (which emits 'python -m aeat.diagnostics').
+    ``CliUnexpectedBoundaryError`` path (which emits generic recovery guidance).
 
     If ``StoredProfileDriftError`` were not caught before the broad
     ``Exception`` arm, the operator would see a diagnostics suggestion
@@ -180,8 +180,7 @@ def test_drifted_stored_profile_boundary_is_distinct_from_unexpected_error(
 
     assert result.exit_code != 0, result.output
     combined = result.output or ""
-    # The unexpected-error boundary message mentions diagnostics, not repair.
-    assert "aeat.diagnostics" not in combined, (
+    assert "config repair integrity" not in combined, (
         f"stored-data drift triggered unexpected-error boundary;\ngot: {combined!r}"
     )
 

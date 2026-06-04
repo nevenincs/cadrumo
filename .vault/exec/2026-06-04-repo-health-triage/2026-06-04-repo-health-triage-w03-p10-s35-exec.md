@@ -8,25 +8,45 @@ related:
   - '[[2026-06-04-repo-health-triage-plan]]'
 ---
 
-# W03.P10.S35 extract identity multi-declaration analyzer
+# W03.P10.S35 remove unapproved diagnostics source package
 
-Scope: `W03.P10` diagnostics complexity reduction.
+Scope: `W03.P10` emergency source-boundary mitigation.
 
 ## Description
 
-- Extract the clause-9 same-name constant scan into `_SameNameConstantMultiDeclarationAnalyzer`.
-- Add `_ConstantDeclaration` and `_iter_literal_module_constants` to separate literal extraction, registry collection, duplicate grouping, and finding rendering.
-- Keep the public `find_same_name_constant_multi_declarations` API unchanged for the placement tests.
+- Remove the unapproved `aeat.diagnostics` source package and its `python -m aeat.diagnostics` entrypoint.
+- Remove generated API stubs for `aeat.diagnostics`.
+- Remove the stale Ruff exception for the deleted diagnostics helper.
+- Replace live source references that advertised `aeat.diagnostics` with approved operator repair wording or neutral internal descriptions.
 
 ## Outcome
 
-The identity-placement multi-declaration detector now has a named analyzer boundary and a smaller public function while preserving existing diagnostics behavior.
+The production source tree no longer contains an `aeat.diagnostics` package.
+Current source and docs config no longer advertise the unapproved module, and
+Python import discovery no longer resolves `aeat.diagnostics`.
+
+## Verification
+
+- `fd . src/aeat/diagnostics -t f` produced no source files; the empty namespace
+  directory and generated `__pycache__` were removed as part of the correction.
+- `fd "aeat\.diagnostics" docs/api -t f` produced no generated API pages.
+- `rg "aeat\.diagnostics|python -m aeat\.diagnostics|docs/api/aeat\.diagnostics|src/aeat/diagnostics|src\\aeat\\diagnostics" src docs pyproject.toml` produced no matches.
+- `uv run --no-sync python -c "import importlib.util; raise SystemExit(0 if importlib.util.find_spec('aeat.diagnostics') is None else 1)"` passed.
+- `uv run --no-sync ruff check ...` passed for the touched source, docs config,
+  and affected tests.
+- `uv run --no-sync ty check ... --output-format concise` passed for the touched
+  typed source and ledger test setup file.
+- `uv run --no-sync pytest ... -q` passed for the non-ledger affected test slice:
+  60 passed, 46 warnings.
+- `uv run --no-sync pytest src/aeat/entrypoints/cli/test_ledger_validation_paths.py --collect-only -q`
+  collected 9 tests successfully after the diagnostics import removal.
+
+The full affected pytest slice still reports the existing ledger validation
+storage-route failures in `test_ledger_validation_paths.py`:
+`INTEGRITY_STORAGE_VALIDATION` / "The database route does not match the active
+bucket session." That module remains a separate ledger-session repair item; it
+is not caused by retaining or removing `aeat.diagnostics`.
 
 ## Notes
 
-Verification completed:
-
-- `uv run --no-sync ruff check src/aeat/diagnostics/_identity_placement.py src/aeat/diagnostics/test_identity_primitive_placement.py`
-- `uv run --no-sync ty check src/aeat/diagnostics/_identity_placement.py --output-format concise`
-- `uv run --no-sync pytest src/aeat/diagnostics/test_identity_primitive_placement.py::test_no_same_name_constant_multi_declarations src/aeat/diagnostics/test_identity_primitive_placement.py::test_same_name_constant_detector_flags_synthetic_violation -q`
-- `uv run --no-sync pytest src/aeat/diagnostics/test_identity_primitive_placement.py -q`
+This supersedes the earlier S35 analyzer extraction, which was rejected because `aeat.diagnostics` is not an approved hexagonal module.

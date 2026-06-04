@@ -79,17 +79,30 @@ code changes. The reviewer noted no behavioral regression in CLI command
 registration, storage-session fixture direction, or the `work calculate` typed
 boundary extraction.
 
-## W03-002 | INFO | S35 diagnostics analyzer review found no actionable defects
+## W03-002 | CRITICAL | S35 used an unapproved diagnostics source package
 
-Status: verified.
+Status: remediated.
 
-The W03.P10.S35 review found no findings. The reviewer confirmed that the
-extracted `_SameNameConstantMultiDeclarationAnalyzer` preserves the public
-`find_same_name_constant_multi_declarations` entry point, keeps the same
-production/test/protect-list filtering, and preserves same-name plus
-same-literal-value multi-module detection behavior.
+The S35 diagnostics analyzer extraction was invalid because `aeat.diagnostics`
+is not an approved hexagonal module and must not live under the production source
+package. The earlier no-findings review is superseded by this architectural
+boundary correction.
 
-The reviewer also confirmed that S35 plan closure, the execution record, and the
-feature index are coherent. Residual risk is limited to the read-only nature of
-the review; local validation covered Ruff, `ty`, the clause-9 tests, the full
-identity-placement test module, and VaultSpec checks.
+Remediation removed the `aeat.diagnostics` package, deleted its generated API
+stubs, removed the stale Ruff exception, replaced live source references to the
+unapproved module, and rewrote the S35 execution record to document the
+emergency removal rather than the rejected analyzer extraction.
+
+Validation confirmed that `aeat.diagnostics` no longer resolves through
+`importlib.util.find_spec`, the exact source/docs/package reference search is
+clean, Ruff and Ty passed on touched files, and the non-ledger affected pytest
+slice passed. The ledger validation module still carries the unrelated
+storage-route mismatch failure and was verified with collection only for this
+emergency package removal.
+
+Focused review by Cicero found no actionable findings and no remaining HIGH or
+CRITICAL issues for the emergency removal. The reviewer confirmed the source
+package and generated API pages are deleted, live `aeat.diagnostics` references
+are gone from source/docs/project config, import discovery returns `None`, and
+VaultSpec plan/exec/index/audit records are coherent for the corrected S35
+scope.

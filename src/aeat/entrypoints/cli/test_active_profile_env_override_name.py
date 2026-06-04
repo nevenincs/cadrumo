@@ -9,8 +9,8 @@ entrypoint name→UUID normalization, a label-valued ``AEAT_ACTIVE_PROFILE`` mad
 every profile-bound command hard-miss with a "no registered bucket manifest"
 refusal. This module pins the fixed behaviour by driving the REAL CLI root
 callback (the normalization site) against a REAL profile created through the real
-``config profile create`` flow — exactly the operator path the persona swarm
-missed, not the in-process diagnostics path.
+``config profile create`` flow: exactly the operator path the persona swarm
+missed.
 
 See the ``2026-06-03-cli-ledger-testimonials`` ADR + the ``2026-05-19``
 profile-lifecycle disaster ADR (the single canonical route resolver this fix
@@ -181,28 +181,6 @@ def test_env_override_ambiguous_label_refuses_cleanly_not_traceback() -> None:
     # A clean operator-facing refusal, not an unhandled ProfileLabelAmbiguousError
     # traceback escaping the catch.
     combined = (listed.output or "") + (str(listed.exception) if listed.exception else "")
-    assert "Traceback" not in combined, combined
-    assert "ProfileLabelAmbiguousError" not in combined, combined
-
-
-def test_diagnostics_active_pointer_ambiguous_label_refuses_cleanly() -> None:
-    """The diagnostics ``profile get`` active-pointer path refuses cleanly on ambiguity.
-
-    Covers the second catch site (``_resolve_target_profile``'s active-pointer
-    branch): with the active profile = an ambiguous label, the diagnostics app
-    must surface the clean ``_bad_ambiguous_profile`` refusal (non-zero exit, no
-    traceback), proving its catch matches ProfileLabelAmbiguousError too.
-    """
-    from ...diagnostics.__main__ import app as diagnostics_app
-
-    _create_profile_and_resolve_uuid()
-    _write_second_live_bucket_sharing_label(_LABEL)
-
-    with override_settings(aeat_active_profile=_LABEL):
-        result = _RUNNER.invoke(diagnostics_app, ["profile", "get", "iva.regime"])
-
-    assert result.exit_code != 0, result.output
-    combined = (result.output or "") + (str(result.exception) if result.exception else "")
     assert "Traceback" not in combined, combined
     assert "ProfileLabelAmbiguousError" not in combined, combined
 
