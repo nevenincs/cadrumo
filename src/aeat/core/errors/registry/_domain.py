@@ -1216,7 +1216,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.ModeloIvaWalletReconciliationBlockedError",
+        "aeat.application.modelo._iva_wallet_gate.ModeloIvaWalletReconciliationBlockedError",
         ErrorCode(
             code="ERROR_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED",
             category=ErrorCategory.ERROR,
