@@ -835,11 +835,16 @@ application:
           per a comunicacions amb l'AEAT.
     profile_binding:
       errors:
-        date_value_type_invalid: 'La dada de perfil per al binding de data %{binding_id} ha de ser una data; s''ha rebut %{value_type}.'
-        decimal_value_invalid: 'La dada de perfil per al binding numeric %{binding_id} ha de ser compatible amb decimal.'
-        decimal_value_type_invalid: 'La dada de perfil per al binding de canal decimal %{binding_id} te un tipus no suportat: %{value_type}.'
-        enum_boolean_invalid: 'La dada de perfil per al binding enum %{binding_id} ha resolt a boolea; els booleans no son claus valides de dispatch enum.'
-        source_trace_mismatch: 'La traca de bindings del perfil no coincideix amb els bindings resolts.'
+        date_value_type_invalid: La dada de perfil per al binding de data %{binding_id}
+          ha de ser una data; s'ha rebut %{value_type}.
+        decimal_value_invalid: La dada de perfil per al binding numeric %{binding_id}
+          ha de ser compatible amb decimal.
+        decimal_value_type_invalid: 'La dada de perfil per al binding de canal decimal
+          %{binding_id} te un tipus no suportat: %{value_type}.'
+        enum_boolean_invalid: La dada de perfil per al binding enum %{binding_id}
+          ha resolt a boolea; els booleans no son claus valides de dispatch enum.
+        source_trace_mismatch: La traca de bindings del perfil no coincideix amb els
+          bindings resolts.
   overview:
     explain:
       errors:
@@ -2589,6 +2594,7 @@ cli:
         auth_providers: Llistar els proveidors d'autenticacio disponibles.
         auth_status: Mostrar l'estat actual de l'autenticacio amb l'AEAT.
         auth_test: Provar l'autenticacio amb l'AEAT.
+        bucket_history: 'Inspecciona l historial append-only d esdeveniments del bucket.'
         diagnostics_logs: Consultar els registres de diagnostic de l'aplicacio.
         diagnostics_quarantine: Gestionar els elements en quarantena.
         diagnostics_repair: Executar comprovacions de salut i reparar l'estat de l'aplicacio.
@@ -2609,6 +2615,7 @@ cli:
         profile_status: Mostrar l'estat del perfil actiu.
         profile_switch: Canviar al perfil de contribuent indicat.
         section_authentication: Autenticacio AEAT
+        section_bucket_inspection: 'Inspeccio de bucket'
         section_diagnostics: Diagnostic
         section_first_run: Primera execucio
         section_profile_inspection: Inspeccio del perfil

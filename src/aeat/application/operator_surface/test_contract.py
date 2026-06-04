@@ -246,9 +246,11 @@ def test_required_children_match_mounted_command_families() -> None:
 
 def test_help_documents_are_backend_owned_and_current_surface_only() -> None:
     root = build_help_document("root")
+    config = build_help_document("config")
     app = build_help_document("app")
 
     root_text = render_help_text(root)
+    config_text = render_help_text(config)
     app_text = render_help_text(app)
 
     assert "The CLI has exactly two roots: config and app." in root.paragraphs
@@ -258,6 +260,7 @@ def test_help_documents_are_backend_owned_and_current_surface_only() -> None:
     assert "aeat app live filed list" in root_text
     assert "aeat app live filed capture" in app_text
     assert "aeat config bucket" not in root_text
+    assert "aeat config bucket history" in config_text
     assert "aeat app invoice" not in app_text
     assert "aeat app declaration" not in app_text
 
