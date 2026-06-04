@@ -407,6 +407,33 @@ Verification:
 - `uv run --no-sync ruff check src/aeat/domain/renta/_ledger_expenses.py src/aeat/domain/transactions/test_gross_invariant.py`
   passed.
 
+## HEALTH-013 | OPEN | W06 type ratchet is Ty-green with explicit Pyright residuals
+
+`W06.P18.S70` captured the post-S64-through-S69 type baseline.
+
+Closed baseline:
+
+- `uv run --no-sync ty check src/aeat/adapters/inbound/declaracion/test_parser_boundary.py src/aeat/adapters/inbound/declaracion/test_exception_hygiene.py src/aeat/adapters/outbound/aeat/auth src/aeat/application/aggregation src/aeat/domain/filing src/aeat/domain/renta/_ledger_expenses.py src/aeat/domain/transactions/test_gross_invariant.py --output-format concise`
+  passed.
+
+Explicit Pyright residual ratchets:
+
+- Auth production profile-service drift:
+  `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py` reports constructor and
+  method-call drift around profile service/repository access.
+- Auth provider description return path:
+  `src/aeat/adapters/outbound/aeat/auth/_authenticator.py` reports a missing
+  return path for `AuthProviderDescription`.
+- Auth test config narrowing:
+  `src/aeat/adapters/outbound/aeat/auth/test_authenticator.py` reports
+  non-required `ConfigDict["frozen"]` access.
+- Aggregation and filing packages report no Pyright errors but still carry
+  pre-existing private/protected test reach-in warnings.
+
+This keeps W06 honest: the primary `ty` ratchet is green for the executed bucket
+set, while Pyright remains an explicit follow-up ratchet rather than an implied
+all-green claim.
+
 ## Suggested Workstreams
 
 1. Repair packaging environment deterministically: schedule a clean `uv sync` window
