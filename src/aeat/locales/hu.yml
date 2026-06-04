@@ -572,10 +572,8 @@ application:
         invalid_kind: 'A szamla tipusa nem tamogatott: %{kind}.'
     linking:
       errors:
-        linked_invoice_not_found: A(z) %{invoice_id} szamla nem talalhato a kapcsolas
-          alkalmazasa utan.
-        transaction_not_found: A(z) %{transaction_id} tranzakcio nem talalhato a tranzakcios
-          katalogusban.
+        linked_invoice_not_found: 'A(z) %{invoice_id} szamla nem talalhato a kapcsolas alkalmazasa utan.'
+        transaction_not_found: 'A(z) %{transaction_id} tranzakcio nem talalhato a tranzakcios katalogusban.'
   ledger:
     errors:
       evidence_attachment_requires_ids: A főkönyvi bizonylat csatolásához vásárlási
