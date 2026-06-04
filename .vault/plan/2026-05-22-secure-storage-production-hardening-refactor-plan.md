@@ -430,7 +430,7 @@ Current register count: `293` production candidate files.
 | `AFR-149` | `src/aeat/application/review/_filter.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-150` | `src/aeat/application/review/_operator.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-151` | `src/aeat/application/setup/_contracts.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
-| `AFR-152` | `src/aeat/application/setup/_service.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-152` | `src/aeat/application/setup/_service.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-153` | `src/aeat/application/state_projection.py` | `runtime, active-profile, manifest-bucket, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-154` | `src/aeat/application/storage/calc_sheets/_engine.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-155` | `src/aeat/application/storage/calc_sheets/_layout.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
@@ -783,7 +783,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S251` - Close `AFR-149` for `src/aeat/application/review/_filter.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/review/_filter.py`.
 - [x] `W12.P26.S252` - Close `AFR-150` for `src/aeat/application/review/_operator.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/review/_operator.py`.
 - [x] `W12.P26.S253` - Close `AFR-151` for `src/aeat/application/setup/_contracts.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/setup/_contracts.py`.
-- [ ] `W12.P26.S254` - Close `AFR-152` for `src/aeat/application/setup/_service.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/setup/_service.py`.
+- [x] `W12.P26.S254` - Close `AFR-152` for `src/aeat/application/setup/_service.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/setup/_service.py`.
 - [ ] `W12.P26.S255` - Close `AFR-153` for `src/aeat/application/state_projection.py` with signals `runtime, active-profile, manifest-bucket, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/state_projection.py`.
 - [ ] `W12.P26.S256` - Close `AFR-154` for `src/aeat/application/storage/calc_sheets/_engine.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/storage/calc_sheets/_engine.py`.
 - [ ] `W12.P26.S257` - Close `AFR-155` for `src/aeat/application/storage/calc_sheets/_layout.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/storage/calc_sheets/_layout.py`.
