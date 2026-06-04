@@ -16,9 +16,9 @@ Closed `AFR-076` for recovery-key primitives.
 ## Description
 
 - Reviewed `src/aeat/adapters/persistence/storage/master_key/_recovery.py` against the `master-key` and `plain-file` scanner signals.
-- Added a local storage-validation helper that binds BIP-39 entropy, mnemonic, checksum, master-key length, and recovery-key length failures to `errors.integrity.integrity_storage_validation`.
+- Added a local storage-validation helper that binds BIP-39 entropy, mnemonic, checksum, master-key length, recovery-key length, malformed recovery JSON, and malformed recovery base64 failures to `errors.integrity.integrity_storage_validation`.
 - Kept recovery-key generation, BIP-39 encoding, HKDF context, AES-GCM wrapping, and `master.recovery.key` JSON shape unchanged.
-- Updated recovery tests to assert `StorageValidationError` and the translated message key for invalid entropy, word count, unknown words, checksum mismatch, master-key length, and recovery-key length.
+- Updated recovery tests to assert `StorageValidationError` and the translated message key for invalid entropy, word count, unknown words, checksum mismatch, master-key length, recovery-key length, malformed recovery JSON, and malformed recovery base64.
 - Replaced the touched test's hardcoded encoding literal with `UTF_8_ENCODING`.
 
 ## Outcome
@@ -34,4 +34,4 @@ Validation passed:
 
 ## Notes
 
-No recovery mnemonic, raw recovery key, master key, nonce, ciphertext, or path value is added to structured error context by this step.
+No recovery mnemonic, raw recovery key, master key, nonce, ciphertext, or path value is added to structured error context by this step. Malformed recovery-file errors use generic messages so local paths are not rendered in user-facing envelopes.
