@@ -433,3 +433,17 @@ matched full observation ids, and fail closed when list-time decrypted payload
 buckets do not match the repository bucket.
 
 Closure assessment: `W12.P26.S231` can close as `remote-mirror`.
+
+## S232-046 | PASS | Modelo package API manifest-discovery closeout verified
+
+The `W12.P26.S232` review found that `src/aeat/application/modelo/__init__.py`
+is a package API facade only. It imports and re-exports modelo application
+services and errors, documents explicit `bucket_id` application boundaries, and
+does not construct repositories, load settings, inspect environment variables,
+open files, swallow exceptions, or mutate storage.
+
+The 2026-06-03 modelo export evidence/workbook parity ADRs were reviewed. Their
+constraints apply to downstream export builders and parity gates, not this
+package re-export surface.
+
+Closure assessment: `W12.P26.S232` can close as `manifest-discovery`.
