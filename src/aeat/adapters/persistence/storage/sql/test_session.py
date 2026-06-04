@@ -6,16 +6,19 @@ running statements through real SQLAlchemy sessions backed by SQLite.
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import pytest
 from sqlalchemy import text
 
 from .....core.config import Settings
+from ..errors import StorageValidationError
 from . import create_engine_from_settings, session_scope
 from ._orm import Base
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+_SESSION_LOGGER_NAME = "aeat.adapters.persistence.storage.sql.session"
 
 
 def _engine(tmp_path: Path):
@@ -41,22 +44,27 @@ def test_session_scope_commits_on_success(tmp_path: Path) -> None:
         engine.dispose()
 
 
-def test_session_scope_rolls_back_on_exception(tmp_path: Path) -> None:
-    """An exception inside :func:`session_scope` rolls back the unit of work."""
+def test_session_scope_rolls_back_and_logs_on_exception(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An exception inside :func:`session_scope` rolls back and logs diagnostics."""
     engine = _engine(tmp_path)
 
-    class BoomError(RuntimeError):
-        pass
-
     try:
-        with pytest.raises(BoomError), session_scope(engine) as session:
+        caplog.set_level(logging.DEBUG, logger=_SESSION_LOGGER_NAME)
+        with pytest.raises(StorageValidationError), session_scope(engine) as session:
             session.execute(
                 text("insert into modelos (identifier, name) values (:identifier, :name)"),
                 {"identifier": "MODELO_303", "name": "IVA"},
             )
-            raise BoomError("rollback me")
+            raise StorageValidationError(
+                translated_message="errors.integrity.integrity_storage_validation",
+            )
         with engine.connect() as conn:
             count = conn.execute(text("select count(*) from modelos")).scalar_one()
         assert count == 0
+        messages = tuple(record.getMessage() for record in caplog.records if record.name == _SESSION_LOGGER_NAME)
+        assert "session_scope rolling back due to exception" in messages
     finally:
         engine.dispose()
