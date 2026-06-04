@@ -161,12 +161,13 @@ def test_topic_projection_accepts_explicit_supported_locale() -> None:
 def test_topic_projection_rejects_unknown_locale_with_application_error(caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.WARNING, logger="aeat.application.registry._corpus")
 
-    with pytest.raises(RegistryApplicationInputError, match=r"registry topic locale") as exc_info:
+    with pytest.raises(RegistryApplicationInputError) as exc_info:
         list_registry_manuals(
             RegistryManualsListCommand(manual=RegistryManualId.RENTA, year=2025),
             locale="zz",
         )
 
+    assert exc_info.value.translated_message == "application.registry.errors.invalid_topic_locale"
     envelope = build_error_envelope(exc_info.value)
     assert envelope.code == "REFUSED_APPLICATION_REGISTRY_INPUT"
     assert envelope.context == {
@@ -204,7 +205,7 @@ def test_registry_input_error_builds_central_error_envelope() -> None:
 def test_manual_rule_kind_refusal_uses_structured_registry_logging(caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.WARNING, logger="aeat.application.registry._corpus")
 
-    with pytest.raises(RegistryApplicationInputError, match=r"manual rule kind"):
+    with pytest.raises(RegistryApplicationInputError) as exc_info:
         list_registry_manual_rules(
             RegistryManualRulesCommand(
                 manual=RegistryManualId.RENTA,
@@ -213,6 +214,9 @@ def test_manual_rule_kind_refusal_uses_structured_registry_logging(caplog: pytes
             )
         )
 
+    assert exc_info.value.translated_message == "application.registry.errors.invalid_manual_rule_kind"
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["rule_kind"] == "not-a-kind"
     records = [
         record for record in caplog.records if getattr(record, "registry_service", "") == "registry.manuals.rules"
     ]
@@ -307,6 +311,32 @@ def test_manuals_list_report_rows_show_manifest_metadata_without_structure() -> 
     assert manual.section_count == 0
 
 
+def test_manuals_view_refuses_section_when_structure_is_not_extracted_with_localized_error() -> None:
+    report = list_registry_manuals(RegistryManualsListCommand(manual=RegistryManualId.RENTA, year=2025))
+    listed_part = next(part for part in report.parts if part.part == ManualPart.PARTE_1.value)
+
+    with pytest.raises(RegistryApplicationInputError) as exc_info:
+        show_registry_manual(
+            RegistryManualShowCommand(
+                manual=RegistryManualId(listed_part.manual_id),
+                year=listed_part.year,
+                part=ManualPart(listed_part.part),
+                section="missing-section",
+            )
+        )
+
+    assert exc_info.value.translated_message == "application.registry.errors.manual_section_requires_structure"
+    assert exc_info.value.context == {
+        "registry_service": "registry.manuals.show",
+        "manual_id": listed_part.manual_id,
+        "year": listed_part.year,
+        "part": listed_part.part,
+        "section": "missing-section",
+        "manual_key": f"{listed_part.manual_id}/{listed_part.year}/{listed_part.part}",
+        "structure_available": False,
+    }
+
+
 def test_manuals_list_report_rows_rules_returns_extracted_rule_report() -> None:
     report = list_registry_manuals(RegistryManualsListCommand(manual=RegistryManualId.RENTA, year=2025))
     listed_part = next(part for part in report.parts if part.part == ManualPart.PARTE_1.value)
@@ -328,12 +358,19 @@ def test_manuals_list_report_rows_rules_returns_extracted_rule_report() -> None:
 
 
 def test_registry_manual_id_rejects_out_of_scope_domain_manual_with_application_error() -> None:
-    with pytest.raises(RegistryApplicationInputError, match=r"registry manual"):
+    with pytest.raises(RegistryApplicationInputError) as exc_info:
         registry_manual_id(ManualId.SOCIEDADES)
+
+    assert exc_info.value.translated_message == "application.registry.errors.invalid_manual_id"
+    assert exc_info.value.context == {
+        "registry_service": "registry.manuals",
+        "manual_id": ManualId.SOCIEDADES.value,
+        "allowed_manual_ids": ("renta", "iva"),
+    }
 
 
 def test_manual_rule_kind_validation_uses_application_error() -> None:
-    with pytest.raises(RegistryApplicationInputError, match=r"manual rule kind"):
+    with pytest.raises(RegistryApplicationInputError) as exc_info:
         list_registry_manual_rules(
             RegistryManualRulesCommand(
                 manual=RegistryManualId.RENTA,
@@ -341,6 +378,8 @@ def test_manual_rule_kind_validation_uses_application_error() -> None:
                 kind="not-a-kind",
             )
         )
+
+    assert exc_info.value.translated_message == "application.registry.errors.invalid_manual_rule_kind"
 
 
 def test_registry_topic_projection_is_strict_and_frozen() -> None:

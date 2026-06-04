@@ -790,8 +790,18 @@ application:
         live portals list' to see available portals.
   registry:
     errors:
+      invalid_manual_id: Registry manual must be one of {allowed_manual_ids}; got
+        {manual_id}.
+      invalid_manual_rule_kind: Registry manual rule kind must be one of {allowed_rule_kinds};
+        got {rule_kind}.
       invalid_oracle_environment: Registry oracle environment must be one of {allowed_values};
         got {value}.
+      invalid_topic_locale: Registry topic locale must be one of {allowed_locales};
+        got {locale}.
+      manual_section_not_found: Manual section {section} was not found in {manual_id}
+        {year} {part}.
+      manual_section_requires_structure: Manual section requires extracted structure
+        for {manual_key}.
   user_profile:
     errors:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
@@ -1448,6 +1458,7 @@ cli:
           lowercase hex string (SHA-256 digest)
         invalid_casilla_key: '--casilla key is not a valid CasillaId (alphanumeric
           plus . _ : - separators, max 64 chars)'
+        invalid_revision_selector: 'Unknown revision selector {value}; choose one of {choices}.'
         invalid_work_unit_id: work_unit_id must be a 64-character lowercase hex string
           (SHA-256 digest)
         kv_empty_key_error: '{flag} key must not be empty; got {spec}.'
@@ -1469,6 +1480,7 @@ cli:
           still needs.'
         modelo_help: Tax form code (e.g. 303, 130, 100)
         name_help: Optional display name for the work unit
+        natural_target_required: 'Pass an exact work-unit id, or address the filing with modelo, year, and period.'
         notes_help: Optional notes attached to the filing record
         output_language_help: Output language for rendered messages.
         override_help: Binding value with KEY=VALUE syntax (repeatable); run `aeat
@@ -1550,6 +1562,7 @@ cli:
           runs` to list run ids.
         revision_help: Stable id of the targeted registry modelo revision; run `aeat
           app modelo describe MODELO` to see the available revision ids.
+        revision_selector_ambiguous: 'More than one calculation revision matches this selector. Choose one explicitly. {candidates}'
         revision_show_help: Show one stored calculation revision's persisted casilla
           values (without recomputing)
         revision_year_mismatch: Revision %{revision} of modelo %{modelo} does not
@@ -1600,6 +1613,9 @@ cli:
         sal_reserva_incomplete: --sal-beneficio-neto, --sal-reserva-dotada, and --sal-capital-social
           must all be supplied together.
         sal_reserva_not_decimal: --sal-* values must be decimal amounts.
+        selector_ambiguous: 'More than one active work unit matches this modelo/year/period. Choose a registry revision or pass an explicit work-unit id. {candidates}'
+        selector_not_found: 'No active work unit matches this modelo, year, and period. Run aeat app modelo work create first.'
+        selector_revision_conflict: 'An active work unit already exists for this modelo/year/period with registry revision {existing_revision}; requested {requested_revision}. Resume the existing work unit, discard it explicitly, or pass an exact id.'
         set_not_decimal: The --set value must be a decimal; got {value}.
         set_override_help: Corrected casilla value with CASILLA=DECIMAL syntax (repeatable;
           at least one required)
@@ -3279,8 +3295,9 @@ errors:
     error_wizard_compile: The wizard catalogue is malformed and could not be compiled.
     error_workflow: A workflow error occurred.
     error_workflow_component: A workflow component raised an unexpected exception.
-    modelo_calculation_revision_selector: 'Calculation revision selection failed.'
-    modelo_calculation_revision_selector_not_found: 'No calculation revision matched the requested selector.'
+    modelo_calculation_revision_selector: Calculation revision selection failed.
+    modelo_calculation_revision_selector_not_found: No calculation revision matched
+      the requested selector.
     modelo_work_selector: The modelo work selector failed.
     modelo_work_selector_unit_not_found: The selected modelo work unit was not found.
   fail:
@@ -3553,8 +3570,10 @@ errors:
       100%.
     modelo_347_threshold: Modelo 347 operations above the reporting threshold require
       explicit declaration coverage.
-    modelo_calculation_revision_selector_ambiguous: 'The calculation revision selector matched more than one revision; refine the selector.'
-    modelo_calculation_revision_selector_state: 'The selected calculation revision is not in a usable state for this operation.'
+    modelo_calculation_revision_selector_ambiguous: The calculation revision selector
+      matched more than one revision; refine the selector.
+    modelo_calculation_revision_selector_state: The selected calculation revision
+      is not in a usable state for this operation.
     modelo_censo_stale: 'The operation is refused because you applied a new censo
       after this work was produced. The AEAT is the binding legal source: regenerate
       it against the current censo.'

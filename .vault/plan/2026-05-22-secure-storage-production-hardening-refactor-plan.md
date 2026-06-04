@@ -432,7 +432,7 @@ Current register count: `293` production candidate files.
 | `AFR-141` | `src/aeat/application/operator_surface/_models.py` | `active-profile` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-142` | `src/aeat/application/overview/__init__.py` | `secure-object, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S85` | closed |
 | `AFR-143` | `src/aeat/application/registry/__init__.py` | `secure-object, plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
-| `AFR-144` | `src/aeat/application/registry/_corpus.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-144` | `src/aeat/application/registry/_corpus.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-145` | `src/aeat/application/repair_integrity.py` | `secure-object, secure-bound, active-profile, manifest-bucket, master-key` | `runtime-default` | `W12.P21.S85` | pending |
 | `AFR-146` | `src/aeat/application/review/_adapters.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-147` | `src/aeat/application/review/_aggregator.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
@@ -785,7 +785,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S243` - Close `AFR-141` for `src/aeat/application/operator_surface/_models.py` with signals `active-profile`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/operator_surface/_models.py`.
 - [x] `W12.P26.S244` - Close `AFR-142` for `src/aeat/application/overview/__init__.py` with signals `secure-object, active-profile, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/overview/__init__.py`.
 - [x] `W12.P26.S245` - Close `AFR-143` for `src/aeat/application/registry/__init__.py` with signals `secure-object, plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/registry/__init__.py`.
-- [ ] `W12.P26.S246` - Close `AFR-144` for `src/aeat/application/registry/_corpus.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/registry/_corpus.py`.
+- [x] `W12.P26.S246` - Close `AFR-144` for `src/aeat/application/registry/_corpus.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/registry/_corpus.py`.
 - [ ] `W12.P26.S247` - Close `AFR-145` for `src/aeat/application/repair_integrity.py` with signals `secure-object, secure-bound, active-profile, manifest-bucket, master-key`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/repair_integrity.py`.
 - [ ] `W12.P26.S248` - Close `AFR-146` for `src/aeat/application/review/_adapters.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/review/_adapters.py`.
 - [ ] `W12.P26.S249` - Close `AFR-147` for `src/aeat/application/review/_aggregator.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/review/_aggregator.py`.

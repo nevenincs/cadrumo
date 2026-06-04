@@ -805,8 +805,17 @@ application:
         live portals list' parancsot az elérhető portálok megtekintéséhez.
   registry:
     errors:
+      invalid_manual_id: 'A nyilvantartasi kezikonyvnek ezek egyikenek kell lennie:
+        {allowed_manual_ids}; kapott ertek: {manual_id}.'
+      invalid_manual_rule_kind: 'A kezikonyvi szabaly tipusanak ezek egyikenek kell
+        lennie: {allowed_rule_kinds}; kapott ertek: {rule_kind}.'
       invalid_oracle_environment: 'A nyilvantartasi oracle kornyezetnek ezek egyikenek
         kell lennie: {allowed_values}; kapott ertek: {value}.'
+      invalid_topic_locale: 'A nyilvantartasi tema nyelvenek ezek egyikenek kell lennie:
+        {allowed_locales}; kapott ertek: {locale}.'
+      manual_section_not_found: A(z) {section} kezikonyvszakasz nem talalhato.
+      manual_section_requires_structure: 'A(z) {section} kezikonyvszakasz kivont strukturat
+        igenyel ehhez: {manual_key}.'
   user_profile:
     errors:
       duplicate_tax_id: A(z) "%{tax_id}" adóazonosítót már a(z) "%{profile}" profil
@@ -1499,6 +1508,7 @@ cli:
           kisbetűs hex-karakterláncnak kell lennie (SHA-256 kivonat).
         invalid_casilla_key: 'A --casilla kulcsa nem érvényes CasillaId (alfanumerikus,
           plusz . _ : - elválasztók, max. 64 karakter).'
+        invalid_revision_selector: 'Ismeretlen revizio valaszto {value}; valasszon ezek kozul: {choices}.'
         invalid_work_unit_id: A work_unit_id értékének 64 karakteres kisbetűs hex-karakterláncnak
           kell lennie (SHA-256 kivonat).
         kv_empty_key_error: 'A(z) {flag} kulcsa nem lehet üres; kapott: {spec}.'
@@ -1523,6 +1533,7 @@ cli:
           kötés listázásához.'
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
         name_help: Opcionális megjelenítési név a munkaegységhez.
+        natural_target_required: 'Adjon meg pontos munkaegyseg-azonositot, vagy cimezze a bevallast --modelo, --year es --period megadasaval.'
         notes_help: Opcionális megjegyzések a benyújtási rekordhoz.
         output_language_help: A megjelenített üzenetek kimeneti nyelve.
         override_help: 'Kötési érték KEY=VALUE szintaxissal (ismételhető); futtassa:
@@ -1610,6 +1621,7 @@ cli:
         revision_help: 'A célzott nyilvántartási nyomtatvány-revízió stabil azonosítója;
           futtassa: `aeat app modelo describe NYOMTATVÁNY` az elérhető revízióazonosítók
           megtekintéséhez.'
+        revision_selector_ambiguous: 'Tobb szamitasi revizio illeszkedik erre a valasztora. Valasszon egyet explicit modon. {candidates}'
         revision_show_help: Egy tárolt számítási revízió megőrzött mezőértékeinek
           megjelenítése (újraszámítás nélkül).
         revision_year_mismatch: A(z) %{revision} revízió a(z) %{modelo} nyomtatványhoz
@@ -1662,6 +1674,9 @@ cli:
         sal_reserva_incomplete: A --sal-beneficio-neto, --sal-reserva-dotada és --sal-capital-social
           opciókat együtt kell megadni.
         sal_reserva_not_decimal: A --sal-* értékeknek decimális összegeknek kell lenniük.
+        selector_ambiguous: 'Tobb aktiv munkaegyseg illeszkedik erre a modelo/ev/idoszak parosra. Valasszon nyilvantartasi reviziot vagy adjon meg pontos munkaegyseg-azonositot. {candidates}'
+        selector_not_found: 'Nincs aktiv munkaegyseg ehhez a modelo/ev/idoszak paroshoz. Futtassa eloszor: aeat app modelo work create.'
+        selector_revision_conflict: 'Ehhez a modelo/ev/idoszak paroshoz mar letezik aktiv munkaegyseg {existing_revision} nyilvantartasi revizioval; a kert revizio {requested_revision}. Folytassa a meglevo munkaegyseget, dobja el explicit modon, vagy adjon meg pontos azonositot.'
         set_not_decimal: 'A --set értékének decimálisnak kell lennie; kapott: {value}.'
         set_override_help: Javított mezőérték CASILLA=DECIMAL szintaxissal (ismételhető;
           legalább egy szükséges).
@@ -3400,8 +3415,9 @@ errors:
     error_wizard_compile: A varázsló-katalógus hibás formátumú és nem fordítható le.
     error_workflow: Munkafolyamat hiba történt.
     error_workflow_component: Egy munkafolyamat-komponens váratlan kivételt dobott.
-    modelo_calculation_revision_selector: 'A szamitasi revizio kivalasztasa sikertelen.'
-    modelo_calculation_revision_selector_not_found: 'Nincs a megadott valasztonak megfelelo szamitasi revizio.'
+    modelo_calculation_revision_selector: A szamitasi revizio kivalasztasa sikertelen.
+    modelo_calculation_revision_selector_not_found: Nincs a megadott valasztonak megfelelo
+      szamitasi revizio.
     modelo_work_selector: A modelo munkavalaszto hibazott.
     modelo_work_selector_unit_not_found: A kivalasztott modelo munkaegyseg nem talalhato.
   fail:
@@ -3669,8 +3685,10 @@ errors:
       kell kitenniük.
     modelo_347_threshold: A Modelo 347 jelentési küszöb feletti ügyleteihez kifejezett
       bevallási lefedettség szükséges.
-    modelo_calculation_revision_selector_ambiguous: 'A szamitasi revizio valaszto tobb reviziora illeszkedik; pontositsa a valasztot.'
-    modelo_calculation_revision_selector_state: 'A kivalasztott szamitasi revizio nincs ehhez a muvelethez hasznalhato allapotban.'
+    modelo_calculation_revision_selector_ambiguous: A szamitasi revizio valaszto tobb
+      reviziora illeszkedik; pontositsa a valasztot.
+    modelo_calculation_revision_selector_state: A kivalasztott szamitasi revizio nincs
+      ehhez a muvelethez hasznalhato allapotban.
     modelo_censo_stale: 'A műveletet elutasítottuk, mert új censot alkalmazott az
       után, hogy ez a munka elkészült. Az AEAT a kötelező jogi forrás: generálja újra
       a legfrissebb censo alapján.'
