@@ -38,9 +38,15 @@ patched repository objects.
 
 - `uv run --no-sync pytest -q src/aeat/application/filing/test_runtime_repository.py` passed with 5 tests.
 - `uv run --no-sync ruff check src/aeat/application/filing/_runtime_repository.py src/aeat/application/filing/test_runtime_repository.py` passed.
+- `uv run --no-sync pytest -q src/aeat/application/filing/test_runtime_repository.py src/aeat/application/filing/test_review_runtime_storage.py` passed with 7 tests.
+- `uv run --no-sync ruff check src/aeat/application/filing/_runtime_repository.py src/aeat/application/filing/_history_repository.py src/aeat/application/filing/_review.py src/aeat/application/filing/test_runtime_repository.py src/aeat/application/filing/test_review_runtime_storage.py` passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for the S210
 slice.
 
 Disposition: close `AFR-108` as `runtime-default`.
+
+Follow-up note: the domain filing runtime helper retains the same resolution
+shape and is intentionally left to `AFR-238`, where the domain boundary can be
+reviewed without widening the S210 application-row commit.
