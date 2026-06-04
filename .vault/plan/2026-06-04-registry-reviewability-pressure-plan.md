@@ -48,7 +48,7 @@ loaded `ModeloDefinition` objects.
 Verify the reviewability-pressure slice through real loader and registry gates,
 then persist code review.
 
-- [ ] `P03.S06` - Verify loader equivalence, reviewability, committed registry, record-design, drift, and plan gates for reviewability repairs; `src/aeat/domain/calculations/registry`.
+- [x] `P03.S06` - Verify loader equivalence, reviewability, committed registry, record-design, drift, and plan gates for reviewability repairs; `src/aeat/domain/calculations/registry`.
 - [ ] `P03.S07` - Review the reviewability-pressure slice and persist closure artefacts; `.vault/audit`.
 
 ## Description
