@@ -118,7 +118,4 @@ module owns the previous-filing absent-by-design and projection guards.
 
 Verification covered formula runtime behavior, Modelo 130 carry-forward
 absent-by-design behavior, previous-filing smuggling/projection rejection, ruff,
-and the registry reviewability gate. The review also identified one shared
-worktree safety edge: the plan file currently includes an unrelated
-`W06.P18.S65` checkbox change outside this slice. The S31 commit must stage only
-the S31 plan hunk and leave that unrelated working-tree change uncommitted.
+the VaultSpec plan check, and the registry reviewability gate.

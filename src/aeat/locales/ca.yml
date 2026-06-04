@@ -614,14 +614,23 @@ application:
         invalid_kind: 'El tipus de factura no esta admes: %{kind}.'
     linking:
       errors:
-        linked_invoice_not_found: 'No s ha trobat la factura %{invoice_id} despres d aplicar l enllac.'
-        transaction_not_found: 'No s ha trobat la transaccio %{transaction_id} al cataleg de transaccions.'
+        linked_invoice_not_found: No s ha trobat la factura %{invoice_id} despres
+          d aplicar l enllac.
+        transaction_not_found: No s ha trobat la transaccio %{transaction_id} al cataleg
+          de transaccions.
   ledger:
     errors:
       evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix
         evidència de compra o identificadors d'adjunt.
       purchase_evidence_already_set: La transacció del llibre diari ja té un purchase_invoice_evidence_id;
         elimineu-lo o substituïu-lo a través del flux d'adjunts.
+  live:
+    expedientes:
+      errors:
+        bucket_id_blank: 'L''identificador del bucket d''expedients no pot estar buit.'
+        snapshot_id_blank: 'L''identificador de la instantània d''expedients no pot estar buit.'
+        snapshot_not_found: 'No hi ha cap instantània d expedients que coincideixi amb l identificador sol·licitat.'
+        snapshot_prefix_ambiguous: 'El prefix de la instantània d expedients coincideix amb diverses instantànies.'
   modelo:
     borrador_binding:
       errors:
