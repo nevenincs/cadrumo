@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import ast
 import re
+from collections.abc import Iterator
 from pathlib import Path
 
 from ..core.logging import get_logger
@@ -334,17 +335,8 @@ def _concat_prefix_marker(argument: ast.expr) -> str | None:
     return f"{literal}.*"
 
 
-def scan_source_tree(root: Path) -> set[str]:
-    """Walk ``root`` for `.py` files and emit concrete dotted locale keys.
-
-    Concrete keys are literal translation keys passed to error
-    constructors (positional first argument or ``message_key=`` kwarg).
-    Dynamic namespaces (f-string and concatenation patterns) are
-    returned by :func:`scan_namespace_markers` and routed through a
-    separate parity check that asserts at least one concrete locale
-    entry exists under each declared namespace prefix.
-    """
-    findings: set[str] = set()
+def _iter_parseable_python_modules(root: Path) -> Iterator[ast.Module]:
+    """Yield parseable Python ASTs under ``root`` for locale discovery."""
     for module in root.rglob("*.py"):
         if module.name in {"test_parity.py", "manager.py", "_ast_scanner.py"}:
             continue
@@ -356,10 +348,23 @@ def scan_source_tree(root: Path) -> set[str]:
             _log.debug("locale ast scan: skipping %s (%s)", module, exc)
             continue
         try:
-            tree = ast.parse(source, filename=str(module))
+            yield ast.parse(source, filename=str(module))
         except SyntaxError as exc:
             _log.debug("locale ast scan: parse failure %s (%s)", module, exc)
-            continue
+
+
+def scan_source_tree(root: Path) -> set[str]:
+    """Walk ``root`` for `.py` files and emit concrete dotted locale keys.
+
+    Concrete keys are literal translation keys passed to error
+    constructors (positional first argument or ``message_key=`` kwarg).
+    Dynamic namespaces (f-string and concatenation patterns) are
+    returned by :func:`scan_namespace_markers` and routed through a
+    separate parity check that asserts at least one concrete locale
+    entry exists under each declared namespace prefix.
+    """
+    findings: set[str] = set()
+    for tree in _iter_parseable_python_modules(root):
         findings.update(_extract_error_constructor_keys(tree))
         findings.update(_extract_locale_constant_keys(tree))
     return findings
@@ -375,21 +380,7 @@ def scan_namespace_markers(root: Path) -> set[str]:
     its prefix.
     """
     findings: set[str] = set()
-    for module in root.rglob("*.py"):
-        if module.name in {"test_parity.py", "manager.py", "_ast_scanner.py"}:
-            continue
-        if module.name.startswith("test_") or module.name.startswith("_test_") or "/tests/" in module.as_posix():
-            continue
-        try:
-            source = module.read_text(encoding="utf-8", errors="ignore")
-        except OSError as exc:
-            _log.debug("locale ast scan: skipping %s (%s)", module, exc)
-            continue
-        try:
-            tree = ast.parse(source, filename=str(module))
-        except SyntaxError as exc:
-            _log.debug("locale ast scan: parse failure %s (%s)", module, exc)
-            continue
+    for tree in _iter_parseable_python_modules(root):
         findings.update(_extract_fstring_prefixes(tree))
         findings.update(_extract_concat_prefixes(tree))
     return findings
