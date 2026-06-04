@@ -10,27 +10,33 @@ related:
 
 # `secure-storage-production-hardening` `W12.P26.S216` Review
 
-## S216-001 | PASS | Invoice queries read through runtime repositories
+## S216-001 | PASS | Link consistency queries use the requested bucket
 
-Repository-backed invoice query helpers load `InvoiceCatalogueRepository`, and
-link verification loads both invoice and transaction catalogues from their
-runtime-backed repositories. The module does not read plaintext invoice stores,
-derive SQL routes, inspect active sessions, or access environment variables.
+`verify_invoice_repository_links(bucket_id=...)` now constructs
+`InvoiceCatalogueRepository(bucket_id=bucket_id)` and
+`TransactionCatalogueRepository(bucket_id=bucket_id)`. This removes the
+previous invoice-side ambient active-profile dependency from the repository
+query path.
 
-## S216-002 | FIXED | Link verification binds both catalogues to the requested bucket
+## S216-002 | PASS | Projection helpers remain storage-free
 
-`verify_invoice_repository_links(bucket_id=...)` already passed the requested
-bucket to `TransactionCatalogueRepository`, but the invoice repository defaulted
-through active-bucket resolution. It now passes the same `bucket_id` to
-`InvoiceCatalogueRepository`, and a real isolated-runtime test covers the
-repository-backed query path.
+`list_invoice_rows()` and `list_unmatched_invoice_rows()` operate on supplied
+`InvoiceCatalogue` instances. They perform deterministic projections and do
+not open files, inspect manifests, or construct repositories.
 
-## S216-003 | PASS | Validation
+## S216-003 | PASS | Runtime test covers the repository boundary
 
-- `uv run --no-sync ruff check src/aeat/application/invoices/_queries.py src/aeat/application/invoices/test_queries.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/invoices/test_queries.py` passed.
+The existing repository query test uses a real isolated runtime profile,
+persists both catalogues through secure repositories, and verifies consistency
+after reloading through the bucket-bound repository query.
+
+## S216-004 | PASS | Validation
+
+- `uv run --no-sync -q ruff check src/aeat/application/invoices/_queries.py src/aeat/application/invoices/test_queries.py` passed.
+- `uv run --no-sync -q pytest -q src/aeat/application/invoices/test_queries.py` passed with 4 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
-Reviewer note: no critical, high, medium, or low findings remain for S216.
+Reviewer note: no critical, high, medium, or low storage-routing findings
+remain for the S216 slice.
 
 Disposition: close `AFR-114` as `runtime-default`.
