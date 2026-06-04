@@ -831,7 +831,7 @@ application:
     calc_sheets:
       engine:
         anchors:
-          final: 'EREDMÉNY'
+          final: EREDMÉNY
           start: 'KEZDET: Entradas'
         errors:
           parameter_no_dated_value: A táblázatexportáló motor nem talált az elszámolási
@@ -850,26 +850,31 @@ application:
             google sync calc pull' parancsot a CLI-ből.
           title: '%{modelo_title} - %{period}/%{filing_year}'
         labels:
-          casilla: 'Casilla'
-          cell: 'Cella'
-          concept: 'Fogalom'
-          fixed_quota: 'Fix kvóta'
-          formula: 'Képlet'
-          legal_refs: 'Jogi hivatk.'
-          marginal_rate: 'Határkulcs'
-          maximum_base: 'Maximum alap'
-          minimum_base: 'Minimum alap'
-          number: 'Sz.'
-          rounding: 'Kerekítés'
-          section: 'Szakasz'
-          source: 'Forrás'
-          source_refs: 'Forráshivatk.'
-          value: 'Érték'
+          casilla: Casilla
+          cell: Cella
+          concept: Fogalom
+          fixed_quota: Fix kvóta
+          formula: Képlet
+          legal_refs: Jogi hivatk.
+          marginal_rate: Határkulcs
+          maximum_base: Maximum alap
+          minimum_base: Minimum alap
+          number: Sz.
+          rounding: Kerekítés
+          section: Szakasz
+          source: Forrás
+          source_refs: Forráshivatk.
+          value: Érték
         protected:
-          calculos: 'Származtatott számítások - védett a paritás megőrzéséhez'
-          guide: 'Útmutató - védett'
-          provenance: 'Eredet / audit trail - védett'
-          tariffs: 'Tarifák / aktív paraméterek - védett'
+          calculos: Származtatott számítások - védett a paritás megőrzéséhez
+          guide: Útmutató - védett
+          provenance: Eredet / audit trail - védett
+          tariffs: Tarifák / aktív paraméterek - védett
+      layout:
+        errors:
+          undeclared_reference: 'A táblázatelrendezés olyan elemre hivatkozik, amelyet a revízió nem deklarál.'
+          unresolved_reference: A táblázatelrendezés nem tartalmaz cellát a hivatkozott
+            elemhez.
   user_profile:
     errors:
       duplicate_tax_id: A(z) "%{tax_id}" adóazonosítót már a(z) "%{profile}" profil

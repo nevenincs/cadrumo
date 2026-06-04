@@ -882,7 +882,7 @@ application:
     calc_sheets:
       engine:
         anchors:
-          final: 'RESULTAT'
+          final: RESULTAT
           start: 'INICI: Entradas'
         errors:
           parameter_no_dated_value: El motor d'exportació de fulls de càlcul no ha
@@ -901,26 +901,31 @@ application:
             executeu 'aeat config google sync calc pull' des de la CLI.
           title: '%{modelo_title} - %{period}/%{filing_year}'
         labels:
-          casilla: 'Casella'
-          cell: 'Cel·la'
-          concept: 'Concepte'
-          fixed_quota: 'Quota fixa'
-          formula: 'Fórmula'
-          legal_refs: 'Ref. legals'
-          marginal_rate: 'Tipus marginal'
-          maximum_base: 'Base màxima'
-          minimum_base: 'Base mínima'
-          number: 'Núm.'
-          rounding: 'Arrodoniment'
-          section: 'Secció'
-          source: 'Origen'
-          source_refs: 'Ref. fonts'
-          value: 'Valor'
+          casilla: Casella
+          cell: Cel·la
+          concept: Concepte
+          fixed_quota: Quota fixa
+          formula: Fórmula
+          legal_refs: Ref. legals
+          marginal_rate: Tipus marginal
+          maximum_base: Base màxima
+          minimum_base: Base mínima
+          number: Núm.
+          rounding: Arrodoniment
+          section: Secció
+          source: Origen
+          source_refs: Ref. fonts
+          value: Valor
         protected:
-          calculos: 'Càlculs derivats - protegit per preservar la paritat'
-          guide: 'Guia - protegit'
-          provenance: 'Procedència / audit trail - protegit'
-          tariffs: 'Tarifes / paràmetres vigents - protegit'
+          calculos: Càlculs derivats - protegit per preservar la paritat
+          guide: Guia - protegit
+          provenance: Procedència / audit trail - protegit
+          tariffs: Tarifes / paràmetres vigents - protegit
+      layout:
+        errors:
+          undeclared_reference: 'El disseny del full de càlcul referencia un element no declarat per la revisió.'
+          unresolved_reference: El disseny del full de càlcul no conté cap cel·la
+            per a un element referenciat.
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un

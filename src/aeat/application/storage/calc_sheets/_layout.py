@@ -56,6 +56,7 @@ from ....domain.calculations.registry import (
     RelationId,
     RevisionId,
 )
+from ._errors import CalcSheetsEngineError
 from ._records import (
     ParameterCell,
     SheetCellAddress,
@@ -139,22 +140,38 @@ class SheetLayout(BaseModel):
             return self.calculos_cells[casilla]
         if casilla in self.entradas_cells:
             return self.entradas_cells[casilla]
-        raise KeyError(f"unknown casilla in layout: {casilla!r}")
+        raise _unknown_layout_reference("casilla")
 
     def address_for_binding(self, binding: BindingId) -> SheetCellAddress:
         if binding not in self.binding_cells:
-            raise KeyError(f"unknown binding in layout: {binding!r}")
+            raise _unknown_layout_reference("binding")
         return self.binding_cells[binding]
 
     def address_for_date_binding(self, binding: BindingId) -> SheetCellAddress:
         if binding not in self.date_binding_cells:
-            raise KeyError(f"unknown date binding in layout: {binding!r}")
+            raise _unknown_layout_reference("date_binding")
         return self.date_binding_cells[binding]
 
     def address_for_relation(self, relation: RelationId) -> SheetCellAddress:
         if relation not in self.relation_cells:
-            raise KeyError(f"unknown relation in layout: {relation!r}")
+            raise _unknown_layout_reference("relation")
         return self.relation_cells[relation]
+
+
+def _unknown_layout_reference(reference_kind: str) -> CalcSheetsEngineError:
+    return CalcSheetsEngineError(
+        "layout reference has no resolved cell",
+        context={"reference_kind": reference_kind},
+        translated_message="application.storage.calc_sheets.layout.errors.unresolved_reference",
+    )
+
+
+def _undeclared_layout_reference(reference_kind: str) -> CalcSheetsEngineError:
+    return CalcSheetsEngineError(
+        "layout reference is not declared by the revision",
+        context={"reference_kind": reference_kind},
+        translated_message="application.storage.calc_sheets.layout.errors.undeclared_reference",
+    )
 
 
 def _walk_expression_parameters(expression: FormulaExpression) -> Iterable[ParameterId]:
@@ -423,7 +440,7 @@ def _layout_bindings(
     entradas_row = entradas_row_start
     for binding_id in _referenced_bindings(revision):
         if binding_id not in bindings_by_id:
-            continue
+            raise _undeclared_layout_reference("binding")
         binding_cells[binding_id] = SheetCellAddress.at(TabName.ENTRADAS, entradas_row, value_column)
         binding_rows.append(_BindingRow(binding=binding_id, tab=TabName.ENTRADAS, row=entradas_row, label=binding_id))
         entradas_row += 1
@@ -433,6 +450,8 @@ def _layout_bindings(
             # Already laid out as a numeric binding; reuse its cell.
             date_binding_cells[binding_id] = binding_cells[binding_id]
             continue
+        if binding_id not in bindings_by_id:
+            raise _undeclared_layout_reference("date_binding")
         date_binding_cells[binding_id] = SheetCellAddress.at(TabName.ENTRADAS, entradas_row, value_column)
         binding_rows.append(_BindingRow(binding=binding_id, tab=TabName.ENTRADAS, row=entradas_row, label=binding_id))
         entradas_row += 1
@@ -478,7 +497,7 @@ def _layout_parameters(
     tariffs_row = tariffs_row_start
     for parameter_id in _referenced_parameters(revision):
         if parameter_id not in parameters_by_id:
-            continue
+            raise _undeclared_layout_reference("parameter")
         definition = parameters_by_id[parameter_id]
         anchor = SheetCellAddress.at(TabName.TARIFFS, tariffs_row, anchor_column)
         tariff_anchors[parameter_id] = anchor
@@ -564,7 +583,7 @@ def _layout_relations(
     tariffs_row = tariffs_row_start
     for relation_id in _referenced_relations(revision):
         if relation_id not in relations_by_id:
-            continue
+            raise _undeclared_layout_reference("relation")
         relation_cells[relation_id] = SheetCellAddress.at(TabName.TARIFFS, tariffs_row, anchor_column)
         tariffs_row += 2
     return relation_cells
