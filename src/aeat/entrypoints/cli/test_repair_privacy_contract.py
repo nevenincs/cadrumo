@@ -9,7 +9,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from ...adapters.persistence.storage import get_master_key_provider
 from ...adapters.persistence.storage.master_key._active_session import activate_session
@@ -20,7 +19,6 @@ from ...core import resolve_active_bucket_id
 from ...core.classification import SensitivityClass
 from ...core.config import override_settings
 from ...core.logging import default_log_file_path
-from ...diagnostics.__main__ import app as diagnostics_app
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import isolated_profile_storage_root
 
@@ -128,36 +126,6 @@ def test_config_repair_profile_cli_redacts_profile_identifiers() -> None:
     named_payload = json.loads(named_payload_result.output)
     assert named_payload["result"]["profile_id"] == "<profile-id>"
     assert named_payload["result"]["bucket_id"] == "<bucket-id>"
-
-
-def test_diagnostics_secure_objects_list_redacts_active_profile_identifier_in_row_context() -> None:
-    """Engineer inventory exposes only the stored lookup digest."""
-
-    _create_operator_profile()
-    active_bucket_id = resolve_active_bucket_id()
-    assert active_bucket_id is not None
-    object_key = f"transaction-catalogue:{active_bucket_id}"
-    with get_master_key_provider():
-        secure_object_repository_for_active_bucket().save(
-            namespace="aeat.domain.transactions.bucket",
-            object_key=object_key,
-            classification=SensitivityClass.FINANCIAL,
-            schema_version=1,
-            written_at=datetime.now(UTC),
-            payload=b"transaction-catalogue-payload",
-        )
-
-    text = CliRunner().invoke(
-        diagnostics_app,
-        ["secure-objects", "list", "aeat.domain.transactions.bucket", "--all"],
-    )
-
-    assert text.exit_code == 0, text.output
-    assert not _UUID_PATTERN.search(text.output)
-    assert "aeat.domain.transactions.bucket\t" in text.output
-    assert object_key not in text.output
-    digest = text.output.strip().splitlines()[-1].split("\t")[-1]
-    assert re.fullmatch(r"[0-9a-f]{64}", digest)
 
 
 def test_config_repair_list_operator_surface_is_retired() -> None:

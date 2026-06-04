@@ -99,7 +99,7 @@ Auto-generated index of all documents tagged with `#repo-health-triage`.
 - `2026-06-04-repo-health-triage-w03-p07-s25-exec` - W03.P07.S25 extract work-calculate typed input assembly
 - `2026-06-04-repo-health-triage-w03-p07-s26-exec` - W03.P07.S26 preserve modelo root command compatibility after extraction
 - `2026-06-04-repo-health-triage-w03-p07-summary-exec` - `repo-health-triage` `W03.P07` summary
-- `2026-06-04-repo-health-triage-w03-p10-s35-exec` - W03.P10.S35 extract identity multi-declaration analyzer
+- `2026-06-04-repo-health-triage-w03-p10-s35-exec` - W03.P10.S35 remove unapproved diagnostics source package
 
 ### plan
 

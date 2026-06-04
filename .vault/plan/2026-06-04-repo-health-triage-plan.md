@@ -120,7 +120,7 @@ Reduce ledger and identity diagnostic complexity through projection and analyzer
 
 - [ ] `W03.P10.S33` - Extract ledger review-filter projection service; `src/aeat/application/ledger/_review_projection.py`.
 - [ ] `W03.P10.S34` - Split ledger list CLI parsing and rendering; `src/aeat/entrypoints/cli/_ledger.py`.
-- [x] `W03.P10.S35` - Extract identity multi-declaration analyzer; `src/aeat/diagnostics/_identity_placement.py`.
+- [x] `W03.P10.S35` - Remove unapproved diagnostics source package; `src/aeat/diagnostics`.
 
 ### Phase `W03.P11` - live and auth decomposition prep
 
