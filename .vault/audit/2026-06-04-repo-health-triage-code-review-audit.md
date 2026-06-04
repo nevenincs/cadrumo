@@ -343,3 +343,38 @@ submission tests pass. A broader adapter repository compatibility run exposed an
 unrelated `ClassificationError` empty-message assertion failure outside the
 protocol change. Remaining Vulture findings are the planned W04.P13.S46 CLI
 documentation payload imports.
+
+## W04-009 | INFO | CLI doc-reference payload import review found no defects
+
+Status: verified.
+
+The W04.P13.S46 review found no behavioral defect in binding the CLI payload
+schema modules into an explicit `payload_schema_modules` tuple after import.
+The generator still imports the modules for their `@register_schema` side
+effects before inspecting `SCHEMA_REGISTRY`; the tuple only makes that
+registration surface observable to dead-code analysis and guards against a
+failed module import.
+
+Focused verification confirmed Vulture reports no remaining production
+dead-code candidates, Ruff passes for the CLI doc-reference surface, and the
+CLI doc-reference conformance gate passes under the `docs` marker. Broader
+language-pinning and write-if-changed edits already present in the worktree are
+left uncommitted by this S46 slice.
+
+## W04-009 | INFO | CLI doc-reference payload registration review found no defects
+
+Status: verified clean.
+
+The W04.P13.S46 review found no behavioral defect in binding the CLI
+doc-reference payload imports into an explicit `payload_schema_modules` tuple
+and asserting each import produced a loaded module name. The generator still
+imports the same payload modules for their schema-registration side effects
+before materialising the lazy CLI tree.
+
+Focused verification confirmed the full configured Vulture scan is clean and
+Ruff passes for the CLI doc-reference surface. The docs conformance tests pass;
+the committed-reference drift test still fails because the live CLI includes
+`app.live.filed.capture-all` while committed `docs/cli` has not been
+regenerated. The worktree already contained unrelated doc-reference generation
+edits, so the commit isolates only the payload-registration reference and Vault
+tracking.

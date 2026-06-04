@@ -607,6 +607,22 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
         _profile_censo_payloads,
     )
 
+    payload_schema_modules = (
+        _app_live_payloads,
+        _config_payloads,
+        _ledger_payloads,
+        _modelo_payloads,
+        _overview_payloads,
+        _registry_corpus_payloads,
+        _registry_payloads,
+        _review_payloads,
+        _root_payloads,
+        _google_payloads,
+        _profile_censo_payloads,
+    )
+    if not all(getattr(module, "__name__", "") for module in payload_schema_modules):
+        raise RuntimeError("CLI payload schema modules failed to load")
+
     # Materialise every lazy subtree before the tree walk.
     _force_lazy_imports(app)
 
