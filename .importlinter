@@ -561,6 +561,8 @@ ignore_imports =
     aeat.domain.invoices.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql._orm
     aeat.domain.invoices.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql.session
     aeat.domain.modelos.test_filing_record_repository_roundtrip -> aeat.adapters.persistence.storage
+    aeat.domain.modelos.test_ledger_filing_evidence_roundtrip -> aeat.adapters.persistence.storage.sql
+    aeat.domain.modelos.test_ledger_filing_evidence_roundtrip -> aeat.tests.secure_sql
     aeat.domain.modelos.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage
     aeat.domain.modelos.test_verification_report_roundtrip -> aeat.adapters.persistence.storage
     aeat.domain.submission.test_repository -> aeat.adapters.persistence.storage
@@ -568,6 +570,44 @@ ignore_imports =
     aeat.domain.submission.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql._orm
     aeat.domain.submission.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql.session
     aeat.domain.transactions.test_repository_roundtrip -> aeat.adapters.persistence.storage
+    aeat.domain.transactions.test_cross_bucket_isolation -> aeat.adapters.persistence.storage
+    aeat.domain.transactions.test_cross_bucket_isolation -> aeat.tests.secure_sql
+    aeat.application.aggregation.test_ledger_filing_evidence -> aeat.tests.secure_sql
+    aeat.application.bucket_maintenance.test_service_browse -> aeat.tests.secure_sql
+    aeat.application.bucket_maintenance.test_service_delete -> aeat.tests.secure_sql
+    aeat.application.bucket_maintenance.test_service_rename -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_036_censal_continuity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_100_multiyear_renta_enrollment -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_130_multiyear_renta_enrollment -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_131_carry_forward_continuity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_151_beckham_cuota_continuity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_180_115_reconciliation_continuity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_184_informativa_fidelity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_190_111_reconciliation_continuity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_193_123_reconciliation_continuity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_200_bin_carry_forward_continuity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_200_dotaciones_deterioro_carry_continuity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_202_cuota_base_ejercicio_anterior_continuity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_210_irnr_continuity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_232_operaciones_vinculadas_fidelity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_303_compensacion_carry_anti_regression -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_303_special_case_casilla_routing -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_308_adhoc_fidelity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_309_adhoc_fidelity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_322_grupo_individual_continuity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_347_informativa_fidelity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_349_intracomunitario_fidelity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_353_grupo_aggregation_continuity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_360_adhoc_fidelity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_369_oss_fidelity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_390_303_reconciliation_continuity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_714_patrimonio_baseline_fidelity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_720_prior_year_baseline_fidelity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_721_cripto_extranjero_fidelity -> aeat.tests.secure_sql
+    aeat.application.calculations.test_modelo_840_iae_continuity -> aeat.tests.secure_sql
+    aeat.application.ledger.test_bulk_classify_scale -> aeat.tests.secure_sql
+    aeat.application.modelo.test_export_evidence_gate -> aeat.tests.secure_sql
+    aeat.application.modelo.test_m036_lifecycle_service -> aeat.tests.secure_sql
     # ── domain production cross-layer edges (lazy imports deferred for cleanup) ──
     # ── domain test cross-layer edges ──
     aeat.domain.calculations.registry.test_referential_integrity -> aeat.application.diagnostics

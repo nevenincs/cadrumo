@@ -1,0 +1,50 @@
+---
+tags:
+  - '#audit'
+  - '#repo-health-triage'
+date: '2026-06-04'
+related:
+  - '[[2026-06-04-repo-health-triage-plan]]'
+  - '[[2026-06-04-repo-health-triage-adr]]'
+  - '[[2026-06-04-repo-health-triage-research]]'
+---
+
+# `repo-health-triage` Code Review
+
+## W01-001 | HIGH | Public Drive service injection bypassed credential-owned construction
+
+Status: remediated.
+
+The W01 resolver change added a public `drive_service` keyword to
+`resolve_document_link`, allowing callers to bypass credential-owned Google Drive
+service construction. This conflicted with the minimal-scope resolver posture and
+converted the test monkeypatch repair into a production test-double injection
+surface.
+
+Remediation removed the public service keyword from `resolve_document_link` and
+restored `_download_drive_file` to always construct the Drive service from
+credentials. Focused download behavior is covered through the private
+`_download_drive_file_from_service` helper instead of the public API.
+
+## W01-002 | MEDIUM | Corpus provenance step overstated relative import conversion
+
+Status: remediated.
+
+The checked W01 plan row claimed the corpus provenance test had been converted to
+a relative import, but `src/aeat/_data/corpus` is a data-tree test location with
+no package context. Turning the data tree into a package just to satisfy the row
+would risk changing package-resource behavior.
+
+Remediation updated the S03 plan action through `vaultspec-core vault plan step edit`
+to describe the implemented behavior: remove the AST-visible absolute self-import
+through the established `aeat.core.resources` boundary.
+
+## W01-003 | LOW | Phase summaries lacked scoped command-output evidence
+
+Status: remediated.
+
+The W01 phase summaries listed verification commands but did not preserve concise
+exit-code and result evidence, despite the ADR requiring scoped command output.
+
+Remediation added focused evidence lines to the W01 phase summaries and corrected
+the S10 step record to describe the post-review resolver contract.
