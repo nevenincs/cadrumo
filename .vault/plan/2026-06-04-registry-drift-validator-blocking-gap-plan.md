@@ -10,6 +10,16 @@ related:
   - '[[2026-06-04-registry-generic-fragmentation-contract-code-review-audit]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `registry-drift-validator-blocking-gap` `implementation` plan
 
 Identify whether any registry drift validator still reports an advisory result
@@ -26,12 +36,11 @@ selects a concrete gap.
 
 ## Steps
 
-- [ ] `S01` - Audit advisory and hard-fail registry drift validators and select one blocking-gap candidate; `.vault/audit`.
+- [x] `S01` - Audit advisory and hard-fail registry drift validators and select one blocking-gap candidate; `.vault/audit`.
 - [ ] `S02` - Add a focused regression that proves the selected drift gap is not currently blocked; `src/aeat/domain/calculations/registry`.
 - [ ] `S03` - Convert the selected drift gap into a `RegistryValidationError` without changing unrelated validator semantics; `src/aeat/domain/calculations/registry`.
 - [ ] `S04` - Verify drift, committed-registry, loader, reviewability, and plan gates; `src/aeat/domain/calculations/registry`.
 - [ ] `S05` - Review and close the drift-validator blocking-gap slice; `.vault/audit`.
-
 ## Parallelization
 
 S01 must land first. S02 and S03 are ordered because the regression must prove
