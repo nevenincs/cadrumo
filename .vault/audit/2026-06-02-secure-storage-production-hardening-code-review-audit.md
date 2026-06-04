@@ -641,3 +641,20 @@ The locale audit also exposed missing Modelo work CLI keys from adjacent
 `python -m aeat.locales` so the full catalog gate passes.
 
 Closure assessment: `W12.P26.S246` can close as `plaintext-exception`.
+
+## S247-058 | PASS | Repair integrity runtime-default closeout verified
+
+The `W12.P26.S247` review found that
+`src/aeat/application/repair_integrity.py` probes secure-object namespaces
+through the runtime-bound active-bucket repository path and persists
+repair-remediation decisions as AUDIT-class encrypted secure-object rows in the
+registered repair-decision namespace.
+
+The module owns no plaintext side store, direct environment wrangling, or remote
+provider mirror. Its defensive active-bucket session fallback already emits
+debug diagnostics; the namespace-list fallback was removed so storage failures
+propagate from the repository boundary instead of being silently swallowed.
+Repair-list and repair-decision refusal paths now use locale keys and structured
+context, with real repository tests covering the decision paths.
+
+Closure assessment: `W12.P26.S247` can close as `runtime-default`.

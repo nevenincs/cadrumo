@@ -31,6 +31,7 @@ from ..core.config import override_settings
 from ..tests.secure_sql import isolated_runtime_profile
 from .repair_integrity import (
     _REPAIR_DECISION_NAMESPACE,
+    RepairDecisionNotFoundError,
     RepairIntegrityError,
     RepairRemediationDecision,
     RepairRemediationDecisionRepository,
@@ -128,6 +129,10 @@ class TestBuildIntegrityReport:
         assert report.unreadable_total == 0
         assert report.check.status == "ok"
 
+    def test_namespace_enumeration_failure_is_not_reported_as_clean_integrity(self) -> None:
+        with pytest.raises(AttributeError, match="list_namespaces"):
+            build_repair_integrity_report(repository=object())  # type: ignore[arg-type]
+
 
 class TestBuildListReport:
     def test_list_returns_all_keys_in_namespace(self) -> None:
@@ -204,13 +209,15 @@ class TestBuildListReport:
     def test_list_refuses_when_both_flags_passed(self) -> None:
         with (
             EphemeralMasterKeyProvider(key=_KEY_A),
-            pytest.raises(RepairIntegrityError, match="cannot combine"),
+            pytest.raises(RepairIntegrityError) as exc_info,
         ):
             build_repair_list_report(
                 namespace="aeat.workflow",
                 include_all=True,
                 only_unreadable=True,
             )
+        assert exc_info.value.translated_message == "application.repair_integrity.errors.conflicting_list_filters"
+        assert exc_info.value.context == {"filters": "--all,--unreadable"}
 
     def test_list_empty_namespace_returns_zero_rows(self) -> None:
         with EphemeralMasterKeyProvider(key=_KEY_A):
@@ -266,5 +273,20 @@ class TestRepairRemediationDecisionRepository:
                 written_at=decided_at,
                 payload=tampered.model_dump_json().encode("utf-8"),
             )
-            with pytest.raises(RepairIntegrityError, match="re-derived"):
+            with pytest.raises(RepairIntegrityError) as exc_info:
                 RepairRemediationDecisionRepository(repository=secure_repository).load_decision(original_id)
+        assert exc_info.value.translated_message == "application.repair_integrity.errors.decision_id_mismatch_load"
+        assert exc_info.value.context is not None
+        assert exc_info.value.context["decision_id"] == original_id
+        assert exc_info.value.context["payload_decision_id"] == original_id
+        assert exc_info.value.context["expected_decision_id"] != original_id
+
+    def test_load_decision_not_found_uses_localized_context(self) -> None:
+        missing_id = "0" * 64
+        with (
+            EphemeralMasterKeyProvider(key=_KEY_A),
+            pytest.raises(RepairDecisionNotFoundError) as exc_info,
+        ):
+            RepairRemediationDecisionRepository(repository=SecureObjectRepository()).load_decision(missing_id)
+        assert exc_info.value.translated_message == "application.repair_integrity.errors.decision_not_found"
+        assert exc_info.value.context == {"decision_id": missing_id}

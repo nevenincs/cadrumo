@@ -93,8 +93,8 @@ _RepairDecisionOutcome = Literal["preserve", "quarantine", "rebuild", "export-re
 class _SecureObjectRepositoryProtocol(Protocol):
     """Structural interface consumed by the repair-integrity application layer.
 
-    ``SecureObjectRepository`` satisfies this protocol; test stubs that
-    implement only these three methods are accepted without subclassing.
+    ``SecureObjectRepository`` satisfies this protocol without forcing the
+    application layer to depend on the concrete SQL implementation.
     """
 
     def list_namespaces(self) -> tuple[str, ...]: ...
@@ -192,13 +192,7 @@ def _build_repair_integrity_report(
     repository: _SecureObjectRepositoryProtocol,
 ) -> RepairIntegrityReport:
     repo = repository
-    if namespace is None:
-        try:
-            namespaces = repo.list_namespaces()
-        except Exception:  # pragma: no cover - defensive; storage layer surfaces typed errors
-            namespaces = ()
-    else:
-        namespaces = (namespace,)
+    namespaces = repo.list_namespaces() if namespace is None else (namespace,)
     integrity = tuple(repo.probe_namespace_integrity(ns) for ns in namespaces)
     readable_total = sum(item.readable for item in integrity)
     unreadable_total = sum(item.unreadable for item in integrity)
@@ -258,8 +252,10 @@ def build_repair_list_report(
     keys and their decryptability status.
     """
     if include_all and only_unreadable:
-        msg = "build_repair_list_report cannot combine --all and --unreadable; pass one or neither"
-        raise RepairIntegrityError(msg)
+        raise RepairIntegrityError(
+            translated_message="application.repair_integrity.errors.conflicting_list_filters",
+            context={"filters": "--all,--unreadable"},
+        )
     if repository is None:
         with active_bucket_repair_session():
             return _build_repair_list_report(
@@ -421,8 +417,11 @@ class RepairRemediationDecisionRepository:
         expected_decision_id = _expected_repair_decision_id(decision)
         if decision.decision_id != expected_decision_id:
             raise RepairIntegrityError(
-                f"repair-remediation decision declares decision_id {decision.decision_id!r} "
-                f"but re-derived {expected_decision_id!r}; refusing the save"
+                translated_message="application.repair_integrity.errors.decision_id_mismatch_save",
+                context={
+                    "decision_id": decision.decision_id,
+                    "expected_decision_id": expected_decision_id,
+                },
             )
         payload = decision.model_dump_json().encode("utf-8")
         self._repo().save(
@@ -447,14 +446,20 @@ class RepairRemediationDecisionRepository:
             max_supported_version=REPAIR_DECISION_STORAGE_NAMESPACE.schema_version,
         )
         if record is None:
-            raise RepairDecisionNotFoundError(f"repair-remediation decision {decision_id!r} does not exist")
+            raise RepairDecisionNotFoundError(
+                translated_message="application.repair_integrity.errors.decision_not_found",
+                context={"decision_id": decision_id},
+            )
         decoded = RepairRemediationDecision.model_validate_json(record.payload)
         expected_decision_id = _expected_repair_decision_id(decoded)
         if decoded.decision_id != decision_id or decoded.decision_id != expected_decision_id:
             raise RepairIntegrityError(
-                f"repair-remediation decision payload at key {decision_id!r} "
-                f"declares decision_id {decoded.decision_id!r} but re-derived "
-                f"{expected_decision_id!r}; refusing the load"
+                translated_message="application.repair_integrity.errors.decision_id_mismatch_load",
+                context={
+                    "decision_id": decision_id,
+                    "payload_decision_id": decoded.decision_id,
+                    "expected_decision_id": expected_decision_id,
+                },
             )
         return decoded
 
@@ -474,8 +479,11 @@ class RepairRemediationDecisionRepository:
             expected_decision_id = _expected_repair_decision_id(decision)
             if decision.decision_id != expected_decision_id:
                 raise RepairIntegrityError(
-                    f"repair-remediation decision declares decision_id {decision.decision_id!r} "
-                    f"but re-derived {expected_decision_id!r}; refusing the list entry"
+                    translated_message="application.repair_integrity.errors.decision_id_mismatch_list",
+                    context={
+                        "decision_id": decision.decision_id,
+                        "expected_decision_id": expected_decision_id,
+                    },
                 )
             decisions.append(decision)
         return tuple(sorted(decisions, key=lambda d: d.decided_at, reverse=True))
