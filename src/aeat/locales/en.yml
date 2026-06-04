@@ -541,10 +541,23 @@ application:
   inventory:
     service:
       errors:
-        actividad_conflict: 'An inventory ledger already exists for activity %{actividad_id} and year %{year}.'
-        actividad_not_found: 'No inventory ledger exists for activity %{actividad_id} and year %{year}.'
-        duplicate_movement_id: 'The inventory ledger already contains movement %{movement_id}.'
-        invalid_valuation_method: 'The inventory valuation method is not supported: %{valuation_method}.'
+        actividad_conflict: An inventory ledger already exists for activity %{actividad_id}
+          and year %{year}.
+        actividad_not_found: No inventory ledger exists for activity %{actividad_id}
+          and year %{year}.
+        duplicate_movement_id: The inventory ledger already contains movement %{movement_id}.
+        invalid_valuation_method: 'The inventory valuation method is not supported:
+          %{valuation_method}.'
+  invoices:
+    importing:
+      errors:
+        import_file_read_failed: 'The invoice import file could not be read: %{path_name}.'
+        invalid_base_total: 'The invoice base_total value is not a decimal: %{base_total}.'
+        invalid_json: The invoice JSON payload is not valid JSON at line %{line},
+          column %{column}.
+        invalid_json_shape: The invoice JSON payload must be an object or a list of
+          objects.
+        invalid_kind: 'The invoice kind is not supported: %{kind}.'
   ledger:
     errors:
       evidence_attachment_requires_ids: Ledger evidence attachment requires purchase

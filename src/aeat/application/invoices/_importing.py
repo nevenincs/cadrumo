@@ -18,6 +18,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ...core.decimal import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
+from ...core.logging import get_logger
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -26,6 +27,8 @@ from ...domain.invoices import (
     InvoiceValidationError,
 )
 from ...domain.iva import InvoiceKind
+
+_log = get_logger(__name__)
 
 
 class InvoiceRowPayload(TypedDict, total=False):
@@ -131,7 +134,16 @@ def import_invoices_from_path(
 
     Returns an :class:`InvoiceImportResult`.
     """
-    invoices = parse_invoice_payload(path.read_text(encoding=UTF_8_ENCODING), default_kind=kind)
+    try:
+        raw = path.read_text(encoding=UTF_8_ENCODING)
+    except OSError as exc:
+        _log.debug("invoice import file read failed", extra={"path_name": path.name, "error_type": type(exc).__name__})
+        raise InvoiceValidationError(
+            "invoice import file could not be read",
+            translated_message="application.invoices.importing.errors.import_file_read_failed",
+            context={"path_name": path.name, "error_type": type(exc).__name__},
+        ) from exc
+    invoices = parse_invoice_payload(raw, default_kind=kind)
     if dry_run:
         return InvoiceImportResult(rows=len(invoices), dry_run=True)
 
@@ -145,7 +157,14 @@ def import_invoices_from_path(
 def _decode_invoice_payload(raw: str) -> tuple[InvoiceRowPayload, ...]:
     raw_stripped = raw.lstrip()
     if raw_stripped.startswith("[") or raw_stripped.startswith("{"):
-        decoded = json.loads(raw)
+        try:
+            decoded = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise InvoiceValidationError(
+                "invoice JSON payload is not valid JSON",
+                translated_message="application.invoices.importing.errors.invalid_json",
+                context={"line": str(exc.lineno), "column": str(exc.colno)},
+            ) from exc
         if isinstance(decoded, Mapping):
             # CAST-RATIONALE-WIRE-PAYLOAD-JSON-OBJECT:
             # json.loads returns Mapping[str, Any]; cast to TypedDict at the
@@ -156,7 +175,11 @@ def _decode_invoice_payload(raw: str) -> tuple[InvoiceRowPayload, ...]:
             # Same JSON-array decode boundary; each item is cast to TypedDict
             # before coercion.
             return tuple(cast(InvoiceRowPayload, dict(item)) for item in decoded)
-        raise InvoiceValidationError("invoice JSON payload must be an object or a list of objects")
+        raise InvoiceValidationError(
+            "invoice JSON payload must be an object or a list of objects",
+            translated_message="application.invoices.importing.errors.invalid_json_shape",
+            context={"payload_type": type(decoded).__name__},
+        )
 
     reader = csv.DictReader(raw.splitlines())
     # CAST-RATIONALE-WIRE-PAYLOAD-CSV-ROW:
@@ -177,7 +200,11 @@ def _synthesise_single_line_if_needed(payload: dict[str, Any]) -> None:
         return
     base = coerce_decimal(payload["base_total"])
     if base is None:
-        raise InvoiceValidationError(f"invoice base_total {payload['base_total']!r} is not a decimal")
+        raise InvoiceValidationError(
+            "invoice base_total is not a decimal",
+            translated_message="application.invoices.importing.errors.invalid_base_total",
+            context={"base_total": str(payload["base_total"])},
+        )
     rate_raw = str(payload["iva_rate"])
     rate = _IVA_RATE_ALIASES.get(rate_raw, rate_raw)
     iva_amount = coerce_decimal(payload.get("iva_total"), default=Decimal("0")) or Decimal("0")
@@ -197,7 +224,15 @@ def _synthesise_single_line_if_needed(payload: dict[str, Any]) -> None:
 def _coerce_kind(kind: InvoiceKind | str) -> InvoiceKind:
     if isinstance(kind, InvoiceKind):
         return kind
-    return InvoiceKind(kind.strip().lower())
+    normalized = kind.strip().lower()
+    try:
+        return InvoiceKind(normalized)
+    except ValueError as exc:
+        raise InvoiceValidationError(
+            "invoice kind is not supported",
+            translated_message="application.invoices.importing.errors.invalid_kind",
+            context={"kind": normalized},
+        ) from exc
 
 
 __all__ = [

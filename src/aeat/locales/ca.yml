@@ -594,10 +594,24 @@ application:
   inventory:
     service:
       errors:
-        actividad_conflict: 'Ja existeix un llibre d inventari per a l activitat %{actividad_id} i l exercici %{year}.'
-        actividad_not_found: 'No existeix cap llibre d inventari per a l activitat %{actividad_id} i l exercici %{year}.'
-        duplicate_movement_id: 'El llibre d inventari ja conte el moviment %{movement_id}.'
-        invalid_valuation_method: 'El metode de valoracio d inventari no esta admes: %{valuation_method}.'
+        actividad_conflict: Ja existeix un llibre d inventari per a l activitat %{actividad_id}
+          i l exercici %{year}.
+        actividad_not_found: No existeix cap llibre d inventari per a l activitat
+          %{actividad_id} i l exercici %{year}.
+        duplicate_movement_id: El llibre d inventari ja conte el moviment %{movement_id}.
+        invalid_valuation_method: 'El metode de valoracio d inventari no esta admes:
+          %{valuation_method}.'
+  invoices:
+    importing:
+      errors:
+        import_file_read_failed: 'No s ha pogut llegir el fitxer d importacio de factures:
+          %{path_name}.'
+        invalid_base_total: 'El valor base_total de la factura no es decimal: %{base_total}.'
+        invalid_json: El contingut JSON de factures no es valid a la linia %{line},
+          columna %{column}.
+        invalid_json_shape: El contingut JSON de factures ha de ser un objecte o una
+          llista d objectes.
+        invalid_kind: 'El tipus de factura no esta admes: %{kind}.'
   ledger:
     errors:
       evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix
@@ -670,10 +684,10 @@ application:
       iva_wallet_next_action: Review the IVA wallet reconciliation decision before
         verifying or exporting this Modelo 303.
       m210_baseline_tipo_deferred:
-        next_action: 'El tipus de gravamen baseline per a tipo_renta={tipo_renta}
-          esta ajornat a una Fase futura sota la task #229 (corpus BOE pendent). Establiu
-          profile.country_of_fiscal_residence per reclamar la tarifa Convenio aplicable,
-          o espereu que el corpus baseline incorpori aquesta fila.'
+        next_action: 'El tipus de gravamen b tipo_renta={tipo_renta} esta ajornat
+          a una Fase futura sota la task #229 (corpus BOE pendent). Establiu profile.country_of_fiscal_residence
+          per reclamar la tarifa Convenio aplicable, o espereu que el corpus baseline
+          incorpori aquesta fila.'
       m210_convenio_rate_missing:
         next_action: Autoritzeu la fila Convenio España-{cc} a m210-convenio-rates
           per a tipo_renta={tipo_renta}, o desestableixi profile.convenio_doble_imposicion_country
