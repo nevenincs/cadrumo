@@ -864,6 +864,10 @@ application:
     errors:
       portal_not_found: El portal AEAT solicitado no está registrado. Ejecute 'aeat
         app live portals list' para ver los portales disponibles.
+  registry:
+    errors:
+      invalid_oracle_environment: El entorno de oráculos del registro debe ser uno
+        de {allowed_values}; se recibió {value}.
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
@@ -2634,7 +2638,7 @@ cli:
         auth_providers: Listar los proveedores de autenticacion disponibles.
         auth_status: Mostrar el estado actual de la autenticacion con la AEAT.
         auth_test: Probar la autenticacion con la AEAT.
-        bucket_history: 'Inspecciona el historial append-only de eventos del bucket.'
+        bucket_history: Inspecciona el historial append-only de eventos del bucket.
         diagnostics_logs: Consultar los registros de diagnostico de la aplicacion.
         diagnostics_quarantine: Gestionar los elementos en cuarentena.
         diagnostics_repair: Ejecutar comprobaciones de salud y reparar el estado de
@@ -2656,7 +2660,7 @@ cli:
         profile_status: Mostrar el estado del perfil activo.
         profile_switch: Cambiar al perfil de contribuyente indicado.
         section_authentication: Autenticacion AEAT
-        section_bucket_inspection: 'Inspeccion de bucket'
+        section_bucket_inspection: Inspeccion de bucket
         section_diagnostics: Diagnostico
         section_first_run: Primera ejecucion
         section_profile_inspection: Inspeccion de perfil
@@ -3503,6 +3507,11 @@ errors:
     error_workflow: Se produjo un error en el flujo de trabajo.
     error_workflow_component: Un componente del flujo de trabajo lanzó una excepción
       inesperada.
+    modelo_calculation_revision_selector: 'La selección de revisión de cálculo falló.'
+    modelo_calculation_revision_selector_not_found: 'Ninguna revisión de cálculo coincide con el selector indicado.'
+    modelo_work_selector: El selector de trabajo de modelo fallo.
+    modelo_work_selector_unit_not_found: No se encontro la unidad de trabajo de modelo
+      seleccionada.
   fail:
     censo_sync: La sincronización del censo del Modelo 036 falló.
     currency_error: Falló la normalización de la moneda.
@@ -3791,6 +3800,8 @@ errors:
       184 deben sumar exactamente el 100 %.
     modelo_347_threshold: Las operaciones del Modelo 347 por encima del umbral informativo
       requieren cobertura declarativa explícita.
+    modelo_calculation_revision_selector_ambiguous: 'El selector de revisión de cálculo coincide con más de una revisión; refine el selector.'
+    modelo_calculation_revision_selector_state: 'La revisión de cálculo seleccionada no está en un estado utilizable para esta operación.'
     modelo_censo_stale: 'La operación se rechaza porque aplicaste un censo nuevo después
       de generar este trabajo. La AEAT es la fuente legal vinculante: vuelve a generarlo
       con el censo actual.'
@@ -3798,6 +3809,14 @@ errors:
       del perfil activo. La exportación solo opera dentro del bucket del perfil activo.
     modelo_export_no_active_bucket: La exportación necesita un perfil activo. Crea
       o selecciona un perfil y vuelve a intentarlo.
+    modelo_work_selector_ambiguous: Mas de una unidad de trabajo de modelo coincide
+      con el selector.
+    modelo_work_selector_contradiction: Los argumentos del selector de trabajo de
+      modelo se contradicen.
+    modelo_work_selector_no_active_bucket: Seleccione un perfil activo antes de resolver
+      una unidad de trabajo de modelo.
+    modelo_work_selector_revision_conflict: La unidad de trabajo de modelo seleccionada
+      pertenece a otra revision.
     profile_already_registered: Ya existe un perfil con ese nombre. Usa `aeat config
       profile switch NOMBRE` para cambiar a él.
     profile_import_collision: El identificador del perfil importado coincide con uno
