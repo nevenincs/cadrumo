@@ -71,7 +71,7 @@ Make calculation revision defaults command-specific and close current-pointer ga
 
 - [x] `W01.P02.S08` - add command-specific filed current and exportable calculation revision selector operations; `src/aeat/application/modelo/_selectors.py`.
 - [x] `W01.P02.S09` - advance current calculation pointers when duplicate draft revisions are reused; `src/aeat/application/modelo/_revision_persistence.py`.
-- [ ] `W01.P02.S10` - preserve filed and current filing pointer persistence invariants; `src/aeat/application/modelo/_revision_persistence.py`.
+- [x] `W01.P02.S10` - preserve filed and current filing pointer persistence invariants; `src/aeat/application/modelo/_revision_persistence.py`.
 - [ ] `W01.P02.S11` - cover current latest-draft latest-verified filed and explicit revision selection; `src/aeat/application/modelo/test_selectors.py`.
 - [ ] `W01.P02.S12` - cover duplicate calculation revision current-pointer behavior; `src/aeat/application/modelo/test_file_flow.py`.
 - [ ] `W01.P02.S13` - cover exportable revision preference without arbitrary latest fallback; `src/aeat/application/modelo/test_export.py`.
@@ -226,6 +226,7 @@ localized operator messages render clearly without stale ID-routing
 guidance, the affected documentation no longer teaches pasted-ID routing
 for the common path, and the feature surface gate reports only relevant
 pass/fail results for this change set.
+
 
 
 
