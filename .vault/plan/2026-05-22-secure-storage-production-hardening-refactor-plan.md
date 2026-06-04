@@ -434,7 +434,7 @@ Current register count: `293` production candidate files.
 | `AFR-153` | `src/aeat/application/state_projection.py` | `runtime, active-profile, manifest-bucket, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-154` | `src/aeat/application/storage/calc_sheets/_engine.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-155` | `src/aeat/application/storage/calc_sheets/_layout.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
-| `AFR-156` | `src/aeat/application/storage/calc_sheets/_parity_harness.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-156` | `src/aeat/application/storage/calc_sheets/_parity_harness.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-157` | `src/aeat/application/storage/calc_sheets/_records.py` | `secure-object, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-158` | `src/aeat/application/storage/calc_sheets/_translator.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-159` | `src/aeat/application/topics/__init__.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
@@ -787,7 +787,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S255` - Close `AFR-153` for `src/aeat/application/state_projection.py` with signals `runtime, active-profile, manifest-bucket, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/state_projection.py`.
 - [x] `W12.P26.S256` - Close `AFR-154` for `src/aeat/application/storage/calc_sheets/_engine.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/storage/calc_sheets/_engine.py`.
 - [x] `W12.P26.S257` - Close `AFR-155` for `src/aeat/application/storage/calc_sheets/_layout.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/storage/calc_sheets/_layout.py`.
-- [ ] `W12.P26.S258` - Close `AFR-156` for `src/aeat/application/storage/calc_sheets/_parity_harness.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/storage/calc_sheets/_parity_harness.py`.
+- [x] `W12.P26.S258` - Close `AFR-156` for `src/aeat/application/storage/calc_sheets/_parity_harness.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/storage/calc_sheets/_parity_harness.py`.
 - [ ] `W12.P26.S259` - Close `AFR-157` for `src/aeat/application/storage/calc_sheets/_records.py` with signals `secure-object, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/storage/calc_sheets/_records.py`.
 - [ ] `W12.P26.S260` - Close `AFR-158` for `src/aeat/application/storage/calc_sheets/_translator.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/storage/calc_sheets/_translator.py`.
 - [ ] `W12.P26.S261` - Close `AFR-159` for `src/aeat/application/topics/__init__.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/topics/__init__.py`.

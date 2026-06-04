@@ -934,9 +934,14 @@ application:
           tariffs: Tarifas / parámetros vigentes - protegido
       layout:
         errors:
-          undeclared_reference: 'El diseño de la hoja de cálculo referencia un elemento no declarado por la revisión.'
+          undeclared_reference: El diseño de la hoja de cálculo referencia un elemento
+            no declarado por la revisión.
           unresolved_reference: El diseño de la hoja de cálculo no contiene una celda
             para un elemento referenciado.
+      parity:
+        errors:
+          seed_anchor_missing: 'La entrada del escenario de paridad no tiene una celda de hoja de cálculo donde sembrarse.'
+          unknown_casilla_numbers: 'El escenario de paridad referencia números de casilla que no están en la instantánea del registro.'
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
