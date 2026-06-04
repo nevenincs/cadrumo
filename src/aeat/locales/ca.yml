@@ -552,7 +552,8 @@ application:
       errors:
         modelo_303_only: L'historial de compensació d'IVA només accepta observacions
           del Model 303.
-        modelo_390_only: 'El resum anual de compensació d''IVA només accepta observacions del Model 390.'
+        modelo_390_only: El resum anual de compensació d'IVA només accepta observacions
+          del Model 390.
         seed_conflict: Ja existeix un estat de compensació d'IVA per a aquest període;
           la llavor sobreescriuria l'historial emmagatzemat.
   filing:
@@ -572,16 +573,31 @@ application:
         unknown: '%{reason}'
     runtime:
       errors:
-        active_profile_load_failed: 'No s ha pogut carregar el perfil actiu de presentacio: %{reason}.'
-        blank_modelo_selection: 'La seleccio de models sol.licitada no pot contenir identificadors buits.'
-        filing_year_period_pair: 'filing_year i period s han d indicar junts.'
-        modelo_not_in_registry: 'El model %{modelo} no esta present al registre de calcul.'
-        modelo_revision_missing: 'El model %{modelo} no te revisions.'
-        provider_year_missing: 'El model %{modelo} revisio %{revision} no te exercici de proveidor.'
-        registry_empty: 'L arrel del registre %{registry_root_name} no te definicions de model.'
-        registry_empty_for_period: 'L arrel del registre no te definicions de model per a l exercici %{filing_year} periode %{period}.'
-        registry_missing_requested_modelos: 'L arrel del registre no conte les definicions de model sol.licitades: %{modelos}.'
-        unsupported_casilla_data_type: 'Tipus de dada de casella del registre no admes: %{data_type}.'
+        active_profile_load_failed: 'No s ha pogut carregar el perfil actiu de presentacio:
+          %{reason}.'
+        blank_modelo_selection: La seleccio de models sol.licitada no pot contenir
+          identificadors buits.
+        filing_year_period_pair: filing_year i period s han d indicar junts.
+        modelo_not_in_registry: El model %{modelo} no esta present al registre de
+          calcul.
+        modelo_revision_missing: El model %{modelo} no te revisions.
+        provider_year_missing: El model %{modelo} revisio %{revision} no te exercici
+          de proveidor.
+        registry_empty: L arrel del registre %{registry_root_name} no te definicions
+          de model.
+        registry_empty_for_period: L arrel del registre no te definicions de model
+          per a l exercici %{filing_year} periode %{period}.
+        registry_missing_requested_modelos: 'L arrel del registre no conte les definicions
+          de model sol.licitades: %{modelos}.'
+        unsupported_casilla_data_type: 'Tipus de dada de casella del registre no admes:
+          %{data_type}.'
+  inventory:
+    service:
+      errors:
+        actividad_conflict: 'Ja existeix un llibre d inventari per a l activitat %{actividad_id} i l exercici %{year}.'
+        actividad_not_found: 'No existeix cap llibre d inventari per a l activitat %{actividad_id} i l exercici %{year}.'
+        duplicate_movement_id: 'El llibre d inventari ja conte el moviment %{movement_id}.'
+        invalid_valuation_method: 'El metode de valoracio d inventari no esta admes: %{valuation_method}.'
   ledger:
     errors:
       evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix

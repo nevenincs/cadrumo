@@ -502,7 +502,7 @@ application:
     iva_compensation:
       errors:
         modelo_303_only: IVA compensation history only accepts Modelo 303 observations.
-        modelo_390_only: 'IVA compensation annual summary only accepts Modelo 390 observations.'
+        modelo_390_only: IVA compensation annual summary only accepts Modelo 390 observations.
         seed_conflict: An IVA compensation state already exists for this period; seeding
           would overwrite stored history.
   filing:
@@ -522,16 +522,29 @@ application:
         unknown: '%{reason}'
     runtime:
       errors:
-        active_profile_load_failed: 'The active filing profile could not be loaded: %{reason}.'
-        blank_modelo_selection: 'Requested modelo selection must not contain blank modelo ids.'
-        filing_year_period_pair: 'filing_year and period must be supplied together.'
-        modelo_not_in_registry: 'Modelo %{modelo} is not present in the calculation registry.'
-        modelo_revision_missing: 'Modelo %{modelo} has no revisions.'
-        provider_year_missing: 'Modelo %{modelo} revision %{revision} has no provider year.'
-        registry_empty: 'The registry root %{registry_root_name} has no modelo definitions.'
-        registry_empty_for_period: 'The registry root has no modelo definitions for year %{filing_year} period %{period}.'
-        registry_missing_requested_modelos: 'The registry root is missing requested modelo definitions: %{modelos}.'
+        active_profile_load_failed: 'The active filing profile could not be loaded:
+          %{reason}.'
+        blank_modelo_selection: Requested modelo selection must not contain blank
+          modelo ids.
+        filing_year_period_pair: filing_year and period must be supplied together.
+        modelo_not_in_registry: Modelo %{modelo} is not present in the calculation
+          registry.
+        modelo_revision_missing: Modelo %{modelo} has no revisions.
+        provider_year_missing: Modelo %{modelo} revision %{revision} has no provider
+          year.
+        registry_empty: The registry root %{registry_root_name} has no modelo definitions.
+        registry_empty_for_period: The registry root has no modelo definitions for
+          year %{filing_year} period %{period}.
+        registry_missing_requested_modelos: 'The registry root is missing requested
+          modelo definitions: %{modelos}.'
         unsupported_casilla_data_type: 'Unsupported registry casilla data type: %{data_type}.'
+  inventory:
+    service:
+      errors:
+        actividad_conflict: 'An inventory ledger already exists for activity %{actividad_id} and year %{year}.'
+        actividad_not_found: 'No inventory ledger exists for activity %{actividad_id} and year %{year}.'
+        duplicate_movement_id: 'The inventory ledger already contains movement %{movement_id}.'
+        invalid_valuation_method: 'The inventory valuation method is not supported: %{valuation_method}.'
   ledger:
     errors:
       evidence_attachment_requires_ids: Ledger evidence attachment requires purchase
