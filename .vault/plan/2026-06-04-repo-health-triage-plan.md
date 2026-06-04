@@ -192,6 +192,53 @@ Record the post-remediation advisory baseline and complete final code review bef
 - [ ] `W05.P17.S61` - Run final code review over all closed repo-health slices; `.vault/audit`.
 - [ ] `W05.P17.S62` - Update execution records and plan closure state; `.vault/exec`.
 
+## Wave `W06` - all-green diagnostic burn-down
+
+Drive every diagnostic class from advisory red to explicit green or documented ratchet state, using one scoped finding class per Step and preserving the shared-worktree no-sync execution discipline.
+
+### Phase `W06.P18` - type checker all-green burn-down
+
+Drive Ty and scoped Pyright findings down by cohesive diagnostic class, recording every remaining exception as an explicit ratchet rather than an untracked red baseline.
+
+- [x] `W06.P18.S63` - Classify current Ty and Pyright diagnostics into executable finding buckets; `.vault/audit/2026-06-04-full-repo-health-diagnostics-audit.md`.
+- [ ] `W06.P18.S64` - Repair Declaracion parser boundary test typing; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+- [ ] `W06.P18.S65` - Repair exception-hygiene AST location narrowing; `src/aeat/adapters/inbound/declaracion/test_exception_hygiene.py`.
+- [ ] `W06.P18.S66` - Normalize auth Settings test constructor values; `src/aeat/adapters/outbound/aeat/auth`.
+- [ ] `W06.P18.S67` - Repair aggregation error constructor and optional narrowing findings; `src/aeat/application/aggregation`.
+- [ ] `W06.P18.S68` - Repair filing repository generic payload residuals; `src/aeat/domain/filing`.
+- [ ] `W06.P18.S69` - Repair renta and transaction Decimal literal residuals; `src/aeat/domain`.
+- [ ] `W06.P18.S70` - Persist type all-green baseline or explicit residual ratchets; `.vault/audit`.
+
+### Phase `W06.P19` - complexity all-green burn-down
+
+Separate production complexity from ratchet-test complexity, then decompose the remaining cognitive-load hotspots until the production lane is green or explicitly thresholded.
+
+- [ ] `W06.P19.S71` - Split production-only complexity lane from package test ratchets; `justfile`.
+- [ ] `W06.P19.S72` - Add ratchet-test complexity lane for top-level package tests; `justfile`.
+- [ ] `W06.P19.S73` - Reduce wizard command catalogue cognitive complexity; `src/aeat/application/wizard/_commands.py`.
+- [ ] `W06.P19.S74` - Reduce remaining modelo CLI command cognitive complexity; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W06.P19.S75` - Reduce registry formula initial-value cognitive complexity; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
+- [ ] `W06.P19.S76` - Reduce ledger list and review projection cognitive complexity; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W06.P19.S77` - Persist complexity all-green baseline or explicit residual ratchets; `.vault/audit`.
+
+### Phase `W06.P20` - hygiene advisory all-green burn-down
+
+Resolve dependency, dead-code, Ruff, security, and duplication advisory findings one class at a time without weakening hard architectural policies.
+
+- [ ] `W06.P20.S78` - Normalize Ruff scope for root scratch and probe artifacts; `pyproject.toml`.
+- [ ] `W06.P20.S79` - Resolve dependency declaration drift findings; `pyproject.toml`.
+- [ ] `W06.P20.S80` - Resolve Vulture dead-code candidate findings; `src/aeat`.
+- [ ] `W06.P20.S81` - Split Semgrep security policy by source class; `.semgrepignore`.
+- [ ] `W06.P20.S82` - Reduce remaining duplication clone groups or record ratchets; `src/aeat`.
+
+### Phase `W06.P21` - final all-green ratchet and review
+
+Run the complete diagnostic surface, persist a final all-green matrix, close plan rows through the CLI, and complete mandatory VaultSpec review before declaring the campaign green.
+
+- [ ] `W06.P21.S83` - Run hard gate suite and persist green evidence; `.vault/audit`.
+- [ ] `W06.P21.S84` - Run full quality-audit and persist final diagnostic matrix; `.vault/audit`.
+- [ ] `W06.P21.S85` - Complete mandatory code review and close all-green campaign state; `.vault/exec`.
+
 ## Parallelization
 
 Waves are ordered by default. Within `W01`, the relative-import, dependency, and
