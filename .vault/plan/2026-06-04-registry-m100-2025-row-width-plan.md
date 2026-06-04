@@ -26,7 +26,7 @@ Reduce the remaining M100 2025 TOML row-width pressure above 520 characters.
 - [x] `S02` - Wrap the four M100 2025 `legal_refs` rows above 520 characters without changing TOML values; `src/aeat/_data/registry/aeat/modelos/100/revisions/2025/casillas`.
 - [x] `S03` - Tighten the TOML row-width baseline if the post-format corpus permits; `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
 - [x] `S04` - Verify reviewability, committed registry, loader, and plan gates; `src/aeat/domain/calculations/registry`.
-- [ ] `S05` - Review and close the M100 2025 row-width slice; `.vault/audit`.
+- [x] `S05` - Review and close the M100 2025 row-width slice; `.vault/audit`.
 ## Description
 
 The previous M100 deferral slice lowered the reviewability baseline to 530 and
