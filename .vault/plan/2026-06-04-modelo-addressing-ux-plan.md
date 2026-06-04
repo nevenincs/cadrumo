@@ -128,7 +128,7 @@ Keep raw IDs as advanced exact-addressing inputs while retiring stale help that 
 
 Decide which nearby work-unit commands join the natural-key first slice and which remain exact-ID advanced surfaces with documented rationale.
 
-- [ ] `W03.P10.S43` - record the adjacent command classification matrix; `.vault/exec/2026-06-04-modelo-addressing-ux`.
+- [ ] `W03.P10.S43` - record the adjacent command and internal service classification matrix covering application services CLI payloads help locales docs and exact-ID escape hatches; `.vault/exec/2026-06-04-modelo-addressing-ux`.
 - [ ] `W03.P10.S44` - classify and implement the work rename addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W03.P10.S45` - classify and implement the work discard addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W03.P10.S46` - classify and implement the work history addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
@@ -144,7 +144,7 @@ Decide how adjacent calculation-revision and modelo-level consumers avoid accide
 - [ ] `W03.P11.S51` - classify and implement the modelo reconcile-from-justificante addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W03.P11.S52` - classify and implement the modelo project addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W03.P11.S53` - classify and implement the modelo compare addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W03.P11.S54` - cover adjacent command decisions with focused CLI regression tests; `src/aeat/entrypoints/cli/test_modelo_work_natural_key.py`.
+- [ ] `W03.P11.S54` - cover adjacent command internal service and selector enrollment decisions with focused regression tests; `src/aeat/entrypoints/cli/test_modelo_work_natural_key.py`.
 
 ## Wave `W04` - documentation reference and locales
 
@@ -154,12 +154,12 @@ Update user-facing docs generated reference help text and localization only afte
 
 Render resumed work ambiguity conflict and selector guidance in each supported locale without reintroducing raw-ID routing as the normal workflow.
 
-- [ ] `W04.P05.S61` - inventory stale localized help that routes common workflows through raw IDs; `src/aeat/locales`.
+- [ ] `W04.P05.S61` - inventory stale localized help and operator guidance that routes common workflows through raw IDs; `src/aeat/locales`.
 - [ ] `W04.P05.S62` - add English messages for resumed work ambiguity conflicts and selector refusals; `src/aeat/locales/en.yml`.
 - [ ] `W04.P05.S63` - add Spanish messages for resumed work ambiguity conflicts and selector refusals; `src/aeat/locales/es.yml`.
 - [ ] `W04.P05.S64` - add Catalan messages for resumed work ambiguity conflicts and selector refusals; `src/aeat/locales/ca.yml`.
 - [ ] `W04.P05.S65` - add Hungarian messages for resumed work ambiguity conflicts and selector refusals; `src/aeat/locales/hu.yml`.
-- [ ] `W04.P05.S66` - cover retired ID-routing help messages in CLI output tests; `src/aeat/entrypoints/cli/test_modelo_work_ux.py`.
+- [ ] `W04.P05.S66` - cover retired ID-routing help payload metadata and natural-key guidance in CLI output tests; `src/aeat/entrypoints/cli/test_modelo_work_ux.py`.
 
 ### Phase `W04.P06` - update user documentation after tested behavior lands
 
@@ -195,6 +195,10 @@ Close the plan only after exact-match semantic and file-discovery audits prove e
 - [ ] `W05.P17.S120` - run semantic raw-ID leakage audit over source locales and docs; `vaultspec-rag`.
 - [ ] `W05.P17.S121` - run file-discovery blast-radius audit for modelo work and revision surfaces; `fd blast-radius inventory`.
 - [ ] `W05.P17.S122` - persist the final blast-radius classification matrix and closure evidence; `.vault/exec/2026-06-04-modelo-addressing-ux`.
+- [ ] `W05.P17.S123` - verify internal service coverage for action export reconcile history taxation result-summary and state-projection ID linkage; `src/aeat/application`.
+- [ ] `W05.P17.S124` - verify external CLI abstraction coverage for modelo command handlers payload schemas and work group help; `src/aeat/entrypoints/cli`.
+- [ ] `W05.P17.S125` - verify narrative and generated documentation coverage for all raw-ID workflow references; `docs`.
+- [ ] `W05.P17.S126` - verify locale and translation guard coverage for all raw-ID workflow references; `src/aeat/locales`.
 
 ## Parallelization
 
