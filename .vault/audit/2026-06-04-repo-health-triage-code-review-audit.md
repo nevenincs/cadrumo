@@ -263,3 +263,19 @@ contain PyPI `torch` transitively through dev tooling, but the application no
 longer declares it directly. Deptry still reports planned residual findings for
 `playwright_stealth` and `prompt_toolkit`, which remain open under
 W04.P12.S41-S42.
+
+## W04-004 | INFO | Playwright stealth dependency placement review found no defects
+
+Status: verified with scoped residual.
+
+The W04.P12.S41 review found no behavioral defect in moving
+`playwright-stealth` from the dev group to runtime dependencies. Production
+browser code imports `playwright_stealth` from `PlaywrightStealthEvasion`, and
+`BrowserSession` defaults to that strategy, so the dependency belongs beside
+runtime `playwright`.
+
+Focused verification passed the existing browser evasion test, both live and
+clean-export lock checks, and Deptry no longer reports `playwright_stealth`.
+Deptry remains red for planned residual dependency findings and unrelated scan
+noise, including an unrelated syntax warning in
+`src/aeat/application/modelo/__init__.py`; those are outside S41.
