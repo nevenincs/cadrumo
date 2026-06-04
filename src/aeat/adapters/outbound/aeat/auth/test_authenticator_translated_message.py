@@ -31,6 +31,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
+from pydantic import SecretStr
 
 from .....core.config import CertificateBackend, Settings
 from .....core.i18n import tr
@@ -107,8 +108,6 @@ def _build_bundle(tmp_path: Path) -> Path:
 
 
 def _load_cert(tmp_path: Path) -> LoadedCertificate:
-    from pydantic import SecretStr
-
     bundle = CertificateBundle(
         path=_build_bundle(tmp_path),
         password=SecretStr(_SECRET),
@@ -127,12 +126,12 @@ def _settings_for(bundle_path: Path) -> Settings:
     returned Settings context within override_settings().
     """
     return Settings(
-        aeat_certificate_path=str(bundle_path),
-        aeat_certificate_password_secret=_SECRET,
+        aeat_certificate_path=bundle_path,
+        aeat_certificate_password_secret=SecretStr(_SECRET),
         aeat_certificate_backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
         aeat_certificate_verify_url="https://127.0.0.1:1/",
-        aeat_token_dir=str(bundle_path.parent / ".tokens"),
-        aeat_local_storage_root=str(bundle_path.parent / "storage"),
+        aeat_token_dir=bundle_path.parent / ".tokens",
+        aeat_local_storage_root=bundle_path.parent / "storage",
     )
 
 
