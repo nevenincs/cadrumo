@@ -133,7 +133,7 @@ Decide which nearby work-unit commands join the natural-key first slice and whic
 - [x] `W03.P10.S45` - classify and implement the work discard addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W03.P10.S46` - classify and implement the work history addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W03.P10.S47` - classify and implement the work compare-taxation addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W03.P10.S48` - classify and implement the work amend addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W03.P10.S48` - classify and implement the work amend addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
 
 ### Phase `W03.P11` - classify adjacent revision and modelo commands
 
@@ -226,6 +226,7 @@ localized operator messages render clearly without stale ID-routing
 guidance, the affected documentation no longer teaches pasted-ID routing
 for the common path, and the feature surface gate reports only relevant
 pass/fail results for this change set.
+
 
 
 
