@@ -110,7 +110,7 @@ Make export select filed and verified-complete revisions through the selector co
 
 - [x] `W02.P09.S23` - allow modelo export to default to filed then current verified-complete revision under a natural target; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W02.P09.S24` - cover the basic Modelo 130 lifecycle without copied IDs; `src/aeat/entrypoints/cli/test_modelo_work_natural_key.py`.
-- [ ] `W02.P09.S25` - cover refusal when a visible target has conflicting active registry revisions; `src/aeat/entrypoints/cli/test_modelo_work_natural_key.py`.
+- [x] `W02.P09.S25` - cover refusal when a visible target has conflicting active registry revisions; `src/aeat/entrypoints/cli/test_modelo_work_natural_key.py`.
 - [ ] `W02.P09.S26` - cover export defaults for filed verified and ambiguous revision states; `src/aeat/entrypoints/cli/test_modelo_export_verb.py`.
 
 ## Wave `W03` - adjacent command compatibility audit
@@ -226,6 +226,7 @@ localized operator messages render clearly without stale ID-routing
 guidance, the affected documentation no longer teaches pasted-ID routing
 for the common path, and the feature surface gate reports only relevant
 pass/fail results for this change set.
+
 
 
 
