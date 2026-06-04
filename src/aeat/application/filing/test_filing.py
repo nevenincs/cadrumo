@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -12,7 +13,15 @@ from ...core.i18n import Translatable as tr
 from ...core.resources import resources
 from ...domain.filing import ModeloDraftError
 from ...domain.submission import ModeloDraftStatus
-from ...domain.transactions import TransactionCatalogue
+from ...domain.transactions import (
+    RawProvenance,
+    RawTransaction,
+    SourceFormat,
+    Transaction,
+    TransactionCatalogue,
+    TransactionCatalogueRepository,
+    TransactionDirection,
+)
 from . import (
     CasillaSchemaProvider,
     ModeloCalculateError,
@@ -23,6 +32,7 @@ from . import (
     approve_draft,
     build_draft,
     build_runtime_schema_provider,
+    compute_current_approval_basis,
     compute_modelo_draft_id,
     iter_findings,
     refresh_review_status,
@@ -66,6 +76,38 @@ def _draft(schema_provider: CasillaSchemaProvider | None = None) -> ModeloDraft:
             "18": Decimal("0"),
         },
         schema_provider=schema_provider or _schema_provider(),
+    )
+
+
+def _transaction(
+    *,
+    provider_id: str,
+    amount: Decimal,
+    description: str,
+) -> Transaction:
+    raw = RawTransaction(
+        transaction_id=provider_id,
+        booked_date=date(2026, 4, 10),
+        value_date=date(2026, 4, 10),
+        amount=amount,
+        currency="EUR",
+        counterparty="Supplier SL",
+        description=description,
+        provenance=RawProvenance(
+            source_path=Path(f"/bank/{provider_id}.csv"),
+            source_sha256="c" * 64,
+            source_row_index=1,
+            source_format=SourceFormat.CSV,
+            ingested_at=datetime(2026, 4, 14, 9, 30, tzinfo=UTC),
+            provider_name="CSV provider",
+        ),
+        raw_fields={"Concepto": description},
+    )
+    return Transaction.model_validate(
+        {
+            "raw": raw,
+            "direction": TransactionDirection.OUTGOING,
+        }
     )
 
 
@@ -350,6 +392,86 @@ def test_approve_draft_uses_registry_schema_fingerprint() -> None:
     assert approved.review_checksum is not None
 
 
+def test_approval_basis_reloads_persisted_transaction_catalogue() -> None:
+    schema_provider = _schema_provider()
+    draft = _draft(schema_provider)
+    repository = TransactionCatalogueRepository(bucket_id="filing-test")
+
+    repository.save(
+        TransactionCatalogue.from_transactions(
+            (
+                _transaction(
+                    provider_id="first-catalogue-row",
+                    amount=Decimal("-80.00"),
+                    description="First persisted catalogue row",
+                ),
+            )
+        )
+    )
+    first_basis = compute_current_approval_basis(
+        draft,
+        bucket_id="filing-test",
+        schema_provider=schema_provider,
+    )
+
+    repository.save(
+        TransactionCatalogue.from_transactions(
+            (
+                _transaction(
+                    provider_id="second-catalogue-row",
+                    amount=Decimal("-125.00"),
+                    description="Second persisted catalogue row",
+                ),
+            )
+        )
+    )
+    second_basis = compute_current_approval_basis(
+        draft,
+        bucket_id="filing-test",
+        schema_provider=schema_provider,
+    )
+
+    assert first_basis.transaction_catalogue_fingerprint != second_basis.transaction_catalogue_fingerprint
+
+
+def test_approve_draft_rejects_blank_approver_with_translated_message() -> None:
+    schema_provider = _schema_provider()
+    draft = _draft(schema_provider)
+
+    with pytest.raises(ModeloDraftError) as exc_info:
+        approve_draft(
+            draft,
+            bucket_id="test",
+            approved_by="   ",
+            schema_provider=schema_provider,
+            transaction_catalogue=TransactionCatalogue(),
+        )
+
+    assert exc_info.value.translated_message == "application.filing.review.errors.approved_by_blank"
+
+
+def test_approve_draft_rejects_unready_draft_with_translated_message() -> None:
+    schema_provider = _schema_provider()
+    finding = ModeloValidationFinding(
+        casilla_id=None,
+        severity=BaseSeverity.ERROR,
+        code="approval-blocker",
+        message=tr("translation"),
+    )
+    draft = _draft(schema_provider).model_copy(update={"findings": (finding,)})
+
+    with pytest.raises(ModeloDraftError) as exc_info:
+        approve_draft(
+            draft,
+            bucket_id="test",
+            approved_by="operator",
+            schema_provider=schema_provider,
+            transaction_catalogue=TransactionCatalogue(),
+        )
+
+    assert exc_info.value.translated_message == "application.filing.review.errors.draft_not_ready"
+
+
 def test_approve_modelo_111_draft_uses_registry_schema_fingerprint() -> None:
     schema_provider = build_runtime_schema_provider()
     draft = build_draft(
@@ -452,7 +574,7 @@ def test_approve_draft_rejects_schema_version_mismatch() -> None:
     schema_provider = _schema_provider()
     draft = _draft(schema_provider).model_copy(update={"schema_version": "registry:130:wrong-revision"})
 
-    with pytest.raises(ModeloDraftError, match="registry review surface"):
+    with pytest.raises(ModeloDraftError) as exc_info:
         approve_draft(
             draft,
             bucket_id="test",
@@ -460,6 +582,8 @@ def test_approve_draft_rejects_schema_version_mismatch() -> None:
             schema_provider=schema_provider,
             transaction_catalogue=TransactionCatalogue(),
         )
+    assert exc_info.value.translated_message == "application.filing.review.errors.registry_review_mismatch"
+    assert exc_info.value.context == {"codes": "filing-schema-version-mismatch"}
 
 
 def test_approve_draft_rejects_formula_trace_mismatch() -> None:
@@ -470,7 +594,7 @@ def test_approve_draft_rejects_formula_trace_mismatch() -> None:
     )
     draft = _draft(schema_provider).model_copy(update={"values": values})
 
-    with pytest.raises(ModeloDraftError, match="registry review surface"):
+    with pytest.raises(ModeloDraftError) as exc_info:
         approve_draft(
             draft,
             bucket_id="test",
@@ -478,6 +602,8 @@ def test_approve_draft_rejects_formula_trace_mismatch() -> None:
             schema_provider=schema_provider,
             transaction_catalogue=TransactionCatalogue(),
         )
+    assert exc_info.value.translated_message == "application.filing.review.errors.registry_review_mismatch"
+    assert exc_info.value.context == {"codes": "formula-divergence"}
 
 
 def test_refresh_review_status_preserves_submitted_status_but_clears_stale_approval() -> None:
