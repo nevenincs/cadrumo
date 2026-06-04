@@ -10,6 +10,7 @@ from ...application.review import (
     project_review_item,
     project_review_queue,
 )
+from ...core.errors import resolve_error_message
 from ...core.i18n import tr
 from ._common import _bad, _emit_envelope
 from ._review_payloads import ReviewQueueResult, ReviewQueueRowPayload, ReviewViewResult
@@ -75,7 +76,7 @@ def review_queue(
     except ValueError as exc:
         raise _bad(tr("cli.review.errors.invalid_state", state=state)) from exc
     except ReviewError as exc:
-        raise _bad(str(exc)) from exc
+        raise _bad(resolve_error_message(exc)) from exc
     typed_result = ReviewQueueResult(
         rows=tuple(_row_to_payload(row) for row in report.rows),
     )
@@ -107,7 +108,7 @@ def review_show(
     try:
         row = project_review_item(item_id)
     except ReviewError as exc:
-        raise _bad(str(exc)) from exc
+        raise _bad(resolve_error_message(exc)) from exc
     typed_result = ReviewViewResult(row=_row_to_payload(row))
     lines = [
         f"{tr('cli.review.labels.id')}\t{row.item_id}",

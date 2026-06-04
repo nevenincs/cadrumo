@@ -4213,6 +4213,7 @@ review:
       item_not_found: No se encontro el elemento solicitado en la cola de revision.
       unknown_kind: Tipo de elemento de revisión desconocido.
       unsupported_item_type: 'Tipo de elemento de revision no admitido: %{item_type}.'
+      reserved_kind: 'El tipo de revisión está reservado y no es un elemento de revisión emitido.'
   transaction:
     summary: Transacción pendiente de clasificación
 sheets:

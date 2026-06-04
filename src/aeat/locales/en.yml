@@ -3944,6 +3944,7 @@ review:
       item_not_found: Review item not found.
       unknown_kind: Unknown review kind.
       unsupported_item_type: Unsupported review item type.
+      reserved_kind: 'Review kind is reserved and is not an emitted review item.'
   transaction:
     summary: Transaction pending classification
 sheets:

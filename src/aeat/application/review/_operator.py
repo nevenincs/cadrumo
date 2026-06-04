@@ -59,13 +59,13 @@ class ReviewQueueReport(BaseModel):
 
 _ACCEPTED_KIND_TO_INTERNAL: Mapping[str, frozenset[ReviewItemKind]] = MappingProxyType(
     {
-    AggregationSourceKind.LEDGER_TRANSACTION: frozenset({ReviewItemKind.TRANSACTION}),
-    AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE: frozenset({ReviewItemKind.INVOICE}),
-    AggregationSourceKind.PAYABLE_INVOICE: frozenset({ReviewItemKind.INVOICE}),
-    AggregationSourceKind.COLLECTIBLE_INVOICE: frozenset({ReviewItemKind.INVOICE}),
-    "modelo_finding": frozenset({ReviewItemKind.FINDING}),
-    "live_notification": frozenset(),
-    "sync_divergence": frozenset(),
+        AggregationSourceKind.LEDGER_TRANSACTION: frozenset({ReviewItemKind.TRANSACTION}),
+        AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE: frozenset({ReviewItemKind.INVOICE}),
+        AggregationSourceKind.PAYABLE_INVOICE: frozenset({ReviewItemKind.INVOICE}),
+        AggregationSourceKind.COLLECTIBLE_INVOICE: frozenset({ReviewItemKind.INVOICE}),
+        "modelo_finding": frozenset({ReviewItemKind.FINDING}),
+        "live_notification": frozenset(),
+        "sync_divergence": frozenset(),
     }
 )
 

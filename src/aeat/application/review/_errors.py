@@ -128,8 +128,10 @@ class ReviewKindReservedError(ReviewError):
 
     Attributes:
         token: The ``--kind`` value supplied by the user.
-        reason: Human-readable explanation naming the blocking upstream
-            record type.
+            Kept for internal compatibility, but omitted from rendered
+            messages and structured context because selector values are
+            operator input and may contain copied identifiers.
+        reason: Explanation naming the blocking upstream record type.
     """
 
     def __init__(self, token: str, reason: str) -> None:
@@ -140,6 +142,10 @@ class ReviewKindReservedError(ReviewError):
             reason: Human-readable explanation naming the blocking
                 upstream record type.
         """
-        super().__init__(f"--kind {token!r} is reserved and is not an emitted review kind: {reason}")
+        super().__init__(
+            "review kind is reserved and is not an emitted review kind",
+            context={"reason": reason},
+            translated_message="review.operator.errors.reserved_kind",
+        )
         self.token = token
         self.reason = reason

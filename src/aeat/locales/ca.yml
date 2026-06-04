@@ -4164,6 +4164,7 @@ review:
       item_not_found: No s'ha trobat l'element sol.licitat a la cua de revisio.
       unknown_kind: Tipus d'element de revisió desconegut.
       unsupported_item_type: 'Tipus d''element de revisio no ames: %{item_type}.'
+      reserved_kind: 'El tipus de revisió està reservat i no és un element de revisió emès.'
   transaction:
     summary: Transacció pendent de classificació
 sheets:
