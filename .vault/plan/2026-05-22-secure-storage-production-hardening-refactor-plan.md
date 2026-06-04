@@ -462,7 +462,7 @@ Current register count: `301` production candidate files.
 | `AFR-181` | `src/aeat/application/workflow/_persistence.py` | `secure-object, runtime, active-profile, manifest-bucket, master-key, sql-route` | `runtime-default` | `W12.P21.S85` | migrated |
 | `AFR-182` | `src/aeat/application/workflow/_profile_bucket_scan.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-183` | `src/aeat/application/workflow/_profile_health.py` | `active-profile, manifest-bucket, master-key, plain-file` | `manifest-discovery` | `W12.P22.S90` | closed |
-| `AFR-184` | `src/aeat/core/_bucket_pointer.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-184` | `src/aeat/core/_bucket_pointer.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-185` | `src/aeat/core/_bucket_pointer_io.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-186` | `src/aeat/core/_toml.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-187` | `src/aeat/core/access_gate/__init__.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
@@ -823,7 +823,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S283` - Close `AFR-181` for `src/aeat/application/workflow/_persistence.py` with signals `secure-object, runtime, active-profile, manifest-bucket, master-key, sql-route`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/workflow/_persistence.py`.
 - [x] `W12.P26.S284` - Close `AFR-182` for `src/aeat/application/workflow/_profile_bucket_scan.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/workflow/_profile_bucket_scan.py`.
 - [x] `W12.P26.S285` - Close `AFR-183` for `src/aeat/application/workflow/_profile_health.py` with signals `active-profile, manifest-bucket, master-key, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/workflow/_profile_health.py`.
-- [ ] `W12.P26.S286` - Close `AFR-184` for `src/aeat/core/_bucket_pointer.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/core/_bucket_pointer.py`.
+- [x] `W12.P26.S286` - Close `AFR-184` for `src/aeat/core/_bucket_pointer.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/core/_bucket_pointer.py`.
 - [ ] `W12.P26.S287` - Close `AFR-185` for `src/aeat/core/_bucket_pointer_io.py` with signals `active-profile, manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/core/_bucket_pointer_io.py`.
 - [ ] `W12.P26.S288` - Close `AFR-186` for `src/aeat/core/_toml.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/_toml.py`.
 - [ ] `W12.P26.S289` - Close `AFR-187` for `src/aeat/core/access_gate/__init__.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/access_gate/__init__.py`.
