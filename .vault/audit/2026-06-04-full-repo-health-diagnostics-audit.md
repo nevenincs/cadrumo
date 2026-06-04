@@ -334,6 +334,32 @@ Full `uv sync` should still be run during a clean window after the other process
 releases `.venv/Scripts/vaultspec-rag.exe`, but the diagnostic command surface is
 usable now.
 
+## HEALTH-010 | CLOSED | Aggregation type error bucket reduced to zero errors
+
+`W06.P18.S67` mitigated the aggregation package type-error bucket without changing
+runtime contracts:
+
+- `Period` now raises `AggregationPeriodError` through the current positional
+  translated-message constructor.
+- `effective_eur_amount` returns `Decimal`, matching the documented EUR projection
+  contract used by renta ledger casilla arithmetic.
+- IVA non-declarable category handling now narrows `iva_category` before reading
+  its enum value.
+- Aggregation tests now pass enum-backed counterpart source kinds at typed
+  construction sites, and validator error contexts/evidence payloads are narrowed
+  before member access.
+
+Verification:
+
+- `uv run --no-sync ty check src/aeat/application/aggregation --output-format concise`
+  passed.
+- `uv run --no-sync pyright src/aeat/application/aggregation --level warning --warnings`
+  reported 0 errors and 17 pre-existing warnings for private/protected test
+  reach-ins.
+- `uv run --no-sync pytest src/aeat/application/aggregation/test_counterpart.py src/aeat/application/aggregation/test_per_modelo_registry_provider.py src/aeat/application/aggregation/test_per_modelo_service.py src/aeat/application/aggregation/test_service.py src/aeat/application/aggregation/test_ledger_filing_evidence.py src/aeat/application/aggregation/test_source_mesh.py src/aeat/application/aggregation/test_renta_ledger_helpers.py src/aeat/application/aggregation/test_renta_ledger_aggregation.py -q`
+  passed with 89 tests.
+- `uv run --no-sync ruff check` over the touched aggregation files passed.
+
 ## Suggested Workstreams
 
 1. Repair packaging environment deterministically: schedule a clean `uv sync` window

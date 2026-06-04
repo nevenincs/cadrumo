@@ -12,6 +12,8 @@ This module provides two predicates that replace the three independent
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...domain.transactions import Transaction
 
@@ -36,7 +38,7 @@ def is_non_eur_without_conversion(transaction: Transaction) -> bool:
     return transaction.raw.currency != DEFAULT_CURRENCY and transaction.value_in_eur is None
 
 
-def effective_eur_amount(transaction: Transaction) -> object:
+def effective_eur_amount(transaction: Transaction) -> Decimal:
     """Return the EUR amount to use for this transaction in casilla projections.
 
     Returns ``transaction.value_in_eur`` for foreign-currency rows whose

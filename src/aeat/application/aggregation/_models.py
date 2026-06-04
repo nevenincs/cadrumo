@@ -155,19 +155,19 @@ class Period(BaseModel):
     def _validate_shape(self) -> Self:
         if self.kind is PeriodKind.QUARTERLY and self.quarter is None:
             raise AggregationPeriodError(
-                translated_message="aggregation.models.errors.quarter_required",
+                message=tr("aggregation.models.errors.quarter_required"),
             )
         if self.kind is PeriodKind.MONTHLY and self.month is None:
             raise AggregationPeriodError(
-                translated_message="aggregation.models.errors.month_required",
+                message=tr("aggregation.models.errors.month_required"),
             )
         if self.kind is PeriodKind.ANNUAL and (self.quarter is not None or self.month is not None):
             raise AggregationPeriodError(
-                translated_message="aggregation.models.errors.annual_period_mixed",
+                message=tr("aggregation.models.errors.annual_period_mixed"),
             )
         if self.quarter is not None and self.month is not None:
             raise AggregationPeriodError(
-                translated_message="aggregation.models.errors.period_type_ambiguous",
+                message=tr("aggregation.models.errors.period_type_ambiguous"),
             )
         return self
 
