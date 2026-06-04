@@ -753,3 +753,25 @@ with the verification boundary and its tests only. Focused verification tests, r
 and locale audit passed.
 
 Closure assessment: `W12.P26.S272` can close as `plaintext-exception`.
+
+## S273-064 | PASS | Wizard command manifest-discovery closeout verified
+
+The `W12.P26.S273` review found that
+`src/aeat/application/wizard/_commands.py` is a command orchestration layer over the
+canonical profile storage spans. Create and full-edit flows enter
+`profile_create_storage_span` or `profile_storage_session`; patch-edit flows enter
+`profile_storage_session` before updating workflow state. The module does not construct
+repositories, manage master-key material, write bucket manifests directly, or persist
+wizard state through a side store.
+
+Existing-profile edit mode resolves the operator label through registered-profile
+guards and `read_profile_bucket`, then persists using the resolved immutable bucket id.
+Output-language defaults and overrides route through settings (`load_settings` and
+`override_settings`), and wizard refusals use `WizardMissingFlagError` locale keys with
+structured context.
+
+Vaultspec RAG semantic search was used for duplication review and clustered the slice
+with the canonical profile storage span and profile-bucket scan helpers. Focused wizard
+command and pointer-atomicity tests passed.
+
+Closure assessment: `W12.P26.S273` can close as `manifest-discovery`.

@@ -459,7 +459,7 @@ Current register count: `293` production candidate files.
 | `AFR-168` | `src/aeat/application/user_profile/_repository.py` | `secure-object, runtime, manifest-bucket` | `runtime-default` | `W12.P21.S85` | closed |
 | `AFR-169` | `src/aeat/application/user_profile/_testing.py` | `secure-object, active-profile` | `runtime-default` | `W12.P21.S85` | closed |
 | `AFR-170` | `src/aeat/application/verification/_verify.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
-| `AFR-171` | `src/aeat/application/wizard/_commands.py` | `active-profile, manifest-bucket, master-key` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-171` | `src/aeat/application/wizard/_commands.py` | `active-profile, manifest-bucket, master-key` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-172` | `src/aeat/application/wizard/_persistence.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-173` | `src/aeat/application/wizard/_prompter.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-174` | `src/aeat/application/wizard/_status.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
@@ -812,7 +812,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S270` - Close `AFR-168` for `src/aeat/application/user_profile/_repository.py` with signals `secure-object, runtime, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/user_profile/_repository.py`.
 - [x] `W12.P26.S271` - Close `AFR-169` for `src/aeat/application/user_profile/_testing.py` with signals `secure-object, active-profile`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/user_profile/_testing.py`.
 - [x] `W12.P26.S272` - Close `AFR-170` for `src/aeat/application/verification/_verify.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/verification/_verify.py`.
-- [ ] `W12.P26.S273` - Close `AFR-171` for `src/aeat/application/wizard/_commands.py` with signals `active-profile, manifest-bucket, master-key`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/wizard/_commands.py`.
+- [x] `W12.P26.S273` - Close `AFR-171` for `src/aeat/application/wizard/_commands.py` with signals `active-profile, manifest-bucket, master-key`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/wizard/_commands.py`.
 - [ ] `W12.P26.S274` - Close `AFR-172` for `src/aeat/application/wizard/_persistence.py` with signals `active-profile, manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/wizard/_persistence.py`.
 - [ ] `W12.P26.S275` - Close `AFR-173` for `src/aeat/application/wizard/_prompter.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/wizard/_prompter.py`.
 - [ ] `W12.P26.S276` - Close `AFR-174` for `src/aeat/application/wizard/_status.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/wizard/_status.py`.
