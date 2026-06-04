@@ -6,6 +6,8 @@ date: '2026-06-04'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S240]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S243]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s240-s243-review-audit]]'
 ---
 
 # `secure-storage-production-hardening` `W12.P26.S240` Review
@@ -13,40 +15,29 @@ related:
 ## S240-001 | PASS | Contract is manifest discovery, not storage ownership
 
 `src/aeat/application/operator_surface/_contract.py` declares immutable
-operator-surface contract records and exposes cached lookup helpers. The module
-does not construct storage repositories, select secure storage backends, build
-SQL routes, read environment variables, open files, write plaintext side stores,
-or mutate bucket state.
+operator-surface contract records and cached lookup helpers. It does not build
+storage repositories, select secure storage backends, build SQL routes, read
+environment variables, open files, write plaintext side stores, or mutate
+bucket state.
 
-## S240-002 | PASS | User-facing refusals remain localized application errors
+## S240-002 | FIXED | Bucket inspection is enrolled
 
-The invalid-root and invalid-source-kind paths raise
-`OperatorSurfaceContractError`. That exception derives from `AeatError`, is
-registered as `REFUSED_OPERATOR_SURFACE_CONTRACT`, and formats its message
-through `tr()`. The contract resolver passes localized refusal reasons and
-suggestions rather than raw exception text.
+The CLI already mounts `aeat config bucket history`, and retired `archive`
+guidance points operators to `aeat config bucket`. S240 now declares the
+`config bucket` command family in the backend contract as read-only bucket
+event-history discovery owned by `aeat.domain.buckets`.
 
-## S240-003 | PASS | Shared models and duplicate concerns were re-grounded
+## S240-003 | PASS | Cross-step model change is explicit
 
-Vaultspec RAG searches clustered the contract with
-`src/aeat/application/operator_surface/_models.py`,
-`src/aeat/application/operator_surface/test_contract.py`, and adjacent
-application contract records. The implementation already uses strict Pydantic
-models and local operator-surface enums; source-kind drift is guarded by the
-existing subset test against `AggregationSourceKind`.
+The contract fix required `MountedCommandDomain.BUCKET`, which is tracked by
+`W12.P26.S243`. The combined S240/S243 review records the coupled model and
+contract change so the plan does not hide the cross-file dependency.
 
-## S240-004 | PASS | No silent swallowing or settings bypass found
+## S240-004 | PASS | Validation
 
-The focused source scan found no `except` blocks, `pass`-style swallowing,
-`os.environ`/`getenv` calls, `load_settings` calls, or settings overrides in
-the contract module. The only diagnostic side effect is a debug log carrying
-stable non-secret contract counts.
-
-## S240-005 | PASS | Validation
-
-- `uv run --no-sync ruff check src/aeat/application/operator_surface/_contract.py src/aeat/application/operator_surface/test_contract.py` passed.
+- `uv run --no-sync ruff check src/aeat/application/operator_surface/_contract.py src/aeat/application/operator_surface/_models.py src/aeat/application/operator_surface/test_contract.py` passed.
 - `uv run --no-sync pytest -q src/aeat/application/operator_surface/test_contract.py` passed with 15 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
-Disposition: close `AFR-138` as `manifest-discovery`; no code migration was
-required.
+Disposition: close `AFR-138` as `manifest-discovery`; implementation hardening
+was required to enroll the real `config bucket` surface.

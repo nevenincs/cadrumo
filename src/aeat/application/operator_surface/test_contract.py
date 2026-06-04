@@ -220,12 +220,18 @@ def test_mounted_command_families_are_backend_owned_and_service_backed() -> None
     assert {"create", "edit", "show", "switch", "delete", "status"}.issubset(
         by_domain[MountedCommandDomain.PROFILE].commands
     )
+    assert by_domain[MountedCommandDomain.BUCKET].root is RootSurfaceName.CONFIG
+    assert by_domain[MountedCommandDomain.BUCKET].child == "bucket"
+    assert by_domain[MountedCommandDomain.BUCKET].commands == ("history",)
+    assert by_domain[MountedCommandDomain.BUCKET].mutability is OperatorMutability.READ_ONLY
+    assert by_domain[MountedCommandDomain.BUCKET].service_owner == "aeat.domain.buckets"
     assert by_domain[MountedCommandDomain.OVERVIEW].mutability is OperatorMutability.READ_ONLY
     assert by_domain[MountedCommandDomain.LEDGER].service_owner == "aeat.application.transactions"
     assert by_domain[MountedCommandDomain.REVIEW].service_owner == "aeat.application.review"
 
     mounted_pairs = {(family.root.value, family.child) for family in contract.command_families}
     assert ("config", "auth") in mounted_pairs
+    assert ("config", "bucket") in mounted_pairs
     assert ("app", "modelo") in mounted_pairs
     assert all("invoice" not in family.child for family in contract.command_families)
 
