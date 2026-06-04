@@ -362,3 +362,16 @@ binding. The new real-runtime test persists linked catalogues and verifies the
 repository-backed consistency query against the requested bucket.
 
 Closure assessment: `W12.P26.S216` can close as `runtime-default`.
+
+## S217-041 | PASS | Invoice reconciliation runtime-default closeout verified
+
+The `W12.P26.S217` review found that invoice reconciliation reads and writes
+durable invoice and transaction catalogue state through runtime-backed
+repositories. The plan target for `AFR-115` is corrected to `runtime-default`.
+
+`reconcile_invoice_repositories(bucket_id=...)` now passes the requested bucket
+to `InvoiceCatalogueRepository`, matching the transaction repository binding.
+The new real-runtime test persists both catalogues, applies reconciliation, and
+verifies both persisted catalogues update under the requested bucket.
+
+Closure assessment: `W12.P26.S217` can close as `runtime-default`.
