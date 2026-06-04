@@ -927,6 +927,7 @@ application:
       lifecycle_profile_tombstoned_rename: 'Törölt profil nem nevezhető át.'
       lifecycle_profile_tombstoned_duplicate: 'Törölt profil nem duplikálható.'
       lifecycle_schema_validation_failed: 'A profiladatok nem felelnek meg a felhasználóiprofil-sémának.'
+      profile_bucket_directory_removal_failed: 'A profil konyvtara nem tavolithato el.'
   wizard:
     errors:
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')

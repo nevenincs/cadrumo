@@ -990,6 +990,7 @@ application:
       lifecycle_profile_tombstoned_rename: 'No se puede renombrar un perfil eliminado.'
       lifecycle_profile_tombstoned_duplicate: 'No se puede duplicar un perfil eliminado.'
       lifecycle_schema_validation_failed: 'Los datos del perfil no coinciden con el esquema de perfil de usuario.'
+      profile_bucket_directory_removal_failed: 'No se pudo eliminar el directorio del perfil.'
   wizard:
     errors:
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
