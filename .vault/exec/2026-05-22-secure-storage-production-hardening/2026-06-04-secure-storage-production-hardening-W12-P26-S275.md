@@ -23,8 +23,8 @@ Scope: close `AFR-173` for `src/aeat/application/wizard/_prompter.py` with signa
   keys and bounded structured context.
 - Corrected the overflow context to report only unconsumed-answer and asked-question
   counts, not raw leftover canonical-token values.
-- Updated prompter tests to assert localized AEAT errors and prove unconsumed answer
-  values are absent from exception context.
+- Updated prompter and setup-runtime tests to assert localized AEAT errors and prove
+  unconsumed answer values are absent from exception context.
 - Ran focused lint, prompter tests, questionary smoke tests, and the canonical locale
   audit through `python -m aeat.locales`.
 
@@ -36,8 +36,8 @@ localized message keys and redacted diagnostic context.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/wizard/_prompter.py src/aeat/application/wizard/test_prompter.py src/aeat/application/wizard/test_questionary_smoke.py`
-- `uv run --no-sync pytest -q src/aeat/application/wizard/test_prompter.py src/aeat/application/wizard/test_questionary_smoke.py`
+- `uv run --no-sync ruff check src/aeat/application/wizard/_prompter.py src/aeat/application/wizard/test_prompter.py src/aeat/application/wizard/test_setup_runtime.py src/aeat/application/wizard/test_questionary_smoke.py`
+- `uv run --no-sync pytest -q src/aeat/application/wizard/test_prompter.py src/aeat/application/wizard/test_setup_runtime.py src/aeat/application/wizard/test_questionary_smoke.py`
 - `uv run --no-sync -q python -m aeat.locales audit`
 
 ## Notes
