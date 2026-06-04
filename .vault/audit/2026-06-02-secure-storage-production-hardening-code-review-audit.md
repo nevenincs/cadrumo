@@ -775,3 +775,24 @@ with the canonical profile storage span and profile-bucket scan helpers. Focused
 command and pointer-atomicity tests passed.
 
 Closure assessment: `W12.P26.S273` can close as `manifest-discovery`.
+
+## S274-065 | PASS | Wizard persistence manifest-discovery closeout verified
+
+The `W12.P26.S274` review found that
+`src/aeat/application/wizard/_persistence.py` is a projection layer from typed wizard
+answers to `UserProfileFact` records. Create and edit persistence delegate to
+`register_active_profile` and `set_active_fields`; the module does not construct
+repositories, open bucket paths, write bucket manifests, manage master-key material, or
+persist wizard state through a plaintext side store.
+
+The `Path` import is type-level wizard answer handling only: it canonicalizes and
+rehydrates PATH answers and performs no direct file IO. The edit-mode misuse refusal
+raises `WorkflowInputMismatchError` with a locale key. No broad exception swallowing or
+naked environment reads were found.
+
+Vaultspec RAG semantic search was used for duplication review and clustered the slice
+with wizard persistence, wizard command orchestration, canonical user-profile
+registration helpers, and pointer-atomicity tests. Focused persistence and setup
+runtime tests passed.
+
+Closure assessment: `W12.P26.S274` can close as `manifest-discovery`.
