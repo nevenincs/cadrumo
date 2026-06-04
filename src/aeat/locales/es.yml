@@ -655,55 +655,135 @@ application:
           con varias instantáneas.
     snapshot_base:
       errors:
-        snapshot_bucket_mismatch: 'El bucket de la carga de la instantanea no coincide con el bucket del repositorio.'
+        snapshot_bucket_mismatch: El bucket de la carga de la instantanea no coincide
+          con el bucket del repositorio.
     verify:
       errors:
-        bucket_id_blank: 'El identificador del bucket de verificacion no puede estar vacio.'
-        observation_bucket_mismatch: 'El bucket de la observacion de verificacion no coincide con el bucket del repositorio.'
-        observation_id_blank: 'El identificador de la observacion de verificacion no puede estar vacio.'
-        observation_not_found: 'No hay ninguna observacion de verificacion que coincida con el identificador solicitado.'
-        observation_prefix_ambiguous: 'El prefijo de la observacion de verificacion coincide con varias observaciones.'
-        observation_id_mismatch: 'El identificador de la observacion de verificacion no coincide con la observacion solicitada.'
+        bucket_id_blank: El identificador del bucket de verificacion no puede estar
+          vacio.
+        observation_bucket_mismatch: El bucket de la observacion de verificacion no
+          coincide con el bucket del repositorio.
+        observation_id_blank: El identificador de la observacion de verificacion no
+          puede estar vacio.
+        observation_id_mismatch: El identificador de la observacion de verificacion
+          no coincide con la observacion solicitada.
+        observation_not_found: No hay ninguna observacion de verificacion que coincida
+          con el identificador solicitado.
+        observation_prefix_ambiguous: El prefijo de la observacion de verificacion
+          coincide con varias observaciones.
   modelo:
     borrador_binding:
       errors:
         caller_binding_keys_blank: Las claves de binding aportadas no pueden estar
           en blanco.
+        decimal_value_invalid: El valor de borrador para el binding numerico %{binding_id}
+          debe ser compatible con decimal.
+        forbidden_bindings: 'El snapshot de borrador contiene valores que el registro
+          no ha marcado como AEAT-prefilled: %{bindings}.'
+        registry_snapshot_axis_mismatch: 'El eje del snapshot de registro no coincide
+          con el comando de binding de borrador: anio del snapshot=%{snapshot_year}
+          periodo=%{snapshot_period}; anio del comando=%{filing_year} periodo=%{period}.'
+        registry_snapshot_modelo_mismatch: 'El modelo del snapshot de registro no
+          coincide con el comando de binding de borrador: modelo del snapshot=%{snapshot_modelo};
+          modelo del comando=%{command_modelo}.'
+        snapshot_axis_mismatch: 'El snapshot de borrador no coincide con el eje del
+          calculo: anio del snapshot=%{snapshot_year} periodo=%{snapshot_period};
+          anio del calculo=%{filing_year} periodo=%{period}.'
+        snapshot_bucket_mismatch: El snapshot de borrador no pertenece al bucket activo.
         snapshot_id_required: Los valores procedentes del borrador requieren un borrador_snapshot_id.
+        snapshot_load_failed: No se puede cargar el snapshot de borrador seleccionado;
+          lista los snapshots activos con aeat app live borrador 100 list.
         snapshot_not_active: El snapshot de borrador no está activo; lista los snapshots
           activos con `aeat app live borrador 100 list`.
         source_trace_mismatch: La traza de origen del borrador debe coincidir con
           los identificadores de binding resueltos.
-        unsupported_modelo: 'El binding de borrador no está soportado para el modelo %{modelo}; el manifiesto del registro debe declarar la capacidad de borrador.'
-        snapshot_load_failed: 'No se puede cargar el snapshot de borrador seleccionado; lista los snapshots activos con aeat app live borrador 100 list.'
-        forbidden_bindings: 'El snapshot de borrador contiene valores que el registro no ha marcado como AEAT-prefilled: %{bindings}.'
-        snapshot_bucket_mismatch: 'El snapshot de borrador no pertenece al bucket activo.'
-        snapshot_axis_mismatch: 'El snapshot de borrador no coincide con el eje del calculo: anio del snapshot=%{snapshot_year} periodo=%{snapshot_period}; anio del calculo=%{filing_year} periodo=%{period}.'
-        registry_snapshot_modelo_mismatch: 'El modelo del snapshot de registro no coincide con el comando de binding de borrador: modelo del snapshot=%{snapshot_modelo}; modelo del comando=%{command_modelo}.'
-        registry_snapshot_axis_mismatch: 'El eje del snapshot de registro no coincide con el comando de binding de borrador: anio del snapshot=%{snapshot_year} periodo=%{snapshot_period}; anio del comando=%{filing_year} periodo=%{period}.'
-        decimal_value_invalid: 'El valor de borrador para el binding numerico %{binding_id} debe ser compatible con decimal.'
+        unsupported_modelo: El binding de borrador no está soportado para el modelo
+          %{modelo}; el manifiesto del registro debe declarar la capacidad de borrador.
     errors:
+      amendment_registry_root_missing: Registry root %{registry_root} is missing;
+        amendment overrides cannot be validated.
+      amendment_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved; amendment
+        overrides cannot be validated.
+      amendment_unknown_casillas: 'Amendment overrides target casilla ids that are
+        not declared in registry modelo %{modelo}, filing year %{filing_year}, period
+        %{period}: %{casillas}.'
       amendment_verification_refused_missing_casillas: 'La enmienda está incompleta:
         faltan identificadores de casilla requeridos en el mapa corregido.'
       amendment_verification_refused_no_snapshot: El registro no tiene una instantánea
         para el modelo, año y período solicitados.
+      calculation_registry_root_missing: Registry root %{registry_root} is missing;
+        modelo calculation cannot continue.
+      calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved.
       calculation_revision_not_found: No existe ninguna revisión de cálculo con id=%{calculation_revision_id}.
+      caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
+        bucket-derived source-bound casillas: %{casillas}.'
       computed_casilla_binding_conflict: 'Las entradas procedentes del bucket tienen
         como destino casillas calculadas; no se pueden sobreescribir con binding externo.
         Casillas afectadas: %{computed}.'
+      export_cross_bucket_refused: La revision indicada pertenece a un bucket distinto
+        del bucket del perfil activo. Cambia de perfil antes de exportar.
+      export_draft_approval_failed: No se pudo aprobar el borrador para la revision
+        de calculo %{calculation_revision_id}.
+      export_draft_write_failed: No se pudo escribir el archivo de exportacion para
+        la revision de calculo %{calculation_revision_id}.
+      export_ledger_evidence_missing: La revision de calculo %{calculation_revision_id}
+        derivada del libro mayor no incluye evidencia del libro mayor ni una referencia
+        resoluble al snapshot; verifica la revision otra vez antes de exportar.
       export_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile
         create NAME` antes de exportar una revisión de modelo.
+      export_operator_name_missing: 'La exportacion requiere el nombre del operador
+        en el perfil activo; faltan estos datos de perfil: %{missing}.'
+      export_operator_profile_missing: La exportacion necesita el nombre del operador
+        del perfil activo, pero no existe un perfil persistido; completa identity.surnames
+        e identity.name antes de exportar.
+      export_period_unmappable: La unidad de trabajo %{work_unit_id} contiene el periodo
+        %{period}, que no se puede asignar a un periodo de registro.
+      export_revision_state_refused: La revision de calculo %{calculation_revision_id}
+        no esta verificada-completa ni presentada y no se puede exportar.
       external_filing_evidence_reference_blank: La importación de declaración externa
         requiere un evidence_reference_id no vacío.
       external_filing_no_casilla_values: La importación de declaración externa requiere
         al menos un valor de casilla; el mapeo aportado está vacío.
+      external_import_duplicate_revision: Calculation revision %{calculation_revision_id}
+        already exists in the catalogue; an identical import was already recorded.
+      external_import_registry_root_missing: Registry root %{registry_root} is missing;
+        imported casilla ids cannot be validated.
+      external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved; imported
+        casilla ids cannot be validated.
+      external_import_unknown_casillas: 'External-filing import carries casilla ids
+        that are not declared in registry modelo %{modelo}, filing year %{filing_year},
+        period %{period}: %{casillas}.'
       filing_record_not_found: No existe ninguna declaración registrada con id=%{filing_record_id}.
+      iva_wallet_backend_casilla_conflict: Backend casilla input for Modelo 303 prior
+        compensation conflicts with the IVA wallet reconciliation decision.
       iva_wallet_blocked: 'La conciliacion del saldo IVA esta bloqueada para el Modelo
         303 (%{divergence}): %{reason}'
+      iva_wallet_caller_binding_conflict: Caller binding for Modelo 303 prior compensation
+        conflicts with the IVA wallet reconciliation decision.
+      iva_wallet_caller_casilla_conflict: Caller casilla input for Modelo 303 prior
+        compensation conflicts with the IVA wallet reconciliation decision.
       iva_wallet_not_seeded: 'El cálculo del Modelo 303 requiere un historial de compensación
         IVA inicializado. Para la primera declaración de un perfil nuevo, inicializa
         el saldo de apertura con cero: `aeat app modelo iva-wallet seed --filing-year
         YEAR --period PERIOD --amount 0 --confirm`.'
+      iva_wallet_selected_amount_missing: IVA wallet reconciliation decision has no
+        selected amount.
+      iva_wallet_supplied_decision_mismatch: Supplied IVA wallet reconciliation decision
+        does not match the persisted decision.
+      iva_wallet_target_mismatch: IVA wallet decision target %{target_year}/%{target_period}
+        does not match work unit %{filing_year}/%{period}.
+      iva_wallet_taxpayer_identity_missing: IVA wallet reconciliation cannot continue
+        without the work-unit taxpayer identity.
+      iva_wallet_taxpayer_mismatch: IVA wallet reconciliation taxpayer does not match
+        the Modelo 303 work unit.
+      iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type:
+        %{decision_type}.'
+      ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
+        %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
+        %{period}` before calculating.'
       reconcile_declaration_unsupported: La reconciliación desde PDF de declaración
         aún no está disponible; usa --from-justificante PATH hasta que el parser de
         declaración esté implementado.
@@ -723,34 +803,6 @@ application:
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
-      iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type: %{decision_type}.'
-      iva_wallet_target_mismatch: 'IVA wallet decision target %{target_year}/%{target_period} does not match work unit %{filing_year}/%{period}.'
-      iva_wallet_taxpayer_identity_missing: 'IVA wallet reconciliation cannot continue without the work-unit taxpayer identity.'
-      iva_wallet_taxpayer_mismatch: 'IVA wallet reconciliation taxpayer does not match the Modelo 303 work unit.'
-      iva_wallet_selected_amount_missing: 'IVA wallet reconciliation decision has no selected amount.'
-      iva_wallet_caller_binding_conflict: 'Caller binding for Modelo 303 prior compensation conflicts with the IVA wallet reconciliation decision.'
-      iva_wallet_caller_casilla_conflict: 'Caller casilla input for Modelo 303 prior compensation conflicts with the IVA wallet reconciliation decision.'
-      iva_wallet_backend_casilla_conflict: 'Backend casilla input for Modelo 303 prior compensation conflicts with the IVA wallet reconciliation decision.'
-      iva_wallet_supplied_decision_mismatch: 'Supplied IVA wallet reconciliation decision does not match the persisted decision.'
-      ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period %{period}` before calculating.'
-      caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override bucket-derived source-bound casillas: %{casillas}.'
-      amendment_registry_root_missing: 'Registry root %{registry_root} is missing; amendment overrides cannot be validated.'
-      amendment_registry_snapshot_unresolved: 'Registry snapshot for modelo %{modelo}, filing year %{filing_year}, period %{period} could not be resolved; amendment overrides cannot be validated.'
-      amendment_unknown_casillas: 'Amendment overrides target casilla ids that are not declared in registry modelo %{modelo}, filing year %{filing_year}, period %{period}: %{casillas}.'
-      external_import_registry_root_missing: 'Registry root %{registry_root} is missing; imported casilla ids cannot be validated.'
-      external_import_registry_snapshot_unresolved: 'Registry snapshot for modelo %{modelo}, filing year %{filing_year}, period %{period} could not be resolved; imported casilla ids cannot be validated.'
-      external_import_unknown_casillas: 'External-filing import carries casilla ids that are not declared in registry modelo %{modelo}, filing year %{filing_year}, period %{period}: %{casillas}.'
-      calculation_registry_root_missing: 'Registry root %{registry_root} is missing; modelo calculation cannot continue.'
-      calculation_registry_snapshot_unresolved: 'Registry snapshot for modelo %{modelo}, filing year %{filing_year}, period %{period} could not be resolved.'
-      external_import_duplicate_revision: 'Calculation revision %{calculation_revision_id} already exists in the catalogue; an identical import was already recorded.'
-      export_ledger_evidence_missing: 'La revision de calculo %{calculation_revision_id} derivada del libro mayor no incluye evidencia del libro mayor ni una referencia resoluble al snapshot; verifica la revision otra vez antes de exportar.'
-      export_revision_state_refused: 'La revision de calculo %{calculation_revision_id} no esta verificada-completa ni presentada y no se puede exportar.'
-      export_operator_profile_missing: 'La exportacion necesita el nombre del operador del perfil activo, pero no existe un perfil persistido; completa identity.surnames e identity.name antes de exportar.'
-      export_operator_name_missing: 'La exportacion requiere el nombre del operador en el perfil activo; faltan estos datos de perfil: %{missing}.'
-      export_period_unmappable: 'La unidad de trabajo %{work_unit_id} contiene el periodo %{period}, que no se puede asignar a un periodo de registro.'
-      export_cross_bucket_refused: 'La revision indicada pertenece a un bucket distinto del bucket del perfil activo. Cambia de perfil antes de exportar.'
-      export_draft_approval_failed: 'No se pudo aprobar el borrador para la revision de calculo %{calculation_revision_id}.'
-      export_draft_write_failed: 'No se pudo escribir el archivo de exportacion para la revision de calculo %{calculation_revision_id}.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
@@ -792,6 +844,13 @@ application:
           mediante el comando `aeat config profile edit`. El TRLIRNR Art. 10 exige
           que los declarantes IRNR no residentes en la UE/EEE designen un representante
           para comunicaciones con la AEAT.
+    profile_binding:
+      errors:
+        date_value_type_invalid: 'El dato de perfil para el binding de fecha %{binding_id} debe ser una fecha; se recibio %{value_type}.'
+        decimal_value_invalid: 'El dato de perfil para el binding numerico %{binding_id} debe ser compatible con decimal.'
+        decimal_value_type_invalid: 'El dato de perfil para el binding de canal decimal %{binding_id} tiene un tipo no soportado: %{value_type}.'
+        enum_boolean_invalid: 'El dato de perfil para el binding enum %{binding_id} resolvio a booleano; los booleanos no son claves validas de despacho enum.'
+        source_trace_mismatch: 'La traza de bindings del perfil no coincide con los bindings resueltos.'
   overview:
     explain:
       errors:
