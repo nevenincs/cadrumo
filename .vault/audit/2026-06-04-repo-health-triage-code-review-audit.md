@@ -376,6 +376,24 @@ financial-provider and detection test suite, and ran `just audit-duplication`.
 The duplication audit no longer lists a CSV/XLSX provider clone; remaining clone
 groups belong to later W04.P14 rows or unrelated shifted-worktree changes.
 
+## W04-011 | INFO | GROI/NIF-IVA oracle flow consolidation review found no defects
+
+Status: verified with scoped residual.
+
+The W04.P14.S48 review found no behavioral defect in extracting shared
+verdict-oriented checker-oracle mechanics into `_checker_oracle_flow.py`. GROI
+and AEAT NIF-IVA still own their distinct oracle ids, URL plans, surface labels,
+guard policies, and error messages; only repeated replay-operation, replay
+decode, normalization, observed lookup, and field-comparison flow moved behind a
+domain-local helper.
+
+Focused verification passed Ruff for the touched oracle modules, passed the
+GROI/NIF-IVA oracle test suite, and reran `just audit-duplication`. The audit
+no longer reports the larger domain oracle flow clones, but it still reports an
+import-block clone between the two oracle modules and adapter live-driver clones
+outside this domain slice. Adapter live-driver docstring edits already present
+in the worktree were left outside the S48 commit.
+
 ## W04-009 | INFO | CLI doc-reference payload registration review found no defects
 
 Status: verified clean.
