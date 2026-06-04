@@ -8,10 +8,13 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import LIVE_VERIFY_OBSERVATION_NAMESPACE
+from ...adapters.persistence.storage import LIVE_VERIFY_OBSERVATION_NAMESPACE, Envelope
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ._errors import LiveApplicationInputError
 from ._verify import (
+    VerifyObservation,
     VerifyObservationNotFoundError,
+    VerifyObservationRepository,
     VerifyService,
     VerifySurface,
     verify_observation_object_key,
@@ -198,8 +201,33 @@ class TestShow:
 
     def test_show_refuses_unknown_id(self, secure_engine: TestRuntimeProfile) -> None:
         svc = _service(secure_engine)
-        with pytest.raises(VerifyObservationNotFoundError, match="no verify observation"):
+        with pytest.raises(VerifyObservationNotFoundError) as exc_info:
             svc.show(bucket_id=secure_engine.bucket_id, observation_id="0" * 64)
+        assert exc_info.value.translated_message == "application.live.verify.errors.observation_not_found"
+        assert exc_info.value.context == {"observation_id": "0" * 64}
+        assert secure_engine.bucket_id not in str(exc_info.value)
+
+    def test_show_refuses_ambiguous_prefix_without_full_id_leak(self, secure_engine: TestRuntimeProfile) -> None:
+        svc = _service(secure_engine)
+        by_prefix: dict[str, list[str]] = {}
+        for index in range(17):
+            obs = svc.record(
+                bucket_id=secure_engine.bucket_id,
+                surface=VerifySurface.NIF_IVA,
+                nif=f"DE{index:011d}",
+                verdict="valid",
+                checked_at=datetime(2025, 3, 15, 10, index, tzinfo=UTC),
+            )
+            by_prefix.setdefault(obs.observation_id[:1], []).append(obs.observation_id)
+
+        prefix, matches = next((candidate, ids) for candidate, ids in by_prefix.items() if len(ids) > 1)
+        with pytest.raises(VerifyObservationNotFoundError) as exc_info:
+            svc.show(bucket_id=secure_engine.bucket_id, observation_id=prefix)
+
+        assert exc_info.value.translated_message == "application.live.verify.errors.observation_prefix_ambiguous"
+        assert exc_info.value.context == {"observation_id": prefix, "match_count": len(matches)}
+        for observation_id in matches:
+            assert observation_id not in str(exc_info.value)
 
 
 class TestLatestForNif:
@@ -283,9 +311,55 @@ class TestSecureStorage:
 
         assert record is not None
         assert b"DE123456789" in record.payload
+        assert b"DE123456789" not in (secure_engine.paths.db_dir / "aeat.db").read_bytes()
         assert not (
             secure_engine.settings.aeat_audit_dir / "live" / "verify" / f"{secure_engine.bucket_id}.jsonl"
         ).exists()
+
+    def test_object_key_refuses_blank_bucket_with_locale_metadata(self) -> None:
+        with pytest.raises(LiveApplicationInputError) as exc_info:
+            verify_observation_object_key(" ", "a" * 64)
+        assert exc_info.value.translated_message == "application.live.verify.errors.bucket_id_blank"
+
+    def test_object_key_refuses_blank_observation_with_locale_metadata(self) -> None:
+        with pytest.raises(LiveApplicationInputError) as exc_info:
+            verify_observation_object_key("bucket-1", " ")
+        assert exc_info.value.translated_message == "application.live.verify.errors.observation_id_blank"
+
+    def test_list_refuses_misrouted_payload_bucket(self, secure_engine: TestRuntimeProfile) -> None:
+        observation = VerifyObservation(
+            observation_id="a" * 64,
+            bucket_id="bucket-b",
+            surface=VerifySurface.NIF_IVA,
+            nif="DE123456789",
+            verdict="valid",
+            checked_at=datetime(2025, 3, 15, tzinfo=UTC),
+            persisted_at=datetime(2025, 3, 15, tzinfo=UTC),
+        )
+        envelope = Envelope[VerifyObservation](
+            schema_version=LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
+            written_at=datetime(2025, 3, 15, tzinfo=UTC),
+            classification=LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity,
+            payload=observation,
+        )
+        secure_engine.repository.save(
+            namespace=LIVE_VERIFY_OBSERVATION_NAMESPACE.namespace,
+            object_key=verify_observation_object_key(secure_engine.bucket_id, observation.observation_id),
+            classification=LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity,
+            schema_version=LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+        repository = VerifyObservationRepository(bucket_id=secure_engine.bucket_id, objects=secure_engine.repository)
+
+        with pytest.raises(LiveApplicationInputError) as exc_info:
+            repository.list_observations()
+
+        assert exc_info.value.translated_message == "application.live.verify.errors.observation_bucket_mismatch"
+        assert exc_info.value.context == {
+            "observation_bucket": "bucket-b",
+            "repository_bucket": secure_engine.bucket_id,
+        }
 
 
 class TestNoWriteSurface:

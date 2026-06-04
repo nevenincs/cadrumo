@@ -600,6 +600,14 @@ application:
     snapshot_base:
       errors:
         snapshot_bucket_mismatch: 'A pillanatkep payload bucketje nem egyezik a repository bucketjevel.'
+    verify:
+      errors:
+        bucket_id_blank: 'A verify bucket azonositoja nem lehet ures.'
+        observation_bucket_mismatch: 'A verify megfigyeles bucketje nem egyezik a tarolo bucketjevel.'
+        observation_id_blank: 'A verify megfigyeles azonositoja nem lehet ures.'
+        observation_not_found: 'Nem talalhato verify megfigyeles a kert azonositohoz.'
+        observation_prefix_ambiguous: 'A verify megfigyeles elotagja tobb megfigyelessel egyezik.'
+        observation_id_mismatch: 'A verify megfigyeles azonositoja nem egyezik a kert megfigyelessel.'
   modelo:
     borrador_binding:
       errors:
