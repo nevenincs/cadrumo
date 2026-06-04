@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...adapters.persistence.storage.bucket import ManifestKdfParams
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -27,6 +27,18 @@ from ...core.identity import ProfileId as _ProfileId
 from ...core.time._utc import validate_utc_aware
 from ...domain.user_profile import UserProfileRecord, UserProfileStatus
 from ...domain.user_profile._errors import UserProfileValidationError
+
+_PROFILE_AGGREGATE_CONFIG = ConfigDict(**_STRICT_FROZEN, hide_input_in_errors=True)
+
+_AGGREGATE_MISMATCH_MESSAGE = "profile aggregate projections are inconsistent"
+
+
+def _aggregate_mismatch_error(*, mismatch: str, translated_message: str) -> UserProfileValidationError:
+    return UserProfileValidationError(
+        _AGGREGATE_MISMATCH_MESSAGE,
+        translated_message=translated_message,
+        context={"mismatch": mismatch},
+    )
 
 
 class ProfileAggregate(BaseModel):
@@ -48,7 +60,7 @@ class ProfileAggregate(BaseModel):
       consumers can read it without unwrapping ``record``.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = _PROFILE_AGGREGATE_CONFIG
 
     profile_id: _ProfileId
     label: str = Field(min_length=1, max_length=160)
@@ -84,18 +96,19 @@ class ProfileAggregate(BaseModel):
         structural defence against that torn-rename state.
         """
         if self.record.profile_id != self.profile_id:
-            raise UserProfileValidationError(
-                f"aggregate profile_id {self.profile_id!r} disagrees with record.profile_id {self.record.profile_id!r}"
+            raise _aggregate_mismatch_error(
+                mismatch="profile_id",
+                translated_message="application.user_profile.errors.aggregate_profile_id_mismatch",
             )
         if self.label != self.record.display_name:
-            raise UserProfileValidationError(
-                f"aggregate label {self.label!r} disagrees with "
-                f"record.display_name {self.record.display_name!r}; "
-                "a torn rename left the manifest and secure record out of sync"
+            raise _aggregate_mismatch_error(
+                mismatch="label",
+                translated_message="application.user_profile.errors.aggregate_label_mismatch",
             )
         if self.record.status is not self.status:
-            raise UserProfileValidationError(
-                f"aggregate status {self.status} disagrees with record.status {self.record.status}"
+            raise _aggregate_mismatch_error(
+                mismatch="status",
+                translated_message="application.user_profile.errors.aggregate_status_mismatch",
             )
         return self
 

@@ -981,6 +981,9 @@ application:
         puede seleccionarse.
       unsupported_bundle_schema_version: La versión del esquema del paquete no es
         compatible con esta versión de la aplicación.
+      aggregate_profile_id_mismatch: 'El almacenamiento del perfil no es coherente: la identidad del manifiesto no coincide con el registro seguro.'
+      aggregate_label_mismatch: 'El almacenamiento del perfil no es coherente: la etiqueta del manifiesto no coincide con el registro seguro.'
+      aggregate_status_mismatch: 'El almacenamiento del perfil no es coherente: el estado de ciclo de vida del manifiesto no coincide con el registro seguro.'
   wizard:
     errors:
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')

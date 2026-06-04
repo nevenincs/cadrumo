@@ -75,10 +75,18 @@ def test_aggregate_accepts_consistent_projections() -> None:
     assert aggregate.record is record
 
 
+def _assert_validation_error_redacts(error: ValidationError, *sensitive_tokens: str) -> None:
+    rendered = str(error)
+    assert "profile aggregate projections are inconsistent" in rendered
+    for token in sensitive_tokens:
+        assert token not in rendered
+
+
 def test_aggregate_rejects_record_profile_id_mismatch() -> None:
     """An aggregate whose record carries a different UUID is rejected."""
 
-    with pytest.raises(ValidationError):
+    mismatched_profile_id = "00000000-0000-4000-8000-000000000000"
+    with pytest.raises(ValidationError) as exc_info:
         ProfileAggregate(
             profile_id=_PROFILE_UUID,
             label="Aggregate Operator",
@@ -86,9 +94,10 @@ def test_aggregate_rejects_record_profile_id_mismatch() -> None:
             kdf_params=_kdf_params(),
             recovery_enrolled=False,
             manifest_schema_version=1,
-            record=_record("00000000-0000-4000-8000-000000000000"),
+            record=_record(mismatched_profile_id),
             status=UserProfileStatus.ACTIVE,
         )
+    _assert_validation_error_redacts(exc_info.value, _PROFILE_UUID, mismatched_profile_id, "Aggregate Operator")
 
 
 def test_aggregate_rejects_torn_rename_label_mismatch() -> None:
@@ -104,7 +113,7 @@ def test_aggregate_rejects_torn_rename_label_mismatch() -> None:
     """
 
     record = _record()  # record.display_name == "Aggregate Operator"
-    with pytest.raises(ValidationError, match="torn rename"):
+    with pytest.raises(ValidationError) as exc_info:
         ProfileAggregate(
             profile_id=_PROFILE_UUID,
             label="Renamed Operator",
@@ -115,12 +124,13 @@ def test_aggregate_rejects_torn_rename_label_mismatch() -> None:
             record=record,
             status=UserProfileStatus.ACTIVE,
         )
+    _assert_validation_error_redacts(exc_info.value, _PROFILE_UUID, "Renamed Operator", "Aggregate Operator")
 
 
 def test_aggregate_rejects_status_mismatch() -> None:
     """An aggregate whose status disagrees with the record is rejected."""
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError) as exc_info:
         ProfileAggregate(
             profile_id=_PROFILE_UUID,
             label="Aggregate Operator",
@@ -131,6 +141,7 @@ def test_aggregate_rejects_status_mismatch() -> None:
             record=_record(status=UserProfileStatus.TOMBSTONED),
             status=UserProfileStatus.ACTIVE,
         )
+    _assert_validation_error_redacts(exc_info.value, _PROFILE_UUID, "Aggregate Operator")
 
 
 def test_verify_integrity_passes_when_every_store_agrees() -> None:
