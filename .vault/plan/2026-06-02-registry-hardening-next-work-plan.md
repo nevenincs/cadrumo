@@ -135,7 +135,19 @@ Audit and repair M200 calculation closure identities so every calculated casilla
 
 - [x] `W05.P09.S41` - Audit M200 closure-only calculation completeness drift and segment ownership; `.vault/audit`.
 - [x] `W05.P09.S42` - Repair M200 calculation completeness declarations for the audited closure-only identities; `src/aeat/_data/registry/aeat/modelos/200`.
-- [ ] `W05.P09.S43` - Verify M200 record-design completeness and committed-registry gates after the repair; `src/aeat/domain/calculations/registry/test_record_design.py`.
+- [ ] `W05.P09.S43` - Verify M200 record-design completeness after the repair and record the remaining cross-modelo gate blocker; `src/aeat/domain/calculations/registry/test_record_design.py`.
+
+## Wave `W06` - M303 completeness manifest blocker
+
+Close the Modelo 303 manifest-only completeness drift that blocks the full record-design gate after the M200 repair.
+
+### Phase `W06.P10` - M303 stale total-row manifest cleanup
+
+Audit and repair stale M303 completeness-manifest rows for totals that no longer participate in the calculation closure.
+
+- [ ] `W06.P10.S44` - Audit M303 manifest-only completeness drift for totals 27 and 45 across both revisions; `.vault/audit`.
+- [ ] `W06.P10.S45` - Remove stale M303 total rows from completeness manifests after closure derivation proves they are no longer calculated; `src/aeat/_data/registry/aeat/modelos/303`.
+- [ ] `W06.P10.S46` - Verify full record-design completeness and committed-registry gates after the M303 cleanup; `src/aeat/domain/calculations/registry/test_record_design.py`.
 
 ## Description
 
