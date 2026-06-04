@@ -48,7 +48,7 @@ and loaded modelo objects.
 Verify value preservation and close the row-width pressure slice.
 
 - [x] `P03.S06` - Verify loader, reviewability, committed registry, record-design, drift, and plan gates for row-width repairs; `src/aeat/domain/calculations/registry`.
-- [ ] `P03.S07` - Review the row-width pressure slice and persist closure artefacts; `.vault/audit`.
+- [x] `P03.S07` - Review the row-width pressure slice and persist closure artefacts; `.vault/audit`.
 
 ## Description
 
