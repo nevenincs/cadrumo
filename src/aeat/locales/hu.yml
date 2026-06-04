@@ -923,6 +923,10 @@ application:
       aggregate_profile_id_mismatch: 'A profiltárolás inkonzisztens: a manifest profilazonossága nem egyezik a biztonságos rekorddal.'
       aggregate_label_mismatch: 'A profiltárolás inkonzisztens: a manifest címkéje nem egyezik a biztonságos rekorddal.'
       aggregate_status_mismatch: 'A profiltárolás inkonzisztens: a manifest életciklus-állapota nem egyezik a biztonságos rekorddal.'
+      lifecycle_profile_already_exists: 'Már létezik profil az aktív bucketben.'
+      lifecycle_profile_tombstoned_rename: 'Törölt profil nem nevezhető át.'
+      lifecycle_profile_tombstoned_duplicate: 'Törölt profil nem duplikálható.'
+      lifecycle_schema_validation_failed: 'A profiladatok nem felelnek meg a felhasználóiprofil-sémának.'
   wizard:
     errors:
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')

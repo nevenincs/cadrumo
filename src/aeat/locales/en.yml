@@ -909,6 +909,10 @@ application:
       aggregate_profile_id_mismatch: 'Profile storage is inconsistent: the manifest profile identity does not match the secure record.'
       aggregate_label_mismatch: 'Profile storage is inconsistent: the manifest label does not match the secure record.'
       aggregate_status_mismatch: 'Profile storage is inconsistent: the manifest lifecycle status does not match the secure record.'
+      lifecycle_profile_already_exists: 'A profile already exists in the active bucket.'
+      lifecycle_profile_tombstoned_rename: 'A removed profile cannot be renamed.'
+      lifecycle_profile_tombstoned_duplicate: 'A removed profile cannot be duplicated.'
+      lifecycle_schema_validation_failed: 'The profile data does not match the user-profile schema.'
   wizard:
     errors:
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
