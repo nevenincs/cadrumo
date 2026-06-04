@@ -35,8 +35,9 @@ def test_derive_kek_raises_key_derivation_error_for_unsupported_algorithm() -> N
         output_length=32,
     )
 
-    with pytest.raises(KeyDerivationError, match="unsupported KDF algorithm"):
+    with pytest.raises(KeyDerivationError, match="unsupported KDF algorithm") as exc_info:
         derive_kek(_PASSPHRASE, bad_params)
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_key_derivation"
 
 
 def test_derive_kek_raises_key_derivation_error_for_unsupported_output_length() -> None:
@@ -52,8 +53,9 @@ def test_derive_kek_raises_key_derivation_error_for_unsupported_output_length() 
         output_length=16,
     )
 
-    with pytest.raises(KeyDerivationError, match="unsupported KDF output_length"):
+    with pytest.raises(KeyDerivationError, match="unsupported KDF output_length") as exc_info:
         derive_kek(_PASSPHRASE, bad_params)
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_key_derivation"
 
 
 def test_key_derivation_error_is_registered() -> None:

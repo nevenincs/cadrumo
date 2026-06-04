@@ -13,6 +13,7 @@ deliberate parameter change):
 
     uv run python -c "
     from argon2.low_level import Type, hash_secret_raw
+    from sys import stdout
     out = hash_secret_raw(
         secret=b'correct horse battery staple',
         salt=b'\\x00' * 16,
@@ -22,7 +23,7 @@ deliberate parameter change):
         hash_len=32,
         type=Type.ID,
     )
-    print(out.hex())
+    stdout.write(out.hex())
     "
 """
 
@@ -30,6 +31,7 @@ from __future__ import annotations
 
 import pytest
 
+from .....core.errors import build_error_envelope
 from ..bucket._manifest import ManifestKdfParams
 from ..errors import KeyDerivationError
 from ._kdf import derive_kek
@@ -99,8 +101,12 @@ def test_derive_kek_rejects_non_argon2id_algorithm() -> None:
         output_length=32,
     )
 
-    with pytest.raises(KeyDerivationError, match="unsupported KDF algorithm"):
+    with pytest.raises(KeyDerivationError, match="unsupported KDF algorithm") as exc_info:
         derive_kek(_REFERENCE_PASSPHRASE, bad_params)
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_key_derivation"
+    envelope = build_error_envelope(exc_info.value)
+    assert envelope.message
+    assert "correct horse battery staple" not in envelope.model_dump_json()
 
 
 def test_derive_kek_rejects_non_thirty_two_output_length() -> None:
@@ -114,5 +120,26 @@ def test_derive_kek_rejects_non_thirty_two_output_length() -> None:
         output_length=16,
     )
 
-    with pytest.raises(KeyDerivationError, match="unsupported KDF output_length"):
+    with pytest.raises(KeyDerivationError, match="unsupported KDF output_length") as exc_info:
         derive_kek(_REFERENCE_PASSPHRASE, bad_params)
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_key_derivation"
+
+
+def test_derive_kek_wraps_argon2_parameter_failure() -> None:
+    """Argon2 rejects too-low memory cost as a typed localized storage error."""
+
+    bad_params = ManifestKdfParams(
+        algorithm="argon2id",
+        version=19,
+        memory_cost=1,
+        time_cost=2,
+        parallelism=1,
+        salt=_REFERENCE_SALT,
+        output_length=32,
+    )
+
+    with pytest.raises(KeyDerivationError, match="Argon2id KEK derivation failed") as exc_info:
+        derive_kek(_REFERENCE_PASSPHRASE, bad_params)
+
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_key_derivation"
+    assert type(exc_info.value.__cause__).__name__ == "HashingError"

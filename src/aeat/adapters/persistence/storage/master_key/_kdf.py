@@ -15,19 +15,25 @@ through a `BucketSession`.
 
 from __future__ import annotations
 
+from argon2.exceptions import Argon2Error
 from argon2.low_level import Type, hash_secret_raw
 
 from ..bucket._manifest import ManifestKdfParams
 from ..errors import KeyDerivationError
 
 _OUTPUT_BYTES = 32
+_STORAGE_KEY_DERIVATION_MESSAGE_KEY = "errors.integrity.integrity_storage_key_derivation"
+
+
+def _key_derivation_error(message: str) -> KeyDerivationError:
+    return KeyDerivationError(message, translated_message=_STORAGE_KEY_DERIVATION_MESSAGE_KEY)
 
 
 def derive_kek(passphrase: bytes, kdf_params: ManifestKdfParams) -> bytes:
     """Derive a 32-byte KEK from `passphrase` and the manifest's `kdf_params`.
 
     Args:
-        passphrase: Operator passphrase encoded UTF-8.
+        passphrase: Operator passphrase encoded to bytes by the caller.
         kdf_params: Manifest-side KDF record carrying algorithm,
             parameter version, the Argon2id cost parameters, the salt,
             and the requested output length.
@@ -41,23 +47,26 @@ def derive_kek(passphrase: bytes, kdf_params: ManifestKdfParams) -> bytes:
             `kdf_params.output_length` is not 32.
     """
     if kdf_params.algorithm != "argon2id":
-        raise KeyDerivationError(
+        raise _key_derivation_error(
             f"unsupported KDF algorithm {kdf_params.algorithm!r}; expected 'argon2id'",
         )
     if kdf_params.output_length != _OUTPUT_BYTES:
-        raise KeyDerivationError(
+        raise _key_derivation_error(
             f"unsupported KDF output_length {kdf_params.output_length}; expected {_OUTPUT_BYTES}",
         )
 
-    return hash_secret_raw(
-        secret=passphrase,
-        salt=kdf_params.salt,
-        time_cost=kdf_params.time_cost,
-        memory_cost=kdf_params.memory_cost,
-        parallelism=kdf_params.parallelism,
-        hash_len=kdf_params.output_length,
-        type=Type.ID,
-    )
+    try:
+        return hash_secret_raw(
+            secret=passphrase,
+            salt=kdf_params.salt,
+            time_cost=kdf_params.time_cost,
+            memory_cost=kdf_params.memory_cost,
+            parallelism=kdf_params.parallelism,
+            hash_len=kdf_params.output_length,
+            type=Type.ID,
+        )
+    except (Argon2Error, TypeError, ValueError) as exc:
+        raise _key_derivation_error("Argon2id KEK derivation failed") from exc
 
 
 __all__ = ["derive_kek"]
