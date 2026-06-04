@@ -9,6 +9,16 @@ related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `registry-reviewability-pressure` `implementation` plan
 
 Audit and reduce the remaining registry TOML reviewability pressure after the
@@ -19,7 +29,7 @@ generic fragmentation contract was verified.
 Classify the near-threshold committed TOML files and inline-only revision
 directories before any registry layout change.
 
-- [ ] `P01.S01` - Audit near-threshold TOML line and row pressure for M123, M369, M100, M200, and M303; `.vault/audit`.
+- [x] `P01.S01` - Audit near-threshold TOML line and row pressure for M123, M369, M100, M200, and M303; `.vault/audit`.
 - [ ] `P01.S02` - Decide whether M123 and M369 inline-only revision directories need mechanical fragment splits now or tracked deferral; `.vault/audit`.
 
 ### Phase `P02` - mechanical reviewability repairs
