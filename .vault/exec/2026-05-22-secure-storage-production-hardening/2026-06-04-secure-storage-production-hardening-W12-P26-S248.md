@@ -19,7 +19,8 @@ Closed `AFR-146` for the review source adapter boundary.
 - Verified transaction, invoice, and filing draft sources are loaded through their domain repositories and active-profile/bucket runtime paths.
 - Verified the adapters do not write review state or persist sidecar plaintext files.
 - Removed raw backend exception text from transaction, invoice, and filing draft source-load error messages and context.
-- Added a real secure-object corruption test for invoice adapter load failures.
+- Added real secure-object corruption tests for invoice and filing-draft adapter load failures.
+- Added the missing localized filing-draft source-load error key through the canonical locale CLI.
 - Closed `S248` through `vaultspec-core vault plan step check`.
 
 ## Outcome
@@ -34,4 +35,4 @@ Validation passed:
 
 ## Notes
 
-The invoice load-failure test writes malformed payload bytes through `secure_object_repository_for_active_bucket`, not through a fake repository or monkeypatch.
+The invoice and draft load-failure tests write malformed payload bytes through the real active-bucket secure-object repositories, not through fake repositories or monkeypatches.

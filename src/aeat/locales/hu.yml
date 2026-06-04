@@ -4034,6 +4034,7 @@ profile:
 review:
   adapters:
     errors:
+      drafts_load_failed: 'Nem sikerult betolteni a bevallasi piszkozatokat a biztonsagos hattertarbol.'
       invoices_load_failed: review.adapters.errors.invoices_load_failed
       transactions_load_failed: review.adapters.errors.transactions_load_failed
   filing:
