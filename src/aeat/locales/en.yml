@@ -126,8 +126,8 @@ adapters:
       errors:
         no_active_profile: No active AEAT profile is bound for Google OAuth.
       suggestions:
-        create_profile: Run `aeat config profile create NAME --tax-id <DNI/NIE/NIF/CIF>` and then
-          retry the Google command.
+        create_profile: Run `aeat config profile create NAME --tax-id <DNI/NIE/NIF/CIF>`
+          and then retry the Google command.
   inbound:
     declaracion:
       errors:
@@ -1693,11 +1693,6 @@ cli:
           importe=10000''. M349 example: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
           clave_operacion=E importe=50000''.'
         row_kv_format_error: --row field {token} must be in KEY=VALUE format.
-        row_m184_share_sum_error: 'M184 miembro rows: share percentages must sum to
-          exactly 100%; got %{total} across %{count} rows'
-        row_m347_threshold_error: 'M347 contraparte row (nif=%{nif}): total amount
-          %{total} does not exceed the EUR %{threshold} threshold required by RD 1065/2007
-          art. 31.1'
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} does not match
           the expected NIF-IVA format for country {pais} (Council Directive 2006/112/EC
           Annex XI)'
@@ -3119,8 +3114,8 @@ errors:
       URL provided.
     auth_auth_certificate_load: The PKCS#12 certificate data could not be parsed.
       Check that the file is not corrupted.
-    auth_auth_certificate_nif_parse: No DNI, NIF, or NIE could be extracted from the certificate
-      subject. Check that the certificate belongs to an individual.
+    auth_auth_certificate_nif_parse: No DNI, NIF, or NIE could be extracted from the
+      certificate subject. Check that the certificate belongs to an individual.
     auth_auth_certificate_password: The certificate password is missing or wrong.
       Set the environment variable to the correct password.
     auth_auth_certificate_pre_expiry: The digital certificate is about to expire.
@@ -4400,9 +4395,9 @@ wizard:
       This prepares the local profile the app uses for ledger work and tax-form checks.
       Expect %{section_total} sections. Only %{required_total} answers are required
       to start; the rest can be left blank when you do not know them yet. Have your
-      DNI/NIE/NIF/CIF, a short activity description, IVA/IRPF regime details, tax residence,
-      and family details if they apply. After saving, check progress with `aeat config
-      profile status`.'
+      DNI/NIE/NIF/CIF, a short activity description, IVA/IRPF regime details, tax
+      residence, and family details if they apply. After saving, check progress with
+      `aeat config profile status`.'
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Intra-community operations exceed 50,000 EUR
