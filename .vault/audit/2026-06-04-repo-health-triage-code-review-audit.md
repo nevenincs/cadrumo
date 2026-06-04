@@ -185,6 +185,19 @@ A dedicated `vaultspec-code-reviewer` delegation was attempted for this slice,
 but the active subagent pool returned a thread-limit failure; the review was
 completed locally against the mandatory code-review checklist.
 
+## W03-008 | INFO | Ledger review projection extraction review found no defects
+
+Status: verified.
+
+The W03.P10.S33 review found no behavioral defect in the extraction.
+`_actions.py` now keeps repository loading and delegates review filtering,
+event-filter matching, row projection, and review-status classification to
+`_review_projection.py`.
+
+Focused verification passed for review period/status projection, direction
+filtering, import/issue event filters, ledger list CLI filters, the full
+application ledger action test file, and Ruff on the touched ledger surfaces.
+
 ## W03-009 | INFO | Ledger list CLI extraction review found no defects
 
 Status: verified with scoped residual.
