@@ -1521,14 +1521,36 @@ cli:
         create_reused_renamed: Existing work unit returned (idempotent on modelo/year/period/revision);
           nothing new was created. The supplied --name was applied as a rename to
           %{name}.
-        create_stub_modelo_151_refused: 'Modelo %{modelo} (special expatriate regime, Beckham Law) is not supported for work-unit creation in this CLI. Legal basis: Ley 35/2006 Art. 93 LIRPF, RD 439/2007 Art. 113, Orden EHA/2887/2008. File the return at AEAT Sede.'
-        create_stub_modelo_210_refused: 'Modelo %{modelo} (IRNR, Non-Resident Income Tax) is not supported for work-unit creation in this CLI. Legal basis: RD Legislativo 5/2004 TRLIRNR and Art. 28 TRLIRNR. File the return through AEAT Sede procedure G320 at sede.agenciatributaria.gob.es.'
-        create_stub_modelo_600_refused: 'Modelo %{modelo} (ITP-AJD, Transfer Tax and Stamp Duty) is not supported for work-unit creation in this CLI. This tax is managed by the Autonomous Communities; file with the relevant regional tax authority.'
-        create_stub_modelo_620_refused: 'Modelo %{modelo} (ITP-AJD, used vehicle transfers) is not supported for work-unit creation in this CLI. File the self-assessment with the relevant regional tax authority.'
-        create_stub_modelo_650_refused: 'Modelo %{modelo} (ISD inheritances) is not supported for work-unit creation in this CLI. Legal basis: Ley 29/1987 LISyD; ordinary deadline is six months from death. File with the competent regional tax authority.'
-        create_stub_modelo_660_refused: 'Modelo %{modelo} (ISD estate inventory, accompanying Modelo 650) is not supported for work-unit creation in this CLI. File with the competent regional tax authority.'
-        create_stub_modelo_714_refused: 'Modelo %{modelo} (Wealth Tax) is not supported for work-unit creation in this CLI. Legal basis: Ley 19/1991 Art. 28 and Orden HAC/1023/2021. File the return at AEAT Sede.'
-        create_stub_modelo_refused: 'Modelo %{modelo} (informative declaration of virtual currencies held abroad) is not supported for work-unit creation in this CLI. Legal authority: Orden HFP/887/2023 and RD 1065/2007 Art. 42 quater; the reporting threshold is 50,000 EUR at 31 December. File through AEAT Sede when legally required.'
+        create_stub_modelo_151_refused: 'Modelo %{modelo} (special expatriate regime,
+          Beckham Law) is not supported for work-unit creation in this CLI. Legal
+          basis: Ley 35/2006 Art. 93 LIRPF, RD 439/2007 Art. 113, Orden EHA/2887/2008.
+          File the return at AEAT Sede.'
+        create_stub_modelo_210_refused: 'Modelo %{modelo} (IRNR, Non-Resident Income
+          Tax) is not supported for work-unit creation in this CLI. Legal basis: RD
+          Legislativo 5/2004 TRLIRNR and Art. 28 TRLIRNR. File the return through
+          AEAT Sede procedure G320 at sede.agenciatributaria.gob.es.'
+        create_stub_modelo_600_refused: Modelo %{modelo} (ITP-AJD, Transfer Tax and
+          Stamp Duty) is not supported for work-unit creation in this CLI. This tax
+          is managed by the Autonomous Communities; file with the relevant regional
+          tax authority.
+        create_stub_modelo_620_refused: Modelo %{modelo} (ITP-AJD, used vehicle transfers)
+          is not supported for work-unit creation in this CLI. File the self-assessment
+          with the relevant regional tax authority.
+        create_stub_modelo_650_refused: 'Modelo %{modelo} (ISD inheritances) is not
+          supported for work-unit creation in this CLI. Legal basis: Ley 29/1987 LISyD;
+          ordinary deadline is six months from death. File with the competent regional
+          tax authority.'
+        create_stub_modelo_660_refused: Modelo %{modelo} (ISD estate inventory, accompanying
+          Modelo 650) is not supported for work-unit creation in this CLI. File with
+          the competent regional tax authority.
+        create_stub_modelo_714_refused: 'Modelo %{modelo} (Wealth Tax) is not supported
+          for work-unit creation in this CLI. Legal basis: Ley 19/1991 Art. 28 and
+          Orden HAC/1023/2021. File the return at AEAT Sede.'
+        create_stub_modelo_refused: 'Modelo %{modelo} (informative declaration of
+          virtual currencies held abroad) is not supported for work-unit creation
+          in this CLI. Legal authority: Orden HFP/887/2023 and RD 1065/2007 Art. 42
+          quater; the reporting threshold is 50,000 EUR at 31 December. File through
+          AEAT Sede when legally required.'
         discard_help: Mark a work unit as discarded (auditable state transition)
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
           app modelo work discard %{work_unit_id} --yes' to confirm.
@@ -1670,6 +1692,8 @@ cli:
           importe=10000''. M349 example: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
           clave_operacion=E importe=50000''.'
         row_kv_format_error: --row field {token} must be in KEY=VALUE format.
+        row_m184_share_sum_error: Modelo 184 share rows must add up to 100%.
+        row_m347_threshold_error: Modelo 347 rows are below the reportable threshold.
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} does not match
           the expected NIF-IVA format for country {pais} (Council Directive 2006/112/EC
           Annex XI)'

@@ -1610,14 +1610,37 @@ cli:
         create_reused_renamed: S'ha retornat la unitat de treball existent (idempotent
           sobre model/exercici/període/revisió); no s'ha creat res nou. El --name
           indicat s'ha aplicat com a reanomenament a %{name}.
-        create_stub_modelo_151_refused: 'El model %{modelo} (regim especial d impatriats, Llei Beckham) no esta suportat per crear unitats de treball en aquest CLI. Base legal: Llei 35/2006 art. 93 LIRPF, RD 439/2007 art. 113, Ordre EHA/2887/2008. Presenta la declaracio a la Seu de l AEAT.'
-        create_stub_modelo_210_refused: 'El model %{modelo} (IRNR, impost sobre la renda de no residents) no està suportat per crear unitats de treball en aquest CLI. Base legal: RD legislatiu 5/2004 TRLIRNR i art. 28 TRLIRNR. Presenta la declaració mitjançant el tràmit G320 de la Seu de l AEAT a sede.agenciatributaria.gob.es.'
-        create_stub_modelo_600_refused: 'El model %{modelo} (ITP-AJD, transmissions patrimonials i actes juridics documentats) no esta suportat per crear unitats de treball en aquest CLI. Aquest impost el gestionen les comunitats autonomes; presenta l autoliquidacio davant l administracio autonomica competent.'
-        create_stub_modelo_620_refused: 'El model %{modelo} (ITP-AJD, transmissions de vehicles usats) no esta suportat per crear unitats de treball en aquest CLI. Presenta l autoliquidacio davant l administracio autonomica competent.'
-        create_stub_modelo_650_refused: 'El model %{modelo} (ISD successions) no esta suportat per crear unitats de treball en aquest CLI. Base legal: Llei 29/1987 LISyD; el termini ordinari es de sis mesos des de la defuncio. Presenta la declaracio davant l administracio autonomica competent.'
-        create_stub_modelo_660_refused: 'El model %{modelo} (ISD cabal relicte, que acompanya el Model 650) no esta suportat per crear unitats de treball en aquest CLI. Presenta la declaracio davant l administracio autonomica competent.'
-        create_stub_modelo_714_refused: 'El model %{modelo} (impost sobre el patrimoni) no esta suportat per crear unitats de treball en aquest CLI. Base legal: Llei 19/1991 art. 28 i Ordre HAC/1023/2021. Presenta la declaracio a la Seu de l AEAT.'
-        create_stub_modelo_refused: 'El model %{modelo} (declaració informativa sobre monedes virtuals situades a l estranger) no està suportat per crear unitats de treball en aquest CLI. Autoritat legal: Ordre HFP/887/2023 i RD 1065/2007 art. 42 quàter; el llindar informatiu és de 50.000 EUR a 31 de desembre. Presenta la declaració a la Seu de l AEAT quan hi hagi obligació legal.'
+        create_stub_modelo_151_refused: 'El model %{modelo} (regim especial d impatriats,
+          Llei Beckham) no esta suportat per crear unitats de treball en aquest CLI.
+          Base legal: Llei 35/2006 art. 93 LIRPF, RD 439/2007 art. 113, Ordre EHA/2887/2008.
+          Presenta la declaracio a la Seu de l AEAT.'
+        create_stub_modelo_210_refused: 'El model %{modelo} (IRNR, impost sobre la
+          renda de no residents) no està suportat per crear unitats de treball en
+          aquest CLI. Base legal: RD legislatiu 5/2004 TRLIRNR i art. 28 TRLIRNR.
+          Presenta la declaració mitjançant el tràmit G320 de la Seu de l AEAT a sede.agenciatributaria.gob.es.'
+        create_stub_modelo_600_refused: El model %{modelo} (ITP-AJD, transmissions
+          patrimonials i actes juridics documentats) no esta suportat per crear unitats
+          de treball en aquest CLI. Aquest impost el gestionen les comunitats autonomes;
+          presenta l autoliquidacio davant l administracio autonomica competent.
+        create_stub_modelo_620_refused: El model %{modelo} (ITP-AJD, transmissions
+          de vehicles usats) no esta suportat per crear unitats de treball en aquest
+          CLI. Presenta l autoliquidacio davant l administracio autonomica competent.
+        create_stub_modelo_650_refused: 'El model %{modelo} (ISD successions) no esta
+          suportat per crear unitats de treball en aquest CLI. Base legal: Llei 29/1987
+          LISyD; el termini ordinari es de sis mesos des de la defuncio. Presenta
+          la declaracio davant l administracio autonomica competent.'
+        create_stub_modelo_660_refused: El model %{modelo} (ISD cabal relicte, que
+          acompanya el Model 650) no esta suportat per crear unitats de treball en
+          aquest CLI. Presenta la declaracio davant l administracio autonomica competent.
+        create_stub_modelo_714_refused: 'El model %{modelo} (impost sobre el patrimoni)
+          no esta suportat per crear unitats de treball en aquest CLI. Base legal:
+          Llei 19/1991 art. 28 i Ordre HAC/1023/2021. Presenta la declaracio a la
+          Seu de l AEAT.'
+        create_stub_modelo_refused: 'El model %{modelo} (declaració informativa sobre
+          monedes virtuals situades a l estranger) no està suportat per crear unitats
+          de treball en aquest CLI. Autoritat legal: Ordre HFP/887/2023 i RD 1065/2007
+          art. 42 quàter; el llindar informatiu és de 50.000 EUR a 31 de desembre.
+          Presenta la declaració a la Seu de l AEAT quan hi hagi obligació legal.'
         discard_help: Marcar una unitat de treball com descartada (transició d'estat
           auditable)
         discard_requires_yes: El descart és una transició d'estat auditable. Torneu
@@ -1767,6 +1790,8 @@ cli:
           Exemple M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
           clave_operacion=E importe=50000''.'
         row_kv_format_error: El camp --row {token} ha de tenir el format CLAU=VALOR.
+        row_m184_share_sum_error: Les files del Model 184 han de sumar el 100 %.
+        row_m347_threshold_error: Les files del Model 347 no arriben al llindar declarable.
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincideix
           amb el format NIF-IVA esperat per al país {pais} (Directiva 2006/112/CE
           Annex XI)'
