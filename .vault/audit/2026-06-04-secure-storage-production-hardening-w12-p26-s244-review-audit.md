@@ -8,48 +8,30 @@ related:
   - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S244]]'
 ---
 
-# `secure-storage-production-hardening` `W12.P26.S244` Review
+# `secure-storage-production-hardening` Code Review
 
-## S244-001 | PASS | Overview is not a storage backend owner
+## S244-001 | FIXED | Overview row was misclassified as remote-mirror
 
-`src/aeat/application/overview/__init__.py` builds in-memory overview records,
-calendar entries, filing advisories, and status reports. It does not construct
-repositories, select secure storage backends, build SQL routes, inspect
-environment variables, open files, write plaintext side stores, or call remote
-providers.
+`src/aeat/application/overview/__init__.py` has no remote provider call and the CLI overview help states the verbs are local-only. The status path reads persisted state by delegating to the canonical `build_operator_state_projection`, which is runtime-backed and secure-object enrolled. The correct affected-file target is therefore `runtime-default`, not `remote-mirror` or `manifest-discovery`.
 
-## S244-002 | PASS | Status storage facts are delegated
+## S244-002 | FIXED | Intentional degradation paths now leave non-secret debug evidence
 
-Overview status delegates runtime state aggregation to
-`build_operator_state_projection`, so the active-profile and bucket facts are
-read through the established operator-state projection boundary. The overview
-module remains a consumer of that projection, not a competing persistence
-adapter.
+The calendar path still degrades benign no-deadline-window years and missing holiday-shift calendars, but it now logs debug records with bounded metadata (`year`, `modelo`, `period`, `error_type`) instead of silently swallowing the condition. Genuine registry-integrity faults continue to propagate.
 
-## S244-003 | FIXED | Benign degradation is debug-observable
+Invalid filing-obligation profile inputs now log field-name and error-shape metadata at debug level, without raw values. The advisory still returns no filing-obligation hint when the input is invalid.
 
-Narrow graceful-degradation catches in the calendar builder now emit debug
-diagnostics before continuing. Invalid profile values used by filing-obligation
-advisories also emit debug diagnostics without logging the raw operator-provided
-value.
+## S244-003 | FIXED | Central decimal coercion no longer logs raw malformed values
 
-## S244-004 | PASS | Stale renderer export removed
+`src/aeat/core/decimal/_coerce.py` previously logged the malformed value and default with `%r` on parse failure. That could leak operator profile or spreadsheet data at debug level. The helper now logs only `value_type`, `default_is_none`, and `error_type`, preserving centralized decimal coercion while removing raw-value exposure.
 
-The package-level `render_overview_status_lines` helper had no active source
-callers. Removing it avoids preserving an unused text-rendering surface in the
-application package while CLI overview rendering remains covered by the CLI
-tests.
+## S244-004 | FIXED | Unused raw overview status renderer removed
 
-## S244-005 | PASS | Duplication and grounding review
+The application package exported an unused `render_overview_status_lines` helper that emitted raw `profile_id` text. The live CLI uses `entrypoints.cli._overview_rendering.render_cli_overview_status_lines` through `_emit_envelope`, which routes text and JSON through the centralized output redaction layer. Removing the unused helper reduces accidental bypass surface.
 
-Vaultspec RAG semantic searches clustered overview behavior with the agenda,
-backlog, CLI overview, and operator-state projection surfaces. No duplicate
-storage implementation or duplicate persistence routing was found in the
-overview package.
+## S244-005 | PASS | Validation
 
-## S244-006 | PASS | Validation
+- `uv run --no-sync ruff check src/aeat/core/decimal/_coerce.py src/aeat/core/decimal/test_coerce.py src/aeat/application/overview/__init__.py src/aeat/application/overview/test_calendar.py src/aeat/entrypoints/cli/test_overview_rendering.py src/aeat/entrypoints/cli/test_overview_verbs.py` passed.
+- `uv run --no-sync pytest -q src/aeat/core/decimal/test_coerce.py src/aeat/application/overview/test_calendar.py src/aeat/entrypoints/cli/test_overview_rendering.py src/aeat/entrypoints/cli/test_overview_verbs.py` passed with 109 tests.
+- `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed for `ca`, `en`, `es`, and `hu`.
 
-- `uv run --no-sync ruff check src/aeat/application/overview/__init__.py src/aeat/application/overview/test_calendar.py src/aeat/entrypoints/cli/test_overview.py src/aeat/entrypoints/cli/test_overview_calendar_verb.py src/aeat/entrypoints/cli/test_overview_verbs.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/overview/test_calendar.py src/aeat/entrypoints/cli/test_overview.py src/aeat/entrypoints/cli/test_overview_calendar_verb.py src/aeat/entrypoints/cli/test_overview_verbs.py` passed with 71 tests.
-
-Disposition: close `AFR-142` as `manifest-discovery`.
+Disposition: close `AFR-142` as `runtime-default`.

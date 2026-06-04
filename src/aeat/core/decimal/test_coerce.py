@@ -15,6 +15,7 @@ from the type contract independently of the implementation.
 
 from __future__ import annotations
 
+import logging
 from decimal import Decimal
 
 import pytest
@@ -82,6 +83,26 @@ def test_coerce_decimal_absent_returns_none_by_default(absent_value: object) -> 
 def test_coerce_decimal_malformed_returns_none_by_default(bad_value: object) -> None:
     """Unparseable values return None when no default is given."""
     assert coerce_decimal(bad_value) is None
+
+
+def test_coerce_decimal_debug_log_omits_raw_malformed_value(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    raw_value = "not-a-decimal-secret"
+
+    with caplog.at_level(logging.DEBUG, logger="aeat.core.decimal._coerce"):
+        assert coerce_decimal(raw_value) is None
+
+    relevant = [
+        record
+        for record in caplog.records
+        if record.getMessage() == "coerce_decimal: could not parse value, returning configured default"
+    ]
+    assert len(relevant) == 1
+    assert relevant[0].value_type == "str"
+    assert relevant[0].default_is_none is True
+    assert relevant[0].error_type == "InvalidOperation"
+    assert raw_value not in relevant[0].getMessage()
 
 
 # ---------------------------------------------------------------------------
