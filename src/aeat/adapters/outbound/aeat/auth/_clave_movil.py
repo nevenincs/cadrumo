@@ -78,7 +78,6 @@ log = get_logger(__name__)
 
 _NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = _Settings().aeat_browser_navigation_timeout_ms
 _DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS: Final[float] = 5.0
-_OWN_NAME_REPRESENTATION_ACTION: Final[str] = "representation-gate-own-name-continue"
 
 # Environment variable name referenced in operator-facing error messages.
 # Named constant so grepping for the env-var name surfaces every usage site.
@@ -868,10 +867,10 @@ class ClaveMovilAuthProvider:
 
     def _storage_state_path(self) -> Path:
         from .....core import require_active_bucket_id
+        from .....core.auth_session_keys import aeat_auth_session_storage_state_path
 
-        token_dir = self._settings.aeat_token_dir
         profile = require_active_bucket_id()
-        return token_dir / f"{profile}-clave-movil-storage.json"
+        return aeat_auth_session_storage_state_path(profile, "clave-movil-storage")
 
     @staticmethod
     def _persist_session(
@@ -1603,7 +1602,10 @@ class ClaveMovilAuthProvider:
         """Continue only through AEAT's authenticated own-name selector."""
         assert_remote_operation_allowed(
             _auth_browser_action_policy(self._settings),
-            RemoteOperation(kind="browser_action", action=_OWN_NAME_REPRESENTATION_ACTION),
+            RemoteOperation(
+                kind="browser_action",
+                action=self._settings.external_constants().aeat.pre303.representation_own_name_action_label,
+            ),
         )
         pre303 = self._settings.external_constants().aeat.pre303
         wait_for = getattr(page, "wait_for_selector", None)
