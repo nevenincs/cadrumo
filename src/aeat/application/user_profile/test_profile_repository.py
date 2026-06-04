@@ -19,6 +19,7 @@ Three contracts are pinned:
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -185,6 +186,7 @@ def test_create_refuses_a_duplicate_tax_id(_backend: Path) -> None:
 
 
 def test_create_succeeds_with_different_nif_when_scan_hits_unreadable_profile(
+    caplog: pytest.LogCaptureFixture,
     _backend: Path,
 ) -> None:
     """An unreadable live profile must NOT block creating a profile with a distinct NIF.
@@ -209,11 +211,17 @@ def test_create_succeeds_with_different_nif_when_scan_hits_unreadable_profile(
 
     # A distinct NIF must succeed despite the torn profile — the warn-and-continue
     # path does not let a torn bucket block a new taxpayer registration.
-    new_profile = _create(repository, label="Different NIF", facts=_SECOND_FACTS)
+    with caplog.at_level(logging.DEBUG, logger="aeat.application.user_profile._profile_repository"):
+        new_profile = _create(repository, label="Different NIF", facts=_SECOND_FACTS)
 
     assert new_profile.label == "Different NIF"
     loaded = _load(repository, new_profile.profile_id)
     assert loaded.label == "Different NIF"
+    assert "tax-id uniqueness scan: skipping unreadable profile" in caplog.text
+    assert "tax-id uniqueness scan skipped unreadable profile" in caplog.text
+    assert "error_type=" in caplog.text
+    assert created.profile_id not in caplog.text
+    assert "<profile-id>" in caplog.text
 
 
 def test_create_still_refuses_duplicate_nif_against_readable_profiles(_backend: Path) -> None:
@@ -553,5 +561,5 @@ def test_load_surfaces_manifest_status_drift(_backend: Path) -> None:
     assert 'status = "tombstoned"' in corrupted, "manifest status mutation did not apply"
     target.write_text(corrupted, encoding="utf-8")
 
-    with pytest.raises(ProfileIntegrityError, match="cross-store lifecycle drift"):
+    with pytest.raises(ProfileIntegrityError, match="profile physical stores disagree on lifecycle status"):
         _load(repository, created.profile_id)
