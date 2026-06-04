@@ -159,7 +159,7 @@ Render resumed work ambiguity conflict and selector guidance in each supported l
 - [x] `W04.P05.S63` - add Spanish messages for resumed work ambiguity conflicts and selector refusals; `src/aeat/locales/es.yml`.
 - [x] `W04.P05.S64` - add Catalan messages for resumed work ambiguity conflicts and selector refusals; `src/aeat/locales/ca.yml`.
 - [x] `W04.P05.S65` - add Hungarian messages for resumed work ambiguity conflicts and selector refusals; `src/aeat/locales/hu.yml`.
-- [ ] `W04.P05.S66` - cover retired ID-routing help payload metadata and natural-key guidance in CLI output tests; `src/aeat/entrypoints/cli/test_modelo_work_ux.py`.
+- [x] `W04.P05.S66` - cover retired ID-routing help payload metadata and natural-key guidance in CLI output tests; `src/aeat/entrypoints/cli/test_modelo_work_ux.py`.
 
 ### Phase `W04.P06` - update user documentation after tested behavior lands
 
@@ -226,6 +226,7 @@ localized operator messages render clearly without stale ID-routing
 guidance, the affected documentation no longer teaches pasted-ID routing
 for the common path, and the feature surface gate reports only relevant
 pass/fail results for this change set.
+
 
 
 
