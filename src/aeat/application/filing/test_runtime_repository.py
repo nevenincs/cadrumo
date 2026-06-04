@@ -38,7 +38,6 @@ def test_resolve_application_filing_bucket_id_rejects_blank_explicit_bucket() ->
 
     assert raised.value.translated_message == "application.workflow.errors.no_active_profile_bucket"
     assert raised.value.context == {"reason": "blank_explicit_bucket_id"}
-    assert raised.value.context == {"reason": "blank_explicit_bucket_id"}
 
 
 def test_resolve_application_filing_bucket_id_uses_active_profile_setting(tmp_path: Path) -> None:
@@ -54,7 +53,6 @@ def test_resolve_application_filing_bucket_id_rejects_missing_active_profile(tmp
         resolve_application_filing_bucket_id(None)
 
     assert raised.value.translated_message == "application.workflow.errors.no_active_profile_bucket"
-    assert raised.value.context == {"reason": "missing_active_profile_bucket"}
     assert raised.value.context == {"reason": "missing_active_profile_bucket"}
 
 
