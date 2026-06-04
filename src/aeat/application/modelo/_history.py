@@ -90,7 +90,10 @@ def assemble_work_unit_history(
     work_units = wu_repo.load()
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
-        raise WorkUnitNotFoundError(f"no work unit with id={work_unit_id!r}")
+        raise WorkUnitNotFoundError(
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={"work_unit_id": work_unit_id},
+        )
 
     catalogue = bv_repo.load()
 
