@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, date, datetime
 
 import pytest
@@ -20,6 +21,7 @@ from . import (
     OverviewCalendarEntry,
     OverviewCalendarRange,
     OverviewPeriodState,
+    build_filing_obligation_advisories,
     build_overview_calendar,
     user_state_for,
 )
@@ -52,6 +54,56 @@ def _profile() -> TaxpayerProfile:
         bienes_extranjero_above_threshold=False,
         notes="overview-calendar test profile",
     )
+
+
+def test_invalid_pagadores_count_is_debug_logged_without_raw_value(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    raw_value = "not-a-count-secret"
+
+    with caplog.at_level(logging.DEBUG, logger="aeat.application.overview"):
+        advisories = build_filing_obligation_advisories(
+            {
+                "irpf.pagadores_count": raw_value,
+                "irpf.pagadores_secondary_income": "2000",
+            }
+        )
+
+    assert advisories == ()
+    relevant = [
+        record
+        for record in caplog.records
+        if record.getMessage() == "overview filing obligation advisory ignored invalid integer profile value"
+    ]
+    assert len(relevant) == 1
+    assert relevant[0].profile_field == "irpf.pagadores_count"
+    assert relevant[0].error_type == "ValueError"
+    assert raw_value not in relevant[0].getMessage()
+
+
+def test_invalid_pagadores_secondary_income_is_debug_logged_without_raw_value(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    raw_value = "not-income-secret"
+
+    with caplog.at_level(logging.DEBUG, logger="aeat.application.overview"):
+        advisories = build_filing_obligation_advisories(
+            {
+                "irpf.pagadores_count": "2",
+                "irpf.pagadores_secondary_income": raw_value,
+            }
+        )
+
+    assert advisories == ()
+    relevant = [
+        record
+        for record in caplog.records
+        if record.getMessage() == "overview filing obligation advisory ignored invalid decimal profile value"
+    ]
+    assert len(relevant) == 1
+    assert relevant[0].profile_field == "irpf.pagadores_secondary_income"
+    assert relevant[0].error_type == "InvalidOperation"
+    assert all(raw_value not in record.getMessage() for record in caplog.records)
 
 
 # ---------------------------------------------------------------------
@@ -852,7 +904,7 @@ class _CorruptRegistryEngine:
         raise ScheduleComputationError(f"deadline registry validation failed for year {year}")
 
 
-def test_calendar_benign_no_windows_year_still_degrades() -> None:
+def test_calendar_benign_no_windows_year_still_degrades(caplog: pytest.LogCaptureFixture) -> None:
     """The benign no-windows fault still degrades gracefully after the
     catch was narrowed to ``NoDeadlineWindowsError``.
 
@@ -861,11 +913,20 @@ def test_calendar_benign_no_windows_year_still_degrades() -> None:
     result rather than propagating the error."""
 
     rng = OverviewCalendarRange(from_date=date(2030, 1, 1), to_date=date(2030, 12, 31))
-    cal = build_overview_calendar(_profile(), rng, today=date(2030, 6, 1), engine=_NoWindowsEngine())
+    with caplog.at_level(logging.DEBUG, logger="aeat.application.overview"):
+        cal = build_overview_calendar(_profile(), rng, today=date(2030, 6, 1), engine=_NoWindowsEngine())
 
     assert isinstance(cal, OverviewCalendar)
     assert cal.entries == ()
     assert cal.taxpayer_model_declared is True
+    relevant = [
+        record
+        for record in caplog.records
+        if record.getMessage() == "overview calendar ignored covered year with no registered deadline windows"
+    ]
+    assert len(relevant) == 2
+    assert {record.year for record in relevant} == {2029, 2030}
+    assert {record.error_type for record in relevant} == {"NoDeadlineWindowsError"}
 
 
 def test_calendar_propagates_genuine_registry_fault() -> None:
