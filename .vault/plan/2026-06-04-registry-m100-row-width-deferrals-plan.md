@@ -11,6 +11,15 @@ related:
   - '[[2026-06-04-registry-row-width-pressure-audit]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `registry-m100-row-width-deferrals` `implementation` plan
 
@@ -19,7 +28,7 @@ pressure plan.
 
 - [x] `S01` - Audit clean M100 deferred row-width targets and unrelated dirty M100 files; `.vault/audit`.
 - [x] `S02` - Wrap M100 2021-2024 completeness-manifest `legal_refs` arrays without changing TOML values; `src/aeat/_data/registry/aeat/modelos/100/revisions`.
-- [ ] `S03` - Convert the M100 2020 inline `constraints` row to an equivalent nested TOML table with loaded M100 equality proof; `src/aeat/_data/registry/aeat/modelos/100/revisions/2020/casillas/0146-0153.toml`.
+- [x] `S03` - Convert the M100 2020 inline `constraints` row to an equivalent nested TOML table with loaded M100 equality proof; `src/aeat/_data/registry/aeat/modelos/100/revisions/2020/casillas/0146-0153.toml`.
 - [ ] `S04` - Tighten the TOML row-width baseline if the post-format corpus permits; `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
 - [ ] `S05` - Verify registry reviewability, loader, committed registry, and plan gates; `src/aeat/domain/calculations/registry`.
 - [ ] `S06` - Review and close the M100 row-width deferral slice; `.vault/audit`.
