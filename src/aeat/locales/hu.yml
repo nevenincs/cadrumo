@@ -1513,12 +1513,6 @@ cli:
           nem lesz.'
         calculation_revision_id_help: Stabil 64 karakteres SHA-256 azonosító egy számítási
           revízióhoz.
-        casilla_bare_numeric_ambiguous: 'A --casilla {key} több casillára illeszkedik
-          ebben a revízióban: {candidates}. Az egyértelműsítéshez használd a ELŐTAG:NNNNN
-          minősített formát.'
-        casilla_bare_numeric_unknown: A --casilla {key} nem illeszkedik egyetlen casilla-számra
-          sem ebben a revízióban.{prefix_hint} Az érvényes casilla-azonosítók listájához
-          használd az `aeat app modelo casillas <MODELO>` parancsot.
         casilla_help: Mezőérték CASILLA=DECIMAL szintaxissal (ismételhető). A CASILLA
           elfogadja a mező azonosítóját, a nyilvántartási számot vagy az `aeat app
           modelo casillas` által megjelenített BOE-n nyomtatott mezőszámot.
@@ -4228,7 +4222,7 @@ topic:
       a negyedév adatait és bizonyos esetekben az előző évet veszi alapul.
     title: IRPF-előlegfizetés
   profile:
-    body: 'A helyi profil tartalmazza az adóazonosítót (NIF), a fő tevékenységet,
+    body: 'A helyi profil tartalmazza az adóazonosítót (DNI/NIE/NIF/CIF), a fő tevékenységet,
       az IVA/IRPF-rezsimet és az opcionális regisztrációkat (SII, Verifactu, intrakomunitáris).
       Szerkessze: `aeat config profile edit NÉV`.'
     title: Adóalany profilja
@@ -4849,8 +4843,8 @@ wizard:
       spouse_consistency_missing: 'Közös adóbevallás: a házastárs adóazonosítója hiányzik.
         Adja meg a közös bevalláshoz.'
       spouse_consistency_ok: 'Közös adóbevallás: a házastárs adatai összhangban vannak.'
-      tax_id_present: 'Adóazonosítás: ellenőrzi, hogy a profil tartalmaz-e NIF vagy
-        NIE azonosítót.'
+      tax_id_present: 'Adóazonosítás: ellenőrzi, hogy a profil tartalmaz-e DNI, NIE,
+        NIF vagy CIF azonosítót.'
   test:
     description: Tesztelje a konfigurációt és a csatlakozást
     example:
