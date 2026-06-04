@@ -9,36 +9,31 @@ related:
   - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s244-review-audit]]'
 ---
 
-# `secure-storage-production-hardening` `W12.P26.S244`
+# W12.P26.S244 Overview Runtime Storage Disposition
 
-Closed `AFR-142` for the overview package.
+Scope: close `AFR-142` for `src/aeat/application/overview/__init__.py`; supporting hardening touched `src/aeat/core/decimal/_coerce.py`.
 
 ## Description
 
-- Reviewed `src/aeat/application/overview/__init__.py` against the affected-file
-  register, current plan wave, and vaultspec RAG semantic searches.
-- Verified overview owns no durable storage backend, secure-object route,
-  plaintext side store, settings/environment wrangling, or remote provider.
-- Reclassified `AFR-142` from stale `remote-mirror` ownership to
-  `manifest-discovery`.
-- Added debug diagnostics for narrow graceful-degradation paths in calendar and
-  filing-obligation advisory handling.
+- Reclassified `AFR-142` from stale `remote-mirror` ownership to `runtime-default`.
+- Verified overview status delegates persisted state reads to the canonical runtime-backed `OperatorStateProjection`.
+- Verified calendar assembly remains local and pure over supplied profile/deadline inputs.
+- Added debug diagnostics for narrow graceful-degradation paths in calendar and filing-obligation advisory handling.
 - Removed the unused package-level `render_overview_status_lines` export.
+- Fixed the central decimal coercion helper so malformed values are logged by type/default/error metadata, not by raw value.
+- Added real behavior tests for overview debug diagnostics and central decimal redaction.
 - Closed `S244` through `vaultspec-core vault plan step check`.
 
 ## Outcome
 
-`AFR-142` is closed as `manifest-discovery`. Overview remains an in-memory
-projection and presentation-support package over established state projection
-boundaries.
+`AFR-142` is closed as `runtime-default`. Overview does not contact AEAT or create a remote mirror; when status needs persisted state, it routes through the already-enrolled runtime projection and secure-object repositories. Graceful degradation paths are now observable at debug level without leaking malformed profile values.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/overview/__init__.py src/aeat/application/overview/test_calendar.py src/aeat/entrypoints/cli/test_overview.py src/aeat/entrypoints/cli/test_overview_calendar_verb.py src/aeat/entrypoints/cli/test_overview_verbs.py`
-- `uv run --no-sync pytest -q src/aeat/application/overview/test_calendar.py src/aeat/entrypoints/cli/test_overview.py src/aeat/entrypoints/cli/test_overview_calendar_verb.py src/aeat/entrypoints/cli/test_overview_verbs.py`
+- `uv run --no-sync ruff check src/aeat/core/decimal/_coerce.py src/aeat/core/decimal/test_coerce.py src/aeat/application/overview/__init__.py src/aeat/application/overview/test_calendar.py src/aeat/entrypoints/cli/test_overview_rendering.py src/aeat/entrypoints/cli/test_overview_verbs.py`
+- `uv run --no-sync pytest -q src/aeat/core/decimal/test_coerce.py src/aeat/application/overview/test_calendar.py src/aeat/entrypoints/cli/test_overview_rendering.py src/aeat/entrypoints/cli/test_overview_verbs.py`
+- `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit`
 
 ## Notes
 
-The pytest run passed with 71 tests and reported Click deprecation warnings for
-`protected_args` in CLI setup. Those warnings predate this closeout and are not
-storage-backend blockers.
+The central decimal logging fix is recorded here because S244 exposed the privacy issue while hardening overview advisory parsing. It is intentionally centralized rather than bypassed locally.
