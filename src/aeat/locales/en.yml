@@ -864,8 +864,19 @@ application:
             a referenced item.
       parity:
         errors:
-          seed_anchor_missing: 'The parity scenario input has no spreadsheet cell to seed.'
-          unknown_casilla_numbers: 'The parity scenario references casilla numbers that are not in the registry snapshot.'
+          seed_anchor_missing: The parity scenario input has no spreadsheet cell to
+            seed.
+          unknown_casilla_numbers: The parity scenario references casilla numbers
+            that are not in the registry snapshot.
+      records:
+        errors:
+          address_mismatch: 'The spreadsheet cell address does not match its row and column.'
+          duplicate_write_address: 'The spreadsheet export plan writes more than one payload to the same cell.'
+          frozen_view_empty: 'The spreadsheet frozen view must freeze at least one row or column.'
+          invalid_column_index: 'The spreadsheet record column index must be one-based and positive.'
+          invalid_column_letters: 'The spreadsheet record column letters are invalid.'
+          range_malformed: 'The spreadsheet range boundaries are invalid.'
+          tariff_shape_invalid: 'The spreadsheet tariff-table record shape is invalid.'
   user_profile:
     errors:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
