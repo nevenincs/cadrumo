@@ -49,10 +49,25 @@ No `noqa`, `pragma`, skips, xfails, mocks, fakes, stubs, or raw user-facing
 strings were introduced. Existing auth operator errors remain `AeatError`
 subclasses and localized through `tr()` / `translated_message`.
 
+## S198-005 | FIXED | Live-auth preflight honours explicit Settings
+
+`build_live_auth_preflight_report(settings=...)` used the supplied settings for
+redacted certificate/Cl@ve fields, but delegated status and provider probing to
+`test_operator_auth()` which reloaded process settings. A certificate path
+supplied through the centralized `Settings` object could therefore render as
+configured while the probe still reported the ambient process certificate state.
+
+The fix threads `Settings` through `test_operator_auth()`,
+`_probe_local_session()`, `_probe_configured_provider()`,
+`_probe_certificate_bundle()`, and `_probe_clave_movil_identity()`, so the
+preflight shape and the probe verdict share the same settings source.
+
 Validation:
 
+- `uv run --no-sync pytest src/aeat/application/auth/test_operator.py src/aeat/entrypoints/cli/_config/test_auth_round5_surface.py -q` passed with 35 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync pytest -q src/aeat/application/auth/test_operator_storage_session.py src/aeat/application/auth/test_operator.py` passed with 26 tests.
-- `$env:PYTHONPATH='src'; uv run --no-sync ruff check src/aeat/application/auth/_operator.py src/aeat/application/auth/test_operator_storage_session.py src/aeat/application/auth/test_operator.py` passed.
+- `$env:PYTHONPATH='src'; uv run --no-sync ruff check src/aeat/application/auth/_operator.py src/aeat/application/auth/test_operator_storage_session.py src/aeat/application/auth/test_operator.py src/aeat/entrypoints/cli/_config/test_auth_round5_surface.py` passed.
+- `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: subagent review remains unavailable because the reviewer agent hit
 the account usage limit earlier in this run. Host review found no remaining
