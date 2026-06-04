@@ -7,6 +7,8 @@ tier: L2
 related:
   - '[[2026-06-04-registry-reviewability-pressure-plan]]'
   - '[[2026-06-04-registry-reviewability-pressure-code-review-audit]]'
+  - '[[2026-06-04-registry-row-width-pressure-adr]]'
+  - '[[2026-06-04-registry-row-width-pressure-research]]'
 ---
 
 
@@ -27,7 +29,7 @@ before editing data files.
 Mechanically reformat only clean TOML rows, preserving parsed registry values
 and loaded modelo objects.
 
-- [ ] `P02.S02` - Reformat clean near-threshold M100 casilla TOML rows without changing TOML values; `src/aeat/_data/registry/aeat/modelos/100`.
+- [x] `P02.S02` - Reformat clean near-threshold M100 casilla TOML rows without changing TOML values; `src/aeat/_data/registry/aeat/modelos/100`.
 - [ ] `P02.S03` - Reformat clean non-M100 near-threshold TOML rows if S01 authorises them; `src/aeat/_data/registry/aeat/modelos`.
 - [ ] `P02.S04` - Defer dirty concurrent near-threshold TOML rows with exact paths and owners; `.vault/audit`.
 - [ ] `P02.S05` - Tighten the reviewability row-width baseline only as far as the post-format corpus permits; `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
