@@ -497,3 +497,21 @@ from `_actions.py`. User-facing borrador binding refusals now carry locale keys
 and structured context, and bucket-mismatch errors no longer echo bucket ids.
 
 Closure assessment: `W12.P26.S235` can close as `manifest-discovery`.
+
+## S236-050 | PASS | Modelo fichero-BOE export plaintext-exception closeout verified
+
+The `W12.P26.S236` review found that `src/aeat/application/modelo/_export.py`
+intentionally writes an operator-selected local fichero-BOE artefact and appends
+a `MODELO_EXPORTED` bucket event through the repository boundary. The affected
+file row was corrected from stale `manifest-discovery` to `plaintext-exception`
+with an explicit `plain-file` signal.
+
+The accepted 2026-06-03 export evidence, workbook parity, and visual-design ADRs
+were reviewed before closure. This step hardens the fichero-BOE export boundary
+and refusal paths; it does not claim the shared workbook builder, Evidencia tab,
+offline/online workbook materialiser parity, visual facets, or official-layout
+parity gate. User-facing export refusals now carry locale keys and structured
+context, and cross-bucket/output-write refusals avoid echoing bucket ids or
+operator filesystem paths.
+
+Closure assessment: `W12.P26.S236` can close as `plaintext-exception`.

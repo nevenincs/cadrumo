@@ -735,6 +735,14 @@ application:
       calculation_registry_root_missing: 'Registry root %{registry_root} is missing; modelo calculation cannot continue.'
       calculation_registry_snapshot_unresolved: 'Registry snapshot for modelo %{modelo}, filing year %{filing_year}, period %{period} could not be resolved.'
       external_import_duplicate_revision: 'Calculation revision %{calculation_revision_id} already exists in the catalogue; an identical import was already recorded.'
+      export_ledger_evidence_missing: 'La revisio de calcul %{calculation_revision_id} derivada del llibre major no inclou evidencia del llibre major ni una referencia resoluble a l''snapshot; verifica la revisio de nou abans d''exportar.'
+      export_revision_state_refused: 'La revisio de calcul %{calculation_revision_id} no esta verificada-completa ni presentada i no es pot exportar.'
+      export_operator_profile_missing: 'L''exportacio necessita el nom de l''operador del perfil actiu, pero no existeix cap perfil persistit; completa identity.surnames i identity.name abans d''exportar.'
+      export_operator_name_missing: 'L''exportacio requereix el nom de l''operador al perfil actiu; falten aquestes dades de perfil: %{missing}.'
+      export_period_unmappable: 'La unitat de treball %{work_unit_id} conte el periode %{period}, que no es pot assignar a un periode de registre.'
+      export_cross_bucket_refused: 'La revisio indicada pertany a un bucket diferent del bucket del perfil actiu. Canvia de perfil abans d''exportar.'
+      export_draft_approval_failed: 'No s''ha pogut aprovar l''esborrany per a la revisio de calcul %{calculation_revision_id}.'
+      export_draft_write_failed: 'No s''ha pogut escriure el fitxer d''exportacio per a la revisio de calcul %{calculation_revision_id}.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
