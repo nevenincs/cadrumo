@@ -10,36 +10,30 @@ related:
 
 # `secure-storage-production-hardening` `W12.P26.S270` Review
 
-## S270-001 | PASS | Repository construction stays runtime-bound
+## S270-001 | PASS | Repository exceptions are typed and sanitized
 
-The user-profile value and snapshot repositories continue to construct their default
-secure-object repository through the bucket storage runtime. The reviewed module uses
-registered storage namespace constants and strict envelope records rather than
-duplicating storage routing, physical SQL paths, or record shapes.
+Profile record miss, profile snapshot miss, inner envelope classification mismatch, and inner envelope schema-version mismatch now raise AEAT-derived typed exceptions with stable messages. Raw profile and snapshot identifiers remain out of `str(error)` and stay in structured context for redacted envelopes.
 
-## S270-002 | PASS | Missing loads use localized AEAT errors
+## S270-002 | PASS | Localization is enrolled through the canonical CLI
 
-Missing live profile records and missing profile snapshots now raise the existing
-user-profile AEAT error classes with registered translation keys and structured
-context. The raw English not-found messages were removed from the repository boundary.
+The repository-specific message keys were added to `en`, `es`, `ca`, and `hu` via `python -m aeat.locales`. The same audit pipeline removed stale modelo work extras and now reports every locale as clean.
 
-## S270-003 | PASS | Nonblocking cache invalidation is observable
+## S270-003 | PASS | Tests exercise real storage behavior
 
-Output-language cache invalidation remains deliberately nonblocking for persistence,
-but import and runtime failures now emit debug diagnostics before being ignored. The
-repository no longer contains a silent broad exception swallow on that path.
+The repository tests write real secure-object records with deliberately mismatched inner envelopes, then load through the public repository APIs. The assertions verify exception type, translated-message key, context evidence, and absence of identifier leakage without fakes, monkeypatches, or duplicated business logic.
 
-## S270-004 | PASS | Duplication and test review
+## S270-004 | OBSERVE | Cache invalidation import fallback remains best-effort
 
-Vaultspec RAG semantic search clustered this row with the real repository roundtrip
-tests, the orchestration lifecycle service wiring, and the missing-load tests. The
-implementation reuses the runtime repository factory and core/domain models instead of
-adding another storage path.
+The output-language cache invalidation path narrows import fallback to `ImportError` and logs that fallback at debug level. Runtime failures from the imported invalidator are not swallowed, which keeps real defects visible instead of hiding them behind the best-effort cache path.
 
 ## S270-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/user_profile/_repository.py src/aeat/application/user_profile/test_repository.py src/aeat/locales`
-- `uv run --no-sync pytest -q src/aeat/application/user_profile/test_repository.py`
+- `uv run --no-sync ruff check src/aeat/application/user_profile/_repository.py src/aeat/application/user_profile/test_repository.py src/aeat/application/user_profile/test_repository_anti_tautology.py src/aeat/application/user_profile/test_repository_roundtrip.py`
+- `uv run --no-sync pytest -q src/aeat/application/user_profile/test_repository.py src/aeat/application/user_profile/test_repository_anti_tautology.py src/aeat/application/user_profile/test_repository_roundtrip.py`
 - `PYTHONPATH=src uv run --no-sync -q python -m aeat.locales audit`
+
+## S270-006 | PASS | Delegated review finding resolved
+
+The delegated reviewer flagged that three modelo work translation keys had been removed while still referenced. Those keys were retained through the canonical locale CLI, and only audit-reported unreferenced modelo work extras were removed. The final locale audit reports `ok` for every locale.
 
 Disposition: close `AFR-168`.

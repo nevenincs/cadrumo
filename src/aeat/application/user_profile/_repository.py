@@ -50,6 +50,12 @@ _USER_PROFILE_VALUE_VERSION = USER_PROFILE_VALUE_STORAGE_NAMESPACE.schema_versio
 _USER_PROFILE_VALUE_SENSITIVITY = USER_PROFILE_VALUE_STORAGE_NAMESPACE.sensitivity
 _USER_PROFILE_SNAPSHOT_VERSION = USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.schema_version
 _USER_PROFILE_SNAPSHOT_SENSITIVITY = USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.sensitivity
+_PROFILE_RECORD_MISSING_MESSAGE = "profile record not found in secure storage"
+_PROFILE_RECORD_CLASSIFICATION_MESSAGE = "profile record classification is incompatible with this repository"
+_PROFILE_RECORD_VERSION_MESSAGE = "profile record schema version is not supported"
+_PROFILE_SNAPSHOT_MISSING_MESSAGE = "profile snapshot not found in secure storage"
+_PROFILE_SNAPSHOT_CLASSIFICATION_MESSAGE = "profile snapshot classification is incompatible with this repository"
+_PROFILE_SNAPSHOT_VERSION_MESSAGE = "profile snapshot schema version is not supported"
 _log = get_logger(__name__)
 
 
@@ -82,13 +88,10 @@ def _clear_output_language_cache() -> None:
     """
     try:
         from ...core.i18n._render import clear_output_language_cache
-    except Exception:  # pragma: no cover - cache invalidation must never block persistence
+    except ImportError:  # pragma: no cover - cache invalidation must never block persistence
         _log.debug("user-profile output-language cache invalidation import failed", exc_info=True)
         return
-    try:
-        clear_output_language_cache()
-    except Exception:  # pragma: no cover - cache invalidation must never block persistence
-        _log.debug("user-profile output-language cache invalidation failed", exc_info=True)
+    clear_output_language_cache()
 
 
 def user_profile_value_object_key(profile_id: str) -> str:
@@ -213,7 +216,8 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
         )
         if record is None:
             raise ProfileNotFoundError(
-                translated_message="errors.refused.refused_profile_not_found",
+                _PROFILE_RECORD_MISSING_MESSAGE,
+                translated_message="application.user_profile.errors.repository_profile_record_missing",
                 context={"profile_id": profile_id, "bucket_id": self._bucket_id},
             )
         try:
@@ -222,13 +226,23 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
             raise StoredProfileDriftError(profile_id, exc) from exc
         if envelope.classification is not _USER_PROFILE_VALUE_SENSITIVITY:
             raise ClassificationError(
-                f"profile {profile_id!r} has classification {envelope.classification}; "
-                f"consumer expected {_USER_PROFILE_VALUE_SENSITIVITY}",
+                _PROFILE_RECORD_CLASSIFICATION_MESSAGE,
+                translated_message="application.user_profile.errors.repository_profile_record_classification_mismatch",
+                context={
+                    "profile_id": profile_id,
+                    "classification": envelope.classification.value,
+                    "expected": _USER_PROFILE_VALUE_SENSITIVITY.value,
+                },
             )
         if envelope.schema_version > _USER_PROFILE_VALUE_VERSION:
             raise EnvelopeVersionError(
-                f"profile {profile_id!r} is at version {envelope.schema_version}; "
-                f"consumer supports up to {_USER_PROFILE_VALUE_VERSION}",
+                _PROFILE_RECORD_VERSION_MESSAGE,
+                translated_message="application.user_profile.errors.repository_profile_record_version_unsupported",
+                context={
+                    "profile_id": profile_id,
+                    "schema_version": envelope.schema_version,
+                    "max_supported_version": _USER_PROFILE_VALUE_VERSION,
+                },
             )
         return envelope.payload
 
@@ -385,19 +399,30 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
         )
         if record is None:
             raise ProfileSnapshotNotFoundError(
-                translated_message="errors.integrity.integrity_profile_snapshot_not_found",
+                _PROFILE_SNAPSHOT_MISSING_MESSAGE,
+                translated_message="application.user_profile.errors.repository_profile_snapshot_missing",
                 context={"snapshot_id": snapshot_id, "bucket_id": self._bucket_id},
             )
         envelope = Envelope[UserProfileSnapshot].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not _USER_PROFILE_SNAPSHOT_SENSITIVITY:
             raise ClassificationError(
-                f"snapshot {snapshot_id!r} has classification {envelope.classification}; "
-                f"consumer expected {_USER_PROFILE_SNAPSHOT_SENSITIVITY}",
+                _PROFILE_SNAPSHOT_CLASSIFICATION_MESSAGE,
+                translated_message="application.user_profile.errors.repository_profile_snapshot_classification_mismatch",
+                context={
+                    "snapshot_id": snapshot_id,
+                    "classification": envelope.classification.value,
+                    "expected": _USER_PROFILE_SNAPSHOT_SENSITIVITY.value,
+                },
             )
         if envelope.schema_version > _USER_PROFILE_SNAPSHOT_VERSION:
             raise EnvelopeVersionError(
-                f"snapshot {snapshot_id!r} is at version {envelope.schema_version}; "
-                f"consumer supports up to {_USER_PROFILE_SNAPSHOT_VERSION}",
+                _PROFILE_SNAPSHOT_VERSION_MESSAGE,
+                translated_message="application.user_profile.errors.repository_profile_snapshot_version_unsupported",
+                context={
+                    "snapshot_id": snapshot_id,
+                    "schema_version": envelope.schema_version,
+                    "max_supported_version": _USER_PROFILE_SNAPSHOT_VERSION,
+                },
             )
         return envelope.payload
 

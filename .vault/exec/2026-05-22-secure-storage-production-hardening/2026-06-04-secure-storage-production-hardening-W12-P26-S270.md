@@ -11,28 +11,28 @@ related:
 
 # `secure-storage-production-hardening` `W12.P26.S270`
 
-Closed `AFR-168` for user-profile secure repository runtime-default custody.
+Closed `AFR-168` for the user-profile secure-object repository runtime-default slice.
 
 ## Description
 
-- Audited the user-profile value and snapshot repository as the runtime-bound secure-object persistence layer.
-- Replaced raw missing profile and missing snapshot messages with translated AEAT error keys and structured context.
-- Added debug diagnostics to the intentionally nonblocking output-language cache invalidation path.
-- Updated real secure-object repository tests to assert the translated error keys and context.
-- Used a narrow vaultspec RAG semantic search to compare the repository with adjacent runtime and lifecycle wiring.
+- Replaced raw profile and snapshot identifiers in repository miss, inner classification, and inner schema-version exception text with stable sanitized messages.
+- Preserved profile id, snapshot id, bucket id, classification, and schema-version evidence in structured exception context for redacted diagnostic boundaries.
+- Added repository-specific translation keys in every locale through `python -m aeat.locales`.
+- Removed stale modelo work locale extras reported by the same canonical locale audit so the locale catalog returned to a clean state.
+- Added real secure-object regression tests that persist mismatched inner envelopes and assert typed, translated, identifier-safe failures without mocks or duplicated repository logic.
+- Closed `S270` through `vaultspec-core vault plan step check` and removed the generated plan `LINK RULES` block.
 
 ## Outcome
 
-`AFR-168` is closed as `runtime-default`. The repository remains bucket-runtime bound,
-uses registered namespace constants and strict envelope records, and no longer has raw
-not-found messages or silent cache-invalidation swallowing.
+`AFR-168` is closed as `runtime-default`. The profile and snapshot repositories still bind to bucket-local secure-object storage, but user-facing failure strings no longer expose raw profile or snapshot identifiers when secure records are absent, misclassified, or written with unsupported inner schema versions.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/user_profile/_repository.py src/aeat/application/user_profile/test_repository.py src/aeat/locales`
-- `uv run --no-sync pytest -q src/aeat/application/user_profile/test_repository.py`
+- `uv run --no-sync ruff check src/aeat/application/user_profile/_repository.py src/aeat/application/user_profile/test_repository.py src/aeat/application/user_profile/test_repository_anti_tautology.py src/aeat/application/user_profile/test_repository_roundtrip.py`
+- `uv run --no-sync pytest -q src/aeat/application/user_profile/test_repository.py src/aeat/application/user_profile/test_repository_anti_tautology.py src/aeat/application/user_profile/test_repository_roundtrip.py`
 - `PYTHONPATH=src uv run --no-sync -q python -m aeat.locales audit`
 
 ## Notes
 
-The broader plan check still reports only the existing `PLAN022` monotonic-order warning.
+The locale CLI was run sequentially after an earlier parallel write race made the catalog briefly invalid. No manual locale content edits were needed after the catalog returned to a valid state.
+The shared plan file also carried concurrent S273 and S393 ledger closures when staged; those plan-only closures are cross-committed with the regenerated `LINK RULES` block removed.
