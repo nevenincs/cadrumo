@@ -131,3 +131,21 @@ that module grows past the recorded baseline.
 
 Verification covered the reviewability gate, focused workbook parity scan and
 inventory behavior, and Ruff on the touched reviewability surface.
+
+## W03-005 | INFO | Modelo binding-resolution extraction review found no defects
+
+Status: verified with scoped residual.
+
+The W03.P08.S27 review found no behavioral defect in the extraction. The
+calculation action now delegates profile, borrador, relation, previous-filing
+override, bound-casilla, and informational-period input assembly to
+`_binding_resolution.py`; IVA wallet reconciliation remains in `_actions.py` for
+the next dedicated slice.
+
+Focused verification passed for profile binding, real profile binding, borrador
+binding, previous-filing casilla override, declaration-period binding, and Ruff
+on touched surfaces. A broader source-mesh calculation run still has two
+pre-helper failures where Renta expense source resolution raises
+`aggregation.renta_ledger.errors.invoice_bucket_mismatch` before binding
+resolution is reached; that edge is outside this extraction and remains tracked
+as a source-mesh preflight ordering issue.
