@@ -157,32 +157,64 @@ def test_verify_integrity_passes_when_every_store_agrees() -> None:
     )
 
 
+def _assert_integrity_error_redacts(
+    error: ProfileIntegrityError,
+    *,
+    message: str,
+    translated_message: str,
+    sensitive_tokens: tuple[str, ...],
+) -> None:
+    rendered = str(error)
+    assert rendered == message
+    assert error.translated_message == translated_message
+    for token in sensitive_tokens:
+        assert token not in rendered
+
+
 def test_verify_integrity_raises_on_manifest_drift() -> None:
     """A manifest bucket_id that disagrees raises ProfileIntegrityError."""
 
-    with pytest.raises(ProfileIntegrityError, match="manifest bucket_id"):
+    mismatched_bucket_id = "00000000-0000-4000-8000-000000000000"
+    with pytest.raises(ProfileIntegrityError) as exc_info:
         verify_profile_integrity(
             profile_id=_PROFILE_UUID,
             directory_name=_PROFILE_UUID,
-            manifest_bucket_id="00000000-0000-4000-8000-000000000000",
+            manifest_bucket_id=mismatched_bucket_id,
             record_profile_id=_PROFILE_UUID,
             manifest_status="active",
             record_status="active",
         )
+    error = exc_info.value
+    assert error.context == {"mismatches": ("manifest_bucket_id",)}
+    _assert_integrity_error_redacts(
+        error,
+        message="profile physical stores disagree on identity",
+        translated_message="application.user_profile.errors.profile_integrity_identity_mismatch",
+        sensitive_tokens=(_PROFILE_UUID, mismatched_bucket_id),
+    )
 
 
 def test_verify_integrity_raises_on_record_drift() -> None:
     """A record profile_id that disagrees raises ProfileIntegrityError."""
 
-    with pytest.raises(ProfileIntegrityError, match="secure-record profile_id"):
+    mismatched_record_id = "00000000-0000-4000-8000-000000000000"
+    with pytest.raises(ProfileIntegrityError) as exc_info:
         verify_profile_integrity(
             profile_id=_PROFILE_UUID,
             directory_name=_PROFILE_UUID,
             manifest_bucket_id=_PROFILE_UUID,
-            record_profile_id="00000000-0000-4000-8000-000000000000",
+            record_profile_id=mismatched_record_id,
             manifest_status="active",
             record_status="active",
         )
+    error = exc_info.value
+    assert error.context == {"mismatches": ("secure_record_profile_id",)}
+    _assert_integrity_error_redacts(
+        error,
+        message="profile physical stores disagree on identity",
+        translated_message="application.user_profile.errors.profile_integrity_identity_mismatch",
+        sensitive_tokens=(_PROFILE_UUID, mismatched_record_id),
+    )
 
 
 def test_lifecycle_status_enums_stay_value_synced() -> None:
@@ -206,7 +238,7 @@ def test_verify_integrity_raises_on_lifecycle_status_drift() -> None:
     surface it rather than serve the profile.
     """
 
-    with pytest.raises(ProfileIntegrityError, match="cross-store lifecycle drift"):
+    with pytest.raises(ProfileIntegrityError) as exc_info:
         verify_profile_integrity(
             profile_id=_PROFILE_UUID,
             directory_name=_PROFILE_UUID,
@@ -215,6 +247,14 @@ def test_verify_integrity_raises_on_lifecycle_status_drift() -> None:
             manifest_status="active",
             record_status="tombstoned",
         )
+    error = exc_info.value
+    assert error.context == {"mismatches": ("manifest_status", "secure_record_status")}
+    _assert_integrity_error_redacts(
+        error,
+        message="profile physical stores disagree on lifecycle status",
+        translated_message="application.user_profile.errors.profile_integrity_status_mismatch",
+        sensitive_tokens=(_PROFILE_UUID, "active", "tombstoned"),
+    )
 
 
 # ── UTC helper migration: validate_utc_aware semantics ─────────────────────
