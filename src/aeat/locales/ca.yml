@@ -980,6 +980,7 @@ application:
       lifecycle_profile_tombstoned_rename: 'No es pot canviar el nom d''un perfil eliminat.'
       lifecycle_profile_tombstoned_duplicate: 'No es pot duplicar un perfil eliminat.'
       lifecycle_schema_validation_failed: 'Les dades del perfil no coincideixen amb l''esquema de perfil d''usuari.'
+      profile_bucket_directory_removal_failed: 'No s''ha pogut eliminar el directori del perfil.'
   wizard:
     errors:
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')

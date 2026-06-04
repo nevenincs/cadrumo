@@ -673,3 +673,23 @@ exception text in operator-facing errors. Tests exercise malformed encrypted
 secure-object payloads through real active-bucket repositories.
 
 Closure assessment: `W12.P26.S248` can close as `manifest-discovery`.
+
+## S268-060 | PASS | User-profile orchestration runtime-default closeout verified
+
+The `W12.P26.S268` review found that
+`src/aeat/application/user_profile/_orchestration.py` coordinates profile lifecycle
+storage sessions and delegates secure-object writes to profile repositories,
+lifecycle services, and bucket-event repositories. It does not introduce an alternate
+secure-object store, direct environment route, or duplicated storage-session factory.
+
+The active-profile pointer and bucket directory surfaces remain centralized through
+settings, bucket path helpers, and bucket-pointer IO. The intentional missing-record
+degradation in `read_active_profile` now emits debug evidence before returning `None`,
+and bucket-directory removal refusal now raises an AEAT user-profile error with a
+locale key rather than a bare path-rendering `OSError`.
+
+Vaultspec RAG semantic searches were used for duplication review. Focused tests use a
+real lifecycle storage span and real pointer/runtime behavior, with no fake repository
+or monkeypatch shortcut.
+
+Closure assessment: `W12.P26.S268` can close as `runtime-default`.
