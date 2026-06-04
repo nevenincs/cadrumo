@@ -7,6 +7,8 @@ tier: L2
 related:
   - '[[2026-06-04-registry-generic-fragmentation-contract-audit]]'
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
+  - '[[2026-05-20-registry-authority-flow-adr]]'
+  - '[[2026-05-20-registry-authority-flow-research]]'
 ---
 
 <!-- LINK RULES:
@@ -30,7 +32,7 @@ Classify the near-threshold committed TOML files and inline-only revision
 directories before any registry layout change.
 
 - [x] `P01.S01` - Audit near-threshold TOML line and row pressure for M123, M369, M100, M200, and M303; `.vault/audit`.
-- [ ] `P01.S02` - Decide whether M123 and M369 inline-only revision directories need mechanical fragment splits now or tracked deferral; `.vault/audit`.
+- [x] `P01.S02` - Decide whether M123 and M369 inline-only revision directories need mechanical fragment splits now or tracked deferral; `.vault/audit`.
 
 ### Phase `P02` - mechanical reviewability repairs
 
