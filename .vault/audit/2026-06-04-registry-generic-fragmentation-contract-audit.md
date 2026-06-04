@@ -47,7 +47,11 @@ Current on-disk result:
 
 - Modelo sources: 30.
 - Modelo layouts: 30 directory-mode, 0 single-file.
-- Revision source layouts: 46 fragment-directory, 0 revision-file.
+- Revision source layouts as reported by `discover_modelo_sources`: 46
+  fragment-directory, 0 revision-file.
+- Of those revision directories, 41 contain additional fragment TOMLs beyond
+  `revision.toml`; 5 are inline-only revision directories whose full revision
+  content is currently carried by `revision.toml` under M123 and M369.
 - Fragment-directory modelos include M036, M100, M111, M115, M123, M130,
   M131, M151, M180, M184, M190, M193, M200, M202, M210, M232, M303,
   M308, M309, M322, M347, M349, M353, M360, M369, M390, M714, M720,
@@ -59,6 +63,11 @@ Current on-disk result:
   at 1,218 lines.
 - Largest observed M200 fragment: `200/revisions/2024-y-siguientes/export/0010-modelo-200-page-007.toml`
   at 954 lines.
+- Closest line-count reviewability pressure is M123 2024, 32 lines below the
+  1,250-line baseline gate in `test_registry_reviewability.py`.
+- Closest row-width reviewability pressure is
+  `100/revisions/2025/casillas/0618-0552.toml`, observed at 572 characters
+  against the 575-character baseline gate.
 
 ## Findings
 
