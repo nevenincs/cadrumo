@@ -112,7 +112,6 @@ from ._models import (
     LedgerRemovalBlocker,
     LedgerReviewQuery,
     LedgerReviewQueryResult,
-    LedgerReviewRow,
     LedgerSourceImportCommand,
     LedgerSourceImportResult,
     LedgerSourceValidationReport,
@@ -132,6 +131,7 @@ from ._models import (
 )
 from ._preflight import preflight_ledger_tax_readiness
 from ._protocols import FinancialProviderProtocol
+from ._review_projection import ledger_transaction_review_status, project_ledger_review_query
 
 
 class LedgerProviderID(StrEnum):
@@ -1044,116 +1044,12 @@ def query_ledger_review_rows(
     """
     repository = _transaction_repository(bucket_id=query.bucket_id, repository=transaction_repository)
     catalogue = repository.load()
-    rows = _filter_ledger_review_rows(
-        rows=tuple(catalogue.values()),
+    return project_ledger_review_query(
         query=query,
         catalogue=catalogue,
         bucket_event_repository=bucket_event_repository,
+        transaction_payload_builder=ledger_transaction_payload,
     )
-    sorted_rows = sorted(
-        rows,
-        key=lambda transaction: (
-            transaction.raw.value_date or transaction.raw.booked_date,
-            transaction.transaction_id,
-        ),
-    )
-    return LedgerReviewQueryResult(
-        bucket_id=query.bucket_id,
-        rows=tuple(
-            _ledger_review_row(transaction, include_transaction=query.transaction_id is not None)
-            for transaction in sorted_rows
-        ),
-        filters=_ledger_review_filter_labels(query),
-    )
-
-
-def _filter_ledger_review_rows(
-    *,
-    rows: tuple[Transaction, ...],
-    query: LedgerReviewQuery,
-    catalogue: TransactionCatalogue,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
-) -> tuple[Transaction, ...]:
-    """Apply the four LedgerReviewQuery filters (period / status / import-or-issue / transaction-id).
-
-    Filters compose left-to-right: each survivor of one filter
-    feeds the next. The ``transaction_id`` filter additionally
-    asserts the id exists in the catalogue so an operator typo
-    surfaces as :class:`TransactionNotFoundError` instead of
-    silently returning an empty result set.
-    """
-    if query.period is not None:
-        period = Period.model_validate(query.period)
-        rows = tuple(
-            transaction
-            for transaction in rows
-            if period.contains(transaction.raw.value_date or transaction.raw.booked_date)
-        )
-    if query.status is not None:
-        rows = tuple(
-            transaction for transaction in rows if ledger_transaction_review_status(transaction) == query.status
-        )
-    if query.classification is not None:
-        rows = tuple(
-            transaction for transaction in rows if transaction.business_classification.value == query.classification
-        )
-    if query.direction is not None:
-        rows = tuple(transaction for transaction in rows if transaction.direction.value == query.direction)
-    if query.text is not None:
-        needle = query.text.casefold()
-        rows = tuple(
-            transaction
-            for transaction in rows
-            if needle in transaction.raw.description.casefold()
-            or needle in transaction.raw.display_counterparty.casefold()
-            or needle in (transaction.category_id or "").casefold()
-        )
-    if query.import_id is not None or query.issue is not None:
-        matching_ids = _transaction_ids_for_review_event_filters(
-            bucket_id=query.bucket_id,
-            import_id=query.import_id,
-            issue=query.issue,
-            bucket_event_repository=bucket_event_repository,
-        )
-        rows = tuple(transaction for transaction in rows if transaction.transaction_id in matching_ids)
-    if query.transaction_id is not None:
-        _require_transaction(catalogue, query.transaction_id)
-        rows = tuple(transaction for transaction in rows if transaction.transaction_id == query.transaction_id)
-    return rows
-
-
-_LEDGER_REVIEW_FILTER_FIELDS: tuple[tuple[str, str], ...] = (
-    ("period", "period"),
-    ("status", "status"),
-    ("issue", "issue"),
-    ("import_id", "import"),
-    ("classification", "classification"),
-    ("text", "text"),
-    ("direction", "direction"),
-    ("transaction_id", "id"),
-)
-
-
-def _ledger_review_filter_labels(query: LedgerReviewQuery) -> tuple[str, ...]:
-    """Render the active filter labels for a LedgerReviewQuery result envelope."""
-    return tuple(
-        f"{label}={getattr(query, attr)}"
-        for attr, label in _LEDGER_REVIEW_FILTER_FIELDS
-        if getattr(query, attr) is not None
-    )
-
-
-def ledger_transaction_review_status(transaction: Transaction) -> LedgerReviewStatus:
-    """Return the :class:`LedgerReviewStatus` for the operator review of a bucket-local transaction fact."""
-    if transaction.business_classification is BusinessClassification.SKIPPED_BY_RULE:
-        return LedgerReviewStatus.SKIPPED
-    if transaction.business_classification in {
-        BusinessClassification.BUSINESS,
-        BusinessClassification.PERSONAL,
-        BusinessClassification.MIXED,
-    }:
-        return LedgerReviewStatus.REVIEWED
-    return LedgerReviewStatus.PENDING
 
 
 def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPayload:
@@ -1247,20 +1143,6 @@ def ledger_transaction_tracking_payload(transaction: Transaction) -> LedgerTrans
         lifecycle_state=transaction.lifecycle_state.value,
         lifecycle_lineage=transaction.lifecycle_lineage,
     )
-
-
-def _ledger_review_row(transaction: Transaction, *, include_transaction: bool) -> LedgerReviewRow:
-    effective_date = (transaction.raw.value_date or transaction.raw.booked_date).isoformat()
-    row: dict[str, object] = {
-        "id": transaction.transaction_id,
-        "date": effective_date,
-        "amount": _display_decimal(transaction.raw.amount),
-        "description": transaction.raw.description,
-        "status": ledger_transaction_review_status(transaction),
-    }
-    if include_transaction:
-        row["transaction"] = ledger_transaction_payload(transaction)
-    return LedgerReviewRow.model_validate(row)
 
 
 def summarize_manual_transactions(
@@ -2350,33 +2232,6 @@ def _diagnostic_events(
                 )
             )
     return tuple(events)
-
-
-def _transaction_ids_for_review_event_filters(
-    *,
-    bucket_id: str,
-    import_id: str | None,
-    issue: str | None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
-) -> frozenset[str]:
-    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
-    events = event_repository.load().for_bucket(
-        bucket_id,
-        event_types=(
-            BucketEventType.LEDGER_TRANSACTION_IMPORTED,
-            BucketEventType.LEDGER_IMPORT_DIAGNOSTIC_RECORDED,
-        ),
-    )
-    matching: set[str] = set()
-    for event in events:
-        if event.object_type is not BucketEventObjectType.LEDGER_TRANSACTION:
-            continue
-        if import_id is not None and event.payload.get("import_batch_id") != import_id:
-            continue
-        if issue is not None and event.payload.get("diagnostic_kind") != issue:
-            continue
-        matching.add(event.object_id)
-    return frozenset(matching)
 
 
 def _require_actor(value: str, *, operation: str) -> str:
