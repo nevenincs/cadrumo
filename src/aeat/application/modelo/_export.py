@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId
+from ...core.logging import get_logger
 from ...core.time import now as _utc_now
 from ...domain import filing as filing_domain
 from ...domain.buckets import (
@@ -83,6 +84,7 @@ _DECLARATION_TYPE_ORDINARY = "I"
 #: Canonical user-profile fact paths for the operator's legal name.
 _PROFILE_SURNAMES_PATH = "identity.surnames"
 _PROFILE_NAME_PATH = "identity.name"
+_LOGGER = get_logger(__name__)
 
 
 class ModeloIvaWalletDecisionProvenance(BaseModel):
@@ -200,6 +202,21 @@ def _sha256_ref(value: str) -> str:
     return f"sha256:{hashlib.sha256(value.encode('utf-8')).hexdigest()}"
 
 
+def _discard_tmp_output_after_failure(tmp_output: Path, *, stage: str) -> None:
+    """Best-effort cleanup that never masks the original export failure."""
+    if not tmp_output.exists():
+        return
+    try:
+        tmp_output.unlink()
+    except OSError as exc:
+        _LOGGER.debug(
+            "modelo export temporary output cleanup failed stage=%s error_type=%s",
+            stage,
+            type(exc).__name__,
+            exc_info=True,
+        )
+
+
 def _iva_wallet_decision_export_provenance(
     decision: IvaCompensationReconciliationDecision | None,
 ) -> ModeloIvaWalletDecisionProvenance | None:
@@ -225,9 +242,8 @@ def _raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> N
     if revision.ledger_filing_snapshot is not None:
         return
     raise ModeloExportEvidenceMissingError(
-        f"calculation revision {revision.calculation_revision_id!r} was derived from "
-        "ledger transactions but carries neither bundled ledger_filing_evidence nor "
-        "a ledger_filing_snapshot reference; verify the revision again before exporting",
+        translated_message="application.modelo.errors.export_ledger_evidence_missing",
+        context={"calculation_revision_id": revision.calculation_revision_id},
     )
 
 
@@ -240,7 +256,8 @@ def _load_revision_for_export(
     revision = revisions.get(calculation_revision_id)
     if revision is None:
         raise CalculationRevisionNotFoundError(
-            f"no calculation revision with id={calculation_revision_id!r}",
+            translated_message="application.modelo.errors.calculation_revision_not_found",
+            context={"calculation_revision_id": calculation_revision_id},
         )
     if revision.state not in {
         CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -248,9 +265,8 @@ def _load_revision_for_export(
         CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
     }:
         raise CalculationRevisionStateError(
-            f"calculation revision {calculation_revision_id!r} is in state "
-            f"{revision.state.value!r}; only verified-complete or filed "
-            f"revisions can be exported",
+            translated_message="application.modelo.errors.export_revision_state_refused",
+            context={"calculation_revision_id": calculation_revision_id, "state": revision.state.value},
         )
     return revision
 
@@ -286,9 +302,7 @@ def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
         record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
     except ProfileNotFoundError as exc:
         raise ModeloExportError(
-            f"export needs the operator name from the active profile bucket "
-            f"{bucket_id!r}, but no profile is persisted; run "
-            f"`aeat config profile` to populate identity.surnames and identity.name"
+            translated_message="application.modelo.errors.export_operator_profile_missing",
         ) from exc
     facts = record_to_path_values(record)
     surnames = (facts.get(_PROFILE_SURNAMES_PATH) or "").strip()
@@ -296,9 +310,8 @@ def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
     missing = [path for path, value in ((_PROFILE_SURNAMES_PATH, surnames), (_PROFILE_NAME_PATH, name)) if not value]
     if missing:
         raise ModeloExportError(
-            f"export requires the operator name on the active profile, but "
-            f"profile fact(s) {', '.join(missing)} are not set; populate them via "
-            f"`aeat config profile` before exporting a modelo declaration"
+            translated_message="application.modelo.errors.export_operator_name_missing",
+            context={"missing": missing},
         )
     return surnames, name
 
@@ -396,8 +409,8 @@ def _resolve_export_period(work_unit: WorkUnit) -> tuple[int, str, str]:
         filing_year, registry_period = parse_canonical_period(canonical)
     except PeriodValidationError as exc:
         raise ModeloExportError(
-            f"work unit {work_unit.work_unit_id!r} carries period {period!r} "
-            f"which cannot be mapped to a registry filing period: {exc}",
+            translated_message="application.modelo.errors.export_period_unmappable",
+            context={"work_unit_id": work_unit.work_unit_id, "period": period},
         ) from exc
     return filing_year, registry_period, canonical
 
@@ -425,13 +438,15 @@ def export_modelo_revision(
     Emits ``MODELO_EXPORTED`` into the bucket-event-history catalogue
     with the calculation revision id, work unit id, output path,
     byte size, and file digest captured in the payload.
+
+    Returns:
+        :class:`ModeloExportResult`: The export result.
     """
     from ...core import resolve_active_bucket_id
 
     active_bucket_id = resolve_active_bucket_id()
     if active_bucket_id is None:
         raise ModeloExportNoActiveBucketError(
-            "no active profile bucket; run `aeat config profile create NAME` before exporting a modelo revision",
             translated_message="application.modelo.errors.export_no_active_bucket",
         )
 
@@ -444,14 +459,13 @@ def export_modelo_revision(
     work_unit = wu_repo.load().get(revision.work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
-            f"calculation revision {command.calculation_revision_id!r} references missing "
-            f"work_unit_id={revision.work_unit_id!r}",
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={"work_unit_id": revision.work_unit_id},
         )
     if work_unit.bucket_id != active_bucket_id:
         raise ModeloExportCrossBucketRefusedError(
-            f"work unit {work_unit.work_unit_id!r} belongs to bucket "
-            f"{work_unit.bucket_id!r} but the active profile bucket is "
-            f"{active_bucket_id!r}; switch profile before exporting",
+            translated_message="application.modelo.errors.export_cross_bucket_refused",
+            context={"work_unit_id": work_unit.work_unit_id},
         )
     iva_wallet_decision = _require_persisted_iva_compensation_decision_matches_revision(
         work_unit,
@@ -489,7 +503,8 @@ def export_modelo_revision(
         )
     except filing_domain.FilingExportError as exc:
         raise ModeloExportError(
-            f"could not approve draft for calculation_revision_id={command.calculation_revision_id!r}: {exc}",
+            translated_message="application.modelo.errors.export_draft_approval_failed",
+            context={"calculation_revision_id": command.calculation_revision_id},
         ) from exc
 
     # Atomic-rename: write the fichero-BOE artefact to a sibling .tmp
@@ -508,11 +523,10 @@ def export_modelo_revision(
     try:
         receipt = export_draft(approved, output_path=tmp_output, headers=headers)
     except filing_domain.FilingExportError as exc:
-        if tmp_output.exists():
-            tmp_output.unlink()
+        _discard_tmp_output_after_failure(tmp_output, stage="draft-write")
         raise ModeloExportError(
-            f"could not export calculation_revision_id={command.calculation_revision_id!r} "
-            f"to {command.output_path!s}: {exc}",
+            translated_message="application.modelo.errors.export_draft_write_failed",
+            context={"calculation_revision_id": command.calculation_revision_id},
         ) from exc
 
     # Route through the shared ``_emit_bucket_event`` helper every
@@ -560,8 +574,7 @@ def export_modelo_revision(
             payload=event_payload,
         )
     except Exception:
-        if tmp_output.exists():
-            tmp_output.unlink()
+        _discard_tmp_output_after_failure(tmp_output, stage="bucket-event")
         raise
     tmp_output.replace(command.output_path)
 

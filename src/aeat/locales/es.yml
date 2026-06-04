@@ -743,6 +743,14 @@ application:
       calculation_registry_root_missing: 'Registry root %{registry_root} is missing; modelo calculation cannot continue.'
       calculation_registry_snapshot_unresolved: 'Registry snapshot for modelo %{modelo}, filing year %{filing_year}, period %{period} could not be resolved.'
       external_import_duplicate_revision: 'Calculation revision %{calculation_revision_id} already exists in the catalogue; an identical import was already recorded.'
+      export_ledger_evidence_missing: 'La revision de calculo %{calculation_revision_id} derivada del libro mayor no incluye evidencia del libro mayor ni una referencia resoluble al snapshot; verifica la revision otra vez antes de exportar.'
+      export_revision_state_refused: 'La revision de calculo %{calculation_revision_id} no esta verificada-completa ni presentada y no se puede exportar.'
+      export_operator_profile_missing: 'La exportacion necesita el nombre del operador del perfil activo, pero no existe un perfil persistido; completa identity.surnames e identity.name antes de exportar.'
+      export_operator_name_missing: 'La exportacion requiere el nombre del operador en el perfil activo; faltan estos datos de perfil: %{missing}.'
+      export_period_unmappable: 'La unidad de trabajo %{work_unit_id} contiene el periodo %{period}, que no se puede asignar a un periodo de registro.'
+      export_cross_bucket_refused: 'La revision indicada pertenece a un bucket distinto del bucket del perfil activo. Cambia de perfil antes de exportar.'
+      export_draft_approval_failed: 'No se pudo aprobar el borrador para la revision de calculo %{calculation_revision_id}.'
+      export_draft_write_failed: 'No se pudo escribir el archivo de exportacion para la revision de calculo %{calculation_revision_id}.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.

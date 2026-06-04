@@ -670,6 +670,14 @@ application:
       calculation_registry_root_missing: 'Registry root %{registry_root} is missing; modelo calculation cannot continue.'
       calculation_registry_snapshot_unresolved: 'Registry snapshot for modelo %{modelo}, filing year %{filing_year}, period %{period} could not be resolved.'
       external_import_duplicate_revision: 'Calculation revision %{calculation_revision_id} already exists in the catalogue; an identical import was already recorded.'
+      export_ledger_evidence_missing: 'Ledger-derived calculation revision %{calculation_revision_id} lacks bundled ledger evidence or a resolvable ledger snapshot reference; verify the revision again before exporting.'
+      export_revision_state_refused: 'Calculation revision %{calculation_revision_id} is not verified-complete or filed and cannot be exported.'
+      export_operator_profile_missing: 'Export needs the operator name from the active profile, but no persisted profile exists; populate identity.surnames and identity.name before exporting.'
+      export_operator_name_missing: 'Export requires the operator name on the active profile; missing profile facts: %{missing}.'
+      export_period_unmappable: 'Work unit %{work_unit_id} carries period %{period}, which cannot be mapped to a registry filing period.'
+      export_cross_bucket_refused: 'The addressed revision belongs to a bucket other than the active profile bucket. Switch profile before exporting.'
+      export_draft_approval_failed: 'Could not approve the draft for calculation revision %{calculation_revision_id}.'
+      export_draft_write_failed: 'Could not write the export file for calculation revision %{calculation_revision_id}.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.

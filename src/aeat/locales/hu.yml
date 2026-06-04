@@ -686,6 +686,14 @@ application:
       calculation_registry_root_missing: 'Registry root %{registry_root} is missing; modelo calculation cannot continue.'
       calculation_registry_snapshot_unresolved: 'Registry snapshot for modelo %{modelo}, filing year %{filing_year}, period %{period} could not be resolved.'
       external_import_duplicate_revision: 'Calculation revision %{calculation_revision_id} already exists in the catalogue; an identical import was already recorded.'
+      export_ledger_evidence_missing: 'A(z) %{calculation_revision_id} ledgerbol szarmazo szamitasi revizio nem tartalmaz csatolt ledger-evidenciat vagy feloldhato ledger-pillanatkep hivatkozast; exportalas elott ellenorizze ujra a reviziot.'
+      export_revision_state_refused: 'A(z) %{calculation_revision_id} szamitasi revizio nincs ellenorzott-teljes vagy beadott allapotban, ezert nem exportalhato.'
+      export_operator_profile_missing: 'Az exportalashoz szukseg van az operator nevere az aktiv profilbol, de nincs perzisztalt profil; exportalas elott toltse ki az identity.surnames es identity.name mezoket.'
+      export_operator_name_missing: 'Az exportalashoz szukseg van az operator nevere az aktiv profilban; hianyzo profiladatok: %{missing}.'
+      export_period_unmappable: 'A(z) %{work_unit_id} munkaegyseg %{period} idoszakot tartalmaz, amely nem kepezheto le regiszter bevallasi idoszakra.'
+      export_cross_bucket_refused: 'A megcimzett revizio nem az aktiv profil bucketjehez tartozik. Exportalas elott valtson profilt.'
+      export_draft_approval_failed: 'Nem sikerult jovahagyni a(z) %{calculation_revision_id} szamitasi revizio tervezetet.'
+      export_draft_write_failed: 'Nem sikerult kiirni a(z) %{calculation_revision_id} szamitasi revizio exportfajljat.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
