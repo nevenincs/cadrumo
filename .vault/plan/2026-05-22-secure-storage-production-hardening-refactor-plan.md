@@ -410,7 +410,7 @@ Current register count: `293` production candidate files.
 | `AFR-129` | `src/aeat/application/live/_verify.py` | `secure-object, manifest-bucket, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-130` | `src/aeat/application/modelo/__init__.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-131` | `src/aeat/application/modelo/_actions.py` | `secure-object, manifest-bucket, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
-| `AFR-132` | `src/aeat/application/modelo/_binding_readiness.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-132` | `src/aeat/application/modelo/_binding_readiness.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-133` | `src/aeat/application/modelo/_borrador_binding.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-134` | `src/aeat/application/modelo/_export.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-135` | `src/aeat/application/modelo/_history.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
@@ -763,7 +763,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S231` - Close `AFR-129` for `src/aeat/application/live/_verify.py` with signals `secure-object, manifest-bucket, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/live/_verify.py`.
 - [x] `W12.P26.S232` - Close `AFR-130` for `src/aeat/application/modelo/__init__.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/modelo/__init__.py`.
 - [x] `W12.P26.S233` - Close `AFR-131` for `src/aeat/application/modelo/_actions.py` with signals `secure-object, manifest-bucket, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W12.P26.S234` - Close `AFR-132` for `src/aeat/application/modelo/_binding_readiness.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/modelo/_binding_readiness.py`.
+- [x] `W12.P26.S234` - Close `AFR-132` for `src/aeat/application/modelo/_binding_readiness.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/modelo/_binding_readiness.py`.
 - [ ] `W12.P26.S235` - Close `AFR-133` for `src/aeat/application/modelo/_borrador_binding.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/modelo/_borrador_binding.py`.
 - [ ] `W12.P26.S236` - Close `AFR-134` for `src/aeat/application/modelo/_export.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/modelo/_export.py`.
 - [ ] `W12.P26.S237` - Close `AFR-135` for `src/aeat/application/modelo/_history.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/modelo/_history.py`.
