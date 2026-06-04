@@ -180,7 +180,7 @@ Audit the loader, schema, and committed modelo corpus for cross-modelo revision 
 
 - [x] `W09.P13.S50` - Audit generic schema/loader revision and fragmentation contract across M100, M200, M303, and non-fragmented modelos; `.vault/audit`.
 - [x] `W09.P13.S51` - Add or tighten real-behavior regression coverage only if the audit exposes a generic-contract gap; `src/aeat/domain/calculations/registry`.
-- [ ] `W09.P13.S52` - Verify generic revision/fragmentation contract gates and review the slice; `src/aeat/domain/calculations/registry`.
+- [x] `W09.P13.S52` - Verify generic revision/fragmentation contract gates and review the slice; `src/aeat/domain/calculations/registry`.
 
 ## Description
 
