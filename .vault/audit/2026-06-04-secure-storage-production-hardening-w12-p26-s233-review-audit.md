@@ -35,7 +35,17 @@ byte-shape parity. It verifies that the action layer now calls the extracted
 IVA wallet gate helpers and that calculation/verify/file state remains routed
 through the canonical repositories those export surfaces later consume.
 
-## S233-004 | PASS | RAG duplication search supports single IVA wallet gate owner
+## S233-004 | PASS | User-facing action guard errors are localised
+
+Remaining raw Modelo action guard failures in the reviewed surface were moved
+to locale keys with structured context: IVA-wallet decision shape/identity
+guards, ledger preflight refusal, calculation/amendment/import registry
+root/snapshot failures, unknown amendment/import casillas, source-bound casilla
+override refusal, and duplicate external-import revision refusal. Locale leaves
+were authored through `python -m aeat.locales set`, then verified with
+`python -m aeat.locales audit`.
+
+## S233-005 | PASS | RAG duplication search supports single IVA wallet gate owner
 
 `vaultspec-rag search "Modelo 303 IVA wallet prior compensation gate" --type
 code --port 8766 --max-results 12` clustered production gate ownership in
@@ -49,11 +59,21 @@ imports continue to resolve without duplicating business logic.
 in `src/aeat/domain/modelos/_runtime_repository.py` and domain repositories,
 supporting the runtime-repository classification.
 
-## S233-005 | PASS | Validation
+## S233-006 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/modelo/_actions.py` passed.
+- `uv run --no-sync ruff check src/aeat/application/modelo/_actions.py src/aeat/application/modelo/test_actions.py` passed.
 - `uv run --no-sync pytest -q src/aeat/application/modelo/test_actions.py` passed with 24 tests.
-- `uv run --no-sync pytest -q src/aeat/application/modelo/test_file_flow.py` passed with 29 tests.
-- `uv run --no-sync pytest -q src/aeat/application/modelo/test_verification_substance.py` passed with 36 tests.
+- `uv run --no-sync pytest -q src/aeat/application/modelo/test_bucket_aggregation_flow.py src/aeat/application/modelo/test_import_flow.py` passed with 27 tests.
+- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "modelo or s85_runtime"` passed with 10 selected tests.
+- `python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
+
+## S233-007 | OBSERVATION | Workflow run marker settings remain adjacent follow-up
+
+`WorkflowRunRepository.save()` still resolves the returned marker path with a
+direct `Settings()` constructor in `src/aeat/application/workflow/_persistence.py`.
+The encrypted workflow run payload is still secure-object backed, and `_actions.py`
+passes workflow runs through `WorkflowRunRepository(objects=bv_repo.secure_object_repository)`;
+the remaining settings-construction cleanup belongs to the workflow persistence
+owner rather than this modelo action row.
 
 Disposition: close `AFR-131` as `remote-mirror`.

@@ -715,6 +715,26 @@ application:
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
+      iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type: %{decision_type}.'
+      iva_wallet_target_mismatch: 'IVA wallet decision target %{target_year}/%{target_period} does not match work unit %{filing_year}/%{period}.'
+      iva_wallet_taxpayer_identity_missing: 'IVA wallet reconciliation cannot continue without the work-unit taxpayer identity.'
+      iva_wallet_taxpayer_mismatch: 'IVA wallet reconciliation taxpayer does not match the Modelo 303 work unit.'
+      iva_wallet_selected_amount_missing: 'IVA wallet reconciliation decision has no selected amount.'
+      iva_wallet_caller_binding_conflict: 'Caller binding for Modelo 303 prior compensation conflicts with the IVA wallet reconciliation decision.'
+      iva_wallet_caller_casilla_conflict: 'Caller casilla input for Modelo 303 prior compensation conflicts with the IVA wallet reconciliation decision.'
+      iva_wallet_backend_casilla_conflict: 'Backend casilla input for Modelo 303 prior compensation conflicts with the IVA wallet reconciliation decision.'
+      iva_wallet_supplied_decision_mismatch: 'Supplied IVA wallet reconciliation decision does not match the persisted decision.'
+      ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period %{period}` before calculating.'
+      caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override bucket-derived source-bound casillas: %{casillas}.'
+      amendment_registry_root_missing: 'Registry root %{registry_root} is missing; amendment overrides cannot be validated.'
+      amendment_registry_snapshot_unresolved: 'Registry snapshot for modelo %{modelo}, filing year %{filing_year}, period %{period} could not be resolved; amendment overrides cannot be validated.'
+      amendment_unknown_casillas: 'Amendment overrides target casilla ids that are not declared in registry modelo %{modelo}, filing year %{filing_year}, period %{period}: %{casillas}.'
+      external_import_registry_root_missing: 'Registry root %{registry_root} is missing; imported casilla ids cannot be validated.'
+      external_import_registry_snapshot_unresolved: 'Registry snapshot for modelo %{modelo}, filing year %{filing_year}, period %{period} could not be resolved; imported casilla ids cannot be validated.'
+      external_import_unknown_casillas: 'External-filing import carries casilla ids that are not declared in registry modelo %{modelo}, filing year %{filing_year}, period %{period}: %{casillas}.'
+      calculation_registry_root_missing: 'Registry root %{registry_root} is missing; modelo calculation cannot continue.'
+      calculation_registry_snapshot_unresolved: 'Registry snapshot for modelo %{modelo}, filing year %{filing_year}, period %{period} could not be resolved.'
+      external_import_duplicate_revision: 'Calculation revision %{calculation_revision_id} already exists in the catalogue; an identical import was already recorded.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
