@@ -154,9 +154,9 @@ def _load_transactions(settings: Settings, *, bucket_id: str) -> TransactionCata
         return repository.load()
     except (ValidationError, OSError, ValueError) as exc:
         raise ReviewSourceLoadError(
-            message=f"failed to load transactions catalogue from secure backend: {exc}",
+            message="failed to load transactions catalogue from secure backend",
             translated_message="review.adapters.errors.transactions_load_failed",
-            context={"error": str(exc)},
+            context=_load_failure_context(exc),
         ) from exc
 
 
@@ -223,9 +223,9 @@ def _load_invoices(settings: Settings) -> InvoiceCatalogue | None:
         return repository.load()
     except (ValidationError, OSError, ValueError) as exc:
         raise ReviewSourceLoadError(
-            message=f"failed to load invoices catalogue from secure backend: {exc}",
+            message="failed to load invoices catalogue from secure backend",
             translated_message="review.adapters.errors.invoices_load_failed",
-            context={"error": str(exc)},
+            context=_load_failure_context(exc),
         ) from exc
 
 
@@ -369,9 +369,21 @@ def _load_drafts(settings: Settings) -> tuple[tuple[Path, ModeloDraft], ...]:
     del settings
     repository = ModeloDraftRepository()
     out: list[tuple[Path, ModeloDraft]] = []
-    for draft in repository.iter_drafts():
-        out.append((repository.envelope_path_for(draft.draft_id), draft))
+    try:
+        for draft in repository.iter_drafts():
+            out.append((repository.envelope_path_for(draft.draft_id), draft))
+    except (AeatError, ValidationError, OSError, ValueError) as exc:
+        raise ReviewSourceLoadError(
+            message="failed to load filing drafts from secure backend",
+            translated_message="review.adapters.errors.drafts_load_failed",
+            context=_load_failure_context(exc),
+        ) from exc
     return tuple(out)
+
+
+def _load_failure_context(exc: BaseException) -> dict[str, str]:
+    """Return non-sensitive load-failure context for operator error envelopes."""
+    return {"error_type": type(exc).__name__}
 
 
 def _classify_finding(severity: BaseSeverity) -> ReviewSeverity:

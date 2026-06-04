@@ -134,8 +134,8 @@ fmt:
 # with selected strict rules on the two listed packages; the
 # Unknown-family rules are deferred to a tracked ratchet workstream.
 typecheck:
-    uv run ty check src
-    uv run pyright src/aeat/domain src/aeat/application
+    uv run --no-sync ty check src
+    uv run --no-sync pyright src/aeat/domain src/aeat/application
 
 # Full-tree type audit. Advisory: use for ratchet discovery and type debt
 # triage, not as the default daily hard gate until the baseline is clean.
@@ -192,12 +192,158 @@ audit-dead-code:
 audit-deprecation:
     uv run --no-sync pyright src/aeat/domain src/aeat/application --level warning --warnings
 
-# Cyclomatic, maintainability, and cognitive-complexity report for refactor
-# planning. Thresholds are advisory until ratcheted by ADR.
+# Cyclomatic, maintainability, and cognitive-complexity report for production
+# refactor planning. Thresholds are advisory until ratcheted by ADR.
 audit-complexity:
-    uv run --no-sync radon cc src/aeat -n C -s -a -e "src/aeat/**/test_*.py,src/aeat/**/_test_*.py,src/aeat/tests/*"
-    uv run --no-sync radon mi src/aeat -s -e "src/aeat/**/test_*.py,src/aeat/**/_test_*.py,src/aeat/tests/*"
-    uv run --no-sync complexipy src/aeat --max-complexity-allowed 20 --details low --sort desc
+    just audit-complexity-production
+
+# Production-only complexity lane. Test ratchets are tracked separately so the
+# production hotspot list is not crowded out by inventory-test maintenance debt.
+[windows]
+audit-complexity-production:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    $exclude = 'src/aeat/test_*.py,src/aeat/**/test_*.py,src/aeat/**/_test_*.py,src/aeat/tests/*,src/aeat/_data/*'
+    uv run --no-sync radon cc src/aeat -n C -s -a -e $exclude
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    uv run --no-sync radon mi src/aeat -s -e $exclude
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    @'
+    from pathlib import Path
+
+    from complexipy import file_complexity
+
+    ROOT = Path("src/aeat")
+    THRESHOLD = 20
+
+    def is_production(path: Path) -> bool:
+        parts = path.parts
+        name = path.name
+        if "_data" in parts or "tests" in parts:
+            return False
+        return not (name.startswith("test_") or name.startswith("_test_") or "_test_" in name)
+
+    findings: list[tuple[int, str, str]] = []
+    files = sorted(path for path in ROOT.rglob("*.py") if is_production(path))
+    for path in files:
+        result = file_complexity(str(path))
+        for function in result.functions:
+            if function.complexity > THRESHOLD:
+                findings.append((function.complexity, str(path), function.name))
+
+    findings.sort(reverse=True)
+    print(f"complexipy production cognitive complexity: {len(files)} files analyzed")
+    if findings:
+        print(f"functions above {THRESHOLD}:")
+        for complexity, path, function_name in findings[:80]:
+            print(f"{complexity:>4}  {path}::{function_name}")
+        raise SystemExit(1)
+    print(f"no production functions exceed {THRESHOLD}")
+    '@ | uv run --no-sync python -
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+[unix]
+audit-complexity-production:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    exclude='src/aeat/test_*.py,src/aeat/**/test_*.py,src/aeat/**/_test_*.py,src/aeat/tests/*,src/aeat/_data/*'
+    uv run --no-sync radon cc src/aeat -n C -s -a -e "$exclude"
+    uv run --no-sync radon mi src/aeat -s -e "$exclude"
+    uv run --no-sync python - <<'PY'
+    from pathlib import Path
+
+    from complexipy import file_complexity
+
+    ROOT = Path("src/aeat")
+    THRESHOLD = 20
+
+    def is_production(path: Path) -> bool:
+        parts = path.parts
+        name = path.name
+        if "_data" in parts or "tests" in parts:
+            return False
+        return not (name.startswith("test_") or name.startswith("_test_") or "_test_" in name)
+
+    findings: list[tuple[int, str, str]] = []
+    files = sorted(path for path in ROOT.rglob("*.py") if is_production(path))
+    for path in files:
+        result = file_complexity(str(path))
+        for function in result.functions:
+            if function.complexity > THRESHOLD:
+                findings.append((function.complexity, str(path), function.name))
+
+    findings.sort(reverse=True)
+    print(f"complexipy production cognitive complexity: {len(files)} files analyzed")
+    if findings:
+        print(f"functions above {THRESHOLD}:")
+        for complexity, path, function_name in findings[:80]:
+            print(f"{complexity:>4}  {path}::{function_name}")
+        raise SystemExit(1)
+    print(f"no production functions exceed {THRESHOLD}")
+    PY
+
+# Top-level package ratchet-test complexity lane. This keeps inventory-test
+# cognitive debt visible without mixing it into the production refactor queue.
+[windows]
+audit-complexity-tests:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    @'
+    from pathlib import Path
+
+    from complexipy import file_complexity
+
+    ROOT = Path("src/aeat")
+    THRESHOLD = 20
+
+    findings: list[tuple[int, str, str]] = []
+    files = sorted(ROOT.glob("test_*.py"))
+    for path in files:
+        result = file_complexity(str(path))
+        for function in result.functions:
+            if function.complexity > THRESHOLD:
+                findings.append((function.complexity, str(path), function.name))
+
+    findings.sort(reverse=True)
+    print(f"complexipy top-level test cognitive complexity: {len(files)} files analyzed")
+    if findings:
+        print(f"functions above {THRESHOLD}:")
+        for complexity, path, function_name in findings[:80]:
+            print(f"{complexity:>4}  {path}::{function_name}")
+        raise SystemExit(1)
+    print(f"no top-level test functions exceed {THRESHOLD}")
+    '@ | uv run --no-sync python -
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+[unix]
+audit-complexity-tests:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run --no-sync python - <<'PY'
+    from pathlib import Path
+
+    from complexipy import file_complexity
+
+    ROOT = Path("src/aeat")
+    THRESHOLD = 20
+
+    findings: list[tuple[int, str, str]] = []
+    files = sorted(ROOT.glob("test_*.py"))
+    for path in files:
+        result = file_complexity(str(path))
+        for function in result.functions:
+            if function.complexity > THRESHOLD:
+                findings.append((function.complexity, str(path), function.name))
+
+    findings.sort(reverse=True)
+    print(f"complexipy top-level test cognitive complexity: {len(files)} files analyzed")
+    if findings:
+        print(f"functions above {THRESHOLD}:")
+        for complexity, path, function_name in findings[:80]:
+            print(f"{complexity:>4}  {path}::{function_name}")
+        raise SystemExit(1)
+    print(f"no top-level test functions exceed {THRESHOLD}")
+    PY
 
 # Copy/paste duplication discovery. Uses the workstation Node toolchain so the
 # Python uv bootstrap does not inherit a Node package dependency.
@@ -480,3 +626,4 @@ release-apply:
     Write-Host '       git tag -a vX.Y.Z -m "aeat vX.Y.Z"'
     Write-Host "When ready (human decision only), push with:"
     Write-Host "  git push origin main --tags"
+

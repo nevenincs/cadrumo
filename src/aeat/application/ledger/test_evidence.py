@@ -71,6 +71,18 @@ class TestEvidenceEventEmission:
         assert event.object_id == result.record.evidence_id
         assert event.bucket_id == "bucket-001"
 
+    def test_default_event_repository_uses_active_runtime_bucket(
+        self, isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path
+    ) -> None:
+        svc = PurchaseInvoiceEvidenceService(settings=isolated_settings)
+
+        result = svc.add(bucket_id="bucket-001", source_path=pdf_file)
+
+        catalogue = _event_repo(secure_objects).load()
+        event = catalogue.events[result.bucket_event_ids[0]]
+        assert event.event_type is BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED
+        assert event.bucket_id == "bucket-001"
+
     def test_update_emits_purchase_invoice_evidence_replaced(
         self, isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path
     ) -> None:

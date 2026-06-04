@@ -244,9 +244,10 @@ class _CancelableClavePage(_RecordingPage):
         self.cancel_response = _CancelResponse(status=status)
         self.evaluate_calls = 0
         self.wait_for_response_calls = 0
+        self.evaluated_script = ""
 
     async def evaluate(self, script: str) -> bool:
-        del script
+        self.evaluated_script = script
         self.evaluate_calls += 1
         return True
 
@@ -378,17 +379,31 @@ def _settings_for(tmp_path: Path, **env: str) -> Settings:
     # (AEAT_CLAVE_MOVIL_DNI_NIE, AEAT_CLAVE_MOVIL_NIE_SOPORTE,
     # AEAT_CLAVE_PREFER_NON_QR, etc.) do not silently mutate test
     # expectations; the per-test env-overrides explicitly opt in.
-    env_overrides: dict[str, str | None] = {
-        "aeat_token_dir": str(tmp_path),
-        "aeat_local_storage_root": str(tmp_path / "storage"),
-        "aeat_clave_prefer_non_qr": "false",
-        "aeat_clave_movil_dni_nie": None,
-        "aeat_clave_movil_dni_fecha": None,
-        "aeat_clave_movil_nie_soporte": None,
+    env_overrides = {key.lower(): value for key, value in env.items()}
+    expected_keys = {
+        "aeat_clave_movil_dni_fecha",
+        "aeat_clave_movil_dni_nie",
+        "aeat_clave_movil_nie_soporte",
+        "aeat_clave_prefer_non_qr",
     }
-    for key, value in env.items():
-        env_overrides[key.lower()] = value
-    return Settings(**env_overrides)
+    unexpected = set(env_overrides) - expected_keys
+    assert unexpected == set()
+    return Settings(
+        aeat_token_dir=tmp_path,
+        aeat_local_storage_root=tmp_path / "storage",
+        aeat_clave_prefer_non_qr=_bool_setting(env_overrides.get("aeat_clave_prefer_non_qr")),
+        aeat_clave_movil_dni_nie=_secret_or_none(env_overrides.get("aeat_clave_movil_dni_nie")),
+        aeat_clave_movil_dni_fecha=env_overrides.get("aeat_clave_movil_dni_fecha"),
+        aeat_clave_movil_nie_soporte=_secret_or_none(env_overrides.get("aeat_clave_movil_nie_soporte")),
+    )
+
+
+def _secret_or_none(value: str | None) -> SecretStr | None:
+    return None if value is None else SecretStr(value)
+
+
+def _bool_setting(value: str | None) -> bool:
+    return False if value is None else value.lower() == "true"
 
 
 # ── identity classification ──────────────────────────────────────────────────
@@ -898,6 +913,10 @@ class TestPendingPetitionRefusal:
 
         assert page.evaluate_calls == 1
         assert page.wait_for_response_calls == 1
+        assert "window.ObtenerClaveMovil" not in page.evaluated_script
+        assert f'window["{settings.external_constants().aeat.clave_movil.obtener_clave_movil_browser_global}"]' in (
+            page.evaluated_script
+        )
 
     def test_pending_request_cancel_confirmation_rejects_failed_response(
         self,

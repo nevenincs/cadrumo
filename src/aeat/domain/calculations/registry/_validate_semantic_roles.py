@@ -10,8 +10,8 @@ import re
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 
+from . import _validate_semantic_role_typos as _semantic_role_typos
 from ._schema import CasillaDefinition, ModeloDefinition
-from ._validate_semantic_role_typos import emit_grouped_semantic_role_typo_twin_warnings
 
 
 class _RoleObservation:
@@ -139,15 +139,15 @@ def _validate_semantic_role_cardinality(
 def _emit_semantic_role_typo_twin_warnings(
     modelos: Iterable[ModeloDefinition],
 ) -> None:
-    """Warn when a ``semantic_role`` value appears on exactly one casilla.
+    """Warn when a ``semantic_role`` value appears on exactly one casilla."""
+    _semantic_role_typos.emit_grouped_semantic_role_typo_twin_warnings(_collect_role_observations(modelos))
 
-    Inline role declaration loses the central-catalogue typo-detection
-    guarantee that a closed enumeration would provide. Single-occurrence
-    role values are most often spelling typos (``taxpayer_nif`` vs
-    ``taxpayer-nif``); this surface flags them without blocking
-    snapshot load.
-    """
-    emit_grouped_semantic_role_typo_twin_warnings(_collect_role_observations(modelos))
+
+def _validate_semantic_role_typo_twins(
+    modelos: Iterable[ModeloDefinition],
+) -> tuple[str, ...]:
+    """Fail when an unreviewed singleton ``semantic_role`` looks like a typo."""
+    return _semantic_role_typos.grouped_semantic_role_typo_twin_failures(_collect_role_observations(modelos))
 
 
 # Enforced semantic_role requirements: each entry is (label_pattern,

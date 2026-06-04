@@ -572,30 +572,44 @@ def _own_name_representation_selectors(*selectors: str) -> tuple[str, ...]:
 
 async def _assert_own_name_representation_form(page: Page, *, expected_path: str) -> None:
     html = await page.content()
+    _assert_own_name_representation_form_html(
+        html,
+        landing_url=getattr(page, "url", "") or "",
+        expected_path=expected_path,
+    )
+
+
+def _assert_own_name_representation_form_html(html: str, *, landing_url: str, expected_path: str) -> None:
     soup = BeautifulSoup(html, "html.parser")
     submit = soup.select_one(_PRE303.representation_submit_selector)
     if submit is None:
         raise SedeNavigationError(
             "AEAT representation gate does not expose the configured own-name submit control",
             failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-            context=_representation_gate_context(html, landing_url=getattr(page, "url", "") or ""),
+            context=_representation_gate_context(html, landing_url=landing_url),
         )
     form = submit.find_parent("form")
     if form is None:
         raise SedeNavigationError(
             "AEAT representation submit control is not inside a form",
             failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-            context=_representation_gate_context(html, landing_url=getattr(page, "url", "") or ""),
+            context=_representation_gate_context(html, landing_url=landing_url),
         )
     method = str(form.get("method", "GET")).strip().upper() or "GET"
-    action = urljoin(getattr(page, "url", "") or _PRE303_PRESENTATION_URL, str(form.get("action", "")))
+    action = urljoin(landing_url or _PRE303_PRESENTATION_URL, str(form.get("action", "")))
     parsed_action = urlsplit(action)
-    if method != "POST" or parsed_action.path != expected_path or not _is_allowed_wallet_host(parsed_action.netloc):
+    if not _own_name_representation_action_allowed(
+        method=method,
+        action_path=parsed_action.path,
+        action_host=parsed_action.netloc,
+        landing_url=landing_url,
+        expected_path=expected_path,
+    ):
         raise SedeNavigationError(
             "AEAT representation form boundary changed before own-name continuation",
             failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
             context={
-                **_representation_gate_context(html, landing_url=getattr(page, "url", "") or ""),
+                **_representation_gate_context(html, landing_url=landing_url),
                 "form_method": method,
                 "form_action_path": parsed_action.path,
             },
@@ -606,15 +620,48 @@ async def _assert_own_name_representation_form(page: Page, *, expected_path: str
         raise SedeNavigationError(
             "AEAT representation gate does not expose both own-name and representative controls",
             failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-            context=_representation_gate_context(html, landing_url=getattr(page, "url", "") or ""),
+            context=_representation_gate_context(html, landing_url=landing_url),
         )
     if _input_checked(representative):
         raise SedeNavigationError(
             "AEAT representation gate has representative mode selected; refusing to continue",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            context=_representation_gate_context(html, landing_url=getattr(page, "url", "") or ""),
+            context=_representation_gate_context(html, landing_url=landing_url),
             suggestion="Use only the authenticated profile user's own-name access for read-only wallet capture.",
         )
+    represented_fields = tuple(
+        str(node.get("name") or node.get("id") or "")
+        for node in soup.find_all("input")
+        if str(node.get("name") or node.get("id") or "").casefold() in {"nif", "nombre"}
+        and str(node.get("value") or "").strip()
+    )
+    if represented_fields:
+        raise SedeNavigationError(
+            "AEAT representation gate carries represented-taxpayer text fields; refusing to continue",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            context={
+                **_representation_gate_context(html, landing_url=landing_url),
+                "represented_fields": represented_fields,
+            },
+            suggestion="Use only the authenticated profile user's own-name access for read-only wallet capture.",
+        )
+
+
+def _own_name_representation_action_allowed(
+    *,
+    method: str,
+    action_path: str,
+    action_host: str,
+    landing_url: str,
+    expected_path: str,
+) -> bool:
+    if not _is_allowed_wallet_host(action_host):
+        return False
+    if method == "POST" and action_path == expected_path:
+        return True
+    landing_path = urlsplit(landing_url).path
+    dialogo_path = _EXTERNAL.aeat.clave_movil.dialogo_representacion_path
+    return method == "GET" and landing_path == dialogo_path and action_path == dialogo_path
 
 
 def _representation_gate_context(html: str, *, landing_url: str) -> dict[str, object]:

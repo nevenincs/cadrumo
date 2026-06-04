@@ -29,8 +29,6 @@ _EXCLUDED_MODULES = {
 }
 
 _ALLOWED_DIRECT_OUTPUTS = {
-    ("diagnostics/profile.py", "typer.echo"),
-    ("diagnostics/secure_objects.py", "typer.echo"),
     ("entrypoints/cli/__init__.py", "typer.echo"),
     ("entrypoints/cli/_app_live.py", "typer.echo"),
     ("entrypoints/cli/_common.py", "typer.echo"),

@@ -7,7 +7,7 @@ to its declared :class:`aeat.core.errors.ErrorCode` row at import time.
 
 from __future__ import annotations
 
-from ....core.errors import AeatError
+from ....core.errors import AeatError, CoreValidationError
 
 
 class CalcSheetsEngineError(AeatError):
@@ -18,11 +18,14 @@ class CalcSheetsEngineError(AeatError):
     """
 
 
-class CalcSheetsRecordError(AeatError):
+class CalcSheetsRecordError(CoreValidationError):
     """Raised when a calc-sheets record operation fails validation.
 
     Covers column-index utility failures (out-of-range or malformed
     A1 column letters) that prevent SheetCellAddress construction.
+    Inherits from :class:`~aeat.core.errors.CoreValidationError` so
+    pydantic validators can surface it as structured validation failure
+    without losing the project-wide :class:`AeatError` contract.
     """
 
 

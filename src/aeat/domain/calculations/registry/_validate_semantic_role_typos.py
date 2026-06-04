@@ -25,7 +25,16 @@ def emit_grouped_semantic_role_typo_twin_warnings(
     grouped: Mapping[str, Sequence[_RoleObservationLike]],
 ) -> None:
     """Warn when a ``semantic_role`` value appears on exactly one casilla."""
+    for failure in grouped_semantic_role_typo_twin_failures(grouped):
+        warnings.warn(failure, stacklevel=2)
+
+
+def grouped_semantic_role_typo_twin_failures(
+    grouped: Mapping[str, Sequence[_RoleObservationLike]],
+) -> tuple[str, ...]:
+    """Return failures for singleton ``semantic_role`` values that look like typos."""
     typo_index = _build_semantic_role_typo_index(grouped.keys())
+    failures: list[str] = []
     for role, observations in grouped.items():
         if len(observations) != 1:
             continue
@@ -34,12 +43,16 @@ def emit_grouped_semantic_role_typo_twin_warnings(
             continue
         if not _semantic_role_looks_like_typo(role, typo_index):
             continue
-        warnings.warn(
-            f"semantic_role {role!r} appears on exactly one casilla "
-            f"({obs.modelo_id}.{obs.revision_id}.{obs.casilla_id}); "
-            "likely typo or missing role declarations on sibling casillas",
-            stacklevel=2,
-        )
+        failures.append(_format_semantic_role_typo_twin_failure(role, obs))
+    return tuple(failures)
+
+
+def _format_semantic_role_typo_twin_failure(role: str, obs: _RoleObservationLike) -> str:
+    return (
+        f"semantic_role {role!r} appears on exactly one casilla "
+        f"({obs.modelo_id}.{obs.revision_id}.{obs.casilla_id}); "
+        "likely typo or missing role declarations on sibling casillas"
+    )
 
 
 class _SemanticRoleTypoIndex(NamedTuple):

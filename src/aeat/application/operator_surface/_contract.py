@@ -32,7 +32,7 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
         purpose="profile lifecycle, bucket lifecycle, first-run state, auth, diagnostics, and durable configuration",
         owns_storage_maintenance=True,
         owns_operational_workflow=False,
-        required_children=("profile", "auth", "repair"),
+        required_children=("profile", "bucket", "auth", "repair"),
     ),
     RootSurface(
         name=RootSurfaceName.APP,
@@ -196,6 +196,15 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
+        domain=MountedCommandDomain.BUCKET,
+        root=RootSurfaceName.CONFIG,
+        child="bucket",
+        operator_question="inspect bucket manifests and append-only bucket-event history",
+        service_owner="aeat.domain.buckets",
+        commands=("history",),
+        mutability=OperatorMutability.READ_ONLY,
+    ),
+    MountedCommandFamily(
         domain=MountedCommandDomain.AUTH,
         root=RootSurfaceName.CONFIG,
         child="auth",
@@ -303,6 +312,11 @@ SERVICE_OWNERS: tuple[ServiceOwner, ...] = (
         capability="profile_and_bucket_state",
         owner="aeat.application.user_profile",
         notes="owns active profile state consumed by app commands",
+    ),
+    ServiceOwner(
+        capability="bucket_event_history",
+        owner="aeat.domain.buckets",
+        notes="owns append-only bucket-event history records exposed by config bucket history",
     ),
     ServiceOwner(
         capability="workflow_state",

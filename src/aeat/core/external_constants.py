@@ -34,6 +34,12 @@ JSON_MIME_TYPE: Final[str] = "application/json"
 #: IANA-registered MIME type for comma-separated value exports.
 CSV_MIME_TYPE: Final[str] = "text/csv"
 
+#: MIME type for newline-delimited JSON export streams.
+JSONL_MIME_TYPE: Final[str] = "application/x-ndjson"
+
+#: MIME type for Office Open XML spreadsheet workbooks.
+XLSX_MIME_TYPE: Final[str] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
 #: Sentinel written to ``classified_by`` when the operator provides a classification directly
 #: (no rule engine involved).  The field also accepts ``"rule:<id>"`` payloads; this named
 #: constant prevents the literal from drifting across the application and domain layers.
@@ -140,6 +146,9 @@ class AeatPre303Surface(_Frozen):
     representation_own_name_label_selector: str = Field(min_length=1)
     representation_representative_selector: str = Field(min_length=1)
     representation_submit_selector: str = Field(min_length=1)
+    representation_own_name_action_label: str = Field(min_length=1)
+    wallet_discovered_entrypoint_action_label: str = Field(min_length=1)
+    wallet_execute_read_action_label: str = Field(min_length=1)
     alert_modal_selector: str = Field(min_length=1)
     alert_continue_button_text: str = Field(min_length=1)
     wallet_form_selector: str = Field(min_length=1)

@@ -129,7 +129,7 @@ def reconcile_invoice_repositories(
     optional mutation, and persistence so entrypoints can remain a thin
     rendering layer.
     """
-    invoices_repo = invoice_repository or InvoiceCatalogueRepository()
+    invoices_repo = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     transactions_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     result = reconcile_invoice_catalogues(
         invoices_repo.load(),

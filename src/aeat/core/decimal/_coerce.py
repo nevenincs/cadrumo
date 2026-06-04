@@ -80,6 +80,13 @@ def coerce_decimal(
         return value
     try:
         return Decimal(str(value))
-    except (InvalidOperation, ValueError):
-        _logger.debug("coerce_decimal: could not parse %r, returning default %r", value, default)
+    except (InvalidOperation, ValueError) as exc:
+        _logger.debug(
+            "coerce_decimal: could not parse value, returning configured default",
+            extra={
+                "value_type": type(value).__name__,
+                "default_is_none": default is None,
+                "error_type": type(exc).__name__,
+            },
+        )
         return default

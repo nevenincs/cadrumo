@@ -120,19 +120,12 @@ class CliUnexpectedBoundaryError(AeatError):
             error: The unexpected exception raised inside the Typer
                 callback.
         """
-        # The recovery hint points at the engineer-surface diagnostic
-        # report rather than `aeat config repair`. The repair family is
-        # bootstrap-exempt but state-touching and may itself fail under
-        # the same conditions that produced this unexpected exception
-        # (disaster ADR Ruling 5: the welded-shut escape hatch retires).
-        # The diagnostics surface dumps a structured report from a
-        # process that never opens an encrypted session.
         super().__init__(
             translated_message="errors.internal.internal_cli_unexpected_boundary",
             context={
-                "recovery": "python -m aeat.diagnostics report",
+                "recovery": "aeat config repair integrity",
             },
-            suggestion="python -m aeat.diagnostics report",
+            suggestion="aeat config repair integrity",
         )
         self.original_exception: Exception = error
 

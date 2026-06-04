@@ -13,10 +13,11 @@ from .....core.config import Settings
 from .....core.external_constants import UTF_8_ENCODING
 from .....domain.calculations.registry import RegistryValidationError
 from ..browser import Profile, opened_browser_page, shared_playwright_runtime
-from ._errors import SedeParseError
+from ._errors import SedeNavigationError, SedeParseError
 from ._iva_compensation_wallet import (
     IVA_COMPENSATION_WALLET_URL,
     PRE303_PRESENTATION_SERVICE_URL,
+    _assert_own_name_representation_form_html,
     _assert_read_browser_action,
     _assert_read_http,
     _dump_wallet_diagnostic,
@@ -380,6 +381,71 @@ def test_iva_wallet_read_guard_allows_wallet_execute_read_query() -> None:
 
 def test_iva_wallet_read_guard_allows_discovered_entrypoint_open() -> None:
     _assert_read_browser_action(_EXTERNAL.aeat.pre303.wallet_discovered_entrypoint_action_label)
+
+
+def test_own_name_representation_guard_accepts_dialogo_dispatcher_shape() -> None:
+    landing_url = f"{_EXTERNAL.aeat.domains.www6}{_EXTERNAL.aeat.clave_movil.dialogo_representacion_path}"
+    html = f"""
+    <html><body>
+      <form id="repForm" method="get" action="{_EXTERNAL.aeat.clave_movil.dialogo_representacion_path}">
+        <input id="ref" name="ref" type="hidden" />
+        <input id="tipoIden" name="tipoIden" type="hidden" />
+        <input id="borrar" name="borrar" type="hidden" />
+        <input id="propio" name="representacion" type="radio" checked="checked" />
+        <input id="representante" name="representacion" type="radio" />
+        <input id="nif" name="nif" type="text" />
+        <input id="nombre" name="nombre" type="text" />
+        <button type="submit">Continuar</button>
+      </form>
+    </body></html>
+    """
+
+    _assert_own_name_representation_form_html(
+        html,
+        landing_url=landing_url,
+        expected_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+    )
+
+
+def test_own_name_representation_guard_rejects_representative_selection() -> None:
+    landing_url = f"{_EXTERNAL.aeat.domains.www6}{_EXTERNAL.aeat.clave_movil.dialogo_representacion_path}"
+    html = f"""
+    <html><body>
+      <form id="repForm" method="get" action="{_EXTERNAL.aeat.clave_movil.dialogo_representacion_path}">
+        <input id="propio" name="representacion" type="radio" />
+        <input id="representante" name="representacion" type="radio" checked="checked" />
+        <button type="submit">Continuar</button>
+      </form>
+    </body></html>
+    """
+
+    with pytest.raises(SedeNavigationError, match="representative mode selected"):
+        _assert_own_name_representation_form_html(
+            html,
+            landing_url=landing_url,
+            expected_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+        )
+
+
+def test_own_name_representation_guard_rejects_prefilled_represented_taxpayer_text() -> None:
+    landing_url = f"{_EXTERNAL.aeat.domains.www6}{_EXTERNAL.aeat.clave_movil.dialogo_representacion_path}"
+    html = f"""
+    <html><body>
+      <form id="repForm" method="get" action="{_EXTERNAL.aeat.clave_movil.dialogo_representacion_path}">
+        <input id="propio" name="representacion" type="radio" checked="checked" />
+        <input id="representante" name="representacion" type="radio" />
+        <input id="nif" name="nif" type="text" value="represented-taxpayer-canary" />
+        <button type="submit">Continuar</button>
+      </form>
+    </body></html>
+    """
+
+    with pytest.raises(SedeNavigationError, match="represented-taxpayer text fields"):
+        _assert_own_name_representation_form_html(
+            html,
+            landing_url=landing_url,
+            expected_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+        )
 
 
 def test_discover_iva_compensation_wallet_entrypoint_from_pre303_link() -> None:

@@ -17,6 +17,7 @@ requested modelo, year, and period.
 
 from __future__ import annotations
 
+from ...core.logging import get_logger
 from ...domain.calculations.registry import (
     RegistrySnapshotError,
     RegistryValidationError,
@@ -24,6 +25,8 @@ from ...domain.calculations.registry import (
 )
 from ...domain.user_profile import ProfileNotFoundError
 from ._profile_binding import resolve_profile_sourced_bindings
+
+_log = get_logger(__name__)
 
 
 def profile_resolvable_binding_ids(
@@ -59,11 +62,29 @@ def profile_resolvable_binding_ids(
             filing_year=filing_year,
             period=resolved_period,
         )
-    except RegistrySnapshotError:
+    except RegistrySnapshotError as exc:
+        _log.debug(
+            "binding-readiness: registry snapshot unavailable for modelo=%s filing_year=%s period=%s; "
+            "treating profile bindings as unresolved (%s: %s)",
+            modelo,
+            filing_year,
+            resolved_period,
+            type(exc).__name__,
+            exc,
+        )
         return frozenset()
     try:
         result = resolve_profile_sourced_bindings(snapshot, bucket_id=bucket_id)
-    except ProfileNotFoundError:
+    except ProfileNotFoundError as exc:
+        _log.debug(
+            "binding-readiness: active profile unavailable while resolving modelo=%s filing_year=%s period=%s; "
+            "treating profile bindings as unresolved (%s: %s)",
+            modelo,
+            filing_year,
+            resolved_period,
+            type(exc).__name__,
+            exc,
+        )
         return frozenset()
     return frozenset(result.bindings_sourced_from_profile)
 
@@ -86,7 +107,15 @@ def _annual_period_for_year(authority: ValidatedRegistryAuthority, *, modelo: st
     """
     try:
         definition = authority.validate_modelo(modelo.strip())
-    except (RegistrySnapshotError, RegistryValidationError):
+    except (RegistrySnapshotError, RegistryValidationError) as exc:
+        _log.debug(
+            "binding-readiness: annual period unavailable for modelo=%s filing_year=%s; "
+            "treating profile bindings as unresolved (%s: %s)",
+            modelo,
+            filing_year,
+            type(exc).__name__,
+            exc,
+        )
         return None
     covering = [
         revision for revision in definition.revisions.values() if revision.period_selector.includes_year(filing_year)

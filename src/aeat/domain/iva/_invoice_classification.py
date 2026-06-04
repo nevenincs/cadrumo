@@ -48,7 +48,7 @@ from pydantic import BaseModel, ConfigDict, model_validator
 # IvaRate is imported lazily inside ``_iva_rate_to_iva_kind`` /
 # ``_iva_rate_to_domestic_category`` to break a circular initialisation
 # without violating the sibling-domain ``_enums`` ban (clause 5 of
-# :func:`aeat.diagnostics._identity_placement.find_sibling_domain_enum_imports`).
+# the structural enum-import placement check).
 # At runtime the helpers are called only after the invoices package init
 # finishes, so the public-package import resolves cleanly.
 from ._classification import InvoiceKind

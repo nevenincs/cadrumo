@@ -494,13 +494,14 @@ def show_registry_manual(
                 },
             )
             raise RegistryApplicationInputError(
-                f"manual section requires extracted structure: {manual_key}",
+                translated_message="application.registry.errors.manual_section_requires_structure",
                 context={
                     "registry_service": "registry.manuals.show",
                     "manual_id": command.manual.value,
                     "year": command.year,
                     "part": command.part.value,
                     "section": command.section,
+                    "manual_key": manual_key,
                     "structure_available": False,
                 },
             ) from None
@@ -543,7 +544,7 @@ def show_registry_manual(
                 },
             )
             raise RegistryApplicationInputError(
-                f"manual section not found: {command.section!r}",
+                translated_message="application.registry.errors.manual_section_not_found",
                 context={
                     "registry_service": "registry.manuals.show",
                     "manual_id": command.manual.value,
@@ -676,7 +677,7 @@ def _registry_topic_locale(locale: str | None) -> str:
             },
         )
         raise RegistryApplicationInputError(
-            f"registry topic locale must be one of {SUPPORTED_OUTPUT_LANGUAGES!r}; got {locale!r}",
+            translated_message="application.registry.errors.invalid_topic_locale",
             context={
                 "registry_service": "registry.topics",
                 "locale": locale,
@@ -837,7 +838,7 @@ def registry_manual_id(value: str | RegistryManualId | ManualId) -> RegistryManu
             },
         )
         raise RegistryApplicationInputError(
-            f"registry manual must be one of {allowed!r}; got {raw!r}",
+            translated_message="application.registry.errors.invalid_manual_id",
             context={
                 "registry_service": "registry.manuals",
                 "manual_id": raw,
@@ -878,7 +879,7 @@ def _manual_rule_kind(kind: str | None) -> RuleKind | None:
         },
     )
     raise RegistryApplicationInputError(
-        f"manual rule kind must be one of {allowed!r}; got {kind!r}",
+        translated_message="application.registry.errors.invalid_manual_rule_kind",
         context={
             "registry_service": "registry.manuals.rules",
             "rule_kind": kind,

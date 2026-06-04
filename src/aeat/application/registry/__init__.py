@@ -3,15 +3,15 @@
 Registry query and corpus validation services consume a
 :class:`ValidatedRegistryAuthority` as the single entry point for
 modelo definitions, revision snapshots, and deadline windows. The
-observation-persistence path accepts an optional :class:`MasterKeyProvider`
-to construct the encrypted observation store.
+observation-persistence path reads captured filed state through the
+active-bucket encrypted observation store.
 """
 
 from __future__ import annotations
 
 from decimal import Decimal
 from pathlib import Path
-from typing import NamedTuple, get_args
+from typing import NamedTuple
 
 from pydantic import BaseModel, ConfigDict
 
@@ -21,7 +21,6 @@ from ...adapters.outbound.aeat.sede import (
 from ...adapters.outbound.aeat.sede import (
     registry_observation_from_filed_declaration as _registry_observation_from_filed_declaration,
 )
-from ...adapters.persistence.storage import MasterKeyProvider as _MasterKeyProvider
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.resources import bundled_path as _bundled_path
 
@@ -127,6 +126,8 @@ from ._corpus import (
     verify_registry_manual,
 )
 from ._errors import RegistryApplicationError, RegistryApplicationInputError
+
+_ORACLE_ENVIRONMENT_VALUES: tuple[str, ...] = tuple(sorted(member.value for member in _OracleEnvironment))
 
 
 class RegistryTreeReport(BaseModel):
@@ -319,7 +320,11 @@ def _typed_oracle_environment(environment: str) -> _OracleEnvironment:
             return _OracleEnvironment.BOTH
         case _:
             raise RegistryApplicationInputError(
-                f"environment must be one of {sorted(get_args(_OracleEnvironment))!r}; got {environment!r}"
+                translated_message="application.registry.errors.invalid_oracle_environment",
+                context={
+                    "allowed_values": _ORACLE_ENVIRONMENT_VALUES,
+                    "value": environment,
+                },
             )
 
 
@@ -357,17 +362,16 @@ def verify_filed_state(
     registry_root: Path | None = None,
     source_root: Path | None = None,
     required_casillas: tuple[str, ...] = (),
-    master_key_provider: _MasterKeyProvider | None = None,
 ) -> FiledStateVerificationReport:
     """Compare a local registry calculation to a captured filed observation.
 
     Returns a :class:`FiledStateVerificationReport` with the per-casilla
     comparison results between the registry calculation and the filed values.
     """
-    filed_observation = _load_filed_observation(observation_path, master_key_provider=master_key_provider)
+    filed_observation = _load_filed_observation(observation_path)
     registry_observation = _registry_observation_from_filed_declaration(filed_observation)
     source_observations = tuple(
-        _load_filed_observation(path, master_key_provider=master_key_provider) for path in source_observation_paths
+        _load_filed_observation(path) for path in source_observation_paths
     )
     registry_source_observations = tuple(
         _registry_observation_from_filed_declaration(observation) for observation in source_observations
@@ -566,10 +570,8 @@ def _revision_details(modelos) -> tuple[RegistryRevisionDetailReport, ...]:
     return tuple(reports)
 
 
-def _load_filed_observation(path: Path, *, master_key_provider: _MasterKeyProvider | None = None):
-    return _FiledDeclaracionObservationStore(path.parent, master_key_provider=master_key_provider).load_observation(
-        path
-    )
+def _load_filed_observation(path: Path):
+    return _FiledDeclaracionObservationStore(path.parent).load_observation(path)
 
 
 __all__ = [

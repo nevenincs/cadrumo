@@ -8,7 +8,14 @@ from pathlib import Path
 
 import pytest
 
-from ...domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
+from ...domain.invoices import (
+    Invoice,
+    InvoiceCatalogue,
+    InvoiceCatalogueRepository,
+    InvoiceLine,
+    IvaRate,
+    PaymentStatus,
+)
 from ...domain.iva import InvoiceKind
 from ...domain.transactions import (
     RawProvenance,
@@ -16,13 +23,16 @@ from ...domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepository,
     TransactionDirection,
     link_invoice,
 )
+from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     link_invoice_transaction_catalogues,
     list_invoice_rows,
     list_unmatched_invoice_rows,
+    verify_invoice_repository_links,
     verify_link_consistency,
 )
 
@@ -77,6 +87,22 @@ def test_consistency_query_reports_one_sided_transaction_link() -> None:
     assert inconsistencies[0].invoice_id == invoice.invoice_id
     assert inconsistencies[0].transaction_id == transaction.transaction_id
     assert inconsistencies[0].direction == "transaction-only"
+
+
+def test_repository_consistency_query_binds_both_catalogues_to_requested_bucket(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="invoice-query-bucket") as profile:
+        invoice = _invoice()
+        transaction = _transaction()
+        linked = link_invoice_transaction_catalogues(
+            InvoiceCatalogue.from_invoices([invoice]),
+            TransactionCatalogue.from_transactions([transaction]),
+            invoice_id=invoice.invoice_id,
+            transaction_id=transaction.transaction_id,
+        )
+        InvoiceCatalogueRepository(bucket_id=profile.bucket_id).save(linked.invoices)
+        TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(linked.transactions)
+
+        assert verify_invoice_repository_links(bucket_id=profile.bucket_id) == ()
 
 
 def _invoice(

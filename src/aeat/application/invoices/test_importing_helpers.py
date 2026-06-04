@@ -31,6 +31,7 @@ from typing import cast
 
 import pytest
 
+from ...domain.invoices import InvoiceValidationError
 from ...domain.iva import InvoiceKind
 from ._importing import (
     _IVA_RATE_ALIASES,
@@ -83,15 +84,27 @@ def test_decode_invoice_payload_rejects_json_with_scalar_top_level() -> None:
     (``{`` or ``[``); only those branches reach the JSON decoder.
     A top-level number that starts with ``[`` would be a list-of-
     scalars — also rejected by the all-Mapping invariant."""
-    with pytest.raises(ValueError, match="object or a list"):
+    with pytest.raises(InvoiceValidationError) as exc_info:
         _decode_invoice_payload("[1, 2, 3]")
+    assert exc_info.value.translated_message == "application.invoices.importing.errors.invalid_json_shape"
+    assert exc_info.value.context == {"payload_type": "list"}
 
 
 def test_decode_invoice_payload_rejects_json_list_of_non_objects() -> None:
     """A list with at least one non-mapping element is rejected so
     the import pipeline cannot silently swallow a malformed entry."""
-    with pytest.raises(ValueError, match="object or a list"):
+    with pytest.raises(InvoiceValidationError) as exc_info:
         _decode_invoice_payload('[{"invoice_id": "inv-1"}, "not-an-object"]')
+    assert exc_info.value.translated_message == "application.invoices.importing.errors.invalid_json_shape"
+    assert exc_info.value.context == {"payload_type": "list"}
+
+
+def test_decode_invoice_payload_rejects_malformed_json_with_context() -> None:
+    with pytest.raises(InvoiceValidationError) as exc_info:
+        _decode_invoice_payload('{"invoice_id": "inv-1"')
+
+    assert exc_info.value.translated_message == "application.invoices.importing.errors.invalid_json"
+    assert exc_info.value.context == {"line": "1", "column": "23"}
 
 
 def test_decode_invoice_payload_decodes_csv_when_no_json_anchor() -> None:
@@ -142,6 +155,16 @@ def test_synthesise_single_line_skips_when_iva_rate_missing() -> None:
     _synthesise_single_line_if_needed(payload)
 
     assert "lines" not in payload
+
+
+def test_synthesise_single_line_rejects_non_decimal_base_total_with_context() -> None:
+    payload: dict[str, object] = {"base_total": "not-a-decimal", "iva_rate": "21"}
+
+    with pytest.raises(InvoiceValidationError) as exc_info:
+        _synthesise_single_line_if_needed(payload)
+
+    assert exc_info.value.translated_message == "application.invoices.importing.errors.invalid_base_total"
+    assert exc_info.value.context == {"base_total": "not-a-decimal"}
 
 
 def test_synthesise_single_line_back_fills_with_substrate_slot_alias() -> None:
@@ -235,7 +258,9 @@ def test_coerce_kind_handles_already_uppercase_string() -> None:
 
 
 def test_coerce_kind_raises_on_unknown_string() -> None:
-    """A string that uppercases to an unknown member raises
-    :class:`ValueError` (the StrEnum's own constructor error)."""
-    with pytest.raises(ValueError, match=r"InvoiceKind|not a valid|NOT-A-KIND"):
+    """A string outside the invoice-kind contract raises the invoice error type."""
+    with pytest.raises(InvoiceValidationError) as exc_info:
         _coerce_kind("not-a-kind")
+
+    assert exc_info.value.translated_message == "application.invoices.importing.errors.invalid_kind"
+    assert exc_info.value.context == {"kind": "not-a-kind"}

@@ -501,43 +501,216 @@ application:
   calculations:
     iva_compensation:
       errors:
-        modelo_303_only: 'IVA compensation history only accepts Modelo 303 observations.'
-        seed_conflict: 'An IVA compensation state already exists for this period; seeding would overwrite stored history.'
+        modelo_303_only: IVA compensation history only accepts Modelo 303 observations.
+        modelo_390_only: IVA compensation annual summary only accepts Modelo 390 observations.
+        seed_conflict: An IVA compensation state already exists for this period; seeding
+          would overwrite stored history.
+  filing:
+    review:
+      errors:
+        approved_by_blank: The approver identifier must not be blank.
+        draft_not_ready: Only drafts ready to submit may be approved.
+        registry_review_mismatch: 'The draft does not match the registry review surface:
+          %{codes}.'
+      stale_reasons:
+        approval_basis_version_changed: approval basis version changed
+        category_profiles_changed: category profiles changed
+        draft_payload_changed: draft payload changed
+        draft_review_changed: draft validation surface changed
+        schema_formula_changed: schema or formula provenance changed
+        transaction_catalogue_changed: transaction catalogue changed
+        unknown: '%{reason}'
+    runtime:
+      errors:
+        active_profile_load_failed: 'The active filing profile could not be loaded:
+          %{reason}.'
+        blank_modelo_selection: Requested modelo selection must not contain blank
+          modelo ids.
+        filing_year_period_pair: filing_year and period must be supplied together.
+        modelo_not_in_registry: Modelo %{modelo} is not present in the calculation
+          registry.
+        modelo_revision_missing: Modelo %{modelo} has no revisions.
+        provider_year_missing: Modelo %{modelo} revision %{revision} has no provider
+          year.
+        registry_empty: The registry root %{registry_root_name} has no modelo definitions.
+        registry_empty_for_period: The registry root has no modelo definitions for
+          year %{filing_year} period %{period}.
+        registry_missing_requested_modelos: 'The registry root is missing requested
+          modelo definitions: %{modelos}.'
+        unsupported_casilla_data_type: 'Unsupported registry casilla data type: %{data_type}.'
+  inventory:
+    service:
+      errors:
+        actividad_conflict: An inventory ledger already exists for activity %{actividad_id}
+          and year %{year}.
+        actividad_not_found: No inventory ledger exists for activity %{actividad_id}
+          and year %{year}.
+        duplicate_movement_id: The inventory ledger already contains movement %{movement_id}.
+        invalid_valuation_method: 'The inventory valuation method is not supported:
+          %{valuation_method}.'
+  invoices:
+    importing:
+      errors:
+        import_file_read_failed: 'The invoice import file could not be read: %{path_name}.'
+        invalid_base_total: 'The invoice base_total value is not a decimal: %{base_total}.'
+        invalid_json: The invoice JSON payload is not valid JSON at line %{line},
+          column %{column}.
+        invalid_json_shape: The invoice JSON payload must be an object or a list of
+          objects.
+        invalid_kind: 'The invoice kind is not supported: %{kind}.'
+    linking:
+      errors:
+        linked_invoice_not_found: Invoice %{invoice_id} was not found after applying
+          the link update.
+        transaction_not_found: Transaction %{transaction_id} was not found in the
+          transaction catalogue.
   ledger:
     errors:
       evidence_attachment_requires_ids: Ledger evidence attachment requires purchase
         evidence or attachment ids.
       purchase_evidence_already_set: Ledger transaction already has a purchase_invoice_evidence_id;
         remove or replace through the attachments workflow.
+  live:
+    expedientes:
+      errors:
+        bucket_id_blank: Expedientes bucket id must not be blank.
+        snapshot_id_blank: Expedientes snapshot id must not be blank.
+        snapshot_not_found: No expedientes snapshot matches the requested id.
+        snapshot_prefix_ambiguous: The expedientes snapshot prefix matches multiple
+          snapshots.
+    notifications:
+      errors:
+        bucket_id_blank: Notifications bucket id must not be blank.
+        snapshot_id_blank: Notifications snapshot id must not be blank.
+        snapshot_not_found: No notifications snapshot matches the requested id.
+        snapshot_prefix_ambiguous: The notifications snapshot prefix matches multiple
+          snapshots.
+    snapshot_base:
+      errors:
+        snapshot_bucket_mismatch: Snapshot payload bucket does not match the repository
+          bucket.
+    verify:
+      errors:
+        bucket_id_blank: Verify bucket id must not be blank.
+        observation_bucket_mismatch: Verify observation bucket does not match the
+          repository bucket.
+        observation_id_blank: Verify observation id must not be blank.
+        observation_id_mismatch: Verify observation id does not match the requested
+          observation.
+        observation_not_found: No verify observation matches the requested id.
+        observation_prefix_ambiguous: The verify observation prefix matches multiple
+          observations.
   modelo:
     borrador_binding:
       errors:
         caller_binding_keys_blank: Caller binding keys must not be blank.
+        decimal_value_invalid: Borrador value for numeric binding %{binding_id} must
+          be decimal-compatible.
+        forbidden_bindings: 'The borrador snapshot contains values that the registry
+          has not marked as AEAT-prefilled: %{bindings}.'
+        registry_snapshot_axis_mismatch: 'The registry snapshot axis does not match
+          the borrador binding command: snapshot year=%{snapshot_year} period=%{snapshot_period};
+          command year=%{filing_year} period=%{period}.'
+        registry_snapshot_modelo_mismatch: 'The registry snapshot modelo does not
+          match the borrador binding command: snapshot modelo=%{snapshot_modelo};
+          command modelo=%{command_modelo}.'
+        snapshot_axis_mismatch: 'The borrador snapshot does not match the calculation
+          axis: snapshot year=%{snapshot_year} period=%{snapshot_period}; calculation
+          year=%{filing_year} period=%{period}.'
+        snapshot_bucket_mismatch: The borrador snapshot does not belong to the active
+          bucket.
         snapshot_id_required: Borrador-sourced values require a borrador_snapshot_id.
+        snapshot_load_failed: Cannot load the selected borrador snapshot; list active
+          snapshots with aeat app live borrador 100 list.
         snapshot_not_active: Borrador snapshot is not active; list active snapshots
           with `aeat app live borrador 100 list`.
         source_trace_mismatch: Borrador source trace must match resolved binding ids.
+        unsupported_modelo: Borrador binding is not supported for modelo %{modelo};
+          the registry manifest must declare the borrador capability.
     errors:
+      amendment_registry_root_missing: Registry root %{registry_root} is missing;
+        amendment overrides cannot be validated.
+      amendment_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved; amendment
+        overrides cannot be validated.
+      amendment_unknown_casillas: 'Amendment overrides target casilla ids that are
+        not declared in registry modelo %{modelo}, filing year %{filing_year}, period
+        %{period}: %{casillas}.'
       amendment_verification_refused_missing_casillas: 'The amendment is incomplete:
         required casilla ids are missing from the corrected map.'
       amendment_verification_refused_no_snapshot: Registry has no snapshot for the
         requested modelo, year, and period.
+      calculation_registry_root_missing: Registry root %{registry_root} is missing;
+        modelo calculation cannot continue.
+      calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved.
       calculation_revision_not_found: No calculation revision found with id=%{calculation_revision_id}.
+      caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
+        bucket-derived source-bound casillas: %{casillas}.'
       computed_casilla_binding_conflict: 'Bucket-derived inputs target computed casillas
         and cannot be overridden by external binding. Affected casillas: %{computed}.'
+      export_cross_bucket_refused: The addressed revision belongs to a bucket other
+        than the active profile bucket. Switch profile before exporting.
+      export_draft_approval_failed: Could not approve the draft for calculation revision
+        %{calculation_revision_id}.
+      export_draft_write_failed: Could not write the export file for calculation revision
+        %{calculation_revision_id}.
+      export_ledger_evidence_missing: Ledger-derived calculation revision %{calculation_revision_id}
+        lacks bundled ledger evidence or a resolvable ledger snapshot reference; verify
+        the revision again before exporting.
       export_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before exporting a modelo revision.
+      export_operator_name_missing: 'Export requires the operator name on the active
+        profile; missing profile facts: %{missing}.'
+      export_operator_profile_missing: Export needs the operator name from the active
+        profile, but no persisted profile exists; populate identity.surnames and identity.name
+        before exporting.
+      export_period_unmappable: Work unit %{work_unit_id} carries period %{period},
+        which cannot be mapped to a registry filing period.
+      export_revision_state_refused: Calculation revision %{calculation_revision_id}
+        is not verified-complete or filed and cannot be exported.
       external_filing_evidence_reference_blank: External-filing import requires a
         non-empty evidence_reference_id.
       external_filing_no_casilla_values: External-filing import requires at least
         one casilla value; the supplied mapping is empty.
+      external_import_duplicate_revision: Calculation revision %{calculation_revision_id}
+        already exists in the catalogue; an identical import was already recorded.
+      external_import_registry_root_missing: Registry root %{registry_root} is missing;
+        imported casilla ids cannot be validated.
+      external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved; imported
+        casilla ids cannot be validated.
+      external_import_unknown_casillas: 'External-filing import carries casilla ids
+        that are not declared in registry modelo %{modelo}, filing year %{filing_year},
+        period %{period}: %{casillas}.'
       filing_record_not_found: No filing record found with id=%{filing_record_id}.
+      iva_wallet_backend_casilla_conflict: Backend casilla input for Modelo 303 prior
+        compensation conflicts with the IVA wallet reconciliation decision.
       iva_wallet_blocked: 'IVA wallet reconciliation is blocked for Modelo 303 (%{divergence}):
         %{reason}'
+      iva_wallet_caller_binding_conflict: Caller binding for Modelo 303 prior compensation
+        conflicts with the IVA wallet reconciliation decision.
+      iva_wallet_caller_casilla_conflict: Caller casilla input for Modelo 303 prior
+        compensation conflicts with the IVA wallet reconciliation decision.
       iva_wallet_not_seeded: 'Modelo 303 calculation requires a seeded IVA compensation
         history. For the first M303 filing of a fresh profile, seed the opening balance
         with zero: `aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD
         --amount 0 --confirm`.'
+      iva_wallet_selected_amount_missing: IVA wallet reconciliation decision has no
+        selected amount.
+      iva_wallet_supplied_decision_mismatch: Supplied IVA wallet reconciliation decision
+        does not match the persisted decision.
+      iva_wallet_target_mismatch: IVA wallet decision target %{target_year}/%{target_period}
+        does not match work unit %{filing_year}/%{period}.
+      iva_wallet_taxpayer_identity_missing: IVA wallet reconciliation cannot continue
+        without the work-unit taxpayer identity.
+      iva_wallet_taxpayer_mismatch: IVA wallet reconciliation taxpayer does not match
+        the Modelo 303 work unit.
+      iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type:
+        %{decision_type}.'
+      ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
+        %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
+        %{period}` before calculating.'
       reconcile_declaration_unsupported: Declaration-PDF reconcile source is not yet
         implemented; use --from-justificante PATH until the declaration parser lands.
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
@@ -595,6 +768,18 @@ application:
         next_action: Designate a fiscal representative in Spain by setting profile.representante_fiscal_nif
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
+    profile_binding:
+      errors:
+        date_value_type_invalid: Profile fact for date-channel binding %{binding_id}
+          must be a date; got %{value_type}.
+        decimal_value_invalid: Profile fact for numeric binding %{binding_id} must
+          be decimal-compatible.
+        decimal_value_type_invalid: Profile fact for Decimal-channel binding %{binding_id}
+          has unsupported value type %{value_type}.
+        enum_boolean_invalid: Profile fact for enum-channel binding %{binding_id}
+          resolved to a boolean; boolean facts are not valid enum dispatch keys.
+        source_trace_mismatch: Profile-sourced binding trace does not match the resolved
+          binding keys.
   overview:
     explain:
       errors:
@@ -603,6 +788,102 @@ application:
     errors:
       portal_not_found: The requested AEAT portal is not registered. Run 'aeat app
         live portals list' to see available portals.
+  registry:
+    errors:
+      invalid_manual_id: Registry manual must be one of {allowed_manual_ids}; got
+        {manual_id}.
+      invalid_manual_rule_kind: Registry manual rule kind must be one of {allowed_rule_kinds};
+        got {rule_kind}.
+      invalid_oracle_environment: Registry oracle environment must be one of {allowed_values};
+        got {value}.
+      invalid_topic_locale: Registry topic locale must be one of {allowed_locales};
+        got {locale}.
+      manual_section_not_found: Manual section {section} was not found in {manual_id}
+        {year} {part}.
+      manual_section_requires_structure: Manual section requires extracted structure
+        for {manual_key}.
+  repair_integrity:
+    errors:
+      conflicting_list_filters: 'Repair list filters are mutually exclusive: {filters}.
+        Pass one filter or neither.'
+      decision_id_mismatch_list: Repair decision id does not match its re-derived
+        content id; refusing to list the decision entry.
+      decision_id_mismatch_load: Repair decision payload id does not match the requested
+        or re-derived content id; refusing to load the decision.
+      decision_id_mismatch_save: Repair decision id does not match its re-derived
+        content id; refusing to save the decision.
+      decision_not_found: Repair decision {decision_id} does not exist.
+  storage:
+    calc_sheets:
+      engine:
+        anchors:
+          final: RESULT
+          start: 'START: Entradas'
+        errors:
+          parameter_no_dated_value: The spreadsheet export engine could not find a
+            parameter value valid for the filing date.
+          parameter_not_scalar: The spreadsheet export engine expected a scalar parameter
+            but received a table parameter.
+          unsupported_rounding: The spreadsheet export engine found an unsupported
+            registry rounding rule.
+        guide:
+          editable_cells: 'Edit only the cells in the ''Entradas'' tab. The other
+            tabs are protected: ''Cálculos'' contains derived formula cells, ''Procedencia''
+            audits each calculated casilla, and ''Tarifas'' mirrors the active parameters
+            used by formulas.'
+          period: '%{modelo_title} - period %{period} / %{filing_year}.'
+          pull_command: To pull your edits into local storage, run 'aeat config google
+            sync calc pull' from the CLI.
+          title: '%{modelo_title} - %{period}/%{filing_year}'
+        labels:
+          casilla: Casilla
+          cell: Cell
+          concept: Concept
+          fixed_quota: Fixed quota
+          formula: Formula
+          legal_refs: Legal refs
+          marginal_rate: Marginal rate
+          maximum_base: Maximum base
+          minimum_base: Minimum base
+          number: No.
+          rounding: Rounding
+          section: Section
+          source: Source
+          source_refs: Source refs
+          value: Value
+        protected:
+          calculos: Derived calculations - protected to preserve parity
+          guide: Guide - protected
+          provenance: Provenance / audit trail - protected
+          tariffs: Tariffs / active parameters - protected
+      layout:
+        errors:
+          undeclared_reference: The spreadsheet layout references an item not declared
+            by the revision.
+          unresolved_reference: The spreadsheet layout does not contain a cell for
+            a referenced item.
+      parity:
+        errors:
+          seed_anchor_missing: The parity scenario input has no spreadsheet cell to
+            seed.
+          unknown_casilla_numbers: The parity scenario references casilla numbers
+            that are not in the registry snapshot.
+      records:
+        errors:
+          address_mismatch: The spreadsheet cell address does not match its row and
+            column.
+          duplicate_write_address: The spreadsheet export plan writes more than one
+            payload to the same cell.
+          frozen_view_empty: The spreadsheet frozen view must freeze at least one
+            row or column.
+          invalid_column_index: The spreadsheet record column index must be one-based
+            and positive.
+          invalid_column_letters: The spreadsheet record column letters are invalid.
+          range_malformed: The spreadsheet range boundaries are invalid.
+          tariff_shape_invalid: The spreadsheet tariff-table record shape is invalid.
+      translator:
+        errors:
+          translation_failed: 'The registry formula cannot be translated to a spreadsheet formula.'
   user_profile:
     errors:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
@@ -612,6 +893,8 @@ application:
         profile switch NAME` to activate it or `aeat config profile delete NAME` first.
       profile_create_route_mismatch: Profile create route '%{route}' does not match
         profile id '%{profile}'.
+      profile_integrity_identity_mismatch: 'Profile storage is inconsistent: physical stores disagree on profile identity.'
+      profile_integrity_status_mismatch: 'Profile storage is inconsistent: the manifest lifecycle status does not match the secure record.'
       profile_label_blank: Profile label must not be blank.
       profile_manifest_already_registered: Profile '%{profile}' already has a registered
         bucket manifest at %{bucket_dir}.
@@ -623,6 +906,14 @@ application:
         be selected.
       unsupported_bundle_schema_version: The bundle schema version is not supported
         by this application version.
+      aggregate_profile_id_mismatch: 'Profile storage is inconsistent: the manifest profile identity does not match the secure record.'
+      aggregate_label_mismatch: 'Profile storage is inconsistent: the manifest label does not match the secure record.'
+      aggregate_status_mismatch: 'Profile storage is inconsistent: the manifest lifecycle status does not match the secure record.'
+      lifecycle_profile_already_exists: 'A profile already exists in the active bucket.'
+      lifecycle_profile_tombstoned_rename: 'A removed profile cannot be renamed.'
+      lifecycle_profile_tombstoned_duplicate: 'A removed profile cannot be duplicated.'
+      lifecycle_schema_validation_failed: 'The profile data does not match the user-profile schema.'
+      profile_bucket_directory_removal_failed: 'Profile bucket directory could not be removed.'
   wizard:
     errors:
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
@@ -989,8 +1280,9 @@ cli:
       export:
         actor_help: Operator label recorded into the MODELO_EXPORTED event.
         errors:
-          no_exportable_revision: 'No exportable revision: the work unit has no verified-complete
-            or submitted revision.'
+          output_required: Supply --output PATH for the fichero-BOE artefact.
+          revision_not_exportable: Selected revision {revision_id} is in state {state};
+            export requires a verified-complete or filed revision.
         help: Export a verified-complete or filed modelo revision to a local AEAT-compatible
           fichero-BOE file. Local-only; never contacts AEAT.
         output_help: Path to write the fichero-BOE artefact to.
@@ -1081,8 +1373,12 @@ cli:
         ccaa_help: Autonomous community tax residence key for the M100 autonomic scale
           (e.g. cataluna, comunidad-valenciana). Must match the registry enum.
         m100_calculation_error: 'Internal error: Modelo 100 calculation failed.'
-        no_m130_revisions: No M130 revisions for the specified year.
-        no_m130_units: No M130 work units for the specified year and period.
+        no_m130_revisions: No M130 revisions for the specified year. Run `aeat app
+          modelo work calculate --modelo 130 --year %{year} --period 1T` for each
+          quarter first.
+        no_m130_units: No M130 work units for the specified year. Create and calculate
+          M130 work units first with `aeat app modelo work create --modelo 130 --year
+          %{year} --period 1T`.
         year_help: Filing year (e.g. 2024).
       project_help: Run modelo aggregate projections (e.g. year-end Modelo 130 aggregation).
       readiness:
@@ -1143,8 +1439,8 @@ cli:
         calculate_help: Persist a new draft calculation revision for the work unit
         calculate_saved: 'Saved as draft calculation revision %{revision_id} (state:
           %{state}). It is persisted and can be resumed later; list revisions with
-          `aeat app modelo work revisions %{work_unit_id}` and re-inspect this one
-          with `aeat app modelo work revision %{revision_id}`.'
+          `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period
+          %{period}` and re-inspect this one with `aeat app modelo work revision %{revision_id}`.'
         calculate_unauthorized_advisory: 'ADVISORY: modelo %{modelo} calculation backend
           is UNAUTHORIZED — it has not yet been proven by an end-to-end test across
           at least two renta years (multi-year-renta authorization gate). The result
@@ -1242,14 +1538,18 @@ cli:
         dt12_computation_error: 'DT12 computation error: %{message}'
         file_help: Mark a verified revision as internally filed. Does NOT submit to
           AEAT
+        file_requires_verified: Selected revision {revision_id} is in state {state};
+          file requires a verified-complete revision.
         from_filing_record_help: Stable id of the baseline filing record to amend.
           Must carry imported external evidence (justificante / CSV register / live
           capture)
         history_help: Show every lifecycle event for one work unit
         history_work_unit_id_help: Work unit id whose lifecycle you want to view
-        id_is_work_unit_not_calc_revision: This id is a work-unit-id, but verify/file
-          need a calculation-revision-id. Run 'aeat app modelo work calculate %{work_unit_id}'
-          to produce the calculation-revision-id, then pass that.
+        id_is_work_unit_not_calc_revision_natural: This id is a work-unit-id, but
+          verify/file need a calculation-revision-id. For the common path, run 'aeat
+          app modelo work calculate --modelo %{modelo} --year %{year} --period %{period}'
+          and then rerun verify/file for that same modelo/year/period. Exact ids remain
+          available as an advanced escape hatch.
         include_discarded_help: Include discarded work units in the listing (excluded
           by default)
         invalid_amendment_kind: --kind must be one of {choices}; got {kind}.
@@ -1259,6 +1559,8 @@ cli:
           lowercase hex string (SHA-256 digest)
         invalid_casilla_key: '--casilla key is not a valid CasillaId (alphanumeric
           plus . _ : - separators, max 64 chars)'
+        invalid_revision_selector: Unknown revision selector {value}; choose one of
+          {choices}.
         invalid_work_unit_id: work_unit_id must be a 64-character lowercase hex string
           (SHA-256 digest)
         kv_empty_key_error: '{flag} key must not be empty; got {spec}.'
@@ -1280,6 +1582,9 @@ cli:
           still needs.'
         modelo_help: Tax form code (e.g. 303, 130, 100)
         name_help: Optional display name for the work unit
+        name_required: Supply --name.
+        natural_target_required: Pass an exact work-unit id, or address the filing
+          with modelo, year, and period.
         notes_help: Optional notes attached to the filing record
         output_language_help: Output language for rendered messages.
         override_help: Binding value with KEY=VALUE syntax (repeatable); run `aeat
@@ -1361,6 +1666,9 @@ cli:
           runs` to list run ids.
         revision_help: Stable id of the targeted registry modelo revision; run `aeat
           app modelo describe MODELO` to see the available revision ids.
+        revision_selector_ambiguous: More than one calculation revision matches this
+          selector. Choose one explicitly. {candidates}
+        revision_selector_help: Revision selector.
         revision_show_help: Show one stored calculation revision's persisted casilla
           values (without recomputing)
         revision_year_mismatch: Revision %{revision} of modelo %{modelo} does not
@@ -1411,6 +1719,13 @@ cli:
         sal_reserva_incomplete: --sal-beneficio-neto, --sal-reserva-dotada, and --sal-capital-social
           must all be supplied together.
         sal_reserva_not_decimal: --sal-* values must be decimal amounts.
+        selector_ambiguous: More than one active work unit matches this modelo/year/period.
+          Choose a registry revision or pass an explicit work-unit id. {candidates}
+        selector_not_found: No active work unit matches this modelo, year, and period.
+          Run aeat app modelo work create first.
+        selector_revision_conflict: An active work unit already exists for this modelo/year/period
+          with registry revision {existing_revision}; requested {requested_revision}.
+          Resume the existing work unit, discard it explicitly, or pass an exact id.
         set_not_decimal: The --set value must be a decimal; got {value}.
         set_override_help: Corrected casilla value with CASILLA=DECIMAL syntax (repeatable;
           at least one required)
@@ -1421,6 +1736,8 @@ cli:
           revisions: %{declared}.'
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
+        verify_requires_draft: Selected revision {revision_id} is in state {state};
+          verify requires a draft revision.
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
@@ -1806,7 +2123,6 @@ cli:
       key_help: Key to clear
     workflow_help: Show config workflow help
   diagnostics:
-    app_help: Engineer-only diagnostics for AEAT internals.
     browser:
       http_status_label: HTTP status
       markers_label: Markers
@@ -1823,23 +2139,6 @@ cli:
         profile and not something you can fix yourself.
     next_action:
       inspect_registry_toml: Inspect the registry TOML sources to identify the problem.
-    profile:
-      errors:
-        ambiguous_profile: 'Ambiguous profile name: %{profile}.'
-        invalid_value_fallback: 'Invalid value for %{key}: %{value}'
-        invalid_value_with_choices: '%{message} (%{choices})'
-        no_active_profile: No active profile selected.
-        profile_empty: --profile must not be blank.
-        unknown_profile: 'Unknown profile: %{profile}.'
-        unknown_profile_key: 'Unknown profile key: %{key}.'
-      get_help: Read one profile key stored value.
-      help: Engineer-only profile field inspection and surgical edits.
-      key_help: Profile key.
-      profile_help: Profile to use; defaults to the active profile.
-      set_help: Write one profile key value, validated against the wizard descriptor.
-      unset_help: Clear one profile key value.
-      unset_placeholder: <unset>
-      value_help: Value to store.
     repair:
       audience_internal: internal application issue
       auth_label: Auth
@@ -1855,18 +2154,6 @@ cli:
       profile_label: Profile
       python_label: Python
       version_label: Version
-    secure_objects:
-      all_help: Return every key, including unreadable rows.
-      errors:
-        conflicting_filters: --all and --unreadable cannot be combined; pass one or
-          neither.
-      help: Inventory the secure-object index by namespace.
-      labels:
-        count: Count
-        namespace: Namespace
-      list_help: List secure-object keys stored under one namespace.
-      namespace_help: Namespace to inventory.
-      unreadable_help: Restrict the listing to undecryptable rows.
     summary:
       auth_no_session: Authentication provider %{provider} has no ready session
       auth_none: Authentication is not configured
@@ -2316,6 +2603,7 @@ cli:
         auth_providers: List supported authentication providers.
         auth_status: Show configured authentication state.
         auth_test: Check local authentication readiness.
+        bucket_history: Inspect append-only bucket event history.
         diagnostics_logs: Show the configured log path and recent lines.
         diagnostics_quarantine: Quarantine unreadable secure objects.
         diagnostics_repair: Diagnose local configuration and storage health.
@@ -2334,6 +2622,7 @@ cli:
         profile_status: Show active profile readiness.
         profile_switch: Switch the active profile.
         section_authentication: Authentication
+        section_bucket_inspection: Bucket inspection
         section_diagnostics: Diagnostics
         section_first_run: First run
         section_profile_inspection: Profile inspection
@@ -2924,6 +3213,7 @@ errors:
     unsupported_comparison_op: 'Unsupported comparison operator: %{op}.'
     unsupported_op: 'Unsupported formula operator: %{op}.'
   censo:
+    bucket_id_blank: 'The censo sync service requires a profile bucket.'
     no_snapshot_captured: No censo snapshot has been captured for profile {profile_id}.
     profile_not_found: Profile {profile_id} does not exist; create it before applying
       censo.
@@ -3118,6 +3408,11 @@ errors:
     error_wizard_compile: The wizard catalogue is malformed and could not be compiled.
     error_workflow: A workflow error occurred.
     error_workflow_component: A workflow component raised an unexpected exception.
+    modelo_calculation_revision_selector: Calculation revision selection failed.
+    modelo_calculation_revision_selector_not_found: No calculation revision matched
+      the requested selector.
+    modelo_work_selector: The modelo work selector failed.
+    modelo_work_selector_unit_not_found: The selected modelo work unit was not found.
   fail:
     censo_sync: The Modelo 036 censo sync failed.
     currency_error: Currency normalization failed.
@@ -3388,6 +3683,10 @@ errors:
       100%.
     modelo_347_threshold: Modelo 347 operations above the reporting threshold require
       explicit declaration coverage.
+    modelo_calculation_revision_selector_ambiguous: The calculation revision selector
+      matched more than one revision; refine the selector.
+    modelo_calculation_revision_selector_state: The selected calculation revision
+      is not in a usable state for this operation.
     modelo_censo_stale: 'The operation is refused because you applied a new censo
       after this work was produced. The AEAT is the binding legal source: regenerate
       it against the current censo.'
@@ -3395,6 +3694,13 @@ errors:
       the active profile's. Export only operates within the active profile bucket.
     modelo_export_no_active_bucket: Export requires an active profile. Create or select
       a profile and try again.
+    modelo_work_selector_ambiguous: More than one modelo work unit matches the selector.
+    modelo_work_selector_contradiction: The modelo work selector arguments contradict
+      each other.
+    modelo_work_selector_no_active_bucket: Select an active profile before resolving
+      a modelo work unit.
+    modelo_work_selector_revision_conflict: The selected modelo work unit belongs
+      to a different revision.
     profile_already_registered: A profile with that name already exists. Use `aeat
       config profile switch NAME` to switch to it.
     profile_import_collision: The imported profile identifier collides with an existing
@@ -3702,18 +4008,27 @@ profile:
 review:
   adapters:
     errors:
+      drafts_load_failed: Failed to load filing drafts from secure backend.
       invoices_load_failed: Failed to load invoices catalogue from secure backend.
       transactions_load_failed: Failed to load transactions catalogue from secure
         backend.
+  edit:
+    errors:
+      parse_failed: Could not parse the edit token. The supplied value has been redacted.
   filing:
     draft_placeholder_summary: Draft pending
     finding_summary: Validation finding on draft
     stale_approval_summary: Draft approval is stale
+  filter:
+    errors:
+      parse_failed: Could not parse the filter token. The supplied value has been
+        redacted.
   invoice:
     summary: Invoice pending review
   operator:
     errors:
       item_not_found: Review item not found.
+      reserved_kind: Review kind is reserved and is not an emitted review item.
       unknown_kind: Unknown review kind.
       unsupported_item_type: Unsupported review item type.
   transaction:

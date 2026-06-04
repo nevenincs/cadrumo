@@ -731,6 +731,176 @@ def _run_full_flow(
         )
 
 
+def _enter_requested_output_language(kwargs: dict[str, object], language_stack: typing.Any) -> None:
+    """Apply a command-line output-language override for the command body."""
+    from ...core.config import override_settings
+
+    requested_language = kwargs.get("output_language")
+    if isinstance(requested_language, str) and requested_language in SUPPORTED_OUTPUT_LANGUAGES:
+        language_stack.enter_context(override_settings(aeat_output_language=requested_language))
+
+
+def _render_error_inside_language_override(exc: typing.Any) -> None:
+    """Freeze a translated AEAT error message before locale overrides unwind."""
+    translated_key = getattr(exc, "translated_message", None)
+    if not isinstance(translated_key, str) or not translated_key:
+        return
+
+    context = getattr(exc, "context", None) or {}
+    rendered = tr(translated_key, **{key: value for key, value in context.items()})
+    exc.args = (rendered, *exc.args[1:])
+    exc.translated_message = None
+
+
+def _require_profile_name(flow: WizardFlow, raw_profile_name: object) -> str:
+    """Return a stripped profile name or raise the wizard missing-flag error."""
+    if isinstance(raw_profile_name, str) and raw_profile_name.strip():
+        return raw_profile_name.strip()
+    raise WizardMissingFlagError(
+        translated_message="application.wizard.errors.profile_flag_required",
+        context={"flow_id": flow.id, "missing": ("profile_name",)},
+    )
+
+
+def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, profile_name: str) -> str:
+    """Resolve or mint the immutable profile id for the requested wizard mode."""
+    from ...domain.user_profile import new_profile_id
+    from ..user_profile._orchestration import _refuse_duplicate_label, _require_registered_label
+    from ..workflow._profile_bucket_scan import read_profile_bucket
+
+    if mode == "create":
+        _refuse_duplicate_label(profile_name)
+        return new_profile_id()
+
+    _require_registered_label(profile_name)
+    pointer = read_profile_bucket(profile_name)
+    if pointer is not None:
+        return pointer.bucket_id
+    raise WizardMissingFlagError(
+        translated_message="application.wizard.errors.profile_flag_required",
+        context={"flow_id": flow.id, "missing": ("profile_name",)},
+    )
+
+
+def _seed_output_language_from_environment(canonical: dict[str, str]) -> None:
+    """Use AEAT_OUTPUT_LANGUAGE when the operator omitted the explicit flag."""
+    from ...core.config import load_settings
+
+    if "output-language" in canonical:
+        return
+
+    env_lang = load_settings().aeat_output_language
+    if isinstance(env_lang, str) and env_lang in SUPPORTED_OUTPUT_LANGUAGES:
+        canonical["output-language"] = env_lang
+
+
+def _refuse_foral_ccaa(canonical: dict[str, str], explicit_flags: dict[str, str]) -> None:
+    """Reject foral CCAA tokens before any persistence or prompt."""
+    ccaa_token = canonical.get("tax-residence-ccaa") or explicit_flags.get("tax-residence-ccaa")
+    if ccaa_token is None:
+        return
+
+    from ...domain.contribuyente import ForalRegimeError, parse_tax_region
+
+    try:
+        parse_tax_region(ccaa_token)
+    except ForalRegimeError as foral_exc:
+        raise typer.BadParameter(
+            tr("profile.errors.foral_regime", tax_region=foral_exc.value),
+            param_hint="'--tax-residence-ccaa'",
+        ) from foral_exc
+
+
+def _run_wizard_persistence_path(
+    flow: WizardFlow,
+    mode: WizardPersistMode,
+    canonical: dict[str, str],
+    explicit_flags: dict[str, str],
+    *,
+    _prompter: Prompter | None,
+    quiet: bool,
+    accept_defaults: bool,
+    profile_name: str,
+    profile_id: str,
+) -> None:
+    """Dispatch to patch-edit or full-flow persistence."""
+    non_interactive = quiet or accept_defaults
+    if mode == "edit" and non_interactive:
+        _run_patch_edit(flow, explicit_flags, profile_id=profile_id)
+        return
+
+    _run_full_flow(
+        flow,
+        canonical,
+        _prompter=_prompter,
+        quiet=quiet,
+        accept_defaults=accept_defaults,
+        profile_name=profile_name,
+        profile_id=profile_id,
+        mode=mode,
+        explicit_question_ids=frozenset(explicit_flags),
+    )
+
+
+def _emit_wizard_success(mode: WizardPersistMode, profile_name: str) -> None:
+    """Emit the success payload in JSON or tabular CLI form."""
+    import typer as _typer
+
+    from ...core.click_context import json_output_requested
+    from ...core.json_contract import emit_json_success
+
+    verb = tr("wizard.commands.status.created" if mode == "create" else "wizard.commands.status.updated")
+    payload: dict[str, object] = {
+        "profile_name": profile_name,
+        "status": verb,
+        "next": "aeat app modelo work create",
+        "next_label": tr("application.wizard.output_labels.next"),
+    }
+    if mode == "create":
+        payload["active_profile"] = profile_name
+    if json_output_requested():
+        command_path = "config.profile.create" if mode == "create" else "config.profile.edit"
+        emit_json_success(command_path, payload)
+        return
+
+    _typer.echo(f"profile\t{profile_name}")
+    _typer.echo(f"{tr('application.wizard.output_labels.status')}\t{verb}")
+    if mode == "create":
+        _typer.echo(f"active_profile\t{profile_name}")
+    _typer.echo(f"next\t{payload['next']}")
+
+
+def _execute_wizard_command(
+    flow: WizardFlow,
+    mode: WizardPersistMode,
+    *,
+    _prompter: Prompter | None,
+    kwargs: dict[str, object],
+) -> None:
+    """Run the wizard command body after Typer has parsed dynamic flags."""
+    profile_name = _require_profile_name(flow, kwargs.pop("profile_name"))
+    profile_id = _resolve_profile_id_for_mode(flow, mode, profile_name)
+    quiet = bool(kwargs.pop("quiet", False))
+    accept_defaults = bool(kwargs.pop("accept_defaults", False))
+    canonical = _collect_flag_values(flow, kwargs)
+    explicit_flags: dict[str, str] = dict(canonical)
+
+    _seed_output_language_from_environment(canonical)
+    _refuse_foral_ccaa(canonical, explicit_flags)
+    _run_wizard_persistence_path(
+        flow,
+        mode,
+        canonical,
+        explicit_flags,
+        _prompter=_prompter,
+        quiet=quiet,
+        accept_defaults=accept_defaults,
+        profile_name=profile_name,
+        profile_id=profile_id,
+    )
+    _emit_wizard_success(mode, profile_name)
+
+
 def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callable[..., None]:
     """Return a Typer-compatible callable that runs ``flow``.
 
@@ -752,9 +922,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
     def _command(*, _prompter: Prompter | None = None, **kwargs: object) -> None:
         import contextlib
 
-        from ...core.config import override_settings
         from ...core.errors import AeatError
-        from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 
         with contextlib.ExitStack() as _language_stack:
             # When the operator supplies `--output-language` on the
@@ -766,141 +934,17 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
             # for the whole command body so the error boundary renders
             # in the requested language rather than falling back to the
             # default. The override unwinds when the command returns.
-            requested_language = kwargs.get("output_language")
-            if isinstance(requested_language, str) and requested_language in SUPPORTED_OUTPUT_LANGUAGES:
-                _language_stack.enter_context(override_settings(aeat_output_language=requested_language))
+            _enter_requested_output_language(kwargs, _language_stack)
             try:
-                _command_body(_prompter=_prompter, **kwargs)
+                _execute_wizard_command(flow, mode, _prompter=_prompter, kwargs=kwargs)
             except AeatError as exc:
                 # Pre-render translated_message INSIDE the override so the
                 # error boundary's renderer (which runs after the ExitStack
                 # unwinds) sees the already-localised string. Without this
                 # the override is gone by the time render_error_text fires,
                 # and the refusal falls back to the default language.
-                translated_key = getattr(exc, "translated_message", None)
-                if isinstance(translated_key, str) and translated_key:
-                    rendered = tr(translated_key, **{k: v for k, v in (exc.context or {}).items()})
-                    exc.args = (rendered, *exc.args[1:])
-                    exc.translated_message = None
+                _render_error_inside_language_override(exc)
                 raise
-
-    def _command_body(*, _prompter: Prompter | None = None, **kwargs: object) -> None:
-        from ...domain.user_profile import new_profile_id
-        from ..user_profile._orchestration import _refuse_duplicate_label, _require_registered_label
-        from ..workflow._profile_bucket_scan import read_profile_bucket
-
-        raw_profile_name = kwargs.pop("profile_name")
-        if not isinstance(raw_profile_name, str) or not raw_profile_name.strip():
-            raise WizardMissingFlagError(
-                translated_message="application.wizard.errors.profile_flag_required",
-                context={"flow_id": flow.id, "missing": ("profile_name",)},
-            )
-        profile_name = raw_profile_name.strip()
-
-        # Refuse BEFORE prompting and BEFORE any pointer/engine write.
-        # A `create` that targets an existing label, or an `edit` that
-        # targets an unknown one, must neither walk the operator
-        # through the flow nor switch the active-profile pointer as a
-        # side effect. The profile identity is the immutable UUID:
-        # `create` mints a fresh one, `edit` resolves the existing
-        # profile's UUID from its operator-facing label.
-        if mode == "create":
-            _refuse_duplicate_label(profile_name)
-            profile_id = new_profile_id()
-        else:
-            _require_registered_label(profile_name)
-            pointer = read_profile_bucket(profile_name)
-            if pointer is None:
-                raise WizardMissingFlagError(
-                    translated_message="application.wizard.errors.profile_flag_required",
-                    context={"flow_id": flow.id, "missing": ("profile_name",)},
-                )
-            profile_id = pointer.bucket_id
-
-        quiet = bool(kwargs.pop("quiet", False))
-        accept_defaults = bool(kwargs.pop("accept_defaults", False))
-        canonical = _collect_flag_values(flow, kwargs)
-
-        # The keys present in `canonical` BEFORE any default seeding are
-        # exactly the question ids the operator named on the command
-        # line. A non-interactive `edit` (`--quiet` / `--accept-
-        # defaults`) is a patch: it writes only these explicit flags
-        # and leaves every other stored field untouched. It must never
-        # be routed through `run_flow`, which constructs the full
-        # `SetupAnswers` model and seeds descriptor defaults for the
-        # unsupplied questions — the silent full-rewrite that flipped
-        # `output_language` while editing an unrelated field.
-        explicit_flags: dict[str, str] = dict(canonical)
-        non_interactive = quiet or accept_defaults
-        patch_edit = mode == "edit" and non_interactive
-
-        # Refuse foral CCAA tokens before any persistence or prompt.
-        # `pais_vasco` and `navarra` are accepted by Click (so the
-        # operator receives a redirect rather than a generic choice
-        # error) but are not valid AEAT-jurisdiction residence CCAAs.
-        _ccaa_token = canonical.get("tax-residence-ccaa") or explicit_flags.get("tax-residence-ccaa")
-        if _ccaa_token is not None:
-            from ...domain.contribuyente import ForalRegimeError, parse_tax_region
-
-            try:
-                parse_tax_region(_ccaa_token)
-            except ForalRegimeError as _foral_exc:
-                raise typer.BadParameter(
-                    tr("profile.errors.foral_regime", tax_region=_foral_exc.value),
-                    param_hint="'--tax-residence-ccaa'",
-                ) from _foral_exc
-
-        if patch_edit:
-            _run_patch_edit(flow, explicit_flags, profile_id=profile_id)
-        else:
-            _run_full_flow(
-                flow,
-                canonical,
-                _prompter=_prompter,
-                quiet=quiet,
-                accept_defaults=accept_defaults,
-                profile_name=profile_name,
-                profile_id=profile_id,
-                mode=mode,
-                explicit_question_ids=frozenset(explicit_flags),
-            )
-
-        import typer as _typer
-
-        from ...core.click_context import json_output_requested
-        from ...core.json_contract import emit_json_success
-
-        verb = tr("wizard.commands.status.created" if mode == "create" else "wizard.commands.status.updated")
-        # `next_label` is the operator-facing localised label for the
-        # next-step tab; `next` is the machine-parseable command hint
-        # scripted consumers parse on the lowercase key column. The two
-        # coexist so the JSON payload carries both audiences.
-        payload: dict[str, object] = {
-            "profile_name": profile_name,
-            "status": verb,
-            "next": "aeat app modelo work create",
-            "next_label": tr("application.wizard.output_labels.next"),
-        }
-        # `create` writes the active-profile pointer above, so the new
-        # profile is now the active one. Surface that explicitly — the
-        # operator otherwise cannot see the silent promotion (the same
-        # `active_profile` line `switch` emits).
-        if mode == "create":
-            payload["active_profile"] = profile_name
-        if json_output_requested():
-            command_path = "config.profile.create" if mode == "create" else "config.profile.edit"
-            emit_json_success(command_path, payload)
-        else:
-            # Machine-parseable KV: lowercase snake_case keys + machine
-            # value tokens (status verb is "created"/"updated", not the
-            # localised display label). Scripted consumers parse on the
-            # key column; localising it would force every consumer to
-            # build a per-locale key table.
-            _typer.echo(f"profile\t{profile_name}")
-            _typer.echo(f"{tr('application.wizard.output_labels.status')}\t{verb}")
-            if mode == "create":
-                _typer.echo(f"active_profile\t{profile_name}")
-            _typer.echo(f"next\t{payload['next']}")
 
     # CAST-RATIONALE-WIZARD-COMMAND-INJECT: Typer resolves CLI parameters
     # from ``__signature__`` at decoration time; the cast to ``Any`` is the

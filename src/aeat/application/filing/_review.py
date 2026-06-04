@@ -19,9 +19,9 @@ import json
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
-from functools import lru_cache
 
 from ...core.hashing import sha256_hex as _sha256_hex
+from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain._identifiers import canonical_decimal_string
@@ -225,10 +225,14 @@ def approve_draft(
     """
     normalized_approver = approved_by.strip()
     if not normalized_approver:
-        raise ModeloDraftError("approved_by must not be blank")
+        raise ModeloDraftError(
+            translated_message="application.filing.review.errors.approved_by_blank",
+        )
 
     if derive_validation_status(draft.findings) is not ModeloDraftStatus.LISTO_PARA_PRESENTAR:
-        raise ModeloDraftError("only READY_TO_SUBMIT drafts may be approved")
+        raise ModeloDraftError(
+            translated_message="application.filing.review.errors.draft_not_ready",
+        )
     _require_registry_review_alignment(draft, schema_provider=schema_provider)
 
     timestamp = approved_at or now()
@@ -397,22 +401,22 @@ def describe_stale_reason(reason: ModeloApprovalStaleReason) -> str:
         reason: The :class:`ModeloApprovalStaleReason` to describe.
 
     Returns:
-        A lowercase imperative phrase suitable for inline UI display.
+        A localized phrase suitable for inline UI display.
     """
     match reason:
         case ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED:
-            return "approval basis version changed"
+            return tr("application.filing.review.stale_reasons.approval_basis_version_changed")
         case ModeloApprovalStaleReason.DRAFT_PAYLOAD_CHANGED:
-            return "draft payload changed"
+            return tr("application.filing.review.stale_reasons.draft_payload_changed")
         case ModeloApprovalStaleReason.DRAFT_REVIEW_CHANGED:
-            return "draft validation surface changed"
+            return tr("application.filing.review.stale_reasons.draft_review_changed")
         case ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED:
-            return "transaction catalogue changed"
+            return tr("application.filing.review.stale_reasons.transaction_catalogue_changed")
         case ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED:
-            return "category profiles changed"
+            return tr("application.filing.review.stale_reasons.category_profiles_changed")
         case ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED:
-            return "schema or formula provenance changed"
-    return reason.value.lower().replace("_", " ")
+            return tr("application.filing.review.stale_reasons.schema_formula_changed")
+    return tr("application.filing.review.stale_reasons.unknown", reason=reason.value.lower().replace("_", " "))
 
 
 def _review_metadata_reset() -> dict[str, object]:
@@ -448,30 +452,18 @@ def _require_registry_review_alignment(
     if derive_validation_status(findings) is ModeloDraftStatus.LISTO_PARA_PRESENTAR:
         return
     codes = tuple(finding.code for finding in findings)
-    raise ModeloDraftError(f"draft does not match the registry review surface: {codes!r}")
+    raise ModeloDraftError(
+        f"draft does not match the registry review surface: {codes!r}",
+        translated_message="application.filing.review.errors.registry_review_mismatch",
+        context={"codes": ", ".join(codes)},
+    )
 
 
 def _load_transaction_catalogue(bucket_id: str) -> TransactionCatalogue:
-    return _load_transaction_catalogue_cached(bucket_id)
-
-
-@lru_cache(maxsize=8)
-def _load_transaction_catalogue_cached(bucket_id: str) -> TransactionCatalogue:
-    from ...domain.transactions import TransactionCatalogueRepository
-
-    repository = TransactionCatalogueRepository(bucket_id=bucket_id)
-    return repository.load()
-
-
-def _read_transaction_catalogue(bucket_id: str) -> TransactionCatalogue:
     """Load the transaction catalogue from the secure backend."""
     from ...domain.transactions import TransactionCatalogueRepository
 
-    repository = TransactionCatalogueRepository(bucket_id=bucket_id)
-    if not repository.exists():
-        _logger.debug("transaction catalogue secure object not found; using empty catalogue")
-        return TransactionCatalogue()
-    return repository.load()
+    return TransactionCatalogueRepository(bucket_id=bucket_id).load()
 
 
 def _draft_review_fingerprint(draft: ModeloDraft) -> str:

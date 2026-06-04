@@ -10,7 +10,6 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...core.external_constants import DEFAULT_CURRENCY
 from ..categories import (
     CategoryCitation,
     CategoryProfile,
@@ -25,6 +24,7 @@ from ._errors import RentaValidationError
 from ._first_slice_routing import FIRST_SLICE_EXPENSE_CASILLAS
 
 LEDGER_RENTA_EXPENSE_SOURCE = "ledger_renta_expense_aggregation"
+EUR_CURRENCY: Literal["EUR"] = "EUR"
 
 # Re-export the canonical first-slice routing table. The single source
 # of truth lives in ``_first_slice_routing.py`` so the validator path
@@ -108,7 +108,7 @@ class RentaDeductibleExpenseFact(_RentaStrictFrozenModel):
     gross_amount: Decimal = Field(gt=Decimal("0"))
     taxable_base: Decimal | None = None
     iva_amount: Decimal | None = None
-    currency: Literal["EUR"] = DEFAULT_CURRENCY
+    currency: Literal["EUR"] = EUR_CURRENCY
     direction: RentaExpenseDirection = RentaExpenseDirection.OUTGOING_EXPENSE
     category: SpendingCategory
     activity_key: str = Field(default="default", min_length=1, max_length=128)
@@ -203,7 +203,7 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     iva_amount: Decimal | None = None
     deductible_amount: Decimal
     non_deductible_amount: Decimal
-    currency: Literal["EUR"] = DEFAULT_CURRENCY
+    currency: Literal["EUR"] = EUR_CURRENCY
     direction: RentaExpenseDirection
     sign: Literal[-1, 1]
     category: SpendingCategory
@@ -419,7 +419,7 @@ def _observation_id(fact: RentaDeductibleExpenseFact) -> str:
     return f"renta-expense:{fact.catalogue_id}:{fact.transaction_id}:{fact.invoice_id}"
 
 
-def _require_decimal(value: Decimal, field_name: str) -> None:
+def _require_decimal(value: object, field_name: str) -> None:
     if isinstance(value, bool) or not isinstance(value, Decimal) or not value.is_finite():
         raise RentaValidationError(f"{field_name} must be a finite Decimal")
 

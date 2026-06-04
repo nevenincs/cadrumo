@@ -35,6 +35,7 @@ from ..user_profile import UserProfileLifecycleRepository
 from . import calculate_modelo_revision, create_work_unit
 from ._actions import ModeloError
 from ._profile_binding import (
+    ProfileBindingResolutionError,
     ProfileSourcedBindingResult,
     resolve_profile_sourced_bindings,
 )
@@ -387,8 +388,6 @@ class TestBoolTypedProfileBinding:
         must refuse rather than silently coercing True -> "True" and
         producing a dispatch-table miss.
         """
-        from ._profile_binding import ProfileBindingResolutionError
-
         # Construct a snapshot whose CCAA binding (enum channel) is satisfied
         # by a bool fact — a mis-wired scenario the guard must catch.
         snapshot = _modelo_100_snapshot()
@@ -402,12 +401,43 @@ class TestBoolTypedProfileBinding:
             created_at=_CLOCK,
             updated_at=_CLOCK,
         )
-        with pytest.raises(ProfileBindingResolutionError, match="boolean facts are not valid enum dispatch keys"):
+        with pytest.raises(
+            ProfileBindingResolutionError,
+            match="boolean facts are not valid enum dispatch keys",
+        ) as exc_info:
             resolve_profile_sourced_bindings(
                 snapshot,
                 bucket_id=_BUCKET_ID,
                 profile_record=bool_profile,
             )
+        assert exc_info.value.translated_message == "application.modelo.profile_binding.errors.enum_boolean_invalid"
+        assert exc_info.value.context == {"binding_id": _CCAA_BINDING, "value_type": "bool"}
+
+
+def test_string_decimal_profile_parse_error_is_localized_and_redacted() -> None:
+    """Invalid profile numeric strings do not echo the raw profile value."""
+    snapshot = _snapshot_with_decimal_profile_binding(_modelo_100_snapshot())
+    record = UserProfileRecord(
+        profile_id=_BUCKET_ID,
+        display_name="Test runtime profile",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="usage_ratios.business_ratio", value="not-a-decimal-secret"),
+        ),
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+    )
+
+    with pytest.raises(ProfileBindingResolutionError, match="decimal-compatible") as exc_info:
+        resolve_profile_sourced_bindings(
+            snapshot,
+            bucket_id=_BUCKET_ID,
+            profile_record=record,
+        )
+
+    assert "not-a-decimal-secret" not in str(exc_info.value)
+    assert exc_info.value.translated_message == "application.modelo.profile_binding.errors.decimal_value_invalid"
+    assert exc_info.value.context == {"binding_id": _SYNTHETIC_DECIMAL_PROFILE_BINDING, "value_type": "str"}
 
 
 def test_calculate_modelo_revision_rejects_ccaa_supplied_through_decimal_channel(
@@ -529,9 +559,14 @@ def test_estimacion_directa_binding_rejected_through_enum_channel(
 
 def test_profile_sourced_binding_result_rejects_inconsistent_trace() -> None:
     """The result model enforces the trace matches the resolved keys."""
-    with pytest.raises(ModeloError):
+    with pytest.raises(ProfileBindingResolutionError) as exc_info:
         ProfileSourcedBindingResult(
             binding_values={},
             enum_binding_values={_CCAA_BINDING: "madrid"},
             bindings_sourced_from_profile=(),
         )
+    assert exc_info.value.translated_message == "application.modelo.profile_binding.errors.source_trace_mismatch"
+    assert exc_info.value.context == {
+        "resolved_bindings": (_CCAA_BINDING,),
+        "trace_bindings": (),
+    }

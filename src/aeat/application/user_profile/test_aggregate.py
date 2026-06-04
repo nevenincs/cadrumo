@@ -75,10 +75,18 @@ def test_aggregate_accepts_consistent_projections() -> None:
     assert aggregate.record is record
 
 
+def _assert_validation_error_redacts(error: ValidationError, *sensitive_tokens: str) -> None:
+    rendered = str(error)
+    assert "profile aggregate projections are inconsistent" in rendered
+    for token in sensitive_tokens:
+        assert token not in rendered
+
+
 def test_aggregate_rejects_record_profile_id_mismatch() -> None:
     """An aggregate whose record carries a different UUID is rejected."""
 
-    with pytest.raises(ValidationError):
+    mismatched_profile_id = "00000000-0000-4000-8000-000000000000"
+    with pytest.raises(ValidationError) as exc_info:
         ProfileAggregate(
             profile_id=_PROFILE_UUID,
             label="Aggregate Operator",
@@ -86,9 +94,10 @@ def test_aggregate_rejects_record_profile_id_mismatch() -> None:
             kdf_params=_kdf_params(),
             recovery_enrolled=False,
             manifest_schema_version=1,
-            record=_record("00000000-0000-4000-8000-000000000000"),
+            record=_record(mismatched_profile_id),
             status=UserProfileStatus.ACTIVE,
         )
+    _assert_validation_error_redacts(exc_info.value, _PROFILE_UUID, mismatched_profile_id, "Aggregate Operator")
 
 
 def test_aggregate_rejects_torn_rename_label_mismatch() -> None:
@@ -104,7 +113,7 @@ def test_aggregate_rejects_torn_rename_label_mismatch() -> None:
     """
 
     record = _record()  # record.display_name == "Aggregate Operator"
-    with pytest.raises(ValidationError, match="torn rename"):
+    with pytest.raises(ValidationError) as exc_info:
         ProfileAggregate(
             profile_id=_PROFILE_UUID,
             label="Renamed Operator",
@@ -115,12 +124,13 @@ def test_aggregate_rejects_torn_rename_label_mismatch() -> None:
             record=record,
             status=UserProfileStatus.ACTIVE,
         )
+    _assert_validation_error_redacts(exc_info.value, _PROFILE_UUID, "Renamed Operator", "Aggregate Operator")
 
 
 def test_aggregate_rejects_status_mismatch() -> None:
     """An aggregate whose status disagrees with the record is rejected."""
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError) as exc_info:
         ProfileAggregate(
             profile_id=_PROFILE_UUID,
             label="Aggregate Operator",
@@ -131,6 +141,7 @@ def test_aggregate_rejects_status_mismatch() -> None:
             record=_record(status=UserProfileStatus.TOMBSTONED),
             status=UserProfileStatus.ACTIVE,
         )
+    _assert_validation_error_redacts(exc_info.value, _PROFILE_UUID, "Aggregate Operator")
 
 
 def test_verify_integrity_passes_when_every_store_agrees() -> None:
@@ -146,32 +157,64 @@ def test_verify_integrity_passes_when_every_store_agrees() -> None:
     )
 
 
+def _assert_integrity_error_redacts(
+    error: ProfileIntegrityError,
+    *,
+    message: str,
+    translated_message: str,
+    sensitive_tokens: tuple[str, ...],
+) -> None:
+    rendered = str(error)
+    assert rendered == message
+    assert error.translated_message == translated_message
+    for token in sensitive_tokens:
+        assert token not in rendered
+
+
 def test_verify_integrity_raises_on_manifest_drift() -> None:
     """A manifest bucket_id that disagrees raises ProfileIntegrityError."""
 
-    with pytest.raises(ProfileIntegrityError, match="manifest bucket_id"):
+    mismatched_bucket_id = "00000000-0000-4000-8000-000000000000"
+    with pytest.raises(ProfileIntegrityError) as exc_info:
         verify_profile_integrity(
             profile_id=_PROFILE_UUID,
             directory_name=_PROFILE_UUID,
-            manifest_bucket_id="00000000-0000-4000-8000-000000000000",
+            manifest_bucket_id=mismatched_bucket_id,
             record_profile_id=_PROFILE_UUID,
             manifest_status="active",
             record_status="active",
         )
+    error = exc_info.value
+    assert error.context == {"mismatches": ("manifest_bucket_id",)}
+    _assert_integrity_error_redacts(
+        error,
+        message="profile physical stores disagree on identity",
+        translated_message="application.user_profile.errors.profile_integrity_identity_mismatch",
+        sensitive_tokens=(_PROFILE_UUID, mismatched_bucket_id),
+    )
 
 
 def test_verify_integrity_raises_on_record_drift() -> None:
     """A record profile_id that disagrees raises ProfileIntegrityError."""
 
-    with pytest.raises(ProfileIntegrityError, match="secure-record profile_id"):
+    mismatched_record_id = "00000000-0000-4000-8000-000000000000"
+    with pytest.raises(ProfileIntegrityError) as exc_info:
         verify_profile_integrity(
             profile_id=_PROFILE_UUID,
             directory_name=_PROFILE_UUID,
             manifest_bucket_id=_PROFILE_UUID,
-            record_profile_id="00000000-0000-4000-8000-000000000000",
+            record_profile_id=mismatched_record_id,
             manifest_status="active",
             record_status="active",
         )
+    error = exc_info.value
+    assert error.context == {"mismatches": ("secure_record_profile_id",)}
+    _assert_integrity_error_redacts(
+        error,
+        message="profile physical stores disagree on identity",
+        translated_message="application.user_profile.errors.profile_integrity_identity_mismatch",
+        sensitive_tokens=(_PROFILE_UUID, mismatched_record_id),
+    )
 
 
 def test_lifecycle_status_enums_stay_value_synced() -> None:
@@ -195,7 +238,7 @@ def test_verify_integrity_raises_on_lifecycle_status_drift() -> None:
     surface it rather than serve the profile.
     """
 
-    with pytest.raises(ProfileIntegrityError, match="cross-store lifecycle drift"):
+    with pytest.raises(ProfileIntegrityError) as exc_info:
         verify_profile_integrity(
             profile_id=_PROFILE_UUID,
             directory_name=_PROFILE_UUID,
@@ -204,6 +247,14 @@ def test_verify_integrity_raises_on_lifecycle_status_drift() -> None:
             manifest_status="active",
             record_status="tombstoned",
         )
+    error = exc_info.value
+    assert error.context == {"mismatches": ("manifest_status", "secure_record_status")}
+    _assert_integrity_error_redacts(
+        error,
+        message="profile physical stores disagree on lifecycle status",
+        translated_message="application.user_profile.errors.profile_integrity_status_mismatch",
+        sensitive_tokens=(_PROFILE_UUID, "active", "tombstoned"),
+    )
 
 
 # ── UTC helper migration: validate_utc_aware semantics ─────────────────────

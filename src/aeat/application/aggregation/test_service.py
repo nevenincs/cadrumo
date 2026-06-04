@@ -12,6 +12,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ...core.aggregation import AggregationSourceKind as CoreAggregationSourceKind
 from ...core.errors import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
 from ._errors import AggregationConfigError
 from ._service import (
@@ -182,7 +183,7 @@ def test_site6_result_rejects_duplicate_source_kinds() -> None:
     from ._service import PerModeloAggregationCommand, aggregate_per_modelo
 
     obs = RetencionObservation(
-        source_kind="ledger_transaction",
+        source_kind=CoreAggregationSourceKind.LEDGER_TRANSACTION,
         source_object_id="ret-1",
         perceptor_nif="B00000001",
         perceptor_name="Proveedor",
@@ -223,7 +224,7 @@ def test_site7_result_rejects_modelo_mismatch() -> None:
     from ._service import PerModeloAggregationCommand, aggregate_per_modelo
 
     obs = CounterpartObservation(
-        source_kind="ledger_transaction",
+        source_kind=CoreAggregationSourceKind.LEDGER_TRANSACTION,
         source_object_id="ctr-1",
         counterparty_nif="B00000001",
         counterparty_name="Cliente",
@@ -265,7 +266,7 @@ def test_site8_result_rejects_period_mismatch() -> None:
     from ._service import PerModeloAggregationCommand, aggregate_per_modelo
 
     obs = CounterpartObservation(
-        source_kind="ledger_transaction",
+        source_kind=CoreAggregationSourceKind.LEDGER_TRANSACTION,
         source_object_id="ctr-2",
         counterparty_nif="B00000002",
         counterparty_name="Cliente B",

@@ -6,6 +6,7 @@ from decimal import Decimal
 
 import pytest
 
+from ...core.aggregation import AggregationSourceKind
 from ...core.external_constants import M347_THRESHOLD_EUR
 from ._counterpart import (
     CounterpartAggregation,
@@ -29,7 +30,7 @@ def _obs(
     invoice_total: str | None = None,
     name: str = "",
     country: str = "ES",
-    source_kind: CounterpartSourceKind = "ledger_transaction",
+    source_kind: CounterpartSourceKind = AggregationSourceKind.LEDGER_TRANSACTION,
     source_id: str = "tx-001",
     period: str = "2025",
     accrued: str = "2025-03-15",

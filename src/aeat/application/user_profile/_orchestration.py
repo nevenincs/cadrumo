@@ -36,6 +36,7 @@ from ...domain.user_profile import (
     UserProfileRecord,
     load_user_profile_schema,
 )
+from ...domain.user_profile._errors import UserProfileError
 from ..workflow._models import WorkflowEvent, WorkflowState
 from ..workflow._utils import utc_now
 from . import (
@@ -440,9 +441,9 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
         gc.collect()
         shutil.rmtree(target, ignore_errors=True)
         if target.exists():
-            raise OSError(
-                f"profile bucket directory {target} could not be removed "
-                "(a file handle is still held); the bucket survives on disk"
+            raise UserProfileError(
+                translated_message="application.user_profile.errors.profile_bucket_directory_removal_failed",
+                context={"profile_id": profile_id, "operation": "remove_profile_bucket_directory"},
             ) from None
         return
     shutil.rmtree(trash, ignore_errors=True)
@@ -569,6 +570,7 @@ def read_active_profile(
     try:
         return service.read(bucket_id)
     except ProfileNotFoundError:
+        _log.debug("active profile selection resolved to a missing profile record; returning no active profile")
         return None
 
 

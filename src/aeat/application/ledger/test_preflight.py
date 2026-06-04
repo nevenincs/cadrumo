@@ -386,6 +386,19 @@ def test_preflight_repository_path_loads_bucket_catalogue(secure_objects: Secure
     assert report.issues == ()
 
 
+def test_preflight_default_repository_loads_active_runtime_bucket(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+        TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
+            TransactionCatalogue.from_transactions((_transaction("row-ready"),))
+        )
+
+        report = preflight_ledger_tax_readiness(bucket_id=profile.bucket_id, period="2026Q2")
+
+    assert report.ready is True
+    assert report.checked_transaction_count == 1
+    assert report.issues == ()
+
+
 def test_preflight_rejects_repository_bucket_mismatch(secure_objects: SecureObjectRepository) -> None:
     objects = secure_objects
     with pytest.raises(TransactionValidationError, match="bucket_id"):

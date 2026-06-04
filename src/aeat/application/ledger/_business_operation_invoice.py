@@ -376,7 +376,7 @@ class _BusinessOperationInvoiceService:
         from ...core.config import load_settings as _load_settings
 
         self._settings = settings or _load_settings()
-        self._event_repository = bucket_event_repository or BucketEventHistoryRepository()
+        self._event_repository = bucket_event_repository
 
     def add(
         self,
@@ -423,7 +423,7 @@ class _BusinessOperationInvoiceService:
         _save(self._settings, self.source_kind, bucket_id, records)
         created_type = _EVENT_MAP[self.source_kind.value][0]
         event_id = _emit_invoice_event(
-            event_repository=self._event_repository,
+            event_repository=self._event_repository_for_bucket(bucket_id),
             record=record,
             event_type=created_type,
             occurred_at=now,
@@ -460,7 +460,7 @@ class _BusinessOperationInvoiceService:
         _save(self._settings, self.source_kind, bucket_id, records)
         updated_type = _EVENT_MAP[self.source_kind.value][1]
         event_id = _emit_invoice_event(
-            event_repository=self._event_repository,
+            event_repository=self._event_repository_for_bucket(bucket_id),
             record=updated,
             event_type=updated_type,
             occurred_at=now,
@@ -482,13 +482,20 @@ class _BusinessOperationInvoiceService:
         _save(self._settings, self.source_kind, bucket_id, records)
         removed_type = _EVENT_MAP[self.source_kind.value][2]
         event_id = _emit_invoice_event(
-            event_repository=self._event_repository,
+            event_repository=self._event_repository_for_bucket(bucket_id),
             record=target,
             event_type=removed_type,
             occurred_at=now,
             actor=actor,
         )
         return BusinessOperationInvoiceResult(record=target, bucket_event_ids=(event_id,))
+
+    def _event_repository_for_bucket(self, bucket_id: str) -> BucketEventHistoryRepositoryProtocol:
+        if self._event_repository is not None:
+            return self._event_repository
+        return BucketEventHistoryRepository(
+            objects=secure_object_repository_for_bucket(bucket_id, self._settings),
+        )
 
 
 class PayableInvoiceService(_BusinessOperationInvoiceService):

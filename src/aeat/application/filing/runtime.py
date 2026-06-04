@@ -168,14 +168,22 @@ class RegistrySchemaProvider:
         try:
             return self.collections[modelo]
         except KeyError as exc:
-            raise ModeloBuilderError(f"modelo {modelo!r} is not present in the calculation registry") from exc
+            raise ModeloBuilderError(
+                f"modelo {modelo!r} is not present in the calculation registry",
+                translated_message="application.filing.runtime.errors.modelo_not_in_registry",
+                context={"modelo": modelo},
+            ) from exc
 
     def get_subview(self, modelo: str) -> RegistryModeloSubview:
         """Return the :class:`RegistryModeloSubview` backing ``modelo``."""
         try:
             return self.subviews[modelo]
         except KeyError as exc:
-            raise ModeloBuilderError(f"modelo {modelo!r} is not present in the calculation registry") from exc
+            raise ModeloBuilderError(
+                f"modelo {modelo!r} is not present in the calculation registry",
+                translated_message="application.filing.runtime.errors.modelo_not_in_registry",
+                context={"modelo": modelo},
+            ) from exc
 
 
 def filing_profile_from_taxpayer(
@@ -232,7 +240,11 @@ def load_default_filing_profile(
     try:
         profile = load_active_taxpayer_profile(state)
     except WizardStatusError as exc:
-        raise ModeloBuilderError(str(exc)) from exc
+        raise ModeloBuilderError(
+            "active filing profile could not be loaded",
+            translated_message="application.filing.runtime.errors.active_profile_load_failed",
+            context={"reason": exc.__class__.__name__},
+        ) from exc
     return filing_profile_from_taxpayer(profile, display_name=display_name)
 
 
@@ -271,13 +283,21 @@ def _build_runtime_schema_provider_cached(
     authority = ValidatedRegistryAuthority.load(root, source_root=resolved_source_root)
     loaded_modelos = authority.modelos
     if not loaded_modelos:
-        raise ModeloBuilderError(f"registry root has no modelo definitions: {root}")
+        raise ModeloBuilderError(
+            "registry root has no modelo definitions",
+            translated_message="application.filing.runtime.errors.registry_empty",
+            context={"registry_root_name": root.name},
+        )
     if selected_tuple is not None:
         selected_ids = set(selected_tuple)
         by_id = {modelo.id: modelo for modelo in loaded_modelos}
         missing = sorted(selected_ids.difference(by_id))
         if missing:
-            raise ModeloBuilderError(f"registry root is missing requested modelo definitions: {missing!r}")
+            raise ModeloBuilderError(
+                f"registry root is missing requested modelo definitions: {missing!r}",
+                translated_message="application.filing.runtime.errors.registry_missing_requested_modelos",
+                context={"modelos": ", ".join(missing)},
+            )
         loaded_modelos = tuple(by_id[modelo_id] for modelo_id in selected_tuple)
     snapshots: dict[str, RegistrySnapshot] = {}
     for modelo in loaded_modelos:
@@ -293,7 +313,11 @@ def _build_runtime_schema_provider_cached(
                 raise
             continue
     if not snapshots:
-        raise ModeloBuilderError(f"registry root has no modelo definitions for year={filing_year} period={period!r}")
+        raise ModeloBuilderError(
+            f"registry root has no modelo definitions for year={filing_year} period={period!r}",
+            translated_message="application.filing.runtime.errors.registry_empty_for_period",
+            context={"filing_year": str(filing_year), "period": str(period)},
+        )
     return RegistrySchemaProvider(
         collections={modelo_id: _collection_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
         subviews={modelo_id: _subview_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
@@ -319,7 +343,10 @@ def _normalize_modelo_selection(modelos: Sequence[str] | None) -> set[str] | Non
         return None
     selected = {modelo.strip() for modelo in modelos}
     if "" in selected:
-        raise ModeloBuilderError("requested modelo selection must not contain blank modelo ids")
+        raise ModeloBuilderError(
+            "requested modelo selection must not contain blank modelo ids",
+            translated_message="application.filing.runtime.errors.blank_modelo_selection",
+        )
     return selected
 
 
@@ -331,14 +358,21 @@ def _snapshot_for_provider(
     period: str | None,
 ) -> RegistrySnapshot:
     if (filing_year is None) != (period is None):
-        raise ModeloBuilderError("filing_year and period must be supplied together")
+        raise ModeloBuilderError(
+            "filing_year and period must be supplied together",
+            translated_message="application.filing.runtime.errors.filing_year_period_pair",
+        )
     if filing_year is not None and period is not None:
         return authority.snapshot(modelo.id, filing_year=filing_year, period=period)
     revision = _current_provider_revision(modelo)
     selector = revision.period_selector
     provider_year = selector.years[0] if selector.years else selector.year_from
     if provider_year is None:
-        raise ModeloBuilderError(f"modelo {modelo.id!r} revision {revision.id!r} has no provider year")
+        raise ModeloBuilderError(
+            f"modelo {modelo.id!r} revision {revision.id!r} has no provider year",
+            translated_message="application.filing.runtime.errors.provider_year_missing",
+            context={"modelo": modelo.id, "revision": revision.id},
+        )
     return authority.snapshot(
         modelo.id,
         filing_year=provider_year,
@@ -351,7 +385,11 @@ def _current_provider_revision(modelo: ModeloDefinition) -> ModeloRevision:
     open_revisions = tuple(revision for revision in modelo.revisions.values() if revision.valid_to is None)
     candidates = open_revisions or tuple(modelo.revisions.values())
     if not candidates:
-        raise ModeloBuilderError(f"modelo {modelo.id!r} has no revisions")
+        raise ModeloBuilderError(
+            f"modelo {modelo.id!r} has no revisions",
+            translated_message="application.filing.runtime.errors.modelo_revision_missing",
+            context={"modelo": modelo.id},
+        )
     return max(candidates, key=lambda revision: (revision.valid_from, revision.id))
 
 
@@ -440,7 +478,11 @@ def _value_type(data_type: str) -> str:
         return "bool"
     if data_type == "date":
         return "date"
-    raise ModeloBuilderError(f"unsupported registry casilla data type {data_type!r}")
+    raise ModeloBuilderError(
+        f"unsupported registry casilla data type {data_type!r}",
+        translated_message="application.filing.runtime.errors.unsupported_casilla_data_type",
+        context={"data_type": data_type},
+    )
 
 
 __all__ = [

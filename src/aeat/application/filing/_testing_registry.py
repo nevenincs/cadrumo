@@ -21,6 +21,8 @@ from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions import TransactionCatalogue
 from . import ModeloBuilderError, approve_draft, build_draft, build_runtime_schema_provider
 
+_REGISTRY_TEST_BUCKET_ID = "registry-test"
+
 
 @dataclass(frozen=True, slots=True)
 class RegistryTestProfile:
@@ -66,7 +68,7 @@ def build_registry_filing_draft(
     if status is ModeloDraftStatus.APROBADO:
         return approve_draft(
             draft,
-            bucket_id="registry-test",
+            bucket_id=_REGISTRY_TEST_BUCKET_ID,
             approved_by="registry",
             schema_provider=schema_provider,
             transaction_catalogue=TransactionCatalogue(),

@@ -1,0 +1,296 @@
+"""Previous-filing binding selectors, requirements, and resolvers."""
+
+from __future__ import annotations
+
+from collections.abc import Iterable, Mapping
+from decimal import Decimal
+from typing import Literal, Protocol
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from ._errors import RegistryValidationError
+from ._schema import DataBindingDefinition, ModeloRevision
+
+
+class _RegistryModeloObservationLike(Protocol):
+    modelo: str
+    filing_year: int
+    period: str
+
+    @property
+    def casilla_values(self) -> Mapping[str, Decimal]: ...
+
+
+class RegistryModeloObservationRequirement(BaseModel):
+    """Filed declaration required by one or more registry bindings."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    modelo: str = Field(min_length=1, max_length=8)
+    filing_year: int = Field(ge=2000, le=2099)
+    period: str = Field(min_length=1, max_length=8)
+    binding_ids: tuple[str, ...] = Field(min_length=1)
+    source_casillas: tuple[str, ...] = Field(min_length=1)
+
+    @field_validator("binding_ids", "source_casillas")
+    @classmethod
+    def _values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise RegistryValidationError("observation requirement tuple entries must be unique")
+        return value
+
+
+def previous_filing_observation_requirements(
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+    period: str,
+) -> tuple[RegistryModeloObservationRequirement, ...]:
+    """Return observation requirements needed by direct previous-filing bindings."""
+    grouped: dict[tuple[str, int, str], dict[str, set[str]]] = {}
+    for binding in revision.bindings:
+        if binding.source != "previous_filing":
+            continue
+        if not _is_direct_previous_filing_binding(binding):
+            continue
+        selector = _previous_filing_selector(binding)
+        for period_year_delta, required_period in selector.required_period_anchors_for_target(period):
+            expected_year = filing_year + selector.filing_year_delta + period_year_delta
+            key = (selector.source_modelo, expected_year, required_period)
+            bucket = grouped.setdefault(key, {"binding_ids": set(), "source_casillas": set()})
+            bucket["binding_ids"].add(binding.id)
+            bucket["source_casillas"].update(_previous_filing_source_ids(selector))
+    return tuple(
+        RegistryModeloObservationRequirement(
+            modelo=modelo,
+            filing_year=expected_year,
+            period=required_period,
+            binding_ids=tuple(sorted(values["binding_ids"])),
+            source_casillas=tuple(sorted(values["source_casillas"])),
+        )
+        for (modelo, expected_year, required_period), values in sorted(grouped.items())
+    )
+
+
+def resolve_previous_filing_binding_values(
+    revision: ModeloRevision,
+    observations: Iterable[_RegistryModeloObservationLike],
+    *,
+    filing_year: int,
+    period: str,
+) -> dict[str, Decimal]:
+    """Resolve direct previous-filing bindings from observed filed declarations."""
+    available = tuple(observations)
+    resolved: dict[str, Decimal] = {}
+    for binding in revision.bindings:
+        if binding.source != "previous_filing":
+            continue
+        if not _is_direct_previous_filing_binding(binding):
+            continue
+        selector = _previous_filing_selector(binding)
+        values = []
+        required_anchors = selector.required_period_anchors_for_target(period)
+        if not required_anchors:
+            continue
+        for period_year_delta, required_period in required_anchors:
+            expected_year = filing_year + selector.filing_year_delta + period_year_delta
+            matches = tuple(
+                observation
+                for observation in available
+                if observation.modelo == selector.source_modelo
+                and observation.filing_year == expected_year
+                and observation.period == required_period
+            )
+            if selector.grouping == "per_grupo_member":
+                if not matches:
+                    raise RegistryValidationError(
+                        f"binding {binding.id!r} (per_grupo_member) expected at least one observed filing "
+                        f"{selector.source_modelo!r}/{expected_year}/{required_period!r}, found 0"
+                    )
+                for member_match in matches:
+                    for casilla_id in _previous_filing_source_ids(selector):
+                        casilla_value = member_match.casilla_values.get(casilla_id)
+                        if casilla_value is None:
+                            raise RegistryValidationError(
+                                f"binding {binding.id!r} requires observed casilla {casilla_id!r} "
+                                f"from {selector.source_modelo!r}/{expected_year}/{required_period!r}"
+                            )
+                        values.append(casilla_value)
+            else:
+                if len(matches) != 1:
+                    raise RegistryValidationError(
+                        f"binding {binding.id!r} expected one observed filing "
+                        f"{selector.source_modelo!r}/{expected_year}/{required_period!r}, found {len(matches)}"
+                    )
+                for casilla_id in _previous_filing_source_ids(selector):
+                    casilla_value = matches[0].casilla_values.get(casilla_id)
+                    if casilla_value is None:
+                        raise RegistryValidationError(
+                            f"binding {binding.id!r} requires observed casilla {casilla_id!r} "
+                            f"from {selector.source_modelo!r}/{expected_year}/{required_period!r}"
+                        )
+                    values.append(casilla_value)
+        resolved[binding.id] = _aggregate_previous_filing_binding(binding, values)
+    return resolved
+
+
+def _selector_as_dict(binding: DataBindingDefinition) -> dict[str, object]:
+    selector = binding.selector
+    if isinstance(selector, BaseModel):
+        return selector.model_dump(exclude={"source"}, exclude_none=True)
+    return {k: v for k, v in selector.items() if k != "source"}
+
+
+class _PreviousModeloSelector(BaseModel):
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    source_modelo: str = Field(min_length=1, max_length=8)
+    filing_year_delta: int = 0
+    period: str | None = Field(default=None, min_length=1, max_length=8)
+    source_periods: tuple[str, ...] = ()
+    source_period_offset_from_target: int | None = None
+    source_casillas: tuple[str, ...] = ()
+    source_output: str | None = Field(default=None, min_length=1)
+    max_year_delta: int | None = None
+    grouping: Literal["per_grupo_member"] | None = None
+
+    @field_validator("max_year_delta")
+    @classmethod
+    def _max_year_delta_non_negative(cls, value: int | None) -> int | None:
+        if value is not None and value < 0:
+            raise RegistryValidationError("previous-filing max_year_delta must be non-negative")
+        return value
+
+    @field_validator("source_periods")
+    @classmethod
+    def _source_periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise RegistryValidationError("previous-filing source_periods entries must be unique")
+        return value
+
+    @property
+    def required_periods(self) -> tuple[str, ...]:
+        if self.period is not None:
+            return (self.period,)
+        return self.source_periods
+
+    def required_periods_for_target(self, target_period: str) -> tuple[str, ...]:
+        return tuple(period for _year_delta, period in self.required_period_anchors_for_target(target_period))
+
+    def required_period_anchors_for_target(self, target_period: str) -> tuple[tuple[int, str], ...]:
+        if self.source_period_offset_from_target is None:
+            anchors: tuple[tuple[int, str], ...] = tuple((0, period) for period in self.required_periods)
+        else:
+            derived = _derive_offset_source_anchor(self.source_period_offset_from_target, target_period=target_period)
+            anchors = () if derived is None else (derived,)
+        if self.max_year_delta is None:
+            return anchors
+        return tuple(anchor for anchor in anchors if abs(anchor[0]) <= self.max_year_delta)
+
+    @field_validator("period")
+    @classmethod
+    def _period_not_empty(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise RegistryValidationError("previous-filing period must be non-empty")
+        return value
+
+    @field_validator("source_casillas")
+    @classmethod
+    def _source_casillas_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise RegistryValidationError("previous-filing source_casillas entries must be unique")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_period_selector(self) -> _PreviousModeloSelector:
+        if self.source_period_offset_from_target is not None:
+            if self.period is not None or self.source_periods:
+                raise RegistryValidationError(
+                    "previous-filing selector cannot declare period/source_periods together with "
+                    "source_period_offset_from_target"
+                )
+            if self.source_period_offset_from_target == 0 and self.grouping != "per_grupo_member":
+                raise RegistryValidationError("previous-filing source_period_offset_from_target must be non-zero")
+        if self.period is not None and self.source_periods:
+            raise RegistryValidationError("previous-filing selector must use period or source_periods, not both")
+        if (
+            self.period is None
+            and not self.source_periods
+            and self.source_period_offset_from_target is None
+            and self.source_casillas
+        ):
+            raise RegistryValidationError(
+                "previous-filing selector must declare period, source_periods, or source_period_offset_from_target"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_source_spec(self) -> _PreviousModeloSelector:
+        if self.source_casillas and self.source_output is not None:
+            raise RegistryValidationError(
+                "previous-filing selector cannot declare both source_casillas and source_output"
+            )
+        return self
+
+
+def _previous_filing_selector(binding: DataBindingDefinition) -> _PreviousModeloSelector:
+    try:
+        return _PreviousModeloSelector.model_validate(_selector_as_dict(binding))
+    except ValueError as exc:
+        raise RegistryValidationError(f"binding {binding.id!r} has malformed previous-filing selector") from exc
+
+
+def _is_direct_previous_filing_binding(binding: DataBindingDefinition) -> bool:
+    selector = _selector_as_dict(binding)
+    if selector.get("source_casillas"):
+        return True
+    if selector.get("source_output") is None:
+        return False
+    return any(key in selector for key in ("period", "source_periods", "source_period_offset_from_target"))
+
+
+def _previous_filing_source_ids(selector: _PreviousModeloSelector) -> tuple[str, ...]:
+    if selector.source_casillas:
+        return selector.source_casillas
+    if selector.source_output is not None:
+        return (selector.source_output,)
+    return ()
+
+
+_QUARTERLY_PERIOD_ORDINAL: dict[str, int] = {"1T": 1, "2T": 2, "3T": 3, "4T": 4}
+_ORDINAL_TO_QUARTERLY: dict[int, str] = {ordinal: code for code, ordinal in _QUARTERLY_PERIOD_ORDINAL.items()}
+_PAGO_FRACCIONADO_PERIOD_ORDINAL: dict[str, int] = {"1P": 1, "2P": 2, "3P": 3}
+_ORDINAL_TO_PAGO_FRACCIONADO: dict[int, str] = {
+    ordinal: code for code, ordinal in _PAGO_FRACCIONADO_PERIOD_ORDINAL.items()
+}
+
+
+def _derive_offset_source_period(offset: int, *, target_period: str) -> str | None:
+    anchor = _derive_offset_source_anchor(offset, target_period=target_period)
+    return None if anchor is None else anchor[1]
+
+
+def _derive_offset_source_anchor(offset: int, *, target_period: str) -> tuple[int, str] | None:
+    if target_period in _QUARTERLY_PERIOD_ORDINAL:
+        year_delta, zero_based = divmod(_QUARTERLY_PERIOD_ORDINAL[target_period] - 1 + offset, 4)
+        return year_delta, _ORDINAL_TO_QUARTERLY[zero_based + 1]
+    if target_period in _PAGO_FRACCIONADO_PERIOD_ORDINAL:
+        year_delta, zero_based = divmod(_PAGO_FRACCIONADO_PERIOD_ORDINAL[target_period] - 1 + offset, 3)
+        return year_delta, _ORDINAL_TO_PAGO_FRACCIONADO[zero_based + 1]
+    if len(target_period) == 2 and target_period.isdigit():
+        year_delta, zero_based = divmod(int(target_period) - 1 + offset, 12)
+        return year_delta, f"{zero_based + 1:02d}"
+    raise RegistryValidationError(
+        f"previous-filing source_period_offset_from_target cannot interpret target period {target_period!r}"
+    )
+
+
+def _aggregate_previous_filing_binding(binding: DataBindingDefinition, values: list[Decimal]) -> Decimal:
+    op = str((binding.aggregation or {}).get("op", "sum"))
+    if op == "sum":
+        return sum(values, Decimal("0"))
+    if op == "copy":
+        if len(values) != 1:
+            raise RegistryValidationError(f"binding {binding.id!r} copy aggregation requires one source casilla")
+        return values[0]
+    raise RegistryValidationError(f"binding {binding.id!r} uses unsupported previous-filing aggregation {op!r}")

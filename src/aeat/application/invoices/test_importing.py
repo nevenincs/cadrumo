@@ -5,12 +5,13 @@ from __future__ import annotations
 import json
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
-from ...domain.invoices import InvoiceCatalogue
+from ...domain.invoices import InvoiceCatalogue, InvoiceValidationError
 from ...domain.iva import InvoiceKind
-from . import merge_invoice_import, parse_invoice_payload
+from . import import_invoices_from_path, merge_invoice_import, parse_invoice_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -79,3 +80,13 @@ def test_invoice_import_merge_is_idempotent_across_repeated_cycles() -> None:
     assert third.imported == 0
     assert third.skipped == 2
     assert third.catalogue == restored
+
+
+def test_import_from_missing_path_reports_localized_read_error(tmp_path: Path) -> None:
+    missing = tmp_path / "missing-invoices.csv"
+
+    with pytest.raises(InvoiceValidationError) as exc_info:
+        import_invoices_from_path(missing, kind=InvoiceKind.RECEIVED, dry_run=True)
+
+    assert exc_info.value.translated_message == "application.invoices.importing.errors.import_file_read_failed"
+    assert exc_info.value.context == {"path_name": "missing-invoices.csv", "error_type": "FileNotFoundError"}

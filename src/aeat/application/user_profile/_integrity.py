@@ -22,6 +22,9 @@ from __future__ import annotations
 
 from ...domain.user_profile import ProfileNotFoundError
 
+_INTEGRITY_IDENTITY_DRIFT_MESSAGE = "profile physical stores disagree on identity"
+_INTEGRITY_STATUS_DRIFT_MESSAGE = "profile physical stores disagree on lifecycle status"
+
 
 class ProfileIntegrityError(ProfileNotFoundError):
     """Raised when a profile's physical stores disagree on its identity.
@@ -65,9 +68,9 @@ def verify_profile_integrity(
     tombstoned record would let ``list`` / ``switch`` serve a deleted
     profile — so it must be surfaced, never served.
 
-    A mismatch raises :class:`ProfileIntegrityError` naming the
-    disagreeing stores so a ``repair`` surface — or the operator — can
-    act on a concrete delta rather than a silent inconsistency.
+    A mismatch raises :class:`ProfileIntegrityError` with sanitized
+    context naming the disagreeing stores so a ``repair`` surface can
+    act on a concrete delta without echoing raw profile identifiers.
 
     Args:
         profile_id: The canonical UUID the caller expects all stores to agree on.
@@ -83,22 +86,22 @@ def verify_profile_integrity(
     """
     mismatches: list[str] = []
     if directory_name != profile_id:
-        mismatches.append(f"bucket directory {directory_name!r}")
+        mismatches.append("bucket_directory")
     if manifest_bucket_id != profile_id:
-        mismatches.append(f"manifest bucket_id {manifest_bucket_id!r}")
+        mismatches.append("manifest_bucket_id")
     if record_profile_id != profile_id:
-        mismatches.append(f"secure-record profile_id {record_profile_id!r}")
+        mismatches.append("secure_record_profile_id")
     if mismatches:
         raise ProfileIntegrityError(
-            f"profile {profile_id!r} has cross-store drift: "
-            + ", ".join(mismatches)
-            + f" do not agree with the profile id {profile_id!r}"
+            _INTEGRITY_IDENTITY_DRIFT_MESSAGE,
+            translated_message="application.user_profile.errors.profile_integrity_identity_mismatch",
+            context={"mismatches": tuple(mismatches)},
         )
     if manifest_status != record_status:
         raise ProfileIntegrityError(
-            f"profile {profile_id!r} has cross-store lifecycle drift: "
-            f"manifest status {manifest_status!r} does not agree with "
-            f"secure-record status {record_status!r}"
+            _INTEGRITY_STATUS_DRIFT_MESSAGE,
+            translated_message="application.user_profile.errors.profile_integrity_status_mismatch",
+            context={"mismatches": ("manifest_status", "secure_record_status")},
         )
 
 

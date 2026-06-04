@@ -15,6 +15,7 @@ from ...adapters.outbound.aeat.sede._notifications import (
 )
 from ...adapters.persistence.storage import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ._errors import LiveApplicationInputError
 from ._notifications import (
     NotificationsService,
     NotificationsSnapshotNotFoundError,
@@ -129,8 +130,40 @@ class TestShow:
 
     def test_show_refuses_unknown_id(self, secure_engine: TestRuntimeProfile) -> None:
         svc = _service(secure_engine)
-        with pytest.raises(NotificationsSnapshotNotFoundError, match="no notifications snapshot"):
+        with pytest.raises(NotificationsSnapshotNotFoundError) as exc_info:
             svc.show(bucket_id=secure_engine.bucket_id, snapshot_id="0" * 64)
+        assert exc_info.value.translated_message == "application.live.notifications.errors.snapshot_not_found"
+        assert exc_info.value.context == {"snapshot_id": "0" * 64}
+        assert secure_engine.bucket_id not in str(exc_info.value)
+
+    def test_show_refuses_ambiguous_prefix_without_full_id_leak(
+        self,
+        secure_engine: TestRuntimeProfile,
+    ) -> None:
+        svc = _service(secure_engine)
+        by_prefix: dict[str, list[str]] = {}
+        for index in range(17):
+            persisted = svc.capture(
+                bucket_id=secure_engine.bucket_id,
+                snapshot=_snapshot(
+                    rows=(
+                        _row(
+                            certificado_id=f"{index:013d}",
+                            concepto=f"Concept {index}",
+                        ),
+                    ),
+                ),
+            )
+            by_prefix.setdefault(persisted.snapshot_id[:1], []).append(persisted.snapshot_id)
+
+        prefix, matches = next((candidate, ids) for candidate, ids in by_prefix.items() if len(ids) > 1)
+        with pytest.raises(NotificationsSnapshotNotFoundError) as exc_info:
+            svc.show(bucket_id=secure_engine.bucket_id, snapshot_id=prefix)
+
+        assert exc_info.value.translated_message == "application.live.notifications.errors.snapshot_prefix_ambiguous"
+        assert exc_info.value.context == {"snapshot_id": prefix, "match_count": len(matches)}
+        for snapshot_id in matches:
+            assert snapshot_id not in str(exc_info.value)
 
 
 class TestLatest:
@@ -213,9 +246,20 @@ class TestSecureStorage:
 
         assert record is not None
         assert b"B12345678" in record.payload
+        assert b"B12345678" not in (secure_engine.paths.db_dir / "aeat.db").read_bytes()
         assert not (
             secure_engine.settings.aeat_audit_dir / "live" / "notifications" / f"{secure_engine.bucket_id}.jsonl"
         ).exists()
+
+    def test_object_key_refuses_blank_bucket_with_locale_metadata(self) -> None:
+        with pytest.raises(LiveApplicationInputError) as exc_info:
+            notifications_snapshot_object_key(" ", "snapshot-1")
+        assert exc_info.value.translated_message == "application.live.notifications.errors.bucket_id_blank"
+
+    def test_object_key_refuses_blank_snapshot_with_locale_metadata(self) -> None:
+        with pytest.raises(LiveApplicationInputError) as exc_info:
+            notifications_snapshot_object_key("bucket-1", " ")
+        assert exc_info.value.translated_message == "application.live.notifications.errors.snapshot_id_blank"
 
 
 class TestNoWriteSurface:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import pytest
@@ -151,6 +152,18 @@ def test_read_active_profile_returns_record(schema) -> None:
         assert record is not None
         assert record.profile_id == "default"
         assert record.status is UserProfileStatus.ACTIVE
+
+
+def test_read_active_profile_logs_missing_selected_record(caplog: pytest.LogCaptureFixture, schema) -> None:
+    """A torn active pointer degrades to no record with debug evidence."""
+
+    with profile_create_storage_span("ghost"):
+        caplog.set_level(logging.DEBUG, logger="aeat.application.user_profile._orchestration")
+
+        record = read_active_profile(WorkflowState(), schema=schema)
+
+    assert record is None
+    assert "active profile selection resolved to a missing profile record" in caplog.text
 
 
 def test_remove_active_profile_tombstones_and_clears_pointer(schema) -> None:

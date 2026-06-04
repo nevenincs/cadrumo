@@ -8,7 +8,14 @@ from pathlib import Path
 
 import pytest
 
-from ...domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
+from ...domain.invoices import (
+    Invoice,
+    InvoiceCatalogue,
+    InvoiceCatalogueRepository,
+    InvoiceLine,
+    IvaRate,
+    PaymentStatus,
+)
 from ...domain.iva import InvoiceKind
 from ...domain.transactions import (
     RawProvenance,
@@ -16,9 +23,11 @@ from ...domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepository,
     TransactionDirection,
 )
-from . import reconcile_invoice_catalogues
+from ...tests.secure_sql import isolated_runtime_profile
+from . import reconcile_invoice_catalogues, reconcile_invoice_repositories
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -67,6 +76,28 @@ def test_reconcile_invoice_catalogues_apply_roundtrips_bidirectional_links() -> 
     assert second.applied == 0
     assert second.invoices == first.invoices
     assert second.transactions == first.transactions
+
+
+def test_reconcile_invoice_repositories_binds_both_catalogues_to_requested_bucket(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="invoice-reconcile-bucket") as profile:
+        invoice = _invoice()
+        transaction = _transaction()
+        InvoiceCatalogueRepository(bucket_id=profile.bucket_id).save(InvoiceCatalogue.from_invoices([invoice]))
+        TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
+            TransactionCatalogue.from_transactions([transaction])
+        )
+
+        result = reconcile_invoice_repositories(bucket_id=profile.bucket_id, apply=True)
+
+        reloaded_invoice = InvoiceCatalogueRepository(bucket_id=profile.bucket_id).load().get(invoice.invoice_id)
+        reloaded_transaction = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load().get(
+            transaction.transaction_id
+        )
+        assert result.applied == 1
+        assert reloaded_invoice is not None
+        assert reloaded_invoice.linked_transaction_ids == (transaction.transaction_id,)
+        assert reloaded_transaction is not None
+        assert reloaded_transaction.invoice_id == invoice.invoice_id
 
 
 def _invoice() -> Invoice:

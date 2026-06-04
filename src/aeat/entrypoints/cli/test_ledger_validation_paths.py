@@ -22,8 +22,10 @@ import pytest
 from typer.testing import CliRunner
 
 from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ...application.user_profile._orchestration import profile_create_storage_span
+from ...application.user_profile._orchestration import profile_create_storage_span, set_active_fields
+from ...application.workflow._persistence import workflow_state_repository
 from ...core.config import override_settings
+from ...domain.user_profile import UserProfileFact
 from ...tests.secure_sql import isolated_profile_storage_root
 from . import app
 
@@ -311,11 +313,10 @@ def test_ledger_classify_rejects_business_pct_without_mixed_classification(
 
 
 def _set_profile_axis(key: str, value: str) -> None:
-    """Set one profile axis via the diagnostics-app descriptor setter."""
-    from ...diagnostics.__main__ import app as diagnostics_app
-
-    result = _RUNNER.invoke(diagnostics_app, ["profile", "set", key, value])
-    assert result.exit_code == 0, result.output
+    """Set one profile axis through the canonical profile orchestration service."""
+    workflow_state_repository().update(
+        lambda state: set_active_fields(state, (UserProfileFact(path=key, value=value),))
+    )
 
 
 def test_ledger_add_defaults_source_jurisdiction_to_es_for_resident_general(
@@ -341,7 +342,7 @@ def test_ledger_add_defaults_source_jurisdiction_to_es_for_resident_general(
             "freelance",
         ],
     )
-    # Default profile is already RESIDENT_IRPF / GENERAL — no diagnostics-set needed.
+    # Default profile is already RESIDENT_IRPF / GENERAL, so no fact mutation is needed.
 
     result = _RUNNER.invoke(
         app,
@@ -377,13 +378,9 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_impatriado(
     would quietly include foreign-source amounts in the IRPF base —
     Art. 93.5 LIRPF segregation. Force operator to declare.
 
-    tracked: #53 — this regime-variant test mutates the profile via the
-    diagnostics-app ``profile set``, which cannot resolve the CLI-created
-    profile in-process (UUID-vs-display-name mismatch, a root cause distinct
-    from the bucket-session regression #52 that this module's
-    ``_open_bucket_session`` fixture fixes). Left red pending #53; deliberately
-    NOT xfail/skip per aeat-roundtrip-discipline — the contract holds at
-    runtime via the real (separate-process) CLI."""
+    The test mutates the profile through the canonical profile orchestration
+    service so the ledger command sees the same stored facts it would read
+    after the operator wizard updates the active profile."""
 
     _RUNNER.invoke(
         app,
@@ -441,11 +438,9 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_non_resident(
     must declare it on every ledger entry — no silent default is safe
     because the IRNR base only admits Spanish-source income.
 
-    tracked: #53 — same UUID-vs-display-name in-process profile-resolution
-    root cause as the impatriado sibling above (diagnostics-app ``profile
-    set`` cannot resolve the CLI-created profile in-process); distinct from
-    the bucket-session regression #52 this module's fixture fixes. Left red
-    pending #53; deliberately NOT xfail/skip per aeat-roundtrip-discipline."""
+    The test mutates the profile through the canonical profile orchestration
+    service so the ledger command sees the same stored facts it would read
+    after the operator wizard updates the active profile."""
 
     _RUNNER.invoke(
         app,

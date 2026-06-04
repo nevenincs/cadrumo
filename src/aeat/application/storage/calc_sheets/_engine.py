@@ -63,7 +63,11 @@ def _rounding_rule_for(
         return ("money", 2)
     if formula.rounding == "integer":
         return ("integer", 0)
-    raise CalcSheetsEngineError(f"unsupported registry rounding code {formula.rounding!r}")
+    raise CalcSheetsEngineError(
+        "unsupported registry rounding code",
+        context={"formula_id": formula.id},
+        translated_message="application.storage.calc_sheets.engine.errors.unsupported_rounding",
+    )
 
 
 def _wrap_rounded(expression: str, *, rule: str, scale: int | None) -> str:
@@ -73,7 +77,7 @@ def _wrap_rounded(expression: str, *, rule: str, scale: int | None) -> str:
 
 
 def registry_sha(snapshot: RegistrySnapshot) -> str:
-    """Stable identity hash of the calculation surface in this snapshot.
+    """Stable identity hash of the calculation surface in this :class:`RegistrySnapshot`.
 
     The hash covers casilla ids, formula expressions, and parameter
     values. Two snapshots that produce the same calculation graph
@@ -88,12 +92,14 @@ def registry_sha(snapshot: RegistrySnapshot) -> str:
 def _guide_paragraphs(snapshot: RegistrySnapshot) -> tuple[str, ...]:
     modelo = snapshot.modelo
     return (
-        f"{modelo.title} — período {snapshot.period} / {snapshot.filing_year}.",
-        "Edite únicamente las celdas de la pestaña 'Entradas'. El resto de pestañas "
-        "están protegidas: 'Cálculos' contiene las casillas derivadas con fórmulas, "
-        "'Procedencia' audita cada casilla calculada y 'Tarifas' refleja los "
-        "parámetros vigentes consultados por las fórmulas.",
-        "Para recoger sus ediciones en la base local, ejecute 'aeat config google sync calc pull' desde la CLI.",
+        tr(
+            "application.storage.calc_sheets.engine.guide.period",
+            modelo_title=modelo.title,
+            period=snapshot.period,
+            filing_year=snapshot.filing_year,
+        ),
+        tr("application.storage.calc_sheets.engine.guide.editable_cells"),
+        tr("application.storage.calc_sheets.engine.guide.pull_command"),
     )
 
 
@@ -121,28 +127,28 @@ def _value_cells_for_entradas(
     cells.append(
         SheetValueCell(
             address=SheetCellAddress.at(TabName.ENTRADAS, 1, 1),
-            value="Sección",
+            value=tr("application.storage.calc_sheets.engine.labels.section"),
             role="label",
         )
     )
     cells.append(
         SheetValueCell(
             address=SheetCellAddress.at(TabName.ENTRADAS, 1, 2),
-            value="Casilla",
+            value=tr("application.storage.calc_sheets.engine.labels.casilla"),
             role="label",
         )
     )
     cells.append(
         SheetValueCell(
             address=SheetCellAddress.at(TabName.ENTRADAS, 1, 3),
-            value="Concepto",
+            value=tr("application.storage.calc_sheets.engine.labels.concept"),
             role="label",
         )
     )
     cells.append(
         SheetValueCell(
             address=SheetCellAddress.at(TabName.ENTRADAS, 1, 4),
-            value="Valor",
+            value=tr("application.storage.calc_sheets.engine.labels.value"),
             role="label",
         )
     )
@@ -190,7 +196,7 @@ def _value_cells_for_entradas(
         cells.append(
             SheetValueCell(
                 address=SheetCellAddress.at(TabName.ENTRADAS, binding_row.row, 1),
-                value="Origen",
+                value=tr("application.storage.calc_sheets.engine.labels.source"),
                 role="label",
             )
         )
@@ -234,28 +240,28 @@ def _label_cells_for_calculos(
     cells.append(
         SheetValueCell(
             address=SheetCellAddress.at(TabName.CALCULOS, 1, 1),
-            value="Sección",
+            value=tr("application.storage.calc_sheets.engine.labels.section"),
             role="label",
         )
     )
     cells.append(
         SheetValueCell(
             address=SheetCellAddress.at(TabName.CALCULOS, 1, 2),
-            value="Casilla",
+            value=tr("application.storage.calc_sheets.engine.labels.casilla"),
             role="label",
         )
     )
     cells.append(
         SheetValueCell(
             address=SheetCellAddress.at(TabName.CALCULOS, 1, 3),
-            value="Concepto",
+            value=tr("application.storage.calc_sheets.engine.labels.concept"),
             role="label",
         )
     )
     cells.append(
         SheetValueCell(
             address=SheetCellAddress.at(TabName.CALCULOS, 1, 4),
-            value="Valor",
+            value=tr("application.storage.calc_sheets.engine.labels.value"),
             role="label",
         )
     )
@@ -323,7 +329,11 @@ def _resolve_scalar(parameter: ParameterDefinition, today: date) -> Decimal:
     Bracket-table parameters do not pass through this helper.
     """
     if parameter.data_type == "bracket_table":
-        raise CalcSheetsEngineError(f"bracket_table parameter {parameter.id!r} has no scalar value")
+        raise CalcSheetsEngineError(
+            "parameter has no scalar value",
+            context={"parameter_id": parameter.id, "data_type": parameter.data_type},
+            translated_message="application.storage.calc_sheets.engine.errors.parameter_not_scalar",
+        )
     chosen: Decimal | None = None
     for dated in parameter.values:
         if dated.valid_from > today:
@@ -332,7 +342,11 @@ def _resolve_scalar(parameter: ParameterDefinition, today: date) -> Decimal:
             continue
         chosen = dated.value
     if chosen is None:
-        raise CalcSheetsEngineError(f"parameter {parameter.id!r} has no dated value valid for {today.isoformat()}")
+        raise CalcSheetsEngineError(
+            "parameter has no dated value valid for requested date",
+            context={"parameter_id": parameter.id, "valid_on": today.isoformat()},
+            translated_message="application.storage.calc_sheets.engine.errors.parameter_no_dated_value",
+        )
     return chosen
 
 
@@ -420,28 +434,28 @@ def _tariff_value_cells(
             cells.append(
                 SheetValueCell(
                     address=SheetCellAddress.at(anchor.tab, header_row, anchor.column),
-                    value="Base mínima",
+                    value=tr("application.storage.calc_sheets.engine.labels.minimum_base"),
                     role="label",
                 )
             )
             cells.append(
                 SheetValueCell(
                     address=SheetCellAddress.at(anchor.tab, header_row, anchor.column + 1),
-                    value="Base máxima",
+                    value=tr("application.storage.calc_sheets.engine.labels.maximum_base"),
                     role="label",
                 )
             )
             cells.append(
                 SheetValueCell(
                     address=SheetCellAddress.at(anchor.tab, header_row, anchor.column + 2),
-                    value="Cuota fija",
+                    value=tr("application.storage.calc_sheets.engine.labels.fixed_quota"),
                     role="label",
                 )
             )
             cells.append(
                 SheetValueCell(
                     address=SheetCellAddress.at(anchor.tab, header_row, anchor.column + 3),
-                    value="Tipo marginal",
+                    value=tr("application.storage.calc_sheets.engine.labels.marginal_rate"),
                     role="label",
                 )
             )
@@ -523,42 +537,42 @@ def _provenance_value_cells(rows: Iterable[SheetProvenanceRow]) -> tuple[SheetVa
     cells: list[SheetValueCell] = [
         SheetValueCell(
             address=SheetCellAddress.at(TabName.PROVENANCE, 1, 1),
-            value="Casilla",
+            value=tr("application.storage.calc_sheets.engine.labels.casilla"),
             role="label",
         ),
         SheetValueCell(
             address=SheetCellAddress.at(TabName.PROVENANCE, 1, 2),
-            value="Nº",
+            value=tr("application.storage.calc_sheets.engine.labels.number"),
             role="label",
         ),
         SheetValueCell(
             address=SheetCellAddress.at(TabName.PROVENANCE, 1, 3),
-            value="Concepto",
+            value=tr("application.storage.calc_sheets.engine.labels.concept"),
             role="label",
         ),
         SheetValueCell(
             address=SheetCellAddress.at(TabName.PROVENANCE, 1, 4),
-            value="Fórmula",
+            value=tr("application.storage.calc_sheets.engine.labels.formula"),
             role="label",
         ),
         SheetValueCell(
             address=SheetCellAddress.at(TabName.PROVENANCE, 1, 5),
-            value="Redondeo",
+            value=tr("application.storage.calc_sheets.engine.labels.rounding"),
             role="label",
         ),
         SheetValueCell(
             address=SheetCellAddress.at(TabName.PROVENANCE, 1, 6),
-            value="Ref. legales",
+            value=tr("application.storage.calc_sheets.engine.labels.legal_refs"),
             role="label",
         ),
         SheetValueCell(
             address=SheetCellAddress.at(TabName.PROVENANCE, 1, 7),
-            value="Ref. fuentes",
+            value=tr("application.storage.calc_sheets.engine.labels.source_refs"),
             role="label",
         ),
         SheetValueCell(
             address=SheetCellAddress.at(TabName.PROVENANCE, 1, 8),
-            value="Celda",
+            value=tr("application.storage.calc_sheets.engine.labels.cell"),
             role="label",
         ),
     ]
@@ -674,7 +688,7 @@ def _protected_ranges(layout: SheetLayout) -> tuple[SheetProtectedRange, ...]:
             end_row=max(last_calc_row, 1),
             start_column=1,
             end_column=4,
-            description="Cálculos derivados — protegido para preservar paridad",
+            description=tr("application.storage.calc_sheets.engine.protected.calculos"),
         ),
         SheetProtectedRange(
             tab=TabName.PROVENANCE,
@@ -682,7 +696,7 @@ def _protected_ranges(layout: SheetLayout) -> tuple[SheetProtectedRange, ...]:
             end_row=max(len(layout.calculos_rows) + 1, 1),
             start_column=1,
             end_column=8,
-            description="Procedencia / audit trail — protegido",
+            description=tr("application.storage.calc_sheets.engine.protected.provenance"),
         ),
         SheetProtectedRange(
             tab=TabName.TARIFFS,
@@ -690,7 +704,7 @@ def _protected_ranges(layout: SheetLayout) -> tuple[SheetProtectedRange, ...]:
             end_row=1000,
             start_column=1,
             end_column=8,
-            description="Tarifas / parámetros vigentes — protegido",
+            description=tr("application.storage.calc_sheets.engine.protected.tariffs"),
         ),
         SheetProtectedRange(
             tab=TabName.GUIDE,
@@ -698,7 +712,7 @@ def _protected_ranges(layout: SheetLayout) -> tuple[SheetProtectedRange, ...]:
             end_row=200,
             start_column=1,
             end_column=4,
-            description="Guía — protegido",
+            description=tr("application.storage.calc_sheets.engine.protected.guide"),
         ),
     )
 
@@ -777,7 +791,7 @@ def _anchors(layout: SheetLayout) -> tuple[SheetAnchor, ...]:
             SheetAnchor(
                 address=SheetCellAddress.at(first.tab, first.row, 6),
                 kind="start",
-                label="INICIO: Entradas",
+                label=tr("application.storage.calc_sheets.engine.anchors.start"),
             )
         )
     if layout.calculos_rows:
@@ -786,7 +800,7 @@ def _anchors(layout: SheetLayout) -> tuple[SheetAnchor, ...]:
             SheetAnchor(
                 address=SheetCellAddress.at(last.tab, last.row, 6),
                 kind="final",
-                label="RESULTADO",
+                label=tr("application.storage.calc_sheets.engine.anchors.final"),
             )
         )
     return tuple(anchors)
@@ -871,7 +885,12 @@ def build_export_plan(
     metadata = _stamp_registry_metadata(snapshot)
     guide_paragraphs = _guide_paragraphs(snapshot)
     guide = SheetGuideContent(
-        title=f"{snapshot.modelo.title} — {snapshot.period}/{snapshot.filing_year}",
+        title=tr(
+            "application.storage.calc_sheets.engine.guide.title",
+            modelo_title=snapshot.modelo.title,
+            period=snapshot.period,
+            filing_year=snapshot.filing_year,
+        ),
         paragraphs=guide_paragraphs,
     )
 

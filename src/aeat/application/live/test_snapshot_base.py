@@ -11,6 +11,7 @@ import pytest
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...adapters.persistence.storage import (
+    TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
     Envelope,
     SensitivityClass,
 )
@@ -510,6 +511,55 @@ def test_secure_snapshot_repository_conforms_to_protocol(
         objects=secure_objects,
     )
     assert isinstance(repo, SnapshotRepository)
+
+
+def test_secure_snapshot_repository_list_rejects_payload_bucket_mismatch(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    snapshot = ProbeSnapshot(
+        snapshot_id="misrouted-snapshot",
+        bucket_id="bucket-b",
+        axis_label="renta-2025",
+        captured_at=_CAPTURED_AT,
+        payload_text="misrouted",
+        state=SnapshotLifecycleState.ACTIVE,
+    )
+    envelope = Envelope[ProbeSnapshot](
+        schema_version=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.schema_version,
+        written_at=_CAPTURED_AT,
+        classification=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.sensitivity,
+        payload=snapshot,
+    )
+    secure_objects.save(
+        namespace=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.namespace,
+        object_key=_probe_object_key("bucket-a", snapshot.snapshot_id),
+        classification=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.sensitivity,
+        schema_version=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.schema_version,
+        written_at=envelope.written_at,
+        payload=envelope.model_dump_json().encode("utf-8"),
+    )
+    repo: SecureSnapshotRepository[ProbeSnapshot] = SecureSnapshotRepository(
+        bucket_id="bucket-a",
+        payload_model=ProbeSnapshot,
+        namespace_definition=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
+        object_key=_probe_object_key,
+        not_found_factory=lambda sid: LiveApplicationInputError(f"probe snapshot {sid!r} not found"),
+        ambiguous_prefix_factory=lambda sid, ids: LiveApplicationInputError(
+            f"probe snapshot prefix {sid!r} is ambiguous"
+        ),
+        domain_label="probe",
+        objects=secure_objects,
+    )
+
+    with pytest.raises(LiveApplicationInputError) as exc_info:
+        repo.list_snapshots()
+
+    assert exc_info.value.translated_message == "application.live.snapshot_base.errors.snapshot_bucket_mismatch"
+    assert exc_info.value.context == {
+        "domain_label": "probe",
+        "snapshot_bucket": "bucket-b",
+        "repository_bucket": "bucket-a",
+    }
 
 
 def test_snapshot_repository_protocol_anti_tautology() -> None:

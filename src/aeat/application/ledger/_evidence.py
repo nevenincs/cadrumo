@@ -238,15 +238,15 @@ class PurchaseInvoiceEvidenceService:
                 ``load_settings()`` is called so that test overrides via
                 ``override_settings()`` are honoured.
             bucket_event_repository: Audit-event sink. Defaults to
-                ``BucketEventHistoryRepository`` backed by the project's
-                configured storage directory.
+                ``BucketEventHistoryRepository`` backed by the requested
+                operation bucket.
         """
         # `load_settings()` honours `override_settings`; bare `Settings()`
         # bypasses the context-var and lands writes in the project default.
         from ...core.config import load_settings as _load_settings
 
         self._settings = settings or _load_settings()
-        self._event_repository = bucket_event_repository or BucketEventHistoryRepository()
+        self._event_repository = bucket_event_repository
 
     def add(
         self,
@@ -286,7 +286,7 @@ class PurchaseInvoiceEvidenceService:
                 ``"cli"``).
 
         Returns:
-            ``PurchaseInvoiceEvidenceResult`` carrying the new record and the
+            :class:`PurchaseInvoiceEvidenceResult`: Carrying the new record and the
             emitted audit event id.
 
         Raises:
@@ -322,7 +322,7 @@ class PurchaseInvoiceEvidenceService:
         records.append(record)
         _save(self._settings, bucket_id, records)
         event_id = _emit_evidence_event(
-            event_repository=self._event_repository,
+            event_repository=self._event_repository_for_bucket(bucket_id),
             bucket_id=bucket_id,
             event_type=BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED,
             evidence_id=record.evidence_id,
@@ -340,7 +340,7 @@ class PurchaseInvoiceEvidenceService:
             evidence_id: Unique evidence id assigned at ``add`` time.
 
         Returns:
-            The matching ``PurchaseInvoiceEvidence`` record.
+            :class:`PurchaseInvoiceEvidence`: The matching record.
 
         Raises:
             ``PurchaseInvoiceEvidenceNotFoundError``: if no record with that id
@@ -361,7 +361,7 @@ class PurchaseInvoiceEvidenceService:
             bucket_id: Ledger bucket to read.
 
         Returns:
-            A tuple of ``PurchaseInvoiceEvidence`` records, oldest first.
+            tuple[:class:`PurchaseInvoiceEvidence`, ...]: Oldest first.
             Returns an empty tuple if the bucket has no evidence file yet.
         """
         return tuple(_load(self._settings, bucket_id))
@@ -389,7 +389,7 @@ class PurchaseInvoiceEvidenceService:
             actor: Identifier stamped on the audit event.
 
         Returns:
-            ``PurchaseInvoiceEvidenceResult`` with the updated record and audit
+            :class:`PurchaseInvoiceEvidenceResult`: With the updated record and audit
             event id.
 
         Raises:
@@ -410,7 +410,7 @@ class PurchaseInvoiceEvidenceService:
             records[index] = updated
             _save(self._settings, bucket_id, records)
             event_id = _emit_evidence_event(
-                event_repository=self._event_repository,
+                event_repository=self._event_repository_for_bucket(bucket_id),
                 bucket_id=bucket_id,
                 event_type=BucketEventType.PURCHASE_INVOICE_EVIDENCE_REPLACED,
                 evidence_id=evidence_id,
@@ -444,7 +444,7 @@ class PurchaseInvoiceEvidenceService:
             actor: Identifier stamped on the audit event.
 
         Returns:
-            ``PurchaseInvoiceEvidenceResult`` carrying the removed record and
+            :class:`PurchaseInvoiceEvidenceResult`: Carrying the removed record and
             the audit event id.
 
         Raises:
@@ -458,7 +458,7 @@ class PurchaseInvoiceEvidenceService:
                 _save(self._settings, bucket_id, records)
                 now = _utc_now()
                 event_id = _emit_evidence_event(
-                    event_repository=self._event_repository,
+                    event_repository=self._event_repository_for_bucket(bucket_id),
                     bucket_id=bucket_id,
                     event_type=BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED,
                     evidence_id=evidence_id,
@@ -470,6 +470,13 @@ class PurchaseInvoiceEvidenceService:
         raise PurchaseInvoiceEvidenceNotFoundError(
             f"no purchase invoice evidence record with id {evidence_id!r} in bucket {bucket_id!r}",
             suggestion="aeat app ledger evidence list",
+        )
+
+    def _event_repository_for_bucket(self, bucket_id: str) -> BucketEventHistoryRepositoryProtocol:
+        if self._event_repository is not None:
+            return self._event_repository
+        return BucketEventHistoryRepository(
+            objects=secure_object_repository_for_bucket(bucket_id, self._settings),
         )
 
 

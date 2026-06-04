@@ -93,7 +93,10 @@ def _column_index_to_letters(column: int) -> str:
         ``CalcSheetsRecordError``: if ``column`` is less than 1.
     """
     if column < 1:
-        raise CalcSheetsRecordError("column index must be 1-based and positive")
+        raise CalcSheetsRecordError(
+            "column index must be 1-based and positive",
+            translated_message="application.storage.calc_sheets.records.errors.invalid_column_index",
+        )
     letters: list[str] = []
     cursor = column
     while cursor:
@@ -119,7 +122,11 @@ def _column_letters_to_index(letters: str) -> int:
             pattern.
     """
     if not _A1_COLUMN.match(letters):
-        raise CalcSheetsRecordError(f"invalid Sheets column letters: {letters!r}")
+        raise CalcSheetsRecordError(
+            "invalid Sheets column letters",
+            context={"letters_length": len(letters)},
+            translated_message="application.storage.calc_sheets.records.errors.invalid_column_letters",
+        )
     cursor = 0
     for char in letters:
         cursor = cursor * 26 + (ord(char) - ord("A") + 1)
@@ -141,8 +148,10 @@ class SheetCellAddress(BaseModel):
         letters = _column_index_to_letters(self.column)
         expected = f"{letters}{self.row}"
         if self.a1 != expected:
-            raise ValueError(
-                f"a1 {self.a1!r} does not match row={self.row} column={self.column} (expected {expected!r})"
+            raise CalcSheetsRecordError(
+                "sheet cell A1 address does not match row and column",
+                context={"row": self.row, "column": self.column},
+                translated_message="application.storage.calc_sheets.records.errors.address_mismatch",
             )
         return self
 
@@ -159,7 +168,7 @@ class SheetCellAddress(BaseModel):
             column: 1-based column index.
 
         Returns:
-            A validated ``SheetCellAddress`` instance.
+            :class:`SheetCellAddress`: A validated ``SheetCellAddress`` instance.
         """
         letters = _column_index_to_letters(column)
         return cls(tab=tab, row=row, column=column, a1=f"{letters}{row}")
@@ -297,9 +306,17 @@ class SheetProtectedRange(BaseModel):
     @model_validator(mode="after")
     def _range_well_formed(self) -> SheetProtectedRange:
         if self.end_row < self.start_row:
-            raise ValueError("end_row must be on or after start_row")
+            raise CalcSheetsRecordError(
+                "range end row must be on or after start row",
+                context={"range_kind": "protected"},
+                translated_message="application.storage.calc_sheets.records.errors.range_malformed",
+            )
         if self.end_column < self.start_column:
-            raise ValueError("end_column must be on or after start_column")
+            raise CalcSheetsRecordError(
+                "range end column must be on or after start column",
+                context={"range_kind": "protected"},
+                translated_message="application.storage.calc_sheets.records.errors.range_malformed",
+            )
         return self
 
 
@@ -369,9 +386,17 @@ class SheetStyledRange(BaseModel):
     @model_validator(mode="after")
     def _range_well_formed(self) -> SheetStyledRange:
         if self.end_row < self.start_row:
-            raise ValueError("end_row must be on or after start_row")
+            raise CalcSheetsRecordError(
+                "range end row must be on or after start row",
+                context={"range_kind": "styled"},
+                translated_message="application.storage.calc_sheets.records.errors.range_malformed",
+            )
         if self.end_column < self.start_column:
-            raise ValueError("end_column must be on or after start_column")
+            raise CalcSheetsRecordError(
+                "range end column must be on or after start column",
+                context={"range_kind": "styled"},
+                translated_message="application.storage.calc_sheets.records.errors.range_malformed",
+            )
         return self
 
 
@@ -407,7 +432,10 @@ class SheetFrozenView(BaseModel):
     @model_validator(mode="after")
     def _at_least_one(self) -> SheetFrozenView:
         if self.frozen_rows == 0 and self.frozen_columns == 0:
-            raise ValueError("a frozen view must freeze at least one row or column")
+            raise CalcSheetsRecordError(
+                "a frozen view must freeze at least one row or column",
+                translated_message="application.storage.calc_sheets.records.errors.frozen_view_empty",
+            )
         return self
 
 
@@ -429,9 +457,17 @@ class SheetAutoFilter(BaseModel):
     @model_validator(mode="after")
     def _range_well_formed(self) -> SheetAutoFilter:
         if self.end_row < self.start_row:
-            raise ValueError("end_row must be on or after start_row")
+            raise CalcSheetsRecordError(
+                "range end row must be on or after start row",
+                context={"range_kind": "auto_filter"},
+                translated_message="application.storage.calc_sheets.records.errors.range_malformed",
+            )
         if self.end_column < self.start_column:
-            raise ValueError("end_column must be on or after start_column")
+            raise CalcSheetsRecordError(
+                "range end column must be on or after start column",
+                context={"range_kind": "auto_filter"},
+                translated_message="application.storage.calc_sheets.records.errors.range_malformed",
+            )
         return self
 
 
@@ -532,14 +568,30 @@ class SheetTariffTable(BaseModel):
     def _shape_well_formed(self) -> SheetTariffTable:
         if self.data_type == "bracket_table":
             if not self.bracket_rows:
-                raise ValueError("bracket_table tariff requires at least one row")
+                raise CalcSheetsRecordError(
+                    "tariff table shape is invalid",
+                    context={"data_type": self.data_type, "reason": "missing_bracket_rows"},
+                    translated_message="application.storage.calc_sheets.records.errors.tariff_shape_invalid",
+                )
             if self.scalar_value is not None:
-                raise ValueError("bracket_table tariff must not declare scalar_value")
+                raise CalcSheetsRecordError(
+                    "tariff table shape is invalid",
+                    context={"data_type": self.data_type, "reason": "unexpected_scalar_value"},
+                    translated_message="application.storage.calc_sheets.records.errors.tariff_shape_invalid",
+                )
         else:
             if self.scalar_value is None:
-                raise ValueError(f"{self.data_type} tariff requires scalar_value")
+                raise CalcSheetsRecordError(
+                    "tariff table shape is invalid",
+                    context={"data_type": self.data_type, "reason": "missing_scalar_value"},
+                    translated_message="application.storage.calc_sheets.records.errors.tariff_shape_invalid",
+                )
             if self.bracket_rows:
-                raise ValueError(f"{self.data_type} tariff must not declare bracket_rows")
+                raise CalcSheetsRecordError(
+                    "tariff table shape is invalid",
+                    context={"data_type": self.data_type, "reason": "unexpected_bracket_rows"},
+                    translated_message="application.storage.calc_sheets.records.errors.tariff_shape_invalid",
+                )
         return self
 
 
@@ -583,7 +635,7 @@ class OperatorInputs(BaseModel):
         """Return a ``CasillaId`` → ``OperatorInput`` lookup mapping.
 
         Returns:
-            A ``Mapping`` keyed by casilla (numbered field) id. Later
+            Mapping[CasillaId, :class:`OperatorInput`]: A ``Mapping`` keyed by casilla (numbered field) id. Later
             duplicates overwrite earlier ones; the registry enforces
             uniqueness so duplicates are not expected in practice.
         """
@@ -630,8 +682,8 @@ class RelationValues(BaseModel):
         """Return a ``RelationId`` → ``RelationValue`` lookup mapping.
 
         Returns:
-            A ``Mapping`` keyed by relation id for fast lookup when the engine
-            resolves cross-revision formula references.
+            Mapping[RelationId, :class:`RelationValue`]: A ``Mapping`` keyed by relation id
+            for fast lookup when the engine resolves cross-revision formula references.
         """
         return {item.relation: item for item in self.values}
 
@@ -667,7 +719,7 @@ class SheetExportMetadata(BaseModel):
     filing_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1, max_length=16)
     engine_version: str = Field(min_length=1)
-    registry_sha: str = Field(min_length=8, max_length=64)
+    registry_sha: str = Field(min_length=8, max_length=64, pattern=r"^[0-9a-f]+$")
     exported_at: datetime
 
     @model_validator(mode="after")
@@ -701,6 +753,24 @@ class SheetExportPlan(BaseModel):
     auto_filters: tuple[SheetAutoFilter, ...] = ()
     guide: SheetGuideContent
 
+    @model_validator(mode="after")
+    def _writable_cells_are_unique(self) -> SheetExportPlan:
+        seen: set[tuple[TabName, int, int]] = set()
+        duplicate_count = 0
+        for address in self.all_addresses():
+            key = (address.tab, address.row, address.column)
+            if key in seen:
+                duplicate_count += 1
+                continue
+            seen.add(key)
+        if duplicate_count:
+            raise CalcSheetsRecordError(
+                "sheet export plan writes more than one payload to the same cell address",
+                context={"duplicate_count": duplicate_count},
+                translated_message="application.storage.calc_sheets.records.errors.duplicate_write_address",
+            )
+        return self
+
     def all_addresses(self) -> tuple[SheetCellAddress, ...]:
         """Return every cell address referenced by value or formula cells.
 
@@ -708,7 +778,7 @@ class SheetExportPlan(BaseModel):
         before sending requests to the Sheets API.
 
         Returns:
-            A tuple of ``SheetCellAddress`` objects from ``value_cells``
+            tuple[:class:`SheetCellAddress`, ...]: objects from ``value_cells``
             followed by those from ``formula_cells``, in declaration order.
         """
         seen: list[SheetCellAddress] = []

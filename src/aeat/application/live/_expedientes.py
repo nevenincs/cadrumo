@@ -17,7 +17,7 @@ lives in the entrypoint that wires the adapter to this service.
 The lifecycle helpers (content-addressed id derivation, dedup on
 re-capture, list/show/latest) are routed through the shared
 :class:`StatelessSnapshotService` base; the public class identity,
-exception class names, file-storage layout, and per-call
+exception class names, secure-object storage layout, and per-call
 ``bucket_id`` signatures are preserved exactly.
 """
 
@@ -85,9 +85,15 @@ def expedientes_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
     trimmed_bucket = bucket_id.strip()
     trimmed_snapshot = snapshot_id.strip()
     if not trimmed_bucket:
-        raise LiveApplicationInputError("bucket_id must not be blank")
+        raise LiveApplicationInputError(
+            "bucket_id must not be blank",
+            translated_message="application.live.expedientes.errors.bucket_id_blank",
+        )
     if not trimmed_snapshot:
-        raise LiveApplicationInputError("snapshot_id must not be blank")
+        raise LiveApplicationInputError(
+            "snapshot_id must not be blank",
+            translated_message="application.live.expedientes.errors.snapshot_id_blank",
+        )
     return f"expedientes-snapshot:{trimmed_bucket}:{trimmed_snapshot}"
 
 
@@ -100,12 +106,16 @@ def _expedientes_repository(
         namespace_definition=LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
         object_key=expedientes_snapshot_object_key,
         not_found_factory=lambda snapshot_id: ExpedientesSnapshotNotFoundError(
-            f"no expedientes snapshot matches {snapshot_id!r} in bucket {bucket_id!r}",
+            "no expedientes snapshot matches the requested id",
             suggestion="aeat app live expedientes list",
+            translated_message="application.live.expedientes.errors.snapshot_not_found",
+            context={"snapshot_id": snapshot_id},
         ),
         ambiguous_prefix_factory=lambda snapshot_id, full_ids: ExpedientesSnapshotNotFoundError(
-            f"prefix {snapshot_id!r} is ambiguous; matches {list(full_ids)!r}",
+            "expedientes snapshot prefix matches multiple snapshots",
             suggestion="provide a longer prefix",
+            translated_message="application.live.expedientes.errors.snapshot_prefix_ambiguous",
+            context={"snapshot_id": snapshot_id, "match_count": len(full_ids)},
         ),
         domain_label="expedientes",
         objects=secure_object_repository_for_bucket(bucket_id, settings),

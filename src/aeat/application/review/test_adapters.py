@@ -13,9 +13,11 @@ from pathlib import Path
 
 import pytest
 
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...application.user_profile._orchestration import profile_create_storage_span
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
+from ...core.classification import SensitivityClass
 from ...core.config import Settings
 from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
@@ -26,7 +28,12 @@ from ...domain.invoices import (
     IvaRate,
     PaymentStatus,
 )
-from ...domain.invoices._repository import InvoiceCatalogueRepository
+from ...domain.invoices._repository import (
+    _INVOICE_CATALOGUE_VERSION,
+    _INVOICE_NAMESPACE,
+    _INVOICE_OBJECT_KEY,
+    InvoiceCatalogueRepository,
+)
 from ...domain.iva import InvoiceKind
 from ...domain.transactions import (
     BusinessClassification,
@@ -49,6 +56,7 @@ from . import (
     FindingReviewItem,
     InvoiceReviewItem,
     ReviewSeverity,
+    ReviewSourceLoadError,
     TransactionReviewItem,
     drafts_pending,
     invoices_pending,
@@ -326,6 +334,25 @@ def test_invoices_pending_emits_invoice_review_item(tmp_path: Path) -> None:
     assert isinstance(items[0], InvoiceReviewItem)
 
 
+def test_invoices_pending_load_failure_context_omits_raw_storage_error(tmp_path: Path) -> None:
+    settings = _build_settings(tmp_path)
+    with profile_create_storage_span("test"):
+        secure_object_repository_for_active_bucket().save(
+            namespace=_INVOICE_NAMESPACE,
+            object_key=_INVOICE_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_INVOICE_CATALOGUE_VERSION,
+            written_at=datetime.now(UTC),
+            payload=b"{not-json",
+        )
+        with pytest.raises(ReviewSourceLoadError) as exc_info:
+            invoices_pending(settings)
+
+    assert exc_info.value.translated_message == "review.adapters.errors.invoices_load_failed"
+    assert exc_info.value.context == {"error_type": "ValidationError"}
+    assert "not-json" not in str(exc_info.value)
+
+
 # ── drafts adapter ────────────────────────────────────────────────
 
 
@@ -373,6 +400,30 @@ def test_drafts_pending_returns_empty_when_source_missing(tmp_path: Path) -> Non
     settings = _build_settings(tmp_path)
     with profile_create_storage_span("test"):
         assert drafts_pending(settings) == ()
+
+
+def test_drafts_pending_load_failure_context_omits_raw_storage_error(tmp_path: Path) -> None:
+    from ...domain.filing import ModeloDraftRepository
+
+    settings = _build_settings(tmp_path)
+    with profile_create_storage_span("test"):
+        _seed_active_profile()
+        repository = ModeloDraftRepository()
+        repository.secure_object_repository.save(
+            namespace=repository.namespace,
+            object_key="corrupt-draft",
+            classification=repository.sensitivity,
+            schema_version=repository.schema_version,
+            written_at=datetime.now(UTC),
+            payload=b"{not-json",
+        )
+        with pytest.raises(ReviewSourceLoadError) as exc_info:
+            drafts_pending(settings)
+
+    assert exc_info.value.translated_message == "review.adapters.errors.drafts_load_failed"
+    assert exc_info.value.context == {"error_type": "ValidationError"}
+    assert "corrupt-draft" not in str(exc_info.value)
+    assert "not-json" not in str(exc_info.value)
 
 
 def test_drafts_pending_emits_one_finding_per_finding(tmp_path: Path) -> None:

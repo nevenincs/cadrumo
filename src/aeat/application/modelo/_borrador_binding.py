@@ -124,8 +124,8 @@ def resolve_modelo_100_borrador_bindings(
     if not registry_snapshot.modelo.has_capability("borrador"):
         target_modelo = command.modelo.strip()
         raise Modelo100BorradorBindingError(
-            f"borrador binding is not supported for modelo {target_modelo!r}; "
-            f"the modelo registry manifest must declare the 'borrador' capability"
+            translated_message="application.modelo.borrador_binding.errors.unsupported_modelo",
+            context={"modelo": target_modelo},
         )
     _assert_registry_snapshot_axis(command=command, registry_snapshot=registry_snapshot)
     repository = snapshot_repository or Borrador100SnapshotRepository(bucket_id=command.bucket_id)
@@ -133,7 +133,8 @@ def resolve_modelo_100_borrador_bindings(
         snapshot = repository.load(command.borrador_snapshot_id)
     except (LiveApplicationInputError, BorradorSnapshotNotFoundError) as exc:
         raise Modelo100BorradorBindingError(
-            str(exc),
+            translated_message="application.modelo.borrador_binding.errors.snapshot_load_failed",
+            context={"borrador_snapshot_id": command.borrador_snapshot_id},
             suggestion=exc.suggestion or "aeat app live borrador 100 list",
         ) from exc
     _assert_same_axis(
@@ -152,8 +153,8 @@ def resolve_modelo_100_borrador_bindings(
     unknown_or_forbidden = sorted(set(snapshot.binding_values) - set(eligible_bindings))
     if unknown_or_forbidden:
         raise Modelo100BorradorBindingError(
-            "borrador snapshot contains values for bindings that are not registry-marked "
-            f"aeat_prefilled: {unknown_or_forbidden!r}"
+            translated_message="application.modelo.borrador_binding.errors.forbidden_bindings",
+            context={"bindings": unknown_or_forbidden},
         )
 
     caller_owned = set(command.caller_binding_values) | set(command.caller_enum_binding_values)
@@ -263,13 +264,17 @@ def _assert_same_axis(
     expected_period = period.strip()
     if snapshot.bucket_id != expected_bucket:
         raise Modelo100BorradorBindingError(
-            f"borrador snapshot bucket_id={snapshot.bucket_id!r} does not match active bucket {expected_bucket!r}"
+            translated_message="application.modelo.borrador_binding.errors.snapshot_bucket_mismatch",
         )
     if snapshot.filing_year != filing_year or snapshot.period != expected_period:
         raise Modelo100BorradorBindingError(
-            "borrador snapshot axis does not match calculation axis: "
-            f"snapshot year={snapshot.filing_year} period={snapshot.period!r}; "
-            f"calculation year={filing_year} period={expected_period!r}"
+            translated_message="application.modelo.borrador_binding.errors.snapshot_axis_mismatch",
+            context={
+                "snapshot_year": snapshot.filing_year,
+                "snapshot_period": snapshot.period,
+                "filing_year": filing_year,
+                "period": expected_period,
+            },
         )
 
 
@@ -280,14 +285,21 @@ def _assert_registry_snapshot_axis(
 ) -> None:
     if registry_snapshot.modelo.id != command.modelo.strip():
         raise Modelo100BorradorBindingError(
-            "registry snapshot modelo does not match borrador binding command: "
-            f"snapshot modelo={registry_snapshot.modelo.id!r}; command modelo={command.modelo.strip()!r}"
+            translated_message="application.modelo.borrador_binding.errors.registry_snapshot_modelo_mismatch",
+            context={
+                "snapshot_modelo": registry_snapshot.modelo.id,
+                "command_modelo": command.modelo.strip(),
+            },
         )
     if registry_snapshot.filing_year != command.filing_year or registry_snapshot.period != command.period.strip():
         raise Modelo100BorradorBindingError(
-            "registry snapshot axis does not match borrador binding command: "
-            f"snapshot year={registry_snapshot.filing_year} period={registry_snapshot.period!r}; "
-            f"command year={command.filing_year} period={command.period.strip()!r}"
+            translated_message="application.modelo.borrador_binding.errors.registry_snapshot_axis_mismatch",
+            context={
+                "snapshot_year": registry_snapshot.filing_year,
+                "snapshot_period": registry_snapshot.period,
+                "filing_year": command.filing_year,
+                "period": command.period.strip(),
+            },
         )
 
 
@@ -303,7 +315,10 @@ def _decimal_value(binding_id: str, value: Decimal | str) -> Decimal:
     return decimal_from_string(
         binding_id,
         value,
-        error_factory=Modelo100BorradorBindingError,
+        error_factory=lambda _message: Modelo100BorradorBindingError(
+            translated_message="application.modelo.borrador_binding.errors.decimal_value_invalid",
+            context={"binding_id": binding_id},
+        ),
         pipeline_label="borrador value",
     )
 

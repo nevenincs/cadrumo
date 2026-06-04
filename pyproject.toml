@@ -458,7 +458,6 @@ convention = "google"
 "src/aeat/test_w26_p58_closure.py" = ["S603", "SIM102"]
 "src/aeat/test_every_module_has_test_coverage.py" = ["SIM103", "SIM108"]
 "src/aeat/test_locale_tr_positional_inventory.py" = ["SIM103"]
-"src/aeat/diagnostics/_identity_placement.py" = ["SIM102"]
 "src/aeat/domain/calculations/test_calculation_grounding.py" = ["SIM102"]
 # Per-line concatenation of AEAT casilla code groups documents each group inline; the
 # RUF005 iterable-unpacking refactor would erase those per-group comments.

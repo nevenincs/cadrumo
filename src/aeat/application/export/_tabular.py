@@ -12,6 +12,9 @@ from io import StringIO
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...core.external_constants import CSV_MIME_TYPE as _CSV_MIME_TYPE
+from ...core.external_constants import JSONL_MIME_TYPE as _JSONL_MIME_TYPE
+from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from ...core.external_constants import XLSX_MIME_TYPE as _XLSX_MIME_TYPE
 from ._errors import ExportFieldError, ExportFormatError
 
 
@@ -23,7 +26,13 @@ class ExportSerializationFormat(StrEnum):
     XLSX = "xlsx"
 
 
-_XLSX_MIME_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+_REFUSED_EXPORT_FIELD_MESSAGE = "errors.refused.refused_export_field"
+_REFUSED_EXPORT_FORMAT_MESSAGE = "errors.refused.refused_export_format"
+_FIELDNAMES_EMPTY_REASON = "fieldnames_empty"
+_FIELDNAMES_BLANK_REASON = "fieldnames_blank"
+_FIELDNAMES_DUPLICATE_REASON = "fieldnames_duplicate"
+_UNKNOWN_FIELDS_REASON = "unknown_fields"
+_SHA256_INVALID_REASON = "sha256_invalid"
 
 
 class TabularExportResult(BaseModel):
@@ -36,7 +45,7 @@ class TabularExportResult(BaseModel):
     filename_extension: str = Field(min_length=1)
     payload: bytes
     byte_size: int = Field(ge=0)
-    sha256: str = Field(min_length=64, max_length=64)
+    sha256: str
     row_count: int = Field(ge=0)
     fieldnames: tuple[str, ...]
 
@@ -45,9 +54,9 @@ class TabularExportResult(BaseModel):
     def _validate_fieldnames(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         normalized = tuple(field.strip() for field in value)
         if any(not field for field in normalized):
-            raise ExportFieldError("fieldnames must not contain blank values")
+            raise _export_field_error(_FIELDNAMES_BLANK_REASON)
         if len(set(normalized)) != len(normalized):
-            raise ExportFieldError("fieldnames must not contain duplicates")
+            raise _export_field_error(_FIELDNAMES_DUPLICATE_REASON)
         return normalized
 
     @field_validator("sha256")
@@ -55,7 +64,7 @@ class TabularExportResult(BaseModel):
     def _validate_sha256(cls, value: str) -> str:
         normalized = value.strip().lower()
         if len(normalized) != 64 or any(char not in "0123456789abcdef" for char in normalized):
-            raise ValueError("sha256 must be a lowercase 64-character hex digest")
+            raise _export_field_error(_SHA256_INVALID_REASON)
         return normalized
 
 
@@ -78,14 +87,17 @@ def serialize_tabular_rows(
         extension = "csv"
     elif export_format is ExportSerializationFormat.JSONL:
         payload = _serialize_jsonl(normalized_rows, fieldnames=normalized_fields)
-        media_type = "application/x-ndjson"
+        media_type = _JSONL_MIME_TYPE
         extension = "jsonl"
     elif export_format is ExportSerializationFormat.XLSX:
         payload = _serialize_xlsx(normalized_rows, fieldnames=normalized_fields)
         media_type = _XLSX_MIME_TYPE
         extension = "xlsx"
-    else:  # pragma: no cover - closed enum defensive guard
-        raise ExportFormatError(f"unsupported export format: {export_format!r}")
+    else:
+        raise ExportFormatError(
+            translated_message=_REFUSED_EXPORT_FORMAT_MESSAGE,
+            context={"export_format": str(export_format)},
+        )
     return TabularExportResult(
         format=export_format,
         media_type=media_type,
@@ -101,19 +113,26 @@ def serialize_tabular_rows(
 def _normalize_fieldnames(fieldnames: Sequence[str]) -> tuple[str, ...]:
     normalized = tuple(field.strip() for field in fieldnames)
     if not normalized:
-        raise ExportFieldError("fieldnames must not be empty")
+        raise _export_field_error(_FIELDNAMES_EMPTY_REASON)
     if any(not field for field in normalized):
-        raise ExportFieldError("fieldnames must not contain blank values")
+        raise _export_field_error(_FIELDNAMES_BLANK_REASON)
     if len(set(normalized)) != len(normalized):
-        raise ExportFieldError("fieldnames must not contain duplicates")
+        raise _export_field_error(_FIELDNAMES_DUPLICATE_REASON)
     return normalized
 
 
 def _normalize_row(row: Mapping[str, str], *, fieldnames: tuple[str, ...]) -> dict[str, str]:
     unknown = sorted(set(row).difference(fieldnames))
     if unknown:
-        raise ExportFieldError(f"row contains unknown fields: {unknown!r}")
+        raise _export_field_error(_UNKNOWN_FIELDS_REASON, unknown_fields=tuple(unknown))
     return {field: str(row.get(field, "")) for field in fieldnames}
+
+
+def _export_field_error(reason: str, **context: object) -> ExportFieldError:
+    return ExportFieldError(
+        translated_message=_REFUSED_EXPORT_FIELD_MESSAGE,
+        context={"reason": reason, **context},
+    )
 
 
 def _serialize_csv(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str, ...]) -> bytes:
@@ -121,13 +140,13 @@ def _serialize_csv(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str, .
     writer = csv.DictWriter(buffer, fieldnames=fieldnames, lineterminator="\n")
     writer.writeheader()
     writer.writerows(rows)
-    return buffer.getvalue().encode("utf-8")
+    return buffer.getvalue().encode(_UTF_8_ENCODING)
 
 
 def _serialize_jsonl(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str, ...]) -> bytes:
     del fieldnames
     text = "".join(json.dumps(row, ensure_ascii=True, sort_keys=True, separators=(",", ":")) + "\n" for row in rows)
-    return text.encode("utf-8")
+    return text.encode(_UTF_8_ENCODING)
 
 
 def _serialize_xlsx(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str, ...]) -> bytes:

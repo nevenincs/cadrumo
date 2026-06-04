@@ -111,7 +111,6 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
         "core/observability/_fingerprint.py",
         "core/observability/_sink.py",
         "core/observability/_store.py",
-        "diagnostics/_identity_placement.py",
         "domain/auth/apoderamientos/_catalogue.py",
         "domain/buckets/_event.py",
         "domain/buckets/_event_repository.py",

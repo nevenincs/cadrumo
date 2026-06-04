@@ -38,6 +38,7 @@ from pydantic import BaseModel, Field
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import ProfileId
+from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.user_profile._values import UserProfileFact, UserProfileRecord
 from ..live._censo import (
@@ -55,6 +56,8 @@ CENSO_SOURCE_TAG: Final = "aeat_censo_read"
 """``UserProfileFact.source`` value stamped on every censo-derived fact."""
 
 _HOME_OFFICE_DEDUCTION_YEAR: Final[int] = 2025
+
+_log = get_logger(__name__)
 
 
 class CensoComparisonStatus(StrEnum):
@@ -148,7 +151,7 @@ class CensoSyncService:
     ) -> None:
         self._bucket_id = bucket_id.strip()
         if not self._bucket_id:
-            raise CensoSyncError("bucket_id must not be blank")
+            raise CensoSyncError(translated_message="errors.censo.bucket_id_blank")
         self._snapshots = snapshots or CensoSnapshotService(bucket_id=self._bucket_id)
         self._profiles = profiles or UserProfileLifecycleRepository(bucket_id=self._bucket_id)
 
@@ -295,6 +298,9 @@ class CensoSyncService:
 
         Raises :exc:`CensoApplyConflictError` when the profile is
         absent — there is nothing to stamp facts onto.
+
+        Returns:
+            :class:`CensoApplyResult`: The apply result details.
         """
         snapshot = self.show_censo(profile_id=profile_id, snapshot_id=snapshot_id)
         if not self._profiles.exists(profile_id):
@@ -352,18 +358,9 @@ class CensoSyncService:
             save_usage_ratios,
         )
 
-        total_raw = snapshot.censo_facts.get("vivienda_office.total_m2")
-        office_raw = snapshot.censo_facts.get("vivienda_office.office_m2")
-        if total_raw is None or office_raw is None:
+        raw_ratio = _raw_afectacion_ratio(snapshot.censo_facts)
+        if raw_ratio is None:
             return ()
-        try:
-            total = Decimal(total_raw)
-            office = Decimal(office_raw)
-        except (InvalidOperation, ValueError):
-            return ()
-        if total <= Decimal("0") or office < Decimal("0") or office > total:
-            return ()
-        raw_ratio = office / total
         derived = derive_home_office_ratios_from_censo(raw_ratio, year=_HOME_OFFICE_DEDUCTION_YEAR)
         current = load_usage_ratios(bucket_id=self._bucket_id)
         seeded: list[str] = []
@@ -397,21 +394,24 @@ class CensoSyncService:
         snapshot = self._snapshots.latest_active(profile_id=profile_id)
         if snapshot is None:
             return None
-        total_raw = snapshot.censo_facts.get("vivienda_office.total_m2")
-        office_raw = snapshot.censo_facts.get("vivienda_office.office_m2")
-        if total_raw is None or office_raw is None:
-            return None
-        try:
-            total = Decimal(total_raw)
-            office = Decimal(office_raw)
-        except (InvalidOperation, ValueError):
-            return None
-        if total <= Decimal("0") or office < Decimal("0"):
-            return None
-        ratio = office / total
-        if ratio > Decimal("1"):
-            return None
-        return ratio
+        return _raw_afectacion_ratio(snapshot.censo_facts)
+
+
+def _raw_afectacion_ratio(censo_facts: Mapping[str, str]) -> Decimal | None:
+    total_raw = censo_facts.get("vivienda_office.total_m2")
+    office_raw = censo_facts.get("vivienda_office.office_m2")
+    if total_raw is None or office_raw is None:
+        return None
+    try:
+        total = Decimal(total_raw)
+        office = Decimal(office_raw)
+    except (InvalidOperation, ValueError):
+        _log.debug("censo raw afectacion ratio ignored: non-decimal censo surface", exc_info=True)
+        return None
+    if total <= Decimal("0") or office < Decimal("0") or office > total:
+        _log.debug("censo raw afectacion ratio ignored: invalid censo ratio bounds")
+        return None
+    return office / total
 
 
 def _profile_facts_by_path(profile: UserProfileRecord | None) -> dict[str, str]:

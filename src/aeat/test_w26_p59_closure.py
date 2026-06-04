@@ -26,8 +26,7 @@ _PARSER = _SRC / "adapters/inbound/declaracion/_parser.py"
 _ENVELOPE = _SRC / "adapters/persistence/storage/envelope/_envelope.py"
 _IVA_WALLET = _SRC / "application/calculations/_iva_wallet_reconciliation.py"
 _DOC_REF = _SRC / "entrypoints/cli/_doc_reference.py"
-_IDENTITY = _SRC / "diagnostics/_identity_placement.py"
-_DESCENDANT = _SRC / "domain/profile/_descendant_facts.py"
+_DESCENDANT = _SRC / "domain/contribuyente/_descendant_facts.py"
 
 _WIRE_PAYLOAD_TOKEN = "CAST-RATIONALE-WIRE-PAYLOAD-"
 _MARITIME_TOKEN = "CAST-RATIONALE-MARITIME-LITERAL-FIELD"
@@ -177,13 +176,6 @@ def test_s670_doc_reference_isinstance_narrowing() -> None:
     src = pathlib.Path(_DOC_REF).read_text(encoding="utf-8")
     assert "isinstance(schema_cls, type)" in src, "_doc_reference.py: isinstance(schema_cls, type) narrowing not found"
 
-
-def test_s670_identity_placement_numeric_narrowing() -> None:
-    """_identity_placement.py must use isinstance(..., (int, float)) narrowing (no operator ignore)."""
-    src = pathlib.Path(_IDENTITY).read_text(encoding="utf-8")
-    assert "isinstance(node.operand.value, (int, float))" in src, (
-        "_identity_placement.py: isinstance numeric narrowing not found"
-    )
 
 
 def test_s670_descendant_facts_cast_applied() -> None:

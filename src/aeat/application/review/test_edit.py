@@ -49,6 +49,8 @@ def test_parse_edit_clause_rejects_missing_equals() -> None:
         parse_edit_clause(raw)
     assert exc.value.reason == "missing-equals"
     assert exc.value.raw_token == raw
+    assert exc.value.translated_message == "review.edit.errors.parse_failed"
+    assert exc.value.context == {"reason": "missing-equals"}
 
 
 def test_parse_edit_clause_rejects_empty_key() -> None:
@@ -148,6 +150,19 @@ def test_ledger_spec_rejects_duplicate_key() -> None:
     with pytest.raises(EditParseError, match=r"duplicate-key-ledger") as exc:
         LedgerEditSpec.from_strings(["category=a", "category=b"])
     assert exc.value.reason == "duplicate-key-ledger"
+    assert exc.value.context == {"reason": "duplicate-key-ledger", "key": "category"}
+
+
+def test_ledger_spec_parse_error_message_omits_sensitive_edit_value() -> None:
+    sensitive_path = "C:/Users/example/Documents/client-tax-id-12345678Z.pdf"
+    with pytest.raises(EditParseError) as exc:
+        LedgerEditSpec.from_strings([f"business.share={sensitive_path}"])
+
+    assert exc.value.reason == "invalid-value-ledger-business-share"
+    assert exc.value.raw_token == f"--set business.share={sensitive_path}"
+    assert exc.value.context == {"reason": "invalid-value-ledger-business-share", "key": "business.share"}
+    assert sensitive_path not in str(exc.value)
+    assert sensitive_path not in repr(exc.value.context)
 
 
 def test_ledger_spec_empty_returns_empty_spec() -> None:

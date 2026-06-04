@@ -16,6 +16,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from ...domain.calculations.registry import InputKind
 from ...domain.calculations.registry._schema import VerificationPredicateDefinition
 from ...domain.deadlines import IVARegime, TaxpayerProfile
 from ...domain.modelos._calculation_revision import (
@@ -27,14 +28,19 @@ from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ._actions import (
     _IVA_LEDGER_EXEMPT_REGIMES,
+    ModeloAggregationBindingError,
+    ModeloIvaWalletReconciliationBlocked,
     WorkflowInputMismatchError,
+    _apply_iva_compensation_decision_binding,
     _collect_revision_verification_findings,
     _dt12_reduccion_advisory_finding,
     _evaluate_verification_predicates,
     _iva_wallet_blocked_message,
     _iva_wallet_blocking_verification_finding,
     _missing_required_casilla_finding,
+    _reject_caller_overrides_of_source_bindings,
     _RevisionInputsProvider,
+    workflow_period_for_work_unit,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -119,6 +125,22 @@ def test_iva_ledger_exempt_regimes_includes_simplificado() -> None:
 def test_iva_ledger_exempt_regimes_excludes_general() -> None:
     """GENERAL must not be in the exempt set — it is subject to ledger preflight."""
     assert IVARegime.GENERAL not in _IVA_LEDGER_EXEMPT_REGIMES
+
+
+def test_workflow_period_resolves_modelo_130_quarter_from_registry_deadline_shape() -> None:
+    """Modelo 130 deadline windows use the registry-declared ``YYYYQn`` shape."""
+
+    work_unit = _minimal_work_unit(modelo="130", period="1T", filing_year=2026)
+
+    assert workflow_period_for_work_unit(work_unit) == "2026Q1"
+
+
+def test_workflow_period_resolves_modelo_303_quarter_from_registry_deadline_shape() -> None:
+    """Modelo 303 deadline windows use the registry-declared ``YYYY-nT`` shape."""
+
+    work_unit = _minimal_work_unit(modelo="303", period="1T", filing_year=2026)
+
+    assert workflow_period_for_work_unit(work_unit) == "2026-1T"
 
 
 # ---------------------------------------------------------------------------
@@ -317,6 +339,44 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key() -> None:
     assert "filed_history_only" in str(exc)
 
 
+def test_iva_wallet_unsupported_decision_type_is_localised() -> None:
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked) as raised:
+        _apply_iva_compensation_decision_binding(
+            "303",
+            2026,
+            "1T",
+            bucket_id="bucket-1",
+            revision=SimpleNamespace(),
+            taxpayer_nif="12345678Z",
+            caller_binding_values={},
+            backend_binding_values={},
+            decision=object(),
+        )
+
+    assert raised.value.translated_message == "application.modelo.errors.iva_wallet_unsupported_decision_type"
+    assert raised.value.context == {"decision_type": "object"}
+    assert "application.modelo.errors.iva_wallet_unsupported_decision_type" not in str(raised.value)
+
+
+def test_source_bound_casilla_override_error_is_localised() -> None:
+    revision = SimpleNamespace(
+        bindings=(SimpleNamespace(id="ledger_iva_base", source="ledger_iva_aggregation"),),
+        casillas=(SimpleNamespace(id="0001", input_kind=InputKind.BOUND, binding="ledger_iva_base"),),
+    )
+
+    with pytest.raises(ModeloAggregationBindingError) as raised:
+        _reject_caller_overrides_of_source_bindings(
+            revision=revision,
+            owned_sources=frozenset({"ledger_iva_aggregation"}),
+            caller_binding_values={},
+            caller_casilla_inputs={"0001": Decimal("12.34")},
+        )
+
+    assert raised.value.translated_message == "application.modelo.errors.caller_casilla_source_binding_conflict"
+    assert raised.value.context == {"casillas": ["0001"]}
+    assert "0001" in str(raised.value)
+
+
 # ---------------------------------------------------------------------------
 # Original S168 tests — IVA-regime enum surface
 # ---------------------------------------------------------------------------
@@ -393,14 +453,14 @@ class TestWorkflowInputMismatchError:
         with pytest.raises(WorkflowInputMismatchError) as exc_info:
             provider.load_inputs(
                 modelo="303",
-                period="2026Q2",  # wrong quarter
+                period="2026-2T",
                 profile=self._stub_profile(),  # type: ignore[arg-type]
             )
 
         exc = exc_info.value
         assert exc.context is not None
-        assert exc.context["expected_period"] == "2026Q1"
-        assert exc.context["requested_period"] == "2026Q2"
+        assert exc.context["expected_period"] == "2026-1T"
+        assert exc.context["requested_period"] == "2026-2T"
 
     def test_error_is_core_validation_error_and_value_error(self) -> None:
         """WorkflowInputMismatchError is a CoreValidationError and ValueError subclass."""

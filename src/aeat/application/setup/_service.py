@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ...core.logging import get_logger
 from ...domain.user_profile import UserProfileFact, new_profile_id
 from ..auth import AuthProviderReservedError, configure_operator_auth
 from ..user_profile._orchestration import (
@@ -10,6 +11,8 @@ from ..user_profile._orchestration import (
 )
 from ..workflow._persistence import workflow_state_repository
 from ._contracts import InitializeWorkspaceCommand, InitializeWorkspaceResult
+
+_log = get_logger(__name__)
 
 
 def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorkspaceResult:
@@ -52,6 +55,11 @@ def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorks
             )
             auth_configured = True
         except AuthProviderReservedError:
+            _log.debug(
+                "initialize_workspace: reserved auth provider was not configured",
+                extra={"auth_provider": command.auth_provider},
+                exc_info=True,
+            )
             auth_configured = False
 
     # 4. Handle env configs (drafts_dir, submissions_dir, manuals_root)

@@ -8,8 +8,7 @@ shipped operator session.
 
 The legacy `view` / `use` / `remove` names and field-at-a-time
 `get` / `set` / `unset` diagnostics verbs MUST NOT resolve on the
-operator surface. Those diagnostics live under
-`python -m aeat.diagnostics profile`.
+operator surface.
 """
 
 from __future__ import annotations

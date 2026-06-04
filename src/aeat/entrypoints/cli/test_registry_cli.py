@@ -40,6 +40,7 @@ from ...core.access_gate import AeatLiveReadNotEnabledError
 from ...core.config import override_settings
 from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry import calculate_registry_snapshot
+from ...tests.aeat_literal_fixtures import aeat_url, configured_path
 from ...tests.cli_runner import invoke_cached_cli
 from ._app_live import _iva_wallet_history_lines, _iva_wallet_pull_lines
 
@@ -48,6 +49,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _WORKBOOK_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro")
 _BUCKET_ID = "registry-cli"
+_DECLARATIONS_LISTING_URL = aeat_url("www6", configured_path("sede_paths", "declarations_listing"))
 
 
 def _session() -> BucketSession:
@@ -894,7 +896,7 @@ def _filed_observation(
         artefacts=(
             FiledDeclaracionArtefact(
                 kind="submitted_file",
-                source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+                source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
                 content_type="application/octet-stream",
                 byte_count=1,
                 sha256="0" * 64,

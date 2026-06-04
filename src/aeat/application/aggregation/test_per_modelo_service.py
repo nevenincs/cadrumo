@@ -53,7 +53,7 @@ def _retencion_obs(*, source_kind: str = "ledger_transaction") -> RetencionObser
 def _counterpart_obs(
     *,
     nif: str = "B00000001",
-    source_kind: CounterpartSourceKind = "ledger_transaction",
+    source_kind: CounterpartSourceKind = AggregationSourceKind.LEDGER_TRANSACTION,
     operation_kind: str = "entregas_y_prestaciones",
     country: str = "ES",
     invoice_total: str = "2000.00",
@@ -150,8 +150,8 @@ def test_service_routes_retenciones_modelos_to_retenciones_aggregation() -> None
 
 def test_service_routes_counterpart_modelos_and_preserves_threshold_semantics() -> None:
     observations = (
-        _counterpart_obs(source_kind="ledger_transaction", invoice_total="1500.00"),
-        _counterpart_obs(source_kind="payable_invoice", invoice_total="1505.07"),
+        _counterpart_obs(source_kind=AggregationSourceKind.LEDGER_TRANSACTION, invoice_total="1500.00"),
+        _counterpart_obs(source_kind=AggregationSourceKind.PAYABLE_INVOICE, invoice_total="1505.07"),
     )
     command = PerModeloAggregationCommand(
         modelo="347",

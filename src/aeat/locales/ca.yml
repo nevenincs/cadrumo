@@ -550,47 +550,231 @@ application:
   calculations:
     iva_compensation:
       errors:
-        modelo_303_only: 'L''historial de compensació d''IVA només accepta observacions del Model 303.'
-        seed_conflict: 'Ja existeix un estat de compensació d''IVA per a aquest període; la llavor sobreescriuria l''historial emmagatzemat.'
+        modelo_303_only: L'historial de compensació d'IVA només accepta observacions
+          del Model 303.
+        modelo_390_only: El resum anual de compensació d'IVA només accepta observacions
+          del Model 390.
+        seed_conflict: Ja existeix un estat de compensació d'IVA per a aquest període;
+          la llavor sobreescriuria l'historial emmagatzemat.
+  filing:
+    review:
+      errors:
+        approved_by_blank: L'identificador de l'aprovador no pot estar buit.
+        draft_not_ready: Nomes es poden aprovar esborranys llestos per presentar.
+        registry_review_mismatch: 'L''esborrany no coincideix amb la superficie de
+          revisio del registre: %{codes}.'
+      stale_reasons:
+        approval_basis_version_changed: la versio de base d'aprovacio ha canviat
+        category_profiles_changed: els perfils de categoria han canviat
+        draft_payload_changed: el contingut de l'esborrany ha canviat
+        draft_review_changed: la superficie de validacio de l'esborrany ha canviat
+        schema_formula_changed: la procedencia de l'esquema o la formula ha canviat
+        transaction_catalogue_changed: el cataleg de transaccions ha canviat
+        unknown: '%{reason}'
+    runtime:
+      errors:
+        active_profile_load_failed: 'No s ha pogut carregar el perfil actiu de presentacio:
+          %{reason}.'
+        blank_modelo_selection: La seleccio de models sol.licitada no pot contenir
+          identificadors buits.
+        filing_year_period_pair: filing_year i period s han d indicar junts.
+        modelo_not_in_registry: El model %{modelo} no esta present al registre de
+          calcul.
+        modelo_revision_missing: El model %{modelo} no te revisions.
+        provider_year_missing: El model %{modelo} revisio %{revision} no te exercici
+          de proveidor.
+        registry_empty: L arrel del registre %{registry_root_name} no te definicions
+          de model.
+        registry_empty_for_period: L arrel del registre no te definicions de model
+          per a l exercici %{filing_year} periode %{period}.
+        registry_missing_requested_modelos: 'L arrel del registre no conte les definicions
+          de model sol.licitades: %{modelos}.'
+        unsupported_casilla_data_type: 'Tipus de dada de casella del registre no admes:
+          %{data_type}.'
+  inventory:
+    service:
+      errors:
+        actividad_conflict: Ja existeix un llibre d inventari per a l activitat %{actividad_id}
+          i l exercici %{year}.
+        actividad_not_found: No existeix cap llibre d inventari per a l activitat
+          %{actividad_id} i l exercici %{year}.
+        duplicate_movement_id: El llibre d inventari ja conte el moviment %{movement_id}.
+        invalid_valuation_method: 'El metode de valoracio d inventari no esta admes:
+          %{valuation_method}.'
+  invoices:
+    importing:
+      errors:
+        import_file_read_failed: 'No s ha pogut llegir el fitxer d importacio de factures:
+          %{path_name}.'
+        invalid_base_total: 'El valor base_total de la factura no es decimal: %{base_total}.'
+        invalid_json: El contingut JSON de factures no es valid a la linia %{line},
+          columna %{column}.
+        invalid_json_shape: El contingut JSON de factures ha de ser un objecte o una
+          llista d objectes.
+        invalid_kind: 'El tipus de factura no esta admes: %{kind}.'
+    linking:
+      errors:
+        linked_invoice_not_found: No s ha trobat la factura %{invoice_id} despres
+          d aplicar l enllac.
+        transaction_not_found: No s ha trobat la transaccio %{transaction_id} al cataleg
+          de transaccions.
   ledger:
     errors:
       evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix
         evidència de compra o identificadors d'adjunt.
       purchase_evidence_already_set: La transacció del llibre diari ja té un purchase_invoice_evidence_id;
         elimineu-lo o substituïu-lo a través del flux d'adjunts.
+  live:
+    expedientes:
+      errors:
+        bucket_id_blank: L'identificador del bucket d'expedients no pot estar buit.
+        snapshot_id_blank: L'identificador de la instantània d'expedients no pot estar
+          buit.
+        snapshot_not_found: No hi ha cap instantània d expedients que coincideixi
+          amb l identificador sol·licitat.
+        snapshot_prefix_ambiguous: El prefix de la instantània d expedients coincideix
+          amb diverses instantànies.
+    notifications:
+      errors:
+        bucket_id_blank: L'identificador del bucket de notificacions no pot estar
+          buit.
+        snapshot_id_blank: L'identificador de la instantània de notificacions no pot
+          estar buit.
+        snapshot_not_found: Cap instantània de notificacions no coincideix amb l'identificador
+          sol·licitat.
+        snapshot_prefix_ambiguous: El prefix de la instantània de notificacions coincideix
+          amb diverses instantànies.
+    snapshot_base:
+      errors:
+        snapshot_bucket_mismatch: El bucket de la carrega de la instantania no coincideix
+          amb el bucket del repositori.
+    verify:
+      errors:
+        bucket_id_blank: L identificador del bucket de verificacio no pot estar buit.
+        observation_bucket_mismatch: El bucket de l observacio de verificacio no coincideix
+          amb el bucket del repositori.
+        observation_id_blank: L identificador de l observacio de verificacio no pot
+          estar buit.
+        observation_id_mismatch: L identificador de l observacio de verificacio no
+          coincideix amb l observacio sol.licitada.
+        observation_not_found: No hi ha cap observacio de verificacio que coincideixi
+          amb l identificador sol.licitat.
+        observation_prefix_ambiguous: El prefix de l observacio de verificacio coincideix
+          amb diverses observacions.
   modelo:
     borrador_binding:
       errors:
         caller_binding_keys_blank: Les claus de binding aportades no poden estar en
           blanc.
+        decimal_value_invalid: El valor d'esborrany per al binding numeric %{binding_id}
+          ha de ser compatible amb decimal.
+        forbidden_bindings: 'L''snapshot d''esborrany conte valors que el registre
+          no ha marcat com a AEAT-prefilled: %{bindings}.'
+        registry_snapshot_axis_mismatch: 'L''eix de l''snapshot de registre no coincideix
+          amb l''ordre de binding d''esborrany: any de l''snapshot=%{snapshot_year}
+          periode=%{snapshot_period}; any de l''ordre=%{filing_year} periode=%{period}.'
+        registry_snapshot_modelo_mismatch: 'El model de l''snapshot de registre no
+          coincideix amb l''ordre de binding d''esborrany: model de l''snapshot=%{snapshot_modelo};
+          model de l''ordre=%{command_modelo}.'
+        snapshot_axis_mismatch: 'L''snapshot d''esborrany no coincideix amb l''eix
+          del calcul: any de l''snapshot=%{snapshot_year} periode=%{snapshot_period};
+          any del calcul=%{filing_year} periode=%{period}.'
+        snapshot_bucket_mismatch: L'snapshot d'esborrany no pertany al bucket actiu.
         snapshot_id_required: Els valors procedents de l'esborrany requereixen un
           borrador_snapshot_id.
+        snapshot_load_failed: No es pot carregar l'snapshot d'esborrany seleccionat;
+          llista els snapshots actius amb aeat app live borrador 100 list.
         snapshot_not_active: L'snapshot d'esborrany no està actiu; llista els snapshots
           actius amb `aeat app live borrador 100 list`.
         source_trace_mismatch: La traça d'origen de l'esborrany ha de coincidir amb
           els identificadors de binding resolts.
+        unsupported_modelo: El binding d'esborrany no esta suportat per al model %{modelo};
+          el manifest del registre ha de declarar la capacitat d'esborrany.
     errors:
+      amendment_registry_root_missing: Registry root %{registry_root} is missing;
+        amendment overrides cannot be validated.
+      amendment_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved; amendment
+        overrides cannot be validated.
+      amendment_unknown_casillas: 'Amendment overrides target casilla ids that are
+        not declared in registry modelo %{modelo}, filing year %{filing_year}, period
+        %{period}: %{casillas}.'
       amendment_verification_refused_missing_casillas: 'L''esmena és incompleta: falten
         identificadors de casella requerits al mapa corregit.'
       amendment_verification_refused_no_snapshot: El registre no té una instantània
         per al model, any i període sol·licitats.
+      calculation_registry_root_missing: Registry root %{registry_root} is missing;
+        modelo calculation cannot continue.
+      calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved.
       calculation_revision_not_found: No s'ha trobat cap revisió de càlcul amb id=%{calculation_revision_id}.
+      caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
+        bucket-derived source-bound casillas: %{casillas}.'
       computed_casilla_binding_conflict: 'Les entrades procedents del bucket apunten
         a caselles calculades i no es poden sobreescriure amb binding extern. Caselles
         afectades: %{computed}.'
+      export_cross_bucket_refused: La revisio indicada pertany a un bucket diferent
+        del bucket del perfil actiu. Canvia de perfil abans d'exportar.
+      export_draft_approval_failed: No s'ha pogut aprovar l'esborrany per a la revisio
+        de calcul %{calculation_revision_id}.
+      export_draft_write_failed: No s'ha pogut escriure el fitxer d'exportacio per
+        a la revisio de calcul %{calculation_revision_id}.
+      export_ledger_evidence_missing: La revisio de calcul %{calculation_revision_id}
+        derivada del llibre major no inclou evidencia del llibre major ni una referencia
+        resoluble a l'snapshot; verifica la revisio de nou abans d'exportar.
       export_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile
         create NAME` abans d'exportar una revisió de modelo.
+      export_operator_name_missing: 'L''exportacio requereix el nom de l''operador
+        al perfil actiu; falten aquestes dades de perfil: %{missing}.'
+      export_operator_profile_missing: L'exportacio necessita el nom de l'operador
+        del perfil actiu, pero no existeix cap perfil persistit; completa identity.surnames
+        i identity.name abans d'exportar.
+      export_period_unmappable: La unitat de treball %{work_unit_id} conte el periode
+        %{period}, que no es pot assignar a un periode de registre.
+      export_revision_state_refused: La revisio de calcul %{calculation_revision_id}
+        no esta verificada-completa ni presentada i no es pot exportar.
       external_filing_evidence_reference_blank: La importació de declaració externa
         requereix un evidence_reference_id no buit.
       external_filing_no_casilla_values: La importació de declaració externa requereix
         com a mínim un valor de casella; el mapatge aportat és buit.
+      external_import_duplicate_revision: Calculation revision %{calculation_revision_id}
+        already exists in the catalogue; an identical import was already recorded.
+      external_import_registry_root_missing: Registry root %{registry_root} is missing;
+        imported casilla ids cannot be validated.
+      external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved; imported
+        casilla ids cannot be validated.
+      external_import_unknown_casillas: 'External-filing import carries casilla ids
+        that are not declared in registry modelo %{modelo}, filing year %{filing_year},
+        period %{period}: %{casillas}.'
       filing_record_not_found: No s'ha trobat cap declaració registrada amb id=%{filing_record_id}.
+      iva_wallet_backend_casilla_conflict: Backend casilla input for Modelo 303 prior
+        compensation conflicts with the IVA wallet reconciliation decision.
       iva_wallet_blocked: 'IVA wallet reconciliation is blocked for Modelo 303 (%{divergence}):
         %{reason}'
+      iva_wallet_caller_binding_conflict: Caller binding for Modelo 303 prior compensation
+        conflicts with the IVA wallet reconciliation decision.
+      iva_wallet_caller_casilla_conflict: Caller casilla input for Modelo 303 prior
+        compensation conflicts with the IVA wallet reconciliation decision.
       iva_wallet_not_seeded: 'El càlcul del Model 303 requereix un historial de compensació
         IVA inicialitzat. Per a la primera declaració d''un perfil nou, inicialitza
         el saldo d''obertura amb zero: `aeat app modelo iva-wallet seed --filing-year
         YEAR --period PERIOD --amount 0 --confirm`.'
+      iva_wallet_selected_amount_missing: IVA wallet reconciliation decision has no
+        selected amount.
+      iva_wallet_supplied_decision_mismatch: Supplied IVA wallet reconciliation decision
+        does not match the persisted decision.
+      iva_wallet_target_mismatch: IVA wallet decision target %{target_year}/%{target_period}
+        does not match work unit %{filing_year}/%{period}.
+      iva_wallet_taxpayer_identity_missing: IVA wallet reconciliation cannot continue
+        without the work-unit taxpayer identity.
+      iva_wallet_taxpayer_mismatch: IVA wallet reconciliation taxpayer does not match
+        the Modelo 303 work unit.
+      iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type:
+        %{decision_type}.'
+      ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
+        %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
+        %{period}` before calculating.'
       reconcile_declaration_unsupported: La reconciliació des de PDF de declaració
         encara no està disponible; fes servir --from-justificante PATH fins que el
         parser de declaració estigui implementat.
@@ -624,10 +808,10 @@ application:
       iva_wallet_next_action: Review the IVA wallet reconciliation decision before
         verifying or exporting this Modelo 303.
       m210_baseline_tipo_deferred:
-        next_action: 'El tipus de gravamen baseline per a tipo_renta={tipo_renta}
-          esta ajornat a una Fase futura sota la task #229 (corpus BOE pendent). Establiu
-          profile.country_of_fiscal_residence per reclamar la tarifa Convenio aplicable,
-          o espereu que el corpus baseline incorpori aquesta fila.'
+        next_action: 'El tipus de gravamen b tipo_renta={tipo_renta} esta ajornat
+          a una Fase futura sota la task #229 (corpus BOE pendent). Establiu profile.country_of_fiscal_residence
+          per reclamar la tarifa Convenio aplicable, o espereu que el corpus baseline
+          incorpori aquesta fila.'
       m210_convenio_rate_missing:
         next_action: Autoritzeu la fila Convenio España-{cc} a m210-convenio-rates
           per a tipo_renta={tipo_renta}, o desestableixi profile.convenio_doble_imposicion_country
@@ -649,6 +833,18 @@ application:
           mitjancant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
+    profile_binding:
+      errors:
+        date_value_type_invalid: La dada de perfil per al binding de data %{binding_id}
+          ha de ser una data; s'ha rebut %{value_type}.
+        decimal_value_invalid: La dada de perfil per al binding numeric %{binding_id}
+          ha de ser compatible amb decimal.
+        decimal_value_type_invalid: 'La dada de perfil per al binding de canal decimal
+          %{binding_id} te un tipus no suportat: %{value_type}.'
+        enum_boolean_invalid: La dada de perfil per al binding enum %{binding_id}
+          ha resolt a boolea; els booleans no son claus valides de dispatch enum.
+        source_trace_mismatch: La traca de bindings del perfil no coincideix amb els
+          bindings resolts.
   overview:
     explain:
       errors:
@@ -657,6 +853,104 @@ application:
     errors:
       portal_not_found: El portal AEAT sol·licitat no està registrat. Executeu 'aeat
         app live portals list' per veure els portals disponibles.
+  registry:
+    errors:
+      invalid_manual_id: El manual del registre ha de ser un de {allowed_manual_ids};
+        sha rebut {manual_id}.
+      invalid_manual_rule_kind: El tipus de regla manual ha de ser un de {allowed_rule_kinds};
+        s ha rebut {rule_kind}.
+      invalid_oracle_environment: L'entorn dels oracles del registre ha de ser un
+        de {allowed_values}; s'ha rebut {value}.
+      invalid_topic_locale: El locale de temes del registre ha de ser un de {allowed_locales};
+        sha rebut {locale}.
+      manual_section_not_found: No sha trobat la seccio {section} a {manual_id} {year}
+        {part}.
+      manual_section_requires_structure: La seccio del manual requereix estructura
+        extreta per a {manual_key}.
+  repair_integrity:
+    errors:
+      conflicting_list_filters: 'Els filtres de llista de reparacio son excloents:
+        {filters}. Fes servir un filtre o cap.'
+      decision_id_mismatch_list: L id de la decisio de reparacio no coincideix amb
+        l id recalculat des del contingut; es rebutja l entrada de la llista.
+      decision_id_mismatch_load: L'id del contingut de la decisio de reparacio no
+        coincideix amb el sol.licitat o recalculat; es rebutja la carrega.
+      decision_id_mismatch_save: L'id de la decisio de reparacio no coincideix amb
+        l'id recalculat des del contingut; es rebutja el desament.
+      decision_not_found: La decisio de reparacio {decision_id} no existeix.
+  storage:
+    calc_sheets:
+      engine:
+        anchors:
+          final: RESULTAT
+          start: 'INICI: Entradas'
+        errors:
+          parameter_no_dated_value: El motor d'exportació de fulls de càlcul no ha
+            trobat cap valor de paràmetre vigent per a la data de meritació.
+          parameter_not_scalar: El motor d'exportació de fulls de càlcul esperava
+            un paràmetre escalar, però ha rebut un paràmetre de taula.
+          unsupported_rounding: El motor d'exportació de fulls de càlcul ha trobat
+            una regla d'arrodoniment del registre no admesa.
+        guide:
+          editable_cells: 'Editeu només les cel·les de la pestanya ''Entradas''. La
+            resta de pestanyes estan protegides: ''Cálculos'' conté les caselles derivades
+            amb fórmules, ''Procedencia'' audita cada casella calculada i ''Tarifas''
+            reflecteix els paràmetres vigents consultats per les fórmules.'
+          period: '%{modelo_title} - període %{period} / %{filing_year}.'
+          pull_command: Per incorporar les vostres edicions a l'emmagatzematge local,
+            executeu 'aeat config google sync calc pull' des de la CLI.
+          title: '%{modelo_title} - %{period}/%{filing_year}'
+        labels:
+          casilla: Casella
+          cell: Cel·la
+          concept: Concepte
+          fixed_quota: Quota fixa
+          formula: Fórmula
+          legal_refs: Ref. legals
+          marginal_rate: Tipus marginal
+          maximum_base: Base màxima
+          minimum_base: Base mínima
+          number: Núm.
+          rounding: Arrodoniment
+          section: Secció
+          source: Origen
+          source_refs: Ref. fonts
+          value: Valor
+        protected:
+          calculos: Càlculs derivats - protegit per preservar la paritat
+          guide: Guia - protegit
+          provenance: Procedència / audit trail - protegit
+          tariffs: Tarifes / paràmetres vigents - protegit
+      layout:
+        errors:
+          undeclared_reference: El disseny del full de càlcul referencia un element
+            no declarat per la revisió.
+          unresolved_reference: El disseny del full de càlcul no conté cap cel·la
+            per a un element referenciat.
+      parity:
+        errors:
+          seed_anchor_missing: L'entrada de l'escenari de paritat no té cap cel·la
+            del full de càlcul on sembrar-se.
+          unknown_casilla_numbers: L'escenari de paritat referencia números de casella
+            que no són a la instantània del registre.
+      records:
+        errors:
+          address_mismatch: La direcció de cel·la del full de càlcul no coincideix
+            amb la seva fila i columna.
+          duplicate_write_address: El pla exportador del full de càlcul escriu més
+            d'una càrrega a la mateixa cel·la.
+          frozen_view_empty: La vista immobilitzada ha de fixar almenys una fila o
+            una columna.
+          invalid_column_index: L'índex de columna del registre del full de càlcul
+            ha de començar en u i ser positiu.
+          invalid_column_letters: Les lletres de columna del registre del full de
+            càlcul no són vàlides.
+          range_malformed: Els límits de l'interval del full de càlcul no són vàlids.
+          tariff_shape_invalid: La forma de la taula de tarifes del full de càlcul
+            no és vàlida.
+      translator:
+        errors:
+          translation_failed: 'La fórmula del registre no es pot traduir a una fórmula de full de càlcul.'
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
@@ -666,6 +960,8 @@ application:
         profile switch NAME` per activar-lo o `aeat config profile delete NAME` primer.
       profile_create_route_mismatch: La ruta de creació de perfil '%{route}' no coincideix
         amb l'id de perfil '%{profile}'.
+      profile_integrity_identity_mismatch: 'L''emmagatzematge del perfil no és coherent: els magatzems físics no coincideixen en la identitat del perfil.'
+      profile_integrity_status_mismatch: 'L''emmagatzematge del perfil no és coherent: l''estat de cicle de vida del manifest no coincideix amb el registre segur.'
       profile_label_blank: L'etiqueta del perfil no pot estar buida.
       profile_manifest_already_registered: El perfil '%{profile}' ja té un manifest
         de bucket registrat a %{bucket_dir}.
@@ -677,6 +973,14 @@ application:
         es pot seleccionar.
       unsupported_bundle_schema_version: La versió de l'esquema del paquet no és compatible
         amb aquesta versió de l'aplicació.
+      aggregate_profile_id_mismatch: 'L''emmagatzematge del perfil no és coherent: la identitat del manifest no coincideix amb el registre segur.'
+      aggregate_label_mismatch: 'L''emmagatzematge del perfil no és coherent: l''etiqueta del manifest no coincideix amb el registre segur.'
+      aggregate_status_mismatch: 'L''emmagatzematge del perfil no és coherent: l''estat de cicle de vida del manifest no coincideix amb el registre segur.'
+      lifecycle_profile_already_exists: 'Ja existeix un perfil al bucket actiu.'
+      lifecycle_profile_tombstoned_rename: 'No es pot canviar el nom d''un perfil eliminat.'
+      lifecycle_profile_tombstoned_duplicate: 'No es pot duplicar un perfil eliminat.'
+      lifecycle_schema_validation_failed: 'Les dades del perfil no coincideixen amb l''esquema de perfil d''usuari.'
+      profile_bucket_directory_removal_failed: 'No s''ha pogut eliminar el directori del perfil.'
   wizard:
     errors:
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
@@ -1060,8 +1364,9 @@ cli:
       export:
         actor_help: Etiqueta de l'operador registrada a l'esdeveniment MODELO_EXPORTED.
         errors:
-          no_exportable_revision: 'No hi ha cap revisió exportable: la unitat de treball
-            no té cap revisió verificada-completa o presentada.'
+          output_required: Proporcioneu --output PATH per a l artefacte fichero-BOE.
+          revision_not_exportable: La revisio seleccionada {revision_id} esta en estat
+            {state}; exportar requereix una revisio verificada completa o presentada.
         help: Exporta una revisió de modelo verificada o presentada a un fitxer local
           compatible amb AEAT (fichero-BOE). Local; mai contacta amb AEAT.
         output_help: Ruta on escriure l'artefacte fichero-BOE.
@@ -1144,9 +1449,12 @@ cli:
         casilla_help: Valor de casilla amb la sintaxi CASILLA=DECIMAL (repetible).
         ccaa_help: Codi de comunitat autònoma per a la projecció territorial.
         m100_calculation_error: 'Error intern: el càlcul del Modelo 100 ha fallat.'
-        no_m130_revisions: No hi ha revisions M130 per a l'exercici indicat.
-        no_m130_units: No hi ha unitats de treball M130 per a l'exercici i el període
-          indicats.
+        no_m130_revisions: No hi ha revisions M130 per a l'exercici indicat. Executa
+          `aeat app modelo work calculate --modelo 130 --year %{year} --period 1T`
+          per a cada trimestre primer.
+        no_m130_units: No hi ha unitats de treball M130 per a l'exercici indicat.
+          Crea i calcula unitats M130 primer amb `aeat app modelo work create --modelo
+          130 --year %{year} --period 1T`.
         year_help: Any fiscal per a la projecció.
       project_help: Executar projeccions agregades de models (p. ex. agregació anual
         del Modelo 130).
@@ -1214,8 +1522,9 @@ cli:
           de treball
         calculate_saved: 'Desat com a revisió de càlcul en esborrany %{revision_id}
           (estat: %{state}). Està persistit i es pot reprendre més tard; llista les
-          revisions amb `aeat app modelo work revisions %{work_unit_id}` i torna a
-          consultar aquesta amb `aeat app modelo work revision %{revision_id}`.'
+          revisions amb `aeat app modelo work revisions --modelo %{modelo} --year
+          %{year} --period %{period}` i torna a consultar aquesta amb `aeat app modelo
+          work revision %{revision_id}`.'
         calculate_unauthorized_advisory: 'AVÍS: el backend de càlcul del model %{modelo}
           NO està autoritzat — encara no s''ha provat amb un test integral al llarg
           d''almenys dos exercicis de renda (porta d''autorització multi-exercici).
@@ -1320,6 +1629,8 @@ cli:
         dt12_computation_error: 'Error de càlcul DT12: %{message}'
         file_help: Marcar una revisió verificada com a internament presentada. NO
           envia a l'AEAT
+        file_requires_verified: La revisio seleccionada {revision_id} esta en estat
+          {state}; presentar requereix una revisio verificada completa.
         from_filing_record_help: Identificador estable del filing record base a amendar.
           Ha de portar evidència externa importada (justificant / CSV / captura en
           viu)
@@ -1327,10 +1638,12 @@ cli:
           de treball
         history_work_unit_id_help: Id d'unitat de treball el cicle de vida de la qual
           vols veure
-        id_is_work_unit_not_calc_revision: Aquest id és un id d'unitat de treball,
-          però verify/file necessiten un id de revisió de càlcul. Executa 'aeat app
-          modelo work calculate %{work_unit_id}' per generar l'id de revisió de càlcul
-          i després passa'l.
+        id_is_work_unit_not_calc_revision_natural: Aquest id és un id d'unitat de
+          treball, però verify/file necessiten un id de revisió de càlcul. Per a la
+          ruta habitual, executa 'aeat app modelo work calculate --modelo %{modelo}
+          --year %{year} --period %{period}' i torna a executar verify/file per al
+          mateix model/any/període. Els ids exactes continuen disponibles com a via
+          avançada.
         include_discarded_help: Incloure les unitats descartades en el llistat (excloses
           per defecte)
         invalid_amendment_kind: --kind ha de ser un de {choices}; s'ha rebut {kind}.
@@ -1340,6 +1653,8 @@ cli:
           hexadecimal en minúscules de 64 caràcters (resum SHA-256)
         invalid_casilla_key: 'La clau --casilla no és un CasillaId vàlid (alfanumèric
           més separadors . _ : -, màx. 64 caràcters)'
+        invalid_revision_selector: 'Selector de revisio desconegut {value}; trieu
+          un de: {choices}.'
         invalid_work_unit_id: work_unit_id ha de ser una cadena hex en minúscules
           de 64 caràcters (resum SHA-256)
         kv_empty_key_error: La clau de {flag} no pot estar buida; s'ha rebut {spec}.
@@ -1363,6 +1678,9 @@ cli:
           el càlcul encara necessita.'
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         name_help: Nom de visualització opcional de la unitat de treball
+        name_required: Proporcioneu --name.
+        natural_target_required: Passeu un id exacte d unitat de treball, o indiqueu
+          la declaracio amb --modelo, --year i --period.
         notes_help: Notes opcionals associades al filing record
         output_language_help: Idioma de sortida per als missatges renderitzats.
         override_help: Valor de binding amb sintaxi KEY=VALUE (repetible); executa
@@ -1447,6 +1765,9 @@ cli:
           Executa `aeat app modelo work runs` per llistar els ids d'execució.
         revision_help: Identificador estable de la revisió registrada del model; executa
           `aeat app modelo describe MODEL` per veure els ids de revisió disponibles.
+        revision_selector_ambiguous: Mes d una revisio de calcul coincideix amb aquest
+          selector. Trieu-ne una explicitament. {candidates}
+        revision_selector_help: Selector de revisio.
         revision_show_help: Mostrar els valors de casella desats d'una revisió de
           càlcul concreta (sense recalcular)
         revision_year_mismatch: La revisió %{revision} del model %{modelo} no cobreix
@@ -1498,6 +1819,15 @@ cli:
         sal_reserva_incomplete: --sal-beneficio-neto, --sal-reserva-dotada i --sal-capital-social
           s'han de subministrar conjuntament.
         sal_reserva_not_decimal: Els valors --sal-* han de ser imports decimals.
+        selector_ambiguous: Mes d una unitat de treball activa coincideix amb aquest
+          modelo/any/periode. Trieu una revisio del registre o passeu un id explicit
+          d unitat de treball. {candidates}
+        selector_not_found: Cap unitat de treball activa coincideix amb aquest modelo/any/periode.
+          Executeu aeat app modelo work create primer.
+        selector_revision_conflict: Ja existeix una unitat de treball activa per a
+          aquest modelo/any/periode amb revisio de registre {existing_revision}; s
+          ha sol licitat {requested_revision}. Repreneu la unitat existent, descarteu-la
+          explicitament o passeu un id exacte.
         set_not_decimal: El valor de --set ha de ser un decimal; s'ha rebut {value}.
         set_override_help: Valor de casella corregit amb sintaxi CASILLA=DECIMAL (repetible;
           almenys un requerit)
@@ -1507,6 +1837,8 @@ cli:
         unknown_revision: 'Revisió desconeguda %{revision} per al model %{modelo};
           revisions declarades: %{declared}.'
         verify_help: Verificar una revisió draft contra el contracte verified-complete
+        verify_requires_draft: La revisio seleccionada {revision_id} esta en estat
+          {state}; verificar requereix una revisio esborrany.
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
@@ -1911,7 +2243,6 @@ cli:
       key_help: Clau a netejar
     workflow_help: Mostrar ajuda del flux de configuració
   diagnostics:
-    app_help: Diagnostics d'us intern per als components de l'AEAT.
     browser:
       http_status_label: Estat HTTP
       markers_label: Marcadors
@@ -1929,23 +2260,6 @@ cli:
     next_action:
       inspect_registry_toml: Inspecciona les fonts TOML del registre per identificar
         el problema.
-    profile:
-      errors:
-        ambiguous_profile: 'Nom de perfil ambigu: %{profile}.'
-        invalid_value_fallback: 'Invalid value for %{key}: %{value}'
-        invalid_value_with_choices: '%{message} (%{choices})'
-        no_active_profile: Cap perfil actiu seleccionat.
-        profile_empty: --profile no pot estar en blanc.
-        unknown_profile: 'Perfil desconegut: %{profile}.'
-        unknown_profile_key: 'Clau de perfil desconeguda: %{key}.'
-      get_help: Read one profile key stored value.
-      help: Engineer-only profile field inspection and surgical edits.
-      key_help: Profile key.
-      profile_help: Profile to use; defaults to the active profile.
-      set_help: Write one profile key value, validated against the wizard descriptor.
-      unset_help: Clear one profile key value.
-      unset_placeholder: <no definit>
-      value_help: Value to store.
     repair:
       audience_internal: problema intern de l'aplicació
       auth_label: Autenticació
@@ -1961,18 +2275,6 @@ cli:
       profile_label: Perfil
       python_label: Python
       version_label: Versió
-    secure_objects:
-      all_help: Return every key, including unreadable rows.
-      errors:
-        conflicting_filters: --all and --unreadable cannot be combined; pass one or
-          neither.
-      help: Inventory the secure-object index by namespace.
-      labels:
-        count: recompte
-        namespace: espai de noms
-      list_help: List secure-object keys stored under one namespace.
-      namespace_help: Namespace to inventory.
-      unreadable_help: Restrict the listing to undecryptable rows.
     summary:
       auth_no_session: El proveïdor d'autenticació %{provider} no té cap sessió preparada
       auth_none: L'autenticació no està configurada
@@ -2428,6 +2730,7 @@ cli:
         auth_providers: Llistar els proveidors d'autenticacio disponibles.
         auth_status: Mostrar l'estat actual de l'autenticacio amb l'AEAT.
         auth_test: Provar l'autenticacio amb l'AEAT.
+        bucket_history: Inspecciona l historial append-only d esdeveniments del bucket.
         diagnostics_logs: Consultar els registres de diagnostic de l'aplicacio.
         diagnostics_quarantine: Gestionar els elements en quarantena.
         diagnostics_repair: Executar comprovacions de salut i reparar l'estat de l'aplicacio.
@@ -2448,6 +2751,7 @@ cli:
         profile_status: Mostrar l'estat del perfil actiu.
         profile_switch: Canviar al perfil de contribuent indicat.
         section_authentication: Autenticacio AEAT
+        section_bucket_inspection: Inspeccio de bucket
         section_diagnostics: Diagnostic
         section_first_run: Primera execucio
         section_profile_inspection: Inspeccio del perfil
@@ -3066,6 +3370,7 @@ errors:
     unsupported_comparison_op: 'Operador de comparacio no ames: %{op}.'
     unsupported_op: 'Operador de formula no ames: %{op}.'
   censo:
+    bucket_id_blank: 'El servei de sincronització censal requereix un bucket de perfil.'
     no_snapshot_captured: No s'ha capturat cap instantània del cens per al perfil
       {profile_id}.
     profile_not_found: El perfil {profile_id} no existeix; crea'l abans d'aplicar
@@ -3286,6 +3591,12 @@ errors:
     error_workflow: S'ha produït un error en el flux de treball.
     error_workflow_component: Un component del flux de treball ha llançat una excepció
       inesperada.
+    modelo_calculation_revision_selector: La seleccio de revisio de calcul ha fallat.
+    modelo_calculation_revision_selector_not_found: Cap revisio de calcul coincideix
+      amb el selector indicat.
+    modelo_work_selector: El selector de treball de modelo ha fallat.
+    modelo_work_selector_unit_not_found: No s'ha trobat la unitat de treball de modelo
+      seleccionada.
   fail:
     censo_sync: La sincronització del cens del Model 036 ha fallat.
     currency_error: Ha fallat la normalització de la moneda.
@@ -3578,6 +3889,10 @@ errors:
       184 han de sumar exactament el 100 %.
     modelo_347_threshold: Les operacions del Model 347 per sobre del llindar informatiu
       requereixen cobertura declarativa explícita.
+    modelo_calculation_revision_selector_ambiguous: El selector de revisio de calcul
+      coincideix amb mes d'una revisio; refineu el selector.
+    modelo_calculation_revision_selector_state: La revisio de calcul seleccionada
+      no esta en un estat utilitzable per a aquesta operacio.
     modelo_censo_stale: 'L''operació es rebutja perquè has aplicat un cens nou després
       de generar aquesta feina. L''AEAT és la font legal vinculant: torna a generar-la
       amb el cens actual.'
@@ -3585,6 +3900,14 @@ errors:
       perfil actiu. L'exportació només opera dins el bucket del perfil actiu.
     modelo_export_no_active_bucket: L'exportació necessita un perfil actiu. Crea o
       selecciona un perfil i torna-ho a provar.
+    modelo_work_selector_ambiguous: Mes d'una unitat de treball de modelo coincideix
+      amb el selector.
+    modelo_work_selector_contradiction: Els arguments del selector de treball de modelo
+      es contradiuen.
+    modelo_work_selector_no_active_bucket: Seleccioneu un perfil actiu abans de resoldre
+      una unitat de treball de modelo.
+    modelo_work_selector_revision_conflict: La unitat de treball de modelo seleccionada
+      pertany a una altra revisio.
     profile_already_registered: Ja existeix un perfil amb aquest nom. Fes servir `aeat
       config profile switch NOM` per canviar-hi.
     profile_import_collision: L'identificador del perfil importat coincideix amb un
@@ -3911,18 +4234,30 @@ profile:
 review:
   adapters:
     errors:
+      drafts_load_failed: No s han pogut carregar els esborranys de presentacio des
+        del backend segur.
       invoices_load_failed: No s'han pogut carregar les factures de l'adaptador.
       transactions_load_failed: No s'han pogut carregar les transaccions de l'adaptador.
+  edit:
+    errors:
+      parse_failed: No s'ha pogut interpretar el token d'edició. El valor indicat
+        s'ha ocultat.
   filing:
     draft_placeholder_summary: Esborrany pendent
     finding_summary: Incidència detectada a l'esborrany
     stale_approval_summary: L'aprovació de l'esborrany ha caducat
+  filter:
+    errors:
+      parse_failed: No s'ha pogut interpretar el token de filtre. El valor indicat
+        s'ha ocultat.
   invoice:
     summary: Justificant pendent de revisió
   operator:
     errors:
       item_not_found: No s'ha trobat l'element sol.licitat a la cua de revisio.
-      unknown_kind: 'Tipus d''element de revisio desconegut: %{kind}.'
+      reserved_kind: El tipus de revisió està reservat i no és un element de revisió
+        emès.
+      unknown_kind: Tipus d'element de revisió desconegut.
       unsupported_item_type: 'Tipus d''element de revisio no ames: %{item_type}.'
   transaction:
     summary: Transacció pendent de classificació

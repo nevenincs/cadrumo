@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import ExitStack
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -20,10 +20,16 @@ import pytest
 from ...adapters.persistence.storage.runtime import inspect_bucket_storage_runtime
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core.config import Settings, override_settings
+from ...core.identity import nif_check_letter
+from ...core.resources import resources
+from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.deadlines._models import IVARegime
 from ...domain.filing import ModeloCasillaProvenance
-from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
+from ...domain.iva_compensation._reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationReconciliationDecision,
+)
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -47,7 +53,10 @@ from ._actions import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloIvaWalletReconciliationBlocked,
+    calculate_modelo_revision,
+    create_work_unit,
     file_modelo_revision,
+    mark_revision_verificado_completo,
     verify_modelo_revision,
 )
 from ._export import (
@@ -55,6 +64,8 @@ from ._export import (
     ModeloExportCrossBucketRefusedError,
     ModeloExportNoActiveBucketError,
     ModeloExportResult,
+    ModeloIvaWalletDecisionProvenance,
+    _iva_wallet_decision_export_provenance,
     export_modelo_revision,
 )
 
@@ -97,11 +108,13 @@ def _ensure_operator_storage_span() -> None:
     _PROFILE_SPAN_OPEN = True
 
 
-def _seed_profile(*, tax_id: str | None = None) -> str:
+def _seed_profile(*, tax_id: str | None = None, profile_overrides: dict[str, str] | None = None) -> str:
     _ensure_operator_storage_span()
-    overrides = {"identity.tax_id": tax_id} if tax_id is not None else None
+    overrides = dict(profile_overrides or {})
+    if tax_id is not None:
+        overrides["identity.tax_id"] = tax_id
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="operator", overrides=overrides),
+        lambda state: register_minimal_profile(state, profile_id="operator", overrides=overrides or None),
     )
     bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     assert bucket_id is not None
@@ -208,6 +221,49 @@ def _filed_history_only_wallet_decision(
     )
 
 
+def _wallet_only_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCompensationReconciliationDecision:
+    now = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+    return IvaCompensationReconciliationDecision(
+        taxpayer_nif=taxpayer_nif,
+        target_year=2026,
+        target_period=period,
+        selected_authority="aeat_wallet",
+        selected_amount=Decimal("1200.00"),
+        wallet_amount=Decimal("1200.00"),
+        local_recurrence_amount=None,
+        override_amount=None,
+        divergence="wallet_only",
+        blocked=False,
+        stale_wallet=False,
+        reason="synthetic wallet-only authority for Modelo 303 export",
+        wallet_captured_at=now,
+        authority_sources=(
+            IvaCompensationAuthoritySource(
+                source_kind="aeat_wallet",
+                amount=Decimal("1200.00"),
+                source_locator="aeat-wallet:synthetic-modelo-303-export-wallet-only",
+                captured_at=now,
+            ),
+        ),
+        decided_at=now,
+    )
+
+
+def _modelo_303_engine_inputs() -> dict[str, Decimal]:
+    return {
+        "modelo-303-iva-repercutido-general-cuota": Decimal("1000.00"),
+        "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
+        "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
+        "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
+        "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
+        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
+    }
+
+
+def _synthetic_valid_nif(number: int) -> str:
+    return f"{number:08d}{nif_check_letter(number)}"
+
+
 def _wallet_decision_repository_at(sidecar_root: Path) -> tuple[IvaWalletDecisionRepository, Settings]:
     settings = Settings(aeat_local_storage_root=sidecar_root, aeat_active_profile="operator")
     objects = inspect_bucket_storage_runtime("operator", settings).secure_object_repository()
@@ -250,6 +306,85 @@ def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:
     ]
 
 
+def test_export_result_json_surfaces_redacted_iva_wallet_decision_provenance(tmp_path: Path) -> None:
+    result = ModeloExportResult(
+        calculation_revision_id="a" * 64,
+        work_unit_id="b" * 64,
+        bucket_id="bucket-operator",
+        modelo="303",
+        filing_year=2026,
+        period="2T",
+        output_path=tmp_path / "modelo-303.txt",
+        byte_size=128,
+        file_sha256="a" * 64,
+        format="fichero-boe",
+        exported_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+        actor="operator",
+        bucket_event_id="event-1",
+        iva_wallet_decision_provenance=ModeloIvaWalletDecisionProvenance(
+            decision_ref="sha256:" + "1" * 64,
+            selected_authority="aeat_wallet",
+            divergence="wallet_only",
+            target_year=2026,
+            target_period="2T",
+            authority_source_kinds=("aeat_wallet",),
+            authority_source_refs=("sha256:" + "2" * 64,),
+        ),
+    )
+
+    payload = result.model_dump(mode="json")
+
+    assert payload["iva_wallet_decision_provenance"] == {
+        "decision_ref": "sha256:" + "1" * 64,
+        "selected_authority": "aeat_wallet",
+        "divergence": "wallet_only",
+        "target_year": 2026,
+        "target_period": "2T",
+        "authority_source_kinds": ["aeat_wallet"],
+        "authority_source_refs": ["sha256:" + "2" * 64],
+    }
+
+
+def test_iva_wallet_export_provenance_redacts_taxpayer_amounts_and_source_locators() -> None:
+    decided_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+    decision = IvaCompensationReconciliationDecision(
+        taxpayer_nif="synthetic-sensitive-marker",
+        target_year=2026,
+        target_period="2T",
+        selected_authority="aeat_wallet",
+        selected_amount=Decimal("1200.00"),
+        wallet_amount=Decimal("1200.00"),
+        local_recurrence_amount=None,
+        override_amount=None,
+        divergence="wallet_only",
+        blocked=False,
+        stale_wallet=False,
+        reason="wallet-only synthetic decision",
+        wallet_captured_at=decided_at,
+        authority_sources=(
+            IvaCompensationAuthoritySource(
+                source_kind="aeat_wallet",
+                amount=Decimal("1200.00"),
+                source_locator="aeat-wallet-reference-containing-synthetic-sensitive-marker",
+                captured_at=decided_at,
+            ),
+        ),
+        decided_at=decided_at,
+    )
+
+    provenance = _iva_wallet_decision_export_provenance(decision)
+
+    assert provenance is not None
+    payload_text = provenance.model_dump_json()
+    assert provenance.selected_authority == "aeat_wallet"
+    assert provenance.divergence == "wallet_only"
+    assert provenance.decision_ref.startswith("sha256:")
+    assert provenance.authority_source_refs[0].startswith("sha256:")
+    assert "synthetic-sensitive-marker" not in payload_text
+    assert "1200" not in payload_text
+    assert "aeat-wallet-reference" not in payload_text
+
+
 def test_export_refuses_when_no_active_bucket(
     isolated_backend: None,
     tmp_path: Path,
@@ -257,10 +392,7 @@ def test_export_refuses_when_no_active_bucket(
     """Without an active profile bucket the service cannot scope the
     MODELO_EXPORTED event and must refuse cleanly."""
 
-    with (
-        pytest.raises(ModeloExportNoActiveBucketError, match=r"aeat config profile create NAME"),
-        override_settings(aeat_active_profile=None),
-    ):
+    with pytest.raises(ModeloExportNoActiveBucketError) as exc_info, override_settings(aeat_active_profile=None):
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id="0" * 64,
@@ -269,6 +401,8 @@ def test_export_refuses_when_no_active_bucket(
             ),
             workflow_profile=_profile(),
         )
+    assert exc_info.value.translated_message == "application.modelo.errors.export_no_active_bucket"
+    assert exc_info.value.context is None
 
 
 def test_export_refuses_unknown_revision(
@@ -280,7 +414,7 @@ def test_export_refuses_unknown_revision(
 
     _seed_profile()
 
-    with pytest.raises(CalculationRevisionNotFoundError, match=r"no calculation revision"):
+    with pytest.raises(CalculationRevisionNotFoundError) as exc_info:
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id="f" * 64,
@@ -289,6 +423,8 @@ def test_export_refuses_unknown_revision(
             ),
             workflow_profile=_profile(),
         )
+    assert exc_info.value.translated_message == "application.modelo.errors.calculation_revision_not_found"
+    assert exc_info.value.context == {"calculation_revision_id": "f" * 64}
 
 
 def test_export_refuses_borrador_revision(
@@ -304,7 +440,7 @@ def test_export_refuses_borrador_revision(
     bucket_id = _seed_profile()
     _, calc_rev_id = _seed_revision(bucket_id=bucket_id, state=CalculationRevisionState.BORRADOR)
 
-    with pytest.raises(CalculationRevisionStateError, match=r"verified-complete or filed"):
+    with pytest.raises(CalculationRevisionStateError) as exc_info:
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=calc_rev_id,
@@ -313,6 +449,11 @@ def test_export_refuses_borrador_revision(
             ),
             workflow_profile=_profile(),
         )
+    assert exc_info.value.translated_message == "application.modelo.errors.export_revision_state_refused"
+    assert exc_info.value.context == {
+        "calculation_revision_id": calc_rev_id,
+        "state": CalculationRevisionState.BORRADOR.value,
+    }
 
 
 def test_export_refuses_cross_bucket_revision(
@@ -331,7 +472,7 @@ def test_export_refuses_cross_bucket_revision(
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
     )
 
-    with pytest.raises(ModeloExportCrossBucketRefusedError, match=r"active profile bucket"):
+    with pytest.raises(ModeloExportCrossBucketRefusedError) as exc_info:
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=calc_rev_id,
@@ -340,6 +481,9 @@ def test_export_refuses_cross_bucket_revision(
             ),
             workflow_profile=_profile(),
         )
+    assert exc_info.value.translated_message == "application.modelo.errors.export_cross_bucket_refused"
+    assert isinstance(exc_info.value.context, dict)
+    assert "work_unit_id" in exc_info.value.context
 
 
 def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
@@ -427,6 +571,98 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
     finally:
         dispose_engine(decision_settings)
     assert not (tmp_path / "out.txt").exists()
+
+
+def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wallet_provenance(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    taxpayer_nif = _synthetic_valid_nif(12_345_678)
+    bucket_id = _seed_profile(
+        tax_id=taxpayer_nif,
+        profile_overrides={"identity.surnames": "Test Surnames"},
+    )
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
+    work_repo = WorkUnitCatalogueRepository()
+    calc_repo = CalculationRevisionCatalogueRepository()
+    event_repo = BucketEventHistoryRepository()
+    decision = _wallet_only_decision(taxpayer_nif=taxpayer_nif)
+    IvaWalletDecisionRepository().save_decision(decision)
+
+    work_unit = create_work_unit(
+        bucket_id=bucket_id,
+        modelo="303",
+        filing_year=2026,
+        period="2T",
+        revision_id=snapshot.revision.id,
+        repository=work_repo,
+        bucket_event_repository=event_repo,
+        clock=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+    )
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        actor="operator",
+        casilla_inputs={
+            "iva.prorrata-volumen-con-derecho": Decimal("100.00"),
+            "iva.prorrata-volumen-total": Decimal("100.00"),
+        },
+        binding_values=_modelo_303_engine_inputs(),
+        iva_compensation_decision=decision,
+        filing_period_date=date(2026, 6, 30),
+        work_unit_repository=work_repo,
+        calculation_repository=calc_repo,
+        bucket_event_repository=event_repo,
+        clock=datetime(2026, 5, 21, 12, 1, tzinfo=UTC),
+    )
+    verified = mark_revision_verificado_completo(
+        revision.calculation_revision_id,
+        actor="operator",
+        calculation_repository=calc_repo,
+        clock=datetime(2026, 5, 21, 12, 2, tzinfo=UTC),
+    )
+
+    output_path = tmp_path / "modelo-303-wallet-only.txt"
+    result = export_modelo_revision(
+        ModeloExportCommand(
+            calculation_revision_id=verified.calculation_revision_id,
+            output_path=output_path,
+            actor="operator",
+        ),
+        workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime.GENERAL),
+        work_unit_repository=work_repo,
+        calculation_repository=calc_repo,
+        bucket_event_repository=event_repo,
+        clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+    )
+
+    assert output_path.exists()
+    assert result.modelo == "303"
+    assert result.byte_size == output_path.stat().st_size
+    assert result.file_sha256
+    assert result.casilla_provenance
+    provenance = result.iva_wallet_decision_provenance
+    assert provenance is not None
+    assert provenance.selected_authority == "aeat_wallet"
+    assert provenance.divergence == "wallet_only"
+    assert provenance.target_year == 2026
+    assert provenance.target_period == "2T"
+    assert provenance.decision_ref.startswith("sha256:")
+    assert provenance.authority_source_kinds == ("aeat_wallet",)
+    assert provenance.authority_source_refs[0].startswith("sha256:")
+
+    event = event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))[-1]
+    assert event.payload["iva_wallet_selected_authority"] == "aeat_wallet"
+    assert event.payload["iva_wallet_divergence"] == "wallet_only"
+    result_json = result.model_dump_json()
+    event_json = event.model_dump_json()
+    exported_text = output_path.read_text(encoding="utf-8")
+    assert taxpayer_nif in exported_text
+    assert taxpayer_nif not in result_json
+    assert taxpayer_nif not in event_json
+    assert "1200" not in result_json
+    assert "1200" not in event_json
+    assert "synthetic-modelo-303-export" not in result_json
+    assert "synthetic-modelo-303-export" not in event_json
 
 
 def test_verify_modelo_303_surfaces_filed_history_only_wallet_decision_as_blocking_readiness(

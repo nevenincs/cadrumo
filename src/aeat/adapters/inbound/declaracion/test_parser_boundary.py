@@ -1204,7 +1204,9 @@ def test_parser_requires_a_known_registry_model_after_template_resolution(tmp_pa
     assert excinfo.value.translated_message == "adapters.inbound.declaracion.errors.registry_snapshot_required"
     assert excinfo.value.context is not None
     assert excinfo.value.context.get("modelo") == "999"
-    assert "is not present in the calculation registry" in excinfo.value.context.get("error", "")
+    error = excinfo.value.context.get("error", "")
+    assert isinstance(error, str)
+    assert "is not present in the calculation registry" in error
 
 
 def test_real_redacted_declaration_copy_extracts_partial_casillas() -> None:
@@ -2022,7 +2024,7 @@ def test_parser_extracts_modelo_131_casillas_from_synthetic_fixture() -> None:
     filing = parse_declaracion(
         _MODELO_131_SYNTHETIC_FIXTURE,
         modelo_override="131",
-        **{"año_override": 2026},
+        año_override=2026,
         template_revision_override="2026",
         period_override="1T",
     )

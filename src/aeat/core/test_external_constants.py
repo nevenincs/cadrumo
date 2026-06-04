@@ -161,6 +161,10 @@ def test_pre303_surface_constants_are_typed() -> None:
     assert surface.wallet_periodo_input_selector.startswith("input")
     assert surface.representation_own_name_selector
     assert surface.representation_own_name_label_selector
+    wallet_actions = load_external_constants().aeat.live_safety.wallet_browser_action_patterns
+    assert surface.representation_own_name_action_label in wallet_actions
+    assert surface.wallet_discovered_entrypoint_action_label in wallet_actions
+    assert surface.wallet_execute_read_action_label in wallet_actions
     assert "clave PIN" in surface.official_access_auth_methods
 
 
@@ -179,10 +183,11 @@ def test_live_safety_action_patterns_are_centralized() -> None:
     """Audited live AEAT browser-action labels live in the external registry."""
 
     safety = load_external_constants().aeat.live_safety
+    pre303 = load_external_constants().aeat.pre303
 
     assert "clave-movil-authorize" in safety.auth_browser_action_patterns
-    assert "wallet-discovered-entrypoint-open" in safety.wallet_browser_action_patterns
-    assert "wallet-execute-read-query" in safety.wallet_browser_action_patterns
+    assert pre303.wallet_discovered_entrypoint_action_label in safety.wallet_browser_action_patterns
+    assert pre303.wallet_execute_read_action_label in safety.wallet_browser_action_patterns
     assert "buscar-declaraciones-presentadas" in safety.declarations_browser_action_patterns
     assert "csv-verifier-query" in safety.csv_verify_browser_action_patterns
     assert "check-nif-*" in safety.consult_oracle_browser_action_patterns
@@ -771,6 +776,22 @@ def test_csv_mime_type_value() -> None:
     assert CSV_MIME_TYPE == "text/csv"
 
 
+def test_jsonl_mime_type_value() -> None:
+    """``JSONL_MIME_TYPE`` equals the newline-delimited JSON MIME type."""
+
+    from .external_constants import JSONL_MIME_TYPE
+
+    assert JSONL_MIME_TYPE == "application/x-ndjson"
+
+
+def test_xlsx_mime_type_value() -> None:
+    """``XLSX_MIME_TYPE`` equals the Office Open XML workbook MIME type."""
+
+    from .external_constants import XLSX_MIME_TYPE
+
+    assert XLSX_MIME_TYPE == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+
 def test_json_mime_type_is_final_str() -> None:
     """``JSON_MIME_TYPE`` is a ``str`` instance (typed ``Final[str]``)."""
 
@@ -785,6 +806,22 @@ def test_csv_mime_type_is_final_str() -> None:
     from .external_constants import CSV_MIME_TYPE
 
     assert isinstance(CSV_MIME_TYPE, str)
+
+
+def test_jsonl_mime_type_is_final_str() -> None:
+    """``JSONL_MIME_TYPE`` is a ``str`` instance (typed ``Final[str]``)."""
+
+    from .external_constants import JSONL_MIME_TYPE
+
+    assert isinstance(JSONL_MIME_TYPE, str)
+
+
+def test_xlsx_mime_type_is_final_str() -> None:
+    """``XLSX_MIME_TYPE`` is a ``str`` instance (typed ``Final[str]``)."""
+
+    from .external_constants import XLSX_MIME_TYPE
+
+    assert isinstance(XLSX_MIME_TYPE, str)
 
 
 def test_declarations_uses_json_mime_constant() -> None:
@@ -826,6 +863,25 @@ def test_tabular_export_uses_csv_mime_constant() -> None:
     )
     assert mod._CSV_MIME_TYPE is CSV_MIME_TYPE
     assert mod._CSV_MIME_TYPE == "text/csv"
+
+
+def test_tabular_export_uses_jsonl_and_xlsx_mime_constants() -> None:
+    """``_tabular.py`` imports JSONL/XLSX MIME constants from core."""
+
+    import importlib
+
+    from .external_constants import JSONL_MIME_TYPE, XLSX_MIME_TYPE
+
+    mod = importlib.import_module("aeat.application.export._tabular")
+
+    assert hasattr(mod, "_JSONL_MIME_TYPE"), (
+        "_tabular must import JSONL_MIME_TYPE from aeat.core.external_constants under the alias _JSONL_MIME_TYPE"
+    )
+    assert hasattr(mod, "_XLSX_MIME_TYPE"), (
+        "_tabular must import XLSX_MIME_TYPE from aeat.core.external_constants under the alias _XLSX_MIME_TYPE"
+    )
+    assert mod._JSONL_MIME_TYPE is JSONL_MIME_TYPE
+    assert mod._XLSX_MIME_TYPE is XLSX_MIME_TYPE
 
 
 def test_no_bare_json_mime_literal_in_declarations() -> None:
@@ -1006,3 +1062,26 @@ def test_no_bare_csv_mime_literal_in_tabular() -> None:
         offenders.append(f"_tabular.py:{node.lineno}: bare 'text/csv' literal")
 
     assert offenders == [], "Bare 'text/csv' literals found; use _CSV_MIME_TYPE instead:\n" + "\n".join(offenders)
+
+
+def test_no_bare_jsonl_or_xlsx_mime_literal_in_tabular() -> None:
+    """No bare JSONL/XLSX MIME literals in ``_tabular.py`` argument positions."""
+
+    repo_root = Path(__file__).parents[3]
+    source = (repo_root / "src/aeat/application/export/_tabular.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    guarded_literals = {
+        "application/x-ndjson": "_JSONL_MIME_TYPE",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "_XLSX_MIME_TYPE",
+    }
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+            continue
+        expected = guarded_literals.get(node.value)
+        if expected is None:
+            continue
+        offenders.append(f"_tabular.py:{node.lineno}: bare {node.value!r} literal; use {expected}")
+
+    assert offenders == [], "Bare JSONL/XLSX MIME literals found:\n" + "\n".join(offenders)
