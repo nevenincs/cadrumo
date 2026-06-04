@@ -23,9 +23,9 @@ from ...domain.calculations.registry import (
     resolve_ledger_renta_expense_aggregation_binding_values,
     resolve_ledger_renta_income_aggregation_binding_values,
 )
-from ...domain.invoices import InvoiceCatalogueRepositoryProtocol
+from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoicePersistenceError
 from ...domain.renta import RentaDeductibleExpenseObservation
-from ...domain.transactions import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions import TransactionCatalogueRepositoryProtocol, TransactionPersistenceError
 from ._errors import AggregationValidationError, t
 from ._iva_ledger import (
     IvaLedgerAggregationIssue,
@@ -47,7 +47,13 @@ from ._source_mesh import (
     storage_degradation_resolution,
 )
 
-_STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
+_STORAGE_DEGRADATION_ERRORS = (
+    ClassificationError,
+    DecryptionError,
+    EnvelopeVersionError,
+    InvoicePersistenceError,
+    TransactionPersistenceError,
+)
 
 
 class ModeloLedgerBindingAggregation(BaseModel):

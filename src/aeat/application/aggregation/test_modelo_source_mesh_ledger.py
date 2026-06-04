@@ -12,6 +12,7 @@ import pytest
 from sqlalchemy import text
 
 from ...adapters.persistence.storage.sql import SecureObjectRepository, session_scope
+from ...core.classification import SensitivityClass
 from ...core.resources import resources
 from ...domain.calculations.registry import ModeloRevision
 from ...domain.categories import SpendingCategory
@@ -45,6 +46,7 @@ from ...domain.transactions import (
     TransactionCatalogue,
     TransactionCatalogueRepository,
     TransactionDirection,
+    transaction_catalogue_object_key,
 )
 from ...tests.secure_sql import isolated_runtime_profile
 from . import (
@@ -261,6 +263,42 @@ def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(
     assert resolution.source_transaction_ids == ()
     assert [diagnostic.reason for diagnostic in merged.diagnostics] == ["storage_degraded"]
     assert merged.diagnostics[0].source_kind == "ledger_iva_aggregation"
+    assert any("source mesh resolver storage degradation" in record.message for record in caplog.records)
+
+
+def test_iva_source_mesh_resolver_degrades_on_transaction_catalogue_drift(
+    secure_objects: SecureObjectRepository,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    revision = _revision("303", "2009-y-siguientes")
+    secure_objects.save(
+        namespace=TX_BUCKET_NAMESPACE,
+        object_key=transaction_catalogue_object_key("bucket-a"),
+        classification=SensitivityClass.FINANCIAL,
+        schema_version=1,
+        written_at=datetime(2026, 6, 4, 12, 0, tzinfo=UTC),
+        payload=b"{}",
+    )
+    tx_repo = TransactionCatalogueRepository(
+        bucket_id="bucket-a",
+        objects=secure_objects,
+    )
+
+    with caplog.at_level(logging.DEBUG, logger="aeat.application.aggregation._source_mesh"):
+        resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
+            CalculationSourceContext(
+                bucket_id="bucket-a",
+                modelo="303",
+                filing_year=2026,
+                period="1T",
+                revision=revision,
+            )
+        )
+
+    assert resolution.binding_values == {}
+    assert resolution.source_transaction_ids == ()
+    assert [diagnostic.reason for diagnostic in resolution.diagnostics] == ["storage_degraded"]
+    assert resolution.diagnostics[0].source_kind == "ledger_iva_aggregation"
     assert any("source mesh resolver storage degradation" in record.message for record in caplog.records)
 
 
