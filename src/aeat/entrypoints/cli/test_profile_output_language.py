@@ -48,7 +48,7 @@ def test_config_profile_create_writes_profile_output_language(
 ) -> None:
     from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from ...application.workflow._persistence import workflow_state_repository
-    from ...core._bucket_pointer_io import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
     from ...core.config import override_settings
 
     _isolate(tmp_path)
@@ -310,6 +310,78 @@ def test_create_error_renders_in_command_line_output_language(
     # Spanish run does not carry the English wording.
     assert "is missing required details" in english.output
     assert "is missing required details" not in spanish.output
+
+
+def test_env_output_language_honored_when_creating_profile_with_accept_defaults(
+    tmp_path: Path,
+) -> None:
+    """``AEAT_OUTPUT_LANGUAGE=en`` is written to the profile when no ``--output-language`` flag is given.
+
+    Before the fix: ``profile create --quiet --accept-defaults`` seeded the
+    catalogue default (``"es"``) for every question that the operator did
+    not supply on the command line, including ``output-language``.  The
+    ``AEAT_OUTPUT_LANGUAGE`` env var was completely ignored for the stored
+    preference.
+
+    After the fix: the wizard reads ``load_settings().aeat_output_language``
+    (which honours the env var) and injects that value into the canonical
+    dict before the catalogue-default seeding runs, so the env var wins.
+    """
+
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ...application.user_profile._orchestration import fact_value
+    from ...application.workflow._persistence import workflow_state_repository
+
+    _isolate(tmp_path)
+
+    result = invoke_cached_cli(
+        [
+            "config",
+            "profile",
+            "create",
+            "marta",
+            "--quiet",
+            "--accept-defaults",
+            "--entity-type",
+            "natural_person",
+            "--irpf-income-categories",
+            "actividad_economica",
+            "--tax-id",
+            "12345678Z",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    assert result.exit_code == 0, result.output
+
+    show_result = _invoke(["--format", "json", "config", "profile", "show", "marta"])
+    assert show_result.exit_code == 0, show_result.output
+
+    import json as _json
+    import re as _re
+
+    m = _re.search(r"(\{.*\}|\[.*\])", show_result.output, _re.DOTALL)
+    facts = {row["path"]: row["value"] for row in _json.loads(m.group(0))["result"]["facts"]} if m else {}
+    assert facts.get("preferences.output_language") == "en", (
+        f"Expected output_language 'en' but got {facts.get('preferences.output_language')!r}. "
+        "AEAT_OUTPUT_LANGUAGE=en env var was not honoured by profile create."
+    )
+
+    # Verify via the repository as well (not just the CLI show surface).
+    from ...core import resolve_active_bucket_id
+    from ...core.config import override_settings
+
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    with (
+        override_settings(aeat_active_profile=bucket_id),
+        activate_master_key_provider(get_master_key_provider()),
+    ):
+        record = workflow_state_repository().load().active_profile_record()
+        assert record is not None
+        assert fact_value(record, "preferences.output_language") == "en", (
+            "Repository fact 'preferences.output_language' must be 'en' when "
+            "AEAT_OUTPUT_LANGUAGE=en is set at profile create time."
+        )
 
 
 def test_config_repair_labels_render_in_profile_output_language(

@@ -40,6 +40,22 @@ class OverviewCalendarEntryPayload(OutputSchema):
     shift_reason: str | None = None
 
 
+class OverviewCalendarEventPayload(OutputSchema):
+    """One observed local event nested in a calendar result."""
+
+    event_type: str
+    event_date: str
+    source: str
+    summary: str
+    reference_id: str
+    snapshot_id: str | None = None
+    modelo: str | None = None
+    filing_year: int | None = None
+    period: str | None = None
+    status: str | None = None
+    source_url: str | None = None
+
+
 class OverviewCalendarWarningPayload(OutputSchema):
     """One calendar warning nested in a calendar result."""
 
@@ -98,6 +114,7 @@ class OverviewCalendarResult(OutputSchema):
     from_date: str | None = None
     to_date: str | None = None
     entries: list[dict] = []
+    events: list[dict] = []
     warnings: list[dict] = []
     suppressed_entries: list[dict] = []
     profiles: list[dict] = []

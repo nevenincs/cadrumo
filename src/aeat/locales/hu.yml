@@ -130,7 +130,7 @@ adapters:
       errors:
         no_active_profile: Nincs aktív AEAT-profil kötve a Google OAuth-hoz.
       suggestions:
-        create_profile: Futtassa az `aeat config profile create NAME --tax-id <NIF>`
+        create_profile: Futtassa az `aeat config profile create NAME --tax-id <DNI/NIE/NIF/CIF>`
           parancsot, majd próbálja újra a Google-parancsot.
   inbound:
     declaracion:
@@ -1739,11 +1739,6 @@ cli:
           clave_operacion=E importe=50000''.'
         row_kv_format_error: A --row {token} mezőnek KULCS=ÉRTÉK formátumúnak kell
           lennie.
-        row_m184_share_sum_error: 'M184 miembro sorok: a reszesedesi szazalekok osszege
-          pontosan 100% kell legyen; kapott ertek: %{total}, sorok: %{count}'
-        row_m347_threshold_error: 'M347 contraparte sor (NIF=%{nif}): a teljes osszeg
-          %{total} nem haladja meg az RD 1065/2007 31.1 cikke szerinti %{threshold}
-          EUR kuszobot'
         row_m349_invalid_nif: '--row operador: a nif_comunitario {nif} nem felel meg
           {pais} ország elvárt NIF-IVA formátumának (2006/112/EK irányelv XI. melléklet)'
         row_unknown_type: 'Ismeretlen --row típus: {row_type!r}; támogatott típusok:
@@ -1883,7 +1878,7 @@ cli:
     errors:
       invalid_value: 'Érvénytelen érték a(z) %{name} mezőhöz: %{value}'
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
-        NÉV --tax-id <NIF>`.'
+        NÉV --tax-id <DNI/NIE/NIF/CIF>`.'
       unknown_key: 'Ismeretlen konfigurációs kulcs: %{name}. Futtassa: `aeat config
         profile list` az elérhető kulcsok megjelenítéséhez.'
     get:
@@ -2036,7 +2031,8 @@ cli:
           a profilra.
         snapshot_id_help: Konkrét pillanatkép-azonosító (előtagok elfogadva).
       create_epilog: 'Minimális önálló vállalkozói profil: --entity-type natural_person
-        --tax-id <NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
+        --tax-id <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet
+        --accept-defaults'
       create_help: Új aktív profil és konfigurációs bucket inicializálása.
       delete_active_cleared: 'A törölt profil volt az aktív; az aktív-profil-mutató
         törölve. Futtassa: `aeat config profile switch NÉV` vagy `aeat config profile
@@ -2075,7 +2071,7 @@ cli:
         el, amíg nem futtatja: `aeat config profile switch NÉV` (vagy nyit egy új
         terminált és újra kiválaszt).'
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
-        NÉV --tax-id <NIF>`.'
+        NÉV --tax-id <DNI/NIE/NIF/CIF>`.'
       preflight_filing_year_help: Bevallási év (négy számjegy).
       preflight_help: Jelenti, mely profilmezők hiányoznak adott (modelo, revízió,
         év, időszak) bevallási kontextushoz.
@@ -4311,7 +4307,7 @@ wizard:
       használatához: aeat config profile create NAME
 
       2. Vagy hozza létre egyetlen lépéssel, a szükséges adatokat kapcsolókként megadva:
-      aeat config profile create NAME --quiet --tax-id NIF'
+      aeat config profile create NAME --quiet --tax-id DNI/NIE/NIF/CIF'
     unsupported_console_edit: 'Az irányított beállítás nem tudott interaktív promptot
       megnyitni ebben a futtatásban. Még semmi nem lett mentve.
 

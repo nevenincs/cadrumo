@@ -16,6 +16,7 @@ from ...application.overview import (
     OverviewCalendar,
     OverviewCalendarRange,
     build_overview_calendar,
+    build_overview_calendar_events,
     build_overview_status_report,
 )
 from ...core.i18n import tr
@@ -45,6 +46,27 @@ app = typer.Typer(
     help=tr("cli.overview.app_help"),
     no_args_is_help=True,
 )
+
+
+def _local_live_calendar_events(bucket_id: str, rng: OverviewCalendarRange):
+    """Return observed calendar events from local persisted live-read snapshots."""
+    from ...application.live import ExpedientesService, NotificationsService
+
+    try:
+        expedientes = ExpedientesService().list_snapshots(bucket_id=bucket_id)
+        notifications = NotificationsService().list_snapshots(bucket_id=bucket_id)
+    except Exception:
+        logger.warning(
+            "overview calendar: failed to load local live snapshots for bucket %s",
+            bucket_id,
+            exc_info=True,
+        )
+        return ()
+    return build_overview_calendar_events(
+        calendar_range=rng,
+        expedientes_snapshots=tuple(expedientes),
+        notification_snapshots=tuple(notifications),
+    )
 
 
 @app.command("status", help=tr("cli.overview.status_help"))
@@ -176,12 +198,16 @@ def overview_calendar(
     current = _state()
     record = current.active_profile_record()
     raw_values = record_to_values(record) if record is not None else None
+    bucket_id = current.active_profile_bucket_id()
+    if bucket_id is None:
+        raise _bad(tr("cli.config.errors.no_active_profile"))
     cal: OverviewCalendar = build_overview_calendar(
         _profile_to_taxpayer(current),
         rng,
         today=_date.today(),
         raw_values=raw_values,
         show_suppressed=show_suppressed,
+        events=_local_live_calendar_events(bucket_id, rng),
     )
     if not cal.taxpayer_model_declared:
         # The taxpayer model is undeclared — the engine refuses
@@ -202,6 +228,7 @@ def overview_calendar(
         f"from\t{rng.from_date.isoformat()}",
         f"to\t{rng.to_date.isoformat()}",
         f"entries\t{len(cal.entries)}",
+        f"events\t{len(cal.events)}",
     ]
     for entry in cal.entries:
         lines.append(
@@ -213,6 +240,24 @@ def overview_calendar(
         )
     for warning in cal.warnings:
         lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
+    for event in cal.events:
+        parts = [
+            "event",
+            event.event_type.value,
+            event.event_date.isoformat(),
+            event.source,
+            event.reference_id,
+            event.summary,
+        ]
+        if event.modelo:
+            parts.append(f"modelo={event.modelo}")
+        if event.filing_year is not None:
+            parts.append(f"year={event.filing_year}")
+        if event.period:
+            parts.append(f"period={event.period}")
+        if event.status:
+            parts.append(f"status={event.status}")
+        lines.append("\t".join(parts))
     if cal.completeness.computable_modelos:
         lines.append(
             f"computable\t{len(cal.completeness.computable_modelos)}"
@@ -243,11 +288,11 @@ def _overview_calendar_all_profiles(
     """
     from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
     from ...application.user_profile import (
+        ProfileRepository,
         profile_storage_session,
         projection_for_taxpayer,
         record_to_values,
     )
-    from ...application.user_profile import ProfileRepository
     from ...application.workflow import list_profile_buckets
 
     today = _date.today()
@@ -284,10 +329,12 @@ def _overview_calendar_all_profiles(
             today=today,
             raw_values=raw_values,
             show_suppressed=show_suppressed,
+            events=_local_live_calendar_events(bucket_id, rng),
         )
 
         all_lines.append(f"profile\t{bucket_id}\t{pointer.label}")
         all_lines.append(f"entries\t{len(cal.entries)}")
+        all_lines.append(f"events\t{len(cal.events)}")
         for entry in cal.entries:
             all_lines.append(
                 f"{entry.modelo}\t{entry.period}\t{entry.user_state.value}"
@@ -303,6 +350,11 @@ def _overview_calendar_all_profiles(
             )
         for warning in cal.warnings:
             all_lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
+        for event in cal.events:
+            all_lines.append(
+                f"event\t{event.event_type.value}\t{event.event_date.isoformat()}\t"
+                f"{event.source}\t{event.reference_id}\t{event.summary}"
+            )
         for suppressed in cal.suppressed_entries:
             all_lines.append(
                 f"suppressed\t{suppressed.modelo}\t{suppressed.period}"

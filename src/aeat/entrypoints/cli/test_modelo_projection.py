@@ -218,6 +218,56 @@ def _create_work_unit(modelo: str, year: str, period: str, revision: str) -> str
     return _payload(result.output)["work_unit_id"]
 
 
+def test_modelo_project_no_units_guides_natural_m130_creation(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    _seed_autónomo_profile(runtime_profile)
+
+    result = invoke_cached_cli(
+        [
+            "app", "modelo", "project",
+            "--year", str(_FILING_YEAR),
+            "--ccaa", _CCAA,
+        ]
+    )  # fmt: skip
+
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    assert "work create" in result.output
+    assert "--modelo" in result.output
+    assert "130" in result.output
+    assert f"--year {_FILING_YEAR}" in result.output
+    assert "--period 1T" in result.output
+    assert "<work_unit_id>" not in result.output
+
+
+def test_modelo_project_no_revisions_guides_natural_m130_calculation(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    _seed_autónomo_profile(runtime_profile)
+    _create_work_unit(
+        modelo="130",
+        year=str(_FILING_YEAR),
+        period="1T",
+        revision="2019-y-siguientes",
+    )
+
+    result = invoke_cached_cli(
+        [
+            "app", "modelo", "project",
+            "--year", str(_FILING_YEAR),
+            "--ccaa", _CCAA,
+        ]
+    )  # fmt: skip
+
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    assert "work calculate --modelo 130" in result.output
+    assert f"--year {_FILING_YEAR}" in result.output
+    assert "--period 1T" in result.output
+    assert "<work_unit_id>" not in result.output
+
+
 # ---------------------------------------------------------------------------
 # Regression test — S117
 # ---------------------------------------------------------------------------
@@ -365,6 +415,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             f"renta-{_FILING_YEAR}-profile-marriage-full-year": Decimal("0"),
             f"renta-{_FILING_YEAR}-profile-marriage-month-start": Decimal("0"),
             f"renta-{_FILING_YEAR}-profile-marriage-month-end": Decimal("0"),
+            f"renta-{_FILING_YEAR}-base-liquidable-negativa-general-anterior": Decimal("0"),
         },
         enum_binding_values={
             f"renta-{_FILING_YEAR}-profile-tax-residence-ccaa": _CCAA,

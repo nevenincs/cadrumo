@@ -443,6 +443,7 @@ def _render_index_page(
     parts: list[str] = []
     parts.append(_rst_heading("CLI reference", "="))
     parts.append("\n")
+    parts.append(".. _cli-reference-start:\n\n")
     parts.append(
         "The ``aeat`` CLI exposes two top-level command families: ``config`` (local"
         " configuration, profile lifecycle, diagnostics) and ``app`` (operational tax"
@@ -453,20 +454,65 @@ def _render_index_page(
         " output-language setting (``--language`` / ``AEAT_OUTPUT_LANGUAGE``).\n\n"
     )
     parts.append(
-        "The output schema section below lists every command that emits a"
-        " ``SchemaEnvelope``-wrapped payload. Commands not listed there emit a bare"
-        " payload; envelope adoption tracks the json-output-contract migration.\n\n"
+        "Start with the family links below. Use the generated command-family pages"
+        " for exact flags, arguments, registry keys, and output schemas; use this"
+        " page for root-level behavior that applies across commands.\n\n"
+    )
+
+    parts.append(_rst_heading("Choose a command family", "-"))
+    parts.append("\n")
+    parts.append(".. grid:: 1 1 2 2\n")
+    parts.append("   :gutter: 2\n")
+    parts.append("   :class-container: aeat-route-grid\n\n")
+    if "app" in family_names:
+        parts.append("   .. grid-item-card:: ``aeat app``\n")
+        parts.append("      :link: app\n")
+        parts.append("      :link-type: doc\n")
+        parts.append("      :class-card: aeat-route-card\n\n")
+        parts.append("      Operational workflow commands: ledger work, modelos, filing")
+        parts.append(" calendars, registry checks, live captures, and review queues.\n\n")
+        parts.append("      +++\n")
+        parts.append("      Open ``aeat app`` reference\n\n")
+    if "config" in family_names:
+        parts.append("   .. grid-item-card:: ``aeat config``\n")
+        parts.append("      :link: config\n")
+        parts.append("      :link-type: doc\n")
+        parts.append("      :class-card: aeat-route-card\n\n")
+        parts.append("      Local setup and maintenance commands: profiles, authentication,")
+        parts.append(" Google integration, repair checks, and reset surfaces.\n\n")
+        parts.append("      +++\n")
+        parts.append("      Open ``aeat config`` reference\n\n")
+
+    parts.append(_rst_heading("Use this page when you need", "-"))
+    parts.append("\n")
+    parts.append(
+        "* :ref:`Global flags <cli-reference-global-flags>` accepted by every"
+        " ``aeat`` invocation.\n"
+    )
+    parts.append("* :ref:`Exit codes <cli-reference-exit-codes>` for automation and shell scripts.\n")
+    parts.append(
+        "* :ref:`TTY and JSON behavior <cli-reference-output-contract>` when switching"
+        " between human-readable output and ``--format json``.\n"
+    )
+    parts.append(
+        "* :ref:`Output schema registry <cli-reference-output-schemas>` for"
+        " integration code that consumes JSON payloads.\n"
+    )
+    parts.append(
+        "* :ref:`Retired command redirects <cli-reference-retired-surfaces>` when an"
+        " older command name no longer exists.\n\n"
     )
 
     # toctree
     parts.append(".. toctree::\n")
-    parts.append("   :maxdepth: 2\n")
-    parts.append("   :caption: Command families\n\n")
+    parts.append("   :maxdepth: 1\n")
+    parts.append("   :hidden:\n\n")
     for name in family_names:
         parts.append(f"   {name}\n")
     parts.append("\n")
 
     # Global flags
+    parts.append(".. _cli-reference-global-flags:\n\n")
     parts.append(_rst_heading("Global flags", "-"))
     parts.append("\n")
     parts.append("These flags are accepted by the ``aeat`` root command and apply to every invocation.\n\n")
@@ -485,6 +531,7 @@ def _render_index_page(
         parts.append(f"{flag}\n   {desc}\n\n")
 
     # Exit codes
+    parts.append(".. _cli-reference-exit-codes:\n\n")
     parts.append(_rst_heading("Exit codes", "-"))
     parts.append("\n")
     exit_code_table = [
@@ -511,6 +558,7 @@ def _render_index_page(
     parts.append("\n")
 
     # TTY contract
+    parts.append(".. _cli-reference-output-contract:\n\n")
     parts.append(_rst_heading("TTY and JSON output contract", "-"))
     parts.append("\n")
     parts.append(
@@ -523,10 +571,15 @@ def _render_index_page(
     )
 
     # Schema registry summary
+    parts.append(".. _cli-reference-output-schemas:\n\n")
     parts.append(_rst_heading("Output schema registry", "-"))
     parts.append("\n")
     envelope_keys = sorted(k for k in schema_registry if k not in _GROUP_CALLBACK_EMIT_KEYS)
     group_keys = sorted(_GROUP_CALLBACK_EMIT_KEYS & set(schema_registry))
+    parts.append(
+        "This section is mainly for tooling authors. If you are running commands"
+        " manually, the family pages above are usually the better entry point.\n\n"
+    )
     parts.append(
         f"The following {len(envelope_keys)} command paths have a registered"
         f" ``OutputSchema``.  Group-callback surfaces"
@@ -542,6 +595,7 @@ def _render_index_page(
     parts.append("\n")
 
     # Retired surfaces
+    parts.append(".. _cli-reference-retired-surfaces:\n\n")
     parts.append(_rst_heading("Retired surfaces", "-"))
     parts.append("\n")
     parts.append(
@@ -551,6 +605,18 @@ def _render_index_page(
     parts.append(_render_retired_table(retired_surfaces))
 
     return "".join(parts)
+
+
+def _write_text_if_changed(path: Path, content: str) -> None:
+    """Write ``content`` only when it differs from the file already on disk.
+
+    Args:
+        path: Destination path.
+        content: Text to persist using the project UTF-8 encoding.
+    """
+    if path.is_file() and path.read_text(encoding=UTF_8_ENCODING) == content:
+        return
+    path.write_text(content, encoding=UTF_8_ENCODING)
 
 
 # ---------------------------------------------------------------------------
@@ -565,10 +631,11 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
     lazy subcommand to load, asserts no fallback surface is present, then
     renders one RST page per top-level family plus an ``index.rst``.
 
-    The caller is responsible for ensuring ``AEAT_OUTPUT_LANGUAGE=en`` is set
-    before any CLI module has been imported, so that ``tr()`` keys resolve to
-    English strings.  The subprocess entry point :func:`main` handles this
-    automatically.
+    This function pins ``AEAT_OUTPUT_LANGUAGE=en`` before importing the CLI tree
+    so that ``tr()`` keys resolve to English strings for deterministic reference
+    output. The subprocess entry point :func:`main` provides a clean interpreter
+    boundary for callers that cannot guarantee the CLI has not already been
+    imported.
 
     Args:
         docs_root: The project documentation root (the directory that contains
@@ -578,6 +645,8 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
         A mapping from relative path (e.g. ``"cli/index.rst"``) to rendered
         RST content, mirroring what was written to disk.
     """
+    os.environ["AEAT_OUTPUT_LANGUAGE"] = "en"
+
     import click
     from typer.main import get_command as _typer_get_command
 
@@ -585,7 +654,10 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
         ACCEPTED_ROOTS,
         RETIRED_OPERATOR_SURFACES,
     )
+    from ...core.i18n._render import clear_output_language_cache
     from ...core.json_contract import SCHEMA_REGISTRY
+
+    clear_output_language_cache()
 
     # Import every payload module so their @register_schema decorators populate
     # SCHEMA_REGISTRY.  The CLI loads these lazily at dispatch time; the generator
@@ -668,7 +740,7 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
         content = _render_family_page(family, leaves, SCHEMA_REGISTRY, all_nodes)
         rel_path = f"cli/{family}.rst"
         rendered[rel_path] = content
-        (output_dir / f"{family}.rst").write_text(content, encoding=UTF_8_ENCODING)
+        _write_text_if_changed(output_dir / f"{family}.rst", content)
 
     index_content = _render_index_page(
         family_names=family_order,
@@ -677,7 +749,7 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
         total_leaf_count=total_leaves,
     )
     rendered["cli/index.rst"] = index_content
-    (output_dir / "index.rst").write_text(index_content, encoding=UTF_8_ENCODING)
+    _write_text_if_changed(output_dir / "index.rst", index_content)
 
     return rendered
 
