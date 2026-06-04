@@ -380,6 +380,33 @@ Verification:
   passed with 11 tests.
 - `uv run --no-sync ruff check src/aeat/domain/filing/_repository.py` passed.
 
+## HEALTH-012 | CLOSED | Renta and transaction Decimal residuals reduced to zero warnings
+
+`W06.P18.S69` closed the focused Renta/transaction Decimal residual bucket. Full
+domain type gates remain red due unrelated registry, contributor, deadline, and
+modelos test buckets, so this step was scoped to the files named by the S69
+diagnostic class.
+
+Changes:
+
+- Renta expense fact and observation currency defaults now use a local
+  `Literal["EUR"]` constant rather than a broader `str` constant.
+- The Renta finite-Decimal guard now accepts `object`, preserving the runtime
+  type check instead of making the guard statically impossible.
+- The non-EUR transaction gross-invariant test now narrows `taxable_base` and
+  `iva_amount` before summing them.
+
+Verification:
+
+- `uv run --no-sync ty check src/aeat/domain/renta/_ledger_expenses.py src/aeat/domain/transactions/test_gross_invariant.py --output-format concise`
+  passed.
+- `uv run --no-sync pyright src/aeat/domain/renta/_ledger_expenses.py src/aeat/domain/transactions/test_gross_invariant.py --level warning --warnings`
+  reported 0 errors and 0 warnings.
+- `uv run --no-sync pytest src/aeat/domain/transactions/test_gross_invariant.py src/aeat/domain/renta/test_first_slice_routing.py -q`
+  passed with 13 tests.
+- `uv run --no-sync ruff check src/aeat/domain/renta/_ledger_expenses.py src/aeat/domain/transactions/test_gross_invariant.py`
+  passed.
+
 ## Suggested Workstreams
 
 1. Repair packaging environment deterministically: schedule a clean `uv sync` window
