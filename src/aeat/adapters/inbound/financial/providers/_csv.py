@@ -13,6 +13,9 @@ from __future__ import annotations
 import csv
 import io
 from collections.abc import Iterator, Mapping
+from dataclasses import dataclass
+from datetime import date
+from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 
@@ -166,6 +169,19 @@ CSV_LAYOUTS: tuple[CsvBankLayout, ...] = (
 """Ordered tuple of bank layouts the CSV provider will try to match."""
 
 
+@dataclass(frozen=True, slots=True)
+class ParsedTabularTransactionRow:
+    """Typed projection shared by CSV and spreadsheet bank-layout rows."""
+
+    transaction_id: str
+    booked_date: date
+    value_date: date | None
+    amount: Decimal
+    currency: str
+    description: str
+    counterparty: str | None
+
+
 class CsvProvider(FinancialProvider):
     """Ingest raw transactions from bank CSV exports.
 
@@ -246,26 +262,16 @@ class CsvProvider(FinancialProvider):
             if _row_is_blank(raw_fields):
                 continue
             try:
-                transaction_id = _value_from_aliases(raw_fields, lookup, layout.columns.external_id)
-                if not transaction_id:
-                    transaction_id = synthesize_transaction_id(
-                        provider_name=layout.bank_name,
-                        source_sha256=source_sha256,
-                        source_row_index=source_row_index,
-                    )
-                booked_date = parse_date_value(
-                    _required_value(raw_fields, lookup, layout.columns.booked_date, "booked_date"),
-                    day_first=layout.day_first_dates,
+                parsed = _parse_tabular_transaction_row(
+                    layout=layout,
+                    lookup=lookup,
+                    raw_fields=raw_fields,
+                    typed_fields=raw_fields,
+                    synthetic_provider_name=layout.bank_name,
+                    source_sha256=source_sha256,
+                    source_row_index=source_row_index,
+                    required_field_context="CSV row",
                 )
-                value_text = _value_from_aliases(raw_fields, lookup, layout.columns.value_date)
-                value_date = parse_date_value(value_text, day_first=layout.day_first_dates) if value_text else None
-                amount = parse_amount_value(
-                    _required_value(raw_fields, lookup, layout.columns.amount, "amount"),
-                    decimal_separator=layout.decimal_separator,
-                )
-                currency = _value_from_aliases(raw_fields, lookup, layout.columns.currency) or default_currency()
-                description = _required_value(raw_fields, lookup, layout.columns.description, "description")
-                counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
             except (ValueError, FinancialValidationError) as exc:
                 _logger.warning(
                     "csv_provider: parse error row=%d file=%s",
@@ -281,13 +287,13 @@ class CsvProvider(FinancialProvider):
                 path=path,
                 source_sha256=source_sha256,
                 source_row_index=source_row_index,
-                transaction_id=transaction_id,
-                booked_date=booked_date,
-                value_date=value_date,
-                amount=amount,
-                currency=currency,
-                counterparty=counterparty,
-                description=description,
+                transaction_id=parsed.transaction_id,
+                booked_date=parsed.booked_date,
+                value_date=parsed.value_date,
+                amount=parsed.amount,
+                currency=parsed.currency,
+                counterparty=parsed.counterparty,
+                description=parsed.description,
                 raw_fields=raw_fields,
             )
 
@@ -407,6 +413,49 @@ def _row_is_blank(raw_fields: Mapping[str, str]) -> bool:
     return not any(value.strip() for value in raw_fields.values())
 
 
+def _parse_tabular_transaction_row(
+    *,
+    layout: CsvBankLayout,
+    lookup: Mapping[str, str],
+    raw_fields: Mapping[str, str],
+    typed_fields: Mapping[str, object],
+    synthetic_provider_name: str,
+    source_sha256: str,
+    source_row_index: int,
+    required_field_context: str,
+) -> ParsedTabularTransactionRow:
+    """Project one bank-layout row into typed transaction fields."""
+    transaction_id = _value_from_aliases(raw_fields, lookup, layout.columns.external_id)
+    if not transaction_id:
+        transaction_id = synthesize_transaction_id(
+            provider_name=synthetic_provider_name,
+            source_sha256=source_sha256,
+            source_row_index=source_row_index,
+        )
+    booked_date = parse_date_value(
+        _required_typed_value(typed_fields, lookup, layout.columns.booked_date, "booked_date", required_field_context),
+        day_first=layout.day_first_dates,
+    )
+    value_raw = _typed_value_from_aliases(typed_fields, lookup, layout.columns.value_date)
+    value_date = parse_date_value(value_raw, day_first=layout.day_first_dates) if value_raw is not None else None
+    amount = parse_amount_value(
+        _required_typed_value(typed_fields, lookup, layout.columns.amount, "amount", required_field_context),
+        decimal_separator=layout.decimal_separator,
+    )
+    currency = _value_from_aliases(raw_fields, lookup, layout.columns.currency) or default_currency()
+    description = _required_value(raw_fields, lookup, layout.columns.description, "description")
+    counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
+    return ParsedTabularTransactionRow(
+        transaction_id=transaction_id,
+        booked_date=booked_date,
+        value_date=value_date,
+        amount=amount,
+        currency=currency,
+        description=description,
+        counterparty=counterparty,
+    )
+
+
 def _value_from_aliases(
     raw_fields: Mapping[str, str],
     lookup: Mapping[str, str],
@@ -421,6 +470,19 @@ def _value_from_aliases(
     return normalized or None
 
 
+def _typed_value_from_aliases(
+    raw_fields: Mapping[str, object],
+    lookup: Mapping[str, str],
+    aliases: tuple[str, ...],
+) -> object | None:
+    """Resolve and read the first non-empty typed value for a logical column."""
+    header = _find_column(lookup, aliases)
+    if header is None:
+        return None
+    value = raw_fields.get(header, "")
+    return value if coerce_cell_text(value) else None
+
+
 def _required_value(
     raw_fields: Mapping[str, str],
     lookup: Mapping[str, str],
@@ -431,4 +493,18 @@ def _required_value(
     value = _value_from_aliases(raw_fields, lookup, aliases)
     if value is None:
         raise InvalidFinancialSourceError(f"CSV row is missing required field {field_name!r}")
+    return value
+
+
+def _required_typed_value(
+    raw_fields: Mapping[str, object],
+    lookup: Mapping[str, str],
+    aliases: tuple[str, ...],
+    field_name: str,
+    context: str,
+) -> object:
+    """Resolve a required logical column from typed tabular cell values."""
+    value = _typed_value_from_aliases(raw_fields, lookup, aliases)
+    if value is None:
+        raise InvalidFinancialSourceError(f"{context} is missing required field {field_name!r}")
     return value

@@ -361,6 +361,21 @@ CLI doc-reference conformance gate passes under the `docs` marker. Broader
 language-pinning and write-if-changed edits already present in the worktree are
 left uncommitted by this S46 slice.
 
+## W04-010 | INFO | CSV/XLSX tabular provider consolidation review found no defects
+
+Status: verified with scoped residual.
+
+The W04.P14.S47 review found no behavioral defect in moving shared bank-layout
+row projection into the CSV provider helper module and routing XLSX ingestion
+through it. The consolidation stays inside the existing financial-provider
+boundary: CSV still owns byte decoding and dialect detection, while XLSX still
+owns workbook selection and typed cell mapping.
+
+Focused verification passed Ruff for the touched providers, passed the CSV/XLSX
+financial-provider and detection test suite, and ran `just audit-duplication`.
+The duplication audit no longer lists a CSV/XLSX provider clone; remaining clone
+groups belong to later W04.P14 rows or unrelated shifted-worktree changes.
+
 ## W04-009 | INFO | CLI doc-reference payload registration review found no defects
 
 Status: verified clean.
