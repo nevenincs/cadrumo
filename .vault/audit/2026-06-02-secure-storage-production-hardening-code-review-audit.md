@@ -693,3 +693,24 @@ real lifecycle storage span and real pointer/runtime behavior, with no fake repo
 or monkeypatch shortcut.
 
 Closure assessment: `W12.P26.S268` can close as `runtime-default`.
+
+## S270-061 | PASS | User-profile secure repository runtime-default closeout verified
+
+The `W12.P26.S270` review found that
+`src/aeat/application/user_profile/_repository.py` owns the encrypted user-profile
+value and snapshot namespaces but delegates default physical repository construction to
+the bucket storage runtime. It uses registered namespace constants, strict `Envelope`
+records, and domain user-profile models rather than duplicating storage routing or
+record shapes.
+
+Missing profile-value and profile-snapshot loads now raise the existing AEAT
+user-profile error classes with registered translation keys and structured context
+instead of raw English messages. Best-effort output-language cache invalidation remains
+non-blocking for persistence but now emits debug diagnostics when it is intentionally
+ignored.
+
+Vaultspec RAG semantic search was used for duplication review. Focused tests assert the
+translation keys and context through real secure-object repositories and preserve the
+strict roundtrip and drift tests.
+
+Closure assessment: `W12.P26.S270` can close as `runtime-default`.
