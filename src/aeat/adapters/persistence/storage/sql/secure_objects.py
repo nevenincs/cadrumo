@@ -6,11 +6,11 @@ import hashlib
 import json
 from collections.abc import Iterator
 from datetime import datetime
-from typing import Final, cast
+from typing import Final, Protocol, cast
 
 from pydantic import BaseModel, Field
 from sqlalchemy import Engine, bindparam, delete, inspect, select, text, update
-from sqlalchemy.engine import CursorResult, RowMapping
+from sqlalchemy.engine import RowMapping
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
@@ -58,6 +58,12 @@ _SECURE_OBJECT_REVISION_METADATA_COLUMNS: tuple[tuple[str, str], ...] = (
     ("source_event_id", "VARCHAR(128)"),
     ("conflict_policy", "VARCHAR(32)"),
 )
+
+
+class _RowcountResult(Protocol):
+    """Structural result shape for SQLAlchemy DML rowcount checks."""
+
+    rowcount: int
 
 
 class SecureObjectRecord(BaseModel):
@@ -1402,10 +1408,9 @@ class SecureObjectRepository:
                     update_stmt = update_stmt.where(_orm.SecureObjectRow.revision_id == expected_revision_id)
                 # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-UPDATE:
                 # SQLAlchemy types ``Session.execute()`` as ``Result[Any]``;
-                # a DML UPDATE always yields ``CursorResult`` at runtime and
-                # only ``CursorResult`` exposes ``.rowcount``.
+                # a DML UPDATE always yields a rowcount-bearing result.
                 result = cast(
-                    "CursorResult[object]",
+                    _RowcountResult,
                     session.execute(
                         update_stmt.values(
                             classification=classification.value,
@@ -1593,10 +1598,9 @@ class SecureObjectRepository:
         with session_scope(self._engine) as session:
             # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-DELETE:
             # SQLAlchemy types ``Session.execute()`` as ``Result[Any]``; a
-            # DML DELETE always yields ``CursorResult`` at runtime, and only
-            # ``CursorResult`` exposes ``.rowcount``.
+            # DML DELETE always yields a rowcount-bearing result.
             result = cast(
-                "CursorResult[object]",
+                _RowcountResult,
                 session.execute(
                     delete(_orm.SecureObjectRow).where(
                         _orm.SecureObjectRow.namespace == namespace,

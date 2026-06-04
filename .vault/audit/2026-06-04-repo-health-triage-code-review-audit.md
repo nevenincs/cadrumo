@@ -309,3 +309,20 @@ Focused verification confirmed Vulture no longer reports the Google API
 protocol parameter names, the Google API request tests still pass including the
 retry propagation assertion, and Ruff passes for the touched adapter/test
 surface. Remaining Vulture findings are the planned W04.P13.S44-S46 residuals.
+
+## W04-007 | INFO | Secure-object CursorResult dead-code review found no defects
+
+Status: verified with scoped residual.
+
+The W04.P13.S44 review found no behavioral defect in removing the unused
+`CursorResult` runtime import from the secure-object SQL repository. The two
+rowcount use sites now cast to a local structural `_RowcountResult` protocol,
+preserving the rowcount contract without importing SQLAlchemy's concrete DML
+result type.
+
+Focused verification confirmed Vulture no longer reports the secure-object
+`CursorResult` import, the secure-object SQL test module passes, and Ruff passes
+for the exact S44 commit-candidate repository blob. Live worktree Ruff remains
+blocked by a pre-existing line-length issue in the same file's unrelated
+docstring edit. Remaining Vulture findings are the planned W04.P13.S45-S46
+residuals.
