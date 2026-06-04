@@ -18,12 +18,13 @@ Closed `AFR-153` for the operator state projection.
 - Reviewed `src/aeat/application/state_projection.py` as a runtime, active-profile, manifest-bucket, plain-file, and remote-provider read projection.
 - Removed raw active bucket id rendering from the profile-label debug log.
 - Added DEBUG logging when registry snapshot absence causes ledger preflight to be skipped for modelo readiness.
-- Added a real state-projection regression test for the no-snapshot preflight-skip path.
+- Added an auth backend probe guard so unknown direct requested-provider tokens do not produce exception tracebacks containing the raw selector.
+- Added real state-projection regression tests for the no-snapshot preflight-skip path and unknown-provider log redaction.
 - Closed `S255` through `vaultspec-core vault plan step check`.
 
 ## Outcome
 
-`AFR-153` is closed as `remote-mirror`. The projection remains read-only and centralized, while failure-to-resolve and skip paths are observable without exposing active bucket ids in log messages.
+`AFR-153` is closed as `remote-mirror`. The projection remains read-only and centralized, while failure-to-resolve, skip, and probe-refusal paths are observable without exposing active bucket ids or caller-supplied provider selectors in log messages.
 
 Validation passed:
 
@@ -33,4 +34,4 @@ Validation passed:
 
 ## Notes
 
-The state projection still deliberately degrades registry snapshot absence to "ledger preflight not required"; the change makes that degradation visible at DEBUG level.
+The state projection still deliberately degrades registry snapshot absence to "ledger preflight not required"; the change makes that degradation visible at DEBUG level. Unknown direct provider tokens remain reflected in the returned projection request scope, but are not emitted into logs or exception tracebacks.

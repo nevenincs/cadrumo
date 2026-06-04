@@ -18,14 +18,18 @@ related:
 
 The active-profile label resolver logged the raw bucket id in the message template when manifest lookup failed. The log now omits the raw bucket id from the rendered message while preserving exception details through the centralized logger.
 
-## S255-003 | PASS | Projection stays read-only and centralized
+## S255-003 | MEDIUM | Unknown auth-provider probe logged caller selector through traceback
+
+`_build_auth_readiness` previously relied on `AuthProviderKind(provider)` raising `ValueError` for an unknown requested provider, then logged the probe failure with `exc_info=True`. Direct API callers could supply arbitrary selector text, and the exception traceback would include that raw selector. The projection now detects unknown provider tokens before enum coercion, logs a generic warning, and reports the backend unavailable without rendering the token.
+
+## S255-004 | PASS | Projection stays read-only and centralized
 
 `build_operator_state_projection` remains the single read-projection producer. It loads profile, auth, workspace, deadline, and modelo-readiness state without writing stores; storage write ownership stays in the underlying profile, workflow, and repository services.
 
-## S255-004 | PASS | Validation
+## S255-005 | PASS | Validation
 
 - `uv run --no-sync ruff check src/aeat/application/state_projection.py src/aeat/application/test_state_projection.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/test_state_projection.py` passed with 14 tests.
+- `uv run --no-sync pytest -q src/aeat/application/test_state_projection.py` passed with 15 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-153` as `remote-mirror` with projection diagnostics hardened.
