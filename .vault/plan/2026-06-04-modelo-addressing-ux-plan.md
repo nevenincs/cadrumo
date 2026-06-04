@@ -165,7 +165,7 @@ Render resumed work ambiguity conflict and selector guidance in each supported l
 
 Replace copy-paste ID routing in narrative docs only after the implementation is backed by real-behavior tests and live CLI help.
 
-- [ ] `W04.P06.S67` - rewrite the tutorial lifecycle path around natural-key modelo work commands; `docs/tutorials/index.md`.
+- [x] `W04.P06.S67` - rewrite the tutorial lifecycle path around natural-key modelo work commands; `docs/tutorials/index.md`.
 - [ ] `W04.P06.S68` - rewrite the getting-started lifecycle path around natural-key modelo work commands; `docs/getting-started.md`.
 - [ ] `W04.P06.S69` - rewrite the quickstart lifecycle path around natural-key modelo work commands; `docs/how-to/quickstart.md`.
 - [ ] `W04.P06.S70` - rewrite the Modelo 303 how-to lifecycle path around natural-key modelo work commands; `docs/how-to/modelo-303.md`.
