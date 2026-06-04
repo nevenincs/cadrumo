@@ -256,3 +256,21 @@ locale-backed. Locale coverage was verified with the required
 `python -m aeat.locales audit` invocation.
 
 Closure assessment: `W12.P26.S209` can close as `runtime-default`.
+
+## S210-034 | PASS | Filing runtime repository helper closeout verified
+
+The `W12.P26.S210` review found no remaining findings in the filing runtime
+repository helper slice.
+
+The helper resolves explicit bucket ids after trimming, falls back to
+`resolve_active_bucket_id()` for active-profile authority, and delegates
+secure-object construction to `secure_object_repository_for_bucket()`. It does
+not read environment variables directly, construct raw production storage, or
+derive SQL routes itself.
+
+Focused tests now cover explicit id handling, blank id refusal, active-profile
+fallback, no-active-profile refusal, and unready runtime refusal. The migrated
+runtime matrix remains the scoped consumer gate for the filing-history path
+using this helper.
+
+Closure assessment: `W12.P26.S210` can close as `runtime-default`.
