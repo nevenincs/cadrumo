@@ -1,8 +1,8 @@
 """Focused unit tests for the describe_stale_reason mapper.
 
 `describe_stale_reason` maps each :class:`ModeloApprovalStaleReason`
-enum member to a short user-facing English phrase displayed inline in
-the CLI review UI. Currently no direct test coverage; if the
+enum member to a short localized phrase displayed inline in the CLI
+review UI. Currently no direct test coverage; if the
 match-statement's case arms drift (e.g., DRAFT_REVIEW_CHANGED renamed
 without updating the case arm), the helper would silently fall through
 to the catch-all and render the raw enum value to the operator.
@@ -14,38 +14,60 @@ from __future__ import annotations
 
 import pytest
 
+from ...core.i18n import tr
 from . import ModeloApprovalStaleReason, describe_stale_reason
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+_EXPECTED_REASON_KEYS = {
+    ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED: (
+        "application.filing.review.stale_reasons.approval_basis_version_changed"
+    ),
+    ModeloApprovalStaleReason.DRAFT_PAYLOAD_CHANGED: "application.filing.review.stale_reasons.draft_payload_changed",
+    ModeloApprovalStaleReason.DRAFT_REVIEW_CHANGED: "application.filing.review.stale_reasons.draft_review_changed",
+    ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED: (
+        "application.filing.review.stale_reasons.transaction_catalogue_changed"
+    ),
+    ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED: (
+        "application.filing.review.stale_reasons.category_profiles_changed"
+    ),
+    ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED: "application.filing.review.stale_reasons.schema_formula_changed",
+}
 
 
 def test_describe_stale_reason_renders_approval_basis_version_changed() -> None:
     assert (
         describe_stale_reason(ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED)
-        == "approval basis version changed"
+        == tr(_EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED])
     )
 
 
 def test_describe_stale_reason_renders_draft_payload_changed() -> None:
-    assert describe_stale_reason(ModeloApprovalStaleReason.DRAFT_PAYLOAD_CHANGED) == "draft payload changed"
+    assert describe_stale_reason(ModeloApprovalStaleReason.DRAFT_PAYLOAD_CHANGED) == tr(
+        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.DRAFT_PAYLOAD_CHANGED]
+    )
 
 
 def test_describe_stale_reason_renders_draft_review_changed() -> None:
     """DRAFT_REVIEW_CHANGED is re-described as 'draft validation surface
     changed' so the operator phrase matches the human-readable concept
     (validation surface), not the raw enum identifier."""
-    assert describe_stale_reason(ModeloApprovalStaleReason.DRAFT_REVIEW_CHANGED) == "draft validation surface changed"
+    assert describe_stale_reason(ModeloApprovalStaleReason.DRAFT_REVIEW_CHANGED) == tr(
+        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.DRAFT_REVIEW_CHANGED]
+    )
 
 
 def test_describe_stale_reason_renders_transaction_catalogue_changed() -> None:
     assert (
         describe_stale_reason(ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED)
-        == "transaction catalogue changed"
+        == tr(_EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED])
     )
 
 
 def test_describe_stale_reason_renders_category_profiles_changed() -> None:
-    assert describe_stale_reason(ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED) == "category profiles changed"
+    assert describe_stale_reason(ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED) == tr(
+        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED]
+    )
 
 
 def test_describe_stale_reason_renders_schema_formula_changed() -> None:
@@ -54,20 +76,8 @@ def test_describe_stale_reason_renders_schema_formula_changed() -> None:
     invalidation, not just the schema or formula bytes themselves)."""
     assert (
         describe_stale_reason(ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED)
-        == "schema or formula provenance changed"
+        == tr(_EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED])
     )
-
-
-@pytest.mark.parametrize("reason", list(ModeloApprovalStaleReason))
-def test_describe_stale_reason_returns_lowercase_phrase(reason: ModeloApprovalStaleReason) -> None:
-    """The docstring promises a 'lowercase imperative phrase'. Walking
-    every enum member catches the case where a new variant is added
-    without an explicit case arm — the catch-all fallback would render
-    `reason.value.lower().replace("_", " ")`, which is still lowercase
-    but the per-member tests above pin the exact text."""
-    phrase = describe_stale_reason(reason)
-
-    assert phrase == phrase.lower()
 
 
 @pytest.mark.parametrize("reason", list(ModeloApprovalStaleReason))
@@ -90,16 +100,6 @@ def test_describe_stale_reason_covers_every_enum_member() -> None:
     """Every concrete member must have an explicit case-arm rendering.
     The catch-all fallback exists for future-proofing only — if it
     fires for a current member, the explicit arms have drifted."""
-    explicit = {
-        ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED: "approval basis version changed",
-        ModeloApprovalStaleReason.DRAFT_PAYLOAD_CHANGED: "draft payload changed",
-        ModeloApprovalStaleReason.DRAFT_REVIEW_CHANGED: "draft validation surface changed",
-        ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED: "transaction catalogue changed",
-        ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED: "category profiles changed",
-        ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED: "schema or formula provenance changed",
-    }
-
-    # Every current enum member is covered by the explicit map.
-    assert set(explicit.keys()) == set(ModeloApprovalStaleReason)
-    for reason, expected_phrase in explicit.items():
-        assert describe_stale_reason(reason) == expected_phrase
+    assert set(_EXPECTED_REASON_KEYS) == set(ModeloApprovalStaleReason)
+    for reason, expected_key in _EXPECTED_REASON_KEYS.items():
+        assert describe_stale_reason(reason) == tr(expected_key)

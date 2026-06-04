@@ -554,6 +554,20 @@ application:
           del Model 303.
         seed_conflict: Ja existeix un estat de compensació d'IVA per a aquest període;
           la llavor sobreescriuria l'historial emmagatzemat.
+  filing:
+    review:
+      errors:
+        approved_by_blank: 'L''identificador de l''aprovador no pot estar buit.'
+        draft_not_ready: 'Nomes es poden aprovar esborranys llestos per presentar.'
+        registry_review_mismatch: 'L''esborrany no coincideix amb la superficie de revisio del registre: %{codes}.'
+      stale_reasons:
+        approval_basis_version_changed: 'la versio de base d''aprovacio ha canviat'
+        category_profiles_changed: 'els perfils de categoria han canviat'
+        draft_payload_changed: 'el contingut de l''esborrany ha canviat'
+        draft_review_changed: 'la superficie de validacio de l''esborrany ha canviat'
+        schema_formula_changed: 'la procedencia de l''esquema o la formula ha canviat'
+        transaction_catalogue_changed: 'el cataleg de transaccions ha canviat'
+        unknown: '%{reason}'
   ledger:
     errors:
       evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix

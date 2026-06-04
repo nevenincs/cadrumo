@@ -504,6 +504,20 @@ application:
         modelo_303_only: IVA compensation history only accepts Modelo 303 observations.
         seed_conflict: An IVA compensation state already exists for this period; seeding
           would overwrite stored history.
+  filing:
+    review:
+      errors:
+        approved_by_blank: 'The approver identifier must not be blank.'
+        draft_not_ready: 'Only drafts ready to submit may be approved.'
+        registry_review_mismatch: 'The draft does not match the registry review surface: %{codes}.'
+      stale_reasons:
+        approval_basis_version_changed: 'approval basis version changed'
+        category_profiles_changed: 'category profiles changed'
+        draft_payload_changed: 'draft payload changed'
+        draft_review_changed: 'draft validation surface changed'
+        schema_formula_changed: 'schema or formula provenance changed'
+        transaction_catalogue_changed: 'transaction catalogue changed'
+        unknown: '%{reason}'
   ledger:
     errors:
       evidence_attachment_requires_ids: Ledger evidence attachment requires purchase

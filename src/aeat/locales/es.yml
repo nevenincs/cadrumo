@@ -562,6 +562,20 @@ application:
           del Modelo 303.
         seed_conflict: Ya existe un estado de compensación de IVA para este periodo;
           la semilla sobrescribiría el historial almacenado.
+  filing:
+    review:
+      errors:
+        approved_by_blank: 'El identificador del aprobador no puede estar vacio.'
+        draft_not_ready: 'Solo pueden aprobarse borradores listos para presentar.'
+        registry_review_mismatch: 'El borrador no coincide con la superficie de revision del registro: %{codes}.'
+      stale_reasons:
+        approval_basis_version_changed: 'la version de base de aprobacion ha cambiado'
+        category_profiles_changed: 'los perfiles de categoria han cambiado'
+        draft_payload_changed: 'el contenido del borrador ha cambiado'
+        draft_review_changed: 'la superficie de validacion del borrador ha cambiado'
+        schema_formula_changed: 'la procedencia del esquema o la formula ha cambiado'
+        transaction_catalogue_changed: 'el catalogo de transacciones ha cambiado'
+        unknown: '%{reason}'
   ledger:
     errors:
       evidence_attachment_requires_ids: El adjunto de evidencia del libro mayor requiere

@@ -238,3 +238,21 @@ route-session mismatch refusal, and active-profile isolation.
 
 Closure assessment: `W12.P26.S208` can close as `runtime-default`; no production
 code change was required.
+
+## S209-033 | PASS | Filing review runtime repository closeout verified
+
+The `W12.P26.S209` review found no remaining findings in the filing review
+runtime-default slice.
+
+The default approval-basis path loads transaction state through
+`TransactionCatalogueRepository` and the active bucket storage runtime rather
+than constructing raw secure-object storage or reading plaintext side files.
+The stale in-process catalogue-cache risk is removed, and focused real-behavior
+tests prove unready runtime refusal plus fresh persisted transaction-catalogue
+changes surfacing as `TRANSACTION_CATALOGUE_CHANGED`.
+
+Review-facing approval errors and stale-reason descriptions are now
+locale-backed. Locale coverage was verified with the required
+`python -m aeat.locales audit` invocation.
+
+Closure assessment: `W12.P26.S209` can close as `runtime-default`.

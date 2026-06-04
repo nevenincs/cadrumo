@@ -517,6 +517,20 @@ application:
           fogadnak el.
         seed_conflict: Ehhez az időszakhoz már létezik IVA-kompenzációs állapot; a
           kezdőérték felülírná a tárolt előzményeket.
+  filing:
+    review:
+      errors:
+        approved_by_blank: 'A jovahagyo azonositoja nem lehet ures.'
+        draft_not_ready: 'Csak benyujtasra kesz tervezetek hagyhatoak jova.'
+        registry_review_mismatch: 'A tervezet nem egyezik a nyilvantartasi ellenorzesi felulettel: %{codes}.'
+      stale_reasons:
+        approval_basis_version_changed: 'a jovahagyasi alap verzioja megvaltozott'
+        category_profiles_changed: 'a kategoriaprofilok megvaltoztak'
+        draft_payload_changed: 'a tervezet tartalma megvaltozott'
+        draft_review_changed: 'a tervezet ellenorzesi felulete megvaltozott'
+        schema_formula_changed: 'a sema vagy keplet eredete megvaltozott'
+        transaction_catalogue_changed: 'a tranzakcios katalogus megvaltozott'
+        unknown: '%{reason}'
   ledger:
     errors:
       evidence_attachment_requires_ids: A főkönyvi bizonylat csatolásához vásárlási
