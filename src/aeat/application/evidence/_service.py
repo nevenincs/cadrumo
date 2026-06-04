@@ -16,6 +16,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings
+from ...core.external_constants import UTF_8_ENCODING
 from ._ids import BundleId
 from ._models import (
     BundleVerificationState,
@@ -147,6 +148,9 @@ class EvidenceBundleService:
         Tries an exact ``repository.load`` first; falls back to a prefix
         scan over all records in the bucket. Raises
         :class:`EvidenceBundleNotFoundError` when nothing matches.
+
+        Returns:
+            :class:`EvidenceBundle`: The retrieved evidence bundle.
         """
         repository = self._repository_for(bucket_id)
         if bundle_id.strip():
@@ -157,7 +161,8 @@ class EvidenceBundleService:
             if bundle.bundle_id == bundle_id or bundle.bundle_id.startswith(bundle_id):
                 return bundle
         raise EvidenceBundleNotFoundError(
-            f"no evidence bundle matches {bundle_id!r} in bucket {bucket_id!r}",
+            translated_message="errors.refused.refused_evidence_bundle_not_found",
+            context={"bundle_id": bundle_id, "bucket_id": bucket_id},
             suggestion="aeat app modelo audit check",
         )
 
@@ -290,17 +295,23 @@ class EvidenceBundleService:
         )
         if report.verification_state is BundleVerificationState.FAILED:
             raise EvidenceBundleVerificationError(
-                f"refusing export of bundle {bundle.bundle_id!r}: verification failed",
+                translated_message="errors.refused.refused_evidence_bundle_verification",
+                context={"bundle_id": bundle.bundle_id, "verification_state": report.verification_state.value},
                 suggestion="aeat app modelo audit check",
             )
         if report.verification_state is BundleVerificationState.INCOMPLETE and not force_incomplete:
             raise EvidenceBundleVerificationError(
-                f"refusing export of incomplete bundle {bundle.bundle_id!r} without --force-incomplete",
+                translated_message="errors.refused.refused_evidence_bundle_verification",
+                context={
+                    "bundle_id": bundle.bundle_id,
+                    "verification_state": report.verification_state.value,
+                    "force_incomplete": force_incomplete,
+                },
                 suggestion="aeat app modelo audit export --force-incomplete",
             )
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        manifest_payload = bundle.model_dump_json(indent=2).encode("utf-8")
+        manifest_payload = bundle.model_dump_json(indent=2).encode(UTF_8_ENCODING)
 
         # Write records first; manifest.json LAST so a partial archive
         # never carries a manifest claiming records that aren't there.
