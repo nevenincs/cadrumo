@@ -622,3 +622,22 @@ with a locale key and structured context, and registry CLI tests use
 centralized configured AEAT URL helpers instead of a literal host string.
 
 Closure assessment: `W12.P26.S245` can close as `plaintext-exception`.
+
+## S246-057 | PASS | Registry corpus plaintext-exception closeout verified
+
+The `W12.P26.S246` review found that
+`src/aeat/application/registry/_corpus.py` reads configured manual roots,
+bundled topic resources, and normative/manual corpus files through centralized
+settings and domain loaders. It does not persist corpus state, profile state,
+secure objects, master-key material, or remote provider mirrors.
+
+Registry corpus refusals now use `RegistryApplicationInputError` with locale
+keys and structured context for topic locale, manual section, manual id, and
+manual rule-kind failures. Tests assert durable translation keys and context
+rather than raw English message substrings.
+
+The locale audit also exposed missing Modelo work CLI keys from adjacent
+`tr(..., default=...)` call sites. Those keys were enrolled through
+`python -m aeat.locales` so the full catalog gate passes.
+
+Closure assessment: `W12.P26.S246` can close as `plaintext-exception`.
