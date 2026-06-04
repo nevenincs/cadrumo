@@ -215,7 +215,7 @@ Drive Ty and scoped Pyright findings down by cohesive diagnostic class, recordin
 - [x] `W06.P18.S65` - Repair exception-hygiene AST location narrowing; `src/aeat/adapters/inbound/declaracion/test_exception_hygiene.py`.
 - [x] `W06.P18.S66` - Normalize auth Settings test constructor values; `src/aeat/adapters/outbound/aeat/auth`.
 - [x] `W06.P18.S67` - Repair aggregation error constructor and optional narrowing findings; `src/aeat/application/aggregation`.
-- [ ] `W06.P18.S68` - Repair filing repository generic payload residuals; `src/aeat/domain/filing`.
+- [x] `W06.P18.S68` - Repair filing repository generic payload residuals; `src/aeat/domain/filing`.
 - [ ] `W06.P18.S69` - Repair renta and transaction Decimal literal residuals; `src/aeat/domain`.
 - [ ] `W06.P18.S70` - Persist type all-green baseline or explicit residual ratchets; `.vault/audit`.
 

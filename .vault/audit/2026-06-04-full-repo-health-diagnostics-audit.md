@@ -360,6 +360,26 @@ Verification:
   passed with 89 tests.
 - `uv run --no-sync ruff check` over the touched aggregation files passed.
 
+## HEALTH-011 | CLOSED | Filing repository generic payload override reduced to zero errors
+
+`W06.P18.S68` closed the filing-domain secure repository generic override error.
+The resident RAG server (`vaultspec-rag search --port 8766`) surfaced the
+`SecureBoundRepository` guidance that explicit `payload_model()` overrides are
+the intended path away from the `ClassVar[type[BaseModel]]` fallback. The filing
+draft repository now follows that pattern and no longer narrows the mutable
+`payload_type` class variable.
+
+Verification:
+
+- `uv run --no-sync ty check src/aeat/domain/filing --output-format concise`
+  passed.
+- `uv run --no-sync pyright src/aeat/domain/filing --level warning --warnings`
+  reported 0 errors and 7 pre-existing warnings for private/protected test
+  reach-ins.
+- `uv run --no-sync pytest src/aeat/domain/filing/test_secure_storage_roundtrip.py src/aeat/domain/filing/test_roundtrip_anti_tautology.py src/aeat/domain/filing/test_amendment_roundtrip.py -q`
+  passed with 11 tests.
+- `uv run --no-sync ruff check src/aeat/domain/filing/_repository.py` passed.
+
 ## Suggested Workstreams
 
 1. Repair packaging environment deterministically: schedule a clean `uv sync` window
