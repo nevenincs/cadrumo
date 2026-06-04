@@ -121,7 +121,7 @@ Classify every nearby work-unit or calculation-revision consumer as natural-key 
 
 Keep raw IDs as advanced exact-addressing inputs while retiring stale help that makes them the common operator path.
 
-- [ ] `W03.P12.S27` - keep positional work-unit and calculation-revision IDs as advanced exact addressing inputs; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W03.P12.S27` - keep positional work-unit and calculation-revision IDs as advanced exact addressing inputs; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W03.P12.S28` - cover ID type hints and stale positional-ID help replacement in CLI output tests; `src/aeat/entrypoints/cli/test_modelo_work_id_type_hint.py`.
 
 ### Phase `W03.P10` - classify adjacent work-unit commands
@@ -226,6 +226,7 @@ localized operator messages render clearly without stale ID-routing
 guidance, the affected documentation no longer teaches pasted-ID routing
 for the common path, and the feature surface gate reports only relevant
 pass/fail results for this change set.
+
 
 
 
