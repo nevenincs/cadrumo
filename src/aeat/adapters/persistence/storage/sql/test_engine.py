@@ -8,15 +8,19 @@ relative SQLite URLs.
 
 from __future__ import annotations
 
+import logging
+import os
 from pathlib import Path
 
 import pytest
 from sqlalchemy import text
 
 from .....core.config import PROJECT_ROOT, Settings
+from ..errors import StorageError
 from . import create_engine_from_settings, dispose_engine
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+_ENGINE_LOGGER_NAME = "aeat.adapters.persistence.storage.sql.engine"
 
 
 def _settings_for(url: str) -> Settings:
@@ -52,6 +56,45 @@ def test_engine_creates_parent_directory(tmp_path: Path) -> None:
         dispose_engine(settings)
 
 
+def test_engine_success_log_does_not_expose_database_path(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    private_dir = tmp_path / "private-client-storage-root"
+    db_file = private_dir / "engine.db"
+    settings = _settings_for(f"sqlite:///{db_file.as_posix()}")
+
+    caplog.set_level(logging.DEBUG, logger=_ENGINE_LOGGER_NAME)
+    engine = create_engine_from_settings(settings)
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("select 1"))
+    finally:
+        engine.dispose()
+        dispose_engine(settings)
+
+    messages = tuple(record.getMessage() for record in caplog.records if record.name == _ENGINE_LOGGER_NAME)
+    assert any("created engine route_marker=" in message for message in messages)
+    assert all("private-client-storage-root" not in message for message in messages)
+    assert all("engine.db" not in message for message in messages)
+
+
+def test_engine_create_failure_does_not_expose_database_path(tmp_path: Path) -> None:
+    private_dir = tmp_path / "private-client-storage-root"
+    settings = _settings_for(f"unknown+dialect:///{private_dir.as_posix()}/engine.db")
+
+    with pytest.raises(StorageError) as excinfo:
+        create_engine_from_settings(settings)
+
+    rendered = str(excinfo.value)
+    assert excinfo.value.translated_message == "errors.storage.engine.create_failed"
+    assert excinfo.value.context is not None
+    assert excinfo.value.context["error_type"] == "NoSuchModuleError"
+    assert "route_marker" in excinfo.value.context
+    assert "private-client-storage-root" not in rendered
+    assert "engine.db" not in rendered
+
+
 def test_engine_builds_against_derived_storage_root_fallback(tmp_path: Path) -> None:
     """An absent database URL derives a root-level SQLite fallback.
 
@@ -80,15 +123,13 @@ def test_engine_builds_against_derived_storage_root_fallback(tmp_path: Path) -> 
         dispose_engine(settings)
 
 
-def test_engine_anchors_relative_sqlite_urls_to_project_root(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_engine_anchors_relative_sqlite_urls_to_project_root(tmp_path: Path) -> None:
     """Relative SQLite URLs must resolve against PROJECT_ROOT, not the process cwd."""
     relative_db = Path("var") / "pytest-relative-sqlite" / "engine.db"
     anchored_db = PROJECT_ROOT / relative_db
     settings = _settings_for(f"sqlite:///{relative_db.as_posix()}")
-    monkeypatch.chdir(tmp_path)
+    original_cwd = Path.cwd()
+    os.chdir(tmp_path)
     engine = create_engine_from_settings(settings)
     try:
         with engine.connect() as conn:
@@ -97,6 +138,7 @@ def test_engine_anchors_relative_sqlite_urls_to_project_root(
         assert anchored_db.exists()
         assert not (tmp_path / relative_db).exists()
     finally:
+        os.chdir(original_cwd)
         engine.dispose()
         dispose_engine(settings)
         if anchored_db.exists():
