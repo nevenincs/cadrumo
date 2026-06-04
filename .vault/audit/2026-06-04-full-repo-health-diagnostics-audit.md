@@ -79,6 +79,44 @@ over blanket ignores: constructor normalization at settings/config boundaries,
 optional narrowing before arithmetic/member access, and repository generic
 contract repair should be preferred before expanding any allowlist.
 
+### 2026-06-04 W06.P18.S63 all-green type bucket inventory
+
+Status: appended.
+
+The all-green campaign now tracks the remaining type work as executable buckets in
+`W06.P18.S63` through `W06.P18.S70`. Targeted checker runs on the first buckets
+showed the following current baseline:
+
+- `S64` Declaracion parser boundary tests: Ty reports five diagnostics in
+  `test_parser_boundary.py`. One is an `object` membership check against an error
+  detail; four are from dynamic `**{"año_override": 2026}` construction that
+  makes Ty treat the integer as every keyword parameter shape accepted by
+  `parse_declaracion`.
+- `S65` exception-hygiene AST narrowing: Ty reports one diagnostic in
+  `test_exception_hygiene.py` where an `ast.AST` value is read as if every node
+  had `lineno`.
+- `S66` auth Settings constructors: full `just typecheck` still reports raw
+  `str` and `str | None` values passed into typed `Settings` fields such as
+  `Path`, `SecretStr`, booleans, and timeout values.
+- `S67` aggregation residuals: a targeted Pyright run over aggregation plus
+  adjacent domain buckets reports 26 errors and 35 warnings. The aggregation
+  errors cluster around `AeatError` constructor signature drift, optional access,
+  object-to-`Decimal` narrowing, and tests still passing string literals where
+  `CounterpartSourceKind` now expects enum-backed literals.
+- `S68` filing repository residuals: `domain/filing/_repository.py` still has
+  the invariant `payload_type` override pattern that earlier secure repository
+  repairs removed from justificante, submission, and apoderado repositories.
+- `S69` renta and transaction residuals: current findings include `Literal["EUR"]`
+  assignment widening, unnecessary runtime type checks after static narrowing,
+  optional `Decimal` arithmetic in gross-invariant tests, and assignment to a
+  read-only `ModelProfile.model_id` field.
+
+Port-bound RAG corroborated that the aggregation and secure-repository residuals
+are follow-on work from W02 rather than new architecture: the top vault results
+were W02 aggregation source-kind and secure repository payload execution records,
+and code search returned the canonical `CounterpartSourceKind` and
+`counterpart_source_kind` surfaces in `src/aeat/core/aggregation.py`.
+
 ## HEALTH-002 | HIGH | Structural boundaries are now diagnosable and show real layer violations
 
 The initial structural run failed because `aeat` was not importable from the shared
