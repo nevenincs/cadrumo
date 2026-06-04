@@ -29,6 +29,10 @@ The edit-mode misuse refusal raises `WorkflowInputMismatchError` with a
 `translated_message` key. No bare environment reads, broad exception swallowing, or raw
 operator-facing exception messages were found in the module.
 
+The patch path now also refuses unknown supplied question ids with
+`WorkflowInputMismatchError`, a locale key, and bounded `question_id` context instead of
+silently skipping an unexpected flag-like token.
+
 ## S274-004 | PASS | Duplication and validation
 
 Vaultspec RAG semantic search clustered the slice with wizard persistence, wizard
@@ -40,5 +44,7 @@ Validation passed:
 
 - `uv run --no-sync ruff check src/aeat/application/wizard/_persistence.py src/aeat/application/wizard/test_persistence_canonical.py src/aeat/application/wizard/test_setup_runtime.py src/aeat/application/wizard/test_create_pointer_atomicity.py`
 - `uv run --no-sync pytest -q src/aeat/application/wizard/test_persistence_canonical.py src/aeat/application/wizard/test_setup_runtime.py src/aeat/application/wizard/test_create_pointer_atomicity.py`
+- `uv run --no-sync pytest -q src/aeat/application/wizard/test_persistence_canonical.py`
+- `python -m aeat.locales audit`
 
 Disposition: close `AFR-172`.

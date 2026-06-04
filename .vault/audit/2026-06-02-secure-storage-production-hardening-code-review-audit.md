@@ -790,6 +790,10 @@ rehydrates PATH answers and performs no direct file IO. The edit-mode misuse ref
 raises `WorkflowInputMismatchError` with a locale key. No broad exception swallowing or
 naked environment reads were found.
 
+The patch path now also fails closed when a supplied question id is not declared by the
+flow, raising `WorkflowInputMismatchError` with a locale key and bounded context instead
+of silently skipping the unexpected id.
+
 Vaultspec RAG semantic search was used for duplication review and clustered the slice
 with wizard persistence, wizard command orchestration, canonical user-profile
 registration helpers, and pointer-atomicity tests. Focused persistence and setup
