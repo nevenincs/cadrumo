@@ -147,7 +147,7 @@ Resolve focused dependency and dead-code issues, then reduce residual duplicatio
 
 Resolve the six Deptry findings by declaring runtime imports explicitly or documenting optional/stale ownership.
 
-- [ ] `W04.P12.S38` - Decide formulas runtime optional or stale ownership; `pyproject.toml`.
+- [x] `W04.P12.S38` - Decide formulas runtime optional or stale ownership; `pyproject.toml`.
 - [ ] `W04.P12.S39` - Decide rich runtime optional or stale ownership; `pyproject.toml`.
 - [ ] `W04.P12.S40` - Decide torch runtime optional or stale ownership; `pyproject.toml`.
 - [ ] `W04.P12.S41` - Declare or optionalize playwright-stealth consistently; `pyproject.toml`.
@@ -266,4 +266,3 @@ The plan is complete when every Step row is closed, scoped execution records exi
 for each Step, `just tooling-doctor` still passes, structural gates pass, focused
 type checks for touched packages pass, and `just quality-audit` has an updated
 baseline document explaining remaining advisory findings.
-

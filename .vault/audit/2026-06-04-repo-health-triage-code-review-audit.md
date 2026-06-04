@@ -213,3 +213,19 @@ Focused verification passed for list filters, cold-start no-profile refusal,
 review-filter help wording, and Ruff on the touched ledger CLI surfaces. A
 broader lifecycle CLI test currently fails before the list path on an unrelated
 `ledger update` taxable-base plus IVA gross-validation refusal.
+
+## W04-001 | INFO | Formulas dependency ownership review found no defects
+
+Status: verified with scoped residual.
+
+The W04.P12.S38 review found no behavioral defect in the dependency hygiene
+decision. `formulas` remains declared for the workbook parity oracle, while the
+production registry formula runtime remains import-free for the external
+package. The Deptry `DEP002` exception is explicit and scoped to that ownership
+decision rather than a blanket dependency suppression.
+
+Focused verification confirmed that no Python import of the external `formulas`
+package exists, `uv run --no-sync deptry .` no longer reports `formulas`, and
+the VaultSpec repo-health plan validates. Deptry still reports planned residual
+findings for `rich`, `torch`, `playwright_stealth`, and `prompt_toolkit`, which
+remain open under W04.P12.S39-S42.

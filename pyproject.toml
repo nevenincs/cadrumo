@@ -40,10 +40,9 @@ dependencies = [
   "google-auth>=2.50.0,<3",
   "google-auth-oauthlib>=1.3.1,<2",
   "google-api-python-client>=2.195.0,<3",
-  # In-process Excel-formula evaluator. Used by the schema-to-sheet
-  # parity oracle to evaluate translated Sheets formulas locally and
-  # assert exact-after-per-casilla-rounding identity against the
-  # canonical Python calc engine. No network IO; runs in-process.
+  # In-process Excel-formula evaluator reserved for the schema-to-sheet
+  # parity oracle. The production registry formula runtime does not import
+  # this package directly; the workbook parity gate owns the dependency.
   "formulas>=1.2.0,<2",
   # HTTP client
   "httpx>=0.28.1,<1",
@@ -727,14 +726,15 @@ ignore_decorators = [
 
 # ── Deptry (unused / transitive dependency lint) ─────────────────────────────
 # Suppress the false positives surfaced by deptry's default heuristics.
-# `pydantic_core` is re-exported by pydantic (legitimate transitive use),
-# `click` ships under typer (typer's CLI surface is built on click), and
-# `yaml` ships as `PyYAML`. The remaining diagnostics flag genuine drift
-# and stay active.
+# `formulas` is owned by the workbook parity oracle even though production
+# imports do not reference it directly yet. `pydantic_core` is re-exported by
+# pydantic (legitimate transitive use), `click` ships under typer (typer's CLI
+# surface is built on click), and `yaml` ships as `PyYAML`. The remaining
+# diagnostics flag genuine drift and stay active.
 [tool.deptry.package_module_name_map]
 "PyYAML" = ["yaml"]
 "pyyaml" = ["yaml"]
 [tool.deptry.per_rule_ignores]
-DEP002 = ["python-dotenv", "tzdata"]
+DEP002 = ["formulas", "python-dotenv", "tzdata"]
 DEP003 = ["click", "pydantic_core", "yaml"]
 DEP004 = ["pytest", "reportlab"]
