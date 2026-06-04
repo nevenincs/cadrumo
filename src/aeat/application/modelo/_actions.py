@@ -31,6 +31,7 @@ import re as _re
 from collections.abc import Mapping
 from datetime import date, datetime
 from decimal import Decimal
+from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -58,6 +59,7 @@ from ...domain.calculations.registry import (
     RegistryCalculationEntry,
     RegistryCalculationResult,
     RegistrySnapshot,
+    RegistrySnapshotError,
     VerificationPredicateDefinition,
     calculate_registry_snapshot,
     input_casilla_alias_map,
@@ -122,7 +124,7 @@ from ...domain.modelos._work_unit import (
     WorkUnitState,
     derive_work_unit_id,
 )
-from ...domain.period import parse_canonical_period, period_end_date
+from ...domain.period import PeriodValidationError, parse_canonical_period, period_end_date
 from ...domain.submission import ModeloDraftStatus, SubmissionEngine
 from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 from ..aggregation._ledger_filing_snapshot import (
@@ -148,6 +150,7 @@ from ..workflow import (
     WorkflowRunRepository,
     WorkflowStage,
 )
+from . import _iva_wallet_gate
 from ._binding_resolution import (
     resolve_bound_casilla_inputs_for_available_bindings,
     resolve_calculation_binding_inputs,
@@ -155,10 +158,16 @@ from ._binding_resolution import (
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import ValidatedRegistryAuthority
-    from ...domain.iva_compensation._reconciliation import (
-        IvaCompensationReconciliationDecision,
-    )
     from ..calculations._observations_repository import IvaWalletDecisionRepository
+
+ModeloIvaWalletReconciliationBlocked = _iva_wallet_gate.ModeloIvaWalletReconciliationBlocked
+ModeloIvaWalletReconciliationBlockedError = _iva_wallet_gate.ModeloIvaWalletReconciliationBlockedError
+_apply_iva_compensation_decision_binding = _iva_wallet_gate.apply_iva_compensation_decision_binding
+_require_iva_compensation_revision_match = _iva_wallet_gate.require_persisted_iva_compensation_decision_matches_revision
+_require_persisted_iva_compensation_decision_matches_revision = _require_iva_compensation_revision_match
+_taxpayer_nif_for_bucket = _iva_wallet_gate.taxpayer_nif_for_bucket
+iva_wallet_blocked_message = _iva_wallet_gate.iva_wallet_blocked_message
+resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva_compensation_decision_for_calculation
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 2
 """Schema version for the bucket-event payload dict emitted by this module.
@@ -172,10 +181,6 @@ the borrador participation triple (``borrador_participated``,
 audit tools reading the event log alone can detect grounding-loss
 regressions without joining against the encrypted revision catalogue.
 """
-
-_M303_PRIOR_COMPENSATION_BINDING_ID = "modelo-303-compensacion-pendiente-anteriores"
-_M303_PRIOR_COMPENSATION_CASILLA_ID = "iva.compensacion-pendiente-periodos-anteriores"
-
 
 def _emit_bucket_event(
     *,
@@ -397,18 +402,58 @@ def _default_name(*, modelo: str, filing_year: int, period: str) -> str:
     return f"{modelo}-{filing_year}-{period}"
 
 
+@lru_cache(maxsize=512)
+def _deadline_window_period_for_registry_period(
+    *,
+    modelo: str,
+    filing_year: int,
+    registry_period: str,
+) -> str | None:
+    """Return the exact deadline-window period token declared by the registry."""
+    try:
+        snapshot = _authority_via_resources().snapshot(modelo, filing_year=filing_year, period=registry_period)
+    except RegistrySnapshotError:
+        return None
+
+    for window in snapshot.revision.deadline_windows:
+        try:
+            window_year, window_registry_period = parse_canonical_period(window.period)
+        except PeriodValidationError:
+            continue
+        if window_year == filing_year and window_registry_period == registry_period:
+            return str(window.period)
+    return None
+
+
 def workflow_period_for_work_unit(work_unit: WorkUnit) -> str:
     """Return the canonical period token consumed by WorkflowEngine.
 
     The work unit stores the period as a short registry token (``"1T"``,
     ``"0A"``, ``"03"``, ``"1P"``); the :class:`WorkflowEngine` consumes a
-    year-qualified token (``"2026Q1"``, ``"2026"``, ``"2026-03"``,
-    ``"2026P1"``).  This is the single producer of that mapping, used by
-    the workflow gate and by run-id resolution so they cannot diverge.
+    year-qualified token using the modelo's registry-declared deadline-window
+    spelling (``"2026Q1"``, ``"2026-1T"``, ``"2026"``, ``"2026-03"``,
+    ``"2026P1"``).  This is the single producer of that mapping, used by the
+    workflow gate and by run-id resolution so they cannot diverge.
     """
     if work_unit.period.endswith("T") and len(work_unit.period) == 2:
-        quarter = work_unit.period[0]
-        return f"{work_unit.filing_year}Q{quarter}"
+        declared = _deadline_window_period_for_registry_period(
+            modelo=work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            registry_period=work_unit.period,
+        )
+        if declared is not None:
+            return declared
+        return f"{work_unit.filing_year}-{work_unit.period}"
+    if len(work_unit.period) == 2 and work_unit.period.startswith("Q") and work_unit.period[1] in "1234":
+        registry_period = f"{work_unit.period[1]}T"
+        declared = _deadline_window_period_for_registry_period(
+            modelo=work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            registry_period=registry_period,
+        )
+        if declared is not None:
+            return declared
+        return f"{work_unit.filing_year}Q{work_unit.period[1]}"
     if work_unit.period == "0A":
         return str(work_unit.filing_year)
     if len(work_unit.period) == 2 and work_unit.period.isdigit():
@@ -912,13 +957,6 @@ class ModeloAggregationBindingError(ModeloError):
     """Raised when bucket-derived aggregation bindings conflict with caller input."""
 
 
-class ModeloIvaWalletReconciliationBlockedError(ModeloError):
-    """Raised when Modelo 303 calculation is blocked by IVA wallet reconciliation."""
-
-
-ModeloIvaWalletReconciliationBlocked = ModeloIvaWalletReconciliationBlockedError
-
-
 class CasillaProvenanceMissingError(ModeloError):
     """Raised when an engine-result casilla has no registry definition.
 
@@ -1015,34 +1053,16 @@ def calculate_modelo_revision(
         revision=snapshot.revision,
         transaction_repository=ledger_preflight_transaction_repository,
     )
-    if iva_compensation_decision is None:
-        iva_compensation_decision = _load_persisted_iva_compensation_decision_for_work_unit(
-            work_unit,
-            repository=iva_compensation_decision_repository,
-        )
-        if iva_compensation_decision is None and not _caller_supplied_prior_compensation_value(
-            binding_values=binding_values,
-            backend_binding_values=backend_binding_values,
-            casilla_inputs=casilla_inputs,
-            backend_casilla_inputs=backend_casilla_inputs,
-        ):
-            # Lazy-derive the local decision ONLY for the implicit path (operator
-            # supplied no prior-compensation value). When the operator EXPLICITLY
-            # asserts a prior-compensation binding/casilla, that value must be
-            # reconciled against a real wallet/seed decision first, so the
-            # existing seed-verb guidance (via _apply_iva_compensation_decision_
-            # binding with decision=None) is preserved for that case.
-            iva_compensation_decision = _lazily_reconcile_local_iva_compensation_for_work_unit(
-                work_unit,
-                snapshot=snapshot,
-                repository=iva_compensation_decision_repository,
-            )
-    else:
-        iva_compensation_decision = _require_persisted_iva_compensation_decision_for_work_unit(
-            work_unit,
-            supplied_decision=iva_compensation_decision,
-            repository=iva_compensation_decision_repository,
-        )
+    iva_compensation_decision = resolve_iva_compensation_decision_for_calculation(
+        work_unit,
+        snapshot=snapshot,
+        supplied_decision=iva_compensation_decision,
+        repository=iva_compensation_decision_repository,
+        binding_values=binding_values,
+        backend_binding_values=backend_binding_values,
+        casilla_inputs=casilla_inputs,
+        backend_casilla_inputs=backend_casilla_inputs,
+    )
 
     period_date = filing_period_date or period_end_date(
         filing_year=work_unit.filing_year,
@@ -1193,311 +1213,11 @@ def calculate_modelo_revision(
     return revision
 
 
-def _apply_iva_compensation_decision_binding(
-    modelo: str,
-    filing_year: int,
-    period: str,
-    *,
-    bucket_id: str,
-    revision: ModeloRevision,
-    taxpayer_nif: str | None = None,
-    casilla_inputs: Mapping[str, Decimal] | None = None,
-    backend_casilla_inputs: Mapping[str, Decimal] | None = None,
-    caller_binding_values: dict[str, Decimal],
-    backend_binding_values: dict[str, Decimal],
-    decision: object | None,
-) -> None:
-    """Apply a non-blocking IVA wallet decision to Modelo 303 binding values."""
-    if modelo != "303":
-        return
-    binding_id = _M303_PRIOR_COMPENSATION_BINDING_ID
-    bound_casilla_id = _M303_PRIOR_COMPENSATION_CASILLA_ID
-    caller_casilla_value = dict(casilla_inputs or {}).get(bound_casilla_id)
-    backend_casilla_value = dict(backend_casilla_inputs or {}).get(bound_casilla_id)
-    if decision is None:
-        caller_value = caller_binding_values.get(binding_id)
-        backend_value = backend_binding_values.get(binding_id)
-        if (
-            caller_value is not None
-            or backend_value is not None
-            or caller_casilla_value is not None
-            or backend_casilla_value is not None
-        ):
-            raise ModeloIvaWalletReconciliationBlocked(
-                translated_message="application.modelo.errors.iva_wallet_not_seeded",
-                suggestion="aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm",
-            )
-        return
-
-    from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-
-    if not isinstance(decision, IvaCompensationReconciliationDecision):
-        raise ModeloIvaWalletReconciliationBlocked("iva_compensation_decision has an unsupported type")
-    if decision.target_year != filing_year or decision.target_period != period:
-        raise ModeloIvaWalletReconciliationBlocked(
-            "IVA wallet reconciliation decision target does not match the Modelo 303 work unit"
-        )
-    if taxpayer_nif is None:
-        raise ModeloIvaWalletReconciliationBlocked(
-            "IVA wallet reconciliation decision cannot be applied without a work-unit taxpayer identity"
-        )
-    if decision.taxpayer_nif.strip().upper() != taxpayer_nif.strip().upper():
-        raise ModeloIvaWalletReconciliationBlocked(
-            "IVA wallet reconciliation decision taxpayer does not match the Modelo 303 work unit"
-        )
-    if decision.blocked:
-        raise ModeloIvaWalletReconciliationBlocked(
-            "IVA wallet reconciliation blocks automatic Modelo 303 calculation: "
-            f"{decision.divergence}: {decision.reason}"
-        )
-    if decision.selected_amount is None:
-        raise ModeloIvaWalletReconciliationBlocked("IVA wallet reconciliation decision has no selected amount")
-    selected = Decimal(decision.selected_amount)
-    caller_value = caller_binding_values.get(binding_id)
-    if caller_value is not None and Decimal(caller_value) != selected:
-        raise ModeloIvaWalletReconciliationBlocked(
-            "caller binding for Modelo 303 prior compensation conflicts with IVA wallet reconciliation decision"
-        )
-    if caller_casilla_value is not None and Decimal(caller_casilla_value) != selected:
-        raise ModeloIvaWalletReconciliationBlocked(
-            "caller casilla input for Modelo 303 prior compensation conflicts with IVA wallet reconciliation decision"
-        )
-    if backend_casilla_value is not None and Decimal(backend_casilla_value) != selected:
-        raise ModeloIvaWalletReconciliationBlocked(
-            "backend casilla input for Modelo 303 prior compensation conflicts with IVA wallet reconciliation decision"
-        )
-    from ..aggregation import CalculationSourceContext
-    from ..calculations import IvaWalletDecisionSourceResolver
-
-    resolution = IvaWalletDecisionSourceResolver(decision).resolve(
-        CalculationSourceContext(
-            bucket_id=bucket_id,
-            modelo=modelo,
-            filing_year=filing_year,
-            period=period,
-            revision=revision,
-        )
-    )
-    backend_binding_values.update(resolution.binding_values)
-
-
-def _require_persisted_iva_compensation_decision_for_work_unit(
-    work_unit: WorkUnit,
-    *,
-    supplied_decision: object,
-    repository: IvaWalletDecisionRepository | None = None,
-) -> object:
-    if work_unit.modelo != "303":
-        return supplied_decision
-    persisted = _load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
-    if persisted is None:
-        raise ModeloIvaWalletReconciliationBlocked(
-            translated_message="application.modelo.errors.iva_wallet_not_seeded",
-            suggestion="aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm",
-        )
-    if persisted != supplied_decision:
-        raise ModeloIvaWalletReconciliationBlocked(
-            "supplied IVA wallet reconciliation decision does not match the persisted decision"
-        )
-    return persisted
-
-
-def _load_persisted_iva_compensation_decision_for_work_unit(
-    work_unit: WorkUnit,
-    *,
-    repository: IvaWalletDecisionRepository | None = None,
-) -> IvaCompensationReconciliationDecision | None:
-    if work_unit.modelo != "303":
-        return None
-    taxpayer_nif = _taxpayer_nif_for_bucket(work_unit.bucket_id)
-    if taxpayer_nif is None:
-        return None
-    if repository is None:
-        from ..calculations._observations_repository import IvaWalletDecisionRepository
-
-        repository = IvaWalletDecisionRepository()
-
-    return repository.load_decision(
-        taxpayer_nif,
-        work_unit.filing_year,
-        work_unit.period,
-    )
-
-
-def _caller_supplied_prior_compensation_value(
-    *,
-    binding_values: Mapping[str, Decimal] | None,
-    backend_binding_values: Mapping[str, Decimal] | None,
-    casilla_inputs: Mapping[str, Decimal] | None,
-    backend_casilla_inputs: Mapping[str, Decimal] | None,
-) -> bool:
-    """Return whether a Modelo 303 prior-compensation value was explicitly supplied.
-
-    The lazy local reconciliation must NOT fire when the operator (caller) or a
-    backend resolver explicitly asserts the prior-compensation binding/casilla:
-    that value needs reconciliation against a real wallet/seed decision, and the
-    existing seed-verb guidance must surface. This mirrors the value-presence
-    check inside :func:`_apply_iva_compensation_decision_binding`.
-    """
-    binding_id = _M303_PRIOR_COMPENSATION_BINDING_ID
-    casilla_id = _M303_PRIOR_COMPENSATION_CASILLA_ID
-    return (
-        dict(binding_values or {}).get(binding_id) is not None
-        or dict(backend_binding_values or {}).get(binding_id) is not None
-        or dict(casilla_inputs or {}).get(casilla_id) is not None
-        or dict(backend_casilla_inputs or {}).get(casilla_id) is not None
-    )
-
-
-def _lazily_reconcile_local_iva_compensation_for_work_unit(
-    work_unit: WorkUnit,
-    *,
-    snapshot: RegistrySnapshot,
-    repository: IvaWalletDecisionRepository | None = None,
-) -> IvaCompensationReconciliationDecision | None:
-    """Auto-derive and persist the local-authority Modelo 303 compensation decision.
-
-    Calculate's prior-compensation gate requires a persisted
-    :class:`IvaCompensationReconciliationDecision`. When none exists and no live
-    AEAT wallet is reconciled, the operator was forced into a circular dead-end:
-    ``iva-wallet seed`` writes the compensation HISTORY (a different record), but
-    calculate kept demanding the decision and pointing back at the seed verb. The
-    seed-only / no-live-wallet flow is the local-authority case: the local
-    Modelo 303 recurrence (carried forward from prior filings, or seeded) IS the
-    authority, so derive the decision from it here rather than refuse.
-
-    This fires ONLY when no decision is persisted (guardrail: a live-wallet flow
-    persists its decision via the Sede reconciliation path BEFORE calculate, so a
-    persisted decision is present and this branch is skipped — the strict
-    live-wallet-discrepancy gate is untouched). The derived decision is NON-blocking
-    with ``selected_amount`` equal to the real local recurrence (zero only when the
-    local history is genuinely zero — never an auto-zero of a real prior balance);
-    :func:`reconcile_modelo_303_iva_compensation` owns that logic. The persisted
-    decision then flows through :func:`_apply_iva_compensation_decision_binding`
-    into casilla 110 (``iva.compensacion-pendiente-periodos-anteriores``), so the
-    carried amount is surfaced on the calculation result with its registry
-    legal_refs (LIVA art. 99) rather than silently applied.
-
-    Returns the derived :class:`IvaCompensationReconciliationDecision`, or ``None``
-    for non-303 work units / when no taxpayer identity is resolvable.
-    """
-    if work_unit.modelo != "303":
-        return None
-    taxpayer_nif = _taxpayer_nif_for_bucket(work_unit.bucket_id)
-    if taxpayer_nif is None:
-        return None
-    from ..calculations._iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
-
-    report = reconcile_modelo_303_iva_compensation(
-        snapshot,
-        taxpayer_nif=taxpayer_nif,
-        wallet=None,
-        decision_repository=repository,
-        # No caller-supplied prior-compensation value reached this point (the
-        # call site guards on that) and no live wallet is configured. When there
-        # is also no prior local recurrence, this is the taxpayer's first IVA
-        # period: casilla 110 is a legally-certain zero (LIVA art. 99.5), so
-        # derive the non-blocking first-period decision rather than dead-end. A
-        # real prior recurrence (filed history) still flows through and stays
-        # gated pending operator confirmation; it is never auto-zeroed.
-        treat_absent_recurrence_as_first_period=True,
-        persist=True,
-    )
-    return report.decision
-
-
-def _require_persisted_iva_compensation_decision_matches_revision(
-    work_unit: WorkUnit,
-    revision: CalculationRevision,
-    *,
-    repository: IvaWalletDecisionRepository | None = None,
-) -> IvaCompensationReconciliationDecision | None:
-    if work_unit.modelo != "303":
-        return None
-    decision = _load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
-    if decision is None:
-        raise ModeloIvaWalletReconciliationBlocked(
-            translated_message="application.modelo.errors.iva_wallet_not_seeded",
-            suggestion="aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm",
-        )
-    if decision.blocked:
-        raise ModeloIvaWalletReconciliationBlocked(
-            _iva_wallet_blocked_message(decision),
-            translated_message="application.modelo.errors.iva_wallet_blocked",
-        )
-    if decision.target_year != work_unit.filing_year or decision.target_period != work_unit.period:
-        raise ModeloIvaWalletReconciliationBlocked(
-            tr(
-                "application.modelo.errors.iva_wallet_blocked",
-                divergence="authority_target_mismatch",
-                reason="persisted IVA wallet decision target does not match the Modelo 303 work unit",
-            ),
-            translated_message="application.modelo.errors.iva_wallet_blocked",
-        )
-    if decision.selected_amount is None:
-        raise ModeloIvaWalletReconciliationBlocked(
-            tr(
-                "application.modelo.errors.iva_wallet_blocked",
-                divergence="authority_missing_amount",
-                reason="persisted IVA wallet decision has no selected amount",
-            ),
-            translated_message="application.modelo.errors.iva_wallet_blocked",
-        )
-    revision_amount = _revision_iva_compensation_amount(revision)
-    if revision_amount is None:
-        raise ModeloIvaWalletReconciliationBlocked(
-            tr(
-                "application.modelo.errors.iva_wallet_blocked",
-                divergence="authority_revision_missing_amount",
-                reason="calculation revision does not carry the Modelo 303 prior-compensation amount",
-            ),
-            translated_message="application.modelo.errors.iva_wallet_blocked",
-        )
-    if Decimal(decision.selected_amount) != revision_amount:
-        raise ModeloIvaWalletReconciliationBlocked(
-            tr(
-                "application.modelo.errors.iva_wallet_blocked",
-                divergence="authority_amount_mismatch",
-                reason="persisted IVA wallet decision does not match the calculation revision",
-            ),
-            translated_message="application.modelo.errors.iva_wallet_blocked",
-        )
-    return decision
-
-
-def _revision_iva_compensation_amount(revision: CalculationRevision) -> Decimal | None:
-    casilla_value = dict(revision.casilla_values).get(_M303_PRIOR_COMPENSATION_CASILLA_ID)
-    if casilla_value is not None:
-        return Decimal(casilla_value)
-    binding_value = dict(revision.binding_overrides).get(_M303_PRIOR_COMPENSATION_BINDING_ID)
-    if binding_value is not None:
-        return Decimal(binding_value)
-    return None
-
-
 # ANY-RETURN-RATIONALE-ACTIONS-IVA-WALLET-DECISION:
-# Concrete type is IvaWalletCompensationDecision but direct import creates a
-# cross-module cycle; helper accesses .divergence/.reason via duck typing.
+# Wrapper preserves the legacy _actions.py private surface and drift token
+# while the extracted IVA wallet gate owns message rendering.
 def _iva_wallet_blocked_message(decision: Any) -> str:
-    divergence = str(decision.divergence)
-    reason = str(decision.reason)
-    return tr("application.modelo.errors.iva_wallet_blocked", divergence=divergence, reason=reason)
-
-
-def _taxpayer_nif_for_bucket(bucket_id: str) -> str | None:
-    from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile._profile_repository import ProfileRepository
-    from ..user_profile._projections import record_to_path_values
-
-    try:
-        profile = ProfileRepository().load(bucket_id)
-        record = profile.record
-    except ProfileNotFoundError:
-        return None
-    value = record_to_path_values(record).get("identity.tax_id")
-    if value is None or not value.strip():
-        return None
-    return value.strip()
+    return iva_wallet_blocked_message(decision)
 
 
 def _iva_regime_for_bucket(bucket_id: str) -> str | None:
@@ -1554,9 +1274,20 @@ def _raise_if_ledger_preflight_blocks_calculation(
         return
     first_issue = report.issues[0]
     raise ModeloAggregationBindingError(
-        "ledger preflight blocks modelo calculation: "
-        f"{first_issue.transaction_id} {first_issue.reason.value}: {first_issue.detail}. "
-        f"Run `aeat app ledger preflight --period {report.period.raw}` before calculating."
+        tr(
+            "application.modelo.errors.ledger_preflight_blocked",
+            transaction_id=first_issue.transaction_id,
+            reason=first_issue.reason.value,
+            detail=first_issue.detail,
+            period=report.period.raw,
+        ),
+        translated_message="application.modelo.errors.ledger_preflight_blocked",
+        context={
+            "transaction_id": first_issue.transaction_id,
+            "reason": first_issue.reason.value,
+            "period": report.period.raw,
+        },
+        suggestion=f"aeat app ledger preflight --period {report.period.raw}",
     )
 
 
@@ -1634,13 +1365,23 @@ def calculate_modelo_revision_from_bucket_aggregation(
         )
     except FileNotFoundError as exc:
         raise CalculationRegistryUnavailableError(
-            f"registry root {_registry_root()} is missing; cannot calculate from bucket aggregation"
+            tr(
+                "application.modelo.errors.calculation_registry_root_missing",
+                registry_root=_registry_root(),
+            ),
+            translated_message="application.modelo.errors.calculation_registry_root_missing",
+            context={"registry_root": _registry_root()},
         ) from exc
     except RegistrySnapshotError as exc:
         raise CalculationRegistryUnavailableError(
-            f"registry snapshot for modelo={work_unit.modelo!r} "
-            f"year={work_unit.filing_year} period={work_unit.period!r} "
-            f"could not be resolved: {exc}"
+            tr(
+                "application.modelo.errors.calculation_registry_snapshot_unresolved",
+                modelo=work_unit.modelo,
+                filing_year=work_unit.filing_year,
+                period=work_unit.period,
+            ),
+            translated_message="application.modelo.errors.calculation_registry_snapshot_unresolved",
+            context={"modelo": work_unit.modelo, "filing_year": work_unit.filing_year, "period": work_unit.period},
         ) from exc
 
     # Normalise operator-supplied casilla aliases (registry number / BOE
@@ -1781,7 +1522,12 @@ def _reject_caller_overrides_of_source_bindings(
     )
     if rejected_casillas:
         raise ModeloAggregationBindingError(
-            f"caller casilla inputs cannot override bucket-derived source bound casillas: {rejected_casillas!r}"
+            tr(
+                "application.modelo.errors.caller_casilla_source_binding_conflict",
+                casillas=rejected_casillas,
+            ),
+            translated_message="application.modelo.errors.caller_casilla_source_binding_conflict",
+            context={"casillas": rejected_casillas},
         )
 
 
@@ -2043,23 +1789,41 @@ def _reject_unknown_override_casillas(
         authority = _authority_via_resources()
     except FileNotFoundError as exc:
         raise AmendmentOverrideCasillaError(
-            f"registry root {_registry_root()} is missing; cannot validate amendment overrides"
+            tr(
+                "application.modelo.errors.amendment_registry_root_missing",
+                registry_root=_registry_root(),
+            ),
+            translated_message="application.modelo.errors.amendment_registry_root_missing",
+            context={"registry_root": _registry_root()},
         ) from exc
 
     try:
         snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
     except RegistrySnapshotError as exc:
         raise AmendmentOverrideCasillaError(
-            f"registry has no snapshot for modelo={modelo!r} filing_year={filing_year} "
-            f"period={period!r}; cannot validate amendment overrides"
+            tr(
+                "application.modelo.errors.amendment_registry_snapshot_unresolved",
+                modelo=modelo,
+                filing_year=filing_year,
+                period=period,
+            ),
+            translated_message="application.modelo.errors.amendment_registry_snapshot_unresolved",
+            context={"modelo": modelo, "filing_year": filing_year, "period": period},
         ) from exc
 
     known = {str(casilla.id) for casilla in snapshot.revision.casillas}
     unknown = sorted(casilla_id for casilla_id in overrides if casilla_id not in known)
     if unknown:
         raise AmendmentOverrideCasillaError(
-            f"amendment overrides target casilla ids that are not declared in registry "
-            f"modelo={modelo!r} filing_year={filing_year} period={period!r}: {unknown!r}"
+            tr(
+                "application.modelo.errors.amendment_unknown_casillas",
+                modelo=modelo,
+                filing_year=filing_year,
+                period=period,
+                casillas=unknown,
+            ),
+            translated_message="application.modelo.errors.amendment_unknown_casillas",
+            context={"modelo": modelo, "filing_year": filing_year, "period": period, "casillas": unknown},
         )
 
 
@@ -2079,23 +1843,41 @@ def _reject_unknown_import_casillas(
         authority = _authority_via_resources()
     except FileNotFoundError as exc:
         raise ExternalModeloImportError(
-            f"registry root {_registry_root()} is missing; cannot validate imported casilla ids"
+            tr(
+                "application.modelo.errors.external_import_registry_root_missing",
+                registry_root=_registry_root(),
+            ),
+            translated_message="application.modelo.errors.external_import_registry_root_missing",
+            context={"registry_root": _registry_root()},
         ) from exc
 
     try:
         snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
     except RegistrySnapshotError as exc:
         raise ExternalModeloImportError(
-            f"registry has no snapshot for modelo={modelo!r} filing_year={filing_year} "
-            f"period={period!r}; cannot validate imported casilla ids"
+            tr(
+                "application.modelo.errors.external_import_registry_snapshot_unresolved",
+                modelo=modelo,
+                filing_year=filing_year,
+                period=period,
+            ),
+            translated_message="application.modelo.errors.external_import_registry_snapshot_unresolved",
+            context={"modelo": modelo, "filing_year": filing_year, "period": period},
         ) from exc
 
     known = {str(casilla.id) for casilla in snapshot.revision.casillas}
     unknown = sorted(casilla_id for casilla_id in casilla_values if casilla_id not in known)
     if unknown:
         raise ExternalModeloImportError(
-            f"external-filing import carries casilla ids that are not declared in registry "
-            f"modelo={modelo!r} filing_year={filing_year} period={period!r}: {unknown!r}"
+            tr(
+                "application.modelo.errors.external_import_unknown_casillas",
+                modelo=modelo,
+                filing_year=filing_year,
+                period=period,
+                casillas=unknown,
+            ),
+            translated_message="application.modelo.errors.external_import_unknown_casillas",
+            context={"modelo": modelo, "filing_year": filing_year, "period": period, "casillas": unknown},
         )
     return snapshot
 
@@ -2761,7 +2543,8 @@ def verify_modelo_revision(
     """Evaluate a draft revision against the four-layer verified-complete gate.
 
     ``workflow_profile`` is the :class:`TaxpayerProfile` used to drive the
-    workflow engine and filing deadline checks.
+    workflow engine and filing deadline checks. The ``transaction_repository``
+    is a :class:`TransactionCatalogueRepository` used to query ledger entries.
 
     The gate is described fully in the package docstring
     (:mod:`aeat.application.modelo`). This function is the implementation
@@ -2869,7 +2652,7 @@ def verify_modelo_revision(
         profile=workflow_profile,
     )
     try:
-        _require_persisted_iva_compensation_decision_matches_revision(
+        _require_iva_compensation_revision_match(
             work_unit,
             target,
             repository=iva_compensation_decision_repository,
@@ -3223,7 +3006,12 @@ def _resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySna
         authority = _authority_via_resources()
     except FileNotFoundError as exc:
         raise CalculationRegistryUnavailableError(
-            f"registry root {_registry_root()} is missing; cannot calculate"
+            tr(
+                "application.modelo.errors.calculation_registry_root_missing",
+                registry_root=_registry_root(),
+            ),
+            translated_message="application.modelo.errors.calculation_registry_root_missing",
+            context={"registry_root": _registry_root()},
         ) from exc
     try:
         return authority.snapshot(
@@ -3233,9 +3021,14 @@ def _resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySna
         )
     except RegistrySnapshotError as exc:
         raise CalculationRegistryUnavailableError(
-            f"registry snapshot for modelo={work_unit.modelo!r} "
-            f"year={work_unit.filing_year} period={work_unit.period!r} "
-            f"could not be resolved: {exc}"
+            tr(
+                "application.modelo.errors.calculation_registry_snapshot_unresolved",
+                modelo=work_unit.modelo,
+                filing_year=work_unit.filing_year,
+                period=work_unit.period,
+            ),
+            translated_message="application.modelo.errors.calculation_registry_snapshot_unresolved",
+            context={"modelo": work_unit.modelo, "filing_year": work_unit.filing_year, "period": work_unit.period},
         ) from exc
 
 
@@ -3455,7 +3248,7 @@ def file_modelo_revision(
         raise WorkUnitNotFoundError(
             f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}"
         )
-    _require_persisted_iva_compensation_decision_matches_revision(
+    _require_iva_compensation_revision_match(
         work_unit,
         target,
         repository=iva_compensation_decision_repository,
@@ -4075,8 +3868,12 @@ def import_external_filing_evidence(
     revisions = cr_repo.load()
     if revision_id in revisions:
         raise ExternalModeloImportError(
-            f"calculation revision id={revision_id!r} already exists in the catalogue; "
-            f"an identical import was already recorded"
+            tr(
+                "application.modelo.errors.external_import_duplicate_revision",
+                calculation_revision_id=revision_id,
+            ),
+            translated_message="application.modelo.errors.external_import_duplicate_revision",
+            context={"calculation_revision_id": revision_id},
         )
 
     revision = CalculationRevision(
