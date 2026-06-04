@@ -21,6 +21,10 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
+from pydantic import ValidationError
+from sqlalchemy.exc import SQLAlchemyError
+
+from .....core.errors import CoreValidationError
 from .....core.logging import get_logger
 from ..bucket._errors import BucketLockedError
 from ..errors import StorageValidationError
@@ -28,7 +32,12 @@ from ._zeroise import zeroise as _zeroise
 
 _KEK_BYTES = 32
 _DEK_BYTES = 32
+_STORAGE_VALIDATION_MESSAGE_KEY = "errors.integrity.integrity_storage_validation"
 _log = get_logger(__name__)
+
+
+def _storage_validation_error(message: str) -> StorageValidationError:
+    return StorageValidationError(message, translated_message=_STORAGE_VALIDATION_MESSAGE_KEY)
 
 
 class BucketSession:
@@ -100,13 +109,13 @@ class BucketSession:
                 positive, ``kek`` is not 32 bytes, or ``dek`` is not 32 bytes.
         """
         if not bucket_id:
-            raise StorageValidationError("bucket_id must be non-empty")
+            raise _storage_validation_error("bucket_id must be non-empty")
         if idle_minutes <= 0:
-            raise StorageValidationError("idle_minutes must be a strict positive integer")
+            raise _storage_validation_error("idle_minutes must be a strict positive integer")
         if len(kek) != _KEK_BYTES:
-            raise StorageValidationError(f"kek must be exactly {_KEK_BYTES} bytes")
+            raise _storage_validation_error(f"kek must be exactly {_KEK_BYTES} bytes")
         if len(dek) != _DEK_BYTES:
-            raise StorageValidationError(f"dek must be exactly {_DEK_BYTES} bytes")
+            raise _storage_validation_error(f"dek must be exactly {_DEK_BYTES} bytes")
 
         idle_window = timedelta(minutes=idle_minutes)
         return cls(
@@ -180,9 +189,9 @@ class BucketSession:
         is removed from the process-wide engine cache so the next
         consumer that opens a different bucket does not accidentally
         reuse this bucket's engine handle. The lookup is conservative:
-        ``dispose_engine()`` is called without arguments only when
-        the per-bucket URL cannot be reconstructed from current
-        settings; otherwise the targeted dispose runs.
+        the targeted dispose runs through the central active-profile
+        route helper; when an explicit database URL prevents deriving
+        a bucket route, every cached engine is disposed instead.
         """
         if self._sealed:
             return
@@ -193,19 +202,32 @@ class BucketSession:
 
     def _evict_engine(self) -> None:
         """Dispose the SQLAlchemy engine bound to this bucket's database."""
-        from .....core.config import Settings, load_settings
-        from .._namespace_registry import BUCKET_DB_DIRNAME, BUCKETS_DIRNAME
+        from .....core.config import load_settings, settings_for_active_profile_bucket
         from ..sql.engine import dispose_engine
 
         try:
-            settings = load_settings()
-            bucket_db_path = (
-                settings.aeat_local_storage_root / BUCKETS_DIRNAME / self._bucket_id / BUCKET_DB_DIRNAME / "aeat.db"
+            settings = settings_for_active_profile_bucket(self._bucket_id, load_settings())
+        except (CoreValidationError, ValidationError) as exc:
+            _log.debug(
+                "bucket session targeted engine eviction unavailable error_type=%s",
+                type(exc).__name__,
             )
-            target_url = f"sqlite:///{bucket_db_path.as_posix()}"
-            dispose_engine(Settings(aeat_database_url=target_url))
-        except Exception as exc:
-            _log.debug("bucket session engine eviction failed: %s", type(exc).__name__)
+            _evict_all_engines()
+            return
+        try:
+            dispose_engine(settings)
+        except SQLAlchemyError as exc:
+            _log.debug("bucket session targeted engine eviction failed error_type=%s", type(exc).__name__)
+
+
+def _evict_all_engines() -> None:
+    """Dispose every cached SQLAlchemy engine when a targeted route is unavailable."""
+    from ..sql.engine import dispose_engine
+
+    try:
+        dispose_engine()
+    except SQLAlchemyError as exc:
+        _log.debug("bucket session fallback engine eviction failed error_type=%s", type(exc).__name__)
 
 
 __all__ = ["BucketSession"]
