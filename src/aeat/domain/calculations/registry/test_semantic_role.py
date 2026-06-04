@@ -5,7 +5,7 @@ slot and an `aliases: tuple[CasillaAlias, ...]` slot. The
 snapshot-build validator now enforces that every casilla sharing a
 `semantic_role` declares the same `data_type` and structurally
 compatible `constraints`. Single-occurrence role values emit a
-typo-twin warning via `warnings.warn`.
+typo-twin diagnostic warning and fail registry-scope validation.
 
 These tests exercise the field shape, the consistency validator,
 the typo-twin warning surface, and the alias-preservation
@@ -329,7 +329,7 @@ class TestTypoTwinWarning:
             _emit_semantic_role_typo_twin_warnings([m])
         assert any("taxpayer_niff" in str(w.message) for w in captured)
 
-    def test_typo_twin_warning_does_not_currently_block_registry_scope(self) -> None:
+    def test_typo_twin_blocks_registry_scope(self) -> None:
         typo = _casilla(cid="a", semantic_role="taxpayer_niff", data_type="nif")
         canonical_a = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
         canonical_b = _casilla(cid="c", semantic_role="taxpayer_nif", data_type="nif")
@@ -339,8 +339,11 @@ class TestTypoTwinWarning:
             warnings.simplefilter("always")
             failures = validate_registry_scope([modelo])
 
-        assert failures == ()
-        assert any("taxpayer_niff" in str(w.message) for w in captured)
+        assert captured == []
+        assert failures == (
+            "semantic_role 'taxpayer_niff' appears on exactly one casilla "
+            "(180.2025.a); likely typo or missing role declarations on sibling casillas",
+        )
 
     def test_intentional_singleton_role_does_not_emit_warning(self) -> None:
         a = _casilla(
