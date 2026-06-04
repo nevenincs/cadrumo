@@ -14,6 +14,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Iterable
 from datetime import date, datetime
+from typing import Literal
 
 from ...core.errors import BaseSeverity
 from ...domain.buckets import (
@@ -49,6 +50,10 @@ from ._repository import UserProfileLifecycleRepository
 from ._validation import ProfileValidationService
 
 _PROFILE_LIFECYCLE_ACTOR = "aeat.application.user_profile"
+_PROFILE_ALREADY_EXISTS_MESSAGE = "profile already exists in the active bucket"
+_PROFILE_TOMBSTONED_RENAME_MESSAGE = "tombstoned profile cannot be renamed"
+_PROFILE_TOMBSTONED_DUPLICATE_MESSAGE = "tombstoned profile cannot be duplicated"
+_PROFILE_SCHEMA_VALIDATION_MESSAGE = "profile facts failed schema validation"
 
 
 def _paths_payload(facts: tuple[UserProfileFact, ...]) -> dict[str, str]:
@@ -80,8 +85,9 @@ class ProfileLifecycleService:
         Returns a :class:`ProfileLifecycleResult`.
         """
         if self._repository.exists(command.profile_id):
-            raise ProfileAlreadyExistsError(
-                f"profile {command.profile_id!r} already exists in bucket {self._repository.bucket_id!r}",
+            raise _profile_already_exists_error(
+                profile_id=command.profile_id,
+                bucket_id=self._repository.bucket_id,
             )
         self._reject_invalid(command.profile_id, command.facts)
         now = utc_now()
@@ -209,9 +215,7 @@ class ProfileLifecycleService:
         """
         source = self._repository.load(command.profile_id)
         if source.status is not UserProfileStatus.ACTIVE:
-            raise ProfileNotFoundError(
-                f"profile {command.profile_id!r} is tombstoned; cannot rename",
-            )
+            raise _profile_tombstoned_error(command.profile_id, action="rename")
         if command.target_display_name == source.display_name:
             return ProfileLifecycleResult(profile=source, applied_at=utc_now())
         now = utc_now()
@@ -237,14 +241,13 @@ class ProfileLifecycleService:
         duplicate profile.
         """
         if self._repository.exists(command.target_profile_id):
-            raise ProfileAlreadyExistsError(
-                f"profile {command.target_profile_id!r} already exists in bucket {self._repository.bucket_id!r}",
+            raise _profile_already_exists_error(
+                profile_id=command.target_profile_id,
+                bucket_id=self._repository.bucket_id,
             )
         source = self._repository.load(command.source_profile_id)
         if source.status is not UserProfileStatus.ACTIVE:
-            raise ProfileNotFoundError(
-                f"source profile {command.source_profile_id!r} is tombstoned; cannot duplicate",
-            )
+            raise _profile_tombstoned_error(command.source_profile_id, action="duplicate")
         now = utc_now()
         target = source.model_copy(
             update={
@@ -271,9 +274,16 @@ class ProfileLifecycleService:
         report = self._validator.validate_facts(profile_id, facts)
         blocking = [issue for issue in report.issues if issue.severity is BaseSeverity.ERROR]
         if blocking:
-            detail = "; ".join(issue.message for issue in blocking)
             raise ProfileSchemaValidationError(
-                f"profile {profile_id!r} rejected by schema validation: {detail}",
+                _PROFILE_SCHEMA_VALIDATION_MESSAGE,
+                context={
+                    "profile_id": profile_id,
+                    "issue_count": len(blocking),
+                    "issue_codes": tuple(issue.code for issue in blocking),
+                    "issue_paths": tuple(issue.path for issue in blocking if issue.path is not None),
+                    "schema_version": report.schema_version,
+                },
+                translated_message="application.user_profile.errors.lifecycle_schema_validation_failed",
             )
 
     def _save_updated(
@@ -337,6 +347,29 @@ class ProfileLifecycleService:
         repository's private secure-object reference.
         """
         return self._repository.iter_records()
+
+
+def _profile_already_exists_error(*, profile_id: str, bucket_id: str) -> ProfileAlreadyExistsError:
+    return ProfileAlreadyExistsError(
+        _PROFILE_ALREADY_EXISTS_MESSAGE,
+        context={"profile_id": profile_id, "bucket_id": bucket_id},
+        translated_message="application.user_profile.errors.lifecycle_profile_already_exists",
+    )
+
+
+def _profile_tombstoned_error(profile_id: str, *, action: Literal["rename", "duplicate"]) -> ProfileNotFoundError:
+    if action == "rename":
+        return ProfileNotFoundError(
+            _PROFILE_TOMBSTONED_RENAME_MESSAGE,
+            context={"profile_id": profile_id, "action": action},
+            translated_message="application.user_profile.errors.lifecycle_profile_tombstoned_rename",
+        )
+    elif action == "duplicate":
+        return ProfileNotFoundError(
+            _PROFILE_TOMBSTONED_DUPLICATE_MESSAGE,
+            context={"profile_id": profile_id, "action": action},
+            translated_message="application.user_profile.errors.lifecycle_profile_tombstoned_duplicate",
+        )
 
 
 __all__ = ["ProfileLifecycleService"]
