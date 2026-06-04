@@ -8,16 +8,25 @@ related:
   - '[[2026-06-04-registry-m100-row-width-deferrals-plan]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `registry-m100-2025-row-width` `implementation` plan
 
 Reduce the remaining M100 2025 TOML row-width pressure above 520 characters.
 
-- [ ] `S01` - Audit clean M100 2025 rows above 520 characters and dirty-path exclusions; `.vault/audit`.
+- [x] `S01` - Audit clean M100 2025 rows above 520 characters and dirty-path exclusions; `.vault/audit`.
 - [ ] `S02` - Wrap the four M100 2025 `legal_refs` rows above 520 characters without changing TOML values; `src/aeat/_data/registry/aeat/modelos/100/revisions/2025/casillas`.
 - [ ] `S03` - Tighten the TOML row-width baseline if the post-format corpus permits; `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
 - [ ] `S04` - Verify reviewability, committed registry, loader, and plan gates; `src/aeat/domain/calculations/registry`.
 - [ ] `S05` - Review and close the M100 2025 row-width slice; `.vault/audit`.
-
 ## Description
 
 The previous M100 deferral slice lowered the reviewability baseline to 530 and
