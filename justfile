@@ -134,8 +134,8 @@ fmt:
 # with selected strict rules on the two listed packages; the
 # Unknown-family rules are deferred to a tracked ratchet workstream.
 typecheck:
-    uv run ty check src
-    uv run pyright src/aeat/domain src/aeat/application
+    uv run --no-sync ty check src
+    uv run --no-sync pyright src/aeat/domain src/aeat/application
 
 # Full-tree type audit. Advisory: use for ratchet discovery and type debt
 # triage, not as the default daily hard gate until the baseline is clean.

@@ -45,6 +45,40 @@ Representative high-signal files include
 `src/aeat/domain/renta/_ledger_expenses.py`, and
 `src/aeat/adapters/inbound/sanitizer/_pipeline.py`.
 
+### 2026-06-04 refresh after no-sync just typecheck repair
+
+Status: appended.
+
+`just typecheck` now invokes both checkers with `uv run --no-sync`, matching the
+shared-worktree virtual-environment repair discipline. The gate remains red on
+the current baseline. `ty check src` reported 1002 diagnostics before Pyright
+could run in the chained recipe. The scoped Pyright half was then run directly as
+`uv run --no-sync pyright src/aeat/domain src/aeat/application`, reporting 792
+errors and 494 warnings.
+
+Current high-signal type-control clusters:
+
+- Declaracion parser boundary tests pass `object`-typed mappings into stricter
+  parser contracts and use dynamic keyword payloads that Ty expands into multiple
+  invalid call shapes.
+- Auth and Cl@ve tests construct `Settings` with raw `str` or `str | None`
+  values where the model expects `Path`, `SecretStr`, booleans, and typed
+  timeout values.
+- Aggregation model errors still show `AeatError` constructor signature drift and
+  optional member access in ledger aggregation code.
+- Domain filing and secure repository classes still expose invariant payload-type
+  override pressure against the generic storage repository contract.
+- Renta and transaction tests still surface optional `Decimal` arithmetic,
+  literal narrowing gaps, and read-only model field assignment.
+- Several top-level ratchet tests remain in the typecheck scan; this makes the
+  count useful as a full-source debt inventory, but less useful as a production
+  readiness signal without a production-only type lane.
+
+This refresh keeps the type ratchet workstream focused on typed boundary fixes
+over blanket ignores: constructor normalization at settings/config boundaries,
+optional narrowing before arithmetic/member access, and repository generic
+contract repair should be preferred before expanding any allowlist.
+
 ## HEALTH-002 | HIGH | Structural boundaries are now diagnosable and show real layer violations
 
 The initial structural run failed because `aeat` was not importable from the shared
@@ -103,6 +137,70 @@ Top cognitive hotspots include `find_same_name_constant_multi_declarations`,
 `resolve_previous_filing_binding_values`, `build_wizard_commands`,
 `find_private_name_cross_package_imports`, `modelo_compare`, `_initial_values`,
 `work_calculate`, and `classify_live_iva_acquisition_failure`.
+
+### 2026-06-04 refresh after S35 diagnostics removal
+
+Status: appended.
+
+`just audit-complexity` was rerun after the unapproved `aeat.diagnostics` source
+package was removed. The command remains an advisory red gate because Complexipy
+exits non-zero when functions exceed `--max-complexity-allowed 20`.
+
+The removed diagnostics package no longer appears in the current complexity
+output. Current production hotspots are now concentrated in these families:
+
+- Modelo CLI orchestration: `src/aeat/entrypoints/cli/_modelo.py`
+  `work_calculate` is still the largest cyclomatic hotspot at F (45);
+  `modelo_project` is D (30), `modelo_compare` is D (29), and `work_create` is
+  D (24). Complexipy also reports `modelo_compare` at cognitive complexity 37
+  and `work_calculate` at 32.
+- Registry formula and binding runtime: `src/aeat/domain/calculations/registry/_formula_runtime.py`
+  `_initial_values` is E (35) cyclomatic and 33 cognitive; `_evaluate_m210_resolve_rate`
+  is D/C-high and 30 cognitive. `src/aeat/domain/calculations/registry/_bindings.py`
+  remains a high-load cluster with `_validate_invoice_fact_and_aggregation` D
+  (23) and 30 cognitive, plus `resolve_previous_filing_binding_values` at 44
+  cognitive.
+- Registry record and validation graph: `src/aeat/domain/calculations/registry/_record_design.py`
+  has `calculation_closure_identities` and `calculation_closure_numbers` as
+  repeated high-complexity closure builders; Complexipy reports one closure path
+  at 37 cognitive and another at 29. `_cross_revision_divergence.py`
+  `_iter_cross_revision_casilla_divergences` reports 34 cognitive.
+- Ledger review/list and action services: `src/aeat/entrypoints/cli/_ledger.py`
+  `ledger_list` is D (27), and `src/aeat/application/ledger/_actions.py`
+  `_filter_ledger_review_rows` is D (27), `summarize_manual_transactions` is D
+  (22), and `_command_matches_current` is C (20).
+- Modelo application actions and profile binding: `src/aeat/application/modelo/_actions.py`
+  `_resolve_m210_rate` is D (26), `calculate_modelo_revision` is D (25), and
+  `_apply_iva_compensation_decision_binding` is D (22). `src/aeat/application/modelo/_profile_binding.py`
+  `resolve_profile_sourced_bindings` reports 25 cognitive.
+- Wizard/config/live-auth surfaces: `src/aeat/application/wizard/_commands.py`
+  `build_wizard_commands` reports 44 cognitive; `src/aeat/entrypoints/cli/_config/_google.py`
+  `_push_secure_object_inventory` reports 37 cognitive; `src/aeat/application/live/_errors.py`
+  `classify_live_iva_acquisition_failure` reports 32 cognitive.
+
+The current execution supports the existing W03 decomposition order: continue
+modelo CLI extraction, then registry formula/binding extraction, then ledger
+review/list projection, with live/auth split work kept behind a dedicated audit
+and ADR because those flows touch encrypted sessions and remote-provider state.
+Port-bound `vaultspec-rag search --type code --prefer prod --port 8766`
+corroborated the registry formula runtime and previous-filing binding cluster as
+semantic neighbors, so this is not just a Radon/Complexipy artifact.
+
+## HEALTH-010 | MEDIUM | Complexity tooling currently mixes production hotspots with ratchet/test complexity
+
+Status: open.
+
+The raw `just audit-complexity` output still includes package-level test ratchets
+and fixture tests. Radon reports top-level `src/aeat/test_*.py` files because the
+current exclude pattern covers nested `src/aeat/**/test_*.py` paths but not
+top-level package tests. Complexipy also scans tests because the recipe points it
+at `src/aeat` without an exclude mechanism.
+
+This does not invalidate the production hotspot list above, but it makes the raw
+dashboard noisy: the highest current cognitive item is the test ratchet
+`test_utc_validator_enrollment_inventory.py` `_file_has_inline_tzinfo_guard` at
+50. The just tooling should grow a production-only complexity lane, while keeping
+a separate test-ratchet complexity lane for test-maintenance debt.
 
 ## HEALTH-004 | MEDIUM | Dependency declaration drift is small but points at production dependency hygiene
 
@@ -209,9 +307,9 @@ usable now.
 3. Type ratchet: fix the aggregation source-kind model, secure repository payload
    override pattern, and optional-member hotspots before attempting full-tree type
    ratchets.
-4. Complexity refactor queue: start with CLI `_modelo.py`, CLI `_ledger.py`,
-   registry formula runtime, registry bindings/schema, identity diagnostics, and
-   modelo/ledger action services.
+4. Complexity refactor queue: start with CLI `_modelo.py`, registry formula
+   runtime, registry bindings/schema, CLI `_ledger.py`, and modelo/ledger action
+   services.
 5. Dependency hygiene: resolve the six Deptry findings and decide whether `torch`
    and `formulas` are runtime, optional, or stale dependencies.
 6. Semgrep policy: split production source scans from mirrored official data and
