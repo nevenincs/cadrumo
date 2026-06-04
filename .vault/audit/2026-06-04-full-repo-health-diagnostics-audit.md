@@ -464,6 +464,29 @@ Residual:
   dependable so S73-S77 can burn down source hotspots without being crowded out
   by test-ratchet maintenance debt.
 
+## HEALTH-015 | CLOSED | Top-level ratchet-test complexity lane added
+
+`W06.P19.S72` added `just audit-complexity-tests` for the top-level
+`src/aeat/test_*.py` ratchet cohort. This keeps inventory-test cognitive debt
+visible without reintroducing it into the production complexity queue.
+
+Verification:
+
+- `just --list` exposes `audit-complexity-tests`.
+- `just audit-complexity-tests` analyzes 55 top-level package test files and
+  fails with exit code 1 while ratchet-test cognitive findings remain above the
+  threshold.
+- The current top ratchet-test cognitive findings are:
+  `_file_has_inline_tzinfo_guard` at 50, `_collect_violations` in canonical
+  clock usage at 30, `_mock_imports` at 27, cast-rationale collectors at 24,
+  and skip/xfail plus module-coverage collectors at 23.
+
+Residual:
+
+- This is a dedicated ratchet lane, not an all-green claim. Production burn-down
+  continues under S73-S77, and top-level ratchet-test simplification can be
+  scheduled separately.
+
 ## Suggested Workstreams
 
 1. Repair packaging environment deterministically: schedule a clean `uv sync` window
