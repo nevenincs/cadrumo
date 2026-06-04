@@ -149,6 +149,17 @@ Audit and repair stale M303 completeness-manifest rows for totals that no longer
 - [x] `W06.P10.S45` - Remove stale M303 total rows from completeness manifests after closure derivation proves they are no longer calculated; `src/aeat/_data/registry/aeat/modelos/303`.
 - [x] `W06.P10.S46` - Verify full record-design completeness and committed-registry gates after the M303 cleanup; `src/aeat/domain/calculations/registry/test_record_design.py`.
 
+## Wave `W07` - legal and official-source grounding check
+
+Close the legal-sensitivity review for the M200 and M303 registry definition edits by proving every changed declaration remains backed by committed legal references and official AEAT/BOE source artifacts.
+
+### Phase `W07.P11` - post-repair legal grounding
+
+Audit the completed completeness repairs against the registry legal/source catalogues, official Diseño coverage, export layouts, and real committed modelo revision setup.
+
+- [ ] `W07.P11.S47` - Audit M200 and M303 completeness repairs for legal refs, source refs, official Diseño/export backing, and calculation-closure consistency; `.vault/audit`.
+- [ ] `W07.P11.S48` - Verify legal-grounding audit with registry gates and close the post-repair legal-sensitivity check; `src/aeat/domain/calculations/registry`.
+
 ## Description
 
 The next work should protect reviewability first, then extend continuity data
