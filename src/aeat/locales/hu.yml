@@ -361,13 +361,9 @@ application:
   auth:
     acquisition_lock:
       errors:
-        acquire_failed: Az AEAT hitelesítési zárat nem sikerült beszerezni az elavult
-          zár helyreállítása után.
-        lock_held: Egy másik AEAT hitelesítési műveletet már folyamatban van ehhez
-          a profilhoz. Ne kezdjen el egy második Cl@ve kérést; várja meg az előző
-          befejezését.
-        lock_held_suggestion: Futtassa az `aeat config auth status --format json`
-          parancsot az aktív hitelesítési zár megvizsgálásához.
+        acquire_failed: 'Az AEAT hitelesítési zárat nem sikerült beszerezni az elavult zár helyreállítása után.'
+        lock_held: 'Egy másik AEAT hitelesítési műveletet már folyamatban van ehhez a profilhoz. Ne kezdjen el egy második Cl@ve kérést; várja meg az előző befejezését.'
+        lock_held_suggestion: 'Futtassa az `aeat config auth status --format json` parancsot az aktív hitelesítési zár megvizsgálásához.'
     certificate:
       health:
         file_missing: A konfigurált tanúsítványfájl (%{path}) nem létezik. Állítsa

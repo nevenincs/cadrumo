@@ -355,12 +355,9 @@ application:
   auth:
     acquisition_lock:
       errors:
-        acquire_failed: AEAT auth lock could not be acquired after stale-lock recovery.
-        lock_held: Another AEAT auth operation is already in progress for this profile.
-          Do not start a second Cl@ve request; wait for the running process to finish
-          or let the lock expire if that process crashed.
-        lock_held_suggestion: Run `aeat config auth status --format json` to inspect
-          the active auth lock.
+        acquire_failed: 'AEAT auth lock could not be acquired after stale-lock recovery.'
+        lock_held: 'Another AEAT auth operation is already in progress for this profile. Do not start a second Cl@ve request; wait for the running process to finish or let the lock expire if that process crashed.'
+        lock_held_suggestion: 'Run `aeat config auth status --format json` to inspect the active auth lock.'
     certificate:
       health:
         file_missing: The configured certificate file (%{path}) does not exist. Restore

@@ -385,13 +385,9 @@ application:
   auth:
     acquisition_lock:
       errors:
-        acquire_failed: No s'ha pogut adquirir el bloqueig d'autenticació AEAT després
-          de la recuperació del bloqueig obsolet.
-        lock_held: Ja hi ha una altra operació d'autenticació AEAT en curs per a aquest
-          perfil. No iniciïs una segona petició de Cl@ve; espera que acabi el procés
-          en curs o deixa expirar el bloqueig si aquest procés ha fallat.
-        lock_held_suggestion: Executa `aeat config auth status --format json` per
-          inspeccionar el bloqueig d'autenticació actiu.
+        acquire_failed: 'No s''ha pogut adquirir el bloqueig d''autenticació AEAT després de la recuperació del bloqueig obsolet.'
+        lock_held: 'Ja hi ha una altra operació d''autenticació AEAT en curs per a aquest perfil. No iniciïs una segona petició de Cl@ve; espera que acabi el procés en curs o deixa expirar el bloqueig si aquest procés ha fallat.'
+        lock_held_suggestion: 'Executa `aeat config auth status --format json` per inspeccionar el bloqueig d''autenticació actiu.'
     certificate:
       health:
         file_missing: El fitxer de certificat configurat (%{path}) no existeix. Recupera

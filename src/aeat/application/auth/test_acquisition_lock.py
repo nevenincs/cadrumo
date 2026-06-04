@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from ...core.config import Settings
+from ...core.external_constants import UTF_8_ENCODING
 from . import AuthProviderKind
 from ._acquisition_lock import (
     AuthAcquisitionLockedError,
@@ -89,7 +90,7 @@ def test_auth_acquisition_lock_recovers_expired_owner(tmp_path: Path) -> None:
         expires_at=now - timedelta(minutes=10),
         operation="crashed-auth-login",
     )
-    path.write_text(stale.model_dump_json(), encoding="utf-8")
+    path.write_text(stale.model_dump_json(), encoding=UTF_8_ENCODING)
 
     status = inspect_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, now=now)
     assert status.state is AuthAcquisitionLockState.STALE
@@ -112,7 +113,7 @@ def test_auth_acquisition_lock_recovers_corrupt_metadata(tmp_path: Path) -> None
     settings = _settings(tmp_path)
     path = auth_acquisition_lock_path(settings, AuthProviderKind.CLAVE_MOVIL)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("{not-json", encoding="utf-8")
+    path.write_text("{not-json", encoding=UTF_8_ENCODING)
 
     status = inspect_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL)
     assert status.state is AuthAcquisitionLockState.CORRUPT
