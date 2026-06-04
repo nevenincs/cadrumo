@@ -14,8 +14,8 @@ Scope: tighten the TOML row-width baseline after closing the M100 deferred rows.
 
 ## Description
 
-- Lowered `_MAX_BASELINE_TOML_LINE_CHARS` from 555 to 535 in `test_registry_reviewability.py`.
-- Chose 535 because the post-S03 widest registry TOML row is 528 characters.
+- Lowered `_MAX_BASELINE_TOML_LINE_CHARS` from 555 to 530 in `test_registry_reviewability.py`.
+- Chose 530 because the post-S03 widest registry TOML row is 528 characters and the assertion uses a strict `<` comparison.
 - Left the hard cap unchanged at 600 characters.
 
 ## Outcome
@@ -26,4 +26,4 @@ Scope: tighten the TOML row-width baseline after closing the M100 deferred rows.
 
 ## Notes
 
-- Further tightening below 535 should wait for a separate M100 2025 legal-ref row pass.
+- Further tightening below 530 should wait for a separate M100 2025 legal-ref row pass.
