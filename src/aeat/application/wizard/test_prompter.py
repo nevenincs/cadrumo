@@ -47,14 +47,21 @@ def test_scripted_prompter_records_asked_questions() -> None:
 
 def test_scripted_prompter_raises_on_underflow() -> None:
     prompter = ScriptedPrompter([])
-    with pytest.raises(WizardScriptUnderflowError, match=r"wizard|script|underflow"):
+    with pytest.raises(WizardScriptUnderflowError) as excinfo:
         prompter.ask(_question("tax-id", _PROMPT_TAX), default=None)
+    assert excinfo.value.translated_message == "errors.internal.internal_wizard_script_underflow"
+    assert excinfo.value.context == {
+        "question_id": "tax-id",
+        "prompt_key": "wizard.setup.profile.tax-id.prompt",
+    }
 
 
 def test_scripted_prompter_close_raises_on_overflow() -> None:
     prompter = ScriptedPrompter(["unused-token"])
-    with pytest.raises(WizardScriptOverflowError, match=r"overflow|unused|script|drained"):
+    with pytest.raises(WizardScriptOverflowError) as excinfo:
         prompter.close()
+    assert excinfo.value.translated_message == "errors.internal.internal_wizard_script_overflow"
+    assert excinfo.value.context == {"remaining": ("unused-token",)}
 
 
 def test_scripted_prompter_close_succeeds_when_drained() -> None:
