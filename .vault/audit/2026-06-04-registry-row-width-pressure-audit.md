@@ -68,3 +68,32 @@ S02 may reformat clean M100 target rows only and must prove loaded M100
 equality before and after. S03 may reformat clean non-M100 target rows only and
 must prove loaded modelo equality for M202 and M303 before and after. S04 should
 record any target that is deferred during implementation.
+
+## S04 deferral record
+
+After S02 and S03, the non-M100 row-width targets have been cleared and the
+M100 2025 casilla `legal_refs` rows have been cleared. The remaining rows at or
+above 540 characters are deferred rather than edited in this slice:
+
+- `100/revisions/2024/completeness/0001-manifest.toml:19`: clean completeness
+  `legal_refs` row, deferred to a completeness-manifest formatting pass rather
+  than extending S02 beyond its casilla scope.
+- `100/revisions/2023/completeness/0001-manifest.toml:19`: clean completeness
+  `legal_refs` row, deferred to a completeness-manifest formatting pass rather
+  than extending S02 beyond its casilla scope.
+- `100/revisions/2022/completeness/0001-manifest.toml:19`: clean completeness
+  `legal_refs` row, deferred to a completeness-manifest formatting pass rather
+  than extending S02 beyond its casilla scope.
+- `100/revisions/2021/completeness/0001-manifest.toml:19`: clean completeness
+  `legal_refs` row, deferred to a completeness-manifest formatting pass rather
+  than extending S02 beyond its casilla scope.
+- `100/revisions/2020/casillas/0146-0153.toml:7`: clean inline `constraints`
+  table row, deferred because it requires a dedicated inline-table versus
+  nested-table TOML equivalence check before changing shape.
+
+No remaining row-width target file is dirty in the scoped worktree diff.
+Unrelated concurrent dirty registry files remain outside the row-width target
+set and were not touched:
+
+- `100/revisions/2024/completeness/0004-casillas.part-003.toml`
+- `100/revisions/2025/completeness/casillas-0569-1607.toml`
