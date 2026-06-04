@@ -431,6 +431,9 @@ the manifest/master-key KDF tests. `just audit-duplication` no longer reports
 the manifest/KDF overlap; the remaining 21 clone groups are outside this S49
 slice and remain scheduled for later review rows.
 
+Follow-up coverage added direct tests for `_kdf_salt.py`, including exact byte
+round-trip behavior and configured storage-error propagation.
+
 ## W04-013 | INFO | Locale traversal consolidation review found no defects
 
 Status: verified with scoped residual.
@@ -446,6 +449,3 @@ parity suite. `just audit-duplication` no longer reports the locale AST or
 YAML traversal clone groups; 19 clone groups remain outside this S50 slice,
 including a newly visible `_modelo_m036_cli.py` clone from shifted shared-tree
 state.
-
-Follow-up coverage added direct tests for `_kdf_salt.py`, including exact byte
-round-trip behavior and configured storage-error propagation.

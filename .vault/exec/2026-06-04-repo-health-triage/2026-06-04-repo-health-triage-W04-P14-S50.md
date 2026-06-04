@@ -31,14 +31,17 @@ rules, YAML write strategy, or CLI behavior.
 
 ## Verification
 
-- `uv run --no-sync ruff check src/aeat/locales/_ast_scanner.py src/aeat/locales/manager.py src/aeat/locales/test_parity.py`
-- `uv run --no-sync pytest src/aeat/locales/test_parity.py`
+- `rg -n "rglob|scan_source_tree|scan_namespace_markers|_iter_parseable_python_modules|_iter_yaml_key_matches|_replace_existing_yaml_leaf|_append_yaml_leaf|_remove_existing_yaml_leaf|isinstance\(.+dict|\.items\(\)" src/aeat/locales`
+- `uv run --no-sync vaultspec-rag search "translation locale nested dictionary traversal YAML key path" --type code --port 8766 --max-results 12`
+- `uv run --no-sync vaultspec-rag search "repo health locale traversal consolidation plan" --type vault --port 8766 --max-results 8`
+- `uv run --no-sync ruff check src/aeat/locales/_ast_scanner.py src/aeat/locales/manager.py src/aeat/locales/test_parity.py src/aeat/locales/test_locale_translation_honesty.py src/aeat/locales/test_cli.py`
+- `uv run --no-sync pytest src/aeat/locales`
 - `just audit-duplication`
 
 ## Outcome
 
-Ruff passed for the locale surface and the locale parity test suite passed
-with 18 tests. The duplication audit no longer reports clone groups for
+Ruff passed for the locale surface and the full locale suite passed with 29
+tests. The duplication audit no longer reports clone groups for
 `src/aeat/locales/_ast_scanner.py` or `src/aeat/locales/manager.py`.
 
 The audit still reports 19 clone groups outside this S50 slice. The shared
