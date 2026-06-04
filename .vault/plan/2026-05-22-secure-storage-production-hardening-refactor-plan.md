@@ -371,7 +371,7 @@ Current register count: `293` production candidate files.
 | `AFR-079` | `src/aeat/adapters/persistence/storage/master_key/_zeroise.py` | `master-key` | `bootstrap-custody` | `W12.P22.S89` | closed |
 | `AFR-080` | `src/aeat/adapters/persistence/storage/runtime.py` | `secure-object, runtime, active-profile, manifest-bucket, master-key, sql-route` | `runtime-default` | `W12.P21.S86` | closed |
 | `AFR-081` | `src/aeat/adapters/persistence/storage/runtime_repository.py` | `secure-object, runtime, manifest-bucket` | `runtime-default` | `W12.P21.S86` | closed |
-| `AFR-082` | `src/aeat/adapters/persistence/storage/secret_store/_secret_store.py` | `master-key, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-082` | `src/aeat/adapters/persistence/storage/secret_store/_secret_store.py` | `master-key, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-083` | `src/aeat/adapters/persistence/storage/sql/__init__.py` | `secure-object` | `runtime-default` | `W12.P21.S86` | pending |
 | `AFR-084` | `src/aeat/adapters/persistence/storage/sql/_orm.py` | `secure-object` | `runtime-default` | `W12.P21.S86` | pending |
 | `AFR-085` | `src/aeat/adapters/persistence/storage/sql/engine.py` | `sql-route, plain-file` | `runtime-default` | `W12.P21.S86` | pending |
@@ -724,7 +724,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S181` - Close `AFR-079` for `src/aeat/adapters/persistence/storage/master_key/_zeroise.py` with signals `master-key`, target `bootstrap-custody`, and owner `W12.P22.S89`; `src/aeat/adapters/persistence/storage/master_key/_zeroise.py`.
 - [x] `W12.P26.S182` - Close `AFR-080` for runtime readiness, localized blank-bucket validation, runtime tests, and convention-guard enrollment; `src/aeat/adapters/persistence/storage/runtime.py`.
 - [x] `W12.P26.S183` - Close `AFR-081` for `src/aeat/adapters/persistence/storage/runtime_repository.py` with signals `secure-object, runtime, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/runtime_repository.py`.
-- [ ] `W12.P26.S184` - Close `AFR-082` for `src/aeat/adapters/persistence/storage/secret_store/_secret_store.py` with signals `master-key, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/persistence/storage/secret_store/_secret_store.py`.
+- [x] `W12.P26.S184` - Close `AFR-082` for `src/aeat/adapters/persistence/storage/secret_store/_secret_store.py` with signals `master-key, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/persistence/storage/secret_store/_secret_store.py`.
 - [ ] `W12.P26.S185` - Close `AFR-083` for `src/aeat/adapters/persistence/storage/sql/__init__.py` with signals `secure-object`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/sql/__init__.py`.
 - [ ] `W12.P26.S186` - Close `AFR-084` for `src/aeat/adapters/persistence/storage/sql/_orm.py` with signals `secure-object`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/sql/_orm.py`.
 - [ ] `W12.P26.S187` - Close `AFR-085` for `src/aeat/adapters/persistence/storage/sql/engine.py` with signals `sql-route, plain-file`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/sql/engine.py`.

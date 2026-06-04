@@ -8,6 +8,7 @@ of overwrites.
 from __future__ import annotations
 
 import json
+import logging
 import secrets
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
@@ -28,6 +29,7 @@ from ..master_key import EphemeralMasterKeyProvider
 from ._secret_store import SecretRecord, SecretStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+_STORE_LOGGER_NAME = "aeat.adapters.persistence.storage.secret_store._secret_store"
 
 
 def _expiry() -> datetime:
@@ -216,6 +218,23 @@ class TestOverwrite:
         manifests_after_second = list(store._blob_store.iter_manifests())
         assert len(manifests_after_second) == 1
 
+    def test_overwrite_logs_already_missing_stale_blob(
+        self,
+        caplog: pytest.LogCaptureFixture,
+        store: SecretStore,
+    ) -> None:
+        first = _make_record(key="aeat:test:already-gone", value=b"first")
+        first_ref = store.put(first)
+        store._blob_store._manifest_path_for(first_ref.sha256_plaintext_hex).unlink()
+        second = _make_record(key=first.key, value=b"second")
+
+        caplog.set_level(logging.DEBUG, logger=_STORE_LOGGER_NAME)
+        store.put(second, overwrite=True)
+
+        messages = tuple(record.getMessage() for record in caplog.records if record.name == _STORE_LOGGER_NAME)
+        assert any("stale secret-store blob cleanup skipped because blob is already absent" in msg for msg in messages)
+        assert all(first.key not in msg for msg in messages)
+
 
 class TestDelete:
     def test_delete_removes_record(self, store: SecretStore) -> None:
@@ -228,6 +247,22 @@ class TestDelete:
     def test_delete_missing_raises(self, store: SecretStore) -> None:
         with pytest.raises(SecretNotFoundError):
             store.delete("never-stored")
+
+    def test_delete_logs_already_missing_blob(self, caplog: pytest.LogCaptureFixture, store: SecretStore) -> None:
+        record = _make_record(key="aeat:test:delete-already-gone")
+        blob_ref = store.put(record)
+        store._blob_store._manifest_path_for(blob_ref.sha256_plaintext_hex).unlink()
+
+        caplog.set_level(logging.DEBUG, logger=_STORE_LOGGER_NAME)
+        store.delete(record.key)
+
+        messages = tuple(record.getMessage() for record in caplog.records if record.name == _STORE_LOGGER_NAME)
+        assert any(
+            "secret-store blob cleanup on delete skipped because blob is already absent" in msg for msg in messages
+        )
+        assert all(record.key not in msg for msg in messages)
+        with pytest.raises(SecretNotFoundError):
+            store.get(record.key)
 
 
 class TestRotate:
