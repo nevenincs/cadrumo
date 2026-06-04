@@ -4,7 +4,7 @@
 profile must mirror. AEAT is the binding legal source of truth for
 censo data; the local profile is a cache that must be kept honest.
 Snapshot records are persisted as :class:`Envelope` objects through a
-:class:`SecureObjectRepository` at PERSONAL sensitivity under the censo namespace.
+:class:`SecureObjectRepository` at IDENTITY sensitivity under the censo namespace.
 
 The snapshot pattern mirrors :mod:`aeat.application.live._borrador_100`:
 content-addressed snapshot ids, encrypted SQLite persistence under a
@@ -250,7 +250,7 @@ class CensoSnapshotRepository:
             snapshot_id: Exact content-addressed id of the snapshot to load.
 
         Returns:
-            The validated ``CensoSnapshot``.
+            :class:`CensoSnapshot`: The validated snapshot.
 
         Raises:
             CensoSnapshotNotFoundError: No object exists at the derived key.
@@ -289,7 +289,7 @@ class CensoSnapshotRepository:
         snapshot id, so the ordering is stable across calls.
 
         Returns:
-            A tuple of ``CensoSnapshot``, oldest capture first.
+            tuple[:class:`CensoSnapshot`, ...]: Oldest capture first.
         """
         snapshots = [
             snapshot
@@ -315,7 +315,7 @@ class CensoSnapshotRepository:
             snapshot_id: Full id or a leading prefix of one.
 
         Returns:
-            The single matching ``CensoSnapshot``.
+            :class:`CensoSnapshot`: The single matching snapshot.
 
         Raises:
             LiveApplicationInputError: ``snapshot_id`` is blank.
@@ -450,7 +450,7 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
                 snapshots in every state.
 
         Returns:
-            A tuple of matching ``CensoSnapshot``, oldest capture first.
+            tuple[:class:`CensoSnapshot`, ...]: Oldest capture first.
         """
         snapshots: tuple[CensoSnapshot, ...] = super().list_snapshots()
         if profile_id is not None:
@@ -472,7 +472,7 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
             profile_id: Operator profile whose latest capture is wanted.
 
         Returns:
-            The newest ACTIVE ``CensoSnapshot``, or ``None`` when the profile
+            :class:`CensoSnapshot`: The newest ACTIVE snapshot, or ``None`` when the profile
             has no ACTIVE snapshot.
         """
         snapshots = self.list_snapshots(profile_id=profile_id)

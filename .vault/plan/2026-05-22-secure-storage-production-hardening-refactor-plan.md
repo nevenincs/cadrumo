@@ -403,7 +403,7 @@ Current register count: `293` production candidate files.
 | `AFR-122` | `src/aeat/application/ledger/_ratios.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S85` | closed |
 | `AFR-123` | `src/aeat/application/live/__init__.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S85` | closed |
 | `AFR-124` | `src/aeat/application/live/_borrador_100.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S85` | closed |
-| `AFR-125` | `src/aeat/application/live/_censo.py` | `secure-object, manifest-bucket, sql-route, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-125` | `src/aeat/application/live/_censo.py` | `secure-object, manifest-bucket, sql-route, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-126` | `src/aeat/application/live/_expedientes.py` | `manifest-bucket, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-127` | `src/aeat/application/live/_notifications.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-128` | `src/aeat/application/live/_snapshot_base.py` | `secure-object, manifest-bucket, plain-file` | `runtime-default` | `W12.P21.S85` | pending |
@@ -756,7 +756,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S224` - Close `AFR-122` for `src/aeat/application/ledger/_ratios.py` with signals `secure-object, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/ledger/_ratios.py`.
 - [x] `W12.P26.S225` - Close `AFR-123` for `src/aeat/application/live/__init__.py` with signals `secure-object, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/live/__init__.py`.
 - [x] `W12.P26.S226` - Close `AFR-124` for `src/aeat/application/live/_borrador_100.py` with signals `secure-object, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/live/_borrador_100.py`.
-- [ ] `W12.P26.S227` - Close `AFR-125` for `src/aeat/application/live/_censo.py` with signals `secure-object, manifest-bucket, sql-route, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/live/_censo.py`.
+- [x] `W12.P26.S227` - Close `AFR-125` for `src/aeat/application/live/_censo.py` with signals `secure-object, manifest-bucket, sql-route, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/live/_censo.py`.
 - [ ] `W12.P26.S228` - Close `AFR-126` for `src/aeat/application/live/_expedientes.py` with signals `manifest-bucket, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/live/_expedientes.py`.
 - [ ] `W12.P26.S229` - Close `AFR-127` for `src/aeat/application/live/_notifications.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/live/_notifications.py`.
 - [ ] `W12.P26.S230` - Close `AFR-128` for `src/aeat/application/live/_snapshot_base.py` with signals `secure-object, manifest-bucket, plain-file`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/live/_snapshot_base.py`.
