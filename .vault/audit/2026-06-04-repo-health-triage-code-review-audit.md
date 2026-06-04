@@ -431,5 +431,21 @@ the manifest/master-key KDF tests. `just audit-duplication` no longer reports
 the manifest/KDF overlap; the remaining 21 clone groups are outside this S49
 slice and remain scheduled for later review rows.
 
+## W04-013 | INFO | Locale traversal consolidation review found no defects
+
+Status: verified with scoped residual.
+
+The W04.P14.S50 review found no behavioral defect in moving repeated locale
+traversal mechanics behind module-local helpers. `_ast_scanner.py` still
+applies the same source-file skip rules, read/parse error logging, concrete-key
+extractors, and namespace extractors. `manager.py` still edits YAML in-place
+with the same newline preservation and leaf/namespace refusal semantics.
+
+Focused verification passed Ruff for the locale surface and passed the locale
+parity suite. `just audit-duplication` no longer reports the locale AST or
+YAML traversal clone groups; 19 clone groups remain outside this S50 slice,
+including a newly visible `_modelo_m036_cli.py` clone from shifted shared-tree
+state.
+
 Follow-up coverage added direct tests for `_kdf_salt.py`, including exact byte
 round-trip behavior and configured storage-error propagation.
