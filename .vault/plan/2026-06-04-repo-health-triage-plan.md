@@ -64,28 +64,28 @@ Reduce type diagnostics by fixing shared contract patterns instead of adding loc
 
 Make aggregation source-kind values enum-backed internally with explicit boundary narrowing.
 
-- [ ] `W02.P04.S12` - Normalize aggregation counterpart source-kind construction; `src/aeat/application/aggregation/_counterpart.py`.
-- [ ] `W02.P04.S13` - Add explicit counterpart source-kind narrowing helper; `src/aeat/core/aggregation.py`.
-- [ ] `W02.P04.S14` - Migrate registry binding source-kind callers to enum-backed values; `src/aeat/domain/calculations/registry/_bindings.py`.
+- [x] `W02.P04.S12` - Normalize aggregation counterpart source-kind construction; `src/aeat/application/aggregation/_counterpart.py`.
+- [x] `W02.P04.S13` - Add explicit counterpart source-kind narrowing helper; `src/aeat/core/aggregation.py`.
+- [x] `W02.P04.S14` - Migrate registry binding source-kind callers to enum-backed values; `src/aeat/domain/calculations/registry/_bindings.py`.
 
 ### Phase `W02.P05` - secure repository payload typing
 
 Repair the generic payload contract once in the secure repository base and apply it to subclasses.
 
-- [ ] `W02.P05.S15` - Replace invariant payload ClassVar override pattern with a typed accessor; `src/aeat/adapters/persistence/storage/envelope/_secure_repository.py`.
-- [ ] `W02.P05.S16` - Migrate justificante repository payload typing to the base pattern; `src/aeat/domain/justificante/_repository.py`.
-- [ ] `W02.P05.S17` - Migrate submission repository payload typing to the base pattern; `src/aeat/domain/submission/_repository.py`.
-- [ ] `W02.P05.S18` - Migrate apoderado repository payload typing to the base pattern; `src/aeat/application/auth/_apoderado.py`.
+- [x] `W02.P05.S15` - Replace invariant payload ClassVar override pattern with a typed accessor; `src/aeat/adapters/persistence/storage/envelope/_secure_repository.py`.
+- [x] `W02.P05.S16` - Migrate justificante repository payload typing to the base pattern; `src/aeat/domain/justificante/_repository.py`.
+- [x] `W02.P05.S17` - Migrate submission repository payload typing to the base pattern; `src/aeat/domain/submission/_repository.py`.
+- [x] `W02.P05.S18` - Migrate apoderado repository payload typing to the base pattern; `src/aeat/application/auth/_apoderado.py`.
 
 ### Phase `W02.P06` - local narrowing and strict generics
 
 Close checker-specific narrowing, return-type, protocol, and generic-argument diagnostics in focused packages.
 
-- [ ] `W02.P06.S19` - Fix sanitizer post-error variable narrowing; `src/aeat/adapters/inbound/sanitizer/_pipeline.py`.
-- [ ] `W02.P06.S20` - Tighten aggregation source-mesh optional narrowing; `src/aeat/application/aggregation/_source_mesh.py`.
-- [ ] `W02.P06.S21` - Tighten registry-provider and currency predicate return types; `src/aeat/application/aggregation/_registry_provider.py`.
-- [ ] `W02.P06.S22` - Add strict generic arguments to usage-ratio services; `src/aeat/domain/usage_ratios/_service.py`.
-- [ ] `W02.P06.S23` - Record focused typecheck audit baseline after type repairs; `.vault/audit`.
+- [x] `W02.P06.S19` - Fix sanitizer post-error variable narrowing; `src/aeat/adapters/inbound/sanitizer/_pipeline.py`.
+- [x] `W02.P06.S20` - Tighten aggregation source-mesh optional narrowing; `src/aeat/application/aggregation/_source_mesh.py`.
+- [x] `W02.P06.S21` - Tighten registry-provider and currency predicate return types; `src/aeat/application/aggregation/_registry_provider.py`.
+- [x] `W02.P06.S22` - Add strict generic arguments to usage-ratio services; `src/aeat/domain/usage_ratios/_service.py`.
+- [x] `W02.P06.S23` - Record focused typecheck audit baseline after type repairs; `.vault/audit`.
 
 ## Wave `W03` - decompose complexity hotspots
 

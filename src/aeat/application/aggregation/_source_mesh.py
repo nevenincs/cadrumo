@@ -171,10 +171,12 @@ class ModeloSourceResolver(Protocol):
     @property
     def resolver_id(self) -> str:
         """Stable resolver identifier for diagnostics and provenance."""
+        ...
 
     @property
     def owned_sources(self) -> tuple[str, ...]:
         """Registry binding source kinds this resolver owns."""
+        ...
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve source-backed calculation values for ``context``.
@@ -182,6 +184,7 @@ class ModeloSourceResolver(Protocol):
         Returns a :class:`CalculationSourceResolution` carrying resolved
         binding values, provenance, and any source diagnostics.
         """
+        ...
 
 
 def merge_source_resolutions(

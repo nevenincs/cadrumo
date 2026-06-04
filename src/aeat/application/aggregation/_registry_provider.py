@@ -13,6 +13,7 @@ from types import MappingProxyType
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.aggregation import COUNTERPART_SOURCE_KINDS, CounterpartSourceKind, counterpart_source_kind
 from ...core.parsing._dates import _parse_iso8601_date
 from ...domain.calculations.registry import (
     CounterpartAggregationObservation as RegistryCounterpartObservation,
@@ -26,20 +27,12 @@ from ...domain.calculations.registry import (
 from ._counterpart import CounterpartAggregation, OperationKind349
 from ._errors import AggregationUnsupportedModeloError, AggregationValidationError, t
 from ._service import (
-    AggregationSourceKind,
     PerModeloAggregationCommand,
     PerModeloAggregationProvider,
     aggregate_per_modelo,
 )
 
-_COUNTERPART_BINDING_SOURCE_KINDS: frozenset[AggregationSourceKind] = frozenset(
-    (
-        AggregationSourceKind.LEDGER_TRANSACTION,
-        AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
-        AggregationSourceKind.PAYABLE_INVOICE,
-        AggregationSourceKind.COLLECTIBLE_INVOICE,
-    )
-)
+_COUNTERPART_BINDING_SOURCE_KINDS = COUNTERPART_SOURCE_KINDS
 
 _OPERATION_KIND_349_TO_CLAVE = {
     OperationKind349.INTRA_DELIVERY.value: "E",
@@ -146,16 +139,21 @@ def resolve_per_modelo_registry_binding_values(
     )
 
 
-def _counterpart_binding_sources(revision: ModeloRevision) -> frozenset[str]:
-    return frozenset(
-        binding.source for binding in revision.bindings if binding.source in _COUNTERPART_BINDING_SOURCE_KINDS
-    )
+def _counterpart_binding_sources(revision: ModeloRevision) -> frozenset[CounterpartSourceKind]:
+    sources: set[CounterpartSourceKind] = set()
+    for binding in revision.bindings:
+        try:
+            source_kind = counterpart_source_kind(binding.source)
+        except ValueError:
+            continue
+        sources.add(source_kind)
+    return frozenset(sources)
 
 
 def _counterpart_registry_observations(
     command: PerModeloAggregationCommand,
     *,
-    source_kinds: frozenset[str],
+    source_kinds: frozenset[CounterpartSourceKind],
     ready_keys: frozenset[tuple[str, str, str]],
 ) -> tuple[RegistryCounterpartObservation, ...]:
     observations: list[RegistryCounterpartObservation] = []
@@ -175,6 +173,11 @@ def _counterpart_registry_observations(
                 t("aggregation.per_modelo.registry.errors.invalid_accrued_on"),
                 context={"source_object_id": observation.source_object_id, "accrued_on": observation.accrued_on},
             ) from exc
+        if transaction_date is None:
+            raise AggregationValidationError(
+                t("aggregation.per_modelo.registry.errors.invalid_accrued_on"),
+                context={"source_object_id": observation.source_object_id, "accrued_on": observation.accrued_on},
+            )
         observations.append(
             RegistryCounterpartObservation(
                 source_kind=observation.source_kind,

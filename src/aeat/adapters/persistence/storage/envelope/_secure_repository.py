@@ -81,10 +81,6 @@ class SecureBoundRepository[T: BaseModel]:
     namespace: ClassVar[str]
     sensitivity: ClassVar[SensitivityClass]
     schema_version: ClassVar[int]
-    # ``payload_type`` is also a ClassVar in practice; declared as a
-    # plain attribute so subclasses can write
-    # ``payload_type: ClassVar[type[ModeloDraft]] = ModeloDraft`` or just
-    # assign the concrete class. Marked ClassVar here for clarity.
     payload_type: ClassVar[type[BaseModel]]
 
     def __init__(
@@ -104,11 +100,12 @@ class SecureBoundRepository[T: BaseModel]:
         else:
             self._objects = _active_bucket_objects_or_default(settings)
         cls = type(self)
-        for attr in ("namespace", "payload_type", "sensitivity", "schema_version"):
+        for attr in ("namespace", "sensitivity", "schema_version"):
             if not hasattr(cls, attr) or getattr(cls, attr, None) is None:
                 raise RepositorySetupError(
                     f"{cls.__name__} must set class attribute {attr!r} before instantiating SecureBoundRepository",
                 )
+        cls.payload_model()
 
     # ------------------------------------------------------------------
     # Subclass extension point
@@ -123,6 +120,16 @@ class SecureBoundRepository[T: BaseModel]:
         raise NotImplementedError(
             f"{type(self).__name__} must override extract_identifier()",
         )
+
+    @classmethod
+    def payload_model(cls) -> type[T]:
+        """Return the concrete Pydantic payload model for this repository."""
+        payload_type = getattr(cls, "payload_type", None)
+        if payload_type is None:
+            raise RepositorySetupError(
+                f"{cls.__name__} must set class attribute 'payload_type' or override payload_model()",
+            )
+        return cast(type[T], payload_type)  # CAST-RATIONALE-SECURE-REPOSITORY-PAYLOAD-MODEL
 
     # ------------------------------------------------------------------
     # Logical path markers (diagnostic surface only)
@@ -179,14 +186,14 @@ class SecureBoundRepository[T: BaseModel]:
                 f"{envelope.schema_version}; consumer supports up to "
                 f"{self.schema_version}",
             )
-        # Safe: _envelope_cls() returns Envelope[self.payload_type] which equals
+        # Safe: _envelope_cls() returns Envelope[self.payload_model()] which equals
         # Envelope[T] for this repository's concrete T. Pydantic's model_validate_json
         # has already validated payload against the T schema, so the runtime type
         # of envelope.payload IS T. The cast bridges the ClassVar[type[BaseModel]]
         # declaration (required for cross-subclass compatibility) to the generic T
         # visible to type checkers at the call site. Future improvement: replace the
-        # ClassVar[type[BaseModel]] with a class-level generic alias to eliminate
-        # this cast entirely (see: CAST-RATIONALE-SECURE-REPOSITORY-LOAD).
+        # ClassVar[type[BaseModel]] fallback with explicit payload_model() overrides
+        # to eliminate this cast entirely (see: CAST-RATIONALE-SECURE-REPOSITORY-LOAD).
         return cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-LOAD
 
     def save(self, payload: T) -> None:
@@ -284,16 +291,14 @@ class SecureBoundRepository[T: BaseModel]:
         typed generic parameterisation. The return type is widened to
         ``Envelope[BaseModel]`` because the method signature must be invariant
         across all concrete subclasses (which each supply a different ``T``).
-        Future improvement: make the class truly generic so this method returns
-        ``Envelope[T]`` directly (see: CAST-RATIONALE-SECURE-REPOSITORY-ENVCLS).
         """
         # The widening to Envelope[BaseModel] is the only remaining escape hatch
-        # here. Envelope.for_payload_type returns type[Envelope[self.payload_type]];
+        # here. Envelope.for_payload_type returns type[Envelope[self.payload_model()]];
         # the mismatch is between the invariant return annotation and the
         # covariant usage at call sites. Safe at runtime because Pydantic enforces
         # the concrete type during model_validate_json.
         # CAST-RATIONALE-SECURE-REPOSITORY-ENVCLS (future: eliminate via generic ClassVar alias)
-        return Envelope.for_payload_type(self.payload_type)  # type: ignore[return-value]
+        return Envelope.for_payload_type(self.payload_model())  # type: ignore[return-value]
 
 
 __all__ = ["SecureBoundRepository"]
