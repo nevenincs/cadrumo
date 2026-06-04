@@ -208,7 +208,7 @@ def create_manual_transaction(
     """
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
-    event_repository = bucket_event_repository or BucketEventHistoryRepository()
+    event_repository = _bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
     transaction_base = _transaction_from_command(command, occurred_at=now)
     _verify_evidence_references(
         command,
@@ -420,7 +420,7 @@ def import_ledger_transactions(
     """
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = bucket_event_repository or BucketEventHistoryRepository()
+    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
     raw_rows = tuple(raw_transactions)
     plan = _evaluate_import_rows(
@@ -564,7 +564,7 @@ def import_ledger_source(
             translated_message="errors.transaction.ledger_import_requires_bucket",
         )
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=repository)
-    event_repository = bucket_event_repository or BucketEventHistoryRepository()
+    event_repository = _bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
     result = import_ledger_transactions(
         bucket_id=command.bucket_id,
         raw_transactions=raw_transactions,
@@ -698,7 +698,7 @@ def remove_manual_transaction(
     trimmed_actor = _require_actor(actor, operation="ledger removal")
     trimmed_source_command = _require_source_command(source_command, operation="ledger removal")
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = bucket_event_repository or BucketEventHistoryRepository()
+    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
     current = _require_transaction(catalogue, transaction_id)
     blockers = _blocking_modelo_references(
@@ -807,7 +807,7 @@ def reset_ledger_catalogue(
     trimmed_actor = _require_actor(actor, operation="ledger reset")
     trimmed_source_command = _require_source_command(source_command, operation="ledger reset")
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = bucket_event_repository or BucketEventHistoryRepository()
+    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
     removed_ids = tuple(sorted(catalogue.transactions))
     guard_ids = _catalogue_modelo_source_ids(catalogue)
@@ -928,10 +928,14 @@ def export_ledger_transactions(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
 ) -> LedgerExportResult:
-    """Export canonical bucket-local ledger transaction rows and emit an audit event."""
+    """Export canonical bucket-local ledger transaction rows and emit an audit event.
+
+    Returns:
+        :class:`LedgerExportResult`: The export outcome.
+    """
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
-    event_repository = bucket_event_repository or BucketEventHistoryRepository()
+    event_repository = _bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
     export_period = Period.model_validate(command.period) if command.period else None
     rows = _ledger_export_rows(
@@ -1346,7 +1350,7 @@ def update_manual_transaction(
     """
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
-    event_repository = bucket_event_repository or BucketEventHistoryRepository()
+    event_repository = _bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
     current = _require_transaction(catalogue, transaction_id)
     if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
@@ -1595,7 +1599,7 @@ def split_transaction(
             context={"bucket_id": bucket_id, "transaction_id": transaction_id, "child_count": len(children)},
         )
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = bucket_event_repository or BucketEventHistoryRepository()
+    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
     parent = _resolve_active_split_parent(catalogue, bucket_id=bucket_id, transaction_id=transaction_id)
     _reject_split_with_finalized_modelo_blockers(
@@ -1918,7 +1922,7 @@ def merge_transactions(
         )
 
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = bucket_event_repository or BucketEventHistoryRepository()
+    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
 
     children = tuple(_require_transaction(catalogue, child_id) for child_id in child_transaction_ids)
@@ -2207,6 +2211,18 @@ def _invoice_repository(
     return repository
 
 
+def _bucket_event_repository(
+    *,
+    bucket_id: str,
+    repository: BucketEventHistoryRepositoryProtocol | None,
+) -> BucketEventHistoryRepositoryProtocol:
+    if repository is not None:
+        return repository
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+
+    return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
+
+
 def _direction_from_amount(raw: RawTransaction) -> TransactionDirection:
     return TransactionDirection.OUTGOING if raw.amount < 0 else TransactionDirection.INCOMING
 
@@ -2343,7 +2359,7 @@ def _transaction_ids_for_review_event_filters(
     issue: str | None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
 ) -> frozenset[str]:
-    event_repository = bucket_event_repository or BucketEventHistoryRepository()
+    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     events = event_repository.load().for_bucket(
         bucket_id,
         event_types=(
@@ -2525,7 +2541,7 @@ def _transition_manual_transaction_lifecycle(
     actor: str,
     reason: str,
     source_command: str,
-    transaction_repository: TransactionCatalogueRepository | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
@@ -2535,7 +2551,7 @@ def _transition_manual_transaction_lifecycle(
     trimmed_actor = _require_actor(actor, operation="ledger lifecycle")
     trimmed_source_command = _require_source_command(source_command, operation="ledger lifecycle")
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = bucket_event_repository or BucketEventHistoryRepository()
+    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
     current = _require_transaction(catalogue, transaction_id)
     if current.lifecycle_state is state:
@@ -3619,7 +3635,7 @@ def bulk_classify_from_csv(
     Returns a :class:`BulkClassifyResult`.
     """
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repo = bucket_event_repository or BucketEventHistoryRepository()
+    event_repo = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
 
     # Parse the CSV header to detect unknown columns before touching storage.
     reader = csv.DictReader(io.StringIO(csv_text))
@@ -3822,7 +3838,7 @@ def apply_classification_rules(
     from ._rule_repository import LedgerClassificationRuleRepository
 
     tx_repo = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repo = bucket_event_repository or BucketEventHistoryRepository()
+    event_repo = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     rule_repo: LedgerClassificationRuleRepository = (
         # CAST-RATIONALE-LEDGER-RULE-REPO-INJECT: same injection-friendly
         # ``object | None`` pattern as ``add_classification_rule``; the

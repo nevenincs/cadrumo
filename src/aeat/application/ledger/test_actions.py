@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pytest
 
+from ...adapters.persistence.storage import StorageValidationError
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...application.export import ExportSerializationFormat
@@ -1319,9 +1320,11 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
             description="classified row",
             business_classification=BusinessClassification.BUSINESS,
             category_id="office-supplies",
-            taxable_base=Decimal("60.00"),
+            # 75.00 gross inverse-split at 21% -> 61.98 base + 13.02 IVA
+            # (keeps the gross == base + iva Transaction invariant).
+            taxable_base=Decimal("61.98"),
             iva_rate=Decimal("0.21"),
-            iva_amount=Decimal("12.60"),
+            iva_amount=Decimal("13.02"),
         ),
         actor="operator-C",
         source_command="aeat app ledger classify",
@@ -1333,7 +1336,7 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
     assert updated.transaction.raw.description == "classified row"
     assert updated.transaction.business_classification is BusinessClassification.BUSINESS
     assert updated.transaction.category_id == "office-supplies"
-    assert updated.transaction.taxable_base == Decimal("60.00")
+    assert updated.transaction.taxable_base == Decimal("61.98")
     assert updated.transaction.edit_lineage[-1].source_command == "aeat app ledger classify"
     events = event_repository.load().for_bucket("bucket-a")
     assert [event.event_type for event in events] == [
@@ -2312,6 +2315,27 @@ def test_create_manual_transaction_rejects_repository_bucket_mismatch(secure_obj
             ),
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
+
+
+def test_create_manual_transaction_default_event_repository_fails_closed_for_inactive_bucket(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_repository = TransactionCatalogueRepository(bucket_id="bucket-b", objects=secure_objects)
+
+    with pytest.raises(StorageValidationError):
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id="bucket-b",
+                booked_date=date(2026, 5, 2),
+                amount=Decimal("-10.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="inactive bucket",
+                actor="operator-A",
+                source_command="aeat app ledger add",
+            ),
+            transaction_repository=transaction_repository,
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
