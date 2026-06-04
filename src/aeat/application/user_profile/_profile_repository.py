@@ -56,6 +56,7 @@ from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.identity import ProfileId
 from ...core.logging import get_logger
+from ...core.redaction import redact_for_cli_output
 from ...core.time import now
 from ...domain.user_profile import (
     ProfileNotFoundError,
@@ -594,6 +595,11 @@ class ProfileRepository:
             try:
                 paths = bucket_paths(self._root, entry.name)
             except ValueError:
+                _log.debug(
+                    "profile inventory skipped invalid bucket directory name bucket_id=%s",
+                    redact_for_cli_output(entry.name),
+                    exc_info=True,
+                )
                 continue
             if not manifest_path(paths).is_file():
                 continue
@@ -609,10 +615,11 @@ class ProfileRepository:
                 # reachable. The narrow scan in `list_profile_bucket_scan_issues`
                 # surfaces the torn bucket on diagnostic surfaces.
                 _log.warning(
-                    "profile inventory: skipping unreadable bucket manifest %s: %s",
-                    entry.name,
-                    exc,
+                    "profile inventory: skipping unreadable bucket manifest bucket_id=%s error_type=%s",
+                    redact_for_cli_output(entry.name),
+                    type(exc).__name__,
                 )
+                _log.debug("profile inventory skipped unreadable bucket manifest", exc_info=True)
                 continue
             summaries.append(
                 ProfileSummary(
@@ -672,17 +679,18 @@ class ProfileRepository:
 
                 with profile_storage_session(summary.profile_id):
                     aggregate = self.load(summary.profile_id)
-            except Exception:
+            except (AeatError, OSError, ValidationError) as exc:
                 # One torn / unreadable bucket must not prevent an operator
                 # from registering a completely different taxpayer. Emit an
                 # operator-visible warning and continue scanning the remaining
                 # readable profiles so duplicate detection still fires for them.
                 _log.warning(
-                    "tax-id uniqueness scan: skipping unreadable profile %s; "
+                    "tax-id uniqueness scan: skipping unreadable profile profile_id=%s error_type=%s; "
                     "proceeding with scan against readable profiles",
-                    summary.profile_id,
-                    exc_info=True,
+                    redact_for_cli_output(summary.profile_id),
+                    type(exc).__name__,
                 )
+                _log.debug("tax-id uniqueness scan skipped unreadable profile", exc_info=True)
                 continue
             existing_tax_id = _canonical_tax_id(aggregate.record.facts)
             if existing_tax_id is not None and existing_tax_id == new_tax_id:
@@ -748,7 +756,6 @@ class ProfileRepository:
         with no secure-object row is detectable, reclaimable garbage.
         """
         import gc
-        import shutil
 
         target = bucket_paths(self._root, profile_id).bucket_dir
         if not target.exists():
@@ -758,9 +765,24 @@ class ProfileRepository:
             target.rename(trash)
         except OSError:
             gc.collect()
-            shutil.rmtree(target, ignore_errors=True)
+            self._remove_tree_best_effort(target, reason="create_rollback_in_place")
             return
-        shutil.rmtree(trash, ignore_errors=True)
+        self._remove_tree_best_effort(trash, reason="create_rollback_trash")
+
+    def _remove_tree_best_effort(self, target: Path, *, reason: str) -> None:
+        """Remove a directory without masking the caller's original failure."""
+        import shutil
+
+        try:
+            shutil.rmtree(target)
+        except OSError as exc:
+            _log.debug(
+                "profile bucket cleanup failed reason=%s target=%s error_type=%s",
+                reason,
+                redact_for_cli_output(str(target)),
+                type(exc).__name__,
+                exc_info=True,
+            )
 
     def _read_pointer_text(self) -> str | None:
         """Return the raw active-profile pointer text, or ``None`` if absent."""
