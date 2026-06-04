@@ -37,7 +37,7 @@ selects a concrete gap.
 ## Steps
 
 - [x] `S01` - Audit advisory and hard-fail registry drift validators and select one blocking-gap candidate; `.vault/audit`.
-- [ ] `S02` - Add a focused regression that proves the selected drift gap is not currently blocked; `src/aeat/domain/calculations/registry`.
+- [x] `S02` - Add a focused regression that proves the selected drift gap is not currently blocked; `src/aeat/domain/calculations/registry`.
 - [ ] `S03` - Convert the selected drift gap into a `RegistryValidationError` without changing unrelated validator semantics; `src/aeat/domain/calculations/registry`.
 - [ ] `S04` - Verify drift, committed-registry, loader, reviewability, and plan gates; `src/aeat/domain/calculations/registry`.
 - [ ] `S05` - Review and close the drift-validator blocking-gap slice; `.vault/audit`.

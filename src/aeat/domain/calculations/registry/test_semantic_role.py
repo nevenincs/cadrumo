@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Iterable
+from datetime import date
 from typing import Any
 
 import pytest
@@ -23,7 +24,15 @@ from pydantic import ValidationError
 
 from ....core.resources import bundled_path
 from . import load_modelo_path
-from ._schema import CasillaAlias, CasillaConstraints, CasillaDefinition
+from ._schema import (
+    CasillaAlias,
+    CasillaConstraints,
+    CasillaDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    PeriodSelector,
+)
+from ._validate_registry_scope import validate_registry_scope
 from ._validate_semantic_roles import (
     _emit_semantic_role_typo_twin_warnings,
     _validate_semantic_role_cardinality,
@@ -81,6 +90,32 @@ def _modelo(modelo_id: str, revision_id: str, casillas: Iterable[CasillaDefiniti
             self.revisions = {revision_id: _Rev()}
 
     return _Mod()
+
+
+def _registry_modelo(modelo_id: str, revision_id: str, casillas: Iterable[CasillaDefinition]) -> ModeloDefinition:
+    revision = ModeloRevision.model_validate(
+        {
+            "id": revision_id,
+            "valid_from": date(2025, 1, 1),
+            "period_selector": PeriodSelector(years=(2025,), periods=("0A",)),
+            "legal_refs": ("ley-58-2003:art-29",),
+            "source_refs": ("aeat-manual",),
+            "casillas": tuple(casillas),
+        }
+    )
+    return ModeloDefinition.model_validate(
+        {
+            "id": modelo_id,
+            "title": f"Modelo {modelo_id}",
+            "official_name": f"Modelo {modelo_id}",
+            "tax_domain": "iva",
+            "cadence": "annual",
+            "jurisdiction": "ES-AEAT",
+            "legal_refs": ("ley-58-2003:art-29",),
+            "source_refs": ("aeat-manual",),
+            "revisions": {revision_id: revision},
+        }
+    )
 
 
 def _bundled_modelo(modelo_id: str) -> Any:
@@ -292,6 +327,19 @@ class TestTypoTwinWarning:
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
+        assert any("taxpayer_niff" in str(w.message) for w in captured)
+
+    def test_typo_twin_warning_does_not_currently_block_registry_scope(self) -> None:
+        typo = _casilla(cid="a", semantic_role="taxpayer_niff", data_type="nif")
+        canonical_a = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
+        canonical_b = _casilla(cid="c", semantic_role="taxpayer_nif", data_type="nif")
+        modelo = _registry_modelo("180", "2025", [typo, canonical_a, canonical_b])
+
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            failures = validate_registry_scope([modelo])
+
+        assert failures == ()
         assert any("taxpayer_niff" in str(w.message) for w in captured)
 
     def test_intentional_singleton_role_does_not_emit_warning(self) -> None:
