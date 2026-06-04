@@ -62,7 +62,11 @@ def link_invoice_transaction_catalogues(
     updated_transactions = link_invoice(transactions, canonical_transaction_id, invoice_id)
     linked_invoice = updated_invoices.get(invoice_id)
     if linked_invoice is None:
-        raise InvoiceLinkError(f"invoice not found after link update: {invoice_id}")
+        raise InvoiceLinkError(
+            "invoice not found after link update",
+            translated_message="application.invoices.linking.errors.linked_invoice_not_found",
+            context={"invoice_id": invoice_id},
+        )
     return InvoiceTransactionLinkResult(
         invoice_id=invoice_id,
         transaction_id=canonical_transaction_id,
@@ -85,7 +89,7 @@ def link_invoice_transaction_repositories(
     Returns an :class:`InvoiceTransactionLinkResult` with the updated
     invoice and transaction catalogues after the link is written.
     """
-    invoices_repo = invoice_repository or InvoiceCatalogueRepository()
+    invoices_repo = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     transactions_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     result = link_invoice_transaction_catalogues(
         invoices_repo.load(),
@@ -105,4 +109,8 @@ def _canonical_transaction_id(catalogue: TransactionCatalogue, transaction_id: s
     normalized = transaction_id.strip().lower()
     if normalized in catalogue:
         return normalized
-    raise InvoiceLinkError(f"transaction not found in catalogue: {transaction_id}")
+    raise InvoiceLinkError(
+        "transaction not found in catalogue",
+        translated_message="application.invoices.linking.errors.transaction_not_found",
+        context={"transaction_id": transaction_id},
+    )

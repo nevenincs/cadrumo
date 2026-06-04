@@ -558,6 +558,10 @@ application:
         invalid_json_shape: The invoice JSON payload must be an object or a list of
           objects.
         invalid_kind: 'The invoice kind is not supported: %{kind}.'
+    linking:
+      errors:
+        linked_invoice_not_found: 'Invoice %{invoice_id} was not found after applying the link update.'
+        transaction_not_found: 'Transaction %{transaction_id} was not found in the transaction catalogue.'
   ledger:
     errors:
       evidence_attachment_requires_ids: Ledger evidence attachment requires purchase

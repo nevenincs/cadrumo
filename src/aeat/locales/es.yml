@@ -620,6 +620,10 @@ application:
         invalid_json_shape: El contenido JSON de facturas debe ser un objeto o una
           lista de objetos.
         invalid_kind: 'El tipo de factura no esta admitido: %{kind}.'
+    linking:
+      errors:
+        linked_invoice_not_found: 'No se encontro la factura %{invoice_id} despues de aplicar el enlace.'
+        transaction_not_found: 'No se encontro la transaccion %{transaction_id} en el catalogo de transacciones.'
   ledger:
     errors:
       evidence_attachment_requires_ids: El adjunto de evidencia del libro mayor requiere

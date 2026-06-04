@@ -334,3 +334,18 @@ instances. The file-read failure path records debug evidence with file name and
 error type before chaining the original `OSError`.
 
 Closure assessment: `W12.P26.S214` can close as `plaintext-exception`.
+
+## S215-039 | PASS | Invoice linking runtime-default closeout verified
+
+The `W12.P26.S215` review found that invoice-to-transaction linking writes
+through runtime-bound invoice and transaction catalogue repositories, not a
+manifest-only discovery path. The plan target for `AFR-113` is corrected to
+`runtime-default`.
+
+The service now passes the requested `bucket_id` into the default invoice
+repository, matching the transaction repository binding. Missing transaction
+and post-link missing invoice refusals use localized `InvoiceLinkError`
+metadata, and the linking locale leaves were set through `python -m
+aeat.locales`.
+
+Closure assessment: `W12.P26.S215` can close as `runtime-default`.
