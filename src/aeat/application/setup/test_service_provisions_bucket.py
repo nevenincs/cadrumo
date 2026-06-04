@@ -13,6 +13,7 @@ recovery enrollment flow runs.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -120,6 +121,32 @@ def test_initialize_workspace_refuses_a_duplicate_operator_name(
 
     with pytest.raises(ProfileAlreadyRegisteredError):
         initialize_workspace(command)
+
+
+def test_initialize_workspace_logs_reserved_auth_provider_refusal(
+    profile_storage_root: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Reserved auth providers remain non-fatal but are observable in debug logs."""
+
+    with caplog.at_level(logging.DEBUG, logger="aeat.application.setup._service"):
+        result = initialize_workspace(
+            InitializeWorkspaceCommand(
+                profile_name="catering",
+                tax_id="12345678Z",
+                activity="catering",
+                iva_regime="GENERAL",
+                auth_provider="clave_pin",
+            )
+        )
+
+    assert result.auth_configured is False
+    assert any(
+        record.levelno == logging.DEBUG
+        and getattr(record, "auth_provider", "") == "clave_pin"
+        and "reserved auth provider was not configured" in record.getMessage()
+        for record in caplog.records
+    )
 
 
 def test_initialize_workspace_two_distinct_names_get_distinct_uuids(
