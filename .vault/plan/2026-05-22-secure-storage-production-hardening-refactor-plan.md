@@ -29,16 +29,6 @@ related:
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 <!-- RETIRED: S422, S423 -->
 
 # `secure-storage-production-hardening` `refactor` plan
@@ -776,7 +766,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S234` - Close `AFR-132` for `src/aeat/application/modelo/_binding_readiness.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/modelo/_binding_readiness.py`.
 - [x] `W12.P26.S235` - Close `AFR-133` for `src/aeat/application/modelo/_borrador_binding.py` with signals `secure-object, manifest-bucket, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/modelo/_borrador_binding.py`.
 - [x] `W12.P26.S236` - Close `AFR-134` for `src/aeat/application/modelo/_export.py` with signals `active-profile, manifest-bucket, plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/modelo/_export.py`.
-- [ ] `W12.P26.S237` - Close `AFR-135` for `src/aeat/application/modelo/_history.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/modelo/_history.py`.
+- [x] `W12.P26.S237` - Close `AFR-135` for `src/aeat/application/modelo/_history.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/modelo/_history.py`.
 - [ ] `W12.P26.S238` - Close `AFR-136` for `src/aeat/application/modelo/_profile_binding.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/modelo/_profile_binding.py`.
 - [x] `W12.P26.S239` - Close `AFR-137` for `src/aeat/application/modelo/_reconcile.py` with signals `secure-object, active-profile, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/modelo/_reconcile.py`.
 - [ ] `W12.P26.S240` - Close `AFR-138` for `src/aeat/application/operator_surface/_contract.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/operator_surface/_contract.py`.

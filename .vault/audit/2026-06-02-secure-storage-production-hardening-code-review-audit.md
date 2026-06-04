@@ -515,3 +515,18 @@ context, and cross-bucket/output-write refusals avoid echoing bucket ids or
 operator filesystem paths.
 
 Closure assessment: `W12.P26.S236` can close as `plaintext-exception`.
+
+## S237-051 | PASS | Modelo history manifest-discovery closeout verified
+
+The `W12.P26.S237` review found that `src/aeat/application/modelo/_history.py`
+is a read-only assembly surface over injected work-unit, calculation,
+verification, and bucket-event repositories. It does not construct storage
+backends, inspect environment variables, write plaintext side stores, or own
+secure-object routing.
+
+The missing work-unit refusal is locale-backed with structured context, and the
+step record plus affected-file register close `AFR-135` as `manifest-discovery`.
+The S237 checkbox was closed through the plan CLI after the implementation commit
+left the register closed but the step line unchecked.
+
+Closure assessment: `W12.P26.S237` can close as `manifest-discovery`.
