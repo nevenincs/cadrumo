@@ -17,7 +17,7 @@ from ...adapters.persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.external_constants import load_external_constants
+from ...core.external_constants import UTF_8_ENCODING, load_external_constants
 from ...core.time import now
 from ._errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
 
@@ -202,7 +202,7 @@ def record_auth_diagnostic_phone_state(
             updated.model_dump(mode="json"),
             ensure_ascii=False,
             sort_keys=True,
-        ).encode("utf-8"),
+        ).encode(UTF_8_ENCODING),
     )
     return AuthDiagnosticReportResult(
         diagnostic_id=diagnostic_id,
@@ -225,7 +225,7 @@ def _secure_objects() -> SecureObjectRepository:
 
 def _payload(raw: bytes) -> _DiagnosticPayload:
     """Deserialize an encrypted auth diagnostic blob into a typed payload envelope."""
-    data = json.loads(raw.decode("utf-8"))
+    data = json.loads(raw.decode(UTF_8_ENCODING))
     if not isinstance(data, dict):
         raise AuthDiagnosticPayloadError("auth diagnostic payload is not a JSON object")
     return _DiagnosticPayload.model_validate(data)
@@ -285,7 +285,7 @@ def _redacted_ref(value: object) -> str:
         return ""
     if text.startswith("sha256:"):
         return text
-    return f"sha256:{hashlib.sha256(text.encode('utf-8')).hexdigest()}"
+    return f"sha256:{hashlib.sha256(text.encode(UTF_8_ENCODING)).hexdigest()}"
 
 
 def _optional_bool(value: object) -> bool | None:
