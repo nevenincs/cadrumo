@@ -22,6 +22,7 @@ from ....application.calculations._observations_repository import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
 )
+from ....application.config_reset import ConfigResetScope, reset_config
 from ....application.diagnostics import preview_quarantine_unreadable_secure_objects
 from ....application.filing import ModeloHistory, ModeloHistoryEntry
 from ....application.filing._history_repository import ModeloHistoryRepository
@@ -734,6 +735,10 @@ def _save_diagnostic_probe_row(label: str) -> None:
     (
         ("workflow_state", lambda: WorkflowStateRepository().load()),
         ("workflow_runs", lambda: WorkflowRunRepository().list()),
+        ("config_reset_auth", lambda: reset_config(ConfigResetScope.AUTH, confirmed=True)),
+        ("config_reset_profile", lambda: reset_config(ConfigResetScope.PROFILE, confirmed=True)),
+        ("config_reset_data", lambda: reset_config(ConfigResetScope.DATA, confirmed=True)),
+        ("config_reset_all", lambda: reset_config(ConfigResetScope.ALL, confirmed=True)),
         ("bucket_events", lambda: BucketEventHistoryRepository().load()),
         ("auth_diagnostics", list_auth_diagnostics),
         ("auth_apoderado", lambda: ApoderadoService().status(bucket_id="bucket-a")),
@@ -802,6 +807,10 @@ def test_migrated_runtime_defaults_refuse_missing_session(
     (
         ("workflow_state", lambda: WorkflowStateRepository().load()),
         ("workflow_runs", lambda: WorkflowRunRepository().list()),
+        ("config_reset_auth", lambda: reset_config(ConfigResetScope.AUTH, confirmed=True)),
+        ("config_reset_profile", lambda: reset_config(ConfigResetScope.PROFILE, confirmed=True)),
+        ("config_reset_data", lambda: reset_config(ConfigResetScope.DATA, confirmed=True)),
+        ("config_reset_all", lambda: reset_config(ConfigResetScope.ALL, confirmed=True)),
         ("bucket_events", lambda: BucketEventHistoryRepository().load()),
         ("auth_diagnostics", list_auth_diagnostics),
         ("auth_apoderado", lambda: ApoderadoService().status(bucket_id="bucket-a")),

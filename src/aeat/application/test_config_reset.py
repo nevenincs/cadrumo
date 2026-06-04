@@ -75,9 +75,21 @@ def test_reset_config_refuses_without_confirmation(
 
     with (
         _isolated_workflow(tmp_path),
-        pytest.raises(ConfigResetUnconfirmedError, match=r"config reset|confirmed must be True"),
+        pytest.raises(ConfigResetUnconfirmedError) as excinfo,
     ):
         reset_config(ConfigResetScope.ALL, confirmed=False)
+    from ..core.errors import build_error_envelope, resolve_error_message
+
+    rendered = resolve_error_message(excinfo.value)
+    assert excinfo.value.translated_message == "errors.refused.refused_config_reset_unconfirmed"
+    assert excinfo.value.context == {"scope": "ALL"}
+    assert rendered != excinfo.value.translated_message
+    assert "refused_config_reset_unconfirmed" not in rendered
+    assert "config reset refused" not in rendered.lower()
+
+    envelope = build_error_envelope(excinfo.value, trace_id=None)
+    assert envelope.code == "REFUSED_CONFIG_RESET_UNCONFIRMED"
+    assert envelope.message == rendered
 
 
 def test_reset_profile_only_clears_active_profile_record(
