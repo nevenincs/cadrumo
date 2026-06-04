@@ -18,6 +18,7 @@ proved here:
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterator
 from contextlib import ExitStack
 from datetime import UTC, date, datetime
@@ -43,7 +44,7 @@ from .auth._operator import test_operator_auth as probe_operator_auth
 from .ledger import ManualLedgerTransactionCommand, create_manual_transaction
 from .modelo._actions import create_work_unit, discard_work_unit
 from .overview import build_overview_status_report
-from .state_projection import ModeloReadinessRequest, build_operator_state_projection
+from .state_projection import ModeloReadinessRequest, _modelo_requires_ledger_preflight, build_operator_state_projection
 from .user_profile._testing import register_minimal_profile
 from .workflow._models import WorkflowState
 from .workflow._persistence import workflow_state_repository
@@ -308,6 +309,28 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers() -> None:
     assert [issue.reason.value for issue in readiness.ledger_issues] == ["missing_category"]
 
 
+def test_missing_registry_snapshot_ledger_preflight_skip_is_debug_logged(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    request = ModeloReadinessRequest(
+        modelo="999",
+        revision_id="missing-registry",
+        filing_year=2026,
+        period="1T",
+    )
+
+    with caplog.at_level(logging.DEBUG, logger="aeat.application.state_projection"):
+        required = _modelo_requires_ledger_preflight(request)
+
+    assert required is False
+    assert any(
+        record.levelno == logging.DEBUG
+        and getattr(record, "modelo", "") == "999"
+        and "ledger preflight skipped" in record.getMessage()
+        for record in caplog.records
+    )
+
+
 def test_projection_is_pure_read() -> None:
     """Building the projection mutates no store: two consecutive builds
     over an unchanged workspace return equal projections."""
@@ -381,6 +404,24 @@ def test_auth_readiness_no_provider_matches_with_and_without_probe() -> None:
     assert probed.auth.available == unprobed.auth.available is False
     assert probed.auth.configured == unprobed.auth.configured is False
     assert probed.auth.health_summary == unprobed.auth.health_summary == ""
+
+
+def test_auth_probe_unknown_requested_provider_log_omits_raw_selector(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    sensitive_provider = "client-tax-id-12345678Z-private-note"
+
+    with caplog.at_level(logging.WARNING, logger="aeat.application.state_projection"):
+        projection = build_operator_state_projection(
+            requested_provider=sensitive_provider,
+            probe_live_backend=True,
+            include_workspace_summary=False,
+            include_pending_obligations=False,
+        )
+
+    assert projection.auth.available is False
+    assert any("unknown provider" in record.getMessage() for record in caplog.records)
+    assert sensitive_provider not in caplog.text
 
 
 def test_auth_readiness_configured_is_coherent_with_health_summary() -> None:

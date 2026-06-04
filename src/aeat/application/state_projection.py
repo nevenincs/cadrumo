@@ -61,6 +61,7 @@ from .workflow._persistence import workflow_state_repository
 from .workflow._profile_health import ActiveProfileHealth, assess_active_profile_health
 
 _log = get_logger(__name__)
+_AUTH_PROVIDER_VALUES = frozenset(kind.value for kind in AuthProviderKind)
 
 
 class ProjectionActiveProfile(BaseModel):
@@ -242,8 +243,7 @@ def _resolve_active_profile_label(bucket_id: str | None) -> str | None:
         pointer = read_profile_bucket_by_id(bucket_id)
     except (OSError, ValueError) as exc:
         _log.debug(
-            "state projection: unable to resolve active-profile label for bucket_id=%s",
-            bucket_id,
+            "state projection: unable to resolve active-profile label",
             exc_info=exc,
         )
         return None
@@ -326,39 +326,44 @@ def _build_auth_readiness(
     health_summary = ""
     health_severity = ""
     if probe_live_backend and provider:
-        try:
-            # The certificate path persisted by ``auth configure`` lives in
-            # workflow state; the backend reads from ``Settings``. Carry the
-            # workflow-state path into the Settings instance the backend
-            # sees so ``configure`` and ``status`` cannot disagree on
-            # whether the certificate is configured.
-            # `load_settings()` honours `override_settings`; bare `Settings()`
-            # bypasses the context-var and shows the project default cert
-            # path even when a test overrides it.
-            from ..core.config import load_settings as _load_settings
-
-            backend_settings = _load_settings()
-            if (
-                provider == AuthProviderKind.CERTIFICATE.value
-                and auth.certificate_path
-                and backend_settings.aeat_certificate_path is None
-            ):
-                backend_settings = backend_settings.model_copy(
-                    update={"aeat_certificate_path": Path(auth.certificate_path)}
-                )
-            backend = select_provider(AuthProviderKind(provider), settings=backend_settings)
-            description = backend.describe()
-            available = description.available
-            health_summary = description.health_summary or ""
-            health_severity = description.health_severity or ""
-            configured = configured and description.configured
-        except (AeatError, OSError, ValueError, AttributeError):
+        if provider not in _AUTH_PROVIDER_VALUES:
             _log.warning(
-                "auth backend probe failed for provider %s; reporting unavailable",
-                provider,
-                exc_info=True,
+                "auth backend probe skipped for unknown provider; reporting unavailable",
             )
             available = False
+        else:
+            try:
+                # The certificate path persisted by ``auth configure`` lives in
+                # workflow state; the backend reads from ``Settings``. Carry the
+                # workflow-state path into the Settings instance the backend
+                # sees so ``configure`` and ``status`` cannot disagree on
+                # whether the certificate is configured.
+                # `load_settings()` honours `override_settings`; bare `Settings()`
+                # bypasses the context-var and shows the project default cert
+                # path even when a test overrides it.
+                from ..core.config import load_settings as _load_settings
+
+                backend_settings = _load_settings()
+                if (
+                    provider == AuthProviderKind.CERTIFICATE.value
+                    and auth.certificate_path
+                    and backend_settings.aeat_certificate_path is None
+                ):
+                    backend_settings = backend_settings.model_copy(
+                        update={"aeat_certificate_path": Path(auth.certificate_path)}
+                    )
+                backend = select_provider(AuthProviderKind(provider), settings=backend_settings)
+                description = backend.describe()
+                available = description.available
+                health_summary = description.health_summary or ""
+                health_severity = description.health_severity or ""
+                configured = configured and description.configured
+            except (AeatError, OSError, ValueError, AttributeError):
+                _log.warning(
+                    "auth backend probe failed; reporting unavailable",
+                    exc_info=True,
+                )
+                available = False
 
     authenticated = configured and bool(auth.authenticated_at)
     health_severity = _resolve_health_severity(
@@ -615,6 +620,11 @@ def _modelo_requires_ledger_preflight(request: ModeloReadinessRequest) -> bool:
             period=request.period,
         )
     except (FileNotFoundError, RegistrySnapshotError):
+        _log.debug(
+            "state projection: registry snapshot unavailable for modelo readiness; ledger preflight skipped",
+            extra={"modelo": request.modelo, "filing_year": request.filing_year, "period": request.period},
+            exc_info=True,
+        )
         return False
     return any(binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES for binding in snapshot.revision.bindings)
 
