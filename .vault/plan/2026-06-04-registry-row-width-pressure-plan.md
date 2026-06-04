@@ -40,7 +40,7 @@ and loaded modelo objects.
 
 - [x] `P02.S02` - Reformat clean near-threshold M100 casilla TOML rows without changing TOML values; `src/aeat/_data/registry/aeat/modelos/100`.
 - [x] `P02.S03` - Reformat clean non-M100 near-threshold TOML rows if S01 authorises them; `src/aeat/_data/registry/aeat/modelos`.
-- [ ] `P02.S04` - Defer dirty concurrent near-threshold TOML rows with exact paths and owners; `.vault/audit`.
+- [x] `P02.S04` - Defer dirty concurrent near-threshold TOML rows with exact paths and owners; `.vault/audit`.
 - [ ] `P02.S05` - Tighten the reviewability row-width baseline only as far as the post-format corpus permits; `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
 
 ### Phase `P03` - verification and review
