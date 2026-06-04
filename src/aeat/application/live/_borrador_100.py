@@ -10,7 +10,7 @@ the inline state-machine, supersession, and content-id helpers have
 been routed through the shared base.
 
 Snapshot records are wrapped in an :class:`Envelope` and persisted through a
-:class:`SecureObjectRepository` at PERSONAL sensitivity under the borrador
+:class:`SecureObjectRepository` at FINANCIAL sensitivity under the borrador
 namespace.
 """
 
