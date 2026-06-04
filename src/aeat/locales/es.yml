@@ -866,8 +866,18 @@ application:
         app live portals list' para ver los portales disponibles.
   registry:
     errors:
+      invalid_manual_id: El manual del registro debe ser uno de {allowed_manual_ids};
+        se recibio {manual_id}.
+      invalid_manual_rule_kind: El tipo de regla del manual del registro debe ser
+        uno de {allowed_rule_kinds}; se recibio {rule_kind}.
       invalid_oracle_environment: El entorno de oráculos del registro debe ser uno
         de {allowed_values}; se recibió {value}.
+      invalid_topic_locale: El locale de temas del registro debe ser uno de {allowed_locales};
+        se recibio {locale}.
+      manual_section_not_found: No se encontro la seccion {section} en {manual_id}
+        {year} {part}.
+      manual_section_requires_structure: La seccion del manual requiere estructura
+        extraida para {manual_key}.
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
@@ -1569,6 +1579,7 @@ cli:
           hex en minúsculas de 64 caracteres (resumen SHA-256)
         invalid_casilla_key: 'La clave --casilla no es un CasillaId válido (alfanumérico
           más separadores . _ : -, máx. 64 caracteres)'
+        invalid_revision_selector: 'Selector de revision desconocido {value}; elija uno de {choices}.'
         invalid_work_unit_id: work_unit_id debe ser una cadena hex en minúsculas de
           64 caracteres (resumen SHA-256)
         kv_empty_key_error: La clave de {flag} no puede estar vacía; se recibió {spec}.
@@ -1593,6 +1604,7 @@ cli:
           el cálculo todavía necesita.'
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         name_help: Nombre de visualización opcional de la unidad de trabajo
+        natural_target_required: 'Pase un id exacto de unidad de trabajo, o indique la declaracion con --modelo, --year y --period.'
         notes_help: Notas opcionales asociadas al filing record
         output_language_help: Idioma de salida para los mensajes renderizados.
         override_help: Valor de binding con sintaxis KEY=VALUE (repetible); ejecuta
@@ -1678,6 +1690,7 @@ cli:
           ejecución). Ejecuta `aeat app modelo work runs` para listar los ids de ejecución.
         revision_help: Identificador estable de la revisión registrada del modelo;
           ejecuta `aeat app modelo describe MODELO` para ver los ids de revisión disponibles.
+        revision_selector_ambiguous: 'Mas de una revision de calculo coincide con este selector. Elija una explicitamente. {candidates}'
         revision_show_help: Mostrar los valores de casilla guardados de una revisión
           de cálculo concreta (sin recalcular)
         revision_year_mismatch: La revisión %{revision} del modelo %{modelo} no cubre
@@ -1729,6 +1742,9 @@ cli:
         sal_reserva_incomplete: --sal-beneficio-neto, --sal-reserva-dotada y --sal-capital-social
           deben suministrarse conjuntamente.
         sal_reserva_not_decimal: Los valores --sal-* deben ser importes decimales.
+        selector_ambiguous: 'Mas de una unidad de trabajo activa coincide con este modelo/ano/periodo. Elija una revision del registro o pase un id de unidad de trabajo explicito. {candidates}'
+        selector_not_found: 'Ninguna unidad de trabajo activa coincide con este modelo, ano y periodo. Ejecute primero aeat app modelo work create.'
+        selector_revision_conflict: 'Ya existe una unidad de trabajo activa para este modelo/ano/periodo con revision de registro {existing_revision}; se solicito {requested_revision}. Reanude la unidad existente, descartela explicitamente o pase un id exacto.'
         set_not_decimal: El valor de --set debe ser un decimal; se recibió {value}.
         set_override_help: Valor de casilla corregido con sintaxis CASILLA=DECIMAL
           (repetible; al menos uno requerido)
@@ -3507,8 +3523,9 @@ errors:
     error_workflow: Se produjo un error en el flujo de trabajo.
     error_workflow_component: Un componente del flujo de trabajo lanzó una excepción
       inesperada.
-    modelo_calculation_revision_selector: 'La selección de revisión de cálculo falló.'
-    modelo_calculation_revision_selector_not_found: 'Ninguna revisión de cálculo coincide con el selector indicado.'
+    modelo_calculation_revision_selector: La selección de revisión de cálculo falló.
+    modelo_calculation_revision_selector_not_found: Ninguna revisión de cálculo coincide
+      con el selector indicado.
     modelo_work_selector: El selector de trabajo de modelo fallo.
     modelo_work_selector_unit_not_found: No se encontro la unidad de trabajo de modelo
       seleccionada.
@@ -3800,8 +3817,10 @@ errors:
       184 deben sumar exactamente el 100 %.
     modelo_347_threshold: Las operaciones del Modelo 347 por encima del umbral informativo
       requieren cobertura declarativa explícita.
-    modelo_calculation_revision_selector_ambiguous: 'El selector de revisión de cálculo coincide con más de una revisión; refine el selector.'
-    modelo_calculation_revision_selector_state: 'La revisión de cálculo seleccionada no está en un estado utilizable para esta operación.'
+    modelo_calculation_revision_selector_ambiguous: El selector de revisión de cálculo
+      coincide con más de una revisión; refine el selector.
+    modelo_calculation_revision_selector_state: La revisión de cálculo seleccionada
+      no está en un estado utilizable para esta operación.
     modelo_censo_stale: 'La operación se rechaza porque aplicaste un censo nuevo después
       de generar este trabajo. La AEAT es la fuente legal vinculante: vuelve a generarlo
       con el censo actual.'
