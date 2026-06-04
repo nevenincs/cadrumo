@@ -1715,10 +1715,6 @@ cli:
           clave_operacion=E importe=50000''.'
         row_kv_format_error: A --row {token} mezőnek KULCS=ÉRTÉK formátumúnak kell
           lennie.
-        row_m184_shares_not_100: 'M184 tagsorok: a részesedési arányok összegének
-          pontosan 100%-nak kell lennie; {count} sorból {total} jött ki.'
-        row_m347_below_threshold: 'M347 contraparte sor (nif={nif}): {total} összimport
-          nem haladja meg a RD 1065/2007 art. 31.1 által előírt €{threshold} küszöböt'
         row_m349_invalid_nif: '--row operador: a nif_comunitario {nif} nem felel meg
           {pais} ország elvárt NIF-IVA formátumának (2006/112/EK irányelv XI. melléklet)'
         row_unknown_type: 'Ismeretlen --row típus: {row_type!r}; támogatott típusok:
