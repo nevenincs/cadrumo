@@ -3206,6 +3206,7 @@ errors:
     unsupported_comparison_op: 'Unsupported comparison operator: %{op}.'
     unsupported_op: 'Unsupported formula operator: %{op}.'
   censo:
+    bucket_id_blank: 'The censo sync service requires a profile bucket.'
     no_snapshot_captured: No censo snapshot has been captured for profile {profile_id}.
     profile_not_found: Profile {profile_id} does not exist; create it before applying
       censo.
