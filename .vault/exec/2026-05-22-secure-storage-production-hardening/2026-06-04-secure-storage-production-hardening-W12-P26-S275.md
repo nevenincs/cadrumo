@@ -21,23 +21,28 @@ Scope: close `AFR-173` for `src/aeat/application/wizard/_prompter.py` with signa
   and retain the underlying exception as diagnostic cause.
 - Replaced scripted prompter underflow and overflow raw English messages with locale
   keys and bounded structured context.
-- Updated prompter and setup-runtime tests to assert the localized AEAT error contract.
-- Ran focused lint, prompter/runtime tests, questionary smoke tests, and vaultspec RAG
-  duplication discovery.
+- Corrected the overflow context to report only unconsumed-answer and asked-question
+  counts, not raw leftover canonical-token values.
+- Updated prompter tests to assert localized AEAT errors and prove unconsumed answer
+  values are absent from exception context.
+- Ran focused lint, prompter tests, questionary smoke tests, and the canonical locale
+  audit through `python -m aeat.locales`.
 
 ## Outcome
 
 `AFR-173` is closed as `plaintext-exception`. The PATH prompt remains token-only, and
 scripted fixture drift now fails through registered AEAT wizard exceptions with
-localized message keys.
+localized message keys and redacted diagnostic context.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/wizard/_prompter.py src/aeat/application/wizard/test_prompter.py src/aeat/application/wizard/test_setup_runtime.py`
-- `uv run --no-sync pytest -q src/aeat/application/wizard/test_prompter.py src/aeat/application/wizard/test_setup_runtime.py src/aeat/application/wizard/test_questionary_smoke.py`
-- `uv run --no-sync vaultspec-rag search "wizard prompter scripted underflow overflow questionary path plaintext exception localized AEAT error" --type code --port 8766 --max-results 8`
+- `uv run --no-sync ruff check src/aeat/application/wizard/_prompter.py src/aeat/application/wizard/test_prompter.py src/aeat/application/wizard/test_questionary_smoke.py`
+- `uv run --no-sync pytest -q src/aeat/application/wizard/test_prompter.py src/aeat/application/wizard/test_questionary_smoke.py`
+- `uv run --no-sync -q python -m aeat.locales audit`
 
 ## Notes
 
 No translation catalogue edit was required; the existing error-registry message keys
-already cover wizard scripted underflow and overflow.
+already cover wizard scripted underflow and overflow. A previous closeout statement
+claimed bounded overflow context while the code still carried raw unconsumed values;
+this step record now reflects the applied redaction repair.
