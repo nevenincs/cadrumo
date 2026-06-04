@@ -29,15 +29,6 @@ related:
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 <!-- RETIRED: S422, S423 -->
 
@@ -384,7 +375,7 @@ Current register count: `293` production candidate files.
 | `AFR-093` | `src/aeat/application/auth/_acquisition_lock.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-094` | `src/aeat/application/auth/_apoderado.py` | `secure-object, secure-bound, manifest-bucket` | `runtime-default` | `W12.P21.S85` | closed |
 | `AFR-095` | `src/aeat/application/auth/_diagnostics.py` | `secure-object, active-profile` | `runtime-default` | `W12.P21.S85` | closed |
-| `AFR-096` | `src/aeat/application/auth/_operator.py` | `secure-object, active-profile, manifest-bucket, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-096` | `src/aeat/application/auth/_operator.py` | `secure-object, active-profile, manifest-bucket, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-097` | `src/aeat/application/auth/_sessions.py` | `active-profile, manifest-bucket, master-key, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-098` | `src/aeat/application/calculations/_iva_compensation_history.py` | `secure-bound` | `runtime-default` | `W12.P21.S85` | pending |
 | `AFR-099` | `src/aeat/application/calculations/_observations_repository.py` | `secure-object, secure-bound` | `runtime-default` | `W12.P21.S85` | pending |
@@ -737,7 +728,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S195` - Close `AFR-093` for `src/aeat/application/auth/_acquisition_lock.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/auth/_acquisition_lock.py`.
 - [x] `W12.P26.S196` - Close `AFR-094` for `src/aeat/application/auth/_apoderado.py` with signals `secure-object, secure-bound, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/auth/_apoderado.py`.
 - [x] `W12.P26.S197` - Close `AFR-095` for `src/aeat/application/auth/_diagnostics.py` with signals `secure-object, active-profile`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/auth/_diagnostics.py`.
-- [ ] `W12.P26.S198` - Close `AFR-096` for `src/aeat/application/auth/_operator.py` with signals `secure-object, active-profile, manifest-bucket, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/auth/_operator.py`.
+- [x] `W12.P26.S198` - Close `AFR-096` for `src/aeat/application/auth/_operator.py` with signals `secure-object, active-profile, manifest-bucket, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/auth/_operator.py`.
 - [ ] `W12.P26.S199` - Close `AFR-097` for `src/aeat/application/auth/_sessions.py` with signals `active-profile, manifest-bucket, master-key, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/auth/_sessions.py`.
 - [ ] `W12.P26.S200` - Close `AFR-098` for `src/aeat/application/calculations/_iva_compensation_history.py` with signals `secure-bound`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/calculations/_iva_compensation_history.py`.
 - [ ] `W12.P26.S201` - Close `AFR-099` for `src/aeat/application/calculations/_observations_repository.py` with signals `secure-object, secure-bound`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/calculations/_observations_repository.py`.
