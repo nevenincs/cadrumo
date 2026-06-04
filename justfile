@@ -282,6 +282,69 @@ audit-complexity-production:
     print(f"no production functions exceed {THRESHOLD}")
     PY
 
+# Top-level package ratchet-test complexity lane. This keeps inventory-test
+# cognitive debt visible without mixing it into the production refactor queue.
+[windows]
+audit-complexity-tests:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    @'
+    from pathlib import Path
+
+    from complexipy import file_complexity
+
+    ROOT = Path("src/aeat")
+    THRESHOLD = 20
+
+    findings: list[tuple[int, str, str]] = []
+    files = sorted(ROOT.glob("test_*.py"))
+    for path in files:
+        result = file_complexity(str(path))
+        for function in result.functions:
+            if function.complexity > THRESHOLD:
+                findings.append((function.complexity, str(path), function.name))
+
+    findings.sort(reverse=True)
+    print(f"complexipy top-level test cognitive complexity: {len(files)} files analyzed")
+    if findings:
+        print(f"functions above {THRESHOLD}:")
+        for complexity, path, function_name in findings[:80]:
+            print(f"{complexity:>4}  {path}::{function_name}")
+        raise SystemExit(1)
+    print(f"no top-level test functions exceed {THRESHOLD}")
+    '@ | uv run --no-sync python -
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+[unix]
+audit-complexity-tests:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run --no-sync python - <<'PY'
+    from pathlib import Path
+
+    from complexipy import file_complexity
+
+    ROOT = Path("src/aeat")
+    THRESHOLD = 20
+
+    findings: list[tuple[int, str, str]] = []
+    files = sorted(ROOT.glob("test_*.py"))
+    for path in files:
+        result = file_complexity(str(path))
+        for function in result.functions:
+            if function.complexity > THRESHOLD:
+                findings.append((function.complexity, str(path), function.name))
+
+    findings.sort(reverse=True)
+    print(f"complexipy top-level test cognitive complexity: {len(files)} files analyzed")
+    if findings:
+        print(f"functions above {THRESHOLD}:")
+        for complexity, path, function_name in findings[:80]:
+            print(f"{complexity:>4}  {path}::{function_name}")
+        raise SystemExit(1)
+    print(f"no top-level test functions exceed {THRESHOLD}")
+    PY
+
 # Copy/paste duplication discovery. Uses the workstation Node toolchain so the
 # Python uv bootstrap does not inherit a Node package dependency.
 audit-duplication:
