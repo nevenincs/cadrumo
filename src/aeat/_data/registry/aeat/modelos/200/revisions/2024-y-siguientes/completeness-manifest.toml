@@ -57,3 +57,55 @@ number = "01766"
 [[revisions."2024-y-siguientes".completeness_manifest.casillas]]
 segmento = "DP200014B"
 number = "01784"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200012"
+number = "00501"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200013"
+number = "00417"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200013"
+number = "00418"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014"
+number = "00547"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014"
+number = "00550"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014"
+number = "01032"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014"
+number = "DP200014:bin-aplicada-maxima"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200015"
+number = "00670"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200015"
+number = "00671"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200020D"
+number = "01494"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200020D"
+number = "01495"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200020D"
+number = "01498"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200020D"
+number = "01499"

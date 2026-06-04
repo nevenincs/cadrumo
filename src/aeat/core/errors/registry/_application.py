@@ -948,7 +948,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_MODELO",
             category=ErrorCategory.REFUSED,
-            message_key="errors.error.error_calculations_registry",
+            message_key="application.calculations.iva_compensation.errors.modelo_303_only",
             default_suggestion="aeat app live iva-wallet history",
             retryable=False,
             runbook_id=None,
@@ -1025,7 +1025,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_SEED_CONFLICT",
             category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_filing_calculate",
+            message_key="application.calculations.iva_compensation.errors.seed_conflict",
             default_suggestion="aeat app live iva-wallet history",
             retryable=False,
             runbook_id=None,

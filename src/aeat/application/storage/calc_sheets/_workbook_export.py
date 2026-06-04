@@ -11,7 +11,9 @@ from typing import TYPE_CHECKING, Literal
 
 from openpyxl import Workbook
 from openpyxl.comments import Comment
-from openpyxl.styles import Font
+from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.properties import PageSetupProperties
 from pydantic import BaseModel, Field
 
 from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -27,6 +29,7 @@ from ._records import (
     SheetValueCell,
     TabName,
 )
+from ._theme import ROLE_STYLES, WORKBOOK_FONT_FAMILY, openpyxl_argb
 
 if TYPE_CHECKING:
     from openpyxl.worksheet.worksheet import Worksheet
@@ -113,23 +116,75 @@ def build_offline_workbook(plan: SheetExportPlan) -> Workbook:
     _write_row_set_headers(workbook, plan.row_sets)
     _write_guide(workbook[TabName.GUIDE.value], plan)
     _write_evidence(workbook[TabName.EVIDENCIA.value], plan)
-    _style_section_headers_and_anchors(workbook, plan)
+    _apply_styling(workbook, plan)
     return workbook
 
 
-def _style_section_headers_and_anchors(workbook: Workbook, plan: SheetExportPlan) -> None:
-    """Bold the section-header cells and the start/final anchor labels.
+def _apply_styling(workbook: Workbook, plan: SheetExportPlan) -> None:
+    """Apply the design system — font, role fills, widths, freezes, filters.
 
-    The anchor label text is written by the value-cell pass; this only applies
-    the bold weight, so the offline and online transports stay value-identical
-    (only the font weight, which the conformance check does not compare, differs).
+    The single offline materialisation of the shared ``_theme`` palette: it sets
+    the monospace family on every populated cell, tints each styled range by its
+    role (header band, section banner, pale-yellow inputs, grey computed, green
+    result), wraps the body columns, sizes the columns, freezes the header rows,
+    and installs the basic filters — mirroring exactly what the online apply
+    adapter emits from the same ``SheetExportPlan`` facets.
     """
-    for header in plan.section_headers:
-        cell = workbook[header.address.tab.value].cell(row=header.address.row, column=header.address.column)
-        cell.font = Font(bold=True)
-    for anchor in plan.anchors:
-        cell = workbook[anchor.address.tab.value].cell(row=anchor.address.row, column=anchor.address.column)
-        cell.font = Font(bold=True)
+    family = plan.font_family or WORKBOOK_FONT_FAMILY
+    base_font = Font(name=family)
+    for tab in TabName:
+        worksheet = workbook[tab.value]
+        for row in worksheet.iter_rows():
+            for cell in row:
+                if cell.value is not None:
+                    cell.font = base_font
+
+    for styled in plan.styled_ranges:
+        style = ROLE_STYLES[styled.role]
+        font = Font(
+            name=family,
+            bold=style.bold,
+            color=openpyxl_argb(style.font_hex) if style.font_hex else None,
+        )
+        fill = (
+            PatternFill(fill_type="solid", fgColor=openpyxl_argb(style.fill_hex))
+            if style.fill_hex is not None
+            else None
+        )
+        alignment = Alignment(horizontal=style.align, vertical="top", wrap_text=styled.wrap)
+        worksheet = workbook[styled.tab.value]
+        for row_index in range(styled.start_row, styled.end_row + 1):
+            for column_index in range(styled.start_column, styled.end_column + 1):
+                cell = worksheet.cell(row=row_index, column=column_index)
+                cell.font = font
+                cell.alignment = alignment
+                if fill is not None:
+                    cell.fill = fill
+
+    for width in plan.column_widths:
+        worksheet = workbook[width.tab.value]
+        worksheet.column_dimensions[get_column_letter(width.column)].width = width.width
+
+    for frozen in plan.frozen_views:
+        worksheet = workbook[frozen.tab.value]
+        worksheet.freeze_panes = f"{get_column_letter(frozen.frozen_columns + 1)}{frozen.frozen_rows + 1}"
+
+    for filter_range in plan.auto_filters:
+        worksheet = workbook[filter_range.tab.value]
+        start = f"{get_column_letter(filter_range.start_column)}{filter_range.start_row}"
+        end = f"{get_column_letter(filter_range.end_column)}{filter_range.end_row}"
+        worksheet.auto_filter.ref = f"{start}:{end}"
+
+    # Print setup: landscape, fit all columns to one page width, and repeat the
+    # header row on every printed page so a printed filing artefact stays
+    # readable across page breaks.
+    for tab in TabName:
+        worksheet = workbook[tab.value]
+        worksheet.page_setup.orientation = "landscape"
+        worksheet.page_setup.fitToWidth = 1
+        worksheet.page_setup.fitToHeight = 0
+        worksheet.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
+        worksheet.print_title_rows = "1:1"
 
 
 def build_evidence_sidecar(

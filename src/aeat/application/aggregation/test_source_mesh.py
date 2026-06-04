@@ -19,6 +19,7 @@ from . import (
     storage_degradation_resolution,
 )
 from ._errors import AggregationValidationError
+from ._source_mesh import SourceMeshError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -54,6 +55,40 @@ def test_source_resolution_contract_is_strict_and_serializable() -> None:
     assert resolution.model_dump(mode="json")["relation_values"] == {"modelo-180-rel-115-base-anual": "2128.75"}
     with pytest.raises(ValidationError, match="Extra inputs"):
         CalculationSourceResolution.model_validate({"resolver_id": "ledger-iva", "unexpected": True})
+
+
+@pytest.mark.parametrize(
+    ("payload", "message_key"),
+    (
+        (
+            {"resolver_id": "source-mesh", "owned_sources": ("ledger", " ")},
+            "aggregation.source_mesh.errors.owned_sources_blank",
+        ),
+        (
+            {"resolver_id": "source-mesh", "owned_sources": ("ledger", "ledger")},
+            "aggregation.source_mesh.errors.owned_sources_duplicate",
+        ),
+        (
+            {"resolver_id": "source-mesh", "source_transaction_ids": ("tx-1", " ")},
+            "aggregation.source_mesh.errors.source_transaction_ids_blank",
+        ),
+        (
+            {"resolver_id": "source-mesh", "source_transaction_ids": ("tx-1", "tx-1")},
+            "aggregation.source_mesh.errors.source_transaction_ids_duplicate",
+        ),
+    ),
+)
+def test_source_resolution_validator_errors_are_localized(
+    payload: dict[str, object],
+    message_key: str,
+) -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        CalculationSourceResolution.model_validate(payload)
+
+    error = exc_info.value.errors()[0]["ctx"]["error"]
+    assert isinstance(error, SourceMeshError)
+    assert str(error) == message_key
+    assert error.translated_message == message_key
 
 
 def test_source_resolution_merge_rejects_duplicate_binding_ownership() -> None:

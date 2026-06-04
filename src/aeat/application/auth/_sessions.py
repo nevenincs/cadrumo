@@ -170,14 +170,18 @@ def storage_state_paths(
 ) -> StorageStatePaths:
     """Return the logical storage-state identifier for ``kind``.
 
-    Returns a :class:`StorageStatePaths` carrying the resolved filesystem
-    path for the provider's session-state file.
+    Returns a :class:`StorageStatePaths` carrying the stable logical object key
+    for the provider's encrypted session state.
     """
     from ...core import require_active_bucket_id
+    from ...core.auth_session_keys import aeat_auth_session_storage_state_path
 
+    # Retained for API compatibility; encrypted session object identity is
+    # active-bucket/provider scoped and must not drift with aeat_token_dir.
+    del settings
     resolved = kind or AuthProviderKind.CERTIFICATE
     stem = _STEM_BY_KIND[resolved]
-    storage_state = settings.aeat_token_dir / f"{require_active_bucket_id()}-{stem}.json"
+    storage_state = aeat_auth_session_storage_state_path(require_active_bucket_id(), stem)
     return StorageStatePaths(storage_state=storage_state)
 
 

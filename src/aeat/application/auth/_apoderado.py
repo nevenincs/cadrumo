@@ -93,7 +93,10 @@ class _ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
     namespace: ClassVar[str] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.schema_version
-    payload_type: ClassVar[type[ApoderadoConfiguration]] = ApoderadoConfiguration
+
+    @classmethod
+    def payload_model(cls) -> type[ApoderadoConfiguration]:
+        return ApoderadoConfiguration
 
     def extract_identifier(self, payload: ApoderadoConfiguration) -> str:
         """Return the ``bucket_id`` as the SQL object key."""
@@ -128,7 +131,7 @@ class ApoderadoService:
         safe_bucket_id = safe_repository_id(bucket_id, context="bucket_id")
         repository = self._repository_instances.get(safe_bucket_id)
         if repository is None:
-            repository = _ApoderadoConfigRepository(bucket_id=safe_bucket_id)
+            repository = _ApoderadoConfigRepository(bucket_id=safe_bucket_id, settings=self._settings)
             self._repository_instances[safe_bucket_id] = repository
         return repository
 

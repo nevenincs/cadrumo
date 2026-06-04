@@ -21,12 +21,15 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
+from ...core.logging import get_logger
 from ...core.time import now as _utc_now
 from ...core.time._utc import coerce_utc_aware
 from . import AuthProviderKind
 
 if TYPE_CHECKING:
     from ...core.config import Settings
+
+_log = get_logger(__name__)
 
 
 class AuthAcquisitionLockState(StrEnum):
@@ -97,6 +100,11 @@ def inspect_auth_acquisition_lock(
     try:
         record = AuthAcquisitionLockRecord.model_validate_json(path.read_text(encoding=UTF_8_ENCODING))
     except (OSError, ValidationError, ValueError) as exc:
+        _log.debug(
+            "auth acquisition lock metadata is unreadable; marking lock recoverable (%s: %s)",
+            type(exc).__name__,
+            exc,
+        )
         return AuthAcquisitionLockStatus(
             state=AuthAcquisitionLockState.CORRUPT,
             path=path,
@@ -249,7 +257,12 @@ def _status_context(status: AuthAcquisitionLockStatus) -> Mapping[str, object]:
 def _release_if_owner(path: Path, expected: AuthAcquisitionLockRecord) -> None:
     try:
         observed = AuthAcquisitionLockRecord.model_validate_json(path.read_text(encoding=UTF_8_ENCODING))
-    except (OSError, ValidationError, ValueError):
+    except (OSError, ValidationError, ValueError) as exc:
+        _log.debug(
+            "auth acquisition lock release skipped because owner metadata is unreadable (%s: %s)",
+            type(exc).__name__,
+            exc,
+        )
         return
     if observed == expected:
         _remove_lock_file(path)

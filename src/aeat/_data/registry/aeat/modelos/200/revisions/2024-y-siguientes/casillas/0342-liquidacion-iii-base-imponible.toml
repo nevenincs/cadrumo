@@ -1,6 +1,7 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01032"
 number = "01032"
+segmento = "DP200014"
 label = "Liquidación III - Base imponible - Reserva de capitalización [01032]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"

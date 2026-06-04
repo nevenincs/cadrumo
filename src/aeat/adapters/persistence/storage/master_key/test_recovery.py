@@ -7,9 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from ..errors import DecryptionError
+from .....core.external_constants import UTF_8_ENCODING
+from ..errors import DecryptionError, StorageValidationError
 from ._recovery import (
     RecoveryKey,
+    WrappedMasterKey,
     decode_mnemonic,
     encode_mnemonic,
     generate_recovery_key,
@@ -47,17 +49,20 @@ class TestMnemonicRoundTrip:
         assert decode_mnemonic(mnemonic) == zeros
 
     def test_rejects_wrong_entropy_length(self) -> None:
-        with pytest.raises(ValueError, match="exactly 32 bytes"):
+        with pytest.raises(StorageValidationError, match="exactly 32 bytes") as excinfo:
             encode_mnemonic(b"\x00" * 16)
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
 
     def test_rejects_wrong_word_count(self) -> None:
-        with pytest.raises(ValueError, match="exactly 24 words"):
+        with pytest.raises(StorageValidationError, match="exactly 24 words") as excinfo:
             decode_mnemonic("abandon abandon abandon")
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
 
     def test_rejects_unknown_word(self) -> None:
         words = ["abandon"] * 23 + ["NOT_A_BIP39_WORD"]
-        with pytest.raises(ValueError, match="unknown BIP-39 word") as excinfo:
+        with pytest.raises(StorageValidationError, match="unknown BIP-39 word") as excinfo:
             decode_mnemonic(" ".join(words))
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
         message = str(excinfo.value)
         # the failing word must NOT be echoed in
         # the error message. The error reports the position only so
@@ -72,8 +77,9 @@ class TestMnemonicRoundTrip:
         # never lands in the error message. Position-only diagnostics.
         unique_typo = "absolutelynotabip39word"
         words = [unique_typo] + ["abandon"] * 23
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(StorageValidationError) as excinfo:
             decode_mnemonic(" ".join(words))
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
         assert unique_typo not in str(excinfo.value)
         assert "position 1" in str(excinfo.value)
 
@@ -85,8 +91,9 @@ class TestMnemonicRoundTrip:
         words = mnemonic.split()
         # Replace the last word with something else valid in the wordlist.
         words[-1] = "zoo"  # Not the correct checksum word for zero entropy.
-        with pytest.raises(ValueError, match="checksum mismatch"):
+        with pytest.raises(StorageValidationError, match="checksum mismatch") as excinfo:
             decode_mnemonic(" ".join(words))
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
 
     def test_case_insensitive_decode(self) -> None:
         zeros = b"\x00" * 32
@@ -134,8 +141,9 @@ class TestMasterKeyWrapping:
 
     def test_wrap_rejects_wrong_master_key_length(self) -> None:
         rk = generate_recovery_key()
-        with pytest.raises(ValueError, match="exactly 32 bytes"):
+        with pytest.raises(StorageValidationError, match="exactly 32 bytes") as excinfo:
             wrap_master_key(master_key=b"\x00" * 16, recovery_key=rk)
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
 
     def test_unwrap_rejects_wrong_recovery_key_length(self) -> None:
         master_key = secrets.token_bytes(32)
@@ -143,8 +151,9 @@ class TestMasterKeyWrapping:
             master_key=master_key,
             recovery_key=generate_recovery_key(),
         )
-        with pytest.raises(ValueError, match="exactly 32 bytes"):
+        with pytest.raises(StorageValidationError, match="exactly 32 bytes") as excinfo:
             unwrap_master_key(wrapped=wrapped, recovery_key_bytes=b"\x00" * 16)
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
 
 
 class TestWrappedMasterKeyPersistence:
@@ -170,10 +179,29 @@ class TestWrappedMasterKeyPersistence:
         )
         target = tmp_path / "secrets" / "master.recovery.key"
         save_wrapped_master_key(wrapped, target)
-        text = target.read_text(encoding="utf-8")
+        text = target.read_text(encoding=UTF_8_ENCODING)
         # The persisted file is a single-line JSON object with the
         # expected fields (base64-encoded nonce + ciphertext).
         assert text.startswith("{")
         assert "schema_version" in text
         assert "nonce_b64" in text
         assert "ciphertext_b64" in text
+
+    def test_load_rejects_malformed_json_as_localized_storage_validation(self, tmp_path: Path) -> None:
+        target = tmp_path / "secrets" / "master.recovery.key"
+        target.parent.mkdir(parents=True)
+        target.write_text("not-json", encoding=UTF_8_ENCODING)
+
+        with pytest.raises(StorageValidationError, match="wrapped recovery master key file") as excinfo:
+            load_wrapped_master_key(target)
+
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
+        assert str(tmp_path) not in str(excinfo.value)
+
+    def test_unwrap_rejects_malformed_base64_as_localized_storage_validation(self) -> None:
+        wrapped = WrappedMasterKey(nonce_b64="not-base64", ciphertext_b64="also-not-base64")
+
+        with pytest.raises(StorageValidationError, match="wrapped recovery master key is malformed") as excinfo:
+            unwrap_master_key(wrapped=wrapped, recovery_key_bytes=secrets.token_bytes(32))
+
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"

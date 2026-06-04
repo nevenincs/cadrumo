@@ -1176,8 +1176,30 @@ __all__ = [
     "WorkRevisionsResult",
     "WorkRunsResult",
     "WorkStatusResult",
+    "M036DeclarationRecordResult",
     "WorkUnitHistoryEventPayload",
     "WorkUnitPayload",
     "WorkVerifyResult",
     "WorkflowRunPayload",
 ]
+
+
+@register_schema("modelo.m036.alta")
+@register_schema("modelo.m036.modificacion")
+@register_schema("modelo.m036.baja")
+class M036DeclarationRecordResult(OutputSchema):
+    """Envelope payload for the ``aeat app modelo m036 {alta,modificacion,baja}`` verbs.
+
+    All three verbs share a single typed contract: the result is the
+    persisted declaration record's content-address + scope + canonical
+    fields, as strings (the CLI envelope is JSON-serialisable). The
+    domain-side typed record is ``aeat.application.modelo.M036DeclarationResult``.
+    """
+
+    declaration_id: str
+    bucket_id: BucketId
+    profile_id: str
+    event_kind: str
+    declared_on: str
+    sede_justificante: str | None = None
+    recorded_at: str

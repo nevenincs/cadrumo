@@ -51,7 +51,7 @@ from __future__ import annotations
 
 import ast
 import re
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from dataclasses import field as dataclass_field
 from pathlib import Path
@@ -1012,16 +1012,118 @@ _CLAUSE9_PROTECT_MODULES: frozenset[str] = frozenset(
     }
 )
 
+_NON_LITERAL_CONSTANT = object()
+
 
 def _literal_constant_value(node: ast.expr) -> object:
     """Return the literal value of ``node`` if it is a simple constant, else sentinel."""
-    _MISSING = object()
     if isinstance(node, ast.Constant):
         return node.value
     if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
         if isinstance(node.operand, ast.Constant) and isinstance(node.operand.value, (int, float)):
             return -node.operand.value
-    return _MISSING
+    return _NON_LITERAL_CONSTANT
+
+
+@dataclass(frozen=True)
+class _ConstantDeclaration:
+    """One module-level literal constant declaration discovered by clause 9."""
+
+    name: str
+    dotted_module: str
+    value: object
+    path: Path
+    line: int
+
+    @property
+    def value_key(self) -> str:
+        """Return a stable grouping key for literal values."""
+        return repr(self.value)
+
+
+def _iter_literal_module_constants(tree: ast.Module) -> Iterator[tuple[str, int, object]]:
+    """Yield module-level assignment names whose value is a simple literal."""
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            value = _literal_constant_value(node.value)
+            if value is _NON_LITERAL_CONSTANT:
+                continue
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    yield target.id, node.lineno, value
+        elif (
+            isinstance(node, ast.AnnAssign)
+            and isinstance(node.target, ast.Name)
+            and node.value is not None
+        ):
+            value = _literal_constant_value(node.value)
+            if value is not _NON_LITERAL_CONSTANT:
+                yield node.target.id, node.lineno, value
+
+
+class _SameNameConstantMultiDeclarationAnalyzer:
+    """Find duplicated literal constants across production modules."""
+
+    def __init__(self, root: Path) -> None:
+        self._root = root
+
+    def findings(self) -> list[Finding]:
+        """Return every duplicated same-name literal constant site."""
+        return list(self._duplicate_findings(self._collect_declarations()))
+
+    def _collect_declarations(self) -> dict[str, list[_ConstantDeclaration]]:
+        registry: dict[str, list[_ConstantDeclaration]] = {}
+        for path in iter_aeat_modules(self._root):
+            if path.name.startswith("test_") or "test_" in path.stem:
+                continue
+            dotted = _module_dotted_path(path, self._root)
+            if self._is_protected_module(dotted):
+                continue
+            tree, err = _parse(path)
+            if err is not None:
+                continue
+            assert tree is not None
+            for name, line, value in _iter_literal_module_constants(tree):
+                if not _UPPER_SNAKE_RE.match(name):
+                    continue
+                registry.setdefault(name, []).append(
+                    _ConstantDeclaration(
+                        name=name,
+                        dotted_module=dotted,
+                        value=value,
+                        path=path,
+                        line=line,
+                    )
+                )
+        return registry
+
+    def _is_protected_module(self, dotted: str) -> bool:
+        return any(dotted == protect or dotted.startswith(protect + ".") for protect in _CLAUSE9_PROTECT_MODULES)
+
+    def _duplicate_findings(
+        self,
+        registry: Mapping[str, list[_ConstantDeclaration]],
+    ) -> Iterator[Finding]:
+        for const_name, sites in registry.items():
+            by_value: dict[str, list[_ConstantDeclaration]] = {}
+            for site in sites:
+                by_value.setdefault(site.value_key, []).append(site)
+            for same_value_sites in by_value.values():
+                if len(same_value_sites) < 2:
+                    continue
+                modules = {site.dotted_module for site in same_value_sites}
+                if len(modules) < 2:
+                    continue
+                for site in same_value_sites:
+                    yield Finding(
+                        site.path,
+                        site.line,
+                        (
+                            f"same-name constant multi-declaration: {const_name!r} "
+                            f"declared in {len(same_value_sites)} modules with the same "
+                            f"literal value; import from the canonical site instead"
+                        ),
+                    )
 
 
 def find_same_name_constant_multi_declarations(
@@ -1036,70 +1138,7 @@ def find_same_name_constant_multi_declarations(
     Returns:
         A list of :class:`Finding` records, one per duplicated constant site.
     """
-    _MISSING = object()
-    # name -> list of (dotted_module, literal_value, path, lineno)
-    registry: dict[str, list[tuple[str, object, Path, int]]] = {}
-
-    for path in iter_aeat_modules(root):
-        if path.name.startswith("test_") or "test_" in path.stem:
-            continue
-        dotted = _module_dotted_path(path, root)
-        if any(dotted == protect or dotted.startswith(protect + ".") for protect in _CLAUSE9_PROTECT_MODULES):
-            continue
-        tree, err = _parse(path)
-        if err is not None:
-            continue
-        assert tree is not None
-        for name, lineno in _iter_module_assignments(tree):
-            if not _UPPER_SNAKE_RE.match(name):
-                continue
-            # find the corresponding value node
-            val = _MISSING
-            for node in tree.body:
-                if isinstance(node, ast.Assign):
-                    for tgt in node.targets:
-                        if isinstance(tgt, ast.Name) and tgt.id == name and node.lineno == lineno:
-                            val = _literal_constant_value(node.value)
-                elif (
-                    isinstance(node, ast.AnnAssign)
-                    and isinstance(node.target, ast.Name)
-                    and node.target.id == name
-                    and node.lineno == lineno
-                    and node.value is not None
-                ):
-                    val = _literal_constant_value(node.value)
-            if val is _MISSING:
-                continue
-            registry.setdefault(name, []).append((dotted, val, path, lineno))
-
-    findings: list[Finding] = []
-    for const_name, sites in registry.items():
-        # group by value
-        by_value: dict[object, list[tuple[str, object, Path, int]]] = {}
-        for site in sites:
-            _val = site[1]
-            # use repr as dict key to handle unhashable types safely
-            key = repr(_val)
-            by_value.setdefault(key, []).append(site)
-        for _val_repr, same_value_sites in by_value.items():
-            if len(same_value_sites) < 2:
-                continue
-            modules = {s[0] for s in same_value_sites}
-            if len(modules) < 2:
-                continue
-            for _dotted, _v, path, lineno in same_value_sites:
-                findings.append(
-                    Finding(
-                        path,
-                        lineno,
-                        (
-                            f"same-name constant multi-declaration: {const_name!r} "
-                            f"declared in {len(same_value_sites)} modules with the same "
-                            f"literal value; import from the canonical site instead"
-                        ),
-                    )
-                )
-    return findings
+    return _SameNameConstantMultiDeclarationAnalyzer(root).findings()
 
 
 # --- Clause 10: bare-``str`` ``<owner>_kind/_status/_state`` BaseModel field --

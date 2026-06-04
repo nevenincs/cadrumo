@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from ..bucket._errors import BucketLockedError
+from ..errors import StorageValidationError
 from ._bucket_session import (
     BucketSession,
 )
@@ -116,23 +117,27 @@ def test_touch_resets_idle_deadline() -> None:
 
 
 def test_open_rejects_wrong_size_kek() -> None:
-    with pytest.raises(ValueError, match="kek must be exactly 32 bytes"):
+    with pytest.raises(StorageValidationError, match="kek must be exactly 32 bytes") as exc_info:
         _open_session(kek=b"x" * 16)
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_validation"
 
 
 def test_open_rejects_wrong_size_dek() -> None:
-    with pytest.raises(ValueError, match="dek must be exactly 32 bytes"):
+    with pytest.raises(StorageValidationError, match="dek must be exactly 32 bytes") as exc_info:
         _open_session(dek=b"x" * 16)
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_validation"
 
 
 def test_open_rejects_empty_bucket_id() -> None:
-    with pytest.raises(ValueError, match="bucket_id must be non-empty"):
+    with pytest.raises(StorageValidationError, match="bucket_id must be non-empty") as exc_info:
         _open_session(bucket_id="")
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_validation"
 
 
 def test_open_rejects_non_positive_idle_minutes() -> None:
-    with pytest.raises(ValueError, match="idle_minutes must be a strict positive integer"):
+    with pytest.raises(StorageValidationError, match="idle_minutes must be a strict positive integer") as exc_info:
         _open_session(idle_minutes=0)
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_validation"
 
 
 def test_module_has_no_classvar_typed_attributes() -> None:
@@ -154,3 +159,17 @@ def test_module_has_no_classvar_typed_attributes() -> None:
                 offenders.append(ast.unparse(node))
 
     assert offenders == [], f"ClassVar attributes are forbidden on this module: {offenders}"
+
+
+def test_module_derives_dispose_settings_from_loaded_settings() -> None:
+    """Engine eviction must not bypass central settings with a direct Settings constructor."""
+
+    source_path = Path(inspect.getsourcefile(BucketSession) or "")
+    module = ast.parse(source_path.read_text(encoding="utf-8"))
+
+    direct_settings_constructors: list[str] = []
+    for node in ast.walk(module):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "Settings":
+            direct_settings_constructors.append(ast.unparse(node))
+
+    assert direct_settings_constructors == []

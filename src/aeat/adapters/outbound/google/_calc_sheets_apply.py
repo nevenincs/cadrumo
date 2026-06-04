@@ -41,14 +41,20 @@ from typing import Any, Final
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....application.storage.calc_sheets import (
+    ROLE_STYLES,
+    WORKBOOK_FONT_FAMILY,
+    SheetAutoFilter,
     SheetCellConstraint,
+    SheetColumnWidth,
     SheetExportPlan,
     SheetFormulaCell,
+    SheetFrozenView,
     SheetProtectedRange,
     SheetRowSet,
     SheetValueCell,
     TabName,
     evidence_table,
+    hex_to_rgb_floats,
 )
 from ....core.config import Settings as _Settings
 from ...outbound.storage._errors import (
@@ -461,6 +467,181 @@ def _build_emphasis_format_requests(
                     },
                     "cell": {"userEnteredFormat": {"textFormat": {"bold": True}}},
                     "fields": "userEnteredFormat.textFormat.bold",
+                }
+            }
+        )
+    return requests
+
+
+_HORIZONTAL_ALIGN: Final[Mapping[str, str]] = {"left": "LEFT", "center": "CENTER", "right": "RIGHT"}
+# Approximate Sheets pixel size for one character column-width unit.
+_PIXELS_PER_WIDTH_UNIT: Final[int] = 7
+
+
+def _build_base_font_requests(
+    plan: SheetExportPlan,
+    *,
+    sheet_id_by_tab: Mapping[str, int],
+) -> list[dict[str, Any]]:
+    """Set the monospace family across every tab's whole grid in one request each.
+
+    The role-specific styled-range requests (which carry bold / colour / fill)
+    run after these and merge on top, so the workbook reads in the chosen
+    monospace family while the per-role emphasis still lands. Mirrors the
+    offline materialiser's base-font pass over every populated cell.
+    """
+    family = plan.font_family or WORKBOOK_FONT_FAMILY
+    requests: list[dict[str, Any]] = []
+    for tab in TabName:
+        sheet_id = sheet_id_by_tab.get(tab.value)
+        if sheet_id is None:
+            continue
+        requests.append(
+            {
+                "repeatCell": {
+                    "range": {"sheetId": sheet_id},
+                    "cell": {"userEnteredFormat": {"textFormat": {"fontFamily": family}}},
+                    "fields": "userEnteredFormat.textFormat.fontFamily",
+                }
+            }
+        )
+    return requests
+
+
+def _build_styled_range_requests(
+    plan: SheetExportPlan,
+    *,
+    sheet_id_by_tab: Mapping[str, int],
+) -> list[dict[str, Any]]:
+    """Render each role-tagged styled range as a ``repeatCell`` format request.
+
+    Resolves the range's :class:`StyleRole` through the shared ``ROLE_STYLES``
+    palette — the same source the offline materialiser reads — so the slate
+    header band, blue-grey section banners, pale-yellow input boxes, grey
+    computed cells, green result, and wrapped body columns render identically
+    online and offline. Later ranges win on overlap (the API applies requests in
+    order), matching the engine's accent-last ordering.
+    """
+    family = plan.font_family or WORKBOOK_FONT_FAMILY
+    requests: list[dict[str, Any]] = []
+    for styled in plan.styled_ranges:
+        sheet_id = sheet_id_by_tab.get(styled.tab.value)
+        if sheet_id is None:
+            continue
+        style = ROLE_STYLES[styled.role]
+        text_format: dict[str, Any] = {"fontFamily": family, "bold": style.bold}
+        if style.font_hex is not None:
+            text_format["foregroundColor"] = hex_to_rgb_floats(style.font_hex)
+        user_format: dict[str, Any] = {
+            "textFormat": text_format,
+            "horizontalAlignment": _HORIZONTAL_ALIGN[style.align],
+            "wrapStrategy": "WRAP" if styled.wrap else "OVERFLOW_CELL",
+        }
+        fields = [
+            "userEnteredFormat.textFormat",
+            "userEnteredFormat.horizontalAlignment",
+            "userEnteredFormat.wrapStrategy",
+        ]
+        if style.fill_hex is not None:
+            user_format["backgroundColor"] = hex_to_rgb_floats(style.fill_hex)
+            fields.append("userEnteredFormat.backgroundColor")
+        requests.append(
+            {
+                "repeatCell": {
+                    "range": {
+                        "sheetId": sheet_id,
+                        "startRowIndex": styled.start_row - 1,
+                        "endRowIndex": styled.end_row,
+                        "startColumnIndex": styled.start_column - 1,
+                        "endColumnIndex": styled.end_column,
+                    },
+                    "cell": {"userEnteredFormat": user_format},
+                    "fields": ",".join(fields),
+                }
+            }
+        )
+    return requests
+
+
+def _build_column_width_requests(
+    column_widths: Iterable[SheetColumnWidth],
+    *,
+    sheet_id_by_tab: Mapping[str, int],
+) -> list[dict[str, Any]]:
+    """Size each declared column so labels and legal-ref columns do not clip."""
+    requests: list[dict[str, Any]] = []
+    for width in column_widths:
+        sheet_id = sheet_id_by_tab.get(width.tab.value)
+        if sheet_id is None:
+            continue
+        requests.append(
+            {
+                "updateDimensionProperties": {
+                    "range": {
+                        "sheetId": sheet_id,
+                        "dimension": "COLUMNS",
+                        "startIndex": width.column - 1,
+                        "endIndex": width.column,
+                    },
+                    "properties": {"pixelSize": width.width * _PIXELS_PER_WIDTH_UNIT},
+                    "fields": "pixelSize",
+                }
+            }
+        )
+    return requests
+
+
+def _build_frozen_view_requests(
+    frozen_views: Iterable[SheetFrozenView],
+    *,
+    sheet_id_by_tab: Mapping[str, int],
+) -> list[dict[str, Any]]:
+    """Freeze the header rows / leading columns so they stay visible on scroll."""
+    requests: list[dict[str, Any]] = []
+    for frozen in frozen_views:
+        sheet_id = sheet_id_by_tab.get(frozen.tab.value)
+        if sheet_id is None:
+            continue
+        requests.append(
+            {
+                "updateSheetProperties": {
+                    "properties": {
+                        "sheetId": sheet_id,
+                        "gridProperties": {
+                            "frozenRowCount": frozen.frozen_rows,
+                            "frozenColumnCount": frozen.frozen_columns,
+                        },
+                    },
+                    "fields": "gridProperties.frozenRowCount,gridProperties.frozenColumnCount",
+                }
+            }
+        )
+    return requests
+
+
+def _build_auto_filter_requests(
+    auto_filters: Iterable[SheetAutoFilter],
+    *,
+    sheet_id_by_tab: Mapping[str, int],
+) -> list[dict[str, Any]]:
+    """Install a basic filter over each tab's header + data rows."""
+    requests: list[dict[str, Any]] = []
+    for filter_range in auto_filters:
+        sheet_id = sheet_id_by_tab.get(filter_range.tab.value)
+        if sheet_id is None:
+            continue
+        requests.append(
+            {
+                "setBasicFilter": {
+                    "filter": {
+                        "range": {
+                            "sheetId": sheet_id,
+                            "startRowIndex": filter_range.start_row - 1,
+                            "endRowIndex": filter_range.end_row,
+                            "startColumnIndex": filter_range.start_column - 1,
+                            "endColumnIndex": filter_range.end_column,
+                        }
+                    }
                 }
             }
         )
@@ -1065,14 +1246,26 @@ def apply_export_plan(
     )
     emphasis_requests = _build_emphasis_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
     number_format_requests = _build_number_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+    base_font_requests = _build_base_font_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+    styled_range_requests = _build_styled_range_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+    column_width_requests = _build_column_width_requests(plan.column_widths, sheet_id_by_tab=sheet_id_by_tab)
+    frozen_view_requests = _build_frozen_view_requests(plan.frozen_views, sheet_id_by_tab=sheet_id_by_tab)
+    auto_filter_requests = _build_auto_filter_requests(plan.auto_filters, sheet_id_by_tab=sheet_id_by_tab)
     structural_requests = (
         cleanup_requests
         + metadata_requests
         + protected_requests
         + constraint_requests
         + note_requests
-        + emphasis_requests
+        # Base font first, then role styling (fills/bold/colour) wins on overlap,
+        # then number formats, emphasis, widths, freezes, filters.
+        + base_font_requests
+        + styled_range_requests
         + number_format_requests
+        + emphasis_requests
+        + column_width_requests
+        + frozen_view_requests
+        + auto_filter_requests
     )
     if structural_requests:
         execute_request(

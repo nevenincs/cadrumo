@@ -1,6 +1,7 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01494"
 number = "01494"
+segmento = "DP200020D"
 label = "Dotaciones deterioro créditos u otros activos - Total - Dotaciones pendientes integración a principio periodo - Que no han cumplido condiciones deducibilidad fiscal [01494]"
 section = ["dotaciones_deterioro_creditos_u_otros_activos", "total"]
 data_type = "money"
@@ -14,6 +15,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01495"
 number = "01495"
+segmento = "DP200020D"
 label = "Dotaciones deterioro créditos u otros activos - Total - Dotaciones pendientes integración a principio periodo - Que han cumplido condiciones deducibilidad fiscal [01495]"
 section = ["dotaciones_deterioro_creditos_u_otros_activos", "total"]
 data_type = "money"
@@ -51,6 +53,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01498"
 number = "01498"
+segmento = "DP200020D"
 label = "Dotaciones deterioro créditos u otros activos - Total - Dotaciones pendientes integración periodos futuros - Que no han cumplido condiciones deducibilidad fiscal [01498]"
 section = ["dotaciones_deterioro_creditos_u_otros_activos", "total"]
 data_type = "money"
@@ -63,6 +66,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01499"
 number = "01499"
+segmento = "DP200020D"
 label = "Dotaciones deterioro créditos u otros activos - Total - Dotaciones pendientes integración periodos futuros - Que han cumplido condiciones deducibilidad fiscal [01499]"
 section = ["dotaciones_deterioro_creditos_u_otros_activos", "total"]
 data_type = "money"

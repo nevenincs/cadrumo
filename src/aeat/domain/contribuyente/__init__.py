@@ -38,6 +38,7 @@ from ._renta_codes import (
     RentaMaritalStatus,
     RentaSexCode,
     SituacionFamiliar,
+    SituacionFamiliarM145,
 )
 from .family import DescendantInfo, RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 
@@ -176,6 +177,7 @@ __all__ = [
     "RentaSexCode",
     "ResidenceChange",
     "SituacionFamiliar",
+    "SituacionFamiliarM145",
     "TaxResidenceProfile",
     "TaxResidenceProfileError",
     "get_profile_key",

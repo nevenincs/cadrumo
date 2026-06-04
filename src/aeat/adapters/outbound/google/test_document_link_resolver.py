@@ -5,8 +5,7 @@ scope. This gate locks the resolver's contract offline, with no network:
 
 - ``parse_drive_file_id`` recovers a Drive file id from the three recorded link
   shapes (``/file/d/<id>``, ``?id=<id>``, bare id) and returns ``None`` otherwise;
-- a ``GOOGLE_DRIVE`` link with a recognisable id dispatches to the Drive download
-  path (here a fake service, since real downloads are operator-tested);
+- the Drive download path preserves Google ``files.get_media`` byte payloads;
 - Gmail links, arbitrary external URLs, and ``drive.file``-unreachable Drive files
   are refused with a typed scope error naming the sensitive scope the operator
   would need to grant — never silently swallowed.
@@ -15,11 +14,12 @@ scope. This gate locks the resolver's contract offline, with no network:
 from __future__ import annotations
 
 import pytest
+from googleapiclient.errors import HttpError
+from httplib2 import Response
 
 from ....domain.attachments import AttachmentSource
 from ...outbound.storage._errors import OutboundStoragePermissionError, OutboundStorageValidationError
-from . import _document_link_resolver as resolver
-from ._document_link_resolver import parse_drive_file_id, resolve_document_link
+from ._document_link_resolver import _download_drive_file_from_service, parse_drive_file_id, resolve_document_link
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -67,7 +67,7 @@ def test_drive_link_without_id_is_validation_error() -> None:
         resolve_document_link(source=AttachmentSource.GOOGLE_DRIVE, reference="no-id-here", credentials=None)
 
 
-class _FakeRequest:
+class _InMemoryDriveRequest:
     def __init__(self, payload: bytes) -> None:
         self._payload = payload
 
@@ -75,50 +75,40 @@ class _FakeRequest:
         return self._payload
 
 
-class _FakeFiles:
+class _InMemoryDriveFiles:
     def __init__(self, payload: bytes, recorder: dict[str, object]) -> None:
         self._payload = payload
         self._recorder = recorder
 
-    def get_media(self, *, fileId: str) -> _FakeRequest:  # noqa: N803 — Google API kwarg name
+    def get_media(self, *, fileId: str) -> _InMemoryDriveRequest:  # noqa: N803 — Google API kwarg name
         self._recorder["file_id"] = fileId
-        return _FakeRequest(self._payload)
+        return _InMemoryDriveRequest(self._payload)
 
 
-class _FakeService:
+class _InMemoryDriveResource:
     def __init__(self, payload: bytes, recorder: dict[str, object]) -> None:
-        self._files = _FakeFiles(payload, recorder)
+        self._files = _InMemoryDriveFiles(payload, recorder)
 
-    def files(self) -> _FakeFiles:
+    def files(self) -> _InMemoryDriveFiles:
         return self._files
 
 
-def test_drive_link_with_id_downloads_bytes(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_drive_download_preserves_google_media_bytes() -> None:
     recorder: dict[str, object] = {}
-    payload = b"%PDF-1.4 fake justificante bytes"
-    monkeypatch.setattr(resolver, "_drive_service", lambda credentials: _FakeService(payload, recorder))
+    payload = b"%PDF-1.4 justificante bytes"
+    service = _InMemoryDriveResource(payload, recorder)
 
-    out = resolve_document_link(
-        source=AttachmentSource.GOOGLE_DRIVE,
-        reference=f"https://drive.google.com/file/d/{_FILE_ID}/view",
-        credentials=object(),
-    )
+    out = _download_drive_file_from_service(_FILE_ID, service)
     assert out == payload
     assert recorder["file_id"] == _FILE_ID
 
 
-class _ForbiddenResp:
-    status = 403
-
-
-def test_drive_403_surfaces_drive_readonly_scope(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_drive_403_surfaces_drive_readonly_scope() -> None:
     class _Files:
         def get_media(self, *, fileId: str):  # noqa: N803
             class _Req:
                 def execute(self) -> bytes:
-                    err = Exception("HttpError 403")
-                    err.resp = _ForbiddenResp()  # type: ignore[attr-defined]
-                    raise err
+                    raise HttpError(Response({"status": "403", "reason": "Forbidden"}), b"{}")
 
             return _Req()
 
@@ -126,12 +116,6 @@ def test_drive_403_surfaces_drive_readonly_scope(monkeypatch: pytest.MonkeyPatch
         def files(self) -> _Files:
             return _Files()
 
-    monkeypatch.setattr(resolver, "_drive_service", lambda credentials: _Svc())
-
     with pytest.raises(OutboundStoragePermissionError) as excinfo:
-        resolve_document_link(
-            source=AttachmentSource.GOOGLE_DRIVE,
-            reference=f"https://drive.google.com/file/d/{_FILE_ID}/view",
-            credentials=object(),
-        )
+        _download_drive_file_from_service(_FILE_ID, _Svc())
     assert excinfo.value.context["required_scope"] == "https://www.googleapis.com/auth/drive.readonly"

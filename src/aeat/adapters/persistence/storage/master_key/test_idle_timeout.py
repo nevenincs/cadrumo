@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+import ast
+import inspect
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 import pytest
 
+from .....core.external_constants import UTF_8_ENCODING
+from ..errors import StorageValidationError
 from ._bucket_session import BucketSession
 from ._idle_timeout import (
     DEFAULT_IDLE_LOCK_MINUTES,
@@ -98,10 +103,13 @@ def test_touch_rolls_deadline_forward() -> None:
 def test_evaluate_idle_rejects_non_positive_configured_minutes() -> None:
     session = _open_session(idle_minutes=15)
 
-    with pytest.raises(ValueError, match="strict positive"):
+    with pytest.raises(StorageValidationError, match="strict positive") as zero_exc:
         evaluate_idle(session=session, now=_NOW, configured_minutes=0)
-    with pytest.raises(ValueError, match="strict positive"):
+    assert zero_exc.value.translated_message == "errors.integrity.integrity_storage_validation"
+
+    with pytest.raises(StorageValidationError, match="strict positive") as negative_exc:
         evaluate_idle(session=session, now=_NOW, configured_minutes=-5)
+    assert negative_exc.value.translated_message == "errors.integrity.integrity_storage_validation"
 
 
 def test_evaluate_idle_is_pure_does_not_mutate_session() -> None:
@@ -128,3 +136,15 @@ def test_idle_evaluation_record_is_strict_pydantic() -> None:
     invalid_remaining: int = -1
     with pytest.raises(ValueError):
         IdleEvaluation(expired=True, remaining_seconds=invalid_remaining)
+
+
+def test_module_does_not_construct_settings_at_import_boundary() -> None:
+    source_path = Path(inspect.getsourcefile(evaluate_idle) or "")
+    module = ast.parse(source_path.read_text(encoding=UTF_8_ENCODING))
+
+    direct_settings_constructors: list[str] = []
+    for node in ast.walk(module):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "Settings":
+            direct_settings_constructors.append(ast.unparse(node))
+
+    assert direct_settings_constructors == []

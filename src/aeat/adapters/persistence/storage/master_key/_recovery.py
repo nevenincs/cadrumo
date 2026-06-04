@@ -33,12 +33,13 @@ to the Bitcoin Core source).
 from __future__ import annotations
 
 import base64
+import binascii
 import hashlib
 import secrets
 from pathlib import Path
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ..crypto._crypto import (
@@ -56,6 +57,11 @@ _RECOVERY_KEY_SIZE: Final[int] = 32
 _MNEMONIC_WORD_COUNT: Final[int] = 24
 _HKDF_CONTEXT_RECOVERY: Final[bytes] = b"aeat.recovery-key.master-wrap.v1"
 _RECOVERY_AAD: Final[bytes] = b"aeat.recovery-key.aad.v1"
+_STORAGE_VALIDATION_MESSAGE_KEY: Final[str] = "errors.integrity.integrity_storage_validation"
+
+
+def _storage_validation_error(message: str) -> StorageValidationError:
+    return StorageValidationError(message, translated_message=_STORAGE_VALIDATION_MESSAGE_KEY)
 
 
 class RecoveryKey(BaseModel):
@@ -96,10 +102,13 @@ class WrappedMasterKey(BaseModel):
 
     def to_blob(self) -> EncryptedBlob:
         """Decode the base64 fields into an :class:`EncryptedBlob`."""
-        return EncryptedBlob(
-            nonce=base64.b64decode(self.nonce_b64.encode("ascii"), validate=True),
-            ciphertext=base64.b64decode(self.ciphertext_b64.encode("ascii"), validate=True),
-        )
+        try:
+            return EncryptedBlob(
+                nonce=base64.b64decode(self.nonce_b64.encode("ascii"), validate=True),
+                ciphertext=base64.b64decode(self.ciphertext_b64.encode("ascii"), validate=True),
+            )
+        except (ValueError, binascii.Error, ValidationError) as exc:
+            raise _storage_validation_error("wrapped recovery master key is malformed") from exc
 
     @classmethod
     def from_blob(cls, blob: EncryptedBlob) -> WrappedMasterKey:
@@ -120,7 +129,7 @@ def _load_wordlist() -> tuple[str, ...]:
     text = path.read_text(encoding="ascii")
     words = tuple(line.strip() for line in text.splitlines() if line.strip())
     if len(words) != 2048:
-        raise StorageValidationError(
+        raise _storage_validation_error(
             f"BIP-39 wordlist must have exactly 2048 words; got {len(words)}",
         )
     return words
@@ -143,7 +152,7 @@ def encode_mnemonic(entropy: bytes) -> str:
         StorageValidationError: When ``entropy`` is not exactly 32 bytes.
     """
     if len(entropy) != _RECOVERY_KEY_SIZE:
-        raise StorageValidationError(
+        raise _storage_validation_error(
             f"BIP-39 24-word encoding requires exactly {_RECOVERY_KEY_SIZE} bytes; got {len(entropy)}",
         )
     # ENT (256) + CS (8) = 264 bits -> 24 x 11-bit groups.
@@ -172,14 +181,14 @@ def decode_mnemonic(mnemonic: str) -> bytes:
     """
     words = mnemonic.strip().lower().split()
     if len(words) != _MNEMONIC_WORD_COUNT:
-        raise StorageValidationError(
+        raise _storage_validation_error(
             f"BIP-39 mnemonic must contain exactly {_MNEMONIC_WORD_COUNT} words; got {len(words)}",
         )
     payload_int = 0
     for position, word in enumerate(words, start=1):
         index = _WORD_TO_INDEX.get(word)
         if index is None:
-            raise StorageValidationError(
+            raise _storage_validation_error(
                 f"unknown BIP-39 word at position {position}; verify the word against the BIP-39 English wordlist.",
             )
         payload_int = (payload_int << 11) | index
@@ -189,7 +198,7 @@ def decode_mnemonic(mnemonic: str) -> bytes:
     entropy = entropy_int.to_bytes(_RECOVERY_KEY_SIZE, "big")
     expected = hashlib.sha256(entropy).digest()[0]
     if checksum != expected:
-        raise StorageValidationError("BIP-39 mnemonic checksum mismatch — verify the words")
+        raise _storage_validation_error("BIP-39 mnemonic checksum mismatch — verify the words")
     return entropy
 
 
@@ -231,7 +240,7 @@ def wrap_master_key(*, master_key: bytes, recovery_key: RecoveryKey) -> WrappedM
         StorageValidationError: When ``master_key`` is not exactly 32 bytes.
     """
     if len(master_key) != KEY_SIZE:
-        raise StorageValidationError(
+        raise _storage_validation_error(
             f"master key must be exactly {KEY_SIZE} bytes; got {len(master_key)}",
         )
     kek = _derive_recovery_kek(recovery_key.raw)
@@ -254,7 +263,7 @@ def unwrap_master_key(*, wrapped: WrappedMasterKey, recovery_key_bytes: bytes) -
         StorageValidationError: When ``recovery_key_bytes`` is not exactly 32 bytes.
     """
     if len(recovery_key_bytes) != _RECOVERY_KEY_SIZE:
-        raise StorageValidationError(
+        raise _storage_validation_error(
             f"recovery key must be exactly {_RECOVERY_KEY_SIZE} bytes; got {len(recovery_key_bytes)}",
         )
     kek = _derive_recovery_kek(recovery_key_bytes)
@@ -277,7 +286,10 @@ def save_wrapped_master_key(wrapped: WrappedMasterKey, path: Path) -> None:
 
 def load_wrapped_master_key(path: Path) -> WrappedMasterKey:
     """Read and validate a wrapped-master-key file, returning a :class:`WrappedMasterKey`."""
-    return WrappedMasterKey.model_validate_json(path.read_text(encoding=_UTF_8_ENCODING))
+    try:
+        return WrappedMasterKey.model_validate_json(path.read_text(encoding=_UTF_8_ENCODING))
+    except (OSError, ValueError, ValidationError) as exc:
+        raise _storage_validation_error("wrapped recovery master key file is malformed") from exc
 
 
 __all__ = [

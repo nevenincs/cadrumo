@@ -30,7 +30,8 @@ import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.classification import SensitivityClass
-from ..errors import ClassificationError, DecryptionError
+from .....core.external_constants import UTF_8_ENCODING
+from ..errors import ClassificationError, DecryptionError, StorageValidationError
 from ..master_key import EphemeralMasterKeyProvider
 from . import CipherEnvelope, Envelope, load_encrypted_envelope, save_encrypted_envelope
 
@@ -92,6 +93,26 @@ class TestCiphertextRoundTrip:
         assert loaded.payload.amount_total == _AMOUNT_CANARY
         assert loaded.classification is SensitivityClass.FINANCIAL
 
+    def test_save_write_failure_raises_storage_validation_without_path(
+        self,
+        tmp_path: Path,
+        provider: EphemeralMasterKeyProvider,
+    ) -> None:
+        parent_file = tmp_path / "not-a-directory"
+        parent_file.write_text("occupied", encoding=UTF_8_ENCODING)
+        target = parent_file / "record.cipher.json"
+
+        with pytest.raises(StorageValidationError) as excinfo:
+            save_encrypted_envelope(
+                _build_envelope(),
+                target,
+                master_key_provider=provider,
+                hkdf_context=_HKDF_CONTEXT_TEST,
+            )
+
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
+        assert str(tmp_path) not in str(excinfo.value)
+
 
 class TestNoPlaintextLeak:
     """The defining no plaintext leaf survives encryption."""
@@ -109,7 +130,7 @@ class TestNoPlaintextLeak:
             master_key_provider=provider,
             hkdf_context=_HKDF_CONTEXT_TEST,
         )
-        text = target.read_text(encoding="utf-8")
+        text = target.read_text(encoding=UTF_8_ENCODING)
         assert _NIF_CANARY not in text
         assert _AMOUNT_CANARY not in text
 
@@ -128,7 +149,7 @@ class TestNoPlaintextLeak:
         )
         # Re-parse the on-disk JSON via the public CipherEnvelope model
         # to confirm the wire shape carries no payload field.
-        text = target.read_text(encoding="utf-8")
+        text = target.read_text(encoding=UTF_8_ENCODING)
         cipher_envelope = CipherEnvelope.model_validate_json(text)
         assert cipher_envelope.classification is SensitivityClass.FINANCIAL
         assert cipher_envelope.encryption.ciphertext_b64
@@ -149,7 +170,7 @@ class TestClassificationGate:
             master_key_provider=provider,
             hkdf_context=_HKDF_CONTEXT_TEST,
         )
-        with pytest.raises(ClassificationError):
+        with pytest.raises(ClassificationError) as excinfo:
             load_encrypted_envelope(
                 target,
                 Envelope[_SamplePayload],
@@ -158,6 +179,7 @@ class TestClassificationGate:
                 hkdf_context=_HKDF_CONTEXT_TEST,
                 max_supported_version=1,
             )
+        assert str(tmp_path) not in str(excinfo.value)
 
 
 class TestAadBinding:
@@ -175,7 +197,7 @@ class TestAadBinding:
             master_key_provider=provider,
             hkdf_context=_HKDF_CONTEXT_TEST,
         )
-        with pytest.raises(DecryptionError):
+        with pytest.raises(DecryptionError) as excinfo:
             load_encrypted_envelope(
                 target,
                 Envelope[_SamplePayload],
@@ -184,6 +206,37 @@ class TestAadBinding:
                 hkdf_context=b"aeat.adapters.persistence.storage.test.envelope.OTHER",
                 max_supported_version=1,
             )
+        assert str(tmp_path) not in str(excinfo.value)
+
+    def test_invalid_persisted_aad_base64_raises_decryption_error_without_path(
+        self,
+        tmp_path: Path,
+        provider: EphemeralMasterKeyProvider,
+    ) -> None:
+        envelope = _build_envelope()
+        target = tmp_path / "record.cipher.json"
+        save_encrypted_envelope(
+            envelope,
+            target,
+            master_key_provider=provider,
+            hkdf_context=_HKDF_CONTEXT_TEST,
+        )
+        cipher_envelope = CipherEnvelope.model_validate_json(target.read_text(encoding=UTF_8_ENCODING))
+        broken_encryption = cipher_envelope.encryption.model_copy(update={"associated_data_b64": "not-base64!!"})
+        broken_envelope = cipher_envelope.model_copy(update={"encryption": broken_encryption})
+        target.write_text(broken_envelope.model_dump_json(), encoding=UTF_8_ENCODING)
+
+        with pytest.raises(DecryptionError) as excinfo:
+            load_encrypted_envelope(
+                target,
+                Envelope[_SamplePayload],
+                expected_class=SensitivityClass.FINANCIAL,
+                master_key_provider=provider,
+                hkdf_context=_HKDF_CONTEXT_TEST,
+                max_supported_version=1,
+            )
+
+        assert str(tmp_path) not in str(excinfo.value)
 
 
 class TestKeyMismatch:
@@ -266,9 +319,9 @@ class TestRelabelTampering:
         )
         # Mutate the on-disk classification to AUDIT but keep the same
         # ciphertext (= an attacker swap).
-        cipher_envelope = CipherEnvelope.model_validate_json(target.read_text(encoding="utf-8"))
+        cipher_envelope = CipherEnvelope.model_validate_json(target.read_text(encoding=UTF_8_ENCODING))
         relabelled = cipher_envelope.model_copy(update={"classification": SensitivityClass.AUDIT})
-        target.write_text(relabelled.model_dump_json(), encoding="utf-8")
+        target.write_text(relabelled.model_dump_json(), encoding=UTF_8_ENCODING)
         with pytest.raises(DecryptionError):
             load_encrypted_envelope(
                 target,

@@ -118,8 +118,11 @@ class TestShow:
 
     def test_show_refuses_on_unknown_id(self, runtime_profile: TestRuntimeProfile) -> None:
         svc = EvidenceBundleService(settings=runtime_profile.settings)
-        with pytest.raises(EvidenceBundleNotFoundError):
+        with pytest.raises(EvidenceBundleNotFoundError) as excinfo:
             svc.show(bucket_id=runtime_profile.bucket_id, bundle_id="no-such-bundle")
+
+        assert excinfo.value.translated_message == "errors.refused.refused_evidence_bundle_not_found"
+        assert excinfo.value.context == {"bundle_id": "no-such-bundle", "bucket_id": runtime_profile.bucket_id}
 
 
 class TestVerify:
@@ -208,13 +211,19 @@ class TestExport:
         added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id=WU_1, record_payloads=payloads)
         tampered = dict(payloads)
         tampered[("calculation_revision", "rev-1")] = b"tampered\n"
-        with pytest.raises(EvidenceBundleVerificationError, match="verification failed"):
+        with pytest.raises(EvidenceBundleVerificationError) as excinfo:
             svc.export(
                 bucket_id=runtime_profile.bucket_id,
                 bundle_id=added.bundle_id,
                 record_payloads=tampered,
                 output_path=tmp_path / "bundle.zip",
             )
+
+        assert excinfo.value.translated_message == "errors.refused.refused_evidence_bundle_verification"
+        assert excinfo.value.context == {
+            "bundle_id": added.bundle_id,
+            "verification_state": BundleVerificationState.FAILED.value,
+        }
 
     def test_export_refuses_incomplete_without_force(
         self,
@@ -225,13 +234,20 @@ class TestExport:
         svc = EvidenceBundleService(settings=runtime_profile.settings)
         added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id=WU_1, record_payloads=payloads)
         partial = {("calculation_revision", "rev-1"): payloads[("calculation_revision", "rev-1")]}
-        with pytest.raises(EvidenceBundleVerificationError, match="--force-incomplete"):
+        with pytest.raises(EvidenceBundleVerificationError) as excinfo:
             svc.export(
                 bucket_id=runtime_profile.bucket_id,
                 bundle_id=added.bundle_id,
                 record_payloads=partial,
                 output_path=tmp_path / "bundle.zip",
             )
+
+        assert excinfo.value.translated_message == "errors.refused.refused_evidence_bundle_verification"
+        assert excinfo.value.context == {
+            "bundle_id": added.bundle_id,
+            "verification_state": BundleVerificationState.INCOMPLETE.value,
+            "force_incomplete": False,
+        }
 
     def test_export_accepts_incomplete_when_forced(
         self,
@@ -320,8 +336,11 @@ class TestBucketIsolation:
                 record_payloads=payloads,
             )
             assert service_b.show(bucket_id=profile_b.bucket_id, bundle_id=b_added.bundle_id) == b_added
-            with pytest.raises(EvidenceBundleNotFoundError):
+            with pytest.raises(EvidenceBundleNotFoundError) as excinfo:
                 service_b.show(bucket_id=profile_b.bucket_id, bundle_id=a_added.bundle_id)
+
+            assert excinfo.value.translated_message == "errors.refused.refused_evidence_bundle_not_found"
+            assert excinfo.value.context == {"bundle_id": a_added.bundle_id, "bucket_id": profile_b.bucket_id}
 
 
 class TestDeriveBundleId:

@@ -33,10 +33,13 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 
+from .....core.logging import get_logger
 from .....core.time import now
 from ..bucket._errors import BucketLockedError
 from ..errors import SecretStoreError
 from ._bucket_session import BucketSession
+
+_log = get_logger(__name__)
 
 _active_session: ContextVar[BucketSession | None] = ContextVar(
     "aeat_active_bucket_session",
@@ -53,7 +56,7 @@ class NoActiveBucketSessionError(SecretStoreError):
     """
 
     def __init__(self, detail: str | None = None) -> None:
-        super().__init__(translated_message="errors.refused.refused_storage_master_key_no_active_session")
+        super().__init__(detail, translated_message="errors.refused.refused_storage_master_key_no_active_session")
         self._detail = detail
 
 
@@ -128,9 +131,10 @@ def _close_active_session_at_exit() -> None:
         return
     try:
         session.close()
-    except Exception:
+    except Exception as exc:
         # Interpreter shutdown is a degraded environment; never raise
-        # from an atexit hook.
+        # from an atexit hook, but keep a debug breadcrumb for audit.
+        _log.debug("active bucket session cleanup failed at interpreter exit error_type=%s", type(exc).__name__)
         return
 
 

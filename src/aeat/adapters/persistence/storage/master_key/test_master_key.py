@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import json
 import os
 import secrets
 from collections.abc import Callable
@@ -12,6 +13,8 @@ from pathlib import Path
 import pytest
 
 from .....core.config import SecretStoreBackend, Settings, override_settings
+from .....core.errors import build_error_envelope
+from .....core.external_constants import UTF_8_ENCODING
 from ..bucket._layout import provision_bucket_directory
 from ..bucket._manifest import (
     BucketKeySchedule,
@@ -22,6 +25,7 @@ from ..bucket._manifest import (
 from ..bucket._manifest_io import write_manifest
 from ..crypto import KEY_SIZE
 from ..errors import (
+    DecryptionError,
     KeyringUnavailableError,
     MasterKeyMaterialMissingError,
     MasterKeyUnavailableError,
@@ -220,6 +224,62 @@ class TestFileFallbackProvider:
         ):
             assert get_active_master_key() == first_dek
 
+    def test_tampered_bucket_dek_raises_localized_master_key_unavailable_without_path(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
+        provider = FileFallbackMasterKeyProvider(
+            store_dir=settings.aeat_secret_store_dir,
+            passphrase_callback=lambda: "correct horse battery staple",
+        )
+        provider.provision_master_key()
+        bucket_dek_path = settings.aeat_local_storage_root / "keystore" / "alpha" / "bucket.dek.json"
+
+        with (
+            override_settings(
+                aeat_local_storage_root=settings.aeat_local_storage_root,
+                aeat_secret_store_dir=settings.aeat_secret_store_dir,
+                aeat_secret_store_backend=SecretStoreBackend.FILE,
+            ),
+            activate_master_key_provider(
+                provider,
+                fallback_bucket_id="alpha",
+                allow_bucket_dek_enrollment=True,
+            ),
+        ):
+            assert len(get_active_master_key()) == KEY_SIZE
+
+        _write_registered_bucket(
+            settings.aeat_local_storage_root,
+            "alpha",
+            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
+        )
+        document = json.loads(bucket_dek_path.read_text(encoding=UTF_8_ENCODING))
+        document["tag_b64"] = base64.b64encode(b"\x00" * 16).decode("ascii")
+        bucket_dek_path.write_text(json.dumps(document), encoding=UTF_8_ENCODING)
+
+        second = FileFallbackMasterKeyProvider(
+            store_dir=settings.aeat_secret_store_dir,
+            passphrase_callback=lambda: "correct horse battery staple",
+        )
+        with (
+            override_settings(
+                aeat_local_storage_root=settings.aeat_local_storage_root,
+                aeat_secret_store_dir=settings.aeat_secret_store_dir,
+                aeat_secret_store_backend=SecretStoreBackend.FILE,
+            ),
+            pytest.raises(MasterKeyUnavailableError) as excinfo,
+            activate_master_key_provider(second, fallback_bucket_id="alpha"),
+        ):
+            pass
+
+        assert isinstance(excinfo.value.__cause__, DecryptionError)
+        assert excinfo.value.translated_message == "errors.auth.auth_storage_master_key_unavailable"
+        assert str(tmp_path) not in str(excinfo.value)
+        envelope = build_error_envelope(excinfo.value)
+        assert str(tmp_path) not in envelope.model_dump_json()
+
     def test_registered_legacy_bucket_without_dek_keeps_master_key_data_path(self, tmp_path: Path) -> None:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
         settings.aeat_local_storage_root.mkdir(parents=True, exist_ok=True)
@@ -380,11 +440,12 @@ class TestFileFallbackProvider:
         # class-specific actionable hint.
         from ..errors import MasterKeyPassphraseMismatchError
 
-        with pytest.raises(MasterKeyPassphraseMismatchError):
+        with pytest.raises(MasterKeyPassphraseMismatchError) as excinfo:
             FileFallbackMasterKeyProvider(
                 store_dir=tmp_path / "secrets",
                 passphrase_callback=lambda: "wrong-passphrase",
             ).get_master_key()
+        assert excinfo.value.translated_message == "errors.auth.auth_storage_master_key_passphrase_mismatch"
 
     def test_wrong_passphrase_inherits_from_master_key_unavailable(self, tmp_path: Path) -> None:
         """Pre-existing `pytest.raises(MasterKeyUnavailableError)` catchers continue to work via inheritance."""
@@ -419,7 +480,7 @@ class TestFileFallbackProvider:
             passphrase_callback=lambda: "test-passphrase",
         )
         provider.provision_master_key()
-        params_text = (tmp_path / "secrets" / "master.kdf").read_text(encoding="utf-8")
+        params_text = (tmp_path / "secrets" / "master.kdf").read_text(encoding=UTF_8_ENCODING)
         params = _KdfParameters.model_validate_json(params_text)
         assert params.version == 2
         assert params.algorithm == "argon2id"
@@ -441,7 +502,7 @@ class TestFileFallbackProvider:
         )
         assert plaintext_key not in wrapped
 
-    def test_tampered_master_key_file_raises(self, tmp_path: Path) -> None:
+    def test_tampered_master_key_file_raises_localized_without_path(self, tmp_path: Path) -> None:
         provider = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
             passphrase_callback=lambda: "test-passphrase",
@@ -452,11 +513,35 @@ class TestFileFallbackProvider:
         tampered = bytes([contents[0] ^ 0x01]) + contents[1:]
         master_key_path.write_bytes(base64.b64encode(tampered))
 
-        with pytest.raises(MasterKeyUnavailableError):
+        with pytest.raises(MasterKeyUnavailableError) as excinfo:
             FileFallbackMasterKeyProvider(
                 store_dir=tmp_path / "secrets",
                 passphrase_callback=lambda: "test-passphrase",
             ).get_master_key()
+
+        assert excinfo.value.translated_message == "errors.auth.auth_storage_master_key_passphrase_mismatch"
+        assert str(tmp_path) not in str(excinfo.value)
+        envelope = build_error_envelope(excinfo.value)
+        assert str(tmp_path) not in envelope.model_dump_json()
+
+    def test_malformed_kdf_file_raises_localized_without_path(self, tmp_path: Path) -> None:
+        provider = FileFallbackMasterKeyProvider(
+            store_dir=tmp_path / "secrets",
+            passphrase_callback=lambda: "test-passphrase",
+        )
+        provider.provision_master_key()
+        (tmp_path / "secrets" / "master.kdf").write_text("not-json", encoding=UTF_8_ENCODING)
+
+        with pytest.raises(MasterKeyUnavailableError) as excinfo:
+            FileFallbackMasterKeyProvider(
+                store_dir=tmp_path / "secrets",
+                passphrase_callback=lambda: "test-passphrase",
+            ).get_master_key()
+
+        assert excinfo.value.translated_message == "errors.auth.auth_storage_master_key_unavailable"
+        assert str(tmp_path) not in str(excinfo.value)
+        envelope = build_error_envelope(excinfo.value)
+        assert str(tmp_path) not in envelope.model_dump_json()
 
     def test_satisfies_protocol(self, tmp_path: Path) -> None:
         provider = FileFallbackMasterKeyProvider(
@@ -562,7 +647,7 @@ class TestTornStateGate:
         (store_dir / "master.key").write_bytes(b"orphan-master-key")
         (store_dir / "master.kdf").write_text(
             '{"version": 2, "algorithm": "argon2id"}',
-            encoding="utf-8",
+            encoding=UTF_8_ENCODING,
         )
 
         from ..errors import MasterKeyMaterialMissingError
@@ -580,7 +665,7 @@ class TestTornStateGate:
         # master.key). The gate refuses regardless of which subset.
         (store_dir / "master.kdf").write_text(
             '{"version": 2, "algorithm": "argon2id"}',
-            encoding="utf-8",
+            encoding=UTF_8_ENCODING,
         )
         (store_dir / "salt").write_bytes(b"\x00" * 16)
 
@@ -788,7 +873,6 @@ class TestFactory:
     def test_auto_backend_falls_back_when_locked_but_file_exists(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         # When the keychain is LOCKED AND file-fallback artefacts
         # already exist, auto routes through file safely — the

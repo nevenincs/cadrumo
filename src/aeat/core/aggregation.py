@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Final, Literal
 
 from .logging import get_logger
 
@@ -17,6 +18,43 @@ class AggregationSourceKind(StrEnum):
     PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"
     PAYABLE_INVOICE = "payable_invoice"
     COLLECTIBLE_INVOICE = "collectible_invoice"
+
+
+type CounterpartSourceKind = Literal[
+    AggregationSourceKind.LEDGER_TRANSACTION,
+    AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
+    AggregationSourceKind.PAYABLE_INVOICE,
+    AggregationSourceKind.COLLECTIBLE_INVOICE,
+]
+"""Canonical source-kind subset accepted by counterpart aggregation.
+
+The retired bare ``invoice`` alias remains in :class:`AggregationSourceKind`
+for persisted-registry validation and explicit rejection, but it is not a
+valid counterpart observation or binding source.
+"""
+
+COUNTERPART_SOURCE_KINDS: Final[frozenset[CounterpartSourceKind]] = frozenset(
+    {
+        AggregationSourceKind.LEDGER_TRANSACTION,
+        AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        AggregationSourceKind.PAYABLE_INVOICE,
+        AggregationSourceKind.COLLECTIBLE_INVOICE,
+    },
+)
+
+
+def counterpart_source_kind(value: object) -> CounterpartSourceKind:
+    """Return ``value`` narrowed to the counterpart source-kind subset."""
+    try:
+        source_kind = value if isinstance(value, AggregationSourceKind) else AggregationSourceKind(value)
+    except ValueError as exc:
+        raise ValueError(f"unsupported source_kind {value!r}") from exc
+    if source_kind in COUNTERPART_SOURCE_KINDS:
+        return source_kind
+    raise ValueError(
+        "unsupported source_kind; use one of ledger_transaction, "
+        "purchase_invoice_evidence, payable_invoice, collectible_invoice",
+    )
 
 
 class PeriodKind(StrEnum):

@@ -19,10 +19,15 @@ import pytest
 from ....application.storage.calc_sheets import build_export_plan
 from ....core.resources import resources
 from ._calc_sheets_apply import (
+    _build_auto_filter_requests,
+    _build_base_font_requests,
+    _build_column_width_requests,
     _build_emphasis_format_requests,
     _build_evidence_value_data,
     _build_formula_data,
+    _build_frozen_view_requests,
     _build_number_format_requests,
+    _build_styled_range_requests,
     _build_value_data,
 )
 
@@ -36,7 +41,15 @@ def _m130_plan():
 
 def test_apply_request_pipeline_is_complete_for_a_real_modelo() -> None:
     plan = _m130_plan()
-    sheet_id_by_tab = {"Entradas": 0, "Cálculos": 1, "Procedencia": 2, "Tarifas": 3, "Guía": 4, "Evidencia": 5, "Detalle": 6}
+    sheet_id_by_tab = {
+        "Entradas": 0,
+        "Cálculos": 1,
+        "Procedencia": 2,
+        "Tarifas": 3,
+        "Guía": 4,
+        "Evidencia": 5,
+        "Detalle": 6,
+    }
 
     value_data = _build_value_data(plan.value_cells)
     formula_data = _build_formula_data(plan.formula_cells)
@@ -55,3 +68,58 @@ def test_apply_request_pipeline_is_complete_for_a_real_modelo() -> None:
     # Every request targets a known tab (no stray sheetId).
     for request in number_format_requests + emphasis_requests:
         assert request["repeatCell"]["range"]["sheetId"] in sheet_id_by_tab.values()
+
+
+def test_apply_design_request_set_is_complete_for_a_real_modelo() -> None:
+    # S: the online apply renders the full design system — monospace base font,
+    # role-tinted styled ranges, sized columns, frozen header rows, and basic
+    # filters — mirroring the offline materialiser from the same plan facets.
+    plan = _m130_plan()
+    sheet_id_by_tab = {
+        "Entradas": 0,
+        "Cálculos": 1,
+        "Procedencia": 2,
+        "Tarifas": 3,
+        "Guía": 4,
+        "Evidencia": 5,
+        "Detalle": 6,
+    }
+
+    base_font = _build_base_font_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+    styled = _build_styled_range_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+    widths = _build_column_width_requests(plan.column_widths, sheet_id_by_tab=sheet_id_by_tab)
+    frozen = _build_frozen_view_requests(plan.frozen_views, sheet_id_by_tab=sheet_id_by_tab)
+    filters = _build_auto_filter_requests(plan.auto_filters, sheet_id_by_tab=sheet_id_by_tab)
+
+    # The base font sets a monospace family on every tab's whole grid.
+    assert base_font, "base font requests missing"
+    families = {
+        req["repeatCell"]["cell"]["userEnteredFormat"]["textFormat"]["fontFamily"] for req in base_font
+    }
+    assert families == {plan.font_family}
+
+    # Styled ranges carry fills / bold / alignment; at least one sets a fill.
+    assert styled, "styled range requests missing"
+    assert any("backgroundColor" in req["repeatCell"]["cell"]["userEnteredFormat"] for req in styled)
+
+    assert widths, "column width requests missing"
+    assert all(req["updateDimensionProperties"]["properties"]["pixelSize"] > 0 for req in widths)
+
+    # Frozen header rows present; at least one tab freezes its header row.
+    assert frozen, "frozen view requests missing"
+    assert any(
+        req["updateSheetProperties"]["properties"]["gridProperties"]["frozenRowCount"] >= 1 for req in frozen
+    )
+
+    assert filters, "basic filter requests missing"
+    for request in styled + widths + frozen + filters:
+        sheet_id = (
+            request.get("repeatCell", {}).get("range", {}).get("sheetId")
+            if "repeatCell" in request
+            else request.get("updateDimensionProperties", {}).get("range", {}).get("sheetId")
+            if "updateDimensionProperties" in request
+            else request.get("updateSheetProperties", {}).get("properties", {}).get("sheetId")
+            if "updateSheetProperties" in request
+            else request.get("setBasicFilter", {}).get("filter", {}).get("range", {}).get("sheetId")
+        )
+        assert sheet_id in sheet_id_by_tab.values()

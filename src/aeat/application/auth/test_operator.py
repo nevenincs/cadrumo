@@ -477,6 +477,30 @@ def test_live_auth_preflight_reports_redacted_clave_profile_alignment() -> None:
     assert "support-present" not in report.model_dump_json()
 
 
+def test_live_auth_preflight_uses_explicit_certificate_settings(tmp_path: Path) -> None:
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+    configure_operator_auth("certificate")
+    cert_path = tmp_path / "operator.p12"
+    cert_path.write_bytes(b"not a pkcs12 bundle")
+    base_settings = load_settings()
+    explicit_settings = Settings(
+        aeat_local_storage_root=base_settings.aeat_local_storage_root,
+        aeat_active_profile=base_settings.aeat_active_profile,
+        aeat_secret_store_backend=base_settings.aeat_secret_store_backend,
+        aeat_secret_store_dir=base_settings.aeat_secret_store_dir,
+        aeat_secret_passphrase=base_settings.aeat_secret_passphrase,
+        aeat_certificate_path=cert_path,
+    )
+
+    with override_settings(aeat_certificate_path=None):
+        report = build_live_auth_preflight_report("certificate", settings=explicit_settings)
+
+    assert report.provider == "certificate"
+    assert report.certificate_path_configured is True
+    assert report.certificate_file_present is True
+    assert report.probe_result == "corrupt"
+
+
 def test_auth_test_carries_a_local_session_probe_status_does_not() -> None:
     """``auth test`` must do something observable ``auth status`` does not.
 

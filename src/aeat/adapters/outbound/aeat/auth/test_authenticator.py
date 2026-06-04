@@ -835,7 +835,9 @@ async def test_authenticate_falls_back_after_stale_persisted_session(
 ) -> None:
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
-    storage_state_path = settings.aeat_token_dir / f"{_BUCKET_ID}-storage.json"
+    from .....core.auth_session_keys import aeat_auth_session_storage_state_path
+
+    storage_state_path = aeat_auth_session_storage_state_path(_BUCKET_ID, "storage")
     stale_storage_state: dict[str, object] = {"cookies": [], "origins": []}
     _session_store.save(
         storage_state_path,

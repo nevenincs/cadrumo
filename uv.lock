@@ -9,7 +9,7 @@ resolution-markers = [
 ]
 
 [manifest]
-overrides = [{ name = "tree-sitter-language-pack", specifier = "<1.6.3" }]
+overrides = [{ name = "tree-sitter-language-pack", specifier = "<1.6.2" }]
 
 [[package]]
 name = "accessible-pygments"
@@ -67,6 +67,7 @@ workbook-windows = [
 [package.dev-dependencies]
 dev = [
     { name = "complexipy" },
+    { name = "deptry" },
     { name = "doc8" },
     { name = "furo" },
     { name = "google-api-python-client-stubs" },
@@ -104,6 +105,7 @@ dev = [
     { name = "types-xlrd" },
     { name = "vaultspec-core" },
     { name = "vaultspec-rag" },
+    { name = "vulture" },
 ]
 
 [package.metadata]
@@ -144,6 +146,7 @@ provides-extras = ["workbook-windows"]
 [package.metadata.requires-dev]
 dev = [
     { name = "complexipy", specifier = ">=3.3.0" },
+    { name = "deptry", specifier = ">=0.24" },
     { name = "doc8", specifier = ">=1.1" },
     { name = "furo", specifier = ">=2024.8" },
     { name = "google-api-python-client-stubs", specifier = ">=1.36" },
@@ -179,8 +182,9 @@ dev = [
     { name = "types-pyyaml", specifier = ">=6.0.12.20260510" },
     { name = "types-reportlab", specifier = ">=4.4.10.20260408" },
     { name = "types-xlrd", specifier = ">=2.0.0.20260408" },
-    { name = "vaultspec-core", specifier = ">=0.1.20" },
-    { name = "vaultspec-rag", specifier = ">=0.2.10" },
+    { name = "vaultspec-core", specifier = ">=0.1.25" },
+    { name = "vaultspec-rag", specifier = ">=0.2.14" },
+    { name = "vulture", specifier = ">=2.16" },
 ]
 
 [[package]]
@@ -703,6 +707,29 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/49/85/12f0a49a7c4ffb70572b6c2ef13c90c88fd190debda93b23f026b25f9634/deprecated-1.3.1.tar.gz", hash = "sha256:b1b50e0ff0c1fddaa5708a2c6b0a6588bb09b892825ab2b214ac9ea9d92a5223", size = 2932523, upload-time = "2025-10-30T08:19:02.757Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/84/d0/205d54408c08b13550c733c4b85429e7ead111c7f0014309637425520a9a/deprecated-1.3.1-py2.py3-none-any.whl", hash = "sha256:597bfef186b6f60181535a29fbe44865ce137a5079f295b479886c82729d5f3f", size = 11298, upload-time = "2025-10-30T08:19:00.758Z" },
+]
+
+[[package]]
+name = "deptry"
+version = "0.25.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "packaging" },
+    { name = "requirements-parser" },
+    { name = "tomli", marker = "python_full_version < '3.15'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b8/b2/50ccc99362ae7757342978b7ecb3b98e47fade721fd617d74db1948ec3a1/deptry-0.25.1.tar.gz", hash = "sha256:45c8cd982c85cd4faae573ddff6920de7eec735336db6973f26a765ae7950f7d", size = 509748, upload-time = "2026-03-18T23:22:18.139Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/33/1d/b538dc635e873b25360d761cfe1fa0ccd7d6c69b698047e552f33401e60d/deptry-0.25.1-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:a4dd1148db24a1ddacfa8b840836c6019c2f864fcb7579dd089fd217606338c8", size = 1850319, upload-time = "2026-03-18T23:22:15.65Z" },
+    { url = "https://files.pythonhosted.org/packages/fe/a9/511477a8f0ae4f6021d68a80bdca77e7ffb0722008dc24ee5d9ef49f5c88/deptry-0.25.1-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:c67c666d916ef12013c0772e40d78be0f21577a495d8d99ec5fcb18c332d393d", size = 1759259, upload-time = "2026-03-18T23:22:30.853Z" },
+    { url = "https://files.pythonhosted.org/packages/4f/4b/c9f0bdda410912a6df79a789cb118fa29acae02a397794ead3c84adcda5c/deptry-0.25.1-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:58d39279828dbf4efc1abb40bf50a71b21499c36759bed5a8d8a3c0e3149b091", size = 1872012, upload-time = "2026-03-18T23:22:19.145Z" },
+    { url = "https://files.pythonhosted.org/packages/72/9c/6f6f9125bac74b5d5d2af89536cbdb3fa159b6466aa097b74e7e85e8e030/deptry-0.25.1-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:14bfcc28b4326ed8c6abb30691b19077d4ef8613cfba6c37ef5b1f471775bf6f", size = 1926575, upload-time = "2026-03-18T23:22:11.269Z" },
+    { url = "https://files.pythonhosted.org/packages/52/48/2a5e705a7f898295966ade67bd1223e2af96da433e25b39f6b9483ba2c7b/deptry-0.25.1-cp310-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:555f5f9a487899ec9bf301eecba1745e14d212c4b354f4d3a5fd691e907366d3", size = 2050816, upload-time = "2026-03-18T23:22:27.439Z" },
+    { url = "https://files.pythonhosted.org/packages/5f/c6/50f189a894e1f3bf21266299112c8a06cb731838976e1b9a9cadd0b4a86e/deptry-0.25.1-cp310-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:18d21b3545ab2bfec53f3f45c6f5f201d55f713323327f8d12674505469ae6b7", size = 2145416, upload-time = "2026-03-18T23:22:24.682Z" },
+    { url = "https://files.pythonhosted.org/packages/7a/6a/3f82f7a06217778282bc4456af1b4ffb3bc4b2c8e7891d00e8323f9ad0b8/deptry-0.25.1-cp310-abi3-win_amd64.whl", hash = "sha256:b59a560cb7dffb21832a98bb80d33d614cfb5630ea36ce21833eabf4eae3df99", size = 1718489, upload-time = "2026-03-18T23:22:28.589Z" },
+    { url = "https://files.pythonhosted.org/packages/c7/7f/cd6b3ac8cf95f2f1c5c7a74ff6452e9098af89a9b56607381f677880641e/deptry-0.25.1-cp310-abi3-win_arm64.whl", hash = "sha256:6efffd8116fb9d2c45a251382ce4ce1c38dbb17179f581ec9231ed5390f7fc12", size = 1647020, upload-time = "2026-03-18T23:22:23.311Z" },
 ]
 
 [[package]]
@@ -2963,6 +2990,18 @@ wheels = [
 ]
 
 [[package]]
+name = "requirements-parser"
+version = "0.13.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/95/96/fb6dbfebb524d5601d359a47c78fe7ba1eef90fc4096404aa60c9a906fbb/requirements_parser-0.13.0.tar.gz", hash = "sha256:0843119ca2cb2331de4eb31b10d70462e39ace698fd660a915c247d2301a4418", size = 22630, upload-time = "2025-05-21T13:42:05.464Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bd/60/50fbb6ffb35f733654466f1a90d162bcbea358adc3b0871339254fbc37b2/requirements_parser-0.13.0-py3-none-any.whl", hash = "sha256:2b3173faecf19ec5501971b7222d38f04cb45bb9d87d0ad629ca71e2e62ded14", size = 14782, upload-time = "2025-05-21T13:42:04.007Z" },
+]
+
+[[package]]
 name = "restructuredtext-lint"
 version = "2.0.2"
 source = { registry = "https://pypi.org/simple" }
@@ -3799,16 +3838,16 @@ wheels = [
 
 [[package]]
 name = "tree-sitter-language-pack"
-version = "1.6.2"
+version = "1.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "tree-sitter" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/09/bd/ac34ab0ee92b2d27802754c575965e921490ce11b5357bf89f74a78e8309/tree_sitter_language_pack-1.6.2-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:f5998cfee5735a8e7e691f577062ff7eb3a7ea405ae5654c9cecaa4a1e6c81b0", size = 2241997, upload-time = "2026-04-18T07:04:36.042Z" },
-    { url = "https://files.pythonhosted.org/packages/a1/e0/b997b8c3e0886288a47890e6313c3a7e74ea8192e2d141b3eab64d59a276/tree_sitter_language_pack-1.6.2-cp310-abi3-manylinux_2_34_aarch64.whl", hash = "sha256:8ce814ede4e295f3419ba179b523889c52cc3a998ac085356a470e776596c026", size = 2419565, upload-time = "2026-04-18T07:04:37.67Z" },
-    { url = "https://files.pythonhosted.org/packages/fa/a4/629e6983a93fbb52dc50af495ec0431565c6477eea4680d4298238e9831e/tree_sitter_language_pack-1.6.2-cp310-abi3-manylinux_2_34_x86_64.whl", hash = "sha256:2305df7835c1cb3d34b71450b79d135878bc25ea5d02d9984cee864607a4ad60", size = 2555465, upload-time = "2026-04-18T07:04:39.57Z" },
-    { url = "https://files.pythonhosted.org/packages/b5/9c/0f486ca7344f6f3345441e8516b464214c7c5a0f3775d11fda1368901c38/tree_sitter_language_pack-1.6.2-cp310-abi3-win_amd64.whl", hash = "sha256:08351222b43c3a73665571eaa440366add2093a2492bb35f032fb7a31945e720", size = 2351156, upload-time = "2026-04-18T07:04:41.377Z" },
+    { url = "https://files.pythonhosted.org/packages/8c/5a/b479def27c195ce3c0b63e9103b96207b0650ae77773719757ca24d56f72/tree_sitter_language_pack-1.6.1-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:8c1e61c1174ffcbb492ae76c95b68fb58930a0f776f5fe3fae5b67e07d9ae770", size = 2241706, upload-time = "2026-04-17T13:23:43.088Z" },
+    { url = "https://files.pythonhosted.org/packages/7c/79/4a81fbd4ff96598fa7867ebbed3cd0fe8ebdec3a3f39725ffcc6cc9a1ee3/tree_sitter_language_pack-1.6.1-cp310-abi3-manylinux_2_34_aarch64.whl", hash = "sha256:8354813b8666af395a724d2323bd3e6fd1148151b253b63045de13cdf7f3a413", size = 2419374, upload-time = "2026-04-17T13:23:45.196Z" },
+    { url = "https://files.pythonhosted.org/packages/80/6a/482b36d4030492e71d1235902487698e1d53a33d4ae2896103a0c280e9af/tree_sitter_language_pack-1.6.1-cp310-abi3-manylinux_2_34_x86_64.whl", hash = "sha256:d414bc34186ccc6f68b97699e06c76338725451a31a98a71a0822d1583aef66f", size = 2555547, upload-time = "2026-04-17T13:23:47.134Z" },
+    { url = "https://files.pythonhosted.org/packages/48/43/bd347295026a0ab822c36eb621be21823bb31cb80267e2d5e87b1f0bcb00/tree_sitter_language_pack-1.6.1-cp310-abi3-win_amd64.whl", hash = "sha256:34d9bd0e6cadf1a2c6fd7e73eb9dd490eca703263ece93c63cfdda7b34520d77", size = 2350857, upload-time = "2026-04-17T13:23:48.704Z" },
 ]
 
 [[package]]
@@ -3991,7 +4030,7 @@ wheels = [
 
 [[package]]
 name = "vaultspec-core"
-version = "0.1.20"
+version = "0.1.25"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
@@ -4006,14 +4045,14 @@ dependencies = [
     { name = "typer" },
     { name = "uvicorn" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/15/3e/b9d36ec7dc3336ea25dee01047cd79dbd3e7a4d3de7673fba8f8793cf5cc/vaultspec_core-0.1.20.tar.gz", hash = "sha256:0a2219ebe29b33d0553dbcb4693fa64367ca828940085e706fabd894ea691d0d", size = 1577445, upload-time = "2026-05-26T20:03:22.475Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/12/8f/74acfe20d653b2b32cdc1412f2b92469d9f2a3c1f6335a559a6a730aec72/vaultspec_core-0.1.25.tar.gz", hash = "sha256:d84ce49c78b72db8dfc4be5f5663ecea7b4741999e4549678e8006457eb1b4e1", size = 1597638, upload-time = "2026-06-02T17:32:49.15Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5a/76/e579ac8a2fedee1d5ae169aeea185552a42ce927e2bbbd05b1c77535eb0a/vaultspec_core-0.1.20-py3-none-any.whl", hash = "sha256:bfe00188bf047e81ab19fe2641e8194fea2077c8fb8dc4e377679fec0d53f542", size = 681834, upload-time = "2026-05-26T20:03:21.178Z" },
+    { url = "https://files.pythonhosted.org/packages/d3/cc/7bef2b187ad3bb28626089c3cdb0d32a843d4740063d1a01b6a07f67b8b3/vaultspec_core-0.1.25-py3-none-any.whl", hash = "sha256:a94aca1c88cb2f633e47af2805e56cc2f8bcaaaa62cdf5de8ec58fa75de158a1", size = 704647, upload-time = "2026-06-02T17:32:50.601Z" },
 ]
 
 [[package]]
 name = "vaultspec-rag"
-version = "0.2.10"
+version = "0.2.14"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -4036,9 +4075,18 @@ dependencies = [
     { name = "vaultspec-core" },
     { name = "watchfiles" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9c/e0/5e50b6dacbd55fc889213f1c5d94327eee27fd9f4b1fdc29349764a99ddf/vaultspec_rag-0.2.10.tar.gz", hash = "sha256:2a69ed0eac4ec9cd6daaef3e78ab725906a5ed2d9647c731bb79fac9638ccfc0", size = 1099914, upload-time = "2026-05-31T18:50:01.954Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/86/e4/5a174dcac4bc345a67e2260259cc5cfb3e589df9946481a0976c9744fded/vaultspec_rag-0.2.14.tar.gz", hash = "sha256:9aa862dfcba3a629040dd068bad7e393b59dc0cf9ba09c7e99418d4fc9b4acad", size = 1229112, upload-time = "2026-06-03T06:27:17.862Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cc/7d/1a7b7cb3ca394d0b687d3fa9b86074d4c997616a8cc14e6ce18c9d39e807/vaultspec_rag-0.2.10-py3-none-any.whl", hash = "sha256:6ac775d16d4c60b4d306f7f186ca6a67049e06bfdd1289da9c5c76dada102e43", size = 289187, upload-time = "2026-05-31T18:50:00.14Z" },
+    { url = "https://files.pythonhosted.org/packages/6b/b7/dc174dc08f1fc4d57a462510ea182c083a79d4b33c10a18ffd9277dcd8ad/vaultspec_rag-0.2.14-py3-none-any.whl", hash = "sha256:24b91d67e0d745c26b0aabbdaea237bebb6f51ebd6566d594273bd90168369dc", size = 395722, upload-time = "2026-06-03T06:27:16.173Z" },
+]
+
+[[package]]
+name = "vulture"
+version = "2.16"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/66/3e/4d08c5903b2c0c70cad583c170cc4a663fc6a61e2ad00b711fcda61358cd/vulture-2.16.tar.gz", hash = "sha256:f8d9f6e2af03011664a3c6c240c9765b3f392917d3135fddca6d6a68d359f717", size = 52680, upload-time = "2026-03-25T14:41:27.141Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f5/be/f935130312330614811dae2ea9df3f395f6d63889eb6c2e68c14507152ee/vulture-2.16-py3-none-any.whl", hash = "sha256:6e0f1c312cef1c87856957e5c2ca9608834a7c794c2180477f30bf0e4cc58eee", size = 26993, upload-time = "2026-03-25T14:41:26.21Z" },
 ]
 
 [[package]]

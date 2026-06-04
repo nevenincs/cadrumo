@@ -340,13 +340,16 @@ def test_seed_iva_compensation_refuses_duplicate(tmp_path: Path) -> None:
             amount=Decimal("800.00"),
         )
 
-        with pytest.raises(IvaCompensationSeedConflictError, match="2024/2T"):
+        with pytest.raises(IvaCompensationSeedConflictError) as excinfo:
             seed_iva_compensation_period(
                 taxpayer_nif=_NIF,
                 filing_year=2024,
                 period="2T",
                 amount=Decimal("100.00"),
             )
+
+    assert excinfo.value.translated_message == "application.calculations.iva_compensation.errors.seed_conflict"
+    assert excinfo.value.context == {"filing_year": 2024, "period": "2T", "existing_status": "seeded"}
 
 
 def test_cli_seed_verb_refuses_without_confirm(tmp_path: Path) -> None:

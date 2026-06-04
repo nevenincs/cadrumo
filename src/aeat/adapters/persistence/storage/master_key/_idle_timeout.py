@@ -23,11 +23,15 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core.config import Settings as _Settings
 from ..errors import StorageValidationError
 from ._bucket_session import BucketSession
 
-DEFAULT_IDLE_LOCK_MINUTES = _Settings().aeat_bucket_default_idle_lock_minutes
+DEFAULT_IDLE_LOCK_MINUTES = 15
+_STORAGE_VALIDATION_MESSAGE_KEY = "errors.integrity.integrity_storage_validation"
+
+
+def _storage_validation_error(message: str) -> StorageValidationError:
+    return StorageValidationError(message, translated_message=_STORAGE_VALIDATION_MESSAGE_KEY)
 
 
 class IdleEvaluation(BaseModel):
@@ -64,7 +68,7 @@ def evaluate_idle(
         StorageValidationError: When ``configured_minutes`` is not a strict positive integer.
     """
     if configured_minutes <= 0:
-        raise StorageValidationError("configured_minutes must be a strict positive integer")
+        raise _storage_validation_error("configured_minutes must be a strict positive integer")
 
     if session.sealed:
         return IdleEvaluation(expired=True, remaining_seconds=0)

@@ -17,15 +17,15 @@ the metadata file goes undetected without this gate).
 
 from __future__ import annotations
 
+import importlib
 from pathlib import Path
 
 import pytest
 
-from aeat.core.resources import bundled_path
-
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
+bundled_path = importlib.import_module("aeat.core.resources").bundled_path
 _CORPUS_ROOT = bundled_path("corpus", "aeat_official", "instructions")
 
 

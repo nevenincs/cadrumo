@@ -117,19 +117,23 @@ _LEDGER_CUOTA_BINDINGS = (
 _CLOCK = datetime(2026, 5, 1, 9, 0, 0, tzinfo=UTC)
 
 #: Manual section-total casillas that drive the régimen-general result on the
-#: printed M303 form: [46] = [27] - [45] (Orden EHA/3786/2008 art. 1). Casilla
-#: 27 is "Total cuota devengada" (LIVA art. 88); casilla 45 is "Total a deducir"
-#: (LIVA arts. 92-94). Entering 45 > 27 yields a negative régimen-general
-#: result — the IVA credit that becomes the saldo a compensar carried forward.
-_CASILLA_TOTAL_DEVENGADA = "27"
-_CASILLA_TOTAL_DEDUCIBLE = "45"
+#: printed M303 form: [46] = total cuota devengada - total a deducir (Orden
+#: EHA/3786/2008 art. 1). Per commit 2677c82d6, `iva.resultado-regimen-general`
+#: reads the COMPUTED semantic totals `iva.cuota-devengada-total` /
+#: `iva.cuota-deducible-total`, which the engine derives from per-rate ledger
+#: cuota bindings. Per-rate cuota bindings are therefore the only path to inject
+#: a credit scenario; the form-number casillas 27 / 45 are display-only
+#: re-projections that the formula no longer reads. The fixture drives a single
+#: general-rate cuota binding on each side to make `cuota-devengada-total < cuota-
+#: deducible-total`, yielding a negative régimen-general result — the IVA credit
+#: that becomes the saldo a compensar carried forward.
 
 
 def _calculate_303(
     *,
     filing_year: int,
     period: str,
-    casilla_inputs: Mapping[str, Decimal],
+    cuota_binding_overrides: Mapping[str, Decimal],
     relation_values: Mapping[str, Decimal],
 ) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL registry 303 calculation; return result + produced-value count.
@@ -137,8 +141,12 @@ def _calculate_303(
     Mirrors the production calculate path's relation materialisation: a
     resolved relation value is copied into its target binding (casilla 110)
     via :func:`materialize_relation_binding_values`, merged with the profile-gap
-    workaround bindings, resolved into bound casilla inputs, then layered under
-    the operator-supplied manual casilla inputs and evaluated by the engine.
+    workaround bindings, layered under per-rate cuota binding overrides
+    supplied by the caller, resolved into bound casilla inputs, and evaluated
+    by the engine. Cuota bindings are the only input path into the régimen-
+    general formula since `2677c82d6` repointed it at the computed semantic
+    totals; manual casilla inputs against the form-number boxes 27/45 are no
+    longer read and the engine refuses computed-casilla inputs.
     """
     snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=period)
     relation_binding_values = materialize_relation_binding_values(
@@ -154,12 +162,10 @@ def _calculate_303(
         _AUTOCONSUMO_PROMOTOR_BASE_BINDING: Decimal("0"),
         _STATE_ATTRIBUTION_RATIO_BINDING: Decimal("100"),
         **{binding: Decimal("0") for binding in _LEDGER_CUOTA_BINDINGS},
+        **cuota_binding_overrides,
         **relation_binding_values,
     }
-    inputs = {
-        **resolve_bound_casilla_inputs(snapshot.revision, binding_values),
-        **dict(casilla_inputs),
-    }
+    inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -181,21 +187,23 @@ def _registry_observation(
     )
 
 
-# Year-N 4T credit scenario: total cuota devengada [27]=21.00, total a deducir
-# [45]=63.00. The engine derives régimen-general result [46]=27-45=-42.00, a
-# negative ``iva.resultado`` whose absolute value becomes the saldo a compensar
-# generated this period and carried into the next. The exact saldo is produced
-# by the engine, never hand-computed against the formula under test.
+# Year-N 4T credit scenario: a general-rate cuota repercutida of 21.00 against
+# a general-rate cuota soportada (interiores) of 63.00. The engine sums each
+# side into the semantic totals (`iva.cuota-devengada-total` = 21,
+# `iva.cuota-deducible-total` = 63), then derives `iva.resultado-regimen-general`
+# = 21 - 63 = -42, a negative ``iva.resultado`` whose absolute value becomes the
+# saldo a compensar generated this period and carried into the next. The exact
+# saldo is produced by the engine, never hand-computed against the formula.
 _YEAR_N_4T_INPUTS = {
-    _CASILLA_TOTAL_DEVENGADA: Decimal("21.00"),
-    _CASILLA_TOTAL_DEDUCIBLE: Decimal("63.00"),
+    "modelo-303-iva-repercutido-general-cuota": Decimal("21.00"),
+    "modelo-303-iva-soportado-interiores-cuota": Decimal("63.00"),
 }
 
-# Year-N+1 1T scenario: a small positive result ([27]=50.00, [45]=0) so the
-# carried prior-year saldo lands in casilla 110 and is applied against it.
+# Year-N+1 1T scenario: a small positive result (cuota repercutida 50, no
+# cuota soportada) so the carried prior-year saldo lands in casilla 110 and is
+# applied against it.
 _YEAR_N_PLUS_1_1T_INPUTS = {
-    _CASILLA_TOTAL_DEVENGADA: Decimal("50.00"),
-    _CASILLA_TOTAL_DEDUCIBLE: Decimal("0"),
+    "modelo-303-iva-repercutido-general-cuota": Decimal("50.00"),
 }
 
 
@@ -211,7 +219,7 @@ def test_year_n_4t_credit_produces_carry_forward_saldo(tmp_path: Path) -> None:
         result, produced = _calculate_303(
             filing_year=_YEAR_N,
             period="4T",
-            casilla_inputs=_YEAR_N_4T_INPUTS,
+            cuota_binding_overrides=_YEAR_N_4T_INPUTS,
             relation_values={},
         )
     assert produced > 0
@@ -234,7 +242,7 @@ def test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t(tmp_path:
         result_n, _ = _calculate_303(
             filing_year=_YEAR_N,
             period="4T",
-            casilla_inputs=_YEAR_N_4T_INPUTS,
+            cuota_binding_overrides=_YEAR_N_4T_INPUTS,
             relation_values={},
         )
         carried_saldo = result_n.values[_SALDO_CASILLA]
@@ -270,7 +278,7 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
         result_n, produced_n = _calculate_303(
             filing_year=_YEAR_N,
             period="4T",
-            casilla_inputs=_YEAR_N_4T_INPUTS,
+            cuota_binding_overrides=_YEAR_N_4T_INPUTS,
             relation_values={},
         )
         recorder.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
@@ -289,7 +297,7 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
         result_n1, produced_n1 = _calculate_303(
             filing_year=_YEAR_N_PLUS_1,
             period="1T",
-            casilla_inputs=_YEAR_N_PLUS_1_1T_INPUTS,
+            cuota_binding_overrides=_YEAR_N_PLUS_1_1T_INPUTS,
             relation_values=resolved,
         )
         recorder.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)

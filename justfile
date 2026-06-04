@@ -7,20 +7,82 @@ default:
 
 # ── Bootstrap / install ──────────────────────────────────────────────────────
 
-# Full bootstrap for a fresh clone or worktree: sync deps, install
-# vaultspec, provision env/.env.
+# Full bootstrap for a fresh clone or worktree: additively install deps,
+# install vaultspec, provision env/.env. Avoid `uv sync` here because shared
+# Windows worktrees can hold long-lived executable locks under `.venv/Scripts`.
 bootstrap:
-    uv sync
-    uv run vaultspec-core install --upgrade
+    just install
+    uv run --no-sync vaultspec-core install --upgrade
     just env-setup
 
-# Install / sync all runtime and dev dependencies via uv.
+# Additively install runtime, workbook, and dev dependencies into the current
+# venv. This is intentionally not an exact sync: it repairs missing packages and
+# editable metadata without removing locked executables from other agents.
+[windows]
 install:
-    uv sync
+    uv pip install --python .venv/Scripts/python.exe --editable ".[workbook-windows]" --group dev
 
-# Alias for `install` — explicit name for CI clarity.
+[unix]
+install:
+    uv pip install --python .venv/bin/python --editable ".[workbook-windows]" --group dev
+
+# Alias for `install` — explicit name for CI clarity without exact pruning.
 sync:
-    uv sync
+    just install
+
+# Workstation CLI prerequisites for non-Python audit recipes.
+[windows]
+workstation-tools:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
+        Write-Error 'scoop is required for workstation tool provisioning.'
+        exit 1
+    }
+    foreach ($tool in @(
+        @{Command = 'uv'; Package = 'uv'},
+        @{Command = 'just'; Package = 'just'},
+        @{Command = 'node'; Package = 'nodejs-lts'},
+        @{Command = 'npx'; Package = 'nodejs-lts'}
+    )) {
+        if (-not (Get-Command $tool.Command -ErrorAction SilentlyContinue)) {
+            scoop install $tool.Package
+        }
+    }
+
+[unix]
+workstation-tools:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for tool in uv just node npx; do
+        command -v "$tool" >/dev/null 2>&1 || {
+            echo "$tool is required; install it with the workstation package manager." >&2
+            exit 1
+        }
+    done
+
+# Verify the local venv and workstation provide the full audit toolchain.
+tooling-doctor:
+    uv run --no-sync python -c "import aeat; print(aeat.__file__)"
+    uv run --no-sync ruff --version
+    uv run --no-sync ty --version
+    uv run --no-sync pyright --version
+    uv run --no-sync lint-imports --version
+    uv run --no-sync deptry --version
+    uv run --no-sync vulture --version
+    uv run --no-sync radon --version
+    uv run --no-sync complexipy --help
+    uvx --from semgrep semgrep --version
+    npx --yes jscpd@4.2.0 --version
+    just tooling-pip-check
+
+[windows]
+tooling-pip-check:
+    uv pip check --python .venv/Scripts/python.exe
+
+[unix]
+tooling-pip-check:
+    uv pip check --python .venv/bin/python
 
 # ── Env-file provisioning ────────────────────────────────────────────────────
 
@@ -75,6 +137,12 @@ typecheck:
     uv run ty check src
     uv run pyright src/aeat/domain src/aeat/application
 
+# Full-tree type audit. Advisory: use for ratchet discovery and type debt
+# triage, not as the default daily hard gate until the baseline is clean.
+typecheck-audit:
+    uv run --no-sync ty check src --output-format concise
+    uv run --no-sync pyright src/aeat --level warning --warnings
+
 # Run the pytest suite (unit-only by default via pyproject addopts).
 test:
     uv run pytest
@@ -96,6 +164,79 @@ verify-shims:
 # post-Step-7 enforces the layered + independence + forbidden contracts.
 lint-imports:
     uv run --no-sync lint-imports
+
+# Hard local quality gate. Keeps required daily checks separate from the
+# advisory quality-audit dashboard below.
+quality:
+    just lint
+    just typecheck
+    just lint-imports
+    just verify-shims
+    just test
+
+# Structural hard checks that do not need the full unit suite.
+audit-structure:
+    just lint-imports
+    just verify-shims
+    uv run --no-sync python scripts/check_relative_imports.py
+
+# Dependency declaration drift: missing, unused, transitive, and misplaced deps.
+audit-deps:
+    uv run --no-sync deptry src/aeat --known-first-party aeat --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
+
+# Dead-code discovery. Configuration lives in pyproject.toml.
+audit-dead-code:
+    uv run --no-sync vulture --config pyproject.toml
+
+# Deprecation, private-usage, unused-function, and type-opportunity report.
+audit-deprecation:
+    uv run --no-sync pyright src/aeat/domain src/aeat/application --level warning --warnings
+
+# Cyclomatic, maintainability, and cognitive-complexity report for refactor
+# planning. Thresholds are advisory until ratcheted by ADR.
+audit-complexity:
+    uv run --no-sync radon cc src/aeat -n C -s -a -e "src/aeat/**/test_*.py,src/aeat/**/_test_*.py,src/aeat/tests/*"
+    uv run --no-sync radon mi src/aeat -s -e "src/aeat/**/test_*.py,src/aeat/**/_test_*.py,src/aeat/tests/*"
+    uv run --no-sync complexipy src/aeat --max-complexity-allowed 20 --details low --sort desc
+
+# Copy/paste duplication discovery. Uses the workstation Node toolchain so the
+# Python uv bootstrap does not inherit a Node package dependency.
+audit-duplication:
+    npx --yes jscpd@4.2.0 src/aeat --format python --min-lines 6 --min-tokens 80 --max-size 250kb --ignore "**/test_*.py,**/_test_*.py,**/tests/**,**/_data/**" --gitignore --reporters console --noTips
+
+# Semgrep security scan. Prefer a workstation executable, then fall back to uvx
+# so a fresh worktree still has an authoritative just endpoint.
+[unix]
+audit-security:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if command -v semgrep >/dev/null 2>&1; then
+        semgrep scan --config auto src/aeat
+    else
+        uvx --from semgrep semgrep scan --config auto src/aeat
+    fi
+
+[windows]
+audit-security:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    if (Get-Command semgrep -ErrorAction SilentlyContinue) {
+        semgrep scan --config auto src/aeat
+    } else {
+        uvx --from semgrep semgrep scan --config auto src/aeat
+    }
+
+# Advisory dashboard for refactor planning. Each line is intentionally
+# error-tolerant so all reports run even when one audit finds existing debt.
+quality-audit:
+    -just typecheck-audit
+    -just audit-structure
+    -just audit-deps
+    -just audit-dead-code
+    -just audit-deprecation
+    -just audit-complexity
+    -just audit-duplication
+    -just audit-security
 
 # Build the HTML documentation (furo) from Google-style docstrings plus
 # the narrative pages under docs/. Output to docs/_build/html (gitignored).

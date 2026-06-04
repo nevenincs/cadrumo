@@ -20,29 +20,21 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...core.aggregation import AggregationSourceKind, OperationKind347, OperationKind349
+from ...core.aggregation import (
+    COUNTERPART_SOURCE_KINDS,
+    CounterpartSourceKind,
+    OperationKind347,
+    OperationKind349,
+    counterpart_source_kind,
+)
 from ...core.external_constants import M347_THRESHOLD_EUR
-from ...domain.calculations.registry import CounterpartSourceKind
 from ._grouping import filter_observations_for_modelo, group_and_collect_names
 
-_CANONICAL_SOURCE_KINDS: frozenset[AggregationSourceKind] = frozenset(
-    {
-        AggregationSourceKind.LEDGER_TRANSACTION,
-        AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
-        AggregationSourceKind.PAYABLE_INVOICE,
-        AggregationSourceKind.COLLECTIBLE_INVOICE,
-    },
-)
+_CANONICAL_SOURCE_KINDS = COUNTERPART_SOURCE_KINDS
 
 
 def _validate_source_kind(value: str) -> CounterpartSourceKind:
-    for canonical in _CANONICAL_SOURCE_KINDS:
-        if value == canonical:
-            return canonical
-    raise ValueError(
-        "unsupported source_kind; use one of ledger_transaction, "
-        "purchase_invoice_evidence, payable_invoice, collectible_invoice",
-    )
+    return counterpart_source_kind(value)
 
 
 def _validate_country(value: str, *, field_name: str) -> str:

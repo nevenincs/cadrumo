@@ -137,7 +137,8 @@ def build_iva_compensation_carry_forward_report(
     """
     if not 2000 <= as_of_year <= 2099:
         raise IvaCompensationYearRangeError(
-            f"IVA compensation as_of_year {as_of_year} out of supported range [2000, 2099]"
+            translated_message="errors.refused.refused_iva_compensation_year_range",
+            context={"as_of_year": as_of_year, "min_year": 2000, "max_year": 2099},
         )
     ordered = tuple(sorted(states, key=lambda item: (item.filing_year, _period_sort_key(item.period))))
     working: list[_WorkingCarryForwardLot] = []

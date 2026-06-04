@@ -10,7 +10,7 @@ import pytest
 
 from ...adapters.persistence.storage import SensitivityClass
 from ...core.errors import ERROR_REGISTRY, build_error_envelope
-from ...core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE, load_external_constants
+from ...core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE, UTF_8_ENCODING, load_external_constants
 from ...tests.secure_sql import isolated_runtime_profile
 from ._diagnostics import (
     _DiagnosticPayload,
@@ -53,7 +53,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
                     "html": "<html><body>older captured page</body></html>",
                     "screenshot_png_base64": "aW1hZ2U=",
                 }
-            ).encode("utf-8"),
+            ).encode(UTF_8_ENCODING),
         )
         repo.save(
             namespace=CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
@@ -95,7 +95,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
                     },
                     "html": "<html><body>newer captured page with sensitive form fields</body></html>",
                 }
-            ).encode("utf-8"),
+            ).encode(UTF_8_ENCODING),
         )
 
         listed = list_auth_diagnostics()
@@ -217,4 +217,4 @@ def test_diagnostic_payload_rejects_non_object_json() -> None:
     from ._diagnostics import _payload
 
     with pytest.raises(ValueError, match="not a JSON object"):
-        _payload(_json.dumps([1, 2, 3]).encode("utf-8"))
+        _payload(_json.dumps([1, 2, 3]).encode(UTF_8_ENCODING))

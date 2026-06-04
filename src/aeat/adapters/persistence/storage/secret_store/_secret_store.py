@@ -25,7 +25,6 @@ when it is absent.
 
 from __future__ import annotations
 
-import contextlib
 import hmac
 import os
 import tempfile
@@ -34,7 +33,7 @@ from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass, default_policy_for
@@ -64,6 +63,11 @@ _log = get_logger(__name__)
 _INDEX_FILE_NAME = "index.json"
 _LOCK_FILE_NAME = "secrets.lock"
 _HKDF_CONTEXT_SECRET_LOOKUP = b"aeat.secret_store.lookup.v1"
+_STORAGE_VALIDATION_MESSAGE_KEY = "errors.integrity.integrity_storage_validation"
+
+
+def _storage_validation_error(message: str) -> StorageValidationError:
+    return StorageValidationError(message, translated_message=_STORAGE_VALIDATION_MESSAGE_KEY)
 
 
 class SecretRecord(BaseModel):
@@ -104,13 +108,16 @@ class SecretRecord(BaseModel):
         try:
             return validate_utc_aware(value)
         except CoreValidationError as exc:
-            raise StorageValidationError(str(exc)) from exc
+            raise _storage_validation_error(str(exc)) from exc
 
     @field_validator("classification")
     @classmethod
     def _check_class(cls, value: SensitivityClass) -> SensitivityClass:
         if value not in {SensitivityClass.SECRET, SensitivityClass.SESSION}:
-            raise StorageValidationError("SecretRecord.classification must be SECRET or SESSION")
+            raise StorageValidationError(
+                "SecretRecord.classification must be SECRET or SESSION",
+                translated_message="errors.integrity.integrity_storage_validation",
+            )
         return value
 
 
@@ -196,7 +203,7 @@ class SecretStore:
             context=_HKDF_CONTEXT_SECRET_LOOKUP,
             length=KEY_SIZE,
         )
-        return hmac.new(sub_key, key.encode("utf-8"), sha256).hexdigest()
+        return hmac.new(sub_key, key.encode(UTF_8_ENCODING), sha256).hexdigest()
 
     def _index_path(self) -> Path:
         """Return the catalogue file path."""
@@ -211,7 +218,10 @@ class SecretStore:
         index_path = self._index_path()
         if not index_path.exists():
             return _SecretIndex()
-        return _SecretIndex.model_validate_json(index_path.read_text(encoding=UTF_8_ENCODING))
+        try:
+            return _SecretIndex.model_validate_json(index_path.read_text(encoding=UTF_8_ENCODING))
+        except (OSError, ValidationError, ValueError) as exc:
+            raise _storage_validation_error("secret-store index is malformed or unreadable") from exc
 
     def _write_index(self, index: _SecretIndex) -> None:
         """Atomically write ``index`` to disk.
@@ -245,9 +255,12 @@ class SecretStore:
             os.replace(tmp_path, target)
             fsync_parent_dir(target)
         except OSError:
-            _log.error("secret_store: atomic index write failed target=%s", target, exc_info=True)
+            _log.error("secret_store: atomic index write failed target=%s", target.name, exc_info=True)
             if tmp_path is not None:
-                tmp_path.unlink(missing_ok=True)
+                try:
+                    tmp_path.unlink(missing_ok=True)
+                except OSError:
+                    _log.warning("secret_store: atomic index cleanup failed target=%s", target.name, exc_info=True)
             raise
 
     def _build_envelope(self, record: SecretRecord) -> Envelope[SecretRecord]:
@@ -314,9 +327,7 @@ class SecretStore:
         index = self._read_index()
         existing = index.entries.get(digest)
         if existing is not None and not overwrite:
-            raise SecretAlreadyExistsError(
-                f"secret already exists at digest {digest}; pass overwrite=True to replace.",
-            )
+            raise SecretAlreadyExistsError("secret already exists; pass overwrite=True to replace.")
         envelope = self._build_envelope(record)
         wire = self._envelope_bytes(envelope)
         blob_ref = self._blob_store.put(
@@ -339,15 +350,12 @@ class SecretStore:
                 sha256_plaintext_hex=existing.blob_sha256_plaintext_hex,
                 classification=existing.classification,
             )
-            with contextlib.suppress(BlobNotFoundError):
-                try:
-                    self._blob_store.delete(old_ref)
-                except (BlobIntegrityError, OSError):
-                    _log.warning(
-                        "stale secret-store blob cleanup failed: digest=%s",
-                        existing.blob_sha256_plaintext_hex,
-                        exc_info=True,
-                    )
+            try:
+                self._blob_store.delete(old_ref)
+            except BlobNotFoundError:
+                _log.debug("stale secret-store blob cleanup skipped because blob is already absent")
+            except (BlobIntegrityError, OSError):
+                _log.warning("stale secret-store blob cleanup failed", exc_info=True)
         return blob_ref
 
     def get(self, key: str) -> SecretRecord:
@@ -366,7 +374,7 @@ class SecretStore:
         index = self._read_index()
         entry = index.entries.get(digest)
         if entry is None:
-            raise SecretNotFoundError(f"no secret persisted under digest {digest}")
+            raise SecretNotFoundError("no secret persisted for the requested key")
         blob_ref = BlobReference(
             sha256_plaintext_hex=entry.blob_sha256_plaintext_hex,
             classification=entry.classification,
@@ -389,23 +397,20 @@ class SecretStore:
             index = self._read_index()
             entry = index.entries.pop(digest, None)
             if entry is None:
-                raise SecretNotFoundError(f"no secret persisted under digest {digest}")
+                raise SecretNotFoundError("no secret persisted for the requested key")
             self._write_index(index)
             blob_ref = BlobReference(
                 sha256_plaintext_hex=entry.blob_sha256_plaintext_hex,
                 classification=entry.classification,
             )
-            # Mirrors the put path: only the benign already-gone case
-            # is silently absorbed; the rest is logged as a WARNING.
-            with contextlib.suppress(BlobNotFoundError):
-                try:
-                    self._blob_store.delete(blob_ref)
-                except (BlobIntegrityError, OSError):
-                    _log.warning(
-                        "secret-store blob cleanup on delete failed: digest=%s",
-                        entry.blob_sha256_plaintext_hex,
-                        exc_info=True,
-                    )
+            # Mirrors the put path: the benign already-gone case is
+            # logged at DEBUG; the rest is logged as a WARNING.
+            try:
+                self._blob_store.delete(blob_ref)
+            except BlobNotFoundError:
+                _log.debug("secret-store blob cleanup on delete skipped because blob is already absent")
+            except (BlobIntegrityError, OSError):
+                _log.warning("secret-store blob cleanup on delete failed", exc_info=True)
 
     def list_digests(self) -> Iterable[str]:
         """Yield every persisted lookup digest.

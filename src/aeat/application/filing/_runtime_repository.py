@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core._bucket_pointer_io import resolve_active_bucket_id
+from ...core import resolve_active_bucket_id
 from .errors import ModeloApplicationError
 
 if TYPE_CHECKING:

@@ -673,7 +673,7 @@ def test_transfer_row_reclassified_to_internal_transfer_and_locked_out_of_tax() 
 
 # --- W08.P15: modification lifecycle (edit lineage, history, blocking) -------
 def _active_repo():
-    from ...core._bucket_pointer_io import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
     from ...domain.transactions import TransactionCatalogueRepository
 
     bucket_id = resolve_active_bucket_id()
@@ -745,7 +745,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
     from datetime import UTC, datetime
     from decimal import Decimal
 
-    from ...core._bucket_pointer_io import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
     from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
     from ...domain.modelos._calculation_revision import (
         CalculationRevision,

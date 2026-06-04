@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core._bucket_pointer_io import resolve_active_bucket_id
+from ...core import resolve_active_bucket_id
 from ._errors import ModeloError
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard

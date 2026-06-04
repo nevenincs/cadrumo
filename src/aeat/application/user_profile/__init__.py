@@ -14,24 +14,24 @@ The service implementations live in sibling modules
 ``ProfileValidationService``, ``ProfilePreflightService``) and the
 secure-storage adapters that consume these records. The aggregate passed
 across service boundaries is :class:`UserProfileRecord`.
+
+Every re-exported name is resolved on demand through module-level
+``__getattr__`` (PEP 562). Top-level imports in this file are reserved
+for genuinely lightweight setup (the active-profile language-resolver
+registration) so the boundary itself does not drag the domain-record /
+registry / service module surfaces into ``sys.modules``. The
+state-free CLI surfaces (``aeat``, ``aeat --version``, ``aeat --help``)
+must not pay the registry cost via this boundary, which the
+:mod:`aeat.entrypoints.cli.test_lazy_command_tree` gate and the
+producer-side probe in
+:mod:`aeat.application.user_profile.test_lazy_boundary` both enforce.
 """
 
 from __future__ import annotations
 
-from datetime import date, datetime
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
-
-from ...core.errors import BaseSeverity as _BaseSeverity
-from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.identity import ProfileId
-from ...domain.user_profile import (
-    UserProfileFact,
-    UserProfileFactValue,
-    UserProfileRecord,
-    UserProfileStatus,
-)
 from ._language_resolver import register_language_resolver as _register_language_resolver
 
 if TYPE_CHECKING:
@@ -50,6 +50,25 @@ if TYPE_CHECKING:
         CensoProfileComparison,
         CensoSyncService,
     )
+    from ._commands import (
+        DuplicateProfileCommand,
+        EditProfileFieldCommand,
+        EditProfileSectionCommand,
+        ProfileImportResult,
+        ProfileLifecycleResult,
+        ProfileListing,
+        ProfileListResult,
+        ProfilePreflightReport,
+        ProfilePreflightRequirement,
+        ProfileSnapshot,
+        ProfileSnapshotRequest,
+        ProfileStaleCheckReport,
+        ProfileValidationIssue,
+        ProfileValidationReport,
+        RegisterProfileCommand,
+        RemoveProfileCommand,
+        RenameProfileCommand,
+    )
     from ._lifecycle import ProfileLifecycleService
     from ._preflight import ProfilePreflightService
     from ._projections import facts_to_values, projection_for_taxpayer, record_to_values, snapshot_to_values
@@ -62,247 +81,64 @@ if TYPE_CHECKING:
         user_profile_value_object_key,
     )
     from ._validation import ProfileValidationService
-
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-
-# Sha-256 content-fingerprint shape shared by the profile-snapshot canonical
-# hash, the stored-hash snapshot pointer, and the current-hash recompute
-# result. Stays bare-str under ADR Rule 7 (fingerprint, not identity);
-# factored to a single module-local constraint kwargs mapping to remove
-# the three-way duplication of the shape literal.
-_PROFILE_SNAPSHOT_HASH_KWARGS: dict[str, object] = {
-    "min_length": 64,
-    "max_length": 64,
-    "pattern": r"^[0-9a-f]{64}$",
-}
+    from ...domain.user_profile import (
+        UserProfileFact,
+        UserProfileFactValue,
+        UserProfileRecord,
+        UserProfileStatus,
+    )
 
 # W09.P43.S166: replace the prior side-effect import with an explicit
 # register call so the registration point is greppable rather than
 # hidden behind a noqa-protected import. Runs after all module-level
-# imports settle so the call sits in a clear initialiser slot.
+# imports settle so the call sits in a clear initialiser slot. The
+# resolver implementation defers its workflow / orchestration imports
+# inside its body so this call does not trigger a heavy cascade.
 _register_language_resolver()
 
-# ---------------------------------------------------------------------------
-# Lifecycle commands
-# ---------------------------------------------------------------------------
 
-
-class RegisterProfileCommand(BaseModel):
-    """Register a new active profile root in the secure DB backend."""
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: ProfileId
-    display_name: str = Field(min_length=1, max_length=160)
-    facts: tuple[UserProfileFact, ...] = ()
-
-
-class EditProfileFieldCommand(BaseModel):
-    """Upsert one effective-dated profile fact."""
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: ProfileId
-    path: str = Field(min_length=3, max_length=192)
-    value: UserProfileFactValue
-    valid_from: date | None = None
-    valid_to: date | None = None
-    source: str = Field(default=_PROVENANCE_SOURCE_MANUAL_CLI, min_length=1, max_length=80)
-
-
-class EditProfileSectionCommand(BaseModel):
-    """Bulk-upsert every fact in one schema section."""
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: ProfileId
-    section_key: str = Field(min_length=1, max_length=64)
-    facts: tuple[UserProfileFact, ...]
-    source: str = Field(default=_PROVENANCE_SOURCE_MANUAL_CLI, min_length=1, max_length=80)
-
-
-class RemoveProfileCommand(BaseModel):
-    """Tombstone the live profile root (immutable filing snapshots are retained)."""
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: ProfileId
-
-
-class DuplicateProfileCommand(BaseModel):
-    """Copy an existing profile under a new id and display name."""
-
-    model_config = _STRICT_FROZEN
-
-    source_profile_id: ProfileId
-    target_profile_id: ProfileId
-    target_display_name: str = Field(min_length=1, max_length=160)
-
-
-class RenameProfileCommand(BaseModel):
-    """Update a live profile's display label.
-
-    Profile identity is an immutable UUID, so a rename is a pure
-    label edit: the live record's ``display_name`` is updated and the
-    record is re-saved under the same secure-object key. There is no
-    directory move, no re-key, and no rollback machinery. The
-    orchestration layer updates the parallel copy of the label in the
-    plaintext bucket manifest.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: ProfileId
-    target_display_name: str = Field(min_length=1, max_length=160)
-
-
-# ---------------------------------------------------------------------------
-# Lifecycle results
-# ---------------------------------------------------------------------------
-
-
-class ProfileLifecycleResult(BaseModel):
-    """Result of a lifecycle mutation (register / edit / remove / duplicate)."""
-
-    model_config = _STRICT_FROZEN
-
-    profile: UserProfileRecord
-    applied_at: datetime
-
-
-class ProfileListing(BaseModel):
-    """One row of a profile-listing result."""
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: ProfileId
-    display_name: str = Field(min_length=1, max_length=160)
-    status: UserProfileStatus
-    created_at: datetime
-    updated_at: datetime
-
-
-class ProfileListResult(BaseModel):
-    """Frozen tuple of profile listings returned by `list_profiles`."""
-
-    model_config = _STRICT_FROZEN
-
-    profiles: tuple[ProfileListing, ...] = ()
-
-
-# ---------------------------------------------------------------------------
-# Validation and preflight
-# ---------------------------------------------------------------------------
-
-
-class ProfileValidationIssue(BaseModel):
-    """One validation finding raised against a profile snapshot."""
-
-    model_config = _STRICT_FROZEN
-
-    severity: _BaseSeverity
-    code: str = Field(min_length=1, max_length=64)
-    path: str | None = None
-    message: str = Field(min_length=1, max_length=512)
-
-
-class ProfileValidationReport(BaseModel):
-    """Aggregate validation report for a profile or a registration command."""
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: ProfileId
-    schema_version: int = Field(ge=1)
-    issues: tuple[ProfileValidationIssue, ...] = ()
-
-
-class ProfilePreflightRequirement(BaseModel):
-    """One required-but-missing profile selector for a modelo / revision."""
-
-    model_config = _STRICT_FROZEN
-
-    selector: str = Field(min_length=1, max_length=128)
-    section_key: str = Field(min_length=1, max_length=64)
-    field_key: str = Field(min_length=1, max_length=128)
-
-
-class ProfilePreflightReport(BaseModel):
-    """Per-`(modelo, revision, filing_year, period)` profile readiness report."""
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: ProfileId
-    modelo: str = Field(min_length=1, max_length=16)
-    revision_id: str = Field(min_length=1, max_length=64)
-    filing_year: int = Field(ge=2000, le=2100)
-    period: str = Field(min_length=1, max_length=8)
-    missing: tuple[ProfilePreflightRequirement, ...] = ()
-    ready: bool
-
-
-# ---------------------------------------------------------------------------
-# Filing snapshots
-# ---------------------------------------------------------------------------
-
-
-class ProfileSnapshotRequest(BaseModel):
-    """Request an immutable filing-time snapshot of one profile."""
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: ProfileId
-    modelo: str = Field(min_length=1, max_length=16)
-    revision_id: str = Field(min_length=1, max_length=64)
-    filing_year: int = Field(ge=2000, le=2100)
-    period: str = Field(min_length=1, max_length=8)
-
-
-class ProfileSnapshot(BaseModel):
-    """Immutable filing-time snapshot of one profile's projection."""
-
-    model_config = _STRICT_FROZEN
-
-    snapshot_id: str = Field(min_length=1, max_length=128)
-    profile_id: ProfileId
-    schema_version: int = Field(ge=1)
-    modelo: str = Field(min_length=1, max_length=16)
-    revision_id: str = Field(min_length=1, max_length=64)
-    filing_year: int = Field(ge=2000, le=2100)
-    period: str = Field(min_length=1, max_length=8)
-    canonical_hash: str = Field(**_PROFILE_SNAPSHOT_HASH_KWARGS)
-    created_at: datetime
-    facts: tuple[UserProfileFact, ...]
-
-
-class ProfileStaleCheckReport(BaseModel):
-    """Result of checking a draft's stored snapshot against the current projection."""
-
-    model_config = _STRICT_FROZEN
-
-    snapshot_id: str = Field(min_length=1, max_length=128)
-    profile_id: ProfileId
-    stored_hash: str = Field(**_PROFILE_SNAPSHOT_HASH_KWARGS)
-    current_hash: str = Field(**_PROFILE_SNAPSHOT_HASH_KWARGS)
-    stale: bool
-
-
-# ---------------------------------------------------------------------------
-# Portable export / import
-# ---------------------------------------------------------------------------
-
-
-class ProfileImportResult(BaseModel):
-    """Outcome of importing a portable bundle."""
-
-    model_config = _STRICT_FROZEN
-
-    profile: UserProfileRecord
-    imported_at: datetime
-    issues: tuple[ProfileValidationIssue, ...] = ()
+_COMMAND_NAMES: frozenset[str] = frozenset(
+    {
+        "DuplicateProfileCommand",
+        "EditProfileFieldCommand",
+        "EditProfileSectionCommand",
+        "ProfileImportResult",
+        "ProfileLifecycleResult",
+        "ProfileListResult",
+        "ProfileListing",
+        "ProfilePreflightReport",
+        "ProfilePreflightRequirement",
+        "ProfileSnapshot",
+        "ProfileSnapshotRequest",
+        "ProfileStaleCheckReport",
+        "ProfileValidationIssue",
+        "ProfileValidationReport",
+        "RegisterProfileCommand",
+        "RemoveProfileCommand",
+        "RenameProfileCommand",
+    }
+)
+
+_DOMAIN_RECORD_NAMES: frozenset[str] = frozenset(
+    {
+        "UserProfileFact",
+        "UserProfileFactValue",
+        "UserProfileRecord",
+        "UserProfileStatus",
+    }
+)
 
 
 def __getattr__(name: str):
-    """Lazy-import the service modules to keep the contract surface light."""
+    """Lazy-import every re-exported name to keep the boundary light."""
+    if name in _COMMAND_NAMES:
+        from . import _commands
+
+        return getattr(_commands, name)
+    if name in _DOMAIN_RECORD_NAMES:
+        from ...domain import user_profile as _domain_user_profile
+
+        return getattr(_domain_user_profile, name)
     if name == "ProfileLifecycleService":
         from ._lifecycle import ProfileLifecycleService
 

@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass
 from .....core.errors import resolve_error_message
+from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now as _utc_now
@@ -328,9 +329,10 @@ class SecureObjectRepository:
         if isinstance(value, bytes | bytearray | memoryview):
             return bytes(value)
         if isinstance(value, str):
-            return value.encode("utf-8")
+            return value.encode(UTF_8_ENCODING)
         raise StorageValidationError(
-            f"secure object raw byte value must be bytes-like or str; got {type(value).__name__}",
+            context={"value_type": type(value).__name__},
+            translated_message="errors.integrity.integrity_storage_secure_object_raw_bytes",
         )
 
     @staticmethod
@@ -345,15 +347,19 @@ class SecureObjectRepository:
         if raw_value in (None, ""):
             return ()
         if isinstance(raw_value, bytes | bytearray | memoryview):
-            text_value = bytes(raw_value).decode("utf-8")
+            text_value = bytes(raw_value).decode(UTF_8_ENCODING)
         else:
             text_value = str(raw_value)
         try:
             parsed = json.loads(text_value)
         except json.JSONDecodeError as exc:
-            raise StorageValidationError("secure object revision ancestry metadata is malformed JSON") from exc
+            raise StorageValidationError(
+                translated_message="errors.integrity.integrity_storage_secure_object_revision_ancestry_json",
+            ) from exc
         if not isinstance(parsed, list) or not all(isinstance(item, str) and len(item) == 64 for item in parsed):
-            raise StorageValidationError("secure object revision ancestry metadata must be a list of revision ids")
+            raise StorageValidationError(
+                translated_message="errors.integrity.integrity_storage_secure_object_revision_ancestry_shape",
+            )
         return tuple(parsed)
 
     @staticmethod
@@ -598,7 +604,8 @@ class SecureObjectRepository:
         self._check_session_freshness()
         if len(hashed_object_key) != 32:
             raise StorageValidationError(
-                f"hashed_object_key must be 32 bytes; got {len(hashed_object_key)}",
+                context={"length": len(hashed_object_key)},
+                translated_message="errors.integrity.integrity_storage_secure_object_hashed_key_length",
             )
         with session_scope(self._engine) as session:
             row_id = session.execute(
@@ -653,14 +660,14 @@ class SecureObjectRepository:
                 if isinstance(object_key_raw, bytes):
                     object_key_value = object_key_raw
                 elif isinstance(object_key_raw, str):
-                    object_key_value = object_key_raw.encode("utf-8")
+                    object_key_value = object_key_raw.encode(UTF_8_ENCODING)
                 else:
                     object_key_value = bytes(object_key_raw)
                 payload_raw = raw.payload
                 if isinstance(payload_raw, bytes):
                     payload_value = payload_raw
                 elif isinstance(payload_raw, str):
-                    payload_value = payload_raw.encode("utf-8")
+                    payload_value = payload_raw.encode(UTF_8_ENCODING)
                 else:
                     payload_value = bytes(payload_raw)
                 revision_written_at_raw = raw.revision_written_at
@@ -752,7 +759,7 @@ class SecureObjectRepository:
                     object_key_value = (
                         raw.object_key
                         if isinstance(raw.object_key, bytes | bytearray | memoryview)
-                        else str(raw.object_key).encode("utf-8")
+                        else str(raw.object_key).encode(UTF_8_ENCODING)
                     )
                     object_key_bytes = bytes(object_key_value)
                     try:
@@ -883,14 +890,14 @@ class SecureObjectRepository:
             if isinstance(object_key_raw, bytes):
                 object_key_value = object_key_raw
             elif isinstance(object_key_raw, str):
-                object_key_value = object_key_raw.encode("utf-8")
+                object_key_value = object_key_raw.encode(UTF_8_ENCODING)
             else:
                 object_key_value = bytes(object_key_raw)
             payload_raw = raw.payload
             if isinstance(payload_raw, bytes):
                 payload_value = payload_raw
             elif isinstance(payload_raw, str):
-                payload_value = payload_raw.encode("utf-8")
+                payload_value = payload_raw.encode(UTF_8_ENCODING)
             else:
                 payload_value = bytes(payload_raw)
             try:
@@ -1016,7 +1023,10 @@ class SecureObjectRepository:
         """
         self._check_session_freshness()
         if batch_size < 1:
-            raise StorageValidationError(f"batch_size must be at least 1; got {batch_size}")
+            raise StorageValidationError(
+                context={"batch_size": batch_size},
+                translated_message="errors.integrity.integrity_storage_secure_object_batch_size",
+            )
         namespace_definition = self._enforce_registered_read_policy(
             namespace=namespace,
             expected_class=expected_class,
@@ -1044,7 +1054,7 @@ class SecureObjectRepository:
                 # ``object_key`` is a HashedLookup digest. Keep the bytes
                 # surface stable for diagnostics and raw mirror consumers.
                 _raw_ok = raw.object_key
-                object_key = _raw_ok.encode("utf-8") if isinstance(_raw_ok, str) else bytes(_raw_ok)
+                object_key = _raw_ok.encode(UTF_8_ENCODING) if isinstance(_raw_ok, str) else bytes(_raw_ok)
                 classification_str = str(raw.classification)
                 schema_version = int(raw.schema_version)
                 written_at = raw.written_at
@@ -1279,7 +1289,8 @@ class SecureObjectRepository:
         self._check_session_freshness()
         if len(hashed_object_key) != 32:
             raise StorageValidationError(
-                f"hashed_object_key must be 32 bytes; got {len(hashed_object_key)}",
+                context={"length": len(hashed_object_key)},
+                translated_message="errors.integrity.integrity_storage_secure_object_hashed_key_length",
             )
         self._save_internal(
             namespace=namespace,
@@ -1431,7 +1442,11 @@ class SecureObjectRepository:
             session.flush()
         except IntegrityError as exc:
             raise RepositoryError(
-                f"secure object upsert failed for {namespace}/<key>: {exc.orig}",
+                context={
+                    "namespace": namespace,
+                    "error_type": type(exc.orig).__name__,
+                },
+                translated_message="errors.fail.fail_storage_secure_object_upsert",
             ) from exc
 
     def _write_revision_metadata(
@@ -1529,7 +1544,7 @@ class SecureObjectRepository:
             previous_revision_id or "",
             previous_payload_hash or "",
         )
-        return hashlib.sha256("\x1f".join(parts).encode("utf-8")).hexdigest()
+        return hashlib.sha256("\x1f".join(parts).encode(UTF_8_ENCODING)).hexdigest()
 
     def peek_metadata(self, namespace: str, object_key: str) -> SecureObjectMetadata | None:
         """Return :class:`SecureObjectMetadata` for one object without decrypting it.
@@ -1603,18 +1618,29 @@ class SecureObjectRepository:
             classification = SensitivityClass(row.classification)
         except ValueError as exc:
             raise ClassificationError(
-                f"secure object {row.namespace}/{bytes(row.object_key).hex()} "
-                f"has unknown classification {row.classification!r}",
+                context={
+                    "namespace": row.namespace,
+                    "classification": row.classification,
+                },
+                translated_message="errors.storage.namespace.unknown_classification",
             ) from exc
         if classification is not expected_class:
             raise ClassificationError(
-                f"secure object {row.namespace}/{bytes(row.object_key).hex()} has classification {classification}; "
-                f"consumer expected {expected_class}",
+                context={
+                    "namespace": row.namespace,
+                    "classification": classification.value,
+                    "expected": expected_class.value,
+                },
+                translated_message="errors.storage.namespace.classification_mismatch",
             )
         if row.schema_version > max_supported_version:
             raise EnvelopeVersionError(
-                f"secure object {row.namespace}/{bytes(row.object_key).hex()} is at version {row.schema_version}; "
-                f"consumer supports up to {max_supported_version}",
+                context={
+                    "namespace": row.namespace,
+                    "schema_version": row.schema_version,
+                    "expected": max_supported_version,
+                },
+                translated_message="errors.storage.namespace.schema_mismatch",
             )
         self._enforce_registered_row_schema(
             namespace=row.namespace,

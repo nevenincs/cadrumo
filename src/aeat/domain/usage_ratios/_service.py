@@ -20,6 +20,7 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ...adapters.persistence.storage import SecureObjectRepository
 
 from ..categories import (
+    SpendingCategory,
     SpendingCategoryFamily,
     categories_for_family,
     effective_usage_ratio,
@@ -172,7 +173,7 @@ _HOME_OFFICE_FAMILIES = (
 )
 
 
-def _home_office_categories() -> frozenset:
+def _home_office_categories() -> frozenset[SpendingCategory]:
     return frozenset(category for family in _HOME_OFFICE_FAMILIES for category in categories_for_family(family))
 
 
@@ -284,7 +285,7 @@ def derive_home_office_ratios_from_censo(
             f"raw_afectacion_ratio must be in [0, 1]; got {raw_afectacion_ratio}",
         )
     registry = resolve_category_profiles(year)
-    derived: dict = {}
+    derived: dict[SpendingCategory, Decimal] = {}
     for family in _HOME_OFFICE_FAMILIES:
         for category in categories_for_family(family):
             profile = registry[category]

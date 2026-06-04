@@ -1,7 +1,7 @@
 """Focused unit tests for application.auth._sessions.storage_state_paths.
 
-`storage_state_paths` composes Settings + AuthProviderKind into the
-storage-state JSON path. Three branches:
+`storage_state_paths` composes the active profile + AuthProviderKind into the
+encrypted storage-state logical key. Three branches:
 
 1. ``kind=AuthProviderKind.CERTIFICATE`` → certificate stem (``storage``).
 2. ``kind=AuthProviderKind.CLAVE_MOVIL`` → clave-movil stem
@@ -10,9 +10,10 @@ storage-state JSON path. Three branches:
 
 Previously no direct unit-test coverage. The helper is consumed by
 ``load_persisted_session``, ``delete_persisted_session``, and the
-broader auth-session lifecycle. A regression in the stem mapping
-(swapping cert ↔ clave-movil) would silently route session reads
-and writes to the wrong file.
+broader auth-session lifecycle. The returned path is not a plaintext
+filesystem destination. A regression in the stem mapping (swapping cert
+<-> clave-movil) would silently route session reads and writes to the
+wrong encrypted object.
 
 Tests pin the path composition contract; assertions are
 structural / composition-contract assertions, not calculation
@@ -61,7 +62,7 @@ def test_storage_state_paths_certificate_uses_storage_stem(tmp_path: Path) -> No
 
     result = storage_state_paths(settings, AuthProviderKind.CERTIFICATE)
 
-    assert result.storage_state == tmp_path / "operator-storage.json"
+    assert result.storage_state == Path(".aeat/auth/sessions/operator-storage.json")
 
 
 def test_storage_state_paths_clave_movil_uses_clave_movil_storage_stem(tmp_path: Path) -> None:
@@ -69,7 +70,7 @@ def test_storage_state_paths_clave_movil_uses_clave_movil_storage_stem(tmp_path:
 
     result = storage_state_paths(settings, AuthProviderKind.CLAVE_MOVIL)
 
-    assert result.storage_state == tmp_path / "operator-clave-movil-storage.json"
+    assert result.storage_state == Path(".aeat/auth/sessions/operator-clave-movil-storage.json")
 
 
 def test_storage_state_paths_none_defaults_to_certificate(tmp_path: Path) -> None:
@@ -83,9 +84,7 @@ def test_storage_state_paths_none_defaults_to_certificate(tmp_path: Path) -> Non
     assert default_result.storage_state == explicit_result.storage_state
 
 
-def test_storage_state_paths_composes_profile_name_into_filename(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_storage_state_paths_composes_profile_name_into_filename(tmp_path: Path) -> None:
     """The active profile name is interpolated into the filename so
     two operator profiles do not share session state. The active
     profile resolves through the operator-facing precedence chain
@@ -94,7 +93,6 @@ def test_storage_state_paths_composes_profile_name_into_filename(
 
     from ...core.config import override_settings
 
-    del monkeypatch  # unused; switching profiles via Settings override
     settings = _settings(tmp_path)
 
     with override_settings(aeat_active_profile="operator"):
@@ -103,21 +101,21 @@ def test_storage_state_paths_composes_profile_name_into_filename(
     with override_settings(aeat_active_profile="other-profile"):
         result_b = storage_state_paths(settings, AuthProviderKind.CERTIFICATE)
 
-    assert result_a.storage_state == tmp_path / "operator-storage.json"
-    assert result_b.storage_state == tmp_path / "other-profile-storage.json"
+    assert result_a.storage_state == Path(".aeat/auth/sessions/operator-storage.json")
+    assert result_b.storage_state == Path(".aeat/auth/sessions/other-profile-storage.json")
     assert result_a.storage_state != result_b.storage_state
 
 
-def test_storage_state_paths_composes_token_dir_into_full_path(tmp_path: Path) -> None:
-    """The token_dir from Settings.aeat_token_dir is the parent of
-    the storage_state path."""
-    nested_dir = tmp_path / "subdir" / "tokens"
-    nested_dir.mkdir(parents=True)
-    settings = _settings(nested_dir)
+def test_storage_state_paths_is_independent_of_plaintext_token_dir(tmp_path: Path) -> None:
+    """Encrypted session object keys must not drift with the legacy token dir."""
+    settings_a = _settings(tmp_path / "tokens-a")
+    settings_b = _settings(tmp_path / "tokens-b")
 
-    result = storage_state_paths(settings, AuthProviderKind.CERTIFICATE)
+    result_a = storage_state_paths(settings_a, AuthProviderKind.CERTIFICATE)
+    result_b = storage_state_paths(settings_b, AuthProviderKind.CERTIFICATE)
 
-    assert result.storage_state.parent == nested_dir
+    assert result_a.storage_state == result_b.storage_state
+    assert result_a.storage_state == Path(".aeat/auth/sessions/operator-storage.json")
 
 
 def test_storage_state_paths_returns_strict_frozen_model(tmp_path: Path) -> None:

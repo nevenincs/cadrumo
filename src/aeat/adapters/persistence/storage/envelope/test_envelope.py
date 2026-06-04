@@ -11,7 +11,8 @@ from pydantic import BaseModel, ValidationError
 
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass
-from ..errors import ClassificationError, EnvelopeVersionError
+from .....core.external_constants import UTF_8_ENCODING
+from ..errors import ClassificationError, DecryptionError, EnvelopeVersionError, StorageValidationError
 from . import EncryptionMetadata, Envelope
 from ._envelope import EnvelopeMigrator, load_envelope, save_envelope
 
@@ -119,7 +120,7 @@ class TestEnvelopeRoundTrip:
             payload=_DemoPayloadV1(name="alpha", count=1),
         )
         save_envelope(first, target)
-        original_text = target.read_text(encoding="utf-8")
+        original_text = target.read_text(encoding=UTF_8_ENCODING)
         assert original_text  # non-empty
 
         # Now write again — the on-disk file must be the new one (not corrupt).
@@ -138,6 +139,37 @@ class TestEnvelopeRoundTrip:
         )
         assert loaded.payload.name == "beta"
 
+    def test_save_write_failure_raises_storage_validation_without_path(self, tmp_path: Path) -> None:
+        env = Envelope[_DemoPayloadV1](
+            schema_version=1,
+            written_at=_now_utc(),
+            classification=SensitivityClass.OPERATIONAL,
+            payload=_DemoPayloadV1(name="x", count=1),
+        )
+        parent_file = tmp_path / "not-a-directory"
+        parent_file.write_text("occupied", encoding=UTF_8_ENCODING)
+        target = parent_file / "env.json"
+
+        with pytest.raises(StorageValidationError) as excinfo:
+            save_envelope(env, target)
+
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
+        assert str(tmp_path) not in str(excinfo.value)
+
+    def test_load_missing_file_raises_storage_validation_without_path(self, tmp_path: Path) -> None:
+        target = tmp_path / "missing.json"
+
+        with pytest.raises(StorageValidationError) as excinfo:
+            load_envelope(
+                target,
+                Envelope[_DemoPayloadV1],
+                expected_class=SensitivityClass.OPERATIONAL,
+                max_supported_version=1,
+            )
+
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
+        assert str(tmp_path) not in str(excinfo.value)
+
 
 class TestClassificationGate:
     """Loading with a different classification than the writer raises."""
@@ -151,13 +183,14 @@ class TestClassificationGate:
         )
         target = tmp_path / "env.json"
         save_envelope(env, target)
-        with pytest.raises(ClassificationError):
+        with pytest.raises(ClassificationError) as excinfo:
             load_envelope(
                 target,
                 Envelope[_DemoPayloadV1],
                 expected_class=SensitivityClass.OPERATIONAL,
                 max_supported_version=1,
             )
+        assert str(tmp_path) not in str(excinfo.value)
 
 
 class TestVersionGate:
@@ -271,3 +304,13 @@ class TestEncryptionMetadata:
                     "ciphertext_b64": base64.b64encode(b"x" * 16).decode("ascii"),
                 }
             )
+
+    def test_invalid_base64_metadata_raises_decryption_error(self) -> None:
+        meta = EncryptionMetadata(
+            nonce_b64="not-base64!!",
+            ciphertext_b64=base64.b64encode(b"x" * 16).decode("ascii"),
+            associated_data_b64="",
+        )
+
+        with pytest.raises(DecryptionError):
+            meta.to_blob()

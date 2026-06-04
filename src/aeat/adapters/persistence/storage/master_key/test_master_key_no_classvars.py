@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pytest
 
+from .....core.external_constants import UTF_8_ENCODING
+
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 _GUARDED_PROVIDERS = frozenset(
@@ -42,7 +44,7 @@ def _is_classvar_annotation(node: ast.AST) -> bool:
 def test_master_key_providers_carry_zero_classvar_state() -> None:
     """The guarded providers must declare no ClassVar-annotated attributes."""
     module_path = Path(__file__).parent / "_master_key.py"
-    tree = ast.parse(module_path.read_text(encoding="utf-8"), filename=str(module_path))
+    tree = ast.parse(module_path.read_text(encoding=UTF_8_ENCODING), filename=str(module_path))
 
     violations: list[str] = []
     for node in ast.walk(tree):

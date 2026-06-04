@@ -254,7 +254,7 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
         assert r_mut.exit_code == 0, r_mut.output
         mut_payload = assert_public_profile_payload_redacted(r_mut.output, mutated_id)
         assert mut_payload["display_name"] == "idempotency-test-mutated"
-        from ...core._bucket_pointer_io import resolve_active_bucket_id
+        from ...core import resolve_active_bucket_id
 
         minted_label_import_id = resolve_active_bucket_id()
         assert minted_label_import_id is not None

@@ -16,10 +16,12 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import get_origin
 
 import pytest
 
 from ....core.resources import bundled_path
+from . import _loader
 from ._errors import RegistryLoadError
 from ._loader import (
     discover_modelo_sources,
@@ -28,6 +30,7 @@ from ._loader import (
     load_modelo_source,
     load_registry_tree,
 )
+from ._schema import ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 _REVISION_HEADER_RE = re.compile(r'^\[\[?revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+))(?=[.\]])')
@@ -210,6 +213,79 @@ def test_directory_mode_rejects_duplicate_revision_id_across_file_and_fragment_d
 
     with pytest.raises(RegistryLoadError, match="already declared"):
         load_modelo_directory(target)
+
+
+def test_directory_mode_loads_plain_revision_file_layout(tmp_path: Path) -> None:
+    """A directory modelo can carry a normal ``revisions/<id>.toml`` revision file."""
+
+    single_file = tmp_path / "999.toml"
+    single_file.write_text(
+        """
+[modelo]
+id = "999"
+title = "Revision-file test"
+official_name = "Revision-file test"
+tax_domain = "iva"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = { years = [2025], periods = ["0A"] }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".casillas]]
+id = "0001"
+number = "1"
+label = "Base"
+section = ["liquidacion"]
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    expected = load_modelo_file(single_file)
+
+    target = tmp_path / "999"
+    (target / "revisions").mkdir(parents=True)
+    (target / "manifest.toml").write_text(
+        """
+[modelo]
+id = "999"
+title = "Revision-file test"
+official_name = "Revision-file test"
+tax_domain = "iva"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025.toml").write_text(
+        """
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = { years = [2025], periods = ["0A"] }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".casillas]]
+id = "0001"
+number = "1"
+label = "Base"
+section = ["liquidacion"]
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    actual = load_modelo_directory(target)
+    assert actual == expected
 
 
 def test_directory_mode_loads_fragmented_revision_layout(tmp_path: Path) -> None:
@@ -908,6 +984,24 @@ def test_committed_registry_tree_loads_directory_modelos() -> None:
     assert all(source.layout == "directory" for source in sources)
 
 
+def test_committed_key_modelos_load_through_generic_fragment_sources() -> None:
+    """Key committed modelos use the same generic directory-source contract."""
+
+    modelos_dir = bundled_path("registry", "aeat", "modelos")
+    sources = {source.modelo_id: source for source in discover_modelo_sources(modelos_dir)}
+
+    for modelo_id in ("036", "100", "200", "303"):
+        source = sources[modelo_id]
+        modelo = load_modelo_source(source)
+
+        assert source.layout == "directory"
+        assert source.path.name == modelo_id
+        assert modelo.id == modelo_id
+        assert source.revision_sources
+        assert all(revision_source.layout == "fragment_directory" for revision_source in source.revision_sources)
+        assert {revision_source.revision_id for revision_source in source.revision_sources} == set(modelo.revisions)
+
+
 def test_discovery_rejects_single_file_and_directory_layout_collision(tmp_path: Path) -> None:
     """A modelo id cannot be declared by both supported layouts."""
 
@@ -1037,6 +1131,25 @@ def test_committed_directory_source_inventory_lists_every_revision_fragment_toml
         assert discovered_paths == {path.resolve() for path in expected_paths}
 
     assert checked, "at least one committed directory revision must be discovered"
+
+
+def test_revision_fragment_merge_contract_covers_repeatable_revision_fields() -> None:
+    """Repeatable revision fields must be classified by the fragment compiler."""
+
+    repeatable_revision_fields = {
+        field_name
+        for field_name, field in ModeloRevision.model_fields.items()
+        if field.default == () and get_origin(field.annotation) is tuple
+    }
+    fragment_merge_fields = {
+        *_loader._REVISION_APPEND_ARRAYS,
+        _loader._REVISION_CONSTRUCTS,
+        _loader._REVISION_EXPORT_LAYOUTS,
+    }
+
+    assert repeatable_revision_fields == fragment_merge_fields
+    assert _loader._REVISION_COMPLETENESS_MANIFEST in ModeloRevision.model_fields
+    assert _loader._REVISION_COMPLETENESS_MANIFEST not in repeatable_revision_fields
 
 
 def test_committed_registry_toml_files_stay_reviewable() -> None:

@@ -165,7 +165,7 @@ def test_repository_backed_aggregation_loads_persisted_catalogues_and_emits_casi
     invoice = _invoice(initial.transaction_id)
     linked = _transaction("row-linked", purchase_invoice_evidence_id=invoice.invoice_id)
     tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((linked,)))
     invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
 
@@ -173,7 +173,7 @@ def test_repository_backed_aggregation_loads_persisted_catalogues_and_emits_casi
         bucket_id="test",
         period="2025",
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
         profile_year=2025,
     )
 
@@ -189,6 +189,34 @@ def test_repository_backed_aggregation_loads_persisted_catalogues_and_emits_casi
     assert result.casilla_aggregation.provenance[0].transaction_ids == (linked.transaction_id,)
 
 
+def test_repository_backed_aggregation_binds_default_invoice_repository_to_requested_bucket(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    initial = _transaction("row-default-invoice-repository")
+    invoice = _invoice(initial.transaction_id)
+    linked = _transaction(
+        "row-default-invoice-repository",
+        purchase_invoice_evidence_id=invoice.invoice_id,
+    )
+    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((linked,))
+    )
+    InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+        InvoiceCatalogue.from_invoices((invoice,))
+    )
+
+    result = aggregate_renta_ledger_expenses_from_repositories(
+        bucket_id="test",
+        period="2025",
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        profile_year=2025,
+    )
+
+    assert result.issues == ()
+    assert result.observations[0].invoice_id == invoice.invoice_id
+    assert result.casilla_values == {"0199": Decimal("121.00")}
+
+
 def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects: SecureObjectRepository) -> None:
     """The application binding-resolution service resolves the modelo-100 renta-expense
     ledger bindings from repository-backed transactions, keyed by binding id."""
@@ -198,7 +226,7 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
         category=SpendingCategory.ASESORIA_FISCAL,
     )
     tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
     invoice_repo.save(InvoiceCatalogue())
 
@@ -210,7 +238,7 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
         filing_year=2025,
         period="0A",
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
     )
     binding_values = aggregation.binding_values
 
@@ -230,7 +258,39 @@ def test_repository_backed_aggregation_rejects_transaction_repository_bucket_mis
             bucket_id="test",
             period="2025",
             transaction_repository=repo,
-            invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+            profile_year=2025,
+        )
+
+
+def test_repository_backed_aggregation_rejects_invoice_repository_bucket_mismatch(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id="other", objects=secure_objects)
+
+    with pytest.raises(AggregationValidationError, match="invoice_bucket_mismatch"):
+        aggregate_renta_ledger_expenses_from_repositories(
+            bucket_id="test",
+            period="2025",
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+            profile_year=2025,
+        )
+
+
+def test_repository_backed_aggregation_rejects_unbound_invoice_repository(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
+
+    with pytest.raises(AggregationValidationError, match="invoice_bucket_mismatch"):
+        aggregate_renta_ledger_expenses_from_repositories(
+            bucket_id="test",
+            period="2025",
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
             profile_year=2025,
         )
 

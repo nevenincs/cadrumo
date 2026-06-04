@@ -13,24 +13,27 @@ The on-wire shape is the typed `WrappedDek` record carrying:
 - `ciphertext` 32 bytes of AES-256-GCM ciphertext.
 - `tag`       16 bytes of AES-256-GCM authentication tag.
 
-`unwrap_dek` raises `cryptography.exceptions.InvalidTag` on AEAD
-failure; callers translate to typed errors at their boundary.
+`unwrap_dek` raises a typed storage `DecryptionError` on AEAD failure.
 """
 
 from __future__ import annotations
 
 import secrets
 
+from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from pydantic import BaseModel, Field
 
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..errors import EncryptionError
+from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from ..errors import DecryptionError, EncryptionError
 
 _NONCE_BYTES = 12
 _TAG_BYTES = 16
 _DEK_BYTES = 32
 _KEK_BYTES = 32
+_STORAGE_DECRYPTION_MESSAGE_KEY = "errors.integrity.integrity_storage_decryption"
+_STORAGE_ENCRYPTION_MESSAGE_KEY = "errors.integrity.integrity_storage_encryption"
 
 
 class WrappedDek(BaseModel):
@@ -46,8 +49,16 @@ class WrappedDek(BaseModel):
 def _associated_data(bucket_id: str) -> bytes:
     """Compose the AEAD additional-authenticated-data for one bucket."""
     if not bucket_id:
-        raise EncryptionError("bucket_id must be non-empty")
-    return f"aeat.dek-wrap.v1:{bucket_id}".encode()
+        raise _encryption_error("bucket_id must be non-empty")
+    return f"aeat.dek-wrap.v1:{bucket_id}".encode(_UTF_8_ENCODING)
+
+
+def _encryption_error(message: str) -> EncryptionError:
+    return EncryptionError(message, translated_message=_STORAGE_ENCRYPTION_MESSAGE_KEY)
+
+
+def _decryption_error(message: str) -> DecryptionError:
+    return DecryptionError(message, translated_message=_STORAGE_DECRYPTION_MESSAGE_KEY)
 
 
 def wrap_dek(*, kek: bytes, dek: bytes, bucket_id: str) -> WrappedDek:
@@ -70,13 +81,16 @@ def wrap_dek(*, kek: bytes, dek: bytes, bucket_id: str) -> WrappedDek:
             is empty.
     """
     if len(kek) != _KEK_BYTES:
-        raise EncryptionError(f"kek must be exactly {_KEK_BYTES} bytes")
+        raise _encryption_error(f"kek must be exactly {_KEK_BYTES} bytes")
     if len(dek) != _DEK_BYTES:
-        raise EncryptionError(f"dek must be exactly {_DEK_BYTES} bytes")
+        raise _encryption_error(f"dek must be exactly {_DEK_BYTES} bytes")
 
     nonce = secrets.token_bytes(_NONCE_BYTES)
     aad = _associated_data(bucket_id)
-    cipher_with_tag = AESGCM(kek).encrypt(nonce, dek, aad)
+    try:
+        cipher_with_tag = AESGCM(kek).encrypt(nonce, dek, aad)
+    except (TypeError, ValueError) as exc:
+        raise _encryption_error("DEK wrap failed") from exc
     ciphertext, tag = cipher_with_tag[:_DEK_BYTES], cipher_with_tag[_DEK_BYTES:]
     return WrappedDek(nonce=nonce, ciphertext=ciphertext, tag=tag)
 
@@ -95,13 +109,19 @@ def unwrap_dek(*, kek: bytes, wrapped: WrappedDek, bucket_id: str) -> bytes:
 
     Raises:
         EncryptionError: When ``kek`` is not 32 bytes or ``bucket_id`` is empty.
+        DecryptionError: When AEAD tag verification fails.
     """
     if len(kek) != _KEK_BYTES:
-        raise EncryptionError(f"kek must be exactly {_KEK_BYTES} bytes")
+        raise _encryption_error(f"kek must be exactly {_KEK_BYTES} bytes")
 
     aad = _associated_data(bucket_id)
     cipher_with_tag = wrapped.ciphertext + wrapped.tag
-    return AESGCM(kek).decrypt(wrapped.nonce, cipher_with_tag, aad)
+    try:
+        return AESGCM(kek).decrypt(wrapped.nonce, cipher_with_tag, aad)
+    except InvalidTag as exc:
+        raise _decryption_error("DEK unwrap tag verification failed") from exc
+    except (TypeError, ValueError) as exc:
+        raise _decryption_error("DEK unwrap failed") from exc
 
 
 __all__ = ["WrappedDek", "unwrap_dek", "wrap_dek"]

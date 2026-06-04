@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core.external_constants import UTF_8_ENCODING
 from ._layout import bucket_paths
 from ._manifest import BucketLifecycleStatus, BucketManifest, ManifestKdfParams
 from ._manifest_io import manifest_path, read_manifest, write_manifest
@@ -118,7 +119,7 @@ def test_bucket_manifest_round_trips_with_last_unlocked_at_unset(
     # quoted "None" string.
     from ._manifest_io import manifest_path
 
-    on_disk = manifest_path(paths).read_text(encoding="utf-8")
+    on_disk = manifest_path(paths).read_text(encoding=UTF_8_ENCODING)
     assert "last_unlocked_at" not in on_disk
 
     loaded = read_manifest(paths)
@@ -146,11 +147,11 @@ def test_manifest_status_mutation_surfaces_as_strict_inequality(
     write_manifest(paths, original)
 
     target = manifest_path(paths)
-    on_disk = target.read_text(encoding="utf-8")
+    on_disk = target.read_text(encoding=UTF_8_ENCODING)
     assert 'status = "tombstoned"' in on_disk
     target.write_text(
         on_disk.replace('status = "tombstoned"', 'status = "active"'),
-        encoding="utf-8",
+        encoding=UTF_8_ENCODING,
     )
 
     reloaded = read_manifest(paths)

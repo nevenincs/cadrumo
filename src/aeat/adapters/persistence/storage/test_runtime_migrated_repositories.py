@@ -13,12 +13,17 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....application.auth._apoderado import ApoderadoService
 from ....application.auth._diagnostics import list_auth_diagnostics
 from ....application.calculations._iva_compensation_history import (
     IvaCompensationHistoryRepository,
 )
-from ....application.calculations._observations_repository import CalculationObservationRepository
-from ....application.diagnostics import preview_quarantine_unreadable_secure_objects
+from ....application.calculations._observations_repository import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
+from ....application.config_reset import ConfigResetScope, reset_config
+from ....application.diagnostics import preview_quarantine_unreadable_secure_objects, secure_object_unreadable_total
 from ....application.filing import ModeloHistory, ModeloHistoryEntry
 from ....application.filing._history_repository import ModeloHistoryRepository
 from ....application.live._borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
@@ -66,6 +71,7 @@ from ....domain.invoices import (
 )
 from ....domain.iva import InvoiceKind
 from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
+from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ....domain.justificante import Justificante
 from ....domain.justificante._repository import JustificanteRepository
 from ....domain.modelos import ModeloCode
@@ -676,6 +682,25 @@ def _repair_decision(label: str) -> RepairRemediationDecision:
     )
 
 
+def _iva_wallet_decision(label: str, *, target_period: str = "2T") -> IvaCompensationReconciliationDecision:
+    return IvaCompensationReconciliationDecision(
+        taxpayer_nif=f"ES{label.upper()}",
+        target_year=2026,
+        target_period=target_period,
+        selected_authority="aeat_wallet",
+        selected_amount=Decimal("1200.00"),
+        wallet_amount=Decimal("1200.00"),
+        local_recurrence_amount=Decimal("1200.00"),
+        override_amount=None,
+        divergence="match",
+        blocked=False,
+        stale_wallet=False,
+        reason=f"Runtime migrated IVA wallet decision {label}.",
+        wallet_captured_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+        decided_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+    )
+
+
 def _save_auth_diagnostic(label: str) -> None:
     payload = {
         "diagnostic_id": f"diagnostic-{label}",
@@ -710,8 +735,13 @@ def _save_diagnostic_probe_row(label: str) -> None:
     (
         ("workflow_state", lambda: WorkflowStateRepository().load()),
         ("workflow_runs", lambda: WorkflowRunRepository().list()),
+        ("config_reset_auth", lambda: reset_config(ConfigResetScope.AUTH, confirmed=True)),
+        ("config_reset_profile", lambda: reset_config(ConfigResetScope.PROFILE, confirmed=True)),
+        ("config_reset_data", lambda: reset_config(ConfigResetScope.DATA, confirmed=True)),
+        ("config_reset_all", lambda: reset_config(ConfigResetScope.ALL, confirmed=True)),
         ("bucket_events", lambda: BucketEventHistoryRepository().load()),
         ("auth_diagnostics", list_auth_diagnostics),
+        ("auth_apoderado", lambda: ApoderadoService().status(bucket_id="bucket-a")),
         ("auth_session", lambda: _session_store.load(Path("/profile/active/aeat-session"))),
         ("google_oauth_client", lambda: google_session_store.load_client("operator-google")),
         ("google_oauth_token", lambda: google_session_store.load_token("operator-google")),
@@ -744,6 +774,11 @@ def _save_diagnostic_probe_row(label: str) -> None:
         (
             "calculation_observations",
             lambda: CalculationObservationRepository(bucket_id="bucket-a").load_observation("303", 2026, "1T"),
+        ),
+        ("iva_wallet_decisions", lambda: IvaWalletDecisionRepository().list_decisions()),
+        (
+            "iva_wallet_decision_history",
+            lambda: IvaWalletDecisionRepository().load_decision_history("ESBUCKET-A", 2026, "2T"),
         ),
         ("iva_compensation_history", lambda: IvaCompensationHistoryRepository(bucket_id="bucket-a").list_periods()),
         ("usage_ratios", lambda: load_usage_ratios(bucket_id="bucket-a")),
@@ -772,8 +807,13 @@ def test_migrated_runtime_defaults_refuse_missing_session(
     (
         ("workflow_state", lambda: WorkflowStateRepository().load()),
         ("workflow_runs", lambda: WorkflowRunRepository().list()),
+        ("config_reset_auth", lambda: reset_config(ConfigResetScope.AUTH, confirmed=True)),
+        ("config_reset_profile", lambda: reset_config(ConfigResetScope.PROFILE, confirmed=True)),
+        ("config_reset_data", lambda: reset_config(ConfigResetScope.DATA, confirmed=True)),
+        ("config_reset_all", lambda: reset_config(ConfigResetScope.ALL, confirmed=True)),
         ("bucket_events", lambda: BucketEventHistoryRepository().load()),
         ("auth_diagnostics", list_auth_diagnostics),
+        ("auth_apoderado", lambda: ApoderadoService().status(bucket_id="bucket-a")),
         ("auth_session", lambda: _session_store.load(Path("/profile/active/aeat-session"))),
         ("google_oauth_client", lambda: google_session_store.load_client("operator-google")),
         ("google_oauth_token", lambda: google_session_store.load_token("operator-google")),
@@ -807,6 +847,11 @@ def test_migrated_runtime_defaults_refuse_missing_session(
             "calculation_observations",
             lambda: CalculationObservationRepository(bucket_id="bucket-a").load_observation("303", 2026, "1T"),
         ),
+        ("iva_wallet_decisions", lambda: IvaWalletDecisionRepository().list_decisions()),
+        (
+            "iva_wallet_decision_history",
+            lambda: IvaWalletDecisionRepository().load_decision_history("ESBUCKET-A", 2026, "2T"),
+        ),
         ("iva_compensation_history", lambda: IvaCompensationHistoryRepository(bucket_id="bucket-a").list_periods()),
         ("usage_ratios", lambda: load_usage_ratios(bucket_id="bucket-a")),
         ("borrador_100_snapshot", lambda: Borrador100SnapshotRepository(bucket_id="bucket-a").list_snapshots()),
@@ -828,6 +873,35 @@ def test_migrated_runtime_defaults_refuse_route_session_mismatch(
         pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"),
     ):
         operation()
+
+
+def test_diagnostics_secure_object_total_degrades_on_missing_session(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level("DEBUG", logger="aeat.application.diagnostics")
+
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="bucket-a"):
+        assert secure_object_unreadable_total() == 0
+
+    assert "secure objects engine unreachable for repair probe" in caplog.text
+    assert "no active bucket session" in caplog.text
+
+
+def test_diagnostics_secure_object_total_degrades_on_route_session_mismatch(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level("DEBUG", logger="aeat.application.diagnostics")
+
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="bucket-a"),
+        activate_session(_session("bucket-b")),
+    ):
+        assert secure_object_unreadable_total() == 0
+
+    assert "secure objects engine unreachable for repair probe" in caplog.text
+    assert "route does not match the active bucket session" in caplog.text
 
 
 def test_workflow_state_default_isolates_active_profile_writes(tmp_path: Path) -> None:
@@ -1040,6 +1114,8 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
     observation_b = RegistryModeloObservation(modelo="303", filing_year=2026, period="2T")
     history_a = _history("bucket-a")
     history_b = _history("bucket-b")
+    decision_a = _iva_wallet_decision("bucket-a", target_period="2T")
+    decision_b = _iva_wallet_decision("bucket-b", target_period="3T")
     usage_a = _usage_profile(SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ, "0.21")
     usage_b = _usage_profile(SpendingCategory.TELEFONIA_MOVIL, "0.60")
 
@@ -1049,12 +1125,15 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
             observation_a,
             source_kind="operator_manual",
         )
+        IvaWalletDecisionRepository().save_decision(decision_a)
         IvaCompensationHistoryRepository(bucket_id="bucket-a").save_period(_iva_state("bucket-a"))
         save_usage_ratios(usage_a, bucket_id="bucket-a")
 
     with _active_runtime(tmp_path, "bucket-b"):
         assert ModeloHistoryRepository(bucket_id="bucket-b").list_modelos() == ()
         assert CalculationObservationRepository(bucket_id="bucket-b").load_observation("303", 2026, "1T") is None
+        assert IvaWalletDecisionRepository().list_decisions() == ()
+        assert IvaWalletDecisionRepository().load_decision_history("ESBUCKET-A", 2026, "2T") == ()
         assert IvaCompensationHistoryRepository(bucket_id="bucket-b").list_periods() == ()
         assert load_usage_ratios(bucket_id="bucket-b") == UsageRatioProfile()
         ModeloHistoryRepository(bucket_id="bucket-b").save(history_b)
@@ -1062,18 +1141,24 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
             observation_b,
             source_kind="operator_manual",
         )
+        IvaWalletDecisionRepository().save_decision(decision_b)
         IvaCompensationHistoryRepository(bucket_id="bucket-b").save_period(_iva_state("bucket-b"))
         save_usage_ratios(usage_b, bucket_id="bucket-b")
 
     with _active_runtime(tmp_path, "bucket-a"):
         modelo_ids = ModeloHistoryRepository(bucket_id="bucket-a").list_modelos()
         observed = CalculationObservationRepository(bucket_id="bucket-a").load_observation("303", 2026, "1T")
+        wallet_repo = IvaWalletDecisionRepository()
+        decisions = wallet_repo.list_decisions()
+        decision_history = wallet_repo.load_decision_history("ESBUCKET-A", 2026, "2T")
         iva_periods = IvaCompensationHistoryRepository(bucket_id="bucket-a").list_periods()
         usage = load_usage_ratios(bucket_id="bucket-a")
 
     assert modelo_ids == ("303",)
     assert observed is not None
     assert observed.observation == observation_a
+    assert decisions == (decision_a,)
+    assert decision_history == (decision_a,)
     assert tuple(state.period for state in iva_periods) == ("1TA",)
     assert usage == usage_a
 

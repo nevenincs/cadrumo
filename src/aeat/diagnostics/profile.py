@@ -85,8 +85,9 @@ def _resolve_target_profile(profile: str | None):
     the immutable UUID ``bucket_id`` and the operator ``label``.
     """
     from ..application.workflow import (
+        ProfileLabelAmbiguousError,
         read_profile_bucket,
-        read_profile_bucket_by_id,
+        resolve_profile_bucket,
     )
 
     if profile is not None:
@@ -95,7 +96,7 @@ def _resolve_target_profile(profile: str | None):
             raise _bad_profile_empty()
         try:
             pointer = read_profile_bucket(target)
-        except ValueError as exc:
+        except ProfileLabelAmbiguousError as exc:
             raise _bad_ambiguous_profile(target) from exc
         if pointer is None:
             raise _bad_unknown_profile(target)
@@ -103,7 +104,19 @@ def _resolve_target_profile(profile: str | None):
     active = resolve_active_bucket_id()
     if active is None:
         raise _bad_no_active_profile()
-    pointer = read_profile_bucket_by_id(active)
+    # The active pointer (AEAT_ACTIVE_PROFILE env var or the on-disk
+    # pointer file) may carry either the UUID bucket id or the operator
+    # display label: an operator references a profile by the name chosen
+    # at create, never the UUID they never see. Resolve either form so a
+    # name-valued active profile does not hard-miss with "unknown profile".
+    # The label fallback raises ProfileLabelAmbiguousError when two live
+    # profiles share the name (it is a WorkflowError, NOT a ValueError);
+    # surface it as the same clean ambiguity refusal the explicit
+    # ``--profile`` branch uses, not a raw traceback.
+    try:
+        pointer = resolve_profile_bucket(active)
+    except ProfileLabelAmbiguousError as exc:
+        raise _bad_ambiguous_profile(active) from exc
     if pointer is None:
         raise _bad_unknown_profile(active)
     return pointer

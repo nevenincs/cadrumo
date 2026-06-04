@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ._errors import MasterKeyTypeError
 from ._zeroise import zeroise
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -46,10 +47,15 @@ def test_zeroise_does_not_replace_buffer_object() -> None:
 
 def test_zeroise_rejects_immutable_bytes() -> None:
     """Python cannot overwrite immutable `bytes`; the contract is enforced."""
-    with pytest.raises(TypeError, match="bytearray"):
+    with pytest.raises(MasterKeyTypeError, match="bytearray") as excinfo:
         zeroise(b"\x01" * 32)
+    assert excinfo.value.translated_message == "errors.internal.internal_master_key_type"
+    assert excinfo.value.context == {"received_type": "bytes"}
 
 
 def test_zeroise_rejects_non_bytes_like() -> None:
-    with pytest.raises(TypeError, match="bytearray"):
+    with pytest.raises(MasterKeyTypeError, match="bytearray") as excinfo:
         zeroise("password")
+    assert excinfo.value.translated_message == "errors.internal.internal_master_key_type"
+    assert excinfo.value.context == {"received_type": "str"}
+    assert "password" not in str(excinfo.value)

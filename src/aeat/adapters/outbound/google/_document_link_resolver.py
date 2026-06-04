@@ -63,7 +63,12 @@ def _drive_service(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-D
     return build("drive", "v3", credentials=credentials, cache_discovery=False)
 
 
-def resolve_document_link(*, source: AttachmentSource, reference: str, credentials: object) -> bytes:
+def resolve_document_link(
+    *,
+    source: AttachmentSource,
+    reference: str,
+    credentials: object,
+) -> bytes:
     """Resolve a recorded document link to its bytes, within the granted scopes.
 
     Args:
@@ -110,6 +115,10 @@ def resolve_document_link(*, source: AttachmentSource, reference: str, credentia
 
 def _download_drive_file(file_id: str, credentials: object) -> bytes:
     service = _drive_service(credentials)
+    return _download_drive_file_from_service(file_id, service)
+
+
+def _download_drive_file_from_service(file_id: str, service: Any) -> bytes:
     request = service.files().get_media(fileId=file_id)
     try:
         payload = request.execute()

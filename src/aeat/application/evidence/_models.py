@@ -25,6 +25,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from ...core.errors import AeatError
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity import BucketId
 from ...core.time import now
 from ...domain.buckets._event import BucketEventObjectType
@@ -170,7 +171,7 @@ def derive_bundle_id(
         payload_parts.append(
             f"record={record.object_type.value}:{record.object_id}:{record.content_sha256}",
         )
-    canonical = "\n".join(payload_parts).encode("utf-8")
+    canonical = "\n".join(payload_parts).encode(UTF_8_ENCODING)
     return hashlib.sha256(canonical).hexdigest()
 
 

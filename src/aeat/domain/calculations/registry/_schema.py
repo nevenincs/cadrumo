@@ -1965,6 +1965,19 @@ class CasillaDefinition(RegistryModel):
     semantic_role_cardinality: Literal["shared", "intentional_singleton"] = "shared"
     semantic_role_cardinality_reason: str | None = Field(default=None, min_length=1, max_length=256)
     aliases: tuple[CasillaAlias, ...] = ()
+    internal_only: bool = Field(
+        default=False,
+        description=(
+            "App-internal computed casilla that participates in the calculation "
+            "graph but is intentionally absent from the AEAT-published Diseño de "
+            "Registros. Typically a regulatory ceiling or intermediate the app "
+            "materialises as a casilla so verification predicates and downstream "
+            "formulas can reference it. An internal_only casilla MUST be computed "
+            "(``input_kind = COMPUTED``), MUST carry no ``export_refs``, and MUST "
+            "carry legal_refs / source_refs grounding the internal computation in "
+            "real regulatory authority."
+        ),
+    )
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
@@ -1978,6 +1991,16 @@ class CasillaDefinition(RegistryModel):
             raise RegistryValidationError(f"bound casilla {self.id!r} must declare binding")
         if self.input_kind == InputKind.BOUND and self.formula is not None:
             raise RegistryValidationError(f"bound casilla {self.id!r} must not declare formula")
+        if self.internal_only and self.export_refs:
+            raise RegistryValidationError(
+                f"internal_only casilla {self.id!r} must not declare export_refs "
+                "(an app-internal casilla cannot also be exported to a fichero record)"
+            )
+        if self.internal_only and self.input_kind != InputKind.COMPUTED:
+            raise RegistryValidationError(
+                f"internal_only casilla {self.id!r} must be computed "
+                "(an internal ceiling has no legitimate computation surface unless formula-derived)"
+            )
         if self.semantic_role_cardinality == "intentional_singleton":
             if self.semantic_role is None:
                 raise RegistryValidationError(

@@ -115,11 +115,12 @@ include = [
 
 # ── uv ───────────────────────────────────────────────────────────────────────
 [tool.uv]
-# tree-sitter-language-pack 1.6.3 (2026-04-23) shipped wheels only for cp312 and
-# cp314; cp313 (our interpreter) has no wheel and no sdist. Pin below 1.6.3 until
-# upstream restores cp313 support.
+# vaultspec-rag 0.2.14 requires tree-sitter-language-pack below 1.6.2, and shared
+# Windows worktrees can keep the native parser DLL locked indefinitely. Keep the
+# resolver bound aligned with vaultspec-rag so additive installs and lock checks
+# do not select the incompatible 1.6.2 parser package.
 override-dependencies = [
-  "tree-sitter-language-pack<1.6.3",
+  "tree-sitter-language-pack<1.6.2",
 ]
 
 [[tool.uv.index]]
@@ -136,6 +137,8 @@ torch = [
 managed-torch-direct-dependency = true
 [dependency-groups]
 dev = [
+  # Dependency declaration drift: missing, unused, transitive, and misplaced deps.
+  "deptry>=0.24",
   # Import-linter for layered-architecture boundary enforcement.
   # Contract definition lives in `.importlinter` at repo root; activated by
   # the architecture boundary checks.
@@ -169,8 +172,8 @@ dev = [
   "time-machine>=2.16.0",
   "ty>=0.0.1a1",
   # Vault tooling — contributor-only; not imported by src/aeat/.
-  "vaultspec-core>=0.1.20",
-  "vaultspec-rag>=0.2.10",
+  "vaultspec-core>=0.1.25",
+  "vaultspec-rag>=0.2.14",
   # Sphinx documentation pipeline — `just docs` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/aeat/.
   "sphinx>=8.1,<10",  # upper bound keeps -W / nitpicky flag semantics stable
@@ -194,6 +197,7 @@ dev = [
   "semgrep>=1.85.0",
   "radon>=6.0.1",
   "complexipy>=3.3.0",
+  "vulture>=2.16",
 ]
 
 # ── Ruff ─────────────────────────────────────────────────────────────────────
@@ -700,9 +704,10 @@ exclude = 'tests|test_|_test_'
 min_confidence = 80
 paths = ["src/aeat"]
 exclude = [
-  "src/aeat/**/test_*.py",
-  "src/aeat/**/_test_*.py",
-  "src/aeat/tests",
+  "*test_*.py",
+  "*_test_*.py",
+  "*/tests/*",
+  "*\\tests\\*",
   "stubs",
 ]
 ignore_decorators = [
@@ -727,14 +732,10 @@ ignore_decorators = [
 # `click` ships under typer (typer's CLI surface is built on click), and
 # `yaml` ships as `PyYAML`. The remaining diagnostics flag genuine drift
 # and stay active.
-[tool.deptry]
-ignore_unused = [
-  "tzdata",         # IANA db, only matters at runtime on Windows; runtime-required.
-  "python-dotenv",  # loaded by core.config when AEAT_DOTENV is set; deptry can't see runtime use.
-]
 [tool.deptry.package_module_name_map]
 "PyYAML" = ["yaml"]
 "pyyaml" = ["yaml"]
 [tool.deptry.per_rule_ignores]
+DEP002 = ["python-dotenv", "tzdata"]
 DEP003 = ["click", "pydantic_core", "yaml"]
 DEP004 = ["pytest", "reportlab"]

@@ -38,6 +38,7 @@ from ...adapters.persistence.storage import (
     safe_repository_id,
 )
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
 from ...domain.calculations.registry import RegistryModeloObservation
 from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
@@ -87,7 +88,7 @@ class _IvaWalletDecisionEnvelopePayload(BaseModel):
 
 
 def _decision_payload_digest(decision: IvaCompensationReconciliationDecision) -> str:
-    return hashlib.sha256(decision.model_dump_json().encode("utf-8")).hexdigest()
+    return hashlib.sha256(decision.model_dump_json().encode(UTF_8_ENCODING)).hexdigest()
 
 
 def observation_key(modelo: str, filing_year: int, period: str) -> str:
@@ -135,7 +136,7 @@ def iva_wallet_decision_key(taxpayer_nif: str, target_year: int, target_period: 
     if not 2000 <= target_year <= 2099:
         raise ObservationKeyError(f"IVA wallet target_year {target_year} out of supported range [2000, 2099]")
     digest = hashlib.sha256(
-        "\x1f".join((taxpayer_token, str(target_year), target_period.strip().upper())).encode("utf-8")
+        "\x1f".join((taxpayer_token, str(target_year), target_period.strip().upper())).encode(UTF_8_ENCODING)
     ).hexdigest()
     return f"iva-wallet-decision:{digest}"
 
@@ -155,7 +156,7 @@ def iva_wallet_decision_event_key(decision: IvaCompensationReconciliationDecisio
                 decision.wallet_captured_at.isoformat() if decision.wallet_captured_at is not None else "",
                 _decision_payload_digest(decision),
             )
-        ).encode("utf-8")
+        ).encode(UTF_8_ENCODING)
     ).hexdigest()
     return f"iva-wallet-decision-event:{digest}"
 
@@ -281,7 +282,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
             classification=self.sensitivity,
             schema_version=self.schema_version,
             written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
+            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
 
     def load_decision(
@@ -331,7 +332,9 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
             expected_class=self.sensitivity,
             max_supported_version=self.schema_version,
         ):
-            envelope = Envelope[_IvaWalletDecisionEnvelopePayload].model_validate_json(record.payload.decode("utf-8"))
+            envelope = Envelope[_IvaWalletDecisionEnvelopePayload].model_validate_json(
+                record.payload.decode(UTF_8_ENCODING)
+            )
             decision = envelope.payload.decision
             if (
                 decision.taxpayer_nif.strip().upper() == taxpayer_token

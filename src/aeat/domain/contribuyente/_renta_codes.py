@@ -158,6 +158,42 @@ class SituacionFamiliar(StrEnum):
         )
 
 
+class SituacionFamiliarM145(StrEnum):
+    """Trinary "Situación familiar" axis declared on Modelo 145 (box 1).
+
+    The Modelo 145 form (Comunicación de datos al pagador, BOE-A-2011-208,
+    art. 88 RIRPF) collects the recipient's family-situation trinary that the
+    pagador uses to apply Art. 81 RIRPF withholding adjustments. It is a
+    distinct axis from :class:`SituacionFamiliar`, which encodes the Art. 82
+    LIRPF unidad-familiar conjunta-eligibility test — Art. 81 retención
+    arithmetic and Art. 82 conjunta arithmetic do not share categories.
+
+    Form-numbered values (mirroring the three numbered boxes on the
+    physical mod145 form):
+
+    - ``familia_1``: viudo/a o casado/a separado/a legalmente con
+      descendientes que dan derecho a la totalidad del mínimo por
+      descendientes. Eligible for the supplementary withholding reduction
+      under RIRPF art. 81.1.1°.
+    - ``familia_2``: casado/a y no separado/a legalmente cuyo cónyuge no
+      obtiene rentas anuales > €1,500 (excluidas las exentas).  Eligible
+      for the supplementary withholding reduction under RIRPF art. 81.1.2°.
+    - ``familia_3``: situación familiar distinta de las anteriores. The
+      default; no supplementary withholding reduction.
+    """
+
+    FAMILIA_1 = "familia_1"
+    FAMILIA_2 = "familia_2"
+    FAMILIA_3 = "familia_3"
+
+    def is_eligible_for_supplementary_reduction(self) -> bool:
+        """True when the situation grants the RIRPF art. 81.1.1°/2° reduction."""
+        return self in (
+            SituacionFamiliarM145.FAMILIA_1,
+            SituacionFamiliarM145.FAMILIA_2,
+        )
+
+
 __all__ = [
     "UE_EEA_COUNTRY_CODES",
     "FiscalResidency",
@@ -166,4 +202,5 @@ __all__ = [
     "RentaMaritalStatus",
     "RentaSexCode",
     "SituacionFamiliar",
+    "SituacionFamiliarM145",
 ]

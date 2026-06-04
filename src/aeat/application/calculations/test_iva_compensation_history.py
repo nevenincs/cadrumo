@@ -14,6 +14,7 @@ from ...adapters.outbound.aeat.sede._schema import (
     FiledDeclaracionObservation,
     IvaCompensationWalletObservation,
     IvaCompensationWalletRow,
+    ObservedCasillaValue,
 )
 from ...core.errors import ERROR_REGISTRY, build_error_envelope
 from ...domain.iva_compensation._carry_forward import (
@@ -23,9 +24,19 @@ from ...domain.iva_compensation._carry_forward import (
     build_iva_compensation_carry_forward_report,
     enforce_iva_compensation_four_year_window,
 )
-from ...domain.iva_compensation._errors import IvaCompensationCarryForwardPolicyError
+from ...domain.iva_compensation._errors import (
+    IvaCompensationCarryForwardPolicyError,
+    IvaCompensationDecimalParseError,
+    IvaCompensationSeedConflictError,
+    IvaCompensationYearRangeError,
+)
+from ...tests.secure_sql import isolated_runtime_profile
 from ._errors import IvaCompensationModeloError
-from ._iva_compensation_history import iva_compensation_state_from_filed_observation
+from ._iva_compensation_history import (
+    iva_compensation_period_key,
+    iva_compensation_state_from_filed_observation,
+    seed_iva_compensation_period,
+)
 from ._iva_wallet_reconciliation import reconcile_iva_compensation_wallet
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -230,14 +241,72 @@ def test_iva_compensation_modelo_error_is_registered_in_error_registry() -> None
 
 
 def test_iva_compensation_modelo_error_round_trips_through_build_error_envelope() -> None:
-    exc = IvaCompensationModeloError("IVA compensation history only accepts Modelo 303 observations")
+    exc = IvaCompensationModeloError(
+        translated_message="application.calculations.iva_compensation.errors.modelo_303_only",
+        context={"modelo": "130"},
+    )
     envelope = build_error_envelope(exc, trace_id=None)
     assert envelope.code == "REFUSED_IVA_COMPENSATION_MODELO"
     assert envelope.retryable is False
     assert envelope.suggestion == "aeat app live iva-wallet history"
+    assert envelope.message != "IVA compensation history only accepts Modelo 303 observations"
 
 
 def test_iva_compensation_state_from_filed_observation_raises_for_non_303_modelo() -> None:
     observation = _filed_observation(modelo="130")
-    with pytest.raises(IvaCompensationModeloError, match="Modelo 303"):
+    with pytest.raises(IvaCompensationModeloError) as excinfo:
         iva_compensation_state_from_filed_observation(observation)
+
+    assert excinfo.value.translated_message == "application.calculations.iva_compensation.errors.modelo_303_only"
+    assert excinfo.value.context == {"modelo": "130"}
+
+
+def test_iva_compensation_period_key_raises_localized_year_range_error() -> None:
+    with pytest.raises(IvaCompensationYearRangeError) as excinfo:
+        iva_compensation_period_key(1999, "1T")
+
+    assert excinfo.value.translated_message == "errors.refused.refused_iva_compensation_year_range"
+    assert excinfo.value.context == {"filing_year": 1999, "min_year": 2000, "max_year": 2099}
+
+
+def test_iva_compensation_state_from_filed_observation_raises_localized_decimal_parse_error() -> None:
+    observation = _filed_observation(modelo="303").model_copy(
+        update={
+            "casillas": (
+                ObservedCasillaValue(
+                    casilla_id="69",
+                    value="not-decimal",
+                    source_artefact_kind="submitted_file",
+                    source_locator="submitted-file:casilla-69",
+                    confidence=1.0,
+                ),
+            )
+        }
+    )
+
+    with pytest.raises(IvaCompensationDecimalParseError) as excinfo:
+        iva_compensation_state_from_filed_observation(observation)
+
+    assert excinfo.value.translated_message == "errors.refused.refused_iva_compensation_decimal_parse"
+    assert excinfo.value.context == {"casilla_id": "69"}
+
+
+def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="iva-compensation-conflict"):
+        seed_iva_compensation_period(
+            taxpayer_nif=_TAXPAYER_REF,
+            filing_year=2024,
+            period="2T",
+            amount=Decimal("100.00"),
+        )
+
+        with pytest.raises(IvaCompensationSeedConflictError) as excinfo:
+            seed_iva_compensation_period(
+                taxpayer_nif=_TAXPAYER_REF,
+                filing_year=2024,
+                period="2T",
+                amount=Decimal("50.00"),
+            )
+
+        assert excinfo.value.translated_message == "application.calculations.iva_compensation.errors.seed_conflict"
+        assert excinfo.value.context == {"filing_year": 2024, "period": "2T", "existing_status": "seeded"}

@@ -39,7 +39,10 @@ class JustificanteRepository(SecureBoundRepository[Justificante]):
     namespace: ClassVar[str] = "aeat.domain.justificante.metadata"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
     schema_version: ClassVar[int] = 1
-    payload_type: ClassVar[type[Justificante]] = Justificante
+
+    @classmethod
+    def payload_model(cls) -> type[Justificante]:
+        return Justificante
 
     def extract_identifier(self, payload: Justificante) -> str:
         return payload.csv
