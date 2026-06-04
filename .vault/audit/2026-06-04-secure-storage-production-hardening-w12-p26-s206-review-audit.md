@@ -43,10 +43,32 @@ modelo calculation workbooks, the `Evidencia` surface, online/offline workbook
 parity, visual styling facets, official-layout parity gates, or BOE fichero
 byte-shape exports. Those remain owned by the modelo export parity workstreams.
 
-## S206-005 | PASS | Validation
+## S206-005 | FIXED | Intersecting wallet constants work is validated
+
+Shared-worktree edits in the same core constants files added typed pre303
+browser-action labels and TOML values used by the IVA compensation wallet and
+Cl@ve Movil auth surfaces. The wallet representation helper was missing from
+the implementation while tests imported it; the helper now validates the same
+HTML guard used by the async browser path and accepts only the reviewed
+own-name dispatcher shape.
+
+## S206-006 | FIXED | Deprecated diagnostics locale leaves were removed
+
+The locale gate surfaced stale `cli.diagnostics.profile` and
+`cli.diagnostics.secure_objects` strings from the removed standalone
+`src/aeat/diagnostics` CLI package. The leaves were removed through the
+canonical `python -m aeat.locales remove` workflow followed by
+`python -m aeat.locales scaffold` to prune empty namespace parents. The stale
+inventory ratchet was removed from `src/aeat/test_locale_coverage_inventory.py`.
+
+## S206-007 | PASS | Validation
 
 - `uv run --no-sync ruff check src/aeat/application/export/_tabular.py src/aeat/application/export/test_tabular.py` passed.
 - `uv run --no-sync pytest src/aeat/application/export/test_tabular.py -q` passed with 21 tests.
+- `uv run --no-sync ruff check src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py src/aeat/adapters/outbound/aeat/sede/test_iva_compensation_wallet.py src/aeat/adapters/outbound/aeat/auth/_clave_movil.py src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py src/aeat/application/export/_tabular.py src/aeat/application/export/test_tabular.py src/aeat/core/external_constants.py src/aeat/core/test_external_constants.py` passed.
+- `uv run --no-sync pytest -q src/aeat/adapters/outbound/aeat/sede/test_iva_compensation_wallet.py src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py -k "browser_action or representation_own_name or own_name_representation or wallet"` passed with 33 selected tests.
+- `uv run --no-sync pytest -q src/aeat/application/export/test_tabular.py src/aeat/core/test_external_constants.py -k "export or mime_type or tabular or pre303 or live_safety"` passed with 39 selected tests.
+- `uv run --no-sync pytest -q src/aeat/test_locale_coverage_inventory.py src/aeat/locales/test_parity.py -k "operator_error_locale_key or codebase_to_locale_parity"` passed with 125 selected tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for the S206

@@ -558,8 +558,10 @@ application:
   calculations:
     iva_compensation:
       errors:
-        modelo_303_only: 'El historial de compensación de IVA solo acepta observaciones del Modelo 303.'
-        seed_conflict: 'Ya existe un estado de compensación de IVA para este periodo; la semilla sobrescribiría el historial almacenado.'
+        modelo_303_only: El historial de compensación de IVA solo acepta observaciones
+          del Modelo 303.
+        seed_conflict: Ya existe un estado de compensación de IVA para este periodo;
+          la semilla sobrescribiría el historial almacenado.
   ledger:
     errors:
       evidence_attachment_requires_ids: El adjunto de evidencia del libro mayor requiere
@@ -1945,7 +1947,6 @@ cli:
       key_help: Clave a limpiar
     workflow_help: Mostrar ayuda del flujo de configuración
   diagnostics:
-    app_help: Diagnósticos internos de AEAT solo para ingeniería.
     browser:
       http_status_label: Estado HTTP
       markers_label: Marcadores
@@ -1963,24 +1964,6 @@ cli:
     next_action:
       inspect_registry_toml: Inspeccione las fuentes TOML del registro para identificar
         el problema.
-    profile:
-      errors:
-        ambiguous_profile: 'Nombre de perfil ambiguo: %{profile}.'
-        invalid_value_fallback: 'Valor no válido para %{key}: %{value}'
-        invalid_value_with_choices: '%{message} (%{choices})'
-        no_active_profile: No hay perfil activo seleccionado.
-        profile_empty: --profile no puede estar en blanco.
-        unknown_profile: 'Perfil desconocido: %{profile}.'
-        unknown_profile_key: 'Clave de perfil desconocida: %{key}.'
-      get_help: Lee el valor guardado de una clave de perfil.
-      help: Inspección de campos de perfil y ediciones quirúrgicas solo para ingeniería.
-      key_help: Clave de perfil.
-      profile_help: Perfil que se va a usar; por defecto, el perfil activo.
-      set_help: Escribe el valor de una clave de perfil, validado con el descriptor
-        del asistente.
-      unset_help: Borra el valor de una clave de perfil.
-      unset_placeholder: <no establecido>
-      value_help: Valor que se va a guardar.
     repair:
       audience_internal: problema interno de la aplicación
       auth_label: Autenticación
@@ -1996,18 +1979,6 @@ cli:
       profile_label: Perfil
       python_label: Python
       version_label: Versión
-    secure_objects:
-      all_help: Devuelve todas las claves, incluidas las filas no legibles.
-      errors:
-        conflicting_filters: --all y --unreadable no se pueden combinar; pasa uno
-          o ninguno.
-      help: Inventariar el índice de objetos seguros por espacio de nombres.
-      labels:
-        count: recuento
-        namespace: Espacio de nombres
-      list_help: Lista las claves de objetos seguros guardadas en un espacio de nombres.
-      namespace_help: Espacio de nombres que se va a inventariar.
-      unreadable_help: Limita el listado a filas no descifrables.
     summary:
       auth_no_session: El proveedor de autenticación %{provider} no tiene una sesión
         lista
