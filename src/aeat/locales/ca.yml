@@ -1015,6 +1015,8 @@ application:
     errors:
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
         requires supplied_question_ids — edit is a patch, not a full rewrite.
+      persist_patch_unknown_question_id: El pedaç de l'assistent referencia un id
+        de pregunta desconegut.
       profile_flag_required: L'assistent requereix --profile NAME (sense valor per
         defecte 'default' implícit).
       quiet_missing_flags: 'A aquesta execució amb --quiet li falten dades obligatòries.
