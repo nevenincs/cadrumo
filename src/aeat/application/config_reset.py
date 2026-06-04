@@ -90,7 +90,10 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
         ConfigResetUnconfirmedError: When ``confirmed`` is ``False``.
     """
     if not confirmed:
-        raise ConfigResetUnconfirmedError("config reset refused: confirmed must be True (run with --yes from the CLI)")
+        raise ConfigResetUnconfirmedError(
+            translated_message="errors.refused.refused_config_reset_unconfirmed",
+            context={"scope": scope.value},
+        )
 
     from .diagnostics import quarantine_unreadable_secure_objects
     from .workflow._models import AuthState
