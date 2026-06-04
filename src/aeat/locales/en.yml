@@ -126,7 +126,7 @@ adapters:
       errors:
         no_active_profile: No active AEAT profile is bound for Google OAuth.
       suggestions:
-        create_profile: Run `aeat config profile create NAME --tax-id <NIF>` and then
+        create_profile: Run `aeat config profile create NAME --tax-id <DNI/NIE/NIF/CIF>` and then
           retry the Google command.
   inbound:
     declaracion:
@@ -1829,7 +1829,7 @@ cli:
     errors:
       invalid_value: 'Invalid value for %{name}: %{value}'
       no_active_profile: No active profile. Run 'aeat config profile create NAME --tax-id
-        <NIF>' first.
+        <DNI/NIE/NIF/CIF>' first.
       unknown_key: 'Unknown configuration key: %{name}. Run ''aeat config profile
         list'' to see the available keys.'
     get:
@@ -1965,7 +1965,7 @@ cli:
         show_help: Show the latest censo AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
       create_epilog: 'Minimal freelancer profile: --entity-type natural_person --tax-id
-        <NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
+        <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Initialize a new active profile and config bucket.
       delete_active_cleared: The deleted profile was the active one; the active-profile
         pointer has been cleared. Run 'aeat config profile switch NAME' or 'aeat config
@@ -2003,7 +2003,7 @@ cli:
         verbs in this terminal will refuse with NoActiveBucketSessionError until you
         run `aeat config profile switch NAME` (or open a new terminal and re-select).
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
-        <NIF>` first.
+        <DNI/NIE/NIF/CIF>` first.
       preflight_filing_year_help: Four-digit filing year.
       preflight_help: Report which profile fields are missing for a given (modelo,
         revision, filing-year, period) filing context.
@@ -4192,7 +4192,7 @@ wizard:
       \ this profile in one of two ways:\n\n1. Run the command again from an interactive\
       \ terminal to use the guided setup:\n     aeat config profile create NAME\n\n\
       2. Or create it in one step by supplying the required details as flags:\n  \
-      \   aeat config profile create NAME --quiet --tax-id NIF"
+      \   aeat config profile create NAME --quiet --tax-id DNI/NIE/NIF/CIF"
     unsupported_console_edit: "The guided setup could not open an interactive prompt\
       \ in this run.\nNothing has been saved yet.\n\nEdit this profile non-interactively\
       \ by naming the field to change:\n  aeat config profile edit %{profile_name}\
