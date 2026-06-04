@@ -38,7 +38,9 @@ specific context for operators and diagnostics.
 Validation passed:
 
 - `uv run --no-sync pytest -q src/aeat/application/filing/test_runtime_repository.py`
+- `uv run --no-sync pytest -q src/aeat/application/filing/test_runtime_repository.py src/aeat/application/filing/test_review_runtime_storage.py`
 - `uv run --no-sync ruff check src/aeat/application/filing/_runtime_repository.py src/aeat/application/filing/test_runtime_repository.py`
+- `uv run --no-sync ruff check src/aeat/application/filing/_runtime_repository.py src/aeat/application/filing/_history_repository.py src/aeat/application/filing/_review.py src/aeat/application/filing/test_runtime_repository.py src/aeat/application/filing/test_review_runtime_storage.py`
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit`
 
 ## Notes
@@ -47,3 +49,8 @@ No direct production `SecureObjectRepository` construction, naked environment
 access, settings bypass, silent exception swallowing, raw user-facing string,
 `noqa`, `pragma`, monkeypatch, fake, mock, skip, xfail, or tautological test was
 introduced.
+
+Observed follow-up: the domain filing runtime helper has a parallel bucket
+resolution shape and remains tracked under its own `AFR-238` row. This S210
+slice did not merge that helper because the current owner row is limited to the
+application filing runtime boundary.
