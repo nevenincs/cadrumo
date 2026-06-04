@@ -1767,11 +1767,6 @@ cli:
           Exemple M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
           clave_operacion=E importe=50000''.'
         row_kv_format_error: El camp --row {token} ha de tenir el format CLAU=VALOR.
-        row_m184_shares_not_100: 'M184 files miembro: els percentatges de participació
-          han de sumar exactament 100%; s''ha obtingut {total} amb {count} files.'
-        row_m347_below_threshold: 'M347 fila contraparte (nif={nif}): importe total
-          {total} no supera el llindar de €{threshold} exigit per RD 1065/2007 art.
-          31.1'
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincideix
           amb el format NIF-IVA esperat per al país {pais} (Directiva 2006/112/CE
           Annex XI)'
