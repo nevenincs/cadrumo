@@ -157,7 +157,7 @@ Close the legal-sensitivity review for the M200 and M303 registry definition edi
 
 Audit the completed completeness repairs against the registry legal/source catalogues, official Diseño coverage, export layouts, and real committed modelo revision setup.
 
-- [ ] `W07.P11.S47` - Audit M200 and M303 completeness repairs for legal refs, source refs, official Diseño/export backing, and calculation-closure consistency; `.vault/audit`.
+- [x] `W07.P11.S47` - Audit M200 and M303 completeness repairs for legal refs, source refs, official Diseño/export backing, and calculation-closure consistency; `.vault/audit`.
 - [ ] `W07.P11.S48` - Verify legal-grounding audit with registry gates and close the post-repair legal-sensitivity check; `src/aeat/domain/calculations/registry`.
 
 ## Wave `W08` - remaining registry hardening wireframe
