@@ -136,7 +136,7 @@ Reduce ledger and identity diagnostic complexity through projection and analyzer
 
 Capture live/auth invariants and ADR scope before touching high-risk Playwright and encrypted-session flows.
 
-- [ ] `W03.P11.S36` - Audit live and auth split invariants before implementation; `.vault/audit`.
+- [x] `W03.P11.S36` - Audit live and auth split invariants before implementation; `.vault/audit`.
 - [ ] `W03.P11.S37` - Prepare dedicated live-auth decomposition ADR; `.vault/adr`.
 
 ## Wave `W04` - clean dependency dead-code and duplication findings
