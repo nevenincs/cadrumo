@@ -4051,6 +4051,9 @@ review:
     draft_placeholder_summary: Tervezet függőben
     finding_summary: Érvényesítési megállapítás a tervezeten
     stale_approval_summary: A tervezet jóváhagyása elavult.
+  filter:
+    errors:
+      parse_failed: 'A szűrőtoken nem értelmezhető. A megadott érték el lett rejtve.'
   invoice:
     summary: Számla felülvizsgálatra vár
   operator:

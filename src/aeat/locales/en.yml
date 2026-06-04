@@ -3931,6 +3931,9 @@ review:
     draft_placeholder_summary: Draft pending
     finding_summary: Validation finding on draft
     stale_approval_summary: Draft approval is stale
+  filter:
+    errors:
+      parse_failed: 'Could not parse the filter token. The supplied value has been redacted.'
   invoice:
     summary: Invoice pending review
   operator:

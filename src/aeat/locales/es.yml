@@ -4204,6 +4204,9 @@ review:
     draft_placeholder_summary: Borrador pendiente
     finding_summary: Incidencia detectada en el borrador
     stale_approval_summary: Aprobación obsoleta del borrador
+  filter:
+    errors:
+      parse_failed: 'No se pudo interpretar el token de filtro. El valor suministrado se ha ocultado.'
   invoice:
     summary: Justificante pendiente de revisión
   operator:

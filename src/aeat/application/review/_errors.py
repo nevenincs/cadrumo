@@ -29,7 +29,12 @@ class FilterParseError(ReviewError):
 
     Attributes:
         raw_token: The string the operator supplied (e.g. ``"status="`` or
-            ``"period: 2026-Q1"``).
+            ``"period: 2026-Q1"``). Kept for internal compatibility,
+            but omitted from rendered messages and context because
+            filter values may include free-text search strings or
+            imported identifiers.
+        safe_token: A redacted token that preserves the key when it is
+            parseable and replaces the value with ``<redacted>``.
         reason: One of ``"missing-equals"``, ``"empty-key"``,
             ``"empty-value"``, ``"unknown-key-{scope}"``,
             ``"invalid-value-{scope}"``, ``"duplicate-key-{scope}"``.
@@ -43,8 +48,17 @@ class FilterParseError(ReviewError):
             reason: Stable reason code (e.g. ``"missing-equals"``,
                 ``"empty-key"``, ``"invalid-value-{scope}"``).
         """
-        super().__init__(f"cannot parse filter token {raw_token!r}: {reason}")
+        context: dict[str, object] = {"reason": reason}
+        key = _safe_token_key(raw_token, flag="--filter")
+        if key is not None:
+            context["key"] = key
+        super().__init__(
+            f"cannot parse filter token: {reason}",
+            context=context,
+            translated_message="review.filter.errors.parse_failed",
+        )
         self.raw_token = raw_token
+        self.safe_token = _safe_token_display(raw_token, flag="--filter")
         self.reason = reason
 
 
@@ -85,12 +99,25 @@ class EditParseError(ReviewError):
 
 def _safe_edit_token_key(raw_token: str) -> str | None:
     """Return the edit key without exposing the user-supplied value."""
-    token = raw_token.removeprefix("--set ").strip()
+    return _safe_token_key(raw_token, flag="--set")
+
+
+def _safe_token_key(raw_token: str, *, flag: str) -> str | None:
+    """Return a parsed token key without exposing the supplied value."""
+    token = raw_token.removeprefix(f"{flag} ").strip()
     key, separator, _value = token.partition("=")
     if not separator:
         return None
     stripped = key.strip().lower()
     return stripped or None
+
+
+def _safe_token_display(raw_token: str, *, flag: str) -> str:
+    """Return a CLI-safe token display that never includes the value."""
+    key = _safe_token_key(raw_token, flag=flag)
+    if key is None:
+        return "<redacted>"
+    return f"{key}=<redacted>"
 
 
 class ReviewKindReservedError(ReviewError):

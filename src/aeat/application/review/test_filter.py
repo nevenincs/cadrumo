@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ...core.i18n import tr
 from ...domain.iva import InvoiceKind
 from ...domain.transactions import BusinessClassification, TransactionDirection
 from ..transactions import LedgerImportDiagnosticKind
@@ -21,6 +22,9 @@ from ._filter import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+_REDACTED = "<redacted>"
+_STATUS_REDACTED = f"status={_REDACTED}"
 
 
 # ---------------------------------------------------------------------
@@ -50,6 +54,9 @@ def test_parse_filter_clause_rejects_missing_equals() -> None:
         parse_filter_clause(raw)
     assert exc.value.reason == "missing-equals"
     assert exc.value.raw_token == raw
+    assert exc.value.safe_token == _REDACTED
+    assert exc.value.translated_message == "review.filter.errors.parse_failed"
+    assert exc.value.context == {"reason": "missing-equals"}
 
 
 def test_parse_filter_clause_rejects_empty_key() -> None:
@@ -165,6 +172,8 @@ def test_ledger_spec_rejects_invalid_status() -> None:
     with pytest.raises(FilterParseError, match=r"invalid-value-ledger-status") as exc:
         LedgerReviewFilterSpec.from_strings(["status=fictional"])
     assert exc.value.reason == "invalid-value-ledger-status"
+    assert exc.value.safe_token == _STATUS_REDACTED
+    assert exc.value.context == {"reason": "invalid-value-ledger-status", "key": "status"}
 
 
 def test_ledger_spec_rejects_invalid_issue() -> None:
@@ -177,6 +186,28 @@ def test_ledger_spec_rejects_duplicate_key() -> None:
     with pytest.raises(FilterParseError, match=r"duplicate-key-ledger") as exc:
         LedgerReviewFilterSpec.from_strings(["status=pending", "status=skipped"])
     assert exc.value.reason == "duplicate-key-ledger"
+
+
+def test_ledger_filter_parse_error_message_omits_sensitive_filter_value() -> None:
+    sensitive_value = "client-tax-id-12345678Z invoice notes"
+    with pytest.raises(FilterParseError) as exc:
+        LedgerReviewFilterSpec.from_strings([f"status={sensitive_value}"])
+
+    assert exc.value.raw_token == f"--filter status={sensitive_value}"
+    assert exc.value.safe_token == _STATUS_REDACTED
+    assert sensitive_value not in str(exc.value)
+    assert sensitive_value not in repr(exc.value.context)
+
+
+def test_ledger_filter_cli_error_uses_redacted_token() -> None:
+    sensitive_value = "client-tax-id-12345678Z invoice notes"
+    with pytest.raises(FilterParseError) as exc:
+        LedgerReviewFilterSpec.from_strings([f"status={sensitive_value}"])
+
+    rendered = tr("cli.ledger.errors.filter_parse_error", reason=exc.value.reason, token=exc.value.safe_token)
+
+    assert _STATUS_REDACTED in rendered
+    assert sensitive_value not in rendered
 
 
 # ---------------------------------------------------------------------
