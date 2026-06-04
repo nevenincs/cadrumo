@@ -20,6 +20,7 @@ Closed `AFR-086` for the SQL secure-object repository.
 - Removed natural-key and stored lookup-digest disclosure from load-time classification and schema-version failures.
 - Replaced repository-local `"utf-8"` literals with the centralized `UTF_8_ENCODING` constant.
 - Added focused real SQLite repository tests for translated raw-key validation, batch-size validation, schema-version drift redaction, and classification redaction.
+- Validated remote-mirror raw iterator and archive-bundle behavior alongside the secure-object suite.
 - Closed `AFR-086` and `W12.P26.S188`.
 
 ## Outcome
@@ -28,11 +29,11 @@ Closed `AFR-086` for the SQL secure-object repository.
 
 Validation passed:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/sql/test_secure_objects.py`
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/sql/secure_objects.py src/aeat/adapters/persistence/storage/sql/test_secure_objects.py`
+- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/sql/test_secure_objects.py src/aeat/adapters/persistence/storage/sql/test_archive_bundle_roundtrip.py`
+- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/sql/secure_objects.py src/aeat/adapters/persistence/storage/sql/test_secure_objects.py src/aeat/adapters/persistence/storage/sql/test_archive_bundle_roundtrip.py src/aeat/locales/test_parity.py src/aeat/locales/test_locale_translation_honesty.py`
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit`
-- `if (rg --fixed-strings 'utf-8' src/aeat/adapters/persistence/storage/sql/secure_objects.py) { exit 1 }`
+- `uv run --no-sync pytest -q src/aeat/locales/test_parity.py src/aeat/locales/test_locale_translation_honesty.py`
 
 ## Notes
 
-The full secure-object suite passed with existing SQLAlchemy sqlite datetime-adapter warnings. Locale strings were updated via `python -m aeat.locales set`; the first CLI attempt failed before writing because `PYTHONPATH=src` was not set, then the command was rerun successfully.
+The full secure-object suite passed with existing SQLAlchemy sqlite datetime-adapter warnings. Locale strings were updated via `python -m aeat.locales set`; the CLI was run with `PYTHONPATH=src` so the local package resolved without syncing the locked virtual environment.
