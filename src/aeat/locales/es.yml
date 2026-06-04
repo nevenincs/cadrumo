@@ -986,6 +986,10 @@ application:
       aggregate_profile_id_mismatch: 'El almacenamiento del perfil no es coherente: la identidad del manifiesto no coincide con el registro seguro.'
       aggregate_label_mismatch: 'El almacenamiento del perfil no es coherente: la etiqueta del manifiesto no coincide con el registro seguro.'
       aggregate_status_mismatch: 'El almacenamiento del perfil no es coherente: el estado de ciclo de vida del manifiesto no coincide con el registro seguro.'
+      lifecycle_profile_already_exists: 'Ya existe un perfil en el bucket activo.'
+      lifecycle_profile_tombstoned_rename: 'No se puede renombrar un perfil eliminado.'
+      lifecycle_profile_tombstoned_duplicate: 'No se puede duplicar un perfil eliminado.'
+      lifecycle_schema_validation_failed: 'Los datos del perfil no coinciden con el esquema de perfil de usuario.'
   wizard:
     errors:
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')

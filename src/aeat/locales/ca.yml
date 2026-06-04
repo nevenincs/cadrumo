@@ -976,6 +976,10 @@ application:
       aggregate_profile_id_mismatch: 'L''emmagatzematge del perfil no és coherent: la identitat del manifest no coincideix amb el registre segur.'
       aggregate_label_mismatch: 'L''emmagatzematge del perfil no és coherent: l''etiqueta del manifest no coincideix amb el registre segur.'
       aggregate_status_mismatch: 'L''emmagatzematge del perfil no és coherent: l''estat de cicle de vida del manifest no coincideix amb el registre segur.'
+      lifecycle_profile_already_exists: 'Ja existeix un perfil al bucket actiu.'
+      lifecycle_profile_tombstoned_rename: 'No es pot canviar el nom d''un perfil eliminat.'
+      lifecycle_profile_tombstoned_duplicate: 'No es pot duplicar un perfil eliminat.'
+      lifecycle_schema_validation_failed: 'Les dades del perfil no coincideixen amb l''esquema de perfil d''usuari.'
   wizard:
     errors:
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
