@@ -423,16 +423,26 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         return snapshot
 
     def list_snapshots(self) -> tuple[TPayload, ...]:
-        snapshots = [
-            snapshot
-            for record in self._objects.list_records(
-                self._namespace_definition.namespace,
-                expected_class=self._namespace_definition.sensitivity,
-                max_supported_version=self._namespace_definition.schema_version,
-            )
-            for snapshot in (self._snapshot_from_record(record),)
-            if _bucket_id_of(snapshot) == self._bucket_id
-        ]
+        snapshots: list[TPayload] = []
+        for record in self._objects.list_records(
+            self._namespace_definition.namespace,
+            expected_class=self._namespace_definition.sensitivity,
+            max_supported_version=self._namespace_definition.schema_version,
+        ):
+            snapshot = self._snapshot_from_record(record)
+            snapshot_bucket = _bucket_id_of(snapshot)
+            if snapshot_bucket != self._bucket_id:
+                raise LiveApplicationInputError(
+                    f"{self._domain_label} snapshot bucket_id={snapshot_bucket!r} "
+                    f"does not match repository bucket {self._bucket_id!r}",
+                    translated_message="application.live.snapshot_base.errors.snapshot_bucket_mismatch",
+                    context={
+                        "domain_label": self._domain_label,
+                        "snapshot_bucket": snapshot_bucket,
+                        "repository_bucket": self._bucket_id,
+                    },
+                )
+            snapshots.append(snapshot)
         return tuple(sorted(snapshots, key=lambda item: _snapshot_id_of(item)))
 
     def resolve(self, snapshot_id: str) -> TPayload:

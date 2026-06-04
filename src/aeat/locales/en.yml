@@ -580,10 +580,14 @@ application:
           snapshots.
     notifications:
       errors:
-        bucket_id_blank: 'Notifications bucket id must not be blank.'
-        snapshot_id_blank: 'Notifications snapshot id must not be blank.'
-        snapshot_not_found: 'No notifications snapshot matches the requested id.'
-        snapshot_prefix_ambiguous: 'The notifications snapshot prefix matches multiple snapshots.'
+        bucket_id_blank: Notifications bucket id must not be blank.
+        snapshot_id_blank: Notifications snapshot id must not be blank.
+        snapshot_not_found: No notifications snapshot matches the requested id.
+        snapshot_prefix_ambiguous: The notifications snapshot prefix matches multiple
+          snapshots.
+    snapshot_base:
+      errors:
+        snapshot_bucket_mismatch: 'Snapshot payload bucket does not match the repository bucket.'
   modelo:
     borrador_binding:
       errors:

@@ -645,10 +645,17 @@ application:
           con varias instantáneas.
     notifications:
       errors:
-        bucket_id_blank: 'El identificador del bucket de notificaciones no puede estar vacío.'
-        snapshot_id_blank: 'El identificador de la instantánea de notificaciones no puede estar vacío.'
-        snapshot_not_found: 'No hay ninguna instantánea de notificaciones que coincida con el identificador solicitado.'
-        snapshot_prefix_ambiguous: 'El prefijo de instantánea de notificaciones coincide con varias instantáneas.'
+        bucket_id_blank: El identificador del bucket de notificaciones no puede estar
+          vacío.
+        snapshot_id_blank: El identificador de la instantánea de notificaciones no
+          puede estar vacío.
+        snapshot_not_found: No hay ninguna instantánea de notificaciones que coincida
+          con el identificador solicitado.
+        snapshot_prefix_ambiguous: El prefijo de instantánea de notificaciones coincide
+          con varias instantáneas.
+    snapshot_base:
+      errors:
+        snapshot_bucket_mismatch: 'El bucket de la carga de la instantanea no coincide con el bucket del repositorio.'
   modelo:
     borrador_binding:
       errors:
