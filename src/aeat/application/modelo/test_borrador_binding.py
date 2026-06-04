@@ -213,6 +213,25 @@ def test_committed_modelo_100_registry_declares_borrador_prefilled_bindings() ->
     assert bindings[_ENUM_BINDING].aeat_prefilled is True
 
 
+def test_borrador_resolution_rejects_registry_without_borrador_capability(snapshot_repository) -> None:
+    registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
+
+    with pytest.raises(Modelo100BorradorBindingError) as exc_info:
+        resolve_modelo_100_borrador_bindings(
+            _command(
+                borrador_snapshot_id="snapshot-does-not-need-loading",
+                modelo="303",
+                filing_year=2026,
+                period="2T",
+            ),
+            registry_snapshot=registry_snapshot,
+            snapshot_repository=snapshot_repository,
+        )
+
+    assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.unsupported_modelo"
+    assert exc_info.value.context == {"modelo": "303"}
+
+
 def test_borrador_resolution_consumes_only_registry_prefilled_bindings(snapshot_repository) -> None:
     snapshot_id = _save_snapshot(
         snapshot_repository,
@@ -443,52 +462,77 @@ def test_borrador_resolution_leaves_explicit_caller_binding_in_control(snapshot_
 def test_borrador_resolution_rejects_registry_unmarked_binding_values(snapshot_repository) -> None:
     snapshot_id = _save_snapshot(snapshot_repository, {_UNMARKED_BINDING: Decimal("1")})
 
-    with pytest.raises(Modelo100BorradorBindingError, match="aeat_prefilled"):
+    with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(
             _command(borrador_snapshot_id=snapshot_id),
             registry_snapshot=_modelo_100_registry_snapshot(),
             snapshot_repository=snapshot_repository,
         )
+
+    assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.forbidden_bindings"
+    assert exc_info.value.context == {"bindings": [_UNMARKED_BINDING]}
 
 
 def test_borrador_resolution_rejects_non_decimal_value_for_numeric_binding(snapshot_repository) -> None:
     snapshot_id = _save_snapshot(snapshot_repository, {_DECIMAL_BINDING: "not-a-decimal"})
 
-    with pytest.raises(Modelo100BorradorBindingError, match="must be decimal-compatible"):
+    with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(
             _command(borrador_snapshot_id=snapshot_id),
             registry_snapshot=_modelo_100_registry_snapshot(),
             snapshot_repository=snapshot_repository,
         )
 
+    assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.decimal_value_invalid"
+    assert exc_info.value.context == {"binding_id": _DECIMAL_BINDING}
+
 
 def test_borrador_resolution_rejects_missing_snapshot_with_live_list_pointer(snapshot_repository) -> None:
-    with pytest.raises(Modelo100BorradorBindingError, match="not found") as exc_info:
+    with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(
             _command(borrador_snapshot_id="missing-snapshot"),
             registry_snapshot=_modelo_100_registry_snapshot(),
             snapshot_repository=snapshot_repository,
         )
 
+    assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.snapshot_load_failed"
+    assert exc_info.value.context == {"borrador_snapshot_id": "missing-snapshot"}
     assert exc_info.value.suggestion == "aeat app live borrador 100 list"
 
 
 def test_borrador_resolution_rejects_non_modelo_100_consumers(snapshot_repository) -> None:
-    with pytest.raises(Modelo100BorradorBindingError, match="registry snapshot modelo does not match"):
+    with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(
             _command(borrador_snapshot_id="snapshot-does-not-need-loading", modelo="303"),
             registry_snapshot=_modelo_100_registry_snapshot(),
             snapshot_repository=snapshot_repository,
         )
 
+    assert (
+        exc_info.value.translated_message
+        == "application.modelo.borrador_binding.errors.registry_snapshot_modelo_mismatch"
+    )
+    assert exc_info.value.context == {"snapshot_modelo": "100", "command_modelo": "303"}
+
 
 def test_borrador_resolution_rejects_registry_snapshot_axis_mismatch(snapshot_repository) -> None:
-    with pytest.raises(Modelo100BorradorBindingError, match="registry snapshot axis"):
+    with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(
             _command(borrador_snapshot_id="snapshot-does-not-need-loading", filing_year=2024),
             registry_snapshot=_modelo_100_registry_snapshot(),
             snapshot_repository=snapshot_repository,
         )
+
+    assert (
+        exc_info.value.translated_message
+        == "application.modelo.borrador_binding.errors.registry_snapshot_axis_mismatch"
+    )
+    assert exc_info.value.context == {
+        "snapshot_year": _YEAR,
+        "snapshot_period": _PERIOD,
+        "filing_year": 2024,
+        "period": _PERIOD,
+    }
 
 
 def test_borrador_resolution_rejects_superseded_snapshot_with_list_pointer(snapshot_repository) -> None:
@@ -530,9 +574,12 @@ def test_borrador_resolution_rejects_discarded_snapshot_with_list_pointer(snapsh
 def test_borrador_resolution_rejects_bucket_or_axis_mismatch(snapshot_repository) -> None:
     snapshot_id = _save_snapshot(snapshot_repository, {_DECIMAL_BINDING: Decimal("1")})
 
-    with pytest.raises(Modelo100BorradorBindingError, match="active bucket"):
+    with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(
             _command(borrador_snapshot_id=snapshot_id, bucket_id="other-bucket"),
             registry_snapshot=_modelo_100_registry_snapshot(),
             snapshot_repository=snapshot_repository,
         )
+
+    assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.snapshot_bucket_mismatch"
+    assert exc_info.value.context is None

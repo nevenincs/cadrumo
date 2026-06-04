@@ -604,6 +604,14 @@ application:
         snapshot_not_active: Borrador snapshot is not active; list active snapshots
           with `aeat app live borrador 100 list`.
         source_trace_mismatch: Borrador source trace must match resolved binding ids.
+        unsupported_modelo: 'Borrador binding is not supported for modelo %{modelo}; the registry manifest must declare the borrador capability.'
+        snapshot_load_failed: 'Cannot load the selected borrador snapshot; list active snapshots with aeat app live borrador 100 list.'
+        forbidden_bindings: 'The borrador snapshot contains values that the registry has not marked as AEAT-prefilled: %{bindings}.'
+        snapshot_bucket_mismatch: 'The borrador snapshot does not belong to the active bucket.'
+        snapshot_axis_mismatch: 'The borrador snapshot does not match the calculation axis: snapshot year=%{snapshot_year} period=%{snapshot_period}; calculation year=%{filing_year} period=%{period}.'
+        registry_snapshot_modelo_mismatch: 'The registry snapshot modelo does not match the borrador binding command: snapshot modelo=%{snapshot_modelo}; command modelo=%{command_modelo}.'
+        registry_snapshot_axis_mismatch: 'The registry snapshot axis does not match the borrador binding command: snapshot year=%{snapshot_year} period=%{snapshot_period}; command year=%{filing_year} period=%{period}.'
+        decimal_value_invalid: 'Borrador value for numeric binding %{binding_id} must be decimal-compatible.'
     errors:
       amendment_verification_refused_missing_casillas: 'The amendment is incomplete:
         required casilla ids are missing from the corrected map.'

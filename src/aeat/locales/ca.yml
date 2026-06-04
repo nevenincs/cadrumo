@@ -666,6 +666,14 @@ application:
           actius amb `aeat app live borrador 100 list`.
         source_trace_mismatch: La traça d'origen de l'esborrany ha de coincidir amb
           els identificadors de binding resolts.
+        unsupported_modelo: 'El binding d''esborrany no esta suportat per al model %{modelo}; el manifest del registre ha de declarar la capacitat d''esborrany.'
+        snapshot_load_failed: 'No es pot carregar l''snapshot d''esborrany seleccionat; llista els snapshots actius amb aeat app live borrador 100 list.'
+        forbidden_bindings: 'L''snapshot d''esborrany conte valors que el registre no ha marcat com a AEAT-prefilled: %{bindings}.'
+        snapshot_bucket_mismatch: 'L''snapshot d''esborrany no pertany al bucket actiu.'
+        snapshot_axis_mismatch: 'L''snapshot d''esborrany no coincideix amb l''eix del calcul: any de l''snapshot=%{snapshot_year} periode=%{snapshot_period}; any del calcul=%{filing_year} periode=%{period}.'
+        registry_snapshot_modelo_mismatch: 'El model de l''snapshot de registre no coincideix amb l''ordre de binding d''esborrany: model de l''snapshot=%{snapshot_modelo}; model de l''ordre=%{command_modelo}.'
+        registry_snapshot_axis_mismatch: 'L''eix de l''snapshot de registre no coincideix amb l''ordre de binding d''esborrany: any de l''snapshot=%{snapshot_year} periode=%{snapshot_period}; any de l''ordre=%{filing_year} periode=%{period}.'
+        decimal_value_invalid: 'El valor d''esborrany per al binding numeric %{binding_id} ha de ser compatible amb decimal.'
     errors:
       amendment_verification_refused_missing_casillas: 'L''esmena és incompleta: falten
         identificadors de casella requerits al mapa corregit.'

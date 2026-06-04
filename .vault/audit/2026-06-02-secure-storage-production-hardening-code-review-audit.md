@@ -480,3 +480,20 @@ surface. Conservative registry/profile fallback branches now log debug
 diagnostics before returning the empty resolved-binding set.
 
 Closure assessment: `W12.P26.S234` can close as `manifest-discovery`.
+
+## S235-049 | PASS | Modelo borrador binding manifest-discovery closeout verified
+
+The `W12.P26.S235` review found that `src/aeat/application/modelo/_borrador_binding.py`
+is an application binding resolver and source-mesh adapter for explicitly
+selected Modelo 100 borrador snapshots. Durable snapshot persistence remains
+owned by the live borrador repository and runtime secure-object backend; this
+module validates eligibility, axis, lifecycle, and precedence before returning
+typed binding values.
+
+Vaultspec RAG semantic searches were used for duplication review. Borrador
+binding ownership clusters in `_borrador_binding.py`, profile binding ownership
+clusters in `_profile_binding.py`, and calculation orchestration calls into both
+from `_actions.py`. User-facing borrador binding refusals now carry locale keys
+and structured context, and bucket-mismatch errors no longer echo bucket ids.
+
+Closure assessment: `W12.P26.S235` can close as `manifest-discovery`.
