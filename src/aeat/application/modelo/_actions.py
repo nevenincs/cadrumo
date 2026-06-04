@@ -26,7 +26,6 @@ from __future__ import annotations
 
 import asyncio
 import decimal as _decimal
-import hashlib
 import re as _re
 from collections.abc import Mapping
 from datetime import date, datetime
@@ -41,12 +40,9 @@ from ...core.errors import CoreNotFoundError
 from ...core.i18n import tr
 from ...core.time import now as _utc_now
 from ...domain.buckets import (
-    BucketEvent,
     BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
-    append_bucket_event,
-    derive_bucket_event_id,
 )
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import (
@@ -155,6 +151,13 @@ from ._binding_resolution import (
     resolve_bound_casilla_inputs_for_available_bindings,
     resolve_calculation_binding_inputs,
 )
+from ._revision_persistence import (
+    emit_bucket_event as _emit_bucket_event,
+)
+from ._revision_persistence import (
+    persist_calculation_revision,
+    persist_filed_revision,
+)
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import ValidatedRegistryAuthority
@@ -168,59 +171,6 @@ _require_persisted_iva_compensation_decision_matches_revision = _require_iva_com
 _taxpayer_nif_for_bucket = _iva_wallet_gate.taxpayer_nif_for_bucket
 iva_wallet_blocked_message = _iva_wallet_gate.iva_wallet_blocked_message
 resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva_compensation_decision_for_calculation
-
-_BUCKET_EVENT_PAYLOAD_VERSION = 2
-"""Schema version for the bucket-event payload dict emitted by this module.
-
-v1 -> v2: ``has_provenance`` key added on the
-``modelo.calculation.created`` payload signalling whether the linked
-revision carries a non-empty typed observations tuple. The same
-payload carries the explicit ``calculation_revision_id`` join key and
-the borrador participation triple (``borrador_participated``,
-``borrador_binding_count``, ``borrador_bindings_trace_sha256``) so that
-audit tools reading the event log alone can detect grounding-loss
-regressions without joining against the encrypted revision catalogue.
-"""
-
-def _emit_bucket_event(
-    *,
-    repository: BucketEventHistoryRepositoryProtocol,
-    bucket_id: str,
-    event_type: BucketEventType,
-    occurred_at: datetime,
-    actor: str,
-    object_type: BucketEventObjectType,
-    object_id: str,
-    payload: Mapping[str, str],
-) -> BucketEvent:
-    """Append one event to the bucket-event-history catalogue and return the persisted record.
-
-    Content-addressed: re-emitting an identical event is a no-op.
-    """
-    event_id = derive_bucket_event_id(
-        bucket_id=bucket_id,
-        event_type=event_type,
-        occurred_at=occurred_at,
-        actor=actor.strip(),
-        object_type=object_type,
-        object_id=object_id,
-        payload=payload,
-    )
-    event = BucketEvent(
-        event_id=event_id,
-        bucket_id=bucket_id,
-        event_type=event_type,
-        occurred_at=occurred_at,
-        actor=actor.strip(),
-        object_type=object_type,
-        object_id=object_id,
-        payload_version=_BUCKET_EVENT_PAYLOAD_VERSION,
-        payload=dict(payload),
-    )
-    catalogue = repository.load()
-    repository.save(append_bucket_event(catalogue, event))
-    return event
-
 
 class WorkUnitNotFoundError(ModeloError, KeyError):
     """Raised when a work-unit lookup or mutation targets a missing id."""
@@ -1135,82 +1085,26 @@ def calculate_modelo_revision(
     casilla_values = dict(engine_result.values)
     typed_observations = _build_typed_observations(engine_result=engine_result, snapshot=snapshot)
 
-    revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit_id,
-        inputs_snapshot=inputs_snapshot,
-        binding_overrides=binding_overrides,
-        casilla_values=casilla_values,
-        source_transaction_ids=source_transaction_ids,
-        borrador_snapshot_id=borrador_result.borrador_snapshot_id,
-        bindings_sourced_from_borrador=borrador_result.bindings_sourced_from_borrador,
-        detail_rows=detail_rows,
-    )
-    revisions = cr_repo.load()
-    existing = revisions.get(revision_id)
-    if existing is not None:
-        return existing
     now = clock or _utc_now()
-    revision = CalculationRevision(
-        calculation_revision_id=revision_id,
+    return persist_calculation_revision(
         work_unit_id=work_unit_id,
-        state=CalculationRevisionState.BORRADOR,
+        work_unit=work_unit,
+        work_units=work_units,
         inputs_snapshot=inputs_snapshot,
         binding_overrides=binding_overrides,
+        casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
         borrador_snapshot_id=borrador_result.borrador_snapshot_id,
         bindings_sourced_from_borrador=borrador_result.bindings_sourced_from_borrador,
-        casilla_values=casilla_values,
         observations=typed_observations,
         detail_rows=detail_rows,
-        created_at=now,
-        updated_at=now,
-    )
-    cr_repo.save(upsert_calculation_revision(revisions, revision))
-    wu_repo.save(
-        upsert_work_unit(
-            work_units,
-            work_unit.model_copy(
-                update={
-                    "current_calculation_revision_id": revision_id,
-                    "updated_at": now,
-                }
-            ),
-        )
-    )
-    _emit_bucket_event(
-        repository=bv_repo,
-        bucket_id=work_unit.bucket_id,
-        event_type=BucketEventType.MODELO_CALCULATION_CREATED,
-        occurred_at=now,
+        formula_count=len(engine_result.entries),
         actor=actor,
-        object_type=BucketEventObjectType.CALCULATION_REVISION,
-        object_id=revision_id,
-        payload={
-            "calculation_revision_id": revision_id,
-            "work_unit_id": work_unit_id,
-            "modelo": work_unit.modelo,
-            "filing_year": str(work_unit.filing_year),
-            "period": work_unit.period,
-            "input_casilla_count": str(len(inputs_snapshot)),
-            "casilla_count": str(len(casilla_values)),
-            "formula_count": str(len(engine_result.entries)),
-            "source_transaction_count": str(len(source_transaction_ids)),
-            "borrador_snapshot_id": borrador_result.borrador_snapshot_id or "",
-            "borrador_participated": ("true" if borrador_result.bindings_sourced_from_borrador else "false"),
-            "borrador_binding_count": str(len(borrador_result.bindings_sourced_from_borrador)),
-            "borrador_bindings_trace_sha256": hashlib.sha256(
-                "\n".join(borrador_result.bindings_sourced_from_borrador).encode("utf-8")
-            ).hexdigest(),
-            # Signals whether the linked calculation revision carries a
-            # non-empty typed observations tuple. Audit tools reading
-            # the event log alone can detect grounding-loss regressions
-            # without joining against the encrypted revision catalogue;
-            # the ``object_id`` field above is the revision id, used as
-            # the join key for full provenance recovery.
-            "has_provenance": "true" if typed_observations else "false",
-        },
+        now=now,
+        calculation_repository=cr_repo,
+        work_unit_repository=wu_repo,
+        bucket_event_repository=bv_repo,
     )
-    return revision
 
 
 # ANY-RETURN-RATIONALE-ACTIONS-IVA-WALLET-DECISION:
@@ -3272,130 +3166,18 @@ def file_modelo_revision(
         run_repository=run_repo,
     )
 
-    new_filing_id = derive_filing_record_id(
-        work_unit_id=target.work_unit_id,
-        calculation_revision_id=calculation_revision_id,
-        filed_at=now,
-        filed_by=actor.strip(),
-    )
-
-    filing_catalogue = fr_repo.load()
-    prior_current = filing_catalogue.current_for(
-        bucket_id=work_unit.bucket_id,
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-    )
-
-    # 1. Build new current filing record.
-    new_filing = ModeloRecord(
-        filing_record_id=new_filing_id,
-        work_unit_id=target.work_unit_id,
-        calculation_revision_id=calculation_revision_id,
-        bucket_id=work_unit.bucket_id,
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-        filed_at=now,
-        filed_by=actor.strip(),
-        notes=notes.strip() if notes else None,
-        aeat_accepted=False,
-        status=ModeloRecordStatus.VIGENTE,
-    )
-
-    # 2. Supersede prior filing record if present.
-    updated_filing_catalogue = filing_catalogue
-    if prior_current is not None:
-        superseded_prior = prior_current.model_copy(
-            update={
-                "status": ModeloRecordStatus.SUPERSEDIDO,
-                "superseded_at": now,
-                "superseded_by_filing_record_id": new_filing_id,
-            }
-        )
-        updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, superseded_prior)
-
-        # Transition prior filed calculation revision to FILED_SUPERSEDED.
-        prior_revision = revisions.get(prior_current.calculation_revision_id)
-        if prior_revision is not None and prior_revision.state is CalculationRevisionState.PRESENTADO:
-            superseded_revision = prior_revision.model_copy(
-                update={
-                    "state": CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-                    "superseded_at": now,
-                    "updated_at": now,
-                }
-            )
-            revisions = upsert_calculation_revision(revisions, superseded_revision)
-
-    # 3. Insert new filing record + transition target revision to FILED.
-    updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
-    filed_target = target.model_copy(
-        update={
-            "state": CalculationRevisionState.PRESENTADO,
-            "filed_at": now,
-            "filed_by": actor.strip(),
-            "updated_at": now,
-        }
-    )
-    revisions = upsert_calculation_revision(revisions, filed_target)
-
-    # 4. Persist (catalogue saves are sequenced).
-    cr_repo.save(revisions)
-    fr_repo.save(updated_filing_catalogue)
-
-    # 5. Advance work-unit pointers.
-    wu_repo.save(
-        upsert_work_unit(
-            work_units,
-            work_unit.model_copy(
-                update={
-                    "filed_calculation_revision_id": calculation_revision_id,
-                    "current_filing_record_id": new_filing_id,
-                    "updated_at": now,
-                }
-            ),
-        )
-    )
-
-    # 6. Emit bucket events: one supersession event per prior filing
-    # (if any), then the new modelo.filed event.
-    if prior_current is not None:
-        _emit_bucket_event(
-            repository=bv_repo,
-            bucket_id=work_unit.bucket_id,
-            event_type=BucketEventType.MODELO_FILED_SUPERSEDED,
-            occurred_at=now,
-            actor=actor,
-            object_type=BucketEventObjectType.FILING_RECORD,
-            object_id=prior_current.filing_record_id,
-            payload={
-                "superseded_by_filing_record_id": new_filing_id,
-                "calculation_revision_id": prior_current.calculation_revision_id,
-                "modelo": work_unit.modelo,
-                "filing_year": str(work_unit.filing_year),
-                "period": work_unit.period,
-            },
-        )
-
-    _emit_bucket_event(
-        repository=bv_repo,
-        bucket_id=work_unit.bucket_id,
-        event_type=BucketEventType.MODELO_FILED,
-        occurred_at=now,
+    return persist_filed_revision(
+        target=target,
+        work_unit=work_unit,
+        work_units=work_units,
+        notes=notes,
         actor=actor,
-        object_type=BucketEventObjectType.FILING_RECORD,
-        object_id=new_filing_id,
-        payload={
-            "calculation_revision_id": calculation_revision_id,
-            "work_unit_id": target.work_unit_id,
-            "modelo": work_unit.modelo,
-            "filing_year": str(work_unit.filing_year),
-            "period": work_unit.period,
-            "supersedes_filing_record_id": (prior_current.filing_record_id if prior_current is not None else ""),
-        },
+        now=now,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        work_unit_repository=wu_repo,
+        bucket_event_repository=bv_repo,
     )
-
-    return new_filing
 
 
 def list_filing_records(
