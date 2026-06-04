@@ -971,6 +971,9 @@ application:
         es pot seleccionar.
       unsupported_bundle_schema_version: La versió de l'esquema del paquet no és compatible
         amb aquesta versió de l'aplicació.
+      aggregate_profile_id_mismatch: 'L''emmagatzematge del perfil no és coherent: la identitat del manifest no coincideix amb el registre segur.'
+      aggregate_label_mismatch: 'L''emmagatzematge del perfil no és coherent: l''etiqueta del manifest no coincideix amb el registre segur.'
+      aggregate_status_mismatch: 'L''emmagatzematge del perfil no és coherent: l''estat de cicle de vida del manifest no coincideix amb el registre segur.'
   wizard:
     errors:
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')

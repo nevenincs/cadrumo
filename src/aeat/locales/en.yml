@@ -904,6 +904,9 @@ application:
         be selected.
       unsupported_bundle_schema_version: The bundle schema version is not supported
         by this application version.
+      aggregate_profile_id_mismatch: 'Profile storage is inconsistent: the manifest profile identity does not match the secure record.'
+      aggregate_label_mismatch: 'Profile storage is inconsistent: the manifest label does not match the secure record.'
+      aggregate_status_mismatch: 'Profile storage is inconsistent: the manifest lifecycle status does not match the secure record.'
   wizard:
     errors:
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')

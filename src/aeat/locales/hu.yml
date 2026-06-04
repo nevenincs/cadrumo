@@ -918,6 +918,9 @@ application:
         választható ki.
       unsupported_bundle_schema_version: A csomag sémaverziója nem támogatott ebben
         az alkalmazásverzióban.
+      aggregate_profile_id_mismatch: 'A profiltárolás inkonzisztens: a manifest profilazonossága nem egyezik a biztonságos rekorddal.'
+      aggregate_label_mismatch: 'A profiltárolás inkonzisztens: a manifest címkéje nem egyezik a biztonságos rekorddal.'
+      aggregate_status_mismatch: 'A profiltárolás inkonzisztens: a manifest életciklus-állapota nem egyezik a biztonságos rekorddal.'
   wizard:
     errors:
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
