@@ -72,6 +72,8 @@ dependencies = [
   "python-dotenv>=1.2.2,<2",
   # CLI localization backend.
   "python-i18n>=0.3.9,<1",
+  # Typer imports Rich at runtime for help/error rendering. Keep the direct
+  # pin version-bounded here; application code should not import Rich directly.
   "rich>=14.2.0,<16",
   # Persistence
   "sqlalchemy>=2.0.36,<3",
@@ -727,14 +729,15 @@ ignore_decorators = [
 # ── Deptry (unused / transitive dependency lint) ─────────────────────────────
 # Suppress the false positives surfaced by deptry's default heuristics.
 # `formulas` is owned by the workbook parity oracle even though production
-# imports do not reference it directly yet. `pydantic_core` is re-exported by
-# pydantic (legitimate transitive use), `click` ships under typer (typer's CLI
-# surface is built on click), and `yaml` ships as `PyYAML`. The remaining
-# diagnostics flag genuine drift and stay active.
+# imports do not reference it directly yet. `rich` is the direct version pin for
+# Typer's console rendering. `pydantic_core` is re-exported by pydantic
+# (legitimate transitive use), `click` ships under typer (typer's CLI surface is
+# built on click), and `yaml` ships as `PyYAML`. The remaining diagnostics flag
+# genuine drift and stay active.
 [tool.deptry.package_module_name_map]
 "PyYAML" = ["yaml"]
 "pyyaml" = ["yaml"]
 [tool.deptry.per_rule_ignores]
-DEP002 = ["formulas", "python-dotenv", "tzdata"]
+DEP002 = ["formulas", "python-dotenv", "rich", "tzdata"]
 DEP003 = ["click", "pydantic_core", "yaml"]
 DEP004 = ["pytest", "reportlab"]

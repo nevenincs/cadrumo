@@ -229,3 +229,19 @@ package exists, `uv run --no-sync deptry .` no longer reports `formulas`, and
 the VaultSpec repo-health plan validates. Deptry still reports planned residual
 findings for `rich`, `torch`, `playwright_stealth`, and `prompt_toolkit`, which
 remain open under W04.P12.S39-S42.
+
+## W04-002 | INFO | Rich dependency ownership review found no defects
+
+Status: verified with scoped residual.
+
+The W04.P12.S39 review found no behavioral defect in the dependency hygiene
+decision. `rich` is retained as a direct version pin for Typer's console
+rendering path, while application code remains free of direct Rich imports. The
+Deptry `DEP002` exception is scoped to that Typer ownership rather than a broad
+unused-dependency allowlist.
+
+Focused verification confirmed no Python import of `rich`, Typer metadata still
+declares `rich>=13.8.0`, root CLI command materialisation succeeds, and
+`uv run --no-sync deptry .` no longer reports `rich`. Deptry still reports
+planned residual findings for `torch`, `playwright_stealth`, and
+`prompt_toolkit`, which remain open under W04.P12.S40-S42.
