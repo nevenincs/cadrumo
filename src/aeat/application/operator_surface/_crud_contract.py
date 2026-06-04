@@ -249,6 +249,9 @@ class CrudContractCatalogue(BaseModel):
         Args:
             cli_path: The Typer mount path to look up (e.g.
                 ``"aeat app ledger payable-invoice"``).
+
+        Returns:
+            :class:`MutatingNounGroupContract` | None: The matching contract, or None.
         """
         for entry in self.entries:
             if entry.cli_path == cli_path:
