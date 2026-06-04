@@ -26,6 +26,7 @@ from typing import Final
 from ....core.decimal import format_decimal
 from ....core.errors import AeatError
 from ....domain.calculations.registry import BindingId, CasillaId, FormulaExpression, ParameterId, RelationId
+from ._errors import CalcSheetsEngineError
 from ._layout import SheetLayout
 
 
@@ -366,9 +367,9 @@ def _translate_age_at_year_end(expression: FormulaExpression, *, layout: SheetLa
         )
     try:
         cell = layout.address_for_date_binding(arg.date_binding)
-    except KeyError as exc:
+    except CalcSheetsEngineError as exc:
         raise TranslationError(
-            f"date_binding {arg.date_binding!r} has no anchor cell in the layout",
+            "date_binding reference has no anchor cell in the layout",
             op="age_at_year_end",
             hint="the layout planner must reserve an Entradas cell for every referenced date_binding",
         ) from exc
@@ -376,16 +377,22 @@ def _translate_age_at_year_end(expression: FormulaExpression, *, layout: SheetLa
 
 
 def _casilla_reference(casilla: CasillaId, *, layout: SheetLayout) -> str:
-    address = layout.address_for(casilla)
+    try:
+        address = layout.address_for(casilla)
+    except CalcSheetsEngineError as exc:
+        raise TranslationError(
+            "casilla reference has no anchor cell in the layout",
+            hint="the layout planner must reserve a cell for every referenced casilla",
+        ) from exc
     return address.qualified()
 
 
 def _binding_reference(binding: BindingId, *, layout: SheetLayout) -> str:
     try:
         address = layout.address_for_binding(binding)
-    except KeyError as exc:
+    except CalcSheetsEngineError as exc:
         raise TranslationError(
-            f"binding {binding!r} has no anchor cell in the layout",
+            "binding reference has no anchor cell in the layout",
             hint="the layout planner must reserve a cell for every referenced binding",
         ) from exc
     return address.qualified()
@@ -394,9 +401,9 @@ def _binding_reference(binding: BindingId, *, layout: SheetLayout) -> str:
 def _relation_reference(relation: RelationId, *, layout: SheetLayout) -> str:
     try:
         address = layout.address_for_relation(relation)
-    except KeyError as exc:
+    except CalcSheetsEngineError as exc:
         raise TranslationError(
-            f"relation {relation!r} has no anchor cell in the layout",
+            "relation reference has no anchor cell in the layout",
             hint="the layout planner must mirror every referenced relation into Tarifas",
         ) from exc
     return address.qualified()

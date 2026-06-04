@@ -817,7 +817,7 @@ application:
     calc_sheets:
       engine:
         anchors:
-          final: 'RESULT'
+          final: RESULT
           start: 'START: Entradas'
         errors:
           parameter_no_dated_value: The spreadsheet export engine could not find a
@@ -836,26 +836,31 @@ application:
             sync calc pull' from the CLI.
           title: '%{modelo_title} - %{period}/%{filing_year}'
         labels:
-          casilla: 'Casilla'
-          cell: 'Cell'
-          concept: 'Concept'
-          fixed_quota: 'Fixed quota'
-          formula: 'Formula'
-          legal_refs: 'Legal refs'
-          marginal_rate: 'Marginal rate'
-          maximum_base: 'Maximum base'
-          minimum_base: 'Minimum base'
-          number: 'No.'
-          rounding: 'Rounding'
-          section: 'Section'
-          source: 'Source'
-          source_refs: 'Source refs'
-          value: 'Value'
+          casilla: Casilla
+          cell: Cell
+          concept: Concept
+          fixed_quota: Fixed quota
+          formula: Formula
+          legal_refs: Legal refs
+          marginal_rate: Marginal rate
+          maximum_base: Maximum base
+          minimum_base: Minimum base
+          number: No.
+          rounding: Rounding
+          section: Section
+          source: Source
+          source_refs: Source refs
+          value: Value
         protected:
-          calculos: 'Derived calculations - protected to preserve parity'
-          guide: 'Guide - protected'
-          provenance: 'Provenance / audit trail - protected'
-          tariffs: 'Tariffs / active parameters - protected'
+          calculos: Derived calculations - protected to preserve parity
+          guide: Guide - protected
+          provenance: Provenance / audit trail - protected
+          tariffs: Tariffs / active parameters - protected
+      layout:
+        errors:
+          undeclared_reference: 'The spreadsheet layout references an item not declared by the revision.'
+          unresolved_reference: The spreadsheet layout does not contain a cell for
+            a referenced item.
   user_profile:
     errors:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';

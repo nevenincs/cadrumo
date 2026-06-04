@@ -893,7 +893,7 @@ application:
     calc_sheets:
       engine:
         anchors:
-          final: 'RESULTADO'
+          final: RESULTADO
           start: 'INICIO: Entradas'
         errors:
           parameter_no_dated_value: El motor de exportación de hojas de cálculo no
@@ -912,26 +912,31 @@ application:
             'aeat config google sync calc pull' desde la CLI.
           title: '%{modelo_title} - %{period}/%{filing_year}'
         labels:
-          casilla: 'Casilla'
-          cell: 'Celda'
-          concept: 'Concepto'
-          fixed_quota: 'Cuota fija'
-          formula: 'Fórmula'
-          legal_refs: 'Ref. legales'
-          marginal_rate: 'Tipo marginal'
-          maximum_base: 'Base máxima'
-          minimum_base: 'Base mínima'
-          number: 'Nº'
-          rounding: 'Redondeo'
-          section: 'Sección'
-          source: 'Origen'
-          source_refs: 'Ref. fuentes'
-          value: 'Valor'
+          casilla: Casilla
+          cell: Celda
+          concept: Concepto
+          fixed_quota: Cuota fija
+          formula: Fórmula
+          legal_refs: Ref. legales
+          marginal_rate: Tipo marginal
+          maximum_base: Base máxima
+          minimum_base: Base mínima
+          number: Nº
+          rounding: Redondeo
+          section: Sección
+          source: Origen
+          source_refs: Ref. fuentes
+          value: Valor
         protected:
-          calculos: 'Cálculos derivados - protegido para preservar paridad'
-          guide: 'Guía - protegido'
-          provenance: 'Procedencia / pista de auditoría - protegido'
-          tariffs: 'Tarifas / parámetros vigentes - protegido'
+          calculos: Cálculos derivados - protegido para preservar paridad
+          guide: Guía - protegido
+          provenance: Procedencia / pista de auditoría - protegido
+          tariffs: Tarifas / parámetros vigentes - protegido
+      layout:
+        errors:
+          undeclared_reference: 'El diseño de la hoja de cálculo referencia un elemento no declarado por la revisión.'
+          unresolved_reference: El diseño de la hoja de cálculo no contiene una celda
+            para un elemento referenciado.
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
