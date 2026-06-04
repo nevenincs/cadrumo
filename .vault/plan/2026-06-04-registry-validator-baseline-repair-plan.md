@@ -26,7 +26,7 @@ registry reviewability gate without raising module baselines.
 
 - [x] `S01` - Compress `_validate_relation_periods.py` docstrings without changing validator semantics; `src/aeat/domain/calculations/registry/_validate_relation_periods.py`.
 - [x] `S02` - Verify registry reviewability and row-width plan gates after the validator baseline repair; `src/aeat/domain/calculations/registry`.
-- [ ] `S03` - Review and close the validator-baseline repair slice; `.vault/audit`.
+- [x] `S03` - Review and close the validator-baseline repair slice; `.vault/audit`.
 ## Description
 
 The row-width pressure plan is open at final verification because
