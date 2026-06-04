@@ -56,13 +56,27 @@ def _fail(question: WizardQuestion, reason: str, **context: object) -> WizardVal
     """
     message_key = f"wizard.errors.{reason}"
     field_label = tr(str(question.prompt))
-    full_context: dict[str, object] = {
+    render_context: dict[str, object] = {
         "prompt_key": field_label,
         "question_id": question.id,
     }
-    full_context.update(context)
-    translated = tr(message_key, **full_context)
-    return WizardValidationError(message_key, context=full_context, translated_message=translated)
+    render_context.update(context)
+    error_context = _redact_validation_context(render_context)
+    translated = tr(message_key, **render_context)
+    return WizardValidationError(message_key, context=error_context, translated_message=translated)
+
+
+def _redact_validation_context(context: dict[str, object]) -> dict[str, object]:
+    """Return structured diagnostics without raw operator answers."""
+    redacted = dict(context)
+    raw = redacted.pop("raw", None)
+    if raw is not None:
+        redacted["raw_redacted"] = True
+        redacted["raw_length"] = len(str(raw))
+    detail = redacted.pop("detail", None)
+    if detail is not None:
+        redacted["detail_redacted"] = True
+    return redacted
 
 
 def validate_text(raw: str, question: WizardQuestion) -> str:

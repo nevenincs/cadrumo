@@ -833,6 +833,10 @@ application:
           mitjancant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
+    iva_wallet:
+      seed_negative_amount: L'import inicial no pot ser negatiu.
+      seed_no_nif: No hi ha NIF definit per a l'operació d'import inicial; associeu-lo
+        al perfil actiu.
     profile_binding:
       errors:
         date_value_type_invalid: La dada de perfil per al binding de data %{binding_id}
@@ -1454,9 +1458,6 @@ cli:
         seed_help: Creació d'un registre d'import inicial del moneder de compensació
           d'IVA per inicialitzar el saldo anterior del moneder.
         seed_invalid_amount: L'import inicial ha de ser un decimal vàlid i no negatiu.
-        seed_negative_amount: L'import inicial no pot ser negatiu.
-        seed_no_nif: No hi ha NIF definit per a l'operació d'import inicial; associeu-lo
-          al perfil actiu.
         seed_period_help: Període de l'import inicial (p. ex. 2024N4).
       list:
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
@@ -1790,8 +1791,12 @@ cli:
           Exemple M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
           clave_operacion=E importe=50000''.'
         row_kv_format_error: El camp --row {token} ha de tenir el format CLAU=VALOR.
-        row_m184_share_sum_error: Les files del Model 184 han de sumar el 100 %.
-        row_m347_threshold_error: Les files del Model 347 no arriben al llindar declarable.
+        row_m184_share_sum_error: 'Model 184, files de membre: els percentatges de
+          participacio han de sumar exactament 100%; s''ha obtingut %{total} en %{count}
+          files'
+        row_m347_threshold_error: 'Model 347, fila de contrapart (NIF=%{nif}): l''import
+          total %{total} no supera el llindar de %{threshold} EUR exigit pel RD 1065/2007
+          art. 31.1'
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincideix
           amb el format NIF-IVA esperat per al país {pais} (Directiva 2006/112/CE
           Annex XI)'
