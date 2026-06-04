@@ -622,8 +622,10 @@ application:
         invalid_kind: 'El tipo de factura no esta admitido: %{kind}.'
     linking:
       errors:
-        linked_invoice_not_found: 'No se encontro la factura %{invoice_id} despues de aplicar el enlace.'
-        transaction_not_found: 'No se encontro la transaccion %{transaction_id} en el catalogo de transacciones.'
+        linked_invoice_not_found: No se encontro la factura %{invoice_id} despues
+          de aplicar el enlace.
+        transaction_not_found: No se encontro la transaccion %{transaction_id} en
+          el catalogo de transacciones.
   ledger:
     errors:
       evidence_attachment_requires_ids: El adjunto de evidencia del libro mayor requiere
@@ -633,10 +635,20 @@ application:
   live:
     expedientes:
       errors:
-        bucket_id_blank: 'El identificador del bucket de expedientes no puede estar vacío.'
-        snapshot_id_blank: 'El identificador de la instantánea de expedientes no puede estar vacío.'
-        snapshot_not_found: 'No hay ninguna instantánea de expedientes que coincida con el identificador solicitado.'
-        snapshot_prefix_ambiguous: 'El prefijo de la instantánea de expedientes coincide con varias instantáneas.'
+        bucket_id_blank: El identificador del bucket de expedientes no puede estar
+          vacío.
+        snapshot_id_blank: El identificador de la instantánea de expedientes no puede
+          estar vacío.
+        snapshot_not_found: No hay ninguna instantánea de expedientes que coincida
+          con el identificador solicitado.
+        snapshot_prefix_ambiguous: El prefijo de la instantánea de expedientes coincide
+          con varias instantáneas.
+    notifications:
+      errors:
+        bucket_id_blank: 'El identificador del bucket de notificaciones no puede estar vacío.'
+        snapshot_id_blank: 'El identificador de la instantánea de notificaciones no puede estar vacío.'
+        snapshot_not_found: 'No hay ninguna instantánea de notificaciones que coincida con el identificador solicitado.'
+        snapshot_prefix_ambiguous: 'El prefijo de instantánea de notificaciones coincide con varias instantáneas.'
   modelo:
     borrador_binding:
       errors:

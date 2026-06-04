@@ -614,8 +614,10 @@ application:
         invalid_kind: 'El tipus de factura no esta admes: %{kind}.'
     linking:
       errors:
-        linked_invoice_not_found: 'No s ha trobat la factura %{invoice_id} despres d aplicar l enllac.'
-        transaction_not_found: 'No s ha trobat la transaccio %{transaction_id} al cataleg de transaccions.'
+        linked_invoice_not_found: No s ha trobat la factura %{invoice_id} despres
+          d aplicar l enllac.
+        transaction_not_found: No s ha trobat la transaccio %{transaction_id} al cataleg
+          de transaccions.
   ledger:
     errors:
       evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix
@@ -625,10 +627,19 @@ application:
   live:
     expedientes:
       errors:
-        bucket_id_blank: 'L''identificador del bucket d''expedients no pot estar buit.'
-        snapshot_id_blank: 'L''identificador de la instantània d''expedients no pot estar buit.'
-        snapshot_not_found: 'No hi ha cap instantània d expedients que coincideixi amb l identificador sol·licitat.'
-        snapshot_prefix_ambiguous: 'El prefix de la instantània d expedients coincideix amb diverses instantànies.'
+        bucket_id_blank: L'identificador del bucket d'expedients no pot estar buit.
+        snapshot_id_blank: L'identificador de la instantània d'expedients no pot estar
+          buit.
+        snapshot_not_found: No hi ha cap instantània d expedients que coincideixi
+          amb l identificador sol·licitat.
+        snapshot_prefix_ambiguous: El prefix de la instantània d expedients coincideix
+          amb diverses instantànies.
+    notifications:
+      errors:
+        bucket_id_blank: 'L''identificador del bucket de notificacions no pot estar buit.'
+        snapshot_id_blank: 'L''identificador de la instantània de notificacions no pot estar buit.'
+        snapshot_not_found: 'Cap instantània de notificacions no coincideix amb l''identificador sol·licitat.'
+        snapshot_prefix_ambiguous: 'El prefix de la instantània de notificacions coincideix amb diverses instantànies.'
   modelo:
     borrador_binding:
       errors:

@@ -389,3 +389,17 @@ metadata. The not-found and ambiguous-prefix paths avoid leaking bucket ids or
 matched full snapshot ids while retaining bounded diagnostic context.
 
 Closure assessment: `W12.P26.S228` can close as `remote-mirror`.
+
+## S229-043 | PASS | Live notifications remote-mirror closeout verified
+
+The `W12.P26.S229` review found that live notification snapshots are encrypted
+remote mirrors of the authenticated AEAT notifications read surface. The
+affected-file row is corrected from stale `manifest-discovery` plaintext
+metadata to `remote-mirror` with secure-object and remote-provider signals.
+
+The service persists through `SecureSnapshotRepository`,
+`LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE`, and
+`secure_object_repository_for_bucket()`. Refusal paths now carry locale-backed
+metadata and avoid leaking bucket ids or matched full snapshot ids.
+
+Closure assessment: `W12.P26.S229` can close as `remote-mirror`.
