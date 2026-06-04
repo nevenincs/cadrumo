@@ -31,3 +31,7 @@ models and error surfaces.
 
 `just audit-duplication` no longer reports the storage manifest/KDF parameter
 clone. Residual clone groups belong to later W04.P14 rows or separate slices.
+
+Follow-up test hardening adds direct coverage for `_kdf_salt.py`, including
+salt byte round-trip behavior and configured `StorageValidationError`
+propagation.

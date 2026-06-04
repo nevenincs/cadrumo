@@ -430,3 +430,6 @@ Focused verification passed Ruff for the touched storage surface and passed
 the manifest/master-key KDF tests. `just audit-duplication` no longer reports
 the manifest/KDF overlap; the remaining 21 clone groups are outside this S49
 slice and remain scheduled for later review rows.
+
+Follow-up coverage added direct tests for `_kdf_salt.py`, including exact byte
+round-trip behavior and configured storage-error propagation.
