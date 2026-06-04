@@ -21,7 +21,7 @@ Scope: close `AFR-176` for `src/aeat/application/wizard/_widgets.py` with signal
 - Added real validator tests that assert rejected confirm and tax-id answers do not
   leave `raw` or identity `detail` fields in `error.context`.
 - Repaired concurrent locale drift through the canonical `python -m aeat.locales`
-  scaffold/remove/audit workflow.
+  set/remove/audit workflow.
 
 ## Outcome
 
@@ -31,9 +31,10 @@ raw rejected answers through structured context.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/wizard/_widgets.py src/aeat/application/wizard/test_widgets.py`
-- `uv run --no-sync pytest -q src/aeat/application/wizard/test_widgets.py src/aeat/locales/test_parity.py`
+- `uv run --no-sync ruff check src/aeat/application/wizard/_widgets.py src/aeat/application/wizard/test_widgets.py src/aeat/application/wizard/_errors.py`
+- `uv run --no-sync pytest -q src/aeat/application/wizard/test_widgets.py src/aeat/application/wizard/test_setup_compiles.py src/aeat/test_locale_coverage_hardened_errors.py`
 - `uv run --no-sync -q python -m aeat.locales audit`
+- `uv run --no-sync vaultspec-rag search "wizard widgets validation localized errors no storage plaintext exception" --type code --port 8766 --max-results 8`
 
 ## Notes
 

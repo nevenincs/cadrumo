@@ -33,8 +33,9 @@ four catalogues clean.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/wizard/_widgets.py src/aeat/application/wizard/test_widgets.py`
-- `uv run --no-sync pytest -q src/aeat/application/wizard/test_widgets.py src/aeat/locales/test_parity.py`
+- `uv run --no-sync ruff check src/aeat/application/wizard/_widgets.py src/aeat/application/wizard/test_widgets.py src/aeat/application/wizard/_errors.py`
+- `uv run --no-sync pytest -q src/aeat/application/wizard/test_widgets.py src/aeat/application/wizard/test_setup_compiles.py src/aeat/test_locale_coverage_hardened_errors.py`
 - `uv run --no-sync -q python -m aeat.locales audit`
+- `uv run --no-sync vaultspec-rag search "wizard widgets validation localized errors no storage plaintext exception" --type code --port 8766 --max-results 8`
 
 Disposition: close `AFR-176`.
