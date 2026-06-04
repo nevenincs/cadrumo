@@ -125,6 +125,18 @@ Bring the relation-period validator module back under its committed reviewabilit
 - [x] `W04.P08.S39` - Reduce relation-period validator module below its reviewability baseline; `src/aeat/domain/calculations/registry/_validate_relation_periods.py`.
 - [x] `W04.P08.S40` - Verify registry reviewability tests after validator baseline repair; `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
 
+## Wave `W05` - M200 calculation completeness repair
+
+Close the M200 record-design completeness regression surfaced after internal-only casilla discipline work, keeping repairs source-grounded and limited to registry declaration data.
+
+### Phase `W05.P09` - M200 closure identity alignment
+
+Audit and repair M200 calculation closure identities so every calculated casilla maps to the committed completeness manifest and full Diseño coverage with the correct segment identity.
+
+- [ ] `W05.P09.S41` - Audit M200 closure-only calculation completeness drift and segment ownership; `.vault/audit`.
+- [ ] `W05.P09.S42` - Repair M200 calculation completeness declarations for the audited closure-only identities; `src/aeat/_data/registry/aeat/modelos/200`.
+- [ ] `W05.P09.S43` - Verify M200 record-design completeness and committed-registry gates after the repair; `src/aeat/domain/calculations/registry/test_record_design.py`.
+
 ## Description
 
 The next work should protect reviewability first, then extend continuity data
@@ -149,6 +161,7 @@ The plan is complete when every Step is closed and these checks pass:
 
 - `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py -q`
 - `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_committed_registry.py -q`
+- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_record_design.py -q`
 - `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_cross_revision_drift.py -q`
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-06-02-registry-hardening-next-work-plan.md`
 
