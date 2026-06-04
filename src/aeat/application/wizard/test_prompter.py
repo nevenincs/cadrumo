@@ -57,11 +57,13 @@ def test_scripted_prompter_raises_on_underflow() -> None:
 
 
 def test_scripted_prompter_close_raises_on_overflow() -> None:
-    prompter = ScriptedPrompter(["unused-token"])
+    unused_answer = "unconsumed-answer-value"
+    prompter = ScriptedPrompter([unused_answer])
     with pytest.raises(WizardScriptOverflowError) as excinfo:
         prompter.close()
     assert excinfo.value.translated_message == "errors.internal.internal_wizard_script_overflow"
-    assert excinfo.value.context == {"remaining": ("unused-token",)}
+    assert excinfo.value.context == {"remaining_count": 1, "asked_count": 0}
+    assert unused_answer not in str(excinfo.value.context)
 
 
 def test_scripted_prompter_close_succeeds_when_drained() -> None:

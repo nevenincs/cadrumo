@@ -25,6 +25,11 @@ prompt-toolkit exception as the cause for diagnostics. The scripted prompter und
 and overflow paths now also raise AEAT wizard exceptions with locale keys and bounded
 structured context instead of raw English exception messages.
 
+Follow-up review corrected the overflow path to avoid placing raw unconsumed scripted
+answers in exception context. The overflow context now reports counts only, so fixture
+drift remains debuggable without exposing canonical-token values that may carry
+operator input.
+
 ## S275-003 | PASS | PATH prompt boundary
 
 The PATH widget dispatches to `questionary.path` and returns `_stringify(result)`.
@@ -38,10 +43,14 @@ questionary smoke tests, locale registry keys, and wizard command orchestration.
 change reuses the existing registered locale keys for wizard scripted fixture drift
 instead of adding duplicate message vocabulary.
 
+The prompter overflow test is a real behavior test against the production
+`ScriptedPrompter` and production `WizardScriptOverflowError`. It does not use mocks,
+fakes, monkeypatching, skips, or duplicated business logic.
+
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/wizard/_prompter.py src/aeat/application/wizard/test_prompter.py src/aeat/application/wizard/test_setup_runtime.py`
-- `uv run --no-sync pytest -q src/aeat/application/wizard/test_prompter.py src/aeat/application/wizard/test_setup_runtime.py src/aeat/application/wizard/test_questionary_smoke.py`
-- `uv run --no-sync vaultspec-rag search "wizard prompter scripted underflow overflow questionary path plaintext exception localized AEAT error" --type code --port 8766 --max-results 8`
+- `uv run --no-sync ruff check src/aeat/application/wizard/_prompter.py src/aeat/application/wizard/test_prompter.py src/aeat/application/wizard/test_questionary_smoke.py`
+- `uv run --no-sync pytest -q src/aeat/application/wizard/test_prompter.py src/aeat/application/wizard/test_questionary_smoke.py`
+- `uv run --no-sync -q python -m aeat.locales audit`
 
 Disposition: close `AFR-173`.
