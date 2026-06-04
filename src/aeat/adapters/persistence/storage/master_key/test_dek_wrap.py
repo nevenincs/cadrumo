@@ -14,7 +14,8 @@ from __future__ import annotations
 import pytest
 from cryptography.exceptions import InvalidTag
 
-from ..errors import EncryptionError
+from .....core.errors import build_error_envelope
+from ..errors import DecryptionError, EncryptionError
 from ._dek_wrap import (
     WrappedDek,
     unwrap_dek,
@@ -88,8 +89,14 @@ def test_unwrap_fails_when_kek_differs() -> None:
     wrapped = wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id="bucket-x")
     wrong_kek = bytes(32)
 
-    with pytest.raises(InvalidTag):
+    with pytest.raises(DecryptionError) as exc_info:
         unwrap_dek(kek=wrong_kek, wrapped=wrapped, bucket_id="bucket-x")
+    assert isinstance(exc_info.value.__cause__, InvalidTag)
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_decryption"
+    assert "bucket-x" not in str(exc_info.value)
+    envelope = build_error_envelope(exc_info.value)
+    assert envelope.message
+    assert "bucket-x" not in envelope.model_dump_json()
 
 
 def test_unwrap_fails_when_bucket_id_differs() -> None:
@@ -97,8 +104,9 @@ def test_unwrap_fails_when_bucket_id_differs() -> None:
 
     wrapped = wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id="bucket-x")
 
-    with pytest.raises(InvalidTag):
+    with pytest.raises(DecryptionError) as exc_info:
         unwrap_dek(kek=_REFERENCE_KEK, wrapped=wrapped, bucket_id="bucket-y")
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_decryption"
 
 
 def test_unwrap_fails_when_tag_is_tampered() -> None:
@@ -109,8 +117,9 @@ def test_unwrap_fails_when_tag_is_tampered() -> None:
         tag=bytes([wrapped.tag[0] ^ 0x01]) + wrapped.tag[1:],
     )
 
-    with pytest.raises(InvalidTag):
+    with pytest.raises(DecryptionError) as exc_info:
         unwrap_dek(kek=_REFERENCE_KEK, wrapped=tampered, bucket_id="bucket-x")
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_decryption"
 
 
 def test_unwrap_fails_when_ciphertext_is_tampered() -> None:
@@ -121,23 +130,27 @@ def test_unwrap_fails_when_ciphertext_is_tampered() -> None:
         tag=wrapped.tag,
     )
 
-    with pytest.raises(InvalidTag):
+    with pytest.raises(DecryptionError) as exc_info:
         unwrap_dek(kek=_REFERENCE_KEK, wrapped=tampered, bucket_id="bucket-x")
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_decryption"
 
 
 def test_wrap_rejects_wrong_size_kek() -> None:
-    with pytest.raises(EncryptionError, match="kek must be exactly 32 bytes"):
+    with pytest.raises(EncryptionError, match="kek must be exactly 32 bytes") as exc_info:
         wrap_dek(kek=b"x" * 16, dek=_REFERENCE_DEK, bucket_id="bucket-x")
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_encryption"
 
 
 def test_wrap_rejects_wrong_size_dek() -> None:
-    with pytest.raises(EncryptionError, match="dek must be exactly 32 bytes"):
+    with pytest.raises(EncryptionError, match="dek must be exactly 32 bytes") as exc_info:
         wrap_dek(kek=_REFERENCE_KEK, dek=b"x" * 16, bucket_id="bucket-x")
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_encryption"
 
 
 def test_wrap_rejects_empty_bucket_id() -> None:
-    with pytest.raises(EncryptionError, match="bucket_id must be non-empty"):
+    with pytest.raises(EncryptionError, match="bucket_id must be non-empty") as exc_info:
         wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id="")
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_encryption"
 
 
 def test_wrapped_dek_strict_validation_rejects_wrong_field_lengths() -> None:
