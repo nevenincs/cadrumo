@@ -182,7 +182,7 @@ Run focused application CLI documentation and feature-surface gates against the 
 
 Validate the selector, lifecycle, documentation, and feature-surface behavior with targeted checks before the plan can close.
 
-- [ ] `W05.P07.S75` - run focused application selector and lifecycle tests; `src/aeat/application/modelo`.
+- [x] `W05.P07.S75` - run focused application selector and lifecycle tests; `src/aeat/application/modelo`.
 - [ ] `W05.P07.S76` - run focused modelo CLI natural-key and legacy-ID tests; `src/aeat/entrypoints/cli`.
 - [ ] `W05.P07.S77` - run docs conformance for updated narrative and generated CLI surfaces; `docs conformance lane`.
 - [ ] `W05.P07.S78` - run the feature surface gate for changed modelo addressing files; `feature-surface-gate`.
@@ -226,6 +226,7 @@ localized operator messages render clearly without stale ID-routing
 guidance, the affected documentation no longer teaches pasted-ID routing
 for the common path, and the feature surface gate reports only relevant
 pass/fail results for this change set.
+
 
 
 
