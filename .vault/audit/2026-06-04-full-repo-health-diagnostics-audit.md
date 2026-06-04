@@ -434,6 +434,36 @@ This keeps W06 honest: the primary `ty` ratchet is green for the executed bucket
 set, while Pyright remains an explicit follow-up ratchet rather than an implied
 all-green claim.
 
+## HEALTH-014 | CLOSED | Production complexity lane split from test ratchets
+
+`W06.P19.S71` split the generic `just audit-complexity` endpoint into a
+production-only lane. The public recipe now delegates to
+`just audit-complexity-production`, which runs Radon and a programmatic
+Complexipy pass over production source only.
+
+The previous lane mixed production hotspots with top-level package ratchet tests,
+which made the refactor queue hard to prioritize. The new lane excludes
+`src/aeat/test_*.py`, nested `test_*.py`/`_test_*.py`, `tests` directories, and
+the generated `_data` tree for both Radon and Complexipy.
+
+Verification:
+
+- `just --list` exposes `audit-complexity-production`.
+- `just audit-complexity-production` now analyzes 862 production files and fails
+  with exit code 1 while production cognitive findings remain above the
+  threshold.
+- The current top production cognitive findings are:
+  `resolve_previous_filing_binding_values` and `build_wizard_command` at 44,
+  `modelo_compare`, `_push_secure_object_mirror_rows`, and
+  `calculation_closure_identities` at 37, followed by registry formula/runtime,
+  CLI, live error-classification, secure-object, and parser hotspots.
+
+Residual:
+
+- This does not claim complexity all-green. It makes the failing production lane
+  dependable so S73-S77 can burn down source hotspots without being crowded out
+  by test-ratchet maintenance debt.
+
 ## Suggested Workstreams
 
 1. Repair packaging environment deterministically: schedule a clean `uv sync` window

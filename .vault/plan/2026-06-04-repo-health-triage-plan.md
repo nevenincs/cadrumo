@@ -223,7 +223,7 @@ Drive Ty and scoped Pyright findings down by cohesive diagnostic class, recordin
 
 Separate production complexity from ratchet-test complexity, then decompose the remaining cognitive-load hotspots until the production lane is green or explicitly thresholded.
 
-- [ ] `W06.P19.S71` - Split production-only complexity lane from package test ratchets; `justfile`.
+- [x] `W06.P19.S71` - Split production-only complexity lane from package test ratchets; `justfile`.
 - [ ] `W06.P19.S72` - Add ratchet-test complexity lane for top-level package tests; `justfile`.
 - [ ] `W06.P19.S73` - Reduce wizard command catalogue cognitive complexity; `src/aeat/application/wizard/_commands.py`.
 - [ ] `W06.P19.S74` - Reduce remaining modelo CLI command cognitive complexity; `src/aeat/entrypoints/cli/_modelo.py`.
