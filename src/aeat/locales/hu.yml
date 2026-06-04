@@ -513,8 +513,10 @@ application:
   calculations:
     iva_compensation:
       errors:
-        modelo_303_only: 'Az IVA-kompenzációs előzmények csak Modelo 303 megfigyeléseket fogadnak el.'
-        seed_conflict: 'Ehhez az időszakhoz már létezik IVA-kompenzációs állapot; a kezdőérték felülírná a tárolt előzményeket.'
+        modelo_303_only: Az IVA-kompenzációs előzmények csak Modelo 303 megfigyeléseket
+          fogadnak el.
+        seed_conflict: Ehhez az időszakhoz már létezik IVA-kompenzációs állapot; a
+          kezdőérték felülírná a tárolt előzményeket.
   ledger:
     errors:
       evidence_attachment_requires_ids: A főkönyvi bizonylat csatolásához vásárlási
@@ -1901,7 +1903,6 @@ cli:
       key_help: A törlendő kulcs.
     workflow_help: Konfiguráció-munkafolyamat súgó megjelenítése.
   diagnostics:
-    app_help: Mérnöki diagnosztika az AEAT belső részeihez.
     browser:
       http_status_label: HTTP-állapot
       markers_label: Jelzők
@@ -1918,23 +1919,6 @@ cli:
         és Ön nem tudja maga javítani.
     next_action:
       inspect_registry_toml: Vizsgálja meg a nyilvántartás TOML-forrásait a hiba azonosításához.
-    profile:
-      errors:
-        ambiguous_profile: 'Tobbertelmu profilnev: %{profile}.'
-        invalid_value_fallback: 'Invalid value for %{key}: %{value}'
-        invalid_value_with_choices: '%{message} (%{choices})'
-        no_active_profile: Nincs kivalasztott aktiv profil.
-        profile_empty: --profile nem lehet ures.
-        unknown_profile: 'Ismeretlen profil: %{profile}.'
-        unknown_profile_key: 'Ismeretlen profilkulcs: %{key}.'
-      get_help: Read one profile key stored value.
-      help: Engineer-only profile field inspection and surgical edits.
-      key_help: Profile key.
-      profile_help: Profile to use; defaults to the active profile.
-      set_help: Write one profile key value, validated against the wizard descriptor.
-      unset_help: Clear one profile key value.
-      unset_placeholder: <nincs beállítva>
-      value_help: Value to store.
     repair:
       audience_internal: belső alkalmazáshiba
       auth_label: Hitelesítés
@@ -1950,18 +1934,6 @@ cli:
       profile_label: Profil
       python_label: Python
       version_label: Verzió
-    secure_objects:
-      all_help: Return every key, including unreadable rows.
-      errors:
-        conflicting_filters: --all and --unreadable cannot be combined; pass one or
-          neither.
-      help: Inventory the secure-object index by namespace.
-      labels:
-        count: darabszám
-        namespace: névtér
-      list_help: List secure-object keys stored under one namespace.
-      namespace_help: Namespace to inventory.
-      unreadable_help: Restrict the listing to undecryptable rows.
     summary:
       auth_no_session: A(z) %{provider} hitelesítési szolgáltatónak nincs kész munkamenete.
       auth_none: A hitelesítés nincs konfigurálva.

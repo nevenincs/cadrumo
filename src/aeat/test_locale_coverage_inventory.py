@@ -64,10 +64,8 @@ _OPERATOR_ERROR_LOCALE_KEYS: frozenset[str] = frozenset(
         "aggregation.prorrata.errors.current_year_not_after_prior",
         "aggregation.prorrata.errors.invalid_provisional_period",
         "aggregation.grouping.errors.unsupported_modelo",
-        # wizard and diagnostics labels
+        # wizard labels
         "application.wizard.next_hint.modelo_work_create",
-        "cli.diagnostics.secure_objects.labels.namespace",
-        "cli.diagnostics.secure_objects.labels.count",
     }
 )
 

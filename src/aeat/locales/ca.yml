@@ -550,8 +550,10 @@ application:
   calculations:
     iva_compensation:
       errors:
-        modelo_303_only: 'L''historial de compensació d''IVA només accepta observacions del Model 303.'
-        seed_conflict: 'Ja existeix un estat de compensació d''IVA per a aquest període; la llavor sobreescriuria l''historial emmagatzemat.'
+        modelo_303_only: L'historial de compensació d'IVA només accepta observacions
+          del Model 303.
+        seed_conflict: Ja existeix un estat de compensació d'IVA per a aquest període;
+          la llavor sobreescriuria l'historial emmagatzemat.
   ledger:
     errors:
       evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix
@@ -1911,7 +1913,6 @@ cli:
       key_help: Clau a netejar
     workflow_help: Mostrar ajuda del flux de configuració
   diagnostics:
-    app_help: Diagnostics d'us intern per als components de l'AEAT.
     browser:
       http_status_label: Estat HTTP
       markers_label: Marcadors
@@ -1929,23 +1930,6 @@ cli:
     next_action:
       inspect_registry_toml: Inspecciona les fonts TOML del registre per identificar
         el problema.
-    profile:
-      errors:
-        ambiguous_profile: 'Nom de perfil ambigu: %{profile}.'
-        invalid_value_fallback: 'Invalid value for %{key}: %{value}'
-        invalid_value_with_choices: '%{message} (%{choices})'
-        no_active_profile: Cap perfil actiu seleccionat.
-        profile_empty: --profile no pot estar en blanc.
-        unknown_profile: 'Perfil desconegut: %{profile}.'
-        unknown_profile_key: 'Clau de perfil desconeguda: %{key}.'
-      get_help: Read one profile key stored value.
-      help: Engineer-only profile field inspection and surgical edits.
-      key_help: Profile key.
-      profile_help: Profile to use; defaults to the active profile.
-      set_help: Write one profile key value, validated against the wizard descriptor.
-      unset_help: Clear one profile key value.
-      unset_placeholder: <no definit>
-      value_help: Value to store.
     repair:
       audience_internal: problema intern de l'aplicació
       auth_label: Autenticació
@@ -1961,18 +1945,6 @@ cli:
       profile_label: Perfil
       python_label: Python
       version_label: Versió
-    secure_objects:
-      all_help: Return every key, including unreadable rows.
-      errors:
-        conflicting_filters: --all and --unreadable cannot be combined; pass one or
-          neither.
-      help: Inventory the secure-object index by namespace.
-      labels:
-        count: recompte
-        namespace: espai de noms
-      list_help: List secure-object keys stored under one namespace.
-      namespace_help: Namespace to inventory.
-      unreadable_help: Restrict the listing to undecryptable rows.
     summary:
       auth_no_session: El proveïdor d'autenticació %{provider} no té cap sessió preparada
       auth_none: L'autenticació no està configurada
