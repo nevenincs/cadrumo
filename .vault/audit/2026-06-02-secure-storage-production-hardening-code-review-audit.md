@@ -841,3 +841,20 @@ and surfaces a localized refusal. Focused status, active-profile resolution, and
 profile-bucket scan tests passed.
 
 Closure assessment: `W12.P26.S276` can close as `manifest-discovery`.
+
+## S277-068 | PASS | Wizard translations remote-mirror closeout verified
+
+The `W12.P26.S277` review found that
+`src/aeat/application/wizard/_translations.py` is a local locale-coverage audit helper.
+It walks wizard descriptors and CLI source translation keys, then resolves them through
+`tr(...)`. It does not construct repositories, write bucket manifests, manage master-key
+material, read remote-provider state, or mirror payloads.
+
+The module's `Path` usage is limited to local CLI Python source introspection for
+translation-key discovery. Locale catalogue drift for modelo work-creation refusal keys
+was repaired through `python -m aeat.locales`, and the stale
+`relation_not_decimal` locale entry was removed by the scaffold/audit flow.
+
+Focused translation tests, ruff, locale audit, and RAG duplication search passed.
+
+Closure assessment: `W12.P26.S277` can close as `remote-mirror`.

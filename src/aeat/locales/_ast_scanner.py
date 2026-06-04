@@ -14,6 +14,10 @@ past that contract:
   but cannot tell what follows. The scanner emits a
   ``<prefix>.*`` marker that the parity check treats as a namespace
   declaration rather than a single key.
+* Bounded locale-key registries exposed as module constants whose names
+  end in ``_LOCALE_KEY`` or ``_LOCALE_KEYS``. These constants centralize
+  key selection for application policies that return translation keys
+  to a later caller instead of calling :func:`tr` locally.
 
 Both findings feed into
 :meth:`aeat.locales.manager.LocaleManager.get_codebase_keys` so the
@@ -109,6 +113,38 @@ def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
         elif isinstance(node, ast.Call):
             _collect_call_site_keys(node, findings)
     return findings
+
+
+def _extract_locale_constant_keys(tree: ast.AST) -> set[str]:
+    """Find dotted locale keys declared in explicit locale-key constants."""
+    findings: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            if any(_declares_locale_key_constant(target) for target in node.targets):
+                _collect_dotted_literals(node.value, findings)
+        elif isinstance(node, ast.AnnAssign) and _declares_locale_key_constant(node.target):
+            _collect_dotted_literals(node.value, findings)
+    return findings
+
+
+def _declares_locale_key_constant(target: ast.expr) -> bool:
+    """Return True when ``target`` names an explicit locale-key registry."""
+    if not isinstance(target, ast.Name):
+        return False
+    return target.id.endswith(("_LOCALE_KEY", "_LOCALE_KEYS"))
+
+
+def _collect_dotted_literals(node: ast.expr | None, findings: set[str]) -> None:
+    """Collect dotted string literals nested under ``node``."""
+    if node is None:
+        return
+    value = _dotted_literal_value(node)
+    if value is not None:
+        findings.add(value)
+        return
+    for child in ast.iter_child_nodes(node):
+        if isinstance(child, ast.expr):
+            _collect_dotted_literals(child, findings)
 
 
 def _collect_kwonly_default_keys(node: ast.FunctionDef, findings: set[str]) -> None:
@@ -325,6 +361,7 @@ def scan_source_tree(root: Path) -> set[str]:
             _log.debug("locale ast scan: parse failure %s (%s)", module, exc)
             continue
         findings.update(_extract_error_constructor_keys(tree))
+        findings.update(_extract_locale_constant_keys(tree))
     return findings
 
 
