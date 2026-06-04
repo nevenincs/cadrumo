@@ -92,7 +92,7 @@ def list_unmatched_invoice_repository_rows(
 def verify_invoice_repository_links(*, bucket_id: str) -> tuple[LinkInconsistency, ...]:
     """Load both catalogues and return one-sided invoice/transaction links as a tuple of :class:`LinkInconsistency`."""
     return verify_link_consistency(
-        InvoiceCatalogueRepository().load(),
+        InvoiceCatalogueRepository(bucket_id=bucket_id).load(),
         TransactionCatalogueRepository(bucket_id=bucket_id).load(),
     )
 
