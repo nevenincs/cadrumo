@@ -3330,6 +3330,7 @@ errors:
     unsupported_comparison_op: Nem tamogatott osszehasonlito muvelet.
     unsupported_op: Nem tamogatott muvelet.
   censo:
+    bucket_id_blank: 'A censo-szinkronizálási szolgáltatáshoz profil-bucket szükséges.'
     no_snapshot_captured: Nem sikerült censo-pillanatképet rögzíteni a(z) {profile_id}
       profilhoz.
     profile_not_found: A(z) {profile_id} profil nem létezik; censo alkalmazása előtt

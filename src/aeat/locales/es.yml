@@ -3410,6 +3410,7 @@ errors:
     unsupported_comparison_op: 'Operador de comparacion no admitido: %{op}.'
     unsupported_op: 'Operador de formula no admitido: %{op}.'
   censo:
+    bucket_id_blank: 'El servicio de sincronización censal requiere un bucket de perfil.'
     no_snapshot_captured: No se ha capturado ninguna instantánea del censo para el
       perfil {profile_id}.
     profile_not_found: El perfil {profile_id} no existe; créalo antes de aplicar el

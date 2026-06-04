@@ -3363,6 +3363,7 @@ errors:
     unsupported_comparison_op: 'Operador de comparacio no ames: %{op}.'
     unsupported_op: 'Operador de formula no ames: %{op}.'
   censo:
+    bucket_id_blank: 'El servei de sincronització censal requereix un bucket de perfil.'
     no_snapshot_captured: No s'ha capturat cap instantània del cens per al perfil
       {profile_id}.
     profile_not_found: El perfil {profile_id} no existeix; crea'l abans d'aplicar

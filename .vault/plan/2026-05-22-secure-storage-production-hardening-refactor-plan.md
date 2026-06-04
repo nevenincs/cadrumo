@@ -440,7 +440,7 @@ Current register count: `293` production candidate files.
 | `AFR-159` | `src/aeat/application/topics/__init__.py` | `plain-file` | `retired` | `W12.P24.S96` | closed |
 | `AFR-160` | `src/aeat/application/user_profile/__init__.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-161` | `src/aeat/application/user_profile/_aggregate.py` | `active-profile, manifest-bucket, sql-route, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
-| `AFR-162` | `src/aeat/application/user_profile/_censo_sync.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-162` | `src/aeat/application/user_profile/_censo_sync.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-163` | `src/aeat/application/user_profile/_integrity.py` | `manifest-bucket, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-164` | `src/aeat/application/user_profile/_language_resolver.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-165` | `src/aeat/application/user_profile/_lifecycle.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
@@ -793,7 +793,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S261` - Close stale `AFR-159` for absent `src/aeat/application/topics/__init__.py` with signals `plain-file`, target `retired`, and owner `W12.P24.S96`; `src/aeat/application/topics/__init__.py`.
 - [x] `W12.P26.S262` - Close `AFR-160` for `src/aeat/application/user_profile/__init__.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/user_profile/__init__.py`.
 - [x] `W12.P26.S263` - Close `AFR-161` for `src/aeat/application/user_profile/_aggregate.py` with signals `active-profile, manifest-bucket, sql-route, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/user_profile/_aggregate.py`.
-- [ ] `W12.P26.S264` - Close `AFR-162` for `src/aeat/application/user_profile/_censo_sync.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/user_profile/_censo_sync.py`.
+- [x] `W12.P26.S264` - Close `AFR-162` for `src/aeat/application/user_profile/_censo_sync.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/user_profile/_censo_sync.py`.
 - [ ] `W12.P26.S265` - Close `AFR-163` for `src/aeat/application/user_profile/_integrity.py` with signals `manifest-bucket, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/application/user_profile/_integrity.py`.
 - [ ] `W12.P26.S266` - Close `AFR-164` for `src/aeat/application/user_profile/_language_resolver.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/user_profile/_language_resolver.py`.
 - [ ] `W12.P26.S267` - Close `AFR-165` for `src/aeat/application/user_profile/_lifecycle.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/user_profile/_lifecycle.py`.

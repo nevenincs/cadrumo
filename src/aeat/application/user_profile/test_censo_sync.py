@@ -7,6 +7,7 @@ CensoSnapshotService and UserProfileLifecycleRepository.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -14,6 +15,7 @@ import pytest
 
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...domain.user_profile import UserProfileFact, UserProfileRecord
+from ...tests.aeat_literal_fixtures import aeat_url, configured_path
 from ...tests.secure_sql import isolated_runtime_profile
 from ..live._censo import CensoSnapshotService, SnapshotLifecycleState
 from . import (
@@ -21,6 +23,7 @@ from . import (
     CensoApplyConflictError,
     CensoComparisonStatus,
     CensoNotAvailableError,
+    CensoSyncError,
     CensoSyncService,
     UserProfileLifecycleRepository,
 )
@@ -28,7 +31,7 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-_G313 = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml"
+_G313 = aeat_url("sede", configured_path("sede_paths", "censo_g313_launcher"))
 
 
 @pytest.fixture
@@ -55,6 +58,16 @@ def _service(secure_objects: SecureObjectRepository) -> CensoSyncService:
         snapshots=snapshots,
         profiles=profiles,
     )
+
+
+def test_service_refuses_blank_bucket_id_with_translated_error(secure_store: SecureObjectRepository) -> None:
+    profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store)
+    snapshots = CensoSnapshotService(bucket_id="b1")
+
+    with pytest.raises(CensoSyncError) as exc_info:
+        CensoSyncService(bucket_id=" ", snapshots=snapshots, profiles=profiles)
+
+    assert exc_info.value.translated_message == "errors.censo.bucket_id_blank"
 
 
 def test_refresh_captures_active_snapshot(secure_store: SecureObjectRepository) -> None:
@@ -233,6 +246,27 @@ def test_apply_seeding_idempotent_on_repeat(secure_store: SecureObjectRepository
     second = service.apply_censo_to_profile(profile_id="operator")
 
     assert second.seeded_home_office_categories == ()
+
+
+def test_bound_raw_afectacion_ratio_logs_non_decimal_censo_values(
+    secure_store: SecureObjectRepository,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    service = _service(secure_store)
+    service.refresh_censo(
+        profile_id="operator",
+        source_url=_G313,
+        fact_source=lambda: {
+            "vivienda_office.total_m2": "not-a-decimal",
+            "vivienda_office.office_m2": "20",
+        },
+    )
+
+    with caplog.at_level(logging.DEBUG, logger="aeat.application.user_profile._censo_sync"):
+        ratio = service.bound_raw_afectacion_ratio(profile_id="operator")
+
+    assert ratio is None
+    assert any("non-decimal censo surface" in record.message for record in caplog.records)
 
 
 def test_apply_preserves_windowed_manual_facts(secure_store: SecureObjectRepository) -> None:
