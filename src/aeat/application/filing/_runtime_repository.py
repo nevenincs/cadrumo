@@ -15,6 +15,10 @@ from .errors import ModeloApplicationError
 if TYPE_CHECKING:
     from ...adapters.persistence.storage.sql import SecureObjectRepository
 
+_NO_ACTIVE_PROFILE_BUCKET_MESSAGE = "application.workflow.errors.no_active_profile_bucket"
+_BLANK_EXPLICIT_BUCKET_CONTEXT = {"reason": "blank_explicit_bucket_id"}
+_MISSING_ACTIVE_BUCKET_CONTEXT = {"reason": "missing_active_profile_bucket"}
+
 
 def resolve_application_filing_bucket_id(bucket_id: str | None) -> str:
     """Return an explicit or active profile bucket id for filing application repositories."""
@@ -23,12 +27,14 @@ def resolve_application_filing_bucket_id(bucket_id: str | None) -> str:
         if trimmed:
             return trimmed
         raise ModeloApplicationError(
-            translated_message="application.workflow.errors.no_active_profile_bucket",
+            translated_message=_NO_ACTIVE_PROFILE_BUCKET_MESSAGE,
+            context=_BLANK_EXPLICIT_BUCKET_CONTEXT,
         )
     active = resolve_active_bucket_id()
     if active is None:
         raise ModeloApplicationError(
-            translated_message="application.workflow.errors.no_active_profile_bucket",
+            translated_message=_NO_ACTIVE_PROFILE_BUCKET_MESSAGE,
+            context=_MISSING_ACTIVE_BUCKET_CONTEXT,
         )
     return active
 
