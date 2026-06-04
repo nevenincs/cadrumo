@@ -658,3 +658,18 @@ Repair-list and repair-decision refusal paths now use locale keys and structured
 context, with real repository tests covering the decision paths.
 
 Closure assessment: `W12.P26.S247` can close as `runtime-default`.
+
+## S248-059 | PASS | Review adapters manifest-discovery closeout verified
+
+The `W12.P26.S248` review found that
+`src/aeat/application/review/_adapters.py` loads transaction, invoice, and
+filing draft review sources through domain repositories and active-profile /
+bucket runtime paths. It does not persist review state, mutate source records,
+write plaintext sidecars, or call remote providers.
+
+Transaction, invoice, and filing-draft source-load wrappers now use localized
+message keys with bounded `error_type` context instead of carrying raw backend
+exception text in operator-facing errors. Tests exercise malformed encrypted
+secure-object payloads through real active-bucket repositories.
+
+Closure assessment: `W12.P26.S248` can close as `manifest-discovery`.
