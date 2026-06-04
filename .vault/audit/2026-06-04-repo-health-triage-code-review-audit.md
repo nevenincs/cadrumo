@@ -62,3 +62,19 @@ The reviewer noted one non-blocking residual edge: a manually constructed invali
 revision with retired `invoice` source can be silently skipped by the resolver,
 but production registry validation rejects that source before resolver use and
 current production registry data does not contain `source = "invoice"` entries.
+
+## W03-001 | LOW | Parallel plan step closure left S24 unchecked
+
+Status: remediated.
+
+The W03.P07 review found that `W03.P07.S24` was still unchecked while matching
+execution and index records existed for the step. The root cause was a local
+workflow error: S24, S25, and S26 were closed in parallel, and concurrent writes
+to the same plan file lost the S24 update.
+
+Remediation reran the S24 plan-step closure serially, regenerated the feature
+index, removed the stale plan template annotation block, and reran VaultSpec
+checks successfully. No HIGH or CRITICAL findings were reported for the W03.P07
+code changes. The reviewer noted no behavioral regression in CLI command
+registration, storage-session fixture direction, or the `work calculate` typed
+boundary extraction.

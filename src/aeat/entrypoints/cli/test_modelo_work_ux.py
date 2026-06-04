@@ -28,11 +28,22 @@ from pathlib import Path
 import pytest
 
 from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ...application.user_profile._orchestration import profile_create_storage_span
+
+# Importing the wizard catalogue + persistence modules triggers
+# register_wizard_catalogue() at import time, exactly as the production CLI
+# startup does (cli.__init__ registers it for profile-key resolution). Without
+# this, an in-process `modelo work create` reaches _guard_modelo_applicability ->
+# projection_for_taxpayer -> get_setup_flow() and raises
+# WizardCatalogueNotRegisteredError (the catalogue is a process-global the real
+# CLI registers at startup; the in-process test must do the same).
+from ...application.wizard import _catalogue as _wizard_catalogue
+from ...application.wizard import _persistence as _wizard_persistence
 from ...core.config import override_settings
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import isolated_profile_storage_root
 from ._test_envelope import unwrap_schema_envelope as _payload
+
+_WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -42,22 +53,11 @@ _PROFILE_ID = "operator"
 
 @pytest.fixture(autouse=True)
 def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    """Isolated storage root plus a held-open bucket session for the test body.
-
-    The active bucket session is a per-process/per-context ContextVar opened by
-    the storage master-key provider. The in-process runner here invokes
-    ``config profile create`` then ``modelo work ...`` within one process, where
-    a bare create invoke opens and closes its own session, so a subsequent
-    profile-bound command finds none ("No active bucket session is open").
-    Holding :func:`profile_create_storage_span` open for the ``operator`` profile
-    the tests create keeps one session active across every invoke — the same
-    pattern the passing ledger-CLI suites use.
-    """
+    """Isolated storage root; each invoke opens the active UUID bucket session."""
     dispose_engine()
     with (
         override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span(_PROFILE_ID),
     ):
         try:
             yield
