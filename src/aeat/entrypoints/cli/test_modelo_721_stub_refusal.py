@@ -24,10 +24,12 @@ from pathlib import Path
 
 import pytest
 
+from ...tests.aeat_literal_fixtures import aeat_host
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+_SEDE_HOST = aeat_host("sede")
 
 
 @pytest.fixture(autouse=True)
@@ -64,7 +66,7 @@ def test_work_create_721_refuses_with_legal_authority_message(
     # Must name the €50.000 threshold from Orden HFP/887/2023 Art. 3.
     assert "50" in result.output
     # Must redirect to AEAT Sede, not imply local-CLI filing support.
-    assert "sede.agenciatributaria.gob.es" in result.output or "Sede" in result.output
+    assert _SEDE_HOST in result.output or "Sede" in result.output
     # Generic crash / unrouted error messages are forbidden.
     assert "could not evaluate" not in result.output
     assert "Modelo desconocido" not in result.output

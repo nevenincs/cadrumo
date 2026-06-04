@@ -108,6 +108,21 @@ def persist_calculation_revision(
     revisions = calculation_repository.load()
     existing = revisions.get(revision_id)
     if existing is not None:
+        if (
+            existing.state is CalculationRevisionState.BORRADOR
+            and work_unit.current_calculation_revision_id != revision_id
+        ):
+            work_unit_repository.save(
+                upsert_work_unit(
+                    work_units,
+                    work_unit.model_copy(
+                        update={
+                            "current_calculation_revision_id": revision_id,
+                            "updated_at": now,
+                        }
+                    ),
+                )
+            )
         return existing
 
     revision = CalculationRevision(

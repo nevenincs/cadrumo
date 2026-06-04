@@ -42,6 +42,7 @@ class WorkUnitPayload(OutputSchema):
     """Work unit fields shared across create / status / rename / discard."""
 
     work_unit_id: WorkUnitId
+    short_work_unit_id: str
     bucket_id: BucketId
     modelo: str
     filing_year: int
@@ -49,6 +50,11 @@ class WorkUnitPayload(OutputSchema):
     revision_id: RevisionId
     name: str
     state: str
+    current_calculation_revision_id: CalculationRevisionId | None = None
+    short_current_calculation_revision_id: str | None = None
+    filed_calculation_revision_id: CalculationRevisionId | None = None
+    short_filed_calculation_revision_id: str | None = None
+    current_filing_record_id: FilingRecordId | None = None
     created_at: str
     updated_at: str
     discarded_at: str | None = None
@@ -192,6 +198,7 @@ class WorkCreateResult(OutputSchema):
     name_applied: str | None = None
     applicability_guard_bypassed: bool
     work_unit_id: WorkUnitId
+    short_work_unit_id: str
     bucket_id: BucketId
     modelo: str
     filing_year: int
@@ -199,6 +206,11 @@ class WorkCreateResult(OutputSchema):
     revision_id: RevisionId
     name: str
     state: str
+    current_calculation_revision_id: CalculationRevisionId | None = None
+    short_current_calculation_revision_id: str | None = None
+    filed_calculation_revision_id: CalculationRevisionId | None = None
+    short_filed_calculation_revision_id: str | None = None
+    current_filing_record_id: FilingRecordId | None = None
     created_at: str
     updated_at: str
     discarded_at: str | None = None
@@ -224,6 +236,7 @@ class WorkStatusResult(OutputSchema):
 
     operation: str = "modelo.work.status"
     work_unit_id: WorkUnitId
+    short_work_unit_id: str
     bucket_id: BucketId
     modelo: str
     filing_year: int
@@ -231,6 +244,11 @@ class WorkStatusResult(OutputSchema):
     revision_id: RevisionId
     name: str
     state: str
+    current_calculation_revision_id: CalculationRevisionId | None = None
+    short_current_calculation_revision_id: str | None = None
+    filed_calculation_revision_id: CalculationRevisionId | None = None
+    short_filed_calculation_revision_id: str | None = None
+    current_filing_record_id: FilingRecordId | None = None
     created_at: str
     updated_at: str
     discarded_at: str | None = None
@@ -245,6 +263,7 @@ class WorkRenameResult(OutputSchema):
 
     operation: str = "modelo.work.rename"
     work_unit_id: WorkUnitId
+    short_work_unit_id: str
     bucket_id: BucketId
     modelo: str
     filing_year: int
@@ -252,6 +271,11 @@ class WorkRenameResult(OutputSchema):
     revision_id: RevisionId
     name: str
     state: str
+    current_calculation_revision_id: CalculationRevisionId | None = None
+    short_current_calculation_revision_id: str | None = None
+    filed_calculation_revision_id: CalculationRevisionId | None = None
+    short_filed_calculation_revision_id: str | None = None
+    current_filing_record_id: FilingRecordId | None = None
     created_at: str
     updated_at: str
     discarded_at: str | None = None
@@ -271,6 +295,7 @@ class WorkDiscardResult(OutputSchema):
 
     operation: str = "modelo.work.discard"
     work_unit_id: WorkUnitId
+    short_work_unit_id: str
     bucket_id: BucketId
     modelo: str
     filing_year: int
@@ -278,6 +303,11 @@ class WorkDiscardResult(OutputSchema):
     revision_id: RevisionId
     name: str
     state: str
+    current_calculation_revision_id: CalculationRevisionId | None = None
+    short_current_calculation_revision_id: str | None = None
+    filed_calculation_revision_id: CalculationRevisionId | None = None
+    short_filed_calculation_revision_id: str | None = None
+    current_filing_record_id: FilingRecordId | None = None
     created_at: str
     updated_at: str
     discarded_at: str | None = None
@@ -817,7 +847,7 @@ class ModeloExportPayload(OutputSchema):
 
     @classmethod
     def from_result(cls, result: _AppModeloExportResult) -> ModeloExportPayload:
-        """Project the application :class:`ModeloExportResult` into this CLI envelope.
+        """Project the application :class:`ModeloExportResult` into this CLI :class:`ModeloExportPayload` envelope.
 
         ``output_path`` is stringified from the application ``Path``; the
         fichero-BOE bytes are intentionally excluded (the file is written to
@@ -1132,6 +1162,7 @@ __all__ = [
     "IvaWalletBalanceResult",
     "IvaWalletSeedResult",
     "LedgerIssuePayload",
+    "M036DeclarationRecordResult",
     "M100ProjectionPayload",
     "M130AccumulatedPayload",
     "ModeloAggregateResult",
@@ -1176,7 +1207,6 @@ __all__ = [
     "WorkRevisionsResult",
     "WorkRunsResult",
     "WorkStatusResult",
-    "M036DeclarationRecordResult",
     "WorkUnitHistoryEventPayload",
     "WorkUnitPayload",
     "WorkVerifyResult",

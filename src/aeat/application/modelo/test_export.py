@@ -68,6 +68,7 @@ from ._export import (
     _iva_wallet_decision_export_provenance,
     export_modelo_revision,
 )
+from ._selectors import ModeloCalculationRevisionSelectorStateError, select_exportable_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -775,3 +776,59 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
     work_unit = WorkUnitCatalogueRepository().load().get(work_unit_id)
     assert work_unit is not None
     assert work_unit.filed_calculation_revision_id is None
+
+
+def test_exportable_selector_refuses_verified_fallback_when_current_draft_conflicts(
+    isolated_backend: None,
+) -> None:
+    bucket_id = _seed_profile()
+    work_repo = WorkUnitCatalogueRepository()
+    calc_repo = CalculationRevisionCatalogueRepository()
+    work_unit = create_work_unit(
+        bucket_id=bucket_id,
+        modelo="130",
+        filing_year=2026,
+        period="1T",
+        revision_id="2019-y-siguientes",
+        repository=work_repo,
+        clock=datetime(2026, 6, 4, 10, 0, tzinfo=UTC),
+    )
+    verified_id = derive_calculation_revision_id(
+        work_unit_id=work_unit.work_unit_id,
+        inputs_snapshot={"01": "10"},
+        binding_overrides={},
+        casilla_values={"01": Decimal("10")},
+    )
+    draft_id = derive_calculation_revision_id(
+        work_unit_id=work_unit.work_unit_id,
+        inputs_snapshot={"01": "20"},
+        binding_overrides={},
+        casilla_values={"01": Decimal("20")},
+    )
+    verified = CalculationRevision(
+        calculation_revision_id=verified_id,
+        work_unit_id=work_unit.work_unit_id,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        inputs_snapshot={"01": "10"},
+        casilla_values={"01": Decimal("10")},
+        created_at=datetime(2026, 6, 4, 10, 1, tzinfo=UTC),
+        updated_at=datetime(2026, 6, 4, 10, 1, tzinfo=UTC),
+        verified_at=datetime(2026, 6, 4, 10, 1, tzinfo=UTC),
+        verified_by="operator",
+    )
+    draft = CalculationRevision(
+        calculation_revision_id=draft_id,
+        work_unit_id=work_unit.work_unit_id,
+        state=CalculationRevisionState.BORRADOR,
+        inputs_snapshot={"01": "20"},
+        casilla_values={"01": Decimal("20")},
+        created_at=datetime(2026, 6, 4, 10, 2, tzinfo=UTC),
+        updated_at=datetime(2026, 6, 4, 10, 2, tzinfo=UTC),
+    )
+    catalogue = upsert_calculation_revision(calc_repo.load(), verified)
+    calc_repo.save(upsert_calculation_revision(catalogue, draft))
+    work_unit = work_unit.model_copy(update={"current_calculation_revision_id": draft.calculation_revision_id})
+    work_repo.save(upsert_work_unit(work_repo.load(), work_unit))
+
+    with pytest.raises(ModeloCalculationRevisionSelectorStateError, match="still draft"):
+        select_exportable_revision(work_unit, calculation_repository=calc_repo)

@@ -9,11 +9,14 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import SecretStr
 
 from ...adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL, parse_iva_compensation_wallet_html
+from ...core.config import AuthProviderKindSetting, Settings
 from ...core.resources import resources
 from ...domain.buckets import BucketEventHistoryRepository
 from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ...domain.deadlines import IVARegime, TaxpayerProfile
 from ...domain.iva_compensation._reconciliation import (
     IvaCompensationOverride,
     IvaCompensationReconciliationDecision,
@@ -24,6 +27,8 @@ from ...domain.modelos._calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ...domain.modelos._filing_record import ModeloRecordStatus
+from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ...domain.user_profile import UserProfileFact, UserProfileRecord
@@ -38,6 +43,8 @@ from . import (
     ModeloIvaWalletReconciliationBlocked,
     calculate_modelo_revision,
     create_work_unit,
+    file_modelo_revision,
+    mark_revision_verificado_completo,
 )
 from ._actions import _require_persisted_iva_compensation_decision_matches_revision
 
@@ -58,6 +65,7 @@ def _secure_backend(tmp_path: Path) -> Iterator[None]:
 def _wallet_observation(
     *,
     pending: Decimal,
+    taxpayer_nif: str = _TAXPAYER_NIF,
     target_year: int = _TARGET_YEAR,
     target_period: str = _TARGET_PERIOD,
     generation_year: int = 2026,
@@ -85,8 +93,8 @@ def _wallet_observation(
           </body>
         </html>
         """,
-        taxpayer_nif=_TAXPAYER_NIF,
-        authenticated_identity=_TAXPAYER_NIF,
+        taxpayer_nif=taxpayer_nif,
+        authenticated_identity=taxpayer_nif,
         target_year=target_year,
         target_period=target_period,
         source_url=IVA_COMPENSATION_WALLET_URL,
@@ -144,14 +152,29 @@ def _work_unit_repositories():
 
 
 def _store_operator_profile() -> None:
+    _store_operator_profile_with_tax_id(_TAXPAYER_NIF)
+
+
+def _store_operator_profile_with_tax_id(tax_id: str) -> None:
     UserProfileLifecycleRepository(bucket_id="operator").save(
         UserProfileRecord(
             profile_id="operator",
             display_name="Test runtime profile",
-            facts=(UserProfileFact(path="identity.tax_id", value=_TAXPAYER_NIF),),
+            facts=(UserProfileFact(path="identity.tax_id", value=tax_id),),
             created_at=_DECIDED_AT,
             updated_at=_DECIDED_AT,
         )
+    )
+
+
+def _workflow_profile(tax_id: str = _TAXPAYER_NIF) -> TaxpayerProfile:
+    return TaxpayerProfile(
+        tax_id=tax_id,
+        iva_regime=IVARegime.GENERAL,
+        has_employees=False,
+        pays_rent_with_retencion=False,
+        does_intracomunitario=False,
+        bienes_extranjero_above_threshold=False,
     )
 
 
@@ -358,6 +381,57 @@ def test_no_seed_no_override_303_calculate_lazily_reconciles_local_zero_and_surf
     assert decision.divergence == "first_period_zero"
 
 
+def test_first_period_zero_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(tmp_path: Path) -> None:
+    with _secure_backend(tmp_path):
+        _store_operator_profile()
+        snapshot = resources().modelos.authority.snapshot("303", filing_year=_TARGET_YEAR, period=_TARGET_PERIOD)
+        report = reconcile_modelo_303_iva_compensation(
+            snapshot,
+            taxpayer_nif=_TAXPAYER_NIF,
+            wallet=None,
+            repository=CalculationObservationRepository(),
+            decided_at=_DECIDED_AT,
+            treat_absent_recurrence_as_first_period=True,
+        )
+
+        assert report.decision.selected_authority == "local_recurrence"
+        assert report.decision.selected_amount == Decimal("0")
+        assert report.decision.divergence == "first_period_zero"
+        assert report.decision.blocked is False
+        assert {source.source_kind for source in report.decision.authority_sources} == {"local_recurrence"}
+
+        work_repo, calc_repo, event_repo = _work_unit_repositories()
+        work_unit = create_work_unit(
+            bucket_id="operator",
+            modelo="303",
+            filing_year=_TARGET_YEAR,
+            period=_TARGET_PERIOD,
+            revision_id=snapshot.revision.id,
+            repository=work_repo,
+            clock=_DECIDED_AT,
+        )
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            actor="operator",
+            casilla_inputs={},
+            binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+            backend_binding_values=_modelo_303_engine_inputs(),
+            iva_compensation_decision=report.decision,
+            filing_period_date=date(2026, 6, 30),
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+            clock=_DECIDED_AT,
+        )
+
+        assert Decimal(revision.binding_overrides["modelo-303-compensacion-pendiente-anteriores"]) == Decimal("0")
+        assert revision.casilla_values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("0.00")
+        assert revision.casilla_values["iva.compensacion-aplicada-periodo"] == Decimal("0.00")
+        decision = _require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
+        assert decision is not None
+        assert decision.divergence == "first_period_zero"
+
+
 def test_no_seed_303_calculate_with_prior_filed_history_stays_safely_blocked(
     tmp_path: Path,
 ) -> None:
@@ -536,6 +610,87 @@ def test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(tm
         decision = _require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
         assert decision is not None
         assert decision.divergence == "wallet_only"
+
+
+def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_preflight(tmp_path: Path) -> None:
+    taxpayer_nif = "X1234567L"
+    with _secure_backend(tmp_path):
+        _store_operator_profile_with_tax_id(taxpayer_nif)
+        snapshot = resources().modelos.authority.snapshot("303", filing_year=_TARGET_YEAR, period=_TARGET_PERIOD)
+        report = reconcile_modelo_303_iva_compensation(
+            snapshot,
+            taxpayer_nif=taxpayer_nif,
+            wallet=_wallet_observation(pending=Decimal("1200.00"), taxpayer_nif=taxpayer_nif),
+            repository=CalculationObservationRepository(),
+            decided_at=_DECIDED_AT,
+        )
+        assert report.decision.selected_authority == "aeat_wallet"
+        assert report.decision.divergence == "wallet_only"
+
+        work_repo, calc_repo, event_repo = _work_unit_repositories()
+        filing_repo = ModeloRecordCatalogueRepository()
+        work_unit = create_work_unit(
+            bucket_id="operator",
+            modelo="303",
+            filing_year=_TARGET_YEAR,
+            period=_TARGET_PERIOD,
+            revision_id=snapshot.revision.id,
+            repository=work_repo,
+            clock=_DECIDED_AT,
+        )
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            actor="operator",
+            casilla_inputs={
+                "iva.prorrata-volumen-con-derecho": Decimal("100.00"),
+                "iva.prorrata-volumen-total": Decimal("100.00"),
+            },
+            binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+            backend_binding_values=_modelo_303_engine_inputs(),
+            iva_compensation_decision=report.decision,
+            filing_period_date=date(2026, 6, 30),
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+            clock=_DECIDED_AT,
+        )
+        verified = mark_revision_verificado_completo(
+            revision.calculation_revision_id,
+            actor="operator",
+            calculation_repository=calc_repo,
+            clock=datetime(2026, 7, 15, 9, 0, 0, tzinfo=UTC),
+        )
+
+        filing = file_modelo_revision(
+            verified.calculation_revision_id,
+            actor="operator",
+            workflow_profile=_workflow_profile(taxpayer_nif),
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            filing_repository=filing_repo,
+            bucket_event_repository=event_repo,
+            settings=Settings(
+                aeat_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
+                aeat_clave_movil_dni_nie=SecretStr(taxpayer_nif),
+            ),
+            clock=datetime(2026, 7, 15, 10, 0, 0, tzinfo=UTC),
+        )
+
+        assert filing.status is ModeloRecordStatus.VIGENTE
+        assert filing.aeat_accepted is False
+        assert filing.external_evidence is None
+        stored_revision = calc_repo.load().get(verified.calculation_revision_id)
+        assert stored_revision is not None
+        assert stored_revision.state is CalculationRevisionState.PRESENTADO
+        stored_work_unit = work_repo.load().get(work_unit.work_unit_id)
+        assert stored_work_unit is not None
+        assert stored_work_unit.filed_calculation_revision_id == verified.calculation_revision_id
+        assert filing_repo.load().current_for(
+            bucket_id="operator",
+            modelo="303",
+            filing_year=_TARGET_YEAR,
+            period=_TARGET_PERIOD,
+        ) == filing
 
 
 def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine_prefill(tmp_path: Path) -> None:

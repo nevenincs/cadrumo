@@ -41,7 +41,7 @@ from ...core.config import override_settings
 from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry import calculate_registry_snapshot
 from ...tests.aeat_literal_fixtures import aeat_url, configured_path
-from ...tests.cli_runner import invoke_cached_cli
+from ...tests.cli_runner import aeat_click_command, invoke_cached_cli
 from ._app_live import _iva_wallet_history_lines, _iva_wallet_pull_lines
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -567,6 +567,33 @@ def test_live_filed_capture_sources_cli_help_resolves_without_registry_alias() -
     assert old_capture.exit_code != 0
     assert "No such command" in old_list.output
     assert "No such command" in old_capture.output
+
+
+def test_live_filed_capture_all_cli_help_resolves() -> None:
+    import click
+
+    result = invoke_cached_cli(
+        ["app", "live", "filed", "capture-all", "--help"],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+
+    assert result.exit_code == 0
+    assert "--from-year" in result.output
+    assert "--to-year" in result.output
+    assert "--modelo" in result.output
+
+    root = aeat_click_command()
+    assert isinstance(root, click.Group)
+    app_group = root.get_command(click.Context(root), "app")
+    assert isinstance(app_group, click.Group)
+    live_group = app_group.get_command(click.Context(app_group), "live")
+    assert isinstance(live_group, click.Group)
+    filed_group = live_group.get_command(click.Context(live_group), "filed")
+    assert isinstance(filed_group, click.Group)
+    capture_all = filed_group.get_command(click.Context(filed_group), "capture-all")
+    assert isinstance(capture_all, click.Command)
+    help_text = (capture_all.help or "").lower()
+    assert "read-only" in help_text or "solo lectura" in help_text
 
 
 def test_live_iva_wallet_cli_help_names_fail_closed_no_submit_policy() -> None:

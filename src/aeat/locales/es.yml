@@ -135,8 +135,8 @@ adapters:
       errors:
         no_active_profile: No hay ningún perfil AEAT activo enlazado para Google OAuth.
       suggestions:
-        create_profile: Ejecuta `aeat config profile create NAME --tax-id <NIF>` y
-          vuelve a intentar el comando de Google.
+        create_profile: Ejecuta `aeat config profile create NAME --tax-id <DNI/NIE/NIF/CIF>`
+          y vuelve a intentar el comando de Google.
   inbound:
     declaracion:
       errors:
@@ -1820,12 +1820,6 @@ cli:
           importe=10000''. Ejemplo M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
           clave_operacion=E importe=50000''.'
         row_kv_format_error: El campo --row {token} debe tener el formato CLAVE=VALOR.
-        row_m184_share_sum_error: 'Modelo 184, filas de miembro: los porcentajes de
-          participacion deben sumar exactamente 100%; se obtuvo %{total} en %{count}
-          filas'
-        row_m347_threshold_error: 'Modelo 347, fila de contraparte (NIF=%{nif}): el
-          importe total %{total} no supera el umbral de %{threshold} EUR exigido por
-          el RD 1065/2007 art. 31.1'
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincide con
           el formato NIF-IVA esperado para el país {pais} (Directiva 2006/112/CE Anexo
           XI)'
@@ -1964,7 +1958,7 @@ cli:
     errors:
       invalid_value: 'Valor inválido para %{name}: %{value}'
       no_active_profile: No hay un perfil activo. Ejecuta 'aeat config profile create
-        NAME --tax-id <NIF>' primero.
+        NAME --tax-id <DNI/NIE/NIF/CIF>' primero.
       unknown_key: 'Clave de configuración desconocida: %{name}. Ejecuta ''aeat config
         profile list'' para ver las claves disponibles.'
     get:
@@ -2111,7 +2105,7 @@ cli:
         show_help: Muestra el último censo informado por AEAT para este perfil
         snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
       create_epilog: 'Perfil mínimo para autónomo: --entity-type natural_person --tax-id
-        <NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
+        <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Inicializa un nuevo perfil activo y su bucket de configuración.
       delete_active_cleared: El perfil eliminado era el activo; el puntero de perfil
         activo se ha borrado. Ejecuta 'aeat config profile switch NOMBRE' o 'aeat
@@ -2150,8 +2144,8 @@ cli:
         Los verbos posteriores en este terminal serán rechazados con NoActiveBucketSessionError
         hasta que ejecutes `aeat config profile switch NOMBRE` (o abras un nuevo terminal
         y vuelvas a seleccionar).
-      no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
-        <NIF>` first.
+      no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
+        NAME --tax-id <DNI/NIE/NIF/CIF>` primero.
       preflight_filing_year_help: Ejercicio de presentación (cuatro dígitos).
       preflight_help: Informa qué campos del perfil faltan para un contexto de presentación
         (modelo, revisión, ejercicio, periodo).
@@ -4471,7 +4465,7 @@ wizard:
       \ de crear este perfil de dos maneras:\n \n1. Ejecuta el comando otra vez desde\
       \ una terminal interactiva para usar el asistente guiado:\n     aeat config\
       \ profile create NAME\n\n2. O créalo en un solo paso indicando los datos obligatorios\
-      \ como flags:\n     aeat config profile create NAME --quiet --tax-id NIF"
+      \ como flags:\n     aeat config profile create NAME --quiet --tax-id DNI/NIE/NIF/CIF"
     unsupported_console_edit: "No pude abrir el asistente guiado en esta ejecución.\n\
       Todavía no se ha guardado nada.\n\nEdita este perfil de forma no interactiva\
       \ indicando el campo a cambiar:\n  aeat config profile edit %{profile_name}\
@@ -4689,8 +4683,8 @@ wizard:
       Hay %{section_total} pasos. Solo %{required_total} respuestas son obligatorias
       para empezar; puedes dejar en blanco lo que todavía no sepas.
 
-      Ten a mano tu DNI/NIE/NIF/CIF, una descripción breve de la actividad, régimen de
-      IVA/IRPF, residencia fiscal y datos familiares si aplican.
+      Ten a mano tu DNI/NIE/NIF/CIF, una descripción breve de la actividad, régimen
+      de IVA/IRPF, residencia fiscal y datos familiares si aplican.
 
       Después de guardar, revisa el progreso con `aeat config profile status`.'
     iva:

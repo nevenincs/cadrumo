@@ -24,6 +24,7 @@ from pathlib import Path
 
 import pytest
 
+from ...application.modelo import maritime_facts_from_active_profile
 from ...application.user_profile._orchestration import profile_create_storage_span
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
@@ -31,7 +32,6 @@ from ...core.config import override_settings
 from ...core.errors import ErrorCategory, get_error_exit_code
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import isolated_profile_storage_root
-from . import _modelo as modelo_cli
 from ._modelo_payloads import (
     WorkPreviewMaritimeExemptionResult,
 )
@@ -237,6 +237,6 @@ class TestVerbWiringIntegration:
                 "maritime_worker.vessel_registry": "rebeca_eu_eea",
             }
         )
-        facts = modelo_cli._maritime_facts_from_active_profile()
+        facts = maritime_facts_from_active_profile()
         assert facts.worker_class == "trabajador_del_mar"
         assert facts.vessel_registry == "rebeca_eu_eea"

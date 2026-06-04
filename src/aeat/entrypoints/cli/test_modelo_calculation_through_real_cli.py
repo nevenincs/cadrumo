@@ -233,6 +233,9 @@ def test_modelo_200_micro_empresa_pyme_cuota_2024(
             "--binding", "modelo-200-2024-profile-tributacion-estado-porcentaje=100",
             # BIN-pendiente fresh-filer baseline (M200 self previous_filing).
             "--binding", "modelo-200-2024-bin-pendiente-ejercicios-anteriores=0",
+            # Dotaciones/deterioro credit balance fresh-filer baseline.
+            "--binding", "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
+            "--binding", "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
             # Relation value: sum of M202 pagos fraccionados for the year.
             # Zero means no prior instalments have been paid.
             "--relation", "modelo-200-2024-rel-202-pagos-fraccionados=0",

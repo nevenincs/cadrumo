@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import AnyHttpUrl
 from typer.testing import CliRunner
 
+from ...adapters.outbound.aeat.sede._declarations import Declaracion
+from ...adapters.outbound.aeat.sede._notifications import NotificationsSnapshot, RemoteNotification
+from ...application.live import ExpedientesCapture, ExpedientesService, NotificationsService
 from ...application.user_profile._orchestration import profile_create_storage_span
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
@@ -105,6 +111,72 @@ def test_calendar_help_advertises_local_only(cli_runner: CliRunner) -> None:
     assert any(
         token in result.output.lower() for token in ("local-only", "local;", "nunca", "mai contacta", "csak helyi")
     ), result.output
+
+
+def test_calendar_json_includes_local_live_snapshot_events(cli_runner: CliRunner) -> None:
+    ExpedientesService().capture(
+        bucket_id="operator",
+        capture=ExpedientesCapture(
+            declarations=(
+                Declaracion(
+                    modelo="303",
+                    ejercicio=2025,
+                    period="1T",
+                    expediente_id="12345678901234567890",
+                    estado="ALTA",
+                    presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+                ),
+            ),
+            captured_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
+            source_url="declarations:modelo=303:ejercicio=2025",
+        ),
+    )
+    NotificationsService().capture(
+        bucket_id="operator",
+        snapshot=NotificationsSnapshot(
+            rows=(
+                RemoteNotification(
+                    certificado_id="2596230606502",
+                    tipo="notificacion",
+                    concepto="Requerimiento censal",
+                    titular_nif="B12345678",
+                    titular_nombre="Test S.L.",
+                    destinatario_nif="B12345678",
+                    destinatario_nombre="Test S.L.",
+                    fecha_emision=date(2025, 4, 14),
+                    fecha_notificacion=None,
+                    leida=False,
+                    source_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/"),
+                ),
+            ),
+            captured_at=datetime(2025, 4, 14, 10, 0, tzinfo=UTC),
+            source_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/"),
+        ),
+    )
+
+    result = cli_runner.invoke(
+        app,
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2025-04-01",
+            "--to",
+            "2025-04-30",
+            "--allow-incomplete",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    events = payload["result"]["events"]
+    assert {(event["event_type"], event["reference_id"]) for event in events} == {
+        ("filing", "12345678901234567890"),
+        ("message", "2596230606502"),
+    }
 
 
 def test_all_profiles_flag_iterates_every_registered_profile(cli_runner: CliRunner) -> None:
