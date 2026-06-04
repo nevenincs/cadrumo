@@ -9,6 +9,7 @@ related:
   - '[[2026-06-04-registry-reviewability-pressure-code-review-audit]]'
 ---
 
+
 # `registry-row-width-pressure` `implementation` plan
 
 Reduce committed registry TOML row-width pressure after the M123 line-count
@@ -19,7 +20,7 @@ split made row length the next active reviewability risk.
 Classify every committed registry TOML row near the current row-width baseline
 before editing data files.
 
-- [ ] `P01.S01` - Audit registry TOML rows at or above 540 characters and classify clean edit targets versus concurrent dirty deferrals; `.vault/audit`.
+- [x] `P01.S01` - Audit registry TOML rows at or above 540 characters and classify clean edit targets versus concurrent dirty deferrals; `.vault/audit`.
 
 ### Phase `P02` - value-preserving formatting
 
