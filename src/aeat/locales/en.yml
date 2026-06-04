@@ -788,6 +788,10 @@ application:
     errors:
       portal_not_found: The requested AEAT portal is not registered. Run 'aeat app
         live portals list' to see available portals.
+  registry:
+    errors:
+      invalid_oracle_environment: Registry oracle environment must be one of {allowed_values};
+        got {value}.
   user_profile:
     errors:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
@@ -2471,7 +2475,7 @@ cli:
         auth_providers: List supported authentication providers.
         auth_status: Show configured authentication state.
         auth_test: Check local authentication readiness.
-        bucket_history: 'Inspect append-only bucket event history.'
+        bucket_history: Inspect append-only bucket event history.
         diagnostics_logs: Show the configured log path and recent lines.
         diagnostics_quarantine: Quarantine unreadable secure objects.
         diagnostics_repair: Diagnose local configuration and storage health.
@@ -2490,7 +2494,7 @@ cli:
         profile_status: Show active profile readiness.
         profile_switch: Switch the active profile.
         section_authentication: Authentication
-        section_bucket_inspection: 'Bucket inspection'
+        section_bucket_inspection: Bucket inspection
         section_diagnostics: Diagnostics
         section_first_run: First run
         section_profile_inspection: Profile inspection
@@ -3275,6 +3279,10 @@ errors:
     error_wizard_compile: The wizard catalogue is malformed and could not be compiled.
     error_workflow: A workflow error occurred.
     error_workflow_component: A workflow component raised an unexpected exception.
+    modelo_calculation_revision_selector: 'Calculation revision selection failed.'
+    modelo_calculation_revision_selector_not_found: 'No calculation revision matched the requested selector.'
+    modelo_work_selector: The modelo work selector failed.
+    modelo_work_selector_unit_not_found: The selected modelo work unit was not found.
   fail:
     censo_sync: The Modelo 036 censo sync failed.
     currency_error: Currency normalization failed.
@@ -3545,6 +3553,8 @@ errors:
       100%.
     modelo_347_threshold: Modelo 347 operations above the reporting threshold require
       explicit declaration coverage.
+    modelo_calculation_revision_selector_ambiguous: 'The calculation revision selector matched more than one revision; refine the selector.'
+    modelo_calculation_revision_selector_state: 'The selected calculation revision is not in a usable state for this operation.'
     modelo_censo_stale: 'The operation is refused because you applied a new censo
       after this work was produced. The AEAT is the binding legal source: regenerate
       it against the current censo.'
@@ -3552,6 +3562,13 @@ errors:
       the active profile's. Export only operates within the active profile bucket.
     modelo_export_no_active_bucket: Export requires an active profile. Create or select
       a profile and try again.
+    modelo_work_selector_ambiguous: More than one modelo work unit matches the selector.
+    modelo_work_selector_contradiction: The modelo work selector arguments contradict
+      each other.
+    modelo_work_selector_no_active_bucket: Select an active profile before resolving
+      a modelo work unit.
+    modelo_work_selector_revision_conflict: The selected modelo work unit belongs
+      to a different revision.
     profile_already_registered: A profile with that name already exists. Use `aeat
       config profile switch NAME` to switch to it.
     profile_import_collision: The imported profile identifier collides with an existing

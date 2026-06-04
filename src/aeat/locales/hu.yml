@@ -803,6 +803,10 @@ application:
     errors:
       portal_not_found: A kért AEAT portál nincs regisztrálva. Futtassa az 'aeat app
         live portals list' parancsot az elérhető portálok megtekintéséhez.
+  registry:
+    errors:
+      invalid_oracle_environment: 'A nyilvantartasi oracle kornyezetnek ezek egyikenek
+        kell lennie: {allowed_values}; kapott ertek: {value}.'
   user_profile:
     errors:
       duplicate_tax_id: A(z) "%{tax_id}" adóazonosítót már a(z) "%{profile}" profil
@@ -2586,7 +2590,7 @@ cli:
         auth_providers: Támogatott hitelesítési szolgáltatók listázása.
         auth_status: Beállított hitelesítési állapot megjelenítése.
         auth_test: Helyi hitelesítési készség ellenőrzése.
-        bucket_history: 'Az append-only bucket esemenytortenet megtekintese.'
+        bucket_history: Az append-only bucket esemenytortenet megtekintese.
         diagnostics_logs: A beállított naplóútvonal és a legújabb sorok megjelenítése.
         diagnostics_quarantine: Olvashatatlan biztonságos objektumok karanténba helyezése.
         diagnostics_repair: Helyi konfiguráció és tár állapotának diagnosztikája.
@@ -2606,7 +2610,7 @@ cli:
         profile_status: Az aktív profil készültségének megjelenítése.
         profile_switch: Az aktív profil váltása.
         section_authentication: Hitelesítés
-        section_bucket_inspection: 'Bucket ellenorzes'
+        section_bucket_inspection: Bucket ellenorzes
         section_diagnostics: Diagnosztika
         section_first_run: Első futtatás
         section_profile_inspection: Profiladatok vizsgálata
@@ -3396,6 +3400,10 @@ errors:
     error_wizard_compile: A varázsló-katalógus hibás formátumú és nem fordítható le.
     error_workflow: Munkafolyamat hiba történt.
     error_workflow_component: Egy munkafolyamat-komponens váratlan kivételt dobott.
+    modelo_calculation_revision_selector: 'A szamitasi revizio kivalasztasa sikertelen.'
+    modelo_calculation_revision_selector_not_found: 'Nincs a megadott valasztonak megfelelo szamitasi revizio.'
+    modelo_work_selector: A modelo munkavalaszto hibazott.
+    modelo_work_selector_unit_not_found: A kivalasztott modelo munkaegyseg nem talalhato.
   fail:
     censo_sync: A Modelo 036 censo-szinkronizáció meghiúsult.
     currency_error: A devizanormalizáció meghiúsult.
@@ -3661,6 +3669,8 @@ errors:
       kell kitenniük.
     modelo_347_threshold: A Modelo 347 jelentési küszöb feletti ügyleteihez kifejezett
       bevallási lefedettség szükséges.
+    modelo_calculation_revision_selector_ambiguous: 'A szamitasi revizio valaszto tobb reviziora illeszkedik; pontositsa a valasztot.'
+    modelo_calculation_revision_selector_state: 'A kivalasztott szamitasi revizio nincs ehhez a muvelethez hasznalhato allapotban.'
     modelo_censo_stale: 'A műveletet elutasítottuk, mert új censot alkalmazott az
       után, hogy ez a munka elkészült. Az AEAT a kötelező jogi forrás: generálja újra
       a legfrissebb censo alapján.'
@@ -3669,6 +3679,13 @@ errors:
       működik.
     modelo_export_no_active_bucket: Az exportáláshoz aktív profil szükséges. Hozzon
       létre vagy válasszon ki egy profilt, és próbálja újra.
+    modelo_work_selector_ambiguous: Tobb modelo munkaegyseg is illeszkedik a valasztora.
+    modelo_work_selector_contradiction: A modelo munkavalaszto argumentumai ellentmondanak
+      egymasnak.
+    modelo_work_selector_no_active_bucket: Valasszon aktiv profilt a modelo munkaegyseg
+      feloldasa elott.
+    modelo_work_selector_revision_conflict: A kivalasztott modelo munkaegyseg masik
+      reviziohoz tartozik.
     profile_already_registered: Ilyen nevű profil már létezik. Profil váltáshoz használja
       az  parancsot.
     profile_import_collision: Az importált profil azonosítója ütközik egy meglévővel.
