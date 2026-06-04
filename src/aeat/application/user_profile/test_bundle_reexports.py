@@ -87,6 +87,16 @@ def test_application_package_reexports_orchestration_full_surface() -> None:
     )
 
 
+def test_application_package_reexports_domain_profile_records() -> None:
+    """The package manifest exposes the domain profile records it lazy-resolves."""
+    from ...domain import user_profile as domain_package
+    from .. import user_profile as package
+
+    for name in ("UserProfileFact", "UserProfileFactValue", "UserProfileRecord", "UserProfileStatus"):
+        assert name in package.__all__
+        assert getattr(package, name) is getattr(domain_package, name)
+
+
 def test_domain_package_reexports_portable_export_record() -> None:
     """`aeat.domain.user_profile` exposes the portable-export domain record."""
     from ...domain import user_profile as package

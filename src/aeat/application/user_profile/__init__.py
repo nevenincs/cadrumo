@@ -35,6 +35,12 @@ from ...core.identity import ProfileId
 from ._language_resolver import register_language_resolver as _register_language_resolver
 
 if TYPE_CHECKING:
+    from ...domain.user_profile import (
+        UserProfileFact,
+        UserProfileFactValue,
+        UserProfileRecord,
+        UserProfileStatus,
+    )
     from ._censo_errors import (
         CensoApplyConflictError,
         CensoFieldValidationError,
@@ -71,7 +77,13 @@ if TYPE_CHECKING:
     )
     from ._lifecycle import ProfileLifecycleService
     from ._preflight import ProfilePreflightService
-    from ._projections import facts_to_values, projection_for_taxpayer, record_to_values, snapshot_to_values
+    from ._projections import (
+        facts_to_values,
+        projection_for_taxpayer,
+        record_to_path_values,
+        record_to_values,
+        snapshot_to_values,
+    )
     from ._repository import (
         USER_PROFILE_SNAPSHOT_NAMESPACE,
         USER_PROFILE_VALUE_NAMESPACE,
@@ -81,12 +93,6 @@ if TYPE_CHECKING:
         user_profile_value_object_key,
     )
     from ._validation import ProfileValidationService
-    from ...domain.user_profile import (
-        UserProfileFact,
-        UserProfileFactValue,
-        UserProfileRecord,
-        UserProfileStatus,
-    )
 
 # W09.P43.S166: replace the prior side-effect import with an explicit
 # register call so the registration point is greppable rather than
@@ -269,9 +275,12 @@ __all__ = [
     "RemoveProfileCommand",
     "RenameProfileCommand",
     "UnsupportedBundleSchemaVersionError",
+    "UserProfileFact",
     "UserProfileFactValue",
     "UserProfileLifecycleRepository",
+    "UserProfileRecord",
     "UserProfileSnapshotRepository",
+    "UserProfileStatus",
     "build_lifecycle_service",
     "delete_profile_with_lifecycle_span",
     "deserialize_profile_bundle",
