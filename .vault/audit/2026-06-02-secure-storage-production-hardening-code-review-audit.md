@@ -418,3 +418,18 @@ real-repository test seeds the contaminated row through the registered test
 namespace and verifies fail-closed behavior.
 
 Closure assessment: `W12.P26.S230` can close as `runtime-default`.
+
+## S231-045 | PASS | Live verify remote-mirror closeout verified
+
+The `W12.P26.S231` review found that live verify observations are encrypted
+audit mirrors of authenticated AEAT verify checks. The affected-file row is
+corrected from stale `manifest-discovery` plaintext metadata to
+`remote-mirror` with secure-object and remote-provider signals.
+
+The service persists through `VerifyObservationRepository`,
+`LIVE_VERIFY_OBSERVATION_NAMESPACE`, and `secure_object_repository_for_bucket()`.
+Refusal paths now carry locale-backed metadata, avoid leaking bucket ids or
+matched full observation ids, and fail closed when list-time decrypted payload
+buckets do not match the repository bucket.
+
+Closure assessment: `W12.P26.S231` can close as `remote-mirror`.
