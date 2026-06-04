@@ -106,3 +106,19 @@ package and generated API pages are deleted, live `aeat.diagnostics` references
 are gone from source/docs/project config, import discovery returns `None`, and
 VaultSpec plan/exec/index/audit records are coherent for the corrected S35
 scope.
+
+## W03-003 | INFO | Formula initial-value extraction review found no defects
+
+Status: verified.
+
+The W03.P09.S31 review found no behavioral defect in the extraction. The runtime
+keeps the same private call sites by importing `initial_values` and
+`materialise_observations` under the old private helper names, while the new
+module owns the previous-filing absent-by-design and projection guards.
+
+Verification covered formula runtime behavior, Modelo 130 carry-forward
+absent-by-design behavior, previous-filing smuggling/projection rejection, ruff,
+and the registry reviewability gate. The review also identified one shared
+worktree safety edge: the plan file currently includes an unrelated
+`W06.P18.S65` checkbox change outside this slice. The S31 commit must stage only
+the S31 plan hunk and leave that unrelated working-tree change uncommitted.
