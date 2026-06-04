@@ -375,3 +375,17 @@ The new real-runtime test persists both catalogues, applies reconciliation, and
 verifies both persisted catalogues update under the requested bucket.
 
 Closure assessment: `W12.P26.S217` can close as `runtime-default`.
+
+## S228-042 | PASS | Live expedientes remote-mirror closeout verified
+
+The `W12.P26.S228` review found that live expedientes captures are encrypted
+remote mirrors of the authenticated AEAT declaration-register read surface.
+The service persists through `SecureSnapshotRepository` and
+`secure_object_repository_for_bucket()`, not plaintext JSONL files or direct SQL
+routes.
+
+Expedientes object-key validation and lookup refusals now carry locale-backed
+metadata. The not-found and ambiguous-prefix paths avoid leaking bucket ids or
+matched full snapshot ids while retaining bounded diagnostic context.
+
+Closure assessment: `W12.P26.S228` can close as `remote-mirror`.
