@@ -1884,7 +1884,7 @@ def ledger_list(
     try:
         spec = parse_ledger_list_filter_spec(filters)
     except FilterParseError as exc:
-        raise _bad(tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.raw_token)) from exc
+        raise _bad(tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.safe_token)) from exc
     projection = project_ledger_list(
         transaction_repository=transaction_repository,
         spec=spec,
@@ -2347,7 +2347,7 @@ def ledger_review(
     try:
         spec = LedgerReviewFilterSpec.from_strings(filters)
     except FilterParseError as exc:
-        raise _bad(tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.raw_token)) from exc
+        raise _bad(tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.safe_token)) from exc
     transaction_repository = _tx_repo(_state())
     # `LedgerReviewQuery.transaction_id` requires the full 64-char
     # SHA-256 id. An operator naturally passes the short display id

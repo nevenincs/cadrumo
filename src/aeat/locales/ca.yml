@@ -4155,6 +4155,9 @@ review:
     draft_placeholder_summary: Esborrany pendent
     finding_summary: Incidència detectada a l'esborrany
     stale_approval_summary: L'aprovació de l'esborrany ha caducat
+  filter:
+    errors:
+      parse_failed: 'No s''ha pogut interpretar el token de filtre. El valor indicat s''ha ocultat.'
   invoice:
     summary: Justificant pendent de revisió
   operator:
