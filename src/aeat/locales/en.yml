@@ -325,6 +325,7 @@ aggregation:
       period_mismatch: Period does not match the expected Renta ledger period.
       quarterly_period_required: Quarterly period is required for M130 income aggregation
         (e.g. 2024Q1).
+      invoice_bucket_mismatch: 'Invoice repository bucket does not match the requested Renta ledger bucket.'
   service:
     errors:
       envelope_modelo_mismatch: Aggregation modelo does not match result modelo.

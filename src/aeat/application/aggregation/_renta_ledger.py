@@ -186,7 +186,13 @@ def aggregate_renta_ledger_expenses_from_repositories(
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
     transactions = repository.load()
-    invoices = (invoice_repository or InvoiceCatalogueRepository()).load()
+    invoices_repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
+    if invoices_repository.bucket_id != bucket_id:
+        raise AggregationValidationError(
+            t("aggregation.renta_ledger.errors.invoice_bucket_mismatch"),
+            context={"bucket_id": bucket_id, "repository_bucket_id": invoices_repository.bucket_id},
+        )
+    invoices = invoices_repository.load()
     return aggregate_renta_ledger_expenses(
         transactions,
         invoices,

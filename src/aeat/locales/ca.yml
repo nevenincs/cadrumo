@@ -354,6 +354,7 @@ aggregation:
         de Renda.
       quarterly_period_required: Es requereix un període trimestral per a l'agregació
         d'ingressos del Model 130 (p.ex. 2024Q1).
+      invoice_bucket_mismatch: 'El bucket del repositori de factures no coincideix amb el bucket sol·licitat del llibre de Renda.'
   service:
     errors:
       envelope_modelo_mismatch: El model de l'embolcall no coincideix amb el model

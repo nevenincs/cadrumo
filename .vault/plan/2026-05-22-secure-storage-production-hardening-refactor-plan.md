@@ -378,7 +378,7 @@ Current register count: `293` production candidate files.
 | `AFR-087` | `src/aeat/adapters/persistence/storage/sql/session.py` | `sql-route` | `runtime-default` | `W12.P21.S86` | closed |
 | `AFR-088` | `src/aeat/application/aggregation/_iva_ledger.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-089` | `src/aeat/application/aggregation/_modelo_bindings.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
-| `AFR-090` | `src/aeat/application/aggregation/_renta_ledger.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-090` | `src/aeat/application/aggregation/_renta_ledger.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-091` | `src/aeat/application/aggregation/_source_mesh.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-092` | `src/aeat/application/aggregation/_source_profile.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-093` | `src/aeat/application/auth/_acquisition_lock.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
@@ -731,7 +731,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S189` - Close `AFR-087` for `src/aeat/adapters/persistence/storage/sql/session.py` with signals `sql-route`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/persistence/storage/sql/session.py`.
 - [x] `W12.P26.S190` - Close `AFR-088` for `src/aeat/application/aggregation/_iva_ledger.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/aggregation/_iva_ledger.py`.
 - [x] `W12.P26.S191` - Close `AFR-089` for `src/aeat/application/aggregation/_modelo_bindings.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/aggregation/_modelo_bindings.py`.
-- [ ] `W12.P26.S192` - Close `AFR-090` for `src/aeat/application/aggregation/_renta_ledger.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/aggregation/_renta_ledger.py`.
+- [x] `W12.P26.S192` - Close `AFR-090` for `src/aeat/application/aggregation/_renta_ledger.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/aggregation/_renta_ledger.py`.
 - [ ] `W12.P26.S193` - Close `AFR-091` for `src/aeat/application/aggregation/_source_mesh.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/aggregation/_source_mesh.py`.
 - [ ] `W12.P26.S194` - Close `AFR-092` for `src/aeat/application/aggregation/_source_profile.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/aggregation/_source_profile.py`.
 - [ ] `W12.P26.S195` - Close `AFR-093` for `src/aeat/application/auth/_acquisition_lock.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/auth/_acquisition_lock.py`.

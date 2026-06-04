@@ -335,6 +335,7 @@ aggregation:
       period_mismatch: Az időszak nem egyezik a várt Renta főkönyvi időszakkal.
       quarterly_period_required: Az M130 jövedelemaggregáláshoz negyedéves időszak
         szükséges (pl. 2024Q1).
+      invoice_bucket_mismatch: 'A számlatár vödre nem egyezik a kért Renta főkönyvi vödörrel.'
   service:
     errors:
       envelope_modelo_mismatch: aggregation.service.errors.envelope_modelo_mismatch
