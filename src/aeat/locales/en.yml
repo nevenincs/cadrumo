@@ -893,6 +893,8 @@ application:
         profile switch NAME` to activate it or `aeat config profile delete NAME` first.
       profile_create_route_mismatch: Profile create route '%{route}' does not match
         profile id '%{profile}'.
+      profile_integrity_identity_mismatch: 'Profile storage is inconsistent: physical stores disagree on profile identity.'
+      profile_integrity_status_mismatch: 'Profile storage is inconsistent: the manifest lifecycle status does not match the secure record.'
       profile_label_blank: Profile label must not be blank.
       profile_manifest_already_registered: Profile '%{profile}' already has a registered
         bucket manifest at %{bucket_dir}.

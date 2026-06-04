@@ -907,6 +907,8 @@ application:
         profile delete NÉV` paranccsal.
       profile_create_route_mismatch: A profil létrehozási útvonala ("%{route}") nem
         egyezik a profil azonosítójával ("%{profile}").
+      profile_integrity_identity_mismatch: 'A profiltárolás inkonzisztens: a fizikai tárolók profilazonossága eltér.'
+      profile_integrity_status_mismatch: 'A profiltárolás inkonzisztens: a manifest életciklus-állapota nem egyezik a biztonságos rekorddal.'
       profile_label_blank: A profil-felirat nem lehet üres.
       profile_manifest_already_registered: 'A(z) "%{profile}" profilhoz már regisztrált
         bucket-manifeszt van itt: %{bucket_dir}.'

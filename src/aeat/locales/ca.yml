@@ -960,6 +960,8 @@ application:
         profile switch NAME` per activar-lo o `aeat config profile delete NAME` primer.
       profile_create_route_mismatch: La ruta de creació de perfil '%{route}' no coincideix
         amb l'id de perfil '%{profile}'.
+      profile_integrity_identity_mismatch: 'L''emmagatzematge del perfil no és coherent: els magatzems físics no coincideixen en la identitat del perfil.'
+      profile_integrity_status_mismatch: 'L''emmagatzematge del perfil no és coherent: l''estat de cicle de vida del manifest no coincideix amb el registre segur.'
       profile_label_blank: L'etiqueta del perfil no pot estar buida.
       profile_manifest_already_registered: El perfil '%{profile}' ja té un manifest
         de bucket registrat a %{bucket_dir}.
