@@ -133,7 +133,7 @@ Close the M200 record-design completeness regression surfaced after internal-onl
 
 Audit and repair M200 calculation closure identities so every calculated casilla maps to the committed completeness manifest and full Diseño coverage with the correct segment identity.
 
-- [ ] `W05.P09.S41` - Audit M200 closure-only calculation completeness drift and segment ownership; `.vault/audit`.
+- [x] `W05.P09.S41` - Audit M200 closure-only calculation completeness drift and segment ownership; `.vault/audit`.
 - [ ] `W05.P09.S42` - Repair M200 calculation completeness declarations for the audited closure-only identities; `src/aeat/_data/registry/aeat/modelos/200`.
 - [ ] `W05.P09.S43` - Verify M200 record-design completeness and committed-registry gates after the repair; `src/aeat/domain/calculations/registry/test_record_design.py`.
 
