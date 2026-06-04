@@ -415,3 +415,18 @@ the committed-reference drift test still fails because the live CLI includes
 regenerated. The worktree already contained unrelated doc-reference generation
 edits, so the commit isolates only the payload-registration reference and Vault
 tracking.
+
+## W04-012 | INFO | Storage KDF salt codec consolidation review found no defects
+
+Status: verified with scoped residual.
+
+The W04.P14.S49 review found no behavioral defect in sharing the storage KDF
+salt length and base64 codec helpers. The bucket manifest and master-key KDF
+schemas still own their separate Pydantic models, validation entrypoints, and
+exception semantics; the new helper only centralizes the repeated 16-byte salt
+codec contract.
+
+Focused verification passed Ruff for the touched storage surface and passed
+the manifest/master-key KDF tests. `just audit-duplication` no longer reports
+the manifest/KDF overlap; the remaining 21 clone groups are outside this S49
+slice and remain scheduled for later review rows.

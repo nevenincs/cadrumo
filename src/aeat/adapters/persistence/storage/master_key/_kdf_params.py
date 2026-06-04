@@ -18,12 +18,12 @@ tampered manifest cannot drive the KDF into a weaker regime at unlock.
 
 from __future__ import annotations
 
-import base64
 import secrets
 from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
+from .._kdf_salt import KDF_SALT_BYTES, decode_kdf_salt, encode_kdf_salt, require_kdf_salt_length
 from ..errors import StorageValidationError
 
 if TYPE_CHECKING:
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
-_SALT_BYTES = 16
+_SALT_BYTES = KDF_SALT_BYTES
 _OUTPUT_BYTES = 32
 _ARGON2_V13 = 19
 _MIN_MEMORY_COST_KIB = 19 * 1024
@@ -66,22 +66,16 @@ class KdfParams(BaseModel):
     @field_validator("salt")
     @classmethod
     def _check_salt_length(cls, value: bytes) -> bytes:
-        if len(value) != _SALT_BYTES:
-            raise StorageValidationError(f"salt must be exactly {_SALT_BYTES} bytes")
-        return value
+        return require_kdf_salt_length(value, error_type=StorageValidationError)
 
     @field_serializer("salt")
     def _serialise_salt(self, value: bytes) -> str:
-        return base64.b64encode(value).decode("ascii")
+        return encode_kdf_salt(value)
 
     @field_validator("salt", mode="before")
     @classmethod
     def _decode_salt(cls, value: object) -> bytes:
-        if isinstance(value, bytes):
-            return value
-        if isinstance(value, str):
-            return base64.b64decode(value.encode("ascii"), validate=True)
-        raise StorageValidationError("salt must be bytes or base64 string")
+        return decode_kdf_salt(value, error_type=StorageValidationError)
 
     @classmethod
     def default(cls) -> KdfParams:
