@@ -142,7 +142,7 @@ Decide how adjacent calculation-revision and modelo-level consumers avoid accide
 - [x] `W03.P11.S49` - classify and implement the work revision addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W03.P11.S50` - classify and implement the modelo reconcile addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W03.P11.S51` - classify and implement the modelo reconcile-from-justificante addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W03.P11.S52` - classify and implement the modelo project addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W03.P11.S52` - classify and implement the modelo project addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W03.P11.S53` - classify and implement the modelo compare addressing decision; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W03.P11.S54` - cover adjacent command internal service and selector enrollment decisions with focused regression tests; `src/aeat/entrypoints/cli/test_modelo_work_natural_key.py`.
 
@@ -226,6 +226,7 @@ localized operator messages render clearly without stale ID-routing
 guidance, the affected documentation no longer teaches pasted-ID routing
 for the common path, and the feature surface gate reports only relevant
 pass/fail results for this change set.
+
 
 
 
