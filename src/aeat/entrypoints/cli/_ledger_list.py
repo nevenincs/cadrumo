@@ -15,7 +15,7 @@ from ...application.ledger import (
 )
 from ...application.review import LedgerReviewFilterSpec
 from ...core.i18n import tr
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions import TransactionCatalogueRepositoryProtocol
 from ._common import _canonical_period
 
 
