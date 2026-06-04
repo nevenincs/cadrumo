@@ -3640,6 +3640,12 @@ errors:
     modelo_calculation_revision_selector: La selección de revisión de cálculo falló.
     modelo_calculation_revision_selector_not_found: Ninguna revisión de cálculo coincide
       con el selector indicado.
+    modelo_compare_no_revisions: 'No se encontraron revisiones de cálculo comparables.'
+    modelo_compare_no_usable_revisions: 'Existen revisiones comparables, pero ninguna se puede usar para esta comparación.'
+    modelo_compare_no_work_units: 'No se encontraron unidades de trabajo de modelo comparables.'
+    modelo_project_no_m130_revisions: 'No hay revisiones de cálculo del Modelo 130 para el ejercicio solicitado.'
+    modelo_project_no_m130_units: 'No hay unidades de trabajo del Modelo 130 para el ejercicio solicitado.'
+    modelo_projection: 'Falló la proyección del modelo.'
     modelo_work_selector: El selector de trabajo de modelo fallo.
     modelo_work_selector_unit_not_found: No se encontro la unidad de trabajo de modelo
       seleccionada.
@@ -3938,10 +3944,12 @@ errors:
     modelo_censo_stale: 'La operación se rechaza porque aplicaste un censo nuevo después
       de generar este trabajo. La AEAT es la fuente legal vinculante: vuelve a generarlo
       con el censo actual.'
+    modelo_compare_need_two_years: 'La comparación requiere dos ejercicios fiscales distintos.'
     modelo_export_cross_bucket: La revisión apuntada pertenece a un bucket distinto
       del perfil activo. La exportación solo opera dentro del bucket del perfil activo.
     modelo_export_no_active_bucket: La exportación necesita un perfil activo. Crea
       o selecciona un perfil y vuelve a intentarlo.
+    modelo_project_invalid_decimal_override: 'Una sobrescritura de proyección no es un importe decimal válido.'
     modelo_work_selector_ambiguous: Mas de una unidad de trabajo de modelo coincide
       con el selector.
     modelo_work_selector_contradiction: Los argumentos del selector de trabajo de
@@ -5007,4 +5015,6 @@ wizard:
       prompt: Example test question
     main:
       title: Main test
+    section:
+      title: Sección de prueba
     title: Test
