@@ -32,6 +32,11 @@ The certificate authenticator and Cl@ve Móvil provider now call the same core
 helper, so provider save/resume paths and application session probes cannot drift
 apart.
 
+Cross-commit note: the dirty Cl@ve Móvil provider/test files also contained
+representation-action centralization through external constants and typed
+initial selector-navigation timeout coverage. Those hunks were validated and
+kept with the provider-side S199 alignment rather than reverted.
+
 ## S199-003 | PASS | Convention and exception hygiene
 
 No new exceptions, broad exception handlers, monkeypatches, fakes, mocks, skips,
@@ -50,6 +55,7 @@ Validation:
 - `$env:PYTHONPATH='src'; uv run --no-sync ruff check src/aeat/core/auth_session_keys.py src/aeat/application/auth/_sessions.py src/aeat/application/auth/test_sessions_storage_state_paths.py src/aeat/application/auth/test_persisted_session_metadata.py src/aeat/adapters/outbound/aeat/auth/_authenticator.py src/aeat/adapters/outbound/aeat/auth/_clave_movil.py src/aeat/adapters/outbound/aeat/auth/test_authenticator.py src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py src/aeat/adapters/outbound/aeat/auth/test_clave_movil_live.py` passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync pytest -q src/aeat/application/auth/test_operator.py src/aeat/application/auth/test_operator_storage_session.py src/aeat/application/auth/test_sessions_storage_state_paths.py src/aeat/application/auth/test_persisted_session_metadata.py` passed with 33 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync pytest -q src/aeat/adapters/outbound/aeat/auth/test_session_store_roundtrip.py src/aeat/adapters/outbound/aeat/auth/test_authenticator.py::test_authenticate_falls_back_after_stale_persisted_session src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py::TestProbePersistedSession::test_probe_uses_existing_encrypted_session_without_invalidating_on_failure` passed with 3 tests.
+- `$env:PYTHONPATH='src'; uv run --no-sync pytest -q src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py::test_auth_browser_action_policy_allows_configured_own_name_representation_action src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py::test_auth_browser_action_policy_rejects_unclassified_representation_action src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py::TestAuthenticateFresh::test_initial_selector_navigation_timeout_is_typed` passed with 3 tests.
 
 Reviewer note: subagent review remains unavailable because the reviewer agent hit
 the account usage limit earlier in this run. Host review found no remaining

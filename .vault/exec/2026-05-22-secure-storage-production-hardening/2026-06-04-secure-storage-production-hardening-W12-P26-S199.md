@@ -29,6 +29,10 @@ Closed `AFR-097` for auth session storage-state identity.
   and provider resumes agree on the encrypted object key.
 - Updated focused storage-state path tests to assert encrypted logical keys,
   provider separation, active-profile separation, and token-dir independence.
+- Cross-commit note: the same Cl@ve Móvil provider files also carried
+  representation-action centralization through external constants and typed
+  initial selector-navigation timeout coverage. Those hunks were validated with
+  the focused Cl@ve tests listed below and were not reverted.
 
 Affected files:
 
@@ -52,6 +56,7 @@ Validation passed:
 - `$env:PYTHONPATH='src'; uv run --no-sync ruff check src/aeat/core/auth_session_keys.py src/aeat/application/auth/_sessions.py src/aeat/application/auth/test_sessions_storage_state_paths.py src/aeat/application/auth/test_persisted_session_metadata.py src/aeat/adapters/outbound/aeat/auth/_authenticator.py src/aeat/adapters/outbound/aeat/auth/_clave_movil.py src/aeat/adapters/outbound/aeat/auth/test_authenticator.py src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py src/aeat/adapters/outbound/aeat/auth/test_clave_movil_live.py`
 - `$env:PYTHONPATH='src'; uv run --no-sync pytest -q src/aeat/application/auth/test_operator.py src/aeat/application/auth/test_operator_storage_session.py src/aeat/application/auth/test_sessions_storage_state_paths.py src/aeat/application/auth/test_persisted_session_metadata.py`
 - `$env:PYTHONPATH='src'; uv run --no-sync pytest -q src/aeat/adapters/outbound/aeat/auth/test_session_store_roundtrip.py src/aeat/adapters/outbound/aeat/auth/test_authenticator.py::test_authenticate_falls_back_after_stale_persisted_session src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py::TestProbePersistedSession::test_probe_uses_existing_encrypted_session_without_invalidating_on_failure`
+- `$env:PYTHONPATH='src'; uv run --no-sync pytest -q src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py::test_auth_browser_action_policy_allows_configured_own_name_representation_action src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py::test_auth_browser_action_policy_rejects_unclassified_representation_action src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py::TestAuthenticateFresh::test_initial_selector_navigation_timeout_is_typed`
 
 ## Notes
 

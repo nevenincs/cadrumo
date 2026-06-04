@@ -1239,8 +1239,9 @@ class AeatAuthenticator:
             if isinstance(storage_state_path, Path):
                 return storage_state_path
         from .....core import require_active_bucket_id
+        from .....core.auth_session_keys import aeat_auth_session_storage_state_path
 
-        return self._settings.aeat_token_dir / f"{require_active_bucket_id()}-storage.json"
+        return aeat_auth_session_storage_state_path(require_active_bucket_id(), "storage")
 
     def _load_persisted_browser_session(self, storage_state_path: Path) -> _session_store.PersistedBrowserSession:
         """Load encrypted browser session state or invalidate the logical path."""

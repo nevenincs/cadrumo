@@ -29,9 +29,11 @@ from .....application.user_profile._testing import register_minimal_profile
 from .....application.workflow._persistence import workflow_state_repository
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
+from .....domain.calculations.registry import RemoteOperation, assert_remote_operation_allowed
+from .....domain.calculations.registry._errors import RegistryValidationError
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from .._playwright import PlaywrightError
+from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from . import _session_store
 from ._clave_movil import (
     CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
@@ -39,6 +41,7 @@ from ._clave_movil import (
     ClaveMovilAuthProvider,
     ClaveMovilConfigurationError,
     ClaveMovilFailureMode,
+    _auth_browser_action_policy,
     _classify_identity,
     _ClaveMovilSessionMetadata,
     _extract_verification_code_from_html,
@@ -55,6 +58,32 @@ _EXTERNAL = Settings.external_constants()
 _DOMAINS = _EXTERNAL.aeat.domains
 _CLAVE_SURFACE = _EXTERNAL.aeat.clave_movil
 _PRE303_SURFACE = _EXTERNAL.aeat.pre303
+
+
+def test_auth_browser_action_policy_allows_configured_own_name_representation_action(tmp_path: Path) -> None:
+    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+    policy = _auth_browser_action_policy(settings)
+
+    result = assert_remote_operation_allowed(
+        policy,
+        RemoteOperation(
+            kind="browser_action",
+            action=settings.external_constants().aeat.pre303.representation_own_name_action_label,
+        ),
+    )
+
+    assert result.decision == "allowed"
+
+
+def test_auth_browser_action_policy_rejects_unclassified_representation_action(tmp_path: Path) -> None:
+    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+    policy = _auth_browser_action_policy(settings)
+
+    with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
+        assert_remote_operation_allowed(
+            policy,
+            RemoteOperation(kind="browser_action", action="representation-gate-represented-taxpayer-continue"),
+        )
 
 
 def _aeat_url(origin: str, path: str) -> str:
@@ -144,6 +173,13 @@ class _RecordingPage:
 
     async def close(self) -> None:
         self.closed = True
+
+
+class _InitialNavigationTimeoutPage(_RecordingPage):
+    async def goto(self, url: str, *, timeout: float | None = None) -> BrowserResponseLike | None:
+        del timeout
+        self.gotos.append(url)
+        raise PlaywrightTimeoutError("selector navigation timed out")
 
 
 class _RepresentationAlertPage(_RecordingPage):
@@ -263,6 +299,13 @@ class _SelectorDispatchContext(_RecordingContext):
         return page
 
 
+class _InitialNavigationTimeoutContext(_RecordingContext):
+    async def new_page(self) -> _InitialNavigationTimeoutPage:
+        page = _InitialNavigationTimeoutPage(target_path=self._target_path)
+        self.pages.append(page)
+        return page
+
+
 class _RecordingBrowserSession:
     """Stand-in for :class:`aeat.adapters.outbound.aeat.browser.BrowserSession`.
 
@@ -312,6 +355,20 @@ class _SelectorDispatchBrowserSession(_RecordingBrowserSession):
     ) -> _SelectorDispatchContext:
         del provisioner, storage_state_path, storage_state
         context = _SelectorDispatchContext(target_path=self._target_path)
+        self.contexts.append(context)
+        return context
+
+
+class _InitialNavigationTimeoutBrowserSession(_RecordingBrowserSession):
+    async def create_context(
+        self,
+        *,
+        provisioner: object | None = None,
+        storage_state_path: Path | None = None,
+        storage_state: Mapping[str, object] | None = None,
+    ) -> _InitialNavigationTimeoutContext:
+        del provisioner, storage_state_path, storage_state
+        context = _InitialNavigationTimeoutContext(target_path=self._target_path)
         self.contexts.append(context)
         return context
 
@@ -499,6 +556,26 @@ class TestAuthenticateFresh:
             assert _CLAVE_SURFACE.continue_button_selector in page.clicks
 
         asyncio.run(run())
+
+    def test_initial_selector_navigation_timeout_is_typed(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        provider = ClaveMovilAuthProvider(settings)
+        browser_session = _InitialNavigationTimeoutBrowserSession(target_path=settings.aeat_sede_expedientes_path)
+
+        async def run() -> None:
+            with pytest.raises(ClaveMovilApprovalTimeoutError, match=r"initial navigation|selector") as excinfo:
+                await provider.authenticate(browser_session=browser_session)
+            assert excinfo.value.failure_mode == ClaveMovilFailureMode.INITIAL_NAVIGATION_TIMEOUT
+            assert excinfo.value.context is not None
+            assert excinfo.value.context["failure_mode"] == ClaveMovilFailureMode.INITIAL_NAVIGATION_TIMEOUT
+            assert excinfo.value.context["target_path"] == settings.aeat_sede_expedientes_path
+
+        asyncio.run(run())
+        assert browser_session.contexts
+        assert browser_session.contexts[0].pages[0].gotos
 
     def test_non_qr_fallback_fills_nie_support_form(
         self,
@@ -935,8 +1012,12 @@ class TestProbePersistedSession:
         asyncio.run(seed())
 
         from .....core import require_active_bucket_id
+        from .....core.auth_session_keys import aeat_auth_session_storage_state_path
 
-        storage_path = settings.aeat_token_dir / f"{require_active_bucket_id()}-clave-movil-storage.json"
+        storage_path = aeat_auth_session_storage_state_path(
+            require_active_bucket_id(),
+            "clave-movil-storage",
+        )
         assert _session_store.exists(storage_path)
         assert not storage_path.exists()
         assert not storage_path.with_suffix(".meta.json").exists()

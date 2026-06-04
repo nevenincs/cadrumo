@@ -71,8 +71,12 @@ async def test_clave_movil_provider_probes_persisted_session_with_central_playwr
     if not settings.aeat_clave_movil_dni_nie:
         pytest.skip("AEAT_CLAVE_MOVIL_DNI_NIE is not configured")
     from .....core import require_active_bucket_id
+    from .....core.auth_session_keys import aeat_auth_session_storage_state_path
 
-    storage_state_path = settings.aeat_token_dir / f"{require_active_bucket_id()}-clave-movil-storage.json"
+    storage_state_path = aeat_auth_session_storage_state_path(
+        require_active_bucket_id(),
+        "clave-movil-storage",
+    )
     with get_master_key_provider():
         if not _session_store.exists(storage_state_path):
             pytest.skip("No persisted encrypted Cl@ve Móvil session is available to probe")
