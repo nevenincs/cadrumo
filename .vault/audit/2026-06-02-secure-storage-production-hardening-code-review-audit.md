@@ -288,22 +288,6 @@ directly.
 
 Closure assessment: `W12.P26.S211` can close as `manifest-discovery`.
 
-## S212-036 | PASS | Filing runtime manifest-discovery closeout verified
-
-The `W12.P26.S212` review found no storage-routing defect in the filing
-runtime schema/profile helper surface.
-
-The module's plain-file signal is bundled registry TOML discovery through
-`bundled_path()`, `Path`-based registry tree fingerprinting, and
-`ValidatedRegistryAuthority`. It does not construct secure-object repositories,
-route SQL storage, inspect active sessions, or read environment variables
-directly. Active profile loading delegates workflow state reads to the
-runtime-owned workflow repository surface.
-
-Closure assessment: `W12.P26.S212` can close as `manifest-discovery`. Raw
-filing-runtime `ModeloBuilderError` messages remain tracked as broader filing
-localization convention debt, not resolved by this storage-disposition row.
-
 ## S212-036 | PASS | Filing runtime provider closeout verified
 
 The `W12.P26.S212` review found no storage-routing defect in the filing runtime
@@ -314,5 +298,8 @@ discovery and tree fingerprinting, then projects snapshots into filing schema
 views. Active profile loading is delegated to workflow/wizard repository
 surfaces. The reviewed file does not construct secure-object repositories,
 route SQL, inspect active sessions, or read settings/environment state directly.
+Filing-runtime `ModeloBuilderError` boundaries now carry locale metadata and
+non-sensitive context payloads for the reviewed missing-registry/profile/modelo
+selection/revision/provider/year-period/casilla-type failures.
 
 Closure assessment: `W12.P26.S212` can close as `manifest-discovery`.
