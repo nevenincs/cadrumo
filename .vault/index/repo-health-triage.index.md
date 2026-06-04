@@ -41,6 +41,10 @@ related:
   - '[[2026-06-04-repo-health-triage-w02-p06-s21-exec]]'
   - '[[2026-06-04-repo-health-triage-w02-p06-s22-exec]]'
   - '[[2026-06-04-repo-health-triage-w02-p06-s23-exec]]'
+  - '[[2026-06-04-repo-health-triage-w03-p07-s24-exec]]'
+  - '[[2026-06-04-repo-health-triage-w03-p07-s25-exec]]'
+  - '[[2026-06-04-repo-health-triage-w03-p07-s26-exec]]'
+  - '[[2026-06-04-repo-health-triage-w03-p07-summary-exec]]'
 ---
 
 # `repo-health-triage` feature index
@@ -90,6 +94,10 @@ Auto-generated index of all documents tagged with `#repo-health-triage`.
 - `2026-06-04-repo-health-triage-w02-p06-s21-exec` - `repo-health-triage` `W02.P06.S21`
 - `2026-06-04-repo-health-triage-w02-p06-s22-exec` - `repo-health-triage` `W02.P06.S22`
 - `2026-06-04-repo-health-triage-w02-p06-s23-exec` - `repo-health-triage` `W02.P06.S23`
+- `2026-06-04-repo-health-triage-w03-p07-s24-exec` - W03.P07.S24 split modelo work command family behind existing Typer wiring
+- `2026-06-04-repo-health-triage-w03-p07-s25-exec` - W03.P07.S25 extract work-calculate typed input assembly
+- `2026-06-04-repo-health-triage-w03-p07-s26-exec` - W03.P07.S26 preserve modelo root command compatibility after extraction
+- `2026-06-04-repo-health-triage-w03-p07-summary-exec` - `repo-health-triage` `W03.P07` summary
 
 ### plan
 

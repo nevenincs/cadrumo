@@ -14,7 +14,6 @@ related:
   - '[[2026-05-26-secure-storage-test-hygiene-audit]]'
 ---
 
-
 # `repo-health-triage` `diagnostic remediation` plan
 
 ## Description
@@ -95,9 +94,9 @@ Split the largest cognitive-load clusters behind existing public surfaces after 
 
 Turn the modelo CLI hotspot into command-family modules that parse, call application services, and render unchanged outputs.
 
-- [ ] `W03.P07.S24` - Split modelo work command family behind existing Typer wiring; `src/aeat/entrypoints/cli/_modelo_work.py`.
-- [ ] `W03.P07.S25` - Extract work-calculate typed input assembly; `src/aeat/application/modelo/_calculate_input.py`.
-- [ ] `W03.P07.S26` - Preserve modelo root command compatibility after extraction; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W03.P07.S24` - Split modelo work command family behind existing Typer wiring; `src/aeat/entrypoints/cli/_modelo_work.py`.
+- [x] `W03.P07.S25` - Extract work-calculate typed input assembly; `src/aeat/application/modelo/_calculate_input.py`.
+- [x] `W03.P07.S26` - Preserve modelo root command compatibility after extraction; `src/aeat/entrypoints/cli/_modelo.py`.
 
 ### Phase `W03.P08` - modelo application orchestration
 

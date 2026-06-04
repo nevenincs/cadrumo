@@ -12,9 +12,9 @@ from __future__ import annotations
 
 import json
 import re
+import typing
 from collections.abc import Callable
 from contextlib import suppress
-import typing
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -93,6 +93,7 @@ from ...domain.modelos._sal_reserva_especial import compute_sal_reserva_especial
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
 from ._common import _parse_iso_date, _profile_to_taxpayer, activate_subcommand_output_language
+from ._modelo_work import create_work_app
 
 _log = get_logger(__name__)
 
@@ -1475,12 +1476,7 @@ def aggregate_modelo(
     _emit_envelope(ctx, command="modelo.aggregate", result=aggregate_result, lines=lines)
 
 
-work_app = typer.Typer(
-    name="work",
-    help=tr("cli.app.modelo.work.app_help"),
-    no_args_is_help=True,
-    add_completion=False,
-)
+work_app = create_work_app()
 app.add_typer(work_app, name="work")
 
 
@@ -1980,9 +1976,9 @@ def work_create(
         typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
     ],
     revision: Annotated[
-        str,
+        str | None,
         typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-    ],
+    ] = None,
     bucket_id: Annotated[
         str | None,
         typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
@@ -2037,8 +2033,19 @@ def work_create(
     # ForalRegimeError) on stderr and exits; no try/except needed here.
     causante_ccaa = parse_tax_region(causante_ccaa_raw) if causante_ccaa_raw is not None else None
     _guard_stub_modelo(modelo)
-    _validate_registry_target(modelo, revision, year)
     resolved_year, resolved_period = _resolve_year_period(year, period, modelo=modelo)
+    if revision is None:
+        try:
+            from ...core.resources import resources
+            from ...domain.calculations.registry._temporal import select_revision
+            authority = resources().modelos.authority
+            modelo_code = modelo.strip()
+            definition = authority.modelo(modelo_code)
+            selected_rev = select_revision(definition, filing_year=resolved_year, period=resolved_period)
+            revision = selected_rev.id
+        except RegistrySnapshotError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+    _validate_registry_target(modelo, revision, year)
     _require_active_profile()
     # Foral defence-in-depth: rejects profiles whose stored tax_residence.ccaa
     # fact carries a foral token that bypassed the wizard-layer guard (e.g.
@@ -3272,17 +3279,27 @@ def work_calculate(
     if detail_rows:
         _validate_m184_share_sum(detail_rows)
         _validate_m347_threshold(detail_rows)
+    from ...application.modelo._calculate_input import WorkCalculateInputBundle
+
+    calculation_inputs = WorkCalculateInputBundle.build(
+        casilla_inputs=casilla_inputs,
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        relation_values=relation_values,
+        detail_rows=detail_rows,
+        borrador_snapshot_id=borrador_snapshot_id,
+    )
 
     try:
         revision = calculate_modelo_revision_from_bucket_aggregation(
             work_unit_id,
             actor=actor or _resolve_default_actor(),
-            casilla_inputs=casilla_inputs,
-            binding_values=binding_values or None,
-            enum_binding_values=enum_binding_values or None,
-            borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
-            relation_values=relation_values or None,
-            detail_rows=detail_rows,
+            casilla_inputs=calculation_inputs.casilla_inputs,
+            binding_values=calculation_inputs.optional_binding_values(),
+            enum_binding_values=calculation_inputs.optional_enum_binding_values(),
+            borrador_snapshot_id=calculation_inputs.borrador_snapshot_id,
+            relation_values=calculation_inputs.optional_relation_values(),
+            detail_rows=calculation_inputs.detail_rows,
         )
     except RegistryValidationError as exc:
         # A formula that consumes an unsatisfied binding / enum-binding /
@@ -4984,11 +5001,11 @@ def modelo_export_verb(
     ] = None,
 ) -> None:
     """Export a verified-complete or filed modelo revision to disk."""
-    from ...application.modelo import ModeloIvaWalletReconciliationBlocked
     from ...application.modelo import (
         ModeloExportCommand,
         ModeloExportCrossBucketRefusedError,
         ModeloExportNoActiveBucketError,
+        ModeloIvaWalletReconciliationBlocked,
         export_modelo_revision,
     )
     from ...application.workflow import workflow_state_repository
@@ -6194,7 +6211,7 @@ app.add_typer(m036_app, name="m036")
 def _record_m036(
     ctx: typer.Context,
     *,
-    event_kind: "CensoModeloEventKindRef",
+    event_kind: CensoModeloEventKindRef,
     declared_on: str,
     sede_justificante: str | None,
     note: str | None,
@@ -6216,6 +6233,7 @@ def _record_m036(
         record_m036_declaration,
     )
     from ...core import resolve_active_bucket_id
+    from ._common import _emit_envelope
     from ._modelo_payloads import M036DeclarationRecordResult
 
     bucket_id = resolve_active_bucket_id()
