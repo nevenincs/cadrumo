@@ -275,7 +275,7 @@ Runtime adoption register rows must use this shape in execution notes:
 
 This register is intentionally monotonous. It lists every current production Python file matched by the expanded storage/profile scanner, including direct secure repositories, active-profile resolution, manifest/bucket discovery, master-key custody, SQL routing, plaintext side stores, and remote storage providers. Rows that are later proven to be false positives must still be closed with a disposition instead of silently disappearing from scope.
 
-Current register count: `293` production candidate files.
+Current register count: `301` production candidate files.
 
 | ID | Path | Signals | Target type | Owning row | Status |
 | --- | --- | --- | --- | --- | --- |
@@ -572,6 +572,14 @@ Current register count: `293` production candidate files.
 | `AFR-291` | `src/aeat/locales/_ast_scanner.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-292` | `src/aeat/locales/cli.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-293` | `src/aeat/locales/manager.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
+| `AFR-294` | `src/aeat/application/modelo/_projection.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W12.P26.S294` | pending |
+| `AFR-295` | `src/aeat/application/modelo/_selectors.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P26.S383` | pending |
+| `AFR-296` | `src/aeat/application/modelo/_work_addressing.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P26.S383` | pending |
+| `AFR-297` | `src/aeat/application/modelo/_work_create_policy.py` | `active-profile, plain-file` | `manifest-discovery` | `W12.P26.S383` | pending |
+| `AFR-298` | `src/aeat/application/modelo/_work_plazo.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W12.P26.S383` | pending |
+| `AFR-299` | `src/aeat/application/modelo/_iva_wallet_seed.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W12.P26.S383` | pending |
+| `AFR-300` | `src/aeat/entrypoints/cli/_modelo_projection_cli.py` | `active-profile, plain-file` | `manifest-discovery` | `W12.P26.S383` | pending |
+| `AFR-301` | `src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W12.P26.S383` | pending |
 
 ### Phase `W12.P20` - adoption register and classification
 
