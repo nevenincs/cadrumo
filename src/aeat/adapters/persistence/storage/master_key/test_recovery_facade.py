@@ -14,6 +14,7 @@ re-running the substrate's encoder against itself.
 
 from __future__ import annotations
 
+import base64
 from datetime import UTC, datetime
 
 import pytest
@@ -109,6 +110,26 @@ def test_unwrap_with_malformed_mnemonic_raises_recovery_verification_error() -> 
 
     with pytest.raises(RecoveryVerificationError):
         unwrap_recovery_envelope(envelope=minted.envelope, mnemonic="not-a-mnemonic")
+
+
+def test_unwrap_with_malformed_envelope_raises_recovery_verification_error() -> None:
+    minted = mint_recovery_envelope(dek=bytes(range(32)), created_at=_NOW)
+    malformed = RecoveryRecord(
+        wrapped_dek_b64=minted.envelope.wrapped_dek_b64,
+        nonce_b64=base64.b64encode(b"short").decode("ascii"),
+        tag_b64=minted.envelope.tag_b64,
+        mnemonic_word_count=24,
+        hkdf_info="aeat.recovery-key.master-wrap.v1",
+        created_at=_NOW,
+    )
+
+    with pytest.raises(RecoveryVerificationError) as excinfo:
+        unwrap_recovery_envelope(envelope=malformed, mnemonic=minted.mnemonic)
+
+    assert excinfo.value.translated_message == "errors.auth.auth_storage_bucket_recovery_verification"
+    envelope = build_error_envelope(excinfo.value)
+    assert envelope.code == "AUTH_STORAGE_BUCKET_RECOVERY_VERIFICATION"
+    assert "short" not in envelope.model_dump_json()
 
 
 def test_verify_recovery_mnemonic_returns_true_on_match_false_on_mismatch() -> None:

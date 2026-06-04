@@ -27,10 +27,11 @@ session the wizard can re-wrap under a fresh passphrase-derived KEK.
 from __future__ import annotations
 
 import base64
+import binascii
 from collections.abc import Callable
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..bucket._errors import RecoveryVerificationError
@@ -82,10 +83,13 @@ def _envelope_from_blob(blob: EncryptedBlob, created_at: datetime) -> RecoveryRe
 
 def _blob_from_envelope(envelope: RecoveryRecord) -> EncryptedBlob:
     """Re-assemble an `EncryptedBlob` from the typed envelope fields."""
-    nonce = base64.b64decode(envelope.nonce_b64.encode("ascii"), validate=True)
-    ciphertext = base64.b64decode(envelope.wrapped_dek_b64.encode("ascii"), validate=True)
-    tag = base64.b64decode(envelope.tag_b64.encode("ascii"), validate=True)
-    return EncryptedBlob(nonce=nonce, ciphertext=ciphertext + tag)
+    try:
+        nonce = base64.b64decode(envelope.nonce_b64.encode("ascii"), validate=True)
+        ciphertext = base64.b64decode(envelope.wrapped_dek_b64.encode("ascii"), validate=True)
+        tag = base64.b64decode(envelope.tag_b64.encode("ascii"), validate=True)
+        return EncryptedBlob(nonce=nonce, ciphertext=ciphertext + tag)
+    except (ValueError, binascii.Error, ValidationError) as exc:
+        raise RecoveryVerificationError("recovery envelope is malformed") from exc
 
 
 def mint_recovery_envelope(*, dek: bytes, created_at: datetime) -> MintedRecovery:
@@ -128,11 +132,11 @@ def unwrap_recovery_envelope(
     except StorageValidationError as exc:
         raise RecoveryVerificationError(str(exc)) from exc
 
-    blob = _blob_from_envelope(envelope)
-    wrapped = WrappedMasterKey.from_blob(blob)
     try:
+        blob = _blob_from_envelope(envelope)
+        wrapped = WrappedMasterKey.from_blob(blob)
         return unwrap_master_key(wrapped=wrapped, recovery_key_bytes=entropy)
-    except DecryptionError as exc:
+    except (DecryptionError, StorageValidationError) as exc:
         raise RecoveryVerificationError(
             "recovery envelope did not decrypt under the supplied mnemonic",
         ) from exc
