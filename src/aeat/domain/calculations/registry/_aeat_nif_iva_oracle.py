@@ -27,6 +27,14 @@ from typing import Literal, Protocol
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator
 
 from ....core.config import Settings
+from ._checker_oracle_flow import (
+    compare_verdict_field,
+    decode_replay_observation,
+    normalize_expected_verdicts,
+    normalize_verdict_mapping,
+    observed_verdict,
+    replay_parse_operation,
+)
 from ._errors import RegistryValidationError
 from ._live_parity import (
     BaseCheckerOracle,
@@ -34,7 +42,6 @@ from ._live_parity import (
     OracleEnvironment,
     OracleSurfaceKind,
     ParityFieldComparison,
-    decode_replay_json_payload,
 )
 from ._remote_state_guard import RemoteOperation
 
@@ -56,14 +63,10 @@ class AeatNifIvaObservation(AeatNifIvaModel):
     @field_validator("values")
     @classmethod
     def _trimmed(cls, value: dict[str, str]) -> dict[str, str]:
-        cleaned: dict[str, str] = {}
-        for nif, verdict in value.items():
-            normalized_nif = nif.strip().upper()
-            normalized_verdict = verdict.strip().lower()
-            if not normalized_nif or not normalized_verdict:
-                raise RegistryValidationError("AEAT NIF-IVA observations must not contain blank keys or values")
-            cleaned[normalized_nif] = normalized_verdict
-        return cleaned
+        return normalize_verdict_mapping(
+            value,
+            blank_message="AEAT NIF-IVA observations must not contain blank keys or values",
+        )
 
 
 class AeatNifIvaDriver(Protocol):
@@ -89,9 +92,9 @@ class AeatNifIvaDriver(Protocol):
     ) -> tuple[RemoteOperation, ...]:
         """Describe the remote steps this driver would take, without running them.
 
-        Returns the ordered ``RemoteOperation`` plan the driver intends to run
+        Returns the ordered :class:`RemoteOperation` plan the driver intends to run
         for the given query, so the oracle can surface and guard the plan
-        before any network or filesystem access. A ``RemoteOperation`` is one
+        before any network or filesystem access. A :class:`RemoteOperation` is one
         recorded step in that plan (for example, a network request or a local
         file parse).
 
@@ -105,7 +108,7 @@ class AeatNifIvaDriver(Protocol):
                 is keyed by the identifier string.
 
         Returns:
-            The ordered tuple of planned ``RemoteOperation`` records.
+            The ordered tuple of planned :class:`RemoteOperation` records.
         """
         ...
 
@@ -129,7 +132,7 @@ class AeatNifIvaDriver(Protocol):
                 driver knows which identifiers to query.
 
         Returns:
-            An ``AeatNifIvaObservation`` carrying the per-identifier verdicts
+            An :class:`AeatNifIvaObservation` carrying the per-identifier verdicts
             the adapter actually saw, plus a locator pointing to the raw
             evidence (the stored response the verdicts were read from).
         """
@@ -158,9 +161,9 @@ class AeatNifIvaReplayDriver:
     ) -> tuple[RemoteOperation, ...]:
         """Report the single local-parse step a replay performs.
 
-        A replay does no remote work, so the plan is one ``RemoteOperation``
+        A replay does no remote work, so the plan is one :class:`RemoteOperation`
         of kind ``local_workbook`` that parses the captured payload. A
-        ``RemoteOperation`` is one recorded step in a driver plan. Both
+        :class:`RemoteOperation`` is one recorded step in a driver plan. Both
         arguments are accepted to match the shared ``AeatNifIvaDriver``
         interface but are unused here.
 
@@ -171,10 +174,10 @@ class AeatNifIvaReplayDriver:
                 planning).
 
         Returns:
-            A one-element tuple holding the local-parse ``RemoteOperation``.
+            A one-element tuple holding the local-parse :class:`RemoteOperation`.
         """
         del payload, expected
-        return (RemoteOperation(kind="local_workbook", action="parse-aeat-nif-iva-replay"),)
+        return replay_parse_operation("parse-aeat-nif-iva-replay")
 
     def collect_observation(
         self,
@@ -185,7 +188,7 @@ class AeatNifIvaReplayDriver:
         """Decode the captured payload into observed NIF-IVA verdicts.
 
         Parses ``payload`` as a replay JSON document and lifts its observed
-        verdict map and raw-evidence locator into an ``AeatNifIvaObservation``.
+        verdict map and raw-evidence locator into an :class:`AeatNifIvaObservation`.
         A verdict is the validity outcome (such as valid or invalid) recorded
         for each identifier; the raw-evidence locator points back to the
         stored response.
@@ -197,11 +200,14 @@ class AeatNifIvaReplayDriver:
                 expectation.
 
         Returns:
-            An ``AeatNifIvaObservation`` built from the decoded document.
+            An :class:`AeatNifIvaObservation` built from the decoded document.
         """
         del expected
-        document = decode_replay_json_payload(payload, surface_label="AEAT NIF-IVA replay")
-        return AeatNifIvaObservation(values=dict(document.observed), raw_evidence_locator=document.raw_evidence_locator)
+        return decode_replay_observation(
+            payload,
+            surface_label="AEAT NIF-IVA replay",
+            observation_type=AeatNifIvaObservation,
+        )
 
 
 class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
@@ -269,8 +275,8 @@ class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
                 non-empty.
 
         Returns:
-            The ordered tuple of planned ``RemoteOperation`` records, where each
-            ``RemoteOperation`` is one recorded step in the plan.
+            The ordered tuple of planned :class:`RemoteOperation` records, where each
+            :class:`RemoteOperation` is one recorded step in the plan.
 
         Raises:
             RegistryValidationError: If ``expected`` is empty, or if any
@@ -304,28 +310,16 @@ class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
         return tuple(operations)
 
     def _expected_values(self, expected: Mapping[str, object]) -> dict[str, str]:
-        values: dict[str, str] = {}
-        for nif, verdict in expected.items():
-            normalized_nif = str(nif).strip().upper()
-            normalized_verdict = str(verdict).strip().lower()
-            if not normalized_nif or not normalized_verdict:
-                raise RegistryValidationError("AEAT NIF-IVA expected values must not contain blanks")
-            values[normalized_nif] = normalized_verdict
-        return values
+        return normalize_expected_verdicts(
+            expected,
+            blank_message="AEAT NIF-IVA expected values must not contain blanks",
+        )
 
     def _observed_for(self, observation: AeatNifIvaObservation, key: str) -> str | None:
-        return observation.values.get(key.upper())
+        return observed_verdict(observation.values, key)
 
     def _compare_field(self, key: str, expected: str, *, observed: str | None) -> ParityFieldComparison:
-        if observed is None:
-            return ParityFieldComparison(name=key, expected=expected, observed="<missing>", verdict="mismatch")
-        normalized_observed = observed.strip().lower()
-        return ParityFieldComparison(
-            name=key,
-            expected=expected,
-            observed=normalized_observed,
-            verdict="match" if normalized_observed == expected else "mismatch",
-        )
+        return compare_verdict_field(key, expected, observed=observed)
 
     def _observation_locator(self, observation: AeatNifIvaObservation) -> str | None:
         return observation.raw_evidence_locator
