@@ -84,7 +84,12 @@ class ProfileSourcedBindingResult(BaseModel):
         resolved = set(self.binding_values) | set(self.enum_binding_values) | set(self.date_binding_values)
         if resolved != set(self.bindings_sourced_from_profile):
             raise ProfileBindingResolutionError(
-                "profile-sourced binding trace does not match the resolved binding keys"
+                "profile-sourced binding trace does not match the resolved binding keys",
+                translated_message="application.modelo.profile_binding.errors.source_trace_mismatch",
+                context={
+                    "resolved_bindings": tuple(sorted(resolved)),
+                    "trace_bindings": tuple(sorted(self.bindings_sourced_from_profile)),
+                },
             )
         return self
 
@@ -93,11 +98,7 @@ def _profile_record_fingerprint(profile_record: object | None) -> str | None:
     """Return a stable provenance fingerprint for the loaded profile record."""
     if profile_record is None:
         return None
-    payload = (
-        profile_record.model_dump_json()
-        if hasattr(profile_record, "model_dump_json")
-        else repr(profile_record)
-    )
+    payload = profile_record.model_dump_json() if hasattr(profile_record, "model_dump_json") else repr(profile_record)
     digest = hashlib.sha256(payload.encode(UTF_8_ENCODING)).hexdigest()
     return f"sha256:{digest}"
 
@@ -270,16 +271,21 @@ def _decimal_value(binding_id: str, value: object) -> Decimal:
         return decimal_from_string(
             binding_id,
             stripped,
-            error_factory=lambda message: ProfileBindingResolutionError(
-                f"{message}. The registry consumes this binding as a numeric operand, not an enum "
-                "dispatch key; the profile fact must carry a numeric value"
+            error_factory=lambda _message: ProfileBindingResolutionError(
+                f"profile fact for numeric binding {binding_id!r} must be decimal-compatible. "
+                "The registry consumes this binding as a numeric operand, not an enum "
+                "dispatch key; the profile fact must carry a numeric value",
+                translated_message="application.modelo.profile_binding.errors.decimal_value_invalid",
+                context={"binding_id": binding_id, "value_type": "str"},
             ),
             pipeline_label="profile fact",
         )
     raise ProfileBindingResolutionError(
         f"profile fact for Decimal-channel binding {binding_id!r} is not decimal-compatible; "
-        f"got {value!r} (type {type(value).__name__}). The registry consumes this binding as a "
-        f"numeric operand; the profile fact must carry a numeric value"
+        f"got value type {type(value).__name__!r}. The registry consumes this binding as a "
+        f"numeric operand; the profile fact must carry a numeric value",
+        translated_message="application.modelo.profile_binding.errors.decimal_value_type_invalid",
+        context={"binding_id": binding_id, "value_type": type(value).__name__},
     )
 
 
@@ -370,7 +376,10 @@ def resolve_profile_sourced_bindings(
                 continue
             if not isinstance(value, date):
                 raise ProfileBindingResolutionError(
-                    f"profile fact for date-channel binding {binding_id!r} must be a date, got {type(value).__name__!r}"
+                    f"profile fact for date-channel binding {binding_id!r} must be a date, "
+                    f"got {type(value).__name__!r}",
+                    translated_message="application.modelo.profile_binding.errors.date_value_type_invalid",
+                    context={"binding_id": binding_id, "value_type": type(value).__name__},
                 )
             date_values[binding_id] = value
         elif binding_id in enum_bindings:
@@ -386,7 +395,9 @@ def resolve_profile_sourced_bindings(
             if isinstance(value, bool):
                 raise ProfileBindingResolutionError(
                     f"profile fact for enum-channel binding {binding_id!r} resolved to a boolean "
-                    f"({value!r}); boolean facts are not valid enum dispatch keys"
+                    f"({value!r}); boolean facts are not valid enum dispatch keys",
+                    translated_message="application.modelo.profile_binding.errors.enum_boolean_invalid",
+                    context={"binding_id": binding_id, "value_type": "bool"},
                 )
             enum_values[binding_id] = str(value)
         else:

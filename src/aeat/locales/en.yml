@@ -587,52 +587,130 @@ application:
           snapshots.
     snapshot_base:
       errors:
-        snapshot_bucket_mismatch: 'Snapshot payload bucket does not match the repository bucket.'
+        snapshot_bucket_mismatch: Snapshot payload bucket does not match the repository
+          bucket.
     verify:
       errors:
-        bucket_id_blank: 'Verify bucket id must not be blank.'
-        observation_bucket_mismatch: 'Verify observation bucket does not match the repository bucket.'
-        observation_id_blank: 'Verify observation id must not be blank.'
-        observation_not_found: 'No verify observation matches the requested id.'
-        observation_prefix_ambiguous: 'The verify observation prefix matches multiple observations.'
-        observation_id_mismatch: 'Verify observation id does not match the requested observation.'
+        bucket_id_blank: Verify bucket id must not be blank.
+        observation_bucket_mismatch: Verify observation bucket does not match the
+          repository bucket.
+        observation_id_blank: Verify observation id must not be blank.
+        observation_id_mismatch: Verify observation id does not match the requested
+          observation.
+        observation_not_found: No verify observation matches the requested id.
+        observation_prefix_ambiguous: The verify observation prefix matches multiple
+          observations.
   modelo:
     borrador_binding:
       errors:
         caller_binding_keys_blank: Caller binding keys must not be blank.
+        decimal_value_invalid: Borrador value for numeric binding %{binding_id} must
+          be decimal-compatible.
+        forbidden_bindings: 'The borrador snapshot contains values that the registry
+          has not marked as AEAT-prefilled: %{bindings}.'
+        registry_snapshot_axis_mismatch: 'The registry snapshot axis does not match
+          the borrador binding command: snapshot year=%{snapshot_year} period=%{snapshot_period};
+          command year=%{filing_year} period=%{period}.'
+        registry_snapshot_modelo_mismatch: 'The registry snapshot modelo does not
+          match the borrador binding command: snapshot modelo=%{snapshot_modelo};
+          command modelo=%{command_modelo}.'
+        snapshot_axis_mismatch: 'The borrador snapshot does not match the calculation
+          axis: snapshot year=%{snapshot_year} period=%{snapshot_period}; calculation
+          year=%{filing_year} period=%{period}.'
+        snapshot_bucket_mismatch: The borrador snapshot does not belong to the active
+          bucket.
         snapshot_id_required: Borrador-sourced values require a borrador_snapshot_id.
+        snapshot_load_failed: Cannot load the selected borrador snapshot; list active
+          snapshots with aeat app live borrador 100 list.
         snapshot_not_active: Borrador snapshot is not active; list active snapshots
           with `aeat app live borrador 100 list`.
         source_trace_mismatch: Borrador source trace must match resolved binding ids.
-        unsupported_modelo: 'Borrador binding is not supported for modelo %{modelo}; the registry manifest must declare the borrador capability.'
-        snapshot_load_failed: 'Cannot load the selected borrador snapshot; list active snapshots with aeat app live borrador 100 list.'
-        forbidden_bindings: 'The borrador snapshot contains values that the registry has not marked as AEAT-prefilled: %{bindings}.'
-        snapshot_bucket_mismatch: 'The borrador snapshot does not belong to the active bucket.'
-        snapshot_axis_mismatch: 'The borrador snapshot does not match the calculation axis: snapshot year=%{snapshot_year} period=%{snapshot_period}; calculation year=%{filing_year} period=%{period}.'
-        registry_snapshot_modelo_mismatch: 'The registry snapshot modelo does not match the borrador binding command: snapshot modelo=%{snapshot_modelo}; command modelo=%{command_modelo}.'
-        registry_snapshot_axis_mismatch: 'The registry snapshot axis does not match the borrador binding command: snapshot year=%{snapshot_year} period=%{snapshot_period}; command year=%{filing_year} period=%{period}.'
-        decimal_value_invalid: 'Borrador value for numeric binding %{binding_id} must be decimal-compatible.'
+        unsupported_modelo: Borrador binding is not supported for modelo %{modelo};
+          the registry manifest must declare the borrador capability.
     errors:
+      amendment_registry_root_missing: Registry root %{registry_root} is missing;
+        amendment overrides cannot be validated.
+      amendment_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved; amendment
+        overrides cannot be validated.
+      amendment_unknown_casillas: 'Amendment overrides target casilla ids that are
+        not declared in registry modelo %{modelo}, filing year %{filing_year}, period
+        %{period}: %{casillas}.'
       amendment_verification_refused_missing_casillas: 'The amendment is incomplete:
         required casilla ids are missing from the corrected map.'
       amendment_verification_refused_no_snapshot: Registry has no snapshot for the
         requested modelo, year, and period.
+      calculation_registry_root_missing: Registry root %{registry_root} is missing;
+        modelo calculation cannot continue.
+      calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved.
       calculation_revision_not_found: No calculation revision found with id=%{calculation_revision_id}.
+      caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
+        bucket-derived source-bound casillas: %{casillas}.'
       computed_casilla_binding_conflict: 'Bucket-derived inputs target computed casillas
         and cannot be overridden by external binding. Affected casillas: %{computed}.'
+      export_cross_bucket_refused: The addressed revision belongs to a bucket other
+        than the active profile bucket. Switch profile before exporting.
+      export_draft_approval_failed: Could not approve the draft for calculation revision
+        %{calculation_revision_id}.
+      export_draft_write_failed: Could not write the export file for calculation revision
+        %{calculation_revision_id}.
+      export_ledger_evidence_missing: Ledger-derived calculation revision %{calculation_revision_id}
+        lacks bundled ledger evidence or a resolvable ledger snapshot reference; verify
+        the revision again before exporting.
       export_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before exporting a modelo revision.
+      export_operator_name_missing: 'Export requires the operator name on the active
+        profile; missing profile facts: %{missing}.'
+      export_operator_profile_missing: Export needs the operator name from the active
+        profile, but no persisted profile exists; populate identity.surnames and identity.name
+        before exporting.
+      export_period_unmappable: Work unit %{work_unit_id} carries period %{period},
+        which cannot be mapped to a registry filing period.
+      export_revision_state_refused: Calculation revision %{calculation_revision_id}
+        is not verified-complete or filed and cannot be exported.
       external_filing_evidence_reference_blank: External-filing import requires a
         non-empty evidence_reference_id.
       external_filing_no_casilla_values: External-filing import requires at least
         one casilla value; the supplied mapping is empty.
+      external_import_duplicate_revision: Calculation revision %{calculation_revision_id}
+        already exists in the catalogue; an identical import was already recorded.
+      external_import_registry_root_missing: Registry root %{registry_root} is missing;
+        imported casilla ids cannot be validated.
+      external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved; imported
+        casilla ids cannot be validated.
+      external_import_unknown_casillas: 'External-filing import carries casilla ids
+        that are not declared in registry modelo %{modelo}, filing year %{filing_year},
+        period %{period}: %{casillas}.'
       filing_record_not_found: No filing record found with id=%{filing_record_id}.
+      iva_wallet_backend_casilla_conflict: Backend casilla input for Modelo 303 prior
+        compensation conflicts with the IVA wallet reconciliation decision.
       iva_wallet_blocked: 'IVA wallet reconciliation is blocked for Modelo 303 (%{divergence}):
         %{reason}'
+      iva_wallet_caller_binding_conflict: Caller binding for Modelo 303 prior compensation
+        conflicts with the IVA wallet reconciliation decision.
+      iva_wallet_caller_casilla_conflict: Caller casilla input for Modelo 303 prior
+        compensation conflicts with the IVA wallet reconciliation decision.
       iva_wallet_not_seeded: 'Modelo 303 calculation requires a seeded IVA compensation
         history. For the first M303 filing of a fresh profile, seed the opening balance
         with zero: `aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD
         --amount 0 --confirm`.'
+      iva_wallet_selected_amount_missing: IVA wallet reconciliation decision has no
+        selected amount.
+      iva_wallet_supplied_decision_mismatch: Supplied IVA wallet reconciliation decision
+        does not match the persisted decision.
+      iva_wallet_target_mismatch: IVA wallet decision target %{target_year}/%{target_period}
+        does not match work unit %{filing_year}/%{period}.
+      iva_wallet_taxpayer_identity_missing: IVA wallet reconciliation cannot continue
+        without the work-unit taxpayer identity.
+      iva_wallet_taxpayer_mismatch: IVA wallet reconciliation taxpayer does not match
+        the Modelo 303 work unit.
+      iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type:
+        %{decision_type}.'
+      ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
+        %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
+        %{period}` before calculating.'
       reconcile_declaration_unsupported: Declaration-PDF reconcile source is not yet
         implemented; use --from-justificante PATH until the declaration parser lands.
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
@@ -650,34 +728,6 @@ application:
       work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
-      iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type: %{decision_type}.'
-      iva_wallet_target_mismatch: 'IVA wallet decision target %{target_year}/%{target_period} does not match work unit %{filing_year}/%{period}.'
-      iva_wallet_taxpayer_identity_missing: 'IVA wallet reconciliation cannot continue without the work-unit taxpayer identity.'
-      iva_wallet_taxpayer_mismatch: 'IVA wallet reconciliation taxpayer does not match the Modelo 303 work unit.'
-      iva_wallet_selected_amount_missing: 'IVA wallet reconciliation decision has no selected amount.'
-      iva_wallet_caller_binding_conflict: 'Caller binding for Modelo 303 prior compensation conflicts with the IVA wallet reconciliation decision.'
-      iva_wallet_caller_casilla_conflict: 'Caller casilla input for Modelo 303 prior compensation conflicts with the IVA wallet reconciliation decision.'
-      iva_wallet_backend_casilla_conflict: 'Backend casilla input for Modelo 303 prior compensation conflicts with the IVA wallet reconciliation decision.'
-      iva_wallet_supplied_decision_mismatch: 'Supplied IVA wallet reconciliation decision does not match the persisted decision.'
-      ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period %{period}` before calculating.'
-      caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override bucket-derived source-bound casillas: %{casillas}.'
-      amendment_registry_root_missing: 'Registry root %{registry_root} is missing; amendment overrides cannot be validated.'
-      amendment_registry_snapshot_unresolved: 'Registry snapshot for modelo %{modelo}, filing year %{filing_year}, period %{period} could not be resolved; amendment overrides cannot be validated.'
-      amendment_unknown_casillas: 'Amendment overrides target casilla ids that are not declared in registry modelo %{modelo}, filing year %{filing_year}, period %{period}: %{casillas}.'
-      external_import_registry_root_missing: 'Registry root %{registry_root} is missing; imported casilla ids cannot be validated.'
-      external_import_registry_snapshot_unresolved: 'Registry snapshot for modelo %{modelo}, filing year %{filing_year}, period %{period} could not be resolved; imported casilla ids cannot be validated.'
-      external_import_unknown_casillas: 'External-filing import carries casilla ids that are not declared in registry modelo %{modelo}, filing year %{filing_year}, period %{period}: %{casillas}.'
-      calculation_registry_root_missing: 'Registry root %{registry_root} is missing; modelo calculation cannot continue.'
-      calculation_registry_snapshot_unresolved: 'Registry snapshot for modelo %{modelo}, filing year %{filing_year}, period %{period} could not be resolved.'
-      external_import_duplicate_revision: 'Calculation revision %{calculation_revision_id} already exists in the catalogue; an identical import was already recorded.'
-      export_ledger_evidence_missing: 'Ledger-derived calculation revision %{calculation_revision_id} lacks bundled ledger evidence or a resolvable ledger snapshot reference; verify the revision again before exporting.'
-      export_revision_state_refused: 'Calculation revision %{calculation_revision_id} is not verified-complete or filed and cannot be exported.'
-      export_operator_profile_missing: 'Export needs the operator name from the active profile, but no persisted profile exists; populate identity.surnames and identity.name before exporting.'
-      export_operator_name_missing: 'Export requires the operator name on the active profile; missing profile facts: %{missing}.'
-      export_period_unmappable: 'Work unit %{work_unit_id} carries period %{period}, which cannot be mapped to a registry filing period.'
-      export_cross_bucket_refused: 'The addressed revision belongs to a bucket other than the active profile bucket. Switch profile before exporting.'
-      export_draft_approval_failed: 'Could not approve the draft for calculation revision %{calculation_revision_id}.'
-      export_draft_write_failed: 'Could not write the export file for calculation revision %{calculation_revision_id}.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
@@ -718,6 +768,13 @@ application:
         next_action: Designate a fiscal representative in Spain by setting profile.representante_fiscal_nif
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
+    profile_binding:
+      errors:
+        date_value_type_invalid: 'Profile fact for date-channel binding %{binding_id} must be a date; got %{value_type}.'
+        decimal_value_invalid: 'Profile fact for numeric binding %{binding_id} must be decimal-compatible.'
+        decimal_value_type_invalid: 'Profile fact for Decimal-channel binding %{binding_id} has unsupported value type %{value_type}.'
+        enum_boolean_invalid: 'Profile fact for enum-channel binding %{binding_id} resolved to a boolean; boolean facts are not valid enum dispatch keys.'
+        source_trace_mismatch: 'Profile-sourced binding trace does not match the resolved binding keys.'
   overview:
     explain:
       errors:

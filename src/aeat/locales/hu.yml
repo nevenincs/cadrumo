@@ -599,54 +599,131 @@ application:
           illeszkedik.
     snapshot_base:
       errors:
-        snapshot_bucket_mismatch: 'A pillanatkep payload bucketje nem egyezik a repository bucketjevel.'
+        snapshot_bucket_mismatch: A pillanatkep payload bucketje nem egyezik a repository
+          bucketjevel.
     verify:
       errors:
-        bucket_id_blank: 'A verify bucket azonositoja nem lehet ures.'
-        observation_bucket_mismatch: 'A verify megfigyeles bucketje nem egyezik a tarolo bucketjevel.'
-        observation_id_blank: 'A verify megfigyeles azonositoja nem lehet ures.'
-        observation_not_found: 'Nem talalhato verify megfigyeles a kert azonositohoz.'
-        observation_prefix_ambiguous: 'A verify megfigyeles elotagja tobb megfigyelessel egyezik.'
-        observation_id_mismatch: 'A verify megfigyeles azonositoja nem egyezik a kert megfigyelessel.'
+        bucket_id_blank: A verify bucket azonositoja nem lehet ures.
+        observation_bucket_mismatch: A verify megfigyeles bucketje nem egyezik a tarolo
+          bucketjevel.
+        observation_id_blank: A verify megfigyeles azonositoja nem lehet ures.
+        observation_id_mismatch: A verify megfigyeles azonositoja nem egyezik a kert
+          megfigyelessel.
+        observation_not_found: Nem talalhato verify megfigyeles a kert azonositohoz.
+        observation_prefix_ambiguous: A verify megfigyeles elotagja tobb megfigyelessel
+          egyezik.
   modelo:
     borrador_binding:
       errors:
         caller_binding_keys_blank: A hívó kötési kulcsok nem lehetnek üresek.
+        decimal_value_invalid: A(z) %{binding_id} numerikus kotes tervezetertekenek
+          decimaliskompatibilisnek kell lennie.
+        forbidden_bindings: 'A tervezet-pillanatkep olyan ertekeket tartalmaz, amelyeket
+          a regiszter nem jelolt AEAT-prefilled ertekkent: %{bindings}.'
+        registry_snapshot_axis_mismatch: 'A regiszter-pillanatkep tengelye nem egyezik
+          a tervezetkotes parancsaval: pillanatkep ev=%{snapshot_year} idoszak=%{snapshot_period};
+          parancs ev=%{filing_year} idoszak=%{period}.'
+        registry_snapshot_modelo_mismatch: 'A regiszter-pillanatkep modellje nem egyezik
+          a tervezetkotes parancsaval: pillanatkep modell=%{snapshot_modelo}; parancs
+          modell=%{command_modelo}.'
+        snapshot_axis_mismatch: 'A tervezet-pillanatkep tengelye nem egyezik a szamitas
+          tengelyevel: pillanatkep ev=%{snapshot_year} idoszak=%{snapshot_period};
+          szamitas ev=%{filing_year} idoszak=%{period}.'
+        snapshot_bucket_mismatch: A tervezet-pillanatkep nem az aktiv buckethez tartozik.
         snapshot_id_required: A tervezet-alapú értékek borrador_snapshot_id-t igényelnek.
+        snapshot_load_failed: 'A kivalasztott tervezet-pillanatkep nem toltheto be;
+          az aktiv pillanatkepek listazhatok ezzel: aeat app live borrador 100 list.'
         snapshot_not_active: A tervezet pillanatképe nem aktív; az aktív pillanatképek
           listájához futtassa az `aeat app live borrador 100 list` parancsot.
         source_trace_mismatch: A tervezet forrás-nyomkövetésének egyeznie kell a feloldott
           kötési azonosítókkal.
-        unsupported_modelo: 'A tervezetkotes nem tamogatott a(z) %{modelo} modellhez; a regiszter manifesztjenek deklaralnia kell a tervezet kepesseget.'
-        snapshot_load_failed: 'A kivalasztott tervezet-pillanatkep nem toltheto be; az aktiv pillanatkepek listazhatok ezzel: aeat app live borrador 100 list.'
-        forbidden_bindings: 'A tervezet-pillanatkep olyan ertekeket tartalmaz, amelyeket a regiszter nem jelolt AEAT-prefilled ertekkent: %{bindings}.'
-        snapshot_bucket_mismatch: 'A tervezet-pillanatkep nem az aktiv buckethez tartozik.'
-        snapshot_axis_mismatch: 'A tervezet-pillanatkep tengelye nem egyezik a szamitas tengelyevel: pillanatkep ev=%{snapshot_year} idoszak=%{snapshot_period}; szamitas ev=%{filing_year} idoszak=%{period}.'
-        registry_snapshot_modelo_mismatch: 'A regiszter-pillanatkep modellje nem egyezik a tervezetkotes parancsaval: pillanatkep modell=%{snapshot_modelo}; parancs modell=%{command_modelo}.'
-        registry_snapshot_axis_mismatch: 'A regiszter-pillanatkep tengelye nem egyezik a tervezetkotes parancsaval: pillanatkep ev=%{snapshot_year} idoszak=%{snapshot_period}; parancs ev=%{filing_year} idoszak=%{period}.'
-        decimal_value_invalid: 'A(z) %{binding_id} numerikus kotes tervezetertekenek decimaliskompatibilisnek kell lennie.'
+        unsupported_modelo: A tervezetkotes nem tamogatott a(z) %{modelo} modellhez;
+          a regiszter manifesztjenek deklaralnia kell a tervezet kepesseget.
     errors:
+      amendment_registry_root_missing: Registry root %{registry_root} is missing;
+        amendment overrides cannot be validated.
+      amendment_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved; amendment
+        overrides cannot be validated.
+      amendment_unknown_casillas: 'Amendment overrides target casilla ids that are
+        not declared in registry modelo %{modelo}, filing year %{filing_year}, period
+        %{period}: %{casillas}.'
       amendment_verification_refused_missing_casillas: 'A módosítás hiányos: a szükséges
         casilla-azonosítók hiányoznak a javított térképből.'
       amendment_verification_refused_no_snapshot: A nyilvántartásban nincs pillanatkép
         a kért modellhez, évhez és időszakhoz.
+      calculation_registry_root_missing: Registry root %{registry_root} is missing;
+        modelo calculation cannot continue.
+      calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved.
       calculation_revision_not_found: Nem található számítás-revízió id=%{calculation_revision_id}
         azonosítóval.
+      caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
+        bucket-derived source-bound casillas: %{casillas}.'
       computed_casilla_binding_conflict: 'A bucket-alapú bemenetek számított mezőket
         céloznak, amelyek nem írhatók felül külső kötéssel. Érintett mezők: %{computed_casillas}.'
+      export_cross_bucket_refused: A megcimzett revizio nem az aktiv profil bucketjehez
+        tartozik. Exportalas elott valtson profilt.
+      export_draft_approval_failed: Nem sikerult jovahagyni a(z) %{calculation_revision_id}
+        szamitasi revizio tervezetet.
+      export_draft_write_failed: Nem sikerult kiirni a(z) %{calculation_revision_id}
+        szamitasi revizio exportfajljat.
+      export_ledger_evidence_missing: A(z) %{calculation_revision_id} ledgerbol szarmazo
+        szamitasi revizio nem tartalmaz csatolt ledger-evidenciat vagy feloldhato
+        ledger-pillanatkep hivatkozast; exportalas elott ellenorizze ujra a reviziot.
       export_no_active_bucket: Nincs aktív profil bucket; a modelo-revízió exportálása
         előtt futtassa az `aeat config profile create NÉV` parancsot.
+      export_operator_name_missing: 'Az exportalashoz szukseg van az operator nevere
+        az aktiv profilban; hianyzo profiladatok: %{missing}.'
+      export_operator_profile_missing: Az exportalashoz szukseg van az operator nevere
+        az aktiv profilbol, de nincs perzisztalt profil; exportalas elott toltse ki
+        az identity.surnames es identity.name mezoket.
+      export_period_unmappable: A(z) %{work_unit_id} munkaegyseg %{period} idoszakot
+        tartalmaz, amely nem kepezheto le regiszter bevallasi idoszakra.
+      export_revision_state_refused: A(z) %{calculation_revision_id} szamitasi revizio
+        nincs ellenorzott-teljes vagy beadott allapotban, ezert nem exportalhato.
       external_filing_evidence_reference_blank: A külső bevallás importálásához nem
         üres evidence_reference_id szükséges.
       external_filing_no_casilla_values: A külső bevallás importálásához legalább
         egy mező értéke szükséges; a megadott leképezés üres.
+      external_import_duplicate_revision: Calculation revision %{calculation_revision_id}
+        already exists in the catalogue; an identical import was already recorded.
+      external_import_registry_root_missing: Registry root %{registry_root} is missing;
+        imported casilla ids cannot be validated.
+      external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved; imported
+        casilla ids cannot be validated.
+      external_import_unknown_casillas: 'External-filing import carries casilla ids
+        that are not declared in registry modelo %{modelo}, filing year %{filing_year},
+        period %{period}: %{casillas}.'
       filing_record_not_found: Nem található benyújtási rekord id=%{filing_record_id}
         azonosítóval.
+      iva_wallet_backend_casilla_conflict: Backend casilla input for Modelo 303 prior
+        compensation conflicts with the IVA wallet reconciliation decision.
       iva_wallet_blocked: 'IVA wallet reconciliation is blocked for Modelo 303 (%{divergence}):
         %{reason}'
+      iva_wallet_caller_binding_conflict: Caller binding for Modelo 303 prior compensation
+        conflicts with the IVA wallet reconciliation decision.
+      iva_wallet_caller_casilla_conflict: Caller casilla input for Modelo 303 prior
+        compensation conflicts with the IVA wallet reconciliation decision.
       iva_wallet_not_seeded: A Modelo 303 számításához feltöltött IVA-kompenzáció
         előzmény szükséges. Egy friss profil első M303 benyújtásához töltse fel az
         előzményt.
+      iva_wallet_selected_amount_missing: IVA wallet reconciliation decision has no
+        selected amount.
+      iva_wallet_supplied_decision_mismatch: Supplied IVA wallet reconciliation decision
+        does not match the persisted decision.
+      iva_wallet_target_mismatch: IVA wallet decision target %{target_year}/%{target_period}
+        does not match work unit %{filing_year}/%{period}.
+      iva_wallet_taxpayer_identity_missing: IVA wallet reconciliation cannot continue
+        without the work-unit taxpayer identity.
+      iva_wallet_taxpayer_mismatch: IVA wallet reconciliation taxpayer does not match
+        the Modelo 303 work unit.
+      iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type:
+        %{decision_type}.'
+      ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
+        %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
+        %{period}` before calculating.'
       reconcile_declaration_unsupported: A bevallás-PDF egyeztetési forrás még nincs
         implementálva; addig használja a --from-justificante ÚTVONAL paramétert.
       reconcile_no_active_bucket: 'Nincs aktív profilmappa; futtassa: `aeat config
@@ -666,34 +743,6 @@ application:
         %{work_unit_id}.'
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
-      iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type: %{decision_type}.'
-      iva_wallet_target_mismatch: 'IVA wallet decision target %{target_year}/%{target_period} does not match work unit %{filing_year}/%{period}.'
-      iva_wallet_taxpayer_identity_missing: 'IVA wallet reconciliation cannot continue without the work-unit taxpayer identity.'
-      iva_wallet_taxpayer_mismatch: 'IVA wallet reconciliation taxpayer does not match the Modelo 303 work unit.'
-      iva_wallet_selected_amount_missing: 'IVA wallet reconciliation decision has no selected amount.'
-      iva_wallet_caller_binding_conflict: 'Caller binding for Modelo 303 prior compensation conflicts with the IVA wallet reconciliation decision.'
-      iva_wallet_caller_casilla_conflict: 'Caller casilla input for Modelo 303 prior compensation conflicts with the IVA wallet reconciliation decision.'
-      iva_wallet_backend_casilla_conflict: 'Backend casilla input for Modelo 303 prior compensation conflicts with the IVA wallet reconciliation decision.'
-      iva_wallet_supplied_decision_mismatch: 'Supplied IVA wallet reconciliation decision does not match the persisted decision.'
-      ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period %{period}` before calculating.'
-      caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override bucket-derived source-bound casillas: %{casillas}.'
-      amendment_registry_root_missing: 'Registry root %{registry_root} is missing; amendment overrides cannot be validated.'
-      amendment_registry_snapshot_unresolved: 'Registry snapshot for modelo %{modelo}, filing year %{filing_year}, period %{period} could not be resolved; amendment overrides cannot be validated.'
-      amendment_unknown_casillas: 'Amendment overrides target casilla ids that are not declared in registry modelo %{modelo}, filing year %{filing_year}, period %{period}: %{casillas}.'
-      external_import_registry_root_missing: 'Registry root %{registry_root} is missing; imported casilla ids cannot be validated.'
-      external_import_registry_snapshot_unresolved: 'Registry snapshot for modelo %{modelo}, filing year %{filing_year}, period %{period} could not be resolved; imported casilla ids cannot be validated.'
-      external_import_unknown_casillas: 'External-filing import carries casilla ids that are not declared in registry modelo %{modelo}, filing year %{filing_year}, period %{period}: %{casillas}.'
-      calculation_registry_root_missing: 'Registry root %{registry_root} is missing; modelo calculation cannot continue.'
-      calculation_registry_snapshot_unresolved: 'Registry snapshot for modelo %{modelo}, filing year %{filing_year}, period %{period} could not be resolved.'
-      external_import_duplicate_revision: 'Calculation revision %{calculation_revision_id} already exists in the catalogue; an identical import was already recorded.'
-      export_ledger_evidence_missing: 'A(z) %{calculation_revision_id} ledgerbol szarmazo szamitasi revizio nem tartalmaz csatolt ledger-evidenciat vagy feloldhato ledger-pillanatkep hivatkozast; exportalas elott ellenorizze ujra a reviziot.'
-      export_revision_state_refused: 'A(z) %{calculation_revision_id} szamitasi revizio nincs ellenorzott-teljes vagy beadott allapotban, ezert nem exportalhato.'
-      export_operator_profile_missing: 'Az exportalashoz szukseg van az operator nevere az aktiv profilbol, de nincs perzisztalt profil; exportalas elott toltse ki az identity.surnames es identity.name mezoket.'
-      export_operator_name_missing: 'Az exportalashoz szukseg van az operator nevere az aktiv profilban; hianyzo profiladatok: %{missing}.'
-      export_period_unmappable: 'A(z) %{work_unit_id} munkaegyseg %{period} idoszakot tartalmaz, amely nem kepezheto le regiszter bevallasi idoszakra.'
-      export_cross_bucket_refused: 'A megcimzett revizio nem az aktiv profil bucketjehez tartozik. Exportalas elott valtson profilt.'
-      export_draft_approval_failed: 'Nem sikerult jovahagyni a(z) %{calculation_revision_id} szamitasi revizio tervezetet.'
-      export_draft_write_failed: 'Nem sikerult kiirni a(z) %{calculation_revision_id} szamitasi revizio exportfajljat.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
@@ -734,6 +783,13 @@ application:
           beallitasaval az `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
           megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
+    profile_binding:
+      errors:
+        date_value_type_invalid: 'A(z) %{binding_id} datumcsatornas kotes profiladata datum kell legyen; kapott tipus: %{value_type}.'
+        decimal_value_invalid: 'A(z) %{binding_id} numerikus kotes profiladata legyen decimaliskompatibilis.'
+        decimal_value_type_invalid: 'A(z) %{binding_id} decimalis csatornas kotes profiladata nem tamogatott tipusu: %{value_type}.'
+        enum_boolean_invalid: 'A(z) %{binding_id} enumcsatornas kotes profiladata boolean ertekre oldodott fel; a boolean adatok nem ervenyes enum dispatch kulcsok.'
+        source_trace_mismatch: 'A profilbol szarmazo kotesnyom nem egyezik a feloldott kotesekkel.'
   overview:
     explain:
       errors:
