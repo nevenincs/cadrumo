@@ -714,3 +714,21 @@ translation keys and context through real secure-object repositories and preserv
 strict roundtrip and drift tests.
 
 Closure assessment: `W12.P26.S270` can close as `runtime-default`.
+
+## S271-062 | PASS | User-profile testing helper runtime-default closeout verified
+
+The `W12.P26.S271` review found that
+`src/aeat/application/user_profile/_testing.py` is a thin test convenience over
+canonical profile orchestration. It delegates to `register_active_profile`,
+`select_profile`, and `set_active_fields`, and does not construct fake repositories,
+monkeypatch storage, read environment variables, or write profile state through an
+alternate backend.
+
+The helper reuses `nif_check_letter`, the core manual-provenance constant, and
+`IVARegime.GENERAL`, so it no longer carries the previously observed duplicate NIF
+letter or provenance/IVA literals. Vaultspec RAG semantic search was used for
+duplication review and clustered the helper with real profile-registration call sites.
+
+Focused pointer and output-language tests passed.
+
+Closure assessment: `W12.P26.S271` can close as `runtime-default`.
