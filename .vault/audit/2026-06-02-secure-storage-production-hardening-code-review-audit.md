@@ -530,38 +530,3 @@ The S237 checkbox was closed through the plan CLI after the implementation commi
 left the register closed but the step line unchecked.
 
 Closure assessment: `W12.P26.S237` can close as `manifest-discovery`.
-
-## S240-052 | PASS | Operator-surface contract/model manifest-discovery closeout verified
-
-The `W12.P26.S240`/`W12.P26.S243` review found that
-`src/aeat/application/operator_surface/_contract.py` builds cached in-memory
-`OperatorSurfaceContract` records and
-`src/aeat/application/operator_surface/_models.py` defines strict frozen
-Pydantic contract records and enums. Neither file constructs storage
-repositories, selects secure storage backends, builds SQL routes, inspects
-environment variables, opens files, writes plaintext side stores, or mutates
-bucket state.
-
-Vaultspec RAG semantic searches were used for duplication review. The coupled
-implementation enrolled the real `config bucket history` CLI family as a
-read-only mounted command family and added the required bucket domain enum,
-keeping the operator-surface architecture contract aligned with the CLI without
-adding storage ownership.
-
-Closure assessment: `W12.P26.S240` and `W12.P26.S243` can close as
-`manifest-discovery`.
-
-## S241-053 | PASS | Operator-surface CRUD contract manifest-discovery closeout verified
-
-The `W12.P26.S241` review found that
-`src/aeat/application/operator_surface/_crud_contract.py` defines enums,
-Pydantic models, validation rules, and lookup helpers for mutating noun-group
-shape. It has no path IO, repository construction, settings or environment
-access, remote provider access, logging/printing, or exception swallowing.
-
-Vaultspec RAG semantic searches were used for duplication review. The module
-clusters with the operator-surface CRUD registry/tests and adjacent
-operator-surface contract records; the previous `plain-file` signal was stale
-and is corrected to `manifest-bucket`/`manifest-discovery`.
-
-Closure assessment: `W12.P26.S241` can close as `manifest-discovery`.
