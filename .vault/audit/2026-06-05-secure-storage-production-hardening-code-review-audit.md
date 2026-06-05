@@ -344,3 +344,22 @@ profile bucket.
 The `_common.py` change did not add locale keys. `python -m aeat.locales audit`, focused
 common helper tests, focused Renta aggregation tests, and selected backend-boundary
 integration checks passed.
+
+## S378-CR-001 | PASS | Config CLI facade delegates storage ownership
+
+Reviewed the S378 scope as `vaultspec-code-reviewer`. `_config/__init__.py` currently
+routes profile lifecycle, repair, auth, apoderado, bucket-history, import/export, and
+Google app registration through application/domain services. Command handlers do not
+construct raw SQL engines or direct secure-object adapters.
+
+## S378-CR-002 | FIXED | Config containment paths lacked debug breadcrumbs
+
+Broad exception-to-operator-diagnostic paths now log at debug level through the
+centralized logger before emitting redacted/profile-safe CLI output. Covered paths
+include repair log tail reads, profile-record repair/status/show failures, invalid
+portable profile bundle parsing, and status projection validation fallback.
+
+## S378-CR-003 | PASS | Locale and focused validation passed
+
+The config facade change added no locale keys. Focused `ruff check`, config boundary
+tests, repair bootstrap/reset tests, and `python -m aeat.locales audit` passed.

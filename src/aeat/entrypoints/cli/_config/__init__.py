@@ -2497,4 +2497,4 @@ from ._google import google_app as _google_app
 
 app.add_typer(_google_app, name="google")
 
-__all__ = ["app", "apoderado_app", "tr"]
+__all__ = ["apoderado_app", "app", "tr"]
