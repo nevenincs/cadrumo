@@ -737,3 +737,37 @@ Reviewed `src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py` as the S449 scope.
 CLI registrar uses the active bucket callback, delegates wallet balance and seed
 operations to application services, localizes help and refusal text through `tr()`, and
 refuses conflicts rather than overwriting existing wallet state.
+
+## S457-CR-001 | FIXED | Custody recovery verbs must own bucket session activation
+
+Review found that `config rekey`, `config recover`, `config show-recovery`, and
+`config verify-recovery` were intentionally bootstrap-exempt at the root callback but
+the mutating custody operations were not proving the active bucket session lifecycle
+inside the custody service. The repair keeps those verbs root-exempt so they can
+resolve passphrase or recovery material, then opens an application-owned
+`activate_master_key_provider()` span for recovery enrollment, passphrase rekey, and
+recovery rebind. `config verify-recovery` remains passphrase-independent by design: it
+validates only that the mnemonic unwraps the persisted typed recovery envelope and
+does not perform an encrypted bucket read or write.
+
+## S457-CR-002 | FIXED | Recovery policy catalog missed adjacent custody verbs
+
+Review found that the repair policy coverage scanner only required catalog rows for
+generic `recover` leaves and therefore missed `config rekey`, `config show-recovery`,
+and `config verify-recovery`. The repair adds those custody leaves to the policy
+coverage predicate and adds secure-storage recovery-surface rows for all three verbs.
+
+## S457-CR-003 | PASS | Test env handoff remains owned by S452
+
+The custody subprocess harness reads `AEAT_TEST_SECRET_PASSPHRASE` only inside the
+test runner and immediately pipes the value into `Settings`; production custody code is
+settings-backed. The remaining test-environment hardening and explicit justification
+work is still owned by open row `W20.P40.S452`.
+
+## S457-CR-004 | PASS | Existing-key display copy remains owned by S458
+
+The current `show-recovery` behavior avoids persisting or redisplaying plaintext
+mnemonics; when a recovery envelope already exists it tells the operator to rotate
+instead. The stale ADR/copy mismatch for existing recovery-code display remains owned
+by open row `W20.P40.S458`, which covers canonical custody guidance and locale-backed
+recovery copy.

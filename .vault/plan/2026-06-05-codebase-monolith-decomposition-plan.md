@@ -197,6 +197,14 @@ Close application package and service roots that remain oversized after first-pa
 - [ ] `W03.P11.S122` - verify residual live package behavior and public facade imports after root decomposition; `src/aeat/application/live/tests src/aeat/entrypoints/cli/tests/test_live*`.
 - [ ] `W03.P11.S123` - decompose overview application root by calendar and filing summary services behind the overview facade; `src/aeat/application/overview/__init__.py src/aeat/application/overview/*.py`.
 - [ ] `W03.P11.S124` - verify overview application behavior and public facade imports after root decomposition; `src/aeat/application/overview/tests src/aeat/entrypoints/cli/tests/test_overview*`.
+- [ ] `W03.P11.S133` - extract residual modelo calculation and bucket-aggregation workflows behind the modelo application facade without moving policy to CLI; `src/aeat/application/modelo/_actions.py src/aeat/application/modelo/_calculation_actions.py src/aeat/application/modelo/_calculation_helpers.py src/aeat/application/modelo/tests`.
+- [ ] `W03.P11.S134` - verify residual modelo calculation extraction preserves behavior and public facade imports; `src/aeat/application/modelo/tests src/aeat/entrypoints/cli/tests/test_modelo*`.
+- [ ] `W03.P11.S135` - extract residual modelo verification predicates findings clean-state and workflow-gate orchestration behind the modelo application facade; `src/aeat/application/modelo/_actions.py src/aeat/application/modelo/_verification_actions.py src/aeat/application/modelo/_verification_helpers.py src/aeat/application/modelo/tests`.
+- [ ] `W03.P11.S136` - verify residual modelo verification extraction preserves reports gates and public facade imports; `src/aeat/application/modelo/tests src/aeat/entrypoints/cli/tests/test_modelo*`.
+- [ ] `W03.P11.S137` - extract residual modelo filing record list get file supersession workflow behind the modelo application facade; `src/aeat/application/modelo/_actions.py src/aeat/application/modelo/_filing_actions.py src/aeat/application/modelo/tests`.
+- [ ] `W03.P11.S138` - verify residual modelo filing extraction preserves filing records supersession and public facade imports; `src/aeat/application/modelo/tests src/aeat/entrypoints/cli/tests/test_modelo*`.
+- [ ] `W03.P11.S139` - extract residual modelo amendment and external filing import workflows behind the modelo application facade; `src/aeat/application/modelo/_actions.py src/aeat/application/modelo/_amendment_actions.py src/aeat/application/modelo/_external_import_actions.py src/aeat/application/modelo/tests`.
+- [ ] `W03.P11.S140` - verify residual modelo amendment import extraction leaves _actions under the 1250-line budget and preserves facade-only consumers; `src/aeat/application/modelo src/aeat/entrypoints/cli src/aeat/tests/test_codebase_size_budgets.py`.
 
 ## Wave `W04` - core and final static guard closure
 

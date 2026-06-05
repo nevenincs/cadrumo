@@ -27,14 +27,13 @@ from __future__ import annotations
 import asyncio
 import decimal as _decimal
 import re as _re
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from ...core.config import Settings
-from ...core.errors import CoreNotFoundError
 from ...core.i18n import tr
 from ...core.time import now as _utc_now
 from ...domain.buckets import (
@@ -49,14 +48,10 @@ from ...domain.calculations.registry import (
     CasillaObservation,
     InputKind,
     ModeloRevision,
-    RegistryCalculationEntry,
-    RegistryCalculationResult,
     RegistrySnapshot,
     VerificationPredicateDefinition,
     calculate_registry_snapshot,
-    input_casilla_alias_map,
 )
-from ...domain.contribuyente._ccaa import CCAA
 from ...domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import (
@@ -69,7 +64,6 @@ from ...domain.modelos._calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._filing_record import (
     ExternalEvidence,
@@ -112,9 +106,7 @@ from ...domain.modelos._verification_repository import (
 )
 from ...domain.modelos._work_unit import (
     WorkUnit,
-    WorkUnitCatalogue,
     WorkUnitState,
-    derive_work_unit_id,
 )
 from ...domain.period import period_end_date
 from ...domain.transactions import TransactionCatalogueRepository
@@ -124,13 +116,14 @@ from ..aggregation._ledger_filing_snapshot import (
 )
 from ..calculations import (
     CalculationObservationRepository,
+    CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
+    CrossPeriodDependencyEvidence,
     CrossPeriodExpectedMemberSet,
     evaluate_cross_period_clean_state,
 )
 from ..live import Borrador100SnapshotRepository
 from ..workflow import (
-    WorkflowAbortReason,
     WorkflowEngine,
     WorkflowPurpose,
     WorkflowResult,
@@ -141,17 +134,107 @@ from ..workflow import (
     WorkflowInputMismatchError as WorkflowInputMismatchError,
 )
 from . import _iva_wallet_gate
+from ._action_errors import (
+    AmendmentEvidenceMissingError,
+    AmendmentOverrideCasillaError,
+    AmendmentTargetStateError,
+    AmendmentVerificationRefusedError,
+    CalculationRegistryUnavailableError,
+    CalculationRevisionNotFoundError,
+    CalculationRevisionStateError,
+    CasillaProvenanceMissingError,
+    ExternalModeloImportError,
+    ModeloAggregationBindingError,
+    ModeloApplicabilityFilterError,
+    ModeloCrossPeriodCleanStateError,
+    ModeloRecordNotFoundError,
+    ModeloWorkflowGateError,
+    StoredCalculationDriftError,
+    VerificationReportNotFoundError,
+    WorkUnitAlreadyDiscardedError,
+    WorkUnitMutationRefusedError,
+    WorkUnitNotFoundError,
+)
 from ._binding_resolution import (
     resolve_bound_casilla_inputs_for_available_bindings,
     resolve_calculation_binding_inputs,
 )
+from ._calculation_common import (
+    amendment_observations as _amendment_observations,
+)
+from ._calculation_common import (
+    build_typed_observations as _build_typed_observations,
+)
+from ._calculation_common import (
+    external_filing_observations as _external_filing_observations,
+)
+from ._calculation_common import (
+    load_work_unit_for_calculation as _load_work_unit_for_calculation,
+)
+from ._calculation_common import (
+    resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit,
+)
+from ._calculation_actions import (
+    _iva_wallet_blocked_message as _iva_wallet_blocked_message,
+)
+from ._calculation_actions import (
+    calculate_modelo_revision as calculate_modelo_revision,
+)
+from ._calculation_actions import (
+    calculate_modelo_revision_from_bucket_aggregation as calculate_modelo_revision_from_bucket_aggregation,
+)
+from ._calculation_actions import (
+    get_calculation_revision as get_calculation_revision,
+)
+from ._calculation_actions import (
+    list_calculation_revisions as list_calculation_revisions,
+)
+from ._calculation_actions import (
+    mark_revision_verificado_completo as mark_revision_verificado_completo,
+)
 from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
+from ._registry_helpers import (
+    assert_revision_content_integrity as _assert_revision_content_integrity,
+)
+from ._registry_helpers import (
+    normalize_casilla_input_aliases as _normalize_casilla_input_aliases,
+)
+from ._registry_helpers import (
+    reject_incomplete_amendment_casillas as _reject_incomplete_amendment_casillas,
+)
+from ._registry_helpers import (
+    reject_unknown_import_casillas as _reject_unknown_import_casillas,
+)
+from ._registry_helpers import (
+    reject_unknown_override_casillas as _reject_unknown_override_casillas,
+)
+from ._registry_resources import (
+    authority_via_resources as _authority_via_resources,
+)
+from ._registry_resources import (
+    registry_root as _registry_root,
+)
 from ._revision_persistence import (
     emit_bucket_event as _emit_bucket_event,
 )
 from ._revision_persistence import (
     persist_calculation_revision,
     persist_filed_revision,
+)
+from ._work_lifecycle import (
+    create_work_unit as create_work_unit,
+)
+from ._work_lifecycle import (
+    discard_work_unit as discard_work_unit,
+)
+from ._work_lifecycle import (
+    get_work_unit as get_work_unit,
+)
+from ._work_lifecycle import (
+    list_work_units as list_work_units,
+)
+from ._work_lifecycle import (
+    rename_work_unit as rename_work_unit,
 )
 from ._workflow_gate import (
     _RevisionInputsProvider as _RevisionInputsProvider,
@@ -164,7 +247,6 @@ from ._workflow_gate import (
 )
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry import ValidatedRegistryAuthority
     from ..calculations._observations_repository import IvaWalletDecisionRepository
 
 ModeloIvaWalletReconciliationBlocked = _iva_wallet_gate.ModeloIvaWalletReconciliationBlocked
@@ -175,190 +257,6 @@ _require_persisted_iva_compensation_decision_matches_revision = _require_iva_com
 _taxpayer_nif_for_bucket = _iva_wallet_gate.taxpayer_nif_for_bucket
 iva_wallet_blocked_message = _iva_wallet_gate.iva_wallet_blocked_message
 resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva_compensation_decision_for_calculation
-
-class WorkUnitNotFoundError(ModeloError, KeyError):
-    """Raised when a work-unit lookup or mutation targets a missing id."""
-
-
-class WorkUnitAlreadyDiscardedError(ModeloError):
-    """Raised when discard is invoked on a work unit already discarded."""
-
-
-class WorkUnitMutationRefusedError(ModeloError):
-    """Raised when a mutation targets a discarded work unit."""
-
-
-class CalculationRevisionNotFoundError(ModeloError, CoreNotFoundError):
-    """Raised when a calculation revision lookup fails.
-
-    Inherits from CoreNotFoundError (which itself inherits from CoreError
-    and KeyError) to participate in the shared CoreNotFoundError catch
-    surface and maintain KeyError compatibility for dict-like lookups.
-    """
-
-
-class CalculationRevisionStateError(ModeloError):
-    """Raised when a state transition is requested from an incompatible source state.
-
-    Examples: marking a non-draft revision as verified-complete;
-    filing a revision that is not verified-complete; verifying a
-    revision that has already been filed.
-    """
-
-
-class ModeloRecordNotFoundError(ModeloError, KeyError):
-    """Raised when a filing record lookup fails."""
-
-
-class VerificationReportNotFoundError(ModeloError, KeyError):
-    """Raised when a verification report lookup fails."""
-
-
-class AmendmentEvidenceMissingError(ModeloError):
-    """Raised when the modelo-amend path is asked to amend a filing record that carries no imported official evidence.
-
-    The amend path is gated on ``external_evidence`` being populated
-    on the baseline filing record. A locally-computed filing record
-    must use the standard re-file supersession path (calculate →
-    verify → file) instead of the amend verb.
-    """
-
-
-class AmendmentTargetStateError(ModeloError):
-    """Raised when the modelo-amend path is asked to amend a filing record that is not in ``CURRENT`` status.
-
-    For example, when it was already superseded by a later filing.
-    """
-
-
-class StoredCalculationDriftError(ModeloError):
-    """Raised when a persisted calculation revision has drifted from its content-addressed id.
-
-    The ``calculation_revision_id`` is a SHA-256 hash of
-    ``(work_unit_id, inputs_snapshot, binding_overrides, casilla_values)``.
-    When the stored payload re-hashes to a different value the record has been
-    mutated after creation — either by tampering or a storage corruption.  The
-    verify path refuses VERIFICADO_COMPLETO and raises this error so the
-    operator is forced to produce a fresh calculation revision.
-    """
-
-
-class ExternalModeloImportError(ModeloError):
-    """Raised when the external-filing import path cannot persist an imported baseline.
-
-    Examples: empty casilla values, missing evidence reference.
-    """
-
-
-class ModeloCrossPeriodCleanStateError(ModeloError):
-    """Raised when a filing-grade workflow lacks clean prior-filing proof."""
-
-
-#: Legal anchors for the modelo workflow gate. The gate enforces
-#: that a Modelo declaration only transitions to VERIFICADO_COMPLETO
-#: or FILED after the workflow engine ran auth + deadline-window +
-#: draft + preflight stages. The grounding spans:
-#:
-#:   - ``ley-58-2003:art-119`` (declaracion tributaria — what a tax
-#:     declaration is, the locked semantics of ModeloRecord
-#:     persistence)
-#:   - ``ley-58-2003:art-120`` (autoliquidaciones — the
-#:     self-assessment regime modelo file_modelo_revision performs,
-#:     and the rectificacion procedure that flows through
-#:     amend_modelo_revision)
-#:   - ``ley-58-2003:art-122`` (complementarias / sustitutivas — the
-#:     supersession transition that file_modelo_revision applies when
-#:     a prior CURRENT filing exists)
-_WORKFLOW_GATE_LEGAL_REFS: tuple[str, ...] = (
-    "ley-58-2003:art-119",
-    "ley-58-2003:art-120",
-    "ley-58-2003:art-122",
-)
-
-
-class ModeloWorkflowGateError(ModeloError):
-    """Raised when the workflow gate refuses an internal file transition.
-
-    The gate is grounded in the procedural articles of the Ley General
-    Tributaria (Ley 58/2003) named in
-    :data:`_WORKFLOW_GATE_LEGAL_REFS`. A refusal here means the
-    declaration cannot be considered legally filed under those
-    articles' regime.
-    """
-
-    def __init__(self, result: WorkflowResult) -> None:
-        # The live WorkflowResult is retained on a private attribute so it
-        # never reaches the CLI error boundary. `render_error_text` merges
-        # every *public* instance attribute into the operator-facing
-        # context via `vars(error)`; a public `result` attribute would
-        # leak a raw Python object repr (datetime constructors, enum
-        # reprs, nested WorkflowStep tuples) straight at a non-technical
-        # taxpayer. The context below carries only already-stringified
-        # primitives — the clean summary the operator needs.
-        self._result = result
-        reason = result.aborted_reason.value if result.aborted_reason is not None else "unknown"
-        summary = result.summary.strip() or "the workflow gate aborted this transition"
-        # NO_PENDING_OBLIGATION is the gate's most-hit dead end for a newcomer:
-        # a verified-complete revision whose AEAT filing-obligation window is not
-        # open at the current clock cannot be marked internally filed. The generic
-        # gate suggestion (`work list`) does not signpost the local finish line, so
-        # for this abort code the suggestion points at `modelo export` (a sibling of
-        # `work`, NOT a `work` subcommand) — exporting the verified-complete revision
-        # to a fichero-BOE artefact is the local finish line and does NOT require an
-        # open filing window or this `file` step.
-        suggestion: str | None = None
-        if result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION:
-            suggestion = "aeat app modelo export <work-unit-id> --output <path>"
-        super().__init__(
-            summary,
-            context={
-                "abort_code": reason,
-                "stage": result.final_stage.value,
-            },
-            suggestion=suggestion,
-        )
-
-    @property
-    def result(self) -> WorkflowResult:
-        """Return the live :class:`WorkflowResult` that triggered the abort.
-
-        Exposed as a property (not a plain instance attribute) so the
-        CLI error boundary's ``vars(error)`` context merge never picks
-        it up and renders its raw Python repr to the operator.
-        """
-        return self._result
-
-
-class AmendmentOverrideCasillaError(ModeloError):
-    """Raised when an amendment override targets a casilla id the registry does not declare for the baseline's modelo.
-
-    The corrected revision is the legal basis of the complementaria
-    filing — fabricated casilla ids cannot be silently accepted.
-    """
-
-
-class AmendmentVerificationRefusedError(ModeloError):
-    """Raised when the corrected casilla map fails verification.
-
-    Mirrors the standard ``verify_modelo_revision`` contract: every
-    required-manual-input casilla declared by the registry for the
-    baseline's modelo / filing year / period must be present in the
-    corrected map. Amend refuses rather than persisting an
-    incomplete complementaria because the corrected revision is the
-    legal basis of the filing.
-    """
-
-
-def _default_name(*, modelo: str, filing_year: int, period: str) -> str:
-    """Return the default display name for a fresh work unit.
-
-    Shape: ``<modelo>-<year>-<period>`` (e.g. ``303-2026-Q1``).
-    Callers may supply their own name; this helper exists so the
-    domain shape stays predictable when the operator does not
-    care to name the unit.
-    """
-    return f"{modelo}-{filing_year}-{period}"
-
 
 def _run_revision_workflow_gate(
     *,
@@ -387,1357 +285,10 @@ def _run_revision_workflow_gate(
     return result
 
 
-def create_work_unit(
-    *,
-    bucket_id: str,
-    modelo: str,
-    filing_year: int,
-    period: str,
-    revision_id: str,
-    name: str | None = None,
-    actor: str = "system",
-    causante_ccaa: CCAA | None = None,
-    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    clock: datetime | None = None,
-) -> WorkUnit:
-    """Create or load a work unit for the four-axis key.
-
-    Idempotent: when a work unit already exists under the
-    deterministic id, the existing record is returned unchanged.
-    A subsequent call with a different ``name`` does NOT mutate the
-    persisted name; ``rename_work_unit`` is the dedicated mutation
-    surface for that.
-
-    On a genuine creation (not an idempotent re-load) a
-    ``modelo.work_unit.created`` bucket event is emitted so the
-    work-unit history is complete from its first moment — the audit
-    trail records when and by whom the unit was provisioned. An
-    idempotent re-load emits nothing: the unit already exists and the
-    original creation event already stands.
-
-    Args:
-        bucket_id: Stable bucket the work unit belongs to.
-        modelo: AEAT modelo code (e.g. ``"303"``).
-        filing_year: Tax year for the filing.
-        period: Filing period token (e.g. ``"Q1"``).
-        revision_id: Stable id of the targeted modelo revision.
-        name: Optional display name; defaults to
-            ``<modelo>-<year>-<period>``.
-        actor: Actor label recorded on the creation bucket event.
-        causante_ccaa: Optional autonomous community of the causante
-            (deceased / estate origin) when the filing is an estate
-            declaration. Persisted on the work unit for CCAA-split logic.
-        repository: Repository override for testing; defaults to
-            the canonical ``WorkUnitCatalogueRepository``.
-        bucket_event_repository: Bucket-event repository override for
-            testing; defaults to ``BucketEventHistoryRepository``.
-        clock: ``datetime`` override for testing the created /
-            updated timestamps. Defaults to the canonical clock helper.
-
-    Returns:
-        The persisted :class:`aeat.domain.modelos.WorkUnit`.
-    """
-    _reject_unknown_revision(modelo=modelo, revision_id=revision_id)
-    _reject_unknown_period_for_revision(modelo=modelo, revision_id=revision_id, period=period)
-    repo = repository or WorkUnitCatalogueRepository()
-    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
-    catalogue = repo.load()
-    work_unit_id = derive_work_unit_id(
-        bucket_id=bucket_id,
-        modelo=modelo,
-        filing_year=filing_year,
-        period=period,
-        revision_id=revision_id,
-    )
-    existing = catalogue.get(work_unit_id)
-    if existing is not None:
-        return existing
-    now = clock or _utc_now()
-    unit = WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        modelo=ModeloCode(modelo),
-        filing_year=filing_year,
-        period=period,
-        revision_id=revision_id,
-        name=name.strip() if name else _default_name(modelo=modelo, filing_year=filing_year, period=period),
-        created_at=now,
-        updated_at=now,
-        causante_ccaa=causante_ccaa,
-    )
-    updated = upsert_work_unit(catalogue, unit)
-    repo.save(updated)
-    _emit_bucket_event(
-        repository=bv_repo,
-        bucket_id=unit.bucket_id,
-        event_type=BucketEventType.MODELO_WORK_UNIT_CREATED,
-        occurred_at=now,
-        actor=actor,
-        object_type=BucketEventObjectType.WORK_UNIT,
-        object_id=unit.work_unit_id,
-        payload={
-            "modelo": str(unit.modelo),
-            "filing_year": str(unit.filing_year),
-            "period": unit.period,
-            "revision_id": unit.revision_id,
-            "name": unit.name,
-        },
-    )
-    return unit
-
-
-def list_work_units(
-    *,
-    bucket_id: str | None = None,
-    include_discarded: bool = False,
-    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-) -> tuple[WorkUnit, ...]:
-    """Return work units, optionally filtered to one bucket.
-
-    Discarded work units are excluded by default; pass
-    ``include_discarded=True`` to see them. The result is sorted
-    by ``(bucket_id, filing_year, modelo, period)`` so consumers
-    see a stable ordering across calls without re-sorting.
-
-    Each element is a :class:`WorkUnit`.
-    """
-    repo = repository or WorkUnitCatalogueRepository()
-    catalogue = repo.load()
-    units = tuple(
-        unit
-        for unit in catalogue.values()
-        if (bucket_id is None or unit.bucket_id == bucket_id)
-        and (include_discarded or unit.state is WorkUnitState.BORRADOR)
-    )
-    return tuple(
-        sorted(
-            units,
-            key=lambda u: (
-                u.bucket_id,
-                u.filing_year,
-                str(u.modelo),
-                u.period,
-            ),
-        )
-    )
-
-
-def get_work_unit(
-    work_unit_id: str,
-    *,
-    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-) -> WorkUnit:
-    """Return one work unit by id.
-
-    Args:
-        work_unit_id: The stable content-addressed id of the work unit
-            to retrieve.
-        repository: Optional repository override; defaults to a fresh
-            :class:`WorkUnitCatalogueRepository`.
-
-    Returns:
-        The :class:`WorkUnit` record for ``work_unit_id``.
-
-    Raises:
-        WorkUnitNotFoundError: When no work unit lives under
-            ``work_unit_id``. ``KeyError`` is in the base classes
-            so callers that prefer the Python idiom can still
-            ``except KeyError``.
-    """
-    repo = repository or WorkUnitCatalogueRepository()
-    catalogue = repo.load()
-    unit = catalogue.get(work_unit_id)
-    if unit is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.work_unit_not_found",
-            context={"work_unit_id": work_unit_id},
-        )
-    return unit
-
-
-def rename_work_unit(
-    work_unit_id: str,
-    new_name: str,
-    *,
-    actor: str,
-    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    clock: datetime | None = None,
-) -> WorkUnit:
-    """Update a work unit's display name, bump ``updated_at``, and return the :class:`WorkUnit`.
-
-    The ``work_unit_id`` does not change — the identifier is
-    content-addressed by the four-axis key, not by display name.
-    A ``modelo.work_unit.renamed`` bucket event records the actor and
-    the prior / new name so the audit trail captures who initiated the
-    rename.
-    """
-    repo = repository or WorkUnitCatalogueRepository()
-    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
-    catalogue: WorkUnitCatalogue = repo.load()
-    existing = catalogue.get(work_unit_id)
-    if existing is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.work_unit_not_found",
-            context={"work_unit_id": work_unit_id},
-        )
-    if existing.state is WorkUnitState.DESCARTADO:
-        raise WorkUnitMutationRefusedError(
-            f"work unit {work_unit_id!r} is discarded; "
-            "create a fresh work unit on the same modelo / year / period to continue",
-            translated_message="application.modelo.errors.work_unit_mutation_refused",
-        )
-    now = clock or _utc_now()
-    cleaned_name = new_name.strip()
-    cleaned_actor = actor.strip()
-    renamed = existing.model_copy(update={"name": cleaned_name, "updated_at": now})
-    updated_catalogue = upsert_work_unit(catalogue, renamed)
-    repo.save(updated_catalogue)
-    _emit_bucket_event(
-        repository=bv_repo,
-        bucket_id=renamed.bucket_id,
-        event_type=BucketEventType.MODELO_WORK_UNIT_RENAMED,
-        occurred_at=now,
-        actor=cleaned_actor,
-        object_type=BucketEventObjectType.WORK_UNIT,
-        object_id=renamed.work_unit_id,
-        payload={
-            "modelo": str(renamed.modelo),
-            "filing_year": str(renamed.filing_year),
-            "period": renamed.period,
-            "previous_name": existing.name,
-            "new_name": cleaned_name,
-        },
-    )
-    return renamed
-
-
-def discard_work_unit(
-    work_unit_id: str,
-    *,
-    actor: str,
-    reason: str | None = None,
-    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    clock: datetime | None = None,
-) -> WorkUnit:
-    """Transition a work unit to ``DISCARDED`` state.
-
-    Audit metadata (``discarded_at``, ``discarded_by``, optional
-    ``discard_reason``) is captured in the same write. Once
-    discarded, the work unit cannot be renamed or re-activated;
-    the operator must create a fresh work unit on the same modelo
-    / year / period. A ``modelo.work_unit.discarded`` bucket event
-    is emitted alongside the state transition.
-
-    Args:
-        work_unit_id: The stable id of the work unit to discard.
-        actor: Operator identifier recorded in the audit trail.
-        reason: Optional human-readable discard reason.
-        repository: Optional work-unit catalogue repository override.
-        bucket_event_repository: Optional bucket-event history repository
-            override.
-        clock: Optional UTC timestamp override for the discard event.
-
-    Returns:
-        The updated :class:`WorkUnit` in ``DISCARDED`` state.
-
-    Raises:
-        WorkUnitNotFoundError: When ``work_unit_id`` is absent.
-        WorkUnitAlreadyDiscardedError: When the unit is already
-            in ``DISCARDED`` state. Idempotent retries would
-            corrupt the audit trail.
-    """
-    repo = repository or WorkUnitCatalogueRepository()
-    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
-    catalogue: WorkUnitCatalogue = repo.load()
-    existing = catalogue.get(work_unit_id)
-    if existing is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.work_unit_not_found",
-            context={"work_unit_id": work_unit_id},
-        )
-    if existing.state is WorkUnitState.DESCARTADO:
-        raise WorkUnitAlreadyDiscardedError(
-            f"work unit {work_unit_id!r} is already discarded "
-            f"(by {existing.discarded_by!r} at {existing.discarded_at!s})",
-            translated_message="application.modelo.errors.work_unit_already_discarded",
-        )
-    now = clock or _utc_now()
-    discarded = existing.model_copy(
-        update={
-            "state": WorkUnitState.DESCARTADO,
-            "discarded_at": now,
-            "discarded_by": actor.strip(),
-            "discard_reason": reason.strip() if reason else None,
-            "updated_at": now,
-        }
-    )
-    updated_catalogue = upsert_work_unit(catalogue, discarded)
-    repo.save(updated_catalogue)
-    _emit_bucket_event(
-        repository=bv_repo,
-        bucket_id=discarded.bucket_id,
-        event_type=BucketEventType.MODELO_WORK_UNIT_DISCARDED,
-        occurred_at=now,
-        actor=discarded.discarded_by or actor.strip(),
-        object_type=BucketEventObjectType.WORK_UNIT,
-        object_id=discarded.work_unit_id,
-        payload={
-            "modelo": str(discarded.modelo),
-            "filing_year": str(discarded.filing_year),
-            "period": discarded.period,
-            "reason": discarded.discard_reason or "",
-        },
-    )
-    return discarded
-
-
 # ---------------------------------------------------------------------------
 # Calculation revision lifecycle: calculate / verify / mark-verified / file
 # ---------------------------------------------------------------------------
 
-
-def _canonical_decimal_str(value: Decimal) -> str:
-    """Stable string form of a Decimal for content-addressing."""
-    if value.is_zero():
-        return "0"
-    return format(value.normalize(), "f")
-
-
-class CalculationRegistryUnavailableError(ModeloError):
-    """Raised when the registry snapshot for a work unit's (modelo, year, period) cannot be resolved at calculate time.
-
-    The calculate path runs the registry's formula engine against
-    the snapshot; if no snapshot exists for the work unit's axis
-    triple the action fails clearly rather than persisting a
-    revision with operator-supplied values that bypass formula
-    evaluation.
-    """
-
-
-class ModeloAggregationBindingError(ModeloError):
-    """Raised when bucket-derived aggregation bindings conflict with caller input."""
-
-
-class CasillaProvenanceMissingError(ModeloError):
-    """Raised when an engine-result casilla has no registry definition.
-
-    Every casilla in :attr:`RegistryCalculationResult.values` must be
-    a casilla declared on the registry snapshot's revision. A casilla
-    present in the engine result but absent from
-    ``snapshot.revision.casillas`` is a referential-integrity
-    violation: building a :class:`CasillaObservation` for it would
-    silently emit empty ``legal_refs`` / ``source_refs`` and erase the
-    legal provenance the audit surface depends on. The observation
-    build hard-fails instead of persisting a provenance-stripped row.
-    """
-
-
-class ModeloApplicabilityFilterError(ModeloError):
-    """Raised when an unknown applicability filter name is encountered.
-
-    The ``_evaluate_applicability_filter`` dispatch table is the single
-    source of truth for named profile-field applicability filters.  An
-    unrecognised filter name is always a registry-authoring error, not a
-    runtime data problem, so it hard-fails with this typed exception
-    rather than silently passing.
-    """
-
-
-def calculate_modelo_revision(
-    work_unit_id: str,
-    *,
-    actor: str = "system",
-    casilla_inputs: Mapping[str, Decimal],
-    binding_values: Mapping[str, Decimal] | None = None,
-    enum_binding_values: Mapping[str, str] | None = None,
-    backend_binding_values: Mapping[str, Decimal] | None = None,
-    backend_casilla_inputs: Mapping[str, Decimal] | None = None,
-    iva_compensation_decision: object | None = None,
-    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
-    ledger_preflight_transaction_repository: TransactionCatalogueRepository | None = None,
-    borrador_snapshot_id: str | None = None,
-    relation_values: Mapping[str, Decimal] | None = None,
-    source_transaction_ids: tuple[str, ...] = (),
-    filing_period_date: date | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
-    detail_rows: tuple[ModeloDetailRow, ...] = (),
-    clock: datetime | None = None,
-) -> CalculationRevision:
-    """Run the registry formula engine, persist a draft revision, and return a :class:`CalculationRevision`.
-
-    ``ledger_preflight_transaction_repository`` is a :class:`TransactionCatalogueRepository`
-    used for the ledger preflight check before calculation.
-
-    Pipeline:
-
-    1. Load the work unit; refuse on DISCARDED.
-    2. Resolve the registry snapshot for ``(modelo, filing_year,
-       period)``. Failure to resolve raises
-       :exc:`CalculationRegistryUnavailableError` — the calculate
-       path runs the engine, so a missing snapshot is a hard refusal.
-    3. Run :func:`calculate_registry_snapshot` over the snapshot
-       with the operator-supplied manual casilla inputs, binding
-       values, enum-binding values, and relation values. The
-       engine evaluates every declared formula in dependency order
-       and returns the full ``casilla_values`` map (inputs plus
-       formula outputs).
-    4. Build canonical-string ``inputs_snapshot`` and
-       ``binding_overrides`` from the engine inputs (so the
-       content-addressed revision id is stable across structurally
-       identical re-runs).
-    5. Persist the revision in ``DRAFT`` state; advance the work
-       unit's ``current_calculation_revision_id`` pointer; emit
-       ``modelo.calculation.created``.
-
-    The revision starts in DRAFT state; callers must run
-    ``verify_modelo_revision`` and ``file_modelo_revision``
-    explicitly to advance through the lifecycle.
-    """
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
-    work_units = wu_repo.load()
-    work_unit = _load_work_unit_for_calculation(work_units, work_unit_id=work_unit_id)
-    snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
-    # Operator-supplied casilla keys may be the registry number or BOE
-    # form number shown by `modelo casillas`; normalise both the caller
-    # inputs and the backend-merged inputs to canonical casilla ids
-    # before the engine consumes them.
-    casilla_inputs = _normalize_casilla_input_aliases(snapshot.revision, casilla_inputs)
-    if backend_casilla_inputs is not None:
-        backend_casilla_inputs = _normalize_casilla_input_aliases(snapshot.revision, backend_casilla_inputs)
-    _raise_if_ledger_preflight_blocks_calculation(
-        work_unit=work_unit,
-        revision=snapshot.revision,
-        transaction_repository=ledger_preflight_transaction_repository,
-    )
-    iva_compensation_decision = resolve_iva_compensation_decision_for_calculation(
-        work_unit,
-        snapshot=snapshot,
-        supplied_decision=iva_compensation_decision,
-        repository=iva_compensation_decision_repository,
-        binding_values=binding_values,
-        backend_binding_values=backend_binding_values,
-        casilla_inputs=casilla_inputs,
-        backend_casilla_inputs=backend_casilla_inputs,
-    )
-
-    period_date = filing_period_date or period_end_date(
-        filing_year=work_unit.filing_year,
-        registry_period=work_unit.period,
-    )
-    caller_binding_values = dict(binding_values or {})
-    caller_enum_binding_values = dict(enum_binding_values or {})
-    lower_precedence_binding_values = dict(backend_binding_values or {})
-    _apply_iva_compensation_decision_binding(
-        work_unit.modelo,
-        work_unit.filing_year,
-        work_unit.period,
-        bucket_id=work_unit.bucket_id,
-        revision=snapshot.revision,
-        taxpayer_nif=_taxpayer_nif_for_bucket(work_unit.bucket_id),
-        casilla_inputs=casilla_inputs,
-        backend_casilla_inputs=backend_casilla_inputs,
-        caller_binding_values=caller_binding_values,
-        backend_binding_values=lower_precedence_binding_values,
-        decision=iva_compensation_decision,
-    )
-    binding_resolution = resolve_calculation_binding_inputs(
-        bucket_id=work_unit.bucket_id,
-        snapshot=snapshot,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-        casilla_inputs=casilla_inputs,
-        caller_binding_values=caller_binding_values,
-        caller_enum_binding_values=caller_enum_binding_values,
-        backend_binding_values=lower_precedence_binding_values,
-        backend_casilla_inputs=backend_casilla_inputs,
-        borrador_snapshot_id=borrador_snapshot_id,
-        borrador_snapshot_repository=borrador_snapshot_repository,
-        relation_values=relation_values,
-    )
-    borrador_result = binding_resolution.borrador_result
-    resolved_bindings = dict(binding_resolution.resolved_bindings)
-    resolved_enum_bindings = dict(binding_resolution.resolved_enum_bindings)
-    resolved_date_bindings = dict(binding_resolution.resolved_date_bindings)
-    resolved_relations = dict(binding_resolution.resolved_relations)
-    resolved_inputs = dict(binding_resolution.resolved_inputs)
-
-    engine_result = calculate_registry_snapshot(
-        snapshot,
-        inputs=resolved_inputs,
-        date_context={"filing_period": period_date},
-        binding_values=resolved_bindings,
-        enum_binding_values=resolved_enum_bindings,
-        relation_values=resolved_relations,
-        date_binding_values=resolved_date_bindings or None,
-    )
-
-    inputs_snapshot: dict[str, str] = dict(
-        sorted((k.strip(), _canonical_decimal_str(v)) for k, v in resolved_inputs.items())
-    )
-    binding_overrides: dict[str, str] = dict(
-        sorted(
-            [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_bindings.items()]
-            + [(k.strip(), v.strip()) for k, v in resolved_enum_bindings.items()]
-            # Persist the date-binding and raw-relation inputs alongside the
-            # Decimal/enum binding overrides so a verify / file replay can
-            # reconstruct the identical draft from the revision alone, without
-            # re-resolving the live profile (which would break immutable-snapshot
-            # determinism). The draft-builder routes them back onto the engine's
-            # date_binding_values / relation_values channels by registry id-set.
-            + [(k.strip(), v.isoformat()) for k, v in resolved_date_bindings.items()]
-            + [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_relations.items()]
-        )
-    )
-    casilla_values = dict(engine_result.values)
-    typed_observations = _build_typed_observations(engine_result=engine_result, snapshot=snapshot)
-
-    now = clock or _utc_now()
-    return persist_calculation_revision(
-        work_unit_id=work_unit_id,
-        work_unit=work_unit,
-        work_units=work_units,
-        inputs_snapshot=inputs_snapshot,
-        binding_overrides=binding_overrides,
-        casilla_values=casilla_values,
-        source_transaction_ids=source_transaction_ids,
-        borrador_snapshot_id=borrador_result.borrador_snapshot_id,
-        bindings_sourced_from_borrador=borrador_result.bindings_sourced_from_borrador,
-        observations=typed_observations,
-        detail_rows=detail_rows,
-        formula_count=len(engine_result.entries),
-        actor=actor,
-        now=now,
-        calculation_repository=cr_repo,
-        work_unit_repository=wu_repo,
-        bucket_event_repository=bv_repo,
-    )
-
-
-# ANY-RETURN-RATIONALE-ACTIONS-IVA-WALLET-DECISION:
-# Wrapper preserves the legacy _actions.py private surface and drift token
-# while the extracted IVA wallet gate owns message rendering.
-def _iva_wallet_blocked_message(decision: Any) -> str:
-    return iva_wallet_blocked_message(decision)
-
-
-def _iva_regime_for_bucket(bucket_id: str) -> str | None:
-    """Return the profile's ``iva.regime`` value, or ``None`` if unset or profile absent."""
-    from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile._profile_repository import ProfileRepository
-    from ..user_profile._projections import record_to_path_values
-
-    try:
-        profile = ProfileRepository().load(bucket_id)
-        record = profile.record
-    except ProfileNotFoundError:
-        return None
-    value = record_to_path_values(record).get("iva.regime")
-    if value is None or not str(value).strip():
-        return None
-    return str(value).strip()
-
-
-_LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
-    {
-        "ledger_iva_aggregation",
-        "ledger_renta_expense_aggregation",
-    }
-)
-# IVA regimes that do not use ledger aggregation for IVA repercutido; these
-# clients supply régimen-simplificado casillas (47-58) directly as manual
-# inputs rather than deriving them from the transaction ledger.
-_IVA_LEDGER_EXEMPT_REGIMES = frozenset({IVARegime.SIMPLIFICADO})
-_ANNUAL_REGISTRY_PERIODS = frozenset(("0A",))
-
-
-def _raise_if_ledger_preflight_blocks_calculation(
-    *,
-    work_unit: WorkUnit,
-    revision: ModeloRevision,
-    transaction_repository: TransactionCatalogueRepository | None = None,
-) -> None:
-    if not any(binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES for binding in revision.bindings):
-        return
-    # Régimen simplificado clients supply casillas 47-58 as manual inputs;
-    # they have no transaction ledger to satisfy the IVA aggregation preflight.
-    iva_regime = _iva_regime_for_bucket(work_unit.bucket_id)
-    if iva_regime in _IVA_LEDGER_EXEMPT_REGIMES:
-        return
-    from ..ledger import preflight_ledger_tax_readiness
-
-    report = preflight_ledger_tax_readiness(
-        bucket_id=work_unit.bucket_id,
-        period=_ledger_preflight_period_for_work_unit(work_unit),
-        transaction_repository=transaction_repository,
-    )
-    if report.ready:
-        return
-    first_issue = report.issues[0]
-    raise ModeloAggregationBindingError(
-        tr(
-            "application.modelo.errors.ledger_preflight_blocked",
-            transaction_id=first_issue.transaction_id,
-            reason=first_issue.reason.value,
-            detail=first_issue.detail,
-            period=report.period.raw,
-        ),
-        translated_message="application.modelo.errors.ledger_preflight_blocked",
-        context={
-            "transaction_id": first_issue.transaction_id,
-            "reason": first_issue.reason.value,
-            "period": report.period.raw,
-        },
-        suggestion=f"aeat app ledger preflight --period {report.period.raw}",
-    )
-
-
-def _ledger_preflight_period_for_work_unit(work_unit: WorkUnit) -> str:
-    token = work_unit.period.strip().upper()
-    if token in {"1T", "2T", "3T", "4T"}:
-        return f"{work_unit.filing_year}Q{token[0]}"
-    if token in {"Q1", "Q2", "Q3", "Q4"}:
-        return f"{work_unit.filing_year}{token}"
-    if token in _ANNUAL_REGISTRY_PERIODS:
-        return str(work_unit.filing_year)
-    if len(token) == 2 and token.isdigit():
-        return f"{work_unit.filing_year}-{token}"
-    return token
-
-
-def calculate_modelo_revision_from_bucket_aggregation(
-    work_unit_id: str,
-    *,
-    actor: str = "system",
-    casilla_inputs: Mapping[str, Decimal] | None = None,
-    binding_values: Mapping[str, Decimal] | None = None,
-    enum_binding_values: Mapping[str, str] | None = None,
-    iva_compensation_decision: object | None = None,
-    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
-    borrador_snapshot_id: str | None = None,
-    relation_values: Mapping[str, Decimal] | None = None,
-    filing_period_date: date | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    transaction_repository: TransactionCatalogueRepository | None = None,
-    invoice_repository: InvoiceCatalogueRepository | None = None,
-    borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
-    detail_rows: tuple[ModeloDetailRow, ...] = (),
-    clock: datetime | None = None,
-) -> CalculationRevision:
-    """Calculate a modelo revision using bucket-local ledger aggregation.
-
-    ``transaction_repository`` is a :class:`TransactionCatalogueRepository` used to
-    load the bucket-local ledger transactions for aggregation.
-    ``invoice_repository`` is an :class:`InvoiceCatalogueRepository` used to load
-    invoice data for the aggregation resolvers that require it.
-
-    Returns a :class:`CalculationRevision`.
-    """
-    from ...domain.calculations.registry import RegistrySnapshotError
-    from ..aggregation import (
-        CalculationSourceContext,
-        LedgerIvaAggregationSourceResolver,
-        LedgerRentaExpenseAggregationSourceResolver,
-        merge_source_resolutions,
-    )
-
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    work_units = wu_repo.load()
-    work_unit = work_units.get(work_unit_id)
-    if work_unit is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.work_unit_not_found",
-            context={"work_unit_id": work_unit_id},
-        )
-    if work_unit.state is WorkUnitState.DESCARTADO:
-        raise WorkUnitMutationRefusedError(
-            translated_message="application.modelo.errors.work_unit_discarded_cannot_calculate",
-            context={"work_unit_id": work_unit_id},
-        )
-
-    try:
-        authority = _authority_via_resources()
-        snapshot = authority.snapshot(
-            work_unit.modelo,
-            filing_year=work_unit.filing_year,
-            period=work_unit.period,
-        )
-    except FileNotFoundError as exc:
-        raise CalculationRegistryUnavailableError(
-            tr(
-                "application.modelo.errors.calculation_registry_root_missing",
-                registry_root=_registry_root(),
-            ),
-            translated_message="application.modelo.errors.calculation_registry_root_missing",
-            context={"registry_root": _registry_root()},
-        ) from exc
-    except RegistrySnapshotError as exc:
-        raise CalculationRegistryUnavailableError(
-            tr(
-                "application.modelo.errors.calculation_registry_snapshot_unresolved",
-                modelo=work_unit.modelo,
-                filing_year=work_unit.filing_year,
-                period=work_unit.period,
-            ),
-            translated_message="application.modelo.errors.calculation_registry_snapshot_unresolved",
-            context={"modelo": work_unit.modelo, "filing_year": work_unit.filing_year, "period": work_unit.period},
-        ) from exc
-
-    # Normalise operator-supplied casilla aliases (registry number / BOE
-    # form number) to canonical ids before the source-collision and
-    # bucket-merge checks compare them against registry casilla ids.
-    if casilla_inputs is not None:
-        casilla_inputs = _normalize_casilla_input_aliases(snapshot.revision, casilla_inputs)
-
-    source_resolution = merge_source_resolutions(
-        (
-            LedgerIvaAggregationSourceResolver(transaction_repository=transaction_repository).resolve(
-                CalculationSourceContext(
-                    bucket_id=work_unit.bucket_id,
-                    modelo=work_unit.modelo,
-                    filing_year=work_unit.filing_year,
-                    period=work_unit.period,
-                    revision=snapshot.revision,
-                )
-            ),
-            LedgerRentaExpenseAggregationSourceResolver(
-                transaction_repository=transaction_repository,
-                invoice_repository=invoice_repository,
-            ).resolve(
-                CalculationSourceContext(
-                    bucket_id=work_unit.bucket_id,
-                    modelo=work_unit.modelo,
-                    filing_year=work_unit.filing_year,
-                    period=work_unit.period,
-                    revision=snapshot.revision,
-                )
-            ),
-        )
-    )
-    _reject_caller_overrides_of_source_bindings(
-        revision=snapshot.revision,
-        owned_sources=frozenset(source_resolution.owned_sources),
-        caller_binding_values=binding_values or {},
-        caller_casilla_inputs=casilla_inputs or {},
-    )
-    backend_inputs = _merge_bucket_bound_inputs(
-        revision=snapshot.revision,
-        casilla_inputs=casilla_inputs or {},
-        bound_inputs=resolve_bound_casilla_inputs_for_available_bindings(
-            snapshot.revision,
-            source_resolution.binding_values,
-        ),
-    )
-    return calculate_modelo_revision(
-        work_unit_id,
-        actor=actor,
-        casilla_inputs=casilla_inputs or {},
-        binding_values=binding_values or {},
-        backend_binding_values=source_resolution.binding_values,
-        backend_casilla_inputs=backend_inputs,
-        iva_compensation_decision=iva_compensation_decision,
-        iva_compensation_decision_repository=iva_compensation_decision_repository,
-        ledger_preflight_transaction_repository=transaction_repository,
-        enum_binding_values=enum_binding_values,
-        borrador_snapshot_id=borrador_snapshot_id,
-        relation_values=relation_values,
-        source_transaction_ids=tuple(source_resolution.source_transaction_ids),
-        filing_period_date=filing_period_date,
-        work_unit_repository=wu_repo,
-        calculation_repository=calculation_repository,
-        bucket_event_repository=bucket_event_repository,
-        borrador_snapshot_repository=borrador_snapshot_repository,
-        detail_rows=detail_rows,
-        clock=clock,
-    )
-
-
-def _merge_bucket_bound_inputs(
-    *,
-    revision: ModeloRevision,
-    casilla_inputs: Mapping[str, Decimal],
-    bound_inputs: Mapping[str, Decimal],
-) -> dict[str, Decimal]:
-    casillas = {casilla.id: casilla for casilla in revision.casillas}
-    computed = sorted(
-        casilla_id
-        for casilla_id in bound_inputs
-        if casilla_id in casillas and casillas[casilla_id].input_kind == InputKind.COMPUTED
-    )
-    if computed:
-        raise ModeloAggregationBindingError(
-            translated_message="application.modelo.errors.computed_casilla_binding_conflict",
-            context={"computed": computed},
-        )
-    return dict(sorted({**bound_inputs, **casilla_inputs}.items()))
-
-
-def _source_owned_binding_ids(revision: ModeloRevision, owned_sources: frozenset[str]) -> frozenset[str]:
-    return frozenset(binding.id for binding in revision.bindings if binding.source in owned_sources)
-
-
-def _source_owned_bound_casilla_ids(revision: ModeloRevision, owned_sources: frozenset[str]) -> frozenset[str]:
-    source_owned_binding_ids = _source_owned_binding_ids(revision, owned_sources)
-    return frozenset(
-        casilla.id
-        for casilla in revision.casillas
-        if casilla.input_kind == InputKind.BOUND and casilla.binding in source_owned_binding_ids
-    )
-
-
-def _reject_caller_overrides_of_source_bindings(
-    *,
-    revision: ModeloRevision,
-    owned_sources: frozenset[str],
-    caller_binding_values: Mapping[str, Decimal],
-    caller_casilla_inputs: Mapping[str, Decimal],
-) -> None:
-    """Refuse caller-supplied bindings or casilla inputs that collide with values bucket source resolvers own.
-
-    Bucket-aggregation calculation derives source-owned binding values
-    (and the casillas bound to them) from bucket substrate. Letting a
-    caller override those silently would break calculation grounding:
-    the persisted revision would no longer reflect the sources it claims
-    to aggregate. Both collisions are rejected before any value reaches
-    the engine.
-    """
-    rejected_bindings = sorted(
-        set(caller_binding_values).intersection(_source_owned_binding_ids(revision, owned_sources))
-    )
-    if rejected_bindings:
-        # For the IVA compensation binding the operator should use the seed verb, not
-        # a manual override, to set the prior carry-forward balance.
-        seed_suggestion = (
-            "aeat app modelo iva-wallet seed"
-            if any("compensacion-pendiente-anteriores" in b for b in rejected_bindings)
-            else None
-        )
-        raise ModeloAggregationBindingError(
-            translated_message="errors.error.error_modelo_aggregation_binding",
-            suggestion=seed_suggestion,
-        )
-    rejected_casillas = sorted(
-        set(caller_casilla_inputs).intersection(_source_owned_bound_casilla_ids(revision, owned_sources))
-    )
-    if rejected_casillas:
-        raise ModeloAggregationBindingError(
-            tr(
-                "application.modelo.errors.caller_casilla_source_binding_conflict",
-                casillas=rejected_casillas,
-            ),
-            translated_message="application.modelo.errors.caller_casilla_source_binding_conflict",
-            context={"casillas": rejected_casillas},
-        )
-
-
-def list_calculation_revisions(
-    *,
-    work_unit_id: str | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-) -> tuple[CalculationRevision, ...]:
-    """List calculation revisions, optionally filtered to one work unit.
-
-    Results are sorted by ``(work_unit_id, created_at)`` so the
-    chronological revision chain for one work unit is contiguous
-    and stable across calls.
-
-    Each element is a :class:`CalculationRevision`.
-    """
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    catalogue = cr_repo.load()
-    revisions = tuple(
-        revision for revision in catalogue.values() if work_unit_id is None or revision.work_unit_id == work_unit_id
-    )
-    return tuple(sorted(revisions, key=lambda r: (r.work_unit_id, r.created_at)))
-
-
-def get_calculation_revision(
-    calculation_revision_id: str,
-    *,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-) -> CalculationRevision:
-    """Return one calculation revision by id, or raise.
-
-    Returns the :class:`CalculationRevision` matching
-    ``calculation_revision_id``.
-    """
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    catalogue = cr_repo.load()
-    revision = catalogue.get(calculation_revision_id)
-    if revision is None:
-        raise CalculationRevisionNotFoundError(
-            translated_message="application.modelo.errors.calculation_revision_not_found",
-            context={"calculation_revision_id": calculation_revision_id},
-        )
-    return revision
-
-
-def mark_revision_verificado_completo(
-    calculation_revision_id: str,
-    *,
-    actor: str,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    clock: datetime | None = None,
-) -> CalculationRevision:
-    """Transition a draft revision to ``VERIFICADO_COMPLETO``.
-
-    The revision must currently be in ``DRAFT`` state. After the
-    transition the revision is immutable; subsequent calculation
-    work on the same work unit must produce a new revision.
-
-    Args:
-        calculation_revision_id: The id of the draft revision to promote.
-        actor: Operator identifier stamped as ``verified_by``.
-        calculation_repository: Optional calculation-revision catalogue
-            repository override.
-        clock: Optional UTC timestamp override for ``verified_at``.
-
-    Returns:
-        The updated :class:`CalculationRevision` in ``VERIFICADO_COMPLETO`` state.
-
-    Raises:
-        CalculationRevisionNotFoundError: When the revision id is
-            absent.
-        CalculationRevisionStateError: When the revision is not
-            currently in ``DRAFT`` state.
-    """
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    catalogue = cr_repo.load()
-    existing = catalogue.get(calculation_revision_id)
-    if existing is None:
-        raise CalculationRevisionNotFoundError(
-            translated_message="application.modelo.errors.calculation_revision_not_found",
-            context={"calculation_revision_id": calculation_revision_id},
-        )
-    if existing.state is not CalculationRevisionState.BORRADOR:
-        raise CalculationRevisionStateError(
-            f"calculation revision {calculation_revision_id!r} is in state "
-            f"{existing.state.value!r}; only DRAFT revisions can be marked verified-complete"
-        )
-    now = clock or _utc_now()
-    verified = existing.model_copy(
-        update={
-            "state": CalculationRevisionState.VERIFICADO_COMPLETO,
-            "verified_at": now,
-            "verified_by": actor.strip(),
-            "updated_at": now,
-        }
-    )
-    cr_repo.save(upsert_calculation_revision(catalogue, verified))
-    return verified
-
-
-def _registry_root() -> Path:
-    """Resolve the registry root from the packaged data tree.
-
-    Calling :func:`aeat.core.resources.bundled_path` makes the
-    resolution independent of the caller's working directory and
-    keeps the editable-install and built-wheel surfaces in sync.
-    """
-    from ...core.resources import bundled_path
-
-    return bundled_path("registry", "aeat")
-
-
-def _authority_via_resources() -> ValidatedRegistryAuthority:
-    """Return the registry authority via the central resource registry."""
-    from ...core.resources import resources
-
-    return resources().modelos.authority
-
-
-def _reject_unknown_revision(*, modelo: str, revision_id: str) -> None:
-    """Refuse a work-unit create that names a revision the registry does not declare.
-
-    The work-unit id is content-addressed over ``(bucket, modelo, year,
-    period, revision_id)``, so a typo or stale revision id quietly
-    creates an unreachable unit (subsequent ``work calculate`` raises
-    the opaque registry-snapshot miss). Catch the typo at the boundary
-    with a clear listing of the valid revision ids for the modelo.
-    """
-    from ...domain.calculations.registry import RegistrySnapshotError
-
-    try:
-        modelo_def = _authority_via_resources().modelo(modelo)
-    except RegistrySnapshotError as exc:
-        # Bubble unknown-modelo as a domain error consistent with the
-        # broader create_work_unit error envelope.
-        raise ModeloError(str(exc)) from exc
-    if revision_id in modelo_def.revisions:
-        return
-    available = ", ".join(sorted(modelo_def.revisions))
-    raise ModeloError(
-        f"revision_id {revision_id!r} is not declared on modelo {modelo!r}. Available revisions: {available}"
-    )
-
-
-def _reject_unknown_period_for_revision(*, modelo: str, revision_id: str, period: str) -> None:
-    """Refuse a work-unit create that names a period the revision does not declare.
-
-    M202 accepts ``--period 1T`` at create but fails calculate with
-    no-revision-for-period when the period is not in the revision's catalogue;
-    period validation must fire at create time using the revision's declared
-    period catalogue.
-
-    The revision's ``filing_schedules`` carry the declared periods per
-    period-kind (monthly / quarterly / annual / ad_hoc). The union of
-    every schedule's ``periods`` tuple is the valid period set for that
-    revision. An unknown period is refused with the sorted-valid list.
-
-    Caller is expected to have already validated the modelo + revision_id
-    via :func:`_reject_unknown_revision`; this helper re-loads the modelo
-    definition lazily and is safe to call independently.
-    """
-    from ...domain.calculations.registry import RegistrySnapshotError
-
-    try:
-        modelo_def = _authority_via_resources().modelo(modelo)
-    except RegistrySnapshotError as exc:
-        raise ModeloError(str(exc)) from exc
-    revision = modelo_def.revisions.get(revision_id)
-    if revision is None:
-        return
-    declared: set[str] = set()
-    for schedule in revision.filing_schedules:
-        declared.update(schedule.periods)
-    if not declared:
-        # Revisions without filing_schedules (rare; informational-only)
-        # cannot validate; accept anything to preserve current behaviour.
-        return
-    if period in declared:
-        return
-    available = ", ".join(sorted(declared))
-    raise ModeloError(
-        f"period {period!r} is not declared on modelo {modelo!r} "
-        f"revision {revision_id!r}. Available periods: {available}"
-    )
-
-
-def _reject_incomplete_amendment_casillas(
-    *,
-    modelo: str,
-    filing_year: int,
-    period: str,
-    casilla_values: Mapping[str, Decimal],
-) -> None:
-    """Mirror the verify-modelo-revision required-manual gate on amend.
-
-    Refuses to file a complementaria whose corrected casilla map is
-    missing one or more registry-declared required-manual casillas.
-    The check is identity-equivalent to the verify path's
-    ``MISSING_REQUIRED_CASILLA`` finding: the corrected revision is
-    the legal basis of the complementaria filing and must satisfy
-    the same required-input contract that a fresh calculate → verify
-    → file path satisfies.
-    """
-    required_optional = _required_input_casillas_for_revision(modelo=modelo, filing_year=filing_year, period=period)
-    if required_optional is None:
-        raise AmendmentVerificationRefusedError(
-            f"registry has no snapshot for modelo={modelo!r} filing_year={filing_year} "
-            f"period={period!r}; cannot verify amendment completeness",
-            translated_message="application.modelo.errors.amendment_verification_refused_no_snapshot",
-        )
-    required, _ = required_optional
-    missing = sorted(casilla_id for casilla_id in required if casilla_id not in casilla_values)
-    if missing:
-        raise AmendmentVerificationRefusedError(
-            f"amendment is incomplete: required casilla id(s) {missing!r} are not present "
-            f"in the corrected map for modelo={modelo!r} filing_year={filing_year} period={period!r}",
-            translated_message="application.modelo.errors.amendment_verification_refused_missing_casillas",
-        )
-
-
-def _normalize_casilla_input_aliases(
-    revision: ModeloRevision,
-    casilla_inputs: Mapping[str, Decimal],
-) -> dict[str, Decimal]:
-    """Resolve operator-supplied ``--casilla`` keys to canonical casilla ids.
-
-    The ``casillas`` discovery command surfaces a ``number`` column —
-    the registry number and BOE form number Spanish taxpayers read off
-    the paper form. Those numbers are legitimate operator-facing
-    identifiers, so a ``--casilla`` key supplied as an unambiguous
-    ``number`` or ``form_number`` is normalised here to the canonical
-    casilla ``id`` the calculation engine consumes. A key already equal
-    to a canonical ``id`` is unchanged; an unresolvable key passes
-    through verbatim so the engine still raises its unknown-casilla
-    refusal. A canonical ``id`` always wins over an alias collision.
-    """
-    if not casilla_inputs:
-        return dict(casilla_inputs)
-    alias_map = input_casilla_alias_map(revision)
-    return {alias_map.get(key, key): value for key, value in casilla_inputs.items()}
-
-
-def _reject_unknown_override_casillas(
-    *,
-    modelo: str,
-    filing_year: int,
-    period: str,
-    overrides: Mapping[str, Decimal],
-) -> None:
-    """Refuse override casilla ids the registry does not declare for the modelo / year / period."""
-    if not overrides:
-        return
-
-    from ...domain.calculations.registry import (
-        RegistrySnapshotError,
-    )
-
-    try:
-        authority = _authority_via_resources()
-    except FileNotFoundError as exc:
-        raise AmendmentOverrideCasillaError(
-            tr(
-                "application.modelo.errors.amendment_registry_root_missing",
-                registry_root=_registry_root(),
-            ),
-            translated_message="application.modelo.errors.amendment_registry_root_missing",
-            context={"registry_root": _registry_root()},
-        ) from exc
-
-    try:
-        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
-    except RegistrySnapshotError as exc:
-        raise AmendmentOverrideCasillaError(
-            tr(
-                "application.modelo.errors.amendment_registry_snapshot_unresolved",
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-            ),
-            translated_message="application.modelo.errors.amendment_registry_snapshot_unresolved",
-            context={"modelo": modelo, "filing_year": filing_year, "period": period},
-        ) from exc
-
-    known = {str(casilla.id) for casilla in snapshot.revision.casillas}
-    unknown = sorted(casilla_id for casilla_id in overrides if casilla_id not in known)
-    if unknown:
-        raise AmendmentOverrideCasillaError(
-            tr(
-                "application.modelo.errors.amendment_unknown_casillas",
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-                casillas=unknown,
-            ),
-            translated_message="application.modelo.errors.amendment_unknown_casillas",
-            context={"modelo": modelo, "filing_year": filing_year, "period": period, "casillas": unknown},
-        )
-
-
-def _reject_unknown_import_casillas(
-    *,
-    modelo: str,
-    filing_year: int,
-    period: str,
-    casilla_values: Mapping[str, Decimal],
-) -> RegistrySnapshot:
-    """Refuse imported casilla ids the registry does not declare and return the resolved snapshot."""
-    from ...domain.calculations.registry import (
-        RegistrySnapshotError,
-    )
-
-    try:
-        authority = _authority_via_resources()
-    except FileNotFoundError as exc:
-        raise ExternalModeloImportError(
-            tr(
-                "application.modelo.errors.external_import_registry_root_missing",
-                registry_root=_registry_root(),
-            ),
-            translated_message="application.modelo.errors.external_import_registry_root_missing",
-            context={"registry_root": _registry_root()},
-        ) from exc
-
-    try:
-        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
-    except RegistrySnapshotError as exc:
-        raise ExternalModeloImportError(
-            tr(
-                "application.modelo.errors.external_import_registry_snapshot_unresolved",
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-            ),
-            translated_message="application.modelo.errors.external_import_registry_snapshot_unresolved",
-            context={"modelo": modelo, "filing_year": filing_year, "period": period},
-        ) from exc
-
-    known = {str(casilla.id) for casilla in snapshot.revision.casillas}
-    unknown = sorted(casilla_id for casilla_id in casilla_values if casilla_id not in known)
-    if unknown:
-        raise ExternalModeloImportError(
-            tr(
-                "application.modelo.errors.external_import_unknown_casillas",
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-                casillas=unknown,
-            ),
-            translated_message="application.modelo.errors.external_import_unknown_casillas",
-            context={"modelo": modelo, "filing_year": filing_year, "period": period, "casillas": unknown},
-        )
-    return snapshot
-
-
-def _external_filing_observations(
-    *,
-    casilla_values: Mapping[str, Decimal],
-    snapshot: RegistrySnapshot,
-) -> tuple[CasillaObservation, ...]:
-    """Build registry-grounded observations for externally imported casilla values."""
-    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
-    return tuple(
-        _casilla_observation_for(
-            casilla_id=casilla_id,
-            value=value,
-            entry=None,
-            registry_casilla=casillas_by_id.get(casilla_id),
-        )
-        for casilla_id, value in casilla_values.items()
-    )
-
-
-def _required_input_casillas_for_revision(
-    *,
-    modelo: str,
-    filing_year: int,
-    period: str,
-) -> tuple[tuple[str, ...], tuple[str, ...]] | None:
-    """Resolve the registry's required and informational input casillas.
-
-    Returns a tuple of (required_casilla_ids, optional_input_casilla_ids)
-    drawn from the registry snapshot for the modelo / year / period.
-    Returns ``None`` when no registry snapshot can be resolved (e.g.
-    the modelo is not in the registry); the verifier treats this as
-    a blocking finding so the operator gets a clear refusal rather
-    than a silently-passed verification.
-
-    ``required`` casillas with ``input_kind="manual"`` are the
-    minimum the operator must supply. Casillas with
-    ``input_kind="bound"`` or ``"computed"`` are resolved by the
-    backend (bindings + formula engine); the current verify
-    implementation treats them as informational because the
-    bindings layer is responsible for them.
-    """
-    from ...domain.calculations.registry import (
-        RegistrySnapshotError,
-    )
-
-    try:
-        authority = _authority_via_resources()
-    except FileNotFoundError:
-        return None
-
-    try:
-        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
-    except RegistrySnapshotError:
-        return None
-
-    required: list[str] = []
-    optional: list[str] = []
-    for casilla in snapshot.revision.casillas:
-        casilla_id = str(casilla.id)
-        if casilla.input_kind == InputKind.MANUAL and casilla.required:
-            required.append(casilla_id)
-        elif casilla.input_kind in (InputKind.MANUAL, InputKind.BOUND, InputKind.COMPUTED):
-            optional.append(casilla_id)
-    return tuple(required), tuple(optional)
-
-
-def _verification_predicates_for_revision(
-    *,
-    modelo: str,
-    filing_year: int,
-    period: str,
-) -> tuple[VerificationPredicateDefinition, ...]:
-    """Return Layer 2 predicates for the registry revision, or empty tuple.
-
-    Resolves the same snapshot as
-    ``_required_input_casillas_for_revision``; when the registry is
-    unavailable the verification pipeline already blocked on Layer 1, so
-    returning an empty tuple here is safe — the caller never reaches
-    predicate evaluation in that case.
-    """
-    from ...domain.calculations.registry import RegistrySnapshotError
-
-    try:
-        authority = _authority_via_resources()
-    except FileNotFoundError:
-        return ()
-
-    try:
-        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
-    except RegistrySnapshotError:
-        return ()
-
-    return snapshot.revision.verification_predicates
-
-
-def _assert_revision_content_integrity(revision: CalculationRevision) -> None:
-    """Check revision integrity; raise :exc:`StoredCalculationDriftError` on content-address or observation drift.
-
-    Two checks run:
-
-    1. Content-hash check: the ``calculation_revision_id`` is a SHA-256
-       hash of ``(work_unit_id, inputs_snapshot, binding_overrides,
-       casilla_values)``.  Re-deriving the hash and comparing it to the
-       stored id detects tampering or corruption of the primary payload.
-
-    2. Observation provenance cross-check: for each typed
-       ``CasillaObservation`` in ``revision.observations``, the
-       ``observation.value`` must match ``revision.casilla_values``
-       for the same casilla.  A mismatch means the typed provenance
-       envelope (which carries ``formula_id``, ``legal_refs``,
-       ``source_refs``) and the flat casilla-values mapping are no
-       longer consistent — either observations or casilla_values was
-       mutated after creation.
-
-    Older revisions where ``observations == ()`` skip check 2 so the
-    legacy-payload path remains loadable.
-    """
-    expected = derive_calculation_revision_id(
-        work_unit_id=revision.work_unit_id,
-        inputs_snapshot=revision.inputs_snapshot,
-        binding_overrides=revision.binding_overrides,
-        casilla_values=revision.casilla_values,
-        source_transaction_ids=revision.source_transaction_ids,
-        borrador_snapshot_id=revision.borrador_snapshot_id,
-        bindings_sourced_from_borrador=revision.bindings_sourced_from_borrador,
-    )
-    if expected != revision.calculation_revision_id:
-        raise StoredCalculationDriftError(
-            f"calculation revision {revision.calculation_revision_id!r} content-address mismatch: "
-            f"stored id does not match re-derived hash of its payload; "
-            f"the record may have been tampered with or corrupted"
-        )
-
-    # Observation provenance cross-check (S210).
-    for obs in revision.observations:
-        stored = revision.casilla_values.get(obs.casilla_id)
-        if stored is None:
-            raise StoredCalculationDriftError(
-                f"calculation revision {revision.calculation_revision_id!r} provenance drift: "
-                f"observation for casilla {obs.casilla_id!r} is present but casilla_values "
-                f"has no entry for it; the provenance envelope may have been tampered with"
-            )
-        if obs.value != stored:
-            raise StoredCalculationDriftError(
-                f"calculation revision {revision.calculation_revision_id!r} provenance drift: "
-                f"observation value for casilla {obs.casilla_id!r} is {obs.value!r} "
-                f"but casilla_values holds {stored!r}; "
-                f"the record may have been tampered with or corrupted"
-            )
 
 
 _PREDICATE_ALL_NONZERO = _re.compile(r"^all_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
@@ -2129,8 +680,8 @@ def _cross_period_clean_state_findings(
         if _iva_wallet_decision_covers_cross_period_dependency(verdict, evidence, iva_compensation_decision):
             continue
         requirement = evidence.requirement
-        blocker_text = ", ".join(blocker.value for blocker in evidence.blockers)
-        origin_text = ", ".join(requirement.origin_ids)
+        blocker_text = _summarize_cross_period_ids(tuple(blocker.value for blocker in evidence.blockers))
+        origin_text = _summarize_cross_period_ids(requirement.origin_ids)
         findings.append(
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
@@ -2141,13 +692,97 @@ def _cross_period_clean_state_findings(
                     f"period={requirement.period} origin={requirement.origin.value} "
                     f"origin_ids={origin_text} blockers={blocker_text}"
                 ),
-                next_action=(
-                    "Import or capture the upstream justificante/CSV/live evidence, "
-                    "reconcile it with the local calculation, and rerun verification."
-                ),
+                next_action=_cross_period_clean_state_next_action(verdict, evidence),
             )
         )
     return tuple(findings)
+
+
+def _summarize_cross_period_ids(
+    values: Iterable[str],
+    *,
+    limit: int = 2,
+    max_chars: int = 120,
+) -> str:
+    items = tuple(dict.fromkeys(values))
+    text = (
+        ", ".join(items)
+        if len(items) <= limit
+        else ", ".join((*items[:limit], f"+{len(items) - limit} more"))
+    )
+    if len(text) <= max_chars:
+        return text
+    return f"{text[: max_chars - 4]}..."
+
+
+def _cross_period_clean_state_next_action(
+    verdict: CrossPeriodCleanStateVerdict,
+    evidence: CrossPeriodDependencyEvidence,
+) -> str:
+    requirement = evidence.requirement
+    blockers = set(evidence.blockers)
+    target_capture = (
+        "aeat app live filed capture-sources "
+        f"--modelo {verdict.target_modelo} "
+        f"--year {verdict.target_filing_year} "
+        f"--period {verdict.target_period}"
+    )
+    source_hint = (
+        f"source modelo={requirement.source_modelo} "
+        f"year={requirement.filing_year} "
+        f"period={requirement.period}"
+    )
+    if CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER in blockers:
+        return (
+            "Configure the expected grupo member roster for "
+            f"{source_hint}, then run `{target_capture}` and rerun verification."
+        )
+    if CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE in blockers:
+        missing = ", ".join(evidence.missing_member_nifs)
+        member_detail = f" Missing members: {missing}." if missing else ""
+        return f"Capture every expected grupo member filing for {source_hint}.{member_detail} Run `{target_capture}`."
+    if CrossPeriodCleanStateBlocker.UNEXPECTED_GROUP_MEMBER_SOURCE in blockers:
+        unexpected = ", ".join(evidence.unexpected_member_nifs)
+        return (
+            f"Review the grupo roster for {source_hint}; unexpected captured members: "
+            f"{unexpected}. Then rerun verification."
+        )
+    if CrossPeriodCleanStateBlocker.OBSERVATION_REVISION_VALUE_DIVERGENCE in blockers:
+        return (
+            "Reconcile the captured filed observation against the local calculation with "
+            "`aeat app registry verify-filed-state --observation PATH`, then refresh the upstream filing evidence."
+        )
+    if CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE in blockers:
+        return f"Use AEAT evidence for upstream values in {source_hint}. Run `{target_capture}`."
+    if blockers & {
+        CrossPeriodCleanStateBlocker.MISSING_OBSERVATION,
+        CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA,
+        CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD,
+        CrossPeriodCleanStateBlocker.DUPLICATE_CURRENT_FILING_RECORD,
+        CrossPeriodCleanStateBlocker.SUPERSEDED_DEPENDENCY,
+        CrossPeriodCleanStateBlocker.MISSING_AEAT_ACCEPTANCE,
+        CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE,
+        CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION,
+        CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE,
+    }:
+        return (
+            f"Capture or import AEAT justificante evidence for {source_hint}. "
+            f"Run `{target_capture}` or `aeat app modelo reconcile-from-justificante PATH WORK_UNIT_ID`, "
+            "then rerun verification."
+        )
+    if blockers & {
+        CrossPeriodCleanStateBlocker.MISSING_CALCULATION_REVISION,
+        CrossPeriodCleanStateBlocker.UNFILED_CALCULATION_REVISION,
+        CrossPeriodCleanStateBlocker.MISSING_COMPLETE_VERIFICATION_REPORT,
+    }:
+        return (
+            f"Recalculate and verify the upstream work unit for {source_hint}, then attach AEAT evidence "
+            "and rerun the target verification."
+        )
+    return (
+        "Import or capture the upstream justificante/CSV/live evidence, reconcile it with the local calculation, "
+        "and rerun verification."
+    )
 
 
 def _require_cross_period_clean_state(
@@ -2694,188 +1329,6 @@ def _classify_verification_outcome(
         return VerificationCompletenessStatus.INCOMPLETE, False
     return VerificationCompletenessStatus.BLOCKED, False
 
-
-def _load_work_unit_for_calculation(work_units: WorkUnitCatalogue, *, work_unit_id: str) -> WorkUnit:
-    """Load a work unit by id, rejecting missing ids and DISCARDED state.
-
-    Returns the work unit. Raises :class:`WorkUnitNotFoundError`
-    when the id is absent and :class:`WorkUnitMutationRefusedError`
-    when the work unit is in DISCARDED state — a discarded work
-    unit cannot accept a new calculation revision.
-    """
-    work_unit = work_units.get(work_unit_id)
-    if work_unit is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.work_unit_not_found",
-            context={"work_unit_id": work_unit_id},
-        )
-    if work_unit.state is WorkUnitState.DESCARTADO:
-        raise WorkUnitMutationRefusedError(
-            translated_message="application.modelo.errors.work_unit_discarded_cannot_calculate",
-            context={"work_unit_id": work_unit_id},
-        )
-    return work_unit
-
-
-def _resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnapshot:
-    """Resolve the registry snapshot for ``(modelo, filing_year, period)``.
-
-    Both failure modes (registry root missing on disk, or the
-    authority refusing the (modelo, year, period) triple) re-raise
-    as :class:`CalculationRegistryUnavailableError` so the caller
-    sees one typed envelope regardless of which boundary refused.
-    """
-    from ...domain.calculations.registry import RegistrySnapshotError
-
-    try:
-        authority = _authority_via_resources()
-    except FileNotFoundError as exc:
-        raise CalculationRegistryUnavailableError(
-            tr(
-                "application.modelo.errors.calculation_registry_root_missing",
-                registry_root=_registry_root(),
-            ),
-            translated_message="application.modelo.errors.calculation_registry_root_missing",
-            context={"registry_root": _registry_root()},
-        ) from exc
-    try:
-        return authority.snapshot(
-            work_unit.modelo,
-            filing_year=work_unit.filing_year,
-            period=work_unit.period,
-        )
-    except RegistrySnapshotError as exc:
-        raise CalculationRegistryUnavailableError(
-            tr(
-                "application.modelo.errors.calculation_registry_snapshot_unresolved",
-                modelo=work_unit.modelo,
-                filing_year=work_unit.filing_year,
-                period=work_unit.period,
-            ),
-            translated_message="application.modelo.errors.calculation_registry_snapshot_unresolved",
-            context={"modelo": work_unit.modelo, "filing_year": work_unit.filing_year, "period": work_unit.period},
-        ) from exc
-
-
-def _build_typed_observations(
-    *, engine_result: RegistryCalculationResult, snapshot: RegistrySnapshot
-) -> tuple[CasillaObservation, ...]:
-    """Build a typed CasillaObservation tuple for every casilla in the engine result.
-
-    Computed casillas carry their full formula provenance from the
-    engine entry; non-computed (input + bound) casillas pull their
-    legal_refs / source_refs from the registry casilla definition.
-    Building observations purely from ``engine_result.entries``
-    would drop grounding for every input and bound casilla — the
-    audit surface depends on the full chain.
-
-    Every casilla in ``engine_result.values`` must be declared on the
-    snapshot revision. A casilla absent from
-    ``snapshot.revision.casillas`` raises
-    :exc:`CasillaProvenanceMissingError` rather than yielding an
-    observation with empty legal provenance.
-    """
-    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
-    entries_by_target = {entry.target: entry for entry in engine_result.entries}
-    return tuple(
-        _casilla_observation_for(
-            casilla_id=casilla_id,
-            value=value,
-            entry=entries_by_target.get(casilla_id),
-            registry_casilla=casillas_by_id.get(casilla_id),
-        )
-        for casilla_id, value in engine_result.values.items()
-    )
-
-
-def _casilla_observation_for(
-    *,
-    casilla_id: str,
-    value: Decimal,
-    entry: RegistryCalculationEntry | None,
-    registry_casilla: CasillaDefinition | None,
-) -> CasillaObservation:
-    """Project one casilla into a :class:`CasillaObservation` with full provenance."""
-    if entry is not None:
-        return CasillaObservation(
-            casilla_id=casilla_id,
-            value=value,
-            formula_id=entry.formula_id,
-            operand_refs=entry.operand_refs,
-            operand_values=entry.operand_values,
-            legal_refs=entry.legal_refs,
-            source_refs=entry.source_refs,
-        )
-    if registry_casilla is None:
-        raise CasillaProvenanceMissingError(
-            f"casilla {casilla_id!r} is present in the engine result but absent "
-            f"from the registry snapshot revision; it has no legal_refs / "
-            f"source_refs definition and cannot be projected to a "
-            f"CasillaObservation without erasing legal provenance"
-        )
-    return CasillaObservation(
-        casilla_id=casilla_id,
-        value=value,
-        formula_id=None,
-        operand_refs=(),
-        operand_values=(),
-        legal_refs=registry_casilla.legal_refs,
-        source_refs=registry_casilla.source_refs,
-    )
-
-
-def _amendment_observations(
-    *,
-    corrected_values: Mapping[str, Decimal],
-    overrides: Mapping[str, Decimal],
-    baseline_revision: CalculationRevision,
-    snapshot: RegistrySnapshot,
-) -> tuple[CasillaObservation, ...]:
-    """Build typed observations for an amendment revision.
-
-    An amendment is an operator-corrected value set, not an engine
-    recomputation: a casilla the operator did not override keeps the
-    baseline revision's observation verbatim (value and full formula
-    provenance); an overridden casilla gets a fresh observation
-    carrying the corrected value and the registry casilla's
-    ``legal_refs`` / ``source_refs`` (an operator override means the
-    casilla is no longer a formula output, so formula provenance is
-    dropped). Building the amendment without observations would discard
-    all regulatory grounding from the persisted revision and the CLI
-    emit — the audit surface depends on the full chain.
-
-    Every casilla in ``corrected_values`` must be declared on the
-    snapshot revision, mirroring :func:`_build_typed_observations`.
-    """
-    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
-    baseline_by_id = {obs.casilla_id: obs for obs in baseline_revision.observations}
-    observations: list[CasillaObservation] = []
-    for casilla_id, value in corrected_values.items():
-        if casilla_id not in overrides:
-            carried = baseline_by_id.get(casilla_id)
-            if carried is not None:
-                observations.append(carried)
-                continue
-        registry_casilla = casillas_by_id.get(casilla_id)
-        if registry_casilla is None:
-            raise CasillaProvenanceMissingError(
-                f"casilla {casilla_id!r} is present in the amendment's corrected "
-                f"values but absent from the registry snapshot revision; it has "
-                f"no legal_refs / source_refs definition and cannot be projected "
-                f"to a CasillaObservation without erasing legal provenance"
-            )
-        observations.append(
-            CasillaObservation(
-                casilla_id=casilla_id,
-                value=value,
-                formula_id=None,
-                operand_refs=(),
-                operand_values=(),
-                legal_refs=registry_casilla.legal_refs,
-                source_refs=registry_casilla.source_refs,
-            )
-        )
-    return tuple(observations)
 
 
 def file_modelo_revision(
@@ -3635,11 +2088,13 @@ __all__ = [
     "CasillaProvenanceMissingError",
     "ExternalModeloImportError",
     "ModeloAggregationBindingError",
+    "ModeloApplicabilityFilterError",
     "ModeloCrossPeriodCleanStateError",
     "ModeloIvaWalletReconciliationBlocked",
     "ModeloIvaWalletReconciliationBlockedError",
     "ModeloRecordNotFoundError",
     "ModeloWorkflowGateError",
+    "StoredCalculationDriftError",
     "VerificationReportNotFoundError",
     "WorkUnitAlreadyDiscardedError",
     "WorkUnitMutationRefusedError",
