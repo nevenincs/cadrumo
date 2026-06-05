@@ -2028,6 +2028,10 @@ cli:
       connectivity_target_help: Connectivity target to probe
       help: Diagnose and repair local configuration, registry, profile, auth, and
         logs
+      integrity:
+        objects_help: 'Check secure-object integrity.'
+        registry_help: 'Check profile registry integrity.'
+        objects_namespace_help: 'Restrict secure-object integrity checks to one namespace.'
       integrity_attribution_details_help: Include per-row safe metadata details
       integrity_attribution_help: Group undecryptable secure-object rows by safe metadata.
       integrity_help: Probe secure-object and registry integrity.

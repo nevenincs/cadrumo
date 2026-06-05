@@ -2172,6 +2172,10 @@ cli:
       connectivity_target_help: Objetivo de conectividad que se debe comprobar
       help: Diagnosticar y reparar configuración local, registro, perfil, autenticación
         y logs
+      integrity:
+        objects_help: 'Comprueba la integridad de los objetos seguros.'
+        registry_help: 'Comprueba la integridad del registro de perfiles.'
+        objects_namespace_help: 'Limita las comprobaciones de integridad de objetos seguros a un espacio de nombres.'
       integrity_attribution_details_help: Incluir detalles de metadatos seguros por
         fila
       integrity_attribution_help: Agrupa las filas de objetos seguros no descifrables

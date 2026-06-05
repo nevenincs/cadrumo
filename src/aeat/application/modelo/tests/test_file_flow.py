@@ -42,11 +42,17 @@ from ....domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
-from ....domain.calculations.registry import InputKind
+from ....domain.calculations.registry import (
+    CasillaObservation,
+    InputKind,
+    RegistryModeloObservation,
+    previous_filing_observation_requirements,
+    relation_source_requirements,
+)
 from ....domain.deadlines import DeadlineEngine, IVARegime, TaxpayerProfile
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
-from ....domain.modelos._filing_record import ModeloRecordStatus
+from ....domain.modelos._filing_record import ExternalEvidenceKind, ModeloRecordStatus
 from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.modelos._verification_report import (
@@ -63,6 +69,7 @@ from ....domain.submission import SubmissionEngine
 from ....domain.transactions import TransactionCatalogue
 from ....tests.secure_sql import isolated_runtime_profile
 from ...auth import AuthProviderDescription, AuthProviderKind
+from ...calculations import CalculationObservationRepository
 from ...filing import (
     approve_draft,
     build_draft,
@@ -90,6 +97,7 @@ from .. import (
     get_filing_record,
     get_verification_report,
     get_work_unit,
+    import_external_filing_evidence,
     list_calculation_revisions,
     list_filing_records,
     list_verification_reports,
@@ -206,6 +214,110 @@ def _workflow_profile() -> TaxpayerProfile:
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
     )
+
+
+def _cross_period_source_groups(work_unit: WorkUnit) -> dict[tuple[str, int, str], set[str]]:
+    snapshot = resources().modelos.authority.snapshot(
+        work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    )
+    groups: dict[tuple[str, int, str], set[str]] = {}
+    for requirement in previous_filing_observation_requirements(
+        snapshot.revision,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    ):
+        groups.setdefault(
+            (requirement.modelo, requirement.filing_year, requirement.period),
+            set(),
+        ).update(requirement.source_casillas)
+    for requirement in relation_source_requirements(
+        snapshot.revision,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    ):
+        for period in requirement.periods:
+            groups.setdefault(
+                (requirement.source_modelo, requirement.filing_year, period),
+                set(),
+            ).add(requirement.source_output)
+    return groups
+
+
+def _source_casilla_values(source_casillas: set[str]) -> dict[str, Decimal]:
+    return {casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(sorted(source_casillas))}
+
+
+def _seed_clean_cross_period_sources(
+    work_unit: WorkUnit,
+    *,
+    work_unit_repository: WorkUnitCatalogueRepository,
+    calculation_repository: CalculationRevisionCatalogueRepository,
+    filing_repository: ModeloRecordCatalogueRepository,
+    bucket_event_repository: BucketEventHistoryRepository,
+) -> None:
+    groups = _cross_period_source_groups(work_unit)
+    if not groups:
+        return
+    observation_repository = CalculationObservationRepository()
+    filing_catalogue = filing_repository.load()
+    for (source_modelo, filing_year, period), source_casillas in sorted(groups.items()):
+        values = _source_casilla_values(source_casillas)
+        current = filing_catalogue.current_for(
+            bucket_id=work_unit.bucket_id,
+            modelo=source_modelo,
+            filing_year=filing_year,
+            period=period,
+        )
+        if current is None:
+            source_snapshot = resources().modelos.authority.snapshot(
+                source_modelo,
+                filing_year=filing_year,
+                period=period,
+            )
+            source_work_unit = create_work_unit(
+                bucket_id=work_unit.bucket_id,
+                modelo=source_modelo,
+                filing_year=filing_year,
+                period=period,
+                revision_id=source_snapshot.revision.id,
+                repository=work_unit_repository,
+                clock=_T0,
+            )
+            import_external_filing_evidence(
+                work_unit_id=source_work_unit.work_unit_id,
+                casilla_values=values,
+                evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+                evidence_reference_id=f"JUST-{source_modelo}-{filing_year}-{period}",
+                actor="aeat-import-test",
+                work_unit_repository=work_unit_repository,
+                calculation_repository=calculation_repository,
+                filing_repository=filing_repository,
+                bucket_event_repository=bucket_event_repository,
+                clock=_T0,
+            )
+            filing_catalogue = filing_repository.load()
+        observation_repository.save_observation(
+            RegistryModeloObservation(
+                modelo=source_modelo,
+                filing_year=filing_year,
+                period=period,
+                observations=tuple(
+                    CasillaObservation(casilla_id=casilla_id, value=value)
+                    for casilla_id, value in values.items()
+                ),
+            ),
+            source_kind="aeat_sede_justificante",
+            captured_at=_T0,
+        )
+
+
+def _target_filing_records(
+    records: tuple,
+    work_unit: WorkUnit,
+) -> tuple:
+    return tuple(record for record in records if record.work_unit_id == work_unit.work_unit_id)
 
 
 def _canonical_work_unit_period(work_unit: WorkUnit) -> str:
@@ -363,6 +475,13 @@ def _file_revision(
     clock: datetime,
     auth_provider: _AuthProvider | None = None,
 ):
+    _seed_clean_cross_period_sources(
+        work_unit,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        filing_repository=filing_repository,
+        bucket_event_repository=bucket_event_repository,
+    )
     gate = _workflow_gate(
         revision=revision,
         work_unit=work_unit,
@@ -393,9 +512,17 @@ def _verify_revision(
     calculation_repository: CalculationRevisionCatalogueRepository,
     verification_repository: VerificationReportCatalogueRepository,
     bucket_event_repository: BucketEventHistoryRepository,
+    filing_repository: ModeloRecordCatalogueRepository | None = None,
     clock: datetime,
     auth_provider: _AuthProvider | None = None,
 ):
+    _seed_clean_cross_period_sources(
+        work_unit,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        filing_repository=filing_repository or ModeloRecordCatalogueRepository(),
+        bucket_event_repository=bucket_event_repository,
+    )
     gate = _workflow_gate(
         revision=revision,
         work_unit=work_unit,
@@ -736,7 +863,7 @@ def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_
         calculation_repository=cr_repo,
     )
     assert refreshed_revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
-    assert list_filing_records(filing_repository=fr_repo) == ()
+    assert _target_filing_records(list_filing_records(filing_repository=fr_repo), work_unit) == ()
     filed_events = bv_repo.load().for_bucket(
         work_unit.bucket_id,
         event_types=(BucketEventType.MODELO_FILED,),
@@ -1150,14 +1277,15 @@ def test_list_filing_records_excludes_superseded_by_default(repos) -> None:
     default_listing = list_filing_records(
         filing_repository=fr_repo,
     )
-    assert len(default_listing) == 1
-    assert default_listing[0].status is ModeloRecordStatus.VIGENTE
+    target_default_listing = _target_filing_records(default_listing, work_unit)
+    assert len(target_default_listing) == 1
+    assert target_default_listing[0].status is ModeloRecordStatus.VIGENTE
 
     with_history = list_filing_records(
         include_superseded=True,
         filing_repository=fr_repo,
     )
-    assert len(with_history) == 2
+    assert len(_target_filing_records(with_history, work_unit)) == 2
 
 
 def test_calculate_refused_on_discarded_work_unit(repos) -> None:
@@ -1313,7 +1441,7 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
     revision stays DRAFT; the refused report is still persisted so
     the audit trail records the refusal."""
 
-    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     required = _registry_required_manual_casillas()
     assert len(required) >= 2
 
@@ -1330,6 +1458,13 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
         clock=_T1,
+    )
+    _seed_clean_cross_period_sources(
+        work_unit,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
     )
 
     report = verify_modelo_revision(
@@ -1632,7 +1767,7 @@ def test_verify_emits_refused_event_on_missing_casilla(repos) -> None:
     when a required casilla is missing; the calculation revision
     stays DRAFT and the refusal lands in the bucket event log."""
 
-    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     required = _registry_required_manual_casillas()
     omitted = required[0]
     supplied = {cid: Decimal("1") for cid in required[1:]}
@@ -1648,6 +1783,13 @@ def test_verify_emits_refused_event_on_missing_casilla(repos) -> None:
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
         clock=_T1,
+    )
+    _seed_clean_cross_period_sources(
+        work_unit,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
     )
     report = verify_modelo_revision(
         revision.calculation_revision_id,

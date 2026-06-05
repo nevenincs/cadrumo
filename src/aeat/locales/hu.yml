@@ -2103,6 +2103,10 @@ cli:
       connectivity_target_help: A vizsgálandó kapcsolódási cél.
       help: Helyi konfiguráció, nyilvántartás, profil, hitelesítés és naplók diagnosztikája
         és javítása.
+      integrity:
+        objects_help: 'Ellenorzi a biztonsagos objektumok integritasat.'
+        registry_help: 'Ellenorzi a profilnyilvantartas integritasat.'
+        objects_namespace_help: 'Biztonsagos objektumok integritasanak ellenorzese egy nevterre korlatozva.'
       integrity_attribution_details_help: Soronkénti biztonságos metaadat-részletek
         bevonása.
       integrity_attribution_help: Visszafejthető biztonságos objektumsorok csoportosítása

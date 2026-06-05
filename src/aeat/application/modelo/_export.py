@@ -35,6 +35,12 @@ from ...domain.buckets import (
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
+from ...domain.modelos import (
+    ModeloRecordCatalogueRepository,
+    ModeloRecordCatalogueRepositoryProtocol,
+    VerificationReportCatalogueRepository,
+    VerificationReportCatalogueRepositoryProtocol,
+)
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._calculation_revision import (
     CalculationRevision,
@@ -52,7 +58,7 @@ from ...domain.period import (
     period_end_date,
     period_start_date,
 )
-from ..calculations import IvaWalletDecisionRepository
+from ..calculations import CalculationObservationRepository, IvaWalletDecisionRepository
 from ..filing import (
     approve_draft,
     build_draft,
@@ -65,6 +71,7 @@ from ._actions import (
     CalculationRevisionStateError,
     WorkUnitNotFoundError,
     _emit_bucket_event,
+    _require_cross_period_clean_state,
     _require_persisted_iva_compensation_decision_matches_revision,
 )
 
@@ -242,6 +249,7 @@ def _raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> N
     if revision.ledger_filing_snapshot is not None:
         return
     raise ModeloExportEvidenceMissingError(
+        "ledger-derived export requires ledger_filing_evidence or ledger_filing_snapshot",
         translated_message="application.modelo.errors.export_ledger_evidence_missing",
         context={"calculation_revision_id": revision.calculation_revision_id},
     )
@@ -421,8 +429,11 @@ def export_modelo_revision(
     workflow_profile: TaxpayerProfile,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
+    calculation_observation_repository: CalculationObservationRepository | None = None,
     clock: datetime | None = None,
 ) -> ModeloExportResult:
     """Export a verified-complete or filed calculation revision to disk.
@@ -452,6 +463,9 @@ def export_modelo_revision(
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
+    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
+    vr_repo = verification_repository or VerificationReportCatalogueRepository()
+    obs_repo = calculation_observation_repository or CalculationObservationRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
 
     revision = _load_revision_for_export(command.calculation_revision_id, repo=cr_repo)
@@ -471,6 +485,14 @@ def export_modelo_revision(
         work_unit,
         revision,
         repository=iva_compensation_decision_repository,
+    )
+    _require_cross_period_clean_state(
+        work_unit,
+        observation_repository=obs_repo,
+        filing_repository=fr_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        iva_compensation_decision=iva_wallet_decision,
     )
     iva_wallet_provenance = _iva_wallet_decision_export_provenance(iva_wallet_decision)
 
