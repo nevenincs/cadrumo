@@ -31,19 +31,19 @@ The version command prints a single line, such as `aeat 0.1.0`.
 
 Spanish tax reporting uses a few recurring terms:
 
-- **Autónomo**: A self-employed worker, sole proprietor, or freelancer registered
+- **Autonomo**: A self-employed worker, sole proprietor, or freelancer registered
   in Spain.
-- **AEAT**: The *Agencia Estatal de Administración Tributaria*, Spain's state tax
+- **AEAT**: The *Agencia Estatal de Administracion Tributaria*, Spain's state tax
   agency.
 - **Modelo**: An official tax form, identified by a number. Modelo 130 is the
   quarterly payment-on-account for personal income tax.
 - **Casilla**: A numbered box or field on the official form.
 - **Tax identifier**: The identifier `aeat` stores for the taxpayer. Spanish
   citizens usually use their Documento Nacional de Identidad (DNI), foreign
-  individuals use their Número de Identidad de Extranjero (NIE), and companies
-  or other legal entities use their Número de Identificación Fiscal (NIF) or
-  Código de Identificación Fiscal (CIF).
-- **Fichero-BOE**: A text file that follows the official Boletín Oficial del
+  individuals use their Numero de Identidad de Extranjero (NIE), and companies
+  or other legal entities use their Numero de Identificacion Fiscal (NIF) or
+  Codigo de Identificacion Fiscal (CIF).
+- **Fichero-BOE**: A text file that follows the official Boletin Oficial del
   Estado (BOE) layout and can be uploaded to the AEAT portal.
 - **Filing target**: The modelo, year, and period you are preparing.
 - **Draft calculation**: The saved set of figures `aeat` calculates for that

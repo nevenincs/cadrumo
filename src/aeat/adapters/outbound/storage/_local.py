@@ -246,7 +246,7 @@ class LocalFileSystemProvider:
         )
 
     def get(self, namespace: str, object_key_hmac: str) -> tuple[bytes, ProviderObjectMetadata]:
-        """Read the object payload from disk and verify its integrity, returning the payload and :class:`ProviderObjectMetadata`.
+        """Read the object payload from disk and return verified metadata.
 
         Locates the ``.bin`` file by HMAC prefix, loads the sibling
         ``.meta.json`` sidecar, reads the raw bytes, and compares the
@@ -397,7 +397,7 @@ class LocalFileSystemProvider:
                 yield entry.name
 
     def iter_objects(self, namespace: str) -> Iterator[ProviderObjectMetadata]:
-        """Yield ``ProviderObjectMetadata`` for every object in ``namespace``, returning an :class:`Iterator` of :class:`ProviderObjectMetadata`.
+        """Yield metadata for every object in ``namespace``.
 
         Only ``.bin`` files with a companion ``.meta.json`` sidecar are
         yielded; files without a sidecar are silently skipped (the coordinator
