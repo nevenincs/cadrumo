@@ -170,9 +170,9 @@ Close remaining oversized CLI roots through explicit residual extraction tranche
 - [x] `W02.P05.S45` - extract the selected google config closure command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/_google.py src/aeat/entrypoints/cli/_config/*.py`.
 - [x] `W02.P05.S46` - verify google config closure behavior and ratchet google size budget; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
 - [x] `W02.P05.S47` - select the next residual ledger root command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/tests`.
-- [ ] `W02.P05.S48` - extract the selected residual ledger root command group into a focused registrar module; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_*.py`.
-- [ ] `W02.P05.S49` - verify residual ledger root behavior and ratchet ledger size budget; `src/aeat/entrypoints/cli/tests/test_ledger* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
-- [ ] `W02.P05.S50` - select the next residual config root command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/tests`.
+- [x] `W02.P05.S48` - extract the selected residual ledger root command group into a focused registrar module; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_*.py`.
+- [x] `W02.P05.S49` - verify residual ledger root behavior and ratchet ledger size budget; `src/aeat/entrypoints/cli/tests/test_ledger* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P05.S50` - select the next residual config root command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/tests`.
 - [ ] `W02.P05.S51` - extract the selected residual config root command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
 - [ ] `W02.P05.S52` - verify residual config root behavior and ratchet config size budget; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
 
