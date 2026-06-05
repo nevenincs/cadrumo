@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import Any
 
 from ....core.logging import get_logger
-from ....core.paths import PROJECT_ROOT
 from ....core.resources import bundled_path
 from ....core.time import now
 from ....domain.calculations.registry import (
@@ -28,7 +27,7 @@ from ....domain.calculations.registry import (
 )
 from ..pdf import ExtractedCasilla
 from ..pdf._label_regex import SPANISH_AMOUNT_GROUP, TEXT_VALUE_GROUP, parse_spanish_decimal
-from ..pdf._utils import sha256_file
+from ..pdf._utils import sha256_file, source_pdf_reference_path
 from ._detect import detect_template_revision, detect_template_revision_from_pages
 from ._errors import DeclaracionParseError, TemplateNotDetectedError
 from ._parsers import extract_pages_text, extract_pages_text_from_bytes
@@ -106,10 +105,12 @@ def parse_declaracion(
     """
     path = Path(pdf_path)
     pages = extract_pages_text(path)
+    source_pdf_sha256 = sha256_file(path)
     return _parse_declaracion_pages(
         pages=pages,
         source_path=path.resolve(),
-        source_pdf_sha256=sha256_file(path),
+        source_pdf_path=source_pdf_reference_path(source_pdf_sha256),
+        source_pdf_sha256=source_pdf_sha256,
         modelo_override=modelo_override,
         template_revision_override=template_revision_override,
         año_override=año_override,
@@ -161,9 +162,11 @@ def parse_declaracion_bytes(
     """
     pages = extract_pages_text_from_bytes(pdf_bytes, source_label=source_label)
     digest = sha256(pdf_bytes).hexdigest()
+    source_pdf_path = source_pdf_reference_path(digest)
     return _parse_declaracion_pages(
         pages=pages,
-        source_path=(PROJECT_ROOT / ".secure-source" / f"{digest}.pdf").resolve(),
+        source_path=source_pdf_path,
+        source_pdf_path=source_pdf_path,
         source_pdf_sha256=digest,
         modelo_override=modelo_override,
         template_revision_override=template_revision_override,
@@ -180,6 +183,7 @@ def _parse_declaracion_pages(
     *,
     pages: tuple[str, ...],
     source_path: Path,
+    source_pdf_path: Path,
     source_pdf_sha256: str,
     modelo_override: str | None,
     template_revision_override: str | None,
@@ -234,7 +238,7 @@ def _parse_declaracion_pages(
         registry_snapshot_ref=snapshot_ref,
         values=values,
         warnings=(),
-        source_pdf_path=source_path,
+        source_pdf_path=source_pdf_path,
         source_pdf_sha256=source_pdf_sha256,
         parsed_at=now(),
     )

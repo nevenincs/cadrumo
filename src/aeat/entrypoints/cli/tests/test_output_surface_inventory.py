@@ -16,11 +16,11 @@ import pytest
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_SRC_ROOT = Path(__file__).resolve().parents[2]
-_PACKAGE_ROOT = _SRC_ROOT.parent
+_SRC_ROOT = Path(__file__).resolve().parents[3]
 
 _CLI_ROOT = _SRC_ROOT / "entrypoints" / "cli"
 _DIAGNOSTICS_ROOT = _SRC_ROOT / "diagnostics"
+_APPLICATION_OUTPUT_ROOTS = (_SRC_ROOT / "application" / "wizard",)
 
 _EXCLUDED_MODULES: set[Path] = set()
 
@@ -30,6 +30,7 @@ _ALLOWED_DIRECT_OUTPUTS = {
     ("entrypoints/cli/_common.py", "typer.echo"),
     ("entrypoints/cli/_errors.py", "write"),
     ("entrypoints/cli/_exit_codes.py", "typer.echo"),
+    ("application/wizard/_commands.py", "typer.echo"),
 }
 
 
@@ -51,7 +52,7 @@ class OutputCall:
 
 def _production_modules() -> tuple[Path, ...]:
     modules: list[Path] = []
-    for root in (_CLI_ROOT, _DIAGNOSTICS_ROOT):
+    for root in (_CLI_ROOT, _DIAGNOSTICS_ROOT, *_APPLICATION_OUTPUT_ROOTS):
         for path in root.rglob("*.py"):
             relative = path.relative_to(_SRC_ROOT)
             if relative in _EXCLUDED_MODULES:
@@ -67,7 +68,7 @@ def _call_kind(node: ast.Call) -> str | None:
     if isinstance(func, ast.Name) and func.id == "print":
         return "print"
     if isinstance(func, ast.Attribute):
-        if isinstance(func.value, ast.Name) and func.value.id == "typer" and func.attr == "echo":
+        if isinstance(func.value, ast.Name) and func.value.id in {"typer", "_typer"} and func.attr == "echo":
             return "typer.echo"
         if func.attr == "print":
             return "print"

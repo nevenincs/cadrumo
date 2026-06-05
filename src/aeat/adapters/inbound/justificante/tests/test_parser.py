@@ -32,8 +32,9 @@ from .....tests.aeat_literal_fixtures import (
     aeat_host,
     aeat_url,
 )
+from ...pdf._utils import source_pdf_reference_path
 from .. import parse_justificante
-from .._parsers import extract_text
+from .._parsers import _TEXT_CACHE, extract_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -75,7 +76,8 @@ class TestParseJustificante:
         assert record.total_a_ingresar == Decimal("1234.56")
         assert record.total_a_devolver is None
         assert urlparse(str(record.verification_url)).hostname == _SEDE_HOST
-        assert record.source_pdf_path == modelo_130_pdf.resolve()
+        assert record.source_pdf_path == source_pdf_reference_path(record.source_pdf_sha256)
+        assert modelo_130_pdf.name not in str(record.source_pdf_path)
 
     def test_modelo_303_devolver(self, modelo_303_pdf: Path) -> None:
         record = parse_justificante(modelo_303_pdf)
@@ -107,6 +109,8 @@ class TestParseJustificante:
             expected = hashlib.sha256(pdf.read_bytes()).hexdigest()
             record = parse_justificante(pdf)
             assert record.source_pdf_sha256 == expected
+            assert record.source_pdf_path == source_pdf_reference_path(expected)
+            assert pdf.name not in str(record.source_pdf_path)
             assert len(record.source_pdf_sha256) == 64
 
     def test_parser_is_deterministic(self, modelo_130_pdf: Path) -> None:
@@ -208,6 +212,8 @@ class TestRealCorpusParses:
         # source_pdf_sha256 always populated.
         assert record.source_pdf_sha256
         assert len(record.source_pdf_sha256) == 64
+        assert record.source_pdf_path == source_pdf_reference_path(record.source_pdf_sha256)
+        assert fixture.name not in str(record.source_pdf_path)
         # verification_url must point at the AEAT cotejo surface.
         assert urlparse(str(record.verification_url)).hostname == _SEDE_HOST
 
@@ -314,6 +320,16 @@ class TestParserDispatch:
         assert exc_info.value.context == {"path": "<input-pdf>"}
         assert exc_info.value.translated_message == "adapters.inbound.justificante.errors.parse_failed"
         assert exc_info.value.missing == ("source_pdf",)
+
+    def test_extract_text_cache_key_omits_source_path(self, modelo_130_pdf: Path) -> None:
+        _TEXT_CACHE.clear()
+
+        text = extract_text(modelo_130_pdf, JustificanteParserBackend.PDFPLUMBER)
+
+        rendered_keys = repr(tuple(_TEXT_CACHE.keys()))
+        assert text
+        assert modelo_130_pdf.name not in rendered_keys
+        assert str(modelo_130_pdf.resolve()) not in rendered_keys
 
 
 class TestJustificanteParseErrorStructuredAttributes:

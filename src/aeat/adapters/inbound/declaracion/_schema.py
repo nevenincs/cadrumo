@@ -85,7 +85,8 @@ class DeclaracionObservation(BaseModel):
         values: Tuple of observed :class:`ExtractedCasilla` records.
         warnings: Tuple of advisories — unresolved casillas, ambiguous
             labels, bbox fallbacks, etc.
-        source_pdf_path: Absolute path of the source PDF.
+        source_pdf_path: Privacy-preserving source reference derived from
+            the source PDF digest.
         source_pdf_sha256: Lowercase hex SHA-256 of the source PDF bytes.
         parsed_at: UTC timestamp at parse completion.
     """

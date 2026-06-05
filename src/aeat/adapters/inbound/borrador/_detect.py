@@ -17,6 +17,7 @@ from ._schema import ArtefactKind
 _VISTA_PREVIA_RE = re.compile(r"\bVISTA\s+PREVIA\b", re.IGNORECASE)
 _BORRADOR_RE = re.compile(r"\bBORRADOR\b", re.IGNORECASE)
 _CSV_RE = re.compile(r"C[óo]digo\s+Seguro\s+de\s+Verificaci[óo]n", re.IGNORECASE)
+_INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
 
 
 def detect_artefact_kind(pdf_path: Path) -> ArtefactKind:
@@ -51,6 +52,6 @@ def detect_artefact_kind(pdf_path: Path) -> ArtefactKind:
         return ArtefactKind.BORRADOR
 
     raise ArtefactNotRecognisedError(
-        f"could not recognise Modelo 100 artefact type in {pdf_path}; "
+        f"could not recognise Modelo 100 artefact type in {_INPUT_PDF_SOURCE_LABEL}; "
         "expected one of: VISTA PREVIA watermark, BORRADOR header, CSV stamp"
     )
