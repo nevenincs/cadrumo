@@ -4133,6 +4133,12 @@ errors:
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
     unsupported_currency: El codi de moneda indicat no és compatible.
     modelo_work_period_token: 'Periode de model no valid.'
+    submission_preflight_draft_stale: 'L''aprovació de l''esborrany ha caducat; revisa i aprova l''esborrany de nou.'
+    submission_preflight_draft_not_approved: 'L''esborrany no està aprovat per a la presentació (estat={status}).'
+    submission_preflight_error_findings: 'L''esborrany té {finding_count} incidència(es) de severitat ERROR; resol-les abans de presentar.'
+    submission_preflight_deadline_closed: 'La finestra de termini per al model {modelo} període {period} no és oberta el {today}.'
+    submission_preflight_auth_describe_failed: 'El proveïdor d''autenticació no s''ha pogut descriure ({cause_type}).'
+    submission_preflight_auth_not_ready: 'El proveïdor d''autenticació {kind} no està llest (configured={configured} available={available}). {operator_impact}'
   snapshot:
     modelo_not_registered: El model no esta registrat al registre.
   storage:

@@ -236,7 +236,7 @@ Separate production complexity from ratchet-test complexity, then decompose the 
 Resolve dependency, dead-code, Ruff, security, and duplication advisory findings one class at a time without weakening hard architectural policies.
 
 - [x] `W06.P20.S78` - Normalize Ruff scope for root scratch and probe artifacts; `pyproject.toml`.
-- [ ] `W06.P20.S79` - Resolve dependency declaration drift findings; `pyproject.toml`.
+- [x] `W06.P20.S79` - Resolve dependency declaration drift findings; `pyproject.toml`.
 - [ ] `W06.P20.S80` - Resolve Vulture dead-code candidate findings; `src/aeat`.
 - [ ] `W06.P20.S81` - Split Semgrep security policy by source class; `.semgrepignore`.
 - [ ] `W06.P20.S82` - Reduce remaining duplication clone groups or record ratchets; `src/aeat`.

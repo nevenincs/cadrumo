@@ -4180,6 +4180,12 @@ errors:
       reanudar.
     unsupported_currency: El código de moneda indicado no es compatible.
     modelo_work_period_token: 'Periodo de modelo no valido.'
+    submission_preflight_draft_stale: 'La aprobación del borrador está caducada; revisa y aprueba el borrador de nuevo.'
+    submission_preflight_draft_not_approved: 'El borrador no está aprobado para presentación (estado={status}).'
+    submission_preflight_error_findings: 'El borrador tiene {finding_count} incidencia(s) de severidad ERROR; resuélvelas antes de presentar.'
+    submission_preflight_deadline_closed: 'La ventana de plazo para el modelo {modelo} periodo {period} no está abierta el {today}.'
+    submission_preflight_auth_describe_failed: 'El proveedor de autenticación no pudo describirse ({cause_type}).'
+    submission_preflight_auth_not_ready: 'El proveedor de autenticación {kind} no está listo (configured={configured} available={available}). {operator_impact}'
   snapshot:
     modelo_not_registered: El modelo no esta registrado en el registro.
   storage:
