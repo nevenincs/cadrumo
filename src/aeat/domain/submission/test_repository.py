@@ -7,12 +7,15 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from sqlalchemy import select
 
 from ...adapters.persistence.storage import (
     Envelope,
     SensitivityClass,
 )
 from ...adapters.persistence.storage.errors import ClassificationError
+from ...adapters.persistence.storage.sql._orm import SecureObjectRow
+from ...adapters.persistence.storage.sql.session import session_scope
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from . import (
     ModeloPresentado,
@@ -115,6 +118,32 @@ class TestListAndIter:
         loaded = {payload.submission_id: payload for payload in repo.iter_submissions()}
         assert loaded[f1.submission_id] == f1
         assert loaded[f2.submission_id] == f2
+
+    def test_iter_submissions_skips_unreadable_rows_with_warning(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        repo = SubmissionRepository()
+        healthy = _make_filing(draft_id="healthy", attempt_ordinal=1)
+        future = _make_filing(draft_id="future", attempt_ordinal=1)
+        repo.save(healthy)
+        repo.save(future)
+
+        with session_scope(runtime_profile.repository._engine) as session:
+            row = session.execute(
+                select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == SubmissionRepository.namespace,
+                    SecureObjectRow.object_key == future.submission_id,
+                )
+            ).scalar_one()
+            row.schema_version = SubmissionRepository.schema_version + 1
+
+        caplog.set_level("WARNING")
+
+        assert tuple(repo.iter_submissions()) == (healthy,)
+        assert "skipping unreadable submission" in caplog.text
+        assert "schema version 2 exceeds supported 1" in caplog.text
 
 
 class TestDelete:
