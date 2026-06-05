@@ -23,7 +23,13 @@ from pydantic import ValidationError
 from ...adapters.persistence.storage import SensitivityClass
 from ...tests.secure_sql import isolated_runtime_profile
 from ._codes import ModeloCode
-from ._repository import _WORK_UNIT_CATALOGUE_VERSION, WorkUnitCatalogueRepository
+from ._repository import (
+    _WORK_UNIT_CATALOGUE_VERSION,
+    _WORK_UNIT_NAMESPACE,
+    _WORK_UNIT_OBJECT_KEY,
+    WorkUnitCatalogueRepository,
+    WorkUnitPersistenceError,
+)
 from ._work_unit import (
     WorkUnit,
     WorkUnitCatalogue,
@@ -154,8 +160,6 @@ def test_work_unit_catalogue_lifecycle_drift_surfaces_at_load(
 
     import json as _json
 
-    from ._repository import _WORK_UNIT_NAMESPACE, _WORK_UNIT_OBJECT_KEY
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         work_unit = _populated_work_unit()
         catalogue = WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit})
@@ -189,3 +193,72 @@ def test_work_unit_catalogue_lifecycle_drift_surfaces_at_load(
 
         with pytest.raises(ValidationError):
             WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+
+def test_work_unit_catalogue_wrong_inner_classification_is_localized(
+    tmp_path: Path,
+) -> None:
+    """A corrupted envelope classification raises a translated persistence error."""
+
+    from ...adapters.persistence.storage import Envelope
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        envelope = Envelope[WorkUnitCatalogue](
+            schema_version=_WORK_UNIT_CATALOGUE_VERSION,
+            written_at=datetime.now(UTC).replace(microsecond=0),
+            classification=SensitivityClass.AUDIT,
+            payload=WorkUnitCatalogue(),
+        )
+        profile.repository.save(
+            namespace=_WORK_UNIT_NAMESPACE,
+            object_key=_WORK_UNIT_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_WORK_UNIT_CATALOGUE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+        with pytest.raises(WorkUnitPersistenceError) as raised:
+            WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    assert raised.value.translated_message == "errors.fail.fail_modelo_work_unit_persistence"
+    assert raised.value.context == {
+        "reason": "classification_mismatch",
+        "expected_classification": "financial",
+        "actual_classification": "audit",
+    }
+
+
+def test_work_unit_catalogue_unsupported_inner_version_is_localized(
+    tmp_path: Path,
+) -> None:
+    """A future inner envelope schema version raises a translated persistence error."""
+
+    from ...adapters.persistence.storage import Envelope
+
+    stored_schema_version = _WORK_UNIT_CATALOGUE_VERSION + 1
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        envelope = Envelope[WorkUnitCatalogue](
+            schema_version=stored_schema_version,
+            written_at=datetime.now(UTC).replace(microsecond=0),
+            classification=SensitivityClass.FINANCIAL,
+            payload=WorkUnitCatalogue(),
+        )
+        profile.repository.save(
+            namespace=_WORK_UNIT_NAMESPACE,
+            object_key=_WORK_UNIT_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_WORK_UNIT_CATALOGUE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+        with pytest.raises(WorkUnitPersistenceError) as raised:
+            WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    assert raised.value.translated_message == "errors.fail.fail_modelo_work_unit_persistence"
+    assert raised.value.context == {
+        "reason": "unsupported_envelope_version",
+        "stored_schema_version": stored_schema_version,
+        "max_supported_version": _WORK_UNIT_CATALOGUE_VERSION,
+    }

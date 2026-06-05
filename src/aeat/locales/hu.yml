@@ -1001,14 +1001,14 @@ application:
         állapotban van, nem ABORTED.'
       resume_refused_terminal_reason: A(z) {run_id} futás {reason} miatt megszakadt,
         ami tervezetten terminális és nem folytatható.
-      resume_revision_selector_invalid: 'A(z) {selector} szamitasi valaszto nem ervenyes ehhez a folytatasi celhoz.'
+      resume_revision_selector_invalid: 'Ismeretlen resume revízióválasztó: {selector}; válasszon: current, latest-draft, latest-verified, filed vagy explicit.'
       resume_run_ambiguous: Egynél több munkafolyamat-futás illeszkedik a(z) {modelo}
         modell {period} időszakára. Válasszon pontos futásazonosítót. {candidates}
-      resume_run_id_invalid: 'A(z) {workflow_run_id} munkafolyamat-futasi azonosito ervenytelen.'
-      resume_target_contradiction: 'Csak egy folytatasi celt adjon meg. Ne kombinalja a target, workflow run id, work unit id, calculation revision id es a lathato modelo/ev/idoszak mezoket.'
-      resume_target_invalid: 'A(z) {target} folytatasi cel nem munkafolyamat-futasi azonosito es nem munkaegyseg-azonosito.'
-      resume_target_required: 'Adjon meg munkafolyamat-futasi azonosítot, munkaegyseg-azonositot, szamitasi revizio azonosítot, target erteket vagy lathato modelo/ev/idoszak celt.'
-      resume_visible_target_incomplete: 'A lathato folytatasi celhez modelo, ev es idoszak szukseges; kapott ertekek: modelo={modelo}, year={year}, period={period}.'
+      resume_run_id_invalid: 'A workflow_run_id 16 karakteres kisbetűs hexadecimális azonosító kell legyen; kapott: {run_id}.'
+      resume_target_contradiction: 'Csak egy resume célt adjon meg: munkafolyamat-futtatás azonosítót, munkaegység-azonosítót, számítási revízió azonosítót, vagy modell/év/időszak értéket.'
+      resume_target_invalid: 'Ervenytelen resume cel: {target}. Hasznalja: --modelo --year --period, vagy futtassa: `aeat app modelo work runs`.'
+      resume_target_required: 'Adja meg a --modelo --year --period opciókat, egy munkafolyamat-futtatás azonosítót, egy munkaegység-azonosítót vagy egy számítási revízió azonosítót a folytatáshoz.'
+      resume_visible_target_incomplete: 'A természetes kulcsú resume együtt igényli a --modelo, --year és --period opciókat; kapott: modelo={modelo}, year={year}, period={period}.'
       run_id_invalid_blank: A futásazonosító nem lehet üres.
       run_id_invalid_separators: A futásazonosító nem tartalmazhat elérési út elválasztókat.
       run_not_found: 'Munkafolyamat-futás nem található: {run_id}.'
@@ -1705,13 +1705,8 @@ cli:
         rescate_plan_pensiones_not_decimal: A --rescate-plan-pensiones-* értékeknek
           decimális összegeknek kell lenniük.
         result_summary_header: eredmény-összefoglaló  Modelo %{modelo} %{year} %{period}
-        resume_help: Ellenőrzés, hogy megszakított munkafolyamat újraindítható-e az
-          AEAT megkeresése nélkül. Munkafolyamat-futtatás azonosítóját vagy munkaegység-azonosítót
-          fogad el.
-        resume_target_help: '16 karakteres munkafolyamat-futtatás-azonosító, vagy
-          a 64 karakteres munkaegység-azonosító (a legújabb futtatása automatikusan
-          feloldódik). Futtassa: `aeat app modelo work runs` a futtatásazonosítók
-          listázásához.'
+        resume_help: 'Ellenőrzi, hogy megszakított munkafolyamat újrapróbálható-e az AEAT megkeresése nélkül. A normál út a --modelo --year --period; a pontos azonosítók haladó menekülőútvonalak.'
+        resume_target_help: 'Opcionális régi 16 karakteres munkafolyamat-futtatás azonosító vagy 64 karakteres munkaegység-azonosító. Előnyben: --modelo --year --period.'
         revision_help: 'A célzott nyilvántartási nyomtatvány-revízió stabil azonosítója;
           futtassa: `aeat app modelo describe NYOMTATVÁNY` az elérhető revízióazonosítók
           megtekintéséhez.'
@@ -3558,8 +3553,7 @@ errors:
       menteni vagy betölteni.
     fail_modelo_verification_report_persistence: Az ellenőrzési jelentés katalógust
       nem sikerült menteni vagy betölteni.
-    fail_modelo_work_unit_persistence: A munkajegység-katalógust nem sikerült menteni
-      vagy betölteni.
+    fail_modelo_work_unit_persistence: 'A munkajegység-katalógust nem sikerült menteni vagy olvasni'
     fail_normatives_normative_parse: Egy normatíva-rekord nem ment át a sémaérvényesítésen.
     fail_observability_run_trace_persistence: A futási nyomkövetési tároló nem tudott
       fájlrendszer-műveletet elvégezni.
