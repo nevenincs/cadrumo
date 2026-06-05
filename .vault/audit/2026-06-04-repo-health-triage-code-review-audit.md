@@ -751,3 +751,13 @@ issues.
 
 Residual: none for dependency declaration drift in the current production
 scope.
+
+## W06-007 | INFO | Vulture dead-code verification found no defects
+
+Status: verified green.
+
+The W06.P20.S80 review found no dead-code candidate requiring source deletion or
+suppression. `just audit-dead-code` runs Vulture with `pyproject.toml` and exits
+0 with no current findings.
+
+Residual: none for the configured Vulture lane.

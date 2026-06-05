@@ -917,3 +917,18 @@ Verification:
 Residual carried forward:
 
 - None for dependency declaration drift in the current production scope.
+
+## HEALTH-022-S80 | CLOSED | 2026-06-05 Vulture dead-code verification
+
+W06.P20.S80 reran the configured Vulture lane against the current shifted
+worktree. No source deletion or suppression edit was needed.
+
+Verification:
+
+- `just audit-dead-code` exits 0.
+- The configured command is `uv run --no-sync vulture --config pyproject.toml`.
+- Vulture reported no current findings.
+
+Residual carried forward:
+
+- None for the Vulture dead-code lane in the current configured scope.
