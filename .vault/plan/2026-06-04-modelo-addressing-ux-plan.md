@@ -11,17 +11,8 @@ related:
   - '[[2026-06-04-cli-workflow-redesign-epic-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
-<!-- RETIRED: P13, P14, P15, P16, S29, S30, S31, S32, S33, S34, S35, S36, S37, S38, S39, S40, S41, S42, S55, S56, S57, S58, S59, S60, S79, S80, S81, S82, S83, S84, S85, S86, S87, S88, S89, S90, S91, S92, S93, S94, S95, S96, S97, S98, S99, S100, S101, S102, S103, S104, S105, S106, S107, S108, S109, S110, S111, S112, S113, S114, S115, S116, S117, S118 -->
+<!-- RETIRED: W07, W08, W09, P13, P14, P15, P16, P22, P23, P24, P25, P26, P27, S29, S30, S31, S32, S33, S34, S35, S36, S37, S38, S39, S40, S41, S42, S55, S56, S57, S58, S59, S60, S79, S80, S81, S82, S83, S84, S85, S86, S87, S88, S89, S90, S91, S92, S93, S94, S95, S96, S97, S98, S99, S100, S101, S102, S103, S104, S105, S106, S107, S108, S109, S110, S111, S112, S113, S114, S115, S116, S117, S118, S129, S131, S135, S138, S141, S144, S148, S152, S154, S155, S156, S157, S158, S159, S160, S161, S162, S163, S164, S165, S166, S167, S168, S169, S170, S171, S172, S173, S174, S175, S176, S177, S178, S179, S180, S181, S182, S183, S184 -->
 
 # `modelo-addressing-ux` implementation plan
 
@@ -174,6 +165,49 @@ Replace copy-paste ID routing in narrative docs only after the implementation is
 - [x] `W04.P06.S73` - update the filing spine explanation for work units revisions current pointers and selectors; `docs/how-to/filing-spine.md`.
 - [x] `W04.P06.S74` - regenerate the CLI reference after command signature changes; `docs/cli`.
 
+## Wave `W06` - CLI boundary and monolith mitigation
+
+Audit and mitigate CLI business-logic leakage and monolithic command modules introduced or exposed by the modelo addressing work. CLI modules must parse operator input call backend application services and render typed output only; business decisions tax rules persistence selection policies and workflow orchestration must live in backend library modules. Monolithic Python files and high-complexity command handlers must be decomposed into bounded modules with enforceable guards.
+
+### Phase `W06.P18` - audit CLI boundary and monolith risk
+
+Inventory every CLI module and modelo command handler for business logic leakage file size command density function complexity nesting and backend-service bypasses before further natural-key implementation is considered complete.
+
+- [x] `W06.P18.S127` - inventory CLI module size command density function length nesting and complexity risk for every entrypoint module; `src/aeat/entrypoints/cli`.
+- [x] `W06.P18.S128` - run exact rg audit for tax calculation persistence workflow registry and selection logic inside CLI command modules; `rg CLI business-logic leakage audit`.
+- [x] `W06.P18.S130` - run semantic vaultspec-rag audit for CLI business-rule reinvention and backend-service bypasses; `vaultspec-rag CLI boundary audit`.
+- [x] `W06.P18.S132` - persist CLI command classification matrix separating parsing rendering backend calls and business decisions; `.vault/exec/2026-06-04-modelo-addressing-ux`.
+- [x] `W06.P18.S133` - map every identified CLI business decision to an application-layer backend service home before extraction; `src/aeat/application`.
+
+### Phase `W06.P19` - relocate CLI business logic to backend services
+
+Move business declarations calculations target resolution defaulting policies persistence decisions reconciliation export project and compare orchestration out of CLI command bodies and into application-layer service functions with real-behavior tests.
+
+- [x] `W06.P19.S134` - extract modelo natural-key lifecycle orchestration from CLI command bodies into application service functions; `src/aeat/application/modelo`.
+- [x] `W06.P19.S136` - relocate revision selector defaulting exportability filing and verification policy out of CLI helpers into backend services; `src/aeat/application/modelo`.
+- [x] `W06.P19.S137` - relocate reconcile export project compare and taxation command orchestration into backend application services; `src/aeat/application/modelo`.
+- [x] `W06.P19.S139` - replace CLI command bodies with parse call backend render flow and no business-rule branching; `src/aeat/entrypoints/cli`.
+
+### Phase `W06.P20` - decompose monolithic CLI modules
+
+Split monolithic CLI files into bounded command-group modules and shared rendering helpers so command functions stay shallow readable and limited to input parsing backend invocation and output rendering.
+
+- [x] `W06.P20.S140` - split the monolithic modelo CLI module into bounded command-group modules without changing public command names; `src/aeat/entrypoints/cli`.
+- [x] `W06.P20.S142` - move shared modelo CLI parsing rendering and envelope helpers into focused support modules without business decisions; `src/aeat/entrypoints/cli`.
+- [x] `W06.P20.S143` - add static architecture guard preventing CLI modules from importing domain internals or bypassing application facades; `src/aeat/entrypoints/cli/test_architecture_boundaries.py`.
+- [x] `W06.P20.S145` - add static size and complexity guard forbidding monolithic Python files and overgrown CLI command functions; `src/aeat/entrypoints/cli/test_cli_module_size.py`.
+- [x] `W06.P20.S146` - cover extracted backend services and decomposed CLI modules with real-behavior regression tests; `src/aeat/application/modelo src/aeat/entrypoints/cli`.
+
+### Phase `W06.P21` - verify CLI boundary and decomposition gates
+
+Prove through exact search semantic search static guards focused tests and feature-surface gates that CLI modules no longer host business logic and no monolithic Python file remains accepted in the changed modelo CLI surface.
+
+- [x] `W06.P21.S147` - run final exact rg audit proving changed CLI modules contain no business-rule declarations or raw backend bypasses; `rg CLI boundary closure audit`.
+- [x] `W06.P21.S149` - run final semantic vaultspec-rag audit proving CLI is a backend consumer not a business-logic reinventor; `vaultspec-rag CLI boundary closure audit`.
+- [x] `W06.P21.S150` - run static size complexity and architecture boundary guards for CLI and modelo addressing surfaces; `src/aeat/entrypoints/cli src/aeat/application/modelo`.
+- [x] `W06.P21.S151` - run focused application and CLI regression tests after extraction and decomposition; `src/aeat/application/modelo src/aeat/entrypoints/cli`.
+- [x] `W06.P21.S153` - persist CLI boundary monolith mitigation closure evidence and residual risk matrix; `.vault/exec/2026-06-04-modelo-addressing-ux`.
+
 ## Wave `W05` - verification gates
 
 Run focused application CLI documentation and feature-surface gates against the revised L3 scope.
@@ -213,77 +247,21 @@ updates generated reference docs, locale strings, or narrative guides.
 `W04` documentation changes must use the documentation workflow and must
 wait until real-behavior CLI tests prove the common lifecycle path no
 longer requires manually copying work-unit or calculation-revision IDs.
-`W05` runs last.
+`W06` runs before the first closure whenever modelo addressing work
+touches CLI command bodies, because the CLI must stay a consumer of
+backend application services rather than a business-logic host. `W05`
+records the original closure gates after `W06` mitigation.
 
 ## Verification
 
 The plan is complete when every Step is closed, the plan status reports
-five waves with no open structural validation findings, focused
+six waves with no open structural validation findings, focused
 application and CLI tests prove visible-target-first resolution,
 duplicate prevention, revision selector defaults, export selection,
-adjacent-command compatibility decisions, and legacy ID compatibility,
+adjacent-command compatibility decisions, and exact-ID compatibility,
 localized operator messages render clearly without stale ID-routing
 guidance, the affected documentation no longer teaches pasted-ID routing
-for the common path, and the feature surface gate reports only relevant
-pass/fail results for this change set.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+for the common path, W06 proves changed CLI modules consume backend
+addressing helpers instead of reinventing resolver policy, and the
+feature surface gate reports only relevant pass/fail results for this
+change set.
