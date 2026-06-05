@@ -460,3 +460,32 @@ missing. No storage discovery happens in the renderer.
 
 No locale leaves were added. Focused `ruff check`, overview rendering integration
 tests, and `python -m aeat.locales audit` passed.
+
+## S387-CR-001 | FIXED | Review queue invoice and draft adapters used ambient repository defaults
+
+Reviewed the S387 scope as `vaultspec-code-reviewer`. `_review.py` delegates to
+`project_review_queue()` and does not construct storage repositories, but
+`ReviewQueue.collect()` was only partially bucket-explicit: transaction loading
+received the resolved bucket id while invoice and draft loading constructed their
+repositories through defaults.
+
+`invoices_pending()` and `drafts_pending()` now require `bucket_id` for repository
+loading, and `ReviewQueue.collect()` passes its bucket id to all source adapters.
+
+## S387-CR-002 | PASS | Review CLI remains a localized application facade
+
+The CLI layer still renders through `tr()` strings and projects `ReviewError` through
+the shared CLI resolver. No raw SQL routes, storage settings, direct repository
+construction, ad hoc exception classes, or new broad catch blocks were added.
+
+## S387-CR-003 | PASS | Locale audit stayed clean for the staged review queue slice
+
+The review queue change did not introduce locale keys. The local shared worktree
+contains an untracked ledger-rule split with its own locale requirement; that repair was
+performed through `python -m aeat.locales set` but remains unstaged with its owning
+source split.
+
+## S387-CR-004 | PASS | Validation passed
+
+Focused `ruff check`, application review tests, review CLI integration tests, and
+`python -m aeat.locales audit` passed.
