@@ -270,7 +270,7 @@ convention = "google"
 # Bundled test modules colocated under src/aeat/. Docstring (D) rules are
 # audience-scoped out of the test surface (tests are excluded from autodoc
 # and interrogate too).
-"src/aeat/**/test_*.py" = ["S101", "T20", "D"]
+"src/aeat/**/tests/test_*.py" = ["S101", "T20", "D"]
 "src/aeat/tests/**/*.py" = ["S101", "T20", "D"]
 "src/aeat/**/conftest.py" = ["D"]
 # Sphinx build configuration is tooling, not the documented package API.
@@ -281,7 +281,7 @@ convention = "google"
 "scripts/**/*.py" = ["T20"]
 # `password_env_var` is an env-var NAME, not a password; S106 false-positives
 # on cert-auth tests. Test modules also commonly use assert and print.
-"src/aeat/adapters/outbound/aeat/auth/test_*.py" = [
+"src/aeat/adapters/outbound/aeat/auth/tests/test_*.py" = [
   "S101",
   "S105",
   "S106",
@@ -290,7 +290,7 @@ convention = "google"
 # Google OAuth tests use synthetic OAuth client_secret + refresh_token
 # literals as fixtures; ruff's S105/S106 heuristic flags every fake
 # `GOCSPX-*` and `1//*` token even though they're documented test data.
-"src/aeat/adapters/outbound/google/test_*.py" = [
+"src/aeat/adapters/outbound/google/tests/test_*.py" = [
   "S101",
   "S105",
   "S106",
@@ -302,7 +302,7 @@ convention = "google"
 # Drive provider tests build long inline `_FakeFile(...)` fixtures with
 # stable id + name + parents + payload tuples that read better on one
 # line; E501 wrapping would obscure intent.
-"src/aeat/adapters/outbound/storage/test_google_drive.py" = [
+"src/aeat/adapters/outbound/storage/tests/test_google_drive.py" = [
   "S101",
   "E501",
   "T20"
@@ -310,7 +310,7 @@ convention = "google"
 # Storage factory tests instantiate fake OAuthClient/OAuthToken records
 # whose synthetic `client_secret` + `token_uri` + `refresh_token`
 # values trip ruff's hardcoded-password heuristic.
-"src/aeat/adapters/outbound/storage/test_factory.py" = [
+"src/aeat/adapters/outbound/storage/tests/test_factory.py" = [
   "S101",
   "S105",
   "S106",
@@ -320,7 +320,6 @@ convention = "google"
 # Google CLI tests use synthetic OAuth refresh_token + token_uri
 # fixtures and emit long inline kwargs that are easier to read on one
 # line than wrapped.
-"src/aeat/entrypoints/cli/_config/test_google.py" = [
   "S101",
   "S105",
   "S106",
@@ -330,7 +329,7 @@ convention = "google"
 # `certificate_password_secret_var_name` is the NAME of an env var, not a
 # password. `_PASSWORD_COMMENT_PREFIX` is a file-format prefix, not a secret.
 "src/aeat/application/setup/_env_writer.py" = ["S105"]
-"src/aeat/application/setup/test_*.py" = ["S101", "S105", "S106", "T20"]
+"src/aeat/application/setup/tests/test_*.py" = ["S101", "S105", "S106", "T20"]
 # Encrypted-column tests deliberately use literal "secret_text" / "secret_*"
 # as column / attribute names; ruff's S105/S106 heuristic flags them as
 # hardcoded passwords when they are in fact attribute identifiers.
@@ -347,27 +346,22 @@ convention = "google"
 "src/aeat/domain/calculations/registry/_applicability.py" = ["S105"]
 # Module-walking test fixtures use file paths and rationale tokens as constants
 # that ruff misreads as hardcoded secret strings.
-"src/aeat/test_diagnostics_and_sidecar_rationale.py" = ["S105"]
-"src/aeat/test_semantic_intent_sampler.py" = ["S105", "S311"]
+"src/aeat/tests/test_diagnostics_and_sidecar_rationale.py" = ["S105"]
+"src/aeat/tests/test_semantic_intent_sampler.py" = ["S105", "S311"]
 # Token catalogue test fixture identifiers (e.g. "BTC") are not passwords.
-"src/aeat/application/calculations/test_modelo_721_cripto_exterior_fidelity.py" = ["S105"]
 # Modelo 720 fichero-BOE roundtrip fixture pins fixed-width AEAT envelope rows
 # (key + 18-char numeric value) that exceed 120 columns and cannot be split.
-"src/aeat/application/calculations/test_modelo_720_fichero_boe_roundtrip.py" = ["E501"]
+"src/aeat/application/calculations/tests/test_modelo_720_fichero_boe_roundtrip.py" = ["E501"]
 # Bundled `git ls-files` invocation reads from PATH; the explicit command list
 # is reviewed and audited rather than a partial path risk.
 "src/aeat/tests/test_wheel_bundles_corpus_and_registry.py" = ["S603", "S607"]
 # Wave-closure inventory ratchets shell out to `sys.executable -m pytest` with
 # vetted file paths from the repo. S603's "untrusted input" warning does not
 # apply to internally-controlled paths in build-internal harnesses.
-"src/aeat/test_w18_p50_closure.py" = ["S105", "S603"]
-"src/aeat/test_w20_p52_closure.py" = ["S105", "S603"]
-"src/aeat/test_w27_p61_closure.py" = ["S105", "S106", "S603"]
-"src/aeat/test_w28_p62_closure.py" = ["S105", "S106", "S603"]
 # Setup-answers subprocess test shells out to `sys.executable -c <script>` to
 # observe the project_answers registration error path; the script is a vetted
 # literal in this file.
-"src/aeat/core/test_setup_answers.py" = ["S603"]
+"src/aeat/core/tests/test_setup_answers.py" = ["S603"]
 # `aeat_secret_store_backend="file"` names the backend enum value, not a
 # password literal.
 "src/aeat/tests/secure_sql.py" = ["S106"]
@@ -385,8 +379,8 @@ convention = "google"
 # block; moving them to the top would re-introduce the circular import.
 "src/aeat/application/workflow/_models.py" = ["E402"]
 "src/aeat/domain/calculations/registry/_bindings.py" = ["E402"]
-"src/aeat/domain/currency/test_service.py" = ["E402"]
-"src/aeat/adapters/outbound/aeat/sede/test_groi_check.py" = ["E402"]
+"src/aeat/domain/currency/tests/test_service.py" = ["E402"]
+"src/aeat/adapters/outbound/aeat/sede/tests/test_groi_check.py" = ["E402"]
 
 # AEAT corpus / form-spec strings carry mandatory Spanish typography
 # (ambiguous unicode characters by RUF001/003 heuristic) and locale-aware
@@ -408,17 +402,17 @@ convention = "google"
 # literal argv (no user/untrusted input), in an isolated subprocess so the
 # build's package imports and global state do not leak into the test process.
 "src/aeat/tests/test_docs_build.py" = ["S603"]
-"src/aeat/adapters/persistence/storage/bucket/test_lockfile.py" = ["S603"]
-"src/aeat/adapters/persistence/storage/test_substrate_smoke.py" = ["S603"]
-"src/aeat/domain/calculations/registry/test_cross_domain_snapshot_registration.py" = ["S603"]
+"src/aeat/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
+"src/aeat/adapters/persistence/storage/tests/test_substrate_smoke.py" = ["S603"]
+"src/aeat/domain/calculations/registry/tests/test_cross_domain_snapshot_registration.py" = ["S603"]
 "src/aeat/adapters/persistence/storage/master_key/_master_key.py" = ["S105"]
-"src/aeat/adapters/outbound/aeat/browser/test_live_evasion.py" = ["S603"]
+"src/aeat/adapters/outbound/aeat/browser/tests/test_live_evasion.py" = ["S603"]
 # `ATTRIBUTION_PASS_THROUGH` is a tax-routing verdict / enum value, not a
 # password literal; ruff's S105 heuristic flags the constant name.
 "src/aeat/application/overview/_applicability.py" = ["S105"]
 "src/aeat/application/wizard/_models.py" = ["S105"]
 "src/aeat/core/config.py" = ["S105"]
-"src/aeat/adapters/persistence/storage/crypto/test_encrypted_columns.py" = ["S105", "S106"]
+"src/aeat/adapters/persistence/storage/crypto/tests/test_encrypted_columns.py" = ["S105", "S106"]
 "src/aeat/adapters/outbound/fx/_ecb_refresh.py" = ["S310"]
 # AEAT registry uses ``Q1..Q4`` casing on the BOE-published row model field names; the
 # domain model preserves the canonical AEAT casing so the registry-binding mapping
@@ -426,74 +420,63 @@ convention = "google"
 "src/aeat/domain/modelos/_row_models.py" = ["N815"]
 # Tests alias the canonical private constant into a per-scenario local name; N811's
 # constant-aliased-as-non-constant heuristic mis-flags the rebinding.
-"src/aeat/application/aggregation/test_service.py" = ["N811"]
+"src/aeat/application/aggregation/tests/test_service.py" = ["N811"]
 # Test files use nested `with`/`if` blocks for legibility around AEAT fixtures; the
 # SIM refactors hurt readability for boundary-shaped tests.
-"src/aeat/adapters/outbound/aeat/auth/test_certificate.py" = ["SIM117"]
-"src/aeat/adapters/outbound/aeat/sede/test_browser_timeouts.py" = ["SIM102"]
-"src/aeat/entrypoints/cli/test_cold_start_no_profile.py" = ["SIM117"]
-"src/aeat/entrypoints/cli/test_repair_bootstrap_exempt.py" = ["SIM117"]
+"src/aeat/adapters/outbound/aeat/auth/tests/test_certificate.py" = ["SIM117"]
+"src/aeat/adapters/outbound/aeat/sede/tests/test_browser_timeouts.py" = ["SIM102"]
+"src/aeat/entrypoints/cli/tests/test_cold_start_no_profile.py" = ["SIM117"]
+"src/aeat/entrypoints/cli/tests/test_repair_bootstrap_exempt.py" = ["SIM117"]
 "src/aeat/tests/test_config.py" = ["SIM117"]
 "src/aeat/tests/test_relative_imports_only.py" = ["SIM102"]
 "src/aeat/tests/test_cross_module_imports_resolve.py" = ["SIM103", "SIM108"]
-"src/aeat/test_w17_p49_closure.py" = ["S105", "S603", "SIM102"]
-"src/aeat/test_w26_p58_closure.py" = ["S603", "SIM102"]
-"src/aeat/test_every_module_has_test_coverage.py" = ["SIM103", "SIM108"]
-"src/aeat/test_locale_tr_positional_inventory.py" = ["SIM103"]
-"src/aeat/domain/calculations/test_calculation_grounding.py" = ["SIM102"]
+"src/aeat/tests/test_locale_tr_positional_inventory.py" = ["SIM103"]
+"src/aeat/domain/calculations/tests/test_calculation_grounding.py" = ["SIM102"]
 # Per-line concatenation of AEAT casilla code groups documents each group inline; the
 # RUF005 iterable-unpacking refactor would erase those per-group comments.
-"src/aeat/application/calculations/test_modelo_190_111_reconciliation_continuity.py" = ["RUF005"]
+"src/aeat/application/calculations/tests/test_modelo_190_111_reconciliation_continuity.py" = ["RUF005"]
 "src/aeat/core/classification/__init__.py" = ["S105"]
-"src/aeat/core/test_config_override.py" = ["S108"]
+"src/aeat/core/tests/test_config_override.py" = ["S108"]
 "src/aeat/core/file_permissions.py" = ["S603"]
 "src/aeat/domain/auth/apoderamientos/_catalogue.py" = ["S105"]
 "src/aeat/domain/calculations/registry/_workbook_parity.py" = ["S603"]
 "src/aeat/domain/deadlines/_festivos.py" = ["S105"]
 "src/aeat/domain/transactions/_llm.py" = ["S603"]
-"src/aeat/entrypoints/cli/test_root_help_shape.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_root_help_shape.py" = ["S603"]
 # W14 aggregate closure test uses RATIONALE marker strings as assertion
 # tokens; ruff's S105 heuristic misreads these as hardcoded passwords.
-"src/aeat/test_w14_p46_survivor_closure.py" = ["S105"]
 # The wave-closure aggregate tests under src/aeat/ enumerate RATIONALE marker
 # strings ("password", "secret", "token", etc.) as assertion tokens to prove
 # the ratchet covers them; ruff's S105/S106 heuristic flags every such
 # literal as a hardcoded password. They are not credentials.
-"src/aeat/test_w15_p47_maintenance_closure.py" = ["S105", "S106"]
-"src/aeat/test_w22_p54_closure.py" = ["S105", "S106"]
-"src/aeat/test_w26_p59_closure.py" = ["S105", "S106"]
-"src/aeat/test_w26_p60_closure.py" = ["S105", "S106"]
 # Same pattern for the rationale-marker ratchets and their broad-except /
 # any-return / narrowed-except cousins under src/aeat/.
-"src/aeat/test_any_return_rationale_markers.py" = ["S105", "S106"]
-"src/aeat/test_broad_except_and_any_return_rationale.py" = ["S105", "S106"]
-"src/aeat/test_narrowed_except_and_path_constants.py" = ["S105", "S106"]
-"src/aeat/test_ratchet_extensions_and_marker_completion.py" = ["S105", "S106"]
+"src/aeat/tests/test_any_return_rationale_markers.py" = ["S105", "S106"]
+"src/aeat/tests/test_broad_except_and_any_return_rationale.py" = ["S105", "S106"]
+"src/aeat/tests/test_narrowed_except_and_path_constants.py" = ["S105", "S106"]
+"src/aeat/tests/test_ratchet_extensions_and_marker_completion.py" = ["S105", "S106"]
 # OAuth / mTLS / clave-pin fixture authoring uses literal credential
 # shape examples (e.g., the example access_token "ya29.fake-bearer"
 # documented in the AEAT auth ADR); they are not real credentials.
 "src/aeat/adapters/outbound/aeat/auth/_fixtures.py" = ["S105", "S106"]
 # Test modules under master_key/ exercise the passphrase-rejection paths
 # with literal short / weak / sentinel passphrases as assertion inputs.
-"src/aeat/adapters/persistence/storage/master_key/test_master_key.py" = ["S105", "S106"]
-"src/aeat/adapters/persistence/storage/master_key/test_master_key_failclosed.py" = ["S105", "S106"]
-"src/aeat/adapters/persistence/storage/test_path_safety.py" = ["S105", "S106"]
-"src/aeat/core/test_logging.py" = ["S105", "S106"]
+"src/aeat/adapters/persistence/storage/master_key/tests/test_master_key.py" = ["S105", "S106"]
+"src/aeat/adapters/persistence/storage/master_key/tests/test_master_key_failclosed.py" = ["S105", "S106"]
+"src/aeat/adapters/persistence/storage/tests/test_path_safety.py" = ["S105", "S106"]
+"src/aeat/core/tests/test_logging.py" = ["S105", "S106"]
 # Subprocess invocations from tests and from the CLI's own doc-reference
 # helper use fixed argv built from controlled inputs (no untrusted shell
 # input). The aggregate-closure tests under src/aeat/ are likewise
 # controlled. S603 ("subprocess without shell=True") is a heuristic ban
 # that doesn't recognise our controlled-argv pattern; granted per-file.
-"src/aeat/core/test_profile.py" = ["S603"]
 "docs/tools/cli_reference.py" = ["S603", "F401"]
 "docs/tools/tests/test_cli_reference_conformance.py" = ["F401"]
-"src/aeat/entrypoints/cli/test_cold_start_wizard_registration.py" = ["S603"]
-"src/aeat/entrypoints/cli/test_config_custody_profile_lifecycle.py" = ["S603"]
-"src/aeat/entrypoints/cli/test_lazy_command_tree.py" = ["S603"]
-"src/aeat/entrypoints/cli/test_root_fallback_write_guard.py" = ["S603"]
-"src/aeat/entrypoints/cli/test_work_calculate_row_flag.py" = ["S603"]
-"src/aeat/test_w16_p48_closure.py" = ["S603"]
-"src/aeat/test_w26_p57_closure.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_cold_start_wizard_registration.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_lazy_command_tree.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_root_fallback_write_guard.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_work_calculate_row_flag.py" = ["S603"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 # Lock the project into pytest-only testing.
@@ -649,7 +632,7 @@ fail-under = 80
 exclude = [
   "stubs",
   "src/aeat/tests",
-  "src/aeat/**/test_*.py",
+  "src/aeat/**/tests/test_*.py",
 ]
 
 # ── pydoclint (docstring-vs-signature accuracy) ──────────────────────────────
