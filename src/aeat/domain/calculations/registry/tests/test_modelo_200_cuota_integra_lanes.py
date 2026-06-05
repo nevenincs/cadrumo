@@ -471,7 +471,7 @@ def test_cuota_ejercicio_00599_raises_when_estado_porcentaje_binding_absent() ->
     after the Task #183 fix: operators see a missing-binding error
     instead of a borrador with 00599 = 0.
     """
-    from . import RegistryValidationError
+    from .. import RegistryValidationError
 
     with pytest.raises(RegistryValidationError, match="has no supplied value"):
         calculate_registry_snapshot(

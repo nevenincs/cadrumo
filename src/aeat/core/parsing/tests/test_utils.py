@@ -1,6 +1,6 @@
 """Real-behaviour tests for :func:`aeat.core.parsing._utils._parse_bool`.
 
-Contract under test (legacy-step):
+Contract under test (contract):
 * Recognised truthy tokens  → True
 * Recognised falsy tokens   → False
 * Absent / empty / unknown  → None  (caller picks fallback)

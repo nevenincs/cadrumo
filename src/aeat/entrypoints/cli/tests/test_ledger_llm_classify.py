@@ -111,7 +111,7 @@ def _deterministic_claude() -> Iterator[_DeterministicClassifier]:
         yield fixture
     finally:
         # Restore the production subprocess builder so peer tests are unaffected.
-        from ...domain.transactions._llm import build_claude_classifier
+        from ....domain.transactions._llm import build_claude_classifier
 
         register_classifier("claude", build_claude_classifier)
 

@@ -93,7 +93,7 @@ def test_questionary_prompter_translates_no_console_error() -> None:
     from prompt_toolkit.input import create_pipe_input
     from prompt_toolkit.output import DummyOutput
 
-    from ._prompter import (
+    from .._prompter import (
         QuestionaryPrompter,
         WizardUnsupportedConsoleError,
     )
@@ -110,7 +110,7 @@ def test_questionary_prompter_translates_no_console_error() -> None:
         def write_raw(self, data: str) -> None:  # pragma: no cover - first call raises
             raise OSError("No console screen buffer attached")
 
-    from ...core.errors._registry import resolve_error_message
+    from ....core.errors._registry import resolve_error_message
 
     with create_pipe_input() as pipe_input:
         prompter = QuestionaryPrompter(input=pipe_input, output=_RaisingOutput())
@@ -121,7 +121,7 @@ def test_questionary_prompter_translates_no_console_error() -> None:
     assert "No console screen buffer attached" not in message
 
 
-# ── legacy-step: QuestionaryPrompter.emit_progress routes through structured logger ───
+# ── contract: QuestionaryPrompter.emit_progress routes through structured logger ───
 
 
 def test_emit_progress_routes_through_logger_not_stdout(
@@ -131,7 +131,7 @@ def test_emit_progress_routes_through_logger_not_stdout(
     """emit_progress must use the structured logger; nothing must reach stdout."""
     import logging
 
-    from ._prompter import QuestionaryPrompter
+    from .._prompter import QuestionaryPrompter
 
     prompter = QuestionaryPrompter()
 
@@ -151,7 +151,7 @@ def test_emit_progress_log_record_carries_text(caplog: pytest.LogCaptureFixture)
     """The log record emitted by emit_progress must carry the progress text."""
     import logging
 
-    from ._prompter import QuestionaryPrompter
+    from .._prompter import QuestionaryPrompter
 
     prompter = QuestionaryPrompter()
 

@@ -1,4 +1,4 @@
-"""Regression test for `aeat app modelo project` (legacy-step).
+"""Regression test for `aeat app modelo project` (contract).
 
 The projection verb reads stored Modelo 130 quarterly calculation revisions,
 aggregates rendimiento neto and pagos fraccionados across all available
@@ -269,7 +269,7 @@ def test_modelo_project_no_revisions_guides_natural_m130_calculation(
 
 
 # ---------------------------------------------------------------------------
-# Regression test — legacy-step
+# Regression test — contract
 # ---------------------------------------------------------------------------
 
 
@@ -369,7 +369,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     # the expected value comes from the registry engine, not from
     # re-implementing the IRPF tariff formula.
     #
-    # Single-authority routing invariant (FU-legacy-plan-F): both the verb's
+    # Single-authority routing invariant (FU-accepted contract-F): both the verb's
     # internal calculate_registry_snapshot call and the oracle below
     # source their RegistrySnapshot from ``resources().modelos.authority``
     # (see _modelo.py modelo_project + the helper at line 528 / 1322 /

@@ -66,7 +66,7 @@ class TestRaiseOnErrors:
     """Behaviour of :func:`aeat.domain.normatives.raise_on_errors`."""
 
     def test_raises_on_dirty_report(self) -> None:
-        from . import NormativeVerificationIssue, NormativeVerificationReport
+        from .. import NormativeVerificationIssue, NormativeVerificationReport
 
         report = NormativeVerificationReport(
             issues=(

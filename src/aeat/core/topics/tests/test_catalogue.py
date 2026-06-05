@@ -66,7 +66,7 @@ def test_every_topic_renders_title_and_body_in_default_locale() -> None:
     entries for at least the default ``es`` locale so the CLI does
     not render bare keys.
     """
-    from ..i18n import tr
+    from ...i18n import tr
 
     catalogue = resources().topics.singleton
     for topic in catalogue.topics:

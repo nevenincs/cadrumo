@@ -122,7 +122,7 @@ def test_deferred_bind_flushes_on_get_registered_error_code() -> None:
 
     # Simulate the deferred state: remove from _CLASS_CODE_REGISTRY and
     # add to _DEFERRED_BIND (as if __init_subclass__ fired mid-init).
-    from ._registry import _CLASS_CODE_REGISTRY
+    from .._registry import _CLASS_CODE_REGISTRY
 
     saved_code = _CLASS_CODE_REGISTRY.pop(UnmatchedPlaceholderError, None)
     _DEFERRED_BIND.add(UnmatchedPlaceholderError)
@@ -155,7 +155,7 @@ def test_bind_error_code_refusal_carries_diagnostic_hints() -> None:
     pointing the operator at ``git status`` for the collision case.
     """
 
-    from . import AeatError
+    from .. import AeatError
 
     # bind_error_code fires from __init_subclass__ during class
     # creation, so the diagnostic ValueError lands on the ``class``
@@ -190,7 +190,7 @@ def test_core_error_prefixes_are_grep_stable() -> None:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step — error-registry logger carries SecretScrubbingFilter
+# contract — error-registry logger carries SecretScrubbingFilter
 # ---------------------------------------------------------------------------
 
 

@@ -250,7 +250,7 @@ def test_get_rejects_non_object_sidecar_with_localized_integrity_error(provider:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step: StorageCorruptionError registry, envelope, and real read-path coverage
+# contract: StorageCorruptionError registry, envelope, and real read-path coverage
 # ---------------------------------------------------------------------------
 
 

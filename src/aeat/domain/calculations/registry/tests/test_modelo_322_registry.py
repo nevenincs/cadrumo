@@ -131,12 +131,12 @@ def test_modelo_322_declares_iva_aggregation_bindings_for_all_three_flow_directi
 def test_modelo_322_iva_bindings_resolve_against_ledger_observations() -> None:
     from decimal import Decimal
 
-    from ...iva import (
+    from ....iva import (
         IvaCategory,
         IvaFlowDirection,
         IvaRateKind,
     )
-    from . import (
+    from .. import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )

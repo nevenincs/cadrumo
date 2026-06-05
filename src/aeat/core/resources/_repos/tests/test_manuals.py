@@ -55,7 +55,7 @@ def test_manual_repository_get_raises_for_unextracted_manual() -> None:
     error hierarchy lets the caller catch via either the domain-
     specific class or the resource-level base.
     """
-    from ....domain.manuals._errors import ManualNotFoundError
+    from .....domain.manuals._errors import ManualNotFoundError
 
     repo = ManualRepository()
     key = ManualKey(manual_id="iva", year=2025, part="single")

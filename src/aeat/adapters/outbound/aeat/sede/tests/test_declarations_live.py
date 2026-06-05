@@ -33,12 +33,12 @@ async def _load_active_clave_session():
         operator has not opted into live tests.
     """
     # Local imports keep the test file lightweight when skipped.
-    from .....application.auth import (
+    from ......application.auth import (
         AuthProviderKind,
         ensure_authenticated_aeat_session,
     )
-    from .....core.config import load_settings
-    from .....core.errors import AeatError
+    from ......core.config import load_settings
+    from ......core.errors import AeatError
 
     settings = load_settings()
     try:

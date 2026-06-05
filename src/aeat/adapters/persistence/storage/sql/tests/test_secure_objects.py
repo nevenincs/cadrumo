@@ -1065,7 +1065,7 @@ def test_list_records_only_emits_warning_when_unreadable_rows_exist(
 def test_iter_all_records_raw_yields_every_row_without_decryption(tmp_path: Path) -> None:
     """The raw iterator returns on-wire ciphertext + metadata across namespaces."""
 
-    from .secure_objects import SecureObjectRawRow
+    from ..secure_objects import SecureObjectRawRow
 
     provider = EphemeralMasterKeyProvider()
     with provider:
@@ -1472,7 +1472,7 @@ def test_secure_object_save_with_raw_key_writes_revision_metadata(tmp_path: Path
 
 
 def test_secure_object_write_rejects_conflict_policy_until_cas_contract_exists() -> None:
-    """legacy-step records the actual LWW policy; legacy-step owns public CAS policy selection."""
+    """contract records the actual LWW policy; contract owns public CAS policy selection."""
 
     with pytest.raises(ValidationError):
         SecureObjectWrite(

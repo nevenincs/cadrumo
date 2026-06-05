@@ -30,7 +30,7 @@ from .. import app
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _RUNNER = CliRunner()
-_CORPUS = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "financial" / "ledger-corpus"
+_CORPUS = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "financial" / "ledger-corpus"
 _FILES = (
     "bbva-business-eur.csv",
     "caixabank-personal.csv",
@@ -470,7 +470,7 @@ def test_preflight_and_check_surface_missing_facts() -> None:
     assert check.exit_code == 0, check.output
 
 
-# --- legacy-plan-step: operating-scale rendering — honest paging/truncation -------
+# --- accepted contract: operating-scale rendering — honest paging/truncation -------
 def _list_payload(*args: str) -> dict:
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list", *args])
     assert listed.exit_code == 0, listed.output
@@ -526,7 +526,7 @@ def test_list_truncation_footer_states_the_full_total() -> None:
     assert "1-5" in listed.output
 
 
-# --- legacy-plan-step: grouping / labelling + grouped display ---------------------
+# --- accepted contract: grouping / labelling + grouped display ---------------------
 def _set_group(tx_id: str, label: str) -> None:
     res = _RUNNER.invoke(app, ["app", "ledger", "update", "--id", tx_id, "--group", label])
     assert res.exit_code == 0, res.output
@@ -577,13 +577,13 @@ def test_unrelated_update_preserves_group_label() -> None:
     assert final["group_label"] is None
 
 
-# --- legacy-plan-step: batch transform / iterative refinement at scale ------------
+# --- accepted contract: batch transform / iterative refinement at scale ------------
 def test_batch_transform_recategorize_relabel_reallocate_at_scale() -> None:
     """Iterative refinement over a large slice: recategorize -> relabel -> reallocate.
 
     Proves the operator can amend hundreds of rows in batched passes and that
     each pass is observable end-to-end (applied counts + per-row read-back),
-    the working-at-scale guarantee behind legacy-plan.
+    the working-at-scale guarantee behind accepted contract.
     """
     _import_corpus()
     rows = _list_rows()
@@ -642,7 +642,7 @@ def test_batch_transform_recategorize_relabel_reallocate_at_scale() -> None:
         assert final[tx_id]["group_label"] == "Cierre 2025"
 
 
-# --- legacy-plan-step: transfer reclassification ----------------------------------
+# --- accepted contract: transfer reclassification ----------------------------------
 def test_transfer_row_reclassified_to_internal_transfer_and_locked_out_of_tax() -> None:
     """Import lands a transfer as OUTGOING/NOT_YET_PROCESSED; the operator
     reclassifies it to INTERNAL_TRANSFER, after which it cannot be marked
@@ -671,10 +671,10 @@ def test_transfer_row_reclassified_to_internal_transfer_and_locked_out_of_tax() 
     assert after["business_classification"] != "BUSINESS"
 
 
-# --- legacy-plan: modification lifecycle (edit lineage, history, blocking) -------
+# --- accepted contract: modification lifecycle (edit lineage, history, blocking) -------
 def _active_repo():
-    from ...core import resolve_active_bucket_id
-    from ...domain.transactions import TransactionCatalogueRepository
+    from ....core import resolve_active_bucket_id
+    from ....domain.transactions import TransactionCatalogueRepository
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
@@ -682,7 +682,7 @@ def _active_repo():
 
 
 def test_edit_editable_facts_records_edit_lineage_chain() -> None:
-    """legacy-plan.legacy-step — editing an id-affecting fact rewrites the row id and the new
+    """accepted contract.contract — editing an id-affecting fact rewrites the row id and the new
     record carries an edit_lineage entry pointing back at the prior id.
     """
     _import_bbva()
@@ -706,7 +706,7 @@ def test_edit_editable_facts_records_edit_lineage_chain() -> None:
 
 
 def test_reclassify_retains_classification_event_chain() -> None:
-    """legacy-plan.legacy-step — reclassifying after review keeps the prior classification in the
+    """accepted contract.contract — reclassifying after review keeps the prior classification in the
     auditable bucket-event chain (the operator-facing classification history).
     """
     _import_bbva()
@@ -739,23 +739,23 @@ def test_reclassify_retains_classification_event_chain() -> None:
 
 
 def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
-    """legacy-plan.legacy-step — once a verified modelo revision cites a ledger row, the CLI
+    """accepted contract.contract — once a verified modelo revision cites a ledger row, the CLI
     refuses to edit that row (finalized-modelo blocking guard).
     """
     from datetime import UTC, datetime
     from decimal import Decimal
 
-    from ...core import resolve_active_bucket_id
-    from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-    from ...domain.modelos._calculation_revision import (
+    from ....core import resolve_active_bucket_id
+    from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+    from ....domain.modelos._calculation_revision import (
         CalculationRevision,
         CalculationRevisionCatalogue,
         CalculationRevisionState,
         derive_calculation_revision_id,
     )
-    from ...domain.modelos._codes import ModeloCode
-    from ...domain.modelos._repository import WorkUnitCatalogueRepository
-    from ...domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+    from ....domain.modelos._codes import ModeloCode
+    from ....domain.modelos._repository import WorkUnitCatalogueRepository
+    from ....domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 
     _import_bbva()
     rows = _list_rows()
@@ -817,14 +817,14 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
     assert "finalized modelo" in refused.output.lower() or "modelo" in refused.output.lower()
 
 
-# --- legacy-plan-step: offline Gmail/Drive document-link metadata -----------------
+# --- accepted contract: offline Gmail/Drive document-link metadata -----------------
 def test_doclink_records_drive_link_as_local_evidence_never_fetched() -> None:
     """A Gmail/Drive/URL link is recorded as local ledger-row evidence without
     any network fetch: the stored attachment carries the link reference and the
     row's attachment_ids gains the content-addressed id.
     """
-    from ...adapters.persistence.storage.attachment import AttachmentStore
-    from ...domain.attachments._service import load_attachment
+    from ....adapters.persistence.storage.attachment import AttachmentStore
+    from ....domain.attachments._service import load_attachment
 
     _import_bbva()
     rows = _list_rows()
@@ -849,18 +849,29 @@ def test_doclink_records_drive_link_as_local_evidence_never_fetched() -> None:
     assert attachment.notes == "ticket"
 
 
-def test_doclink_refuses_non_link_source() -> None:
+def test_doclink_refuses_non_link_source(tmp_path: Path) -> None:
     _import_bbva()
     rows = _list_rows()
     tx = _find(rows, "Material oficina Papeleria Gomez")["transaction_id"]
     # LOCAL_FILE is a valid AttachmentSource but not a document *link* source.
     res = _RUNNER.invoke(
-        app, ["app", "ledger", "doclink", "--id", tx, "--source", "LOCAL_FILE", "--reference", "/tmp/x"]
+        app,
+        [
+            "app",
+            "ledger",
+            "doclink",
+            "--id",
+            tx,
+            "--source",
+            "LOCAL_FILE",
+            "--reference",
+            str(tmp_path / "local-source.txt"),
+        ],
     )
     assert res.exit_code != 0, res.output
 
 
-# --- legacy-plan-step: split a mixed invoice into business + personal children ----
+# --- accepted contract: split a mixed invoice into business + personal children ----
 def test_split_mixed_invoice_into_business_and_personal_children() -> None:
     """Split one parent row into a business child (with base/IVA) and a personal
     child, then classify each independently — the mixed-invoice per-child split.
@@ -889,7 +900,11 @@ def test_split_mixed_invoice_into_business_and_personal_children() -> None:
 
     catalogue = _active_repo().load()
     # Locate the two children by their split descriptions.
-    children = [t for t in catalogue.values() if t.split_lineage is not None and "Material oficina (" in t.raw.description]
+    children = [
+        t
+        for t in catalogue.values()
+        if t.split_lineage is not None and "Material oficina (" in t.raw.description
+    ]
     assert len(children) == 2, [t.raw.description for t in children]
     biz_child = next(t for t in children if "negocio" in t.raw.description)
     per_child = next(t for t in children if "personal" in t.raw.description)
@@ -915,8 +930,8 @@ def test_split_mixed_invoice_into_business_and_personal_children() -> None:
     assert biz_child.raw.amount + per_child.raw.amount == amount
 
 
-# --- legacy-plan: multi-format import/export fidelity ----------------------------
-_FIN_FIXTURES = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "financial"
+# --- accepted contract: multi-format import/export fidelity ----------------------------
+_FIN_FIXTURES = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "financial"
 
 
 def _xlsx_mirror_of_csv(csv_path: Path, out: Path) -> None:
@@ -936,9 +951,9 @@ def _xlsx_mirror_of_csv(csv_path: Path, out: Path) -> None:
 
 
 def test_xlsx_import_is_id_for_id_parity_with_csv(tmp_path: Path) -> None:
-    """legacy-plan.legacy-step — the XLSX provider yields the same canonical rows as CSV."""
-    from ...adapters.inbound.financial.providers._csv import CsvProvider
-    from ...domain.transactions import derive_transaction_id
+    """accepted contract.contract — the XLSX provider yields the same canonical rows as CSV."""
+    from ....adapters.inbound.financial.providers._csv import CsvProvider
+    from ....domain.transactions import derive_transaction_id
 
     csv_path = _CORPUS / "bbva-business-eur.csv"
     # Canonical CSV id-set computed in-process (no bucket pollution / no reset).
@@ -949,14 +964,17 @@ def test_xlsx_import_is_id_for_id_parity_with_csv(tmp_path: Path) -> None:
     # id-set — the two provider formats agree row-for-row.
     xlsx_path = tmp_path / "bbva.xlsx"
     _xlsx_mirror_of_csv(csv_path, xlsx_path)
-    xlsx_res = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "import", str(xlsx_path), "--provider", "xlsx"])
+    xlsx_res = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "import", str(xlsx_path), "--provider", "xlsx"],
+    )
     assert xlsx_res.exit_code == 0, xlsx_res.output
     xlsx_ids = {r["transaction_id"] for r in _list_rows()}
     assert xlsx_ids == csv_ids, (len(xlsx_ids), len(csv_ids))
 
 
 def test_cross_format_reimport_dedups_by_fingerprint(tmp_path: Path) -> None:
-    """legacy-plan.legacy-step — re-importing the same rows in a different format adds nothing."""
+    """accepted contract.contract — re-importing the same rows in a different format adds nothing."""
     csv_path = _CORPUS / "bbva-business-eur.csv"
     _RUNNER.invoke(app, ["app", "ledger", "import", str(csv_path), "--provider", "csv"])
     before = len(_list_rows())
@@ -972,7 +990,7 @@ def test_cross_format_reimport_dedups_by_fingerprint(tmp_path: Path) -> None:
 
 
 def test_ofx_and_pdf_providers_import_real_transactions() -> None:
-    """legacy-plan.legacy-step — the OFX and PDF providers ingest real bank exports."""
+    """accepted contract.contract — the OFX and PDF providers ingest real bank exports."""
     ofx = _FIN_FIXTURES / "synthetic-transactions.ofx"
     ofx_res = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "import", str(ofx), "--provider", "ofx"])
     assert ofx_res.exit_code == 0, ofx_res.output
@@ -986,7 +1004,7 @@ def test_ofx_and_pdf_providers_import_real_transactions() -> None:
 
 
 def test_jsonl_export_roundtrips_back_through_import(tmp_path: Path) -> None:
-    """legacy-plan.legacy-step — exporting JSONL and re-importing preserves the active row set."""
+    """accepted contract.contract — exporting JSONL and re-importing preserves the active row set."""
     _import_bbva()
     before = len(_list_rows())
     out = tmp_path / "ledger.jsonl"

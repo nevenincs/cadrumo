@@ -47,7 +47,7 @@ importlib.import_module("aeat.domain.renta")
 @pytest.fixture(scope="module")
 def snapshot_2025():
     """Real Modelo 100 2025 registry snapshot (module-level singleton)."""
-    from ...core.resources import resources
+    from ....core.resources import resources
 
     return resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
 
@@ -210,7 +210,7 @@ def test_comparison_result_structure_is_typed(snapshot_2025) -> None:
     filing_year, modelo, and revision, and that the recommendation
     reason string is non-empty.
     """
-    from ._taxation_comparison import TaxationComparisonResult
+    from .._taxation_comparison import TaxationComparisonResult
 
     inputs = {**_BASE_INPUTS, "0003": Decimal("52000")}
     result = compare_taxation_modes(
@@ -237,7 +237,7 @@ def test_comparison_result_structure_is_typed(snapshot_2025) -> None:
 # base liquidable. Authoring a meaningful coverage test requires identifying
 # the elective-application casilla under construct
 # 2026-renta-anexo-c-base-liquidable-negativa-aplicada and supplying it
-# alongside the binding. Tracked under session-honest-followups legacy-plan-step +
+# alongside the binding. Tracked under session-honest-followups accepted contract +
 # task #149.
 
 
@@ -253,9 +253,9 @@ def test_taxation_comparison_error_is_registered_and_envelopes() -> None:
     registry declaration in aeat.core.errors.registry._application, not
     hand-computed.
     """
-    from ...core.errors import ERROR_REGISTRY, build_error_envelope
-    from ...core.errors._registry import get_registered_error_code
-    from ._taxation_comparison import TaxationComparisonError
+    from ....core.errors import ERROR_REGISTRY, build_error_envelope
+    from ....core.errors._registry import get_registered_error_code
+    from .._taxation_comparison import TaxationComparisonError
 
     # Registry membership: the declared code must be present in ERROR_REGISTRY.
     code_obj = get_registered_error_code(TaxationComparisonError)
@@ -281,7 +281,7 @@ def test_taxation_comparison_module_imports_cleanly() -> None:
     """aeat.application.modelo._taxation_comparison must import without error.
 
     Exercises that the module's top-level imports and TYPE_CHECKING block
-    clean-up (legacy-step) did not break the production import path.
+    clean-up (contract) did not break the production import path.
     """
     import importlib
 
@@ -298,7 +298,7 @@ def test_comparison_error_raised_for_non_m100_snapshot() -> None:
     profile-declaration-type binding; the function should detect this
     and raise TaxationComparisonError rather than a raw engine error.
     """
-    from ...core.resources import resources
+    from ....core.resources import resources
 
     snapshot_303 = resources().modelos.authority.snapshot("303", filing_year=2025, period="3T")
 

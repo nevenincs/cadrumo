@@ -5,7 +5,7 @@ and asserts that none carry ``pytest.mark.skip``, ``pytest.mark.skipif``, or
 ``pytest.mark.xfail`` decorators.
 
 Documented legitimate exceptions (environment-conditional guards):
-- ``src/aeat/core/observability/test_sink.py`` — ``@pytest.mark.skipif(
+- ``src/aeat/core/observability/tests/test_sink.py`` — ``@pytest.mark.skipif(
   sys.platform == "win32", ...)`` guards a file-permission test that requires
   POSIX chmod semantics; the guard is platform-conditional, not a behaviour
   mask.
@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _logger = get_logger(__name__)
 
-_SRC_AEAT = Path(__file__).resolve().parent
+_SRC_AEAT = Path(__file__).resolve().parents[1]
 _REPO_ROOT = _SRC_AEAT.parents[1]  # chore-476-restructure-execution
 _FIXTURES_DIR = _SRC_AEAT / "tests" / "fixtures"
 
@@ -38,7 +38,7 @@ _FIXTURES_DIR = _SRC_AEAT / "tests" / "fixtures"
 _DOCUMENTED_EXCEPTIONS: frozenset[tuple[str, str]] = frozenset(
     {
         (
-            "src/aeat/core/observability/test_sink.py",
+            "src/aeat/core/observability/tests/test_sink.py",
             "skipif",
         ),
     }

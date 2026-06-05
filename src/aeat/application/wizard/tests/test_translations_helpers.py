@@ -214,7 +214,7 @@ def test_cli_keys_referenced_in_source_omits_f_string_interpolated_keys() -> Non
 def test_cli_keys_referenced_in_source_root_resolves_under_entrypoints_cli() -> None:
     """Sanity-check that the helper's root path resolution lands on the
     real entrypoints/cli directory (the regex walks every .py under it)."""
-    from ._translations import _cli_entrypoints_root
+    from .._translations import _cli_entrypoints_root
 
     root = _cli_entrypoints_root()
     assert root.is_dir()

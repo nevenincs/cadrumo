@@ -102,7 +102,7 @@ def test_work_create_210_refusal_fires_before_profile_check(
 
 
 def test_guard_stub_modelo_210_skipped_when_engine_live_flag_is_set() -> None:
-    """legacy-step: _guard_stub_modelo returns silently for modelo 210 when the
+    """contract: _guard_stub_modelo returns silently for modelo 210 when the
     aeat_m210_engine_live Settings flag is True. Other stub-only modelos
     continue to refuse unconditionally.
 
@@ -116,9 +116,9 @@ def test_guard_stub_modelo_210_skipped_when_engine_live_flag_is_set() -> None:
     refactor that gated ALL stubs on the flag would fail (b).
     """
 
-    from ...core.config import override_settings
-    from ._errors import CliRefusedBoundaryError
-    from ._modelo import _guard_stub_modelo
+    from ....core.config import override_settings
+    from .._errors import CliRefusedBoundaryError
+    from .._modelo_work_lifecycle_cli import _guard_stub_modelo
 
     with override_settings(aeat_m210_engine_live=True):
         # Flag-True: modelo 210 falls through silently (no exception).
@@ -131,15 +131,15 @@ def test_guard_stub_modelo_210_skipped_when_engine_live_flag_is_set() -> None:
 
 
 def test_guard_stub_modelo_210_refuses_when_engine_live_flag_is_unset() -> None:
-    """legacy-step control: with the flag default (False), modelo 210 still
+    """contract control: with the flag default (False), modelo 210 still
     refuses with the canonical Path-B stub message. Companion to the
     flag-True test above; preserves the original-contract assertion
     under the default Settings() — no override, real ContextVar state.
     """
 
-    from ...core.config import Settings
-    from ._errors import CliRefusedBoundaryError
-    from ._modelo import _guard_stub_modelo
+    from ....core.config import Settings
+    from .._errors import CliRefusedBoundaryError
+    from .._modelo_work_lifecycle_cli import _guard_stub_modelo
 
     assert Settings().aeat_m210_engine_live is False, (
         "S391 contract: m210_engine_live must default False until S392 acceptance"

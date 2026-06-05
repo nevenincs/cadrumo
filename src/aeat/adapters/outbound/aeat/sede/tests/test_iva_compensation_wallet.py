@@ -590,7 +590,7 @@ def test_iva_wallet_live_routes_are_centralized_external_constants() -> None:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step/legacy-step — empty IVA wallet period/amount cells carry translated_message
+# contract/contract — empty IVA wallet period/amount cells carry translated_message
 # ---------------------------------------------------------------------------
 
 

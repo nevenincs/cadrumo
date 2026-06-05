@@ -1,6 +1,6 @@
 """Focused fail-closed coverage for the settings-DI passphrase override.
 
-Closes settings-di legacy-plan-step: proves that
+Closes settings-di accepted contract: proves that
 ``override_settings(aeat_secret_passphrase=None)`` raises the same
 error as the unset-env path (the original native-env contract that
 the ContextVar override seam replaced). The plan Step refers to

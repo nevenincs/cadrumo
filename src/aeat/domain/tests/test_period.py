@@ -106,7 +106,7 @@ class TestParseCanonicalPeriodPagoFraccionado:
 
     The canonical input form for the CLI / workflow layer is ``"YYYYPn"``
     (e.g. ``"2026P1"``); the registry-native form is the short token
-    ``"nP"`` (e.g. ``"1P"``). This class verifies the legacy-step arms.
+    ``"nP"`` (e.g. ``"1P"``). This class verifies the contract arms.
     """
 
     @pytest.mark.parametrize(

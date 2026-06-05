@@ -126,8 +126,8 @@ def _transaction(
 
 
 def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
-    from ...application.user_profile._orchestration import profile_storage_session
-    from ...core import resolve_active_bucket_id
+    from ....application.user_profile._orchestration import profile_storage_session
+    from ....core import resolve_active_bucket_id
 
     _create_profile()
     work_unit = _create_303_work_unit()
@@ -166,8 +166,8 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
     with profile_storage_session(bucket_id):
         from datetime import UTC, datetime
 
-        from ...application.calculations._observations_repository import IvaWalletDecisionRepository
-        from ...domain.iva_compensation._reconciliation import (
+        from ....application.calculations._observations_repository import IvaWalletDecisionRepository
+        from ....domain.iva_compensation._reconciliation import (
             IvaCompensationReconciliationDecision,
         )
 

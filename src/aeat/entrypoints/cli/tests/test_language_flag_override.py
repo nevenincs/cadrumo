@@ -1,6 +1,6 @@
 """CLI ``--language`` flag reaches the i18n renderer via ContextVar override.
 
-Closes settings-di legacy-plan-step: proves that the operator-supplied
+Closes settings-di accepted contract: proves that the operator-supplied
 ``--language`` value flows through ``override_settings`` (the
 ContextVar-backed Settings override seam) into ``output_language()``
 in the i18n renderer — without any test-side ``os.environ`` /

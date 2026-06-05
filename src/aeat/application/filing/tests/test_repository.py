@@ -140,7 +140,7 @@ class TestClassificationGate:
         assert draft.draft_id.encode("utf-8") not in raw
 
     def test_foreign_class_object_refused(self) -> None:
-        from ...adapters.persistence.storage import Envelope, SensitivityClass
+        from ....adapters.persistence.storage import Envelope, SensitivityClass
 
         draft = _make_draft()
         bad = Envelope[ModeloDraft](

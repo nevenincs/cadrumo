@@ -23,7 +23,13 @@ from .....domain.contribuyente.assets import (
     AssetRecordError,
 )
 from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ..assets import AssetsLedgerRepository, load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
+from ..assets import (
+    AssetsLedgerRepository,
+    load_amortizacion_ledger,
+    load_assets,
+    save_amortizacion_ledger,
+    save_assets,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

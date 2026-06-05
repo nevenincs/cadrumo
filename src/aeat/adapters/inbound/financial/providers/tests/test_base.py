@@ -16,7 +16,7 @@ import pytest
 
 from ......domain.transactions import RawTransaction, SourceFormat
 from ......tests import FIXTURES_DIR
-from ... import (
+from .. import (
     BankStatementParseError,
     ProviderValidation,
     detect_provider,
@@ -175,7 +175,7 @@ def test_bank_statement_parse_error_carries_structured_attributes() -> None:
 
 def test_bank_statement_parse_error_is_financial_provider_error() -> None:
     """BankStatementParseError is catchable as FinancialProviderError."""
-    from .. import FinancialProviderError
+    from ... import FinancialProviderError
 
     err = BankStatementParseError("layout drift")
     assert isinstance(err, FinancialProviderError)

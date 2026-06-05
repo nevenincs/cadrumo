@@ -401,12 +401,13 @@ def _verb_path_from_context(ctx: typer.Context) -> str | None:
     if invoked is None:
         return None
     tokens: list[str] = [invoked]
-    # Click stages the unparsed remainder for the dispatched subcommand on
-    # ``protected_args`` during root-callback execution (the
-    # ``protected_args`` / ``args`` split is removed in Click 9.0 in favour
-    # of a single ``args`` list, so we read both for forward compatibility).
-    protected = getattr(ctx, "protected_args", ())
-    remainder = list(protected) + list(ctx.args)
+    # Click 9 exposes the unparsed remainder on ``ctx.args``. Click 8 still
+    # stages the same data on the internal protected list during root-callback
+    # execution; reading the deprecated public ``protected_args`` property emits
+    # a warning, so use the internal storage only as a compatibility fallback.
+    remainder = list(ctx.args)
+    if not remainder:
+        remainder = list(getattr(ctx, "_protected_args", ()))
     for token in remainder:
         if token.startswith("-"):
             # Stop at the first option flag; the verb chain is the

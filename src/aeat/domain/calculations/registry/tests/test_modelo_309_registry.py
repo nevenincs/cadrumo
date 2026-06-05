@@ -94,8 +94,8 @@ def test_modelo_309_declares_autorepercutido_and_recargo_soportado_bindings() ->
 def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None:
     from decimal import Decimal
 
-    from ...iva import IvaCategory, IvaFlowDirection, IvaRateKind
-    from . import (
+    from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+    from .. import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )

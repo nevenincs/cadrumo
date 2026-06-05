@@ -572,7 +572,7 @@ class TestDefaultBlobStoreRoots:
         # ``aeat_secret_store_dir``. A rotation that walks the wrong
         # directory silently skips every secret-store DEK and bricks
         # the secret store on old-key cutover.
-        from . import default_blob_store_roots
+        from .. import default_blob_store_roots
 
         secret_store_dir = tmp_path / "secrets"
         blob_store_dir = tmp_path / "blobs"
@@ -581,7 +581,7 @@ class TestDefaultBlobStoreRoots:
         blob_store_dir.mkdir()
         attachments_dir.mkdir()
 
-        from ....core.config import Settings
+        from .....core.config import Settings
 
         settings = Settings(
             aeat_secret_store_dir=secret_store_dir,
@@ -596,12 +596,12 @@ class TestDefaultBlobStoreRoots:
         # Operator override may point both settings at the same dir;
         # the helper must deduplicate so rotation does not visit the
         # same blob twice.
-        from . import default_blob_store_roots
+        from .. import default_blob_store_roots
 
         shared = tmp_path / "shared-blobs"
         shared.mkdir()
 
-        from ....core.config import Settings
+        from .....core.config import Settings
 
         settings = Settings(
             aeat_secret_store_dir=tmp_path / "secrets",
@@ -615,8 +615,8 @@ class TestDefaultBlobStoreRoots:
         # Pre-provision installations have no blob store yet — the
         # helper must omit non-existent directories so the rotation
         # reports a clean (0, 0, 0) instead of an OS-level error.
-        from ....core.config import Settings
-        from . import default_blob_store_roots
+        from .....core.config import Settings
+        from .. import default_blob_store_roots
 
         settings = Settings(
             aeat_secret_store_dir=tmp_path / "secrets",
@@ -676,7 +676,7 @@ class TestRotationLockTargetAlignment:
         # byte target ``<draft_id>.lock.lock``). The rotation must
         # contend on the SAME ``<draft_id>.lock.lock`` so concurrent
         # writers cannot stomp the rotation mid-run.
-        from . import LockAcquisitionError, exclusive_file_lock
+        from .. import LockAcquisitionError, exclusive_file_lock
 
         store = tmp_path / "drafts"
         store.mkdir()
@@ -708,7 +708,7 @@ class TestRotationLockTargetAlignment:
         # ``target.with_suffix('.lock')`` for ``target = usage-ratios.json``.
         # The rotation plan entry for the usage-ratios profile must
         # produce the same lock target.
-        from . import exclusive_file_lock
+        from .. import exclusive_file_lock
 
         store = tmp_path / "financial"
         store.mkdir()

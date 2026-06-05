@@ -135,7 +135,7 @@ def test_core_error_does_not_catch_non_core_aeat_error() -> None:
     (McpLaunchError inherits AeatError directly, not CoreError) raised
     inside a try block is NOT caught by a CoreError handler.
     """
-    from . import McpLaunchError
+    from .. import McpLaunchError
 
     with pytest.raises(McpLaunchError):
         try:

@@ -70,8 +70,8 @@ async def test_clave_movil_provider_probes_persisted_session_with_central_playwr
     settings = _settings_or_skip()
     if not settings.aeat_clave_movil_dni_nie:
         pytest.skip("AEAT_CLAVE_MOVIL_DNI_NIE is not configured")
-    from .....core import require_active_bucket_id
-    from .....core.auth_session_keys import aeat_auth_session_storage_state_path
+    from ......core import require_active_bucket_id
+    from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 
     storage_state_path = aeat_auth_session_storage_state_path(
         require_active_bucket_id(),

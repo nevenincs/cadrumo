@@ -1,4 +1,4 @@
-"""legacy-step: Wizard flow description key inventory test.
+"""contract: Wizard flow description key inventory test.
 
 Asserts that every registered wizard flow carries a locale key
 ``wizard.{flow.id}.description`` that resolves to a non-trivial string

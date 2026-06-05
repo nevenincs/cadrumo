@@ -60,7 +60,7 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
             # negativos-anteriores). For Q1 the prior-quarter anchor is
             # absent by design (max_year_delta=0, no prior trimestre in
             # the same ejercicio). Supplying it as a casilla input would
-            # violate the legacy-plan-step smuggled-binding guard; the formula
+            # violate the accepted contract smuggled-binding guard; the formula
             # engine materialises it as Decimal("0") via the absent-by-
             # design path with provenance marker on the CasillaObservation.
             "16": Decimal("0"),

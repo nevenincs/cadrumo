@@ -1,6 +1,6 @@
 """Real-behavior inventory test: zero bare hardcoded literals in production source.
 
-Asserts that none of the literals canonicalised in legacy-plan survive in production
+Asserts that none of the literals canonicalised in ratchet history survive in production
 Python source outside their single canonical definition site and documented escapes.
 """
 

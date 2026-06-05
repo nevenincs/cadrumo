@@ -85,8 +85,8 @@ def test_work_create_151_has_no_placeholder_registry_definition(
     Beckham + the form-approval order corpus).
     """
 
-    from ...core.resources import bundled_path
-    from ...domain.calculations.registry import load_registry_tree
+    from ....core.resources import bundled_path
+    from ....domain.calculations.registry import load_registry_tree
 
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     assert "151" in {modelo.id for modelo in modelos}

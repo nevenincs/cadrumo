@@ -448,7 +448,7 @@ def test_anti_tautology_mutating_on_disk_payload_is_detected_on_load(
 
     from pydantic import ValidationError
 
-    from ...adapters.persistence.storage import (
+    from ....adapters.persistence.storage import (
         Envelope,
         SensitivityClass,
     )

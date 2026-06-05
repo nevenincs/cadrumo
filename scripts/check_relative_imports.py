@@ -12,12 +12,12 @@ docstrings or `textwrap.dedent` blocks does not produce false positives.
 
 Intended invocation:
 
-* `just lint` — runs this with no arguments (full-tree scan).
-* `prek run` — runs as a local hook with the staged file paths
+* `just lint` â€” runs this with no arguments (full-tree scan).
+* `prek run` â€” runs as a local hook with the staged file paths
   appended (per-file scan); see `prek.toml`.
 * Direct invocation: `python scripts/check_relative_imports.py [PATH...]`.
   When PATHs are supplied, only those files are scanned (any path
-  outside `src/aeat/` is silently skipped — boundary `tests/` and
+  outside `src/aeat/` is silently skipped â€” boundary `tests/` and
   `scripts/` are out of scope by design).
 
 Boundaries: `tests/` and `scripts/` live outside the package and may
@@ -27,7 +27,7 @@ explicitly listed on the command line.
 Known blind-spot: dynamic-import strings such as
 ``pytest.importorskip("aeat.X")`` or ``importlib.import_module("aeat.X")``
 are NOT flagged because the AST sees them as plain string constants.
-This is intentional — string-form module names are sometimes the
+This is intentional â€” string-form module names are sometimes the
 right tool (placeholder gates, plugin loaders), and a heuristic match
 on every "aeat."-prefixed string would produce noise. New contributors
 adding dynamic-import sites should prefer relative-equivalent helpers
@@ -124,7 +124,7 @@ def _resolve_targets(args: list[str]) -> list[Path]:
     the listed paths and keep only those inside `src/aeat/`. Paths
     outside `src/aeat/` (tests, scripts, env, etc.) are silently
     dropped because the mandate scopes there explicitly to absolute
-    imports — surfacing them as "skipped" would be noise during a
+    imports â€” surfacing them as "skipped" would be noise during a
     pre-commit run.
     """
     if not args:
@@ -133,7 +133,7 @@ def _resolve_targets(args: list[str]) -> list[Path]:
     targets: list[Path] = []
     src_aeat_resolved = SRC_AEAT.resolve()
     for raw in args:
-        # Resolve relative to the current working directory — standard
+        # Resolve relative to the current working directory â€” standard
         # CLI semantics. prek invokes hooks from the repo root, so this
         # also handles repo-root-relative paths correctly.
         candidate = Path(raw).resolve()

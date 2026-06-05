@@ -950,7 +950,7 @@ def test_file_still_refuses_a_closed_past_period_no_pending_obligation(repos) ->
     # neither an open filing-obligation window nor this `file` step — and the
     # refusal summary states why the gate refused (the obligation window is not
     # open).
-    from ...core.errors import render_error_text
+    from ....core.errors import render_error_text
 
     rendered = render_error_text(gate_error.value)
     # The signpost must name the REAL verb: `aeat app modelo export` is a sibling
@@ -1164,7 +1164,7 @@ def test_calculate_refused_on_discarded_work_unit(repos) -> None:
     """A discarded work unit refuses further calculation. The
     operator must create a fresh work unit to continue."""
 
-    from . import (
+    from .. import (
         WorkUnitMutationRefusedError,
         discard_work_unit,
     )
@@ -1194,8 +1194,8 @@ def test_discard_emits_modelo_work_unit_discarded_event(repos) -> None:
     """``discard_work_unit`` emits a ``modelo.work_unit.discarded``
     bucket event with actor + reason payload."""
 
-    from ...domain.buckets._event import BucketEventObjectType, BucketEventType
-    from . import discard_work_unit
+    from ....domain.buckets._event import BucketEventObjectType, BucketEventType
+    from .. import discard_work_unit
 
     wu_repo, _, _, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
@@ -1391,10 +1391,10 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     # BLOCKING_RULE path explicitly: the work unit was anchored at a
     # year that predates the modelo's earliest revision, so verify's
     # registry-snapshot resolution still fails.
-    from ...domain.modelos._calculation_repository import (
+    from ....domain.modelos._calculation_repository import (
         upsert_calculation_revision,
     )
-    from ...domain.modelos._calculation_revision import (
+    from ....domain.modelos._calculation_revision import (
         CalculationRevision,
         derive_calculation_revision_id,
     )
@@ -1936,7 +1936,7 @@ def test_calculate_refuses_when_registry_snapshot_unresolvable(repos) -> None:
     ``CalculationRegistryUnavailableError`` rather than persisting a
     revision that bypasses the engine."""
 
-    from . import CalculationRegistryUnavailableError
+    from .. import CalculationRegistryUnavailableError
 
     wu_repo, cr_repo, _, _, bv_repo = repos
     # Modelo 130 at year 2010 predates the registry's earliest

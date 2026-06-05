@@ -1,6 +1,6 @@
 """Tests for maritime worker IRPF exemption selectors and calculation functions.
 
-Covers legacy-step (selector predicates), legacy-step (calculation tests with registry-
+Covers contract (selector predicates), contract (calculation tests with registry-
 authoritative fixture values), and the DA 41 / RETMAR completeness gate tests.
 
 Expected values are grounded in:
@@ -36,7 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 # ---------------------------------------------------------------------------
-# legacy-step: selector unit tests
+# contract: selector unit tests
 # ---------------------------------------------------------------------------
 
 
@@ -183,7 +183,7 @@ class TestDa41Eligible:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step: DA 41 inactive guard
+# contract: DA 41 inactive guard
 # ---------------------------------------------------------------------------
 
 
@@ -221,7 +221,7 @@ class TestGuardDa41Inactive:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step: RETMAR mandatory-filing completeness gate
+# contract: RETMAR mandatory-filing completeness gate
 # ---------------------------------------------------------------------------
 
 
@@ -248,7 +248,7 @@ class TestCheckRetmarMandatoryFiling:
         assert err.context.get("legal_ref") == "Ley 47/2015 BOE-A-2015-11346"
 
     def test_retmar_warning_is_renta_error_subclass(self) -> None:
-        from ._errors import RentaError
+        from .._errors import RentaError
 
         facts = MaritimeWorkerFacts(retmar_registered=True)
         with pytest.raises(RentaError):
@@ -256,7 +256,7 @@ class TestCheckRetmarMandatoryFiling:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step + legacy-step: Art. 7.p) calculation with registry-authoritative fixture values
+# contract + contract: Art. 7.p) calculation with registry-authoritative fixture values
 # ---------------------------------------------------------------------------
 
 
@@ -320,7 +320,7 @@ class TestCalculateArt7pExemption:
         assert obs.value < ART_7P_EXEMPTION_CAP_EUR
 
     def test_observation_carries_art7p_legal_refs(self) -> None:
-        # legacy-plan close gate: CasillaObservation.legal_refs must carry
+        # accepted contract close gate: CasillaObservation.legal_refs must carry
         # "ley-35-2006:art-7p" per aeat-calculation-grounding rule.
         # The ADR's registry binding uses "Ley 35/2006 Art. 7.p)".
         obs = calculate_art_7p_exemption(
@@ -351,7 +351,7 @@ class TestCalculateArt7pExemption:
         assert obs.casilla_id == RENTA_EXENTA_CASILLA
 
     def test_raises_when_not_eligible(self) -> None:
-        from ._errors import RentaValidationError
+        from .._errors import RentaValidationError
 
         facts = MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
@@ -366,7 +366,7 @@ class TestCalculateArt7pExemption:
             )
 
     def test_raises_on_zero_salary(self) -> None:
-        from ._errors import RentaValidationError
+        from .._errors import RentaValidationError
 
         with pytest.raises(RentaValidationError):
             calculate_art_7p_exemption(
@@ -376,7 +376,7 @@ class TestCalculateArt7pExemption:
             )
 
     def test_raises_on_zero_qualifying_days(self) -> None:
-        from ._errors import RentaValidationError
+        from .._errors import RentaValidationError
 
         with pytest.raises(RentaValidationError):
             calculate_art_7p_exemption(
@@ -386,7 +386,7 @@ class TestCalculateArt7pExemption:
             )
 
     def test_raises_on_qualifying_days_exceeding_year(self) -> None:
-        from ._errors import RentaValidationError
+        from .._errors import RentaValidationError
 
         with pytest.raises(RentaValidationError):
             calculate_art_7p_exemption(
@@ -397,7 +397,7 @@ class TestCalculateArt7pExemption:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step + legacy-step: REBECA calculation with registry-authoritative fixture values
+# contract + contract: REBECA calculation with registry-authoritative fixture values
 # ---------------------------------------------------------------------------
 
 
@@ -483,7 +483,7 @@ class TestCalculateRebecaExemption:
         assert obs.casilla_id == RENTA_EXENTA_CASILLA
 
     def test_raises_when_not_eligible(self) -> None:
-        from ._errors import RentaValidationError
+        from .._errors import RentaValidationError
 
         facts = MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
@@ -496,7 +496,7 @@ class TestCalculateRebecaExemption:
             )
 
     def test_raises_on_zero_income(self) -> None:
-        from ._errors import RentaValidationError
+        from .._errors import RentaValidationError
 
         with pytest.raises(RentaValidationError):
             calculate_rebeca_exemption(
@@ -506,7 +506,7 @@ class TestCalculateRebecaExemption:
 
 
 # ---------------------------------------------------------------------------
-# legacy-plan close gate: prohibited legal refs not cited in binding outputs
+# accepted contract close gate: prohibited legal refs not cited in binding outputs
 # ---------------------------------------------------------------------------
 
 

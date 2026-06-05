@@ -1,4 +1,4 @@
-"""Offline/online renderer conformance (legacy-plan-step).
+"""Offline/online renderer conformance (accepted contract).
 
 One ``SheetExportPlan`` must render to structurally identical grids whether
 materialised offline (openpyxl xls) or online (Google-Sheets apply). This test
@@ -117,10 +117,10 @@ def test_value_and_formula_cells_render_identically_offline_and_online() -> None
 
 
 def test_apply_adapter_emits_number_format_and_emphasis_requests() -> None:
-    # legacy-step: the online apply renders number formats + start/final + section
+    # contract: the online apply renders number formats + start/final + section
     # headers, not just values. A plan with a money number format yields a
     # NUMBER repeatCell; section headers / anchors yield bold repeatCells.
-    from ....application.storage.calc_sheets import SheetAnchor, SheetSectionHeader
+    from .....application.storage.calc_sheets import SheetAnchor, SheetSectionHeader
 
     plan = _plan().model_copy(
         update={

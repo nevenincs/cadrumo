@@ -51,61 +51,61 @@ def _assert_enrolled(error_cls: type[AeatError], message: str = "test trigger") 
 
 
 # ---------------------------------------------------------------------------
-# legacy-step — RepositorySetupError
+# contract — RepositorySetupError
 # ---------------------------------------------------------------------------
 
 
 def test_repository_setup_error_enrolled() -> None:
-    from ..adapters.persistence.storage.errors import RepositorySetupError
+    from ...adapters.persistence.storage.errors import RepositorySetupError
 
     envelope = _assert_enrolled(RepositorySetupError, "missing class attribute 'namespace'")
     assert envelope.code == "FAIL_STORAGE_REPOSITORY_SETUP"
 
 
 # ---------------------------------------------------------------------------
-# legacy-step — ProfileLabelAmbiguousError
+# contract — ProfileLabelAmbiguousError
 # ---------------------------------------------------------------------------
 
 
 def test_profile_label_ambiguous_error_enrolled() -> None:
-    from .workflow._errors import ProfileLabelAmbiguousError
+    from ..workflow._errors import ProfileLabelAmbiguousError
 
     envelope = _assert_enrolled(ProfileLabelAmbiguousError, "profile label 'test' is ambiguous: 2 buckets carry it")
     assert envelope.code == "REFUSED_PROFILE_LABEL_AMBIGUOUS"
 
 
 # ---------------------------------------------------------------------------
-# legacy-step — RepairIntegrityError and RepairDecisionNotFoundError
+# contract — RepairIntegrityError and RepairDecisionNotFoundError
 # ---------------------------------------------------------------------------
 
 
 def test_repair_integrity_error_enrolled() -> None:
-    from .repair_integrity import RepairIntegrityError
+    from ..repair_integrity import RepairIntegrityError
 
     envelope = _assert_enrolled(RepairIntegrityError, "decision_id mismatch")
     assert envelope.code == "INTEGRITY_REPAIR_INTEGRITY"
 
 
 def test_repair_decision_not_found_error_enrolled() -> None:
-    from .repair_integrity import RepairDecisionNotFoundError
+    from ..repair_integrity import RepairDecisionNotFoundError
 
     envelope = _assert_enrolled(RepairDecisionNotFoundError, "repair-remediation decision 'abc' does not exist")
     assert envelope.code == "FAIL_REPAIR_DECISION_NOT_FOUND"
 
 
 def test_repair_decision_not_found_is_subtype_of_repair_integrity() -> None:
-    from .repair_integrity import RepairDecisionNotFoundError, RepairIntegrityError
+    from ..repair_integrity import RepairDecisionNotFoundError, RepairIntegrityError
 
     assert issubclass(RepairDecisionNotFoundError, RepairIntegrityError)
 
 
 # ---------------------------------------------------------------------------
-# legacy-step — SnapshotNotFoundError (now AeatError + KeyError)
+# contract — SnapshotNotFoundError (now AeatError + KeyError)
 # ---------------------------------------------------------------------------
 
 
 def test_snapshot_not_found_error_enrolled() -> None:
-    from .live._snapshot_base import SnapshotNotFoundError
+    from ..live._snapshot_base import SnapshotNotFoundError
 
     assert issubclass(SnapshotNotFoundError, AeatError), "SnapshotNotFoundError must inherit AeatError"
     assert issubclass(SnapshotNotFoundError, KeyError), "SnapshotNotFoundError must still inherit KeyError"
@@ -115,8 +115,8 @@ def test_snapshot_not_found_error_enrolled() -> None:
 
 def test_snapshot_not_found_subclasses_still_work() -> None:
     """Per-service subclasses remain catchable as both AeatError and KeyError."""
-    from .live._borrador_100 import BorradorSnapshotNotFoundError
-    from .live._snapshot_base import SnapshotNotFoundError
+    from ..live._borrador_100 import BorradorSnapshotNotFoundError
+    from ..live._snapshot_base import SnapshotNotFoundError
 
     assert issubclass(BorradorSnapshotNotFoundError, SnapshotNotFoundError)
     assert issubclass(BorradorSnapshotNotFoundError, AeatError)
@@ -129,7 +129,7 @@ def test_snapshot_not_found_subclasses_still_work() -> None:
 
 
 def test_modelo_applicability_filter_error_enrolled() -> None:
-    from .modelo._actions import ModeloApplicabilityFilterError
+    from ..modelo._actions import ModeloApplicabilityFilterError
 
     envelope = _assert_enrolled(ModeloApplicabilityFilterError, "Unknown applicability filter: 'bad_filter'")
     assert envelope.code is not None

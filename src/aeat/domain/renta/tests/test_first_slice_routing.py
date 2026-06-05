@@ -77,8 +77,8 @@ def test_first_slice_routing_targets_exist_in_modelo_100_registry() -> None:
     :func:`_check_all_id_references`.
     """
 
-    from ...core.resources import bundled_path
-    from ..calculations.registry._loader import load_registry_tree
+    from ....core.resources import bundled_path
+    from ...calculations.registry._loader import load_registry_tree
 
     modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     modelo_100 = next((m for m in modelos if m.id == "100"), None)
@@ -102,8 +102,8 @@ def test_first_slice_check_is_registered_with_the_registry_validator() -> None:
     ``renta``).
     """
 
-    from ..calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
-    from ._first_slice_routing_integrity import check_first_slice_routing
+    from ...calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+    from .._first_slice_routing_integrity import check_first_slice_routing
 
     assert check_first_slice_routing in _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
@@ -118,7 +118,7 @@ def test_registered_check_fires_through_the_snapshot_build_gate() -> None:
     than dead code.
     """
 
-    from ._first_slice_routing_integrity import check_first_slice_routing
+    from .._first_slice_routing_integrity import check_first_slice_routing
 
     real_targets = first_slice_target_casillas()
     # A casilla set missing every routing target must report them all.

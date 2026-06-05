@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _fully_populated_taxpayer() -> TaxpayerProfile:
-    """A TaxpayerProfile with every legacy-plan axis set to a non-default value.
+    """A TaxpayerProfile with every accepted contract axis set to a non-default value.
 
     entity_type, legal_entity_form, irpf_income_categories,
     irpf_estimation_regime, iva_regime (REAGP, the new member), and the
@@ -716,7 +716,7 @@ class TestParseDaysInSpain:
     """
 
     def setup_method(self) -> None:
-        from ._profiles import _parse_days_in_spain
+        from .._profiles import _parse_days_in_spain
 
         self._parse = _parse_days_in_spain
 
