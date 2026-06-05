@@ -28,6 +28,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _SRC_AEAT = Path(__file__).resolve().parents[1]
 _REPO_ROOT = _SRC_AEAT.parents[1]
 _FIXTURES_DIR = _SRC_AEAT / "tests" / "fixtures"
+_TEST_MODULE_ROOTS = (
+    _SRC_AEAT,
+    _REPO_ROOT / "docs",
+)
 _EXECUTION_MARKERS = frozenset({"unit", "integration", "aeat_live"})
 _HEX_MARKERS = frozenset(
     {
@@ -116,21 +120,22 @@ _LIVE_TEST_OPT_IN_SCAN_ROOTS = (
 
 
 def _discover_test_modules() -> list[Path]:
-    """Return every ``test_*.py`` module under ``src/aeat/``.
+    """Return every source-controlled ``test_*.py`` module.
 
     Excludes ``__init__.py`` and any module beneath
     ``src/aeat/tests/fixtures/`` (those are fixture-generator helpers
     that ship alongside the bundled fixtures, not project test modules).
     """
     collected: set[Path] = set()
-    for path in _SRC_AEAT.glob("**/test_*.py"):
-        if path.name == "__init__.py":
-            continue
-        try:
-            path.relative_to(_FIXTURES_DIR)
-        except ValueError:
-            if _module_defines_test_functions(path):
-                collected.add(path)
+    for root in _TEST_MODULE_ROOTS:
+        for path in root.glob("**/test_*.py"):
+            if path.name == "__init__.py":
+                continue
+            try:
+                path.relative_to(_FIXTURES_DIR)
+            except ValueError:
+                if _module_defines_test_functions(path):
+                    collected.add(path)
     return sorted(collected)
 
 
@@ -555,11 +560,16 @@ def test_test_modules_live_under_tests_directories_and_use_test_prefix() -> None
     """Every test module must live below a ``tests`` directory and use ``test_``."""
     misplaced = [
         str(path.relative_to(_REPO_ROOT))
-        for path in _SRC_AEAT.rglob("test_*.py")
+        for root in _TEST_MODULE_ROOTS
+        for path in root.rglob("test_*.py")
         if "tests" not in path.relative_to(_REPO_ROOT).parts
     ]
-    underscore_prefixed = [str(path.relative_to(_REPO_ROOT)) for path in _SRC_AEAT.rglob("_test_*.py")]
-    suffix_style = [str(path.relative_to(_REPO_ROOT)) for path in _SRC_AEAT.rglob("*_test.py")]
+    underscore_prefixed = [
+        str(path.relative_to(_REPO_ROOT)) for root in _TEST_MODULE_ROOTS for path in root.rglob("_test_*.py")
+    ]
+    suffix_style = [
+        str(path.relative_to(_REPO_ROOT)) for root in _TEST_MODULE_ROOTS for path in root.rglob("*_test.py")
+    ]
     assert not misplaced, "test-prefixed files outside tests directories:\n" + "\n".join(misplaced)
     assert not underscore_prefixed, "underscore-prefixed test files are forbidden:\n" + "\n".join(
         underscore_prefixed
