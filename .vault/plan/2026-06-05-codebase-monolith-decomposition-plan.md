@@ -127,6 +127,10 @@ Close any CLI roots still above the hard module budget after first-pass registra
 - [x] `W02.P10.S116` - select the next residual config CLI closure group using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests`.
 - [x] `W02.P10.S117` - extract the selected residual config CLI group into focused transport registrar modules; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
 - [x] `W02.P10.S118` - verify residual config CLI behavior and ratchet config module size budget; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [ ] `W02.P10.S143` - split residual config custody command registration into focused transport helpers without moving custody policy into CLI; `src/aeat/entrypoints/cli/_config/_custody.py src/aeat/entrypoints/cli/_config/tests`.
+- [ ] `W02.P10.S144` - split residual profile censo command registration into focused transport helpers without moving censo policy into CLI; `src/aeat/entrypoints/cli/_config/_profile_censo.py src/aeat/entrypoints/cli/_config/tests`.
+- [ ] `W02.P10.S145` - repair hard size-budget inventory for deleted or moved tracked paths and shrunken modelo compatibility modules; `src/aeat/tests/test_codebase_size_budgets.py src/aeat/application/modelo src/aeat/entrypoints/cli/tests`.
+- [ ] `W02.P10.S146` - verify residual config callable splits and hard size-budget inventory no longer fail on stale paths or config registrar callables; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests src/aeat/tests/test_codebase_size_budgets.py`.
 
 ## Wave `W03` - application and domain monolith decomposition
 
@@ -195,8 +199,8 @@ Close application package and service roots that remain oversized after first-pa
 - [x] `W03.P11.S120` - verify residual modelo application behavior and public facade imports after action decomposition; `src/aeat/application/modelo/tests src/aeat/entrypoints/cli/tests/test_modelo*`.
 - [x] `W03.P11.S121` - decompose residual live package root exports into focused private modules behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/*.py`.
 - [x] `W03.P11.S122` - verify residual live package behavior and public facade imports after root decomposition; `src/aeat/application/live/tests src/aeat/entrypoints/cli/tests/test_live*`.
-- [ ] `W03.P11.S123` - decompose overview application root by calendar and filing summary services behind the overview facade; `src/aeat/application/overview/__init__.py src/aeat/application/overview/*.py`.
-- [ ] `W03.P11.S124` - verify overview application behavior and public facade imports after root decomposition; `src/aeat/application/overview/tests src/aeat/entrypoints/cli/tests/test_overview*`.
+- [x] `W03.P11.S123` - decompose overview application root by calendar and filing summary services behind the overview facade; `src/aeat/application/overview/__init__.py src/aeat/application/overview/*.py`.
+- [x] `W03.P11.S124` - verify overview application behavior and public facade imports after root decomposition; `src/aeat/application/overview/tests src/aeat/entrypoints/cli/tests/test_overview*`.
 - [x] `W03.P11.S133` - extract residual modelo calculation and bucket-aggregation workflows behind the modelo application facade without moving policy to CLI; `src/aeat/application/modelo/_actions.py src/aeat/application/modelo/_calculation_actions.py src/aeat/application/modelo/_calculation_helpers.py src/aeat/application/modelo/tests`.
 - [x] `W03.P11.S134` - verify residual modelo calculation extraction preserves behavior and public facade imports; `src/aeat/application/modelo/tests src/aeat/entrypoints/cli/tests/test_modelo*`.
 - [x] `W03.P11.S135` - extract residual modelo verification predicates findings clean-state and workflow-gate orchestration behind the modelo application facade; `src/aeat/application/modelo/_actions.py src/aeat/application/modelo/_verification_actions.py src/aeat/application/modelo/_verification_helpers.py src/aeat/application/modelo/tests`.

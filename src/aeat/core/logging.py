@@ -108,7 +108,7 @@ def _scrub_text(value: str, *, key: str | None = None) -> str:
     scrubbed = _SENSITIVE_ASSIGNMENT_RE.sub(
         lambda match: (
             match.group(0)
-            if _PERCENT_PLACEHOLDER_VALUE_RE.fullmatch(match.group("value"))
+            if _PERCENT_PLACEHOLDER_RE.search(match.group("value"))
             else (
                 f"{match.group('key')}{match.group('separator')}"
                 f"{_redacted_value(match.group('key'), match.group('value'))}"
