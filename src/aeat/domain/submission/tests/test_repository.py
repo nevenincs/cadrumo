@@ -27,7 +27,7 @@ from .._repository import (
     SubmissionRepository,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _make_filing(

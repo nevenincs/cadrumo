@@ -262,6 +262,7 @@ def __getattr__(name: str):
 
 
 __all__ = [
+    "CENSO_DERIVED_SOURCE_TAG",
     "CENSO_SOURCE_TAG",
     "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
     "USER_PROFILE_SNAPSHOT_NAMESPACE",

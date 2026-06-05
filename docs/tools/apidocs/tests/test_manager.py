@@ -17,7 +17,7 @@ def test_scaffold_produces_conformant_tree(tmp_path: pytest.TempPathFactory) -> 
     """
     from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = Path(__file__).resolve().parents[4]
     src_aeat = repo_root / "src" / "aeat"
     docs_api = tmp_path / "api"
 
@@ -42,7 +42,7 @@ def test_check_detects_missing_stub(tmp_path: pytest.TempPathFactory) -> None:
     """
     from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = Path(__file__).resolve().parents[4]
     src_aeat = repo_root / "src" / "aeat"
     docs_api = tmp_path / "api"
 
@@ -67,7 +67,7 @@ def test_check_detects_orphan_stub(tmp_path: pytest.TempPathFactory) -> None:
     """
     from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = Path(__file__).resolve().parents[4]
     src_aeat = repo_root / "src" / "aeat"
     docs_api = tmp_path / "api"
 
@@ -86,7 +86,7 @@ def test_check_detects_stale_stub_content(tmp_path: pytest.TempPathFactory) -> N
     """check() reports a generated stub whose content was hand-edited."""
     from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = Path(__file__).resolve().parents[4]
     src_aeat = repo_root / "src" / "aeat"
     docs_api = tmp_path / "api"
 
@@ -109,7 +109,7 @@ def test_scaffold_removes_stale_stub(tmp_path: pytest.TempPathFactory) -> None:
     """
     from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = Path(__file__).resolve().parents[4]
     src_aeat = repo_root / "src" / "aeat"
     docs_api = tmp_path / "api"
     docs_api.mkdir(parents=True)
@@ -128,7 +128,7 @@ def test_scaffold_leaves_unchanged_stubs_untouched(tmp_path: pytest.TempPathFact
     """A second scaffold run writes no files when the tree is already current."""
     from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = Path(__file__).resolve().parents[4]
     src_aeat = repo_root / "src" / "aeat"
     docs_api = tmp_path / "api"
 
@@ -145,7 +145,7 @@ def test_audit_returns_conformant_message_after_scaffold(tmp_path: pytest.TempPa
     """audit() includes a conformant message after a successful scaffold."""
     from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = Path(__file__).resolve().parents[4]
     src_aeat = repo_root / "src" / "aeat"
     docs_api = tmp_path / "api"
 

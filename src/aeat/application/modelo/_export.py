@@ -17,6 +17,7 @@ service.
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Iterable
 from datetime import date, datetime
 from pathlib import Path
 
@@ -58,7 +59,11 @@ from ...domain.period import (
     period_end_date,
     period_start_date,
 )
-from ..calculations import CalculationObservationRepository, IvaWalletDecisionRepository
+from ..calculations import (
+    CalculationObservationRepository,
+    CrossPeriodExpectedMemberSet,
+    IvaWalletDecisionRepository,
+)
 from ..filing import (
     approve_draft,
     build_draft,
@@ -434,6 +439,7 @@ def export_modelo_revision(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     calculation_observation_repository: CalculationObservationRepository | None = None,
+    cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     clock: datetime | None = None,
 ) -> ModeloExportResult:
     """Export a verified-complete or filed calculation revision to disk.
@@ -493,6 +499,7 @@ def export_modelo_revision(
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
         iva_compensation_decision=iva_wallet_decision,
+        expected_member_sets=cross_period_expected_member_sets,
     )
     iva_wallet_provenance = _iva_wallet_decision_export_provenance(iva_wallet_decision)
 

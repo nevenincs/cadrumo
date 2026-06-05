@@ -26,7 +26,7 @@ from .._record_spec import (
     validate_record_specs,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 class TestRecordFieldSpec:

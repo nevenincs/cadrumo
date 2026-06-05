@@ -25,7 +25,11 @@ def quarantine_unreadable_rows(
     ensure_quarantine_table(engine)
     with session_scope(engine) as session:
         quarantined_at = quarantine_timestamp()
-        namespaces = session.execute(text("SELECT DISTINCT namespace FROM secure_objects ORDER BY namespace")).scalars().all()
+        namespaces = (
+            session.execute(text("SELECT DISTINCT namespace FROM secure_objects ORDER BY namespace"))
+            .scalars()
+            .all()
+        )
         per_namespace: list[SecureObjectNamespaceIntegrity] = []
         for namespace in namespaces:
             rows = session.execute(

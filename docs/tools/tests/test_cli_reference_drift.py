@@ -1,7 +1,6 @@
 """Committed-versus-regenerated CLI reference drift gate.
 
-Closes docs-architecture W02.P07.S23: every commit that changes the
-CLI surface must also regenerate the docs/cli/ subtree so the
+Every commit that changes the CLI surface must also regenerate the docs/cli/ subtree so the
 committed pages match what ``docs.tools.cli_reference.generate_cli_reference``
 emits. Without this gate, a verb/flag/help-text drift silently
 diverges from the published reference and the docs-check lane
@@ -13,10 +12,10 @@ reference projection without making external calls.
 
 from __future__ import annotations
 
+import difflib
 from pathlib import Path
 
 import pytest
-
 from docs.tools.cli_reference import generate_cli_reference_in_subprocess
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -56,13 +55,11 @@ def test_committed_cli_reference_matches_regenerated_output(tmp_path: Path) -> N
             continue
         committed = committed_path.read_text(encoding="utf-8")
         if committed != rendered:
-            import difflib
-            print("DIFF FOR", relative_path)
-            print("\n".join(difflib.unified_diff(committed.splitlines(), rendered.splitlines())))
+            diff = "\n".join(difflib.unified_diff(committed.splitlines(), rendered.splitlines()))
             drift.append(
                 f"docs/{relative_path} drifted from generator output "
                 f"(committed {len(committed)} chars; regenerated "
-                f"{len(rendered)} chars)"
+                f"{len(rendered)} chars)\n{diff}"
             )
 
     # Detect orphan pages (committed files the generator no longer emits).

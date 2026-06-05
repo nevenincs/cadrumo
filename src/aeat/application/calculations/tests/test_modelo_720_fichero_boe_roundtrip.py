@@ -50,7 +50,7 @@ from ....application.filing import (
     export_draft,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # ---------------------------------------------------------------------------
 # Golden SHA placeholder — filled in after first real run.

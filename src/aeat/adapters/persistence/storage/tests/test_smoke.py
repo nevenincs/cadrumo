@@ -12,8 +12,8 @@ import pytest
 from .....core import errors, logging
 from .. import RepositoryError, StorageError
 from .. import __all__ as storage_all
-from . import __dict__ as storage_namespace
-from . import __doc__ as storage_doc
+from .. import __dict__ as storage_namespace
+from .. import __doc__ as storage_doc
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

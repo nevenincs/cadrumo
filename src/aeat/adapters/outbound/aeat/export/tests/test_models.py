@@ -21,7 +21,7 @@ from ......domain.submission import (
     make_submission_id,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def _attempt(

@@ -29,7 +29,7 @@ from ..._errors import AeatExportFormatError
 from .._deserialise import _decode_date
 from .._record_spec import DateFmt, encode_date
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 _SAMPLE_DATES: list[date] = [

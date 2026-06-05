@@ -155,5 +155,14 @@ def _keyword_literal(call: ast.Call, name: str) -> str | None:
 
 def _requires_policy_coverage(command_path: str) -> bool:
     tokens = command_path.split()
-    recovery_leaves = {"import", "export", "recover", "recovery", "restore"}
+    recovery_leaves = {
+        "export",
+        "import",
+        "recover",
+        "recovery",
+        "rekey",
+        "restore",
+        "show-recovery",
+        "verify-recovery",
+    }
     return "repair" in tokens or "bucket" in tokens or tokens[-1] in recovery_leaves

@@ -26,7 +26,7 @@ import pytest
 from .......core.external_constants import LATIN_1_ENCODING
 from .._record_spec import encode_currency
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 class TestUnsignedCurrency13Byte:

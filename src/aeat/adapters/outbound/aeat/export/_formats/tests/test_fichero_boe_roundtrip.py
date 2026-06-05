@@ -51,7 +51,7 @@ from .._record_spec import (
 )
 from .._serialise import serialise
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def test_currency_inline_sign_round_trips_negative_value() -> None:

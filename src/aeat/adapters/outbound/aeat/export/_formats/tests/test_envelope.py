@@ -21,7 +21,7 @@ from .._record_spec import (
 )
 from .._serialise import serialise_envelope
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def _build_envelope_mini() -> tuple[SegmentSpec, ...]:
