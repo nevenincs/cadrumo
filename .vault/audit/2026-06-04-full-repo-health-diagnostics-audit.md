@@ -815,3 +815,60 @@ Residuals carried forward:
 - `test_backend_boundary.py::test_manual_ledger_review_help_exposes_backend_filter_vocabulary`
   still fails because rendered `ledger review --help` does not include the
   expected `classification` filter token.
+
+## HEALTH-019-S77 | CLOSED | 2026-06-05 complexity residual ratchet
+
+W06.P19.S77 persisted the post-refactor complexity baseline after the modelo CLI,
+registry formula, and ledger projection reductions. The complexity lanes remain
+advisory-red, but the active W06.P19 reductions removed the targeted command and
+registry hotspots from the Complexipy over-threshold list.
+
+Current complexity lane status:
+
+- `just audit-complexity-production` exits 1.
+- Complexipy production scan analyzed 880 files.
+- Production functions above the project threshold of 20: 24.
+- `just audit-complexity-tests` exits 1.
+- Top-level package test functions above the threshold of 20: 8.
+
+Current production over-threshold ratchet:
+
+- 44: `src\aeat\domain\calculations\registry\_bindings_previous_filing.py::resolve_previous_filing_binding_values`
+- 37: `src\aeat\entrypoints\cli\_config\_google.py::_push_secure_object_mirror_rows`
+- 37: `src\aeat\domain\calculations\registry\_record_design.py::calculation_closure_identities`
+- 34: `src\aeat\domain\calculations\registry\_cross_revision_divergence.py::_iter_cross_revision_casilla_divergences`
+- 32: `src\aeat\application\live\_errors.py::classify_live_iva_acquisition_failure`
+- 30: `src\aeat\domain\calculations\registry\_bindings.py::_validate_invoice_fact_and_aggregation`
+- 29: `src\aeat\domain\calculations\registry\_record_design.py::calculation_closure_numbers`
+- 27: `src\aeat\domain\calculations\registry\_validate_semantic_role_typos.py::_semantic_role_looks_like_typo`
+- 27: `src\aeat\domain\calculations\registry\_remote_state_guard.py::RemoteStateGuardPolicy::_validate_policy`
+- 27: `src\aeat\application\storage\calc_sheets\_workbook_export.py::_apply_styling`
+- 26: `src\aeat\adapters\persistence\storage\sql\secure_objects.py::SecureObjectRepository::_ensure_deterministic_object_keys`
+- 26: `src\aeat\adapters\outbound\aeat\sede\_declarations.py::_capture_filed_declaration_observation_from_row`
+- 25: `src\aeat\domain\iva_compensation\_reconciliation.py::reconcile_iva_compensation_wallet`
+- 25: `src\aeat\domain\calculations\registry\_bindings.py::_validated_counterpart_selector`
+- 25: `src\aeat\application\modelo\_profile_binding.py::resolve_profile_sourced_bindings`
+- 25: `src\aeat\application\modelo\_actions.py::_resolve_m210_rate`
+- 25: `src\aeat\adapters\outbound\aeat\auth\_authenticator.py::AeatAuthenticator::_resume_from_storage_state_locked`
+- 25: `src\aeat\adapters\inbound\declaracion\_parser.py::_extract_profile_values`
+- 24: `src\aeat\entrypoints\cli\_errors.py::command_error_boundary`
+- 24: `src\aeat\domain\calculations\registry\_applicability.py::ModeloApplicabilityRule::evaluate`
+- 24: `src\aeat\application\modelo\_result_summary.py::calculation_result_summary`
+- 24: `src\aeat\application\calculations\_binding_prefill.py::_gather_observations`
+- 23: `src\aeat\application\workflow\_resume.py::resolve_modelo_workflow_resume_target`
+- 21: `src\aeat\domain\contribuyente\_descendant_facts.py::descendant_list_from_facts`
+
+Current top-level test over-threshold ratchet:
+
+- 50: `src\aeat\test_utc_validator_enrollment_inventory.py::_file_has_inline_tzinfo_guard`
+- 30: `src\aeat\test_canonical_clock_usage.py::_collect_violations`
+- 27: `src\aeat\test_mock_inventory.py::_mock_imports`
+- 24: `src\aeat\test_core_time_deletion_and_cast_rationale.py::_collect_cast_violations`
+- 24: `src\aeat\test_cast_rationale_inventory.py::_collect_violations`
+- 23: `src\aeat\test_no_skip_xfail.py::_forbidden_marker_sites`
+- 23: `src\aeat\test_every_module_has_test_coverage.py::_aeat_imports_in`
+- 21: `src\aeat\test_w17_p49_closure.py::test_s634_no_bare_eur_default_in_ledger_expenses`
+
+Next complexity targets should start with the remaining registry binding and
+record-design hotspots, followed by config Google sync, live error
+classification, and the top-level inventory-test collectors.
