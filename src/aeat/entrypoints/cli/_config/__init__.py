@@ -59,6 +59,7 @@ from .._command_suggestions import AeatTyperGroup as _AeatTyperGroup
 from .._common import _emit, _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from ._apoderado import apoderado_app, register_apoderado_commands
 from ._auth_diagnostics import auth_diagnostics_app
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
 
@@ -84,11 +85,6 @@ profile_app = typer.Typer(
     cls=_AeatTyperGroup,
 )
 auth_app = typer.Typer(name="auth", help=tr("cli.config.auth.help"), no_args_is_help=True)
-apoderado_app = typer.Typer(
-    name="apoderado",
-    help=tr("cli.config.auth.apoderado.help", default="Manage apoderado configuration"),
-    no_args_is_help=True,
-)
 repair_app = typer.Typer(
     name="repair",
     help=tr("cli.config.repair.help"),
@@ -2316,216 +2312,6 @@ def auth_clear(
     )
 
 
-scopes_app = typer.Typer(
-    name="scopes",
-    help=tr("cli.config.auth.apoderado.scopes.help", default="Manage apoderado scope vocabulary"),
-    no_args_is_help=True,
-)
-apoderado_app.add_typer(scopes_app, name="scopes")
-
-
-@scopes_app.command(
-    "list", help=tr("cli.config.auth.apoderado.scopes.list_help", default="List accepted apoderado scopes")
-)
-def apoderado_scopes_list(
-    ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    _activate_subcommand_output_language(ctx, output_language)
-    """List all available representative scopes in the vocabulary."""
-    from ....application.auth import ApoderadoService
-    from .._config_payloads import ApoderadoScopesListResult
-
-    svc = ApoderadoService()
-    payload = svc.catalogue.model_dump(mode="json")
-    lines = [f"{s.code}\t{tr(f'cli.config.auth.apoderado.scope.{s.code.lower()}')}" for s in svc.catalogue.scopes]
-    scopes_result = ApoderadoScopesListResult.model_validate(payload)
-    _emit_envelope(ctx, command="config.auth.apoderado.scopes.list", result=scopes_result, lines=lines)
-
-
-@apoderado_app.command(
-    "status", help=tr("cli.config.auth.apoderado.status_help", default="Show active apoderado configuration")
-)
-def apoderado_status(
-    ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import ApoderadoService
-
-    pointer = _resolve_active_profile_pointer()
-    if pointer is None:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.no_active_profile",
-        )
-
-    from .._config_payloads import ApoderadoStatusResult
-
-    svc = ApoderadoService()
-    result = svc.status(bucket_id=pointer.bucket_id)
-
-    payload = result.model_dump(mode="json")
-    lines = [
-        f"bucket_id\t{result.bucket_id}",
-        f"configured\t{result.configured}",
-    ]
-    if result.configured:
-        lines.append(f"represented_nif\t{result.represented_nif}")
-        lines.append(f"granted_scopes\t{','.join(result.granted_scopes)}")
-
-    status_result = ApoderadoStatusResult.model_validate(payload)
-    _emit_envelope(ctx, command="config.auth.apoderado.status", result=status_result, lines=lines)
-
-
-@apoderado_app.command(
-    "configure", help=tr("cli.config.auth.apoderado.configure_help", default="Set active apoderado configuration")
-)
-def apoderado_configure(
-    ctx: typer.Context,
-    represented_nif: str = typer.Option(
-        ...,
-        "--represented-nif",
-        help=tr("cli.config.auth.apoderado.configure.represented_nif_help", default="NIF of the represented party"),
-    ),
-    scope: list[str] = typer.Option(
-        ...,
-        "--scope",
-        help=tr("cli.config.auth.apoderado.configure.scope_help", default="Scope tokens (can be repeated)"),
-    ),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import ApoderadoService
-    from ....application.workflow import workflow_state_repository
-
-    workflow_state_repository().load()
-    pointer = _resolve_active_profile_pointer()
-    if pointer is None:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.no_active_profile",
-        )
-
-    from .._config_payloads import ApoderadoConfigureResult
-
-    svc = ApoderadoService()
-    result = svc.configure(
-        bucket_id=pointer.bucket_id,
-        represented_nif=represented_nif,
-        scope_tokens=tuple(scope),
-    )
-
-    payload = result.model_dump(mode="json")
-    lines = [
-        f"bucket_id\t{result.bucket_id}",
-        f"represented_nif\t{result.represented_nif}",
-        f"granted_scopes\t{','.join(result.granted_scopes)}",
-    ]
-    configure_result = ApoderadoConfigureResult.model_validate(payload)
-    _emit_envelope(ctx, command="config.auth.apoderado.configure", result=configure_result, lines=lines)
-
-
-@apoderado_app.command(
-    "clear", help=tr("cli.config.auth.apoderado.clear_help", default="Retire the apoderado configuration")
-)
-def apoderado_clear(
-    ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import ApoderadoService
-    from ....application.workflow import workflow_state_repository
-
-    workflow_state_repository().load()
-    pointer = _resolve_active_profile_pointer()
-    if pointer is None:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.no_active_profile",
-        )
-
-    from .._config_payloads import ApoderadoClearResult
-
-    svc = ApoderadoService()
-    cleared = svc.clear(bucket_id=pointer.bucket_id)
-
-    clear_result = ApoderadoClearResult(bucket_id=pointer.bucket_id, cleared=cleared)
-    lines = [
-        f"bucket_id\t{pointer.bucket_id}",
-        f"cleared\t{cleared}",
-    ]
-    _emit_envelope(ctx, command="config.auth.apoderado.clear", result=clear_result, lines=lines)
-
-
-@apoderado_app.command("check", help=tr("cli.config.auth.apoderado.check_help", default="Read-only live verification"))
-def apoderado_check(
-    ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import ApoderadoLiveCheckUnavailableError, ApoderadoService
-    from ....application.workflow import workflow_state_repository
-    from ....core.errors import resolve_error_message
-
-    workflow_state_repository().load()
-    pointer = _resolve_active_profile_pointer()
-    if pointer is None:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.no_active_profile",
-        )
-
-    from .._config_payloads import ApoderadoCheckResult
-
-    svc = ApoderadoService()
-
-    try:
-        result = svc.check(bucket_id=pointer.bucket_id)
-    except ApoderadoLiveCheckUnavailableError as exc:
-        # ApoderadoLiveCheckUnavailableError is a registered AeatError;
-        # str(exc) is empty when it is raised message-key-based, so
-        # render through resolve_error_message to keep the refusal text.
-        raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
-
-    apoderado_result = ApoderadoCheckResult(
-        bucket_id=result.bucket_id,
-        configured=result.configured,
-        represented_nif=result.represented_nif if result.configured else None,
-        granted_scopes=list(result.granted_scopes) if result.configured else None,
-    )
-    lines = [
-        f"bucket_id\t{result.bucket_id}",
-        f"configured\t{result.configured}",
-    ]
-    if result.configured:
-        lines.append(f"represented_nif\t{result.represented_nif}")
-        lines.append(f"granted_scopes\t{','.join(result.granted_scopes)}")
-
-    _emit_envelope(ctx, command="config.auth.apoderado.check", result=apoderado_result, lines=lines)
-
-
 @bucket_app.command("history", help=tr("cli.config.bucket.history_help"))
 def bucket_history(
     ctx: typer.Context,
@@ -2702,7 +2488,7 @@ from ._profile_censo import register as _register_profile_censo
 _register_profile_censo(profile_app)
 
 app.add_typer(profile_app, name="profile")
-auth_app.add_typer(apoderado_app, name="apoderado")
+register_apoderado_commands(auth_app, resolve_active_profile_pointer=_resolve_active_profile_pointer)
 auth_app.add_typer(auth_diagnostics_app, name="diagnostics")
 app.add_typer(auth_app, name="auth")
 app.add_typer(bucket_app, name="bucket")
