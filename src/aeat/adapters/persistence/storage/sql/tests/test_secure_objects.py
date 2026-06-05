@@ -1472,7 +1472,7 @@ def test_secure_object_save_with_raw_key_writes_revision_metadata(tmp_path: Path
 
 
 def test_secure_object_write_rejects_conflict_policy_until_cas_contract_exists() -> None:
-    """S29 records the actual LWW policy; S30 owns public CAS policy selection."""
+    """legacy-step records the actual LWW policy; legacy-step owns public CAS policy selection."""
 
     with pytest.raises(ValidationError):
         SecureObjectWrite(

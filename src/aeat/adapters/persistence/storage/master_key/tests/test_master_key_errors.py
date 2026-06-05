@@ -1,4 +1,4 @@
-"""Real-behavior tests for MasterKeyReentrantError envelope round-trip (S245).
+"""Real-behavior tests for MasterKeyReentrantError envelope round-trip (legacy-step).
 
 Asserts that:
 - `MasterKeyReentrantError` is raised on re-entrant context-manager use.

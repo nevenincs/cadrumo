@@ -2341,7 +2341,7 @@ def test_create_manual_transaction_default_event_repository_fails_closed_for_ina
 
 
 # ---------------------------------------------------------------------------
-# S16 — re-affirmation no-op bypass (update_manual_transaction_fields)
+# legacy-step — re-affirmation no-op bypass (update_manual_transaction_fields)
 # ---------------------------------------------------------------------------
 
 
@@ -2376,7 +2376,7 @@ def test_update_manual_transaction_fields_reaffirmation_noop_returns_stored_tran
     already carries (reaffirm=False, the default) must return the stored
     transaction unchanged and emit no new bucket events.
 
-    This is the S14 re-affirmation no-op bypass: ``_command_matches_current``
+    This is the legacy-step re-affirmation no-op bypass: ``_command_matches_current``
     detects the identity and ``_result`` returns the stored value directly
     rather than routing through ``update_manual_transaction``."""
 

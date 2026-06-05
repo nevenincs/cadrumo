@@ -50,7 +50,7 @@ def _count_test_functions(path: Path) -> int:
 def test_tautology_gate_file_exists_and_is_non_vacuous() -> None:
     """The tautology gate must exist and contain at least two test functions.
 
-    Verifies S214: if the gate is deleted or emptied, this test fails
+    Verifies legacy-step: if the gate is deleted or emptied, this test fails
     loudly so the audit surface is not silently disabled.
     """
     assert _TAUTOLOGY_GATE_PATH.exists(), (

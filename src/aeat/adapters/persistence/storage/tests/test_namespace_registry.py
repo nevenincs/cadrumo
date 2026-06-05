@@ -86,7 +86,7 @@ def test_secure_object_registry_names_application_namespaces() -> None:
 
 
 def test_secure_object_registry_names_live_m036_declaration_namespace() -> None:
-    """The M036 declarative-recording verbs (#629 W85.P414.S2349)
+    """The M036 declarative-recording verbs (#629 legacy-plan-step)
     persist operator declarations through this namespace. Authority:
     2026-06-03-m036-lifecycle-verbs-research.
     """
@@ -358,7 +358,7 @@ def test_namespace_definition_rejects_pathlike_namespaces() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S40: NamespaceRegistryError error-registry and real-behavior invariant tests
+# legacy-step: NamespaceRegistryError error-registry and real-behavior invariant tests
 # ---------------------------------------------------------------------------
 
 

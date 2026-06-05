@@ -26,7 +26,7 @@ RATIONALE-* markers.
 
 (f) adapters/outbound/storage/_google_drive.py build-factory markers.
 
-(g) entrypoints/cli/_stdio.py stdlib-logger survivor enrollment.
+(g) entrypoints/cli/_stdio.py stdlib-logger regression enrollment.
 
 No mocks, no skips, no tautological assertions.
 """
@@ -218,7 +218,7 @@ def test_google_drive_any_return_sites_carry_rationale(func_name: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# (g) entrypoints/cli/_stdio.py stdlib-logger survivor enrollment
+# (g) entrypoints/cli/_stdio.py stdlib-logger regression enrollment
 # ---------------------------------------------------------------------------
 # _stdio.py intentionally uses ``logging.getLogger(__name__)`` (stdlib) rather
 # than ``aeat.core.logging.get_logger`` because the module runs before settings

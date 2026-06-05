@@ -1,14 +1,14 @@
-"""Tax-fact manipulation fidelity (W06.P13).
+"""Tax-fact manipulation fidelity (legacy-plan).
 
 Builds strict :class:`aeat.domain.transactions.Transaction` records with
 controlled tax facts and asserts the real aggregation pipelines respond to
 fact changes:
 
-- S39: gross→base/IVA derivation at 21/10/4 routes to M303 soportado with the
+- legacy-step: gross→base/IVA derivation at 21/10/4 routes to M303 soportado with the
   matching :class:`aeat.domain.iva.IvaCategory`.
-- S40: changing ``business_pct`` / per-category usage ratio scales the renta
+- legacy-step: changing ``business_pct`` / per-category usage ratio scales the renta
   deductible base proportionally.
-- S41: reassigning ``irpf_category`` (trabajo↔actividad) flips M130 income
+- legacy-step: reassigning ``irpf_category`` (trabajo↔actividad) flips M130 income
   routing.
 
 These assert routing + proportionality wiring against independent expectations;
@@ -77,7 +77,7 @@ def _gross_split(gross: Decimal, rate: Decimal) -> tuple[Decimal, Decimal]:
     return base, _q(gross - base)
 
 
-# --- S39: gross→base/IVA at 21/10/4 routes to M303 soportado ----------------
+# --- legacy-step: gross→base/IVA at 21/10/4 routes to M303 soportado ----------------
 def test_base_iva_rederivation_at_21_10_4_routes_to_m303_soportado() -> None:
     cases = [
         (Decimal("0.21"), IvaCategory.DOMESTIC_GENERAL_21),
@@ -113,7 +113,7 @@ def test_base_iva_rederivation_at_21_10_4_routes_to_m303_soportado() -> None:
         assert by_cat[category].flow_direction is IvaFlowDirection.SOPORTADO
 
 
-# --- S40: business_pct / usage-ratio proportionality propagates -------------
+# --- legacy-step: business_pct / usage-ratio proportionality propagates -------------
 # arrendamiento_local maps to a first-slice Modelo 100 deductible casilla.
 _DEDUCTIBLE_CATEGORY = SpendingCategory.ARRENDAMIENTO_LOCAL
 
@@ -162,7 +162,7 @@ def test_business_proportion_primitive_drives_deductible_scaling() -> None:
     assert business_proportion(BusinessClassification.MIXED, None) is None
 
 
-# --- S41: irpf_category reassignment flips M130 routing ---------------------
+# --- legacy-step: irpf_category reassignment flips M130 routing ---------------------
 def _income_observation_count(irpf_category: str) -> int:
     txn = Transaction.model_validate(
         {

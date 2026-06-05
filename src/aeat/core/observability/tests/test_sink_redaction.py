@@ -159,7 +159,7 @@ def test_run_scoped_records_scrubbed_before_reaching_jsonl_via_attach_run_sink(
 ) -> None:
     """Records flowing through attach_run_sink must be scrubbed before on-disk write.
 
-    Verifies S76: the full pipeline — root logger -> SecretScrubbingFilter
+    Verifies legacy-step: the full pipeline — root logger -> SecretScrubbingFilter
     (attached by attach_run_sink) -> JsonlRunSink -> JSONL file — redacts
     sensitive values.  The sink is attached via the real attach_run_sink
     helper (no mocks); a log record with a plaintext NIF in a form-fill

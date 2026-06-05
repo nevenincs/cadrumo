@@ -1,18 +1,18 @@
 """Real-behavior tests for SedeNavigationError translated_message threading.
 
-Coverage (S100):
-- S100-A: storage_state_for_session raises SedeNavigationError with
+Coverage (legacy-step):
+- legacy-step-A: storage_state_for_session raises SedeNavigationError with
   translated_message populated when storage_state_path is None.
-- S100-B: storage_state_for_session raises SedeNavigationError with
+- legacy-step-B: storage_state_for_session raises SedeNavigationError with
   translated_message populated when the persisted session cannot be loaded
   (path points to a non-existent file).
-- S100-C: translated_message resolves to a non-placeholder string in the
+- legacy-step-C: translated_message resolves to a non-placeholder string in the
   catalogue (i.e. the locale key exists and is bound to real copy).
-- S100-D: fetch_notifications_summary raises SedeNavigationError with
+- legacy-step-D: fetch_notifications_summary raises SedeNavigationError with
   translated_message when storage_state_path is None.
-- S100-E: fetch_iva_compensation_wallet raises SedeNavigationError with
+- legacy-step-E: fetch_iva_compensation_wallet raises SedeNavigationError with
   translated_message when storage_state_path is None.
-- S100-F: walk_expedientes_tree raises SedeNavigationError with
+- legacy-step-F: walk_expedientes_tree raises SedeNavigationError with
   translated_message when storage_state_path is None.
 """
 
@@ -64,7 +64,7 @@ def _minimal_session(*, storage_state_path: Path | None, identity_nif: str = "12
 
 
 # ---------------------------------------------------------------------------
-# S100-A: None path triggers translated_message in storage_state_for_session
+# legacy-step-A: None path triggers translated_message in storage_state_for_session
 # ---------------------------------------------------------------------------
 
 
@@ -77,7 +77,7 @@ def test_storage_state_for_session_no_path_carries_translated_message() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S100-B: load returns None triggers translated_message (with profile isolation)
+# legacy-step-B: load returns None triggers translated_message (with profile isolation)
 # ---------------------------------------------------------------------------
 
 
@@ -100,7 +100,7 @@ def test_storage_state_for_session_unloaded_state_carries_translated_message(
 
 
 # ---------------------------------------------------------------------------
-# S100-C: locale key resolves to non-placeholder string
+# legacy-step-C: locale key resolves to non-placeholder string
 # ---------------------------------------------------------------------------
 
 
@@ -111,7 +111,7 @@ def test_no_auth_session_locale_key_resolves_to_real_copy() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S100-D: fetch_notifications_summary carries translated_message on None path
+# legacy-step-D: fetch_notifications_summary carries translated_message on None path
 # ---------------------------------------------------------------------------
 
 
@@ -128,7 +128,7 @@ def test_fetch_notifications_summary_carries_translated_message_on_none_path() -
 
 
 # ---------------------------------------------------------------------------
-# S100-E: fetch_iva_compensation_wallet carries translated_message on None path
+# legacy-step-E: fetch_iva_compensation_wallet carries translated_message on None path
 # ---------------------------------------------------------------------------
 
 
@@ -152,7 +152,7 @@ def test_fetch_iva_compensation_wallet_carries_translated_message_on_none_path()
 
 
 # ---------------------------------------------------------------------------
-# S100-F: walk_expedientes_tree carries translated_message on None path
+# legacy-step-F: walk_expedientes_tree carries translated_message on None path
 # ---------------------------------------------------------------------------
 
 

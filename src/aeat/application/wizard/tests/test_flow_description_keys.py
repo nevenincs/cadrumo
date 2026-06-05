@@ -1,4 +1,4 @@
-"""S442: Wizard flow description key inventory test.
+"""legacy-step: Wizard flow description key inventory test.
 
 Asserts that every registered wizard flow carries a locale key
 ``wizard.{flow.id}.description`` that resolves to a non-trivial string

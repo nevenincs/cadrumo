@@ -305,7 +305,7 @@ def test_preflight_skips_iva_facts_on_trabajo_income_rows() -> None:
     missing_iva_rate on these rows.
 
     Closes the R9-ANDREA-HIGH false-positive surfaced in cross-domain-
-    continuity W05.P22.S345.
+    continuity legacy-plan-step.
     """
     nomina = _transaction(
         "row-nomina",

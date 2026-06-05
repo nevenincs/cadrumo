@@ -1,12 +1,12 @@
-"""Offline registry-grounded modelo-export parity gate (W03.P04).
+"""Offline registry-grounded modelo-export parity gate (legacy-plan).
 
 The export workbook must mirror the official AEAT casilla structure. This gate
 asserts, purely offline (no Sheets / network), that the plan produced by
 ``build_export_plan`` for a modelo:
 
 - covers every casilla the official completeness manifest requires (number +
-  segmento) — a divergence from the official set is a hard failure (S14);
-- emits a live spreadsheet formula for every computed casilla (S15).
+  segmento) — a divergence from the official set is a hard failure (legacy-step);
+- emits a live spreadsheet formula for every computed casilla (legacy-step).
 
 Grounded against the registry completeness manifest (the in-repo projection of
 the AEAT Diseño de Registros), which is the same authority the calculation

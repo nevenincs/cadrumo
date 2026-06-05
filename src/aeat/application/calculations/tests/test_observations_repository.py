@@ -174,7 +174,7 @@ def test_observation_key_error_is_value_error() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S158: legacy decision-key bridge behaviour
+# legacy-step: legacy decision-key bridge behaviour
 # ---------------------------------------------------------------------------
 
 

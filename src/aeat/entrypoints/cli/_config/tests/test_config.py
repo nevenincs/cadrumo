@@ -1,6 +1,6 @@
-"""Real-behavior CLI tests for config-boundary error narrowing (S37/S38).
+"""Real-behavior CLI tests for config-boundary error narrowing (legacy-step/legacy-step).
 
-Verifies two contracts introduced by S37:
+Verifies two contracts introduced by legacy-step:
 
 1. AeatError subclasses that escape a config command surface produce a
    typed error envelope — the command_error_boundary receives the typed

@@ -354,7 +354,7 @@ class TestIterEvents:
 class TestSinkEmitFailureWarningIsScrubbed:
     """Verify sink-emit failures route through SecretScrubbingFilter.
 
-    S56: when ``JsonlRunSink.emit`` fails (e.g. write to a non-writable
+    legacy-step: when ``JsonlRunSink.emit`` fails (e.g. write to a non-writable
     path) the WARNING record it emits must pass through
     ``SecretScrubbingFilter`` so any sensitive tokens embedded in the
     exception text are redacted before reaching any handler.

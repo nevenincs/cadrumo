@@ -2,9 +2,9 @@
 
 Covers two surfaces:
 - user_profile/schema.toml: maritime_worker section with worker_class and
-  vessel/RETMAR supporting facts (S03 profile-load tests).
+  vessel/RETMAR supporting facts (legacy-step profile-load tests).
 - categories/trabajador_del_mar.toml: three exemption binding entries each
-  carrying legal_refs populated from BOE-grounded sources (S07 integrity tests).
+  carrying legal_refs populated from BOE-grounded sources (legacy-step integrity tests).
 """
 
 from __future__ import annotations
@@ -125,7 +125,7 @@ def test_no_da24_reference_in_maritime_worker_section() -> None:
         assert "DA 24" not in field.description, f"field {field.key!r} description mentions DA 24 LIRPF"
 
 
-# --- S07: binding-entry integrity tests ---
+# --- legacy-step: binding-entry integrity tests ---
 
 
 def test_trabajador_del_mar_toml_declares_three_binding_entries() -> None:

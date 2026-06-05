@@ -385,7 +385,7 @@ def test_bucket_event_type_includes_censo_declaration_kinds() -> None:
     stale-cascade logic can react.
 
     Authority: 2026-06-03-m036-lifecycle-verbs-research +
-    cli-workflow-redesign-epic plan Step W85.P414.S2349.
+    cli-workflow-redesign-epic plan Step legacy-plan-step.
     """
 
     from ._event import BucketEventType

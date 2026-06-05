@@ -226,7 +226,7 @@ def test_non_help_invocation_without_columns_set() -> None:
         assert "COLUMNS" not in os.environ
 
 
-# --- _COLUMNS_ENV_VAR constant (S188) ----------------------------------------
+# --- _COLUMNS_ENV_VAR constant (legacy-step) ----------------------------------------
 
 
 def test_columns_env_var_constant_value() -> None:
@@ -263,7 +263,7 @@ def test_columns_env_var_used_for_env_read() -> None:
         assert os.environ[_COLUMNS_ENV_VAR] == wide
 
 
-# --- COLUMNS env-write scoping (S306) ----------------------------------------
+# --- COLUMNS env-write scoping (legacy-step) ----------------------------------------
 
 
 def test_columns_write_is_scoped_help_invocation() -> None:
@@ -313,7 +313,7 @@ def test_columns_write_not_scoped_on_non_help() -> None:
         assert os.environ[_COLUMNS_ENV_VAR] == before
 
 
-# --- SecretScrubbingFilter propagation via stdio logger (S50) ----------------
+# --- SecretScrubbingFilter propagation via stdio logger (legacy-step) ----------------
 
 
 class _CapturingHandler(logging.Handler):

@@ -6,7 +6,7 @@ propagated from the registry binding entries.
 
 These tests exercise real domain functions without mocks.
 
-Covers S17 (application layer wiring) and S18 (integration test asserting
+Covers legacy-step (application layer wiring) and legacy-step (integration test asserting
 legal_refs and source_refs in the observation output).
 """
 
@@ -51,7 +51,7 @@ class TestResolveMaritimeExemptionArt7p:
         assert len(result.observations) == 1
 
     def test_observation_carries_art7p_legal_refs(self) -> None:
-        """S18 close gate: CLI JSON emit must include legal_refs for each observation."""
+        """legacy-step close gate: CLI JSON emit must include legal_refs for each observation."""
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             annual_salary=Decimal("36500"),
@@ -64,7 +64,7 @@ class TestResolveMaritimeExemptionArt7p:
         assert any("BOE-A-2006-20764" in ref for ref in obs.legal_refs)
 
     def test_observation_carries_source_refs(self) -> None:
-        """S18 close gate: source_refs must be populated for each observation."""
+        """legacy-step close gate: source_refs must be populated for each observation."""
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             annual_salary=Decimal("36500"),
@@ -130,7 +130,7 @@ class TestResolveMaritimeExemptionRebeca:
         assert len(result.observations) == 1
 
     def test_observation_carries_rebeca_legal_refs(self) -> None:
-        """S18 close gate: legal_refs must include BOE-A-1994-16100 for REBECA."""
+        """legacy-step close gate: legal_refs must include BOE-A-1994-16100 for REBECA."""
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             gross_navigation_income=Decimal("30000"),

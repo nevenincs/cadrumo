@@ -1,4 +1,4 @@
-"""Real-CLI tests: ledger verb validation-error paths (S13).
+"""Real-CLI tests: ledger verb validation-error paths (legacy-step).
 
 Each verb that wraps command construction in a try/except ValidationError
 must surface the pydantic field message through ``_ledger_validation_bad``
@@ -105,7 +105,7 @@ def _create_profile_and_import(tmp_path: Path) -> str:
 
 
 # ---------------------------------------------------------------------------
-# S13.1  ledger add — business_pct set without MIXED classification
+# legacy-step.1  ledger add — business_pct set without MIXED classification
 # ---------------------------------------------------------------------------
 
 
@@ -161,7 +161,7 @@ def test_ledger_add_rejects_business_pct_on_non_mixed_classification(tmp_path: P
 
 
 # ---------------------------------------------------------------------------
-# S13.2  ledger update — patch with no fields (empty-patch validator)
+# legacy-step.2  ledger update — patch with no fields (empty-patch validator)
 # ---------------------------------------------------------------------------
 
 
@@ -186,7 +186,7 @@ def test_ledger_update_rejects_empty_patch(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# S13.3  ledger allocate — business_pct out of range for MIXED
+# legacy-step.3  ledger allocate — business_pct out of range for MIXED
 # ---------------------------------------------------------------------------
 
 
@@ -218,7 +218,7 @@ def test_ledger_allocate_rejects_out_of_range_business_pct(tmp_path: Path) -> No
 
 
 # ---------------------------------------------------------------------------
-# S13.4  ledger split — blank description on a child slice
+# legacy-step.4  ledger split — blank description on a child slice
 # ---------------------------------------------------------------------------
 
 
@@ -258,7 +258,7 @@ def test_ledger_split_rejects_blank_child_description(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# S13.5  ledger classify — business_pct requires MIXED (pre-pydantic guard)
+# legacy-step.5  ledger classify — business_pct requires MIXED (pre-pydantic guard)
 # ---------------------------------------------------------------------------
 
 
@@ -298,7 +298,7 @@ def test_ledger_classify_rejects_business_pct_without_mixed_classification(
 
 
 # ---------------------------------------------------------------------------
-# S384  ledger add — profile-conditional source_jurisdiction (#258)
+# legacy-step  ledger add — profile-conditional source_jurisdiction (#258)
 #
 # Truth table per the regulatory branching:
 #   - LIRPF Art. 8 (universal-base presumption): resident IRPF GENERAL

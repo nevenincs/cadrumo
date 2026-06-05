@@ -74,9 +74,9 @@ def test_casilla_observation_rejects_extra_fields() -> None:
 
 
 def test_casilla_observation_absent_by_design_defaults_to_false() -> None:
-    """P08.S51: the absent_by_design provenance marker is opt-in.
+    """legacy-plan-step: the absent_by_design provenance marker is opt-in.
 
-    The flag was added in P03.S11 to distinguish structural zeros
+    The flag was added in legacy-plan-step to distinguish structural zeros
     (binding had no anchor for the target period) from value-bearing
     observations. Default False so pre-P03-persisted observations
     deserialise as "value-bearing" — the historical contract — until
@@ -87,7 +87,7 @@ def test_casilla_observation_absent_by_design_defaults_to_false() -> None:
 
 
 def test_casilla_observation_absent_by_design_roundtrips_through_json() -> None:
-    """P08.S51: absent_by_design survives JSON serialise-then-parse.
+    """legacy-plan-step: absent_by_design survives JSON serialise-then-parse.
 
     A real-behaviour roundtrip: construct an observation with the
     flag set, dump to JSON via model_dump_json, parse back via
@@ -112,7 +112,7 @@ def test_casilla_observation_absent_by_design_roundtrips_through_json() -> None:
 
 
 def test_casilla_observation_absent_by_design_default_roundtrips_through_json() -> None:
-    """P08.S51: the False default also survives the JSON roundtrip.
+    """legacy-plan-step: the False default also survives the JSON roundtrip.
 
     Migration concern: pre-P03 persisted observations deserialise
     with the default False. This test pins that the default ALSO

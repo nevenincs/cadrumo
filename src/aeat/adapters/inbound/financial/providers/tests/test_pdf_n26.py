@@ -164,7 +164,7 @@ def test_pdf_n26_provider_verification_source_is_declared() -> None:
 
 
 # ---------------------------------------------------------------------------
-# DEFAULT_CURRENCY enrollment (S314)
+# DEFAULT_CURRENCY enrollment (legacy-step)
 # ---------------------------------------------------------------------------
 
 

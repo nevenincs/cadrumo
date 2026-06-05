@@ -62,7 +62,7 @@ def _invoice() -> Invoice:
 
 
 # ---------------------------------------------------------------------------
-# S166 — invoice_review_status returns are InvoiceReviewStatus enum members
+# legacy-step — invoice_review_status returns are InvoiceReviewStatus enum members
 # ---------------------------------------------------------------------------
 
 

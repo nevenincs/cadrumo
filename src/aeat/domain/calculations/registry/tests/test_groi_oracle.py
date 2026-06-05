@@ -209,7 +209,7 @@ def test_replay_driver_rejects_non_string_observed_values() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S124 — ReplayPayload roundtrip: validate strictly + round-trip through driver
+# legacy-step — ReplayPayload roundtrip: validate strictly + round-trip through driver
 # ---------------------------------------------------------------------------
 
 

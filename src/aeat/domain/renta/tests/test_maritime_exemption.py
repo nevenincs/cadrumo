@@ -1,6 +1,6 @@
 """Tests for maritime worker IRPF exemption selectors and calculation functions.
 
-Covers S11 (selector predicates), S16 (calculation tests with registry-
+Covers legacy-step (selector predicates), legacy-step (calculation tests with registry-
 authoritative fixture values), and the DA 41 / RETMAR completeness gate tests.
 
 Expected values are grounded in:
@@ -36,7 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 # ---------------------------------------------------------------------------
-# S11: selector unit tests
+# legacy-step: selector unit tests
 # ---------------------------------------------------------------------------
 
 
@@ -183,7 +183,7 @@ class TestDa41Eligible:
 
 
 # ---------------------------------------------------------------------------
-# S14: DA 41 inactive guard
+# legacy-step: DA 41 inactive guard
 # ---------------------------------------------------------------------------
 
 
@@ -221,7 +221,7 @@ class TestGuardDa41Inactive:
 
 
 # ---------------------------------------------------------------------------
-# S15: RETMAR mandatory-filing completeness gate
+# legacy-step: RETMAR mandatory-filing completeness gate
 # ---------------------------------------------------------------------------
 
 
@@ -256,7 +256,7 @@ class TestCheckRetmarMandatoryFiling:
 
 
 # ---------------------------------------------------------------------------
-# S12 + S16: Art. 7.p) calculation with registry-authoritative fixture values
+# legacy-step + legacy-step: Art. 7.p) calculation with registry-authoritative fixture values
 # ---------------------------------------------------------------------------
 
 
@@ -320,7 +320,7 @@ class TestCalculateArt7pExemption:
         assert obs.value < ART_7P_EXEMPTION_CAP_EUR
 
     def test_observation_carries_art7p_legal_refs(self) -> None:
-        # W02 close gate: CasillaObservation.legal_refs must carry
+        # legacy-plan close gate: CasillaObservation.legal_refs must carry
         # "ley-35-2006:art-7p" per aeat-calculation-grounding rule.
         # The ADR's registry binding uses "Ley 35/2006 Art. 7.p)".
         obs = calculate_art_7p_exemption(
@@ -397,7 +397,7 @@ class TestCalculateArt7pExemption:
 
 
 # ---------------------------------------------------------------------------
-# S13 + S16: REBECA calculation with registry-authoritative fixture values
+# legacy-step + legacy-step: REBECA calculation with registry-authoritative fixture values
 # ---------------------------------------------------------------------------
 
 
@@ -506,7 +506,7 @@ class TestCalculateRebecaExemption:
 
 
 # ---------------------------------------------------------------------------
-# W02 close gate: prohibited legal refs not cited in binding outputs
+# legacy-plan close gate: prohibited legal refs not cited in binding outputs
 # ---------------------------------------------------------------------------
 
 

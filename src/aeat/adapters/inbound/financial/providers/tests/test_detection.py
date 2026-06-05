@@ -96,7 +96,7 @@ def test_provider_for_extension_returns_none_for_no_extension() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S182: assert detection routes through the shared _constants module
+# legacy-step: assert detection routes through the shared _constants module
 # ---------------------------------------------------------------------------
 
 

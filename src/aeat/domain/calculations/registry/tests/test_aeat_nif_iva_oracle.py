@@ -194,7 +194,7 @@ def test_register_default_test_environment_classification_supported() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S122 — ReplayPayload roundtrip: validate strictly + round-trip through driver
+# legacy-step — ReplayPayload roundtrip: validate strictly + round-trip through driver
 # ---------------------------------------------------------------------------
 
 

@@ -1,4 +1,4 @@
-"""Destructive-action safeguard regression (W77.P373.S2147).
+"""Destructive-action safeguard regression (legacy-plan-step).
 
 Asserts that every destructive ledger / config verb refuses to run
 without an explicit ``--yes`` (or ``--dry-run`` where allowed). The

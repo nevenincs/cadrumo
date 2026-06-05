@@ -1,4 +1,4 @@
-"""Online modelo-export request-pipeline integration (W05 / follow-up S05).
+"""Online modelo-export request-pipeline integration (legacy-plan / follow-up legacy-step).
 
 The live Drive/Sheets write itself is validated by manual operator testing
 (``aeat config google sync calc export`` against a real account) — external-write

@@ -200,7 +200,7 @@ def test_cli_balance_verb_text_output_lines(
 
 
 # ---------------------------------------------------------------------------
-# S352: iva-wallet seed verb
+# legacy-step: iva-wallet seed verb
 # ---------------------------------------------------------------------------
 
 

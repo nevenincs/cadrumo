@@ -187,9 +187,9 @@ def test_felipe_ar_pension_not_yet_authored_emits_blocking_finding(
 ) -> None:
     """Felipe (AR / pension): real ``NOT_YET_AUTHORED`` sentinel fires a BLOCKING finding.
 
-    The real AR/pension Convenio row authored in S389b carries the
-    ``NOT_YET_AUTHORED`` placeholder. The helper recognises the
-    sentinel, returns ``(None, [finding])`` and surfaces the
+    The real AR/pension Convenio row carries the ``NOT_YET_AUTHORED``
+    placeholder. The helper recognises the sentinel, returns
+    ``(None, [finding])`` and surfaces the
     ``m210-convenio-rate-not-yet-authored`` predicate id. The
     ``pension`` baseline row remains absent; this test exercises the
     "baseline absent but Convenio override exists" branch.

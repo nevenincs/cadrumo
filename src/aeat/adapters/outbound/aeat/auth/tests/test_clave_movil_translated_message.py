@@ -1,17 +1,17 @@
-"""Real-behavior tests for AeatLoginAssertionError translated_message threading (S276).
+"""Real-behavior tests for AeatLoginAssertionError translated_message threading (legacy-step).
 
 Coverage:
-- S276-A: _load_persisted raises AeatLoginAssertionError with translated_message
+- legacy-step-A: _load_persisted raises AeatLoginAssertionError with translated_message
   set to the no_persisted_session key when session_store.load returns None.
-- S276-B: probe_persisted_session raises AeatLoginAssertionError with
+- legacy-step-B: probe_persisted_session raises AeatLoginAssertionError with
   translated_message set to no_persisted_session when no persisted session exists.
-- S276-C: resume_session raises AeatLoginAssertionError with translated_message
+- legacy-step-C: resume_session raises AeatLoginAssertionError with translated_message
   set to session_expired when the idle deadline has passed.
-- S276-D: resume_session raises AeatLoginAssertionError with translated_message
+- legacy-step-D: resume_session raises AeatLoginAssertionError with translated_message
   set to storage_state_hash_mismatch when the storage-state hash does not match.
-- S276-E: _click_clave_movil_button raises AeatLoginAssertionError with
+- legacy-step-E: _click_clave_movil_button raises AeatLoginAssertionError with
   translated_message set to page_missing_click when page has no click attribute.
-- S276-F: locale keys for all four sites resolve to non-placeholder strings in
+- legacy-step-F: locale keys for all four sites resolve to non-placeholder strings in
   the catalogue.
 """
 
@@ -118,7 +118,7 @@ class _MinimalBrowserSession:
 
 
 # ---------------------------------------------------------------------------
-# S276-A: _load_persisted raises with no_persisted_session translated_message
+# legacy-step-A: _load_persisted raises with no_persisted_session translated_message
 # ---------------------------------------------------------------------------
 
 
@@ -139,7 +139,7 @@ def test_load_persisted_no_session_carries_translated_message(
 
 
 # ---------------------------------------------------------------------------
-# S276-B: probe_persisted_session carries no_persisted_session translated_message
+# legacy-step-B: probe_persisted_session carries no_persisted_session translated_message
 # ---------------------------------------------------------------------------
 
 
@@ -162,7 +162,7 @@ def test_probe_persisted_session_carries_no_persisted_session_translated_message
 
 
 # ---------------------------------------------------------------------------
-# S276-C: resume_session raises with session_expired translated_message
+# legacy-step-C: resume_session raises with session_expired translated_message
 # ---------------------------------------------------------------------------
 
 
@@ -206,7 +206,7 @@ def test_probe_persisted_session_expired_carries_translated_message(
 
 
 # ---------------------------------------------------------------------------
-# S276-D: resume_session raises with storage_state_hash_mismatch translated_message
+# legacy-step-D: resume_session raises with storage_state_hash_mismatch translated_message
 # ---------------------------------------------------------------------------
 
 
@@ -254,7 +254,7 @@ def test_resume_locked_hash_mismatch_carries_translated_message(
 
 
 # ---------------------------------------------------------------------------
-# S276-E: _click_clave_movil_button raises with page_missing_click
+# legacy-step-E: _click_clave_movil_button raises with page_missing_click
 # ---------------------------------------------------------------------------
 
 
@@ -278,7 +278,7 @@ def test_click_clave_movil_button_missing_click_carries_translated_message(
 
 
 # ---------------------------------------------------------------------------
-# S276-F: locale keys resolve to non-placeholder strings
+# legacy-step-F: locale keys resolve to non-placeholder strings
 # ---------------------------------------------------------------------------
 
 

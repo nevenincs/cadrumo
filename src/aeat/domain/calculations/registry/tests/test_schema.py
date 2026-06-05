@@ -166,7 +166,7 @@ def test_casilla_default_input_kind_is_manual() -> None:
 
 
 # ---------------------------------------------------------------------------
-# CasillaFieldKind enum surface — S170
+# CasillaFieldKind enum surface — legacy-step
 # ---------------------------------------------------------------------------
 
 _FIELD_BASE = dict(

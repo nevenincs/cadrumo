@@ -1,4 +1,4 @@
-"""Regression tests for bare-numeric --casilla normalisation (S59/S60).
+"""Regression tests for bare-numeric --casilla normalisation (legacy-step/legacy-step).
 
 Drives the real ``aeat`` CLI against an isolated real-session backend.
 No mocks. The tests exercise ``_normalise_casilla_key`` through the
@@ -8,7 +8,7 @@ Coverage:
 * Bare numeric token that unambiguously matches a casilla by number
   resolves to the canonical id and the calculation succeeds.
 * Bare numeric token that does not match any casilla surfaces the
-  S60 improved error message and names the token explicitly.
+  legacy-step improved error message and names the token explicitly.
 * A non-numeric (already-qualified) key passes through the normaliser
   unchanged and still resolves correctly.
 """
@@ -142,7 +142,7 @@ def test_bare_numeric_resolves_to_canonical_casilla_id(
 
 
 # ---------------------------------------------------------------------------
-# Unknown bare-numeric produces helpful error (S60)
+# Unknown bare-numeric produces helpful error (legacy-step)
 # ---------------------------------------------------------------------------
 
 

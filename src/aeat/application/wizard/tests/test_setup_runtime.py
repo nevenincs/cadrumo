@@ -57,7 +57,7 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             # ── taxpayer biographic (visible: natural person) ──
             "",  # taxpayer-sex
             "",  # taxpayer-marital-status
-            "",  # situacion-familiar (Art. 82 LIRPF axis, S176)
+            "",  # situacion-familiar (Art. 82 LIRPF axis, legacy-step)
             # taxpayer-marriage-date SKIPPED (conditional on marital-status == CASADO)
             "",  # taxpayer-birth-date
             "",  # taxpayer-disability-grade
@@ -193,7 +193,7 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             # ── taxpayer biographic (visible: natural person) ──
             "",  # taxpayer-sex
             "",  # taxpayer-marital-status
-            "",  # situacion-familiar (Art. 82 LIRPF axis, S176)
+            "",  # situacion-familiar (Art. 82 LIRPF axis, legacy-step)
             # taxpayer-marriage-date SKIPPED (conditional on marital-status == CASADO)
             "",  # taxpayer-birth-date
             "",  # taxpayer-disability-grade

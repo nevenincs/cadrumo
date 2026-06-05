@@ -785,7 +785,7 @@ def test_config_repair_report_marks_registry_integrity_internal() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S46: DiagnosticModelError registration and invariant-replacement tests
+# legacy-step: DiagnosticModelError registration and invariant-replacement tests
 # ---------------------------------------------------------------------------
 
 

@@ -1210,7 +1210,7 @@ def test_parser_requires_a_known_registry_model_after_template_resolution(tmp_pa
 def test_real_redacted_declaration_copy_extracts_partial_casillas() -> None:
     """The synthetic M130 2024-1T corpus PDF extracts casillas via bbox_anchored.
 
-    Ground truth from the S202 fixture regeneration: 2024-1T carries only casillas
+    Ground truth from the legacy-step fixture regeneration: 2024-1T carries only casillas
     03 (rendimiento neto) and 19 (closure result) with values; all other casillas are
     blank (zero or not-applicable) in this synthetic filing.  With min_coverage=0 the
     parser accepts the partial extraction without error.

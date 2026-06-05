@@ -99,9 +99,9 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
 def test_calculation_observation_absent_by_design_flag_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
 ) -> None:
-    """P08.S61 (M2 from code review): CasillaObservation.absent_by_design survives the full encrypted-storage roundtrip.
+    """legacy-plan-step (M2 from code review): CasillaObservation.absent_by_design survives the full encrypted-storage roundtrip.
 
-    The P08.S51 pydantic-roundtrip test pinned the model_dump_json
+    The legacy-plan-step pydantic-roundtrip test pinned the model_dump_json
     round trip. The production persistence path goes through
     SecureObjectRepository + encrypted SQLite + envelope, which
     adds serialization layers the pydantic gate doesn't exercise.

@@ -1,4 +1,4 @@
-"""Online Sheets Evidencia rendering + offline/online evidence parity (W05.S22/S23).
+"""Online Sheets Evidencia rendering + offline/online evidence parity (legacy-plan.legacy-step/legacy-step).
 
 The apply adapter must write the Evidencia surface to Google Sheets identically
 to the offline xls workbook. Both transports consume the single ``evidence_table``

@@ -313,7 +313,7 @@ def test_failed_create_leaves_no_half_live_profile(_backend: Path) -> None:
     """
 
     # A pre-existing profile so "pointer restored to its prior state"
-    # is a non-trivial assertion: the pointer must end at the survivor.
+    # is a non-trivial assertion: the pointer must end at the regression.
     repository = ProfileRepository()
     survivor = _create(repository, label="Survivor", facts=_VALID_FACTS)
     write_pointer(_backend, BucketPointer(bucket_id=survivor.profile_id, schema_version=1))
@@ -328,7 +328,7 @@ def test_failed_create_leaves_no_half_live_profile(_backend: Path) -> None:
     pointer_after = read_pointer(_backend)
     assert pointer_after is not None
     assert pointer_after.bucket_id == survivor.profile_id, "the failed create stranded the active-profile pointer"
-    # The survivor is untouched and still loads cleanly.
+    # The regression is untouched and still loads cleanly.
     reloaded = _load(repository, survivor.profile_id)
     assert reloaded.label == "Survivor"
 

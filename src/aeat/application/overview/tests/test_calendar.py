@@ -714,7 +714,7 @@ def test_calendar_excludes_non_applicable_modelos() -> None:
     autónomo. For an estimación-objetiva autónomo the regime axis makes
     Modelo 130 ``NOT_APPLICABLE`` and Modelo 131 ``APPLICABLE``. The
     calendar must surface only the ``APPLICABLE`` verdicts — a
-    ``NOT_APPLICABLE`` row shown as confidently due is the W02 defect.
+    ``NOT_APPLICABLE`` row shown as confidently due is the legacy-plan defect.
     """
 
     from ...domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
@@ -961,7 +961,7 @@ def test_calendar_legal_entity_is_never_shown_an_irpf_cuota() -> None:
 
     Modelo 100 / 130 / 303 deadline windows are registered and the
     deadline engine still surfaces them (the registry applicability
-    conditions are not yet entity-type-aware — a W03 registry gap).
+    conditions are not yet entity-type-aware — a legacy-plan registry gap).
     The applicability filter in ``build_overview_calendar`` is what
     keeps the calendar correct: a sociedad limitada is an Impuesto
     sobre Sociedades contribuyente, so every IRPF modelo resolves
@@ -1113,12 +1113,12 @@ def test_calendar_propagates_genuine_registry_fault() -> None:
 
 
 # ---------------------------------------------------------------------
-# S227 regressions — LEGAL_ENTITY calendar completeness
+# legacy-step regressions — LEGAL_ENTITY calendar completeness
 # ---------------------------------------------------------------------
 
 
 def test_calendar_legal_entity_shows_modelo_202_pagos_fraccionados() -> None:
-    """S227 regression: M202 must appear in the calendar for a LEGAL_ENTITY profile.
+    """legacy-step regression: M202 must appear in the calendar for a LEGAL_ENTITY profile.
 
     The M202 filing schedule uses ``field = "taxpayer.entity_type"`` as a profile
     condition, but TaxpayerProfile has ``entity_type`` directly — no ``.taxpayer``
@@ -1142,7 +1142,7 @@ def test_calendar_legal_entity_shows_modelo_202_pagos_fraccionados() -> None:
 
 
 def test_calendar_legal_entity_shows_modelo_200_impuesto_sociedades() -> None:
-    """S227 regression: M200 must appear for a LEGAL_ENTITY profile.
+    """legacy-step regression: M200 must appear for a LEGAL_ENTITY profile.
 
     The M200 Impuesto sobre Sociedades annual declaration has ``filing_year = 2024``
     but its deadline window opens on 2025-07-01 and closes on 2025-07-25. A calendar

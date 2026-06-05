@@ -58,7 +58,7 @@ def test_modelo_303_revision_period_selectors_cover_2009_to_present() -> None:
     assert rev_new.valid_from == date(2023, 1, 1)
     assert rev_new.period_selector.year_from == 2023
     assert rev_new.period_selector.year_to is None
-    # S230: 2023+ revision accepts both quarterly (standard) and monthly (SII-enrolled)
+    # legacy-step: 2023+ revision accepts both quarterly (standard) and monthly (SII-enrolled)
     assert "1T" in rev_new.period_selector.periods
     assert "4T" in rev_new.period_selector.periods
     assert "01" in rev_new.period_selector.periods
@@ -459,7 +459,7 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
 
 
 def test_modelo_303_sii_monthly_snapshot_resolves_for_each_period() -> None:
-    """S230 regression: SII-enrolled taxpayers file M303 monthly (Art. 62.6
+    """legacy-step regression: SII-enrolled taxpayers file M303 monthly (Art. 62.6
     RD 1624/1992). The 2023-y-siguientes revision must accept periods 01-12
     via select_revision so ``bindings list --period 01`` resolves without a
     RegistrySnapshotError."""

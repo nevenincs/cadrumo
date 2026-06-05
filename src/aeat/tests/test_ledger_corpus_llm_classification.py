@@ -1,4 +1,4 @@
-"""Live LLM classification accuracy harness over the ledger corpus (W05.P12).
+"""Live LLM classification accuracy harness over the ledger corpus (legacy-plan).
 
 Drives the REAL Claude classifier (``build_claude_classifier`` → the ``claude``
 CLI) over a representative sample of the hand-authored corpus and scores its
@@ -7,12 +7,12 @@ from the default unit selection; self-skips when the classifier is unavailable
 (no CLI / not logged in), mirroring ``test_live_anthropic``.
 
 When live classification IS available the harness:
-- S34: scores per-classification accuracy against the oracle;
-- S35: records ``classified_by="llm:<name>"`` + confidence and flags
+- legacy-step: scores per-classification accuracy against the oracle;
+- legacy-step: records ``classified_by="llm:<name>"`` + confidence and flags
   low-confidence predictions for manual review;
-- S36: includes the edge cases (recargo anomaly, internal transfer, foreign
+- legacy-step: includes the edge cases (recargo anomaly, internal transfer, foreign
   reverse-charge, régimen simplificado) in the sample;
-- S37: gates overall accuracy against a lenient floor and reports the
+- legacy-step: gates overall accuracy against a lenient floor and reports the
   per-classification miss rate.
 """
 
@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]
 
 _CORPUS = Path(__file__).parent / "fixtures" / "financial" / "ledger-corpus"
 _ACCOUNTS = ("bbva-business-eur.csv", "caixabank-personal.csv", "revolut-multi.csv")
-# Representative descriptions spanning the gamut + the edge cases (S36).
+# Representative descriptions spanning the gamut + the edge cases (legacy-step).
 _SAMPLE_NEEDLES = (
     "Cobro factura F-2025-001 ACME",          # business income
     "Cuota autonomos RETA",                    # business expense
@@ -104,7 +104,7 @@ def test_llm_classification_scores_against_oracle_and_gates_accuracy() -> None:
     misses_by_expected: dict[str, int] = {}
     for txn, rule in sample:
         response = classifier.classify(txn)
-        # S35: every prediction carries a confidence and an attributable source.
+        # legacy-step: every prediction carries a confidence and an attributable source.
         classified_by = f"llm:{classifier.name}"
         assert classified_by.startswith("llm:")
         assert Decimal("0") <= response.confidence <= Decimal("1")
@@ -123,7 +123,7 @@ def test_llm_classification_scores_against_oracle_and_gates_accuracy() -> None:
             misses_by_expected[expected] = misses_by_expected.get(expected, 0) + 1
 
     accuracy = Decimal(correct) / Decimal(total)
-    # S37: lenient accuracy gate + per-class miss report (surfaced on failure).
+    # legacy-step: lenient accuracy gate + per-class miss report (surfaced on failure).
     assert accuracy >= _ACCURACY_FLOOR, (accuracy, misses_by_expected, low_confidence)
 
 

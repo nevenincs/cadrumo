@@ -181,7 +181,7 @@ def test_broad_except_ratchet_still_covers_xlsx() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _sink.py is a logging-survivor: stdlib logging import is justified
+# _sink.py is a logging-regression: stdlib logging import is justified
 # ---------------------------------------------------------------------------
 
 

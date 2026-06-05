@@ -137,7 +137,7 @@ def test_calendar_and_explain_agree_on_applicability_verdict(
     any verdict state), the applicability verdict returned by the calendar
     path must be identical to the verdict returned by the explain path.
 
-    This pins the agreement state as of the S46 landing commit. A
+    This pins the agreement state as of the legacy-step landing commit. A
     regression in either surface will be caught by this test.
     """
     profile = profile_factory()

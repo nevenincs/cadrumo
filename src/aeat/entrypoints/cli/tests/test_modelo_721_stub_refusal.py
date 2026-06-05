@@ -1,6 +1,6 @@
 """Regression tests for Modelo 721 unsupported local-work refusal.
 
-S367 show-stopper: ``aeat app modelo work create --modelo 721`` must
+legacy-step show-stopper: ``aeat app modelo work create --modelo 721`` must
 return a legally-grounded refusal payload rather than a silent error or
 an unroutable work unit.
 
@@ -41,7 +41,7 @@ def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
 def test_work_create_721_refuses_with_legal_authority_message(
     _isolated_cli_backend: Path,
 ) -> None:
-    """S367: ``work create --modelo 721`` is refused with a legally-grounded
+    """legacy-step: ``work create --modelo 721`` is refused with a legally-grounded
     message citing Orden HFP/887/2023.
 
     The CLI must NOT return a generic crash, a silent empty result, or

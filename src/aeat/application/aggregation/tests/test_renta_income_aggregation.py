@@ -302,7 +302,7 @@ def test_casilla_01_target_matches_expected_binding_contract() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S342: irpf_category filter + taxable_base_sum fact
+# legacy-step: irpf_category filter + taxable_base_sum fact
 # Grounded in RD 439/2007 art. 110.2 — only actividades económicas feed M130.
 # ---------------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-"""Tests for Plan C W05 validator hard-flip and semantic cross-reference accessor.
+"""Tests for Plan C legacy-plan validator hard-flip and semantic cross-reference accessor.
 
 `_validate_required_role_declarations` enforces that casillas
 matching any registered label pattern declare the canonical role.

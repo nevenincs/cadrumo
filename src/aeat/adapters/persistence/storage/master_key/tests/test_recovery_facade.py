@@ -161,7 +161,7 @@ def test_open_session_from_recovery_returns_unlocked_session_bound_to_bucket() -
 
 
 # ---------------------------------------------------------------------------
-# S30: ErrorCode registry binding + narrowed-except contract tests
+# legacy-step: ErrorCode registry binding + narrowed-except contract tests
 # ---------------------------------------------------------------------------
 
 

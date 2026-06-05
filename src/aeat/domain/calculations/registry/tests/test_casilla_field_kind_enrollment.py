@@ -18,7 +18,7 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # ---------------------------------------------------------------------------
-# Paths of the files that carried bare-string kind usages (S233–S236).
+# Paths of the files that carried bare-string kind usages (legacy-step).
 # ---------------------------------------------------------------------------
 _REPO_ROOT = Path(__file__).resolve().parents[5]
 

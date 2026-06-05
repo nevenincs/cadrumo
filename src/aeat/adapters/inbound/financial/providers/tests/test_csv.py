@@ -74,7 +74,7 @@ def test_csv_provider_ignores_invalid_configured_encoding_name() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Canonical fallback chain — real-behavior decode tests (S180)
+# Canonical fallback chain — real-behavior decode tests (legacy-step)
 # ---------------------------------------------------------------------------
 # Each sub-test feeds bytes that are only valid in ONE of the four encodings
 # in CSV_ENCODING_FALLBACK_CHAIN.  The preferred codec is set to an invalid

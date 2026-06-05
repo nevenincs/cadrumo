@@ -77,8 +77,8 @@ def test_ledger_link_check_preflight_sit_at_noun_group_root() -> None:
     )
 
 
-# W72.P348.S2022: count-side companion to the set-equality roster gate above.
-# The W71 canonical spine for `aeat app ledger` is the CRUD spine (add / view /
+# legacy-plan-step: count-side companion to the set-equality roster gate above.
+# The legacy-plan canonical spine for `aeat app ledger` is the CRUD spine (add / view /
 # list / update / remove / archive / reset) plus the ratified orthogonal axes
 # (link / check / preflight) plus the ratified workflow axes (allocate / attach
 # / categories / classify / export / history / import / merge / review / split /
@@ -97,7 +97,7 @@ _EXPECTED_LEDGER_VERB_COUNT: int = (
 
 
 def test_ledger_verb_count_matches_w71_canonical_spine() -> None:
-    """The mounted `aeat app ledger` verb count matches the W71 canonical
+    """The mounted `aeat app ledger` verb count matches the legacy-plan canonical
     spine (CRUD + ratified orthogonal axes + ratified workflow axes).
 
     Count-side companion to :func:`test_ledger_verb_roster_matches_canonical_spine`.
@@ -134,7 +134,7 @@ def test_ledger_orthogonal_verb_help_states_local_only(
     )
 
 
-# W72.P349.S2024: help-text enumeration gate. The `aeat app ledger --help`
+# legacy-plan-step: help-text enumeration gate. The `aeat app ledger --help`
 # and `aeat app modelo --help` surfaces are the operator's first encounter
 # with the noun-group's verb tree; if a canonical verb is mounted but
 # omitted from help (e.g. by a missing tr() entry), the operator cannot
@@ -214,11 +214,11 @@ def test_modelo_top_level_verb_roster_matches_canonical_spine() -> None:
     assert not extras, f"modelo verbs added without test update: {sorted(extras)}"
 
 
-# W13.P66.S407 — bucket_app maintenance-verb pre-landing state pinned.
-# Per W77.P370.S2131 + W77.P374.S2150 the bucket noun-group will gain
+# legacy-plan-step — bucket_app maintenance-verb pre-landing state pinned.
+# Per legacy-plan-step + legacy-plan-step the bucket noun-group will gain
 # six maintenance verbs (browse, search, export, import, rename, delete)
 # once BucketMaintenanceService lands. Until then, only `history` is
-# mounted. This test pins the current state so when S2150 lands the
+# mounted. This test pins the current state so when legacy-step lands the
 # implementer is forced to update EXPECTED_BUCKET_APP_VERBS, preventing
 # a silent partial-landing where some verbs ship without the others.
 EXPECTED_BUCKET_APP_VERBS: frozenset[str] = frozenset({"history"})
@@ -226,9 +226,9 @@ EXPECTED_BUCKET_APP_VERBS: frozenset[str] = frozenset({"history"})
 
 def test_bucket_app_verb_roster_pins_pre_s2150_state() -> None:
     """Bucket noun-group today carries only `history`; the six maintenance
-    verbs (per W77.P370.S2131 + W77.P374.S2150) are not yet mounted.
+    verbs (per legacy-plan-step + legacy-plan-step) are not yet mounted.
 
-    When S2150 lands this assertion fires, which is the intended flag:
+    When legacy-step lands this assertion fires, which is the intended flag:
     the implementer must update :data:`EXPECTED_BUCKET_APP_VERBS` to
     include the new maintenance verbs (browse / search / export /
     import / rename / delete) so the test continues to pass and the

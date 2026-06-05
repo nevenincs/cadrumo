@@ -1,7 +1,7 @@
 """Real-behavior tests for :func:`aeat.core.decimal.coerce_decimal`.
 
 Expected values are derived from the Python :class:`decimal.Decimal`
-specification and the three caller contracts consolidated in S153:
+specification and the three caller contracts consolidated in legacy-step:
 
 - ``_calc_sheets_pull``: nullable-cell pattern — no default, returns ``None``.
 - ``_row_set_assembly``: aggregation pattern — ``default=Decimal("0")``, always returns

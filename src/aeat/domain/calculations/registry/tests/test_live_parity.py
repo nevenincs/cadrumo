@@ -299,7 +299,7 @@ def test_catalogue_ids_filter_by_environment() -> None:
     assert catalogue.ids(environment="test_environment") == ("both", "test")
 
 
-# ── S174: OracleEnvironment StrEnum round-trip ───────────────────────────────
+# ── legacy-step: OracleEnvironment StrEnum round-trip ───────────────────────────────
 
 
 def test_oracle_environment_members_are_str_subclass() -> None:
@@ -451,7 +451,7 @@ def test_oracle_verify_payload_raises_when_planned_operation_blocked() -> None:
 
 
 # ---------------------------------------------------------------------------
-# ReplayPayload roundtrip tests (S120)
+# ReplayPayload roundtrip tests (legacy-step)
 # ---------------------------------------------------------------------------
 
 

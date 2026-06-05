@@ -427,7 +427,7 @@ def test_evidence_kind_rejects_unrelated_token() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S05 — typed WorkUnitId validation at CLI ingress
+# legacy-step — typed WorkUnitId validation at CLI ingress
 # ---------------------------------------------------------------------------
 
 
@@ -474,7 +474,7 @@ def test_validate_work_unit_id_rejects_malformed(bad: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# S06 -- CasillaId / BindingId key validation at CLI ingress
+# legacy-step -- CasillaId / BindingId key validation at CLI ingress
 # ---------------------------------------------------------------------------
 
 
@@ -1060,7 +1060,7 @@ def test_describe_unknown_modelo_keeps_its_own_error() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S277 -- _parse_typed_cli_observations typed-boundary warmup
+# legacy-step -- _parse_typed_cli_observations typed-boundary warmup
 # ---------------------------------------------------------------------------
 
 
@@ -1216,7 +1216,7 @@ def test_verification_report_lines_omits_next_action_when_granted() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S84 — describe label localisation
+# legacy-step — describe label localisation
 # ---------------------------------------------------------------------------
 
 _DESCRIBE_LABEL_KEYS: tuple[str, ...] = (
@@ -1293,7 +1293,7 @@ def test_describe_output_contains_localized_labels_in_english() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S108 -- describe BadParameter messages are localized via tr()
+# legacy-step -- describe BadParameter messages are localized via tr()
 # ---------------------------------------------------------------------------
 
 
@@ -1335,7 +1335,7 @@ def test_describe_period_error_locale_key_interpolates_message() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S110 -- DT12 / SAL computation error surfaces are localized via tr()
+# legacy-step -- DT12 / SAL computation error surfaces are localized via tr()
 # ---------------------------------------------------------------------------
 
 
@@ -1398,14 +1398,14 @@ def test_sal_computation_error_locale_key_interpolates_message() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S34 -- autocomplete _declared_period_tokens narrows except to AeatError
+# legacy-step -- autocomplete _declared_period_tokens narrows except to AeatError
 # ---------------------------------------------------------------------------
 
 
 class TestDeclaredPeriodTokensAutocomplete:
     """Real-behavior tests for the narrowed _declared_period_tokens autocomplete.
 
-    S33 narrowed the catch-all ``except Exception: return ()`` to two arms:
+    legacy-step narrowed the catch-all ``except Exception: return ()`` to two arms:
     - ``except AeatError: return ()``  — typed registry failures swallowed silently.
     - ``except Exception: _log.debug(...); return ()`` — unexpected errors logged.
 

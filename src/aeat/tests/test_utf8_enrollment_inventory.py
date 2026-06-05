@@ -9,11 +9,11 @@ instead of the bare string literal ``"utf-8"``.  Idiomatic hash sites
 same logical line) are allowlisted because the encoding is
 protocol-fixed and mechanical substitution adds no value.
 
-Structural prevention (W11.P42)
+Structural prevention (legacy-plan)
 --------------------------------
 This test AST-walks **all** Python files under ``src/aeat/`` rather than
 a fixed allowlist so that new files added by any campaign are automatically
-covered.  The W11 regression (``locales/manager.py`` escaping detection
+covered.  The legacy-plan regression (``locales/manager.py`` escaping detection
 because it was added after the original test was written) cannot recur.
 
 The test uses a ratchet: ``_KNOWN_VIOLATING_FILES`` records the set of
@@ -67,7 +67,7 @@ _SCAN_EXCLUDES: frozenset[str] = frozenset(
     }
 )
 
-# Known pre-existing violating files (W07/W09 backlog, to be cleaned up
+# Known pre-existing violating files (legacy-plan/legacy-plan backlog, to be cleaned up
 # in future campaigns).  New files must NOT appear here — add a cleanup
 # commit instead.  Removing an entry locks that file at zero violations.
 _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
@@ -189,7 +189,7 @@ def test_no_bare_utf8_literals_in_production_files() -> None:
 
     - Files already in the ratchet set are skipped (tracked for future cleanup).
     - Any file NOT in the ratchet set must have zero bare ``"utf-8"`` literals.
-    - New files added by any campaign are automatically covered — the W11 regression
+    - New files added by any campaign are automatically covered — the legacy-plan regression
       class (new files escaping the fixed enrolled-module set) cannot recur.
 
     To clean up a known-violating file: migrate it to ``UTF_8_ENCODING``, then
@@ -224,7 +224,7 @@ def test_no_bare_utf8_literals_in_production_files() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Hash-protocol allowlist commentary (S596)
+# Hash-protocol allowlist commentary (legacy-step)
 # ---------------------------------------------------------------------------
 # The following 4 sites use .encode('utf-8') fed directly into hashlib.sha256
 # on the same logical line.  They are exempt from the bare-literal check via
@@ -250,7 +250,7 @@ def test_no_bare_utf8_literals_in_production_files() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Scripts-tree ratchet (S594 — W12.P44)
+# Scripts-tree ratchet (legacy-step — legacy-plan)
 # ---------------------------------------------------------------------------
 # The ``scripts/`` directory is repo tooling; it must not import
 # ``aeat.core.external_constants`` just to satisfy the production UTF-8
