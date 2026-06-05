@@ -49,6 +49,8 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S44]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S45]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S46]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S47]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P04-S07]]'
   - '[[2026-06-05-codebase-monolith-decomposition-adr]]'
   - '[[2026-06-05-codebase-monolith-decomposition-code-review-audit]]'
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
@@ -113,8 +115,10 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S42` - W02.P05.S42 - extract modelo reconcile registrar
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S43` - W02.P05.S43 - verify modelo reconcile closure
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S44` - W02.P05.S44 - select google config closure command group
-- `2026-06-05-codebase-monolith-decomposition-W02-P05-S45` - W02.P05.S45 - extract google sync calc command group
-- `2026-06-05-codebase-monolith-decomposition-W02-P05-S46` - W02.P05.S46 Google Config Closure Verification
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S45` - W02.P05.S45 - extract google config closure command group
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S46` - W02.P05.S46 - verify google config closure extraction
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S47` - W02.P05.S47 Ledger Residual Import Selection
+- `2026-06-05-codebase-monolith-decomposition-W03-P04-S07` - W03.P04.S07 Backend ADR Queue
 
 ### plan
 
