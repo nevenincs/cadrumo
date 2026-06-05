@@ -173,8 +173,9 @@ Close remaining oversized CLI roots through explicit residual extraction tranche
 - [x] `W02.P05.S48` - extract the selected residual ledger root command group into a focused registrar module; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_*.py`.
 - [x] `W02.P05.S49` - verify residual ledger root behavior and ratchet ledger size budget; `src/aeat/entrypoints/cli/tests/test_ledger* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
 - [x] `W02.P05.S50` - select the next residual config root command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/tests`.
-- [ ] `W02.P05.S51` - extract the selected residual config root command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
-- [ ] `W02.P05.S52` - verify residual config root behavior and ratchet config size budget; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P05.S51` - extract the selected residual config root command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
+- [x] `W02.P05.S52` - verify residual config root behavior and ratchet config size budget; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P05.S93` - Migrate stale ledger integration fixtures to UUID-safe profile registration; `src/aeat/entrypoints/cli/tests/test_ledger_validation_paths.py; src/aeat/entrypoints/cli/tests/test_ledger_ux_defect_cluster.py`.
 
 ## Wave `W03` - application and domain monolith decomposition
 
