@@ -34,6 +34,7 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P03-S29]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P03-S30]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P03-S31]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S100]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S32]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S33]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S34]]'
@@ -55,7 +56,16 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S50]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S51]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S52]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S93]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S94]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S95]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S96]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S97]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S98]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S99]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P04-S07]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S53]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S54]]'
   - '[[2026-06-05-codebase-monolith-decomposition-adr]]'
   - '[[2026-06-05-codebase-monolith-decomposition-code-review-audit]]'
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
@@ -107,6 +117,7 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W02-P03-S29` - W02.P03.S29 - residual modelo audit selection
 - `2026-06-05-codebase-monolith-decomposition-W02-P03-S30` - W02.P03.S30 - residual modelo audit extraction
 - `2026-06-05-codebase-monolith-decomposition-W02-P03-S31` - W02.P03.S31 - residual modelo audit verification
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S100` - W02.P05.S100 Modelo Import Regression Verification
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S32` - `codebase-monolith-decomposition` `W02.P05.S32`
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S33` - `codebase-monolith-decomposition` `W02.P05.S33`
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S34` - W02.P05.S34 - verify ledger rule extraction
@@ -128,7 +139,16 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S50` - W02.P05.S50 - select residual config auth command group
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S51` - W02.P05.S51 - extract residual config auth command group
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S52` - W02.P05.S52 - verify residual config auth extraction
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S93` - W02.P05.S93 UUID-Safe Ledger Fixtures
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S94` - W02.P05.S94 - select residual config repair command groups
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S95` - W02.P05.S95 - extract config repair maintenance commands
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S96` - W02.P05.S96 - verify config repair command extraction
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S97` - W02.P05.S97 Config Bucket History Selection
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S98` - W02.P05.S98 - extract config bucket history
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S99` - W02.P05.S99 - verify config bucket history extraction
 - `2026-06-05-codebase-monolith-decomposition-W03-P04-S07` - W03.P04.S07 Backend ADR Queue
+- `2026-06-05-codebase-monolith-decomposition-W03-P06-S53` - W03.P06.S53 - decompose application modelo action helpers
+- `2026-06-05-codebase-monolith-decomposition-W03-P06-S54` - W03.P06.S54 - verify application modelo action decomposition
 
 ### plan
 

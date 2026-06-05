@@ -25,6 +25,8 @@ from typer.testing import CliRunner
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span
+from ....application.user_profile._testing import register_minimal_profile
+from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....domain.categories import SpendingCategory
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -45,14 +47,10 @@ def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
     """Hold an active bucket session open across this module's in-process invokes.
 
     The active bucket session is a per-process/per-context ContextVar opened by
-    the storage master-key provider. In the real CLI each command process
-    re-opens it from persisted state; in-process ``CliRunner`` a bare
-    ``config profile create`` invoke opens and closes its own session, so a
-    subsequent ``ledger ...`` invoke finds none ("No active bucket session is
-    open"). Wrapping the test body in :func:`profile_create_storage_span`
-    activates the master-key provider for the ``tester`` profile the tests
-    create via the CLI, so every invoke shares one open session — the same
-    pattern the passing ledger-CLI suites use.
+    the storage master-key provider. Profile identity is an immutable bucket id
+    distinct from the display label, so these tests seed a real profile under
+    the same id as the held storage span instead of opening a second
+    UUID-backed in-process CLI create session.
     """
     dispose_engine()
     with (
@@ -60,6 +58,7 @@ def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span(_PROFILE_ID),
     ):
+        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_PROFILE_ID))
         try:
             yield
         finally:
@@ -67,21 +66,7 @@ def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
 
 
 def _create_profile() -> None:
-    created = _RUNNER.invoke(
-        app,
-        [
-            "config",
-            "profile",
-            "create",
-            "tester",
-            "--quiet",
-            "--tax-id",
-            "00000001R",
-            "--activity",
-            "freelance",
-        ],
-    )
-    assert created.exit_code == 0, created.output
+    """Keep legacy test arrangement readable; the autouse fixture registers it."""
 
 
 def _imported_transaction_id(tmp_path: Path) -> str:

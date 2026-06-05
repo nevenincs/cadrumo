@@ -12,12 +12,19 @@ from ....application.repair_integrity import build_repair_policy_command_surface
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_CLI_DIR = Path(__file__).resolve().parent
+_CLI_DIR = Path(__file__).resolve().parents[1]
 
 _POLICY_COMMAND_MODULES: tuple[tuple[Path, str, tuple[str, ...]], ...] = (
     (_CLI_DIR / "_config" / "__init__.py", "app", ("config",)),
+    (_CLI_DIR / "_config" / "_bucket_history.py", "bucket_app", ("config", "bucket")),
+    (_CLI_DIR / "_config" / "_repair_cli.py", "repair_app", ("config", "repair")),
+    (_CLI_DIR / "_config" / "_repair_profile.py", "repair_app", ("config", "repair")),
     (_CLI_DIR / "_ledger.py", "app", ("app", "ledger")),
+    (_CLI_DIR / "_ledger_import_cli.py", "app", ("app", "ledger")),
     (_CLI_DIR / "_modelo.py", "app", ("app", "modelo")),
+    (_CLI_DIR / "_modelo_audit_cli.py", "audit_app", ("app", "modelo", "audit")),
+    (_CLI_DIR / "_modelo_export_cli.py", "app", ("app", "modelo")),
+    (_CLI_DIR / "_modelo_records_cli.py", "filing_record_app", ("app", "modelo", "filing-record")),
     (_CLI_DIR / "_app_live.py", "app", ("app", "live")),
 )
 

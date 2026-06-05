@@ -20,8 +20,8 @@ Scope: `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/te
 
 ## Outcome
 
-Focused bucket-history verification passed. Ruff reported no issues, parser and lifecycle/roster checks passed, and the CLI module-size guard pins the config root at the new smaller line budget.
+Focused bucket-history verification passed. Ruff reported no issues, parser and lifecycle/roster checks reported 47 passing tests, and the CLI module-size guard pins the config root at the new smaller line budget.
 
 ## Notes
 
-The broader combined config gate also includes the long repair privacy contract before this tranche is committed.
+The broader combined config gate also includes the long repair privacy contract before this tranche is committed. S100 records the fresh-process output-language parity rerun that passed with 40 tests.
