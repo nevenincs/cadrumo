@@ -3608,6 +3608,7 @@ errors:
       or the calculation engine may be corrupted.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
+    integrity_active_profile_pointer: 'The active-profile pointer is invalid; repair the selected profile before continuing.'
   internal:
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
       error.

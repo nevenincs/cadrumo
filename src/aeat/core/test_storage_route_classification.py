@@ -14,7 +14,7 @@ from .config import (
     classify_storage_route,
     settings_for_active_profile_bucket,
 )
-from .errors import CoreValidationError
+from .errors import ActiveProfilePointerError, CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
@@ -81,6 +81,17 @@ def test_pointer_resolved_bucket_database_route_is_detected(tmp_path: Path) -> N
 
     assert route.kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE
     assert route.bucket_id == "pointer-bucket"
+
+
+def test_corrupt_pointer_refuses_root_fallback(tmp_path: Path) -> None:
+    (tmp_path / "active-profile").write_text("not = valid = toml", encoding="utf-8")
+
+    with pytest.raises(ActiveProfilePointerError) as exc_info:
+        Settings(aeat_local_storage_root=tmp_path)
+
+    assert "invalid active-profile pointer" in str(exc_info.value)
+    assert "refusing root storage fallback" in str(exc_info.value)
+    assert exc_info.value.__cause__ is not None
 
 
 def test_no_active_profile_classifies_root_fallback_database(tmp_path: Path) -> None:
