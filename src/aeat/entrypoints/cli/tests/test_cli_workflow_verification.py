@@ -167,7 +167,7 @@ def _review_rows(outcome: _WorkflowRoundTripOutcome) -> list[Mapping[str, object
 def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
     """Drive the canonical operator round-trip through the CLI.
 
-    Five logical phases:
+    Five logical stages:
 
     1. `config profile create` — register operator profile with --accept-defaults.
     2. `config profile status` — verify the wizard persisted every

@@ -41,7 +41,7 @@ Verify the CLI path from censo refresh/apply to calendar, including authenticate
 Verify the censo-to-calendar path with focused non-live tests first, then record either successful read-only live evidence or an authenticated external blocker. Lack of live proof remains open work rather than local completion.
 
 - [x] `W02.P02.S03` - Run focused lint/tests plus live censo/calendar CLI verification; `.vault/exec/2026-06-05-live-censo-calendar-reconciliation`.
-- [ ] `W02.P02.S04` - Run code review and persist audit; `.vault/audit/2026-06-05-live-censo-calendar-reconciliation-code-review-audit.md`.
+- [x] `W02.P02.S04` - Run code review and persist audit; `.vault/audit/2026-06-05-live-censo-calendar-reconciliation-code-review-audit.md`.
 
 ## Description
 

@@ -639,7 +639,7 @@ application:
         filing year %{filing_year}, period %{period} could not be resolved.
       calculation_revision_not_found: No calculation revision found with id=%{calculation_revision_id}.
       caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
-        bucket-derived source-bound casillas: %{casillas}.'
+        bucket-derived source bound casillas: %{casillas}.'
       computed_casilla_binding_conflict: 'Bucket-derived inputs target computed casillas
         and cannot be overridden by external binding. Affected casillas: %{computed}.'
       cross_period_clean_state_incomplete: Cross-period clean-state proof is incomplete

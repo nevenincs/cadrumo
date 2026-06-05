@@ -15,9 +15,13 @@ related:
 - `.\.venv\Scripts\ruff.exe check src/aeat/application/user_profile/_censo_sync.py src/aeat/application/user_profile/__init__.py src/aeat/entrypoints/cli/_config/_profile_censo.py src/aeat/entrypoints/cli/_config/_profile_censo_payloads.py src/aeat/application/user_profile/tests/test_censo_sync.py src/aeat/entrypoints/cli/tests/test_profile_censo_verbs.py`
   - Result: passed.
 - `.\.venv\Scripts\pytest.exe src/aeat/application/user_profile/tests/test_censo_sync.py src/aeat/entrypoints/cli/tests/test_profile_censo_verbs.py -m "hex_application or hex_entrypoint" -q`
-  - Result: 25 passed in 69.25s.
+  - Initial result: 25 passed in 69.25s.
+  - Post-review remediation result: 27 passed in 75.76s.
 - `.\.venv\Scripts\pytest.exe src/aeat/application/overview/tests/test_calendar.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py -m "hex_application or hex_entrypoint" -q`
-  - Result: 71 passed in 62.87s.
+  - Initial result: 71 passed in 62.87s.
+  - Post-review remediation result: 71 passed in 75.41s.
+- `.\.venv\Scripts\python.exe -c "... yaml.safe_load(...) ..."` over `src/aeat/locales/{en,es,ca,hu}.yml`
+  - Result: locale YAML parsed successfully.
 - `git diff --check -- ...`
   - Result: no whitespace errors; Git warned that `_censo_sync.py` will normalize CRLF to LF when touched.
 
@@ -36,6 +40,10 @@ related:
 - `.\.venv\Scripts\aeat.exe config profile censo refresh`
   - Result: refused after the AEAT G313 surface returned no readable censo for the active profile.
   - CLI message: "La sede de la AEAT (G313) no devolvió ningún censo legible para el perfil <profile-id>; confirma que tu certificado o Cl@ve está registrado para este NIF."
+- Post-remediation live-state recheck:
+  - `config auth status`: still configured/authenticated/available, with operator-mediated Cl@ve completion required.
+  - `config profile censo show`: still refused because no censo snapshot exists.
+  - `app overview calendar --from 2024-01-01 --to 2026-12-31 --allow-incomplete`: still refused because taxpayer-model facts are absent.
 
 ## Result
 

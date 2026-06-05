@@ -123,10 +123,10 @@ Surface typed clean-state blockers with actionable repair commands for importing
 
 Run focused registry, calculation, modelo workflow, export, and doctor checks and record remaining legal or backend risk.
 
-- [ ] `W04.P11.S41` - Run registry cross-dependency tests; `src/aeat/domain/calculations/registry/tests`.
-- [ ] `W04.P11.S42` - Run calculation clean-state tests; `src/aeat/application/calculations/tests`.
-- [ ] `W04.P11.S43` - Run modelo workflow clean-state tests; `src/aeat/application/modelo/tests`.
-- [ ] `W04.P11.S44` - Run doctor and feature index checks; `vaultspec-core doctor`.
+- [x] `W04.P11.S41` - Run registry cross-dependency tests; `src/aeat/domain/calculations/registry/tests`.
+- [x] `W04.P11.S42` - Run calculation clean-state tests; `src/aeat/application/calculations/tests`.
+- [x] `W04.P11.S43` - Run modelo workflow clean-state tests; `src/aeat/application/modelo/tests`.
+- [x] `W04.P11.S44` - Run doctor and feature index checks; `vaultspec-core doctor`.
 
 ## Description
 

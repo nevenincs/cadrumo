@@ -655,7 +655,7 @@ application:
       calculation_revision_not_found: Nem található számítás-revízió id=%{calculation_revision_id}
         azonosítóval.
       caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
-        bucket-derived source-bound casillas: %{casillas}.'
+        bucket-derived source bound casillas: %{casillas}.'
       computed_casilla_binding_conflict: 'A bucket-alapú bemenetek számított mezőket
         céloznak, amelyek nem írhatók felül külső kötéssel. Érintett mezők: %{computed_casillas}.'
       cross_period_clean_state_incomplete: A keresztidoszaki tiszta allapot igazolasa
@@ -4107,9 +4107,7 @@ errors:
       unsecured_backend: Az aktív bucket-munkamenet a nem biztonságos háttérrendszert
         használja. A gyártási profil-kötött tároláshoz fájl- vagy kulcstár-felügyelet
         szükséges.
-    stored_data_validation_boundary: Egy tárolt profil vagy munkafolyamat-rekord már
-      nem egyezik a várt sémával – a lemezen lévő adatok eltértek a jelenlegi formátumtól.
-      A diagnosztikához és helyreállításhoz futtassa az  parancsot.
+    stored_data_validation_boundary: 'Egy tarolt profil vagy munkafolyamat-rekord mar nem egyezik a vart semaval; a lemezen levo adatok eltertek a jelenlegi formatumtol. Diagnosztikahoz es helyreallitashoz futtasd aeat config doctor.'
   transaction:
     import_source_invalid: A forrás nem érvényes főkönyvi dokumentum
     ledger_import_failed: 'A főkönyvi fájl nem importálható: {reason}'
