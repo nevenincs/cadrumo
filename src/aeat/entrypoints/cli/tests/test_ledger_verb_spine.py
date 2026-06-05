@@ -30,6 +30,7 @@ EXPECTED_LEDGER_VERBS: frozenset[str] = frozenset(
         "categories",
         "check",
         "classify",
+        "doclink",
         "export",
         "history",
         "import",
@@ -37,6 +38,7 @@ EXPECTED_LEDGER_VERBS: frozenset[str] = frozenset(
         "list",
         "merge",
         "preflight",
+        "providers",
         "remove",
         "reset",
         "review",
@@ -81,16 +83,16 @@ def test_ledger_link_check_preflight_sit_at_noun_group_root() -> None:
 # The accepted contract canonical spine for `aeat app ledger` is the CRUD spine (add / view /
 # list / update / remove / archive / reset) plus the ratified orthogonal axes
 # (link / check / preflight) plus the ratified workflow axes (allocate / attach
-# / categories / classify / export / history / import / merge / review / split /
-# stash / status / track). Counting them independently of the set membership
+# / categories / classify / doclink / export / history / import / merge /
+# providers / review / split / stash / status / track). Counting them independently of the set membership
 # catches accidental verb-count drift (e.g. a verb silently re-parented but
 # replaced by a similarly-named alias) that an exact-set match might still
 # happen to satisfy if both the missing and the extra are accounted for in the
 # expected set update.
 _CRUD_SPINE_COUNT: int = 7  # add, view, list, update, remove, archive, reset
 _RATIFIED_ORTHOGONAL_AXIS_COUNT: int = 3  # link, check, preflight
-_RATIFIED_WORKFLOW_AXIS_COUNT: int = 13  # allocate attach categories classify
-# export history import merge review split stash status track
+_RATIFIED_WORKFLOW_AXIS_COUNT: int = 15  # allocate attach categories classify
+# doclink export history import merge providers review split stash status track
 _EXPECTED_LEDGER_VERB_COUNT: int = (
     _CRUD_SPINE_COUNT + _RATIFIED_ORTHOGONAL_AXIS_COUNT + _RATIFIED_WORKFLOW_AXIS_COUNT
 )

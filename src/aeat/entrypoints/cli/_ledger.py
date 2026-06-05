@@ -19,42 +19,28 @@ from pydantic_core import ErrorDetails
 
 from ...application.export import ExportSerializationFormat
 from ...application.ledger import (
-    ApplyRulesResult,
     LedgerExportCommand,
     LedgerReviewQuery,
     LedgerReviewQueryResult,
     LedgerReviewRow,
-    LedgerSourceImportCommand,
-    LedgerSourceImportResult,
-    LedgerSourceValidationReport,
-    LedgerSourceVerificationReport,
     LedgerTransactionResultPayload,
     LLMProvider,
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
-    SplitChildCommand,
     apply_llm_classification,
-    archive_manual_transaction,
-    attach_manual_transaction_evidence,
     available_llm_providers,
     compute_display_id_width,
     create_manual_transaction,
     export_ledger_transactions,
     get_manual_transaction,
-    import_ledger_source,
     is_llm_provider_available,
     ledger_transaction_payload,
     ledger_transaction_result_payload,
     ledger_transaction_review_status,
     ledger_transaction_tracking_payload,
     list_manual_transactions,
-    merge_transactions,
     query_ledger_review_rows,
-    remove_manual_transaction,
-    reset_ledger_catalogue,
     resolve_transaction_id,
-    split_transaction,
-    stash_manual_transaction,
     suggest_llm_classification,
     summarize_manual_transactions,
     update_manual_transaction_fields,
@@ -64,11 +50,9 @@ from ...application.review import (
     LedgerReviewFilterSpec,
 )
 from ...core import resolve_active_bucket_id
-from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.logging import get_logger
-from ...core.time import now
-from ...domain.attachments import AttachmentSource
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -84,19 +68,16 @@ from ...domain.deadlines._models import IrpfSpecialRegime
 from ...domain.iva._schema import EUMemberState, IvaCategory
 from ...domain.transactions import (
     BusinessClassification,
-    LedgerClassificationRule,
     LLMClassifierError,
     Transaction,
     TransactionCatalogueRepository,
     TransactionDirection,
     TransactionIdPrefixError,
-    TransactionLifecycleState,
 )
 from ._common import (
     _bad,
     _canonical_period,
     _emit_envelope,
-    _no_active_profile_refusal,
     _parse_iso_date,
     _profile_to_taxpayer,
     _state,
@@ -108,9 +89,22 @@ from ._ledger_business_invoice_cli import (
     register_business_invoice_commands,
 )
 from ._ledger_evidence_cli import register_evidence_commands
+from ._ledger_import_cli import register_import_commands
 from ._ledger_inventory_cli import inventory_app, register_inventory_commands
+from ._ledger_lifecycle_cli import (
+    ledger_archive,
+    ledger_attach,
+    ledger_doclink,
+    ledger_merge,
+    ledger_remove,
+    ledger_reset,
+    ledger_split,
+    ledger_stash,
+    register_lifecycle_commands,
+)
 from ._ledger_list import parse_ledger_list_filter_spec, project_ledger_list
 from ._ledger_ratios_cli import ratios_app, register_ratios_commands
+from ._ledger_rules_cli import register_rule_commands, rule_app
 from ._schemas import OutputSchema
 
 _log = get_logger(__name__)
@@ -119,8 +113,17 @@ __all__ = [
     "app",
     "collectible_invoice_app",
     "inventory_app",
+    "ledger_archive",
+    "ledger_attach",
+    "ledger_doclink",
+    "ledger_merge",
+    "ledger_remove",
+    "ledger_reset",
+    "ledger_split",
+    "ledger_stash",
     "payable_invoice_app",
     "ratios_app",
+    "rule_app",
 ]
 
 app = typer.Typer(
@@ -147,39 +150,6 @@ def _parse_required_decimal(raw: str, *, label: str) -> Decimal:
     parsed = _parse_decimal(raw, label=label)
     assert parsed is not None
     return parsed
-
-
-def _known_import_providers() -> tuple[str, ...]:
-    """Return the tuple of recognised provider ids from the canonical enum."""
-    from ...application.ledger import LedgerProviderID
-
-    return tuple(p.value for p in LedgerProviderID)
-
-
-def _provider_catalogue_text() -> str:
-    """Return the comma-joined recognised provider ids for messages."""
-    return ", ".join(_known_import_providers())
-
-
-def _validate_import_provider(provider: str) -> str:
-    """Reject an unrecognised import provider with a discoverable message.
-
-    Resolution is case-insensitive and whitespace-tolerant to match
-    `_resolve_financial_provider`. An unknown value is refused with a
-    `typer.BadParameter` that enumerates every accepted provider id so
-    the operator does not have to discover the set by trial and error
-    (cluster D / persona testimonials, ledger import surface).
-    """
-    normalised = provider.strip().lower()
-    if normalised not in _known_import_providers():
-        raise _bad(
-            tr(
-                "cli.ledger.errors.unknown_provider",
-                provider=provider,
-                providers=_provider_catalogue_text(),
-            )
-        )
-    return normalised
 
 
 def _category_catalogue_text() -> str:
@@ -1015,404 +985,7 @@ def ledger_allocate(
     )
 
 
-@app.command("attach", help=tr("cli.ledger.attach.help"))
-def ledger_attach(
-    ctx: typer.Context,
-    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.attach.id_help")),
-    purchase_invoice_evidence_id: str | None = typer.Option(
-        None,
-        "--purchase-invoice-evidence-id",
-        help=tr("cli.ledger.attach.purchase_invoice_evidence_help"),
-    ),
-    attachment_ids: list[str] = typer.Option(
-        [],
-        "--attachment-id",
-        help=tr("cli.ledger.attach.attachment_help"),
-    ),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.attach.actor_help")),
-) -> None:
-    """Attach existing secure evidence objects to one ledger transaction."""
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
-    result = attach_manual_transaction_evidence(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-        attachment_ids=tuple(attachment_ids),
-        actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger attach",
-        transaction_repository=transaction_repository,
-    )
-    from ._ledger_payloads import LedgerAttachResult
-
-    _emit_update_result(
-        ctx,
-        result.transaction,
-        result.ref.bucket_id,
-        result.bucket_event_ids,
-        command="ledger.attach",
-        result_cls=LedgerAttachResult,
-    )
-
-
-@app.command(
-    "doclink",
-    help=tr(
-        "cli.ledger.doclink.help",
-        default="Record a Gmail/Drive/URL document link on a ledger row (never fetched).",
-    ),
-)
-def ledger_doclink(
-    ctx: typer.Context,
-    transaction_id: str = typer.Option(
-        ...,
-        "--id",
-        help=tr("cli.ledger.doclink.id_help", default="Ledger transaction id."),
-    ),
-    source: AttachmentSource = typer.Option(
-        ..., "--source", help=tr("cli.ledger.doclink.source_help", default="Link source: gmail, google_drive, or url.")
-    ),
-    reference: str = typer.Option(
-        ..., "--reference", help=tr("cli.ledger.doclink.reference_help", default="The document link reference.")
-    ),
-    note: str = typer.Option("", "--note", help=tr("cli.ledger.doclink.note_help", default="Optional note.")),
-    actor: str | None = typer.Option(
-        None,
-        "--actor",
-        help=tr("cli.ledger.doclink.actor_help", default="Operator label."),
-    ),
-) -> None:
-    """Record a Gmail/Drive/URL document link as local evidence on a ledger row.
-
-    The remote document is never fetched: the locally-stored payload is the link
-    reference itself, registered as a content-addressed
-    :class:`~aeat.domain.attachments.Attachment` and bound to the transaction's
-    ``attachment_ids``. The live counterpart (resolving the link's bytes from
-    Drive/Gmail) is tracked separately in Wave W04.
-    """
-    from ...adapters.persistence.storage.attachment import AttachmentStore
-    from ...domain.attachments import AttachmentKind
-    from ...domain.attachments._service import add_link_attachment
-
-    kind_by_source = {
-        AttachmentSource.GMAIL: AttachmentKind.EMAIL_MESSAGE,
-        AttachmentSource.GOOGLE_DRIVE: AttachmentKind.DRIVE_DOCUMENT,
-        AttachmentSource.URL: AttachmentKind.OTHER,
-    }
-    kind = kind_by_source.get(source)
-    if kind is None:
-        raise _bad(
-            tr(
-                "cli.ledger.doclink.bad_source",
-                source=source.value,
-                default=f"document-link source must be one of: gmail, google_drive, url (got '{source.value}').",
-            )
-        )
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
-    store = AttachmentStore()
-    attachment = add_link_attachment(
-        store,
-        kind=kind,
-        source=source,
-        source_reference=reference,
-        captured_at=now(),
-        bucket_id=transaction_repository.bucket_id,
-        link_transaction_ids=(resolved_id,),
-        notes=note,
-    )
-    result = attach_manual_transaction_evidence(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        attachment_ids=(attachment.attachment_id,),
-        actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger doclink",
-        transaction_repository=transaction_repository,
-        attachment_store=store,
-    )
-    from ._ledger_payloads import LedgerAttachResult
-
-    _emit_update_result(
-        ctx,
-        result.transaction,
-        result.ref.bucket_id,
-        result.bucket_event_ids,
-        command="ledger.doclink",
-        result_cls=LedgerAttachResult,
-    )
-
-
-@app.command("archive", help=tr("cli.ledger.archive.help"))
-def ledger_archive(
-    ctx: typer.Context,
-    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.archive.id_help")),
-    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.archive.reason_help")),
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.archive.yes_help")),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.archive.actor_help")),
-) -> None:
-    """Archive one ledger transaction through the bucket-scoped backend."""
-    if not yes:
-        raise _bad(tr("cli.ledger.errors.confirm_required"))
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
-    result = archive_manual_transaction(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        actor=actor or resolve_active_bucket_id() or "operator",
-        reason=reason,
-        source_command="aeat app ledger archive",
-        transaction_repository=transaction_repository,
-    )
-    from ._ledger_payloads import LedgerArchiveResult
-
-    _emit_update_result(
-        ctx,
-        result.transaction,
-        result.ref.bucket_id,
-        result.bucket_event_ids,
-        command="ledger.archive",
-        result_cls=LedgerArchiveResult,
-    )
-
-
-@app.command("stash", help=tr("cli.ledger.stash.help"))
-def ledger_stash(
-    ctx: typer.Context,
-    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.stash.id_help")),
-    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.stash.reason_help")),
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.stash.yes_help")),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.stash.actor_help")),
-) -> None:
-    """Stash one ledger transaction through the bucket-scoped backend."""
-    if not yes:
-        raise _bad(tr("cli.ledger.errors.confirm_required"))
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
-    result = stash_manual_transaction(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        actor=actor or resolve_active_bucket_id() or "operator",
-        reason=reason,
-        source_command="aeat app ledger stash",
-        transaction_repository=transaction_repository,
-    )
-    from ._ledger_payloads import LedgerStashResult
-
-    _emit_update_result(
-        ctx,
-        result.transaction,
-        result.ref.bucket_id,
-        result.bucket_event_ids,
-        command="ledger.stash",
-        result_cls=LedgerStashResult,
-    )
-
-
-@app.command("remove", help=tr("cli.ledger.remove.help"))
-def ledger_remove(
-    ctx: typer.Context,
-    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.remove.id_help")),
-    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.remove.reason_help")),
-    dry_run: bool = typer.Option(False, "--dry-run", help=tr("cli.ledger.remove.dry_run_help")),
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.remove.yes_help")),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.remove.actor_help")),
-) -> None:
-    """Remove one ledger transaction through the bucket-scoped backend."""
-    if not dry_run and not yes:
-        raise _bad(tr("cli.ledger.errors.confirm_required"))
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
-    report = remove_manual_transaction(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        actor=actor or resolve_active_bucket_id() or "operator",
-        reason=reason,
-        dry_run=dry_run,
-        source_command="aeat app ledger remove",
-        transaction_repository=transaction_repository,
-    )
-    from ._ledger_payloads import LedgerRemoveResult
-
-    _emit_envelope(
-        ctx,
-        command="ledger.remove",
-        result=LedgerRemoveResult.model_validate(report.model_dump(mode="json")),
-        lines=[
-            f"{tr('cli.ledger.labels.bucket')}\t{report.bucket_id}",
-            f"{tr('cli.ledger.labels.id')}\t{report.transaction_id}",
-            f"{tr('cli.ledger.labels.removed')}\t{report.removed}",
-            f"{tr('cli.ledger.labels.dry_run')}\t{report.dry_run}",
-        ],
-    )
-
-
-@app.command("reset", help=tr("cli.ledger.reset.help"))
-def ledger_reset(
-    ctx: typer.Context,
-    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.reset.reason_help")),
-    dry_run: bool = typer.Option(False, "--dry-run", help=tr("cli.ledger.reset.dry_run_help")),
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.reset.yes_help")),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.reset.actor_help")),
-) -> None:
-    """Reset the active bucket ledger catalogue through the backend."""
-    if not dry_run and not yes:
-        raise _bad(tr("cli.ledger.errors.confirm_required"))
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    report = reset_ledger_catalogue(
-        bucket_id=transaction_repository.bucket_id,
-        actor=actor or resolve_active_bucket_id() or "operator",
-        reason=reason,
-        dry_run=dry_run,
-        source_command="aeat app ledger reset",
-        transaction_repository=transaction_repository,
-    )
-    from ._ledger_payloads import LedgerResetResult
-
-    _emit_envelope(
-        ctx,
-        command="ledger.reset",
-        result=LedgerResetResult.model_validate(report.model_dump(mode="json")),
-        lines=[
-            f"{tr('cli.ledger.labels.bucket')}\t{report.bucket_id}",
-            f"{tr('cli.ledger.labels.rows')}\t{len(report.removed_transaction_ids)}",
-            f"{tr('cli.ledger.labels.reset')}\t{report.reset}",
-            f"{tr('cli.ledger.labels.dry_run')}\t{report.dry_run}",
-        ],
-    )
-
-
-@app.command("split", help=tr("cli.ledger.split.help"))
-def ledger_split(
-    ctx: typer.Context,
-    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.split.id_help")),
-    child_amount: list[str] = typer.Option(
-        [],
-        "--child-amount",
-        help=tr("cli.ledger.split.child_amount_help"),
-    ),
-    child_description: list[str] = typer.Option(
-        [],
-        "--child-description",
-        help=tr("cli.ledger.split.child_description_help"),
-    ),
-    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.split.reason_help")),
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.split.yes_help")),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.split.actor_help")),
-) -> None:
-    """Redistribute one parent transaction into N child transactions."""
-    if not yes:
-        raise _bad(tr("cli.ledger.errors.confirm_required"))
-    if len(child_amount) != len(child_description):
-        raise _bad(tr("cli.ledger.split.errors.child_args_mismatch"))
-    if len(child_amount) < 2:
-        raise _bad(tr("cli.ledger.split.errors.min_two_children"))
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
-    # A leaked `pydantic.ValidationError` (negative child amount, zero-sum
-    # split) is caught here and surfaced as the real validator cause,
-    # mirroring the `ledger classify` treatment.
-    try:
-        children = tuple(
-            SplitChildCommand(
-                amount=_parse_required_decimal(amount_raw, label="child-amount"),
-                description=description_raw,
-            )
-            for amount_raw, description_raw in zip(child_amount, child_description, strict=True)
-        )
-        result = split_transaction(
-            bucket_id=transaction_repository.bucket_id,
-            transaction_id=resolved_id,
-            children=children,
-            actor=actor or resolve_active_bucket_id() or "operator",
-            source_command="aeat app ledger split",
-            reason=reason,
-            transaction_repository=transaction_repository,
-        )
-    except ValidationError as exc:
-        raise _ledger_validation_bad(exc) from exc
-    from ._ledger_payloads import LedgerSplitResult
-
-    _emit_envelope(
-        ctx,
-        command="ledger.split",
-        result=LedgerSplitResult.model_validate(
-            {
-                "bucket_id": result.bucket_id,
-                "parent_transaction_id": result.parent_transaction_id,
-                "split_group_id": result.split_group_id,
-                "child_transaction_ids": list(result.child_transaction_ids),
-                "bucket_event_id": result.bucket_event_id,
-            }
-        ),
-        lines=[
-            f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
-            f"{tr('cli.ledger.labels.parent_id')}\t{result.parent_transaction_id}",
-            f"{tr('cli.ledger.labels.split_group_id')}\t{result.split_group_id}",
-            f"{tr('cli.ledger.labels.children')}\t{len(result.child_transaction_ids)}",
-            f"{tr('cli.ledger.labels.event_id')}\t{result.bucket_event_id}",
-        ],
-    )
-
-
-@app.command("merge", help=tr("cli.ledger.merge.help"))
-def ledger_merge(
-    ctx: typer.Context,
-    child_id: list[str] = typer.Option(
-        [],
-        "--child-id",
-        help=tr("cli.ledger.merge.child_id_help"),
-    ),
-    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.merge.reason_help")),
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.merge.yes_help")),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.merge.actor_help")),
-) -> None:
-    """Re-merge a complete cohort of split children into a fresh transaction."""
-    if not yes:
-        raise _bad(tr("cli.ledger.errors.confirm_required"))
-    if len(child_id) < 2:
-        raise _bad(tr("cli.ledger.merge.errors.min_two_children"))
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_ids = tuple(_resolve_id(transaction_repository, raw) for raw in child_id)
-    result = merge_transactions(
-        bucket_id=transaction_repository.bucket_id,
-        child_transaction_ids=resolved_ids,
-        actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger merge",
-        reason=reason,
-        transaction_repository=transaction_repository,
-    )
-    from ._ledger_payloads import LedgerMergeResult
-
-    _emit_envelope(
-        ctx,
-        command="ledger.merge",
-        result=LedgerMergeResult.model_validate(
-            {
-                "bucket_id": result.bucket_id,
-                "split_group_id": result.split_group_id,
-                "parent_transaction_id": result.parent_transaction_id,
-                "merged_transaction_id": result.merged_transaction_id,
-                "source_child_ids": list(result.source_child_ids),
-                "bucket_event_id": result.bucket_event_id,
-            }
-        ),
-        lines=[
-            f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
-            f"{tr('cli.ledger.labels.split_group_id')}\t{result.split_group_id}",
-            f"{tr('cli.ledger.labels.parent_id')}\t{result.parent_transaction_id}",
-            f"{tr('cli.ledger.labels.merged_id')}\t{result.merged_transaction_id}",
-            f"{tr('cli.ledger.labels.children')}\t{len(result.source_child_ids)}",
-            f"{tr('cli.ledger.labels.event_id')}\t{result.bucket_event_id}",
-        ],
-    )
+register_lifecycle_commands(app)
 
 
 _LEDGER_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
@@ -2147,211 +1720,6 @@ def _ledger_track_lines(transaction_id: str, transaction: Transaction) -> list[s
     return lines
 
 
-@app.command("import", help=tr("cli.ledger.import.help"))
-def ledger_import(
-    ctx: typer.Context,
-    path: Path = typer.Argument(..., help=tr("cli.ledger.import.path_help")),
-    provider: str = typer.Option(
-        ...,
-        "--provider",
-        help=tr("cli.ledger.import.provider_help", providers=_provider_catalogue_text()),
-    ),
-    dry_run: bool = typer.Option(False, "--dry-run", help=tr("cli.ledger.import.dry_run_help")),
-    verify: bool = typer.Option(False, "--verify", help=tr("cli.ledger.import.verify_help")),
-    source: Path | None = typer.Option(None, "--source", help=tr("cli.ledger.import.source_help")),
-    verbose: bool = typer.Option(False, "--verbose", help=tr("cli.ledger.import.verbose_help")),
-    period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.import.period_help")),
-) -> None:
-    """Import a financial-statement file via the existing provider registry."""
-    normalised_provider = _validate_import_provider(provider)
-    bucket_id: str | None = None
-    actor = "operator"
-    transaction_repository = None
-    # A real import requires an active profile. A dry run resolves the
-    # active bucket *when one exists* so the preview can count rows
-    # against the already-stored catalogue (accurate would-import /
-    # would-skip dedup) — but it degrades gracefully to an empty
-    # catalogue when no profile is configured, so the preview still
-    # works on a cold workspace. `import_ledger_source` never persists
-    # on a dry run.
-    if dry_run:
-        if resolve_active_bucket_id() is not None:
-            transaction_repository = _tx_repo(_state())
-            bucket_id = transaction_repository.bucket_id
-    else:
-        current_state = _state()
-        transaction_repository = _tx_repo(current_state)
-        bucket_id = transaction_repository.bucket_id
-        actor = resolve_active_bucket_id() or "operator"
-    # Composition root: wire the ECB euro reference-rate normalizer so foreign
-    # rows convert to value_in_eur at import (ledger-fx-conversion ADR). Without
-    # this they would persist unconverted and silently gate at aggregation.
-    from ...adapters.outbound.fx import default_ecb_rate_provider
-    from ...domain.currency import CurrencyNormalizationService
-
-    currency_normalizer = CurrencyNormalizationService(rate_provider=default_ecb_rate_provider())
-    canonical_period = _canonical_period(period) if period else None
-    # Folder/multi-file import: a directory imports every supported statement
-    # file in one invocation, sequentially (so later files dedup against earlier
-    # ones), with the envelope counts aggregated across files.
-    import_paths = _resolve_import_paths(path)
-    file_results = [
-        import_ledger_source(
-            LedgerSourceImportCommand(
-                bucket_id=bucket_id,
-                path=file_path,
-                provider=normalised_provider,
-                dry_run=dry_run,
-                verify=verify,
-                source=source,
-                period=canonical_period,
-                actor=actor,
-                source_command="aeat app ledger import",
-            ),
-            transaction_repository=transaction_repository,
-            currency_normalizer=currency_normalizer,
-        )
-        for file_path in import_paths
-    ]
-    result = file_results[0] if len(file_results) == 1 else _aggregate_import_results(file_results)
-    lines = [
-        f"{tr('cli.ledger.labels.rows')}\t{result.rows}",
-        f"{tr('cli.ledger.labels.imported')}\t{result.imported}",
-        f"{tr('cli.ledger.labels.skipped')}\t{result.skipped}",
-    ]
-    dry_run_notice: str | None = None
-    likely_duplicate_notice: str | None = None
-    if result.dry_run:
-        lines.append(f"{tr('cli.ledger.labels.dry_run')}\t{tr('cli.ledger.labels.yes')}")
-        # A dry run reports what *would* happen; make that explicit so
-        # the imported/skipped counts above are not read as a no-op.
-        dry_run_notice = f"{tr('cli.ledger.labels.notice')}\t{tr('cli.ledger.import.dry_run_preview')}"
-        lines.append(dry_run_notice)
-    empty_import_notice = _empty_import_notice(result)
-    if empty_import_notice is not None:
-        lines.append(empty_import_notice)
-    if result.likely_duplicates > 0:
-        # Cross-format duplicate suspicion: same date and amount as an
-        # existing row but a divergent narrative. The row is imported;
-        # the operator is warned so they can review rather than silently
-        # double-count a movement re-exported in a different format.
-        likely_duplicate_notice = (
-            f"{tr('cli.ledger.labels.warning')}\t"
-            f"{tr('cli.ledger.import.likely_duplicates', count=result.likely_duplicates)}"
-        )
-        lines.append(likely_duplicate_notice)
-    if verbose or verify:
-        lines.extend(_validation_lines(result.validation, result.source))
-    from ._ledger_payloads import LedgerImportPayload
-
-    _emit_envelope(
-        ctx,
-        command="ledger.import",
-        result=LedgerImportPayload.from_result(
-            result,
-            dry_run_notice=dry_run_notice,
-            empty_import_notice=empty_import_notice,
-            likely_duplicate_notice=likely_duplicate_notice,
-        ),
-        lines=lines,
-    )
-
-
-_IMPORT_DIR_EXTENSIONS = frozenset({".csv", ".xlsx", ".xls", ".ofx", ".qfx", ".tsv"})
-
-
-def _resolve_import_paths(path: Path) -> list[Path]:
-    """Return the statement files to import.
-
-    A regular file imports itself; a directory imports every supported statement
-    file inside it (non-recursive, sorted) so an operator can drop a folder of
-    bank exports and import them in one invocation.
-    """
-    if not path.is_dir():
-        return [path]
-    files = sorted(
-        child
-        for child in path.iterdir()
-        if child.is_file() and child.suffix.lower() in _IMPORT_DIR_EXTENSIONS
-    )
-    if not files:
-        raise _bad(
-            tr(
-                "cli.ledger.import.empty_directory",
-                path=str(path),
-                default=f"No importable statement files found in directory: {path}",
-            )
-        )
-    return files
-
-
-def _aggregate_import_results(results: list[LedgerSourceImportResult]) -> LedgerSourceImportResult:
-    """Sum per-file import results into one envelope for a folder import."""
-    first = results[0]
-
-    def _concat(attr: str) -> tuple:
-        out: list = []
-        for result in results:
-            out.extend(getattr(result, attr))
-        return tuple(out)
-
-    return LedgerSourceImportResult(
-        rows=sum(r.rows for r in results),
-        imported=sum(r.imported for r in results),
-        skipped=sum(r.skipped for r in results),
-        likely_duplicates=sum(r.likely_duplicates for r in results),
-        dry_run=first.dry_run,
-        verify=first.verify,
-        period=first.period,
-        bucket_id=first.bucket_id,
-        import_batch_id=first.import_batch_id,
-        bucket_event_ids=_concat("bucket_event_ids"),
-        imported_transaction_refs=_concat("imported_transaction_refs"),
-        skipped_transaction_refs=_concat("skipped_transaction_refs"),
-        likely_duplicate_transaction_refs=_concat("likely_duplicate_transaction_refs"),
-        validation=first.validation,
-        source=first.source,
-        diagnostics=_concat("diagnostics"),
-    )
-
-
-def _empty_import_notice(result: LedgerSourceImportResult) -> str | None:
-    """Return an explanatory line when a parsed import yields zero rows.
-
-    A known provider can parse a file successfully and still import
-    nothing — the source had a recognised header but no data rows, or
-    every row was skipped as a duplicate. Reporting only
-    ``Imported  0`` reads as success, so an operator assumes the data
-    landed when it did not. This helper produces a clear notice that
-    distinguishes the two zero-import paths and points at the
-    documented column format. A dry run is excluded because zero
-    imports is the expected outcome of a dry run.
-    """
-    if result.dry_run or result.imported > 0:
-        return None
-    if result.skipped > 0:
-        return f"{tr('cli.ledger.labels.notice')}\t{tr('cli.ledger.import.all_rows_skipped', skipped=result.skipped)}"
-    return f"{tr('cli.ledger.labels.notice')}\t{tr('cli.ledger.import.no_rows_imported')}"
-
-
-def _validation_lines(
-    validation: LedgerSourceValidationReport,
-    source_verification: LedgerSourceVerificationReport,
-) -> list[str]:
-    validation_payload = validation.model_dump(mode="json")
-    source_payload = source_verification.model_dump(mode="json")
-    valid_label = tr("cli.ledger.labels.yes") if validation_payload["valid"] else tr("cli.ledger.labels.no")
-    lines = [
-        f"{tr('cli.ledger.labels.valid')}\t{valid_label}",
-        f"{tr('cli.ledger.labels.dialect')}\t{validation_payload['dialect'] or '-'}",
-    ]
-    if validation_payload["warnings"]:
-        lines.append(f"{tr('cli.ledger.labels.warnings')}\t{'; '.join(validation_payload['warnings'])}")
-    if source_payload["requested"]:
-        lines.append(f"{tr('cli.ledger.labels.source')}\t{source_payload['path'] or '-'}")
-    return lines
-
-
 def _ledger_review_filter_spec(filters: list[str]) -> LedgerReviewFilterSpec:
     try:
         return LedgerReviewFilterSpec.from_strings(filters)
@@ -2571,320 +1939,8 @@ register_inventory_commands(app)
 register_evidence_commands(app)
 
 
-# ---------------------------------------------------------------------------
-# rule sub-app
-# ---------------------------------------------------------------------------
-
-rule_app = typer.Typer(
-    name="rule",
-    help=tr(
-        "cli.app.ledger.rule.group_help",
-        default="Manage and apply ledger classification rules.",
-    ),
-    no_args_is_help=True,
-)
-app.add_typer(rule_app, name="rule")
+register_rule_commands(app)
 
 
-def _rule_bucket_id() -> str:
-    from ...core import require_active_bucket_id
-    from ...core.errors import NoActiveProfileError
+register_import_commands(app)
 
-    try:
-        return require_active_bucket_id()
-    except NoActiveProfileError as exc:
-        raise _no_active_profile_refusal() from exc
-
-
-@rule_app.command(
-    "add",
-    help=tr(
-        "cli.app.ledger.rule.add_help",
-        default="Add a classification rule that auto-classifies matching transactions.",
-    ),
-)
-def rule_add(
-    ctx: typer.Context,
-    description_pattern: str = typer.Option(
-        ...,
-        "--description-pattern",
-        help=tr(
-            "cli.app.ledger.rule.description_pattern_help",
-            default="Regex pattern matched (case-insensitive) against transaction description.",
-        ),
-    ),
-    classification: BusinessClassification = typer.Option(
-        ...,
-        "--classification",
-        help=tr("cli.app.ledger.rule.classification_help", default="Target classification for matching transactions."),
-    ),
-    category_id: str | None = typer.Option(
-        None,
-        "--category-id",
-        help=tr("cli.app.ledger.rule.category_id_help", default="Optional spending category to apply."),
-    ),
-    priority: int = typer.Option(
-        100,
-        "--priority",
-        help=tr(
-            "cli.app.ledger.rule.priority_help",
-            default="Rule priority (lower number wins). Default 100.",
-        ),
-    ),
-    actor: str | None = typer.Option(
-        None,
-        "--actor",
-        help=tr("cli.app.ledger.rule.actor_help", default="Operator identifier recorded in the rule provenance."),
-    ),
-) -> None:
-    """Add or idempotently update a ledger classification rule."""
-    from ...application.ledger import add_classification_rule
-    from ...core import resolve_active_bucket_id
-
-    bucket_id = _rule_bucket_id()
-    validated_category_id = _validate_category_id(category_id)
-    try:
-        rule = add_classification_rule(
-            bucket_id=bucket_id,
-            description_pattern=description_pattern,
-            classification=classification,
-            category_id=validated_category_id,
-            priority=priority,
-            actor=actor or resolve_active_bucket_id() or "operator",
-        )
-    except ValueError as exc:
-        raise _bad(str(exc)) from exc
-    payload = {
-        "rule_id": rule.rule_id,
-        "description_pattern": rule.description_pattern,
-        "classification": rule.classification.value,
-        "category_id": rule.category_id,
-        "priority": rule.priority,
-        "actor": rule.actor,
-        "created_at": rule.created_at.isoformat(),
-    }
-    lines = [
-        f"rule_id\t{rule.rule_id[:16]}...",
-        f"pattern\t{rule.description_pattern}",
-        f"classification\t{rule.classification.value}",
-        f"priority\t{rule.priority}",
-    ]
-    from ._ledger_payloads import RuleAddResult
-
-    _emit_envelope(
-        ctx,
-        command="ledger.rule.add",
-        result=RuleAddResult.model_validate(payload),
-        lines=lines,
-    )
-
-
-def _rule_apply_transaction_is_candidate(transaction: Transaction, *, reaffirm: bool) -> bool:
-    if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-        return False
-    if transaction.business_classification is BusinessClassification.NOT_YET_PROCESSED:
-        return True
-    return reaffirm and transaction.classified_by == CLASSIFIED_BY_MANUAL
-
-
-def _first_matching_rule(
-    transaction: Transaction,
-    rules: tuple[LedgerClassificationRule, ...],
-) -> LedgerClassificationRule | None:
-    for rule in rules:
-        if rule.matches(transaction.raw.description):
-            return rule
-    return None
-
-
-def _rule_apply_dry_run_matches(
-    *,
-    bucket_id: str,
-    reaffirm: bool,
-) -> list[dict[str, object]]:
-    from ...application.ledger import LedgerClassificationRuleRepository
-
-    rule_repo = LedgerClassificationRuleRepository()
-    rules = rule_repo.list_rules()
-    tx_repo = TransactionCatalogueRepository(bucket_id=bucket_id)
-    catalogue = tx_repo.load()
-    would_match: list[dict[str, object]] = []
-    for transaction in catalogue.transactions.values():
-        if not _rule_apply_transaction_is_candidate(transaction, reaffirm=reaffirm):
-            continue
-        rule = _first_matching_rule(transaction, rules)
-        if rule is None:
-            continue
-        would_match.append(
-            {
-                "transaction_id": transaction.transaction_id,
-                "description": transaction.raw.description,
-                "matched_rule_id": rule.rule_id,
-                "classification": rule.classification.value,
-            }
-        )
-    return would_match
-
-
-def _rule_apply_dry_run_payload(would_match: list[dict[str, object]]) -> dict[str, object]:
-    return {"dry_run": True, "would_match": would_match, "count": len(would_match)}
-
-
-def _rule_apply_dry_run_lines(would_match: list[dict[str, object]]) -> list[str]:
-    lines = [
-        tr(
-            "cli.app.ledger.rule.apply_dry_run_summary",
-            count=len(would_match),
-            default=f"dry-run: {len(would_match)} transaction(s) would be classified",
-        )
-    ]
-    lines.extend(f"  match\t{str(row['transaction_id'])[:16]}...\t{row['classification']}" for row in would_match)
-    return lines
-
-
-def _emit_rule_apply_dry_run(ctx: typer.Context, *, bucket_id: str, reaffirm: bool) -> None:
-    from ._ledger_payloads import RuleApplyResult
-
-    would_match = _rule_apply_dry_run_matches(bucket_id=bucket_id, reaffirm=reaffirm)
-    _emit_envelope(
-        ctx,
-        command="ledger.rule.apply",
-        result=RuleApplyResult.model_validate(_rule_apply_dry_run_payload(would_match)),
-        lines=_rule_apply_dry_run_lines(would_match),
-    )
-
-
-def _rule_apply_payload(result: ApplyRulesResult) -> dict[str, object]:
-    return {
-        "rules_evaluated": result.rules_evaluated,
-        "transactions_scanned": result.transactions_scanned,
-        "matched": result.matched,
-        "skipped_already_classified": result.skipped_already_classified,
-        "no_match": result.no_match,
-        "applied": [row.model_dump(mode="json") for row in result.applied],
-    }
-
-
-def _rule_apply_lines(result: ApplyRulesResult) -> list[str]:
-    lines = [
-        tr(
-            "cli.app.ledger.rule.apply_summary",
-            rules=result.rules_evaluated,
-            scanned=result.transactions_scanned,
-            matched=result.matched,
-            skipped=result.skipped_already_classified,
-            no_match=result.no_match,
-            default=(
-                f"rules: {result.rules_evaluated}, scanned: {result.transactions_scanned}, "
-                f"matched: {result.matched}, skipped: {result.skipped_already_classified}, "
-                f"no_match: {result.no_match}"
-            ),
-        )
-    ]
-    lines.extend(f"  applied\t{row.transaction_id[:16]}...\t{row.classification.value}" for row in result.applied)
-    return lines
-
-
-def _emit_rule_apply_result(ctx: typer.Context, result: ApplyRulesResult) -> None:
-    from ._ledger_payloads import RuleApplyResult
-
-    _emit_envelope(
-        ctx,
-        command="ledger.rule.apply",
-        result=RuleApplyResult.model_validate(_rule_apply_payload(result)),
-        lines=_rule_apply_lines(result),
-    )
-
-
-@rule_app.command(
-    "apply",
-    help=tr(
-        "cli.app.ledger.rule.apply_help",
-        default="Apply stored classification rules to unclassified ACTIVE transactions.",
-    ),
-)
-def rule_apply(
-    ctx: typer.Context,
-    reaffirm: bool = typer.Option(
-        False,
-        "--reaffirm",
-        help=tr(
-            "cli.app.ledger.rule.apply_reaffirm_help",
-            default="Also re-classify transactions that were manually classified.",
-        ),
-    ),
-    dry_run: bool = typer.Option(
-        False,
-        "--dry-run",
-        help=tr(
-            "cli.app.ledger.rule.apply_dry_run_help",
-            default="Show what would be classified without persisting changes.",
-        ),
-    ),
-    actor: str | None = typer.Option(
-        None,
-        "--actor",
-        help=tr("cli.app.ledger.rule.actor_help", default="Operator identifier recorded in the rule provenance."),
-    ),
-) -> None:
-    """Apply stored rules to ACTIVE NOT_YET_PROCESSED transactions."""
-    from ...core import resolve_active_bucket_id
-
-    bucket_id = _rule_bucket_id()
-    resolved_actor = actor or resolve_active_bucket_id() or "operator"
-
-    if dry_run:
-        _emit_rule_apply_dry_run(ctx, bucket_id=bucket_id, reaffirm=reaffirm)
-        return
-
-    from ...application.ledger import apply_classification_rules
-
-    result = apply_classification_rules(
-        bucket_id=bucket_id,
-        reaffirm=reaffirm,
-        actor=resolved_actor,
-        source_command="aeat app ledger rule apply",
-    )
-    _emit_rule_apply_result(ctx, result)
-
-
-@rule_app.command(
-    "list",
-    help=tr(
-        "cli.app.ledger.rule.list_help",
-        default="List stored classification rules ordered by priority.",
-    ),
-)
-def rule_list(ctx: typer.Context) -> None:
-    """List all stored ledger classification rules (priority ascending)."""
-    from ...application.ledger import LedgerClassificationRuleRepository
-
-    _rule_bucket_id()  # raises if no active profile
-    rules = LedgerClassificationRuleRepository().list_rules()
-    payload = {
-        "rules": [
-            {
-                "rule_id": r.rule_id,
-                "description_pattern": r.description_pattern,
-                "classification": r.classification.value,
-                "category_id": r.category_id,
-                "priority": r.priority,
-                "actor": r.actor,
-                "created_at": r.created_at.isoformat(),
-            }
-            for r in rules
-        ]
-    }
-    lines: list[str] = [tr("cli.app.ledger.rule.list_header", default="priority\tclassification\tpattern\trule_id")]
-    if not rules:
-        lines.append(tr("cli.app.ledger.rule.list_empty", default="(no rules stored)"))
-    for r in rules:
-        lines.append(f"{r.priority}\t{r.classification.value}\t{r.description_pattern}\t{r.rule_id[:16]}...")
-    from ._ledger_payloads import RuleListResult
-
-    _emit_envelope(
-        ctx,
-        command="ledger.rule.list",
-        result=RuleListResult.model_validate(payload),
-        lines=lines,
-    )
