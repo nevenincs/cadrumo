@@ -54,15 +54,14 @@ def _resolve_confirmed_new_passphrase(value: str | None, confirmation: str | Non
     return first
 
 
-def register_custody_commands(
+def _register_unlock_command(
     app: typer.Typer,
     *,
     resolve_active_profile_pointer: Callable[[], Any],
     resolve_profile_by_label: Callable[[str], Any],
     assert_profile_record_present: Callable[..., None],
 ) -> None:
-    """Register root-level profile custody commands."""
-
+    """Register the profile unlock transport command."""
     @app.command("unlock", help=tr("cli.config.unlock.help"))
     def config_unlock(
         ctx: typer.Context,
@@ -101,6 +100,9 @@ def register_custody_commands(
             lines=(f"active_profile\t{pointer.label}",),
         )
 
+
+def _register_lock_command(app: typer.Typer) -> None:
+    """Register the profile lock transport command."""
     @app.command("lock", help=tr("cli.config.lock.help"))
     def config_lock(
         ctx: typer.Context,
@@ -132,6 +134,9 @@ def register_custody_commands(
             ),
         )
 
+
+def _register_rekey_command(app: typer.Typer) -> None:
+    """Register the profile rekey transport command."""
     @app.command("rekey", help=tr("cli.config.rekey.help"))
     def config_rekey(
         ctx: typer.Context,
@@ -170,6 +175,9 @@ def register_custody_commands(
             ),
         )
 
+
+def _register_recover_command(app: typer.Typer) -> None:
+    """Register the recovery transport command."""
     @app.command("recover", help=tr("cli.config.recover.help"))
     def config_recover(
         ctx: typer.Context,
@@ -214,6 +222,9 @@ def register_custody_commands(
             ),
         )
 
+
+def _register_show_recovery_command(app: typer.Typer) -> None:
+    """Register the show-recovery transport command."""
     @app.command("show-recovery", help=tr("cli.config.show_recovery.help"))
     def config_show_recovery(
         ctx: typer.Context,
@@ -273,6 +284,9 @@ def register_custody_commands(
             ),
         )
 
+
+def _register_verify_recovery_command(app: typer.Typer) -> None:
+    """Register the verify-recovery transport command."""
     @app.command("verify-recovery", help=tr("cli.config.verify_recovery.help"))
     def config_verify_recovery(
         ctx: typer.Context,
@@ -302,3 +316,24 @@ def register_custody_commands(
         )
         if not result.verified:
             raise typer.Exit(code=2)
+
+
+def register_custody_commands(
+    app: typer.Typer,
+    *,
+    resolve_active_profile_pointer: Callable[[], Any],
+    resolve_profile_by_label: Callable[[str], Any],
+    assert_profile_record_present: Callable[..., None],
+) -> None:
+    """Register root-level profile custody commands."""
+    _register_unlock_command(
+        app,
+        resolve_active_profile_pointer=resolve_active_profile_pointer,
+        resolve_profile_by_label=resolve_profile_by_label,
+        assert_profile_record_present=assert_profile_record_present,
+    )
+    _register_lock_command(app)
+    _register_rekey_command(app)
+    _register_recover_command(app)
+    _register_show_recovery_command(app)
+    _register_verify_recovery_command(app)

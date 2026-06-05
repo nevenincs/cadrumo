@@ -147,6 +147,138 @@ def test_filing_record_catalogue_survives_encrypted_storage_roundtrip(
     assert (profile.paths.db_dir / "aeat.db").is_file()
 
 
+def test_filing_record_catalogue_allows_distinct_current_group_members() -> None:
+    """Member-scoped filing history keeps separate grupo members independent."""
+
+    bucket_id = "bucket-A"
+    filed_at = datetime(2026, 2, 20, 9, 0, 0, tzinfo=UTC)
+    member_a_id = derive_filing_record_id(
+        work_unit_id=_hex("1"),
+        calculation_revision_id=_hex("2"),
+        filed_at=filed_at,
+        filed_by="aeat.cli.modelo.file",
+        member_nif="A00000000",
+    )
+    member_b_id = derive_filing_record_id(
+        work_unit_id=_hex("3"),
+        calculation_revision_id=_hex("4"),
+        filed_at=filed_at + timedelta(minutes=5),
+        filed_by="aeat.cli.modelo.file",
+        member_nif="B00000001",
+    )
+
+    catalogue = ModeloRecordCatalogue(
+        records={
+            member_a_id: ModeloRecord(
+                filing_record_id=member_a_id,
+                work_unit_id=_hex("1"),
+                calculation_revision_id=_hex("2"),
+                bucket_id=bucket_id,
+                modelo=ModeloCode("322"),
+                filing_year=2026,
+                period="01",
+                member_nif="A00000000",
+                filed_at=filed_at,
+                filed_by="aeat.cli.modelo.file",
+                aeat_accepted=True,
+            ),
+            member_b_id: ModeloRecord(
+                filing_record_id=member_b_id,
+                work_unit_id=_hex("3"),
+                calculation_revision_id=_hex("4"),
+                bucket_id=bucket_id,
+                modelo=ModeloCode("322"),
+                filing_year=2026,
+                period="01",
+                member_nif="B00000001",
+                filed_at=filed_at + timedelta(minutes=5),
+                filed_by="aeat.cli.modelo.file",
+                aeat_accepted=True,
+            ),
+        }
+    )
+
+    assert catalogue.current_for(
+        bucket_id=bucket_id,
+        modelo="322",
+        filing_year=2026,
+        period="01",
+    ) is None
+    assert (
+        catalogue.current_for(
+            bucket_id=bucket_id,
+            modelo="322",
+            filing_year=2026,
+            period="01",
+            member_nif="A00000000",
+        )
+        .filing_record_id
+        == member_a_id
+    )
+    assert tuple(
+        record.filing_record_id
+        for record in catalogue.history_for(
+            bucket_id=bucket_id,
+            modelo="322",
+            filing_year=2026,
+            period="01",
+            member_nif="B00000001",
+        )
+    ) == (member_b_id,)
+
+
+def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> None:
+    """A member axis widens, but does not weaken, current-record uniqueness."""
+
+    filed_at = datetime(2026, 2, 20, 9, 0, 0, tzinfo=UTC)
+    first_id = derive_filing_record_id(
+        work_unit_id=_hex("5"),
+        calculation_revision_id=_hex("6"),
+        filed_at=filed_at,
+        filed_by="aeat.cli.modelo.file",
+        member_nif="A00000000",
+    )
+    second_id = derive_filing_record_id(
+        work_unit_id=_hex("7"),
+        calculation_revision_id=_hex("8"),
+        filed_at=filed_at + timedelta(minutes=5),
+        filed_by="aeat.cli.modelo.file",
+        member_nif="A00000000",
+    )
+
+    with pytest.raises(ValidationError, match="more than one current filing record"):
+        ModeloRecordCatalogue(
+            records={
+                first_id: ModeloRecord(
+                    filing_record_id=first_id,
+                    work_unit_id=_hex("5"),
+                    calculation_revision_id=_hex("6"),
+                    bucket_id="bucket-A",
+                    modelo=ModeloCode("322"),
+                    filing_year=2026,
+                    period="01",
+                    member_nif="A00000000",
+                    filed_at=filed_at,
+                    filed_by="aeat.cli.modelo.file",
+                    aeat_accepted=True,
+                ),
+                second_id: ModeloRecord(
+                    filing_record_id=second_id,
+                    work_unit_id=_hex("7"),
+                    calculation_revision_id=_hex("8"),
+                    bucket_id="bucket-A",
+                    modelo=ModeloCode("322"),
+                    filing_year=2026,
+                    period="01",
+                    member_nif="A00000000",
+                    filed_at=filed_at + timedelta(minutes=5),
+                    filed_by="aeat.cli.modelo.file",
+                    aeat_accepted=True,
+                ),
+            }
+        )
+
+
 def test_filing_record_catalogue_supersession_chain_drift_surfaces_at_load(
     tmp_path: Path,
 ) -> None:

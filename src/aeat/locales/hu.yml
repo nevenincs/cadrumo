@@ -1578,20 +1578,10 @@ cli:
           jövedelemadója) munkafeladat-létrehozása ebben a CLI-ben nem támogatott.
           Jogi alap: RD Legislativo 5/2004 TRLIRNR és Art. 28 TRLIRNR. A bevallást
           az AEAT Sede G320 eljárásán keresztül kell benyújtani: sede.agenciatributaria.gob.es.'
-        create_stub_modelo_600_refused: A(z) %{modelo} nyomtatvany (ITP-AJD, vagyonatruhazasi
-          ado es okirati illetek) munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott.
-          Ezt az adot az autonom kozossegek kezelik; az onadozast az illetekes regionalis
-          adohatosagnal kell benyujtani.
-        create_stub_modelo_620_refused: A(z) %{modelo} nyomtatvany (ITP-AJD, hasznalt
-          jarmuvek atadasa) munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott.
-          Az onadozast az illetekes regionalis adohatosagnal kell benyujtani.
-        create_stub_modelo_650_refused: 'A(z) %{modelo} nyomtatvany (ISD oroklesek)
-          munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott. Jogi alap: Ley
-          29/1987 LISyD; az altalanos hatarido a halalozastol szamitott hat honap.
-          A bevallast az illetekes regionalis adohatosagnal kell benyujtani.'
-        create_stub_modelo_660_refused: A(z) %{modelo} nyomtatvany (ISD hagyateki
-          leltar, a Modelo 650 melleklete) munkafeladat-letrehozasa ebben a CLI-ben
-          nem tamogatott. A bevallast az illetekes regionalis adohatosagnal kell benyujtani.
+        create_stub_modelo_600_refused: 'A(z) %{modelo} nyomtatvany (ITP-AJD, vagyonatruhazasi ado es okirati illetek) munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott. Jogalap: Ley 28/1990 es regionalis ITPyAJD hataskor; a megfelelo regionalis Hacienda / CCAA adohatosagnal kell benyujtani.'
+        create_stub_modelo_620_refused: 'A(z) %{modelo} nyomtatvany (ITP-AJD, hasznalt jarmuvek atruhazasa) munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott. Jogalap: Ley 28/1990 es regionalis ITPyAJD hataskor; az onadozast a megfelelo regionalis Hacienda / CCAA adohatosagnal kell benyujtani.'
+        create_stub_modelo_650_refused: 'A(z) %{modelo} nyomtatvany (ISD oroklesek) munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott. Jogalap: Ley 29/1987 LISyD es Art. 67 RISD; a rendes hatarido a halaltol szamitott 6 honap. A megfelelo regionalis Hacienda adohatosagnal kell benyujtani.'
+        create_stub_modelo_660_refused: 'A(z) %{modelo} nyomtatvany (ISD hagyateki leltar, a Modelo 650 melleklete) munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott. Jogalap: Ley 29/1987 LISyD; a megfelelo regionalis Hacienda adohatosagnal kell benyujtani.'
         create_stub_modelo_714_refused: 'A(z) %{modelo} nyomtatvany (vagyonado) munkafeladat-letrehozasa
           ebben a CLI-ben nem tamogatott. Jogi alap: Ley 19/1991 28. cikk es Orden
           HAC/1023/2021. A bevallast az AEAT Sede feluleten kell benyujtani.'
@@ -2112,8 +2102,6 @@ cli:
         profil).'
       show_name_help: 'A megjelenítendő profil azonosítója (alapértelmezés: az aktív
         profil).'
-      switch_help: Az aktív profil váltása.
-      switch_name_help: Az aktiválandó profilnév.
       unknown_profile: 'Ismeretlen profil: %{name}. Futtassa: `aeat config profile
         list` a regisztrált profilok megtekintéséhez.'
       use_help: Meglévő profil kiválasztása aktív profilként.

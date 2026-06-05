@@ -91,7 +91,7 @@ def _combined_output(result: subprocess.CompletedProcess[str]) -> str:
     return f"{result.stdout}\n{result.stderr}"
 
 
-def test_profile_create_provisions_file_custody_and_switch_reopens_it(tmp_path: Path) -> None:
+def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: Path) -> None:
     """Profile lifecycle is the custody surface; no legacy bootstrap command is reintroduced."""
 
     created = _run_aeat(
@@ -130,7 +130,7 @@ def test_profile_create_provisions_file_custody_and_switch_reopens_it(tmp_path: 
     assert logged_out.returncode == 0, _combined_output(logged_out)
     assert "logged_out_profile" in logged_out.stdout
 
-    switched = _run_aeat(tmp_path, ("config", "profile", "switch", "custody"))
+    switched = _run_aeat(tmp_path, ("config", "unlock", "custody"))
     assert switched.returncode == 0, _combined_output(switched)
     assert "active_profile\tcustody" in switched.stdout
 

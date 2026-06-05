@@ -42,86 +42,15 @@ from ._registry_helpers import reject_unknown_override_casillas as _reject_unkno
 from ._revision_persistence import emit_bucket_event as _emit_bucket_event
 
 
-def amend_modelo_revision(
+def _load_amendment_baseline(
     *,
     from_filing_record_id: str,
     overrides: Mapping[str, Decimal],
-    amendment_kind: CalculationRevisionAmendmentKind,
-    reason: str,
-    actor: str,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    clock: datetime | None = None,
-) -> ModeloRecord:
-    """Build and file an amendment over an externally-filed return.
-
-    Pipeline:
-
-    1. Load the baseline filing record (must exist, must be CURRENT,
-       must carry ``external_evidence``). The evidence gate ensures
-       the amendment runs against AEAT-attested imported data, not a
-       fabricated local original.
-    2. Load the baseline calculation revision; merge its
-       ``casilla_values`` with the operator-supplied ``overrides``
-       to produce the corrected casilla map.
-    3. Persist a new ``DRAFT`` calculation revision carrying
-       ``amendment_kind``, ``amends_filing_record_id``, and the
-       operator-supplied ``reason``.
-    4. Transition it through ``VERIFICADO_COMPLETO`` (the verification
-       contract for amendments is identity-equivalent to the
-       calculate path because the registry-snapshot resolver still
-       applies; here we mark it verified-complete directly because
-       the operator opts in by invoking the amend verb).
-    5. Build a new filing record with
-       ``amends_filing_record_id = baseline.filing_record_id`` and
-       status CURRENT; supersede the baseline record.
-    6. Emit a ``modelo.amended`` bucket event linking the new
-       filing record to the baseline.
-
-    Args:
-        from_filing_record_id: The id of the baseline filing record to amend.
-            Must be CURRENT and carry ``external_evidence``.
-        overrides: Casilla-id to Decimal mapping of corrected values to merge
-            over the baseline revision's casilla map.
-        amendment_kind: Whether the amendment is ``COMPLEMENTARIA`` or
-            ``SUSTITUTIVA``.
-        reason: Operator-supplied explanation for the amendment, recorded in
-            the revision and bucket event.
-        actor: Operator identifier recorded in the audit trail.
-        work_unit_repository: Optional work-unit catalogue repository override.
-        calculation_repository: Optional calculation-revision catalogue
-            repository override.
-        filing_repository: Optional filing-record catalogue repository override.
-        bucket_event_repository: Optional bucket-event history repository
-            override.
-        clock: Optional UTC timestamp override.
-
-    Returns:
-        The newly created :class:`ModeloRecord` in ``CURRENT`` status for the
-        amendment.
-
-    Raises:
-        ModeloRecordNotFoundError: When ``from_filing_record_id`` is
-            absent from the catalogue.
-        AmendmentEvidenceMissingError: When the baseline record does
-            not carry ``external_evidence``.
-        AmendmentTargetStateError: When the baseline record is not
-            in ``CURRENT`` status.
-        WorkUnitNotFoundError: When the work unit referenced by the
-            baseline record cannot be loaded.
-        CalculationRevisionNotFoundError: When the baseline calculation
-            revision referenced by the filing record is absent.
-        CalculationRevisionStateError: When the amendment overrides
-            produce a duplicate revision id already present in the catalogue.
-    """
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
-    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
-
-    filing_catalogue = fr_repo.load()
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+):
+    filing_catalogue = filing_repository.load()
     baseline = filing_catalogue.get(from_filing_record_id)
     if baseline is None:
         raise ModeloRecordNotFoundError(
@@ -140,14 +69,14 @@ def amend_modelo_revision(
             f"only CURRENT filings can be amended"
         )
 
-    work_units = wu_repo.load()
+    work_units = work_unit_repository.load()
     work_unit = work_units.get(baseline.work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
             f"filing record {from_filing_record_id!r} references missing work_unit_id={baseline.work_unit_id!r}"
         )
 
-    revisions = cr_repo.load()
+    revisions = calculation_repository.load()
     baseline_revision = revisions.get(baseline.calculation_revision_id)
     if baseline_revision is None:
         raise CalculationRevisionNotFoundError(
@@ -159,6 +88,35 @@ def amend_modelo_revision(
         filing_year=baseline.filing_year,
         period=baseline.period,
         overrides=overrides,
+    )
+    return filing_catalogue, baseline, work_units, work_unit, revisions, baseline_revision
+
+
+def amend_modelo_revision(
+    *,
+    from_filing_record_id: str,
+    overrides: Mapping[str, Decimal],
+    amendment_kind: CalculationRevisionAmendmentKind,
+    reason: str,
+    actor: str,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    clock: datetime | None = None,
+) -> ModeloRecord:
+    """Build and file an amendment over an externally-filed return."""
+    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
+    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
+    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
+    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
+
+    filing_catalogue, baseline, work_units, work_unit, revisions, baseline_revision = _load_amendment_baseline(
+        from_filing_record_id=from_filing_record_id,
+        overrides=overrides,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
     )
 
     now = clock or _utc_now()
@@ -240,21 +198,12 @@ def amend_modelo_revision(
         filed_by=actor.strip(),
     )
 
-    new_filing = ModeloRecord(
+    new_filing = _build_amendment_filing_record(
         filing_record_id=new_filing_id,
-        work_unit_id=baseline.work_unit_id,
+        baseline=baseline,
         calculation_revision_id=new_revision_id,
-        bucket_id=baseline.bucket_id,
-        modelo=baseline.modelo,
-        filing_year=baseline.filing_year,
-        period=baseline.period,
         filed_at=now,
         filed_by=actor.strip(),
-        notes=None,
-        aeat_accepted=False,
-        status=ModeloRecordStatus.VIGENTE,
-        external_evidence=None,
-        amends_filing_record_id=baseline.filing_record_id,
     )
 
     superseded_baseline = baseline.model_copy(
@@ -277,10 +226,74 @@ def amend_modelo_revision(
     )
     revisions = upsert_calculation_revision(revisions, filed_amendment)
 
-    cr_repo.save(revisions)
-    fr_repo.save(updated_filing_catalogue)
+    _persist_amendment_side_effects(
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        work_unit_repository=wu_repo,
+        bucket_event_repository=bv_repo,
+        revisions=revisions,
+        filing_catalogue=updated_filing_catalogue,
+        work_units=work_units,
+        work_unit=work_unit,
+        baseline=baseline,
+        new_revision_id=new_revision_id,
+        new_filing_id=new_filing_id,
+        amendment_kind=amendment_kind,
+        override_count=len(overrides),
+        actor=actor,
+        now=now,
+    )
 
-    wu_repo.save(
+    return new_filing
+
+
+def _build_amendment_filing_record(
+    *,
+    filing_record_id: str,
+    baseline: ModeloRecord,
+    calculation_revision_id: str,
+    filed_at: datetime,
+    filed_by: str,
+) -> ModeloRecord:
+    return ModeloRecord(
+        filing_record_id=filing_record_id,
+        work_unit_id=baseline.work_unit_id,
+        calculation_revision_id=calculation_revision_id,
+        bucket_id=baseline.bucket_id,
+        modelo=baseline.modelo,
+        filing_year=baseline.filing_year,
+        period=baseline.period,
+        filed_at=filed_at,
+        filed_by=filed_by,
+        notes=None,
+        aeat_accepted=False,
+        status=ModeloRecordStatus.VIGENTE,
+        external_evidence=None,
+        amends_filing_record_id=baseline.filing_record_id,
+    )
+
+
+def _persist_amendment_side_effects(
+    *,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    revisions,
+    filing_catalogue,
+    work_units,
+    work_unit,
+    baseline: ModeloRecord,
+    new_revision_id: str,
+    new_filing_id: str,
+    amendment_kind: CalculationRevisionAmendmentKind,
+    override_count: int,
+    actor: str,
+    now: datetime,
+) -> None:
+    calculation_repository.save(revisions)
+    filing_repository.save(filing_catalogue)
+    work_unit_repository.save(
         upsert_work_unit(
             work_units,
             work_unit.model_copy(
@@ -293,9 +306,8 @@ def amend_modelo_revision(
             ),
         )
     )
-
     _emit_bucket_event(
-        repository=bv_repo,
+        repository=bucket_event_repository,
         bucket_id=baseline.bucket_id,
         event_type=BucketEventType.MODELO_AMENDED,
         occurred_at=now,
@@ -310,8 +322,6 @@ def amend_modelo_revision(
             "filing_year": str(baseline.filing_year),
             "period": baseline.period,
             "amendment_kind": amendment_kind.value,
-            "override_count": str(len(overrides)),
+            "override_count": str(override_count),
         },
     )
-
-    return new_filing

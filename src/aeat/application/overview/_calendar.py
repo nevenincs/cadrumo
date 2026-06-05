@@ -1046,6 +1046,58 @@ def _build_completeness_and_warnings(
     return completeness, tuple(warnings)
 
 
+def _calendar_entry_from_obligation(
+    obligation: _ModeloDeadline,
+    *,
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
+) -> OverviewCalendarEntry:
+    try:
+        shift = _shift_deadline(
+            obligation.closes_on,
+            modelo=obligation.modelo,
+            ccaa_code=None,
+        )
+        adjusted = shift.adjusted_close_date
+        reason = shift.shift_reason
+        holiday_refs = shift.holiday_refs
+        jurisdictions = shift.jurisdictions
+    except _DeadlineValidationError as exc:
+        _log.debug(
+            "overview calendar ignored deadline shift validation error",
+            extra={
+                "modelo": obligation.modelo,
+                "period": obligation.period,
+                "error_type": type(exc).__name__,
+            },
+        )
+        adjusted = obligation.closes_on
+        reason = "calendar_unavailable"
+        holiday_refs = ()
+        jurisdictions = ()
+    filing_year = _filing_year_from_period(obligation.period, obligation.closes_on)
+    return OverviewCalendarEntry(
+        modelo=obligation.modelo,
+        period=obligation.period,
+        opens_on=obligation.opens_on,
+        closes_on=obligation.closes_on,
+        adjusted_closes_on=adjusted,
+        shift_reason=reason,
+        holiday_refs=holiday_refs,
+        jurisdictions=jurisdictions,
+        payment_cutoff_on=obligation.payment_cutoff_on,
+        status=obligation.status,
+        user_state=user_state_for(obligation.status),
+        recovery=obligation.recovery,
+        filing_year=filing_year,
+        filing_evidence=_calendar_entry_filing_evidence(
+            modelo=obligation.modelo,
+            filing_year=filing_year,
+            period=obligation.period,
+            evidence=filing_evidence,
+        ),
+    )
+
+
 def build_overview_calendar(
     profile: _TaxpayerProfile,
     calendar_range: OverviewCalendarRange,
@@ -1170,57 +1222,7 @@ def build_overview_calendar(
                         )
                     )
                 continue
-            try:
-                shift = _shift_deadline(
-                    obligation.closes_on,
-                    modelo=obligation.modelo,
-                    ccaa_code=None,
-                )
-                adjusted = shift.adjusted_close_date
-                reason = shift.shift_reason
-                holiday_refs = shift.holiday_refs
-                jurisdictions = shift.jurisdictions
-            except _DeadlineValidationError as exc:
-                # Holiday calendar not registered for this year; degrade
-                # gracefully — surface the original close date and an
-                # explicit reason so renderers can show that no shift
-                # was applied.
-                _log.debug(
-                    "overview calendar ignored deadline shift validation error",
-                    extra={
-                        "modelo": obligation.modelo,
-                        "period": obligation.period,
-                        "error_type": type(exc).__name__,
-                    },
-                )
-                adjusted = obligation.closes_on
-                reason = "calendar_unavailable"
-                holiday_refs = ()
-                jurisdictions = ()
-            filing_year = _filing_year_from_period(obligation.period, obligation.closes_on)
-            entries.append(
-                OverviewCalendarEntry(
-                    modelo=obligation.modelo,
-                    period=obligation.period,
-                    opens_on=obligation.opens_on,
-                    closes_on=obligation.closes_on,
-                    adjusted_closes_on=adjusted,
-                    shift_reason=reason,
-                    holiday_refs=holiday_refs,
-                    jurisdictions=jurisdictions,
-                    payment_cutoff_on=obligation.payment_cutoff_on,
-                    status=obligation.status,
-                    user_state=user_state_for(obligation.status),
-                    recovery=obligation.recovery,
-                    filing_year=filing_year,
-                    filing_evidence=_calendar_entry_filing_evidence(
-                        modelo=obligation.modelo,
-                        filing_year=filing_year,
-                        period=obligation.period,
-                        evidence=filing_evidence,
-                    ),
-                )
-            )
+            entries.append(_calendar_entry_from_obligation(obligation, filing_evidence=filing_evidence))
 
     entries.sort(key=lambda entry: (entry.closes_on, entry.modelo, entry.period))
     suppressed.sort(key=lambda s: (s.modelo, s.period))

@@ -77,23 +77,7 @@ from ._action_errors import (
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
 )
-from ._actions import (
-    ModeloIvaWalletReconciliationBlocked,
-    ModeloIvaWalletReconciliationBlockedError,
-    amend_modelo_revision,
-    calculate_modelo_revision,
-    calculate_modelo_revision_from_bucket_aggregation,
-    file_modelo_revision,
-    get_calculation_revision,
-    get_filing_record,
-    get_verification_report,
-    import_external_filing_evidence,
-    list_calculation_revisions,
-    list_filing_records,
-    list_verification_reports,
-    mark_revision_verificado_completo,
-    verify_modelo_revision,
-)
+from ._amendment_actions import amend_modelo_revision
 from ._binding_readiness import profile_resolvable_binding_ids
 from ._borrador_binding import (
     Modelo100BorradorBindingCommand,
@@ -113,6 +97,13 @@ from ._calculate_input import (
     calculate_modelo_work_revision,
     modelo_202_modality_for_work_unit,
 )
+from ._calculation_actions import (
+    calculate_modelo_revision,
+    calculate_modelo_revision_from_bucket_aggregation,
+    get_calculation_revision,
+    list_calculation_revisions,
+    mark_revision_verificado_completo,
+)
 from ._export import (
     ModeloExportCommand,
     ModeloExportCrossBucketRefusedError,
@@ -120,10 +111,22 @@ from ._export import (
     ModeloExportResult,
     export_modelo_revision,
 )
+from ._external_import_actions import import_external_filing_evidence
+from ._filing_actions import (
+    file_modelo_revision,
+    get_filing_record,
+    get_verification_report,
+    list_filing_records,
+    list_verification_reports,
+)
 from ._history import (
     WorkUnitHistory,
     WorkUnitHistoryEvent,
     assemble_work_unit_history,
+)
+from ._iva_wallet_gate import (
+    ModeloIvaWalletReconciliationBlocked,
+    ModeloIvaWalletReconciliationBlockedError,
 )
 from ._iva_wallet_seed import (
     ModeloIvaWalletSeedError,
@@ -227,6 +230,9 @@ from ._taxation_comparison import (
     compare_taxation_for_work_address,
     compare_taxation_for_work_unit,
     compare_taxation_modes,
+)
+from ._verification_actions import (
+    verify_modelo_revision,
 )
 from ._work_addressing import (
     ModeloExactWorkUnitTarget,

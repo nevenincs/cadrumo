@@ -1628,20 +1628,10 @@ cli:
           renda de no residents) no està suportat per crear unitats de treball en
           aquest CLI. Base legal: RD legislatiu 5/2004 TRLIRNR i art. 28 TRLIRNR.
           Presenta la declaració mitjançant el tràmit G320 de la Seu de l AEAT a sede.agenciatributaria.gob.es.'
-        create_stub_modelo_600_refused: El model %{modelo} (ITP-AJD, transmissions
-          patrimonials i actes juridics documentats) no esta suportat per crear unitats
-          de treball en aquest CLI. Aquest impost el gestionen les comunitats autonomes;
-          presenta l autoliquidacio davant l administracio autonomica competent.
-        create_stub_modelo_620_refused: El model %{modelo} (ITP-AJD, transmissions
-          de vehicles usats) no esta suportat per crear unitats de treball en aquest
-          CLI. Presenta l autoliquidacio davant l administracio autonomica competent.
-        create_stub_modelo_650_refused: 'El model %{modelo} (ISD successions) no esta
-          suportat per crear unitats de treball en aquest CLI. Base legal: Llei 29/1987
-          LISyD; el termini ordinari es de sis mesos des de la defuncio. Presenta
-          la declaracio davant l administracio autonomica competent.'
-        create_stub_modelo_660_refused: El model %{modelo} (ISD cabal relicte, que
-          acompanya el Model 650) no esta suportat per crear unitats de treball en
-          aquest CLI. Presenta la declaracio davant l administracio autonomica competent.
+        create_stub_modelo_600_refused: 'El model %{modelo} (ITP-AJD, transmissions patrimonials i actes juridics documentats) no esta suportat per crear unitats de treball en aquest CLI. Fonament legal: Ley 28/1990 i competencia autonomica ITPyAJD; presenteu-lo davant la Hacienda / CCAA competent.'
+        create_stub_modelo_620_refused: 'El model %{modelo} (ITP-AJD, transmissions de vehicles usats) no esta suportat per crear unitats de treball en aquest CLI. Fonament legal: Ley 28/1990 i competencia autonomica ITPyAJD; presenteu lautoliquidacio davant la Hacienda / CCAA competent.'
+        create_stub_modelo_650_refused: 'El model %{modelo} (ISD successions) no esta suportat per crear unitats de treball en aquest CLI. Fonament legal: Ley 29/1987 LISyD i Art. 67 RISD; termini ordinari de 6 mesos des de la defuncio. Presenteu-lo davant la Hacienda autonomica competent.'
+        create_stub_modelo_660_refused: 'El model %{modelo} (ISD cabal relicte, que acompanya el Modelo 650) no esta suportat per crear unitats de treball en aquest CLI. Fonament legal: Ley 29/1987 LISyD; presenteu-lo davant la Hacienda autonomica competent.'
         create_stub_modelo_714_refused: 'El model %{modelo} (impost sobre el patrimoni)
           no esta suportat per crear unitats de treball en aquest CLI. Base legal:
           Llei 19/1991 art. 28 i Ordre HAC/1023/2021. Presenta la declaracio a la
@@ -2144,8 +2134,6 @@ cli:
       rename_target_help: Nou nom del perfil
       show_help: Mostra les dades d'un perfil
       show_name_help: Id del perfil a mostrar (per defecte el perfil actiu)
-      switch_help: Activa un perfil existent
-      switch_name_help: Nom del perfil que vols activar
       unknown_profile: 'Perfil desconegut: %{name}. Executa ''aeat config profile
         list'' per veure els perfils registrats.'
       use_help: Seleccionar un perfil existent com a perfil actiu

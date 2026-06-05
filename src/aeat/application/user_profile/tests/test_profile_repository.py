@@ -454,7 +454,7 @@ def test_delete_mirrors_the_tombstone_onto_the_manifest(_backend: Path) -> None:
 def test_tombstoned_profile_is_excluded_from_the_live_scan(_backend: Path) -> None:
     """A tombstoned profile leaves ``list_profile_buckets`` / ``read_profile_bucket``.
 
-    Closes the ``profile list`` and ``profile switch`` leak: after a
+    Closes the live-scan and unlock leak: after a
     delete the manifest scan no longer surfaces the profile, so neither
     the listing nor the label-resolver can serve it. The by-id
     resolver still finds it — ``show`` and diagnostics inspect a
@@ -485,7 +485,7 @@ def test_tombstoned_profile_is_excluded_from_the_live_scan(_backend: Path) -> No
 def test_select_refuses_a_tombstoned_profile(_backend: Path) -> None:
     """``select`` refuses a tombstoned profile with ``ProfileNotFoundError``.
 
-    Closes the ``profile switch`` leak at the repository layer: a
+    Closes the activation leak at the repository layer: a
     deleted profile can never become the active one, refused with the
     same error class as an unknown profile.
     """

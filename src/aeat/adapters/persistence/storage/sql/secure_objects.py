@@ -244,7 +244,7 @@ class SecureObjectRepository:
         ContextVar. When the session is sealed or past its deadline,
         raises :class:`SessionExpiredError` (translated by the CLI
         error decorator into a refusal that names ``aeat config
-        profile switch`` as the next action). On a fresh session,
+        unlock`` as the next action). On a fresh session,
         calls :meth:`BucketSession.touch` to roll the deadline
         forward by the configured idle window — the operator's
         active session remains usable for the next window's
