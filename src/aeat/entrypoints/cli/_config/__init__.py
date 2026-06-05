@@ -38,6 +38,7 @@ from .._command_suggestions import AeatTyperGroup as _AeatTyperGroup
 from .._common import _emit, _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from .._errors import command_error_boundary as _command_error_boundary
 from ._apoderado import apoderado_app, register_apoderado_commands
 from ._auth import auth_app
 from ._auth_diagnostics import auth_diagnostics_app
@@ -1100,7 +1101,7 @@ _config_profile_create_callback = profile_app.command(
             " --quiet --accept-defaults"
         ),
     ),
-)(_wizard_create_command)
+)(_command_error_boundary(_wizard_create_command))
 
 
 _config_profile_edit_callback = profile_app.command(
@@ -1109,7 +1110,7 @@ _config_profile_edit_callback = profile_app.command(
         "cli.config.profile.edit_help",
         default="Re-run the wizard against an existing profile; updates values in place.",
     ),
-)(_wizard_edit_command)
+)(_command_error_boundary(_wizard_edit_command))
 
 
 @profile_app.command(
