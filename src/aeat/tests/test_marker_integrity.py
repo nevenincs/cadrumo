@@ -15,6 +15,9 @@ contract.
 from __future__ import annotations
 
 import ast
+import io
+import re
+import tokenize
 import tomllib
 from pathlib import Path
 
@@ -38,6 +41,12 @@ _HEX_MARKERS = frozenset(
     }
 )
 _EXPECTED_CONFIGURED_MARKERS = _EXECUTION_MARKERS | _HEX_MARKERS
+_CAMPAIGN_METADATA_PATTERNS = (
+    re.compile(r"\btest_w\d+_p\d+", re.IGNORECASE),
+    re.compile(r"\bW\d{1,3}(?:\.P\d{1,3})?(?:\.S\d{1,4})?\b"),
+    re.compile(r"\bP\d{1,3}\.S\d{1,4}\b"),
+    re.compile(r"\bS\d{2,4}\b"),
+)
 _FORBIDDEN_MARKERS = frozenset(
     {
         "docs",
@@ -110,6 +119,44 @@ def _module_defines_test_functions(path: Path) -> bool:
         if isinstance(node, ast.ClassDef) and node.name.startswith("Test"):
             return True
     return False
+
+
+def _docstring_ranges(path: Path) -> set[tuple[int, int]]:
+    """Return source-line ranges for module, class, and function docstrings."""
+    source = path.read_text(encoding="utf-8")
+    try:
+        tree = ast.parse(source, filename=str(path))
+    except SyntaxError:
+        return set()
+    ranges: set[tuple[int, int]] = set()
+    for node in ast.walk(tree):
+        body = getattr(node, "body", None)
+        if not isinstance(body, list) or not body:
+            continue
+        first = body[0]
+        if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
+            ranges.add((first.lineno, getattr(first, "end_lineno", first.lineno)))
+    return ranges
+
+
+def _campaign_metadata_violations(path: Path) -> list[str]:
+    """Return campaign identifiers found in comments or docstrings."""
+    source = path.read_text(encoding="utf-8")
+    ranges = _docstring_ranges(path)
+    violations: list[str] = []
+    tokens = tokenize.generate_tokens(io.StringIO(source).readline)
+    for token in tokens:
+        inspect_token = token.type == tokenize.COMMENT or (
+            token.type == tokenize.STRING and any(start <= token.start[0] <= end for start, end in ranges)
+        )
+        if not inspect_token:
+            continue
+        for pattern in _CAMPAIGN_METADATA_PATTERNS:
+            if pattern.search(token.string):
+                relative = path.relative_to(_REPO_ROOT)
+                violations.append(f"{relative}:{token.start[0]}: {token.string.strip()[:160]}")
+                break
+    return violations
 
 
 def _extract_pytestmark_names(path: Path) -> tuple[set[str], str | None]:
@@ -424,6 +471,14 @@ def test_source_tests_do_not_reference_retired_marker_names() -> None:
             if f"pytest.mark.{marker}" in text:
                 violations.append(f"{module_path.relative_to(_REPO_ROOT)}: pytest.mark.{marker}")
     assert not violations, "retired marker usage remains:\n" + "\n".join(violations)
+
+
+def test_source_test_comments_and_docstrings_do_not_reference_campaign_metadata() -> None:
+    """Durable test comments and docstrings must not carry vaultspec campaign IDs."""
+    violations: list[str] = []
+    for module_path in _MODULES:
+        violations.extend(_campaign_metadata_violations(module_path))
+    assert not violations, "campaign metadata remains in comments/docstrings:\n" + "\n".join(violations)
 
 
 def test_discovery_found_modules() -> None:

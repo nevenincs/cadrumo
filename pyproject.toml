@@ -320,6 +320,7 @@ convention = "google"
 # Google CLI tests use synthetic OAuth refresh_token + token_uri
 # fixtures and emit long inline kwargs that are easier to read on one
 # line than wrapped.
+"src/aeat/entrypoints/cli/_config/tests/test_google_*.py" = [
   "S101",
   "S105",
   "S106",
@@ -355,16 +356,13 @@ convention = "google"
 # Bundled `git ls-files` invocation reads from PATH; the explicit command list
 # is reviewed and audited rather than a partial path risk.
 "src/aeat/tests/test_wheel_bundles_corpus_and_registry.py" = ["S603", "S607"]
-# Wave-closure inventory ratchets shell out to `sys.executable -m pytest` with
-# vetted file paths from the repo. S603's "untrusted input" warning does not
-# apply to internally-controlled paths in build-internal harnesses.
 # Setup-answers subprocess test shells out to `sys.executable -c <script>` to
 # observe the project_answers registration error path; the script is a vetted
 # literal in this file.
 "src/aeat/core/tests/test_setup_answers.py" = ["S603"]
 # `aeat_secret_store_backend="file"` names the backend enum value, not a
 # password literal.
-"src/aeat/tests/secure_sql.py" = ["S106"]
+"src/aeat/tests/test_secure_sql.py" = ["S106"]
 # ── Group G structural / domain-justified per-file-ignores ────────────────
 
 # Package __init__ files defer submodule imports below module-level helpers
@@ -401,7 +399,7 @@ convention = "google"
 # The docs build gate runs sphinx via `sys.executable -m sphinx` with a fixed,
 # literal argv (no user/untrusted input), in an isolated subprocess so the
 # build's package imports and global state do not leak into the test process.
-"src/aeat/tests/test_docs_build.py" = ["S603"]
+"docs/tools/tests/test_docs_build.py" = ["S603"]
 "src/aeat/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
 "src/aeat/adapters/persistence/storage/tests/test_substrate_smoke.py" = ["S603"]
 "src/aeat/domain/calculations/registry/tests/test_cross_domain_snapshot_registration.py" = ["S603"]
@@ -430,6 +428,7 @@ convention = "google"
 "src/aeat/tests/test_config.py" = ["SIM117"]
 "src/aeat/tests/test_relative_imports_only.py" = ["SIM102"]
 "src/aeat/tests/test_cross_module_imports_resolve.py" = ["SIM103", "SIM108"]
+"src/aeat/tests/test_every_module_has_test_coverage.py" = ["SIM103", "SIM108"]
 "src/aeat/tests/test_locale_tr_positional_inventory.py" = ["SIM103"]
 "src/aeat/domain/calculations/tests/test_calculation_grounding.py" = ["SIM102"]
 # Per-line concatenation of AEAT casilla code groups documents each group inline; the
@@ -443,14 +442,9 @@ convention = "google"
 "src/aeat/domain/deadlines/_festivos.py" = ["S105"]
 "src/aeat/domain/transactions/_llm.py" = ["S603"]
 "src/aeat/entrypoints/cli/tests/test_root_help_shape.py" = ["S603"]
-# W14 aggregate closure test uses RATIONALE marker strings as assertion
-# tokens; ruff's S105 heuristic misreads these as hardcoded passwords.
-# The wave-closure aggregate tests under src/aeat/ enumerate RATIONALE marker
-# strings ("password", "secret", "token", etc.) as assertion tokens to prove
-# the ratchet covers them; ruff's S105/S106 heuristic flags every such
-# literal as a hardcoded password. They are not credentials.
-# Same pattern for the rationale-marker ratchets and their broad-except /
-# any-return / narrowed-except cousins under src/aeat/.
+# Rationale-marker ratchets enumerate strings that ruff's S105/S106
+# heuristic flags as hardcoded passwords. They are assertion tokens,
+# not credentials.
 "src/aeat/tests/test_any_return_rationale_markers.py" = ["S105", "S106"]
 "src/aeat/tests/test_broad_except_and_any_return_rationale.py" = ["S105", "S106"]
 "src/aeat/tests/test_narrowed_except_and_path_constants.py" = ["S105", "S106"]
@@ -466,10 +460,9 @@ convention = "google"
 "src/aeat/adapters/persistence/storage/tests/test_path_safety.py" = ["S105", "S106"]
 "src/aeat/core/tests/test_logging.py" = ["S105", "S106"]
 # Subprocess invocations from tests and from the CLI's own doc-reference
-# helper use fixed argv built from controlled inputs (no untrusted shell
-# input). The aggregate-closure tests under src/aeat/ are likewise
-# controlled. S603 ("subprocess without shell=True") is a heuristic ban
-# that doesn't recognise our controlled-argv pattern; granted per-file.
+# helper use fixed argv built from controlled inputs. S603 ("subprocess
+# without shell=True") is a heuristic ban that does not recognise our
+# controlled-argv pattern; granted per-file.
 "docs/tools/cli_reference.py" = ["S603", "F401"]
 "docs/tools/tests/test_cli_reference_conformance.py" = ["F401"]
 "src/aeat/entrypoints/cli/tests/test_cold_start_wizard_registration.py" = ["S603"]

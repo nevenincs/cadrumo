@@ -77,6 +77,22 @@ class _FailingAuthProvider:
         raise AeatError("no smartcard")
 
 
+class _UnavailableAuthProvider:
+    kind = AuthProviderKind.CERTIFICATE
+
+    def describe(self) -> AuthProviderDescription:
+        return AuthProviderDescription(
+            kind=self.kind,
+            label="Test certificate",
+            configured=True,
+            available=False,
+            identity_nif=None,
+            subject=None,
+            expires_on=None,
+            health_summary="not ready",
+        )
+
+
 _TODAY = date(2026, 4, 10)
 
 
@@ -94,16 +110,22 @@ class TestPreflightGates:
         assert result is None
 
     def test_gate_1_draft_not_approved(self) -> None:
-        with pytest.raises(SubmissionPreflightError, match="not approved"):
+        with pytest.raises(SubmissionPreflightError) as raised:
             _preflight().check(_Draft(status=ModeloDraftStatus.BORRADOR), today=_TODAY)
+        assert raised.value.translated_message == "errors.refused.submission_preflight_draft_not_approved"
+        assert raised.value.context == {"status": "BORRADOR"}
 
     def test_gate_1_ready_but_unapproved_blocks(self) -> None:
-        with pytest.raises(SubmissionPreflightError, match="not approved"):
+        with pytest.raises(SubmissionPreflightError) as raised:
             _preflight().check(_Draft(status=ModeloDraftStatus.LISTO_PARA_PRESENTAR), today=_TODAY)
+        assert raised.value.translated_message == "errors.refused.submission_preflight_draft_not_approved"
+        assert raised.value.context == {"status": "LISTO_PARA_PRESENTAR"}
 
     def test_gate_1_stale_approval_blocks(self) -> None:
-        with pytest.raises(SubmissionPreflightError, match="stale"):
+        with pytest.raises(SubmissionPreflightError) as raised:
             _preflight().check(_Draft(status=ModeloDraftStatus.APROBACION_CADUCADA), today=_TODAY)
+        assert raised.value.translated_message == "errors.refused.submission_preflight_draft_stale"
+        assert raised.value.context == {"status": "APROBACION_CADUCADA"}
 
     def test_gate_2_error_finding_blocks(self) -> None:
         findings = (
@@ -112,8 +134,10 @@ class TestPreflightGates:
                 message="export.test_preflight.message_868279",
             ),
         )
-        with pytest.raises(SubmissionPreflightError, match="ERROR-severity"):
+        with pytest.raises(SubmissionPreflightError) as raised:
             _preflight().check(_Draft(findings=findings), today=_TODAY)
+        assert raised.value.translated_message == "errors.refused.submission_preflight_error_findings"
+        assert raised.value.context == {"finding_count": 1}
 
     def test_gate_2_warning_does_not_block(self) -> None:
         findings = (
@@ -127,9 +151,23 @@ class TestPreflightGates:
         assert result is None
 
     def test_gate_3_window_closed(self) -> None:
-        with pytest.raises(SubmissionPreflightError, match="deadline window"):
+        with pytest.raises(SubmissionPreflightError) as raised:
             _preflight(checker=_AlwaysClosedChecker()).check(_Draft(), today=_TODAY)
+        assert raised.value.translated_message == "errors.refused.submission_preflight_deadline_closed"
+        assert raised.value.context == {"modelo": "130", "period": "2026Q1", "today": "2026-04-10"}
 
     def test_gate_4_cert_load_fails(self) -> None:
-        with pytest.raises(SubmissionPreflightError, match="auth provider"):
+        with pytest.raises(SubmissionPreflightError) as raised:
             _preflight(cert=_FailingAuthProvider()).check(_Draft(), today=_TODAY)
+        assert raised.value.translated_message == "errors.refused.submission_preflight_auth_describe_failed"
+        assert raised.value.context == {"cause_type": "AeatError"}
+
+    def test_gate_4_unavailable_provider_surfaces_structured_context(self) -> None:
+        with pytest.raises(SubmissionPreflightError) as raised:
+            _preflight(cert=_UnavailableAuthProvider()).check(_Draft(), today=_TODAY)
+        assert raised.value.translated_message == "errors.refused.submission_preflight_auth_not_ready"
+        assert raised.value.context is not None
+        assert raised.value.context["kind"] == "certificate"
+        assert raised.value.context["configured"] is True
+        assert raised.value.context["available"] is False
+        assert "configured but not ready" in str(raised.value.context["operator_impact"])
