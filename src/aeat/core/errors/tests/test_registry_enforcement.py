@@ -24,16 +24,17 @@ from pathlib import Path
 
 import pytest
 
+import aeat
+
 from .. import ERROR_REGISTRY, AeatError, ErrorCategory, get_registered_error_code
-from . import __path__ as aeat_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _import_all_aeat_modules() -> None:
-    for info in pkgutil.walk_packages(aeat_path, prefix="aeat."):
+    for info in pkgutil.walk_packages(aeat.__path__, prefix="aeat."):
         name = info.name
-        if ".test_" in name or "._test_" in name:
+        if ".tests." in name or ".test_" in name or "._test_" in name:
             continue
         importlib.import_module(name)
 
@@ -41,6 +42,8 @@ def _import_all_aeat_modules() -> None:
 def _iter_error_subclasses(root: type[AeatError]) -> set[type[AeatError]]:
     discovered: set[type[AeatError]] = set()
     for subclass in root.__subclasses__():
+        if ".tests." in subclass.__module__ or ".test_" in subclass.__module__:
+            continue
         discovered.add(subclass)
         discovered.update(_iter_error_subclasses(subclass))
     return discovered

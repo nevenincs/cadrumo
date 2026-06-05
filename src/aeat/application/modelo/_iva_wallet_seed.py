@@ -5,20 +5,20 @@ from __future__ import annotations
 from decimal import Decimal
 
 from ...domain.iva_compensation import IvaCompensationPeriodState
+from ...domain.modelos._errors import ModeloError
 from ..calculations import seed_iva_compensation_period
 from ._iva_wallet_gate import taxpayer_nif_for_bucket
 
 
-class ModeloIvaWalletSeedError(Exception):
+class ModeloIvaWalletSeedError(ModeloError):
     """Base class for Modelo IVA wallet seed application errors."""
 
-    translated_message: str
-    context: dict[str, object]
-
     def __init__(self, *, translated_message: str, context: dict[str, object] | None = None) -> None:
-        self.translated_message = translated_message
-        self.context = context or {}
-        super().__init__(translated_message)
+        super().__init__(
+            translated_message,
+            translated_message=translated_message,
+            context=context,
+        )
 
 
 class ModeloIvaWalletSeedNoTaxpayerError(ModeloIvaWalletSeedError):
