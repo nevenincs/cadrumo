@@ -9,57 +9,50 @@ related:
 
 # `secure-storage-production-hardening` Code Review
 
-## S289-001 | PASS | Access-gate facade is not a storage backend
+## S289-001 | PASS | Access gate is not a storage runtime factory
 
-`src/aeat/core/access_gate/__init__.py` exports the live-read gate, live-write refusal,
-authorization-manifest types, and loader helpers. It does not resolve active buckets,
-open secure-object repositories, write SQL routes, scan profile manifests, call remote
-providers, or handle master-key material. The package's plaintext files are limited to
-authorization manifest fragments loaded by the sibling authorization module through
-the shared TOML helper.
+`src/aeat/core/access_gate/__init__.py` exports live-read/write gate types,
+authorization-manifest models, and typed access-gate errors. It does not construct
+secure-object repositories, select active buckets, scan profile buckets, open SQL
+routes, manage master-key material, or call remote storage providers. Runtime bucket
+enrollment remains outside this module.
 
-Disposition: close `AFR-187` as a plaintext-exception facade and gate policy surface.
+Disposition: close `AFR-187` as a retained plaintext policy/export boundary.
 
-## S289-002 | PASS | AEAT environment state flows through Settings
+## S289-002 | PASS | Settings owns AEAT live-test configuration
 
-The live-read gate reads AEAT live-test opt-in from the injected
-`aeat.core.config.Settings` instance and renders the canonical environment variable
-name through `LIVE_READ_TEST_OPT_IN_ENV_VAR`. The legacy local literal was removed.
-The only direct environment read left in this module is `PYTEST_CURRENT_TEST`, a pytest
-runner marker with no AEAT settings field; tests can pass it through the explicit
-`pytest_current_test` seam instead of mutating the real environment.
+`AeatAccessGate` consumes `settings.aeat_live_tests_enabled` instead of reading
+`AEAT_LIVE_TESTS_ENABLED` directly. The settings override tests construct the real
+gate from `load_settings()` and prove `override_settings()` controls the gate without
+mutating `os.environ`. The only direct environment read is `PYTEST_CURRENT_TEST`,
+which is pytest infrastructure, not AEAT application configuration.
 
-## S289-003 | PASS | Exceptions use the AEAT hierarchy and registry
+## S289-003 | PASS | Authorization manifest failures are typed and loud
 
-The access-gate errors derive from `AeatError` through `src/aeat/core/access_gate/_errors.py`.
-`LiveSubmitForbiddenError`, `AeatLiveReadNotEnabledError`, and
-`AuthorizationManifestError` are registered in the central error registry.
-Authorization manifest failures have locale entries in all audited locales, and live
-submit refusal carries a translated-message key for direct CLI rendering.
+The authorization manifest loader parses `authorization.d/<modelo>.toml` fragments
+through the shared TOML helper and raises `AuthorizationManifestError` for malformed
+fragments, model/stem mismatches, duplicate enrollment, and invalid year claims.
+Absent or empty manifest directories remain default-deny-by-absence and do not grant
+runtime capability.
 
-## S289-004 | PASS | Exception propagation is explicit
+## S289-004 | PASS | User-facing live-submit refusal uses central i18n
 
-`require_live_read()` raises `AeatLiveReadNotEnabledError` only for pytest-driven live
-reads when `Settings.aeat_live_tests_enabled` is not exactly `"1"`. Operator contexts
-fall through to the auth/profile/read-only guards. `require_live_write()` always raises
-`LiveSubmitForbiddenError`. Authorization manifest parsing raises
-`AuthorizationManifestError` for malformed present fragments and uses
-default-deny-by-absence only when the manifest directory is absent.
+`LiveSubmitForbiddenError` now uses the centralized
+`errors.locked.locked_access_gate_live_submit_forbidden` locale key bound in the
+error registry instead of the deprecated `access_gate.errors.default_translatable`
+namespace. The obsolete locale leaf was removed through `python -m aeat.locales`, and
+`python -m aeat.locales audit` passes for all supported locales.
 
-## S289-005 | PASS | Duplication and tests
+## S289-005 | PASS | Behavior validation is non-tautological
 
-Vaultspec RAG clustered this slice with the settings override tests, outbound auth gate
-tests, auth operator login gate, authorization manifest loader, and error registry
-entries. No duplicate live-read gate or plaintext authorization manifest facade was
-found in the reviewed cluster. The focused tests use the real settings override
-surface, real gate object, and real authorization manifest loader; they do not
-monkeypatch, stub, skip, xfail, or mirror gate logic.
+The added coverage renders a real `LiveSubmitForbiddenError` through the real error
+registry and i18n renderer. Existing access-gate and authorization-manifest tests use
+real settings overrides, real pydantic models, and real temporary TOML fragments; they
+do not mock, monkeypatch, skip, xfail, or mirror production loader logic.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/core/access_gate/__init__.py src/aeat/core/access_gate/_authorization.py src/aeat/core/access_gate/_errors.py src/aeat/core/access_gate/test_override.py src/aeat/core/access_gate/test_authorization_manifest.py src/aeat/adapters/outbound/aeat/auth/test_gate.py src/aeat/application/auth/_operator.py src/aeat/core/errors/registry/_core.py`
-- `uv run --no-sync pytest -q src/aeat/core/access_gate/test_override.py src/aeat/core/access_gate/test_authorization_manifest.py src/aeat/adapters/outbound/aeat/auth/test_gate.py src/aeat/entrypoints/cli/test_registry_cli.py::test_list_filed_data_cli_requires_live_gate_before_remote_read src/aeat/entrypoints/cli/test_registry_cli.py::test_capture_filed_data_cli_requires_live_gate_before_local_writes src/aeat/entrypoints/cli/test_registry_cli.py::test_capture_iva_history_cli_requires_live_gate_before_local_writes src/aeat/entrypoints/cli/test_registry_cli.py::test_capture_source_filed_data_requires_live_gate_before_local_writes`
-- `uv run --no-sync pytest -q src/aeat/entrypoints/cli/_config/test_auth_round5_surface.py::test_login_refuses_with_user_prose_citing_live_tests_gate src/aeat/entrypoints/cli/_config/test_auth_round5_surface.py::test_operator_login_without_pytest_context_does_not_require_live_test_gate`
+- `uv run --no-sync ruff check src/aeat/core/access_gate/__init__.py src/aeat/core/access_gate/_errors.py src/aeat/core/access_gate/_authorization.py src/aeat/core/access_gate/test_override.py src/aeat/core/access_gate/test_authorization_manifest.py src/aeat/adapters/outbound/aeat/auth/test_gate.py src/aeat/entrypoints/cli/test_windows_encoding.py src/aeat/entrypoints/cli/test_error_registry_contract.py src/aeat/core/errors/test_registry.py`
+- `uv run --no-sync pytest -q src/aeat/core/access_gate/test_override.py src/aeat/core/access_gate/test_authorization_manifest.py src/aeat/adapters/outbound/aeat/auth/test_gate.py src/aeat/entrypoints/cli/test_windows_encoding.py src/aeat/entrypoints/cli/test_error_registry_contract.py src/aeat/core/errors/test_registry.py`
 - `uv run --no-sync -q python -m aeat.locales audit`
-- `uv run --no-sync vaultspec-rag search "AeatAccessGate settings live read opt in PYTEST_CURRENT_TEST os.environ authorization manifest plaintext exception" --type code --port 8766 --max-results 8`
-- `uv run --no-sync vaultspec-rag search "access gate AuthorizationManifestError AeatError read_toml default deny authorization.d manifest exception handling" --type code --port 8766 --max-results 8`
+- `uv run --no-sync vaultspec-rag search "AeatAccessGate Settings live read authorization manifest read_toml no secure bucket repository runtime" --type code --port 8766 --max-results 8`

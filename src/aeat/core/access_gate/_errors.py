@@ -51,21 +51,23 @@ class LiveSubmitForbiddenError(AccessGateSubmissionPreflightError):
             "export and upload the file yourself in the AEAT portal"
         ),
         *,
-        translated_message: str = "access_gate.errors.default_translatable",
+        translated_message: str | None = "errors.locked.locked_access_gate_live_submit_forbidden",
     ) -> None:
-        """Construct the permanent live-submit refusal error."""
+        """Construct the permanent live-submit refusal error.
+
+        By default the user-facing text uses the same locale key as the
+        central error registry entry bound to this class.
+        """
         super().__init__(message, translated_message=translated_message)
 
 
 class AeatLiveReadNotEnabledError(AeatError):
-    """Raised when live-read access is required but the gate is shut.
+    """Raised when pytest live-read access is required but the test gate is shut.
 
-    Emitted by :meth:`AeatAccessGate.require_live_read` when
-    ``AEAT_LIVE_TESTS_ENABLED`` is not set to ``"1"``. The existing
-    per-test ``if os.environ[...] != "1": pytest.skip(...)``
-    boilerplate is not replaced — this error gives non-test callers
-    (future live-read CLI commands, sync runners) a typed failure
-    shape.
+    Emitted by :meth:`AeatAccessGate.require_live_read` during pytest
+    execution when ``AEAT_LIVE_TESTS_ENABLED`` is not set to ``"1"``.
+    Operator-facing live reads are controlled by auth/profile/read-only
+    guards rather than this test opt-in variable.
     """
 
 

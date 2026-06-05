@@ -1,8 +1,3 @@
-access_gate:
-  errors:
-    default_translatable: el envío en vivo a la AEAT está permanentemente prohibido;
-      usa produce -> verify -> export y sube el fichero manualmente en el portal de
-      la AEAT
 adapters:
   aeat:
     clave_movil:
