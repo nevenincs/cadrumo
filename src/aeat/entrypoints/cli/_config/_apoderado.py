@@ -13,7 +13,8 @@ from .._common import activate_subcommand_output_language as _activate_subcomman
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 _resolve_active_profile_pointer: Callable[[], object | None] | None = None
-_commands_registered = False
+_mounted_auth_app_ids: set[int] = set()
+_scopes_registered = False
 
 apoderado_app = typer.Typer(
     name="apoderado",
@@ -33,15 +34,18 @@ def register_apoderado_commands(
     resolve_active_profile_pointer: Callable[[], object | None],
 ) -> None:
     """Mount apoderado commands on the config auth app."""
-    global _commands_registered
+    global _scopes_registered
     global _resolve_active_profile_pointer
 
     _resolve_active_profile_pointer = resolve_active_profile_pointer
-    if _commands_registered:
+    if not _scopes_registered:
+        apoderado_app.add_typer(scopes_app, name="scopes")
+        _scopes_registered = True
+    auth_app_id = id(auth_app)
+    if auth_app_id in _mounted_auth_app_ids:
         return
-    apoderado_app.add_typer(scopes_app, name="scopes")
     auth_app.add_typer(apoderado_app, name="apoderado")
-    _commands_registered = True
+    _mounted_auth_app_ids.add(auth_app_id)
 
 
 def _active_profile_pointer() -> object:
