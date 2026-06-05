@@ -17,10 +17,12 @@ _CLI_DIR = Path(__file__).resolve().parents[1]
 _POLICY_COMMAND_MODULES: tuple[tuple[Path, str, tuple[str, ...]], ...] = (
     (_CLI_DIR / "_config" / "__init__.py", "app", ("config",)),
     (_CLI_DIR / "_config" / "_bucket_history.py", "bucket_app", ("config", "bucket")),
+    (_CLI_DIR / "_config" / "_profile_bundle.py", "profile_app", ("config", "profile")),
     (_CLI_DIR / "_config" / "_repair_cli.py", "repair_app", ("config", "repair")),
     (_CLI_DIR / "_config" / "_repair_profile.py", "repair_app", ("config", "repair")),
     (_CLI_DIR / "_ledger.py", "app", ("app", "ledger")),
     (_CLI_DIR / "_ledger_import_cli.py", "app", ("app", "ledger")),
+    (_CLI_DIR / "_ledger_read_cli.py", "app", ("app", "ledger")),
     (_CLI_DIR / "_modelo.py", "app", ("app", "modelo")),
     (_CLI_DIR / "_modelo_audit_cli.py", "audit_app", ("app", "modelo", "audit")),
     (_CLI_DIR / "_modelo_export_cli.py", "app", ("app", "modelo")),
