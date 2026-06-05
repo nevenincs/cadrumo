@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator
 from datetime import datetime
-from typing import Final, Protocol, cast
+from typing import Protocol, cast
 
 from sqlalchemy import Engine, bindparam, delete, inspect, select, text, update
-from sqlalchemy.engine import RowMapping
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
@@ -20,9 +18,7 @@ from .....core.logging import get_logger
 from .....core.time import now as _utc_now
 from .._namespace_registry import SecureObjectNamespaceDefinition, StorageHierarchyRegistry
 from ..crypto._encrypted_columns import (
-    HashedLookup,
     decrypt_encrypted_bytes_column,
-    decrypt_encrypted_string_column,
 )
 from ..errors import (
     ClassificationError,
@@ -35,6 +31,16 @@ from ..errors import (
 )
 from . import _orm
 from ._secure_object_crypto import derive_revision_id, sha256_hex
+from ._secure_object_integrity import (
+    iter_namespace_decryptability as _iter_namespace_decryptability,
+)
+from ._secure_object_integrity import (
+    probe_namespace_integrity as _probe_namespace_integrity,
+)
+from ._secure_object_integrity import (
+    quarantine_unreadable_rows as _quarantine_unreadable_rows,
+)
+from ._secure_object_migration import ensure_deterministic_object_keys
 from ._secure_object_records import (
     DEFAULT_WRITE_PROVENANCE,
     SecureObjectDecryptabilityRow,
@@ -46,6 +52,17 @@ from ._secure_object_records import (
     SecureObjectUnreadable,
     SecureObjectWrite,
 )
+from ._secure_object_schema import (
+    build_revision_ancestor_ids,
+    coerce_raw_bytes,
+    copy_row_to_quarantine,
+    database_bytes,
+    database_datetime,
+    ensure_quarantine_table,
+    ensure_table_revision_metadata_columns,
+    is_duplicate_column_race,
+    parse_revision_ancestor_ids,
+)
 from .engine import get_engine
 from .session import session_scope
 
@@ -53,20 +70,6 @@ _log = get_logger(__name__)
 
 _DEFAULT_WRITE_PROVENANCE = DEFAULT_WRITE_PROVENANCE
 _DEFAULT_CONFLICT_POLICY = "last-write-wins"
-# SQL column-type constants — centralised so every DDL site stays consistent.
-_VARCHAR_64: Final[str] = "VARCHAR(64)"
-_SECURE_OBJECT_REVISION_METADATA_COLUMNS: tuple[tuple[str, str], ...] = (
-    ("revision_id", _VARCHAR_64),
-    ("previous_revision_id", _VARCHAR_64),
-    ("revision_ancestor_ids", "TEXT"),
-    ("previous_payload_hash", _VARCHAR_64),
-    ("payload_hash", _VARCHAR_64),
-    ("ciphertext_hash", _VARCHAR_64),
-    ("revision_written_at", "DATETIME"),
-    ("write_provenance", "VARCHAR(255)"),
-    ("source_event_id", "VARCHAR(128)"),
-    ("conflict_policy", "VARCHAR(32)"),
-)
 
 
 class _RowcountResult(Protocol):
@@ -104,44 +107,18 @@ class SecureObjectRepository:
 
     def _ensure_table_revision_metadata_columns(self, table_name: str) -> None:
         """Add nullable revision metadata columns to a pre-existing table."""
-        existing = {column["name"] for column in inspect(self._engine).get_columns(table_name)}
-        missing = tuple(
-            (name, column_type)
-            for name, column_type in _SECURE_OBJECT_REVISION_METADATA_COLUMNS
-            if name not in existing
-        )
+        missing = ensure_table_revision_metadata_columns(self._engine, table_name)
         if not missing:
             return
-        for name, column_type in missing:
-            try:
-                with self._engine.begin() as connection:
-                    connection.execute(
-                        # Identifiers come from local revision-metadata constants.
-                        text(  # nosemgrep
-                            f"ALTER TABLE {table_name} ADD COLUMN {name} {column_type}"
-                        )
-                    )
-            except OperationalError as exc:
-                if self._is_duplicate_column_race(table_name, name, exc):
-                    _log.debug(
-                        "%s: revision metadata column %s was added by a concurrent bootstrap",
-                        table_name,
-                        name,
-                    )
-                    continue
-                raise
         _log.debug(
             "%s: added missing revision metadata columns: %s",
             table_name,
-            ", ".join(name for name, _ in missing),
+            ", ".join(missing),
         )
 
     def _is_duplicate_column_race(self, table_name: str, column_name: str, exc: OperationalError) -> bool:
         """Return whether an ``ALTER TABLE ADD COLUMN`` failed after a concurrent add."""
-        if "duplicate column" not in str(exc.orig).lower():
-            return False
-        existing = {column["name"] for column in inspect(self._engine).get_columns(table_name)}
-        return column_name in existing
+        return is_duplicate_column_race(self._engine, table_name, column_name, exc)
 
     def _ensure_deterministic_object_keys(self) -> None:
         """Migrate legacy randomized object-key ciphertexts to HMAC digests.
@@ -153,184 +130,28 @@ class SecureObjectRepository:
         legacy keys in place and quarantines duplicate superseded rows so
         the active table regains the one-row-per-logical-key contract.
         """
-        with session_scope(self._engine) as session:
-            rows = (
-                session.execute(
-                    text(
-                        "SELECT id, namespace, object_key, classification, schema_version, written_at, "
-                        "revision_id, previous_revision_id, revision_ancestor_ids, "
-                        "previous_payload_hash, payload_hash, "
-                        "ciphertext_hash, revision_written_at, write_provenance, source_event_id, "
-                        "conflict_policy, payload "
-                        "FROM secure_objects ORDER BY namespace, id"
-                    )
-                )
-                .mappings()
-                .all()
-            )
-            if not rows:
-                return
-
-            grouped: dict[tuple[str, bytes], list[tuple[RowMapping, bytes]]] = {}
-            unmigratable: list[tuple[RowMapping, bytes]] = []
-            for raw in rows:
-                namespace = str(raw["namespace"])
-                raw_key = self._coerce_raw_bytes(raw["object_key"])
-                try:
-                    natural_key = decrypt_encrypted_string_column(raw_key)
-                except DecryptionError:
-                    if len(raw_key) == 32:
-                        grouped.setdefault((namespace, raw_key), []).append((raw, raw_key))
-                    else:
-                        unmigratable.append((raw, raw_key))
-                    continue
-                target_key = HashedLookup.compute(natural_key)
-                grouped.setdefault((namespace, target_key), []).append((raw, raw_key))
-
-            if unmigratable or any(len(entries) > 1 for entries in grouped.values()):
-                self._ensure_quarantine_table()
-            quarantined_at = _utc_now().isoformat()
-            for raw, raw_key in unmigratable:
-                self._copy_row_to_quarantine(session, raw, object_key=raw_key, quarantined_at=quarantined_at)
-                session.execute(text("DELETE FROM secure_objects WHERE id = :id"), {"id": int(raw["id"])})
-
-            for (_namespace, target_key), entries in grouped.items():
-                winner, winner_key = max(entries, key=self._lookup_migration_sort_key)
-                for raw, raw_key in entries:
-                    if int(raw["id"]) == int(winner["id"]):
-                        continue
-                    self._copy_row_to_quarantine(session, raw, object_key=raw_key, quarantined_at=quarantined_at)
-                    session.execute(text("DELETE FROM secure_objects WHERE id = :id"), {"id": int(raw["id"])})
-                if winner_key != target_key:
-                    session.execute(
-                        text("UPDATE secure_objects SET object_key = :object_key WHERE id = :id"),
-                        {"object_key": target_key, "id": int(winner["id"])},
-                    )
+        ensure_deterministic_object_keys(self._engine, logger=_log)
 
     @staticmethod
     def _coerce_raw_bytes(value: object) -> bytes:
-        if isinstance(value, bytes | bytearray | memoryview):
-            return bytes(value)
-        if isinstance(value, str):
-            return value.encode(UTF_8_ENCODING)
-        raise StorageValidationError(
-            context={"value_type": type(value).__name__},
-            translated_message="errors.integrity.integrity_storage_secure_object_raw_bytes",
-        )
-
-    @staticmethod
-    def _lookup_migration_sort_key(entry: tuple[RowMapping, bytes]) -> tuple[str, str, int]:
-        raw, _raw_key = entry
-        revision_written_at = raw["revision_written_at"] or ""
-        written_at = raw["written_at"] or ""
-        return (str(revision_written_at), str(written_at), int(raw["id"]))
+        return coerce_raw_bytes(value)
 
     @staticmethod
     def _parse_revision_ancestor_ids(raw_value: object) -> tuple[str, ...]:
-        if raw_value in (None, ""):
-            return ()
-        if isinstance(raw_value, bytes | bytearray | memoryview):
-            text_value = bytes(raw_value).decode(UTF_8_ENCODING)
-        else:
-            text_value = str(raw_value)
-        try:
-            parsed = json.loads(text_value)
-        except json.JSONDecodeError as exc:
-            raise StorageValidationError(
-                translated_message="errors.integrity.integrity_storage_secure_object_revision_ancestry_json",
-            ) from exc
-        if not isinstance(parsed, list) or not all(isinstance(item, str) and len(item) == 64 for item in parsed):
-            raise StorageValidationError(
-                translated_message="errors.integrity.integrity_storage_secure_object_revision_ancestry_shape",
-            )
-        return tuple(parsed)
+        return parse_revision_ancestor_ids(raw_value)
 
     @staticmethod
     def _build_revision_ancestor_ids(
         previous_revision_id: str | None,
         previous_revision_ancestor_ids: tuple[str, ...],
     ) -> tuple[str, ...]:
-        if previous_revision_id is None:
-            return ()
-        return (
-            previous_revision_id,
-            *tuple(item for item in previous_revision_ancestor_ids if item != previous_revision_id),
-        )
+        return build_revision_ancestor_ids(previous_revision_id, previous_revision_ancestor_ids)
 
-    @staticmethod
-    def _copy_row_to_quarantine(
-        session: Session,
-        raw: RowMapping,
-        *,
-        object_key: bytes,
-        quarantined_at: str,
-    ) -> None:
-        payload_bytes = SecureObjectRepository._coerce_raw_bytes(raw["payload"])
-        session.execute(
-            text(
-                "INSERT INTO secure_objects_quarantine "
-                "(source_id, namespace, object_key, classification, schema_version, "
-                " written_at, revision_id, previous_revision_id, revision_ancestor_ids, previous_payload_hash, "
-                " payload_hash, ciphertext_hash, revision_written_at, write_provenance, "
-                " source_event_id, conflict_policy, payload, quarantined_at) "
-                "VALUES (:source_id, :namespace, :object_key, :classification, "
-                "        :schema_version, :written_at, :revision_id, "
-                "        :previous_revision_id, :revision_ancestor_ids, :previous_payload_hash, :payload_hash, "
-                "        :ciphertext_hash, :revision_written_at, :write_provenance, "
-                "        :source_event_id, :conflict_policy, :payload, :quarantined_at)"
-            ),
-            {
-                "source_id": int(raw["id"]),
-                "namespace": str(raw["namespace"]),
-                "object_key": object_key,
-                "classification": str(raw["classification"]),
-                "schema_version": int(raw["schema_version"]),
-                "written_at": raw["written_at"],
-                "revision_id": raw["revision_id"],
-                "previous_revision_id": raw["previous_revision_id"],
-                "revision_ancestor_ids": raw["revision_ancestor_ids"],
-                "previous_payload_hash": raw["previous_payload_hash"],
-                "payload_hash": raw["payload_hash"],
-                "ciphertext_hash": raw["ciphertext_hash"],
-                "revision_written_at": raw["revision_written_at"],
-                "write_provenance": raw["write_provenance"],
-                "source_event_id": raw["source_event_id"],
-                "conflict_policy": raw["conflict_policy"],
-                "payload": payload_bytes,
-                "quarantined_at": quarantined_at,
-            },
-        )
+    _copy_row_to_quarantine = staticmethod(copy_row_to_quarantine)
 
     def _ensure_quarantine_table(self) -> None:
         """Create the quarantine archive table with the secure-object metadata shape."""
-        with self._engine.begin() as connection:
-            connection.execute(
-                # Static bootstrap DDL; no user-controlled SQL reaches this statement.
-                text(  # nosemgrep
-                    "CREATE TABLE IF NOT EXISTS secure_objects_quarantine ("
-                    "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                    "  source_id INTEGER NOT NULL,"
-                    "  namespace VARCHAR(128) NOT NULL,"
-                    "  object_key BLOB NOT NULL,"
-                    "  classification VARCHAR(32) NOT NULL,"
-                    "  schema_version INTEGER NOT NULL,"
-                    "  written_at DATETIME NOT NULL,"
-                    f"  revision_id {_VARCHAR_64},"
-                    f"  previous_revision_id {_VARCHAR_64},"
-                    "  revision_ancestor_ids TEXT,"
-                    f"  previous_payload_hash {_VARCHAR_64},"
-                    f"  payload_hash {_VARCHAR_64},"
-                    f"  ciphertext_hash {_VARCHAR_64},"
-                    "  revision_written_at DATETIME,"
-                    "  write_provenance VARCHAR(255),"
-                    "  source_event_id VARCHAR(128),"
-                    "  conflict_policy VARCHAR(32),"
-                    "  payload BLOB NOT NULL,"
-                    "  quarantined_at DATETIME NOT NULL"
-                    ")"
-                )
-            )
-        self._ensure_table_revision_metadata_columns("secure_objects_quarantine")
+        ensure_quarantine_table(self._engine)
 
     @property
     def namespace_registry(self) -> StorageHierarchyRegistry | None:
