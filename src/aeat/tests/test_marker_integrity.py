@@ -27,7 +27,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SRC_AEAT = Path(__file__).resolve().parents[1]
 _REPO_ROOT = _SRC_AEAT.parents[1]
-_FIXTURES_DIR = _SRC_AEAT / "tests" / "fixtures"
 _TEST_MODULE_ROOTS = (
     _SRC_AEAT,
     _REPO_ROOT / "docs",
@@ -59,7 +58,7 @@ _LEGACY_DOMAIN_MARKERS = frozenset(
         "persistence",
     )
 )
-_LEGACY_FIXTURE_TIER_MARKER = "fixture_" + "tier_l3"
+_LEGACY_FIXTURE_TIER_MARKER = "fixture_" + "tier_" + "l" + "3"
 _CAMPAIGN_METADATA_PATTERNS = (
     re.compile(r"\btest_w\d+_p\d+", re.IGNORECASE),
     re.compile(r"\bW\d{1,3}(?:\.P\d{1,3})?(?:\.S\d{1,4})?\b"),
@@ -122,20 +121,16 @@ _LIVE_TEST_OPT_IN_SCAN_ROOTS = (
 def _discover_test_modules() -> list[Path]:
     """Return every source-controlled ``test_*.py`` module.
 
-    Excludes ``__init__.py`` and any module beneath
-    ``src/aeat/tests/fixtures/`` (those are fixture-generator helpers
-    that ship alongside the bundled fixtures, not project test modules).
+    Excludes ``__init__.py`` and helper modules that do not define test
+    functions or test classes.
     """
     collected: set[Path] = set()
     for root in _TEST_MODULE_ROOTS:
         for path in root.glob("**/test_*.py"):
             if path.name == "__init__.py":
                 continue
-            try:
-                path.relative_to(_FIXTURES_DIR)
-            except ValueError:
-                if _module_defines_test_functions(path):
-                    collected.add(path)
+            if _module_defines_test_functions(path):
+                collected.add(path)
     return sorted(collected)
 
 
@@ -436,6 +431,37 @@ def _requires_live_gate_helper(path: Path) -> bool:
     return False
 
 
+def _expected_hex_marker_for_path(path: Path) -> str | None:
+    """Return the owning hex marker for paths with unambiguous architecture roots."""
+    relative = path.relative_to(_REPO_ROOT)
+    parts = relative.parts
+    path_text = relative.as_posix()
+
+    if path_text.startswith("docs/tools/tests/test_cli_reference"):
+        return "hex_entrypoint"
+    if path_text.startswith("docs/"):
+        return "hex_core"
+    if parts[:3] == ("src", "aeat", "entrypoints"):
+        return "hex_entrypoint"
+    if parts[:3] == ("src", "aeat", "application"):
+        return "hex_application"
+    if parts[:3] == ("src", "aeat", "domain"):
+        return "hex_domain"
+    if parts[:4] == ("src", "aeat", "adapters", "inbound"):
+        return "hex_inbound_adapter"
+    if parts[:4] == ("src", "aeat", "adapters", "outbound"):
+        return "hex_outbound_adapter"
+    if parts[:4] == ("src", "aeat", "adapters", "persistence"):
+        return "hex_persistence_adapter"
+    if parts[:3] == ("src", "aeat", "core"):
+        return "hex_core"
+    if parts[:3] == ("src", "aeat", "_data"):
+        return "hex_domain"
+    if path_text.startswith("src/aeat/tests/fixtures/"):
+        return "hex_inbound_adapter"
+    return None
+
+
 def _configured_marker_names() -> list[str]:
     """Return marker names declared in ``pyproject.toml``."""
     data = tomllib.loads((_REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
@@ -496,6 +522,24 @@ def test_module_carries_valid_pytestmark(module_path: Path) -> None:
 
     forbidden = names & _FORBIDDEN_MARKERS
     assert not forbidden, f"{relative}: forbidden legacy marker(s) {sorted(forbidden)}"
+
+
+@pytest.mark.parametrize(
+    "module_path",
+    _MODULES,
+    ids=[str(p.relative_to(_REPO_ROOT)).replace("\\", "/") for p in _MODULES],
+)
+def test_module_hex_marker_matches_owning_architecture_root(module_path: Path) -> None:
+    """Tests under clear architecture roots must carry that root's hex marker."""
+    expected = _expected_hex_marker_for_path(module_path)
+    if expected is None:
+        return
+    names, error = _extract_pytestmark_names(module_path)
+    assert error is None, f"{module_path.relative_to(_REPO_ROOT)}: {error}"
+    hex_markers = {name for name in names if name.startswith("hex_")}
+    assert hex_markers == {expected}, (
+        f"{module_path.relative_to(_REPO_ROOT)}: expected {expected}; found {sorted(hex_markers)}"
+    )
 
 
 @pytest.mark.parametrize(

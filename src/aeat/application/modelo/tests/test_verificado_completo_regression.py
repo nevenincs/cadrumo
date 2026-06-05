@@ -27,9 +27,11 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
-from ....domain.calculations.registry import InputKind
+from ....domain.calculations.registry import CasillaObservation, InputKind, RegistryModeloObservation
 from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.modelos import ExternalEvidenceKind
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.modelos._verification_report import (
     ModeloVerificationFindingKind,
@@ -37,10 +39,12 @@ from ....domain.modelos._verification_report import (
 )
 from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
+from ...calculations import CalculationObservationRepository, cross_period_dependency_requirements
 from .. import (
     StoredCalculationDriftError,
     calculate_modelo_revision,
     create_work_unit,
+    import_external_filing_evidence,
     verify_modelo_revision,
 )
 
@@ -79,9 +83,70 @@ def repos(tmp_path):
         objects = profile.repository
         wu = WorkUnitCatalogueRepository(objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)
+        filing = ModeloRecordCatalogueRepository(objects=objects)
         vr = VerificationReportCatalogueRepository(objects=objects)
         bv = BucketEventHistoryRepository(objects=objects)
-        yield wu, cr, vr, bv
+        yield wu, cr, filing, vr, bv
+
+
+def _seed_clean_cross_period_sources_for_m130(
+    work_unit,
+    *,
+    work_unit_repository: WorkUnitCatalogueRepository,
+    calculation_repository: CalculationRevisionCatalogueRepository,
+    filing_repository: ModeloRecordCatalogueRepository,
+    bucket_event_repository: BucketEventHistoryRepository,
+) -> None:
+    snapshot = resources().modelos.authority.snapshot(
+        work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    )
+    observation_repository = CalculationObservationRepository()
+    for requirement in cross_period_dependency_requirements(snapshot):
+        values = {casilla_id: Decimal("0") for casilla_id in requirement.source_casillas}
+        source_snapshot = resources().modelos.authority.snapshot(
+            requirement.source_modelo,
+            filing_year=requirement.filing_year,
+            period=requirement.period,
+        )
+        source_work_unit = create_work_unit(
+            bucket_id=work_unit.bucket_id,
+            modelo=requirement.source_modelo,
+            filing_year=requirement.filing_year,
+            period=requirement.period,
+            revision_id=source_snapshot.revision.id,
+            repository=work_unit_repository,
+            bucket_event_repository=bucket_event_repository,
+            clock=_T0,
+        )
+        import_external_filing_evidence(
+            work_unit_id=source_work_unit.work_unit_id,
+            casilla_values=values,
+            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            evidence_reference_id=(
+                f"JUST-{requirement.source_modelo}-{requirement.filing_year}-{requirement.period}"
+            ),
+            actor="aeat-import-test",
+            work_unit_repository=work_unit_repository,
+            calculation_repository=calculation_repository,
+            filing_repository=filing_repository,
+            bucket_event_repository=bucket_event_repository,
+            clock=_T0,
+        )
+        observation_repository.save_observation(
+            RegistryModeloObservation(
+                modelo=requirement.source_modelo,
+                filing_year=requirement.filing_year,
+                period=requirement.period,
+                observations=tuple(
+                    CasillaObservation(casilla_id=casilla_id, value=value)
+                    for casilla_id, value in values.items()
+                ),
+            ),
+            source_kind="aeat_sede_justificante",
+            captured_at=_T0,
+        )
 
 
 def test_verify_refuses_when_required_casillas_absent_m130(repos) -> None:
@@ -91,7 +156,7 @@ def test_verify_refuses_when_required_casillas_absent_m130(repos) -> None:
     required. It calculates a revision with those casillas absent and
     asserts the verifier produces ≥1 MISSING_REQUIRED_CASILLA finding.
     """
-    wu_repo, cr_repo, vr_repo, bv_repo = repos
+    wu_repo, cr_repo, _filing_repo, vr_repo, bv_repo = repos
     required = _required_manual_casillas_for_m130()
     assert len(required) >= 1, (
         "M130 registry must declare at least one required manual casilla; "
@@ -166,7 +231,7 @@ def test_verify_refuses_when_required_casillas_absent_m130(repos) -> None:
 
 def test_verify_grants_when_required_casillas_supplied_m130(repos) -> None:
     """M130 revision with all required casillas present is granted verificado_completo."""
-    wu_repo, cr_repo, vr_repo, bv_repo = repos
+    wu_repo, cr_repo, filing_repo, vr_repo, bv_repo = repos
     required = _required_manual_casillas_for_m130()
 
     work_unit = create_work_unit(
@@ -207,6 +272,13 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos) -> None:
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
+    _seed_clean_cross_period_sources_for_m130(
+        work_unit,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=filing_repo,
+        bucket_event_repository=bv_repo,
+    )
 
     report = verify_modelo_revision(
         revision.calculation_revision_id,
@@ -244,9 +316,9 @@ def test_tampered_revision_raises_drift_error(repos) -> None:
     In production, such breakage can occur through raw-storage manipulation or a
     future schema migration that mutates the payload without updating the id.
     """
-    from .._actions import _assert_revision_content_integrity
+    from .._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
 
-    wu_repo, cr_repo, _vr_repo, bv_repo = repos
+    wu_repo, cr_repo, _filing_repo, _vr_repo, bv_repo = repos
 
     work_unit = create_work_unit(
         bucket_id="default",

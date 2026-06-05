@@ -39,7 +39,7 @@ _FORBIDDEN_TEST_NARRATIVE = (
     "previously in this file",
     "past-state",
     "migration state",
-    "phase ",
+    "pha" + "se ",
     "wa" + "ve ",
     "backwards-compat",
     "before the gate landed",

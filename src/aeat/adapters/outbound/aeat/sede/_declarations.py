@@ -434,7 +434,7 @@ async def _drive_search(
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             context=await _declarations_page_shape_context_from_page(
                 page,
-                phase="listing_goto",
+                stage="listing_goto",
                 modelo=modelo,
                 ejercicio=ejercicio,
             ),
@@ -455,7 +455,7 @@ async def _drive_search(
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             context=await _declarations_page_shape_context_from_page(
                 page,
-                phase="listing_final_url",
+                stage="listing_final_url",
                 modelo=modelo,
                 ejercicio=ejercicio,
             ),
@@ -476,7 +476,7 @@ async def _drive_search(
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             context=await _declarations_page_shape_context_from_page(
                 page,
-                phase="form_render",
+                stage="form_render",
                 modelo=modelo,
                 ejercicio=ejercicio,
             ),
@@ -494,7 +494,7 @@ async def _drive_search(
             failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
             context=await _declarations_page_shape_context_from_page(
                 page,
-                phase="modelo_option_missing",
+                stage="modelo_option_missing",
                 modelo=modelo,
                 ejercicio=ejercicio,
             ),
@@ -523,7 +523,7 @@ async def _drive_search(
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             context=await _declarations_page_shape_context_from_page(
                 page,
-                phase="buscar_click",
+                stage="buscar_click",
                 modelo=modelo,
                 ejercicio=ejercicio,
             ),
@@ -536,7 +536,7 @@ async def _drive_search(
         _declarations_page_shape_context(
             await page.content(),
             landing_url=getattr(page, "url", "") or "",
-            phase="post_buscar",
+            stage="post_buscar",
             modelo=modelo,
             ejercicio=ejercicio,
         ),
@@ -547,7 +547,7 @@ async def _drive_search(
 async def _declarations_page_shape_context_from_page(
     page: Page,
     *,
-    phase: str,
+    stage: str,
     modelo: str,
     ejercicio: int,
 ) -> dict[str, object]:
@@ -558,7 +558,7 @@ async def _declarations_page_shape_context_from_page(
     return _declarations_page_shape_context(
         html,
         landing_url=getattr(page, "url", "") or "",
-        phase=phase,
+        stage=stage,
         modelo=modelo,
         ejercicio=ejercicio,
     )
@@ -568,7 +568,7 @@ def _declarations_page_shape_context(
     html: str,
     *,
     landing_url: str,
-    phase: str,
+    stage: str,
     modelo: str,
     ejercicio: int,
 ) -> dict[str, object]:
@@ -580,7 +580,7 @@ def _declarations_page_shape_context(
         for header in soup.find_all(class_=_has_class("z-listheader"))[:12]
     )
     return {
-        "phase": phase,
+        "stage": stage,
         "modelo": modelo,
         "ejercicio": ejercicio,
         "landing_url": _redacted_url(landing_url),

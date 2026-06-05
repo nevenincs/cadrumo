@@ -252,7 +252,17 @@ class CensoSyncService:
     ) -> CensoSnapshot:
         """Return one :class:`CensoSnapshot` — the latest ACTIVE by default."""
         if snapshot_id is not None:
-            return self._snapshots.resolve_snapshot(snapshot_id)
+            snapshot = self._snapshots.resolve_snapshot(snapshot_id)
+            if snapshot.profile_id != profile_id.strip():
+                raise CensoNotAvailableError(
+                    translated_message="errors.censo.snapshot_profile_mismatch",
+                    context={
+                        "profile_id": profile_id,
+                        "snapshot_profile_id": snapshot.profile_id,
+                        "snapshot_id": snapshot.snapshot_id,
+                    },
+                )
+            return snapshot
         active = self._snapshots.latest_active(profile_id=profile_id)
         if active is None:
             raise CensoNotAvailableError(
@@ -450,7 +460,8 @@ def _derive_profile_facts_from_censo(
     """Return taxpayer-model facts proven by censo facts plus profile identity."""
     derived: list[UserProfileFact] = []
     tax_id = (profile_facts.get("identity.tax_id") or profile_facts.get("tax.id") or "").strip().upper()
-    if _NATURAL_PERSON_TAX_ID_RE.match(tax_id):
+    is_natural_person = _NATURAL_PERSON_TAX_ID_RE.match(tax_id) is not None
+    if is_natural_person:
         derived.append(
             UserProfileFact(
                 path="taxpayer_type.entity_type",
@@ -459,7 +470,7 @@ def _derive_profile_facts_from_censo(
             )
         )
     iae_epigraph = (censo_facts.get("activities.iae_epigraph") or "").strip()
-    if iae_epigraph:
+    if is_natural_person and iae_epigraph:
         derived.append(
             UserProfileFact(
                 path="taxpayer_type.irpf_income_categories",
@@ -505,6 +516,7 @@ def _compare(
 
 
 __all__ = [
+    "CENSO_DERIVED_SOURCE_TAG",
     "CENSO_SOURCE_TAG",
     "CensoApplyResult",
     "CensoComparisonStatus",

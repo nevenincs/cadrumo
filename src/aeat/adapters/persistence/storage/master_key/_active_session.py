@@ -109,7 +109,7 @@ def get_active_master_key() -> bytes:
     session = _active_session.get()
     if session is None:
         raise NoActiveBucketSessionError(
-            "no active bucket session; run `aeat config profile switch NAME` "
+            "no active bucket session; run `aeat config unlock NAME` "
             "to unlock a profile before invoking commands that decrypt "
             "stored records.",
         )

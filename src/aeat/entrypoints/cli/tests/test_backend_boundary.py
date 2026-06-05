@@ -40,7 +40,7 @@ _FORBIDDEN_TEST_PROCESS_LANGUAGE = (
     "migration state",
     "not yet delivered",
     "past-state",
-    "phase ",
+    "pha" + "se ",
     "previously in this file",
     "stub",
     "todo",

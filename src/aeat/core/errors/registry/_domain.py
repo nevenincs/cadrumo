@@ -1115,7 +1115,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.ModeloWorkflowGateError",
+        "aeat.application.modelo._action_errors.ModeloWorkflowGateError",
         ErrorCode(
             code="REFUSED_MODELO_WORKFLOW_GATE",
             category=ErrorCategory.REFUSED,
@@ -1126,7 +1126,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.WorkUnitNotFoundError",
+        "aeat.application.modelo._action_errors.WorkUnitNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_WORK_UNIT_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -1137,7 +1137,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.WorkUnitAlreadyDiscardedError",
+        "aeat.application.modelo._action_errors.WorkUnitAlreadyDiscardedError",
         ErrorCode(
             code="ERROR_MODELO_WORK_UNIT_ALREADY_DISCARDED",
             category=ErrorCategory.ERROR,
@@ -1148,7 +1148,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.WorkUnitMutationRefusedError",
+        "aeat.application.modelo._action_errors.WorkUnitMutationRefusedError",
         ErrorCode(
             code="ERROR_MODELO_WORK_UNIT_MUTATION_REFUSED",
             category=ErrorCategory.ERROR,
@@ -1161,7 +1161,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.CalculationRevisionNotFoundError",
+        "aeat.application.modelo._action_errors.CalculationRevisionNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_CALCULATION_REVISION_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -1172,7 +1172,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.CalculationRevisionStateError",
+        "aeat.application.modelo._action_errors.CalculationRevisionStateError",
         ErrorCode(
             code="ERROR_MODELO_CALCULATION_REVISION_STATE",
             category=ErrorCategory.ERROR,
@@ -1183,7 +1183,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.CalculationRegistryUnavailableError",
+        "aeat.application.modelo._action_errors.CalculationRegistryUnavailableError",
         ErrorCode(
             code="ERROR_MODELO_CALCULATION_REGISTRY_UNAVAILABLE",
             category=ErrorCategory.ERROR,
@@ -1194,7 +1194,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.CasillaProvenanceMissingError",
+        "aeat.application.modelo._action_errors.CasillaProvenanceMissingError",
         ErrorCode(
             code="ERROR_MODELO_CASILLA_PROVENANCE_MISSING",
             category=ErrorCategory.ERROR,
@@ -1205,7 +1205,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.ModeloAggregationBindingError",
+        "aeat.application.modelo._action_errors.ModeloAggregationBindingError",
         ErrorCode(
             code="ERROR_MODELO_AGGREGATION_BINDING",
             category=ErrorCategory.ERROR,
@@ -1227,7 +1227,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.ModeloCrossPeriodCleanStateError",
+        "aeat.application.modelo._action_errors.ModeloCrossPeriodCleanStateError",
         ErrorCode(
             code="REFUSED_MODELO_CROSS_PERIOD_CLEAN_STATE",
             category=ErrorCategory.REFUSED,
@@ -1271,7 +1271,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.ModeloRecordNotFoundError",
+        "aeat.application.modelo._action_errors.ModeloRecordNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_FILING_RECORD_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -1282,7 +1282,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.AmendmentEvidenceMissingError",
+        "aeat.application.modelo._action_errors.AmendmentEvidenceMissingError",
         ErrorCode(
             code="ERROR_MODELO_AMENDMENT_EVIDENCE_MISSING",
             category=ErrorCategory.ERROR,
@@ -1293,7 +1293,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.AmendmentTargetStateError",
+        "aeat.application.modelo._action_errors.AmendmentTargetStateError",
         ErrorCode(
             code="ERROR_MODELO_AMENDMENT_TARGET_STATE",
             category=ErrorCategory.ERROR,
@@ -1304,7 +1304,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.AmendmentOverrideCasillaError",
+        "aeat.application.modelo._action_errors.AmendmentOverrideCasillaError",
         ErrorCode(
             code="REFUSED_MODELO_AMENDMENT_OVERRIDE_CASILLA",
             category=ErrorCategory.REFUSED,
@@ -1315,7 +1315,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.AmendmentVerificationRefusedError",
+        "aeat.application.modelo._action_errors.AmendmentVerificationRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_AMENDMENT_VERIFICATION",
             category=ErrorCategory.REFUSED,
@@ -1326,7 +1326,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.ExternalModeloImportError",
+        "aeat.application.modelo._action_errors.ExternalModeloImportError",
         ErrorCode(
             code="ERROR_MODELO_EXTERNAL_FILING_IMPORT",
             category=ErrorCategory.ERROR,
@@ -1359,7 +1359,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.VerificationReportNotFoundError",
+        "aeat.application.modelo._action_errors.VerificationReportNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_VERIFICATION_REPORT_NOT_FOUND",
             category=ErrorCategory.ERROR,

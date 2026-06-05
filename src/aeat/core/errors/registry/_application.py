@@ -504,7 +504,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_AUTH_PROFILE_IDENTITY_MISMATCH",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.auth_profile_identity_mismatch",
-            default_suggestion="aeat config profile switch NAME",
+            default_suggestion="aeat config unlock NAME",
             retryable=False,
             runbook_id=None,
         ),
@@ -872,7 +872,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_RECONCILIATION_CROSS_BUCKET",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.reconciliation_cross_bucket",
-            default_suggestion="aeat config profile switch NAME",
+            default_suggestion="aeat config unlock NAME",
             retryable=False,
             runbook_id=None,
         ),
@@ -1026,7 +1026,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_MODELO_EXPORT_CROSS_BUCKET",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.modelo_export_cross_bucket",
-            default_suggestion="aeat config profile switch NAME",
+            default_suggestion="aeat config unlock NAME",
             retryable=False,
             runbook_id=None,
         ),
@@ -1158,7 +1158,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_PROFILE_ALREADY_REGISTERED",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.profile_already_registered",
-            default_suggestion="aeat config profile switch NAME",
+            default_suggestion="aeat config unlock NAME",
             retryable=False,
             runbook_id=None,
         ),
@@ -1329,7 +1329,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.StoredCalculationDriftError",
+        "aeat.application.modelo._action_errors.StoredCalculationDriftError",
         ErrorCode(
             code="INTEGRITY_STORED_CALCULATION_DRIFT",
             category=ErrorCategory.INTEGRITY,
@@ -1340,7 +1340,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.ModeloApplicabilityFilterError",
+        "aeat.application.modelo._action_errors.ModeloApplicabilityFilterError",
         ErrorCode(
             code="REFUSED_MODELO_APPLICABILITY_FILTER",
             category=ErrorCategory.REFUSED,

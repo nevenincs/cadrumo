@@ -20,7 +20,6 @@ _CLI_HARNESS = dedent(
     """
     from __future__ import annotations
 
-    import os
     import sys
     from pathlib import Path
 
@@ -28,12 +27,10 @@ _CLI_HARNESS = dedent(
     from aeat.core.config import Settings
 
     storage_root = Path(sys.argv[1])
-    cli_args = sys.argv[2:]
+    passphrase_arg = sys.argv[2]
+    cli_args = sys.argv[3:]
     base_settings = Settings(_env_file=None)
-    passphrase = os.environ.get(
-        "AEAT_TEST_SECRET_PASSPHRASE",
-        base_settings.aeat_dev_test_database_password,
-    )
+    passphrase = passphrase_arg or base_settings.aeat_dev_test_database_password
     settings = Settings(
         _env_file=None,
         aeat_local_storage_root=storage_root,
@@ -71,13 +68,14 @@ def _run_aeat(
     storage_root: Path,
     args: tuple[str, ...],
     *,
+    passphrase: str | None = None,
     extra_env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     env = _env()
     if extra_env:
         env.update(extra_env)
     return subprocess.run(
-        [sys.executable, "-c", _CLI_HARNESS, str(storage_root), *args],
+        [sys.executable, "-c", _CLI_HARNESS, str(storage_root), passphrase or "", *args],
         cwd=Path(__file__).parents[3],
         env=env,
         text=True,
@@ -257,7 +255,7 @@ def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path)
     shown_after_rekey = _run_aeat(
         tmp_path,
         ("config", "profile", "show"),
-        extra_env={"AEAT_TEST_SECRET_PASSPHRASE": rotated_value},
+        passphrase=rotated_value,
     )
     assert shown_after_rekey.returncode == 0, _combined_output(shown_after_rekey)
     assert "display_name\tcustody" in shown_after_rekey.stdout
@@ -275,7 +273,7 @@ def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path)
             "--confirm-new-passphrase",
             recovered_value,
         ),
-        extra_env={"AEAT_TEST_SECRET_PASSPHRASE": rotated_value},
+        passphrase=rotated_value,
     )
     assert recovered.returncode == 0, _combined_output(recovered)
     assert "recovered\tyes" in recovered.stdout
@@ -283,7 +281,7 @@ def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path)
     shown_after_recover = _run_aeat(
         tmp_path,
         ("config", "profile", "show"),
-        extra_env={"AEAT_TEST_SECRET_PASSPHRASE": recovered_value},
+        passphrase=recovered_value,
     )
     assert shown_after_recover.returncode == 0, _combined_output(shown_after_recover)
     assert "display_name\tcustody" in shown_after_recover.stdout

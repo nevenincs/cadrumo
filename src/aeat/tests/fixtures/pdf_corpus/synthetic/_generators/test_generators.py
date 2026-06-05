@@ -1,4 +1,4 @@
-"""Smoke tests for the L3-synthetic PDF generator family.
+"""Smoke tests for the synthetic PDF generator family.
 
 Each generator exposes a pure `generate(params) -> (bytes, ground_truth)`
 function. The smoke tests exercise that API end-to-end with minimal
@@ -37,7 +37,7 @@ from .modelo_303_generator import (
     generate as generate_modelo_303,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
 def _assert_pdf(pdf_bytes: bytes) -> None:

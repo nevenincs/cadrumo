@@ -24,7 +24,7 @@ import pytest
 
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .test_privacy import (
+from .privacy_helpers import (
     assert_public_profile_id_not_leaked,
     assert_public_profile_id_redacted,
     assert_public_profile_payload_redacted,

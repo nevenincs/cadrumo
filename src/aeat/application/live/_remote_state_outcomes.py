@@ -219,7 +219,6 @@ _SAFE_FAILURE_CONTEXT_KEYS = frozenset(
         "modelo",
         "operation",
         "period",
-        "phase",
         "phone_state",
         "reason",
         "stage",

@@ -658,7 +658,7 @@ async def _run_live_iva_remote_state_command[T](
             surface="remote_state_command",
             timeout_ms=resolved_timeout_ms,
             progress_context={
-                "phase": "cli_watchdog",
+                "stage": "cli_watchdog",
                 "surface": LiveIvaReadSurface.FILED_HISTORY.value,
                 "watchdog_reaped_process_count": killed_processes,
                 **pre_timeout_auth_context,

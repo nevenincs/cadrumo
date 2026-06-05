@@ -12,7 +12,7 @@ from ....application.modelo import WorkUnitNotFoundError
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
 from .._modelo import _bad_parameter_from_error
-from .test_envelope import unwrap_schema_envelope as _payload
+from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

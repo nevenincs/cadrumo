@@ -82,7 +82,7 @@ class BucketLockedError(BucketError):
     """Raised when an operation requires an unlocked :class:`BucketSession`.
 
     Carries the locked bucket id so the diagnostic can point the
-    operator at ``aeat config profile switch NAME``.
+    operator at ``aeat config unlock NAME``.
     """
 
     def __init__(self, *, bucket_id: str) -> None:
@@ -112,7 +112,7 @@ class RecoveryUnavailableError(BucketError):
 class RecoveryVerificationError(BucketError):
     """Raised when the operator-typed recovery code does not decode.
 
-    Fired by the profile recovery flow when the 24-word entry does not
+    Fired by ``aeat config recover`` when the 24-word entry does not
     unwrap the bucket's recovery envelope.
     """
 

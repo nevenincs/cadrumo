@@ -10,7 +10,7 @@ Contract enforced by :func:`apply` on every collected item:
 - Each item must carry exactly one execution marker from
   ``{unit, integration, aeat_live}``. Zero or more than one raises
   :class:`pytest.UsageError`.
-- Each item must carry at least one ``hex_*`` marker at module level.
+- Each item must carry exactly one accepted ``hex_*`` marker at module level.
 
 Double-invocation tolerance: the repo-root ``conftest.py`` and the
 package-scoped ``src/aeat/tests/conftest.py`` both delegate to
@@ -28,13 +28,24 @@ from __future__ import annotations
 import pytest
 
 _EXECUTION_MARKERS = frozenset({"unit", "integration", "aeat_live"})
+_HEX_MARKERS = frozenset(
+    {
+        "hex_application",
+        "hex_core",
+        "hex_domain",
+        "hex_entrypoint",
+        "hex_inbound_adapter",
+        "hex_outbound_adapter",
+        "hex_persistence_adapter",
+    }
+)
 
 
 def apply(config: pytest.Config, items: list[pytest.Item]) -> None:
     """Apply the hexagonal marker taxonomy contract to the collected items.
 
     Raises :class:`pytest.UsageError` for items missing exactly one execution
-    marker or at least one hexagonal architecture marker.
+    marker or exactly one accepted hexagonal architecture marker.
 
     Args:
         config: The active :class:`pytest.Config` from the collection hook.
@@ -49,7 +60,11 @@ def apply(config: pytest.Config, items: list[pytest.Item]) -> None:
                 f"{item.nodeid}: must carry exactly one of {{unit, integration, aeat_live}}, "
                 f"found {sorted(execution) or 'none'}"
             )
-        if not any(name.startswith("hex_") for name in owned):
-            raise pytest.UsageError(f"{item.nodeid}: must carry at least one hex_* marker")
+        hex_markers = {name for name in owned if name.startswith("hex_")}
+        if len(hex_markers) != 1 or not hex_markers <= _HEX_MARKERS:
+            raise pytest.UsageError(
+                f"{item.nodeid}: must carry exactly one accepted hex_* marker, "
+                f"found {sorted(hex_markers) or 'none'}"
+            )
         remaining.append(item)
     items[:] = remaining

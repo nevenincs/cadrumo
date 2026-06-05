@@ -18,7 +18,7 @@ from ._generate import (
     _render_borrador_pdf,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
 def test_format_spanish_decimal_uses_comma_and_dot_separators() -> None:

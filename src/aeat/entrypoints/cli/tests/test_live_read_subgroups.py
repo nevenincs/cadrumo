@@ -240,7 +240,7 @@ class TestIvaRemoteStateCliSurface:
             assert raised.value.context["surface"] == "remote_state_command"
             assert raised.value.context["timeout_ms"] == 1
             progress = raised.value.context["progress"]
-            assert progress["phase"] == "cli_watchdog"
+            assert progress["stage"] == "cli_watchdog"
             assert progress["surface"] == LiveIvaReadSurface.FILED_HISTORY.value
             assert "watchdog_reaped_process_count" in progress
             assert "auth_watchdog_before_persisted_session" in progress or progress.get(
@@ -349,7 +349,7 @@ class TestIvaRemoteStateCliSurface:
                     failure_type="ClaveMovilApprovalTimeoutError",
                     failure_context={
                         "progress": {
-                            "phase": "walk_declarations_register",
+                            "stage": "walk_declarations_register",
                             "modelo": "303",
                             "ejercicio": 2026,
                         }
@@ -376,7 +376,7 @@ class TestIvaRemoteStateCliSurface:
             line.startswith("surface_outcome=filed_history\tstatus=failed\toutcome=no_clave_prompt") for line in lines
         )
         assert any(
-            "failure_context=progress={ejercicio:2026,modelo:303,phase:walk_declarations_register}" in line
+            "failure_context=progress={ejercicio:2026,modelo:303,stage:walk_declarations_register}" in line
             for line in lines
         )
         assert any(

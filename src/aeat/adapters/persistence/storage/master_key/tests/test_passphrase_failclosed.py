@@ -37,3 +37,12 @@ def test_crlf_only_passphrase_raises_secret_store_error() -> None:
         pytest.raises(SecretStoreError, match="whitespace-only"),
     ):
         _default_passphrase_callback()
+
+
+def test_unset_passphrase_falls_through_to_real_prompt_and_fails_closed() -> None:
+    """Unset settings use the real prompt path and fail closed under pytest stdin capture."""
+    with (
+        override_settings(aeat_secret_passphrase=None),
+        pytest.raises((EOFError, OSError)),
+    ):
+        _default_passphrase_callback()

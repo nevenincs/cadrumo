@@ -103,6 +103,18 @@ def test_show_returns_latest_active(secure_store: SecureObjectRepository) -> Non
     assert shown.snapshot_id == captured.snapshot_id
 
 
+def test_show_refuses_explicit_snapshot_for_another_profile(secure_store: SecureObjectRepository) -> None:
+    service = _service(secure_store)
+    other = service.refresh_censo(profile_id="other-profile", source_url=_G313, fact_source=_facts)
+
+    with pytest.raises(CensoNotAvailableError) as exc_info:
+        service.show_censo(profile_id="operator", snapshot_id=other.snapshot_id)
+
+    assert exc_info.value.translated_message == "errors.censo.snapshot_profile_mismatch"
+    assert exc_info.value.context["snapshot_id"] == other.snapshot_id
+    assert exc_info.value.context["snapshot_profile_id"] == "other-profile"
+
+
 def test_show_refuses_when_no_snapshot_exists(secure_store: SecureObjectRepository) -> None:
     service = _service(secure_store)
 
@@ -253,6 +265,54 @@ def test_apply_does_not_infer_income_category_without_iae(secure_store: SecureOb
     by_path = {fact.path: fact for fact in reloaded.facts}
     assert result.derived_paths == ("taxpayer_type.entity_type",)
     assert by_path["taxpayer_type.entity_type"].value == "natural_person"
+    assert "taxpayer_type.irpf_income_categories" not in by_path
+    calendar = build_overview_calendar(
+        projection_for_taxpayer(reloaded),
+        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+        today=date(2025, 4, 1),
+    )
+    assert calendar.taxpayer_model_declared is False
+
+
+def test_apply_does_not_infer_income_category_without_natural_person_identity(
+    secure_store: SecureObjectRepository,
+) -> None:
+    profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store)
+    profiles.save(
+        UserProfileRecord(
+            profile_id="operator",
+            display_name="Operator",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="B12345678"),
+                UserProfileFact(path="identity.name", value="Operator SL"),
+                UserProfileFact(path="activities.description", value="Servicios profesionales"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            ),
+        ),
+    )
+    service = CensoSyncService(
+        bucket_id="b1",
+        snapshots=CensoSnapshotService(bucket_id="b1"),
+        profiles=profiles,
+    )
+    service.refresh_censo(
+        profile_id="operator",
+        source_url=_G313,
+        fact_source=lambda: {
+            "activities.iae_epigraph": "763",
+            "censo.activity_start_date": "2024-01-15",
+        },
+    )
+
+    result = service.apply_censo_to_profile(profile_id="operator")
+
+    reloaded = profiles.load("operator")
+    by_path = {fact.path: fact for fact in reloaded.facts}
+    assert result.derived_paths == ()
+    assert "taxpayer_type.entity_type" not in by_path
     assert "taxpayer_type.irpf_income_categories" not in by_path
     calendar = build_overview_calendar(
         projection_for_taxpayer(reloaded),

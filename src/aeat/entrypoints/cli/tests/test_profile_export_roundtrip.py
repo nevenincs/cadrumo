@@ -33,7 +33,7 @@ from pydantic import ValidationError
 
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .test_privacy import (
+from .privacy_helpers import (
     assert_public_profile_id_not_leaked,
     assert_public_profile_id_redacted,
     assert_public_profile_payload_redacted,
@@ -62,7 +62,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
     """
 
     from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ....application.modelo._actions import create_work_unit
+    from ....application.modelo import create_work_unit
     from ....core import resolve_active_bucket_id
     from ....core.config import override_settings
     from ....domain.calculations.registry import CasillaObservation
