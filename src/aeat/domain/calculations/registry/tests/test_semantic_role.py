@@ -1,4 +1,4 @@
-"""Roundtrip and validator tests for Plan C semantic_role + aliases.
+"""Roundtrip and validator tests for semantic_role + aliases.
 
 `CasillaDefinition` gained an optional `semantic_role: str | None`
 slot and an `aliases: tuple[CasillaAlias, ...]` slot. The

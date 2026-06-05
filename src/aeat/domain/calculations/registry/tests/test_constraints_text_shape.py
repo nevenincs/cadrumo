@@ -1,4 +1,4 @@
-"""Roundtrip and violation tests for the Plan B text-shape constraints.
+"""Roundtrip and violation tests for text-shape constraints.
 
 `CasillaConstraints` was extended with `pattern`, `min_length`,
 `max_length`, and `enum` slots. These tests exercise:
@@ -156,7 +156,7 @@ class TestAntiTautology:
 
 
 class TestNumericViolatesPreserved:
-    """Plan B is additive; the existing numeric `violates` contract is untouched."""
+    """Text-shape constraints are additive; the numeric `violates` contract is untouched."""
 
     def test_numeric_violates_still_works(self) -> None:
         from decimal import Decimal

@@ -369,7 +369,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     # the expected value comes from the registry engine, not from
     # re-implementing the IRPF tariff formula.
     #
-    # Single-authority routing invariant (FU-accepted contract-F): both the verb's
+    # Single-authority routing invariant: both the verb's
     # internal calculate_registry_snapshot call and the oracle below
     # source their RegistrySnapshot from ``resources().modelos.authority``
     # (see _modelo.py modelo_project + the helper at line 528 / 1322 /

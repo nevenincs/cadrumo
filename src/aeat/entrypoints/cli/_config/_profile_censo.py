@@ -20,8 +20,8 @@ import typer
 
 from ....core.errors import resolve_error_message
 from ....core.i18n import tr
+from ....core.identity import BucketId
 from ....core.time import now
-from ....domain.contribuyente._constants import ProfileName
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
 from ._profile_censo_payloads import (
@@ -32,7 +32,7 @@ from ._profile_censo_payloads import (
 )
 
 
-def _active_pointer() -> tuple[ProfileName, ProfileName]:
+def _active_pointer() -> tuple[BucketId, BucketId]:
     from ....application.workflow import read_profile_bucket_by_id
     from ....core import resolve_active_bucket_id
 
@@ -57,6 +57,7 @@ def _build_service(bucket_id: str):
 
 def _emit_censo_event(*, bucket_id: str, event_type, profile_id: str, snapshot_id: str) -> None:
 
+    from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ....domain.buckets import (
         BucketEvent,
         BucketEventHistoryRepository,
@@ -76,7 +77,7 @@ def _emit_censo_event(*, bucket_id: str, event_type, profile_id: str, snapshot_i
         object_id=profile_id,
         payload=payload,
     )
-    repo = BucketEventHistoryRepository()
+    repo = BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
     catalogue = repo.load()
     repo.save(
         append_bucket_event(

@@ -11,7 +11,7 @@ calls ``_install_cross_domain_snapshot_checks`` before the referential-
 integrity gate runs; the installer imports every peer-domain check module
 named in ``_CROSS_DOMAIN_CHECK_MODULES`` by name. The registry never
 imports ``renta`` statically (that would reverse the dependency direction
-the restructure ADR fixes, defect F7) -- it owns only the list of peer
+the cross-domain dependency fix, defect F7) -- it owns only the list of peer
 module names. A Modelo 100 snapshot therefore validates the BOE-prescribed
 first-slice routing gate regardless of whether the importing process ever
 imported ``aeat.domain.renta`` first.

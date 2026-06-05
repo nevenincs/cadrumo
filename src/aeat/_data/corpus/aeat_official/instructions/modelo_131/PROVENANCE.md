@@ -33,11 +33,11 @@ AEAT publication and corpus capture is within the project's
 corpus-freshness convention (re-fetch on every campaign that
 quotes from the corpus).
 
-## Verification at P08.S54
+## Verification
 
 The carry-forward sentence cited in
 `.vault/audit/2026-05-27-modelo-130-relation-regression-audit.md`
-(P07.S38 finding) — "Casilla 11. Si en la casilla 10 anterior se
+— "Casilla 11. Si en la casilla 10 anterior se
 hubiera obtenido una cantidad positiva, se hará constar en la
 casilla 11 el importe (sin signo) de los resultados negativos
 que, en su caso, se hubieran obtenido en la casilla 15 de
@@ -49,7 +49,7 @@ consignada en la casilla 10." — is present verbatim in
 `files/modelo-131-instrucciones.html` (the AEAT corpus
 2026-05-05 capture of the 2026-04-01 publication).
 
-The P08.S47 cap predicate (`cap_le_when_positive(["11", "10"])`)
+The cap predicate (`cap_le_when_positive(["11", "10"])`)
 declared on all 4 M131 revisions is therefore grounded against
 the AEAT-published instructions verbatim at the corpus's
 capture date.

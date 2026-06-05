@@ -27,7 +27,7 @@ def test_financial_validation_error_not_value_error() -> None:
     )
 
     assert not issubclass(FinancialValidationError, ValueError), (
-        "FinancialValidationError must not inherit from ValueError after W07 MRO cleanup"
+        "FinancialValidationError must not inherit from ValueError after the MRO cleanup"
     )
 
 

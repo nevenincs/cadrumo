@@ -546,7 +546,7 @@ def test_importing_diagnostics_does_not_pull_the_browser_or_registry_subtree() -
 
     The ``aeat --version`` fast path imports ``aeat.application.
     diagnostics`` solely for ``build_cli_version_report`` /
-    ``render_cli_version_text``. Disaster ADR Ruling 4 mandates that
+    ``render_cli_version_text``. Disaster rollback contract mandates that
     surface return fast on cold start. The browser adapter and the
     registry-authority parse together add seconds of import time; a
     regression that re-introduces an eager module-level import of

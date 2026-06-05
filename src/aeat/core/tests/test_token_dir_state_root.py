@@ -1,6 +1,6 @@
 """Focused tests for the `aeat_token_dir` one-state-root contract.
 
-The profile-state aggregate ADR mandates that every profile store -
+The profile-state aggregate contract requires every profile store -
 token and lock files included - is rooted under
 `aeat_local_storage_root`. The `aeat_token_dir` model validator
 enforces this: when the field is not explicitly supplied, it derives

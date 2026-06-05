@@ -32,7 +32,7 @@ skipped; only call sites where the first argument is a string literal
 are checked.
 
 The test is expected to fail on first landing. Each failure entry names
-the key, axis, and offending token/kwarg so follow-up accepted contract Steps can
+the key, axis, and offending token/kwarg so follow-up remediation can
 target exactly the right locale values and call sites to fix.
 """
 

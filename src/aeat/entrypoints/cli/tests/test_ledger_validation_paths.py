@@ -23,6 +23,7 @@ from typer.testing import CliRunner
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span, set_active_fields
+from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....domain.user_profile import UserProfileFact
@@ -42,15 +43,10 @@ def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
     """Hold an active bucket session open across this module's in-process invokes.
 
     The active bucket session is a per-process/per-context ContextVar opened by
-    the storage master-key provider (see
-    ``adapters/persistence/storage/master_key/_active_session.py``). In the real
-    CLI each command process re-opens it from persisted state; in-process
-    ``CliRunner`` a bare ``config profile create`` invoke opens and closes its
-    own session, so a subsequent ``ledger ...`` invoke finds none ("No active
-    bucket session is open"). Wrapping the test body in
-    :func:`profile_create_storage_span` activates the master-key provider for the
-    ``tester`` profile the tests create via the CLI, so every invoke shares one
-    open session — the same pattern the passing ledger-CLI suites use.
+    the storage master-key provider. The profile id is now an immutable bucket
+    id distinct from the display label, so these tests seed the real profile
+    record under the same id as the held storage span rather than creating a
+    UUID-backed profile via a separate in-process CLI invoke.
     """
     dispose_engine()
     with (
@@ -58,6 +54,7 @@ def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span(_PROFILE_ID),
     ):
+        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_PROFILE_ID))
         try:
             yield
         finally:
@@ -71,22 +68,6 @@ def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
 
 def _create_profile_and_import(tmp_path: Path) -> str:
     """Provision a profile with one imported transaction; return transaction_id."""
-    created = _RUNNER.invoke(
-        app,
-        [
-            "config",
-            "profile",
-            "create",
-            "tester",
-            "--quiet",
-            "--tax-id",
-            "00000001R",
-            "--activity",
-            "freelance",
-        ],
-    )
-    assert created.exit_code == 0, created.output
-
     statement = tmp_path / "statement.csv"
     statement.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
@@ -117,21 +98,6 @@ def test_ledger_add_rejects_business_pct_on_non_mixed_classification(tmp_path: P
     validator raises "business_pct must be None unless classification is
     MIXED".  ``_ledger_validation_bad`` must route this through the CLI
     refusal rather than letting it bubble to the generic boundary."""
-
-    _RUNNER.invoke(
-        app,
-        [
-            "config",
-            "profile",
-            "create",
-            "tester",
-            "--quiet",
-            "--tax-id",
-            "00000001R",
-            "--activity",
-            "freelance",
-        ],
-    )
 
     result = _RUNNER.invoke(
         app,
@@ -328,20 +294,6 @@ def test_ledger_add_defaults_source_jurisdiction_to_es_for_resident_general(
     worldwide income with a Spanish-source default. The default-ES path
     must not require operator action."""
 
-    _RUNNER.invoke(
-        app,
-        [
-            "config",
-            "profile",
-            "create",
-            "tester",
-            "--quiet",
-            "--tax-id",
-            "00000001R",
-            "--activity",
-            "freelance",
-        ],
-    )
     # Default profile is already RESIDENT_IRPF / GENERAL, so no fact mutation is needed.
 
     result = _RUNNER.invoke(
@@ -382,20 +334,6 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_impatriado(
     service so the ledger command sees the same stored facts it would read
     after the operator wizard updates the active profile."""
 
-    _RUNNER.invoke(
-        app,
-        [
-            "config",
-            "profile",
-            "create",
-            "tester",
-            "--quiet",
-            "--tax-id",
-            "00000001R",
-            "--activity",
-            "freelance",
-        ],
-    )
     _set_profile_axis("irpf.special_regime", "impatriado")
     _set_profile_axis("irpf.special_regime_start_date", "2023-01-01")
 
@@ -442,20 +380,6 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_non_resident(
     service so the ledger command sees the same stored facts it would read
     after the operator wizard updates the active profile."""
 
-    _RUNNER.invoke(
-        app,
-        [
-            "config",
-            "profile",
-            "create",
-            "tester",
-            "--quiet",
-            "--tax-id",
-            "00000001R",
-            "--activity",
-            "freelance",
-        ],
-    )
     _set_profile_axis("taxpayer_type.fiscal_residency", "non_resident_irnr")
     # UE/EEE country chosen so ue_eee_status is True and the
     # TaxpayerProfile _check_representante_fiscal_required validator does
@@ -500,21 +424,6 @@ def test_ledger_add_honours_operator_source_jurisdiction_override_for_resident(
     Resident IRPF / GENERAL operator may legitimately add a foreign-source
     row (e.g. dividendos de fuente extranjera). The default-ES rule must
     not override an explicit operator value."""
-
-    _RUNNER.invoke(
-        app,
-        [
-            "config",
-            "profile",
-            "create",
-            "tester",
-            "--quiet",
-            "--tax-id",
-            "00000001R",
-            "--activity",
-            "freelance",
-        ],
-    )
 
     result = _RUNNER.invoke(
         app,

@@ -1,7 +1,7 @@
 """Tests for the typed-context factories on registry error classes.
 
-Pins the contract from ADR `2026-05-26-linkage-design-audit-adr`
-decision 2 (`registry-error-typed-context-factories`): each
+Pins the contract from the linkage-design audit decision (`registry-error-typed-context-factories`):
+each
 canonical raise scenario is a classmethod factory; the resulting
 error carries a pinned ``context`` dict with named keys downstream
 consumers (locale templates, CLI JSON emit) can rely on.

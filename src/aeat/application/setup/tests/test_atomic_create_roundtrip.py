@@ -87,7 +87,7 @@ def test_atomic_create_roundtrip_identity_is_consistent_across_verbs(_cli_storag
     """create -> list -> show -> switch -> show all agree on one profile.
 
     Profile/bucket UUIDs are redacted on the CLI surface per the centralised
-    output-redaction ADR; the test asserts the operator-visible identity
+    output-redaction contract; the test asserts the operator-visible identity
     (display_name plus the stable redacted placeholder) survives every verb.
     """
 
@@ -123,7 +123,7 @@ def test_atomic_create_roundtrip_facts_survive_to_show(_cli_storage: Path) -> No
 
     ``identity.tax_id`` is a sensitive operator identifier and is redacted to a
     stable ``sha256:<prefix>`` token at the CLI boundary per the centralised
-    output-redaction ADR. The non-sensitive facts surface verbatim.
+    output-redaction contract. The non-sensitive facts surface verbatim.
     """
 
     _create("alice")

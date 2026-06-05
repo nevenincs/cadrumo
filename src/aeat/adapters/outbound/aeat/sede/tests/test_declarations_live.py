@@ -9,7 +9,7 @@ the real AEAT sede with a Cl@ve-móvil session. Skips cleanly when:
 
 The test is read-only by construction — every public surface in
 :mod:`aeat.adapters.outbound.aeat.sede._declarations` is structurally incapable of
-mutating AEAT state (parent ADR's five-layer write guard).
+mutating AEAT state under the outbound write guard.
 """
 
 from __future__ import annotations

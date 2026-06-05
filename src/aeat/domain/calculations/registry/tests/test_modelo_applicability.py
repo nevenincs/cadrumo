@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
-    """The accepted contract.contract seed rules are exposed by the registry package."""
+    """The seed rules are exposed by the registry package."""
 
     assert derive_modelo_applicability.__module__ == ("aeat.domain.calculations.registry._applicability")
     rules = iter_modelo_applicability_rules()

@@ -1,7 +1,7 @@
 """Ledger→modelo staleness + finalized-modelo edit blocking (ratchet history).
 
 A modelo revision verified from the ledger captures an immutable content
-fingerprint over its contributing rows (the modelo-filing-ledger-snapshot ADR).
+fingerprint over its contributing rows (the modelo-filing ledger snapshot contract).
 When a contributing row's tax facts later drift, the staleness evaluator surfaces
 it — a filed revision is never silently stale (behavior contract). Conversely, once a
 revision is finalized, the blocking guard refuses destructive edits to its source

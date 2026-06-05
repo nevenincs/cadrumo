@@ -5,7 +5,7 @@ cent, that a populated tax substrate reconstitutes the IVA-inclusive gross —
 but only when **both** ``taxable_base`` and ``iva_amount`` are present. Rows
 with an unset tax substrate (the common case) must validate unconditionally.
 
-Authority: ``2026-06-04-llm-ledger-classification-adr``.
+Authority: LLM ledger classification contract.
 """
 
 from __future__ import annotations

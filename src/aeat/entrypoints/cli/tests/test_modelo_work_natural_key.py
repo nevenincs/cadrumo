@@ -47,8 +47,61 @@ def _create_profile() -> None:
     assert result.exit_code == 0, result.output
 
 
-def test_modelo_130_calculate_verify_export_without_copied_ids(tmp_path: Path) -> None:
-    """Create, calculate, verify, and export Modelo 130 through natural keys."""
+def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -> None:
+    """Create, calculate, verify, and export through natural keys."""
+
+    _create_profile()
+    created = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+        ]
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+    work_unit_id = _payload(created.output)["work_unit_id"]
+
+    calculated = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+        ]
+    )  # fmt: skip
+    assert calculated.exit_code == 0, calculated.output
+    calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
+    assert _payload(calculated.output)["work_unit_id"] == work_unit_id
+
+    verified = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "verify",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+        ]
+    )  # fmt: skip
+    assert verified.exit_code == 0, verified.output
+    assert _payload(verified.output)["calculation_revision_id"] == calculation_revision_id
+    assert _payload(verified.output)["granted_verificado_completo"] is True
+
+    out = tmp_path / "modelo-111.txt"
+    exported = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "export",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--output", str(out),
+        ]
+    )  # fmt: skip
+    assert exported.exit_code == 0, exported.output
+    payload = _payload(exported.output)
+    assert payload["work_unit_id"] == work_unit_id
+    assert payload["calculation_revision_id"] == calculation_revision_id
+    assert out.exists()
+    assert out.stat().st_size > 0
+
+
+def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_state() -> None:
+    """Modelo 130 cannot be verified as complete without upstream clean-state proof."""
 
     _create_profile()
     created = _invoke(
@@ -83,25 +136,12 @@ def test_modelo_130_calculate_verify_export_without_copied_ids(tmp_path: Path) -
             "--modelo", "130", "--year", "2025", "--period", "1T",
         ]
     )  # fmt: skip
-    assert verified.exit_code == 0, verified.output
-    assert _payload(verified.output)["calculation_revision_id"] == calculation_revision_id
-    assert _payload(verified.output)["granted_verificado_completo"] is True
-
-    out = tmp_path / "modelo-130.txt"
-    exported = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "export",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
-            "--output", str(out),
-        ]
-    )  # fmt: skip
-    assert exported.exit_code == 0, exported.output
-    payload = _payload(exported.output)
-    assert payload["work_unit_id"] == work_unit_id
+    assert verified.exit_code == 1, verified.output
+    payload = _payload(verified.output)
     assert payload["calculation_revision_id"] == calculation_revision_id
-    assert out.exists()
-    assert out.stat().st_size > 0
+    assert payload["granted_verificado_completo"] is False
+    assert payload["findings"][0]["kind"] == "cross_period_dependency_unclean"
+    assert "Import or capture the upstream justificante" in payload["findings"][0]["next_action"]
 
 
 def test_work_create_refuses_conflicting_registry_revision_for_visible_target() -> None:

@@ -1,6 +1,6 @@
 """Structural guard: resources() is the only resource-access surface.
 
-The resource-management-api ADR mandates a single resource-access
+The resource-management API contract mandates a single resource-access
 boundary at ``src/aeat/core/resources/``. This test enforces the
 invariant by scanning every production module under ``src/aeat/``
 for unauthorised parallel-locator patterns.

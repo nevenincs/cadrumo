@@ -658,6 +658,7 @@ application:
         bucket-derived source-bound casillas: %{casillas}.'
       computed_casilla_binding_conflict: 'A bucket-alapú bemenetek számított mezőket
         céloznak, amelyek nem írhatók felül külső kötéssel. Érintett mezők: %{computed_casillas}.'
+      cross_period_clean_state_incomplete: 'A keresztidoszaki tiszta allapot igazolasa hianyos a(z) {modelo} {filing_year} {period} modellhez; {finding_count} megallapitas maradt.'
       export_cross_bucket_refused: A megcimzett revizio nem az aktiv profil bucketjehez
         tartozik. Exportalas elott valtson profilt.
       export_draft_approval_failed: Nem sikerult jovahagyni a(z) %{calculation_revision_id}
@@ -1891,6 +1892,7 @@ cli:
         client_unregistered: Nincs regisztrált OAuth-ügyfél a(z) {profile} profilhoz.
         no_metadata_for_refresh: Nincs OAuth-munkamenet a(z) {profile} profilhoz;
           korábbi bejelentkezés nélkül nem lehet megújítani.
+        sync_push_limit_requires_dry_run: 'A Google sync push csak --dry-run mellett hasznalhat --limit kapcsolot, mert egy korlatozott eles futas reszleges tavoli tukor manifestet hozna letre.'
       errors:
         auth_failed: 'Google-hitelesítés sikertelen: {detail}'
         browser_open: 'Nem sikerült megnyitni a böngészőt a Google-hozzáférés engedélyezéséhez:
@@ -2102,6 +2104,10 @@ cli:
       connectivity_target_help: A vizsgálandó kapcsolódási cél.
       help: Helyi konfiguráció, nyilvántartás, profil, hitelesítés és naplók diagnosztikája
         és javítása.
+      integrity:
+        objects_help: 'Ellenorzi a biztonsagos objektumok integritasat.'
+        registry_help: 'Ellenorzi a profilnyilvantartas integritasat.'
+        objects_namespace_help: 'Biztonsagos objektumok integritasanak ellenorzese egy nevterre korlatozva.'
       integrity_attribution_details_help: Soronkénti biztonságos metaadat-részletek
         bevonása.
       integrity_attribution_help: Visszafejthető biztonságos objektumsorok csoportosítása
@@ -2409,6 +2415,7 @@ cli:
         listázásához.'
       unknown_provider: 'Ismeretlen importálási --provider {provider!r}. Elismert
         szolgáltatók: {providers}.'
+      invalid_category: 'Ismeretlen koltsegkategoria: ''{category}''. Ismert kategoriak: {known}. Futtasd: ''aeat app ledger categories'' az ervenyes --category-id ertekekhez.'
     export:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       format_help: Exportálási sorosítási formátum.

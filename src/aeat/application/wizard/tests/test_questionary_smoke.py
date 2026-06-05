@@ -4,7 +4,7 @@ One test per widget kind drives a real ``QuestionaryPrompter.ask`` call
 through ``prompt_toolkit.input.create_pipe_input`` plus a
 ``DummyOutput``. The tests confirm the canonical-token contract holds
 end-to-end and that the widget dispatch matches the questionary
-primitive listed in the ADR.
+primitive listed in the contract model.
 """
 
 from __future__ import annotations

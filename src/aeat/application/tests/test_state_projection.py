@@ -134,7 +134,7 @@ def _stage_profile_manifest(root: Path, bucket_id: str) -> None:
 
 
 def test_overview_status_reports_modelo_work_units(tmp_path: Path) -> None:
-    """The concrete bug this wave closes: with ``modelo work`` work units
+    """The concrete bug this regression closes: with ``modelo work`` work units
     present, ``overview status`` must report them.
 
     Before the canonical projection, ``build_overview_status_report``

@@ -18,9 +18,9 @@ from .._ledger import app as ledger_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-# Canonical ledger verb roster. Adding a verb here without the
-# corresponding ADR amendment is a contract drift; removing one
-# breaks an established CLI surface. Sorted alphabetically.
+# Canonical ledger verb roster. Adding a verb here without updating the
+# reviewed surface contract is drift; removing one breaks an established
+# CLI surface. Sorted alphabetically.
 EXPECTED_LEDGER_VERBS: frozenset[str] = frozenset(
     {
         "add",
@@ -30,6 +30,7 @@ EXPECTED_LEDGER_VERBS: frozenset[str] = frozenset(
         "categories",
         "check",
         "classify",
+        "doclink",
         "export",
         "history",
         "import",
@@ -37,6 +38,7 @@ EXPECTED_LEDGER_VERBS: frozenset[str] = frozenset(
         "list",
         "merge",
         "preflight",
+        "providers",
         "remove",
         "reset",
         "review",
@@ -57,7 +59,7 @@ def test_ledger_verb_roster_matches_canonical_spine() -> None:
 
     A missing verb means a service was un-mounted; an extra verb
     indicates an un-reviewed addition to the noun-group. Both cases
-    require an ADR amendment + an update to this expected set."""
+    require an explicit contract update to this expected set."""
 
     registered = frozenset(cmd.name for cmd in ledger_app.registered_commands)
     missing = EXPECTED_LEDGER_VERBS - registered
@@ -77,27 +79,27 @@ def test_ledger_link_check_preflight_sit_at_noun_group_root() -> None:
     )
 
 
-# accepted contract: count-side companion to the set-equality roster gate above.
-# The accepted contract canonical spine for `aeat app ledger` is the CRUD spine (add / view /
+# Count-side companion to the set-equality roster gate above.
+# The canonical spine for `aeat app ledger` is the CRUD spine (add / view /
 # list / update / remove / archive / reset) plus the ratified orthogonal axes
 # (link / check / preflight) plus the ratified workflow axes (allocate / attach
-# / categories / classify / export / history / import / merge / review / split /
-# stash / status / track). Counting them independently of the set membership
+# / categories / classify / doclink / export / history / import / merge /
+# providers / review / split / stash / status / track). Counting them independently of the set membership
 # catches accidental verb-count drift (e.g. a verb silently re-parented but
 # replaced by a similarly-named alias) that an exact-set match might still
 # happen to satisfy if both the missing and the extra are accounted for in the
 # expected set update.
-_W71_CRUD_SPINE_COUNT: int = 7  # add, view, list, update, remove, archive, reset
+_CRUD_SPINE_COUNT: int = 7  # add, view, list, update, remove, archive, reset
 _RATIFIED_ORTHOGONAL_AXIS_COUNT: int = 3  # link, check, preflight
-_RATIFIED_WORKFLOW_AXIS_COUNT: int = 13  # allocate attach categories classify
-# export history import merge review split stash status track
+_RATIFIED_WORKFLOW_AXIS_COUNT: int = 15  # allocate attach categories classify
+# doclink export history import merge providers review split stash status track
 _EXPECTED_LEDGER_VERB_COUNT: int = (
-    _W71_CRUD_SPINE_COUNT + _RATIFIED_ORTHOGONAL_AXIS_COUNT + _RATIFIED_WORKFLOW_AXIS_COUNT
+    _CRUD_SPINE_COUNT + _RATIFIED_ORTHOGONAL_AXIS_COUNT + _RATIFIED_WORKFLOW_AXIS_COUNT
 )
 
 
-def test_ledger_verb_count_matches_w71_canonical_spine() -> None:
-    """The mounted `aeat app ledger` verb count matches the accepted contract canonical
+def test_ledger_verb_count_matches_canonical_spine() -> None:
+    """The mounted `aeat app ledger` verb count matches the canonical
     spine (CRUD + ratified orthogonal axes + ratified workflow axes).
 
     Count-side companion to :func:`test_ledger_verb_roster_matches_canonical_spine`.
@@ -108,7 +110,7 @@ def test_ledger_verb_count_matches_w71_canonical_spine() -> None:
     registered_count = len(ledger_app.registered_commands)
     assert registered_count == _EXPECTED_LEDGER_VERB_COUNT, (
         f"ledger verb count drifted: expected {_EXPECTED_LEDGER_VERB_COUNT} "
-        f"(W71 CRUD {_W71_CRUD_SPINE_COUNT} + orthogonal axes "
+        f"(CRUD {_CRUD_SPINE_COUNT} + orthogonal axes "
         f"{_RATIFIED_ORTHOGONAL_AXIS_COUNT} + workflow axes "
         f"{_RATIFIED_WORKFLOW_AXIS_COUNT}); got {registered_count}: "
         f"{sorted(cmd.name for cmd in ledger_app.registered_commands)!r}"
@@ -134,7 +136,7 @@ def test_ledger_orthogonal_verb_help_states_local_only(
     )
 
 
-# accepted contract: help-text enumeration gate. The `aeat app ledger --help`
+# Help-text enumeration gate. The `aeat app ledger --help`
 # and `aeat app modelo --help` surfaces are the operator's first encounter
 # with the noun-group's verb tree; if a canonical verb is mounted but
 # omitted from help (e.g. by a missing tr() entry), the operator cannot
@@ -200,8 +202,8 @@ EXPECTED_MODELO_TOP_LEVEL_VERBS: frozenset[str] = frozenset(
 def test_modelo_top_level_verb_roster_matches_canonical_spine() -> None:
     """The set of top-level `aeat app modelo` verbs equals the canonical roster.
 
-    Missing or extra entries are a contract drift that requires an explicit
-    update to :data:`EXPECTED_MODELO_TOP_LEVEL_VERBS` plus an ADR amendment.
+    Missing or extra entries are contract drift that requires an explicit
+    update to :data:`EXPECTED_MODELO_TOP_LEVEL_VERBS`.
     Subgroup verbs (`work verify`, `audit export`, etc.) are governed by
     their own per-subgroup gates, not by this roster."""
 
@@ -214,8 +216,8 @@ def test_modelo_top_level_verb_roster_matches_canonical_spine() -> None:
     assert not extras, f"modelo verbs added without test update: {sorted(extras)}"
 
 
-# accepted contract — bucket_app maintenance-verb pre-landing state pinned.
-# Per accepted contract + accepted contract the bucket noun-group will gain
+# Bucket_app maintenance-verb pre-landing state pinned.
+# The bucket noun-group will gain
 # six maintenance verbs (browse, search, export, import, rename, delete)
 # once BucketMaintenanceService lands. Until then, only `history` is
 # mounted. This test pins the current state so when contract lands the
@@ -226,7 +228,7 @@ EXPECTED_BUCKET_APP_VERBS: frozenset[str] = frozenset({"history"})
 
 def test_bucket_app_verb_roster_pins_pre_s2150_state() -> None:
     """Bucket noun-group today carries only `history`; the six maintenance
-    verbs (per accepted contract + accepted contract) are not yet mounted.
+    verbs are not yet mounted.
 
     When contract lands this assertion fires, which is the intended flag:
     the implementer must update :data:`EXPECTED_BUCKET_APP_VERBS` to

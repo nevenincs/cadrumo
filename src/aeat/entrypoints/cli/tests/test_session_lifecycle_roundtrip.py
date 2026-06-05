@@ -1,6 +1,6 @@
 """Roundtrip: session open -> verb -> idle expiry -> refusal.
 
-Disaster ADR Ruling 1 wires the idle-timeout lifecycle into the
+The session lifecycle contract wires the idle-timeout lifecycle into the
 secure-object repository: every repository call polls the active
 :class:`BucketSession` against its idle deadline, touches it forward
 on success, and raises :class:`SessionExpiredError` once the window
@@ -165,7 +165,7 @@ def test_session_lifecycle_full_roundtrip_open_verb_expiry_refusal(_runtime_prof
 def test_expired_session_refusal_names_profile_switch_recovery_verb() -> None:
     """The expiry refusal renders an operator message naming ``profile switch``.
 
-    Disaster ADR Ruling 1 requires the idle-expiry refusal to name a
+    The session lifecycle contract requires the idle-expiry refusal to name a
     recovery verb that actually works. ``SessionExpiredError`` carries
     that message; the CLI error decorator surfaces it without a
     traceback.

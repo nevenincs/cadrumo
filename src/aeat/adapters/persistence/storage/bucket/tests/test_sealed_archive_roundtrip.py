@@ -1,6 +1,6 @@
 """Round-trip tests for the sealed bucket-export archive writer + reader.
 
-Exercises the layout contract from 2026-06-03-bucket-sealed-archive-adr:
+Exercises the sealed bucket-export archive layout contract:
 write → read returns the same header + payload bytes; layout drift
 fast-fails before any payload-decryption attempt; the recovery-wrap
 presence is consistent across write and read; the metadata

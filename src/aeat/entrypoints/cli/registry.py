@@ -16,6 +16,7 @@ from ...application.registry import (
     verify_registry_tree,
     verify_registry_workbooks,
 )
+from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.resources import bundled_path
 from ...domain.calculations.registry import OracleEnvironment as _OracleEnvironment
@@ -80,6 +81,10 @@ def _resolve_source_root(value: Path | None) -> Path:
     current working directory.
     """
     return value if value is not None else bundled_path()
+
+
+def _resolve_parity_store_root(value: Path | None) -> Path:
+    return value if value is not None else load_settings().aeat_registry_parity_store_dir
 
 
 @app.command("inspect", help=tr("cli.registry.inspect_help"))
@@ -237,10 +242,6 @@ def verify_filed_state_cmd(
         Path,
         typer.Option(
             "--observation",
-            exists=True,
-            file_okay=True,
-            dir_okay=False,
-            readable=True,
             help=tr("cli.registry.observation_help"),
         ),
     ],
@@ -248,10 +249,6 @@ def verify_filed_state_cmd(
         list[Path] | None,
         typer.Option(
             "--source-observation",
-            exists=True,
-            file_okay=True,
-            dir_okay=False,
-            readable=True,
             help=tr("cli.registry.source_observation_help"),
         ),
     ] = None,
@@ -419,7 +416,7 @@ def run_parity_cmd(
         ),
     ] = None,
     store_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--store-root",
             file_okay=False,
@@ -427,7 +424,7 @@ def run_parity_cmd(
             writable=True,
             help=tr("cli.registry.parity_store_root_help"),
         ),
-    ] = Path("var/aeat/parity"),
+    ] = None,
     output: Annotated[
         Path | None,
         typer.Option(
@@ -444,7 +441,7 @@ def run_parity_cmd(
         scenario_path=scenario_path,
         registry_root=_resolve_registry_root(registry_root),
         source_root=_resolve_source_root(source_root),
-        store_root=store_root,
+        store_root=_resolve_parity_store_root(store_root),
         output=output,
     )
     _emit_envelope(

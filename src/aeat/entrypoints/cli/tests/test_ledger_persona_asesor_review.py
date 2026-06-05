@@ -104,7 +104,7 @@ def _json(result_output: str) -> dict:
     return payload.get("result", payload)
 
 
-# --- Step 1: an asesor's first look is "what is unclassified?" ---------------
+# --- Asesor first look: what is unclassified? -------------------------------
 def test_asesor_sees_entire_corpus_unclassified_on_arrival() -> None:
     """A freshly imported client ledger lands wholly unclassified.
 
@@ -134,7 +134,7 @@ def test_asesor_triage_pending_backlog_via_review_filter() -> None:
     assert any(_PERSONAL_DESC in d for d in descriptions), sorted(descriptions)[:10]
 
 
-# --- Step 2: check + preflight surface what blocks a clean filing -----------
+# --- Check + preflight surface what blocks a clean filing -------------------
 def test_check_surfaces_all_period_anomalies_without_mutating() -> None:
     """``check`` is the all-period anomaly probe.
 
@@ -187,7 +187,7 @@ def test_preflight_issue_detail_is_actionable_text() -> None:
     assert "classification" in details.lower(), details[:200]
 
 
-# --- Step 3: lineage / audit legibility on a single transaction -------------
+# --- Lineage / audit legibility on a single transaction ---------------------
 def test_history_and_track_expose_lineage_for_one_transaction() -> None:
     """``history`` + ``track`` are the asesor's audit-trail surfaces.
 
@@ -234,7 +234,7 @@ def test_history_after_disposition_records_the_decision() -> None:
     assert after > before, (before, after)
 
 
-# --- Step 4: business vs personal vs gated discrimination --------------------
+# --- Business vs personal vs gated discrimination ---------------------------
 def test_asesor_can_classify_then_preflight_surfaces_recargo_gaps() -> None:
     """The recargo row is a supplier anomaly: a BUSINESS purchase whose RE
     surcharge is non-deductible.

@@ -3,9 +3,8 @@
 The hyphenated sugar verb shares the ``modelo_reconcile`` application
 service entry point with the canonical ``aeat app modelo reconcile
 WORK_UNIT_ID --from-justificante PATH`` form. These tests lock the
-behaviour expected by the complementaria-external-filing-path ADR
-2026-05-15 amendment (with the hyphenated-form deviation queued for
-ADR amendment).
+behaviour expected by the complementaria external filing path contract,
+including the hyphenated sugar form.
 """
 
 from __future__ import annotations

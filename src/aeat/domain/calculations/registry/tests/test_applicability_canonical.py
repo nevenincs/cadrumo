@@ -1,6 +1,6 @@
 """Regression tests asserting single canonical definition of applicability rules.
 
-Pins the contract from accepted contract (applicability collapse to single domain
+Pins the applicability collapse to the single domain
 source): ``_MODELO_APPLICABILITY_RULES`` and ``derive_modelo_applicability``
 must be defined exactly once in the codebase (in the domain module) and
 every access path must resolve to the same object in memory.
@@ -75,7 +75,7 @@ def test_rules_dict_defined_exactly_once() -> None:
 def test_application_overview_applicability_shim_is_absent() -> None:
     """The application.overview._applicability re-export shim must not exist.
 
-    The cross-domain-continuity plan (accepted contract / accepted contract) ratified the
+    The cross-domain continuity contract ratified the
     removal of ``aeat.application.overview._applicability`` — the
     application layer consumes the domain rules through the public
     registry surface directly (``aeat.domain.calculations.registry``)

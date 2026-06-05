@@ -9,8 +9,8 @@ and encrypted record ``display_name`` both move) and that the
 service-side emission lands a ``BUCKET_RENAMED`` event carrying the
 previous and new labels in its payload.
 
-Authority: ``2026-06-03-cli-workflow-redesign-adr`` (composition
-pattern). Co-emission of ``PROFILE_RENAMED`` (lifecycle) and
+Authority: workflow-composition contract pattern. Co-emission of
+``PROFILE_RENAMED`` (lifecycle) and
 ``BUCKET_RENAMED`` (maintenance) is the intended audit shape.
 """
 

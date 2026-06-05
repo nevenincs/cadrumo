@@ -1,6 +1,6 @@
 """Tripwire test that the built wheel bundles every git-tracked corpus + registry file.
 
-The packaging strategy ratified by the corpus-registry-packaging ADR
+The corpus-registry packaging contract
 relocates both data trees under ``src/aeat/_data/`` so the existing
 ``packages = ["src/aeat"]`` hatchling directive carries them inside
 the wheel without any force-include declaration. This test verifies

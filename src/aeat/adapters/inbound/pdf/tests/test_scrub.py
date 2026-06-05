@@ -206,7 +206,7 @@ class TestScrubSidecar:
     """Strict + frozen invariants of the scrub sidecar boundary record."""
 
     def test_sidecar_is_strict_and_frozen(self, tmp_path: Path) -> None:
-        """A computed sidecar carries the canonical fixture tier and is immutable."""
+        """A computed sidecar carries its redaction classification and is immutable."""
         original = tmp_path / "source.pdf"
         original.write_bytes(b"%PDF-1.4\nsource\n%%EOF")
         scrubbed = tmp_path / "scrubbed.pdf"

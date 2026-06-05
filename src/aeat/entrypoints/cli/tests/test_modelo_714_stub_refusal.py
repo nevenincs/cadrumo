@@ -73,14 +73,13 @@ def test_work_create_714_refuses_with_legal_authority_message(
 def test_work_create_714_has_no_placeholder_registry_definition(
     _isolated_cli_backend: Path,
 ) -> None:
-    """M714 Phase-A registry presence must be legally grounded.
+    """M714 registry presence must be legally grounded.
 
-    Phase-A Patrimonio landed M714 alongside M151 (commit bc7a80df5).
-    The work-create refusal still fires (sibling test
+    The registry carries a manual-casilla definition. The work-create
+    refusal still fires (sibling test
     test_work_create_714_refuses_with_legal_authority_message proves
-    that) — Phase-A carries the registry definition but the calculation
-    engine and form-flow are out of scope until Phase-B. The contract
-    this test defends: when M714 IS in the registry, it MUST be
+    that), because the calculation engine and form-flow remain
+    unsupported. The contract this test defends: when M714 IS in the registry, it MUST be
     grounded by the binding legal authority (Ley 19/1991 Art. 28
     Patrimonio + the form-approval order corpus).
     """

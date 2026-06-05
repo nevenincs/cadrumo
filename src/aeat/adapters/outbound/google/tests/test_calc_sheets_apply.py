@@ -17,7 +17,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_APPLY_PY = pathlib.Path(__file__).parent / "_calc_sheets_apply.py"
+_APPLY_PY = pathlib.Path(__file__).parent.parent / "_calc_sheets_apply.py"
 
 _BOUNDARY_RATIONALE_MARKER = "irreducible"
 """Shared substring embedded in every documented ``dict[str, Any]`` rationale."""

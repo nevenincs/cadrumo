@@ -13,8 +13,7 @@ from __future__ import annotations
 
 import json
 from decimal import Decimal, InvalidOperation
-from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 import click
 import typer
@@ -62,6 +61,8 @@ from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import RegistryValidationError
 from ._common import activate_subcommand_output_language
+from ._modelo_audit_cli import audit_app as audit_app
+from ._modelo_audit_cli import register_audit_commands
 from ._modelo_cli_support import (
     bad_parameter_from_error as _bad_parameter_from_error,
 )
@@ -108,6 +109,7 @@ from ._modelo_m036_cli import register_m036_commands
 from ._modelo_maritime_cli import register_maritime_commands
 from ._modelo_projection_cli import register_projection_commands
 from ._modelo_readiness_cli import register_readiness_commands
+from ._modelo_reconcile_cli import register_reconcile_commands
 from ._modelo_records_cli import (
     filing_record_app as filing_record_app,
 )
@@ -137,9 +139,6 @@ from ._modelo_work_runs_cli import register_work_run_commands
 from ._modelo_work_verification_cli import register_work_verification_commands
 
 _log = get_logger(__name__)
-
-if TYPE_CHECKING:
-    from ...application.modelo import ModeloReconciliationReport
 
 _OUTPUT_LANGUAGE_CLI = click.Choice(SUPPORTED_OUTPUT_LANGUAGES)
 
@@ -260,6 +259,15 @@ def _require_active_profile() -> None:
 
     if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
+
+
+def _active_bucket_id() -> str:
+    from ...core import require_active_bucket_id
+
+    try:
+        return require_active_bucket_id()
+    except Exception as exc:
+        raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
 
 
 def _guard_foral_profile_ccaa() -> None:
@@ -1029,235 +1037,6 @@ register_record_commands(
 
 
 # ─────────────────────────────────────────────────────────────────────────
-# Evidence bundle audit
-# ─────────────────────────────────────────────────────────────────────────
-
-
-audit_app = typer.Typer(
-    name="audit",
-    help=tr(
-        "cli.app.modelo.audit.group_help",
-        default="Evidence bundle audit verbs (show/check/export/replay).",
-    ),
-    no_args_is_help=True,
-)
-app.add_typer(audit_app, name="audit")
-
-
-def _evidence_bundle_service():
-    from ...application.evidence import EvidenceBundleService
-
-    return EvidenceBundleService()
-
-
-def _active_bucket_id() -> str:
-    from ...core import require_active_bucket_id
-
-    try:
-        return require_active_bucket_id()
-    except Exception as exc:
-        raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
-
-
-@audit_app.command(
-    "show",
-    help=tr(
-        "cli.app.modelo.audit.show_help",
-        default="Render an evidence bundle's manifest and referenced records.",
-    ),
-)
-def audit_show(
-    ctx: typer.Context,
-    bundle_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
-    ],
-) -> None:
-    """Render an evidence bundle's manifest and referenced record list."""
-    bucket_id = _active_bucket_id()
-    bundle = _evidence_bundle_service().show(bucket_id=bucket_id, bundle_id=bundle_id)
-    from ._common import _emit_envelope
-    from ._modelo_payloads import EvidenceRecordRefPayload, ModeloAuditShowResult
-
-    result = ModeloAuditShowResult(
-        bundle_id=bundle.bundle_id,
-        manifest_version=bundle.manifest_version,
-        bucket_id=bundle.bucket_id,
-        work_unit_id=bundle.work_unit_id,
-        calculation_revision_id=bundle.calculation_revision_id,
-        filing_record_id=bundle.filing_record_id,
-        verification_state=bundle.verification_state.value,
-        completeness_ratio=bundle.completeness_ratio,
-        records=[
-            EvidenceRecordRefPayload(
-                object_type=rec.object_type.value,
-                object_id=rec.object_id,
-                content_sha256=rec.content_sha256,
-                payload_size_bytes=rec.payload_size_bytes,
-            )
-            for rec in bundle.records
-        ],
-        created_at=bundle.created_at.isoformat(),
-        notes=bundle.notes,
-    )
-    lines = [
-        f"bucket\t{bucket_id}",
-        f"bundle_id\t{bundle.bundle_id}",
-        f"work_unit_id\t{bundle.work_unit_id}",
-        f"manifest_version\t{bundle.manifest_version}",
-        f"verification_state\t{bundle.verification_state.value}",
-        f"records\t{len(bundle.records)}",
-    ]
-    _emit_envelope(ctx, command="modelo.audit.show", result=result, lines=lines)
-
-
-@audit_app.command(
-    "check",
-    help=tr(
-        "cli.app.modelo.audit.check_help",
-        default="Re-verify the evidence bundle's integrity (report-only).",
-    ),
-)
-def audit_check(
-    ctx: typer.Context,
-    bundle_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
-    ],
-) -> None:
-    """Re-verify the evidence bundle's integrity without mutating state."""
-    bucket_id = _active_bucket_id()
-    report = _evidence_bundle_service().check(bucket_id=bucket_id, bundle_id=bundle_id)
-    from ._common import _emit_envelope
-    from ._modelo_payloads import EvidenceBundleCheckFindingPayload, ModeloAuditCheckResult
-
-    result = ModeloAuditCheckResult(
-        bundle_id=report.bundle_id,
-        verification_state=report.verification_state.value,
-        completeness_ratio=report.completeness_ratio,
-        findings=[
-            EvidenceBundleCheckFindingPayload(
-                check=f.check.value,
-                passed=f.passed,
-                detail=f.detail,
-            )
-            for f in report.findings
-        ],
-    )
-    lines = [
-        f"bucket\t{bucket_id}",
-        f"bundle_id\t{report.bundle_id}",
-        f"verification_state\t{report.verification_state.value}",
-        f"completeness_ratio\t{report.completeness_ratio}",
-        f"findings\t{len(report.findings)}",
-    ]
-    _emit_envelope(ctx, command="modelo.audit.check", result=result, lines=lines)
-
-
-@audit_app.command(
-    "export",
-    help=tr(
-        "cli.app.modelo.audit.export_help",
-        default="Write a ZIP archive of the bundle (manifest emitted last).",
-    ),
-)
-def audit_export(
-    ctx: typer.Context,
-    bundle_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
-    ],
-    output: Annotated[
-        Path,
-        typer.Option(
-            "--output",
-            help=tr("cli.app.modelo.audit.output_help", default="Output ZIP path."),
-        ),
-    ],
-    force_incomplete: Annotated[
-        bool,
-        typer.Option(
-            "--force-incomplete",
-            help=tr(
-                "cli.app.modelo.audit.force_incomplete_help",
-                default="Allow export when verification is incomplete.",
-            ),
-        ),
-    ] = False,
-) -> None:
-    """Write the evidence bundle as a ZIP archive to ``--output``."""
-    bucket_id = _active_bucket_id()
-    service = _evidence_bundle_service()
-    output_path = service.export(
-        bucket_id=bucket_id,
-        bundle_id=bundle_id,
-        output_path=output,
-        force_incomplete=force_incomplete,
-    )
-    bundle = service.show(bucket_id=bucket_id, bundle_id=bundle_id)
-    from ._common import _emit_envelope
-    from ._modelo_payloads import ModeloAuditExportResult
-
-    result = ModeloAuditExportResult(
-        bucket_id=bucket_id,
-        bundle_id=bundle.bundle_id,
-        output=str(output_path),
-        verification_state=bundle.verification_state.value,
-        records=len(bundle.records),
-    )
-    lines = [
-        f"bucket\t{bucket_id}",
-        f"bundle_id\t{bundle.bundle_id}",
-        f"output\t{output_path}",
-        f"verification_state\t{bundle.verification_state.value}",
-    ]
-    _emit_envelope(ctx, command="modelo.audit.export", result=result, lines=lines)
-
-
-@audit_app.command(
-    "replay",
-    help=tr(
-        "cli.app.modelo.audit.replay_help",
-        default="Replay the bundle's evidence case (never contacts AEAT).",
-    ),
-)
-def audit_replay(
-    ctx: typer.Context,
-    bundle_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
-    ],
-) -> None:
-    """Replay the evidence bundle's case assertions without contacting AEAT."""
-    bucket_id = _active_bucket_id()
-    report = _evidence_bundle_service().replay(bucket_id=bucket_id, bundle_id=bundle_id)
-    from ._common import _emit_envelope
-    from ._modelo_payloads import EvidenceBundleCheckFindingPayload, ModeloAuditReplayResult
-
-    result = ModeloAuditReplayResult(
-        bundle_id=report.bundle_id,
-        verification_state=report.verification_state.value,
-        completeness_ratio=report.completeness_ratio,
-        findings=[
-            EvidenceBundleCheckFindingPayload(
-                check=f.check.value,
-                passed=f.passed,
-                detail=f.detail,
-            )
-            for f in report.findings
-        ],
-    )
-    lines = [
-        f"bucket\t{bucket_id}",
-        f"bundle_id\t{report.bundle_id}",
-        f"verification_state\t{report.verification_state.value}",
-        f"completeness_ratio\t{report.completeness_ratio}",
-        f"findings\t{len(report.findings)}",
-    ]
-    _emit_envelope(ctx, command="modelo.audit.replay", result=result, lines=lines)
-
-
-# ─────────────────────────────────────────────────────────────────────────
 # History verb
 # ─────────────────────────────────────────────────────────────────────────
 
@@ -1352,255 +1131,15 @@ def modelo_history(
         lines.append(f"{e.occurred_at.isoformat()}\t{e.event_type.value}\t{e.object_id}\t{e.actor}")
     _emit_envelope(ctx, command="modelo.history", result=history_result, lines=lines)
 
-
-def _render_reconciliation_report(
-    ctx: typer.Context,
-    report: ModeloReconciliationReport,
-    *,
-    command: str,
-) -> None:
-    """Render a :class:`ModeloReconciliationReport` through the typed envelope."""
-    from ._common import _emit_envelope
-    from ._modelo_payloads import (
-        ModeloReconcileResult,
-        ModeloReconciliationDiffPayload,
-    )
-
-    result = ModeloReconcileResult(
-        work_unit_id=report.work_unit_id,
-        bucket_id=report.bucket_id,
-        source_kind=report.source_kind.value,
-        source_path=report.source_path,
-        verdict=report.verdict.value,
-        diffs=tuple(
-            ModeloReconciliationDiffPayload(
-                field_name=diff.field_name,
-                work_unit_value=diff.work_unit_value,
-                evidence_value=diff.evidence_value,
-                kind=diff.kind,
-            )
-            for diff in report.diffs
-        ),
-        reconciled_at=report.reconciled_at.isoformat(),
-        narrative=report.narrative,
-    )
-    lines = [
-        f"work_unit_id\t{report.work_unit_id}",
-        f"bucket\t{report.bucket_id}",
-        f"source_kind\t{report.source_kind.value}",
-        f"source_path\t{report.source_path}",
-        f"verdict\t{report.verdict.value}",
-        f"diffs\t{len(report.diffs)}",
-    ]
-    for diff in report.diffs:
-        lines.append(
-            f"diff\t{diff.field_name}\twork_unit={diff.work_unit_value}\tevidence={diff.evidence_value}",
-        )
-    _emit_envelope(ctx, command=command, result=result, lines=lines)
-
-
-@app.command(
-    "reconcile",
-    help=tr(
-        "cli.app.modelo.reconcile.help",
-        default=(
-            "Reconcile a modelo work unit against external evidence (justificante PDF). "
-            "Local-only; never contacts AEAT."
-        ),
-    ),
+register_reconcile_commands(
+    app,
+    require_active_profile=_require_active_profile,
+    resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
+    resolve_default_actor=_resolve_default_actor,
 )
-def modelo_reconcile_verb(
-    ctx: typer.Context,
-    work_unit_id: Annotated[
-        str | None,
-        typer.Argument(
-            help=tr(
-                "cli.app.modelo.reconcile.work_unit_id_help",
-                default="Work unit id (SHA-256 or unambiguous prefix).",
-            ),
-        ),
-    ] = None,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-    ] = None,
-    period: Annotated[
-        str | None,
-        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-    ] = None,
-    revision: Annotated[
-        str | None,
-        typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-    ] = None,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
-    from_justificante: Annotated[
-        Path | None,
-        typer.Option(
-            "--from-justificante",
-            help=tr(
-                "cli.app.modelo.reconcile.from_justificante_help",
-                default="Path to the AEAT justificante PDF to reconcile against.",
-            ),
-        ),
-    ] = None,
-    from_declaration: Annotated[
-        Path | None,
-        typer.Option(
-            "--from-declaration",
-            help=tr(
-                "cli.app.modelo.reconcile.from_declaration_help",
-                default="Path to the filed declaration PDF to reconcile against.",
-            ),
-        ),
-    ] = None,
-    actor: Annotated[
-        str | None,
-        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ] = None,
-) -> None:
-    """Reconcile a modelo work unit against an external evidence source.
-
-    Exactly one of ``--from-justificante`` or ``--from-declaration`` must be
-    supplied. The CLI enforces the exclusivity here; the application
-    service performs the reconciliation, emits the bucket event, and
-    returns the verdict. The verb is local-only per the app-modelo-shape
-    ADR amendment.
-    """
-    from ...application.modelo import (
-        ModeloReconciliationCommand,
-        ModeloReconciliationSourceKind,
-        modelo_reconcile,
-    )
-
-    if from_justificante is None and from_declaration is None:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.reconcile.errors.missing_source",
-                default="Supply --from-justificante PATH or --from-declaration PATH.",
-            ),
-        )
-    if from_justificante is not None and from_declaration is not None:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.reconcile.errors.exclusive_source",
-                default="--from-justificante and --from-declaration are mutually exclusive.",
-            ),
-        )
-
-    source_kind = (
-        ModeloReconciliationSourceKind.JUSTIFICANTE
-        if from_justificante is not None
-        else ModeloReconciliationSourceKind.DECLARATION
-    )
-    source_path = from_justificante if from_justificante is not None else from_declaration
-    assert source_path is not None  # exhaustive by the exclusivity check above
-
-    resolved_actor = actor.strip() if actor else _resolve_default_actor()
-    _require_active_profile()
-    unit = _resolve_work_unit_for_cli(
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        revision=revision,
-        bucket_id=bucket_id,
-    )
-    report = modelo_reconcile(
-        ModeloReconciliationCommand(
-            work_unit_id=unit.work_unit_id,
-            source_kind=source_kind,
-            source_path=source_path,
-            actor=resolved_actor,
-        ),
-    )
-    _render_reconciliation_report(ctx, report, command="modelo.reconcile")
 
 
-@app.command(
-    "reconcile-from-justificante",
-    help=tr(
-        "cli.app.modelo.reconcile_from_justificante.help",
-        default=(
-            "Reconcile a modelo work unit against a justificante PDF. Sugar for "
-            'operators who think "reconcile from this justificante" rather than '
-            '"reconcile, source = justificante". Shares the modelo_reconcile '
-            "application service entry point with the flag-based form. Local-only; "
-            "never contacts AEAT."
-        ),
-    ),
-)
-def modelo_reconcile_from_justificante_verb(
-    ctx: typer.Context,
-    justificante_path: Annotated[
-        Path,
-        typer.Argument(
-            help=tr(
-                "cli.app.modelo.reconcile_from_justificante.justificante_path_help",
-                default="Path to the AEAT justificante PDF to reconcile against.",
-            ),
-        ),
-    ],
-    work_unit_id: Annotated[
-        str | None,
-        typer.Argument(
-            help=tr(
-                "cli.app.modelo.reconcile_from_justificante.work_unit_id_help",
-                default="Work unit id (SHA-256 or unambiguous prefix).",
-            ),
-        ),
-    ] = None,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-    ] = None,
-    period: Annotated[
-        str | None,
-        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-    ] = None,
-    revision: Annotated[
-        str | None,
-        typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-    ] = None,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
-) -> None:
-    """Reconcile a work unit against the supplied justificante PDF."""
-    from ...application.modelo import (
-        ModeloReconciliationCommand,
-        ModeloReconciliationSourceKind,
-        modelo_reconcile,
-    )
-
-    _require_active_profile()
-    unit = _resolve_work_unit_for_cli(
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        revision=revision,
-        bucket_id=bucket_id,
-    )
-    report = modelo_reconcile(
-        ModeloReconciliationCommand(
-            work_unit_id=unit.work_unit_id,
-            source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
-            source_path=justificante_path,
-        ),
-    )
-    _render_reconciliation_report(ctx, report, command="modelo.reconcile_from_justificante")
+register_audit_commands(app)
 
 
 register_export_commands(
@@ -1643,6 +1182,8 @@ __all__ = [
     "_verification_report_lines",
     "_verification_report_payload",
     "app",
+    "audit_app",
     "filing_record_app",
     "verification_report_app",
 ]
+

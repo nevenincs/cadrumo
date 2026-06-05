@@ -710,6 +710,7 @@ application:
       computed_casilla_binding_conflict: 'Les entrades procedents del bucket apunten
         a caselles calculades i no es poden sobreescriure amb binding extern. Caselles
         afectades: %{computed}.'
+      cross_period_clean_state_incomplete: 'La prova d''estat net entre periodes esta incompleta per al model {modelo} {filing_year} {period}; queden {finding_count} troballa(es).'
       export_cross_bucket_refused: La revisio indicada pertany a un bucket diferent
         del bucket del perfil actiu. Canvia de perfil abans d'exportar.
       export_draft_approval_failed: No s'ha pogut aprovar l'esborrany per a la revisio
@@ -1942,6 +1943,7 @@ cli:
         client_unregistered: no hi ha cap client OAuth registrat per al perfil {profile}
         no_metadata_for_refresh: no hi ha cap sessió OAuth per al perfil {profile};
           no es pot renovar sense un inici de sessió previ
+        sync_push_limit_requires_dry_run: 'La sincronitzacio push de Google no pot usar --limit llevat que --dry-run estigui activat, perque una execucio real acotada crearia un manifest remot parcial.'
       errors:
         auth_failed: 'L''autenticació amb Google ha fallat: {detail}'
         browser_open: 'No s''ha pogut obrir un navegador per autoritzar l''accés a
@@ -2141,6 +2143,10 @@ cli:
       connectivity_target_help: Objectiu de connectivitat que cal comprovar
       help: Diagnosticar i reparar configuració local, registre, perfil, autenticació
         i logs
+      integrity:
+        objects_help: 'Comprova la integritat dels objectes segurs.'
+        registry_help: 'Comprova la integritat del registre de perfils.'
+        objects_namespace_help: 'Limita les comprovacions d''integritat d''objectes segurs a un espai de noms.'
       integrity_attribution_details_help: Inclou detalls de metadades segures per
         fila
       integrity_attribution_help: Agrupa les files d'objectes segurs no desxifrables
@@ -2449,6 +2455,7 @@ cli:
         Executa `aeat app ledger categories` per veure tots els identificadors reconeguts.
       unknown_provider: 'Proveïdor d''importació --provider {provider!r} desconegut.
         Proveïdors reconeguts: {providers}.'
+      invalid_category: 'Categoria de despesa desconeguda ''{category}''. Categories conegudes: {known}. Executa ''aeat app ledger categories'' per veure valors valids de --category-id.'
     export:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       format_help: Format de serialització d'exportació

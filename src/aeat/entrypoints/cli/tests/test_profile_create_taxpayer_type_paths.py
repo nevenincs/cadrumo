@@ -4,7 +4,7 @@ These tests exercise the real `aeat config profile create ... --quiet`
 CLI surface for every entity type. They pin the behaviour that a legal
 entity, an attribution entity, and a natural person can each be created
 non-interactively without supplying spouse / personal-IRPF flags, that
-each accepted contract taxpayer-type flag populates its own wizard question, and that
+each taxpayer-type flag populates its own wizard question, and that
 a taxpayer with no economic activity is not forced to invent one.
 
 No mocks: the runner drives the real Typer command, the real wizard

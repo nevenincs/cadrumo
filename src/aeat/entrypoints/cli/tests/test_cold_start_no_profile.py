@@ -33,6 +33,7 @@ _COLD_START_VERBS: tuple[tuple[str, ...], ...] = (
     ("app", "modelo", "work", "list"),
     ("app", "modelo", "work", "revisions"),
     ("app", "ledger", "list"),
+    ("app", "overview", "status", "--period", "2026Q1"),
 )
 
 # Internal plumbing strings that must never reach the operator.
@@ -98,3 +99,13 @@ def test_cold_start_refusal_is_consistent_across_surfaces(_fresh_storage_root: P
         f"  modelo work list: {modelo.output!r}\n"
         f"  ledger list:      {ledger.output!r}"
     )
+
+
+def test_overview_period_status_uses_refusal_boundary(_fresh_storage_root: Path) -> None:
+    """`overview status --period` must not wrap no-profile as a bad parameter."""
+
+    result = invoke_cached_cli(["app", "overview", "status", "--period", "2026Q1"])
+
+    assert result.exit_code != 0, result.output
+    assert "Invalid value" not in result.output
+    assert "profile create" in result.output.replace("\n", " ")

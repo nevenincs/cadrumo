@@ -1,4 +1,4 @@
-"""CLI surface tests for ``aeat app ledger ratios`` (accepted contract).
+"""CLI surface tests for ``aeat app ledger ratios``.
 
 Pins the 5-verb ratios subgroup (list / set / unset / eligible /
 validate) against the real ratios backend, plus exercises the help-text
@@ -7,7 +7,7 @@ to the destructive-action safeguard tests; the ratios `unset` verb is
 non-destructive of accounting state (clears one per-category override
 that the operator can recompute) so it has no `--yes` requirement.
 
-The bucket-maintenance verbs (accepted contract) are not yet mounted, so
+The bucket-maintenance verbs are not yet mounted, so
 this file covers only the ratios half of contract; the bucket-maintenance
 half lands when contract is closed.
 """
@@ -86,5 +86,4 @@ def test_ledger_ratios_unset_refuses_when_no_override_exists(cli_runner: CliRunn
 
     result = cli_runner.invoke(app, ["app", "ledger", "ratios", "unset", "material_oficina"])
     assert result.exit_code != 0, result.output
-
 

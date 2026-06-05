@@ -5,8 +5,7 @@ required at the service boundary; the active bucket cannot be
 deleted; a happy-path delete composes the soft tombstone with the
 hard directory removal and emits ``BUCKET_DELETED`` between them.
 
-Authority: ``2026-06-03-cli-workflow-redesign-adr`` (composition
-pattern, ``delete`` verb).
+Authority: workflow-composition contract (``delete`` verb).
 """
 
 from __future__ import annotations
@@ -140,5 +139,5 @@ def test_delete_refusals_carry_translated_message(
 # provider does not resolve the secondary's keystore. The
 # session-management contract for cross-bucket writes is being
 # reshaped by peers; the happy-path test re-opens as a follow-up
-# Step once secure-storage accepted contract+ commits settle on the
+# Follow-up once secure-storage commits settle on the
 # per-bucket-session master-key resolution path.

@@ -423,6 +423,10 @@ class Settings(BaseSettings):
         gt=0,
         description="Subprocess timeout (seconds) for the LibreOffice binary XLS conversion fall-back",
     )
+    aeat_registry_parity_store_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "audit" / "registry" / "parity",
+        description="Directory where registry parity tape artifacts are archived by default",
+    )
     aeat_calc_sheets_recalc_delay_s: float = Field(
         default=2.0,
         gt=0,
@@ -586,7 +590,7 @@ class Settings(BaseSettings):
     # a wider opt-in surface than the test-gate intent allows.
     aeat_live_tests_enabled: str = Field(
         default="",
-        description="Opt-in flag (set to '1') to run @pytest.mark.live_read tests against real external services",
+        description="Opt-in flag (set to '1') to run @pytest.mark.aeat_live tests against real external services",
     )
 
     # ── Replay IPC ──────────────────────────────────────────────────────────
@@ -1287,6 +1291,7 @@ class Settings(BaseSettings):
         "aeat_secret_store_dir",
         "aeat_blob_store_dir",
         "aeat_audit_dir",
+        "aeat_registry_parity_store_dir",
         "aeat_manuals_root",
         "aeat_normatives_root",
         "aeat_iva_catalogue_root",

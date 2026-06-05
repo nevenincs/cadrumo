@@ -11,7 +11,7 @@ Test strategy:
 - Assert the help text includes ``--output-language`` and the language
   choice list, confirming the option is registered.
 - A failing assertion on first landing surfaces any still-missed surface
-  and drives a accepted contract follow-up for that command.
+  and keeps that command enrolled in parity coverage.
 
 No active profile is required: ``--help`` is intercepted by Click/Typer
 before any state access.
@@ -125,7 +125,7 @@ def test_auth_test_retains_output_language() -> None:
 
 
 # ---------------------------------------------------------------------------
-# accepted contract — modelo work read-only verbs (contract/contract broader sweep)
+# Modelo work read-only verbs.
 # ---------------------------------------------------------------------------
 
 
@@ -143,17 +143,17 @@ def test_work_read_only_verb_accepts_output_language(verb: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# accepted contract — config profile validate verb (lint-zero session add)
+# Config profile validate verb.
 # ---------------------------------------------------------------------------
 
 
 def test_config_profile_validate_accepts_output_language() -> None:
-    """``aeat config profile validate`` (shipped accepted contract) accepts ``--output-language``."""
+    """``aeat config profile validate`` accepts ``--output-language``."""
     _assert_output_language_registered(["config", "profile", "validate"])
 
 
 # ---------------------------------------------------------------------------
-# accepted contract — full config profile verb tree parity sweep
+# Full config profile verb tree parity sweep.
 # ---------------------------------------------------------------------------
 
 
@@ -162,14 +162,14 @@ def test_config_profile_validate_accepts_output_language() -> None:
     ["list", "switch", "delete", "duplicate", "rename", "export", "import", "logout", "status"],
 )
 def test_config_profile_verb_accepts_output_language(verb: str) -> None:
-    """accepted contract closure: every config-profile verb that previously
+    """Every config-profile verb that previously
     lacked ``--output-language`` now accepts it for parity with the rest
     of the config noun-group."""
     _assert_output_language_registered(["config", "profile", verb])
 
 
 # ---------------------------------------------------------------------------
-# accepted contract — sub-noun-group parity sweep
+# Sub-noun-group parity sweep.
 # ---------------------------------------------------------------------------
 
 
@@ -193,7 +193,7 @@ def test_config_profile_verb_accepts_output_language(verb: str) -> None:
     ],
 )
 def test_sub_noun_group_verb_accepts_output_language(argv: list[str]) -> None:
-    """accepted contract closure: every CLI sub-noun-group verb under
+    """Every CLI sub-noun-group verb under
     auth_diagnostics, apoderado, bucket, and ledger ratios accepts
     ``--output-language`` for parity with the top-level config verbs."""
     _assert_output_language_registered(argv)

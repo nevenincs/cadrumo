@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _fully_populated_taxpayer() -> TaxpayerProfile:
-    """A TaxpayerProfile with every accepted contract axis set to a non-default value.
+    """A TaxpayerProfile with every taxpayer axis set to a non-default value.
 
     entity_type, legal_entity_form, irpf_income_categories,
     irpf_estimation_regime, iva_regime (REAGP, the new member), and the

@@ -1,6 +1,6 @@
 """Single-source conformance gate for the educational documentation surface.
 
-Per the ``docs-educational-surface`` ADR, the Diataxis educational docs
+Per the ``docs-educational-surface`` contract, the Diataxis educational docs
 (``docs/tutorials``, ``docs/explanation``, ``docs/how-to``) reference the live
 CLI surface by stable verb and link to sibling docs; they never re-author flag
 help. This gate makes that contract a tested invariant rather than an
@@ -76,7 +76,7 @@ def _cited_commands(text: str) -> set[tuple[str, ...]]:
 
 
 def test_educational_docs_exist() -> None:
-    """The educational surface is present (the ADR's deliverable)."""
+    """The educational surface is present."""
     docs = _edu_docs()
     assert docs, "no educational docs found under docs/{tutorials,explanation,how-to}/"
 

@@ -645,6 +645,7 @@ application:
         bucket-derived source-bound casillas: %{casillas}.'
       computed_casilla_binding_conflict: 'Bucket-derived inputs target computed casillas
         and cannot be overridden by external binding. Affected casillas: %{computed}.'
+      cross_period_clean_state_incomplete: 'Cross-period clean-state proof is incomplete for modelo {modelo} {filing_year} {period}; {finding_count} finding(s) remain.'
       export_cross_bucket_refused: The addressed revision belongs to a bucket other
         than the active profile bucket. Switch profile before exporting.
       export_draft_approval_failed: Could not approve the draft for calculation revision
@@ -1836,6 +1837,7 @@ cli:
         client_unregistered: no OAuth client is registered for profile {profile}
         no_metadata_for_refresh: no OAuth session for profile {profile}; cannot refresh
           without a prior login
+        sync_push_limit_requires_dry_run: 'Google sync push cannot use --limit unless --dry-run is set, because a bounded non-dry-run would create a partial remote mirror manifest.'
       errors:
         auth_failed: 'Google authentication failed: {detail}'
         browser_open: 'Could not open a browser to authorise Google access: {detail}'
@@ -2027,6 +2029,10 @@ cli:
       connectivity_target_help: Connectivity target to probe
       help: Diagnose and repair local configuration, registry, profile, auth, and
         logs
+      integrity:
+        objects_help: 'Check secure-object integrity.'
+        registry_help: 'Check profile registry integrity.'
+        objects_namespace_help: 'Restrict secure-object integrity checks to one namespace.'
       integrity_attribution_details_help: Include per-row safe metadata details
       integrity_attribution_help: Group undecryptable secure-object rows by safe metadata.
       integrity_help: Probe secure-object and registry integrity.
@@ -2323,6 +2329,7 @@ cli:
         app ledger categories` to list every recognised id.
       unknown_provider: 'Unknown import --provider {provider!r}. Recognised providers:
         {providers}.'
+      invalid_category: 'Unknown spending category ''{category}''. Known categories: {known}. Run ''aeat app ledger categories'' for valid --category-id values.'
     export:
       actor_help: Operator name recorded on the bucket event
       format_help: Export serialization format

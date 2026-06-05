@@ -1,9 +1,9 @@
 """Focused fail-closed coverage for the settings-DI passphrase override.
 
-Closes settings-di accepted contract: proves that
+Proves the settings dependency-injection contract:
 ``override_settings(aeat_secret_passphrase=None)`` raises the same
 error as the unset-env path (the original native-env contract that
-the ContextVar override seam replaced). The plan Step refers to
+the ContextVar override seam replaced). The regression refers to
 the field by its prior name ``aeat_master_key_passphrase``; the
 field landed at ``aeat_secret_passphrase`` in ``aeat.core.config``
 (no behaviour difference; same single-source-of-truth surface).

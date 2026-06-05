@@ -12,7 +12,7 @@ Documented legitimate exceptions (environment-conditional guards):
 
 Each exception MUST be accompanied by an inline justification comment in the
 source file.  The exception set is the authoritative inventory; additions
-require a corresponding plan Step.
+require a corresponding durable remediation note.
 """
 
 from __future__ import annotations
@@ -33,7 +33,7 @@ _REPO_ROOT = _SRC_AEAT.parents[1]  # chore-476-restructure-execution
 _FIXTURES_DIR = _SRC_AEAT / "tests" / "fixtures"
 
 # Documented exceptions: (relative-to-repo path, marker name, justification).
-# Additions here require a follow-up plan Step and inline justification in the
+# Additions here require a follow-up remediation note and inline justification in the
 # source file.
 _DOCUMENTED_EXCEPTIONS: frozenset[tuple[str, str]] = frozenset(
     {
@@ -114,7 +114,7 @@ def test_no_skip_or_xfail_markers() -> None:
 
     assert not violations, (
         "Undocumented pytest.mark.skip / skipif / xfail found "
-        "(add to _DOCUMENTED_EXCEPTIONS with a follow-up Step, or remove):\n" + "\n".join(violations)
+        "(add to _DOCUMENTED_EXCEPTIONS with a durable rationale, or remove):\n" + "\n".join(violations)
     )
 
 

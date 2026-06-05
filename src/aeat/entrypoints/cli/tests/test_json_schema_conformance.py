@@ -26,6 +26,7 @@ from ....core.json_contract import SCHEMA_REGISTRY, SchemaEnvelope
 # decorators populate SCHEMA_REGISTRY before the gate inspects it.
 # The CLI loads these lazily at dispatch time, so without an explicit
 # import here the registry is empty when this test module collects.
+from .. import _config_payloads as _config_payloads
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -240,29 +241,34 @@ def test_registered_schema_envelope_round_trips(command_path: str) -> None:
 
 
 # ---------------------------------------------------------------------
-# Zero-bare-emit gate (emit-envelope-schema-burndown accepted contract)
+# Zero-bare-emit gate for the envelope-schema contract.
 # ---------------------------------------------------------------------
 
 # Production CLI sites that legitimately emit through the bare ``_emit``
 # helper rather than the OutputSchema-gated ``_emit_envelope``. Each
 # entry carries a durable rationale per the metastate-zero-tolerance
-# ADR — these are not metastate lists; they encode a per-entry
+# These are not metastate lists; they encode a per-entry
 # constraint-shape decision about which surfaces are typed payloads
 # vs unstructured operator-facing prose.
 _BARE_EMIT_EXEMPTIONS: frozenset[tuple[str, str]] = frozenset(
     {
         (
             "src/aeat/entrypoints/cli/_config/__init__.py",
-            # help-document prose: rendered help text is operator-facing
-            # prose with no typed payload shape; not an OutputSchema candidate.
+            "help-document prose is operator-facing text, not an OutputSchema payload",
         ),
         (
             "src/aeat/entrypoints/cli/_config/__init__.py",
-            # repair-report passthrough: emits the raw model_dump of the
-            # underlying ConfigRepairReport; OutputSchema wrapping would
-            # double-validate the already-validated typed report.
+            "repair-report passthrough emits an already validated ConfigRepairReport",
+        ),
+        (
+            "src/aeat/entrypoints/cli/_config/_repair_cli.py",
+            "repair-report passthrough after config repair extraction",
         ),
     }
+)
+
+_BARE_EMIT_EXEMPTION_PATHS: frozenset[str] = frozenset(
+    path for path, _rationale in _BARE_EMIT_EXEMPTIONS
 )
 
 
@@ -289,8 +295,7 @@ def test_zero_bare_emit_sites_outside_exemption_set() -> None:
             if "_emit(ctx" not in line:
                 continue
             relative = path.as_posix()
-            if relative.startswith("src/aeat/entrypoints/cli/_config/__init__.py"):
-                # Exempt: help-document + repair-report sites documented above.
+            if relative in _BARE_EMIT_EXEMPTION_PATHS:
                 continue
             violations.append(f"{relative}:{lineno}: {line.strip()}")
     assert violations == [], (

@@ -16,7 +16,7 @@ applicability research grounding, not hand-invented:
 * An attribution entity → ``attribution_pass_through`` for the cuota
   modelos 100 / 130 / 200 / 202 (it runs no IS and no IRPF cuota of
   its own) and ``applicable`` for its own informational Modelo 184
-  (corporate-entity ADR §2).
+  (corporate-entity contract §2).
 * An undeclared profile → ``incomplete`` with the undeclared rationale.
 * A modelo with no seed rule → ``incomplete`` with the un-ruled
   rationale, distinct from the undeclared one even on a declared
@@ -403,7 +403,7 @@ def test_attribution_entity_cuota_modelos_are_pass_through() -> None:
     (Modelo 100 / 130 / 200 / 202) gets the ATTRIBUTION_PASS_THROUGH
     verdict — it runs no IS and no IRPF cuota of its own. This is the
     honest answer to 'what is my cuota': none, the income is taxed in
-    the members' returns (corporate-entity ADR §2)."""
+    the members' returns (corporate-entity contract §2)."""
 
     profile = _attribution_entity()
     for modelo in ("100", "130", "200", "202"):
@@ -430,7 +430,7 @@ def test_attribution_entity_pass_through_reason_is_honest() -> None:
 def test_attribution_entity_owes_modelo_184() -> None:
     """Modelo 184 (declaración informativa de atribución de rentas) is
     the attribution entity's OWN obligation — applicable, not a
-    pass-through (corporate-entity ADR §2)."""
+    pass-through (corporate-entity contract §2)."""
 
     result = derive_modelo_applicability(_attribution_entity(), "184")
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
@@ -466,7 +466,7 @@ def test_attribution_entity_modelo_100_reason_not_persona_fisica() -> None:
 
 
 # ---------------------------------------------------------------------
-# Tax-routing contract — entity_type selects the tax (ADR §4)
+# Tax-routing contract — entity_type selects the tax (contract §4)
 # ---------------------------------------------------------------------
 
 
@@ -479,7 +479,7 @@ def test_natural_person_routes_to_irpf() -> None:
 
 def test_legal_entity_routes_to_impuesto_sociedades() -> None:
     """A legal-entity profile routes to the Impuesto sobre Sociedades
-    branch — never the IRPF tarifa (corporate-entity ADR §4)."""
+    branch — never the IRPF tarifa (corporate-entity contract §4)."""
 
     assert derive_tax_route(_sociedad_limitada()) is TaxRoute.IMPUESTO_SOCIEDADES
 
@@ -493,7 +493,7 @@ def test_attribution_entity_routes_to_pass_through() -> None:
 
 def test_undeclared_entity_type_routes_incomplete() -> None:
     """An undeclared entity_type yields an INCOMPLETE route — the engine
-    never defaults a tax (corporate-entity ADR §4 safe default)."""
+    never defaults a tax (corporate-entity contract §4 safe default)."""
 
     assert derive_tax_route(_undeclared()) is TaxRoute.INCOMPLETE
 

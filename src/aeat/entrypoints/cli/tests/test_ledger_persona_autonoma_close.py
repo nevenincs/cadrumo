@@ -98,10 +98,10 @@ def _is_q1_2025(row: dict) -> bool:
 
 
 def test_marta_closes_1t_2025_end_to_end() -> None:
-    """Marta's full first quarterly close, step by step, as she would run it."""
+    """Marta's full first quarterly close as she would run it."""
     rules = _oracle_rules()
 
-    # --- Step 1: import every bank export -----------------------------------
+    # --- Import every bank export -----------------------------------------
     # Marta downloaded one CSV from each of her four banks. She imports each in
     # turn. TESTIMONIAL: there is no "import all CSVs in a folder" affordance;
     # she must invoke the verb once per file and remember the --provider flag.
@@ -109,7 +109,7 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
     all_rows = _list_rows()
     assert len(all_rows) >= 500, f"expected full corpus imported, got {len(all_rows)}"
 
-    # --- Step 2: narrow to the quarter --------------------------------------
+    # --- Narrow to the quarter --------------------------------------------
     # Marta tries the documented filter first: review --filter period=2025Q1.
     by_period = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=2025Q1"])
     assert by_period.exit_code == 0, by_period.output
@@ -122,7 +122,7 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
     # Every freshly-imported row is unprocessed; Marta has real work to do.
     assert all(r.get("business_classification") == "NOT_YET_PROCESSED" for r in q1_rows)
 
-    # --- Step 3: classify the quarter's business income + expenses ----------
+    # --- Classify the quarter's business income + expenses ----------------
     # Marta builds a classify CSV resolving each Q1 row against the oracle. She
     # restricts to non-MIXED, non-gated rows (MIXED needs --business-pct, which
     # --from-csv does not carry; gated/personal rows she leaves out of scope).
@@ -163,7 +163,7 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
     for tx_id, classification in expected.items():
         assert by_id[tx_id]["business_classification"] == classification, tx_id
 
-    # --- Step 4: classify one MIXED home-office expense the long way ---------
+    # --- Classify one MIXED home-office expense the long way ---------------
     # `--from-csv` can't carry the business proportion, so Marta classifies her
     # mixed-use rows one at a time with --business-pct. She picks her Q1 fibra
     # internet line (oracle business_pct 0.30).
@@ -182,7 +182,7 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
         )
         assert mixed.exit_code == 0, mixed.output
 
-    # --- Step 5: readiness gates --------------------------------------------
+    # --- Readiness gates --------------------------------------------------
     # Marta runs preflight for the quarter to see what's still missing.
     preflight = _RUNNER.invoke(
         app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"]
@@ -205,7 +205,7 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
     status = _RUNNER.invoke(app, ["app", "ledger", "status", "--period", "2025Q1"])
     assert status.exit_code == 0, status.output
 
-    # --- Step 6: export the quarter -----------------------------------------
+    # --- Export the quarter -----------------------------------------------
     # Marta exports the whole ledger for her gestor. TESTIMONIAL: `export` has
     # no --period flag, so she cannot hand her gestor *just* the quarter; the
     # export is the entire bucket and her gestor must filter downstream.

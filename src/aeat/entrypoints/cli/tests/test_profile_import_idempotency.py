@@ -1,6 +1,6 @@
 """Idempotency regression tests for `aeat config profile import` (contract).
 
-ADR D5 idempotency contract:
+Import idempotency contract:
   - Re-importing the same bundle twice produces exactly ONE profile; the
     second attempt is refused with "already registered".
   - Re-importing a bundle with ``--label <taken>`` when that label belongs

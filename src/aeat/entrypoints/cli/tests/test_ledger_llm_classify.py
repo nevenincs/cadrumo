@@ -8,7 +8,7 @@ through the production :func:`register_classifier` registry (the same offline
 pattern the LLM adapter's deterministic provider establishes), and a real
 ``PATH`` manipulation for the unavailable-provider refusal.
 
-Coverage (per the LLM-ledger-classification ADR):
+Coverage for the LLM-ledger-classification contract:
 
 * suggest (``--llm`` without ``--apply``) returns the classifier's decision
   and persists nothing;

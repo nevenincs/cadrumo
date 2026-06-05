@@ -27,9 +27,9 @@ def _kwargs(**overrides: object) -> dict[str, object]:
     """Default kwargs for an authenticated_simulator cross-reference.
 
     The defaults form the canonical 'GROI Spanish-ROI consult' shape
-    as locked by the no-synthetic-sede-live-surfaces ADR — AEAT host,
+    as locked by the no-synthetic-sede-live-surfaces contract — AEAT host,
     cl@ve-movil-required, POST in allowed_methods, executable parity,
-    ``synthetic_data_allowed=False`` (the post-ADR registry TOML
+    ``synthetic_data_allowed=False`` (the post-contract registry TOML
     declares this flag false; synthetic NIFs are prohibited on
     AEAT-hosted live surfaces).
 
@@ -59,7 +59,7 @@ def _kwargs(**overrides: object) -> dict[str, object]:
 def test_authenticated_simulator_with_canonical_groi_shape_validates() -> None:
     """The canonical GROI cross-reference shape — auth required, AEAT host,
     POST in allowed_methods, executable parity, synthetic data prohibited
-    (per the no-synthetic-sede-live-surfaces ADR) — validates clean."""
+    (per the no-synthetic-sede-live-surfaces contract) — validates clean."""
 
     decision = LiveCrossReferenceDecision.model_validate(_kwargs())
 
@@ -103,7 +103,8 @@ def test_authenticated_simulator_rejects_methods_outside_query_set() -> None:
 
 
 def test_authenticated_simulator_rejects_synthetic_data_on_aeat_hosts() -> None:
-    """The no-synthetic-sede-live-surfaces ADR mandates synthetic_data_allowed=False
+    """The no-synthetic-sede-live-surfaces rule mandates
+    ``synthetic_data_allowed=False``
     on every AEAT-hosted live surface. The canonical GROI shape pinned by ``_kwargs``
     declares an AEAT host; flipping the flag
     back to True must raise. ``requires_aeat_authorization`` remains flexible
@@ -112,7 +113,7 @@ def test_authenticated_simulator_rejects_synthetic_data_on_aeat_hosts() -> None:
     # Synthetic data prohibited on AEAT hosts: the validator must reject.
     with pytest.raises(ValidationError, match="synthetic data is prohibited on AEAT-hosted"):
         LiveCrossReferenceDecision.model_validate(_kwargs(synthetic_data_allowed=True))
-    # Canonical post-ADR shape: synthetic_data_allowed=False on the AEAT host
+    # Canonical post-contract shape: synthetic_data_allowed=False on the AEAT host
     # validates clean.
     canonical = LiveCrossReferenceDecision.model_validate(_kwargs(synthetic_data_allowed=False))
     assert canonical.synthetic_data_allowed is False
@@ -155,7 +156,7 @@ def test_existing_surface_categories_still_validate() -> None:
     decisions: list[LiveCrossReferenceDecision] = []
 
     # open_simulator on AEAT host: synthetic_data_allowed must be False
-    # post no-synthetic-sede-live-surfaces ADR.
+    # post no-synthetic-sede-live-surfaces contract.
     decisions.append(
         LiveCrossReferenceDecision(
             id="probe-open-sim",

@@ -3,7 +3,7 @@
 M130 casilla 15 (Resultados negativos de trimestres anteriores) is bound via
 ``source = "previous_filing"``.  Before this fix the operator-supplied
 ``--casilla "15=2694"`` was silently zeroed (or raised a cryptic
-RegistryValidationError after accepted contract hardening) because no upstream resolver
+RegistryValidationError after consistency hardening) because no upstream resolver
 populated the matching ``binding_values["modelo-130-resultados-negativos-anteriores"]``
 entry when working from a fresh bucket without local prior-quarter filings.
 

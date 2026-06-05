@@ -604,7 +604,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     assert revision.id == "2024-y-siguientes"
     relation_ids = {relation.id for relation in revision.relations}
     # The BIN-pendiente previous_filing binding ships as a relation on the
-    # 2024 revision (M200 base-determination ADR).
+    # 2024 revision (M200 base-determination design note).
     assert relation_ids == {
         "modelo-200-2024-rel-202-pagos-fraccionados",
         "modelo-200-2024-rel-self-bin-pendiente-anterior",

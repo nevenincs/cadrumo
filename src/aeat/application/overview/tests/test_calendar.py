@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import logging
 from datetime import UTC, date, datetime
+from decimal import Decimal
 
 import pytest
 from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede._declarations import Declaracion
 from ....adapters.outbound.aeat.sede._notifications import RemoteNotification
+from ....adapters.outbound.aeat.sede._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
+from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,
@@ -19,26 +22,104 @@ from ....domain.deadlines import (
     Schedule,
     TaxpayerProfile,
 )
+from ....domain.modelos import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+)
 from ....tests.aeat_literal_fixtures import aeat_url
+from ...calculations._observations_repository import _ObservationEnvelopePayload
 from ...live._expedientes import PersistedExpedientesSnapshot
 from ...live._notifications import PersistedNotificationsSnapshot
 from .. import (
+    OverviewAeatSubmissionState,
     OverviewCalendar,
     OverviewCalendarEntry,
     OverviewCalendarEventType,
     OverviewCalendarRange,
+    OverviewLocalFilingState,
     OverviewPeriodState,
     build_filing_obligation_advisories,
     build_overview_calendar,
     build_overview_calendar_events,
     calendar_events_from_expedientes_snapshots,
     calendar_events_from_notification_snapshots,
+    calendar_filing_evidence_from_sources,
     user_state_for,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SOURCE_URL = aeat_url("sede", "/")
+_WORK_UNIT_ID = "a" * 64
+_CALCULATION_REVISION_ID = "b" * 64
+_BUCKET_ID = "c" * 32
+
+
+def _modelo_record(
+    *,
+    modelo: str = "303",
+    filing_year: int = 2025,
+    period: str = "1T",
+    aeat_accepted: bool = False,
+    external_evidence: ExternalEvidence | None = None,
+) -> ModeloRecord:
+    filed_at = datetime(2025, 4, 14, 12, 0, tzinfo=UTC)
+    filing_record_id = derive_filing_record_id(
+        work_unit_id=_WORK_UNIT_ID,
+        calculation_revision_id=_CALCULATION_REVISION_ID,
+        filed_at=filed_at,
+        filed_by="operator",
+    )
+    return ModeloRecord(
+        filing_record_id=filing_record_id,
+        work_unit_id=_WORK_UNIT_ID,
+        calculation_revision_id=_CALCULATION_REVISION_ID,
+        bucket_id=_BUCKET_ID,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        filed_at=filed_at,
+        filed_by="operator",
+        aeat_accepted=aeat_accepted,
+        status=ModeloRecordStatus.VIGENTE,
+        external_evidence=external_evidence,
+    )
+
+
+def _filed_declaration_observation(
+    *,
+    artefacts: tuple[FiledDeclaracionArtefact, ...],
+) -> FiledDeclaracionObservation:
+    return FiledDeclaracionObservation(
+        modelo="303",
+        ejercicio=2025,
+        period="1T",
+        expediente_id="12345678901234567890",
+        status="ALTA",
+        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+        authenticated_identity="X1234567L",
+        artefacts=artefacts,
+    )
+
+
+def _filed_declaration_artefact(
+    *,
+    kind: str = "justificante_pdf",
+    storage_ref: str | None = "secure-object:financial:" + "d" * 64,
+    byte_count: int = 128,
+) -> FiledDeclaracionArtefact:
+    return FiledDeclaracionArtefact(
+        kind=kind,
+        source_url=AnyHttpUrl(_SOURCE_URL),
+        content_type="application/pdf",
+        byte_count=byte_count,
+        sha256="d" * 64,
+        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+        storage_ref=storage_ref,
+    )
 
 
 def _profile() -> TaxpayerProfile:
@@ -370,6 +451,176 @@ def test_build_overview_calendar_accepts_observed_events() -> None:
     )
 
     assert tuple(observed.reference_id for observed in calendar.events) == ("2596230606502",)
+
+
+def test_local_modelo_record_does_not_mark_aeat_submission() -> None:
+    evidence = calendar_filing_evidence_from_sources(
+        filing_records=(_modelo_record(),),
+    )
+
+    assert len(evidence) == 1
+    row = evidence[0]
+    assert row.local_filing_state is OverviewLocalFilingState.READY_TO_FILE
+    assert row.aeat_submission_state is OverviewAeatSubmissionState.NOT_OBSERVED
+    assert row.justificante_required is True
+    assert row.justificante_verified is False
+
+
+def test_expedientes_event_marks_observed_submission_but_not_justificante_verified() -> None:
+    event = calendar_events_from_expedientes_snapshots(
+        (
+            PersistedExpedientesSnapshot(
+                snapshot_id="e" * 64,
+                bucket_id="bucket-1",
+                captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
+                source_url=_SOURCE_URL,
+                declarations=(
+                    Declaracion(
+                        modelo="303",
+                        ejercicio=2025,
+                        period="1T",
+                        expediente_id="12345678901234567890",
+                        estado="ALTA",
+                        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+                    ),
+                ),
+                persisted_at=datetime(2025, 4, 16, 10, 5, tzinfo=UTC),
+            ),
+        ),
+        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+    )
+    evidence = calendar_filing_evidence_from_sources(
+        filing_records=(_modelo_record(),),
+        observed_events=event,
+    )
+
+    row = evidence[0]
+    assert row.local_filing_state is OverviewLocalFilingState.READY_TO_FILE
+    assert row.aeat_submission_state is OverviewAeatSubmissionState.SUBMITTED_OBSERVED
+    assert row.aeat_reference_id == "12345678901234567890"
+    assert row.justificante_verified is False
+
+
+def test_sede_calculation_observation_is_not_justificante_verification() -> None:
+    payload = _ObservationEnvelopePayload(
+        observation=RegistryModeloObservation(
+            modelo="303",
+            filing_year=2025,
+            period="1T",
+            observations=(CasillaObservation(casilla_id="01", value=Decimal("123.45")),),
+        ),
+        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+        source_kind="aeat_sede_justificante",
+    )
+
+    evidence = calendar_filing_evidence_from_sources(calculation_observations=(payload,))
+
+    assert len(evidence) == 1
+    row = evidence[0]
+    assert row.aeat_submission_state is OverviewAeatSubmissionState.SUBMITTED_OBSERVED
+    assert row.aeat_evidence_kind == "aeat_sede_justificante"
+    assert row.justificante_verified is False
+
+
+def test_filed_declaration_observation_with_stored_justificante_marks_verified() -> None:
+    evidence = calendar_filing_evidence_from_sources(
+        filed_declaration_observations=(
+            _filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),
+        ),
+    )
+
+    assert len(evidence) == 1
+    row = evidence[0]
+    assert row.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
+    assert row.aeat_evidence_kind == "aeat_justificante_pdf"
+    assert row.aeat_reference_id == "12345678901234567890"
+    assert row.justificante_verified is True
+
+
+def test_filed_declaration_observation_without_stored_justificante_is_observed_only() -> None:
+    evidence = calendar_filing_evidence_from_sources(
+        filed_declaration_observations=(
+            _filed_declaration_observation(
+                artefacts=(
+                    _filed_declaration_artefact(
+                        kind="submitted_file",
+                        storage_ref="secure-object:financial:" + "e" * 64,
+                    ),
+                    _filed_declaration_artefact(storage_ref=None),
+                ),
+            ),
+        ),
+    )
+
+    assert len(evidence) == 1
+    row = evidence[0]
+    assert row.aeat_submission_state is OverviewAeatSubmissionState.SUBMITTED_OBSERVED
+    assert row.aeat_evidence_kind == "filed_declaration_observation"
+    assert row.justificante_verified is False
+
+
+def test_imported_justificante_record_marks_aeat_verified_without_implying_local_calculation() -> None:
+    imported_at = datetime(2025, 4, 16, 11, 0, tzinfo=UTC)
+    evidence = calendar_filing_evidence_from_sources(
+        filing_records=(
+            _modelo_record(
+                aeat_accepted=True,
+                external_evidence=ExternalEvidence(
+                    kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+                    reference_id="JUST-303-2025-1T",
+                    imported_at=imported_at,
+                ),
+            ),
+        ),
+    )
+
+    row = evidence[0]
+    assert row.local_filing_state is OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED
+    assert row.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
+    assert row.aeat_evidence_kind == "aeat_justificante_pdf"
+    assert row.justificante_verified is True
+
+
+def test_calendar_entry_carries_distinct_local_and_aeat_states() -> None:
+    record = _modelo_record()
+    event = calendar_events_from_expedientes_snapshots(
+        (
+            PersistedExpedientesSnapshot(
+                snapshot_id="f" * 64,
+                bucket_id="bucket-1",
+                captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
+                source_url=_SOURCE_URL,
+                declarations=(
+                    Declaracion(
+                        modelo="303",
+                        ejercicio=2025,
+                        period="1T",
+                        expediente_id="12345678901234567890",
+                        estado="ALTA",
+                        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+                    ),
+                ),
+                persisted_at=datetime(2025, 4, 16, 10, 5, tzinfo=UTC),
+            ),
+        ),
+        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+    )
+    evidence = calendar_filing_evidence_from_sources(filing_records=(record,), observed_events=event)
+
+    calendar = build_overview_calendar(
+        _profile(),
+        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+        today=date(2025, 4, 10),
+        events=event,
+        filing_evidence=evidence,
+    )
+
+    matching = [entry for entry in calendar.entries if entry.modelo == "303" and entry.filing_year == 2025]
+    assert matching, [(entry.modelo, entry.period, entry.filing_year) for entry in calendar.entries]
+    row = matching[0].filing_evidence
+    assert row.local_filing_state is OverviewLocalFilingState.READY_TO_FILE
+    assert row.aeat_submission_state is OverviewAeatSubmissionState.SUBMITTED_OBSERVED
+    assert row.justificante_verified is False
 
 
 # ---------------------------------------------------------------------
@@ -714,7 +965,7 @@ def test_calendar_excludes_non_applicable_modelos() -> None:
     autónomo. For an estimación-objetiva autónomo the regime axis makes
     Modelo 130 ``NOT_APPLICABLE`` and Modelo 131 ``APPLICABLE``. The
     calendar must surface only the ``APPLICABLE`` verdicts — a
-    ``NOT_APPLICABLE`` row shown as confidently due is the accepted contract defect.
+    ``NOT_APPLICABLE`` row shown as confidently due is the regression defect.
     """
 
     from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
@@ -929,7 +1180,7 @@ def test_undeclared_profile_message_resolves_to_real_localised_text() -> None:
 
 
 # ---------------------------------------------------------------------
-# Entity-type calendar correctness (corporate-entity ADR §4)
+# Entity-type calendar correctness (corporate-entity contract §4)
 # ---------------------------------------------------------------------
 
 
@@ -961,12 +1212,12 @@ def test_calendar_legal_entity_is_never_shown_an_irpf_cuota() -> None:
 
     Modelo 100 / 130 / 303 deadline windows are registered and the
     deadline engine still surfaces them (the registry applicability
-    conditions are not yet entity-type-aware — a accepted contract registry gap).
+    conditions are not yet entity-type-aware — a registry gap).
     The applicability filter in ``build_overview_calendar`` is what
     keeps the calendar correct: a sociedad limitada is an Impuesto
     sobre Sociedades contribuyente, so every IRPF modelo resolves
     NOT_APPLICABLE and is dropped. The engine never shows a company an
-    IRPF tarifa obligation (corporate-entity ADR §4)."""
+    IRPF tarifa obligation (corporate-entity contract §4)."""
 
     rng = OverviewCalendarRange(from_date=date(2024, 1, 1), to_date=date(2026, 12, 31))
     cal = build_overview_calendar(_legal_entity(), rng, today=date(2025, 7, 1))
@@ -995,7 +1246,7 @@ def test_calendar_attribution_entity_is_shown_no_cuota_obligation() -> None:
     """An attribution entity's calendar lists no IS and no IRPF cuota.
 
     A comunidad de bienes runs no cuota self-assessment of its own —
-    the income is taxed in the members' returns (corporate-entity ADR
+    the income is taxed in the members' returns (corporate-entity contract
     §2). Every cuota modelo (100 / 130 / 200 / 202) resolves to the
     ATTRIBUTION_PASS_THROUGH verdict and is dropped from the calendar;
     the engine never shows the entity a cuota obligation it does not

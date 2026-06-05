@@ -22,7 +22,7 @@ Convention (G7 standing review gate)
 --------------------------------------
 Every ``# type: ignore`` in production code must carry a
 ``TYPE-IGNORE-RATIONALE-<scope>`` token within 3 lines, or be enrolled in
-``_KNOWN_VIOLATING_LINES`` for paydown in a subsequent wave.
+``_KNOWN_VIOLATING_LINES`` for direct follow-up remediation.
 
 Structural prevention (ratchet history)
 ---------------------------------
@@ -35,7 +35,7 @@ If no marker is found, the site is recorded as ``(relative-posix-path, line-numb
 
 The ratchet records the 99 pre-existing sites found at ratchet history authoring time.
 New sites must either carry a rationale marker or be accompanied by a ratchet
-expansion PR with a documented reason.
+expansion with a documented reason.
 
 Paydown
 -------

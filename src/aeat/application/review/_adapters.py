@@ -190,15 +190,19 @@ def _to_transaction_item(
 def invoices_pending(
     settings: Settings,
     *,
+    bucket_id: str,
     catalogue: InvoiceCatalogue | None = None,
 ) -> tuple[InvoiceReviewItem, ...]:
     """Return :class:`InvoiceReviewItem` records for unmatched / disputed / pending invoices.
 
-    ``catalogue`` is an optional :class:`InvoiceCatalogue` override; the repository is
-    loaded when ``None``.
+    Args:
+        settings: Active application settings.
+        bucket_id: Stable bucket identifier for the invoice catalogue to inspect.
+        catalogue: Optional :class:`InvoiceCatalogue` override; the repository is
+            loaded when ``None``.
     """
     if catalogue is None:
-        catalogue = _load_invoices(settings)
+        catalogue = _load_invoices(settings, bucket_id=bucket_id)
         if catalogue is None:
             return ()
     items: list[InvoiceReviewItem] = []
@@ -211,11 +215,11 @@ def invoices_pending(
     return tuple(items)
 
 
-def _load_invoices(settings: Settings) -> InvoiceCatalogue | None:
+def _load_invoices(settings: Settings, *, bucket_id: str) -> InvoiceCatalogue | None:
     from ...domain.invoices import InvoiceCatalogueRepository
 
     del settings
-    repository = InvoiceCatalogueRepository()
+    repository = InvoiceCatalogueRepository(bucket_id=bucket_id)
     if not repository.exists():
         _LOGGER.debug("invoices catalogue secure object absent")
         return None
@@ -263,22 +267,24 @@ def _to_invoice_item(invoice: Invoice, *, severity: ReviewSeverity, reason: str)
 def drafts_pending(
     settings: Settings,
     *,
+    bucket_id: str,
     drafts: tuple[tuple[Path, ModeloDraft], ...] | None = None,
 ) -> tuple[FindingReviewItem, ...]:
     """Return :class:`FindingReviewItem` records for findings + unready drafts.
 
     Args:
         settings: Active application settings.
+        bucket_id: Stable bucket identifier for the draft repository to inspect.
         drafts: Optional pre-loaded sequence of ``(path, draft)`` pairs where
             each draft is a :class:`ModeloDraft`; when ``None`` drafts are
-            loaded from the active profile's storage.
+            loaded from that bucket's secure storage.
 
     A draft whose ``profile_tax_id`` does not match the active
     profile's tax id is not the active profile's data and is skipped.
     Callers see only drafts owned by the active profile.
     """
     if drafts is None:
-        drafts = _load_drafts(settings)
+        drafts = _load_drafts(settings, bucket_id=bucket_id)
     active_tax_id = _resolve_active_tax_id(settings)
     if active_tax_id is None:
         return ()
@@ -356,7 +362,7 @@ def _resolve_active_tax_id(settings: Settings) -> str | None:
     return fact_value(record, "identity.tax_id") or None
 
 
-def _load_drafts(settings: Settings) -> tuple[tuple[Path, ModeloDraft], ...]:
+def _load_drafts(settings: Settings, *, bucket_id: str) -> tuple[tuple[Path, ModeloDraft], ...]:
     """Iterate every persisted draft via :class:`ModeloDraftRepository`.
 
     Drafts are ciphertext-at-rest only. The helper returns the secure
@@ -367,7 +373,7 @@ def _load_drafts(settings: Settings) -> tuple[tuple[Path, ModeloDraft], ...]:
     from ...domain.filing import ModeloDraftRepository
 
     del settings
-    repository = ModeloDraftRepository()
+    repository = ModeloDraftRepository(bucket_id=bucket_id)
     out: list[tuple[Path, ModeloDraft]] = []
     try:
         for draft in repository.iter_drafts():

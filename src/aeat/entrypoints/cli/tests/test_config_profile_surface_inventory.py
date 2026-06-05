@@ -1,7 +1,7 @@
 """Inventory tests for the `aeat config profile` operator surface.
 
 Pins the ten plain-English operator-target verbs the
-2026-05-16 ADR mandates as reachable on the
+profile surface contract mandates as reachable on the
 `aeat config profile` subgroup. Future regressions that
 accidentally rename or unmount a verb surface here, not in a
 shipped operator session.

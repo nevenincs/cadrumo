@@ -396,7 +396,7 @@ def test_transaction_catalogue_preserves_group_label_through_encrypted_storage(
 ) -> None:
     """group_label must survive the encrypted-envelope roundtrip.
 
-    Anchors the operator-assigned organisational grouping axis (accepted contract) at
+    Anchors the operator-assigned organisational grouping axis at
     the persistence boundary: a Transaction carrying a non-default
     ``group_label`` saved through the repository must load back equal (strict
     pydantic equality), with the label preserved verbatim. A save-drops /

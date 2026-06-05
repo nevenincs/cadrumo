@@ -1,6 +1,6 @@
 """Settings-override seam coverage for the live-read access gate.
 
-Per the settings-di plan accepted contract: the migrated access-gate read of
+Per the settings dependency-injection contract: the migrated access-gate read of
 ``aeat_live_tests_enabled`` (formerly a direct ``os.environ`` read)
 must observe ``override_settings`` ContextVar values without any test
 manipulating the actual environment. This file proves that contract.

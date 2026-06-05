@@ -3,7 +3,7 @@
 The companion module ``test_modelo_303_compensacion_carry_forward_continuity``
 asserts the cross-renta wiring invariant on a single credit scenario. This
 module is the anti-regression contract authorised by
-`2026-06-03-m303-cross-period-carry-continuity-adr`: it varies the
+`cross-period-carry-continuity`: it varies the
 primitive credit magnitude in 4T/N and asserts that 1T/N+1's casilla 110
 auto-resolves proportionally — the contract that would have caught the
 regression hidden by the primitive-encoding commit (`6e5a316a6`) had it
@@ -59,7 +59,7 @@ _CARRY_BINDING = "modelo-303-compensacion-pendiente-anteriores"
 _CASILLA_110 = "iva.compensacion-pendiente-periodos-anteriores"
 _SALDO_CASILLA = "iva.compensacion-disponible-fin-periodo"
 
-#: Profile-gap workaround bindings (mirror the companion module; ADR-pinned
+#: Profile-gap workaround bindings (mirror the companion module; contract-pinned
 #: as MUST-NOT-mutate to mask the diagnostic).
 _AUTOCONSUMO_PROMOTOR_BASE_BINDING = "modelo-303-autoconsumo-promotor-base"
 _STATE_ATTRIBUTION_RATIO_BINDING = "modelo-303-profile-state-attribution-ratio"
@@ -185,7 +185,7 @@ def test_carry_in_tracks_prior_period_saldo_magnitude(
     hand-computed expectation participates in the assertion.
 
     This is the proportional-tracking gate the
-    ``m303-cross-period-carry-continuity`` ADR mandated as the durable
+    ``m303-cross-period-carry-continuity`` contract mandated as the durable
     anti-regression against future shifts in the per-rate primitive
     distribution. If a future primitive-encoding change preserves the
     in-period totals (devengada-total / deducible-total) but collapses

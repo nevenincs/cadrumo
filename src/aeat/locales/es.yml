@@ -717,6 +717,7 @@ application:
       computed_casilla_binding_conflict: 'Las entradas procedentes del bucket tienen
         como destino casillas calculadas; no se pueden sobreescribir con binding externo.
         Casillas afectadas: %{computed}.'
+      cross_period_clean_state_incomplete: 'La prueba de estado limpio entre periodos esta incompleta para el modelo {modelo} {filing_year} {period}; quedan {finding_count} hallazgo(s).'
       export_cross_bucket_refused: La revision indicada pertenece a un bucket distinto
         del bucket del perfil activo. Cambia de perfil antes de exportar.
       export_draft_approval_failed: No se pudo aprobar el borrador para la revision
@@ -1968,6 +1969,7 @@ cli:
           {profile}
         no_metadata_for_refresh: no hay sesión OAuth para el perfil {profile}; no
           se puede renovar sin un inicio de sesión previo
+        sync_push_limit_requires_dry_run: 'La sincronizacion push de Google no puede usar --limit salvo que --dry-run este activado, porque una ejecucion real acotada crearia un manifiesto remoto parcial.'
       errors:
         auth_failed: 'La autenticación con Google falló: {detail}'
         browser_open: 'No se pudo abrir un navegador para autorizar el acceso a Google:
@@ -2171,6 +2173,10 @@ cli:
       connectivity_target_help: Objetivo de conectividad que se debe comprobar
       help: Diagnosticar y reparar configuración local, registro, perfil, autenticación
         y logs
+      integrity:
+        objects_help: 'Comprueba la integridad de los objetos seguros.'
+        registry_help: 'Comprueba la integridad del registro de perfiles.'
+        objects_namespace_help: 'Limita las comprobaciones de integridad de objetos seguros a un espacio de nombres.'
       integrity_attribution_details_help: Incluir detalles de metadatos seguros por
         fila
       integrity_attribution_help: Agrupa las filas de objetos seguros no descifrables
@@ -2483,6 +2489,7 @@ cli:
         Ejecuta `aeat app ledger categories` para ver todos los identificadores reconocidos.
       unknown_provider: 'Proveedor de importación --provider {provider!r} desconocido.
         Proveedores reconocidos: {providers}.'
+      invalid_category: 'Categoria de gasto desconocida ''{category}''. Categorias conocidas: {known}. Ejecuta ''aeat app ledger categories'' para ver valores validos de --category-id.'
     export:
       actor_help: Nombre del operador registrado en el evento del bucket
       format_help: Formato de serialización de exportación

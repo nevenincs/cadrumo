@@ -23,6 +23,7 @@ from ....core.config import Settings, override_settings
 from ....core.identity import nif_check_letter
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....domain.deadlines import TaxpayerProfile
 from ....domain.deadlines._models import IVARegime
 from ....domain.filing import ModeloCasillaProvenance
@@ -40,12 +41,17 @@ from ....domain.modelos._calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos._codes import ModeloCode
+from ....domain.modelos._filing_record import ExternalEvidenceKind
 from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...calculations import IvaWalletDecisionRepository
+from ...calculations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+    cross_period_dependency_requirements,
+)
 from ...user_profile._orchestration import profile_create_storage_span
 from ...user_profile._testing import register_minimal_profile
 from ...workflow._persistence import workflow_state_repository
@@ -56,6 +62,7 @@ from .._actions import (
     calculate_modelo_revision,
     create_work_unit,
     file_modelo_revision,
+    import_external_filing_evidence,
     mark_revision_verificado_completo,
     verify_modelo_revision,
 )
@@ -259,6 +266,61 @@ def _modelo_303_engine_inputs() -> dict[str, Decimal]:
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
+
+
+def _seed_modelo_303_1t_clean_state(
+    *,
+    bucket_id: str,
+    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepository | None = None,
+) -> None:
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
+    source_casillas = sorted(
+        {
+            casilla_id
+            for requirement in cross_period_dependency_requirements(snapshot)
+            if requirement.source_modelo == "303" and requirement.filing_year == 2026 and requirement.period == "1T"
+            for casilla_id in requirement.source_casillas
+        }
+    )
+    assert source_casillas, "Modelo 303 2T fixture must declare a 1T filed-history dependency"
+    values = {casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(source_casillas)}
+    source_snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
+    work_unit = create_work_unit(
+        bucket_id=bucket_id,
+        modelo="303",
+        filing_year=2026,
+        period="1T",
+        revision_id=source_snapshot.revision.id,
+        repository=work_unit_repository,
+        bucket_event_repository=bucket_event_repository,
+        clock=datetime(2026, 5, 21, 11, 0, tzinfo=UTC),
+    )
+    import_external_filing_evidence(
+        work_unit_id=work_unit.work_unit_id,
+        casilla_values=values,
+        evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        evidence_reference_id="JUST-303-2026-1T",
+        actor="aeat-import-test",
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        filing_repository=ModeloRecordCatalogueRepository(),
+        bucket_event_repository=bucket_event_repository,
+        clock=datetime(2026, 5, 21, 11, 1, tzinfo=UTC),
+    )
+    CalculationObservationRepository().save_observation(
+        RegistryModeloObservation(
+            modelo="303",
+            filing_year=2026,
+            period="1T",
+            observations=tuple(
+                CasillaObservation(casilla_id=casilla_id, value=value) for casilla_id, value in values.items()
+            ),
+        ),
+        source_kind="aeat_sede_justificante",
+        captured_at=datetime(2026, 5, 21, 11, 2, tzinfo=UTC),
+    )
 
 
 def _synthetic_valid_nif(number: int) -> str:
@@ -500,6 +562,7 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
         filing_year=2026,
         period="2T",
     )
+    _seed_modelo_303_1t_clean_state(bucket_id=bucket_id)
     IvaWalletDecisionRepository().save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
 
     with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"):
@@ -527,6 +590,7 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_filed_histo
         filing_year=2026,
         period="2T",
     )
+    _seed_modelo_303_1t_clean_state(bucket_id=bucket_id)
     IvaWalletDecisionRepository().save_decision(_filed_history_only_wallet_decision(taxpayer_nif=taxpayer_nif))
 
     with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="filed_history_only"):
@@ -554,6 +618,7 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
         filing_year=2026,
         period="2T",
     )
+    _seed_modelo_303_1t_clean_state(bucket_id=bucket_id)
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions-export.db")
     decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
     assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, 2026, "2T") is None
@@ -620,6 +685,12 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
         actor="operator",
         calculation_repository=calc_repo,
         clock=datetime(2026, 5, 21, 12, 2, tzinfo=UTC),
+    )
+    _seed_modelo_303_1t_clean_state(
+        bucket_id=bucket_id,
+        work_unit_repository=work_repo,
+        calculation_repository=calc_repo,
+        bucket_event_repository=event_repo,
     )
 
     output_path = tmp_path / "modelo-303-wallet-only.txt"
