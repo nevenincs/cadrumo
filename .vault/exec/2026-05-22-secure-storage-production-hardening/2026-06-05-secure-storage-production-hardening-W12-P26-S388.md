@@ -15,33 +15,35 @@ Scope: close `AFR-286` for `src/aeat/entrypoints/cli/_review_payloads.py` with s
 
 ## Description
 
-- Audited `_review_payloads.py` as the typed JSON contract for `review queue` and
-  `review view`.
-- Confirmed the module imports only the shared `BucketId` identity alias and CLI schema
-  registry helpers.
-- Confirmed the module does not construct storage repositories, resolve active-profile
-  state, inspect manifests, open remote providers, or perform redaction-sensitive
-  output rendering.
-- Confirmed the remote-provider signal is only a JSON contract concern: payloads expose
-  the application-projected bucket id and legal references that downstream mirrors or
-  tools consume; the module does not own mirror transport.
-- Confirmed strict roundtrip tests cover the row payload, queue envelope, view envelope,
-  and unknown top-level key rejection.
-- Closed `W12.P26.S388` through `vaultspec-core vault plan step check` and updated the
-  `AFR-286` register status to `closed`.
+- Audited `src/aeat/entrypoints/cli/_review_payloads.py` as the typed JSON envelope
+  schema module for `aeat review queue` and `aeat review view`.
+- Confirmed the module only defines strict `OutputSchema` payload models and registers
+  the `review.queue` and `review.view` JSON contracts.
+- Confirmed the bucket signal is an output field (`bucket_id`) projected from
+  application review rows, not a storage route or direct repository constructor.
+- Confirmed storage/provider work lives outside the payload module: `_review.py`
+  delegates to `project_review_queue()` / `project_review_item()`, while application
+  review aggregation uses the active bucket and bucket-bound adapters.
+- Closed `W12.P26.S388` through `vaultspec-core vault plan step check` and confirmed the
+  `AFR-286` register status is `closed`.
 
 ## Outcome
 
-`AFR-286` is closed as `remote-mirror` with no code changes. `_review_payloads.py`
-remains a schema-only boundary that uses shared core identity and registered output
-schema contracts.
+`AFR-286` is closed as `remote-mirror` for the payload/JSON-contract surface. The file
+does not create a storage backend, open remote providers, enumerate manifests, or mutate
+state. It mirrors review rows into registered CLI JSON schemas, including the bucket id
+that identifies the active review context.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/entrypoints/cli/_review_payloads.py src/aeat/entrypoints/cli/tests/test_review_payloads_roundtrip.py`
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_review_payloads_roundtrip.py`
-- `uv run --no-sync -q python -m aeat.locales audit`
+- `uv run --no-sync ruff check src/aeat/entrypoints/cli/_review_payloads.py src/aeat/entrypoints/cli/_review.py src/aeat/entrypoints/cli/tests/test_review_payloads_roundtrip.py src/aeat/entrypoints/cli/tests/test_review_operator_errors.py src/aeat/application/review/_operator.py src/aeat/application/review/_aggregator.py src/aeat/application/review/_adapters.py src/aeat/application/review/tests/test_adapters.py`
+- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_review_payloads_roundtrip.py src/aeat/entrypoints/cli/tests/test_review_operator_errors.py`
+- `uv run --no-sync pytest -q -m unit src/aeat/application/review/tests/test_adapters.py src/aeat/application/review/tests/test_operator.py src/aeat/application/review/tests/test_aggregator.py src/aeat/application/review/tests/test_models.py`
+- `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit`
+- `uv run --no-sync vaultspec-rag search "review payloads ReviewQueueRowPayload registered schema bucket id remote mirror manifest discovery" --type code --port 8766 --max-results 6`
 
 ## Notes
 
-No locale leaves or source files were changed for this slice.
+The first mixed pytest command selected only the integration-marked CLI tests and
+deselected the unit-marked application review tests. The application review tests were
+rerun explicitly with `-m unit` and passed with 40 tests.
