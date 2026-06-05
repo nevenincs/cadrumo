@@ -539,7 +539,7 @@ Current register count: `301` production candidate files.
 | `AFR-258` | `src/aeat/domain/normatives/_loader.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-259` | `src/aeat/domain/renta/_substrate.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-260` | `src/aeat/domain/submission/_models.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
-| `AFR-261` | `src/aeat/domain/submission/_preflight.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-261` | `src/aeat/domain/submission/_preflight.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-262` | `src/aeat/domain/submission/_protocols.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-263` | `src/aeat/domain/submission/_repository.py` | `secure-bound` | `runtime-default` | `W12.P21.S84` | closed |
 | `AFR-264` | `src/aeat/domain/transactions/_errors.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
@@ -900,7 +900,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S360` - Close `AFR-258` for `src/aeat/domain/normatives/_loader.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/domain/normatives/_loader.py`.
 - [x] `W12.P26.S361` - Close `AFR-259` for `src/aeat/domain/renta/_substrate.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/domain/renta/_substrate.py`.
 - [x] `W12.P26.S362` - Close `AFR-260` for `src/aeat/domain/submission/_models.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/domain/submission/_models.py`.
-- [ ] `W12.P26.S363` - Close `AFR-261` for `src/aeat/domain/submission/_preflight.py` with signals `plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/domain/submission/_preflight.py`.
+- [x] `W12.P26.S363` - Close `AFR-261` for `src/aeat/domain/submission/_preflight.py` with signals `plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/domain/submission/_preflight.py`.
 - [ ] `W12.P26.S364` - Close `AFR-262` for `src/aeat/domain/submission/_protocols.py` with signals `plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/domain/submission/_protocols.py`.
 - [x] `W12.P26.S365` - Close `AFR-263` for `src/aeat/domain/submission/_repository.py` with signals `secure-bound`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/submission/_repository.py`.
 - [x] `W12.P26.S366` - Close `AFR-264` for `src/aeat/domain/transactions/_errors.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/domain/transactions/_errors.py`.
