@@ -17,6 +17,7 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...tests.aeat_literal_fixtures import aeat_url, configured_path
 from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,
@@ -32,7 +33,7 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _BUCKET_ID = "bucket-renta"
-_SOURCE = "https://www2.agenciatributaria.gob.es/wlpl/PRET-R210/SimuladorOpenAjax"
+_SOURCE = aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax"))
 _CAPTURED_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
 
 

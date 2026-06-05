@@ -17,6 +17,15 @@ from collections.abc import Mapping
 import pytest
 from pydantic import AnyUrl, ValidationError
 
+from ....tests.aeat_literal_fixtures import (
+    LIVE_PARITY_GENERIC_CHECK_PATH_FIXTURE,
+    LIVE_PARITY_PRET_CHECK_PATH_FIXTURE,
+    LIVE_PARITY_STATE_CREATING_PATH_CANARIES,
+    LIVE_PARITY_STATIC_REMOTE_PATH_FIXTURE,
+    LIVE_PARITY_SUBMIT_PATH_CANARY,
+    aeat_host,
+    aeat_url,
+)
 from ._errors import RegistryValidationError
 from ._live_parity import (
     LiveParityCatalogue,
@@ -33,6 +42,8 @@ from ._live_parity import (
 from ._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+_WWW6_HOST = aeat_host("www6")
 
 
 class _CannedOracle:
@@ -91,7 +102,7 @@ def _read_only_policy() -> RemoteStateGuardPolicy:
         id="test-policy",
         evidence_tier="executable_parity_evidence",
         classification="open_simulator",
-        allowed_hosts=("www6.agenciatributaria.gob.es",),
+        allowed_hosts=(_WWW6_HOST,),
         synthetic_data_allowed=False,
         requires_authentication=False,
         requires_aeat_authorization=False,
@@ -122,12 +133,7 @@ def _post(url: str) -> RemoteOperation:
 
 @pytest.mark.parametrize(
     "url",
-    [
-        "https://www6.agenciatributaria.gob.es/wlpl/TGVI/online",
-        "https://www6.agenciatributaria.gob.es/wlpl/PRET/tgvionline/upload",
-        "https://www6.agenciatributaria.gob.es/wlpl/PRET/transmision-fichero",
-        "https://www6.agenciatributaria.gob.es/wlpl/PRET/transmitir",
-    ],
+    [aeat_url("www6", path) for path in LIVE_PARITY_STATE_CREATING_PATH_CANARIES],
 )
 def test_pre_flight_blocks_oracle_targeting_state_creating_aeat_surface(url: str) -> None:
     oracle = _CannedOracle(
@@ -166,7 +172,7 @@ def test_catalogue_register_and_lookup_round_trip() -> None:
     oracle = _CannedOracle(
         oracle_id="aeat-public-vies",
         surface_kind="iva_id_check",
-        operations=(_read_only_get("https://www6.agenciatributaria.gob.es/wlpl/PRET/check"),),
+        operations=(_read_only_get(aeat_url("www6", LIVE_PARITY_PRET_CHECK_PATH_FIXTURE)),),
         verdict=ParityResult(
             oracle_id="aeat-public-vies",
             cross_reference_id="test-policy",
@@ -371,7 +377,7 @@ def test_pre_flight_passes_when_planned_operations_are_read_only() -> None:
     oracle = _CannedOracle(
         oracle_id="vies",
         surface_kind="iva_id_check",
-        operations=(_read_only_get("https://www6.agenciatributaria.gob.es/wlpl/check?nif=DE111"),),
+        operations=(_read_only_get(f"{aeat_url('www6', LIVE_PARITY_GENERIC_CHECK_PATH_FIXTURE)}?nif=DE111"),),
         verdict=ParityResult(oracle_id="vies", cross_reference_id="test-policy", verdict="match", narrative="ok"),
     )
     policy = _read_only_policy()
@@ -386,8 +392,8 @@ def test_pre_flight_blocks_oracle_with_post_operation() -> None:
         oracle_id="bad",
         surface_kind="pre_filing_validator",
         operations=(
-            _read_only_get("https://www6.agenciatributaria.gob.es/wlpl/check"),
-            _post("https://www6.agenciatributaria.gob.es/wlpl/submit"),
+            _read_only_get(aeat_url("www6", LIVE_PARITY_GENERIC_CHECK_PATH_FIXTURE)),
+            _post(aeat_url("www6", LIVE_PARITY_SUBMIT_PATH_CANARY)),
         ),
         verdict=ParityResult(oracle_id="bad", cross_reference_id="test-policy", verdict="match", narrative="x"),
     )
@@ -414,7 +420,7 @@ def test_evaluate_returns_blocked_result_for_static_only_policy_when_oracle_plan
     oracle = _CannedOracle(
         oracle_id="oracle",
         surface_kind="open_simulator",
-        operations=(_read_only_get("https://www6.agenciatributaria.gob.es/wlpl/sim"),),
+        operations=(_read_only_get(aeat_url("www6", LIVE_PARITY_STATIC_REMOTE_PATH_FIXTURE)),),
         verdict=ParityResult(
             oracle_id="oracle",
             cross_reference_id="static-only-policy",
@@ -435,7 +441,7 @@ def test_oracle_verify_payload_raises_when_planned_operation_blocked() -> None:
     oracle = _CannedOracle(
         oracle_id="bad-verify",
         surface_kind="pre_filing_validator",
-        operations=(_post("https://www6.agenciatributaria.gob.es/wlpl/submit"),),
+        operations=(_post(aeat_url("www6", LIVE_PARITY_SUBMIT_PATH_CANARY)),),
         verdict=ParityResult(oracle_id="bad-verify", cross_reference_id="test-policy", verdict="match", narrative="x"),
     )
     policy = _read_only_policy()

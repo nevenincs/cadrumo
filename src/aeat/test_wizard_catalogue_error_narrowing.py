@@ -20,11 +20,11 @@ from .core.errors import (
     build_error_envelope,
     get_registered_error_code,
 )
+from .core.setup_answers import ProjectAnswersNotRegisteredError
 from .core.wizard_catalogue import (
     WizardCatalogueAlreadyRegisteredError,
     WizardCatalogueNotRegisteredError,
 )
-from .core.setup_answers import ProjectAnswersNotRegisteredError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

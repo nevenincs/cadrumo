@@ -126,7 +126,12 @@ class RenameProfileCommand(BaseModel):
 
 
 class ProfileLifecycleResult(BaseModel):
-    """Result of a lifecycle mutation (register / edit / remove / duplicate)."""
+    """Result of a lifecycle mutation (register / edit / remove / duplicate).
+
+    Attributes:
+        profile: The mutated :class:`UserProfileRecord`.
+        applied_at: The timestamp when the mutation was applied.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -256,7 +261,13 @@ class ProfileStaleCheckReport(BaseModel):
 
 
 class ProfileImportResult(BaseModel):
-    """Outcome of importing a portable bundle."""
+    """Outcome of importing a portable bundle.
+
+    Attributes:
+        profile: The imported :class:`UserProfileRecord`.
+        imported_at: The timestamp of import.
+        issues: Any validation issues.
+    """
 
     model_config = _STRICT_FROZEN
 

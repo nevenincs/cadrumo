@@ -17,6 +17,7 @@ Submodules
    aeat.application.user_profile._bundle
    aeat.application.user_profile._censo_errors
    aeat.application.user_profile._censo_sync
+   aeat.application.user_profile._commands
    aeat.application.user_profile._integrity
    aeat.application.user_profile._keys_validation
    aeat.application.user_profile._language_resolver

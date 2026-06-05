@@ -31,6 +31,16 @@ def test_clave_operator_timeout_keeps_its_own_outcome() -> None:
     assert classify_live_iva_acquisition_failure(exc) is LiveIvaAcquisitionFailureMode.OPERATOR_TIMEOUT
 
 
+def test_clave_initial_navigation_timeout_maps_to_live_navigation_failure() -> None:
+    exc = ClaveMovilApprovalTimeoutError(
+        "initial selector navigation timed out",
+        failure_mode="initial_navigation_timeout",
+        context={"auth_mode": "non_qr"},
+    )
+
+    assert classify_live_iva_acquisition_failure(exc) is LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED
+
+
 def test_qr_wait_state_failure_is_reported_as_qr_required() -> None:
     exc = ClaveMovilApprovalTimeoutError(
         "QR flow did not reach the expected wait state",

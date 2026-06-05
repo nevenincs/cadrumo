@@ -14,6 +14,7 @@ import pytest
 from ...domain.filing import ModeloImportError
 from ...domain.justificante import JustificanteParseError
 from ...tests import FIXTURES_DIR
+from ...tests.aeat_literal_fixtures import justificante_cotejo_url
 from . import import_filing_from_justificante
 from .runtime import build_runtime_schema_provider
 
@@ -81,7 +82,7 @@ def _justificante_pdf_without_period(tmp_path: Path, *, modelo: str, ejercicio: 
     c.drawString(100, 660, f"Numero de justificante: {modelo}{ejercicio}ABCD1234")
     c.drawString(100, 635, "Fecha y hora de presentacion: 2026-04-10 11:23:45")
     c.drawString(100, 610, "Resultado: A ingresar 10,00")
-    c.drawString(100, 585, "https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=ABCD1234EFGH5678")
+    c.drawString(100, 585, justificante_cotejo_url("ABCD1234EFGH5678"))
     c.showPage()
     c.save()
     return target

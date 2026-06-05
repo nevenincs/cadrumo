@@ -12,6 +12,7 @@ import pytest
 from pydantic import AnyUrl
 
 from ....core.resources import bundled_path
+from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ... import renta as _renta_snapshot_checks  # noqa: F401  # snapshot-check registration side effect
 from ...contribuyente import PROFILE_KEYS, TaxResidenceProfile
 from ...contribuyente.family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
@@ -38,6 +39,8 @@ from . import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+_DECLARATIONS_LISTING_URL = aeat_url("www6", configured_path("sede_paths", "declarations_listing"))
 
 
 @cache
@@ -250,26 +253,45 @@ def test_modelo_100_dependent_modelos_construct_covers_every_revision_relation()
     assert set(dependencies.relations) == {relation.id for relation in snapshot.revision.relations}
 
 
-def test_modelo_100_payments_retentions_construct_excludes_atribucion_bindings() -> None:
+def test_modelo_100_payments_retentions_construct_covers_classified_payment_bindings() -> None:
     """payments_retentions covers retention + pagos-a-cuenta filings only.
 
-    The modelo-184 atribución binding is a previous_filing source
-    but belongs to economic-activities (income attribution
-    semantics), not to payments-retentions.
+    Some previous_filing bindings are not payment/retention sources:
+    Modelo 184 belongs to economic-activities attribution semantics, and
+    prior-year Modelo 100 base-liquidation carry-forward belongs to Anexo C.
     """
     snapshot = _modelo_100_snapshot()
     payments_retentions = snapshot.constructs["renta-payments-retentions"]
-    filed_dependency_bindings = {
-        binding.id for binding in snapshot.revision.bindings if binding.source == "previous_filing"
+    payment_source_modelos = {
+        classification.source_modelo
+        for classification in snapshot.revision.dependency_classifications
+        if "renta-payments-retentions" in classification.target_constructs
     }
-    expected = {b for b in filed_dependency_bindings if "atribucion" not in b}
+    expected = {
+        binding.id
+        for binding in snapshot.revision.bindings
+        if binding.source == "previous_filing" and binding.selector.get("source_modelo") in payment_source_modelos
+    }
+
     assert set(payments_retentions.bindings) == expected
+    assert "renta-2025-base-liquidable-negativa-general-anterior" not in payments_retentions.bindings
+    assert (
+        "renta-2025-base-liquidable-negativa-general-anterior"
+        in snapshot.constructs["renta-anexo-c-base-liquidable-negativa-general"].bindings
+    )
 
 
 def test_modelo_100_payments_retentions_construct_excludes_atribucion_relations() -> None:
     snapshot = _modelo_100_snapshot()
     payments_retentions = snapshot.constructs["renta-payments-retentions"]
-    expected = {r.id for r in snapshot.revision.relations if "atribucion" not in r.id}
+    payment_source_modelos = {
+        classification.source_modelo
+        for classification in snapshot.revision.dependency_classifications
+        if "renta-payments-retentions" in classification.target_constructs
+    }
+    expected = {
+        relation.id for relation in snapshot.revision.relations if relation.source_modelo in payment_source_modelos
+    }
     assert set(payments_retentions.relations) == expected
 
 
@@ -604,7 +626,7 @@ def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_onl
             RemoteOperation(
                 kind="http",
                 method="GET",
-                url=AnyUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+                url=AnyUrl(_DECLARATIONS_LISTING_URL),
             ),
         )
         with pytest.raises(RegistryValidationError, match="remote write method"):
@@ -613,7 +635,7 @@ def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_onl
                 RemoteOperation(
                     kind="http",
                     method="POST",
-                    url=AnyUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+                    url=AnyUrl(_DECLARATIONS_LISTING_URL),
                 ),
             )
 

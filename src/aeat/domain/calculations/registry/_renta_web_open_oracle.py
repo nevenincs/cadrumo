@@ -121,7 +121,7 @@ class RentaWebOpenDriver(Protocol):
                 Modelo 100) to their expected values, used to scope the plan.
 
         Returns:
-            The ordered ``RemoteOperation`` tuple the driver intends to run.
+            The ordered :class:`RemoteOperation` tuple the driver intends to run.
         """
         ...
 
@@ -140,7 +140,7 @@ class RentaWebOpenDriver(Protocol):
                 the form) to their expected values, available to scope scraping.
 
         Returns:
-            A ``RentaWebOpenObservation`` whose ``values`` maps casilla numbers
+            A :class:`RentaWebOpenObservation` whose ``values`` maps casilla numbers
             to their observed string renderings, plus an optional evidence
             locator pointing at the captured source.
         """
@@ -180,7 +180,7 @@ class RentaWebOpenReplayDriver:
                 unused, present to satisfy the ``RentaWebOpenDriver`` protocol.
 
         Returns:
-            A one-element tuple holding the local-parse ``RemoteOperation``.
+            A one-element tuple holding the local-parse :class:`RemoteOperation`.
         """
         return (RemoteOperation(kind="local_workbook", action="parse-renta-web-open-replay"),)
 
@@ -199,7 +199,7 @@ class RentaWebOpenReplayDriver:
                 unused, present to satisfy the ``RentaWebOpenDriver`` protocol.
 
         Returns:
-            A ``RentaWebOpenObservation`` carrying the decoded casilla values
+            A :class:`RentaWebOpenObservation` carrying the decoded casilla values
             and the document's raw evidence locator.
 
         Raises:
@@ -261,7 +261,7 @@ class RentaWebOpenOracle:
                 Modelo 100) to their expected values. Must be non-empty.
 
         Returns:
-            The ordered ``RemoteOperation`` tuple the run intends to perform.
+            The ordered :class:`RemoteOperation` tuple the run intends to perform.
 
         Raises:
             RegistryValidationError: If ``expected`` is empty, since a parity
@@ -304,7 +304,7 @@ class RentaWebOpenOracle:
                 compare against the observation.
 
         Returns:
-            A ``ParityResult`` carrying the verdict (``"match"``, ``"mismatch"``,
+            A :class:`ParityResult` carrying the verdict (``"match"``, ``"mismatch"``,
             ``"unverifiable"``, or ``"blocked"``), a human-readable narrative,
             the per-casilla comparisons, and any raw evidence locator.
         """

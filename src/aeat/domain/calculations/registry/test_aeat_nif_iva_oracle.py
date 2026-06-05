@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import json
+from urllib.parse import urlparse
 
 import pytest
 from pydantic import ValidationError
 
 from ....core.config import Settings
+from ....tests.aeat_literal_fixtures import aeat_host
 from ._aeat_nif_iva_oracle import (
     ORACLE_ID,
     AeatNifIvaCheckerOracle,
@@ -25,6 +27,10 @@ from ._remote_state_guard import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
+_SEDE_HOST = aeat_host("sede")
+_WWW1_HOST = aeat_host("www1")
+_WWW6_HOST = aeat_host("www6")
+
 
 def _aeat_policy() -> RemoteStateGuardPolicy:
     # AEAT-hosted policies must not advertise synthetic input per the
@@ -37,8 +43,8 @@ def _aeat_policy() -> RemoteStateGuardPolicy:
         # entry point that the live driver visits first lives on
         # sede.agenciatributaria.gob.es. Both must be in the allow-list.
         allowed_hosts=(
-            "sede.agenciatributaria.gob.es",
-            "www1.agenciatributaria.gob.es",
+            _SEDE_HOST,
+            _WWW1_HOST,
         ),
         allowed_browser_action_patterns=(
             Settings.external_constants().aeat.live_safety.consult_oracle_browser_action_patterns
@@ -58,7 +64,7 @@ def _wrong_host_policy() -> RemoteStateGuardPolicy:
         id="wrong-host",
         evidence_tier="executable_parity_evidence",
         classification="open_simulator",
-        allowed_hosts=("www6.agenciatributaria.gob.es",),
+        allowed_hosts=(_WWW6_HOST,),
         forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
         synthetic_data_allowed=False,
         requires_authentication=False,
@@ -77,15 +83,15 @@ def test_adapter_urls_stay_inside_aeat_host_pinning_suffix() -> None:
     """Both the entry point and the form servlet are on AEAT-controlled subdomains.
 
     The remote-state guard's host-pinning policy keys off the
-    ``agenciatributaria.gob.es`` suffix; the entry URL is on the sede
+    configured AEAT host suffix; the entry URL is on the Sede
     subdomain and the form URL is on the www1 subdomain. Both match.
     """
 
     _ext = Settings.external_constants()
     entry_url = f"{_ext.aeat.domains.sede}{_ext.aeat.help_pages.nif_iva_landing}"
     verification_url = _ext.aeat.oracles.nif_iva_verification
-    assert entry_url.startswith("https://sede.agenciatributaria.gob.es/")
-    assert verification_url.startswith("https://www1.agenciatributaria.gob.es/")
+    assert urlparse(entry_url).hostname == _SEDE_HOST
+    assert urlparse(verification_url).hostname == _WWW1_HOST
 
 
 def test_planned_operations_returns_entry_then_form_then_per_nif_then_discard() -> None:

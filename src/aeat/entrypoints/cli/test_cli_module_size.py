@@ -19,17 +19,15 @@ _LEGACY_MODULE_LINE_BUDGETS = {
     "_app_live.py": 2117,
     "_config/__init__.py": 2890,
     "_config/_google.py": 1399,
-    "_doc_reference.py": 875,
     "_ledger.py": 4255,
     "_ledger_payloads.py": 918,
-    "_modelo.py": 3083,
+    "_modelo.py": 2321,
     "_modelo_payloads.py": 1235,
 }
 
 _LEGACY_COMMAND_LINE_BUDGETS = {
     ("_ledger.py", "ledger_classify"): 194,
     ("_modelo.py", "work_create"): 196,
-    ("_modelo.py", "work_calculate"): 435,
     ("_modelo_iva_wallet_cli.py", "register_iva_wallet_commands"): 199,
     ("_modelo_projection_cli.py", "register_projection_commands"): 243,
 }

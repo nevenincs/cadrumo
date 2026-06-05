@@ -41,6 +41,7 @@ Submodules
    aeat.core._tax_domain
    aeat.core._toml
    aeat.core.aggregation
+   aeat.core.auth_session_keys
    aeat.core.click_context
    aeat.core.config
    aeat.core.env_io

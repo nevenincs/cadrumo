@@ -59,7 +59,7 @@ class ResolvedConstruct:
             kind: Entity kind to filter on, e.g. ``"casilla"`` or ``"formula"``.
 
         Returns:
-            A tuple of matching ``ResolvedConstructMember`` instances, empty if
+            A tuple of matching :class:`ResolvedConstructMember` instances, empty if
             no members carry the requested kind.
         """
         return tuple(member for member in self.members if member.kind == kind)
@@ -115,11 +115,11 @@ def resolve_revision_constructs(revision: ModeloRevision) -> tuple[ResolvedConst
     ``resolve_construct`` for each entry.
 
     Args:
-        revision: The ``ModeloRevision`` (a dated version of an AEAT modelo —
+        revision: The :class:`ModeloRevision` (a dated version of an AEAT modelo —
             tax form) whose construct groups should be resolved.
 
     Returns:
-        A tuple of ``ResolvedConstruct`` records in the same order as
+        A tuple of :class:`ResolvedConstruct` records in the same order as
         ``revision.constructs``.
 
     Raises:
@@ -140,12 +140,12 @@ def resolve_construct(revision: ModeloRevision, construct_id: str) -> ResolvedCo
     id raises ``RegistrySnapshotError`` immediately.
 
     Args:
-        revision: The ``ModeloRevision`` to resolve against.
+        revision: The :class:`ModeloRevision` to resolve against.
         construct_id: The registry-declared id of the construct group to
             resolve.
 
     Returns:
-        A ``ResolvedConstruct`` carrying all members with their typed values.
+        A :class:`ResolvedConstruct` carrying all members with their typed values.
 
     Raises:
         ``RegistrySnapshotError``: if ``construct_id`` is not declared on the

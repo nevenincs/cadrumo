@@ -26,6 +26,7 @@ from ...application.live import (
     IvaCompensationHistoryReport,
     IvaRemoteStateAcquisitionReport,
     IvaWalletCaptureReport,
+    capture_expedientes_bulk,
     capture_filed_data,
     capture_filed_data_bulk,
     capture_source_filed_data,
@@ -159,6 +160,7 @@ def _live_auth_preflight_lines(report: LiveAuthPreflightReport) -> tuple[str, ..
         _metric_line("auth_certificate_backend", report.certificate_backend),
         _metric_line("auth_persisted_session", "present" if report.persisted_session_present else "missing"),
         _metric_line("auth_persisted_session_expired", report.persisted_session_expired),
+        _metric_line("auth_persisted_session_state", report.persisted_session_state),
         _metric_line("auth_probe_result", report.probe_result),
     )
 
@@ -540,7 +542,8 @@ def iva_wallet_capture_remote_state_cmd(
                 target_period=target_period,
                 taxpayer_nif=taxpayer_nif,
                 output_root=output_root,
-            )
+            ),
+            timeout_ms=_live_iva_remote_state_command_timeout_ms(year_from=year_from, year_to=year_to),
         )
     )
     from ._app_live_payloads import (
@@ -647,16 +650,57 @@ async def _run_live_iva_remote_state_command[T](
         timeout_ms if timeout_ms is not None else load_settings().aeat_live_iva_cli_watchdog_timeout_ms
     )
     preexisting_profiles = _playwright_profile_tokens(_process_command_inventory())
+    pre_timeout_auth_context = _live_iva_auth_watchdog_context(stage="before")
     try:
         return await asyncio.wait_for(awaitable, timeout=resolved_timeout_ms / 1000)
     except TimeoutError as exc:
-        _reap_new_playwright_profile_processes(preexisting_profiles=preexisting_profiles)
+        killed_processes = _reap_new_playwright_profile_processes(preexisting_profiles=preexisting_profiles)
+        post_timeout_auth_context = _live_iva_auth_watchdog_context(stage="after")
         raise LiveIvaSurfaceTimeoutError(
             f"live IVA remote-state command did not complete within {resolved_timeout_ms} ms",
             surface="remote_state_command",
             timeout_ms=resolved_timeout_ms,
-            progress_context={"phase": "cli_watchdog", "surface": LiveIvaReadSurface.FILED_HISTORY.value},
+            progress_context={
+                "phase": "cli_watchdog",
+                "surface": LiveIvaReadSurface.FILED_HISTORY.value,
+                "watchdog_reaped_process_count": killed_processes,
+                **pre_timeout_auth_context,
+                **post_timeout_auth_context,
+            },
         ) from exc
+
+
+def _live_iva_remote_state_command_timeout_ms(*, year_from: int, year_to: int) -> int:
+    """Return the CLI watchdog budget for one combined IVA remote-state command."""
+    from ...core.config import load_settings
+
+    settings = load_settings()
+    year_count = max(1, year_to - year_from + 1)
+    filed_history_budget_ms = settings.aeat_live_iva_surface_timeout_ms * year_count
+    wallet_budget_ms = settings.aeat_live_iva_surface_timeout_ms
+    auth_budget_ms = settings.aeat_clave_movil_timeout_ms
+    cleanup_budget_ms = settings.aeat_live_iva_cli_watchdog_timeout_ms
+    return max(
+        settings.aeat_live_iva_cli_watchdog_timeout_ms,
+        auth_budget_ms + filed_history_budget_ms + wallet_budget_ms + cleanup_budget_ms,
+    )
+
+
+def _live_iva_auth_watchdog_context(*, stage: str) -> dict[str, object]:
+    """Return redacted local auth-session state for live IVA watchdog diagnostics."""
+    try:
+        from ...application.auth import build_live_auth_preflight_report
+
+        report = build_live_auth_preflight_report()
+    except Exception:
+        return {f"auth_watchdog_{stage}_probe": "unavailable"}
+    return {
+        f"auth_watchdog_{stage}_provider": report.provider,
+        f"auth_watchdog_{stage}_profile_status": report.active_profile_status,
+        f"auth_watchdog_{stage}_identity_alignment": report.identity_alignment,
+        f"auth_watchdog_{stage}_persisted_session": "present" if report.persisted_session_present else "missing",
+        f"auth_watchdog_{stage}_persisted_session_expired": report.persisted_session_expired,
+    }
 
 
 @dataclass(frozen=True, slots=True)
@@ -1240,6 +1284,46 @@ def notifications_show(
     _emit_envelope(ctx, command="app.live.notifications.view", result=result, lines=lines)
 
 
+@notifications_app.command(
+    "latest",
+    help=tr(
+        "cli.app.live.notifications.latest_help",
+        default="Show the most recent DEHú notification snapshot in the active bucket.",
+    ),
+)
+def notifications_latest(ctx: typer.Context) -> None:
+    """Show the most recent DEHú notification snapshot for the active bucket, or report none."""
+    from ...application.live import NotificationsService
+
+    bucket_id = _active_bucket_id()
+    record = NotificationsService().latest(bucket_id=bucket_id)
+    from ._app_live_payloads import NotificationsLatestResult
+
+    if record is None:
+        empty = NotificationsLatestResult(bucket_id=bucket_id, snapshot_id=None)
+        _emit_envelope(
+            ctx,
+            command="app.live.notifications.latest",
+            result=empty,
+            lines=[f"bucket\t{bucket_id}", "snapshot_id\t-"],
+        )
+        return
+    result = NotificationsLatestResult(
+        bucket_id=bucket_id,
+        snapshot_id=record.snapshot_id,
+        captured_at=record.captured_at.isoformat(),
+        source_url=record.source_url,
+        row_count=len(record.rows),
+    )
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"snapshot_id\t{record.snapshot_id}",
+        f"captured_at\t{record.captured_at.isoformat()}",
+        f"row_count\t{len(record.rows)}",
+    ]
+    _emit_envelope(ctx, command="app.live.notifications.latest", result=result, lines=lines)
+
+
 # ─────────────────────────────────────────────────────────────────────────
 # ─────────────────────────────────────────────────────────────────────────
 # Portals subgroup
@@ -1421,6 +1505,92 @@ def expedientes_capture(
         f"source_url\t{persisted.source_url}",
     ]
     _emit_envelope(ctx, command="app.live.expedientes.capture", result=result, lines=lines)
+
+
+@expedientes_app.command(
+    "capture-all",
+    help=tr(
+        "cli.app.live.expedientes.capture_all_help",
+        default=(
+            "Live-walk the AEAT declaration register for every requested registry modelo across a year range "
+            "and persist bucket-scoped snapshots."
+        ),
+    ),
+)
+def expedientes_capture_all(
+    ctx: typer.Context,
+    year_from: Annotated[
+        int,
+        typer.Option("--from-year", min=2000, max=2099, help=tr("cli.app.live.from_year_help")),
+    ],
+    year_to: Annotated[
+        int,
+        typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
+    ],
+    modelos: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--modelo",
+            help=tr(
+                "cli.app.live.expedientes.capture_all_modelo_help",
+                default="Modelo code to include. Repeat to limit the run; omit to query all registry modelos.",
+            ),
+        ),
+    ] = None,
+) -> None:
+    """Live-walk the AEAT declaration register for many modelos and persist one snapshot per query."""
+    bucket_id = _active_bucket_id()
+    _emit_live_auth_preflight()
+    report = asyncio.run(
+        capture_expedientes_bulk(
+            bucket_id=bucket_id,
+            year_from=year_from,
+            year_to=year_to,
+            modelos=tuple(modelos) if modelos else None,
+        )
+    )
+    from ._app_live_payloads import (
+        ExpedientesCaptureAllResult,
+        ExpedientesCaptureFailurePayload,
+    )
+
+    lines = [
+        f"bucket\t{bucket_id}",
+        _metric_line("modelo_count", len(report.modelos)),
+        _metric_line("year_from", report.year_from),
+        _metric_line("year_to", report.year_to),
+        _metric_line("captured_snapshot_count", report.captured_snapshot_count),
+        _metric_line("declaration_count", report.declaration_count),
+        _metric_line("failed_count", len(report.failures)),
+        _metric_line("snapshot_ids", ",".join(report.snapshot_ids)),
+    ]
+    lines.extend(
+        _metric_line(
+            "failure",
+            "\t".join((failure.modelo, str(failure.year), failure.error_type, failure.message)),
+        )
+        for failure in report.failures
+    )
+    result = ExpedientesCaptureAllResult(
+        bucket_id=report.bucket_id,
+        modelos=list(report.modelos),
+        year_from=report.year_from,
+        year_to=report.year_to,
+        captured_snapshot_count=report.captured_snapshot_count,
+        declaration_count=report.declaration_count,
+        snapshot_ids=list(report.snapshot_ids),
+        failed_count=len(report.failures),
+        failures=[
+            ExpedientesCaptureFailurePayload(
+                modelo=failure.modelo,
+                year=failure.year,
+                error_type=failure.error_type,
+                message=failure.message,
+            )
+            for failure in report.failures
+        ],
+    )
+    _emit_envelope(ctx, command="app.live.expedientes.capture_all", result=result, lines=lines)
 
 
 @expedientes_app.command(

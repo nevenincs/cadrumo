@@ -186,6 +186,10 @@ def compute_styling(
     A pure function of the resolved layout and the structural facets: two runs
     over the same inputs produce the same facets, so the design is deterministic
     and the two transports stay in lock-step.
+
+    Returns:
+        tuple[tuple[:class:`SheetStyledRange`, ...], tuple[:class:`SheetColumnWidth`, ...], tuple[:class:`SheetFrozenView`, ...], tuple[:class:`SheetAutoFilter`, ...]]:
+        The computed styling facets.
     """
     entradas_last = max(
         (row.row for row in layout.entradas_rows),

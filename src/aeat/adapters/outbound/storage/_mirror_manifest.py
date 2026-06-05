@@ -63,7 +63,7 @@ def get_remote_mirror_namespace_manifest(
     provider: StorageProvider,
     namespace: str,
 ) -> RemoteMirrorNamespaceManifest | None:
-    """Return the remote mirror manifest for ``namespace`` when one exists."""
+    """Return the :class:`RemoteMirrorNamespaceManifest` for ``namespace`` when one exists."""
     try:
         payload, _metadata = provider.get(REMOTE_MIRROR_MANIFEST_NAMESPACE, _manifest_object_key_hmac(namespace))
     except OutboundStorageNotFoundError:

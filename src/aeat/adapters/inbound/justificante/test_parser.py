@@ -12,6 +12,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
+from urllib.parse import urlparse
 
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
@@ -25,12 +26,19 @@ from ....domain.justificante import (
 )
 from ....tests import FIXTURES_DIR as _FIXTURES_ROOT
 from ....tests._justificante_parse_cache import parse_committed_justificante_fixture
+from ....tests.aeat_literal_fixtures import (
+    JUSTIFICANTE_AYUDA_PATH_FIXTURE,
+    JUSTIFICANTE_VERIFY_PATH_FIXTURE,
+    aeat_host,
+    aeat_url,
+)
 from . import parse_justificante
 from ._parsers import extract_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 FIXTURES_DIR = _FIXTURES_ROOT / "justificantes"
+_SEDE_HOST = aeat_host("sede")
 
 
 @pytest.fixture(scope="module")
@@ -66,7 +74,7 @@ class TestParseJustificante:
         assert record.presented_at == datetime(2026, 4, 10, 11, 23, 45)
         assert record.total_a_ingresar == Decimal("1234.56")
         assert record.total_a_devolver is None
-        assert str(record.verification_url).startswith("https://sede.agenciatributaria.gob.es/")
+        assert urlparse(str(record.verification_url)).hostname == _SEDE_HOST
         assert record.source_pdf_path == modelo_130_pdf.resolve()
 
     def test_modelo_303_devolver(self, modelo_303_pdf: Path) -> None:
@@ -201,7 +209,7 @@ class TestRealCorpusParses:
         assert record.source_pdf_sha256
         assert len(record.source_pdf_sha256) == 64
         # verification_url must point at the AEAT cotejo surface.
-        assert "agenciatributaria.gob.es" in str(record.verification_url)
+        assert urlparse(str(record.verification_url)).hostname == _SEDE_HOST
 
 
 def _observed_period_expected(fixture: Path, ejercicio: str, filename_period: str) -> str:
@@ -264,7 +272,7 @@ def non_justificante_pdf_bytes() -> bytes:
     c.drawString(100, 620, "NIF: 00000000T")
     c.drawString(100, 600, "Numero de justificante: 1302026")
     c.drawString(100, 580, "Fecha y hora de presentacion: 2026-04-10 11:00:00")
-    c.drawString(100, 560, "https://sede.agenciatributaria.gob.es/ayuda")
+    c.drawString(100, 560, aeat_url("sede", JUSTIFICANTE_AYUDA_PATH_FIXTURE))
     c.showPage()
     c.save()
     return buffer.getvalue()
@@ -382,7 +390,9 @@ class TestJustificanteModel:
             tax_id="00000000T",
             total_a_ingresar=Decimal("10.00"),
             total_a_devolver=None,
-            verification_url=TypeAdapter(AnyHttpUrl).validate_python("https://sede.agenciatributaria.gob.es/verify"),
+            verification_url=TypeAdapter(AnyHttpUrl).validate_python(
+                aeat_url("sede", JUSTIFICANTE_VERIFY_PATH_FIXTURE),
+            ),
             source_pdf_path=pdf,
             source_pdf_sha256=sha256 or hashlib.sha256(pdf.read_bytes()).hexdigest(),
             parsed_at=datetime(2026, 4, 12, 0, 0, 0),

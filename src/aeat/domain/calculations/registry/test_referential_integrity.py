@@ -20,6 +20,7 @@ from pydantic import ValidationError
 
 from ....core._toml import freeze_toml
 from ....core.classification import SensitivityClass
+from ....core.config import Settings
 from ....core.resources import bundled_path
 from . import RegistryValidationError
 from ._authority import ValidatedRegistryAuthority
@@ -151,7 +152,7 @@ def _minimal_source_ref() -> SourceReference:
         sha256="a" * 64,
         bytes=1024,
         retrieved_at=date(2024, 1, 1),
-        source_url="https://www.agenciatributaria.es/",
+        source_url=f"{Settings.external_constants().aeat.domains.legacy_www}/",
         review_status="reviewed",
     )
 

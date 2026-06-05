@@ -1,98 +1,172 @@
 # Set up your taxpayer profile
 
-A profile is your saved taxpayer identity and settings. Every `aeat app` command
-runs against the one active profile and refuses to run when no profile is active,
-so a profile is the first thing to set up. This guide creates your first profile and shows how
-to keep several. You need `aeat` installed; if you don't have it yet, see
-[Get started](../getting-started.md).
+Use this guide to create the local taxpayer profile that `aeat app` commands
+use. The active profile is the one `aeat` reads and updates when you import
+ledger records, calculate a modelo, or export a local file. A modelo is a
+Spanish tax form.
 
-## Create your first profile
+Profiles are local. Creating or editing a profile does not contact the Agencia
+Estatal de Administración Tributaria (AEAT).
 
-Have ready your NIF or NIE (your tax identity number), your name and surnames or
-company name, your postcode, and your taxpayer type. Run the create command with
-a name for the profile:
+## Before you start
+
+You need `aeat` installed. If it is not installed, start with
+[Get started with aeat](../getting-started.md).
+
+Have these facts ready:
+
+- Your Spanish identity or tax identifier:
+  - Spanish citizens usually use Documento Nacional de Identidad (DNI).
+  - Foreign individuals usually use Número de Identidad de Extranjero (NIE).
+  - Companies and other legal entities use Número de Identificación Fiscal
+    (NIF). If your records say Código de Identificación Fiscal (CIF), enter
+    that identifier as requested by the command.
+- Name and surnames, or company name
+- Tax address postcode
+- Taxpayer type, such as natural person or legal entity
+- Business activity, as plain text or an Impuesto sobre Actividades Económicas
+  (IAE) heading if you know it
+- Impuesto sobre la Renta de las Personas Físicas (IRPF) income category, the
+  personal income tax category for the income you report
+- Impuesto sobre el Valor Añadido (IVA) regime, the value-added tax regime for
+  the activity
+- Output language for command responses
+
+## Create the profile with the wizard
+
+Run `create` with a profile name you recognize, such as `my-profile`:
 
 ```
 aeat config profile create my-profile
 ```
 
-A short wizard asks for those details, including your taxpayer type - natural
-person, legal entity, or attribution entity - and your IRPF (personal income tax)
-income category. When
-the wizard finishes, the profile is active. Confirm it:
+Answer the prompts. The wizard asks only the questions that apply to the choices
+you make. When it finishes, the new profile becomes active.
+
+## Confirm the active profile
+
+Check which profile is active:
 
 ```
 aeat config profile status
+```
+
+Inspect the saved facts:
+
+```
 aeat config profile show
 ```
 
-## Create a profile without the wizard (scripted / non-interactive)
+Fix any wrong facts before you import ledger records or calculate a modelo.
 
-The wizard above is the primary path. In a non-interactive shell — a script, a
-CI job, or a piped session — the wizard cannot prompt, so `create` refuses and
-points you at `--quiet` with the flags to supply instead. Run `aeat config
-profile create --help` for the full flag set.
+## Create a profile without prompts
 
-Pass `--quiet` to run without prompts, supplying each value as a flag, and add
-`--accept-defaults` to fill every flag you omit with the descriptor's default.
-At minimum, supply the tax id. To export a modelo later, you must also set the
-display name and surnames now — `export` reads `identity.name` and
-`identity.surnames` to build the fichero-BOE header and refuses without them:
+Use non-interactive creation only when the wizard cannot ask questions, such as
+inside a script. Pass `--quiet`, and add `--accept-defaults` when you want `aeat`
+to fill any omitted facts from its defaults.
+
+This example creates a natural-person profile for an economic activity. First
+create the profile with the facts required for profile status checks:
 
 ```
-aeat config profile create my-profile --quiet --accept-defaults --tax-id 12345678Z --name "Ana" --surnames "García López" --address-postcode 28013 --entity-type natural_person --irpf-income-categories actividad_economica
+aeat config profile create my-profile --quiet --accept-defaults --tax-id 12345678Z --activity "graphic design"
 ```
 
-The created profile becomes active immediately, exactly as the wizard leaves it.
-Each closed-value flag (`--entity-type`, `--irpf-income-categories`,
-`--iva-regime`, and the rest) lists its accepted values in `--help`; pass them
-explicitly here rather than relying on `--accept-defaults` when the default
-isn't right for your taxpayer.
+Then add the name and filing facts:
+
+```
+aeat config profile edit my-profile --quiet --name "Ana" --surnames "Garcia Lopez"
+aeat config profile edit my-profile --quiet --address-postcode 28013 --entity-type natural_person
+aeat config profile edit my-profile --quiet --irpf-income-categories actividad_economica --iva-regime GENERAL --output-language en
+```
+
+Use the [CLI reference](../cli/index.rst) for the full flag list and accepted
+values.
+
+## Update profile facts
+
+Use `edit` to change an existing profile:
+
+```
+aeat config profile edit my-profile
+```
+
+For a single scripted change, pass `--quiet` and the field you want to change:
+
+```
+aeat config profile edit my-profile --quiet --address-postcode 28014
+```
+
+Run `status` or `show` again after editing.
 
 ## Switch between profiles
 
-List your profiles and see which one is active:
+List your profiles:
 
 ```
 aeat config profile list
 ```
 
-Activate a different one:
+Switch before you work on another taxpayer:
 
 ```
 aeat config profile switch my-other-profile
 ```
 
-`aeat app` commands always run against the active profile and take no profile
-argument, so switch first. Inspect any profile with `aeat config profile show`,
-or check the active one with `aeat config profile status`.
+Run `aeat config profile status` after switching if you are not sure which
+profile is active.
 
-## Manage your profiles
+## Check the profile
 
-Use these when you manage more than one profile:
+Validate the active profile against the profile schema:
 
-- Copy a profile under a new id: `aeat config profile duplicate <source> <target>`.
-- Rename a profile, moving the active pointer with it:
-  `aeat config profile rename <source> <target>`.
-- Remove a profile and **all** its local state: `aeat config profile delete <name> --yes`. This is irreversible and deletes everything under the profile, including its imported ledger and any modelo work units and drafts. To change a detail rather than start over, edit the profile instead of deleting it.
-- Re-run the wizard over an existing profile to change its details: `aeat config profile edit <name>` (interactive). To change a single field non-interactively, re-run `edit` with the matching flag, for example `aeat config profile edit <name> --quiet --name "..." --surnames "..."`.
+```
+aeat config profile validate
+```
 
-## Your profile and your financial data
+To validate another profile without switching:
 
-Your modelo calculations draw their figures from the classified ledger stored
-under the active profile. Setting up that ledger - importing your records, then
-classifying them - is the next step. The [tutorial](../tutorials/index.md) walks
-through `aeat app ledger import` and `aeat app ledger classify`. For the terms
-*ledger* and *classified*, see the [glossary](../glossary.md).
+```
+aeat config profile validate my-other-profile
+```
 
-## Where next
+Modelo-specific checks need a modelo, registry revision, filing year, and
+period. For those checks, see
+`aeat config profile preflight --modelo ... --revision-id ... --filing-year ... --period ...`
+in the [CLI reference](../cli/index.rst).
 
-- [Quickstart](quickstart.md) - produce a modelo file once a profile and ledger
-  are ready.
-- [Tutorial](../tutorials/index.md) - the full workflow, including the ledger.
-- [Pipeline explanation](../explanation/index.md) - why `aeat` uses a profile,
-  and how each figure traces to the law.
-- [CLI reference](../cli/index.rst) - every profile command and its flags.
-- [Glossary](../glossary.md) - the Spanish tax terms used here.
-- Report a problem or ask a question on the
-  [issue tracker](https://github.com/wgergely/aeat/issues).
+## Manage profile records
+
+Copy a profile when you need a second profile that starts from the same facts:
+
+```
+aeat config profile duplicate my-profile my-copy
+```
+
+Rename a profile:
+
+```
+aeat config profile rename my-profile new-profile-name
+```
+
+Delete a profile only when you mean to remove it from normal use:
+
+```
+aeat config profile delete old-profile --yes
+```
+
+`--yes` is required. Deletion is a local operation, but it is destructive.
+The profile stops being available for ordinary `list`, `switch`, and `app`
+workflows. If it was active, `aeat` clears the active-profile pointer.
+
+## If a command stops with an error
+
+If a command reports that no profile is active, a field value is invalid, or you
+are working under the wrong profile, use
+[Diagnose and repair your local setup](troubleshooting.md).
+
+## Next steps
+
+- [Import and classify a bank statement](import-bank-statements.md)
+- [Plan your filing calendar](filing-calendar.md)
+- [CLI reference](../cli/index.rst)

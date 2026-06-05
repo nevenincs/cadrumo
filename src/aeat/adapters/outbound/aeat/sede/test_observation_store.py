@@ -11,12 +11,15 @@ from typing import Literal
 import pytest
 from pydantic import AnyHttpUrl
 
+from .....core.config import Settings
 from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ._observation_store import FiledDeclaracionObservationStore
 from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 _BUCKET_ID = "sede-observation"
+_AEAT = Settings.external_constants().aeat
+_DECLARATIONS_LISTING_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.declarations_listing}"
 
 
 @pytest.fixture
@@ -99,7 +102,7 @@ def _artefact(
 ) -> FiledDeclaracionArtefact:
     return FiledDeclaracionArtefact(
         kind=kind,
-        source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+        source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
         content_type=content_type,
         byte_count=len(body),
         sha256=hashlib.sha256(body).hexdigest(),

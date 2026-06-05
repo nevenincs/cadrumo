@@ -400,6 +400,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.workflow._resume.WorkflowResumeRunAmbiguousError",
+        ErrorCode(
+            code="REFUSED_WORKFLOW_RESUME_RUN_AMBIGUOUS",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_workflow_resume",
+            default_suggestion="aeat app modelo work runs",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.live._snapshot_base.SnapshotNotFoundError",
         ErrorCode(
             code="FAIL_SNAPSHOT_NOT_FOUND",

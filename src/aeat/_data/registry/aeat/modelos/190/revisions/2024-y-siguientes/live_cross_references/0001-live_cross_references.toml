@@ -3,7 +3,7 @@ id = "modelo-190-filed-declarations-read"
 evidence_tier = "official_source_guidance"
 surface = "authenticated_read_surface"
 guard_policy_id = "modelo-190-filed-declarations-read-only"
-allowed_hosts = ["sede.agenciatributaria.gob.es", "www1.agenciatributaria.gob.es", "www2.agenciatributaria.gob.es"]
+allowed_hosts = ["sede.agenciatributaria.gob.es", "www1.agenciatributaria.gob.es", "www2.agenciatributaria.gob.es", "www6.agenciatributaria.gob.es"]
 allowed_methods = ["GET", "HEAD", "OPTIONS"]
 forbidden_actions = [
     "server-side-save",

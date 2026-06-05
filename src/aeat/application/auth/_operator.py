@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.config import Settings, load_settings, unwrap_optional_secret
+from ...core.config import LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD, Settings, load_settings, unwrap_optional_secret
 from ...core.errors import AeatError
 from ...core.i18n import tr
 from ...core.logging import get_logger
@@ -41,7 +41,7 @@ _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS = (
     "aeat_secret_store_dir",
     "aeat_secret_passphrase",
     "aeat_auth_provider",
-    "aeat_live_tests_enabled",
+    LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD,
     "aeat_certificate_path",
     "aeat_certificate_password_secret",
     "aeat_certificate_friendly_name",
@@ -206,6 +206,7 @@ class AuthTestResult(AuthStatusResult):
 
     persisted_session_present: bool = False
     persisted_session_expired: bool | None = None
+    persisted_session_state: str = ""
     probe_summary: str = ""
     probe_result: str = ""
 
@@ -236,6 +237,7 @@ class LiveAuthPreflightReport(BaseModel):
     certificate_backend: str = ""
     persisted_session_present: bool = False
     persisted_session_expired: bool | None = None
+    persisted_session_state: str = ""
     probe_result: str = ""
 
 
@@ -409,7 +411,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
 
 
 def inspect_operator_auth(provider: str | None = None) -> AuthStatusResult:
-    """Return current local auth state, optionally scoped to a known provider slot.
+    """Return current local auth state as :class:`AuthStatusResult`, optionally scoped to a known provider slot.
 
     Consumes the canonical :func:`build_operator_state_projection`. The
     ``configured`` field is the projection's single canonical
@@ -607,7 +609,7 @@ def _certificate_completeness(
 
 
 def test_operator_auth(provider: str | None = None, *, settings: Settings | None = None) -> AuthTestResult:
-    """Return auth readiness plus a deeper local session-token probe.
+    """Return auth readiness as :class:`AuthTestResult`, plus a deeper local session-token probe.
 
     ``auth test`` and ``auth status`` (:func:`inspect_operator_auth`)
     both consume :func:`build_operator_state_projection`, so they report
@@ -655,6 +657,7 @@ def test_operator_auth(provider: str | None = None, *, settings: Settings | None
             **status.model_dump(),
             persisted_session_present=session_probe.present,
             persisted_session_expired=session_probe.expired,
+            persisted_session_state=session_probe.state,
             probe_summary=provider_probe.summary or session_probe.summary,
             probe_result=provider_probe.result,
         )
@@ -717,6 +720,7 @@ def build_live_auth_preflight_report(
         certificate_backend=resolved_settings.aeat_certificate_backend.value,
         persisted_session_present=probe.persisted_session_present,
         persisted_session_expired=probe.persisted_session_expired,
+        persisted_session_state=probe.persisted_session_state,
         probe_result=probe.probe_result,
     )
 
@@ -782,6 +786,7 @@ class _LocalSessionProbe(BaseModel):
 
     present: bool = False
     expired: bool | None = None
+    state: str = ""
     summary: str = ""
 
 
@@ -796,6 +801,7 @@ def _probe_local_session(provider: str, *, settings: Settings | None = None) -> 
         return _LocalSessionProbe(
             present=False,
             expired=None,
+            state="no_provider",
             summary=tr("application.auth.operator.probe.no_provider"),
         )
     try:
@@ -804,6 +810,7 @@ def _probe_local_session(provider: str, *, settings: Settings | None = None) -> 
         return _LocalSessionProbe(
             present=False,
             expired=None,
+            state="no_provider",
             summary=tr("application.auth.operator.probe.no_provider"),
         )
 
@@ -818,16 +825,20 @@ def _probe_local_session(provider: str, *, settings: Settings | None = None) -> 
         return _LocalSessionProbe(
             present=False,
             expired=None,
+            state="no_session",
             summary=tr("application.auth.operator.probe.no_session"),
         )
     expired = session.is_expired(now())
     if expired:
+        state = "expired"
         summary = tr("application.auth.operator.probe.session_expired")
     else:
+        state = "live"
         summary = tr("application.auth.operator.probe.session_live")
     return _LocalSessionProbe(
         present=True,
         expired=expired,
+        state=state,
         summary=summary,
     )
 
@@ -1054,13 +1065,12 @@ def _probe_clave_movil_identity(*, settings: Settings | None = None) -> _Provide
 
 
 class AuthLoginNotEnabledError(AeatError):
-    """Raised when ``auth login`` is invoked without the live-tests safety gate enabled.
+    """Raised when pytest invokes ``auth login`` without the live-test opt-in enabled.
 
-    ``aeat`` is a build / verify / export tool; live AEAT submission is
-    permanently forbidden and live reads are gated behind
-    ``AEAT_LIVE_TESTS_ENABLED=1``. Surfacing this refusal here, in user
-    prose, replaces the raw engineering English that previously bubbled
-    from the certificate-bundle precondition (round-5 B2).
+    Live AEAT submission remains permanently forbidden, but read-only
+    operator authentication is an operational CLI surface. The
+    The live-test opt-in setting gates pytest-driven live reads, not
+    normal operator login attempts.
     """
 
 
@@ -1081,13 +1091,15 @@ async def login_operator_auth(
     reset_lock: bool = False,
     target_url: str | None = None,
     settings: Settings | None = None,
+    pytest_current_test: str | None = None,
 ) -> AuthLoginResult:
-    """Acquire or verify a live AEAT session and persist backend auth state.
+    """Acquire or verify a live AEAT session as :class:`AuthLoginResult`, and persist backend auth state.
 
     Refuses with a localised, user-prose message — never a raw env-var
-    or class name — when (a) the ``AEAT_LIVE_TESTS_ENABLED`` safety gate
-    is off, or (b) the configured provider is locally incomplete
-    (certificate path unset / file missing / unreadable). Round-5 B2.
+    or class name — when a pytest live-read attempt is missing its
+    live-test opt-in, or when the configured provider is locally
+    incomplete (certificate path unset / file missing / unreadable).
+    Round-5 B2.
     """
     if settings is not None:
         with _auth_operator_settings_scope(settings):
@@ -1097,6 +1109,7 @@ async def login_operator_auth(
                 reset_lock=reset_lock,
                 target_url=target_url,
                 settings=None,
+                pytest_current_test=pytest_current_test,
             )
     resolved_settings = load_settings()
     provider_kind = _provider_kind_or_none(provider)
@@ -1104,14 +1117,20 @@ async def login_operator_auth(
         provider_kind = _configured_or_default_provider(resolved_settings)
     _implemented_provider(provider_kind.value)
 
-    # The live-tests safety gate is the FIRST reason a non-live tool
-    # refuses login, and must surface before any per-provider check.
-    # The refusal text is user prose, never the env-var name.
-    if resolved_settings.aeat_live_tests_enabled != "1":
+    from ...core.access_gate import AeatAccessGate, AeatLiveReadNotEnabledError
+
+    gate = AeatAccessGate(resolved_settings)
+    # During pytest, the live-test opt-in remains the first refusal so
+    # test execution cannot accidentally reach external services.
+    # Outside pytest, auth login is an operational read surface and
+    # proceeds to provider readiness/session checks.
+    try:
+        gate.require_live_read(pytest_current_test=pytest_current_test)
+    except AeatLiveReadNotEnabledError as exc:
         raise AuthLoginNotEnabledError(
             translated_message="application.auth.operator.login.refused_live_tests_disabled",
             context={"provider": provider_kind.value},
-        )
+        ) from exc
 
     # Provider-specific local-readiness preconditions. A certificate
     # provider with no path / a missing file / an unreadable bundle
@@ -1164,7 +1183,7 @@ def clear_operator_auth(
     locks: bool = False,
     settings: Settings | None = None,
 ) -> AuthClearResult:
-    """Clear workflow auth state, persisted sessions, and acquisition locks."""
+    """Clear workflow auth state, persisted sessions, and acquisition locks, returning a :class:`AuthClearResult`."""
     if settings is not None:
         with _auth_operator_settings_scope(settings):
             return clear_operator_auth(

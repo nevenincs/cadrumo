@@ -27,6 +27,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   aeat.adapters.persistence.storage._kdf_salt
    aeat.adapters.persistence.storage._namespace_registry
    aeat.adapters.persistence.storage._path_safety
    aeat.adapters.persistence.storage._rotation

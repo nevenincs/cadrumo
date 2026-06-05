@@ -96,7 +96,7 @@ def _parse_eurofxref(path: Path) -> dict[date, dict[str, Decimal]]:
 
 @lru_cache(maxsize=1)
 def default_ecb_rate_provider() -> EcbReferenceRateProvider:
-    """Return the process-wide provider over the bundled ECB snapshot (cached)."""
+    """Return the process-wide :class:`EcbReferenceRateProvider` over the bundled ECB snapshot (cached)."""
     return EcbReferenceRateProvider()
 
 

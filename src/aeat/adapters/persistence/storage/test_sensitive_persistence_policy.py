@@ -272,16 +272,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "target.write_text",
     ): "ECB refresh utility writes bundled non-user reference-rate data after parser validation",
     (
-        "src/aeat/apidocs/manager.py",
-        "scaffold",
-        "path.write_text",
-    ): "API documentation stub generation",
-    (
-        "src/aeat/entrypoints/cli/_doc_reference.py",
-        "_write_text_if_changed",
-        "path.write_text",
-    ): "CLI reference documentation page generation",
-    (
         "src/aeat/domain/calculations/registry/_workbook_parity.py",
         "_converted_binary_xls_path",
         "cached_path.write_bytes",

@@ -2,7 +2,7 @@
 
 The application stores filing periods in a single canonical token shape:
 
-- ``YYYYQ[1-4]``  — quarterly (e.g. ``2026Q1``)
+- ``YYYYQ[1-4]`` or ``YYYY-[1-4]T`` — quarterly (e.g. ``2026Q1`` or ``2026-1T``)
 - ``YYYY-MM``      — monthly  (e.g. ``2026-03``)
 - ``YYYYA``        — annual   (e.g. ``2026A``)
 - bare ``YYYY``    — annual shorthand
@@ -48,6 +48,7 @@ class PeriodValidationError(PeriodError, ValueError):
 
 
 _QUARTER_PERIOD_RE = re.compile(r"^(?P<year>\d{4})Q(?P<quarter>[1-4])$")
+_DASHED_QUARTER_PERIOD_RE = re.compile(r"^(?P<year>\d{4})-(?P<quarter>[1-4])T$")
 _MONTH_PERIOD_RE = re.compile(r"^(?P<year>\d{4})-(?P<month>0[1-9]|1[0-2])$")
 _ANNUAL_PERIOD_RE = re.compile(r"^(?P<year>\d{4})A$")
 _BARE_YEAR_RE = re.compile(r"^\d{4}$")
@@ -60,8 +61,8 @@ def parse_canonical_period(period: str, *, ejercicio: str | None = None) -> tupl
 
     Args:
         period: A canonical filing-period token (``YYYYQ[1-4]``,
-            ``YYYY-MM``, ``YYYYA``, bare ``YYYY``, or ``YYYYPn`` for
-            pago-fraccionado instalments). When ``ejercicio`` is
+            ``YYYY-[1-4]T``, ``YYYY-MM``, ``YYYYA``, bare ``YYYY``,
+            or ``YYYYPn`` for pago-fraccionado instalments). When ``ejercicio`` is
             supplied, the raw AEAT quarterly form (``nT``) is also
             accepted; the year then comes from ``ejercicio``.
         ejercicio: Optional filing year string consumed only when
@@ -77,6 +78,8 @@ def parse_canonical_period(period: str, *, ejercicio: str | None = None) -> tupl
         PeriodValidationError: When ``period`` is none of the accepted shapes.
     """
     if match := _QUARTER_PERIOD_RE.fullmatch(period):
+        return int(match.group("year")), f"{match.group('quarter')}T"
+    if match := _DASHED_QUARTER_PERIOD_RE.fullmatch(period):
         return int(match.group("year")), f"{match.group('quarter')}T"
     if match := _MONTH_PERIOD_RE.fullmatch(period):
         return int(match.group("year")), match.group("month")

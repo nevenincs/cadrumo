@@ -78,6 +78,8 @@ def classify_live_iva_acquisition_failure(exc: BaseException) -> LiveIvaAcquisit
             return LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT
         if exc.failure_mode == ClaveMovilFailureMode.PENDING_PETITION_BLOCKED.value:
             return LiveIvaAcquisitionFailureMode.PENDING_CLAVE_REQUEST
+        if exc.failure_mode == ClaveMovilFailureMode.INITIAL_NAVIGATION_TIMEOUT.value:
+            return LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED
         if exc.failure_mode in {
             ClaveMovilFailureMode.AUTH_COMPLETION_TIMEOUT.value,
             ClaveMovilFailureMode.APPROVAL_TIMEOUT.value,

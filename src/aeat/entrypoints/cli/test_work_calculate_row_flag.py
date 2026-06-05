@@ -28,7 +28,7 @@ from ...domain.modelos._row_models import (
     validate_m184_member_share_sum,
     validate_m347_threshold,
 )
-from ._modelo import _parse_row_spec
+from ._modelo_cli_support import parse_row_spec as _parse_row_spec
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

@@ -34,6 +34,7 @@ from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
 from ...core.identity import BucketId
+from ...core.money import round_to_cents
 from ...core.time._utc import validate_utc_aware
 from .._identifiers import canonical_decimal_string
 from ..iva._schema import EUMemberState, IvaCategory
@@ -946,6 +947,53 @@ class Transaction(BaseModel):
             raise TransactionValidationError("fx_rate and value_in_eur must be absent for EUR-native transactions")
         if (self.rate_source is not None or self.rate_date is not None) and not fx_set:
             raise TransactionValidationError("rate_source/rate_date require an fx_rate (rate provenance needs a rate)")
+        return self
+
+    @model_validator(mode="after")
+    def _enforce_gross_equals_base_plus_iva(self) -> Self:
+        """Enforce ``gross == taxable_base + iva_amount`` to the cent.
+
+        The IVA-exclusive :attr:`taxable_base` and the :attr:`iva_amount`
+        charged on the row must reconstitute the IVA-inclusive gross. The
+        gross reference is ``raw.amount`` taken as an absolute value: the
+        tax substrate is denominated in the row's native currency (the
+        aggregation layer carries ``value_in_eur`` as a separate parallel
+        EUR projection and does **not** apply ``fx_rate`` to the base or
+        amount), and the income/expense direction lives on
+        :attr:`direction`, not on the sign of the tax substrate.
+
+        For self-assessed IVA categories (reverse charge and imports),
+        the paid cash gross matches the taxable base; the IVA amount is
+        self-assessed but not paid in the transaction itself.
+
+        The check fires **only when both** :attr:`taxable_base` and
+        :attr:`iva_amount` are present. A row with either field unset (the
+        common case — most transactions never carry the tax substrate)
+        validates unconditionally, so the invariant cannot break the
+        existing transaction corpus.
+        """
+        if self.taxable_base is None or self.iva_amount is None:
+            return self
+        if self.iva_category in {
+            IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            IvaCategory.DOMESTIC_REVERSE_CHARGE,
+            IvaCategory.IMPORT_THIRD_COUNTRY,
+        }:
+            expected = round_to_cents(abs(self.raw.amount))
+            reconstituted = round_to_cents(self.taxable_base)
+            if reconstituted != expected:
+                raise TransactionValidationError(
+                    "taxable_base must equal the gross to the cent for self-assessed IVA: "
+                    f"{self.taxable_base} != {expected}"
+                )
+            return self
+        expected = round_to_cents(abs(self.raw.amount))
+        reconstituted = round_to_cents(self.taxable_base + self.iva_amount)
+        if reconstituted != expected:
+            raise TransactionValidationError(
+                "taxable_base + iva_amount must equal the gross to the cent: "
+                f"{self.taxable_base} + {self.iva_amount} = {reconstituted} != {expected}"
+            )
         return self
 
 

@@ -221,7 +221,7 @@ class AuthorizationManifest(BaseModel):
         return self
 
     def entry_for(self, modelo: str) -> ModeloAuthorizationEntry | None:
-        """Return the enrolling entry for ``modelo``, or ``None`` if absent."""
+        """Return the enrolling :class:`ModeloAuthorizationEntry` for ``modelo``, or ``None`` if absent."""
         for entry in self.entries:
             if entry.modelo == modelo:
                 return entry

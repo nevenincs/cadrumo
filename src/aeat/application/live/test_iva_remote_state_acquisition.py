@@ -16,6 +16,7 @@ from ...adapters.outbound.aeat.sede import SedeFailureMode, SedeNavigationError
 from ...adapters.persistence.storage import LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE
 from ...adapters.persistence.storage.errors import StorageValidationError
 from ...core.config import Settings
+from ...core.identity import nif_check_letter
 from ...tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root
 from ..auth import AuthenticatedAeatSessionResult, AuthProviderKind
 from . import (
@@ -26,10 +27,14 @@ from . import (
     LiveIvaReadStatus,
     LiveIvaReadSurface,
     LiveIvaSurfaceTimeoutError,
+    _aggregate_iva_compensation_history_reports,
     _await_live_iva_surface,
     _filed_history_surface_timeout_ms,
     _suppress_live_iva_playwright_cancellation_noise,
     build_iva_remote_state_acquisition_report,
+    capture_iva_compensation_history,
+    capture_iva_compensation_wallet,
+    capture_iva_remote_state,
     classify_live_iva_acquisition_failure,
     list_iva_remote_state_acquisition_manifests,
     load_iva_remote_state,
@@ -130,6 +135,64 @@ def test_combined_acquisition_marks_partial_filed_history_as_failed(tmp_path: Pa
         "failed_declaration_count": 1,
         "failed_declarations": ("modelo=303;ejercicio=2024;period=1T;failure_type=TimeoutError",),
     }
+
+
+def test_year_chunked_filed_history_reports_aggregate_into_one_command_report(tmp_path: Path) -> None:
+    report_2024 = IvaCompensationHistoryCaptureReport(
+        output_root=str(tmp_path / "filed-history"),
+        year_from=2024,
+        year_to=2024,
+        captured_count=4,
+        observation_paths=("observations/303-2024-1T.json", "observations/303-2024-2T.json"),
+        artefact_refs=("secure-object:2024-1T",),
+        casilla_count=316,
+        calculation_observation_count=4,
+        calculation_observation_keys=("303:2024:1T", "303:2024:2T"),
+        reloaded_history_count=4,
+        reloaded_rows=(),
+    )
+    report_2023 = IvaCompensationHistoryCaptureReport(
+        output_root=str(tmp_path / "filed-history"),
+        year_from=2023,
+        year_to=2023,
+        captured_count=3,
+        observation_paths=("observations/303-2023-1T.json",),
+        artefact_refs=("secure-object:2023-1T", "secure-object:2023-2T"),
+        casilla_count=237,
+        calculation_observation_count=3,
+        calculation_observation_keys=("303:2023:1T",),
+        reloaded_history_count=7,
+        reloaded_rows=(),
+        failed_declaration_count=1,
+        failed_declarations=("modelo=303;ejercicio=2023;period=4T;failure_type=TimeoutError",),
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="session"):
+        aggregate = _aggregate_iva_compensation_history_reports(
+            [report_2024, report_2023],
+            output_root=tmp_path / "filed-history",
+            year_from=2023,
+            year_to=2024,
+        )
+
+    assert aggregate.year_from == 2023
+    assert aggregate.year_to == 2024
+    assert aggregate.captured_count == 7
+    assert aggregate.casilla_count == 553
+    assert aggregate.calculation_observation_count == 7
+    assert aggregate.observation_paths == (
+        "observations/303-2024-1T.json",
+        "observations/303-2024-2T.json",
+        "observations/303-2023-1T.json",
+    )
+    assert aggregate.artefact_refs == (
+        "secure-object:2024-1T",
+        "secure-object:2023-1T",
+        "secure-object:2023-2T",
+    )
+    assert aggregate.calculation_observation_keys == ("303:2024:1T", "303:2024:2T", "303:2023:1T")
+    assert aggregate.failed_declaration_count == 1
+    assert aggregate.failed_declarations == ("modelo=303;ejercicio=2023;period=4T;failure_type=TimeoutError",)
 
 
 def test_auth_failure_blocks_surface_outcomes_with_typed_mode(tmp_path: Path) -> None:
@@ -495,6 +558,59 @@ def test_acquisition_manifest_persists_redacted_auth_diagnostic_ref(tmp_path: Pa
     assert diagnostic_id not in remote_state.model_dump_json()
 
 
+def test_acquisition_manifest_redacts_sensitive_surface_failure_context(tmp_path: Path) -> None:
+    sensitive_nif = f"12345678{nif_check_letter(12345678)}"
+    sensitive_support = "support-number-private-canary"
+    sensitive_object_key = "wallet:private-object-key-canary"
+    sensitive_profile_id = "123e4567-e89b-12d3-a456-426614174000"
+    sensitive_url = "https://example.test/private/path?token=private-query-canary"
+    wallet_error = SedeNavigationError(
+        "wallet read failed before parser",
+        failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
+        context={
+            "dni_nie": sensitive_nif,
+            "num_soporte": sensitive_support,
+            "object_key": sensitive_object_key,
+            "profile_id": sensitive_profile_id,
+            "landing_url": sensitive_url,
+            "phone_state": "app_did_not_prompt",
+            "nested": {"identity_nif": sensitive_nif, "stage": "wallet_auth_gate"},
+            "credentials": {"raw": sensitive_support},
+            "attempts": (sensitive_nif, sensitive_support),
+        },
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="session") as profile:
+        report = build_iva_remote_state_acquisition_report(
+            output_root=tmp_path / "remote-state",
+            year_from=2024,
+            year_to=2024,
+            target_year=2026,
+            target_period="1T",
+            wallet_error=wallet_error,
+        )
+        manifest = persist_iva_remote_state_acquisition_report(report, captured_at=_CAPTURED_AT)
+        remote_state = load_iva_remote_state(as_of_year=2026)
+
+        rendered = f"{report.model_dump_json()} {manifest.model_dump_json()} {remote_state.model_dump_json()}"
+        database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
+
+    for raw in (
+        sensitive_nif,
+        sensitive_support,
+        sensitive_object_key,
+        sensitive_profile_id,
+        "private-query-canary",
+        "/private/path",
+    ):
+        assert raw not in rendered
+        assert raw.encode() not in database_bytes
+    assert "phone_state" in rendered
+    assert "app_did_not_prompt" in rendered
+    assert "sha256:" in rendered
+    assert "https://example.test" in rendered
+
+
 def test_legacy_acquisition_manifest_without_auth_outcome_still_loads() -> None:
     legacy = IvaRemoteStateAcquisitionReport(
         output_root="legacy-output",
@@ -544,6 +660,40 @@ def test_combined_acquisition_manifest_requires_ready_active_profile_runtime(tmp
 
         with pytest.raises(StorageValidationError):
             persist_iva_remote_state_acquisition_report(report, captured_at=_CAPTURED_AT)
+
+
+def test_remote_state_reload_refuses_without_active_profile(tmp_path: Path) -> None:
+    with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(StorageValidationError):
+        load_iva_remote_state(as_of_year=2026)
+
+
+def test_remote_state_capture_refuses_without_active_profile(tmp_path: Path) -> None:
+    async def run() -> None:
+        await capture_iva_remote_state(
+            year_from=2026,
+            year_to=2026,
+            target_year=2026,
+            target_period="2T",
+        )
+
+    with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(StorageValidationError):
+        asyncio.run(run())
+
+
+def test_standalone_iva_wallet_capture_refuses_without_active_profile(tmp_path: Path) -> None:
+    async def run() -> None:
+        await capture_iva_compensation_wallet(target_year=2026, target_period="2T")
+
+    with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(StorageValidationError):
+        asyncio.run(run())
+
+
+def test_standalone_iva_history_capture_refuses_without_active_profile(tmp_path: Path) -> None:
+    async def run() -> None:
+        await capture_iva_compensation_history(year_from=2026, year_to=2026, output_root=tmp_path / "history")
+
+    with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(StorageValidationError):
+        asyncio.run(run())
 
 
 def _secure_object_namespace_count(database_path: Path, namespace: str) -> int:

@@ -16,12 +16,7 @@ _MODELO_MODULE_PREFIX = "_modelo"
 _MODELO_LEGACY_ROOT = "_modelo.py"
 _MODELO_PAYLOADS = "_modelo_payloads.py"
 
-_LEGACY_ROOT_PRIVATE_IMPORT_MODULES = {
-    "domain.modelos._calculation_revision",
-    "domain.modelos._filing_record",
-    "domain.modelos._row_models",
-    "domain.modelos._work_unit",
-}
+_LEGACY_ROOT_PRIVATE_IMPORT_MODULES: set[str] = set()
 
 _LEGACY_ROOT_REGISTRY_AUTHORITY_READ_BUDGET = 0
 _LEGACY_ROOT_REGISTRY_QUERY_SERVICE_CALL_BUDGET = 0

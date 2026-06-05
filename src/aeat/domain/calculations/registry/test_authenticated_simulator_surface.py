@@ -12,11 +12,15 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from ....tests.aeat_literal_fixtures import aeat_host
 from ._live_parity import _COMPATIBLE_SURFACE_PAIRS
 from ._remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS
 from ._schema import LiveCrossReferenceDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+_SEDE_HOST = aeat_host("sede")
+_WWW2_HOST = aeat_host("www2")
 
 
 def _kwargs(**overrides: object) -> dict[str, object]:
@@ -38,7 +42,7 @@ def _kwargs(**overrides: object) -> dict[str, object]:
         "evidence_tier": "executable_parity_evidence",
         "surface": "authenticated_simulator",
         "guard_policy_id": "modelo-349-groi-spanish-roi-check",
-        "allowed_hosts": ("www2.agenciatributaria.gob.es",),
+        "allowed_hosts": (_WWW2_HOST,),
         "allowed_methods": ("GET", "POST"),
         "forbidden_actions": AEAT_WRITE_FORBIDDEN_ACTIONS,
         "synthetic_data_allowed": False,
@@ -101,7 +105,7 @@ def test_authenticated_simulator_rejects_methods_outside_query_set() -> None:
 def test_authenticated_simulator_rejects_synthetic_data_on_aeat_hosts() -> None:
     """The no-synthetic-sede-live-surfaces ADR mandates synthetic_data_allowed=False
     on every AEAT-hosted live surface. The canonical GROI shape pinned by ``_kwargs``
-    declares an AEAT host (``www2.agenciatributaria.gob.es``); flipping the flag
+    declares an AEAT host; flipping the flag
     back to True must raise. ``requires_aeat_authorization`` remains flexible
     independently."""
 
@@ -158,7 +162,7 @@ def test_existing_surface_categories_still_validate() -> None:
             evidence_tier="executable_parity_evidence",
             surface="open_simulator",
             guard_policy_id="probe",
-            allowed_hosts=("sede.agenciatributaria.gob.es",),
+            allowed_hosts=(_SEDE_HOST,),
             allowed_methods=("GET",),
             forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
             synthetic_data_allowed=False,
@@ -175,7 +179,7 @@ def test_existing_surface_categories_still_validate() -> None:
             evidence_tier="official_source_guidance",
             surface="public_read_surface",
             guard_policy_id="probe",
-            allowed_hosts=("sede.agenciatributaria.gob.es",),
+            allowed_hosts=(_SEDE_HOST,),
             allowed_methods=("GET",),
             forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
             synthetic_data_allowed=False,
@@ -192,7 +196,7 @@ def test_existing_surface_categories_still_validate() -> None:
             evidence_tier="official_source_guidance",
             surface="authenticated_read_surface",
             guard_policy_id="probe",
-            allowed_hosts=("sede.agenciatributaria.gob.es",),
+            allowed_hosts=(_SEDE_HOST,),
             allowed_methods=("GET",),
             forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
             synthetic_data_allowed=False,
@@ -209,7 +213,7 @@ def test_existing_surface_categories_still_validate() -> None:
             evidence_tier="official_source_guidance",
             surface="static_official_documentation",
             guard_policy_id="probe",
-            allowed_hosts=("sede.agenciatributaria.gob.es",),
+            allowed_hosts=(_SEDE_HOST,),
             allowed_methods=(),
             forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
             synthetic_data_allowed=False,

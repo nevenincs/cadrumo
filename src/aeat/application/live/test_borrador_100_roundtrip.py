@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 
 from ...adapters.persistence.storage.errors import StorageValidationError
+from ...tests.aeat_literal_fixtures import aeat_url, configured_template_path
 from ...tests.secure_sql import isolated_runtime_profile
 from ._borrador_100 import (
     Borrador100Snapshot,
@@ -33,6 +34,18 @@ from ._errors import LiveApplicationInputError
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
+def _borrador_detail_url(expediente_id: str) -> str:
+    return aeat_url(
+        "www2",
+        configured_template_path(
+            "sede_paths",
+            "borrador_100_detail_template",
+            year=2024,
+            expediente_id=expediente_id,
+        ),
+    )
+
+
 def _populated_snapshot(*, bucket_id: str) -> Borrador100Snapshot:
     captured_at = datetime(2024, 4, 12, 11, 30, 0, tzinfo=UTC)
     binding_values = {
@@ -40,7 +53,7 @@ def _populated_snapshot(*, bucket_id: str) -> Borrador100Snapshot:
         "casilla.0501": Decimal("8750.50"),
         "casilla.identity.declarant_label": "Persona Prueba",
     }
-    source_url = "https://www2.agenciatributaria.gob.es/wlpl/PROC-RENTA/borrador/2024?expediente=202410013522456T"
+    source_url = _borrador_detail_url("202410013522456T")
     snapshot_id = derive_borrador_100_snapshot_id(
         filing_year=2024,
         period="0A",
@@ -121,7 +134,7 @@ def test_borrador_100_superseded_state_survives_encrypted_storage_roundtrip(
             "casilla.0500": Decimal("39800.00"),
             "casilla.identity.declarant_label": "Persona Prueba",
         }
-        source_url = "https://www2.agenciatributaria.gob.es/wlpl/PROC-RENTA/borrador/2024?expediente=202410013522401X"
+        source_url = _borrador_detail_url("202410013522401X")
         snapshot_id = derive_borrador_100_snapshot_id(
             filing_year=2024,
             period="0A",
@@ -186,7 +199,7 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
             "casilla.0500": Decimal("39800.00"),
             "casilla.identity.declarant_label": "Persona Prueba",
         }
-        source_url = "https://www2.agenciatributaria.gob.es/wlpl/PROC-RENTA/borrador/2024?expediente=202410013522401X"
+        source_url = _borrador_detail_url("202410013522401X")
         snapshot_id = derive_borrador_100_snapshot_id(
             filing_year=2024,
             period="0A",

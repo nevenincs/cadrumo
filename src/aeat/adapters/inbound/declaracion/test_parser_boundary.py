@@ -460,9 +460,8 @@ def test_parser_extracts_modelo_123_historical_registry_profile_targets_from_pdf
 def test_parser_extracts_modelo_123_2024_corpus_round_trip() -> None:
     """Round-trip: parse the committed M123 2024-y-siguientes synthetic fixture.
 
-    Ground truth is the AEAT-published Diseño de Registro Modelo 123 v20 available at:
-      https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/
-        DR_100_199/archivos/DR123v20.xlsx
+    Ground truth is the AEAT-published Diseño de Registro Modelo 123 v20
+    identified by source_ref aeat-dr-123-2024-v20.
     (source_ref: aeat-dr-123-2024-v20; legal authority: Orden HAC/56/2024)
 
     Layout verdict (LINE-START box numbers):
@@ -1377,7 +1376,7 @@ def test_parser_extracts_modelo_036_synthetic_fixture_targets() -> None:
     Ground truth is the AEAT-published practical guide "Instrucciones Modelo 036",
     PAGINA 1, section heading (h3 element):
       "Causas de presentación de la declaración"
-    Source: sede.agenciatributaria.gob.es/.../cumplimentacion-modelo/pagina-1.html
+    Source: the configured AEAT Sede Modelo 036 instructions page.
     Fetched 2026-05-27 and saved at:
       src/aeat/_data/corpus/aeat_official/instructions/modelo_036/files/
         instrucciones-cumplimentacion-pagina-1.html
@@ -1653,9 +1652,8 @@ def test_parser_extracts_modelo_720_synthetic_fixture_targets() -> None:
     """Round-trip: parse the sanitized M720 synthetic fixture and verify decl.ejercicio.
 
     Ground truth for the ejercicio label pattern is:
-    (1) AEAT-published diseño de registro (modelo_720.pdf), downloaded 2026-05-27 from
-        https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/
-          DR_Resto_Mod/archivos/modelo_720.pdf
+    (1) AEAT-published diseño de registro (modelo_720.pdf), downloaded 2026-05-27
+        from the configured AEAT Sede static corpus source.
         Record-type-1 positions 5-8: EJERCICIO.
     (2) Orden HAP/72/2013 Art. 7: "al que se refiera la información a suministrar" —
         M720 is a declaración informativa; it uses "información", not "declaración".
@@ -1701,9 +1699,8 @@ def test_parser_extracts_modelo_184_synthetic_fixture_targets() -> None:
     """Round-trip: parse the sanitized M184 synthetic fixture and verify decl.ejercicio.
 
     Ground truth for the ejercicio label pattern is:
-    AEAT-published diseño de registro DR_Modelo_184_2025.pdf, downloaded 2026-05-27 from
-      https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/
-        DR_100_199/DR_Modelo_184_2025.pdf
+    AEAT-published diseño de registro DR_Modelo_184_2025.pdf, downloaded 2026-05-27
+    from the configured AEAT Sede static corpus source.
     Saved at:
       src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_184/files/
         01-184-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1430-2025-de-3-de-diciembre-365-kb.pdf

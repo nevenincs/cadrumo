@@ -10,6 +10,7 @@ import pytest
 from pydantic_settings import SettingsConfigDict
 
 from ...core.config import Settings
+from ...tests.aeat_literal_fixtures import manual_practicos_url
 from . import (
     ManualCatalogue,
     ManualId,
@@ -23,6 +24,8 @@ from . import (
 from ._errors import ManualNotFoundError, ManualParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+_IVA_MANUAL_URL = manual_practicos_url("iva.pdf")
 
 
 class _IsolatedSettings(Settings):
@@ -67,7 +70,7 @@ def _seed_iva(tmp_path: Path) -> Settings:
                 "references_sections": [],
                 "references_legal_acts": ["LEY_37_1992|art. 1"],
                 "source": {
-                    "manual_url": "https://sede.agenciatributaria.gob.es/static_files/iva.pdf",
+                    "manual_url": _IVA_MANUAL_URL,
                     "page": 12,
                     "paragraph": 1,
                 },
@@ -85,7 +88,7 @@ def _seed_iva(tmp_path: Path) -> Settings:
         "references_sections": [],
         "references_legal_acts": [],
         "source": {
-            "manual_url": "https://sede.agenciatributaria.gob.es/static_files/iva.pdf",
+            "manual_url": _IVA_MANUAL_URL,
             "page": 10,
         },
         "definition_reviewed_by": "gw",
@@ -114,7 +117,7 @@ def _seed_iva(tmp_path: Path) -> Settings:
         "part": "single",
         "title": "Manual práctico IVA 2025",
         "summary": "Resumen",
-        "source_pdf_url": "https://sede.agenciatributaria.gob.es/static_files/iva.pdf",
+        "source_pdf_url": _IVA_MANUAL_URL,
         "source_html_url": None,
         "fetched_at": "2026-04-12T00:00:00Z",
         "definition_reviewed_by": "gw",
@@ -176,7 +179,7 @@ class TestLoader:
             "references_sections": [],
             "references_legal_acts": [],
             "source": {
-                "manual_url": "https://sede.agenciatributaria.gob.es/static_files/iva.pdf",
+                "manual_url": _IVA_MANUAL_URL,
                 "page": 10,
             },
             "definition_reviewed_by": "gw",

@@ -35,8 +35,8 @@ declaración
   the return you submit on it.
 
 expediente
-: An AEAT case file. `aeat` can read expedientes when live reads are enabled; it
-  never writes to them.
+: An AEAT case file. `aeat` can read expedientes when AEAT authentication is
+  configured for read-only access; it never writes to them.
 
 fichero-BOE
 : The fixed-width text file format the AEAT accepts for upload. `aeat` writes
@@ -72,9 +72,12 @@ modelo
   a three-digit code such as 100 (personal income tax), 130 (quarterly
   income-tax instalment), or 303 (value-added tax, IVA).
 
-NIF (Número de Identificación Fiscal) / NIE (Número de Identidad de Extranjero)
-: Spanish tax identification numbers. The NIF identifies a taxpayer; the NIE is
-  the equivalent for a foreign resident.
+DNI, NIE, NIF, and CIF
+: Spanish identity and tax identifiers. Spanish citizens usually use Documento
+  Nacional de Identidad (DNI). Foreign individuals usually use Número de
+  Identidad de Extranjero (NIE). Companies and other legal entities use Número
+  de Identificación Fiscal (NIF). Older records may call a company identifier
+  Código de Identificación Fiscal (CIF).
 
 preflight
 : A readiness check on the ledger for a period. It reports rows missing a

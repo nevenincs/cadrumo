@@ -100,6 +100,9 @@ def diff_ledger_fingerprints(
     ``current_fingerprints`` maps each contributor's transaction id to its
     freshly-recomputed fingerprint (a contributor missing from the mapping is
     treated as removed). Pure: no ledger read happens here.
+
+    Returns:
+        The computed :class:`LedgerFilingStalenessVerdict` detail.
     """
     changed: list[str] = []
     removed: list[str] = []

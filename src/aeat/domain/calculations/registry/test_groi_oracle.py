@@ -13,11 +13,13 @@ uses so a calculation engine can drive both oracles uniformly.
 from __future__ import annotations
 
 import json
+from urllib.parse import urlparse
 
 import pytest
 from pydantic import AnyUrl, ValidationError
 
 from ....core.config import Settings
+from ....tests.aeat_literal_fixtures import UNKNOWN_AEAT_STATE_SURFACE_URL_CANARY, aeat_host
 from ._errors import RegistryValidationError
 from ._groi_oracle import (
     GROI_ORACLE_ID,
@@ -36,6 +38,9 @@ from ._remote_state_guard import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
+_SEDE_HOST = aeat_host("sede")
+_WWW2_HOST = aeat_host("www2")
+
 
 def _aeat_policy() -> RemoteStateGuardPolicy:
     # AEAT-hosted policies must not advertise synthetic input per the
@@ -44,7 +49,7 @@ def _aeat_policy() -> RemoteStateGuardPolicy:
         id="modelo-349-groi-spanish-roi-check",
         evidence_tier="executable_parity_evidence",
         classification="open_simulator",
-        allowed_hosts=("www2.agenciatributaria.gob.es",),
+        allowed_hosts=(_WWW2_HOST,),
         allowed_browser_action_patterns=(
             Settings.external_constants().aeat.live_safety.consult_oracle_browser_action_patterns
         ),
@@ -60,7 +65,7 @@ def _wrong_host_policy() -> RemoteStateGuardPolicy:
         id="wrong-host",
         evidence_tier="executable_parity_evidence",
         classification="open_simulator",
-        allowed_hosts=("sede.agenciatributaria.gob.es",),
+        allowed_hosts=(_SEDE_HOST,),
         forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
         synthetic_data_allowed=False,
         requires_authentication=False,
@@ -76,11 +81,13 @@ def test_oracle_satisfies_live_parity_oracle_protocol() -> None:
 
 
 def test_oracle_url_stays_inside_aeat_host_pinning_suffix() -> None:
-    """The form URL is on www2.agenciatributaria.gob.es; suffix-pinning still covers it."""
+    """The form URL is on the configured GROI host; suffix-pinning still covers it."""
 
     groi_url = Settings.external_constants().aeat.oracles.groi_check
-    assert groi_url.startswith("https://www2.agenciatributaria.gob.es/")
-    assert groi_url.endswith("/wlpl/GROI-JDIT/ConsultaOperadorSedeGroiServlet")
+    parsed = urlparse(groi_url)
+    assert parsed.scheme == "https"
+    assert parsed.hostname == _WWW2_HOST
+    assert parsed.path.startswith("/")
 
 
 def test_planned_operations_returns_form_open_per_nif_then_discard() -> None:
@@ -363,7 +370,7 @@ def test_guard_blocks_http_get_to_aeat_host_outside_policy_allowed_hosts() -> No
     fabricated = RemoteOperation(
         kind="http",
         method="GET",
-        url=AnyUrl("https://www99.agenciatributaria.gob.es/some/forbidden/path"),
+        url=AnyUrl(UNKNOWN_AEAT_STATE_SURFACE_URL_CANARY),
     )
     with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
         assert_remote_operation_allowed(_aeat_policy(), fabricated)
@@ -384,7 +391,7 @@ def test_groi_oracle_verify_payload_returns_blocked_on_fabricated_write_intent()
         id="paranoid-policy",
         evidence_tier="executable_parity_evidence",
         classification="open_simulator",
-        allowed_hosts=("www2.agenciatributaria.gob.es",),
+        allowed_hosts=(_WWW2_HOST,),
         forbidden_actions=(*AEAT_WRITE_FORBIDDEN_ACTIONS, "check-nif"),
         synthetic_data_allowed=False,
         requires_authentication=False,

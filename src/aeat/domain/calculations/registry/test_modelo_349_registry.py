@@ -10,6 +10,7 @@ from typing import cast
 import pytest
 
 from ....core.resources import bundled_path
+from ....tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED, aeat_host
 from . import (
     InputKind,
     InvoiceObservation,
@@ -25,6 +26,7 @@ from . import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+_WWW6_HOST = aeat_host("www6")
 
 # Field positions taken from Orden HAC/174/2020 Anexo (DR_Anexo_349.pdf
 # pages 9-22), the layout authority cited by Modelo 349's registry revision.
@@ -254,9 +256,9 @@ def test_committed_modelo_349_authenticated_read_surface_pins_aeat_hosts() -> No
     revision = modelo.revisions["2020-y-siguientes"]
     auth_surface = next(ref for ref in revision.live_cross_references if ref.id == "modelo-349-filed-declarations-read")
 
-    assert "www6.agenciatributaria.gob.es" in auth_surface.allowed_hosts
+    assert _WWW6_HOST in auth_surface.allowed_hosts
     for host in auth_surface.allowed_hosts:
-        assert host.endswith("agenciatributaria.gob.es"), f"non-AEAT host allowed: {host!r}"
+        assert host.endswith(AEAT_HOST_SUFFIX_EXPECTED), f"non-AEAT host allowed: {host!r}"
 
 
 def test_committed_modelo_349_workbook_parity_resolves_to_corpus_artefact() -> None:

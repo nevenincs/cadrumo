@@ -77,7 +77,7 @@ def _raw_transaction(
 def _transaction(
     provider_id: str,
     *,
-    amount: Decimal = Decimal("-121.00"),
+    amount: Decimal | None = None,
     direction: TransactionDirection = TransactionDirection.OUTGOING,
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
     business_pct: Decimal | None = None,
@@ -90,6 +90,15 @@ def _transaction(
     prorrata_reference: str | None = None,
     lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
 ) -> Transaction:
+    # Keep the gross consistent with base + iva (the Transaction
+    # gross == taxable_base + iva_amount invariant). When the caller does not
+    # pin an explicit amount and both tax fields are present, derive the
+    # IVA-inclusive gross from them, signed negative for the OUTGOING default.
+    if amount is None:
+        if taxable_base is not None and iva_amount is not None:
+            amount = -(taxable_base + iva_amount)
+        else:
+            amount = Decimal("-121.00")
     return Transaction.model_validate(
         {
             "raw": _raw_transaction(
@@ -374,6 +383,9 @@ def test_internal_transfer_is_reported_as_unsupported_direction() -> None:
         amount=Decimal("-10.00"),
         direction=TransactionDirection.INTERNAL_TRANSFER,
         business_classification=BusinessClassification.NOT_YET_PROCESSED,
+        taxable_base=None,
+        iva_rate=None,
+        iva_amount=None,
     )
 
     result = aggregate_iva_ledger_observations(

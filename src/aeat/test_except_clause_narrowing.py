@@ -14,7 +14,11 @@ from __future__ import annotations
 
 import pytest
 
+from .tests.aeat_literal_fixtures import aeat_url
+
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+_SEDE_ROOT_URL = aeat_url("sede", "/")
 
 
 # ---------------------------------------------------------------------------
@@ -40,7 +44,7 @@ class TestSiteHealthValidatorUsesValueError:
 
         with pytest.raises(ValidationError) as exc_info:
             SiteHealthEvidence(
-                url=_AnyHttpUrl("https://sede.agenciatributaria.gob.es/"),
+                url=_AnyHttpUrl(_SEDE_ROOT_URL),
                 http_status=200,
                 html_fragment="",
                 detected_markers=(42,),  # type: ignore[arg-type]
@@ -61,7 +65,7 @@ class TestSiteHealthValidatorUsesValueError:
 
         try:
             SiteHealthEvidence(
-                url=_AnyHttpUrl("https://sede.agenciatributaria.gob.es/"),
+                url=_AnyHttpUrl(_SEDE_ROOT_URL),
                 http_status=200,
                 html_fragment="",
                 detected_markers=(99,),  # type: ignore[arg-type]
@@ -135,7 +139,7 @@ class TestSiteHealthValidatorHappyPath:
         from .adapters.outbound.aeat.browser._site_health import SiteHealthEvidence
 
         ev = SiteHealthEvidence(
-            url=_AnyHttpUrl("https://sede.agenciatributaria.gob.es/"),
+            url=_AnyHttpUrl(_SEDE_ROOT_URL),
             http_status=200,
             html_fragment="ok",
             detected_markers=("mantenimiento", "agencia"),

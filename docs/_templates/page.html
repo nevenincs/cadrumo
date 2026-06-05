@@ -1,0 +1,63 @@
+{% extends "!page.html" %}
+
+{% macro aeat_link(item, class_name="") -%}
+  {%- if item.doc -%}
+  {%- set href = pathto(item.doc) -%}
+  {%- if item.fragment -%}
+  {%- if href == "#" -%}
+  {%- set href = "#" ~ item.fragment -%}
+  {%- else -%}
+  {%- set href = href ~ '#' ~ item.fragment -%}
+  {%- endif -%}
+  {%- endif -%}
+  <a{% if class_name %} class="{{ class_name }}"{% endif %} href="{{ href }}">{{ item.label }}</a>
+  {%- elif item.url -%}
+  <a{% if class_name %} class="{{ class_name }}"{% endif %} href="{{ item.url }}">{{ item.label }}</a>
+  {%- else -%}
+  <span{% if class_name %} class="{{ class_name }}"{% endif %}>{{ item.label }}</span>
+  {%- endif -%}
+{%- endmacro %}
+
+{% block announcement %}
+  {% if aeat_broadcasts %}
+  <div class="aeat-broadcast" aria-label="Site updates">
+    {% for broadcast in aeat_broadcasts %}
+    <div class="aeat-broadcast-item">
+      <span class="aeat-broadcast-label">{{ broadcast.label }}</span>
+      <span class="aeat-broadcast-message">{{ broadcast.message }}</span>
+      {% if broadcast.links %}
+      <span class="aeat-broadcast-links" aria-label="Broadcast links">
+        {% for link in broadcast.links %}
+          {{ aeat_link(link, "aeat-broadcast-link") }}
+        {% endfor %}
+      </span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endblock announcement %}
+
+{% block footer %}
+  {% if aeat_footer_groups %}
+  <section class="aeat-site-footer" aria-label="Documentation update channels">
+    <div class="aeat-site-footer-intro">
+      <p class="aeat-site-footer-kicker">Project notices</p>
+      <p class="aeat-site-footer-note">{{ aeat_footer_note }}</p>
+    </div>
+    <div class="aeat-site-footer-grid">
+      {% for group in aeat_footer_groups %}
+      <nav class="aeat-site-footer-group" aria-label="{{ group.title }}">
+        <p class="aeat-site-footer-title">{{ group.title }}</p>
+        <ul>
+          {% for link in group.links %}
+          <li>{{ aeat_link(link) }}</li>
+          {% endfor %}
+        </ul>
+      </nav>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+  {{ super() }}
+{% endblock footer %}

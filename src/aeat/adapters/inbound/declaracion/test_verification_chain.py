@@ -2310,7 +2310,7 @@ def test_verification_chain_m036_parser_extracts_event_kind_casilla() -> None:
     The fixture reproduces the AEAT-published section heading
     "Causas de presentacion de la declaracion" so the named_label parser
     can locate and extract the event-kind enum value.
-    Source: sede.agenciatributaria.gob.es -- Anexo 3 Instrucciones Modelo 036,
+    Source: configured AEAT Sede Anexo 3 Instrucciones Modelo 036,
     Pagina 1, fetched 2026-05-27 (aeat-dr-036-2025, aeat-modelo-036-procedure).
 
     M036 is a censal (ad-hoc) modelo: its period_selector declares

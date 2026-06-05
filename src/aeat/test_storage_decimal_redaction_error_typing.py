@@ -300,7 +300,7 @@ def test_portal_validation_error_path_not_starting_slash() -> None:
 def test_profile_answer_type_error_descendant_bad_discapacidad() -> None:
     """parse_descendiente_flag raises ProfileAnswerTypeError for invalid DISCAPACIDAD."""
     from .core.errors import ProfileAnswerTypeError
-    from .domain.profile._descendant_facts import parse_descendiente_flag
+    from .domain.contribuyente._descendant_facts import parse_descendiente_flag
 
     with pytest.raises(ProfileAnswerTypeError):
         parse_descendiente_flag("NACIMIENTO=2010-01-01,DISCAPACIDAD=50")
@@ -309,7 +309,7 @@ def test_profile_answer_type_error_descendant_bad_discapacidad() -> None:
 def test_profile_answer_type_error_marriage_date_invalid() -> None:
     """parse_marriage_date_flag raises ProfileAnswerTypeError for non-ISO-8601 input."""
     from .core.errors import ProfileAnswerTypeError
-    from .domain.profile._marriage_facts import parse_marriage_date_flag
+    from .domain.contribuyente._marriage_facts import parse_marriage_date_flag
 
     with pytest.raises(ProfileAnswerTypeError):
         parse_marriage_date_flag("not-a-date")
@@ -318,7 +318,7 @@ def test_profile_answer_type_error_marriage_date_invalid() -> None:
 def test_profile_answer_type_error_ccaa_unknown_label() -> None:
     """CCAA.from_label raises ProfileAnswerTypeError for an unknown CCAA label."""
     from .core.errors import ProfileAnswerTypeError
-    from .domain.profile._ccaa import CCAA
+    from .domain.contribuyente._ccaa import CCAA
 
     with pytest.raises(ProfileAnswerTypeError):
         CCAA.from_label("xyzzy")

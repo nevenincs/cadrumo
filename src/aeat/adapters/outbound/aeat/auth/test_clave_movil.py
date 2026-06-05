@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import time
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -31,6 +32,7 @@ from .....core.classification import SensitivityClass
 from .....core.config import Settings
 from .....domain.calculations.registry import RemoteOperation, assert_remote_operation_allowed
 from .....domain.calculations.registry._errors import RegistryValidationError
+from .....tests.aeat_literal_fixtures import CLAVE_MOVIL_BROWSER_GLOBAL_EXPECTED
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
@@ -293,6 +295,11 @@ class _RecordingContext:
         self.closed = True
 
 
+class _HangingCloseContext(_RecordingContext):
+    async def close(self) -> None:
+        await asyncio.sleep(60)
+
+
 class _SelectorDispatchContext(_RecordingContext):
     async def new_page(self) -> _SelectorDispatchPage:
         page = _SelectorDispatchPage(target_path=self._target_path)
@@ -344,6 +351,11 @@ class _RecordingBrowserSession:
 
     async def close(self) -> None:
         self.closed = True
+
+
+class _HangingCloseBrowserSession(_RecordingBrowserSession):
+    async def close(self) -> None:
+        await asyncio.sleep(60)
 
 
 class _SelectorDispatchBrowserSession(_RecordingBrowserSession):
@@ -404,6 +416,39 @@ def _secret_or_none(value: str | None) -> SecretStr | None:
 
 def _bool_setting(value: str | None) -> bool:
     return False if value is None else value.lower() == "true"
+
+
+# ── cleanup bounds ───────────────────────────────────────────────────────────
+
+
+def test_context_cleanup_is_bounded_by_settings_timeout(tmp_path: Path) -> None:
+    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z").model_copy(
+        update={"aeat_browser_close_timeout_ms": 1}
+    )
+    provider = ClaveMovilAuthProvider(settings)
+    context = _HangingCloseContext(target_path=settings.aeat_sede_expedientes_path)
+
+    async def run() -> None:
+        started = time.perf_counter()
+        await provider._close_context(context, reason="timeout-regression")
+        assert time.perf_counter() - started < 0.5
+
+    asyncio.run(run())
+
+
+def test_browser_session_cleanup_is_bounded_by_settings_timeout(tmp_path: Path) -> None:
+    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z").model_copy(
+        update={"aeat_browser_close_timeout_ms": 1}
+    )
+    provider = ClaveMovilAuthProvider(settings)
+    session = _HangingCloseBrowserSession(target_path=settings.aeat_sede_expedientes_path)
+
+    async def run() -> None:
+        started = time.perf_counter()
+        await provider._close_browser_session(session)
+        assert time.perf_counter() - started < 0.5
+
+    asyncio.run(run())
 
 
 # ── identity classification ──────────────────────────────────────────────────
@@ -913,7 +958,7 @@ class TestPendingPetitionRefusal:
 
         assert page.evaluate_calls == 1
         assert page.wait_for_response_calls == 1
-        assert "window.ObtenerClaveMovil" not in page.evaluated_script
+        assert f"window.{CLAVE_MOVIL_BROWSER_GLOBAL_EXPECTED}" not in page.evaluated_script
         assert f'window["{settings.external_constants().aeat.clave_movil.obtener_clave_movil_browser_global}"]' in (
             page.evaluated_script
         )
@@ -1055,6 +1100,42 @@ class TestProbePersistedSession:
         assert _session_store.exists(storage_path)
         assert not storage_path.exists()
         assert not storage_path.with_suffix(".meta.json").exists()
+
+    def test_probe_with_explicit_target_does_not_click_clave_selector(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        external = settings.external_constants()
+        provider = ClaveMovilAuthProvider(settings)
+        browser_session_login = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
+
+        async def seed() -> None:
+            await provider.authenticate(browser_session=browser_session_login)
+            await provider.close()
+
+        asyncio.run(seed())
+
+        target_url = f"{external.aeat.domains.www1}{external.aeat.pre303.presentation_service_path}"
+        target_path = provider._target_path_from_url(target_url)
+        probe_provider = ClaveMovilAuthProvider(settings)
+        browser_session_probe = _SelectorDispatchBrowserSession(target_path=target_path)
+
+        async def probe() -> None:
+            session, assertion = await probe_provider.probe_persisted_session(
+                browser_session=browser_session_probe,
+                target_url=target_url,
+            )
+            assert session.identity_nif == "12345678Z"
+            assert assertion.is_valid is True
+            await probe_provider.close()
+
+        asyncio.run(probe())
+
+        page = browser_session_probe.contexts[0].pages[0]
+        assert external.aeat.clave_movil.selector_access_path_marker not in page.gotos[0]
+        assert external.aeat.clave_movil.authorize_button_selector not in page.clicks
 
 
 class TestResume:

@@ -25,7 +25,6 @@ _MODELO = _SRC / "entrypoints/cli/_modelo.py"
 _PARSER = _SRC / "adapters/inbound/declaracion/_parser.py"
 _ENVELOPE = _SRC / "adapters/persistence/storage/envelope/_envelope.py"
 _IVA_WALLET = _SRC / "application/calculations/_iva_wallet_reconciliation.py"
-_DOC_REF = _SRC / "entrypoints/cli/_doc_reference.py"
 _DESCENDANT = _SRC / "domain/contribuyente/_descendant_facts.py"
 
 _WIRE_PAYLOAD_TOKEN = "CAST-RATIONALE-WIRE-PAYLOAD-"
@@ -169,13 +168,6 @@ def test_s670_iva_wallet_repository_typed() -> None:
     src = pathlib.Path(_IVA_WALLET).read_text(encoding="utf-8")
     assert "repository: " in src, "_iva_wallet_reconciliation.py: typed repository parameter not found"
     assert "no-untyped-def" not in src, "_iva_wallet_reconciliation.py: bare no-untyped-def type: ignore survives"
-
-
-def test_s670_doc_reference_isinstance_narrowing() -> None:
-    """_doc_reference.py must use isinstance(schema_cls, type) narrowing (no union-attr ignore)."""
-    src = pathlib.Path(_DOC_REF).read_text(encoding="utf-8")
-    assert "isinstance(schema_cls, type)" in src, "_doc_reference.py: isinstance(schema_cls, type) narrowing not found"
-
 
 
 def test_s670_descendant_facts_cast_applied() -> None:

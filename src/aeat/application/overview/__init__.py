@@ -101,10 +101,12 @@ from ._errors import (
     OverviewError,
     OverviewExplainError,
 )
+
 if TYPE_CHECKING:
+    from ..live._expedientes import PersistedExpedientesSnapshot
+    from ..live._notifications import PersistedNotificationsSnapshot
     from ..state_projection import OperatorStateProjection
     from ..workflow import WorkflowState
-
 
 _log = _get_logger(__name__)
 
@@ -264,6 +266,36 @@ class OverviewCalendarEntry(BaseModel):
         return self
 
 
+class OverviewCalendarEventType(StrEnum):
+    """Observed local event types shown alongside legal filing windows."""
+
+    FILING = "filing"
+    MESSAGE = "message"
+
+
+class OverviewCalendarEvent(BaseModel):
+    """One observed local event attached to an overview calendar range.
+
+    Calendar entries remain the legal obligation rows. Events are
+    already-observed facts from local persisted live-read snapshots:
+    AEAT filed declarations and AEAT notifications/communications.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    event_type: OverviewCalendarEventType
+    event_date: date
+    source: str = Field(min_length=1, max_length=64)
+    summary: str = Field(min_length=1, max_length=256)
+    reference_id: str = Field(min_length=1, max_length=128)
+    snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
+    modelo: str | None = Field(default=None, min_length=1, max_length=8)
+    filing_year: int | None = Field(default=None, ge=2000, le=2099)
+    period: str | None = Field(default=None, min_length=1, max_length=16)
+    status: str | None = Field(default=None, max_length=64)
+    source_url: str | None = Field(default=None, max_length=512)
+
+
 class CalendarWarning(BaseModel):
     """One under-specified-profile warning attached to a calendar query.
 
@@ -384,6 +416,9 @@ class OverviewCalendar(BaseModel):
             when ``show_suppressed=True`` was passed to
             :func:`build_overview_calendar`; empty otherwise. Ordered
             by ``(modelo, period)`` for deterministic output.
+        events: Tuple of :class:`OverviewCalendarEvent` rows projected
+            from already-persisted local live-read snapshots. These are
+            observed AEAT facts, not derived legal obligations.
     """
 
     model_config = _STRICT_FROZEN
@@ -396,6 +431,7 @@ class OverviewCalendar(BaseModel):
     taxpayer_model_declared: bool = True
     incomplete_reason: str | None = None
     suppressed_entries: tuple[SuppressedCalendarEntry, ...] = Field(default=())
+    events: tuple[OverviewCalendarEvent, ...] = Field(default=())
 
 
 class OverviewStatusReport(BaseModel):
@@ -448,6 +484,106 @@ def _entry_intersects_range(
 ) -> bool:
     """Return whether ``obligation``'s [opens_on, closes_on] intersects the range."""
     return obligation.closes_on >= calendar_range.from_date and obligation.opens_on <= calendar_range.to_date
+
+
+def _calendar_event_sort_key(event: OverviewCalendarEvent) -> tuple[date, str, str, str]:
+    """Return the deterministic sort key for observed calendar events."""
+    return (
+        event.event_date,
+        event.event_type.value,
+        event.modelo or "",
+        event.reference_id,
+    )
+
+
+def _dedupe_calendar_events(events: list[OverviewCalendarEvent]) -> tuple[OverviewCalendarEvent, ...]:
+    """Deduplicate repeated observations across multiple local snapshots."""
+    by_key: dict[tuple[object, ...], OverviewCalendarEvent] = {}
+    for event in events:
+        key = (
+            event.event_type,
+            event.event_date,
+            event.source,
+            event.reference_id,
+            event.modelo,
+            event.filing_year,
+            event.period,
+        )
+        by_key[key] = event
+    return tuple(sorted(by_key.values(), key=_calendar_event_sort_key))
+
+
+def calendar_events_from_expedientes_snapshots(
+    snapshots: tuple[PersistedExpedientesSnapshot, ...],
+    calendar_range: OverviewCalendarRange,
+) -> tuple[OverviewCalendarEvent, ...]:
+    """Project persisted AEAT declaration-register snapshots into calendar events."""
+    events: list[OverviewCalendarEvent] = []
+    for snapshot in sorted(snapshots, key=lambda item: item.captured_at):
+        for declaration in snapshot.declarations:
+            event_date = declaration.presented_at.date()
+            if not calendar_range.covers(event_date):
+                continue
+            summary = f"Modelo {declaration.modelo} {declaration.ejercicio} {declaration.period} filed at AEAT"
+            events.append(
+                OverviewCalendarEvent(
+                    event_type=OverviewCalendarEventType.FILING,
+                    event_date=event_date,
+                    source="aeat_sede_expedientes",
+                    summary=summary,
+                    reference_id=declaration.expediente_id,
+                    snapshot_id=snapshot.snapshot_id,
+                    modelo=declaration.modelo,
+                    filing_year=declaration.ejercicio,
+                    period=declaration.period,
+                    status=declaration.estado,
+                    source_url=snapshot.source_url,
+                )
+            )
+    return _dedupe_calendar_events(events)
+
+
+def calendar_events_from_notification_snapshots(
+    snapshots: tuple[PersistedNotificationsSnapshot, ...],
+    calendar_range: OverviewCalendarRange,
+) -> tuple[OverviewCalendarEvent, ...]:
+    """Project persisted AEAT notifications and communications into calendar events."""
+    events: list[OverviewCalendarEvent] = []
+    for snapshot in sorted(snapshots, key=lambda item: item.captured_at):
+        for row in snapshot.rows:
+            event_date = row.fecha_notificacion or row.fecha_emision
+            if not calendar_range.covers(event_date):
+                continue
+            read_state = "read" if row.leida is True else "unread" if row.leida is False else None
+            status = read_state or row.tipo
+            summary = row.concepto.strip() or row.tipo
+            events.append(
+                OverviewCalendarEvent(
+                    event_type=OverviewCalendarEventType.MESSAGE,
+                    event_date=event_date,
+                    source="aeat_sede_notifications",
+                    summary=summary,
+                    reference_id=row.certificado_id,
+                    snapshot_id=snapshot.snapshot_id,
+                    status=status,
+                    source_url=str(row.source_url),
+                )
+            )
+    return _dedupe_calendar_events(events)
+
+
+def build_overview_calendar_events(
+    *,
+    calendar_range: OverviewCalendarRange,
+    expedientes_snapshots: tuple[PersistedExpedientesSnapshot, ...] = (),
+    notification_snapshots: tuple[PersistedNotificationsSnapshot, ...] = (),
+) -> tuple[OverviewCalendarEvent, ...]:
+    """Build observed calendar events from persisted local live-read snapshots."""
+    events = [
+        *calendar_events_from_expedientes_snapshots(expedientes_snapshots, calendar_range),
+        *calendar_events_from_notification_snapshots(notification_snapshots, calendar_range),
+    ]
+    return _dedupe_calendar_events(events)
 
 
 # Codec: maps a _PayerFact value to the profile key and locale warning key
@@ -608,6 +744,7 @@ def build_overview_calendar(
     engine: _ScheduleProducer | None = None,
     raw_values: Mapping[str, object] | None = None,
     show_suppressed: bool = False,
+    events: tuple[OverviewCalendarEvent, ...] = (),
 ) -> OverviewCalendar:
     """Build a typed calendar view for ``profile`` over ``calendar_range``.
 
@@ -634,6 +771,8 @@ def build_overview_calendar(
             applicability verdict. Default is ``False`` — the standard
             calendar view excludes suppressed rows from the payload
             entirely.
+        events: Optional observed calendar events, usually projected
+            from persisted local live-read snapshots by the CLI.
 
     A year inside the range with no registered deadline windows is
     treated as a "no data yet" state: that year contributes zero
@@ -658,6 +797,7 @@ def build_overview_calendar(
             completeness=CalendarCompleteness(),
             taxpayer_model_declared=False,
             incomplete_reason=_tr("cli.overview.taxpayer_model_undeclared"),
+            events=_dedupe_calendar_events(list(events)),
         )
 
     deadline_engine = engine if engine is not None else _DeadlineEngine()
@@ -770,6 +910,7 @@ def build_overview_calendar(
         warnings=warnings,
         completeness=completeness,
         suppressed_entries=tuple(suppressed),
+        events=_dedupe_calendar_events(list(events)),
     )
 
 
@@ -883,6 +1024,8 @@ __all__ = [
     "OverviewCalendar",
     "OverviewCalendarEntry",
     "OverviewCalendarError",
+    "OverviewCalendarEvent",
+    "OverviewCalendarEventType",
     "OverviewCalendarRange",
     "OverviewError",
     "OverviewExplainError",
@@ -893,8 +1036,11 @@ __all__ = [
     "build_overview_agenda",
     "build_overview_backlog",
     "build_overview_calendar",
+    "build_overview_calendar_events",
     "build_overview_explain",
     "build_overview_status_report",
+    "calendar_events_from_expedientes_snapshots",
+    "calendar_events_from_notification_snapshots",
     "derive_modelo_applicability",
     "overview_status_report_from_projection",
     "user_state_for",

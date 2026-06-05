@@ -10,6 +10,7 @@ import pytest
 
 from ...adapters.outbound.aeat.sede._declarations import Declaracion
 from ...adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
+from ...tests.aeat_literal_fixtures import aeat_url, configured_path
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ._errors import LiveApplicationInputError
 from ._expedientes import (
@@ -20,6 +21,7 @@ from ._expedientes import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+_DECLARACION_CONSULT_URL = aeat_url("www6", configured_path("sede_paths", "declaracion_consult"))
 
 
 @pytest.fixture
@@ -59,7 +61,7 @@ def _capture(
     return ExpedientesCapture(
         declarations=declarations,
         captured_at=captured_at or datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
-        source_url="https://www6.agenciatributaria.gob.es/wlpl/CCD-WLPL/ConsultarDecl",
+        source_url=_DECLARACION_CONSULT_URL,
     )
 
 

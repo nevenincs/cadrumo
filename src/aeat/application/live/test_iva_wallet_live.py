@@ -13,6 +13,7 @@ from ...adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
 from ...adapters.persistence.storage import get_master_key_provider
 from ...core import require_active_bucket_id
 from ...core.config import load_settings
+from ...core.resources import resources
 from ...tests.live_gate import requires_live_enabled
 from ..calculations import IvaWalletDecisionRepository
 from ..modelo import ModeloIvaWalletReconciliationBlocked
@@ -69,12 +70,19 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
             pytest.fail("live IVA wallet report did not match the persisted observation")
 
         backend_bindings: dict[str, Decimal] = {}
+        revision = resources().modelos.authority.snapshot(
+            "303",
+            filing_year=target_year,
+            period=target_period,
+        ).revision
         if decision.blocked:
             with pytest.raises(ModeloIvaWalletReconciliationBlocked):
                 _apply_iva_compensation_decision_binding(
                     "303",
                     target_year,
                     target_period,
+                    bucket_id=bucket_id,
+                    revision=revision,
                     taxpayer_nif=taxpayer_nif,
                     casilla_inputs={},
                     backend_casilla_inputs={},
@@ -88,6 +96,8 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
             "303",
             target_year,
             target_period,
+            bucket_id=bucket_id,
+            revision=revision,
             taxpayer_nif=taxpayer_nif,
             casilla_inputs={},
             backend_casilla_inputs={},

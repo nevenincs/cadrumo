@@ -18,7 +18,9 @@ Submodules
    aeat.domain.calculations.registry._applicability
    aeat.domain.calculations.registry._authority
    aeat.domain.calculations.registry._bindings
+   aeat.domain.calculations.registry._bindings_previous_filing
    aeat.domain.calculations.registry._censo_modelos
+   aeat.domain.calculations.registry._checker_oracle_flow
    aeat.domain.calculations.registry._citation_blocklist
    aeat.domain.calculations.registry._constructs
    aeat.domain.calculations.registry._coverage
@@ -27,6 +29,7 @@ Submodules
    aeat.domain.calculations.registry._export
    aeat.domain.calculations.registry._export_parse
    aeat.domain.calculations.registry._filed_state
+   aeat.domain.calculations.registry._formula_initial_values
    aeat.domain.calculations.registry._formula_runtime
    aeat.domain.calculations.registry._groi_oracle
    aeat.domain.calculations.registry._ids
@@ -57,6 +60,7 @@ Submodules
    aeat.domain.calculations.registry._validate_constructs
    aeat.domain.calculations.registry._validate_cross_domain_snapshot
    aeat.domain.calculations.registry._validate_cross_revision
+   aeat.domain.calculations.registry._validate_cross_revision_advisory
    aeat.domain.calculations.registry._validate_dependency_sections
    aeat.domain.calculations.registry._validate_evidence
    aeat.domain.calculations.registry._validate_exports

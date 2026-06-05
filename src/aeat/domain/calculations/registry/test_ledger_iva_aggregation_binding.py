@@ -411,7 +411,7 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
 
     assert (
         annual_result.values["iva.anual.compensacion-ultimo-periodo-97"]
-        == q4_result["iva.compensacion-disponible-fin-periodo"]
+        == q4_result["iva.compensacion-generada-periodo"]
     )
     assert annual_result.values["iva.anual.compensacion-generada-ejercicio-no-97"] == non_q4_generated
     assert annual_result.values["iva.anual.compensacion-ultimo-periodo-97"] > Decimal("0")

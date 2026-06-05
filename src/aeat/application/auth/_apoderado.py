@@ -137,7 +137,7 @@ class ApoderadoService:
 
     @property
     def catalogue(self) -> ApoderamientosCatalogue:
-        """Return the AEAT apoderamiento scope catalogue in use by this service."""
+        """Return the AEAT apoderamiento scope :class:`ApoderamientosCatalogue` in use by this service."""
         return self._catalogue
 
     def status(self, *, bucket_id: str) -> ApoderadoStatus:

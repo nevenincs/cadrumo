@@ -25,6 +25,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
 from .....core.config import Settings
+from .....tests.aeat_literal_fixtures import PDF_100_PATH_FIXTURE, PDF_FORM_PATH_FIXTURE, sede_pdf_url
 from ..errors import RepositoryError
 from . import (
     CorpusArtifactRecord,
@@ -62,7 +63,7 @@ def test_sqlite_foreign_keys_cascade(tmp_path: Path) -> None:
                     modelo_id=modelo.id,
                     file_path="corpus/2024/modelos/130/form.pdf",
                     sha256="a" * 64,
-                    source_url="https://sede.agenciatributaria.gob.es/form.pdf",
+                    source_url=sede_pdf_url(PDF_FORM_PATH_FIXTURE),
                     fetched_at=datetime(2026, 4, 12, tzinfo=UTC),
                 )
             )
@@ -109,7 +110,7 @@ def test_corpus_artifact_unique_identity(tmp_path: Path) -> None:
                 modelo_id=modelo.id,
                 file_path="corpus/2024/modelos/100/form.pdf",
                 sha256="b" * 64,
-                source_url="https://sede.agenciatributaria.gob.es/100.pdf",
+                source_url=sede_pdf_url(PDF_100_PATH_FIXTURE),
                 fetched_at=datetime(2026, 4, 12, tzinfo=UTC),
             )
             repo.upsert(record)
@@ -124,7 +125,7 @@ def test_corpus_artifact_unique_identity(tmp_path: Path) -> None:
                     modelo_id=modelo.id,
                     file_path="corpus/2024/modelos/100/form.pdf",
                     sha256="c" * 64,
-                    source_url="https://sede.agenciatributaria.gob.es/100.pdf",
+                    source_url=sede_pdf_url(PDF_100_PATH_FIXTURE),
                     fetched_at=datetime(2026, 4, 12, tzinfo=UTC),
                 )
             )

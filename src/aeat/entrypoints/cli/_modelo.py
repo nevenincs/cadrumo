@@ -12,14 +12,13 @@ detailed :class:`CasillaObservation` data on command output.
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
 import click
 import typer
-from pydantic import BaseModel, TypeAdapter, ValidationError
+from pydantic import BaseModel, ValidationError
 
 from ...application.aggregation import (
     CounterpartObservation,
@@ -31,8 +30,11 @@ from ...application.aggregation import (
 from ...application.modelo import (
     AmendmentEvidenceMissingError,
     AmendmentTargetStateError,
+    CalculationRevision,
+    CalculationRevisionAmendmentKind,
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
+    ExternalEvidenceKind,
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
     ModeloCalculationRevisionSelectorNotFoundError,
@@ -40,18 +42,15 @@ from ...application.modelo import (
     ModeloRecordNotFoundError,
     ModeloWorkAddress,
     ModeloWorkAddressNotFoundError,
-    ModeloWorkCalculationServiceResult,
     ModeloWorkRevisionConflictError,
     ModeloWorkSelectorContradictionError,
     ModeloWorkUnitNotFoundError,
     ModeloWorkVisibleTargetAmbiguousError,
     VerificationReportNotFoundError,
-    WorkCalculateInputBundle,
+    WorkUnit,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     amend_modelo_revision,
-    build_work_calculate_input_bundle,
-    calculate_modelo_work_revision,
     declared_modelo_period_tokens,
     file_modelo_revision,
     get_filing_record,
@@ -74,24 +73,9 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import (
-    BindingId,
-    CasillaId,
     RegistryValidationError,
     parse_modelo_period,
 )
-from ...domain.modelos._calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionAmendmentKind,
-)
-from ...domain.modelos._row_models import (
-    Modelo184MemberRow,
-    Modelo232VinculadaRow,
-    Modelo347ContraparteRow,
-    Modelo349OperadorRow,
-    ModeloDetailRow,
-    validate_m349_nif_format,
-)
-from ...domain.modelos._work_unit import WorkUnit
 from ._common import _profile_to_taxpayer, activate_subcommand_output_language
 from ._modelo_cli_support import (
     bad_parameter_from_error as _bad_parameter_from_error,
@@ -101,6 +85,15 @@ from ._modelo_cli_support import (
 )
 from ._modelo_cli_support import (
     calculation_revision_not_found_bad_parameter as _calculation_revision_not_found_bad_parameter,
+)
+from ._modelo_cli_support import (
+    parse_binding_override as _parse_binding_override,
+)
+from ._modelo_cli_support import (
+    parse_casilla_override as _parse_casilla_override,
+)
+from ._modelo_cli_support import (
+    parse_kv_spec as _parse_kv_spec,
 )
 from ._modelo_cli_support import (
     parse_revision_selector as _parse_revision_selector,
@@ -115,7 +108,13 @@ from ._modelo_cli_support import (
     validate_calculation_revision_id as _validate_calculation_revision_id,
 )
 from ._modelo_cli_support import (
+    validate_casilla_key as _validate_casilla_key,
+)
+from ._modelo_cli_support import (
     validate_work_unit_id as _validate_work_unit_id,
+)
+from ._modelo_cli_support import (
+    work_calculate_input_bundle_from_cli as _work_calculate_input_bundle_from_cli,
 )
 from ._modelo_discovery_cli import register_discovery_commands
 from ._modelo_export_cli import register_export_commands
@@ -145,10 +144,8 @@ from ._modelo_rendering import (
 from ._modelo_rendering import (
     verification_report_payload as _verification_report_payload,
 )
-from ._modelo_rendering import (
-    work_unit_plazo_lines as _work_unit_plazo_lines,
-)
 from ._modelo_work import create_work_app
+from ._modelo_work_calculate_cli import register_work_calculate_commands
 from ._modelo_work_lifecycle_cli import register_work_lifecycle_commands
 from ._modelo_work_runs_cli import register_work_run_commands
 
@@ -156,11 +153,6 @@ _log = get_logger(__name__)
 
 if TYPE_CHECKING:
     from ...application.modelo import ModeloReconciliationReport
-
-_CASILLA_MAX_LEN = 64
-_BINDING_MAX_LEN = 128
-_BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
-_CASILLA_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(CasillaId)
 
 _OUTPUT_LANGUAGE_CLI = click.Choice(SUPPORTED_OUTPUT_LANGUAGES)
 
@@ -331,45 +323,6 @@ def _guard_foral_profile_ccaa() -> None:
 register_readiness_commands(app)
 
 
-def _parse_kv_spec[T](
-    spec: str,
-    *,
-    flag: str,
-    key_label: str = "KEY",
-    value_label: str = "VALUE",
-    transform: Callable[[str], T],
-    key_validator: Callable[[str, str], None] | None = None,
-) -> tuple[str, T]:
-    """Parse a ``KEY=VALUE`` CLI spec into ``(key, transform(value))``.
-
-    Centralises the shape every override flag shares: split on the
-    first ``=``, require a non-empty key, hand the right-hand side to
-    a flag-specific transform. ``flag``/``key_label``/``value_label``
-    feed the :class:`typer.BadParameter` messages so each call site
-    keeps its own operator-facing wording.
-
-    If ``key_validator`` is provided it receives ``(key, spec)`` and
-    must raise :class:`typer.BadParameter` if the key is malformed.
-    """
-    if "=" not in spec:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.kv_format_error",
-                flag=flag,
-                key_label=key_label,
-                value_label=value_label,
-                spec=spec,
-            )
-        )
-    key, _, value = spec.partition("=")
-    key = key.strip()
-    if not key:
-        raise typer.BadParameter(tr("cli.app.modelo.work.kv_empty_key_error", flag=flag, spec=spec))
-    if key_validator is not None:
-        key_validator(key, spec)
-    return key, transform(value)
-
-
 def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
     """Return the registry-declared period tokens for one modelo.
 
@@ -515,38 +468,6 @@ def _bare_period_error(modelo: str, period: str, *, fallback: str) -> str:
     )
 
 
-def _validate_binding_key(key: str, spec: str) -> None:
-    """Validate a ``--binding`` key against :data:`BindingId` constraints."""
-    try:
-        _BINDING_ID_ADAPTER.validate_python(key)
-    except ValidationError as exc:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.invalid_binding_key",
-                default=(
-                    f"--binding key {key!r} is not a valid BindingId "
-                    f"(max {_BINDING_MAX_LEN} chars, lowercase kebab/dotted ref); "
-                    f"got {spec!r}"
-                ),
-            )
-        ) from exc
-
-
-def _parse_binding_override(spec: str) -> tuple[str, str]:
-    """Parse a ``--binding KEY=VALUE`` spec into a ``(key, value)`` pair.
-
-    The key is validated against :data:`BindingId` constraints at the
-    CLI boundary; the value is passed through unchanged so the
-    bindings-resolution layer can coerce it per source type.
-    """
-    return _parse_kv_spec(
-        spec,
-        flag="--binding",
-        transform=lambda value: value,
-        key_validator=_validate_binding_key,
-    )
-
-
 register_discovery_commands(
     app,
     resolve_year_period=_resolve_year_period,
@@ -554,114 +475,6 @@ register_discovery_commands(
     parse_binding_override=_parse_binding_override,
     bad_parameter_from_error=_bad_parameter_from_error,
 )
-
-
-# ---------------------------------------------------------------------------
-# --row TYPE FIELD=value FIELD=value parsing helpers
-#
-# Supports multi-row entry for informational modelos whose filing
-# content is a list of records rather than scalar casilla values.
-# Supported types: miembro (M184 atribución member), vinculada (M232
-# operación vinculada).  Each ``--row`` flag takes a string of the
-# form ``TYPE FIELD=value [FIELD=value ...]``.
-# ---------------------------------------------------------------------------
-
-_ROW_TYPES_SUPPORTED: frozenset[str] = frozenset({"miembro", "vinculada", "operador", "contraparte"})
-_ROW_DECIMAL_FIELDS: frozenset[str] = frozenset(
-    {"porcentaje", "importe", "importe_Q1", "importe_Q2", "importe_Q3", "importe_Q4"}
-)
-
-
-def _parse_row_spec(spec: str) -> ModeloDetailRow:
-    """Parse a ``--row TYPE FIELD=value ...`` spec into a typed row model.
-
-    The first whitespace-separated token is the row type (``miembro`` or
-    ``vinculada``). Remaining tokens are ``KEY=VALUE`` pairs.  Raises
-    :class:`typer.BadParameter` on any parse or validation error.
-    """
-    parts = spec.split()
-    if not parts:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.row_empty_spec",
-                default="--row spec cannot be empty; expected TYPE FIELD=value [...]",
-            )
-        )
-    row_type = parts[0].lower()
-    if row_type not in _ROW_TYPES_SUPPORTED:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.row_unknown_type",
-                default=(f"--row type {row_type!r} is not recognised; supported types: {sorted(_ROW_TYPES_SUPPORTED)}"),
-                row_type=row_type,
-                supported=", ".join(sorted(_ROW_TYPES_SUPPORTED)),
-            )
-        )
-    kv_raw: dict[str, str] = {}
-    for token in parts[1:]:
-        if "=" not in token:
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.work.row_kv_format_error",
-                    default=f"--row field {token!r} must be in KEY=VALUE format",
-                    token=token,
-                )
-            )
-        key, _, value = token.partition("=")
-        if not key:
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.work.row_empty_key",
-                    default=f"--row field key cannot be empty in {token!r}",
-                    token=token,
-                )
-            )
-        kv_raw[key] = value
-    try:
-        kv_pairs: dict[str, str | Decimal] = {
-            k: Decimal(v) if k in _ROW_DECIMAL_FIELDS else v for k, v in kv_raw.items()
-        }
-        # kv_pairs is dict[str, str|Decimal]; the splat matches each row dataclass's
-        # fields after decimal coercion at the parse boundary. type: ignore[arg-type]
-        # documents the splat-to-field-types narrowing; per-splat CAST-RATIONALE token
-        # sits inline on each return below for the W26.P59 marker-count gate.
-        if row_type == "miembro":
-            return Modelo184MemberRow(row_type="miembro", **kv_pairs)  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-MODELO-ROW-SPLAT  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO-ROW-SPLAT
-        elif row_type == "vinculada":
-            return Modelo232VinculadaRow(row_type="vinculada", **kv_pairs)  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-MODELO-ROW-SPLAT  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO-ROW-SPLAT
-        elif row_type == "operador":
-            row_m349 = Modelo349OperadorRow(row_type="operador", **kv_pairs)  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-MODELO-ROW-SPLAT  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO-ROW-SPLAT
-            # NIF format check is advisory at parse time — invalid format raises BadParameter.
-            nif = str(kv_pairs.get("nif_comunitario", ""))
-            pais = str(kv_pairs.get("codigo_pais", ""))
-            if nif and pais and not validate_m349_nif_format(nif, pais):
-                raise typer.BadParameter(
-                    tr(
-                        "cli.app.modelo.work.row_m349_invalid_nif",
-                        default=(
-                            f"--row operador: nif_comunitario {nif!r} does not match "
-                            f"the expected NIF-IVA format for country {pais!r} "
-                            f"(Council Directive 2006/112/EC Annex XI)"
-                        ),
-                        nif=nif,
-                        pais=pais,
-                    )
-                )
-            return row_m349
-        else:
-            # Same splat-to-field-types narrowing rationale as the rows above.
-            return Modelo347ContraparteRow(row_type="contraparte", **kv_pairs)  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-MODELO-ROW-SPLAT  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO-ROW-SPLAT
-    except typer.BadParameter:
-        raise
-    except (ValidationError, TypeError, ValueError, ArithmeticError) as exc:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.row_validation_error",
-                default=f"--row {row_type!r} failed validation: {exc}",
-                row_type=row_type,
-                error=str(exc),
-            )
-        ) from exc
 
 
 def _parse_typed_cli_observations[ObservationT: BaseModel](
@@ -866,590 +679,16 @@ filing_record_app = typer.Typer(
 app.add_typer(filing_record_app, name="filing-record")
 
 
-def _validate_casilla_key(key: str, spec: str) -> None:
-    """Validate a ``--casilla`` key against :data:`CasillaId` constraints."""
-    try:
-        _CASILLA_ID_ADAPTER.validate_python(key)
-    except ValidationError as exc:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.invalid_casilla_key",
-                default=(
-                    f"--casilla key {key!r} is not a valid CasillaId "
-                    f"(max {_CASILLA_MAX_LEN} chars, alphanumeric/dotted ref); "
-                    f"got {spec!r}"
-                ),
-            )
-        ) from exc
-
-
-# Casilla data_types that accept a Decimal override via --casilla.
-# Non-numeric types (text, boolean, nif, date, etc.) must be supplied
-# through --binding or profile sources, not as raw decimal overrides.
-_NUMERIC_CASILLA_DATA_TYPES: frozenset[str] = frozenset({"decimal", "money", "integer", "ratio"})
-
-
-def _guard_casilla_data_type(casilla_id: str, revision: object) -> None:
-    """Raise BadParameter when the casilla is non-numeric.
-
-    Supplying a decimal value for a text, boolean, or identifier casilla
-    silently produces wrong results because the engine stores the Decimal
-    but the casilla's formula chain treats its absence as zero.  Surface
-    the misuse early with the label and the correct input channel.
-    """
-    casilla_def = next(
-        (c for c in revision.casillas if str(c.id) == casilla_id),
-        None,
-    )
-    if casilla_def is None:
-        return  # unknown casilla will fail later in the engine
-    if casilla_def.data_type not in _NUMERIC_CASILLA_DATA_TYPES:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.casilla_non_numeric_data_type",
-                key=casilla_id,
-                data_type=casilla_def.data_type,
-                label=casilla_def.label,
-            )
-        )
-
-
-def _parse_casilla_override(spec: str) -> tuple[str, str]:
-    return _parse_kv_spec(
-        spec,
-        flag="--casilla",
-        key_label="ID",
-        transform=str.strip,
-        key_validator=_validate_casilla_key,
-    )
-
-
-def _parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:
-    """Parse one ``HIJO_ID=MESES`` token from ``--meses-trabajo-con-hijo-menor-3``.
-
-    Returns ``(hijo_id_str, meses_int)``.  Raises :exc:`typer.BadParameter` on
-    malformed input or out-of-range meses (must be 0–12).
-    """
-    if "=" not in spec:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.meses_trabajo_hijo_bad_format",
-                spec=spec,
-                default="--meses-trabajo-con-hijo-menor-3 requires HIJO_ID=MESES format; got: {spec}",
-            )
-        )
-    hijo_id, _, meses_raw = spec.partition("=")
-    hijo_id = hijo_id.strip()
-    meses_raw = meses_raw.strip()
-    try:
-        meses = int(meses_raw)
-    except ValueError as exc:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.meses_trabajo_hijo_not_integer",
-                spec=spec,
-                default="--meses-trabajo-con-hijo-menor-3 MESES must be an integer 0–12; got: {spec}",
-            )
-        ) from exc
-    if not (0 <= meses <= 12):
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.meses_trabajo_hijo_out_of_range",
-                spec=spec,
-                meses=meses,
-                default="--meses-trabajo-con-hijo-menor-3 MESES must be 0–12; got {meses} in: {spec}",
-            )
-        )
-    return hijo_id, meses
-
-
-def _optional_decimal_option(raw: str | None, *, translation_key: str, default: str) -> Decimal | None:
-    if raw is None:
-        return None
-    try:
-        return Decimal(raw)
-    except (InvalidOperation, ValueError) as exc:
-        raise typer.BadParameter(
-            tr(
-                translation_key,
-                value=raw,
-                default=default,
-            )
-        ) from exc
-
-
-def _work_calculate_input_bundle_from_cli(
-    *,
-    work_unit_id: str,
-    casilla: list[str] | None,
-    binding: list[str] | None,
-    relation: list[str] | None,
-    row: list[str] | None,
-    borrador_snapshot_id: str | None,
-    prestacion_inss_exenta: str | None,
-    meses_trabajo_con_hijo_menor_3: list[str] | None,
-    rescate_plan_pensiones_capital: str | None,
-    rescate_plan_pensiones_aportaciones_pre_2007: str | None,
-    rescate_plan_pensiones_aportaciones_totales: str | None,
-    sal_beneficio_neto: str | None,
-    sal_reserva_dotada: str | None,
-    sal_capital_social: str | None,
-    autoconsumo_promotor_base: str | None,
-) -> WorkCalculateInputBundle:
-    casilla_pairs = dict(_parse_casilla_override(spec) for spec in (casilla or ()))
-    binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
-    relation_pairs = dict(
-        _parse_kv_spec(spec, flag="--relation", transform=lambda value: value) for spec in relation or ()
-    )
-    detail_rows: tuple[ModeloDetailRow, ...] = tuple(_parse_row_spec(spec) for spec in (row or ()))
-    meses_pairs: tuple[tuple[str, int], ...] = tuple(
-        _parse_meses_trabajo_hijo_spec(spec) for spec in (meses_trabajo_con_hijo_menor_3 or ())
-    )
-    try:
-        return build_work_calculate_input_bundle(
-            work_unit_id=work_unit_id,
-            casilla_overrides=casilla_pairs,
-            binding_overrides=binding_pairs,
-            relation_overrides=relation_pairs,
-            detail_rows=detail_rows,
-            borrador_snapshot_id=borrador_snapshot_id,
-            prestacion_inss_exenta=_optional_decimal_option(
-                prestacion_inss_exenta,
-                translation_key="cli.app.modelo.work.prestacion_inss_exenta_not_decimal",
-                default="--prestacion-inss-exenta must be a decimal amount; received: {value}",
-            ),
-            meses_trabajo_con_hijo_menor_3=meses_pairs,
-            rescate_plan_pensiones_capital=_optional_decimal_option(
-                rescate_plan_pensiones_capital,
-                translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
-                default="--rescate-plan-pensiones-* values must be decimals.",
-            ),
-            rescate_plan_pensiones_aportaciones_pre_2007=_optional_decimal_option(
-                rescate_plan_pensiones_aportaciones_pre_2007,
-                translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
-                default="--rescate-plan-pensiones-* values must be decimals.",
-            ),
-            rescate_plan_pensiones_aportaciones_totales=_optional_decimal_option(
-                rescate_plan_pensiones_aportaciones_totales,
-                translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
-                default="--rescate-plan-pensiones-* values must be decimals.",
-            ),
-            sal_beneficio_neto=_optional_decimal_option(
-                sal_beneficio_neto,
-                translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
-                default="--sal-* values must be decimals.",
-            ),
-            sal_reserva_dotada=_optional_decimal_option(
-                sal_reserva_dotada,
-                translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
-                default="--sal-* values must be decimals.",
-            ),
-            sal_capital_social=_optional_decimal_option(
-                sal_capital_social,
-                translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
-                default="--sal-* values must be decimals.",
-            ),
-            autoconsumo_promotor_base=_optional_decimal_option(
-                autoconsumo_promotor_base,
-                translation_key="cli.app.modelo.work.autoconsumo_promotor_base_not_decimal",
-                default="--autoconsumo-promotor-base must be a decimal amount; received: {value}",
-            ),
-        )
-    except (LookupError, ValueError, WorkUnitNotFoundError) as exc:
-        raise typer.BadParameter(str(exc)) from exc
-
-
-def _work_calculate_saved_confirmation(revision: CalculationRevision, work_unit: WorkUnit) -> str:
-    return tr(
-        "cli.app.modelo.work.calculate_saved",
-        default=(
-            "Saved as draft calculation revision %{revision_id} "
-            "(state: %{state}). It is persisted and can be resumed later; "
-            "list revisions with "
-            "`aeat app modelo work revisions --modelo %{modelo} --year %{year} --period %{period}` "
-            "and re-inspect this one with `aeat app modelo work revision %{revision_id}`."
-        ),
-        revision_id=revision.calculation_revision_id,
-        state=revision.state.value,
-        modelo=work_unit.modelo,
-        year=work_unit.filing_year,
-        period=work_unit.period,
-    )
-
-
-def _work_calculate_modality_output(
-    calculation_result: ModeloWorkCalculationServiceResult,
-) -> tuple[dict[str, object], list[str]]:
-    modality = calculation_result.modality
-    if modality is None:
-        return {}, []
-    return (
-        {
-            "modality": modality.modality,
-            "modality_reason": modality.reason,
-        },
-        [f"modality\t{modality.modality}"],
-    )
-
-
-def _work_calculate_authorization_output(
-    calculation_result: ModeloWorkCalculationServiceResult,
-    *,
-    work_unit: WorkUnit,
-) -> tuple[dict[str, object], list[str]]:
-    advisory = calculation_result.authorization_advisory
-    if advisory is None:
-        return {}, []
-    advisory_text = tr(
-        "cli.app.modelo.work.calculate_unauthorized_advisory",
-        modelo=str(work_unit.modelo),
-        default=(
-            "ADVISORY: modelo %{modelo} calculation backend is UNAUTHORIZED — it has not "
-            "yet been proven by an end-to-end test across at least two renta years "
-            "(multi-year-renta authorization gate). The result was computed and saved, "
-            "but treat it as provisional until the modelo is authorized."
-        ),
-    )
-    return (
-        {
-            "authorization_advisory": advisory_text,
-            "authorization_state": advisory.state,
-        },
-        [f"authorization_state\t{advisory.state}", advisory_text],
-    )
-
-
-@work_app.command("calculate", help=tr("cli.app.modelo.work.calculate_help"))
-def work_calculate(
-    ctx: typer.Context,
-    work_unit_id: Annotated[
-        str | None,
-        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
-    ] = None,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-    ] = None,
-    period: Annotated[
-        str | None,
-        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-    ] = None,
-    revision: Annotated[
-        str | None,
-        typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-    ] = None,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
-    casilla: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--casilla",
-            help=tr("cli.app.modelo.work.casilla_help"),
-        ),
-    ] = None,
-    binding: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--binding",
-            help=tr("cli.app.modelo.work.override_help"),
-        ),
-    ] = None,
-    borrador_snapshot_id: Annotated[
-        str | None,
-        typer.Option(
-            "--borrador",
-            help=tr(
-                "cli.app.modelo.work.borrador_help",
-                default=(
-                    "Modelo 100 borrador snapshot id (full or unambiguous "
-                    "prefix). Snapshot binding values flow into the calculation "
-                    "for registry bindings marked aeat_prefilled; caller --binding "
-                    "overrides always take precedence."
-                ),
-            ),
-        ),
-    ] = None,
-    actor: Annotated[
-        str | None,
-        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ] = None,
-    relation: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--relation",
-            help=tr(
-                "cli.app.modelo.work.relation_help",
-                default=(
-                    "Prior-period relation value as KEY=VALUE. "
-                    "The KEY is a registry relation id; the VALUE is a "
-                    "decimal. Repeat to supply multiple relations."
-                ),
-            ),
-        ),
-    ] = None,
-    row: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--row",
-            help=tr(
-                "cli.app.modelo.work.row_help",
-                default=(
-                    "Typed detail row for multi-record informational modelos. "
-                    "Format: TYPE FIELD=value [FIELD=value ...]. "
-                    "TYPE is 'miembro' (M184 atribución member) or "
-                    "'vinculada' (M232 operación vinculada). "
-                    "Repeat to add multiple rows. "
-                    "M184 example: --row 'miembro nif=12345678A porcentaje=40 importe=10000'. "
-                    "M232 example: --row 'vinculada nif=A12345678 tipo_operacion=01 importe=50000'."
-                ),
-            ),
-        ),
-    ] = None,
-    prestacion_inss_exenta: Annotated[
-        str | None,
-        typer.Option(
-            "--prestacion-inss-exenta",
-            help=tr(
-                "cli.app.modelo.work.prestacion_inss_exenta_help",
-                default=(
-                    "Importe íntegro de prestaciones INSS maternidad/paternidad "
-                    "exentas (Art. 7.h LIRPF). Se registra en casilla 0058 (rev. 2024) "
-                    "o 0059 (rev. 2025) y se descuenta del total de ingresos computables. "
-                    "Introduce el importe bruto recibido de la Seguridad Social por "
-                    "baja de maternidad o paternidad. NO lo incluyas en --casilla 0003."
-                ),
-            ),
-        ),
-    ] = None,
-    meses_trabajo_con_hijo_menor_3: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--meses-trabajo-con-hijo-menor-3",
-            help=tr(
-                "cli.app.modelo.work.meses_trabajo_con_hijo_menor_3_help",
-                default=(
-                    "Meses trabajados mientras el hijo menor de 3 años estaba en la unidad "
-                    "familiar (Art. 81 LIRPF deducción maternidad). Formato: HIJO_ID=MESES. "
-                    "Repetible por cada hijo. HIJO_ID es un identificador libre (p. ej. 0, 1, 'laia'). "
-                    "Se calcula sum(min(MESES × 100, 1200)) y se inyecta en casilla 0611. "
-                    "Ejemplo: --meses-trabajo-con-hijo-menor-3 0=12 --meses-trabajo-con-hijo-menor-3 1=6 "
-                    "→ 0611 = 1800."
-                ),
-            ),
-        ),
-    ] = None,
-    rescate_plan_pensiones_capital: Annotated[
-        str | None,
-        typer.Option(
-            "--rescate-plan-pensiones-capital",
-            help=tr(
-                "cli.app.modelo.work.rescate_plan_pensiones_capital_help",
-                default=(
-                    "Importe bruto del rescate del plan de pensiones en forma de capital "
-                    "(DT 12ª LIRPF). Úsalo junto con "
-                    "--rescate-plan-pensiones-aportaciones-pre-2007 y "
-                    "--rescate-plan-pensiones-aportaciones-totales para que el asistente "
-                    "calcule automáticamente la reducción del 40% y la inyecte en casilla 0011."
-                ),
-            ),
-        ),
-    ] = None,
-    rescate_plan_pensiones_aportaciones_pre_2007: Annotated[
-        str | None,
-        typer.Option(
-            "--rescate-plan-pensiones-aportaciones-pre-2007",
-            help=tr(
-                "cli.app.modelo.work.rescate_plan_pensiones_aportaciones_pre_2007_help",
-                default=(
-                    "Aportaciones realizadas al plan de pensiones hasta el 31-dic-2006 "
-                    "(base prorrateo DT 12ª LIRPF). Necesario junto con "
-                    "--rescate-plan-pensiones-capital y "
-                    "--rescate-plan-pensiones-aportaciones-totales."
-                ),
-            ),
-        ),
-    ] = None,
-    rescate_plan_pensiones_aportaciones_totales: Annotated[
-        str | None,
-        typer.Option(
-            "--rescate-plan-pensiones-aportaciones-totales",
-            help=tr(
-                "cli.app.modelo.work.rescate_plan_pensiones_aportaciones_totales_help",
-                default=(
-                    "Total de aportaciones al plan de pensiones (denominador del prorrateo "
-                    "DT 12ª LIRPF). Necesario junto con "
-                    "--rescate-plan-pensiones-capital y "
-                    "--rescate-plan-pensiones-aportaciones-pre-2007."
-                ),
-            ),
-        ),
-    ] = None,
-    sal_beneficio_neto: Annotated[
-        str | None,
-        typer.Option(
-            "--sal-beneficio-neto",
-            help=tr(
-                "cli.app.modelo.work.sal_beneficio_neto_help",
-                default=(
-                    "Beneficio neto del ejercicio de la Sociedad Laboral (SAL/SLL) "
-                    "(Ley 44/2015 Art. 14). Se aplica el 10% para calcular la dotación "
-                    "obligatoria a la reserva especial, limitada por el umbral del 50% del "
-                    "capital social. Úsalo junto con --sal-reserva-dotada y --sal-capital-social."
-                ),
-            ),
-        ),
-    ] = None,
-    sal_reserva_dotada: Annotated[
-        str | None,
-        typer.Option(
-            "--sal-reserva-dotada",
-            help=tr(
-                "cli.app.modelo.work.sal_reserva_dotada_help",
-                default=(
-                    "Reserva especial acumulada en ejercicios anteriores (Ley 44/2015 Art. 14). "
-                    "Se usa para comprobar si ya se ha alcanzado el límite del 50% del capital social. "
-                    "Necesario junto con --sal-beneficio-neto y --sal-capital-social."
-                ),
-            ),
-        ),
-    ] = None,
-    sal_capital_social: Annotated[
-        str | None,
-        typer.Option(
-            "--sal-capital-social",
-            help=tr(
-                "cli.app.modelo.work.sal_capital_social_help",
-                default=(
-                    "Capital social de la Sociedad Laboral (Ley 44/2015 Art. 14). "
-                    "Denominador del test del 50%: la dotación se anula cuando la reserva "
-                    "acumulada alcanza el 50% del capital social. "
-                    "Necesario junto con --sal-beneficio-neto y --sal-reserva-dotada."
-                ),
-            ),
-        ),
-    ] = None,
-    autoconsumo_promotor_base: Annotated[
-        str | None,
-        typer.Option(
-            "--autoconsumo-promotor-base",
-            help=tr(
-                "cli.app.modelo.work.autoconsumo_promotor_base_help",
-                default=(
-                    "Base imponible del autoconsumo del promotor inmobiliario "
-                    "(Art. 9.1.c + Art. 79.4 LISIVA): coste de construcción o "
-                    "rehabilitación de inmuebles afectados al patrimonio de arrendamiento. "
-                    "El asistente aplica automáticamente el 21% (Art. 90 LISIVA) para "
-                    "calcular la cuota devengada. Sólo aplicable a Modelo 303."
-                ),
-            ),
-        ),
-    ] = None,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    """Persist a new draft calculation revision for the work unit."""
-    activate_subcommand_output_language(ctx, output_language)
-    _require_active_profile()
-    unit = _resolve_work_unit_for_cli(
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        revision=revision,
-        bucket_id=bucket_id,
-    )
-    work_unit_id = unit.work_unit_id
-    from ...application.modelo import (
-        CalculationRegistryUnavailableError,
-        Modelo100BorradorBindingError,
-        ModeloIvaWalletReconciliationBlocked,
-    )
-
-    calculation_inputs = _work_calculate_input_bundle_from_cli(
-        work_unit_id=work_unit_id,
-        casilla=casilla,
-        binding=binding,
-        relation=relation,
-        row=row,
-        borrador_snapshot_id=borrador_snapshot_id,
-        prestacion_inss_exenta=prestacion_inss_exenta,
-        meses_trabajo_con_hijo_menor_3=meses_trabajo_con_hijo_menor_3,
-        rescate_plan_pensiones_capital=rescate_plan_pensiones_capital,
-        rescate_plan_pensiones_aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
-        rescate_plan_pensiones_aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
-        sal_beneficio_neto=sal_beneficio_neto,
-        sal_reserva_dotada=sal_reserva_dotada,
-        sal_capital_social=sal_capital_social,
-        autoconsumo_promotor_base=autoconsumo_promotor_base,
-    )
-
-    try:
-        calculation_result = calculate_modelo_work_revision(
-            work_unit_id=work_unit_id,
-            actor=actor or _resolve_default_actor(),
-            inputs=calculation_inputs,
-        )
-    except RegistryValidationError as exc:
-        # A formula that consumes an unsatisfied binding / enum-binding /
-        # relation raises RegistryValidationError. The bare message names
-        # the missing key but gives the operator no path forward; append
-        # the --binding KEY=VALUE syntax and the bindings-list discovery
-        # command so the first calculate failure is self-correcting.
-        raise typer.BadParameter(_missing_binding_guidance(exc, work_unit_id)) from exc
-    except (
-        WorkUnitNotFoundError,
-        WorkUnitMutationRefusedError,
-        CalculationRegistryUnavailableError,
-        Modelo100BorradorBindingError,
-        ModeloIvaWalletReconciliationBlocked,
-    ) as exc:
-        raise _bad_parameter_from_error(exc) from exc
-
-    # The casilla table alone gives the operator no signal that the
-    # result was persisted. Each calculate writes a `borrador` revision
-    # that survives the session; the confirmation line states that
-    # explicitly and names the verbs to resume or re-inspect it.
-    calculation_revision = calculation_result.revision
-    unit_for_modality = calculation_result.work_unit
-    saved_confirmation = _work_calculate_saved_confirmation(calculation_revision, unit_for_modality)
-    modality_payload, modality_lines = _work_calculate_modality_output(calculation_result)
-    authorization_payload, authorization_lines = _work_calculate_authorization_output(
-        calculation_result,
-        work_unit=unit_for_modality,
-    )
-
-    from ._common import _emit_envelope
-    from ._modelo_payloads import WorkCalculateResult
-
-    result = WorkCalculateResult.model_validate(
-        {
-            "saved": True,
-            "saved_confirmation": saved_confirmation,
-            **_calculation_revision_payload(calculation_revision).model_dump(mode="python"),
-            **modality_payload,
-            **authorization_payload,
-        }
-    )
-    plazo_lines = _work_unit_plazo_lines(unit_for_modality)
-    lines = [
-        "operation\tmodelo.work.calculate",
-        *_calculation_revision_lines(calculation_revision),
-        *modality_lines,
-        *plazo_lines,
-        *authorization_lines,
-        saved_confirmation,
-    ]
-    _emit_envelope(ctx, command="modelo.work.calculate", result=result, lines=lines)
+register_work_calculate_commands(
+    work_app,
+    activate_output_language=activate_subcommand_output_language,
+    require_active_profile=_require_active_profile,
+    resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
+    resolve_default_actor=_resolve_default_actor,
+    calculate_input_bundle_from_cli=_work_calculate_input_bundle_from_cli,
+    bad_parameter_from_error=_bad_parameter_from_error,
+    missing_binding_guidance=_missing_binding_guidance,
+)
 
 
 @work_app.command(
@@ -2412,7 +1651,6 @@ def filing_record_import(
         ExternalModeloImportError,
         import_external_filing_evidence,
     )
-    from ...domain.modelos._filing_record import ExternalEvidenceKind
 
     try:
         kind = ExternalEvidenceKind(evidence_kind)

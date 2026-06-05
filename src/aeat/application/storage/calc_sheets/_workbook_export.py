@@ -192,7 +192,11 @@ def build_evidence_sidecar(
     *,
     workbook_sha256: str,
 ) -> OfflineWorkbookEvidenceSidecar:
-    """Build the machine-readable evidence sidecar for one workbook export."""
+    """Build the machine-readable evidence sidecar for one workbook export.
+
+    Returns:
+        :class:`OfflineWorkbookEvidenceSidecar`: The evidence sidecar.
+    """
     return OfflineWorkbookEvidenceSidecar(
         metadata=plan.metadata,
         workbook_sha256=workbook_sha256,
@@ -216,7 +220,11 @@ def serialize_offline_workbook(plan: SheetExportPlan) -> bytes:
 
 
 def serialize_offline_export(plan: SheetExportPlan) -> OfflineWorkbookExportResult:
-    """Serialize an offline workbook and its adjacent evidence sidecar."""
+    """Serialize an offline workbook and its adjacent evidence sidecar.
+
+    Returns:
+        :class:`OfflineWorkbookExportResult`: The export result.
+    """
     workbook_payload = serialize_offline_workbook(plan)
     workbook_sha256 = _sha256(workbook_payload)
     sidecar = build_evidence_sidecar(plan, workbook_sha256=workbook_sha256)

@@ -596,6 +596,54 @@ def test_live_filed_capture_all_cli_help_resolves() -> None:
     assert "read-only" in help_text or "solo lectura" in help_text
 
 
+def test_live_notifications_latest_cli_help_resolves() -> None:
+    import click
+
+    result = invoke_cached_cli(
+        ["app", "live", "notifications", "latest", "--help"],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+
+    assert result.exit_code == 0
+    assert "latest" in result.output.lower()
+
+    root = aeat_click_command()
+    assert isinstance(root, click.Group)
+    app_group = root.get_command(click.Context(root), "app")
+    assert isinstance(app_group, click.Group)
+    live_group = app_group.get_command(click.Context(app_group), "live")
+    assert isinstance(live_group, click.Group)
+    notifications_group = live_group.get_command(click.Context(live_group), "notifications")
+    assert isinstance(notifications_group, click.Group)
+    latest = notifications_group.get_command(click.Context(notifications_group), "latest")
+    assert isinstance(latest, click.Command)
+
+
+def test_live_expedientes_capture_all_cli_help_resolves() -> None:
+    import click
+
+    result = invoke_cached_cli(
+        ["app", "live", "expedientes", "capture-all", "--help"],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+
+    assert result.exit_code == 0
+    assert "--from-year" in result.output
+    assert "--to-year" in result.output
+    assert "--modelo" in result.output
+
+    root = aeat_click_command()
+    assert isinstance(root, click.Group)
+    app_group = root.get_command(click.Context(root), "app")
+    assert isinstance(app_group, click.Group)
+    live_group = app_group.get_command(click.Context(app_group), "live")
+    assert isinstance(live_group, click.Group)
+    expedientes_group = live_group.get_command(click.Context(live_group), "expedientes")
+    assert isinstance(expedientes_group, click.Group)
+    capture_all = expedientes_group.get_command(click.Context(expedientes_group), "capture-all")
+    assert isinstance(capture_all, click.Command)
+
+
 def test_live_iva_wallet_cli_help_names_fail_closed_no_submit_policy() -> None:
     group = invoke_cached_cli(
         ["app", "live", "iva-wallet", "--help"],

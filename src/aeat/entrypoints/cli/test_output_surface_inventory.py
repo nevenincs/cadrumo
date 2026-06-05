@@ -22,11 +22,7 @@ _PACKAGE_ROOT = _SRC_ROOT.parent
 _CLI_ROOT = _SRC_ROOT / "entrypoints" / "cli"
 _DIAGNOSTICS_ROOT = _SRC_ROOT / "diagnostics"
 
-_EXCLUDED_MODULES = {
-    # Developer documentation helper, not part of the operator CLI surface
-    # inventoried by the centralized-output-redaction research.
-    Path("entrypoints/cli/_doc_reference.py"),
-}
+_EXCLUDED_MODULES: set[Path] = set()
 
 _ALLOWED_DIRECT_OUTPUTS = {
     ("entrypoints/cli/__init__.py", "typer.echo"),

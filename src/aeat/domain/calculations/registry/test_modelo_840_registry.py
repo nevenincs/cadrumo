@@ -7,6 +7,7 @@ from functools import lru_cache
 import pytest
 
 from ....core.resources import bundled_path
+from ....tests.aeat_literal_fixtures import aeat_host
 from . import (
     InputKind,
     RegistryValidator,
@@ -15,6 +16,8 @@ from . import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+_WWW1_HOST = aeat_host("www1")
+_WWW6_HOST = aeat_host("www6")
 
 
 @lru_cache(maxsize=1)
@@ -103,8 +106,8 @@ def test_committed_modelo_840_authenticated_read_surface_is_read_only_and_guarde
         assert decision.synthetic_data_allowed is False
         assert set(decision.allowed_methods) <= {"GET", "HEAD", "OPTIONS"}, revision.id
         assert set(decision.allowed_hosts) == {
-            "www1.agenciatributaria.gob.es",
-            "www6.agenciatributaria.gob.es",
+            _WWW1_HOST,
+            _WWW6_HOST,
         }, revision.id
         assert _FORBIDDEN_REMOTE_ACTIONS.issubset(decision.forbidden_actions), revision.id
 

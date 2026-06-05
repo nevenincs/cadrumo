@@ -13,6 +13,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
+from .....tests.aeat_literal_fixtures import PDF_MODELO_130_2024_PATH_FIXTURE, aeat_url, sede_pdf_url
 from . import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -35,7 +36,7 @@ def test_portal_record_requires_enum_auth_method() -> None:
     """PortalRecord.auth_method is a strict enum, not a bare string."""
     record = PortalRecord(
         identifier="SEDE_ROOT",
-        base_url="https://sede.agenciatributaria.gob.es",
+        base_url=aeat_url("sede", "/").rstrip("/"),
         auth_method=PortalAuthMethod.CERTIFICATE,
         label="Sede electrónica",
     )
@@ -50,7 +51,7 @@ def test_corpus_artifact_record_requires_sha256_length() -> None:
         modelo_id=1,
         file_path="corpus/2024/modelos/130/modelo-130-2024.pdf",
         sha256=ok_digest,
-        source_url="https://sede.agenciatributaria.gob.es/modelo-130-2024.pdf",
+        source_url=sede_pdf_url(PDF_MODELO_130_2024_PATH_FIXTURE),
         fetched_at=datetime(2026, 4, 12, tzinfo=UTC),
     )
     assert record.sha256 == ok_digest
@@ -61,6 +62,6 @@ def test_corpus_artifact_record_requires_sha256_length() -> None:
             modelo_id=1,
             file_path="corpus/2024/modelos/130/modelo-130-2024.pdf",
             sha256="short",
-            source_url="https://sede.agenciatributaria.gob.es/modelo-130-2024.pdf",
+            source_url=sede_pdf_url(PDF_MODELO_130_2024_PATH_FIXTURE),
             fetched_at=datetime(2026, 4, 12, tzinfo=UTC),
         )

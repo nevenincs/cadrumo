@@ -90,8 +90,7 @@ _INLINE_CODE_RE = re.compile(r"`([^`\n]+)`")
 _FENCE_RE = re.compile(r"```[^\n]*\n(.*?)```", re.DOTALL)
 
 # A line is an ``aeat`` invocation when ``aeat`` appears as a bare token
-# (start of line or after shell punctuation), not as a substring (``aeat.exe``,
-# ``aeat.apidocs``, ``api/aeat``).
+# (start of line or after shell punctuation), not as a substring (``aeat.exe``).
 _AEAT_TOKEN_RE = re.compile(r"(?:^|[\s$|&(;])aeat(?=\s|$)")
 
 # Global options declared on the root callback. Accepted at any position before

@@ -90,6 +90,54 @@ class _GatheredObservation(BaseModel):
 
     observation: RegistryModeloObservation
     source_kind: str
+    casilla_source_kinds: Mapping[str, str]
+
+
+def _gathered_observation(
+    observation: RegistryModeloObservation,
+    *,
+    source_kind: str,
+) -> _GatheredObservation:
+    return _GatheredObservation(
+        observation=observation,
+        source_kind=source_kind,
+        casilla_source_kinds={item.casilla_id: source_kind for item in observation.observations},
+    )
+
+
+def _merge_gathered_observations(
+    primary: _GatheredObservation,
+    overlay: _GatheredObservation,
+) -> _GatheredObservation:
+    """Merge same-filing observations while preserving casilla-level provenance.
+
+    The registry previous-filing resolver accepts one observation for each
+    single-filer ``(modelo, filing_year, period)``. Secure IVA-history
+    projections therefore have to be folded into the app-filing observation
+    before resolution, otherwise one source shadows the other.
+    """
+    primary_key = (primary.observation.modelo, primary.observation.filing_year, primary.observation.period)
+    overlay_key = (overlay.observation.modelo, overlay.observation.filing_year, overlay.observation.period)
+    if primary_key != overlay_key:
+        raise BindingPrefillTypeError(
+            "cannot merge previous_filing observations with different modelo/year/period keys"
+        )
+
+    observations_by_casilla = {item.casilla_id: item for item in primary.observation.observations}
+    observations_by_casilla.update({item.casilla_id: item for item in overlay.observation.observations})
+    casilla_source_kinds = {
+        **dict(primary.casilla_source_kinds),
+        **dict(overlay.casilla_source_kinds),
+    }
+    source_kinds = {primary.source_kind, overlay.source_kind}
+    source_kind = primary.source_kind if len(source_kinds) == 1 else _MIXED_OBSERVATION_SOURCE_KIND
+    return _GatheredObservation(
+        observation=primary.observation.model_copy(
+            update={"observations": tuple(observations_by_casilla.values())}
+        ),
+        source_kind=source_kind,
+        casilla_source_kinds=casilla_source_kinds,
+    )
 
 
 class PrefilledBinding(BaseModel):
@@ -168,25 +216,32 @@ def _gather_observations(
                     continue
                 member_idx = seen_member.get(req_key, 0)
                 seen_member[req_key] = member_idx + 1
-                needed[(obs.modelo, obs.filing_year, obs.period, member_idx)] = _GatheredObservation(
-                    observation=obs, source_kind=payload.source_kind
+                needed[(obs.modelo, obs.filing_year, obs.period, member_idx)] = _gathered_observation(
+                    obs, source_kind=payload.source_kind
                 )
             continue
         payload = repository.load_observation(requirement.modelo, requirement.filing_year, requirement.period)
+        gathered: _GatheredObservation | None = None
         if payload is not None:
-            obs = payload.observation
-            source_kind = payload.source_kind
-        elif requirement.modelo == "303" and iva_history_repository is not None:
+            gathered = _gathered_observation(payload.observation, source_kind=payload.source_kind)
+        if requirement.modelo == "303" and iva_history_repository is not None:
             state = iva_history_repository.load_period(requirement.filing_year, requirement.period)
-            if state is None:
-                continue
-            obs = _observation_from_iva_compensation_history(state)
-            source_kind = _IVA_COMPENSATION_HISTORY_SOURCE_KIND
-        else:
+            if state is not None:
+                history_gathered = _gathered_observation(
+                    _observation_from_iva_compensation_history(state),
+                    source_kind=_IVA_COMPENSATION_HISTORY_SOURCE_KIND,
+                )
+                gathered = (
+                    _merge_gathered_observations(gathered, history_gathered)
+                    if gathered is not None
+                    else history_gathered
+                )
+        if gathered is None:
             continue
+        obs = gathered.observation
         needed.setdefault(
             (obs.modelo, obs.filing_year, obs.period, 0),
-            _GatheredObservation(observation=obs, source_kind=source_kind),
+            gathered,
         )
     return tuple(needed.values())
 
@@ -269,6 +324,7 @@ def _observation_from_iva_compensation_history(
             *observed("87", state.pending_for_later_amount),
             *observed("69", state.period_result_amount),
             *observed("71", state.final_result_amount),
+            *observed("iva.compensacion-generada-periodo", state.generated_amount),
             *observed("iva.compensacion-disponible-fin-periodo", state.available_end_amount),
         ),
     )
@@ -292,21 +348,47 @@ def _requirements_by_binding(
     }
 
 
+def _selector_source_casillas(value: object) -> tuple[str, ...]:
+    if isinstance(value, str):
+        return (value,)
+    if isinstance(value, tuple) and all(isinstance(item, str) for item in value):
+        return tuple(str(item) for item in value)
+    if isinstance(value, list) and all(isinstance(item, str) for item in value):
+        return tuple(str(item) for item in value)
+    return ()
+
+
+def _selector_value(selector: object, key: str, default: object) -> object:
+    if isinstance(selector, dict):
+        return selector.get(key, default)
+    return getattr(selector, key, default)
+
+
 def _source_kind_for_binding(
     gathered: tuple[_GatheredObservation, ...],
     *,
     source_modelo: str,
     source_filing_year: int,
     source_periods: tuple[str, ...],
+    source_casillas: tuple[str, ...] = (),
 ) -> str:
     required_periods = set(source_periods)
-    matched_source_kinds = {
-        item.source_kind
-        for item in gathered
-        if item.observation.modelo == source_modelo
-        and item.observation.filing_year == source_filing_year
-        and item.observation.period in required_periods
-    }
+    matched_source_kinds: set[str] = set()
+    for item in gathered:
+        if (
+            item.observation.modelo != source_modelo
+            or item.observation.filing_year != source_filing_year
+            or item.observation.period not in required_periods
+        ):
+            continue
+        if source_casillas:
+            matched_source_kinds.update(
+                item.casilla_source_kinds.get(casilla_id, item.source_kind)
+                for casilla_id in source_casillas
+                if casilla_id in item.observation.casilla_values
+            )
+        else:
+            matched_source_kinds.add(item.source_kind)
     if len(matched_source_kinds) == 1:
         return next(iter(matched_source_kinds))
     if matched_source_kinds:
@@ -371,11 +453,12 @@ def resolve_bindings_from_local_store(
         source_modelo, source_filing_year, source_periods = requirement_index.get(
             binding_id,
             (
-                str(getattr(selector, "source_modelo", "") or ""),
-                snapshot.filing_year + _selector_year_delta(getattr(selector, "filing_year_delta", 0)),
-                _selector_periods(getattr(selector, "source_periods", ())),
+                str(_selector_value(selector, "source_modelo", "") or ""),
+                snapshot.filing_year + _selector_year_delta(_selector_value(selector, "filing_year_delta", 0)),
+                _selector_periods(_selector_value(selector, "source_periods", ())),
             ),
         )
+        source_casillas = _selector_source_casillas(_selector_value(selector, "source_casillas", ()))
         prefilled.append(
             PrefilledBinding(
                 binding_id=binding_id,
@@ -385,6 +468,7 @@ def resolve_bindings_from_local_store(
                     source_modelo=source_modelo,
                     source_filing_year=source_filing_year,
                     source_periods=source_periods,
+                    source_casillas=source_casillas,
                 ),
                 source_modelo=source_modelo,
                 source_filing_year=source_filing_year,

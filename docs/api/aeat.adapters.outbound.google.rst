@@ -16,6 +16,7 @@ Submodules
    aeat.adapters.outbound.google._api
    aeat.adapters.outbound.google._calc_sheets_apply
    aeat.adapters.outbound.google._calc_sheets_pull
+   aeat.adapters.outbound.google._document_link_resolver
    aeat.adapters.outbound.google._errors
    aeat.adapters.outbound.google._oauth_flow
    aeat.adapters.outbound.google._profile_binding

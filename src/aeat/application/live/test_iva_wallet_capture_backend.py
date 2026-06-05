@@ -15,19 +15,23 @@ from ...adapters.outbound.aeat.sede import (
     FiledDeclaracionObservationStore,
     parse_iva_compensation_wallet_html,
 )
+from ...adapters.persistence.storage import has_active_bucket_session
 from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ...domain.iva_compensation._carry_forward import IvaCompensationPeriodState
 from ...domain.iva_compensation._reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
-from ...tests.secure_sql import dev_test_database_password, isolated_runtime_profile
+from ...tests.secure_sql import dev_test_database_password, isolated_profile_storage_root, isolated_runtime_profile
 from ..calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
     IvaWalletDecisionRepository,
     iva_wallet_decision_key,
 )
+from ..user_profile._orchestration import profile_create_storage_span
+from ..user_profile._testing import register_minimal_profile
+from ..workflow import workflow_state_repository
 from . import load_iva_remote_state, persist_and_reconcile_iva_compensation_wallet
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -351,6 +355,38 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
         database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
         assert _TAXPAYER_REF.encode("ascii") not in database_bytes
         assert b"EXP-2025-4T" not in database_bytes
+
+
+def test_remote_iva_evidence_reload_opens_active_profile_session_without_cli_bootstrap(tmp_path: Path) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        with profile_create_storage_span(_SESSION_BUCKET_ID):
+            workflow_state_repository().update(
+                lambda state: register_minimal_profile(state, profile_id=_SESSION_BUCKET_ID)
+            )
+            IvaCompensationHistoryRepository().save_period(
+                IvaCompensationPeriodState(
+                    taxpayer_nif=_TAXPAYER_REF,
+                    filing_year=2025,
+                    period="4T",
+                    expediente_id="EXP-2025-4T",
+                    status="ALTA",
+                    presented_at=_CAPTURED_AT,
+                    generated_amount=Decimal("20.00"),
+                    available_end_amount=Decimal("20.00"),
+                    source_observation_key="303:2025:4T:EXP-2025-4T",
+                )
+            )
+
+        assert has_active_bucket_session() is False
+
+        remote_state = load_iva_remote_state(as_of_year=2026)
+
+    assert remote_state.history.row_count == 1
+    assert remote_state.history.carry_forward_lot_count == 1
+    assert remote_state.history.rows[0].year == 2025
+    assert remote_state.history.rows[0].period == "4T"
+    assert _TAXPAYER_REF not in remote_state.model_dump_json()
+    assert "EXP-2025-4T" not in remote_state.model_dump_json()
 
 
 def _store_prior_compensation(repository: CalculationObservationRepository, *, amount: Decimal) -> None:

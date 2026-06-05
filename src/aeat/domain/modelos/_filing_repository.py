@@ -74,7 +74,7 @@ class ModeloRecordCatalogueRepository:
         Returns an empty catalogue when nothing has been persisted yet.
 
         Returns:
-            The decrypted ``ModeloRecordCatalogue`` for this bucket.
+            The decrypted :class:`ModeloRecordCatalogue` for this bucket.
 
         Raises:
             ModeloRecordPersistenceError: If the stored envelope fails its

@@ -627,6 +627,40 @@ def test_calendar_undeclared_profile_yields_incomplete_empty_calendar() -> None:
     assert "perfil" in cal.incomplete_reason
 
 
+def test_calendar_undeclared_profile_preserves_observed_events() -> None:
+    """Observed AEAT events remain visible even when obligations cannot be derived."""
+
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
+    events = calendar_events_from_expedientes_snapshots(
+        (
+            PersistedExpedientesSnapshot(
+                snapshot_id="e" * 64,
+                bucket_id="bucket-1",
+                captured_at=datetime(2026, 4, 16, 10, 0, tzinfo=UTC),
+                source_url=_SOURCE_URL,
+                declarations=(
+                    Declaracion(
+                        modelo="303",
+                        ejercicio=2026,
+                        period="1T",
+                        expediente_id="202630313520389Q",
+                        estado="ALTA",
+                        presented_at=datetime(2026, 4, 15, 9, 30, tzinfo=UTC),
+                    ),
+                ),
+                persisted_at=datetime(2026, 4, 16, 10, 5, tzinfo=UTC),
+            ),
+        ),
+        rng,
+    )
+
+    cal = build_overview_calendar(_undeclared_profile(), rng, today=date(2026, 4, 1), events=events)
+
+    assert cal.taxpayer_model_declared is False
+    assert cal.entries == ()
+    assert tuple(event.reference_id for event in cal.events) == ("202630313520389Q",)
+
+
 def _fully_enrolled_autonomo() -> TaxpayerProfile:
     """An autónomo whose enrolment flags trigger the full modelo set.
 

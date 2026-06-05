@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import bundled_path
+from ....tests.aeat_literal_fixtures import aeat_host
 from . import (
     CasillaObservation,
     InputKind,
@@ -23,6 +24,7 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
+_WWW6_HOST = aeat_host("www6")
 
 
 def _load_modelo(modelo_id: str):
@@ -58,6 +60,19 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
         "portal",
         "workflow",
     } <= linked_surfaces
+
+
+def test_modelo_190_filed_declarations_read_allows_live_register_host() -> None:
+    modelo, _ = _load_modelo("190")
+    revision = modelo.revisions["2024-y-siguientes"]
+    filed_read = next(ref for ref in revision.live_cross_references if ref.id == "modelo-190-filed-declarations-read")
+
+    assert filed_read.surface == "authenticated_read_surface"
+    assert filed_read.requires_authentication is True
+    assert filed_read.requires_aeat_authorization is True
+    assert filed_read.synthetic_data_allowed is False
+    assert _WWW6_HOST in filed_read.allowed_hosts
+    assert set(filed_read.allowed_methods) <= {"GET", "HEAD", "OPTIONS"}
 
 
 def test_modelo_190_relations_resolve_against_modelo_111_registry() -> None:

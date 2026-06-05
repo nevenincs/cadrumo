@@ -40,6 +40,7 @@ from ._app_live import (
     _iva_remote_state_capture_lines,
     _live_auth_preflight_lines,
     _live_iva_outcome_label,
+    _live_iva_remote_state_command_timeout_ms,
     _playwright_profile_tokens,
     _process_command_inventory,
     _reap_new_playwright_profile_processes,
@@ -73,11 +74,15 @@ def test_live_auth_preflight_lines_redact_active_profile_identifier() -> None:
         available=True,
         active_profile="operator-private-profile-id",
         active_profile_status="ready",
+        persisted_session_present=True,
+        persisted_session_expired=False,
+        persisted_session_state="live",
     )
 
     lines = _live_auth_preflight_lines(report)
 
     assert "auth_active_profile=<profile-id>" in lines
+    assert "auth_persisted_session_state=live" in lines
     assert all("operator-private-profile-id" not in line for line in lines)
 
 
@@ -208,6 +213,19 @@ class TestReadOnlyStructuralInvariants:
 
 
 class TestIvaRemoteStateCliSurface:
+    def test_remote_state_command_watchdog_budget_scales_with_year_span(self) -> None:
+        with override_settings(
+            aeat_clave_movil_timeout_ms=120_000,
+            aeat_live_iva_surface_timeout_ms=180_000,
+            aeat_live_iva_cli_watchdog_timeout_ms=240_000,
+        ):
+            one_year = _live_iva_remote_state_command_timeout_ms(year_from=2026, year_to=2026)
+            five_years = _live_iva_remote_state_command_timeout_ms(year_from=2022, year_to=2026)
+
+        assert one_year == 720_000
+        assert five_years == 1_440_000
+        assert five_years > one_year
+
     def test_remote_state_command_watchdog_reports_typed_timeout(self) -> None:
         async def slow_read() -> str:
             await asyncio.sleep(0.05)
@@ -219,14 +237,18 @@ class TestIvaRemoteStateCliSurface:
 
             assert raised.value.surface == "remote_state_command"
             assert raised.value.timeout_ms == 1
-            assert raised.value.context == {
-                "surface": "remote_state_command",
-                "timeout_ms": 1,
-                "progress": {
-                    "phase": "cli_watchdog",
-                    "surface": LiveIvaReadSurface.FILED_HISTORY.value,
-                },
-            }
+            assert raised.value.context["surface"] == "remote_state_command"
+            assert raised.value.context["timeout_ms"] == 1
+            progress = raised.value.context["progress"]
+            assert progress["phase"] == "cli_watchdog"
+            assert progress["surface"] == LiveIvaReadSurface.FILED_HISTORY.value
+            assert "watchdog_reaped_process_count" in progress
+            assert "auth_watchdog_before_persisted_session" in progress or progress.get(
+                "auth_watchdog_before_probe"
+            ) == "unavailable"
+            assert "auth_watchdog_after_persisted_session" in progress or progress.get(
+                "auth_watchdog_after_probe"
+            ) == "unavailable"
 
         asyncio.run(run())
 

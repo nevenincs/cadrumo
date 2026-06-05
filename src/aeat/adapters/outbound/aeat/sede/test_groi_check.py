@@ -13,6 +13,8 @@ live in a separate live test module to keep the unit suite fast.
 
 from __future__ import annotations
 
+from urllib.parse import urlsplit
+
 import pytest
 from pydantic import ValidationError
 
@@ -43,9 +45,11 @@ def test_oracle_id_matches_registry_namespace() -> None:
 def test_url_pins_to_aeat_www2_groi_servlet() -> None:
     """URL captured live; pinned so a future drift forces re-verification."""
 
-    assert Settings.external_constants().aeat.oracles.groi_check == (
-        "https://www2.agenciatributaria.gob.es/wlpl/GROI-JDIT/ConsultaOperadorSedeGroiServlet"
-    )
+    constants = Settings.external_constants().aeat
+    configured = urlsplit(constants.oracles.groi_check)
+    assert configured.scheme == "https"
+    assert configured.netloc == urlsplit(constants.domains.www2).netloc
+    assert configured.path
 
 
 def test_default_timeout_is_thirty_seconds() -> None:

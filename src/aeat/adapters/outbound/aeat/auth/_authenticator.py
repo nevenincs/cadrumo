@@ -1343,9 +1343,9 @@ class AeatAuthenticator:
         """Assemble a :class:`CertificateBundle` from ``settings``.
 
         Raises :class:`CertificateLoadError` if the mandatory cert fields
-        are not configured. Live auth requires AEAT_LIVE_TESTS_ENABLED; this
-        is a structural precondition — callers should have verified presence
-        before calling the authenticator.
+        are not configured. Callers should already have applied the
+        relevant operational auth/profile/read-only gates before calling
+        the authenticator.
         """
         path = self._settings.aeat_certificate_path
         if path is None:

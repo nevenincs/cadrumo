@@ -9,11 +9,14 @@ import pytest
 from pydantic_settings import SettingsConfigDict
 
 from ...core.config import Settings
+from ...tests.aeat_literal_fixtures import manual_practicos_url
 from . import ManualId, ManualPart, verify_manual_dir
 from ._errors import ManualNotFoundError, ManualReviewRequiredError
 from ._verify import raise_on_errors
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+_IVA_MANUAL_URL = manual_practicos_url("iva.pdf")
 
 
 class _IsolatedSettings(Settings):
@@ -51,7 +54,7 @@ def _seed_structure(root: Path, *, reviewer: str = "gw") -> None:
             "references_sections": [],
             "references_legal_acts": [],
             "source": {
-                "manual_url": "https://sede.agenciatributaria.gob.es/static_files/iva.pdf",
+                "manual_url": _IVA_MANUAL_URL,
                 "page": 10,
             },
             "definition_reviewed_by": reviewer,
@@ -82,7 +85,7 @@ def _seed_structure(root: Path, *, reviewer: str = "gw") -> None:
             "part": "single",
             "title": "Manual práctico IVA 2025",
             "summary": "Resumen",
-            "source_pdf_url": "https://sede.agenciatributaria.gob.es/static_files/iva.pdf",
+            "source_pdf_url": _IVA_MANUAL_URL,
             "source_html_url": None,
             "fetched_at": "2026-04-12T00:00:00Z",
             "definition_reviewed_by": reviewer,

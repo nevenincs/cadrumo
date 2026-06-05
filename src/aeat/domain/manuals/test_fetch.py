@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
+from ...core.external_constants import load_external_constants
 from . import (
     PART_SPECS,
     FetchedManualPart,
@@ -49,9 +50,11 @@ class TestPartSpecs:
         }
 
     def test_part_specs_urls_are_aeat(self) -> None:
-        """Every URL points at the AEAT sede static_files host."""
+        """Every URL points at the configured AEAT Sede manuals root."""
+        aeat = load_external_constants().aeat
+        expected_prefix = f"{aeat.domains.sede}{aeat.help_pages.manual_practicos_root}"
         for spec in PART_SPECS:
-            assert spec.source_pdf_url.startswith("https://sede.agenciatributaria.gob.es/static_files/")
+            assert spec.source_pdf_url.startswith(expected_prefix)
 
     def test_lookup_spec_hit(self) -> None:
         """lookup_spec returns the matching entry for a known triple."""

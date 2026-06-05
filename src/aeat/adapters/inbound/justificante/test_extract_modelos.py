@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ._extract import extract_justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -38,7 +39,7 @@ _SHAPE_M130_QUARTERLY = (
     "Numero de justificante: 1305124255671\n"
     "NIF Presentador: Y0000001S\n"
     "Y0000001S 2024 1T\n"
-    "https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=SANITIZED1302024\n"
+    f"{justificante_cotejo_url('SANITIZED1302024')}\n"
 )
 
 _SHAPE_M303_QUARTERLY = (
@@ -50,7 +51,7 @@ _SHAPE_M303_QUARTERLY = (
     "Numero de justificante: 3050124211223\n"
     "NIF Presentador: Y0000001S\n"
     "Sujeto pasivo (2) Ejercicio 2024 Periodo 1T\n"
-    "https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=SANITIZED3032024\n"
+    f"{justificante_cotejo_url('SANITIZED3032024')}\n"
 )
 
 _SHAPE_M111_QUARTERLY = (
@@ -63,7 +64,7 @@ _SHAPE_M111_QUARTERLY = (
     "NIF Presentador: Y0000001S\n"
     "MINISTERIO DE HACIENDA\n"
     "2024 1T\n"
-    "https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=SANITIZED1112024\n"
+    f"{justificante_cotejo_url('SANITIZED1112024')}\n"
 )
 
 _SHAPE_M190_RESUMEN_ANUAL = (
@@ -77,7 +78,7 @@ _SHAPE_M190_RESUMEN_ANUAL = (
     "Resumen anual\n"
     "Declarante\n"
     "Ejercicio (con 4 cifras) ....... 2024\n"
-    "https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=SANITIZED1902024\n"
+    f"{justificante_cotejo_url('SANITIZED1902024')}\n"
 )
 
 _SHAPE_M390_ANUAL = (
@@ -90,7 +91,7 @@ _SHAPE_M390_ANUAL = (
     "NIF Presentador: Y0000001S\n"
     "Sujeto pasivo Devengo\n"
     "Ejercicio 2023 Declaracion sustitutiva\n"
-    "https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=SANITIZED3902023\n"
+    f"{justificante_cotejo_url('SANITIZED3902023')}\n"
 )
 
 # English-language layout — AEAT serves these when the user files
@@ -114,7 +115,7 @@ _SHAPE_M130_2021_ENGLISH = (
     "APELLIDO APELLIDO NOMBRE\n"
     "Surname(s) and first name/Company name:\n"
     "Y0000001S 2021 4T\n"  # positional NIF + year + period block
-    "https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=SANITIZED1302021\n"
+    f"{justificante_cotejo_url('SANITIZED1302021')}\n"
 )
 
 _SHAPE_M390_2021_ENGLISH = (
@@ -130,7 +131,7 @@ _SHAPE_M390_2021_ENGLISH = (
     "Tax identification number(NIF)of filer:\n"
     "Liability\n"
     "Financial year 2021 Replacement tax return\n"
-    "https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=SANITIZED3902021\n"
+    f"{justificante_cotejo_url('SANITIZED3902021')}\n"
 )
 
 
@@ -189,7 +190,7 @@ class TestPeriodPositionalRejectsMonthlyNoise:
             "NIF Presentador: Y0000001S\n"
             "Resumen anual\n"
             "Ejercicio (con 4 cifras) ....... 2024 01 enero\n"
-            "https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=SANITIZED1902024\n"
+            f"{justificante_cotejo_url('SANITIZED1902024')}\n"
         )
         record = extract_justificante(text, _pdf_path(tmp_path, "190"))
         assert record.period == "2024"
@@ -204,7 +205,7 @@ class TestPeriodPositionalRejectsMonthlyNoise:
             "Presentacion realizada el: 05-07-2024 a las 16:28:37\n"
             "NIF Presentador: Y0000001S\n"
             "Y0000001S 2024 1T\n"
-            "https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=SANITIZED1302024\n"
+            f"{justificante_cotejo_url('SANITIZED1302024')}\n"
         )
         record = extract_justificante(text, _pdf_path(tmp_path, "130"))
         assert record.period == "1T"

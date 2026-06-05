@@ -688,6 +688,23 @@ class SourceReference(RegistryModel):
             raise RegistryValidationError("source reference applies_to must be on or after applies_from")
         if "\\" in self.corpus_path or self.corpus_path.startswith(("/", ".")):
             raise RegistryValidationError("source reference corpus_path must be repository-relative POSIX style")
+        if self.kind == "record_design":
+            # The record-design extractor (_extract_record_design_cached) supports only the
+            # fixed-width AEAT Diseño workbook formats. An HTML / XSD / DOC corpus declared as
+            # record_design is a kind misclassification — the right fix is to reclassify the
+            # source to form_spec / instructions / xsd, or to ingest the real Diseño workbook.
+            # Refusing at catalogue load time keeps the parser from seeing the bad extension.
+            allowed_record_design_suffixes = (".pdf", ".xls", ".xlsx", ".xlsm")
+            suffix = self.corpus_path.rsplit(".", 1)
+            extension = "." + suffix[1].lower() if len(suffix) == 2 else ""
+            if extension not in allowed_record_design_suffixes:
+                raise RegistryValidationError(
+                    f"source reference {self.id!r} declares kind='record_design' but corpus_path "
+                    f"{self.corpus_path!r} has unsupported extension {extension!r}; the record-design "
+                    f"extractor accepts only .pdf / .xls / .xlsx / .xlsm — reclassify the source "
+                    f"(e.g. kind='form_spec' for an AEAT/BOE landing page HTML) or ingest the real "
+                    f"Diseño workbook"
+                )
         return self
 
     @field_validator("sha256")

@@ -473,8 +473,42 @@ def test_live_auth_preflight_reports_redacted_clave_profile_alignment() -> None:
     assert report.prefer_non_qr is True
     assert report.timeout_ms == 120_000
     assert report.nie_soporte_configured is True
+    assert report.persisted_session_state == "no_session"
     assert "12345678Z" not in report.model_dump_json()
     assert "support-present" not in report.model_dump_json()
+
+
+def test_live_auth_preflight_reports_expired_persisted_session_state() -> None:
+    """Live preflight must distinguish local Cl@ve config health from session reuse readiness."""
+
+    workflow_state_repository().update(
+        lambda state: register_minimal_profile(
+            state,
+            profile_id="operator",
+            overrides={"identity.tax_id": "12345678Z"},
+        )
+    )
+    with override_settings(aeat_clave_movil_dni_nie=SecretStr("12345678Z")):
+        configure_operator_auth("clave_movil")
+        captured_at = utc_now() - timedelta(minutes=30)
+        path = storage_state_paths(load_settings(), AuthProviderKind.CLAVE_MOVIL).storage_state
+        _session_store.save(
+            path,
+            storage_state={"cookies": [], "origins": []},
+            metadata={
+                "provider_kind": AuthProviderKind.CLAVE_MOVIL.value,
+                "identity_nif": "12345678Z",
+                "authenticated_at": captured_at.isoformat(),
+                "idle_deadline": (captured_at + timedelta(minutes=18)).isoformat(),
+            },
+        )
+
+        report = build_live_auth_preflight_report("clave_movil")
+
+    assert report.probe_result == "ok"
+    assert report.persisted_session_present is True
+    assert report.persisted_session_expired is True
+    assert report.persisted_session_state == "expired"
 
 
 def test_live_auth_preflight_uses_explicit_certificate_settings(tmp_path: Path) -> None:
@@ -523,11 +557,17 @@ def test_auth_test_carries_a_local_session_probe_status_does_not() -> None:
     status_fields = set(status.model_dump())
     probe_fields = set(probe.model_dump())
     assert "persisted_session_present" not in status_fields
-    assert {"persisted_session_present", "persisted_session_expired", "probe_summary"} <= probe_fields
+    assert {
+        "persisted_session_present",
+        "persisted_session_expired",
+        "persisted_session_state",
+        "probe_summary",
+    } <= probe_fields
 
     # No login has been performed, so there is no persisted token.
     assert probe.persisted_session_present is False
     assert probe.persisted_session_expired is None
+    assert probe.persisted_session_state == "no_session"
     assert probe.probe_summary != ""
 
 
@@ -607,6 +647,7 @@ def test_operator_auth_test_reports_profile_scoped_clave_session() -> None:
 
     assert result.persisted_session_present is True
     assert result.persisted_session_expired is False
+    assert result.persisted_session_state == "live"
 
 
 def test_clave_live_auth_guard_accepts_matching_active_profile_identity() -> None:

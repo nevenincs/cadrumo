@@ -84,7 +84,7 @@ class VerificationReportCatalogueRepository:
         ever been written, an empty catalogue is returned rather than raising.
 
         Returns:
-            The stored ``VerificationReportCatalogue``, or an empty one
+            The stored :class:`VerificationReportCatalogue`, or an empty one
             when nothing has been persisted for this bucket.
 
         Raises:

@@ -47,6 +47,7 @@ from ...domain.deadlines import (
 )
 from ...domain.submission import ModeloDraftStatus, ModeloFinding, SubmissionPreflightError
 from ...tests import FIXTURES_DIR
+from ...tests.aeat_literal_fixtures import aeat_url, configured_path
 from ..filing.runtime import build_runtime_schema_provider
 from . import (
     ModeloInputs,
@@ -59,6 +60,8 @@ from . import (
 from ._errors import UnhandledWorkflowError, WorkflowInputMismatchError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+_SEDE_ROOT_URL = aeat_url("sede", "/")
+_NOTIFICATIONS_QUERY_URL = aeat_url("www6", configured_path("sede_paths", "notifications_query"))
 
 # ── Test doubles ────────────────────────────────────────────────────────
 
@@ -197,9 +200,7 @@ class _ConcreteNotificationsSource:
         return NotificationsSnapshot(
             rows=self.rows,
             captured_at=datetime(2026, 4, 12, tzinfo=UTC),
-            source_url=AnyHttpUrl(
-                "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/SvInteresadosQuery?VEZ=BUSCAR1"
-            ),
+            source_url=AnyHttpUrl(_NOTIFICATIONS_QUERY_URL),
         )
 
 
@@ -458,9 +459,7 @@ class TestAbortReasons:
                 fecha_notificacion=None,
                 modo_notificacion=None,
                 leida=False,
-                source_url=AnyHttpUrl(
-                    "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/SvInteresadosQuery?VEZ=BUSCAR1"
-                ),
+                source_url=AnyHttpUrl(_NOTIFICATIONS_QUERY_URL),
             ),
         )
         result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
@@ -475,7 +474,12 @@ class TestAbortReasons:
                 ejercicio=2026,
                 category_path=("Agencia Tributaria", "IRPF", "Modelo 130"),
                 detail_url=AnyHttpUrl(
-                    "https://www6.agenciatributaria.gob.es/wlpl/DASR-CORE/AccesoDR2026RVlt?exp=202610013522456T"
+                    aeat_url(
+                        "www6",
+                        f"{configured_path('sede_paths', 'irpf_expediente_detail_year_prefix')}"
+                        f"2026{configured_path('sede_paths', 'irpf_expediente_detail_year_suffix')}"
+                        "?exp=202610013522456T",
+                    )
                 ),
             ),
         )
@@ -801,7 +805,7 @@ class TestSiteUnavailableArm:
         fixture_path = FIXTURES_DIR / "site_health" / "mantenimiento" / "interstitial.html"
         body = Path(fixture_path).read_text(encoding="utf-8")
         real_status = evaluate_response(
-            "https://sede.agenciatributaria.gob.es/",
+            _SEDE_ROOT_URL,
             200,
             {},
             body,
@@ -826,7 +830,7 @@ class TestSiteUnavailableArm:
         fixture_path = FIXTURES_DIR / "site_health" / "mantenimiento" / "interstitial.html"
         body = Path(fixture_path).read_text(encoding="utf-8")
         real_status = evaluate_response(
-            "https://sede.agenciatributaria.gob.es/",
+            _SEDE_ROOT_URL,
             200,
             {},
             body,

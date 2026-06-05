@@ -72,8 +72,9 @@ unreadable and nothing else recovers it.
 
 ## Authentication and connectivity
 
-These matter only if you use live reads from the AEAT, which stay off until you
-set `AEAT_LIVE_TESTS_ENABLED` to `1`. Check your AEAT authentication:
+These matter only if you use read-only live data from the AEAT. Live reads
+require configured AEAT authentication, such as a registered certificate or
+Cl@ve session. Check your AEAT authentication:
 
 ```
 aeat config auth status
@@ -94,4 +95,3 @@ aeat config repair connectivity --target browser
 - [Pipeline explanation](../explanation/index.md) - what the registry, secure
   storage, and workflow state are.
 - [CLI reference](../cli/index.rst) - every repair command, flag, and exit code.
-- Report a problem on the [issue tracker](https://github.com/wgergely/aeat/issues).

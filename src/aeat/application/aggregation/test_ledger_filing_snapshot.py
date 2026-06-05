@@ -209,9 +209,9 @@ def test_material_change_to_contributor_is_detected_stale() -> None:
     snap = compute_ledger_filing_snapshot(
         source_transaction_ids=[original.transaction_id], catalogue=_catalogue(original), captured_at=_CAPTURED
     )
-    # Operator later re-splits the base/iva: same row id, material change to a
-    # casilla input -> detected as changed, not removed.
-    edited = _tx("row-a", taxable_base=Decimal("90.00"), iva_amount=Decimal("18.90"))
+    # Operator later re-splits the base/iva of the same 121.00 gross: same row
+    # id, material change to a casilla input -> detected as changed, not removed.
+    edited = _tx("row-a", taxable_base=Decimal("110.00"), iva_amount=Decimal("11.00"))
     assert edited.transaction_id == original.transaction_id
     verdict = evaluate_ledger_filing_staleness(snap, _catalogue(edited))
     assert verdict.is_stale is True

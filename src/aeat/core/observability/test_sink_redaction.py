@@ -23,6 +23,7 @@ from pathlib import Path
 
 import pytest
 
+from ...tests.aeat_literal_fixtures import REDACTION_SECRET_WLPL_PATH_CANARY, aeat_url
 from . import (
     ErrorPayload,
     FormFillPayload,
@@ -38,8 +39,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 _NIF_CANARY = "12345678Z"
 _BEARER_TAIL = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 _BEARER_CANARY = f"Bearer {_BEARER_TAIL}"
-_URL_PATH_CANARY = "/wlpl/SECRET-PATH/Submit?session=ABCDEFGHIJ"
-_AEAT_URL = "https://www.agenciatributaria.gob.es" + _URL_PATH_CANARY
+_URL_PATH_CANARY = REDACTION_SECRET_WLPL_PATH_CANARY
+_AEAT_URL = aeat_url("aeat_gob", _URL_PATH_CANARY)
 
 
 def _emit(sink: JsonlRunSink, event: RunEvent) -> None:

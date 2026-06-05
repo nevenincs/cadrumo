@@ -20,3 +20,6 @@ Submodules
    aeat.adapters.persistence.storage.bucket._lockfile
    aeat.adapters.persistence.storage.bucket._manifest
    aeat.adapters.persistence.storage.bucket._manifest_io
+   aeat.adapters.persistence.storage.bucket._sealed_archive_errors
+   aeat.adapters.persistence.storage.bucket._sealed_archive_reader
+   aeat.adapters.persistence.storage.bucket._sealed_archive_writer

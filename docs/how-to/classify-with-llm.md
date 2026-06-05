@@ -77,5 +77,5 @@ aeat app ledger classify --id <transaction-id> --llm claude --apply
 - [Common filing recipes](index.md) - the modelo lifecycle these classifications
   feed.
 - [CLI reference](../cli/index.rst) - every classify option and exit code.
-- [Glossary](../glossary.md) - the Spanish terms used here.
-- Report a problem on the [issue tracker](https://github.com/wgergely/aeat/issues).
+- [Diagnose and repair your local setup](troubleshooting.md) - fix local setup
+  or readiness problems.

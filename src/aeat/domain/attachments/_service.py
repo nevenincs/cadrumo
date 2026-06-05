@@ -110,6 +110,9 @@ def add_link_attachment(
     Gmail message link or Drive file link is recorded as ledger evidence metadata
     without any network access. The content-addressed id is the digest of the
     reference text, so the same link deduplicates naturally.
+
+    Returns:
+        The created :class:`Attachment` manifest.
     """
     payload = source_reference.encode(UTF_8_ENCODING)
     sha256 = store.put_bytes(payload)

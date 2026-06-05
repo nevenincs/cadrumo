@@ -156,7 +156,7 @@ class SecureBoundRepository[T: BaseModel]:
 
     @property
     def secure_object_repository(self) -> SecureObjectRepository:
-        """Return the concrete secure-object repository backing this logical repository."""
+        """Return the concrete :class:`SecureObjectRepository` backing this logical repository."""
         return self._objects
 
     # ------------------------------------------------------------------

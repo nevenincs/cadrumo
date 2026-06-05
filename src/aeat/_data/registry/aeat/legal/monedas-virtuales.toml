@@ -116,7 +116,13 @@ required_text = [
 [sources."aeat-dr-721"]
 evidence_tier = "layout_authority"
 authority = "aeat"
-kind = "record_design"
+# Reclassified from record_design to form_spec: the corpus is a 356-byte stub HTML
+# landing page pending full Diseño ingest, not a fixed-width record-design workbook.
+# The record_design kind is reserved for sources the extractor can parse (.pdf/.xls/
+# .xlsx/.xlsm); the kind-vs-extension gate on SourceReference enforces that. When
+# the real Orden HFP/886/2023 Anexo Diseño is ingested, flip this back to
+# record_design and update the corpus_path/sha256/bytes/applies_from fields.
+kind = "form_spec"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_721/files/01-721-orden-hfp-886-2023-diseno-registro.html"
 sha256 = "95113765b1055bd2cbdd72d24d01ddc2374dcdb876958c7ce66777699edd841c"
 bytes = 356

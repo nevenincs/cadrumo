@@ -91,6 +91,9 @@ class PortalsService:
         portals (``active=False``) are excluded by default; pass
         ``include_retired=True`` to surface them so the operator can
         trace where a deprecated URL was supposed to redirect to.
+
+        Returns:
+            tuple[:class:`PortalRow`, ...]: The list of portals.
         """
         entries: Iterable[PortalMetadata] = self._registry.values()
         if not include_retired:

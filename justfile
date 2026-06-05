@@ -387,7 +387,28 @@ quality-audit:
 # Build the HTML documentation (furo) from Google-style docstrings plus
 # the narrative pages under docs/. Output to docs/_build/html (gitignored).
 docs:
-    uv run --no-sync sphinx-build -b html -j auto docs docs/_build/html
+    uv run --no-sync python docs/tools/build_changed_docs.py docs/conf.py
+
+# Build one non-API documentation source file into the canonical HTML output
+# without rebuilding generated API/autodoc pages.
+docs-page PAGE:
+    uv run --no-sync python docs/tools/build_changed_docs.py --single-page {{PAGE}}
+
+# Build only documentation pages affected by local changes since BASE.
+docs-changed BASE="HEAD":
+    uv run --no-sync python docs/tools/build_changed_docs.py --base {{BASE}}
+
+# Build explicit repository-relative docs/source paths in a noisy worktree.
+docs-path +PATHS:
+    uv run --no-sync python docs/tools/build_changed_docs.py {{PATHS}}
+
+# Strict changed-page build: nitpicky warnings-as-errors, offline inventories.
+docs-changed-strict BASE="HEAD":
+    uv run --no-sync python docs/tools/build_changed_docs.py --base {{BASE}} --strict
+
+# Build changed docs and refresh the resident vaultspec-rag service index.
+docs-changed-rag BASE="HEAD":
+    uv run --no-sync python docs/tools/build_changed_docs.py --base {{BASE}} --rag-index
 
 # Documentation conformance gate: the docs-marked tests (nitpicky
 # warnings-as-errors Sphinx build, module-to-stub correspondence, and CLI
@@ -626,4 +647,3 @@ release-apply:
     Write-Host '       git tag -a vX.Y.Z -m "aeat vX.Y.Z"'
     Write-Host "When ready (human decision only), push with:"
     Write-Host "  git push origin main --tags"
-

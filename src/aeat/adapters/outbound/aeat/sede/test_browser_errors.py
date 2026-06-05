@@ -23,6 +23,7 @@ from typing import Any
 
 import pytest
 
+from .....core.config import Settings
 from .....core.errors import ERROR_REGISTRY, build_error_envelope
 from ._errors import BrowserAdapterTypeError
 from ._groi_check import collect_groi_observations
@@ -64,7 +65,7 @@ class _FakeLivePayload:
     """Minimal live-payload stand-in (only fields accessed before new_page())."""
 
     timeout_ms: int = 5_000
-    app_url: str = "https://renta.agenciatributaria.gob.es/WDCOPANE/portada"
+    app_url: str = Settings.external_constants().aeat.oracles.renta_web_open_app_template.format(year=2026)
     casilla_overrides: dict[str, object] = {}
     scrape_casillas: tuple[str, ...] = ()
 
