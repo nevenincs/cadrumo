@@ -595,7 +595,43 @@ Colour resolution uses the active CLI flag context plus `Settings.no_color` and
 resolution uses the registry message key, and is declared in the centralized application
 error registry.
 
-## S391-CR-004 | PASS | Validation passed
+## S391-CR-004 | FIXED | Direct profile wizard callbacks bypassed error rendering
 
-Focused `ruff check`, TTY locale integration tests, error-registry tests, and `python -m
-aeat.locales audit` passed.
+Profile lifecycle validation showed direct `profile_app` invocations of generated
+profile `create`/`edit` callbacks bypassed the root app's error boundary. The generated
+callbacks are now registered through `command_error_boundary`, so non-TTY refusals render
+typed recovery guidance in direct sub-app tests and root CLI usage.
+
+## S391-CR-005 | FIXED | Deprecated tax-id placeholder removed from profile lifecycle assertion
+
+The profile-create recovery assertion expected the old `--tax-id NIF` placeholder. It
+now asserts the current `--tax-id DNI/NIE/NIF/CIF` operator guidance.
+
+## S391-CR-006 | PASS | Validation passed
+
+Focused `ruff check`, TTY locale integration tests, profile lifecycle integration tests,
+error-registry tests, JSON schema conformance tests, and `python -m aeat.locales audit`
+passed.
+
+## S392-CR-001 | PASS | Registry CLI is read-only and storage-free
+
+Reviewed the S392 scope as `vaultspec-code-reviewer`. `registry.py` delegates to
+application registry verification services and resolves default roots through
+`bundled_path()`. It does not resolve active profiles, inspect manifests, construct
+secure-object repositories, open SQL routes, persist data, or call remote providers.
+
+## S392-CR-002 | PASS | Operator path inputs stay explicit
+
+The registry, source, workbook, scenario, tape, and output paths are explicit Typer
+`Path` options. Defaults point at bundled resources or the local parity archive path;
+there is no fallback to profile storage or ambient secure-storage roots.
+
+## S392-CR-003 | PASS | Output contract is schema-backed
+
+All command result paths use `_emit_envelope()` with registered registry payload models.
+The JSON schema conformance gate passed for the current CLI tree.
+
+## S392-CR-004 | PASS | Validation passed
+
+Focused `ruff check`, registry CLI integration tests, schema conformance tests, and
+`python -m aeat.locales audit` passed.

@@ -29,12 +29,25 @@ read `NO_COLOR` or `AEAT_FORCE_COLOR` directly.
 is registered with `REFUSED_CLI_NON_TTY` in the centralized error registry. Locale
 coverage for the registry message key is covered by the focused integration test.
 
-## S391-004 | PASS | Validation
+## S391-004 | FIXED | Direct profile wizard callbacks bypassed error rendering
+
+The focused profile lifecycle check exposed that `profile_app` direct invocations of the
+generated `create`/`edit` wizard callbacks bypassed the root app's error boundary. The
+callbacks are now registered through `command_error_boundary`, so a non-TTY `profile
+edit` refusal renders the edit-specific recovery hint instead of returning empty output.
+
+## S391-005 | FIXED | Profile-create recovery assertion used deprecated tax-id placeholder
+
+The current localized recovery command uses `--tax-id DNI/NIE/NIF/CIF`. A profile
+lifecycle test still expected the deprecated `--tax-id NIF` placeholder and now asserts
+the current operator guidance.
+
+## S391-006 | PASS | Validation
 
 Focused ruff passed for `_tty.py`, its locale tests, the application error registry, and
-settings. The TTY integration tests passed with 4 selected tests. Error-registry tests
-passed with 14 selected tests. The locale audit passed through `python -m aeat.locales
-audit`.
+settings. The TTY integration tests passed with 4 selected tests. Profile lifecycle
+integration tests passed with 43 selected tests. Error-registry tests passed with 14
+selected tests. The locale audit passed through `python -m aeat.locales audit`.
 
 Reviewer note: no critical, high, medium, or low findings remain for the S391 slice.
 
