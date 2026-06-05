@@ -21,11 +21,10 @@ The ``env/.env`` auto-load happens at module-load time in the repo-root
 
 Banned-import hits are hard ``pytest.exit`` rather than warnings.
 
-The ``source_tree_ast`` session-scoped fixture (consumed by ratchet
-inventories under ``src/aeat/test_*.py`` and elsewhere) lives at
-``src/aeat/conftest.py`` rather than here; pytest conftest discovery
-walks up from each test file, so a fixture nested under ``tests/`` is
-invisible to ratchets that live at the ``src/aeat/`` top level.
+The ``source_tree_ast`` session-scoped fixture is consumed by ratchet
+tests throughout the relocated ``tests/`` folders and lives at
+``src/aeat/conftest.py`` rather than here so pytest can discover it
+from every source test subtree.
 """
 
 from __future__ import annotations
