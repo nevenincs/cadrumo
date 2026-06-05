@@ -159,7 +159,7 @@ Reviewed W05.P12 `S125`. The committed synthetic justificante regeneration comma
 
 Verification covers Ruff, compileall, compatibility export smoke, 23 focused fixture/provenance tests, the 2-test hard size-budget guard, and vault frontmatter/link checks. No fixture PDFs were regenerated or changed in this slice.
 
-## REVIEW-022 | LOW | No blocking findings in application and adapter error registry shard closure
+## REVIEW-023 | LOW | No blocking findings in application and adapter error registry shard closure
 
 Reviewed W04.P09 `S87` through `S90`. The application and adapter error registry modules now remain as aggregate facades over private ordered shards. The shard files keep declaration order and `ErrorCode` payloads intact, and each aggregate continues to expose `_DECLARED_ERROR_CODES` for the core registry package.
 
