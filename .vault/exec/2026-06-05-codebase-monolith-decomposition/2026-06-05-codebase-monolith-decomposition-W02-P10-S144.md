@@ -10,18 +10,20 @@ related:
 
 # W02.P10.S144 Profile Censo Registrar Split
 
-Scope: `src/aeat/entrypoints/cli/_config/_profile_censo.py`; `src/aeat/entrypoints/cli/_config/tests`.
+## Scope
+
+Split the residual oversized profile censo registrar into focused transport helpers.
 
 ## Description
 
-- Split profile censo command registration into focused `refresh`, `show`, `compare`, and `apply` helper registrations.
-- Keep the public `profile censo` Typer subgroup and command payloads unchanged.
+- Extracted refresh, show, compare, and apply command registration into separate helpers.
+- Preserved `CensoSyncService` as the backend owner for censo behavior.
+- Kept the top-level `register` function as a Typer subgroup composition facade.
 
 ## Outcome
 
-- `register` now only builds the subgroup, delegates command attachment, and mounts the subgroup.
-- Verified by `ruff check` and config/profile CLI lifecycle tests.
+The censo registrar no longer exceeds its callable budget and remains a CLI consumer of backend services.
 
 ## Notes
 
-- No censo comparison or application policy was moved into the entrypoint layer.
+No command behavior or option shape was changed.

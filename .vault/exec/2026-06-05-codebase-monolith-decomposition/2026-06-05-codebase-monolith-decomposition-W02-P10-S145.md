@@ -8,21 +8,22 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
 ---
 
-# W02.P10.S145 Budget Inventory Repair
+# W02.P10.S145 Size Budget Inventory Repair
 
-Scope: `src/aeat/tests/test_codebase_size_budgets.py`; `src/aeat/application/modelo`; `src/aeat/entrypoints/cli/tests`.
+## Scope
+
+Repair stale size-budget inventory entries exposed by residual decomposition and concurrent file movement.
 
 ## Description
 
-- Removed stale legacy callable and module allowances for shrunken modelo compatibility modules.
-- Made the tracked-file inventory ignore deleted tracked paths so concurrent renames do not raise `FileNotFoundError`.
-- Replaced the retired cross-profile `switch` test surface with the root `unlock` equivalent.
+- Removed obsolete legacy budgets for the now-shrunken modelo `_actions` module and moved `_actions` callables.
+- Removed the obsolete profile censo `register` callable exception after the split.
+- Made the tracked-file inventory ignore absent tracked paths so dirty renames do not produce a `FileNotFoundError`.
 
 ## Outcome
 
-- The hard size-budget test now reports actual budget offenders instead of failing on deleted tracked files.
-- Verified by `src/aeat/tests/test_codebase_size_budgets.py`.
+The size guard now measures existing tracked Python files and no longer fails on the deleted ledger switch test path or obsolete modelo/config callable exceptions.
 
 ## Notes
 
-- This step kept the guard strict for existing files; it only skips paths that no longer exist in the working tree.
+The guard still enforces line and callable budgets for existing files.
