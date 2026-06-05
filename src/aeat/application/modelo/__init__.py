@@ -57,7 +57,7 @@ from ...domain.modelos import (
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
 from ...domain.modelos._filing_record import ExternalEvidenceKind
 from ...domain.modelos._work_unit import WorkUnit
-from ._actions import (
+from ._action_errors import (
     AmendmentEvidenceMissingError,
     AmendmentOverrideCasillaError,
     AmendmentTargetStateError,
@@ -69,8 +69,6 @@ from ._actions import (
     ExternalModeloImportError,
     ModeloAggregationBindingError,
     ModeloCrossPeriodCleanStateError,
-    ModeloIvaWalletReconciliationBlocked,
-    ModeloIvaWalletReconciliationBlockedError,
     ModeloRecordNotFoundError,
     ModeloWorkflowGateError,
     StoredCalculationDriftError,
@@ -78,25 +76,23 @@ from ._actions import (
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
+)
+from ._actions import (
+    ModeloIvaWalletReconciliationBlocked,
+    ModeloIvaWalletReconciliationBlockedError,
     amend_modelo_revision,
     calculate_modelo_revision,
     calculate_modelo_revision_from_bucket_aggregation,
-    create_work_unit,
-    discard_work_unit,
     file_modelo_revision,
     get_calculation_revision,
     get_filing_record,
     get_verification_report,
-    get_work_unit,
     import_external_filing_evidence,
     list_calculation_revisions,
     list_filing_records,
     list_verification_reports,
-    list_work_units,
     mark_revision_verificado_completo,
-    rename_work_unit,
     verify_modelo_revision,
-    workflow_period_for_work_unit,
 )
 from ._binding_readiness import profile_resolvable_binding_ids
 from ._borrador_binding import (
@@ -272,11 +268,19 @@ from ._work_create_policy import (
     modelo_work_create_applicability_refusal,
     modelo_work_create_refusal_locale_key,
 )
+from ._work_lifecycle import (
+    create_work_unit,
+    discard_work_unit,
+    get_work_unit,
+    list_work_units,
+    rename_work_unit,
+)
 from ._work_plazo import (
     ModeloWorkPlazoSummary,
     ModeloWorkRecargoSummary,
     modelo_work_plazo_summary,
 )
+from ._workflow_gate import workflow_period_for_work_unit
 
 __all__ = [
     "STUB_MODELO_LOCALE_KEYS",

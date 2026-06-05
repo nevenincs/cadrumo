@@ -78,3 +78,9 @@ Reviewed the final pre-commit W03.P08 `S81` and `S82` diff. The public master-ke
 Verification recorded in the step logs covers direct import discovery, ruff, 212 master-key tests, 264 storage tests, public facade smoke imports, vault frontmatter and link checks, `_master_key.py` line-budget confirmation at 1241 lines, and plan validation with only the known PLAN022 monotonic-order warning.
 
 Residual risk is outside this slice: the remaining open plan rows still cover oversized modelo/live/overview application roots, core configuration and error registries, oversized fixtures/tests, and final hard size/complexity gates.
+
+## REVIEW-010 | LOW | No blocking findings in residual modelo action split
+
+Reviewed the W03.P11 `S119` residual modelo action decomposition after focused gates exposed and repaired facade regressions for moved action errors and IVA wallet aliases. The package facade still exposes work-unit lifecycle actions, calculation and filing workflows, workflow-period resolution, and legacy action-error classes while the moved implementations live in private helper modules. Registry authority lookup now has one owner in `_registry_resources.py`, with `_registry_helpers.py` delegating to it rather than carrying a duplicate copy.
+
+Verification covers ruff, compileall, direct facade import smoke, and 46 focused modelo application tests. Residual risk remains tracked in the plan: `_actions.py` is still above the final module budget, so follow-up rows `S133` through `S140` now split calculation, verification, filing, amendment, and import workflows.
