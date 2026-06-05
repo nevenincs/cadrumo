@@ -30,10 +30,12 @@ import base64
 import binascii
 from collections.abc import Callable
 from datetime import datetime
+from pathlib import Path
 
 from pydantic import BaseModel, ValidationError
 
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ..bucket._errors import RecoveryVerificationError
 from ..crypto._crypto import EncryptedBlob
 from ..errors import DecryptionError, StorageValidationError
@@ -156,6 +158,21 @@ def verify_recovery_mnemonic(*, envelope: RecoveryRecord, mnemonic: str) -> bool
     return True
 
 
+def save_recovery_envelope(envelope: RecoveryRecord, path: Path) -> None:
+    """Atomically persist a typed recovery envelope."""
+    from ._master_key import atomic_write_secure_bytes
+
+    atomic_write_secure_bytes(path, envelope.model_dump_json().encode(_UTF_8_ENCODING))
+
+
+def load_recovery_envelope(path: Path) -> RecoveryRecord:
+    """Read and validate a typed recovery envelope."""
+    try:
+        return RecoveryRecord.model_validate_json(path.read_text(encoding=_UTF_8_ENCODING))
+    except (OSError, ValueError, ValidationError) as exc:
+        raise RecoveryVerificationError("recovery envelope file is malformed") from exc
+
+
 def open_session_from_recovery(
     *,
     bucket_id: str,
@@ -184,8 +201,10 @@ def open_session_from_recovery(
 
 __all__ = [
     "MintedRecovery",
+    "load_recovery_envelope",
     "mint_recovery_envelope",
     "open_session_from_recovery",
+    "save_recovery_envelope",
     "unwrap_recovery_envelope",
     "verify_recovery_mnemonic",
 ]

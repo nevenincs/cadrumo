@@ -57,9 +57,11 @@ from ._bindings import (
     counterpart_binding_requirements,
     invoice_binding_requirements,
     previous_filing_observation_requirements,
+    resolve_atribucion_binding_row_values,
     resolve_bound_casilla_inputs,
     resolve_counterpart_binding_row_values,
     resolve_counterpart_binding_values,
+    resolve_foreign_asset_binding_row_values,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
     resolve_ledger_iva_aggregation_binding_values,
@@ -67,6 +69,8 @@ from ._bindings import (
     resolve_ledger_renta_expense_aggregation_binding_values,
     resolve_ledger_renta_income_aggregation_binding_values,
     resolve_previous_filing_binding_values,
+    resolve_refund_binding_row_values,
+    resolve_related_party_binding_row_values,
     resolve_withholding_binding_row_values,
     resolve_withholding_binding_values,
     unsupported_ledger_iva_observations,
@@ -287,8 +291,6 @@ from ._schema import (
     ExtractionTargetDefinition,
     FormulaDefinition,
     FormulaExpression,
-    InputKind,
-    InputKindValue,
     KeyedBracketEntry,
     LegalParameter,
     LegalReference,
@@ -300,7 +302,6 @@ from ._schema import (
     ParameterDefinition,
     ProfilePredicateDefinition,
     RegistryCatalogues,
-    RegistryRoundingCode,
     RegistrySnapshot,
     RegistrySnapshotRef,
     RegistryVerificationPolicy,
@@ -310,6 +311,8 @@ from ._schema import (
     VerificationPredicateDefinition,
     WorkbookParityReference,
 )
+from ._schema_input_kind import InputKind, InputKindValue
+from ._schema_rounding import RegistryRoundingCode
 from ._snapshot import build_snapshot
 from ._sources import verify_source_catalogue, verify_source_file
 from ._validate import RegistryValidator
@@ -614,6 +617,7 @@ __all__ = [
     "relation_source_requirements",
     "remote_state_policy_from_cross_reference",
     "replay_parity_tape",
+    "resolve_atribucion_binding_row_values",
     "resolve_bound_casilla_inputs",
     "resolve_censo_modelo_foundation",
     "resolve_censo_modelo_work_unit_foundation",
@@ -622,6 +626,7 @@ __all__ = [
     "resolve_counterpart_binding_values",
     "resolve_cross_reference_oracle",
     "resolve_export_layout",
+    "resolve_foreign_asset_binding_row_values",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
     "resolve_ledger_iva_aggregation_binding_values",
@@ -629,6 +634,8 @@ __all__ = [
     "resolve_ledger_renta_expense_aggregation_binding_values",
     "resolve_ledger_renta_income_aggregation_binding_values",
     "resolve_previous_filing_binding_values",
+    "resolve_refund_binding_row_values",
+    "resolve_related_party_binding_row_values",
     "resolve_relation_values",
     "resolve_relation_values_from_observations",
     "resolve_revision_constructs",

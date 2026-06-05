@@ -42,6 +42,16 @@ from ._recovery import (
     unwrap_master_key,
     wrap_master_key,
 )
+from ._recovery_facade import (
+    MintedRecovery,
+    load_recovery_envelope,
+    mint_recovery_envelope,
+    open_session_from_recovery,
+    save_recovery_envelope,
+    unwrap_recovery_envelope,
+    verify_recovery_mnemonic,
+)
+from ._recovery_record import RecoveryRecord
 
 __all__ = [
     "EphemeralMasterKeyProvider",
@@ -49,8 +59,10 @@ __all__ = [
     "KdfParams",
     "KeyringMasterKeyProvider",
     "MasterKeyProvider",
+    "MintedRecovery",
     "NoActiveBucketSessionError",
     "RecoveryKey",
+    "RecoveryRecord",
     "UnsecuredMasterKeyProvider",
     "WrappedMasterKey",
     "activate_master_key_provider",
@@ -60,10 +72,16 @@ __all__ = [
     "encode_mnemonic",
     "generate_recovery_key",
     "get_master_key_provider",
+    "load_recovery_envelope",
     "load_wrapped_master_key",
     "looks_like_real_tax_id",
+    "mint_recovery_envelope",
+    "open_session_from_recovery",
     "refuse_unsecured_with_real_nif",
+    "save_recovery_envelope",
     "save_wrapped_master_key",
     "unwrap_master_key",
+    "unwrap_recovery_envelope",
+    "verify_recovery_mnemonic",
     "wrap_master_key",
 ]

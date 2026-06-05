@@ -31,13 +31,12 @@ import json
 import re
 import time
 from collections.abc import Mapping
-from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 from urllib.parse import quote, urlsplit
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
+from pydantic import SecretStr, ValidationError
 
 from .....core.classification import SensitivityClass
 from .....core.config import Settings as _Settings
@@ -60,6 +59,7 @@ from ._authenticator import (
     BrowserSessionFactory,
     BrowserSessionLike,
 )
+from ._clave_movil_metadata import ClaveMovilSessionMetadata
 from ._errors import AeatLoginAssertionError, AuthConfigurationError, AuthError
 from ._providers import (
     AuthProviderDescription,
@@ -83,9 +83,6 @@ _DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS: Final[float] = 5.0
 # Named constant so grepping for the env-var name surfaces every usage site.
 _CLAVE_MOVIL_DNI_NIE_ENV: Final[str] = "AEAT_CLAVE_MOVIL_DNI_NIE"
 
-
-AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION: Final[int] = 2
-"""Distinct from certificate metadata v1 so stale certificate objects are rejected."""
 
 _DIAGNOSTIC_NAMESPACE: Final[str] = CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 
@@ -160,39 +157,6 @@ class ClaveMovilFailureMode(StrEnum):
     PUSH_WAIT_STATE_NOT_REACHED = "push_wait_state_not_reached"
     AUTH_COMPLETION_TIMEOUT = "auth_completion_timeout"
     APPROVAL_TIMEOUT = "approval_timeout"
-
-
-class _ClaveMovilSessionMetadata(BaseModel):
-    """Encrypted metadata stored with the Cl@ve Móvil storage state.
-
-    Strict mode is ON so malformed metadata (e.g. ``"2"`` where the
-    integer ``2`` is expected, or an unknown enum value) fails at
-    validation rather than being silently coerced. Datetimes are
-    stored as ISO-8601 strings by ``model_dump(mode="json")`` and
-    parsed back by Pydantic's built-in datetime validator — the only
-    coercion permitted is that round-trip.
-    """
-
-    model_config = ConfigDict(frozen=True, extra="forbid", strict=True)
-
-    schema_version: int = Field(default=AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION, ge=2)
-    provider_kind: AuthProviderKind = AuthProviderKind.CLAVE_MOVIL
-    identity_nif: str = Field(min_length=1)
-    authenticated_at: datetime
-    idle_deadline: datetime
-    storage_state_sha256: str = Field(min_length=64, max_length=64)
-    used_non_qr_fallback: bool = False
-    verification_code: str | None = None
-    landing_url: str | None = Field(
-        default=None,
-        description=(
-            "Concrete URL Playwright observed after AEAT dispatched the "
-            "successful login. "
-            "Used as the probe target by auth-session readiness checks because AEAT's "
-            "the Cl@ve selector page is a static dispatch page that always "
-            "returns 200 regardless of auth state."
-        ),
-    )
 
 
 def _classify_identity(raw: str) -> str:
@@ -911,7 +875,7 @@ class ClaveMovilAuthProvider:
         storage_state_path: Path,
         *,
         storage_state: Mapping[str, object],
-        metadata: _ClaveMovilSessionMetadata,
+        metadata: ClaveMovilSessionMetadata,
     ) -> None:
         _session_store.save(
             storage_state_path,
@@ -932,9 +896,9 @@ class ClaveMovilAuthProvider:
     def _load_metadata(
         storage_state_path: Path,
         persisted: _session_store.PersistedBrowserSession,
-    ) -> _ClaveMovilSessionMetadata:
+    ) -> ClaveMovilSessionMetadata:
         try:
-            return _ClaveMovilSessionMetadata.model_validate_json(json.dumps(persisted.metadata, default=str))
+            return ClaveMovilSessionMetadata.model_validate_json(json.dumps(persisted.metadata, default=str))
         except (ValueError, ValidationError) as exc:
             raise AeatLoginAssertionError(
                 f"Cl@ve Móvil metadata invalid for {storage_state_path}: {exc}",
@@ -1079,7 +1043,7 @@ class ClaveMovilAuthProvider:
         authenticated_at = now()
         idle_deadline = authenticated_at + AEAT_SESSION_IDLE_TTL
         try:
-            metadata = _ClaveMovilSessionMetadata(
+            metadata = ClaveMovilSessionMetadata(
                 identity_nif=dni_nie,
                 authenticated_at=authenticated_at,
                 idle_deadline=idle_deadline,

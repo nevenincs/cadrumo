@@ -144,6 +144,37 @@ class FiledDeclaracionObservationStore:
             )
         return envelope.payload
 
+    def list_observations(self) -> tuple[FiledDeclaracionObservation, ...]:
+        """Return filed-declaration observations from the active encrypted backend."""
+        observations: list[FiledDeclaracionObservation] = []
+        with self._crypto_scope():
+            records = self._repository.list_records(
+                _OBSERVATION_NAMESPACE,
+                expected_class=_OBSERVATION_CLASSIFICATION,
+                max_supported_version=_OBSERVATION_ENVELOPE_VERSION,
+            )
+        for record in records:
+            envelope = Envelope[FiledDeclaracionObservation].model_validate_json(
+                record.payload.decode(_UTF_8_ENCODING)
+            )
+            if envelope.classification is not _OBSERVATION_CLASSIFICATION:
+                raise ClassificationError(
+                    f"filed-declaration observation {record.object_key!r} has classification "
+                    f"{envelope.classification}; consumer expected {_OBSERVATION_CLASSIFICATION}",
+                )
+            if envelope.schema_version > _OBSERVATION_ENVELOPE_VERSION:
+                raise EnvelopeVersionError(
+                    f"filed-declaration observation {record.object_key!r} is at version "
+                    f"{envelope.schema_version}; consumer supports up to {_OBSERVATION_ENVELOPE_VERSION}",
+                )
+            observations.append(envelope.payload)
+        return tuple(
+            sorted(
+                observations,
+                key=lambda item: (item.modelo, item.ejercicio, item.period, item.presented_at, item.expediente_id),
+            )
+        )
+
     def persist_iva_wallet_observation(self, observation: IvaCompensationWalletObservation) -> Path:
         """Persist a read-only IVA wallet observation and return its logical path."""
         object_key = self._iva_wallet_observation_key(

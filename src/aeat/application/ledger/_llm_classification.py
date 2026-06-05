@@ -61,7 +61,7 @@ from ...domain.transactions import (
     set_classification,
 )
 from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
-from ._actions import (
+from ._actions_common import (
     _build_bucket_event,
     _result,
     _save_transaction_catalogue_and_events,

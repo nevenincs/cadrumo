@@ -16,12 +16,10 @@ Safety invariants enforced by this module:
 from __future__ import annotations
 
 from datetime import date, datetime
-from enum import StrEnum
-from typing import Literal, NoReturn, cast
 
 from ...application.auth import describe_provider_operator_impact
 from ...core.config import Settings
-from ...core.errors import BaseSeverity, SiteHealthError, build_error_envelope
+from ...core.errors import BaseSeverity, SiteHealthError
 from ...core.logging import get_logger
 from ...core.time import now as _utcnow
 from ...domain.deadlines import (
@@ -33,13 +31,30 @@ from ...domain.deadlines import (
     next_deadline,
 )
 from ...domain.filing import ModeloBuilderError
-from ...domain.period import PeriodValidationError, parse_canonical_period
 from ...domain.submission import ModeloDraftStatus, SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
-from ._errors import UnhandledWorkflowError, WorkflowAbortSignalError, WorkflowError, WorkflowInputMismatchError
+from ._engine_helpers import (
+    DeadlineRole,
+    FilingWindowState,
+)
+from ._engine_helpers import (
+    classify_cert_expiry as _classify_cert_expiry,
+)
+from ._engine_helpers import (
+    enum_value as _enum_value,
+)
+from ._engine_helpers import (
+    registry_filing_year as _registry_filing_year,
+)
+from ._engine_helpers import (
+    registry_period_token as _registry_period_token,
+)
+from ._engine_helpers import (
+    summary_text as _summary_text,
+)
+from ._engine_recording import record_site_unavailable, record_unhandled
+from ._errors import WorkflowAbortSignalError, WorkflowError, WorkflowInputMismatchError
 from ._models import (
-    SiteHealthAlert,
-    SiteHealthStatus,
     WorkflowAbortReason,
     WorkflowPurpose,
     WorkflowResult,
@@ -60,92 +75,7 @@ from ._protocols import (
     SubmissionEngineProtocol,
 )
 
-_CertificateSeverityValue = Literal["OK", "WARN", "CRITICAL", "EXPIRED"]
-
-
-class DeadlineRole(StrEnum):
-    """Role of a deadline within workflow step metadata."""
-
-    INFORMATIONAL = "informational"
-    BINDING = "binding"
-
-
-class FilingWindowState(StrEnum):
-    """State of the filing window for a given (modelo, period) at workflow time."""
-
-    ABSENT = "absent"
-    OPEN = "open"
-    CLOSED = "closed"
-
-
-def _registry_period_token(period: str) -> tuple[int, str]:
-    """Resolve a deadline-engine period token to ``(filing_year, registry_period)``.
-
-    Delegates to the canonical :func:`aeat.domain.period.parse_canonical_period`
-    parser (DB-06: the registry-period mapping is authored once in the domain,
-    not re-implemented here). Wraps the domain
-    :class:`~aeat.domain.period.PeriodValidationError` into the workflow's
-    :class:`WorkflowError` so the call boundary keeps its trilingual envelope.
-    """
-    try:
-        return parse_canonical_period(period)
-    except PeriodValidationError as exc:
-        raise WorkflowError(
-            translated_message="application.workflow.errors.period_registry_unmappable",
-            context={"period": period},
-        ) from exc
-
-
 _logger = get_logger(__name__)
-
-
-def _classify_cert_expiry(
-    *,
-    not_after: date,
-    today: date,
-    warn_days: int,
-    critical_days: int,
-) -> tuple[_CertificateSeverityValue, int]:
-    """Classify a certificate's expiry window against operator thresholds.
-
-    Operates on the provider description's expiry date rather than the
-    rich :class:`aeat.adapters.outbound.aeat.auth.LoadedCertificate`, so it can be called from
-    the workflow engine without forcing certificate-only types into the
-    workflow boundary. Boundary semantics match
-    :func:`aeat.adapters.outbound.aeat.auth.evaluate_loaded_certificate_health`:
-    exactly ``critical_days`` remaining is CRITICAL (inclusive), and
-    exactly ``warn_days`` remaining is WARN (inclusive).
-
-    Args:
-        not_after: The certificate's expiry date.
-        today: Reference date (usually the workflow ``today`` arg).
-        warn_days: Warning threshold in days.
-        critical_days: Critical threshold in days.
-
-    Returns:
-        A ``(severity, days_until_expiry)`` tuple.
-    """
-    days_until_expiry = (not_after - today).days
-    if days_until_expiry <= 0:
-        return ("EXPIRED", days_until_expiry)
-    if days_until_expiry <= critical_days:
-        return ("CRITICAL", days_until_expiry)
-    if days_until_expiry <= warn_days:
-        return ("WARN", days_until_expiry)
-    return ("OK", days_until_expiry)
-
-
-def _summary_text(en: str) -> str:
-    """Build a workflow summary string."""
-    return en
-
-
-def _enum_value(value: object) -> str:
-    """Return ``Enum.value`` when present, otherwise ``str(value)``."""
-    if value is None:
-        return ""
-    raw = getattr(value, "value", value)
-    return str(raw)
 
 
 class WorkflowEngine:
@@ -788,13 +718,7 @@ class WorkflowEngine:
                     exc=exc,
                     steps=steps,
                 )
-            try:
-                target_year, _ = parse_canonical_period(obligation.period)
-            except PeriodValidationError as exc:
-                raise WorkflowError(
-                    translated_message="application.workflow.errors.period_registry_year_unresolvable",
-                    context={"period": obligation.period},
-                ) from exc
+            target_year = _registry_filing_year(obligation.period)
             already = tuple(
                 e
                 for e in expedientes
@@ -1197,50 +1121,8 @@ class WorkflowEngine:
         started: datetime,
         exc: BaseException,
         steps: list[WorkflowStep],
-    ) -> NoReturn:
-        """Record a failed step and raise ``WorkflowAbortSignalError(UNHANDLED_EXCEPTION)``.
-
-        Centralises the wrap-and-record ritual so every stage method
-        surfaces an unexpected exception identically.  A synthetic
-        :class:`~aeat.application.workflow._errors.UnhandledWorkflowError`
-        is constructed and passed to :func:`~aeat.core.errors.build_error_envelope`
-        so the unhandled path produces a structured
-        :class:`~aeat.core.errors.ErrorEnvelope` with a stable
-        ``INTERNAL_WORKFLOW_UNHANDLED`` code for downstream telemetry.
-        """
-        _logger.warning(
-            "workflow stage raised an unhandled exception stage=%s",
-            stage.value,
-            exc_info=(type(exc), exc, exc.__traceback__),
-        )
-        unhandled_summary = _summary_text(f"Unhandled {type(exc).__name__} at stage={stage.value}: {exc}")
-        synthetic = UnhandledWorkflowError(
-            f"{stage.value} raised {type(exc).__name__}: {exc}",
-            context={
-                "stage": stage.value,
-                "error_type": type(exc).__name__,
-                "error_message": str(exc),
-            },
-        )
-        synthetic.__cause__ = exc
-        build_error_envelope(synthetic)
-        steps.append(
-            WorkflowStep(
-                stage=stage,
-                started_at=started,
-                ended_at=_utcnow(),
-                success=False,
-                summary=unhandled_summary,
-                details={
-                    "error_type": type(exc).__name__,
-                    "error_message": str(exc),
-                },
-            )
-        )
-        raise WorkflowAbortSignalError(
-            reason=WorkflowAbortReason.UNHANDLED_EXCEPTION,
-            summary=unhandled_summary,
-        ) from synthetic
+    ) -> None:
+        record_unhandled(stage=stage, started=started, exc=exc, steps=steps)
 
     def _record_site_unavailable(
         self,
@@ -1249,36 +1131,14 @@ class WorkflowEngine:
         started: datetime,
         exc: SiteHealthError,
         steps: list[WorkflowStep],
-    ) -> NoReturn:
-        """Record a site-health failure and abort with ``SITE_UNAVAILABLE``."""
-        # CAST-RATIONALE-WORKFLOW-SITE-HEALTH-STATUS:
-        # ``SiteHealthError`` types its payload through the structural
-        # ``SiteHealthStatusLike`` protocol so ``core.errors`` need not
-        # import the browser adapter. Every site-health failure raised
-        # by the AEAT browser adapter carries the concrete
-        # ``SiteHealthStatus`` record, which the workflow ``SiteHealthAlert``
-        # requires; narrow at this adapter boundary.
-        status = cast("SiteHealthStatus", exc.status)
-        alert_run_id = self._compute_current_run_id() or "-"
-        summary = _summary_text(f"AEAT site unavailable at stage={stage.value}: {status.state.value}")
-        steps.append(
-            WorkflowStep(
-                stage=stage,
-                started_at=started,
-                ended_at=_utcnow(),
-                success=False,
-                summary=summary,
-                site_health_alert=SiteHealthAlert(
-                    stage=stage,
-                    status=status,
-                    run_id=alert_run_id,
-                ),
-            )
+    ) -> None:
+        record_site_unavailable(
+            stage=stage,
+            started=started,
+            exc=exc,
+            steps=steps,
+            current_run_id=self._compute_current_run_id,
         )
-        raise WorkflowAbortSignalError(
-            reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-            summary=summary,
-        ) from exc
 
 
 __all__ = [

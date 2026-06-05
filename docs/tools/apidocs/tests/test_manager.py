@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .manager import ApiStubManager, DriftResult, ScaffoldResult
+from ..manager import ApiStubManager, DriftResult, ScaffoldResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

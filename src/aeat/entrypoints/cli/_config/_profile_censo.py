@@ -280,11 +280,14 @@ def register(profile_app: typer.Typer) -> None:
             f"snapshot_id\t{result.snapshot_id}",
             f"written\t{len(result.written_paths)}",
             f"unchanged\t{len(result.unchanged_paths)}",
+            f"derived\t{len(result.derived_paths)}",
         ]
         for path in result.written_paths:
             lines.append(f"written\t{path}")
         for path in result.unchanged_paths:
             lines.append(f"unchanged\t{path}")
+        for path in result.derived_paths:
+            lines.append(f"derived\t{path}")
         _emit_envelope(ctx, command="config.profile.censo.apply", result=typed_apply, lines=lines)
 
     profile_app.add_typer(censo_app, name="censo")

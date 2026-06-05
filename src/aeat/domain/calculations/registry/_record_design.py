@@ -22,7 +22,6 @@ import xlrd
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 from pdfplumber.page import Page
-from pydantic import ConfigDict
 from xlrd.sheet import Sheet as XlrdSheet
 
 from ....core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
@@ -31,38 +30,14 @@ from ....core.external_constants import XLSM_EXTENSION as _XLSM_EXTENSION
 from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from ....core.logging import get_logger
 from ._errors import RegistryValidationError
+from ._record_design_schema import RecordDesignField, RecordDesignSheet
 from ._runtime_graph import expression_casilla_refs
-from ._schema import CasillaDefinition, ModeloRevision, RegistryModel
+from ._schema import CasillaDefinition, ModeloRevision
 
 _log = get_logger(__name__)
 
 _OPENPYXL_HEADER_FOOTER_WARNING = "Cannot parse header or footer so it will be ignored"
 _OPENPYXL_PRINT_AREA_WARNING = r"Print area cannot be set to Defined name: .*"
-
-
-class RecordDesignField(RegistryModel):
-    """One fixed-width field described by an AEAT record-design sheet."""
-
-    sheet: str
-    row: int
-    ordinal: int
-    offset: int
-    length: int
-    type_code: str
-    complementary: str | None = None
-    description: str
-    validation: str | None = None
-    content: str | None = None
-
-
-class RecordDesignSheet(RegistryModel):
-    """Parsed field rows and declared total length for one workbook sheet."""
-
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    name: str
-    fields: tuple[RecordDesignField, ...]
-    total_positions: int | None = None
 
 
 @dataclass(frozen=True)

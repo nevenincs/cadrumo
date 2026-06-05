@@ -34,7 +34,7 @@ operator never declared a gating field.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from types import MappingProxyType
@@ -135,6 +135,29 @@ class OverviewPeriodState(StrEnum):
     UNKNOWN = "unknown"
 
 
+class OverviewLocalFilingState(StrEnum):
+    """Local application-side filing readiness for a calendar obligation.
+
+    This is deliberately separate from real-world AEAT submission. In
+    this application, a local filing record means a verified calculation
+    revision was marked as the current answer ready for external filing;
+    it does not mean the return was sent to AEAT.
+    """
+
+    NOT_READY_TO_FILE = "not_ready_to_file"
+    READY_TO_FILE = "ready_to_file"
+    EXTERNAL_BASELINE_IMPORTED = "external_baseline_imported"
+
+
+class OverviewAeatSubmissionState(StrEnum):
+    """Observed AEAT-side submission evidence for a calendar obligation."""
+
+    NOT_OBSERVED = "not_observed"
+    SUBMITTED_OBSERVED = "submitted_observed"
+    ACCEPTED = "accepted"
+    JUSTIFICANTE_VERIFIED = "justificante_verified"
+
+
 _USER_STATE_FOR_OBLIGATION_STATUS: MappingProxyType[_ObligationStatus, OverviewPeriodState] = MappingProxyType(
     {
         _ObligationStatus.UPCOMING: OverviewPeriodState.DUE,
@@ -146,6 +169,16 @@ _USER_STATE_FOR_OBLIGATION_STATUS: MappingProxyType[_ObligationStatus, OverviewP
     }
 )
 """Translates the 6-state engine status into the CLI's 4-state taxonomy."""
+
+_AEAT_SUBMISSION_RANK: MappingProxyType[OverviewAeatSubmissionState, int] = MappingProxyType(
+    {
+        OverviewAeatSubmissionState.NOT_OBSERVED: 0,
+        OverviewAeatSubmissionState.SUBMITTED_OBSERVED: 1,
+        OverviewAeatSubmissionState.ACCEPTED: 2,
+        OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED: 3,
+    }
+)
+"""Merge priority for multiple AEAT evidence sources about the same period."""
 
 
 def user_state_for(obligation_status: _ObligationStatus) -> OverviewPeriodState:
@@ -195,6 +228,34 @@ class OverviewCalendarRange(BaseModel):
         return self.from_date <= candidate <= self.to_date
 
 
+class OverviewCalendarFilingEvidence(BaseModel):
+    """Filing evidence attached to one legal calendar obligation.
+
+    The local and AEAT axes are independent. A local filing record can
+    be ready to file while AEAT submission remains unobserved. An
+    imported AEAT justificante can verify AEAT submission even when the
+    application did not compute the filing locally.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    modelo: str | None = Field(default=None, min_length=1, max_length=8)
+    filing_year: int | None = Field(default=None, ge=2000, le=2099)
+    period: str | None = Field(default=None, min_length=1, max_length=16)
+    local_filing_state: OverviewLocalFilingState = OverviewLocalFilingState.NOT_READY_TO_FILE
+    local_filing_record_id: str | None = Field(default=None, min_length=1, max_length=128)
+    local_calculation_revision_id: str | None = Field(default=None, min_length=1, max_length=128)
+    local_filed_at: datetime | None = None
+    aeat_submission_state: OverviewAeatSubmissionState = OverviewAeatSubmissionState.NOT_OBSERVED
+    aeat_submitted_at: datetime | None = None
+    aeat_reference_id: str | None = Field(default=None, min_length=1, max_length=128)
+    aeat_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
+    aeat_evidence_kind: str | None = Field(default=None, min_length=1, max_length=64)
+    justificante_required: bool = True
+    justificante_verified: bool = False
+    evidence_source: str | None = Field(default=None, min_length=1, max_length=64)
+
+
 class OverviewCalendarEntry(BaseModel):
     """One ``(modelo, period)`` row in the calendar view.
 
@@ -235,6 +296,8 @@ class OverviewCalendarEntry(BaseModel):
     status: _ObligationStatus
     user_state: OverviewPeriodState
     recovery: _Recovery | None = None
+    filing_year: int | None = Field(default=None, ge=2000, le=2099)
+    filing_evidence: OverviewCalendarFilingEvidence = Field(default_factory=lambda: OverviewCalendarFilingEvidence())
 
     @model_validator(mode="after")
     def _enforce_window_order(self) -> OverviewCalendarEntry:
@@ -294,6 +357,8 @@ class OverviewCalendarEvent(BaseModel):
     period: str | None = Field(default=None, min_length=1, max_length=16)
     status: str | None = Field(default=None, max_length=64)
     source_url: str | None = Field(default=None, max_length=512)
+    aeat_submission_state: OverviewAeatSubmissionState | None = None
+    justificante_verified: bool | None = None
 
 
 class CalendarWarning(BaseModel):
@@ -538,6 +603,8 @@ def calendar_events_from_expedientes_snapshots(
                     period=declaration.period,
                     status=declaration.estado,
                     source_url=snapshot.source_url,
+                    aeat_submission_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
+                    justificante_verified=False,
                 )
             )
     return _dedupe_calendar_events(events)
@@ -584,6 +651,340 @@ def build_overview_calendar_events(
         *calendar_events_from_notification_snapshots(notification_snapshots, calendar_range),
     ]
     return _dedupe_calendar_events(events)
+
+
+def calendar_filing_evidence_from_sources(
+    *,
+    filing_records: tuple[object, ...] = (),
+    observed_events: tuple[OverviewCalendarEvent, ...] = (),
+    filed_declaration_observations: tuple[object, ...] = (),
+    calculation_observations: tuple[object, ...] = (),
+) -> tuple[OverviewCalendarFilingEvidence, ...]:
+    """Build per-obligation filing evidence from local records and AEAT observations.
+
+    The function is pure and intentionally accepts already-loaded
+    records. CLI/storage code owns I/O; this projection only reconciles
+    the existing local Modelo filing catalogue, calendar-visible AEAT
+    register events, and persisted calculation observations from
+    justificante capture.
+    """
+    by_key: dict[tuple[str, int, str], OverviewCalendarFilingEvidence] = {}
+    event_specific: list[OverviewCalendarFilingEvidence] = []
+    for record in filing_records:
+        evidence = _filing_evidence_from_modelo_record(record)
+        if evidence is not None:
+            _merge_filing_evidence(by_key, evidence)
+    for event in observed_events:
+        evidence = _filing_evidence_from_observed_event(event)
+        if evidence is not None:
+            _merge_filing_evidence(by_key, evidence)
+    for observation in filed_declaration_observations:
+        evidence = _filing_evidence_from_filed_declaration_observation(observation)
+        if evidence is not None:
+            event_specific.append(evidence)
+            _merge_filing_evidence(by_key, evidence)
+    for payload in calculation_observations:
+        evidence = _filing_evidence_from_calculation_observation(payload)
+        if evidence is not None:
+            _merge_filing_evidence(by_key, evidence)
+    unique: dict[tuple[str | None, int | None, str | None, str | None], OverviewCalendarFilingEvidence] = {}
+    for evidence in (*by_key.values(), *event_specific):
+        key_reference = (
+            evidence.aeat_reference_id
+            if evidence.evidence_source == "filed_declaration_observation"
+            else None
+        )
+        unique[(evidence.modelo, evidence.filing_year, evidence.period, key_reference)] = evidence
+    return tuple(sorted(unique.values(), key=_calendar_filing_evidence_sort_key))
+
+
+def _filing_evidence_from_modelo_record(record: object) -> OverviewCalendarFilingEvidence | None:
+    """Project one local Modelo filing record into calendar evidence."""
+    status = getattr(record, "status", None)
+    if str(getattr(status, "value", status)).lower() != "vigente":
+        return None
+    modelo = str(record.modelo)
+    filing_year = int(record.filing_year)
+    period = str(record.period)
+    external_evidence = getattr(record, "external_evidence", None)
+    local_state = (
+        OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED
+        if external_evidence is not None
+        else OverviewLocalFilingState.READY_TO_FILE
+    )
+    aeat_state = OverviewAeatSubmissionState.NOT_OBSERVED
+    aeat_evidence_kind = None
+    aeat_reference_id = None
+    justificante_verified = False
+    if bool(getattr(record, "aeat_accepted", False)):
+        aeat_state = OverviewAeatSubmissionState.ACCEPTED
+    if external_evidence is not None:
+        kind = getattr(external_evidence, "kind", None)
+        aeat_evidence_kind = str(getattr(kind, "value", kind))
+        aeat_reference_id = str(external_evidence.reference_id)
+        if aeat_evidence_kind == "aeat_justificante_pdf":
+            aeat_state = OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
+            justificante_verified = True
+        elif aeat_state is OverviewAeatSubmissionState.NOT_OBSERVED:
+            aeat_state = OverviewAeatSubmissionState.SUBMITTED_OBSERVED
+    return OverviewCalendarFilingEvidence(
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        local_filing_state=local_state,
+        local_filing_record_id=str(record.filing_record_id),
+        local_calculation_revision_id=str(record.calculation_revision_id),
+        local_filed_at=record.filed_at,
+        aeat_submission_state=aeat_state,
+        aeat_reference_id=aeat_reference_id,
+        aeat_evidence_kind=aeat_evidence_kind,
+        justificante_verified=justificante_verified,
+        evidence_source="modelo_filing_record",
+    )
+
+
+def _filing_evidence_from_observed_event(
+    event: OverviewCalendarEvent,
+) -> OverviewCalendarFilingEvidence | None:
+    """Project an AEAT calendar event into per-obligation evidence."""
+    if event.event_type is not OverviewCalendarEventType.FILING:
+        return None
+    if event.modelo is None or event.filing_year is None or event.period is None:
+        return None
+    state = event.aeat_submission_state or OverviewAeatSubmissionState.SUBMITTED_OBSERVED
+    return OverviewCalendarFilingEvidence(
+        modelo=event.modelo,
+        filing_year=event.filing_year,
+        period=event.period,
+        aeat_submission_state=state,
+        aeat_submitted_at=datetime.combine(event.event_date, datetime.min.time(), tzinfo=UTC),
+        aeat_reference_id=event.reference_id,
+        aeat_snapshot_id=event.snapshot_id,
+        justificante_verified=bool(event.justificante_verified),
+        evidence_source=event.source,
+    )
+
+
+def _filing_evidence_from_filed_declaration_observation(observation: object) -> OverviewCalendarFilingEvidence | None:
+    """Project a captured AEAT filed-declaration observation into calendar evidence."""
+    modelo = getattr(observation, "modelo", None)
+    filing_year = getattr(observation, "ejercicio", None)
+    period = getattr(observation, "period", None)
+    expediente_id = getattr(observation, "expediente_id", None)
+    if modelo is None or filing_year is None or period is None or expediente_id is None:
+        return None
+    justificante = next(
+        (
+            artefact
+            for artefact in getattr(observation, "artefacts", ())
+            if getattr(artefact, "kind", None) == "justificante_pdf"
+            and getattr(artefact, "storage_ref", None)
+            and int(getattr(artefact, "byte_count", 0)) > 0
+        ),
+        None,
+    )
+    verified = justificante is not None
+    return OverviewCalendarFilingEvidence(
+        modelo=str(modelo),
+        filing_year=int(filing_year),
+        period=str(period),
+        aeat_submission_state=(
+            OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
+            if verified
+            else OverviewAeatSubmissionState.SUBMITTED_OBSERVED
+        ),
+        aeat_submitted_at=getattr(observation, "presented_at", None),
+        aeat_reference_id=str(expediente_id),
+        aeat_evidence_kind="aeat_justificante_pdf" if verified else "filed_declaration_observation",
+        justificante_verified=verified,
+        evidence_source="filed_declaration_observation",
+    )
+
+
+def _filing_evidence_from_calculation_observation(payload: object) -> OverviewCalendarFilingEvidence | None:
+    """Project a persisted calculation observation into AEAT-submitted evidence."""
+    source_kind = str(getattr(payload, "source_kind", ""))
+    if source_kind != "aeat_sede_justificante":
+        return None
+    observation = getattr(payload, "observation", None)
+    if observation is None:
+        return None
+    return OverviewCalendarFilingEvidence(
+        modelo=str(observation.modelo),
+        filing_year=int(observation.filing_year),
+        period=str(observation.period),
+        aeat_submission_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
+        aeat_submitted_at=getattr(payload, "captured_at", None),
+        aeat_evidence_kind=source_kind,
+        justificante_verified=False,
+        evidence_source=source_kind,
+    )
+
+
+def _merge_filing_evidence(
+    by_key: dict[tuple[str, int, str], OverviewCalendarFilingEvidence],
+    candidate: OverviewCalendarFilingEvidence,
+) -> None:
+    """Merge one evidence row into every comparable period key."""
+    if candidate.modelo is None or candidate.filing_year is None or candidate.period is None:
+        return
+    aliases = _period_aliases(candidate.period, candidate.filing_year)
+    existing = next(
+        (
+            by_key[(candidate.modelo, candidate.filing_year, alias)]
+            for alias in aliases
+            if (candidate.modelo, candidate.filing_year, alias) in by_key
+        ),
+        None,
+    )
+    merged = candidate if existing is None else _stronger_filing_evidence(existing, candidate)
+    for period in aliases:
+        by_key[(candidate.modelo, candidate.filing_year, period)] = merged
+
+
+def _stronger_filing_evidence(
+    existing: OverviewCalendarFilingEvidence,
+    candidate: OverviewCalendarFilingEvidence,
+) -> OverviewCalendarFilingEvidence:
+    """Return a merged evidence row preserving the strongest signal on each axis."""
+    local = existing
+    if (
+        existing.local_filing_state is OverviewLocalFilingState.NOT_READY_TO_FILE
+        and candidate.local_filing_state is not OverviewLocalFilingState.NOT_READY_TO_FILE
+    ):
+        local = local.model_copy(
+            update={
+                "local_filing_state": candidate.local_filing_state,
+                "local_filing_record_id": candidate.local_filing_record_id,
+                "local_calculation_revision_id": candidate.local_calculation_revision_id,
+                "local_filed_at": candidate.local_filed_at,
+            }
+        )
+    if _AEAT_SUBMISSION_RANK[candidate.aeat_submission_state] >= _AEAT_SUBMISSION_RANK[local.aeat_submission_state]:
+        local = local.model_copy(
+            update={
+                "aeat_submission_state": candidate.aeat_submission_state,
+                "aeat_submitted_at": candidate.aeat_submitted_at or local.aeat_submitted_at,
+                "aeat_reference_id": candidate.aeat_reference_id or local.aeat_reference_id,
+                "aeat_snapshot_id": candidate.aeat_snapshot_id or local.aeat_snapshot_id,
+                "aeat_evidence_kind": candidate.aeat_evidence_kind or local.aeat_evidence_kind,
+                "justificante_verified": candidate.justificante_verified or local.justificante_verified,
+                "evidence_source": candidate.evidence_source or local.evidence_source,
+            }
+        )
+    return local
+
+
+def _calendar_filing_evidence_sort_key(
+    evidence: OverviewCalendarFilingEvidence,
+) -> tuple[str, int, str]:
+    return (evidence.modelo or "", evidence.filing_year or 0, evidence.period or "")
+
+
+def _filing_evidence_key(modelo: str, filing_year: int, period: str) -> tuple[str, int, str]:
+    return (modelo, filing_year, _normalize_period_token(period))
+
+
+def _period_aliases(period: str, filing_year: int) -> tuple[str, ...]:
+    """Return comparable period aliases for deadline and AEAT period labels."""
+    token = _normalize_period_token(period)
+    aliases = {token}
+    year_prefix = str(filing_year)
+    if token.startswith(year_prefix):
+        suffix = token[len(year_prefix) :].lstrip("-_")
+        if suffix:
+            aliases.add(suffix)
+            if suffix.startswith("Q") and suffix[1:].isdigit():
+                aliases.add(f"{int(suffix[1:])}T")
+        else:
+            aliases.add("0A")
+    if token.endswith("A") and token[:-1] == "0":
+        aliases.add(year_prefix)
+    if token in {"1T", "2T", "3T", "4T"}:
+        aliases.add(f"{year_prefix}Q{token[0]}")
+    return tuple(sorted(aliases))
+
+
+def _normalize_period_token(period: str) -> str:
+    return period.strip().upper()
+
+
+def _filing_year_from_period(period: str, fallback_date: date) -> int:
+    token = _normalize_period_token(period)
+    if len(token) >= 4 and token[:4].isdigit():
+        return int(token[:4])
+    return fallback_date.year
+
+
+def _calendar_entry_filing_evidence(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+    evidence: tuple[OverviewCalendarFilingEvidence, ...],
+) -> OverviewCalendarFilingEvidence:
+    by_key: dict[tuple[str, int, str], OverviewCalendarFilingEvidence] = {}
+    for item in evidence:
+        _merge_filing_evidence(by_key, item)
+    for alias in _period_aliases(period, filing_year):
+        match = by_key.get((modelo, filing_year, alias))
+        if match is not None:
+            return match.model_copy(update={"modelo": modelo, "filing_year": filing_year, "period": period})
+    return OverviewCalendarFilingEvidence(modelo=modelo, filing_year=filing_year, period=period)
+
+
+def _calendar_events_with_filing_evidence(
+    events: tuple[OverviewCalendarEvent, ...],
+    evidence: tuple[OverviewCalendarFilingEvidence, ...],
+) -> tuple[OverviewCalendarEvent, ...]:
+    enriched: list[OverviewCalendarEvent] = []
+    for event in events:
+        if event.event_type is not OverviewCalendarEventType.FILING:
+            enriched.append(event)
+            continue
+        if event.modelo is None or event.filing_year is None or event.period is None:
+            enriched.append(event)
+            continue
+        row = _calendar_event_filing_evidence(event=event, evidence=evidence)
+        if row is None:
+            enriched.append(event)
+            continue
+        current_state = event.aeat_submission_state or OverviewAeatSubmissionState.SUBMITTED_OBSERVED
+        if _AEAT_SUBMISSION_RANK[row.aeat_submission_state] <= _AEAT_SUBMISSION_RANK[current_state]:
+            enriched.append(event)
+            continue
+        enriched.append(
+            event.model_copy(
+                update={
+                    "aeat_submission_state": row.aeat_submission_state,
+                    "justificante_verified": row.justificante_verified,
+                }
+            )
+        )
+    return _dedupe_calendar_events(enriched)
+
+
+def _calendar_event_filing_evidence(
+    *,
+    event: OverviewCalendarEvent,
+    evidence: tuple[OverviewCalendarFilingEvidence, ...],
+) -> OverviewCalendarFilingEvidence | None:
+    if event.modelo is None or event.filing_year is None or event.period is None:
+        return None
+    matching_refs = tuple(
+        item
+        for item in evidence
+        if item.aeat_reference_id == event.reference_id
+        and item.modelo == event.modelo
+        and item.filing_year == event.filing_year
+        and _normalize_period_token(event.period) in _period_aliases(item.period or "", event.filing_year)
+    )
+    if not matching_refs:
+        return None
+    row = matching_refs[0]
+    for candidate in matching_refs[1:]:
+        row = _stronger_filing_evidence(row, candidate)
+    return row
 
 
 # Codec: maps a _PayerFact value to the profile key and locale warning key
@@ -745,6 +1146,7 @@ def build_overview_calendar(
     raw_values: Mapping[str, object] | None = None,
     show_suppressed: bool = False,
     events: tuple[OverviewCalendarEvent, ...] = (),
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...] = (),
 ) -> OverviewCalendar:
     """Build a typed calendar view for ``profile`` over ``calendar_range``.
 
@@ -773,6 +1175,10 @@ def build_overview_calendar(
             entirely.
         events: Optional observed calendar events, usually projected
             from persisted local live-read snapshots by the CLI.
+        filing_evidence: Optional local/AEAT evidence rows keyed to
+            calendar obligations. These rows are preloaded by callers
+            that own storage access; the calendar builder only merges
+            them onto legal deadline entries.
 
     A year inside the range with no registered deadline windows is
     treated as a "no data yet" state: that year contributes zero
@@ -797,7 +1203,7 @@ def build_overview_calendar(
             completeness=CalendarCompleteness(),
             taxpayer_model_declared=False,
             incomplete_reason=_tr("cli.overview.taxpayer_model_undeclared"),
-            events=_dedupe_calendar_events(list(events)),
+            events=_calendar_events_with_filing_evidence(events, filing_evidence),
         )
 
     deadline_engine = engine if engine is not None else _DeadlineEngine()
@@ -882,6 +1288,7 @@ def build_overview_calendar(
                 reason = "calendar_unavailable"
                 holiday_refs = ()
                 jurisdictions = ()
+            filing_year = _filing_year_from_period(obligation.period, obligation.closes_on)
             entries.append(
                 OverviewCalendarEntry(
                     modelo=obligation.modelo,
@@ -896,6 +1303,13 @@ def build_overview_calendar(
                     status=obligation.status,
                     user_state=user_state_for(obligation.status),
                     recovery=obligation.recovery,
+                    filing_year=filing_year,
+                    filing_evidence=_calendar_entry_filing_evidence(
+                        modelo=obligation.modelo,
+                        filing_year=filing_year,
+                        period=obligation.period,
+                        evidence=filing_evidence,
+                    ),
                 )
             )
 
@@ -910,7 +1324,7 @@ def build_overview_calendar(
         warnings=warnings,
         completeness=completeness,
         suppressed_entries=tuple(suppressed),
-        events=_dedupe_calendar_events(list(events)),
+        events=_calendar_events_with_filing_evidence(events, filing_evidence),
     )
 
 
@@ -1019,6 +1433,7 @@ def build_overview_status_report(
 __all__ = [
     "CalendarCompleteness",
     "CalendarWarning",
+    "OverviewAeatSubmissionState",
     "OverviewAgendaError",
     "OverviewBacklogError",
     "OverviewCalendar",
@@ -1026,9 +1441,11 @@ __all__ = [
     "OverviewCalendarError",
     "OverviewCalendarEvent",
     "OverviewCalendarEventType",
+    "OverviewCalendarFilingEvidence",
     "OverviewCalendarRange",
     "OverviewError",
     "OverviewExplainError",
+    "OverviewLocalFilingState",
     "OverviewPeriodState",
     "OverviewStatusReport",
     "SuppressedCalendarEntry",
@@ -1041,6 +1458,7 @@ __all__ = [
     "build_overview_status_report",
     "calendar_events_from_expedientes_snapshots",
     "calendar_events_from_notification_snapshots",
+    "calendar_filing_evidence_from_sources",
     "derive_modelo_applicability",
     "overview_status_report_from_projection",
     "user_state_for",

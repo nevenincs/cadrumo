@@ -167,7 +167,13 @@ def _root(
         # AEAT_ACTIVE_PROFILE env override / pointer. Normalize a display-name
         # value to its UUID so the core storage-route resolver (UUID-only)
         # resolves it — an operator only knows the label, never the UUID.
-        _normalize_active_profile_label_to_uuid(ctx)
+        # Bootstrap-exempt recovery verbs must not read bucket manifests here:
+        # they are the surfaces operators use when those manifests are torn.
+        from ._bootstrap_exempt import is_bootstrap_exempt
+
+        verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
+        if not is_bootstrap_exempt(verb_path):
+            _normalize_active_profile_label_to_uuid(ctx)
     if ctx.invoked_subcommand is None:
         # The landing surface needs the application operator_surface
         # layer; deferring the import keeps it off the ``--version`` /
@@ -280,12 +286,17 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     )
     from ...core import resolve_active_bucket_id
     from ...core.config import override_settings
+    from ...core.errors import AeatError
     from ._errors import CliRefusedBoundaryError
 
     active = resolve_active_bucket_id()
     if active is None:
         return
-    if read_profile_bucket_by_id(active) is not None:
+    try:
+        active_bucket = read_profile_bucket_by_id(active)
+    except AeatError:
+        return
+    if active_bucket is not None:
         # Already a UUID bucket directory — the canonical fast path. Leave the
         # active-profile value byte-identical so the UUID path is unchanged.
         return
@@ -300,6 +311,8 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
             translated_message="cli.config.profile.unknown_profile",
             context={"name": active},
         ) from exc
+    except AeatError:
+        return
     if pointer is None:
         # Not a live label either; leave resolution to the per-command active
         # profile guard, which emits the canonical no-active-profile refusal.

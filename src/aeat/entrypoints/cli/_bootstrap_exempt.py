@@ -43,6 +43,15 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # imported bucket establishes its own session as part of the
     # import flow.
     "config profile import",
+    # Custody verbs own their own unlock / recovery / rewrap flow. The
+    # root callback must not pre-open the active bucket session before
+    # these handlers can resolve passphrase or recovery material.
+    "config unlock",
+    "config lock",
+    "config rekey",
+    "config recover",
+    "config show-recovery",
+    "config verify-recovery",
     # Diagnostic surface: must operate without a session so the
     # operator can recover from a torn workspace.
     "config repair",

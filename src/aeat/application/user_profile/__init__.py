@@ -48,6 +48,7 @@ if TYPE_CHECKING:
         CensoSyncError,
     )
     from ._censo_sync import (
+        CENSO_DERIVED_SOURCE_TAG,
         CENSO_SOURCE_TAG,
         CensoApplyResult,
         CensoComparisonStatus,
@@ -74,6 +75,13 @@ if TYPE_CHECKING:
         RegisterProfileCommand,
         RemoveProfileCommand,
         RenameProfileCommand,
+    )
+    from ._custody import (
+        CustodyRecoverResult,
+        CustodyRecoveryEnrollment,
+        CustodyRecoveryStatus,
+        CustodyRecoveryVerification,
+        CustodyRekeyResult,
     )
     from ._lifecycle import ProfileLifecycleService
     from ._preflight import ProfilePreflightService
@@ -159,6 +167,7 @@ def __getattr__(name: str):
 
         return getattr(_censo_errors, name)
     if name in (
+        "CENSO_DERIVED_SOURCE_TAG",
         "CENSO_SOURCE_TAG",
         "CensoApplyResult",
         "CensoComparisonStatus",
@@ -197,6 +206,22 @@ def __getattr__(name: str):
         from . import _bundle
 
         return getattr(_bundle, name)
+    if name in (
+        "CustodyRecoverResult",
+        "CustodyRecoveryEnrollment",
+        "CustodyRecoveryStatus",
+        "CustodyRecoveryVerification",
+        "CustodyRekeyResult",
+        "inspect_recovery_status",
+        "mint_recovery_code",
+        "recover_secret_store",
+        "recovery_wrap_path",
+        "rekey_secret_store",
+        "verify_recovery_code",
+    ):
+        from . import _custody
+
+        return getattr(_custody, name)
     if name in (
         "ProfileAlreadyRegisteredError",
         "build_lifecycle_service",
@@ -251,6 +276,11 @@ __all__ = [
     "CensoProfileComparison",
     "CensoSyncError",
     "CensoSyncService",
+    "CustodyRecoverResult",
+    "CustodyRecoveryEnrollment",
+    "CustodyRecoveryStatus",
+    "CustodyRecoveryVerification",
+    "CustodyRekeyResult",
     "DuplicateProfileCommand",
     "EditProfileFieldCommand",
     "EditProfileSectionCommand",
@@ -286,14 +316,19 @@ __all__ = [
     "deserialize_profile_bundle",
     "fact_value",
     "facts_to_values",
+    "inspect_recovery_status",
     "logout_active_profile",
+    "mint_recovery_code",
     "profile_create_storage_span",
     "profile_storage_session",
     "projection_for_taxpayer",
     "read_active_profile",
     "record_to_path_values",
     "record_to_values",
+    "recover_secret_store",
+    "recovery_wrap_path",
     "register_active_profile",
+    "rekey_secret_store",
     "remove_active_profile",
     "remove_profile_bucket_directory",
     "rename_profile",
@@ -305,4 +340,5 @@ __all__ = [
     "snapshot_to_values",
     "user_profile_snapshot_object_key",
     "user_profile_value_object_key",
+    "verify_recovery_code",
 ]

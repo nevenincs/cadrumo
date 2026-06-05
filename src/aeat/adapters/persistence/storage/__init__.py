@@ -162,6 +162,7 @@ from .blob_store._materialisation import (
     materialise_secret,
     override_secret_store,
 )
+from .bucket import RecoveryVerificationError
 from .crypto._crypto import (
     GCM_TAG_SIZE,
     KEY_SIZE,
@@ -246,6 +247,16 @@ from .master_key._recovery import (
     unwrap_master_key,
     wrap_master_key,
 )
+from .master_key._recovery_facade import (
+    MintedRecovery,
+    load_recovery_envelope,
+    mint_recovery_envelope,
+    open_session_from_recovery,
+    save_recovery_envelope,
+    unwrap_recovery_envelope,
+    verify_recovery_mnemonic,
+)
+from .master_key._recovery_record import RecoveryRecord
 from .runtime import (
     StorageRuntime,
     StorageRuntimeReadiness,
@@ -363,6 +374,7 @@ __all__ = [
     "MasterKeyPassphraseMismatchError",
     "MasterKeyProvider",
     "MasterKeyUnavailableError",
+    "MintedRecovery",
     "ModeloCatalogueRecord",
     "ModeloRepository",
     "NoActiveBucketSessionError",
@@ -373,6 +385,8 @@ __all__ = [
     "PortalRecord",
     "PortalRepository",
     "RecoveryKey",
+    "RecoveryRecord",
+    "RecoveryVerificationError",
     "RedactionRule",
     "RedactionStrategy",
     "RepositoryError",
@@ -440,10 +454,13 @@ __all__ = [
     "load_corpus_manifest",
     "load_encrypted_envelope",
     "load_envelope",
+    "load_recovery_envelope",
     "load_wrapped_master_key",
     "looks_like_real_tax_id",
     "manifest_path_for",
     "materialise_secret",
+    "mint_recovery_envelope",
+    "open_session_from_recovery",
     "override_secret_store",
     "redact",
     "redact_for_log",
@@ -458,11 +475,14 @@ __all__ = [
     "save_corpus_manifest",
     "save_encrypted_envelope",
     "save_envelope",
+    "save_recovery_envelope",
     "save_wrapped_master_key",
     "secure_object_logical_path",
     "secure_object_namespace_logical_path",
     "session_scope",
     "unwrap_master_key",
+    "unwrap_recovery_envelope",
     "verify_corpus_manifest",
+    "verify_recovery_mnemonic",
     "wrap_master_key",
 ]

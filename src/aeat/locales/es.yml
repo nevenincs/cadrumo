@@ -717,7 +717,9 @@ application:
       computed_casilla_binding_conflict: 'Las entradas procedentes del bucket tienen
         como destino casillas calculadas; no se pueden sobreescribir con binding externo.
         Casillas afectadas: %{computed}.'
-      cross_period_clean_state_incomplete: 'La prueba de estado limpio entre periodos esta incompleta para el modelo {modelo} {filing_year} {period}; quedan {finding_count} hallazgo(s).'
+      cross_period_clean_state_incomplete: La prueba de estado limpio entre periodos
+        esta incompleta para el modelo {modelo} {filing_year} {period}; quedan {finding_count}
+        hallazgo(s).
       export_cross_bucket_refused: La revision indicada pertenece a un bucket distinto
         del bucket del perfil activo. Cambia de perfil antes de exportar.
       export_draft_approval_failed: No se pudo aprobar el borrador para la revision
@@ -787,6 +789,11 @@ application:
         create NAME` antes de reconciliar una unidad de trabajo.
       verification_report_not_found: No existe ningún informe de verificación con
         id=%{verification_report_id}.
+      work_period_token_invalid: '--period ''%{token}'' no es un token de periodo
+        valido para el modelo %{modelo}. Indica --year %{year} por separado y usa
+        uno de: %{tokens}.'
+      work_period_token_unrecognised: --period '%{token}' no se reconoce. Indica --year
+        %{year} por separado y usa un token de periodo como 0A, Q1, 1T o 01.
       work_unit_already_discarded: La unidad de trabajo ya está descartada.
       work_unit_discarded_cannot_calculate: La unidad de trabajo %{work_unit_id} está
         descartada y no puede calcularse. Crea una nueva unidad de trabajo sobre el
@@ -799,8 +806,6 @@ application:
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
-      work_period_token_invalid: '--period ''%{token}'' no es un token de periodo valido para el modelo %{modelo}. Indica --year %{year} por separado y usa uno de: %{tokens}.'
-      work_period_token_unrecognised: '--period ''%{token}'' no se reconoce. Indica --year %{year} por separado y usa un token de periodo como 0A, Q1, 1T o 01.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
@@ -1072,14 +1077,20 @@ application:
         puede reanudar: está en estado {final_stage}, no ABORTED.'
       resume_refused_terminal_reason: La ejecución {run_id} se abortó por {reason},
         que es terminal por diseño y no puede reanudarse.
-      resume_revision_selector_invalid: 'Selector de revisión no reconocido para resume: {selector}; elige current, latest-draft, latest-verified, filed o explicit.'
+      resume_revision_selector_invalid: 'Selector de revisión no reconocido para resume:
+        {selector}; elige current, latest-draft, latest-verified, filed o explicit.'
       resume_run_ambiguous: Más de una ejecución de flujo de trabajo coincide con
         el modelo {modelo} período {period}. Elija un id de ejecución exacto. {candidates}
-      resume_run_id_invalid: 'workflow_run_id debe ser un id hexadecimal en minúsculas de 16 caracteres; se recibió {run_id}.'
-      resume_target_contradiction: 'Indica solo un destino de resume: id de ejecución de flujo, id de unidad de trabajo, id de revisión de cálculo, o modelo/año/periodo.'
-      resume_target_invalid: 'Destino de resume {target} invalido. Usa --modelo --year --period o ejecuta `aeat app modelo work runs`.'
-      resume_target_required: 'Indica --modelo --year --period, un id de ejecución de flujo, un id de unidad de trabajo o un id de revisión de cálculo para reanudar.'
-      resume_visible_target_incomplete: 'Resume por clave natural requiere --modelo, --year y --period juntos; recibido modelo={modelo}, year={year}, period={period}.'
+      resume_run_id_invalid: workflow_run_id debe ser un id hexadecimal en minúsculas
+        de 16 caracteres; se recibió {run_id}.
+      resume_target_contradiction: 'Indica solo un destino de resume: id de ejecución
+        de flujo, id de unidad de trabajo, id de revisión de cálculo, o modelo/año/periodo.'
+      resume_target_invalid: Destino de resume {target} invalido. Usa --modelo --year
+        --period o ejecuta `aeat app modelo work runs`.
+      resume_target_required: Indica --modelo --year --period, un id de ejecución
+        de flujo, un id de unidad de trabajo o un id de revisión de cálculo para reanudar.
+      resume_visible_target_incomplete: Resume por clave natural requiere --modelo,
+        --year y --period juntos; recibido modelo={modelo}, year={year}, period={period}.
       run_id_invalid_blank: El identificador de ejecución no debe estar en blanco.
       run_id_invalid_separators: El identificador de ejecución no debe contener separadores
         de ruta.
@@ -1788,8 +1799,11 @@ cli:
         rescate_plan_pensiones_not_decimal: Los valores --rescate-plan-pensiones-*
           deben ser importes decimales.
         result_summary_header: resumen del resultado  Modelo %{modelo} %{year} %{period}
-        resume_help: 'Valida si puedes reintentar una ejecución de flujo interrumpida sin contactar con AEAT. Usa --modelo --year --period como ruta normal; los ids exactos quedan como escape avanzado.'
-        resume_target_help: 'Id heredado opcional de ejecución de flujo de 16 caracteres o id de unidad de trabajo de 64 caracteres. Prefiere --modelo --year --period.'
+        resume_help: Valida si puedes reintentar una ejecución de flujo interrumpida
+          sin contactar con AEAT. Usa --modelo --year --period como ruta normal; los
+          ids exactos quedan como escape avanzado.
+        resume_target_help: Id heredado opcional de ejecución de flujo de 16 caracteres
+          o id de unidad de trabajo de 64 caracteres. Prefiere --modelo --year --period.
         revision_help: Identificador estable de la revisión registrada del modelo;
           ejecuta `aeat app modelo describe MODELO` para ver los ids de revisión disponibles.
         revision_selector_ambiguous: Mas de una revision de calculo coincide con este
@@ -1945,6 +1959,15 @@ cli:
         ej. 2026-04-01T00:00:00+00:00)
       until_help: Filtrar el historial a eventos en o antes de esta marca ISO-8601
         (p. ej. 2026-04-30T23:59:59+00:00)
+    custody:
+      confirm_new_passphrase_help: 'Repite la nueva contrasena del almacen secreto.'
+      confirm_new_passphrase_prompt: 'Confirma la nueva contrasena del almacen secreto AEAT: '
+      data_loss_warning: 'Anota ahora esta clave de recuperacion. AEAT no almacena la clave de recuperacion en claro y no puede mostrarla otra vez.'
+      errors:
+        missing_new_passphrase_confirmation: 'Repite la nueva contrasena con --confirm-new-passphrase.'
+        new_passphrase_mismatch: 'La nueva contrasena y su confirmacion no coinciden.'
+      new_passphrase_help: 'Nueva contrasena del almacen secreto. Omitela para introducirla de forma interactiva.'
+      new_passphrase_prompt: 'Nueva contrasena del almacen secreto AEAT: '
     errors:
       invalid_value: 'Valor inválido para %{name}: %{value}'
       no_active_profile: No hay un perfil activo. Ejecuta 'aeat config profile create
@@ -1969,7 +1992,9 @@ cli:
           {profile}
         no_metadata_for_refresh: no hay sesión OAuth para el perfil {profile}; no
           se puede renovar sin un inicio de sesión previo
-        sync_push_limit_requires_dry_run: 'La sincronizacion push de Google no puede usar --limit salvo que --dry-run este activado, porque una ejecucion real acotada crearia un manifiesto remoto parcial.'
+        sync_push_limit_requires_dry_run: La sincronizacion push de Google no puede
+          usar --limit salvo que --dry-run este activado, porque una ejecucion real
+          acotada crearia un manifiesto remoto parcial.
       errors:
         auth_failed: 'La autenticación con Google falló: {detail}'
         browser_open: 'No se pudo abrir un navegador para autorizar el acceso a Google:
@@ -2085,6 +2110,8 @@ cli:
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: Listar todos los perfiles registrados y marcar el activo
+    lock:
+      help: 'Bloquear el perfil activo eliminando el puntero de perfil activo.'
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
       censo:
@@ -2168,15 +2195,21 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; por defecto el perfil
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
+    recover:
+      help: 'Recuperar el almacen secreto de archivo con una clave de recuperacion y vincularlo a una nueva contrasena.'
+      recovery_key_help: 'Clave de recuperacion de veinticuatro palabras.'
+    rekey:
+      help: 'Reenvolver el almacen secreto de archivo con una nueva contrasena.'
     repair:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
       connectivity_target_help: Objetivo de conectividad que se debe comprobar
       help: Diagnosticar y reparar configuración local, registro, perfil, autenticación
         y logs
       integrity:
-        objects_help: 'Comprueba la integridad de los objetos seguros.'
-        registry_help: 'Comprueba la integridad del registro de perfiles.'
-        objects_namespace_help: 'Limita las comprobaciones de integridad de objetos seguros a un espacio de nombres.'
+        objects_help: Comprueba la integridad de los objetos seguros.
+        objects_namespace_help: Limita las comprobaciones de integridad de objetos
+          seguros a un espacio de nombres.
+        registry_help: Comprueba la integridad del registro de perfiles.
       integrity_attribution_details_help: Incluir detalles de metadatos seguros por
         fila
       integrity_attribution_help: Agrupa las filas de objetos seguros no descifrables
@@ -2251,14 +2284,23 @@ cli:
         next_step: 'Próximo paso: ejecuta `aeat app overview status` para revisar
           tu espacio de trabajo.'
         saved: Perfil '%{profile_name}' guardado.
+    show_recovery:
+      existing_notice: 'La clave de recuperacion en claro no se almacena y no puede volver a mostrarse. Usa --rotate para generar una nueva clave de recuperacion.'
+      help: 'Mostrar el estado de recuperacion o generar una clave de recuperacion de un solo uso.'
+      rotate_help: 'Rotar el envoltorio de recuperacion e imprimir una nueva clave de recuperacion de un solo uso.'
     status:
       empty_profile: Sin perfil configurado. Ejecuta `aeat config profile create NAME`
         para empezar.
       help: Mostrar el estado del perfil de configuración activo
       next_step: 'Próximo paso: `aeat app overview status`'
+    unlock:
+      help: 'Desbloquear un perfil seleccionandolo y abriendo su sesion de almacenamiento.'
+      name_help: 'Nombre del perfil que se va a desbloquear. Si se omite, se usa el puntero del perfil activo.'
     unset:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
+    verify_recovery:
+      help: 'Verificar que una clave de recuperacion abre el envoltorio de recuperacion persistido.'
     workflow_help: Mostrar ayuda del flujo de configuración
   diagnostics:
     browser:
@@ -2483,13 +2525,15 @@ cli:
       id_prefix_too_long: El prefijo de id %{prefix!r} supera los 64 caracteres de
         un SHA-256 completo.
       id_prefix_unknown: 'Error inesperado en el prefijo de id de transacción: %{message}'
+      invalid_category: 'Categoria de gasto desconocida ''{category}''. Categorias
+        conocidas: {known}. Ejecuta ''aeat app ledger categories'' para ver valores
+        validos de --category-id.'
       invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}'
       unknown_category: --category-id {category!r} no reconocido. Pasa un id de categoría
         sin prefijo como {example!r}, no una clave compuesta ni con prefijo de familia.
         Ejecuta `aeat app ledger categories` para ver todos los identificadores reconocidos.
       unknown_provider: 'Proveedor de importación --provider {provider!r} desconocido.
         Proveedores reconocidos: {providers}.'
-      invalid_category: 'Categoria de gasto desconocida ''{category}''. Categorias conocidas: {known}. Ejecuta ''aeat app ledger categories'' para ver valores validos de --category-id.'
     export:
       actor_help: Nombre del operador registrado en el evento del bucket
       format_help: Formato de serialización de exportación
@@ -3945,6 +3989,7 @@ errors:
       o selecciona un perfil y vuelve a intentarlo.
     modelo_project_invalid_decimal_override: Una sobrescritura de proyección no es
       un importe decimal válido.
+    modelo_work_period_token: Periodo de modelo no valido.
     modelo_work_registry_year_mismatch: La revisión de registro seleccionada no cubre
       el ejercicio fiscal solicitado.
     modelo_work_selector_ambiguous: Mas de una unidad de trabajo de modelo coincide
@@ -4185,14 +4230,19 @@ errors:
       revision.
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
+    submission_preflight_auth_describe_failed: El proveedor de autenticación no pudo
+      describirse ({cause_type}).
+    submission_preflight_auth_not_ready: El proveedor de autenticación {kind} no está
+      listo (configured={configured} available={available}). {operator_impact}
+    submission_preflight_deadline_closed: La ventana de plazo para el modelo {modelo}
+      periodo {period} no está abierta el {today}.
+    submission_preflight_draft_not_approved: El borrador no está aprobado para presentación
+      (estado={status}).
+    submission_preflight_draft_stale: La aprobación del borrador está caducada; revisa
+      y aprueba el borrador de nuevo.
+    submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
+      de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
-    modelo_work_period_token: 'Periodo de modelo no valido.'
-    submission_preflight_draft_stale: 'La aprobación del borrador está caducada; revisa y aprueba el borrador de nuevo.'
-    submission_preflight_draft_not_approved: 'El borrador no está aprobado para presentación (estado={status}).'
-    submission_preflight_error_findings: 'El borrador tiene {finding_count} incidencia(s) de severidad ERROR; resuélvelas antes de presentar.'
-    submission_preflight_deadline_closed: 'La ventana de plazo para el modelo {modelo} periodo {period} no está abierta el {today}.'
-    submission_preflight_auth_describe_failed: 'El proveedor de autenticación no pudo describirse ({cause_type}).'
-    submission_preflight_auth_not_ready: 'El proveedor de autenticación {kind} no está listo (configured={configured} available={available}). {operator_impact}'
   snapshot:
     modelo_not_registered: El modelo no esta registrado en el registro.
   storage:

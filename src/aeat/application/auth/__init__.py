@@ -198,6 +198,15 @@ from ._diagnostics import (
 )
 from ._models import AuthState
 from ._operator import (
+    build_live_auth_preflight_report,
+    clear_operator_auth,
+    configure_operator_auth,
+    inspect_operator_auth,
+    list_operator_auth_providers,
+    login_operator_auth,
+    test_operator_auth,
+)
+from ._operator_results import (
     AuthClearResult,
     AuthConfigureDanglingActiveProfileError,
     AuthConfigureNoActiveBucketError,
@@ -210,13 +219,6 @@ from ._operator import (
     AuthStatusResult,
     AuthTestResult,
     LiveAuthPreflightReport,
-    build_live_auth_preflight_report,
-    clear_operator_auth,
-    configure_operator_auth,
-    inspect_operator_auth,
-    list_operator_auth_providers,
-    login_operator_auth,
-    test_operator_auth,
 )
 from ._sessions import (
     AuthenticatedAeatSessionResult,

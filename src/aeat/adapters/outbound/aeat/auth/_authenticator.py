@@ -47,6 +47,12 @@ from .....core.time import now
 from .....core.time._utc import coerce_utc_aware
 from .._playwright import PlaywrightError
 from . import _session_store
+from ._authenticator_persistence import (
+    AEAT_STORAGE_STATE_SCHEMA_VERSION,
+    PersistedSessionMetadata,
+    persisted_session_reason_code,
+    persisted_session_reason_from_error,
+)
 from ._errors import AeatLoginAssertionError, AeatSessionExpiredError, AuthValidationError
 from ._providers import (
     CERTIFICATE_CONTEXT_MARKER,
@@ -99,10 +105,6 @@ env-var change — the operator surface stays narrow.
 
 AEAT_LOGIN_NAVIGATION_TIMEOUT_MS: Final[int] = _Settings().aeat_browser_navigation_timeout_ms
 """Playwright navigation timeout for post-auth verification probes."""
-
-
-AEAT_STORAGE_STATE_SCHEMA_VERSION: Final[int] = 1
-"""Schema version for the persisted AEAT session metadata."""
 
 
 # ── Boundary records ────────────────────────────────────────────────────────
@@ -243,68 +245,11 @@ class AeatSession(BaseModel):
         return reference > self.idle_deadline
 
 
-class _PersistedSessionMetadata(BaseModel):
-    """AEAT-specific metadata stored beside a Playwright storage-state file."""
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-    schema_version: int = Field(default=AEAT_STORAGE_STATE_SCHEMA_VERSION, ge=1)
-    certificate_thumbprint: str = Field(min_length=1)
-    certificate_subject: str = Field(min_length=1)
-    certificate_nif: str = Field(min_length=1)
-    authenticated_at: datetime
-    idle_deadline: datetime
-    storage_state_sha256: str = Field(min_length=64, max_length=64)
-    handshake: HandshakeResult
+# ── Browser session Protocol ────────────────────────────────────────────────
 
 
 class _PersistedSessionInvalidError(AeatLoginAssertionError):
     """Raised when a persisted AEAT browser session cannot be trusted."""
-
-
-def _persisted_session_reason_code(reason: str) -> str:
-    """Return a non-sensitive persisted-session invalidation reason code."""
-    reason_lower = reason.lower()
-    if "hash does not match" in reason_lower:
-        return "storage_hash_mismatch"
-    if "past its idle deadline" in reason_lower:
-        return "idle_deadline_expired"
-    if "different certificate thumbprint" in reason_lower:
-        return "certificate_thumbprint_mismatch"
-    if "different certificate subject" in reason_lower:
-        return "certificate_subject_mismatch"
-    if "failed live verification" in reason_lower:
-        return "live_verification_failed"
-    if "could not be resumed" in reason_lower:
-        return "resume_failed"
-    if "storage_state missing" in reason_lower:
-        return "storage_state_missing"
-    if "storage_state is malformed" in reason_lower:
-        return "storage_state_malformed"
-    if "storage_state root" in reason_lower:
-        return "storage_state_root_invalid"
-    if "cookies array" in reason_lower:
-        return "storage_state_cookies_missing"
-    if "origins array" in reason_lower:
-        return "storage_state_origins_missing"
-    if "metadata is malformed" in reason_lower:
-        return "metadata_malformed"
-    if "schema version" in reason_lower:
-        return "schema_version_unsupported"
-    return "invalid_persisted_session"
-
-
-def _persisted_session_reason_from_error(error: AeatLoginAssertionError) -> str:
-    """Extract the redacted persisted-session reason code from an auth error."""
-    context = getattr(error, "context", None)
-    if isinstance(context, Mapping):
-        reason = context.get("reason")
-        if isinstance(reason, str) and reason:
-            return reason
-    return "invalid_persisted_session"
-
-
-# ── Browser session Protocol ────────────────────────────────────────────────
 
 
 @runtime_checkable
@@ -573,7 +518,7 @@ class AeatAuthenticator:
                         target_url=target,
                     )
                 except _PersistedSessionInvalidError as exc:
-                    reason = _persisted_session_reason_from_error(exc)
+                    reason = persisted_session_reason_from_error(exc)
                     log.info(
                         "AeatAuthenticator: persisted session invalid session=%s reason=%s; falling back to fresh auth",
                         _PERSISTED_SESSION_LABEL,
@@ -1061,7 +1006,7 @@ class AeatAuthenticator:
                 "capture_storage_state() requires a certificate-backed session with handshake metadata",
                 translated_message="adapters.auth.authenticator.errors.capture_requires_certificate",
             )
-        metadata = _PersistedSessionMetadata(
+        metadata = PersistedSessionMetadata(
             certificate_thumbprint=certificate_thumbprint,
             certificate_subject=certificate_subject,
             certificate_nif=session.identity_nif,
@@ -1268,13 +1213,13 @@ class AeatAuthenticator:
             )
         return persisted
 
-    def _read_persisted_metadata(self, storage_state_path: Path) -> _PersistedSessionMetadata:
+    def _read_persisted_metadata(self, storage_state_path: Path) -> PersistedSessionMetadata:
         """Load and validate the persisted metadata."""
         persisted = self._load_persisted_browser_session(storage_state_path)
-        metadata: _PersistedSessionMetadata | None = None
+        metadata: PersistedSessionMetadata | None = None
         metadata_failed = False
         try:
-            metadata = _PersistedSessionMetadata.model_validate_json(json.dumps(persisted.metadata, default=str))
+            metadata = PersistedSessionMetadata.model_validate_json(json.dumps(persisted.metadata, default=str))
         except (AuthValidationError, ValidationError) as exc:
             metadata_failed = True
             log.debug(
@@ -1322,7 +1267,7 @@ class AeatAuthenticator:
 
     def _raise_invalid_persisted_state(self, storage_state_path: Path, reason: str) -> NoReturn:
         """Delete the persisted state pair and raise a typed invalidation error."""
-        reason_code = _persisted_session_reason_code(reason)
+        reason_code = persisted_session_reason_code(reason)
         self._invalidate_persisted_state(storage_state_path, reason_code)
         raise _PersistedSessionInvalidError(
             "persisted AEAT browser session is invalid",

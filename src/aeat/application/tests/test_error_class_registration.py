@@ -206,7 +206,7 @@ def test_try_load_certificate_metadata_does_not_swallow_unrelated_exceptions() -
     # We only verify that the function is importable and the except clause is narrow.
     # The real certificate load path requires a PKCS#12 file; we exercise the guard via
     # the password=None early-exit path (returns None without exception).
-    from ..auth._operator import _try_load_certificate_metadata
+    from ..auth._operator_probes import _try_load_certificate_metadata
 
     result = _try_load_certificate_metadata.__doc__
     assert result is not None  # function exists and has a docstring

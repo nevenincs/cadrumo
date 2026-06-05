@@ -47,12 +47,13 @@ Use this when `aeat` does not yet know which taxpayer, activity, or local
 profile to use.
 :::
 
-:::{grid-item-card} Import Bank Records
+:::{grid-item-card} Work with Transactions
 :link: how-to/import-bank-statements
 :link-type: doc
 :class-card: aeat-route-card
 
-Use this when records are not yet in the ledger or still need review.
+Use this when records are not yet in the ledger or still need review,
+classification, export, split, merge, or evidence links.
 :::
 
 :::{grid-item-card} Classify Transactions

@@ -28,6 +28,7 @@ event without further coupling.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Mapping
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
@@ -55,7 +56,11 @@ from ._repository import UserProfileLifecycleRepository
 CENSO_SOURCE_TAG: Final = "aeat_censo_read"
 """``UserProfileFact.source`` value stamped on every censo-derived fact."""
 
+CENSO_DERIVED_SOURCE_TAG: Final = "aeat_censo_derived"
+"""``UserProfileFact.source`` for facts derived from censo plus profile evidence."""
+
 _HOME_OFFICE_DEDUCTION_YEAR: Final[int] = 2025
+_NATURAL_PERSON_TAX_ID_RE: Final = re.compile(r"^(?:\d{8}[A-Z]|[XYZ]\d{7}[A-Z])$")
 
 _log = get_logger(__name__)
 
@@ -120,6 +125,7 @@ class CensoApplyResult(BaseModel):
     profile_id: ProfileId
     written_paths: tuple[str, ...] = Field(default_factory=tuple)
     unchanged_paths: tuple[str, ...] = Field(default_factory=tuple)
+    derived_paths: tuple[str, ...] = Field(default_factory=tuple)
     seeded_home_office_categories: tuple[str, ...] = Field(default_factory=tuple)
 
 
@@ -286,11 +292,13 @@ class CensoSyncService:
     ) -> CensoApplyResult:
         """Stamp the snapshot facts onto the profile, replacing prior ``aeat_censo_read`` facts.
 
-        Every censo fact lands as a :class:`UserProfileFact` with
-        ``source = "aeat_censo_read"``. Pre-existing
-        ``aeat_censo_read`` facts are replaced; facts from other
-        sources (``manual_cli``, wizard) are preserved untouched so
-        operator-entered values stay addressable for the compare verb.
+        Every raw censo fact lands as a :class:`UserProfileFact` with
+        ``source = "aeat_censo_read"``. Facts defensibly derived from
+        the censo/profile pair land with ``source =
+        "aeat_censo_derived"``. Pre-existing facts from either censo
+        source are replaced; facts from other sources (``manual_cli``,
+        wizard) are preserved untouched so operator-entered values stay
+        addressable for the compare verb.
 
         Emits no events itself; the caller (CLI handler) is responsible
         for surfacing ``CENSO_APPLIED`` on the bucket-event-history
@@ -310,14 +318,22 @@ class CensoSyncService:
             )
         profile = self._profiles.load(profile_id)
         before = _profile_facts_by_path(profile)
-        retained = tuple(fact for fact in profile.facts if fact.source != CENSO_SOURCE_TAG)
+        retained = tuple(
+            fact for fact in profile.facts if fact.source not in {CENSO_SOURCE_TAG, CENSO_DERIVED_SOURCE_TAG}
+        )
+        retained_paths = {fact.path for fact in retained}
         new_censo_facts = tuple(
             UserProfileFact(path=path, value=value, source=CENSO_SOURCE_TAG)
             for path, value in sorted(snapshot.censo_facts.items())
         )
+        derived_facts = tuple(
+            fact
+            for fact in _derive_profile_facts_from_censo(snapshot.censo_facts, before)
+            if fact.path not in retained_paths
+        )
         updated = profile.model_copy(
             update={
-                "facts": retained + new_censo_facts,
+                "facts": retained + new_censo_facts + derived_facts,
                 "updated_at": now(),
             },
         )
@@ -335,6 +351,7 @@ class CensoSyncService:
             profile_id=profile_id.strip(),
             written_paths=tuple(written),
             unchanged_paths=tuple(unchanged),
+            derived_paths=tuple(sorted(fact.path for fact in derived_facts)),
             seeded_home_office_categories=seeded,
         )
 
@@ -424,6 +441,33 @@ def _profile_facts_by_path(profile: UserProfileRecord | None) -> dict[str, str]:
     if profile is None:
         return {}
     return {fact.path: _coerce_to_str(fact.value) for fact in profile.facts}
+
+
+def _derive_profile_facts_from_censo(
+    censo_facts: Mapping[str, str],
+    profile_facts: Mapping[str, str],
+) -> tuple[UserProfileFact, ...]:
+    """Return taxpayer-model facts proven by censo facts plus profile identity."""
+    derived: list[UserProfileFact] = []
+    tax_id = (profile_facts.get("identity.tax_id") or profile_facts.get("tax.id") or "").strip().upper()
+    if _NATURAL_PERSON_TAX_ID_RE.match(tax_id):
+        derived.append(
+            UserProfileFact(
+                path="taxpayer_type.entity_type",
+                value="natural_person",
+                source=CENSO_DERIVED_SOURCE_TAG,
+            )
+        )
+    iae_epigraph = (censo_facts.get("activities.iae_epigraph") or "").strip()
+    if iae_epigraph:
+        derived.append(
+            UserProfileFact(
+                path="taxpayer_type.irpf_income_categories",
+                value="actividad_economica",
+                source=CENSO_DERIVED_SOURCE_TAG,
+            )
+        )
+    return tuple(derived)
 
 
 def _coerce_to_str(value: object) -> str:

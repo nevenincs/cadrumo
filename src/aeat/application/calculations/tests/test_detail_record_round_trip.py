@@ -20,7 +20,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry._bindings import (
+from ....domain.calculations.registry import (
     resolve_atribucion_binding_row_values,
     resolve_foreign_asset_binding_row_values,
     resolve_refund_binding_row_values,

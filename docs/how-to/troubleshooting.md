@@ -91,6 +91,10 @@ aeat config repair connectivity --target browser
 - [Quickstart: produce a modelo file](quickstart.md) - follow the first local
   filing path.
 - [Set up your taxpayer profile](profile-setup.md) - create and switch profiles.
+- [Authenticate with AEAT](authenticate-with-aeat.md) - check read-only live
+  access setup.
+- [Check AEAT notifications](check-aeat-notifications.md) - inspect saved DEHu
+  notification snapshots.
 - [Pipeline explanation](../explanation/index.md) - what the registry, secure
   storage, and workflow state are.
 - [CLI reference](../cli/index.rst) - every repair command, flag, and exit code.

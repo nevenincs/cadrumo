@@ -12,7 +12,7 @@ from .....core.external_constants import UTF_8_ENCODING
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_ROOT = Path(__file__).resolve().parents[5]
+_ROOT = Path(__file__).resolve().parents[6]
 _SENSITIVE_SURFACES = (
     _ROOT / "src" / "aeat" / "application" / "review",
     _ROOT / "src" / "aeat" / "application" / "workflow" / "_persistence.py",
@@ -277,12 +277,12 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "cached_path.write_bytes",
     ): "registry workbook-parity conversion cache; non-user AEAT reference workbook bytes",
     (
-        "src/aeat/entrypoints/cli/_config/__init__.py",
+        "src/aeat/entrypoints/cli/_config/_profile_bundle.py",
         "config_profile_export",
         "out.write_text",
     ): "explicit operator-directed profile export to a caller-chosen path",
     (
-        "src/aeat/application/ledger/_actions.py",
+        "src/aeat/application/ledger/_actions_export.py",
         "export_ledger_transactions",
         "command.output_path.write_bytes",
     ): "explicit operator-directed ledger transaction export to a caller-chosen path",

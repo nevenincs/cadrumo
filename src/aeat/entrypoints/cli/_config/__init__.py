@@ -31,6 +31,8 @@ from ._apoderado import apoderado_app, register_apoderado_commands
 from ._auth import auth_app
 from ._auth_diagnostics import auth_diagnostics_app
 from ._bucket_history import _parse_bucket_event_types, register_bucket_history_commands
+from ._custody import register_custody_commands
+from ._custody import select_profile_pointer as _select_profile_pointer
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
 from ._profile_bundle import register_profile_bundle_commands
 from ._repair_cli import register_repair_maintenance_commands
@@ -233,8 +235,6 @@ def config_profile_switch(
 ) -> None:
     """Select an existing profile as the active profile."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile import select_profile_with_lifecycle_span
-    from ....domain.user_profile import ProfileNotFoundError
 
     pointer = _read_profile_bucket(name)
     if pointer is None:
@@ -245,13 +245,7 @@ def config_profile_switch(
     _assert_profile_record_present(ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label)
     from .._config_payloads import ConfigProfileSwitchResult
 
-    try:
-        select_profile_with_lifecycle_span(pointer.bucket_id)
-    except ProfileNotFoundError as exc:
-        _emit_profile_record_missing(
-            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label
-        )
-        raise typer.Exit(code=2) from exc
+    _select_profile_pointer(pointer)
     result = ConfigProfileSwitchResult(active_profile=pointer.label)
     _emit_envelope(
         ctx,
@@ -1119,6 +1113,12 @@ register_repair_profile_command(
 )
 register_repair_maintenance_commands(repair_app)
 register_bucket_history_commands(bucket_app)
+register_custody_commands(
+    app,
+    resolve_active_profile_pointer=_resolve_active_profile_pointer,
+    resolve_profile_by_label=_resolve_profile_by_label,
+    assert_profile_record_present=_assert_profile_record_present,
+)
 app.add_typer(repair_app, name="repair")
 app.add_typer(profile_app, name="profile")
 register_apoderado_commands(auth_app, resolve_active_profile_pointer=_resolve_active_profile_pointer)

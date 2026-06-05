@@ -70,7 +70,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._operator.AuthProviderReservedError",
+        "aeat.application.auth._operator_results.AuthProviderReservedError",
         ErrorCode(
             code="REFUSED_AUTH_PROVIDER_RESERVED",
             category=ErrorCategory.REFUSED,
@@ -81,7 +81,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._operator.AuthConfigureNoActiveBucketError",
+        "aeat.application.auth._operator_results.AuthConfigureNoActiveBucketError",
         ErrorCode(
             code="REFUSED_AUTH_CONFIGURE_NO_ACTIVE_BUCKET",
             category=ErrorCategory.REFUSED,
@@ -92,7 +92,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._operator.AuthConfigureDanglingActiveProfileError",
+        "aeat.application.auth._operator_results.AuthConfigureDanglingActiveProfileError",
         ErrorCode(
             code="REFUSED_AUTH_CONFIGURE_DANGLING_ACTIVE_PROFILE",
             category=ErrorCategory.REFUSED,
@@ -103,7 +103,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._operator.AuthLoginNotEnabledError",
+        "aeat.application.auth._operator_results.AuthLoginNotEnabledError",
         ErrorCode(
             code="REFUSED_AUTH_LOGIN_LIVE_TESTS_DISABLED",
             category=ErrorCategory.REFUSED,
@@ -114,7 +114,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._operator.AuthLoginPreconditionError",
+        "aeat.application.auth._operator_results.AuthLoginPreconditionError",
         ErrorCode(
             code="REFUSED_AUTH_LOGIN_PRECONDITION",
             category=ErrorCategory.REFUSED,

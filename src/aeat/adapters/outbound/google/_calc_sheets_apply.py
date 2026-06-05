@@ -47,13 +47,10 @@ from ....application.storage.calc_sheets import (
     SheetCellConstraint,
     SheetColumnWidth,
     SheetExportPlan,
-    SheetFormulaCell,
     SheetFrozenView,
     SheetProtectedRange,
-    SheetRowSet,
     SheetValueCell,
     TabName,
-    evidence_table,
     hex_to_rgb_floats,
 )
 from ....core.config import Settings as _Settings
@@ -63,6 +60,16 @@ from ...outbound.storage._errors import (
     OutboundStorageValidationError,
 )
 from ._api import execute_request
+from ._calc_sheets_apply_values import (
+    _build_evidence_value_data,
+    _build_formula_data,
+    _build_guide_value_data,
+    _build_row_set_header_data,
+    _build_value_data,
+)
+from ._calc_sheets_apply_values import (
+    _coerce_cell_value as _coerce_cell_value,
+)
 
 _FOLDER_MIME: Final[str] = "application/vnd.google-apps.folder"
 _SPREADSHEET_MIME: Final[str] = "application/vnd.google-apps.spreadsheet"
@@ -313,81 +320,6 @@ def _create_spreadsheet(
         action="drive.files.update.move_and_stamp",
     )
     return spreadsheet
-
-
-def _coerce_cell_value(value: Decimal | str | bool | None) -> object:
-    if value is None:
-        return ""
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, Decimal):
-        # Sheets accepts plain floats; render the Decimal as a fixed
-        # decimal string so very small/very large values do not round.
-        return format(value, "f")
-    return str(value)
-
-
-def _build_value_data(value_cells: Iterable[SheetValueCell]) -> list[dict[str, Any]]:
-    data: list[dict[str, Any]] = []
-    for cell in value_cells:
-        data.append(
-            {
-                "range": cell.address.qualified(),
-                "values": [[_coerce_cell_value(cell.value)]],
-            }
-        )
-    return data
-
-
-def _build_formula_data(formula_cells: Iterable[SheetFormulaCell]) -> list[dict[str, Any]]:
-    data: list[dict[str, Any]] = []
-    for cell in formula_cells:
-        data.append(
-            {
-                "range": cell.address.qualified(),
-                "values": [[f"={cell.formula}"]],
-            }
-        )
-    return data
-
-
-def _build_row_set_header_data(row_sets: Iterable[SheetRowSet]) -> list[dict[str, Any]]:
-    """Emit Detalle-tab header cells declaring each row-set column.
-
-    The engine reserves a header row + data area per row-set. This writer
-    materialises the header labels so an operator opening the spreadsheet
-    sees the per-record column titles ready to receive their tipo-2
-    detail rows (perceptores on 190, foreign assets on 720, etc.).
-    """
-    data: list[dict[str, Any]] = []
-    for row_set in row_sets:
-        for column in row_set.columns:
-            data.append(
-                {
-                    "range": column.header_address.qualified(),
-                    "values": [[column.header_label]],
-                }
-            )
-    return data
-
-
-def _build_evidence_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
-    """Build the Evidencia tab value writes, mirroring the offline workbook.
-
-    Consumes the shared ``evidence_table`` single source so the online Sheets
-    Evidencia surface is byte-identical to the offline xls one
-    (modelo-export-evidence-parity ADR W05): fingerprint at A1/B1, headers at
-    row 3, contributor + manual rows from row 4.
-    """
-    fingerprint, header, body = evidence_table(plan)
-    tab = TabName.EVIDENCIA.value
-    data: list[dict[str, Any]] = [
-        {"range": f"'{tab}'!A1", "values": [["Snapshot fingerprint", fingerprint]]},
-        {"range": f"'{tab}'!A3", "values": [list(header)]},
-    ]
-    for offset, row in enumerate(body):
-        data.append({"range": f"'{tab}'!A{4 + offset}", "values": [list(row)]})
-    return data
 
 
 _NUMBER_FORMAT_TYPE: Final[Mapping[str, str]] = {
@@ -1026,32 +958,6 @@ def _build_cell_note_requests(
             }
         )
     return requests
-
-
-def _build_guide_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
-    data: list[dict[str, Any]] = [
-        {"range": f"'{TabName.GUIDE.value}'!A1", "values": [[plan.guide.title]]},
-    ]
-    for index, paragraph in enumerate(plan.guide.paragraphs, start=3):
-        data.append({"range": f"'{TabName.GUIDE.value}'!A{index}", "values": [[paragraph]]})
-    metadata = plan.metadata
-    base_row = 3 + len(plan.guide.paragraphs) + 2
-    stamps = (
-        ("Modelo", metadata.modelo_id),
-        ("Revisión", metadata.revision_id),
-        ("Período", f"{metadata.period} / {metadata.filing_year}"),
-        ("Motor", metadata.engine_version),
-        ("Registry SHA", metadata.registry_sha),
-        ("Exportado", metadata.exported_at.isoformat()),
-    )
-    for offset, (label, value) in enumerate(stamps):
-        data.append(
-            {
-                "range": f"'{TabName.GUIDE.value}'!A{base_row + offset}",
-                "values": [[label, value]],
-            }
-        )
-    return data
 
 
 def _spreadsheet_title(plan: SheetExportPlan) -> str:

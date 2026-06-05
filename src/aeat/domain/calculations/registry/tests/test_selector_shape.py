@@ -9,8 +9,8 @@ at handler-call time.
 
 This file pins:
 
-  * the registry of typed selectors is non-empty and registers every
-    typed source key currently declared in
+  * the registry of map-backed typed selectors is non-empty and
+    registers every typed source key currently declared in
     ``_BINDING_SELECTOR_REGISTRY``;
   * a well-shaped selector for each typed source passes the gate;
   * a misshapen selector for a typed source surfaces the violation
@@ -53,7 +53,7 @@ def _binding(
 
 
 def test_binding_selector_registry_covers_typed_sources() -> None:
-    """The discriminator registry must enumerate every typed selector."""
+    """The discriminator registry must enumerate every map-backed typed selector."""
 
     expected = {
         "previous_filing",
@@ -67,7 +67,6 @@ def test_binding_selector_registry_covers_typed_sources() -> None:
         "ledger_iva_aggregation",
         "ledger_renta_expense_aggregation",
         "ledger_renta_income_aggregation",
-        "withholding",
         "related_party_operation",
         "foreign_asset",
         "atribucion_member",

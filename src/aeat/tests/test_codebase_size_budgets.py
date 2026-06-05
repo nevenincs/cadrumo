@@ -77,7 +77,7 @@ _LEGACY_CALLABLE_LINE_BUDGETS = {
 def _tracked_python_files() -> tuple[Path, ...]:
     git_executable = shutil.which("git")
     assert git_executable is not None, "git executable is required for tracked-file inventory"
-    result = subprocess.run(  # noqa: S603 - fixed git ls-files inventory with literal arguments.
+    result = subprocess.run(  # noqa
         [git_executable, "ls-files", "-z", "src/aeat"],
         cwd=PROJECT_ROOT,
         check=True,

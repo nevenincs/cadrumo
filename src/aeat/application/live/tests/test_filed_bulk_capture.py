@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.sede._declarations import Declaracion
+from ....adapters.outbound.aeat.sede import Declaracion
 from .. import (
     BulkFiledDataCaptureReport,
     FiledDataCaptureFailureRow,
