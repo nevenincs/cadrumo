@@ -1062,14 +1062,14 @@ application:
         en estat {final_stage}, no ABORTED.'
       resume_refused_terminal_reason: L'execució {run_id} es va avortar per {reason},
         que és terminal per disseny i no es pot reprendre.
-      resume_revision_selector_invalid: 'El selector de calcul {selector} no es valid per a aquest desti de represa.'
+      resume_revision_selector_invalid: 'Selector de revisió no reconegut per a resume: {selector}; tria current, latest-draft, latest-verified, filed o explicit.'
       resume_run_ambiguous: Més d'una execució de flux de treball coincideix amb el
         model {modelo} període {period}. Trieu un id d'execució exacte. {candidates}
-      resume_run_id_invalid: 'L id d execucio de flux {workflow_run_id} no es valid.'
-      resume_target_contradiction: 'Proporciona nomes un desti de represa. No combinis target, workflow run id, work unit id, calculation revision id ni camps visibles modelo/any/periode.'
-      resume_target_invalid: 'El desti de represa {target} no es un id d execucio de flux ni un id d unitat de treball.'
-      resume_target_required: 'Proporciona un id d execucio de flux, id d unitat de treball, id de revisio de calcul, target o desti visible modelo/any/periode.'
-      resume_visible_target_incomplete: 'El desti visible de represa requereix modelo, any i periode; s ha rebut modelo={modelo}, year={year}, period={period}.'
+      resume_run_id_invalid: 'workflow_run_id ha de ser un id hexadecimal en minúscules de 16 caràcters; s''ha rebut {run_id}.'
+      resume_target_contradiction: 'Indica només un destí de resume: id d''execució de flux, id d''unitat de treball, id de revisió de càlcul, o model/any/període.'
+      resume_target_invalid: 'Desti de resume {target} invalid. Usa --modelo --year --period o executa `aeat app modelo work runs`.'
+      resume_target_required: 'Indica --modelo --year --period, un id d''execució de flux, un id d''unitat de treball o un id de revisió de càlcul per reprendre.'
+      resume_visible_target_incomplete: 'Resume per clau natural requereix --modelo, --year i --period junts; rebut modelo={modelo}, year={year}, period={period}.'
       run_id_invalid_blank: L'identificador d'execució no pot estar en blanc.
       run_id_invalid_separators: L'identificador d'execució no ha de contenir separadors
         de ruta.
@@ -1761,12 +1761,8 @@ cli:
         rescate_plan_pensiones_not_decimal: Els valors --rescate-plan-pensiones-*
           han de ser imports decimals.
         result_summary_header: resum del resultat  Modelo %{modelo} %{year} %{period}
-        resume_help: Valida si pots reintentar una execució de flux interrompuda sense
-          contactar amb AEAT. Accepta un id d'execució de flux o un id d'unitat de
-          treball.
-        resume_target_help: Id d'execució de flux de 16 caràcters, o l'id d'unitat
-          de treball de 64 caràcters (es resol automàticament la seva darrera execució).
-          Executa `aeat app modelo work runs` per llistar els ids d'execució.
+        resume_help: 'Valida si pots reintentar una execució de flux interrompuda sense contactar amb AEAT. Fes servir --modelo --year --period com a ruta normal; els ids exactes queden com a escape avançat.'
+        resume_target_help: 'Id heretat opcional d''execució de flux de 16 caràcters o id d''unitat de treball de 64 caràcters. Prefereix --modelo --year --period.'
         revision_help: Identificador estable de la revisió registrada del model; executa
           `aeat app modelo describe MODEL` per veure els ids de revisió disponibles.
         revision_selector_ambiguous: Mes d una revisio de calcul coincideix amb aquest

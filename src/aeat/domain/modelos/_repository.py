@@ -25,6 +25,7 @@ _LOGGER = get_logger(__name__)
 _WORK_UNIT_NAMESPACE = "aeat.domain.modelos.work_units"
 _WORK_UNIT_OBJECT_KEY = "catalogue"
 _WORK_UNIT_CATALOGUE_VERSION = 1
+_WORK_UNIT_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_work_unit_persistence"
 
 
 class WorkUnitPersistenceError(ModeloError):
@@ -80,19 +81,51 @@ class WorkUnitCatalogueRepository:
             )
         except (ClassificationError, EnvelopeVersionError) as exc:
             _LOGGER.error("work-unit catalogue integrity error", exc_info=True)
-            raise WorkUnitPersistenceError(f"work-unit catalogue integrity error: {type(exc).__name__}: {exc}") from exc
+            raise WorkUnitPersistenceError(
+                "work-unit catalogue integrity error",
+                translated_message=_WORK_UNIT_PERSISTENCE_MESSAGE,
+                context={
+                    "reason": "secure_object_integrity",
+                    "cause_type": type(exc).__name__,
+                },
+            ) from exc
         if record is None:
             _LOGGER.debug("work-unit catalogue not found; returning empty catalogue")
             return WorkUnitCatalogue()
         envelope = Envelope[WorkUnitCatalogue].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not SensitivityClass.FINANCIAL:
+            _LOGGER.error(
+                "work-unit catalogue classification mismatch",
+                extra={
+                    "expected_classification": SensitivityClass.FINANCIAL.value,
+                    "actual_classification": envelope.classification.value,
+                },
+            )
             raise WorkUnitPersistenceError(
-                f"work-unit catalogue has classification {envelope.classification}; FINANCIAL expected"
+                "work-unit catalogue classification mismatch",
+                translated_message=_WORK_UNIT_PERSISTENCE_MESSAGE,
+                context={
+                    "reason": "classification_mismatch",
+                    "expected_classification": SensitivityClass.FINANCIAL.value,
+                    "actual_classification": envelope.classification.value,
+                },
             )
         if envelope.schema_version > _WORK_UNIT_CATALOGUE_VERSION:
+            _LOGGER.error(
+                "work-unit catalogue envelope version unsupported",
+                extra={
+                    "stored_schema_version": envelope.schema_version,
+                    "max_supported_version": _WORK_UNIT_CATALOGUE_VERSION,
+                },
+            )
             raise WorkUnitPersistenceError(
-                f"work-unit catalogue is at version {envelope.schema_version}; "
-                f"consumer supports up to {_WORK_UNIT_CATALOGUE_VERSION}"
+                "work-unit catalogue envelope version unsupported",
+                translated_message=_WORK_UNIT_PERSISTENCE_MESSAGE,
+                context={
+                    "reason": "unsupported_envelope_version",
+                    "stored_schema_version": envelope.schema_version,
+                    "max_supported_version": _WORK_UNIT_CATALOGUE_VERSION,
+                },
             )
         catalogue = envelope.payload
         _LOGGER.debug("loaded work-unit catalogue with %d entr(y/ies)", len(catalogue))

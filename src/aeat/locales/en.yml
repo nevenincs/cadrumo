@@ -991,14 +991,14 @@ application:
         in {final_stage} state, not ABORTED.'
       resume_refused_terminal_reason: Workflow run {run_id} aborted for {reason},
         which is terminal by design and may not be resumed.
-      resume_revision_selector_invalid: 'Calculation selector {selector} is not valid for this resume target.'
+      resume_revision_selector_invalid: 'Unknown resume revision selector {selector}; choose current, latest-draft, latest-verified, filed, or explicit.'
       resume_run_ambiguous: More than one workflow run matches modelo {modelo} period
         {period}. Choose an exact workflow run id. {candidates}
-      resume_run_id_invalid: 'Workflow run id {workflow_run_id} is invalid.'
-      resume_target_contradiction: 'Provide only one resume target. Do not combine target, workflow run id, work unit id, calculation revision id, or visible modelo/year/period fields.'
-      resume_target_invalid: 'Resume target {target} is not a workflow run id or work unit id.'
-      resume_target_required: 'Provide a workflow run id, work unit id, calculation revision id, target, or visible modelo/year/period target.'
-      resume_visible_target_incomplete: 'Visible resume target requires modelo, year, and period; got modelo={modelo}, year={year}, period={period}.'
+      resume_run_id_invalid: 'workflow_run_id must be a 16-character lowercase hex id; got {run_id}.'
+      resume_target_contradiction: 'Pass only one resume target: a workflow run id, a work-unit id, a calculation revision id, or modelo/year/period.'
+      resume_target_invalid: 'Invalid resume target {target}. Use --modelo --year --period, or run `aeat app modelo work runs`.'
+      resume_target_required: 'Pass --modelo --year --period, a workflow run id, a work-unit id, or a calculation revision id to resume.'
+      resume_visible_target_incomplete: 'Natural-key resume requires --modelo, --year, and --period together; got modelo={modelo}, year={year}, period={period}.'
       run_id_invalid_blank: Run identifier must not be blank.
       run_id_invalid_separators: Run identifier must not contain path separators.
       run_not_found: 'Workflow run not found: {run_id}.'
@@ -1663,11 +1663,8 @@ cli:
         rescate_plan_pensiones_not_decimal: --rescate-plan-pensiones-* values must
           be decimal amounts.
         result_summary_header: result summary  Modelo %{modelo} %{year} %{period}
-        resume_help: Validate whether you can retry an interrupted workflow run without
-          contacting AEAT. Accepts a workflow run id or a work-unit id.
-        resume_target_help: 16-character workflow run id, or the 64-character work-unit
-          id (its latest run is resolved automatically). Run `aeat app modelo work
-          runs` to list run ids.
+        resume_help: 'Validate whether you can retry an interrupted workflow run without contacting AEAT. Use --modelo --year --period for the normal path; exact ids remain advanced escape hatches.'
+        resume_target_help: 'Optional legacy 16-character workflow run id or 64-character work-unit id. Prefer --modelo --year --period.'
         revision_help: Stable id of the targeted registry modelo revision; run `aeat
           app modelo describe MODELO` to see the available revision ids.
         revision_selector_ambiguous: More than one calculation revision matches this
@@ -3449,8 +3446,7 @@ errors:
       saved or loaded.
     fail_modelo_verification_report_persistence: The verification-report catalogue
       could not be saved or loaded.
-    fail_modelo_work_unit_persistence: The work-unit catalogue could not be saved
-      or loaded.
+    fail_modelo_work_unit_persistence: 'The work-unit catalogue could not be saved or read'
     fail_normatives_normative_parse: A normative record failed schema validation.
     fail_observability_run_trace_persistence: The run trace store could not complete
       a filesystem operation.

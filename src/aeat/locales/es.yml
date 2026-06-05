@@ -1069,14 +1069,14 @@ application:
         puede reanudar: está en estado {final_stage}, no ABORTED.'
       resume_refused_terminal_reason: La ejecución {run_id} se abortó por {reason},
         que es terminal por diseño y no puede reanudarse.
-      resume_revision_selector_invalid: 'El selector de calculo {selector} no es valido para este destino de reanudacion.'
+      resume_revision_selector_invalid: 'Selector de revisión no reconocido para resume: {selector}; elige current, latest-draft, latest-verified, filed o explicit.'
       resume_run_ambiguous: Más de una ejecución de flujo de trabajo coincide con
         el modelo {modelo} período {period}. Elija un id de ejecución exacto. {candidates}
-      resume_run_id_invalid: 'El id de ejecucion de flujo {workflow_run_id} no es valido.'
-      resume_target_contradiction: 'Proporciona solo un destino de reanudacion. No combines target, workflow run id, work unit id, calculation revision id ni campos visibles modelo/ano/periodo.'
-      resume_target_invalid: 'El destino de reanudacion {target} no es un id de ejecucion de flujo ni un id de unidad de trabajo.'
-      resume_target_required: 'Proporciona un id de ejecucion de flujo, id de unidad de trabajo, id de revision de calculo, target o destino visible modelo/ano/periodo.'
-      resume_visible_target_incomplete: 'El destino visible de reanudacion requiere modelo, ano y periodo; se recibio modelo={modelo}, year={year}, period={period}.'
+      resume_run_id_invalid: 'workflow_run_id debe ser un id hexadecimal en minúsculas de 16 caracteres; se recibió {run_id}.'
+      resume_target_contradiction: 'Indica solo un destino de resume: id de ejecución de flujo, id de unidad de trabajo, id de revisión de cálculo, o modelo/año/periodo.'
+      resume_target_invalid: 'Destino de resume {target} invalido. Usa --modelo --year --period o ejecuta `aeat app modelo work runs`.'
+      resume_target_required: 'Indica --modelo --year --period, un id de ejecución de flujo, un id de unidad de trabajo o un id de revisión de cálculo para reanudar.'
+      resume_visible_target_incomplete: 'Resume por clave natural requiere --modelo, --year y --period juntos; recibido modelo={modelo}, year={year}, period={period}.'
       run_id_invalid_blank: El identificador de ejecución no debe estar en blanco.
       run_id_invalid_separators: El identificador de ejecución no debe contener separadores
         de ruta.
@@ -1787,12 +1787,8 @@ cli:
         rescate_plan_pensiones_not_decimal: Los valores --rescate-plan-pensiones-*
           deben ser importes decimales.
         result_summary_header: resumen del resultado  Modelo %{modelo} %{year} %{period}
-        resume_help: Valida si puedes reintentar una ejecución de flujo interrumpida
-          sin contactar con AEAT. Acepta un id de ejecución de flujo o un id de unidad
-          de trabajo.
-        resume_target_help: Id de ejecución de flujo de 16 caracteres, o el id de
-          unidad de trabajo de 64 caracteres (se resuelve automáticamente su última
-          ejecución). Ejecuta `aeat app modelo work runs` para listar los ids de ejecución.
+        resume_help: 'Valida si puedes reintentar una ejecución de flujo interrumpida sin contactar con AEAT. Usa --modelo --year --period como ruta normal; los ids exactos quedan como escape avanzado.'
+        resume_target_help: 'Id heredado opcional de ejecución de flujo de 16 caracteres o id de unidad de trabajo de 64 caracteres. Prefiere --modelo --year --period.'
         revision_help: Identificador estable de la revisión registrada del modelo;
           ejecuta `aeat app modelo describe MODELO` para ver los ids de revisión disponibles.
         revision_selector_ambiguous: Mas de una revision de calculo coincide con este
