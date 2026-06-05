@@ -797,3 +797,30 @@ the final `python -m aeat.locales audit` passed for `ca`, `en`, `es`, and `hu`.
 
 Focused ruff, master-key provider/adverse-session tests, error-registry tests, and
 locale audit passed. No high or medium S458 findings remain open.
+
+## S452-CR-001 | PASS | Passphrase custody no longer depends on secret env handoff
+
+Reviewed the S452 passphrase bootstrap and custody lifecycle changes. The master-key
+resolver remains settings-backed, the unset-path test uses the real prompt boundary,
+and the custody subprocess harness passes test passphrases through an argv-to-Settings
+path instead of `AEAT_TEST_SECRET_PASSPHRASE`.
+
+## S452-CR-002 | PASS | Multi-word assignment redaction is centrally enforced
+
+Reviewed the central logging scrubber and focused logging tests. Assignment-shaped
+passphrases now redact quoted and unquoted multi-word values while preserving adjacent
+non-sensitive assignment context. The review found no remaining whitespace leak in the
+covered log path.
+
+## S452-CR-003 | PASS | Residual env use is non-secret test isolation
+
+Residual `os.environ` usage in the reviewed custody lifecycle test is limited to
+constructing a sanitized subprocess environment and exercising `AEAT_ACTIVE_PROFILE`
+precedence. No passphrase material is carried through environment variables in the
+reviewed S452 surface.
+
+## S452-CR-004 | PASS | Focused validation passed
+
+Focused logging, master-key passphrase, master-key provider, custody lifecycle, ruff,
+residual-search, and plan-validation checks passed. No critical, high, or medium S452
+findings remain open.
