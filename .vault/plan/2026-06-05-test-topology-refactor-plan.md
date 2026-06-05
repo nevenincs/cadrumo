@@ -149,8 +149,8 @@ Run the final mechanical, semantic, and collection gates, update durable documen
 
 Run mechanical fd gates, marker integrity, targeted pytest collection, vaultspec-core sync checks, and vaultspec-rag index/search verification after all edits land.
 
-- [ ] `W05.P12.S38` - Run final fd topology and naming gates; `fd final gates`.
-- [ ] `W05.P12.S39` - Run marker integrity and pytest collection gates; `pytest collection gates`.
+- [x] `W05.P12.S38` - Run final fd topology and naming gates; `fd final gates`.
+- [x] `W05.P12.S39` - Run marker integrity and pytest collection gates; `pytest collection gates`.
 - [ ] `W05.P12.S40` - Run vaultspec-core rule sync and status checks; `vaultspec-core sync`.
 - [ ] `W05.P12.S41` - Run vaultspec-rag index and semantic verification searches; `vaultspec-rag verification`.
 
