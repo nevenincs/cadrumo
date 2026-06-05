@@ -566,7 +566,7 @@ Current register count: `301` production candidate files.
 | `AFR-285` | `src/aeat/entrypoints/cli/_review.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-286` | `src/aeat/entrypoints/cli/_review_payloads.py` | `manifest-bucket, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-287` | `src/aeat/entrypoints/cli/_root_landing.py` | `active-profile` | `manifest-discovery` | `W12.P22.S90` | closed |
-| `AFR-288` | `src/aeat/entrypoints/cli/_schemas.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-288` | `src/aeat/entrypoints/cli/_schemas.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-289` | `src/aeat/entrypoints/cli/_tty.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-290` | `src/aeat/entrypoints/cli/registry.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-291` | `src/aeat/locales/_ast_scanner.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
@@ -927,7 +927,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S387` - Close `AFR-285` for `src/aeat/entrypoints/cli/_review.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/entrypoints/cli/_review.py`.
 - [x] `W12.P26.S388` - Close `AFR-286` for `src/aeat/entrypoints/cli/_review_payloads.py` with signals `manifest-bucket, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/entrypoints/cli/_review_payloads.py`.
 - [x] `W12.P26.S389` - Close `AFR-287` for `src/aeat/entrypoints/cli/_root_landing.py` with signals `active-profile`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/entrypoints/cli/_root_landing.py`.
-- [ ] `W12.P26.S390` - Close `AFR-288` for `src/aeat/entrypoints/cli/_schemas.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/entrypoints/cli/_schemas.py`.
+- [x] `W12.P26.S390` - Close `AFR-288` for `src/aeat/entrypoints/cli/_schemas.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/entrypoints/cli/_schemas.py`.
 - [ ] `W12.P26.S391` - Close `AFR-289` for `src/aeat/entrypoints/cli/_tty.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/entrypoints/cli/_tty.py`.
 - [ ] `W12.P26.S392` - Close `AFR-290` for `src/aeat/entrypoints/cli/registry.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/entrypoints/cli/registry.py`.
 - [x] `W12.P26.S393` - Close `AFR-291` for `src/aeat/locales/_ast_scanner.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/locales/_ast_scanner.py`.
