@@ -11,8 +11,8 @@ rules:
       - python
     paths:
       include:
-        - "src/aeat/domain/"
-        - "src/aeat/application/"
+        - "/src/aeat/domain/"
+        - "/src/aeat/application/"
     pattern-either:
       - pattern: |
           $X: Any
@@ -22,10 +22,16 @@ rules:
           def $F(...) -> Any:
               ...
       - patterns:
-          - pattern: def $F(..., $PARAM: Any, ...) -> $R: ...
-          - pattern-not: def $F(..., **$KW: Any) -> $R: ...
+          - pattern: |
+              def $F(..., $PARAM: Any, ...) -> $R:
+                  ...
+          - pattern-not: |
+              def $F(..., **$KW: Any) -> $R:
+                  ...
       - patterns:
-          - pattern: def $F(..., **$KW: Any) -> $R: ...
+          - pattern: |
+              def $F(..., **$KW: Any) -> $R:
+                  ...
           - pattern-not-inside: |
               def reconfigure(self, ...) -> None:
                   ...

@@ -468,6 +468,12 @@ blocked before scanning by invalid YAML in `.semgrep/rules/no-any-annotation.yml
 that pre-existing rule-file defect is outside this `.semgrepignore` policy
 slice.
 
+2026-06-05 follow-up: the project-regression rule loader defect is resolved.
+`no-any-annotation.yml` now uses block scalar patterns for typed function
+signatures, and custom rule paths are anchored for Semgrepignore v2 semantics.
+The custom lane now runs 7 rules over 891 tracked files and reports 91 real
+findings. The stock production lane still runs successfully with 11 findings.
+
 ## W05-002 | INFO | Mirrored data security disposition review found no defects
 
 Status: verified with scoped residual.
