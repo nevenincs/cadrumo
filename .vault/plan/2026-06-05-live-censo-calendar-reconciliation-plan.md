@@ -9,6 +9,16 @@ related:
   - '[[2026-06-05-calendar-filing-semantics-plan]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `live-censo-calendar-reconciliation` `implementation` plan
 
 ## Wave `W01` - censo taxpayer-model bridge
@@ -17,14 +27,18 @@ Make censo apply produce defensible taxpayer-model facts that the existing calen
 
 ### Phase `W01.P01` - censo-derived facts
 
-- [ ] `W01.P01.S01` - Add censo/profile taxpayer fact derivation to `src/aeat/application/user_profile/_censo_sync.py`.
-- [ ] `W01.P01.S02` - Add real-behavior service and calendar tests for censo-derived obligations; `src/aeat/application/user_profile/tests/test_censo_sync.py`.
+TODO: Phase intent paragraph required by the convention ADR.
+
+- [x] `W01.P01.S01` - Add censo/profile taxpayer fact derivation; `src/aeat/application/user_profile/_censo_sync.py`.
+- [x] `W01.P01.S02` - Add real-behavior service and calendar tests for censo-derived obligations; `src/aeat/application/user_profile/tests/test_censo_sync.py`.
 
 ## Wave `W02` - live verification and closeout
 
 Verify the CLI path from censo refresh/apply to calendar, including authenticated live-read attempts and explicit external-auth blockers.
 
 ### Phase `W02.P02` - gates and live checks
+
+TODO: Phase intent paragraph required by the convention ADR.
 
 - [ ] `W02.P02.S03` - Run focused lint/tests plus live censo/calendar CLI verification; `.vault/exec/2026-06-05-live-censo-calendar-reconciliation`.
 - [ ] `W02.P02.S04` - Run code review and persist audit; `.vault/audit/2026-06-05-live-censo-calendar-reconciliation-code-review-audit.md`.
