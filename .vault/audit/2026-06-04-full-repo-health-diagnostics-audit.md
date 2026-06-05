@@ -900,3 +900,20 @@ Residual carried forward:
   subprocess probes, and import-order findings.
 - `pyproject.toml` has unrelated dirty WIP from the concurrent test-topology
   refactor. S78 did not stage or modify that file.
+
+## HEALTH-021-S79 | CLOSED | 2026-06-05 Dependency declaration drift verification
+
+W06.P20.S79 reran the production dependency declaration drift lane against the
+current shifted worktree. No `pyproject.toml` edit was needed.
+
+Verification:
+
+- `just audit-deps` exits 0.
+- Deptry scanned 884 files under `src/aeat`.
+- The configured command uses `--known-first-party aeat` and excludes test
+  paths from the production dependency audit.
+- Deptry reported: no dependency issues found.
+
+Residual carried forward:
+
+- None for dependency declaration drift in the current production scope.

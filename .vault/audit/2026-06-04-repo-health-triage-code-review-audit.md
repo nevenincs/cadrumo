@@ -738,3 +738,16 @@ Residual: `uv run --no-sync ruff check . --statistics` still exits 1 with 475
 findings across docs tooling, contributor scripts, relocated test packages, and
 production import/line-length issues. Those are not scratch/probe scope failures
 and remain visible for the later hygiene rows.
+
+## W06-006 | INFO | Dependency declaration drift verification found no defects
+
+Status: verified green.
+
+The W06.P20.S79 review found no dependency declaration drift requiring a
+`pyproject.toml` change. `just audit-deps` invokes deptry against `src/aeat`
+with `aeat` declared as first-party and test paths excluded from the production
+scan. The gate exits 0 after scanning 884 files and reports no dependency
+issues.
+
+Residual: none for dependency declaration drift in the current production
+scope.
