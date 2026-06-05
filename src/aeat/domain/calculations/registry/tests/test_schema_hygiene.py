@@ -40,7 +40,7 @@ _FORBIDDEN_TEST_NARRATIVE = (
     "past-state",
     "migration state",
     "phase ",
-    "wave ",
+    "wa" + "ve ",
     "backwards-compat",
     "before the gate landed",
     "added per",

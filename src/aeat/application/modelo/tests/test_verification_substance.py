@@ -98,7 +98,7 @@ def test_cap_le_when_positive_passes_when_limited_within_ceiling() -> None:
 def test_cap_le_when_positive_fails_when_limited_exceeds_ceiling() -> None:
     """cap_le_when_positive: fails when ceiling > 0 AND limited > ceiling.
 
-    accepted contract case: M131 C11 (resultados negativos anteriores) MUST NOT
+    Predicate case: M131 C11 (resultados negativos anteriores) MUST NOT
     exceed C10 (cuota positiva del trimestre) per AEAT instructions
     "en ningún caso podrá figurar en la casilla 11 un importe superior
     a la cantidad positiva consignada en la casilla 10".
@@ -108,7 +108,7 @@ def test_cap_le_when_positive_fails_when_limited_exceeds_ceiling() -> None:
 
 
 def test_cap_le_when_positive_emits_blocking_rule_finding_for_violated_predicate() -> None:
-    """accepted contract integration test: a violated cap_le_when_positive predicate produces a BLOCKING_RULE finding.
+    """A violated cap_le_when_positive predicate produces a BLOCKING_RULE finding.
 
     Constructs the exact M130 C15-cap predicate used in the
     registry (modelo-130-c15-cap-by-c14) and runs it through
@@ -134,7 +134,7 @@ def test_cap_le_when_positive_emits_blocking_rule_finding_for_violated_predicate
 
 
 def test_cap_le_when_positive_emits_no_finding_when_within_cap() -> None:
-    """accepted contract integration test: a satisfied cap predicate produces no finding."""
+    """A satisfied cap predicate produces no finding."""
     predicate = VerificationPredicateDefinition(
         predicate_id="modelo-130-c15-cap-by-c14",
         legal_refs=("rd-439-2007:art-110",),
@@ -169,7 +169,7 @@ def test_cap_le_when_positive_holds_when_ceiling_is_zero_or_negative() -> None:
 def test_unknown_expression_does_not_block() -> None:
     """An unrecognised expression pattern does not produce a blocking finding."""
     values: dict[str, Decimal] = {}
-    # Passes through — unknown DSL extensions do not block in accepted contract
+    # Passes through — unknown DSL extensions do not block legacy registry data.
     assert _evaluate_predicate_expression('threshold(["01"], 100)', values, _workflow_profile()) is True
 
 
@@ -481,7 +481,7 @@ def test_m130_all_zero_without_gastos_is_blocked(repos) -> None:
 
 
 def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
-    """accepted contract: the canonical predicate-operator set MUST be runtime-evaluable.
+    """The canonical predicate-operator set MUST be runtime-evaluable.
 
     The single source of truth lives at
     aeat.domain.calculations.registry.KNOWN_VERIFICATION_PREDICATE_OPERATORS.
@@ -543,7 +543,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
 
 
 def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c14(repos) -> None:
-    """accepted contract: end-to-end integration test for the M130 C15 ≤ C14 cap predicate.
+    """End-to-end integration test for the M130 C15 <= C14 cap predicate.
 
     Drives the full registry-load → snapshot → calculate_modelo_revision →
     verify_modelo_revision pipeline with a scenario where the prior-quarter
@@ -625,10 +625,10 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
 
 
 def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c10(repos) -> None:
-    """accepted contract: M131 cap-predicate end-to-end integration (symmetry with contract).
+    """M131 cap-predicate end-to-end integration.
 
     M131 declares modelo-131-<rev>-c11-cap-by-c10 on all 4 revisions
-    via cap_le_when_positive(["11", "10"]). accepted contract covered M130;
+    via cap_le_when_positive(["11", "10"]). The companion test covers M130;
     this Step extends parallel coverage to M131. AEAT M131
     instructions cite the same cap rule verbatim: "en ningún caso
     podrá figurar en la casilla 11 un importe superior a la

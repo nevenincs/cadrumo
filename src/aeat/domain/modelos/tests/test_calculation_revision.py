@@ -33,7 +33,7 @@ def test_revision_id_pinned_against_fully_populated_fixture() -> None:
     """Anti-tautology proof: pin the exact SHA-256 for a fully-populated
     derivation against a known-good hex string.
 
-    Staged for linkage accepted contract (the planned collapse of
+    Staged for linkage cleanup (the planned collapse of
     ``CalculationRevision.casilla_values`` into a derived ``@property``
     over the typed ``observations`` envelope). The collapse must
     preserve the hash domain — every already-persisted revision id

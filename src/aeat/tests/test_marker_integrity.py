@@ -62,6 +62,10 @@ _CAMPAIGN_METADATA_PATTERNS = (
     re.compile(r"\bP\d{1,3}\.S\d{1,4}\b"),
     re.compile(r"\bS\d{2,4}\b"),
     re.compile(r"\blegacy-(?:plan|step)"),
+    re.compile(r"\baccepted contract\b", re.IGNORECASE),
+    re.compile(r"\bhistory-step\b", re.IGNORECASE),
+    re.compile(r"\bplan Step\b"),
+    re.compile(r"\bwave\b", re.IGNORECASE),
 )
 _FORBIDDEN_MARKERS = (
     frozenset(
@@ -486,7 +490,7 @@ def test_source_tests_do_not_reference_retired_marker_names() -> None:
 
 
 def test_source_test_comments_and_docstrings_do_not_reference_campaign_metadata() -> None:
-    """Durable test comments and docstrings must not carry vaultspec campaign IDs."""
+    """Durable test comments and docstrings must not carry process metadata."""
     violations: list[str] = []
     for module_path in _MODULES:
         violations.extend(_campaign_metadata_violations(module_path))

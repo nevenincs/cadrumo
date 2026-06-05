@@ -6,7 +6,7 @@ layout package imports cleanly. This gate proves the inverse: every
 to an attribute that actually exists on ``aeat.X``.
 
 Closes the foreign-WIP failure pattern that surfaced three times in
-the linkage-ratchet history-step + M303 session — a sibling agent added an import
+the linkage integrity regression where a sibling change added an import
 to a caller without adding the matching name to the target package's
 ``__init__.py`` imports / ``__all__``. The consumer module then
 raises ``ImportError`` the next time any test collection walks it,
@@ -244,7 +244,7 @@ def test_at_least_one_aeat_cross_module_import_was_collected() -> None:
 # the discipline). Trim caps as packages clean up; the close state
 # is an empty mapping.
 _INIT_MISSING_FROM_ALL_BASELINE: dict[str, int] = {
-    # Peer-introduced drift (suite-redgreen-2026-06-02 plan ratchet history-step):
+    # Peer-introduced drift discovered by the import-resolution gate:
     # these entries set the regression cap at the current count so the
     # gate ratchets shut as packages clean up their __all__ exports.
     # Decrement the cap (never increment) as imports get listed.

@@ -1,4 +1,4 @@
-"""Offline/online renderer conformance (accepted contract).
+"""Offline/online renderer conformance.
 
 One ``SheetExportPlan`` must render to structurally identical grids whether
 materialised offline (openpyxl xls) or online (Google-Sheets apply). This test

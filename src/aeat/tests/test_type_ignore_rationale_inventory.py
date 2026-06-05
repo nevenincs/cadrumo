@@ -22,7 +22,7 @@ Convention (G7 standing review gate)
 --------------------------------------
 Every ``# type: ignore`` in production code must carry a
 ``TYPE-IGNORE-RATIONALE-<scope>`` token within 3 lines, or be enrolled in
-``_KNOWN_VIOLATING_LINES`` for paydown in a subsequent wave.
+``_KNOWN_VIOLATING_LINES`` for direct follow-up remediation.
 
 Structural prevention (ratchet history)
 ---------------------------------

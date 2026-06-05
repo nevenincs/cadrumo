@@ -1,4 +1,4 @@
-"""Online Sheets Evidencia rendering + offline/online evidence parity (accepted contract.contract/contract).
+"""Online Sheets Evidencia rendering + offline/online evidence parity.
 
 The apply adapter must write the Evidencia surface to Google Sheets identically
 to the offline xls workbook. Both transports consume the single ``evidence_table``

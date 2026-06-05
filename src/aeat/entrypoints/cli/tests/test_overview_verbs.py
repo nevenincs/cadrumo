@@ -1,14 +1,14 @@
 """CLI surface tests for ``aeat app overview`` + retired-noun negatives.
 
-Closes two accepted contract Steps in one file:
+Closes two overview verb coverage gaps in one file:
 
-- accepted contract: Add CLI surface tests for every overview verb per
+- Add CLI surface tests for every overview verb per
   the adjudicated grammar (status / calendar / agenda / backlog /
   explain). Each verb is exercised against an isolated profile so the
   mount + help path + empty-bucket envelope all reach the operator.
 
-- accepted contract: Add negative tests asserting `aeat deadlines` and
-  related retired noun-groups are unknown commands. The accepted contract verb tree
+- Add negative tests asserting `aeat deadlines` and
+  related retired noun-groups are unknown commands. The verb tree
   retired the standalone `deadlines` noun-group in favour of mounting
   deadline-shaped surfaces under `aeat app overview`. Operators
   reaching for `aeat deadlines ...` must see Click's "No such command"
@@ -88,7 +88,7 @@ def test_retired_deadlines_noun_group_is_unknown(
     retired_verb: list[str],
 ) -> None:
     """Reaching for `aeat deadlines ...` (or `aeat app deadlines ...`)
-    must surface Click's "No such command" refusal. The accepted contract verb tree
+    must surface Click's "No such command" refusal. The verb tree
     retired the standalone deadlines noun-group; its surfaces live
     under `aeat app overview` (calendar, agenda, backlog)."""
 

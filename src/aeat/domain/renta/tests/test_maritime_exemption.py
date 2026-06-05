@@ -320,7 +320,7 @@ class TestCalculateArt7pExemption:
         assert obs.value < ART_7P_EXEMPTION_CAP_EUR
 
     def test_observation_carries_art7p_legal_refs(self) -> None:
-        # accepted contract close gate: CasillaObservation.legal_refs must carry
+        # Close gate: CasillaObservation.legal_refs must carry
         # "ley-35-2006:art-7p" per aeat-calculation-grounding rule.
         # The ADR's registry binding uses "Ley 35/2006 Art. 7.p)".
         obs = calculate_art_7p_exemption(
@@ -506,7 +506,7 @@ class TestCalculateRebecaExemption:
 
 
 # ---------------------------------------------------------------------------
-# accepted contract close gate: prohibited legal refs not cited in binding outputs
+# Close gate: prohibited legal refs not cited in binding outputs
 # ---------------------------------------------------------------------------
 
 

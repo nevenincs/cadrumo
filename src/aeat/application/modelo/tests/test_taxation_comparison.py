@@ -237,7 +237,7 @@ def test_comparison_result_structure_is_typed(snapshot_2025) -> None:
 # base liquidable. Authoring a meaningful coverage test requires identifying
 # the elective-application casilla under construct
 # 2026-renta-anexo-c-base-liquidable-negativa-aplicada and supplying it
-# alongside the binding. Tracked under session-honest-followups accepted contract +
+# alongside the binding. Tracked as a follow-up with the comparison binding
 # task #149.
 
 
