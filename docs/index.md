@@ -103,7 +103,7 @@ how official rule sources are tracked.
 :hidden:
 :caption: Where to start
 
-how-to/quickstart
+how-to/index
 tutorials/index
 ```
 
@@ -111,20 +111,6 @@ tutorials/index
 :hidden:
 :caption: Everyday use
 
-how-to/index
-how-to/profile-setup
-how-to/authenticate-with-aeat
-how-to/censo-update
-how-to/import-bank-statements
-how-to/classify-transactions
-how-to/classify-with-llm
-how-to/review-calculation-values
-how-to/filing-calendar
-how-to/filing-spine
-how-to/modelo-303
-how-to/modelo-390
-how-to/reconcile
-how-to/troubleshooting
 cli/index
 ```
 
