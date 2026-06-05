@@ -1,4 +1,4 @@
-"""Roundtrip tests for the long-tail Plan A data_type aliases.
+"""Roundtrip tests for the long-tail data_type aliases.
 
 Covers `name`, `nif_iva`, `ccaa_code`, `province_code`,
 `postal_code`, `municipality_code`, `bic`, and `date`. Each alias

@@ -146,7 +146,7 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
     """
     pdf_path = _BORRADOR_FIXTURES_DIR / f"modelo_100_{year}.pdf"
 
-    # Step 1: parse the borrador PDF.
+    # Parse the borrador PDF.
     try:
         borrador = parse_borrador(
             pdf_path,
@@ -158,7 +158,7 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
 
     extracted = {v.casilla_id: v.printed_value for v in borrador.values}
 
-    # Step 2: Verify leaf input 0505 is present and is a Decimal.
+    # Verify leaf input 0505 is present and is a Decimal.
     assert "0505" in extracted, (
         f"PARSER-GAP [M100-borrador/{year}]: leaf casilla '0505' not extracted.\n  got: {sorted(extracted)}"
     )
@@ -173,7 +173,7 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
         cid: val for cid, val in extracted.items() if cid not in _COMPUTED_CASILLAS_M100 and isinstance(val, Decimal)
     }
 
-    # Step 3: resolve registry snapshot and run engine.
+    # Resolve registry snapshot and run engine.
     snapshot = _registry_snapshot_m100(year)
 
     try:
@@ -195,7 +195,7 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
 
     engine_values = dict(result.values)
 
-    # Step 4: VERIFIED gate — all four closure casillas must match.
+    # VERIFIED gate: all four closure casillas must match.
     for closure_id in ("0545", "0546", "0585", "0586"):
         if closure_id not in extracted:
             pytest.fail(
