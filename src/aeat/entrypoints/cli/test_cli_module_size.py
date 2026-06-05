@@ -22,7 +22,7 @@ _LEGACY_MODULE_LINE_BUDGETS = {
     "_doc_reference.py": 875,
     "_ledger.py": 4255,
     "_ledger_payloads.py": 918,
-    "_modelo.py": 3576,
+    "_modelo.py": 3083,
     "_modelo_payloads.py": 1235,
 }
 

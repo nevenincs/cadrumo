@@ -13,10 +13,9 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
-from datetime import date
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Protocol
+from typing import TYPE_CHECKING, Annotated
 
 import click
 import typer
@@ -53,6 +52,7 @@ from ...application.modelo import (
     amend_modelo_revision,
     build_work_calculate_input_bundle,
     calculate_modelo_work_revision,
+    declared_modelo_period_tokens,
     file_modelo_revision,
     get_filing_record,
     get_verification_report,
@@ -76,9 +76,6 @@ from ...core.logging import get_logger
 from ...domain.calculations.registry import (
     BindingId,
     CasillaId,
-    InputKind,
-    RegistryQueryService,
-    RegistrySnapshotError,
     RegistryValidationError,
     parse_modelo_period,
 )
@@ -95,7 +92,7 @@ from ...domain.modelos._row_models import (
     validate_m349_nif_format,
 )
 from ...domain.modelos._work_unit import WorkUnit
-from ._common import _parse_iso_date, _profile_to_taxpayer, activate_subcommand_output_language
+from ._common import _profile_to_taxpayer, activate_subcommand_output_language
 from ._modelo_cli_support import (
     bad_parameter_from_error as _bad_parameter_from_error,
 )
@@ -120,6 +117,7 @@ from ._modelo_cli_support import (
 from ._modelo_cli_support import (
     validate_work_unit_id as _validate_work_unit_id,
 )
+from ._modelo_discovery_cli import register_discovery_commands
 from ._modelo_export_cli import register_export_commands
 from ._modelo_iva_wallet_cli import register_iva_wallet_commands
 from ._modelo_m036_cli import register_m036_commands
@@ -330,242 +328,7 @@ def _guard_foral_profile_ccaa() -> None:
     guard_active_profile_foral_ccaa()
 
 
-def _run_query[T](call: Callable[[], T]) -> T:
-    """Run a registry-query call and translate user-input errors to clean CLI failures.
-
-    ``RegistryQueryService`` raises :exc:`ValueError` from ``parse_modelo_period``
-    on a malformed ``--period`` arg and :exc:`RegistrySnapshotError` from the
-    authority on unknown modelo / unresolved revision. Both are user-input
-    errors at the CLI boundary; surfacing them as ``typer.BadParameter``
-    keeps the operator-facing experience clean rather than printing a
-    traceback.
-    """
-    try:
-        return call()
-    except (ValueError, RegistrySnapshotError) as exc:
-        raise _bad_parameter_from_error(exc) from exc
-
-
 register_readiness_commands(app)
-
-
-@app.command("list")
-def list_modelos(
-    ctx: typer.Context,
-    year: Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.list.year_help"))] = None,
-) -> None:
-    report = _run_query(lambda: _service().list_modelos(year=year))
-    from ._common import _emit_envelope
-    from ._modelo_payloads import ModeloListResult, ModeloRowPayload
-
-    result = ModeloListResult(
-        year_filter=year,
-        modelo_count=len(report.modelos),
-        modelos=[
-            ModeloRowPayload(
-                code=row.code,
-                title=row.title,
-                cadence=row.cadence,
-                tax_domain=row.tax_domain,
-                revision_count=row.revision_count,
-            )
-            for row in report.modelos
-        ],
-    )
-    lines = [
-        "code\ttitle\tcadence\tdomain\trevisions",
-        *[f"{row.code}\t{row.title}\t{row.cadence}\t{row.tax_domain}\t{row.revision_count}" for row in report.modelos],
-    ]
-    _emit_envelope(ctx, command="modelo.list", result=result, lines=lines)
-
-
-@app.command("describe")
-def describe_modelo(
-    ctx: typer.Context,
-    modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.describe.modelo_help"))],
-    period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.describe.period_help"))] = None,
-    as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.describe.as_of_help"))] = None,
-) -> None:
-    try:
-        report = _service().describe_modelo(modelo, period=period, as_of=_as_of(as_of))
-    except (ValueError, RegistrySnapshotError) as exc:
-        # A malformed --period yields a generic shape hint from the
-        # registry parser; enrich it with the modelo's declared period
-        # tokens so the operator sees exactly which tokens are valid.
-        # Only the period-parse / period-not-declared errors are
-        # rewritten — an unknown-modelo error keeps its own message.
-        message = str(exc)
-        if period is not None and "period" in message.lower():
-            raise typer.BadParameter(_bare_period_error(modelo, period, fallback=message)) from exc
-        raise typer.BadParameter(tr("cli.app.modelo.describe.period_error", message=message)) from exc
-    from ._common import _emit_envelope
-    from ._modelo_payloads import ModeloDescribeResult
-
-    result = ModeloDescribeResult(
-        code=report.code,
-        title=report.title,
-        official_name=report.official_name,
-        tax_domain=report.tax_domain,
-        cadence=report.cadence,
-        revision=report.revision,
-        filing_year=report.filing_year,
-        period=report.period,
-        revision_ids=list(report.revision_ids),
-        periods=list(report.periods),
-        casilla_count=report.casilla_count,
-        binding_count=report.binding_count,
-        formula_count=report.formula_count,
-    )
-    lines = [
-        f"{tr('cli.app.modelo.describe.label_modelo')}\t{report.code}",
-        f"{tr('cli.app.modelo.describe.label_title')}\t{report.title}",
-        f"{tr('cli.app.modelo.describe.label_official_name')}\t{report.official_name}",
-        f"{tr('cli.app.modelo.describe.label_tax_domain')}\t{report.tax_domain}",
-        f"{tr('cli.app.modelo.describe.label_cadence')}\t{report.cadence}",
-        f"{tr('cli.app.modelo.describe.label_revision')}\t{report.revision}",
-        f"{tr('cli.app.modelo.describe.label_revision_ids')}\t{', '.join(report.revision_ids)}",
-        f"{tr('cli.app.modelo.describe.label_periods')}\t{', '.join(report.periods)}",
-        f"{tr('cli.app.modelo.describe.label_casillas')}\t{report.casilla_count}",
-        f"{tr('cli.app.modelo.describe.label_bindings')}\t{report.binding_count}",
-        f"{tr('cli.app.modelo.describe.label_formulas')}\t{report.formula_count}",
-    ]
-    _emit_envelope(ctx, command="modelo.describe", result=result, lines=lines)
-
-
-@app.command("casillas")
-def casillas(
-    ctx: typer.Context,
-    modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.casillas.modelo_help"))],
-    period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.casillas.period_help"))] = None,
-    as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.casillas.as_of_help"))] = None,
-    input_kind: Annotated[
-        InputKind | None,
-        typer.Option("--input-kind", help=tr("cli.app.modelo.casillas.input_kind_help")),
-    ] = None,
-    required: Annotated[bool, typer.Option("--required", help=tr("cli.app.modelo.casillas.required_help"))] = False,
-    form_number: Annotated[
-        str | None,
-        typer.Option("--form-number", help=tr("cli.app.modelo.casillas.form_number_help")),
-    ] = None,
-) -> None:
-    report = _run_query(
-        lambda: _service().casillas(
-            modelo,
-            period=period,
-            as_of=_as_of(as_of),
-            input_kind=input_kind,
-            required=True if required else None,
-            form_number=form_number,
-        )
-    )
-    from ._common import _emit_envelope
-    from ._modelo_payloads import CasillaRowPayload, ModeloCasillasResult
-
-    result = ModeloCasillasResult(
-        modelo=report.code,
-        revision=report.revision,
-        casilla_count=len(report.rows),
-        rows=[
-            CasillaRowPayload(
-                casilla_id=row.casilla_id,
-                number=row.number,
-                input_kind=row.input_kind,
-                required=bool(row.required),
-                label=row.label,
-            )
-            for row in report.rows
-        ],
-    )
-    lines = [
-        "casilla_id\tnumber\tinput\trequired\tlabel",
-        *[
-            f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t{str(row.required).lower()}\t{row.label}"
-            for row in report.rows
-        ],
-    ]
-    _emit_envelope(ctx, command="modelo.casillas", result=result, lines=lines)
-
-
-bindings_app = typer.Typer(
-    name="bindings",
-    help=tr("cli.app.modelo.bindings.app_help"),
-    no_args_is_help=True,
-    add_completion=False,
-)
-app.add_typer(bindings_app, name="bindings")
-
-#: Readiness category attached to every binding, derived from its
-#: source kind. Fixes the operator-facing vocabulary that
-#: missing-binding errors produce in place of raw registry error
-#: strings.
-_BINDING_SOURCE_TO_READINESS: dict[str, str] = {
-    "constant_value": "casilla",
-    "previous_filing": "prior filed revision",
-    "live_observation": "live observation",
-    "ledger_iva_aggregation": "ledger source",
-    "ledger_oss_aggregation": "ledger source",
-    "ledger_renta_expense_aggregation": "ledger source",
-    "profile": "profile fact",
-    "profile_fact": "profile fact",
-    "bucket_state": "bucket",
-    "waiver": "waiver",
-    "blocking_finding": "blocking finding",
-}
-
-
-def _readiness_for_source(source: str) -> str:
-    """Return the readiness category for ``source``.
-
-    Unknown sources fall back to ``"ledger source"`` because every
-    registered source kind today is bucket / ledger-derived. If a
-    new source is added without a readiness mapping the fallback is
-    still operator-readable; stricter exhaustiveness belongs in the
-    bindings-resolution layer.
-    """
-    return _BINDING_SOURCE_TO_READINESS.get(source, "ledger source")
-
-
-class _BindingReportLike(Protocol):
-    """Structural view of a modelo bindings report.
-
-    ``_profile_resolved_binding_ids`` needs only the modelo ``code``;
-    ``filing_year`` and ``period`` are read defensively via ``getattr``
-    because an unscoped (no ``--year``) report carries neither.
-    """
-
-    @property
-    def code(self) -> str: ...
-
-
-def _profile_resolved_binding_ids(report: _BindingReportLike) -> frozenset[str]:
-    """Return binding ids the active profile already resolves for a report's scope.
-
-    Backs ``bindings list --missing``: a binding the active profile
-    satisfies is no longer something the operator owes. Resolution
-    needs a concrete filing year; a report with no resolved
-    ``filing_year`` (the unscoped, no-``--year`` listing) yields an
-    empty set and ``--missing`` then drops only constant bindings. A
-    bucket with no active profile likewise yields an empty set.
-    """
-    filing_year = getattr(report, "filing_year", None)
-    if filing_year is None:
-        return frozenset()
-    from ...application.modelo import profile_resolvable_binding_ids
-    from ...domain.user_profile import ProfileNotFoundError
-
-    try:
-        bucket_id = _active_bucket_id()
-    except typer.BadParameter:
-        return frozenset()
-    try:
-        return profile_resolvable_binding_ids(
-            modelo=str(report.code),
-            bucket_id=bucket_id,
-            filing_year=int(filing_year),
-            period=getattr(report, "period", None),
-        )
-    except (RegistrySnapshotError, RegistryValidationError, ProfileNotFoundError):
-        return frozenset()
 
 
 def _parse_kv_spec[T](
@@ -620,10 +383,7 @@ def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
     if not modelo or not modelo.strip():
         return ()
     try:
-        from ...core.resources import resources
-
-        authority = resources().modelos.authority
-        definition = authority.validate_modelo(modelo.strip())
+        return declared_modelo_period_tokens(modelo)
     except AeatError:
         return ()
     except Exception:
@@ -633,9 +393,6 @@ def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
             exc_info=True,
         )
         return ()
-    return tuple(
-        sorted({token for revision in definition.revisions.values() for token in revision.period_selector.periods})
-    )
 
 
 def _resolve_year_period(year: int, period: str, *, modelo: str | None = None) -> tuple[int, str]:
@@ -790,6 +547,15 @@ def _parse_binding_override(spec: str) -> tuple[str, str]:
     )
 
 
+register_discovery_commands(
+    app,
+    resolve_year_period=_resolve_year_period,
+    bare_period_error=_bare_period_error,
+    parse_binding_override=_parse_binding_override,
+    bad_parameter_from_error=_bad_parameter_from_error,
+)
+
+
 # ---------------------------------------------------------------------------
 # --row TYPE FIELD=value FIELD=value parsing helpers
 #
@@ -896,342 +662,6 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
                 error=str(exc),
             )
         ) from exc
-
-
-def _bindings_report_for_target(
-    service: RegistryQueryService,
-    target: str,
-    *,
-    year: int | None,
-    period: str | None,
-    as_of: str | None,
-):
-    if year is not None and period is not None:
-        resolved_year, resolved_period = _resolve_year_period(year, period, modelo=target)
-        return _run_query(
-            lambda: service.bindings_for_scope(
-                target,
-                filing_year=resolved_year,
-                period=resolved_period,
-                as_of=_as_of(as_of),
-            )
-        )
-    if year is not None:
-        return _run_query(
-            lambda: service.bindings_for_year(
-                target,
-                filing_year=year,
-                as_of=_as_of(as_of),
-            )
-        )
-    return _run_query(lambda: service.bindings(target, period=period, as_of=_as_of(as_of)))
-
-
-def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[dict[str, object]], list[str]]:
-    rows = report.rows
-    if missing:
-        profile_resolved = _profile_resolved_binding_ids(report)
-        # A ``constant_value`` binding carries its own literal and is always
-        # available, so it is never "missing". No modelo declares one today
-        # (every binding sources from manual_input / previous_filing /
-        # profile / a ledger or operation aggregation), so this clause drops
-        # nothing in the current registry; it is kept because constant_value
-        # is a deliberate source kind in the readiness vocabulary, correct
-        # for the day a registry binding adopts it. The profile-resolved
-        # exclusion is the clause that actually narrows the set today.
-        rows = tuple(row for row in rows if row.source != "constant_value" and row.binding_id not in profile_resolved)
-
-    merged_rows: list[dict[str, object]] = []
-    text_rows: list[str] = []
-    for row in rows:
-        readiness = _readiness_for_source(row.source)
-        merged_rows.append(
-            {
-                "modelo": report.code,
-                "revision": report.revision,
-                "filing_year": report.filing_year,
-                "period": report.period,
-                "binding_id": row.binding_id,
-                "source": row.source,
-                "readiness": readiness,
-                "typed_enum": row.typed_enum,
-                "input_channel": row.input_channel,
-                "borrador_capable": row.borrador_capable,
-            }
-        )
-        text_rows.append(
-            f"{report.code}\t{report.revision}\t{report.period or '-'}\t"
-            f"{row.binding_id}\t{row.source}\t{readiness}\t{row.typed_enum or '-'}\t"
-            f"{row.input_channel}\t{row.borrador_capable}"
-        )
-    return merged_rows, text_rows
-
-
-@bindings_app.command("list", help=tr("cli.app.modelo.bindings.list_help"))
-def bindings_list(
-    ctx: typer.Context,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.bindings.modelo_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.app.modelo.bindings.year_help")),
-    ] = None,
-    period: Annotated[
-        str | None,
-        typer.Option("--period", help=tr("cli.app.modelo.bindings.period_help")),
-    ] = None,
-    missing: Annotated[
-        bool,
-        typer.Option("--missing", help=tr("cli.app.modelo.bindings.missing_help")),
-    ] = False,
-    as_of: Annotated[
-        str | None,
-        typer.Option("--as-of", help=tr("cli.app.modelo.bindings.as_of_help")),
-    ] = None,
-) -> None:
-    """List bindings across modelos. All filters are optional refinements.
-
-    With no filter, the full configured-binding set across every modelo
-    in the registry is returned. ``--modelo`` narrows to one modelo;
-    ``--year`` + ``--period`` further narrow to that revision. ``--year``
-    alone resolves the revision covering that filing year — the same
-    revision a work unit created for the same modelo / year resolves —
-    so the reported binding ids match the calculation. ``--missing``
-    filters to the bindings not yet resolvable from current state: it
-    drops constant-valued bindings and any binding the active profile
-    already satisfies. With no active profile nothing is satisfied yet,
-    so every non-constant binding is reported as still missing — the
-    listing then equals the unfiltered one, which is the correct
-    conservative answer rather than a no-op. Prior-filing pulls and
-    ledger aggregations are always reported missing here; ``--missing``
-    does not yet consult a prior filed revision.
-    """
-    service = _service()
-    targets = tuple(str(m.id) for m in service._authority.modelos) if modelo is None else (modelo,)
-    per_modelo_reports = []
-    for target in targets:
-        try:
-            report = _bindings_report_for_target(service, target, year=year, period=period, as_of=as_of)
-        except Exception:
-            if modelo is not None:
-                raise
-            _log.debug("bindings list skipped modelo during all-modelo scan", exc_info=True)
-            continue
-        per_modelo_reports.append(report)
-    merged_rows: list[dict[str, object]] = []
-    text_rows: list[str] = []
-    for report in per_modelo_reports:
-        report_rows, report_text_rows = _binding_list_rows_for_report(report, missing=missing)
-        merged_rows.extend(report_rows)
-        text_rows.extend(report_text_rows)
-    from ._common import _emit_envelope
-    from ._modelo_payloads import ModeloBindingsListResult
-
-    result = ModeloBindingsListResult(
-        modelo_filter=modelo,
-        year_filter=year,
-        period_filter=period,
-        missing_filter=missing,
-        binding_count=len(merged_rows),
-        bindings=merged_rows,
-    )
-    lines = [
-        "operation\tregistry.modelo.bindings.list",
-        f"modelo_filter\t{modelo or '-'}",
-        f"year_filter\t{year if year is not None else '-'}",
-        f"period_filter\t{period or '-'}",
-        f"missing_filter\t{missing}",
-        f"binding_count\t{len(merged_rows)}",
-        "modelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable",
-    ]
-    lines.extend(text_rows)
-    _emit_envelope(ctx, command="modelo.bindings.list", result=result, lines=lines)
-
-
-@bindings_app.command("preview", help=tr("cli.app.modelo.bindings.preview_help"))
-def bindings_preview(
-    ctx: typer.Context,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.bindings.modelo_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.app.modelo.bindings.year_help")),
-    ] = None,
-    period: Annotated[
-        str | None,
-        typer.Option("--period", help=tr("cli.app.modelo.bindings.period_help")),
-    ] = None,
-    binding: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--binding",
-            help=tr("cli.app.modelo.bindings.override_help"),
-        ),
-    ] = None,
-    as_of: Annotated[
-        str | None,
-        typer.Option("--as-of", help=tr("cli.app.modelo.bindings.as_of_help")),
-    ] = None,
-) -> None:
-    """Resolve temporary ``--binding`` overrides without mutating state.
-
-    The override map is parsed at the CLI boundary; the registry
-    binding catalogue is loaded for the active modelo / year /
-    period and any override targeting a known binding id is
-    echoed back resolved. Unknown override keys fail with a
-    suggestion list sourced from the same catalogue.
-    """
-    _require_binding_scope(modelo=modelo, year=year, period=period)
-    assert modelo is not None
-    assert year is not None
-    assert period is not None
-    overrides = dict(_parse_binding_override(spec) for spec in (binding or ()))
-    resolved_year, resolved_period = _resolve_year_period(year, period, modelo=modelo)
-    report = _run_query(
-        lambda: _service().bindings_for_scope(
-            modelo, filing_year=resolved_year, period=resolved_period, as_of=_as_of(as_of)
-        )
-    )
-    known_ids = {row.binding_id for row in report.rows}
-    unknown_keys = sorted(set(overrides) - known_ids)
-    if unknown_keys:
-        suggestion = ", ".join(sorted(known_ids))
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.bindings.unknown_keys",
-                keys=unknown_keys,
-                code=report.code,
-                revision=report.revision,
-                period=report.period,
-                suggestion=suggestion,
-            )
-        )
-    from ._common import _emit_envelope
-    from ._modelo_payloads import BindingPreviewRowPayload, ModeloBindingsPreviewResult
-
-    result = ModeloBindingsPreviewResult(
-        modelo=report.code,
-        revision=report.revision,
-        filing_year=report.filing_year,
-        period=report.period,
-        override_count=len(overrides),
-        binding_count=len(report.rows),
-        bindings=[
-            BindingPreviewRowPayload(
-                binding_id=row.binding_id,
-                source=row.source,
-                readiness=_readiness_for_source(row.source),
-                typed_enum=row.typed_enum,
-                override=overrides.get(row.binding_id),
-            )
-            for row in report.rows
-        ],
-    )
-    lines = [
-        "operation\tregistry.modelo.bindings.preview",
-        f"modelo\t{report.code}",
-        f"revision\t{report.revision}",
-        f"filing_year\t{report.filing_year}",
-        f"period\t{report.period}",
-        f"override_count\t{len(overrides)}",
-        f"binding_count\t{len(report.rows)}",
-        "binding_id\tsource\treadiness\toverride",
-    ]
-    lines.extend(
-        "\t".join(
-            (
-                row.binding_id,
-                row.source,
-                _readiness_for_source(row.source),
-                overrides.get(row.binding_id) or "-",
-            )
-        )
-        for row in report.rows
-    )
-    _emit_envelope(ctx, command="modelo.bindings.preview", result=result, lines=lines)
-
-
-def _require_binding_scope(*, modelo: str | None, year: int | None, period: str | None) -> None:
-    """Report every missing required binding-scope option at once."""
-    missing = [
-        option
-        for option, value in (("--modelo", modelo), ("--year", year), ("--period", period))
-        if value is None or (isinstance(value, str) and not value.strip())
-    ]
-    if missing:
-        raise typer.BadParameter(tr("cli.app.modelo.bindings.missing_required_options", options=", ".join(missing)))
-
-
-@app.command("formulas")
-def formulas(
-    ctx: typer.Context,
-    modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.formulas.modelo_help"))],
-    period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.formulas.period_help"))] = None,
-    as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.formulas.as_of_help"))] = None,
-    explain: Annotated[
-        bool,
-        typer.Option(
-            "--explain",
-            help=tr(
-                "cli.app.modelo.formulas.explain_help",
-                default=(
-                    "Include the legal_refs and source_refs that ground each formula "
-                    "in the text output. The JSON payload always carries them."
-                ),
-            ),
-        ),
-    ] = False,
-) -> None:
-    report = _run_query(lambda: _service().formulas(modelo, period=period, as_of=_as_of(as_of)))
-    if explain:
-        lines = [
-            "formula_id\ttarget\tinputs\tlegal_refs\tsource_refs",
-            *[
-                f"{row.formula_id}\t{row.target}\t"
-                f"{', '.join((*row.input_casillas, *row.input_bindings, *row.input_parameters))}\t"
-                f"{', '.join(row.legal_refs)}\t"
-                f"{', '.join(row.source_refs)}"
-                for row in report.rows
-            ],
-        ]
-    else:
-        lines = [
-            "formula_id\ttarget\tinputs",
-            *[
-                f"{row.formula_id}\t{row.target}\t"
-                f"{', '.join((*row.input_casillas, *row.input_bindings, *row.input_parameters))}"
-                for row in report.rows
-            ],
-        ]
-    from ._common import _emit_envelope
-    from ._modelo_payloads import FormulaPayload, FormulasResult
-
-    result = FormulasResult(
-        code=report.code,
-        revision=report.revision,
-        filing_year=report.filing_year,
-        period=report.period,
-        formula_count=len(report.rows),
-        rows=tuple(
-            FormulaPayload(
-                formula_id=row.formula_id,
-                target=row.target,
-                input_casillas=tuple(row.input_casillas),
-                input_bindings=tuple(row.input_bindings),
-                input_parameters=tuple(row.input_parameters),
-                input_relations=tuple(row.input_relations),
-                expression=dict(row.expression) if hasattr(row, "expression") else {},
-                legal_refs=tuple(row.legal_refs),
-                source_refs=tuple(row.source_refs),
-            )
-            for row in report.rows
-        ),
-    )
-    _emit_envelope(ctx, command="modelo.formulas", result=result, lines=lines)
 
 
 def _parse_typed_cli_observations[ObservationT: BaseModel](
@@ -3036,18 +2466,6 @@ def filing_record_import(
     ]
     lines.append("filing_disambiguation\t(imported AEAT-attested baseline)")
     _emit_envelope(ctx, command="modelo.filing_record.import", result=result, lines=lines)
-
-
-def _service() -> RegistryQueryService:
-    from ...core.resources import resources
-
-    return RegistryQueryService(resources().modelos.authority)
-
-
-def _as_of(raw: str | None) -> date | None:
-    if raw is None:
-        return None
-    return _parse_iso_date(raw, label="--as-of")
 
 
 # ─────────────────────────────────────────────────────────────────────────

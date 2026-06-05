@@ -1,14 +1,13 @@
 """Integration tests for the ``--row`` typed flag on ``work calculate``.
 
-Tests the CLI boundary layer:
+Tests the row-input flow:
   * ``_parse_row_spec`` parses valid TYPE FIELD=value specs
   * ``_parse_row_spec`` raises BadParameter on malformed input
-  * ``_validate_m184_share_sum`` enforces the 100% constraint
-  * ``_validate_m347_threshold`` enforces the €3,005.06 minimum
+  * domain row validators enforce aggregate legal constraints outside the CLI layer
   * Row type discrimination routes to correct pydantic model
 
-Tests are unit-level (no storage, no registry snapshot) — the parsing
-helpers are pure functions that do not touch any external state.
+The final test runs the real CLI to verify persisted rows remain visible in
+operator output.
 """
 
 from __future__ import annotations
@@ -21,11 +20,15 @@ import typer
 
 from ...domain.modelos._row_models import (
     Modelo184MemberRow,
+    Modelo184ShareSumError,
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
+    Modelo347ThresholdError,
     Modelo349OperadorRow,
+    validate_m184_member_share_sum,
+    validate_m347_threshold,
 )
-from ._modelo import _parse_row_spec, _validate_m184_share_sum, _validate_m347_threshold
+from ._modelo import _parse_row_spec
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -124,7 +127,7 @@ class TestParseRowSpecInvalid:
 
 
 # ---------------------------------------------------------------------------
-# _validate_m184_share_sum
+# validate_m184_member_share_sum
 # ---------------------------------------------------------------------------
 
 
@@ -136,12 +139,12 @@ class TestValidateM184ShareSum:
             Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("35"), importe=Decimal("10500")),
             Modelo184MemberRow(nif="33333333C", porcentaje=Decimal("25"), importe=Decimal("7500")),
         )
-        _validate_m184_share_sum(rows)  # Must not raise
+        validate_m184_member_share_sum(rows)  # Must not raise
 
     def test_single_member_100_passes(self) -> None:
         """Single member with 100% share passes."""
         rows = (Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("100"), importe=Decimal("10000")),)
-        _validate_m184_share_sum(rows)  # Must not raise
+        validate_m184_member_share_sum(rows)  # Must not raise
 
     def test_members_not_summing_100_raises(self) -> None:
         """Shares summing to != 100 raise BadParameter."""
@@ -149,17 +152,12 @@ class TestValidateM184ShareSum:
             Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("40"), importe=Decimal("4000")),
             Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("35"), importe=Decimal("3500")),
         )
-        with pytest.raises(typer.BadParameter, match="100"):
-            _validate_m184_share_sum(rows)
-
-    def test_no_miembro_rows_skips_check(self) -> None:
-        """When no miembro rows are present the check is skipped silently."""
-        rows = (Modelo232VinculadaRow(nif="A12345678", importe=Decimal("1000")),)
-        _validate_m184_share_sum(rows)  # Must not raise
+        with pytest.raises(Modelo184ShareSumError):
+            validate_m184_member_share_sum(rows)
 
     def test_empty_rows_skips_check(self) -> None:
         """Empty row tuple skips validation."""
-        _validate_m184_share_sum(())  # Must not raise
+        validate_m184_member_share_sum(())  # Must not raise
 
     def test_antitautology_changing_importe_does_not_affect_share_sum(self) -> None:
         """Anti-tautology: changing importe on a row does not affect share-sum validation.
@@ -171,20 +169,20 @@ class TestValidateM184ShareSum:
             Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("60"), importe=Decimal("60000")),
             Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("40"), importe=Decimal("40000")),
         )
-        _validate_m184_share_sum(rows_pass)  # Passes
+        validate_m184_member_share_sum(rows_pass)  # Passes
 
         rows_still_pass = (
             Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("60"), importe=Decimal("99999")),
             Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("40"), importe=Decimal("1")),
         )
-        _validate_m184_share_sum(rows_still_pass)  # Still passes — different importe same share
+        validate_m184_member_share_sum(rows_still_pass)  # Still passes - different importe same share
 
         rows_fail = (
             Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("50"), importe=Decimal("60000")),
             Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("40"), importe=Decimal("40000")),
         )
-        with pytest.raises(typer.BadParameter, match="100"):
-            _validate_m184_share_sum(rows_fail)
+        with pytest.raises(Modelo184ShareSumError):
+            validate_m184_member_share_sum(rows_fail)
 
 
 # ---------------------------------------------------------------------------
@@ -260,7 +258,7 @@ class TestParseRowSpecM347:
 
 
 # ---------------------------------------------------------------------------
-# _validate_m347_threshold
+# validate_m347_threshold
 # ---------------------------------------------------------------------------
 
 
@@ -268,30 +266,25 @@ class TestValidateM347Threshold:
     def test_above_threshold_passes(self) -> None:
         """A contraparte row with total > €3,005.06 passes validation."""
         rows = (Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("3005.07")),)
-        _validate_m347_threshold(rows)  # Must not raise
+        validate_m347_threshold(rows)  # Must not raise
 
     def test_exactly_threshold_rejected(self) -> None:
         """A total equal to €3,005.06 is rejected (must exceed, not equal).
 
         Oracle: RD 1065/2007 art. 31.1 — 'supere' (exceed), not 'iguale'."""
         rows = (Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("3005.06")),)
-        with pytest.raises(typer.BadParameter, match=r"3005\.06"):
-            _validate_m347_threshold(rows)
+        with pytest.raises(Modelo347ThresholdError):
+            validate_m347_threshold(rows)
 
     def test_below_threshold_rejected(self) -> None:
         """A total below €3,005.06 is rejected."""
         rows = (Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("1000")),)
-        with pytest.raises(typer.BadParameter, match="threshold"):
-            _validate_m347_threshold(rows)
-
-    def test_no_contraparte_rows_skips_check(self) -> None:
-        """Non-M347 rows do not trigger the threshold check."""
-        rows = (Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("100"), importe=Decimal("100")),)
-        _validate_m347_threshold(rows)  # Must not raise
+        with pytest.raises(Modelo347ThresholdError):
+            validate_m347_threshold(rows)
 
     def test_empty_rows_skips_check(self) -> None:
         """Empty row tuple skips validation."""
-        _validate_m347_threshold(())  # Must not raise
+        validate_m347_threshold(())  # Must not raise
 
     def test_antitautology_threshold_check_reads_total_not_individual_quarters(self) -> None:
         """Anti-tautology: the check sums Q1+Q2+Q3+Q4, not just Q1.
@@ -309,7 +302,7 @@ class TestValidateM347Threshold:
                 importe_Q4=Decimal("1005.07"),
             ),
         )
-        _validate_m347_threshold(rows)  # total=4005.07 > 3005.06, must not raise
+        validate_m347_threshold(rows)  # total=4005.07 > 3005.06, must not raise
 
 
 # ---------------------------------------------------------------------------
