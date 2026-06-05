@@ -36,15 +36,15 @@ def test_policy_command_surface_catalog_covers_cli_repair_import_export_and_buck
     assert catalogued == discovered
 
 
-def test_policy_command_surfaces_are_adr_linked_and_namespace_policies_are_registered() -> None:
+def test_policy_command_surfaces_are_decision_linked_and_namespace_policies_are_registered() -> None:
     surfaces = build_repair_policy_command_surface_catalog()
     assert len({surface.command_path for surface in surfaces}) == len(surfaces)
     registered = {definition.namespace: definition for definition in STORAGE_NAMESPACE_REGISTRY.namespaces}
 
     for surface in surfaces:
-        assert surface.adr_links
+        assert surface.decision_links
         assert surface.owner_domains
-        for link in surface.adr_links:
+        for link in surface.decision_links:
             assert link.startswith("[[")
             assert link.endswith("]]")
         for policy in surface.namespace_policies:
