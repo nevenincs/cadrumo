@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
 
 from ...core.resources import resources
 from ...domain.calculations.registry._temporal import select_revision
@@ -14,6 +13,7 @@ from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
 from ...domain.modelos._work_unit import WorkUnit
 from ._actions import create_work_unit, get_calculation_revision, rename_work_unit
 from ._selectors import (
+    ModeloCalculationRevisionDefault,
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
     ModeloCalculationRevisionSelectorNotFoundError,
@@ -21,11 +21,8 @@ from ._selectors import (
     ModeloWorkResolution,
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
+    resolve_modelo_calculation_revision_pick,
     resolve_modelo_work_unit,
-    select_current_draft_revision,
-    select_current_verified_revision,
-    select_exportable_revision,
-    select_modelo_calculation_revision,
 )
 
 
@@ -68,7 +65,7 @@ class ModeloRevisionPick:
 
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT
     calculation_revision_id: CalculationRevisionId | None = None
-    default_for: Literal["verify", "file", "export"] | None = None
+    default_for: ModeloCalculationRevisionDefault | None = None
 
     def __post_init__(self) -> None:
         if self.selector is ModeloCalculationRevisionSelector.EXPLICIT:
@@ -368,26 +365,37 @@ def resolve_modelo_calculation_revision_address(
     address: ModeloWorkAddress,
     calculation_revision_id: str | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
-    default_for: str | None = None,
+    default_for: ModeloCalculationRevisionDefault | None = None,
 ) -> CalculationRevision:
     """Resolve a calculation revision by exact id or under a modelo work address."""
     if calculation_revision_id is not None and address == ModeloWorkAddress():
         return get_calculation_revision(calculation_revision_id)
 
     work_unit = resolve_modelo_work_address_unit(address)
-    if calculation_revision_id is not None:
-        return select_modelo_calculation_revision(
-            work_unit,
-            selector=ModeloCalculationRevisionSelector.EXPLICIT,
-            calculation_revision_id=calculation_revision_id,
-        ).revision
-    if default_for == "verify" and selector is ModeloCalculationRevisionSelector.CURRENT:
-        return select_current_draft_revision(work_unit).revision
-    if default_for == "file" and selector is ModeloCalculationRevisionSelector.CURRENT:
-        return select_current_verified_revision(work_unit).revision
-    if default_for == "export" and selector is ModeloCalculationRevisionSelector.CURRENT:
-        return select_exportable_revision(work_unit).revision
-    return select_modelo_calculation_revision(work_unit, selector=selector).revision
+    return resolve_modelo_calculation_revision_pick(
+        work_unit,
+        selector=selector,
+        calculation_revision_id=calculation_revision_id,
+        default_for=default_for,
+    ).revision
+
+
+def resolve_modelo_revision_pick(
+    *,
+    target: ModeloWorkTarget,
+    pick: ModeloRevisionPick | None = None,
+) -> ModeloResolvedRevisionProjection:
+    """Resolve and project a calculation revision for a visible or exact work target."""
+    if pick is None:
+        pick = ModeloRevisionPick()
+    work_unit = resolve_modelo_work_address_unit(work_address_for_modelo_target(target))
+    selection = resolve_modelo_calculation_revision_pick(
+        work_unit,
+        selector=pick.selector,
+        calculation_revision_id=pick.calculation_revision_id,
+        default_for=pick.default_for,
+    )
+    return ModeloResolvedRevisionProjection.from_revision(selection.revision, selector=selection.selector)
 
 
 def _require_revision_state(
@@ -489,6 +497,7 @@ __all__ = [
     "resolve_exportable_modelo_calculation_revision_address",
     "resolve_fileable_modelo_calculation_revision_address",
     "resolve_modelo_calculation_revision_address",
+    "resolve_modelo_revision_pick",
     "resolve_modelo_work_address",
     "resolve_modelo_work_address_unit",
     "resolve_modelo_work_target",
