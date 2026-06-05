@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from pydantic import ValidationError
+
 from ...core.logging import get_logger
 from ...core.time import now
 from ._errors import BucketsError
@@ -65,19 +67,48 @@ class BucketEventHistoryRepository:
         except (ClassificationError, EnvelopeVersionError) as exc:
             _LOGGER.error("bucket-event-history catalogue integrity error", exc_info=True)
             raise BucketEventHistoryPersistenceError(
-                f"bucket-event-history catalogue integrity error: {type(exc).__name__}: {exc}"
+                context={"namespace": _NAMESPACE, "object_key": _OBJECT_KEY, "error": type(exc).__name__},
+                translated_message=getattr(exc, "translated_message", None)
+                or "errors.integrity.integrity_storage_validation",
             ) from exc
         if record is None:
             return BucketEventHistoryCatalogue()
-        envelope = Envelope[BucketEventHistoryCatalogue].model_validate_json(record.payload.decode("utf-8"))
-        if envelope.classification is not SensitivityClass.FINANCIAL:
+        try:
+            envelope = Envelope[BucketEventHistoryCatalogue].model_validate_json(record.payload)
+        except ValidationError as exc:
+            _LOGGER.error("bucket-event-history catalogue schema drift", exc_info=True)
             raise BucketEventHistoryPersistenceError(
-                f"bucket-event-history catalogue has classification {envelope.classification}; FINANCIAL expected"
+                context={"namespace": _NAMESPACE, "object_key": _OBJECT_KEY, "recovery": "aeat config repair"},
+                suggestion="aeat config repair",
+                translated_message="errors.storage.stored_data_validation_boundary",
+            ) from exc
+        if envelope.classification is not SensitivityClass.FINANCIAL:
+            _LOGGER.error(
+                "bucket-event-history catalogue classification mismatch classification=%s",
+                envelope.classification.value,
+            )
+            raise BucketEventHistoryPersistenceError(
+                context={
+                    "namespace": _NAMESPACE,
+                    "object_key": _OBJECT_KEY,
+                    "classification": envelope.classification.value,
+                    "expected": SensitivityClass.FINANCIAL.value,
+                },
+                translated_message="errors.integrity.integrity_storage_classification",
             )
         if envelope.schema_version > _CATALOGUE_VERSION:
+            _LOGGER.error(
+                "bucket-event-history catalogue envelope version mismatch schema_version=%d",
+                envelope.schema_version,
+            )
             raise BucketEventHistoryPersistenceError(
-                f"bucket-event-history catalogue is at version {envelope.schema_version}; "
-                f"consumer supports up to {_CATALOGUE_VERSION}"
+                context={
+                    "namespace": _NAMESPACE,
+                    "object_key": _OBJECT_KEY,
+                    "schema_version": envelope.schema_version,
+                    "expected": _CATALOGUE_VERSION,
+                },
+                translated_message="errors.integrity.integrity_storage_envelope_version",
             )
         return envelope.payload
 

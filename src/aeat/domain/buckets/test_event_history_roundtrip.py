@@ -15,8 +15,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
 
+from ...adapters.persistence.storage import Envelope, SensitivityClass
 from ...tests.secure_sql import isolated_runtime_profile
 from ._event import (
     BucketEvent,
@@ -25,7 +25,13 @@ from ._event import (
     BucketEventType,
     derive_bucket_event_id,
 )
-from ._event_repository import _NAMESPACE, BucketEventHistoryRepository
+from ._event_repository import (
+    _CATALOGUE_VERSION,
+    _NAMESPACE,
+    _OBJECT_KEY,
+    BucketEventHistoryPersistenceError,
+    BucketEventHistoryRepository,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -163,5 +169,89 @@ def test_bucket_event_payload_tampering_surfaces_at_load(tmp_path: Path) -> None
             event_dict["payload"]["modelo"] = "100"
             row.payload = _json.dumps(envelope).encode("utf-8")
 
-        with pytest.raises(ValidationError):
+        with pytest.raises(BucketEventHistoryPersistenceError) as exc_info:
             repo.load()
+
+        assert exc_info.value.translated_message == "errors.storage.stored_data_validation_boundary"
+        assert exc_info.value.context == {
+            "namespace": _NAMESPACE,
+            "object_key": _OBJECT_KEY,
+            "recovery": "aeat config repair",
+        }
+        assert exc_info.value.suggestion == "aeat config repair"
+
+
+def test_bucket_event_inner_classification_drift_is_structured(tmp_path: Path) -> None:
+    """Inner envelope classification drift is rejected after secure-object decrypts."""
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        catalogue = BucketEventHistoryCatalogue()
+        repo = BucketEventHistoryRepository()
+        repo.save(catalogue)
+        record = profile.repository.load(
+            _NAMESPACE,
+            _OBJECT_KEY,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = Envelope[BucketEventHistoryCatalogue].model_validate_json(record.payload)
+        profile.repository.save(
+            namespace=record.namespace,
+            object_key=record.object_key,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=envelope.model_copy(update={"classification": SensitivityClass.AUDIT})
+            .model_dump_json()
+            .encode("utf-8"),
+        )
+
+        with pytest.raises(BucketEventHistoryPersistenceError) as exc_info:
+            repo.load()
+
+        assert exc_info.value.translated_message == "errors.integrity.integrity_storage_classification"
+        assert exc_info.value.context == {
+            "namespace": _NAMESPACE,
+            "object_key": _OBJECT_KEY,
+            "classification": SensitivityClass.AUDIT.value,
+            "expected": SensitivityClass.FINANCIAL.value,
+        }
+
+
+def test_bucket_event_inner_schema_version_drift_is_structured(tmp_path: Path) -> None:
+    """Inner envelope schema-version drift is rejected after secure-object decrypts."""
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        catalogue = BucketEventHistoryCatalogue()
+        repo = BucketEventHistoryRepository()
+        repo.save(catalogue)
+        record = profile.repository.load(
+            _NAMESPACE,
+            _OBJECT_KEY,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = Envelope[BucketEventHistoryCatalogue].model_validate_json(record.payload)
+        profile.repository.save(
+            namespace=record.namespace,
+            object_key=record.object_key,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=envelope.model_copy(update={"schema_version": _CATALOGUE_VERSION + 1})
+            .model_dump_json()
+            .encode("utf-8"),
+        )
+
+        with pytest.raises(BucketEventHistoryPersistenceError) as exc_info:
+            repo.load()
+
+        assert exc_info.value.translated_message == "errors.integrity.integrity_storage_envelope_version"
+        assert exc_info.value.context == {
+            "namespace": _NAMESPACE,
+            "object_key": _OBJECT_KEY,
+            "schema_version": _CATALOGUE_VERSION + 1,
+            "expected": _CATALOGUE_VERSION,
+        }
