@@ -541,3 +541,21 @@ invocation no longer reports `scratch_probe`, `run_p04_s11_test`,
 lane still exits nonzero for unrelated scheduled findings in package and test
 code; those remain open under the later W05/W06 rows rather than being hidden
 by this scope correction.
+
+## W05-006 | INFO | Modelo CLI envelope-emitter decomposition review found no defects
+
+Status: verified with shared-worktree residual.
+
+The W05.P16.S56 review found no defect in the shifted modelo CLI command
+decomposition. Extracted modelo command modules import `_emit_envelope` from
+`._common` directly, matching the established extracted command-module pattern,
+and receive root-only selector/rendering helpers through explicit registration
+dependencies rather than importing the legacy `_modelo.py` root.
+
+Focused verification passed Ruff for the modelo root, extracted modelo command
+modules, and the new CLI guard tests. The modelo Typer app imports and registers
+the expected root commands and command groups. Real CLI tests for export and
+work-id hinting passed. The new architecture guard tests pass; the size-budget
+guard currently reports only unrelated dirty live-IVA WIP in `_app_live.py`
+(`2135` working-tree lines versus budget `2117`). That residual is not part of
+S56 and remains visible for the W05.P17 full quality-audit baseline.
