@@ -50,7 +50,7 @@ selectable write-test marker or write-test lane.
 
 ### Hexagonal Layer
 
-Each module carries at least one layer marker:
+Each module carries exactly one layer marker:
 
 | Marker | Covers |
 | --- | --- |
@@ -72,7 +72,7 @@ marker rules.
 The collection hook in `aeat.tests._marker_hook`, invoked from both the
 repo-root `conftest.py` and `src/aeat/tests/conftest.py`, also raises
 `pytest.UsageError` during collection when a test item lacks exactly one
-execution marker or lacks any `hex_*` marker.
+execution marker or exactly one accepted `hex_*` marker.
 
 ## Live Read Opt-In
 
