@@ -13,8 +13,8 @@ rules:
       - python
     paths:
       include:
-        - "src/aeat/domain/"
-        - "src/aeat/application/"
+        - "/src/aeat/domain/"
+        - "/src/aeat/application/"
     pattern-either:
       - pattern: dict[str, Any]
       - pattern: Dict[str, Any]

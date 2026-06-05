@@ -45,8 +45,26 @@ by this S51 scope split.
 
 ## Notes
 
-The separate project-regression rule lane remains blocked before scanning:
+2026-06-04 blocker:
+
+The separate project-regression rule lane was blocked before scanning:
 `uvx --from semgrep semgrep scan --config .semgrep/rules/ --error src/aeat/`
 reports invalid YAML in `.semgrep/rules/no-any-annotation.yml` at line 25.
 That pre-existing rule-file defect is not resolved in this `.semgrepignore`
 slice.
+
+2026-06-05 follow-up:
+
+The custom-rule loader blocker is resolved. `no-any-annotation.yml` now uses
+block scalar Semgrep patterns for typed function signatures, and all custom
+rule path includes/excludes are anchored for Semgrepignore v2 semantics.
+
+Verification:
+
+- `uvx --from semgrep semgrep scan --config .semgrep/rules/ --error src/aeat/ --metrics off`
+- `just audit-security`
+
+The project-regression rule lane now scans 891 tracked files with 7 custom
+rules and reports 91 real findings. The production security lane still scans
+891 tracked files with 323 stock rules and reports 11 findings. Both counts are
+remaining remediation backlog, not configuration failures.
