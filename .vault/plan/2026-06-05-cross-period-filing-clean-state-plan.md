@@ -136,6 +136,51 @@ Extend the filing ledger and clean-state proof so group fan-in dependencies prov
 
 Add a durable member axis to upstream filed-history state so multiple group member filings can coexist and be queried independently.
 
+- [x] `W05.P12.S45` - Expose member-scoped filing history queries through the repository contract; `src/aeat/domain/modelos/_protocols.py`.
+- [x] `W05.P12.S46` - Add member-scoped filing identity and current-record invariants; `src/aeat/domain/modelos/_filing_record.py`.
+
+### Phase `W05.P13` - member proof wiring
+
+Wire member-scoped filing records into clean-state evaluation, export, and filing so 353 and future group aggregators fail closed on incomplete member filing evidence.
+
+- [x] `W05.P13.S47` - Evaluate group fan-in against member-scoped filing records; `src/aeat/application/calculations/_cross_period_clean_state.py`.
+- [x] `W05.P13.S48` - Persist member-scoped clean-state workflow coverage; `src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`.
+
+## Wave `W06` - external evidence grounding
+
+Strengthen clean-state proof so external-evidence references resolve to imported justificante, CSV register, or live capture artifacts and remain reconciled with filed calculation values.
+
+### Phase `W06.P14` - evidence reference resolution
+
+Resolve filing-record external evidence references through application ports instead of treating the reference metadata itself as sufficient proof.
+
+- [ ] `W06.P14.S49` - Add evidence-reference resolution inputs to clean-state evaluation; `src/aeat/application/calculations/_cross_period_clean_state.py`.
+- [ ] `W06.P14.S50` - Bind justificante and live-capture import artifacts to filing records; `src/aeat/application/modelo/_external_import_actions.py`.
+
+### Phase `W06.P15` - evidence reconciliation tests
+
+Prove CSV-only, live-capture-only, missing-object, stale-object, and reconciled justificante states produce the expected clean-state verdicts.
+
+- [ ] `W06.P15.S51` - Cover evidence-reference blockers with real repository tests; `src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
+- [ ] `W06.P15.S52` - Cover import-to-filing evidence grounding in workflow tests; `src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`.
+
+## Wave `W07` - full matrix rollout gates
+
+Turn the dependency inventory into operator-visible coverage and run sharded real-behavior gates across every declared cross-period modelo family.
+
+### Phase `W07.P16` - operator coverage surface
+
+Expose the cross-period inventory and clean-state verdicts through CLI/operator surfaces so incomplete filing history is discoverable before filing.
+
+- [ ] `W07.P16.S53` - Expose cross-period dependency inventory in modelo CLI; `src/aeat/entrypoints/cli/_modelo_work_verification_cli.py`.
+- [ ] `W07.P16.S54` - Cover operator inventory and blocker output; `src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py`.
+
+### Phase `W07.P17` - matrix quality gates
+
+Replace the timed-out broad calculation run with explicit sharded gates covering every declared cross-period target family and final vault hygiene.
+
+- [ ] `W07.P17.S55` - Run sharded cross-period calculation family gates; `src/aeat/application/calculations/tests`.
+- [ ] `W07.P17.S56` - Run final feature index, plan check, doctor, and code-review audit; `quality gates`.
 
 ## Description
 

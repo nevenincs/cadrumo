@@ -2,27 +2,37 @@
 
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.justificante import Justificante, JustificanteRepository
 from ....domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
+    ExternalEvidence,
     ExternalEvidenceKind,
+    ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordCatalogueRepository,
     ModeloRecordStatus,
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
     VerificationReportCatalogueRepository,
+    derive_calculation_revision_id,
+    derive_filing_record_id,
 )
+from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import (
     calculate_modelo_revision,
@@ -145,17 +155,133 @@ def _save_member_322_observation(
     )
 
 
+def _seed_member_322_filing(
+    observation_repository: CalculationObservationRepository,
+    *,
+    member_nif: str,
+    source_casillas: tuple[str, ...],
+) -> None:
+    values = _member_source_values(member_nif, source_casillas)
+    work_unit_id = hashlib.sha256(f"322:{_M353_YEAR}:{_M353_PERIOD}:{member_nif}".encode()).hexdigest()
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        inputs_snapshot={},
+        binding_overrides={},
+        casilla_values=values,
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit_id,
+        state=CalculationRevisionState.PRESENTADO,
+        casilla_values=values,
+        observations=tuple(
+            CasillaObservation(casilla_id=casilla_id, value=value)
+            for casilla_id, value in values.items()
+        ),
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+        verified_at=_CLOCK,
+        verified_by="aeat-import-test",
+        filed_at=_CLOCK,
+        filed_by="aeat-import-test",
+    )
+    calculation_repository = CalculationRevisionCatalogueRepository()
+    calculation_catalogue = calculation_repository.load()
+    calculation_repository.save(
+        CalculationRevisionCatalogue(
+            revisions={**dict(calculation_catalogue.revisions), revision_id: revision}
+        )
+    )
+
+    evidence_reference_id = f"JUST-322-{member_nif}"
+    _persist_justificante_metadata(
+        evidence_reference_id,
+        modelo="322",
+        period=_M353_PERIOD,
+        filing_year=_M353_YEAR,
+    )
+    filing_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_at=_CLOCK,
+        filed_by="aeat-import-test",
+        member_nif=member_nif,
+    )
+    filing_repository = ModeloRecordCatalogueRepository()
+    filing_catalogue = filing_repository.load()
+    filing_repository.save(
+        ModeloRecordCatalogue(
+            records={
+                **dict(filing_catalogue.records),
+                filing_id: ModeloRecord(
+                    filing_record_id=filing_id,
+                    work_unit_id=work_unit_id,
+                    calculation_revision_id=revision_id,
+                    bucket_id=_BUCKET_ID,
+                    modelo="322",
+                    filing_year=_M353_YEAR,
+                    period=_M353_PERIOD,
+                    member_nif=member_nif,
+                    filed_at=_CLOCK,
+                    filed_by="aeat-import-test",
+                    aeat_accepted=True,
+                    external_evidence=ExternalEvidence(
+                        kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+                        reference_id=evidence_reference_id,
+                        imported_at=_CLOCK,
+                    ),
+                ),
+            }
+        )
+    )
+    _save_member_322_observation(
+        observation_repository,
+        member_nif=member_nif,
+        source_casillas=source_casillas,
+    )
+
+
+def _persist_justificante_metadata(csv: str, *, modelo: str, period: str, filing_year: int) -> None:
+    pdf_bytes = f"%PDF-1.4\n% synthetic justificante {csv}\n%%EOF\n".encode()
+    JustificanteRepository().save(
+        Justificante(
+            csv=csv,
+            modelo=modelo,
+            period=period,
+            ejercicio=str(filing_year),
+            presentation_id=None,
+            presented_at=_CLOCK,
+            tax_id="X1234567L",
+            total_a_ingresar=None,
+            total_a_devolver=None,
+            verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
+            source_pdf_path=Path("var") / "justificantes" / f"{csv}.pdf",
+            source_pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
+            parsed_at=_CLOCK,
+        )
+    )
+
+
 def _seed_official_303_source_filings(
     *,
     observation_repository: CalculationObservationRepository,
     evidence_kind_by_period: dict[str, ExternalEvidenceKind] | None = None,
+    skip_justificante_metadata_periods: set[str] | None = None,
 ) -> None:
     evidence_kind_by_period = evidence_kind_by_period or {}
+    skip_justificante_metadata_periods = skip_justificante_metadata_periods or set()
     source_casillas_by_period: dict[str, set[str]] = {}
     for requirement in cross_period_dependency_requirements(_snapshot_390()):
         source_casillas_by_period.setdefault(requirement.period, set()).update(requirement.source_casillas)
 
     for period, source_casillas in sorted(source_casillas_by_period.items()):
+        evidence_kind = evidence_kind_by_period.get(period, ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF)
+        evidence_reference_id = f"JUST-{period}"
+        if (
+            evidence_kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
+            and period not in skip_justificante_metadata_periods
+        ):
+            _persist_justificante_metadata(evidence_reference_id, modelo="303", period=period, filing_year=_M390_YEAR)
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="303",
@@ -168,8 +294,8 @@ def _seed_official_303_source_filings(
         import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
             casilla_values=values,
-            evidence_kind=evidence_kind_by_period.get(period, ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF),
-            evidence_reference_id=f"JUST-{period}",
+            evidence_kind=evidence_kind,
+            evidence_reference_id=evidence_reference_id,
             actor="aeat-import-test",
             clock=_CLOCK,
         )
@@ -416,6 +542,46 @@ def test_cross_period_clean_state_blocks_unexpected_group_member_fan_in(
     assert CrossPeriodCleanStateBlocker.UNEXPECTED_GROUP_MEMBER_SOURCE in member_evidence.blockers
 
 
+def test_cross_period_clean_state_accepts_member_scoped_group_filing_records(
+    tmp_path: Path,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        observation_repository = CalculationObservationRepository()
+        requirement = _member_fan_in_requirement()
+        for member_nif in (_GROUP_MEMBER_A, _GROUP_MEMBER_B):
+            _seed_member_322_filing(
+                observation_repository,
+                member_nif=member_nif,
+                source_casillas=requirement.source_casillas,
+            )
+
+        verdict = evaluate_cross_period_clean_state(
+            _snapshot_353(),
+            bucket_id=_BUCKET_ID,
+            observation_repository=observation_repository,
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+            expected_member_sets=(
+                CrossPeriodExpectedMemberSet(
+                    source_modelo="322",
+                    filing_year=_M353_YEAR,
+                    period=_M353_PERIOD,
+                    member_nifs=(_GROUP_MEMBER_A, _GROUP_MEMBER_B),
+                ),
+            ),
+        )
+
+    member_evidence = next(evidence for evidence in verdict.dependencies if evidence.requirement.requires_member_fan_in)
+    assert verdict.requires_clean_state is True
+    assert verdict.clean is True
+    assert member_evidence.clean is True
+    assert member_evidence.member_filing_record_ids
+    assert len(member_evidence.member_filing_record_ids) == 2
+    assert member_evidence.member_calculation_revision_ids
+    assert len(member_evidence.member_calculation_revision_ids) == 2
+
+
 def test_cross_period_clean_state_blocks_superseded_upstream_filing(
     tmp_path: Path,
 ) -> None:
@@ -479,6 +645,30 @@ def test_cross_period_clean_state_accepts_aeat_attested_reconciled_sources(tmp_p
     assert verdict.requires_clean_state is True
     assert verdict.clean is True
     assert verdict.blockers == ()
+
+
+def test_cross_period_clean_state_blocks_dangling_justificante_evidence_reference(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        observation_repository = CalculationObservationRepository()
+        _seed_official_303_source_filings(
+            observation_repository=observation_repository,
+            skip_justificante_metadata_periods={"1T"},
+        )
+
+        verdict = evaluate_cross_period_clean_state(
+            _snapshot_390(),
+            bucket_id=_BUCKET_ID,
+            observation_repository=observation_repository,
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+        )
+
+    first_quarter = next(evidence for evidence in verdict.dependencies if evidence.requirement.period == "1T")
+    assert verdict.requires_clean_state is True
+    assert verdict.clean is False
+    assert first_quarter.external_evidence_kind == "aeat_justificante_pdf"
+    assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
 
 
 def test_cross_period_clean_state_blocks_csv_register_without_justificante_verification(tmp_path: Path) -> None:

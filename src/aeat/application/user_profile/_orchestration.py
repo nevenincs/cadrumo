@@ -185,7 +185,7 @@ class ProfileAlreadyRegisteredError(ProfileNotFoundError):
     Inherits from ``ProfileNotFoundError`` so existing exception
     handlers that catch the broader family also catch this case;
     the CLI decorator translates it to a typed refusal that names
-    ``profile switch`` as the next action.
+    ``config unlock`` as the next action.
     """
 
 

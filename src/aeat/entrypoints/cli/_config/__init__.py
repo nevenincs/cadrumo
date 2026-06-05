@@ -32,7 +32,6 @@ from ._auth import auth_app
 from ._auth_diagnostics import auth_diagnostics_app
 from ._bucket_history import _parse_bucket_event_types, register_bucket_history_commands
 from ._custody import register_custody_commands
-from ._custody import select_profile_pointer as _select_profile_pointer
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
 from ._profile_bundle import register_profile_bundle_commands
 from ._repair_cli import register_repair_maintenance_commands
@@ -220,39 +219,6 @@ def config_list(
             marker = "*" if pointer.bucket_id == active else " "
             lines.append(f"{marker}\t{pointer.label}")
     _emit_envelope(ctx, command="config.profile.list", result=result, lines=lines)
-
-
-@profile_app.command("switch", help=tr("cli.config.profile.switch_help"))
-def config_profile_switch(
-    ctx: typer.Context,
-    name: str = typer.Argument(..., help=tr("cli.config.profile.switch_name_help")),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    """Select an existing profile as the active profile."""
-    _activate_subcommand_output_language(ctx, output_language)
-
-    pointer = _read_profile_bucket(name)
-    if pointer is None:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.unknown_profile",
-            context={"name": name},
-        )
-    _assert_profile_record_present(ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label)
-    from .._config_payloads import ConfigProfileSwitchResult
-
-    _select_profile_pointer(pointer)
-    result = ConfigProfileSwitchResult(active_profile=pointer.label)
-    _emit_envelope(
-        ctx,
-        command="config.profile.switch",
-        result=result,
-        lines=(f"active_profile\t{pointer.label}",),
-    )
 
 
 def _assert_profile_record_present(ctx: typer.Context, *, profile_id: str, bucket_id: str, label: str) -> None:
@@ -652,7 +618,7 @@ def config_profile_delete(
     # unknown name surfaces a clear "unknown profile" refusal distinct
     # from any session-state diagnostic — the operator can always tell
     # whether the name exists. ``delete`` does not require a pre-existing
-    # session: like ``switch``, it opens its own scoped to the target.
+    # session: like ``unlock``, it opens its own scoped to the target.
     pointer = _resolve_profile_by_label(name)
     deleting_active_profile = pointer.bucket_id == _resolve_active_bucket_id()
     try:
@@ -878,7 +844,7 @@ def config_profile_logout(
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
-    """Clear the active-profile pointer so subsequent verbs refuse without an explicit switch."""
+    """Clear the active-profile pointer so subsequent verbs refuse without an explicit unlock."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile import logout_active_profile
 

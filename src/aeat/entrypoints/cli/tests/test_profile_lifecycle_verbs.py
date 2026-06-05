@@ -1,4 +1,4 @@
-"""CLI surface tests for `aeat config profile {switch, show, delete, duplicate, rename}`."""
+"""CLI surface tests for `aeat config profile {show, delete, duplicate, rename}` and root custody."""
 
 from __future__ import annotations
 
@@ -122,23 +122,23 @@ def _json_payload(result: Result) -> dict[str, object]:
     return json.loads(match.group(0))
 
 
-def test_config_profile_switch_activates_existing_profile(cli_runner: CliRunner) -> None:
+def test_config_unlock_activates_existing_profile(cli_runner: CliRunner) -> None:
     _seed("operator")
     _seed("spouse")
-    result = cli_runner.invoke(profile_app, ["switch", "operator"])
+    result = cli_runner.invoke(root_app, ["config", "unlock", "operator"])
     assert result.exit_code == 0, result.output
     assert "active_profile\toperator" in result.output
 
 
-def test_config_profile_switch_refuses_unknown_profile(cli_runner: CliRunner) -> None:
-    result = cli_runner.invoke(profile_app, ["switch", "ghost"])
+def test_config_unlock_refuses_unknown_profile(cli_runner: CliRunner) -> None:
+    result = cli_runner.invoke(root_app, ["config", "unlock", "ghost"])
     assert result.exit_code != 0
 
 
-def test_config_profile_switch_reports_manifest_without_profile_record(cli_runner: CliRunner) -> None:
+def test_config_unlock_reports_manifest_without_profile_record(cli_runner: CliRunner) -> None:
     _stage_bucket_manifest("operator", label="operator")
 
-    result = cli_runner.invoke(profile_app, ["switch", "operator"])
+    result = cli_runner.invoke(root_app, ["config", "unlock", "operator"])
 
     assert result.exit_code == 2, result.output
     assert "readiness\tmissing_profile_record" in result.output
@@ -146,7 +146,7 @@ def test_config_profile_switch_reports_manifest_without_profile_record(cli_runne
     assert "unknown profile" not in result.output.lower()
 
 
-def test_config_profile_show_does_not_suggest_switch_for_missing_record(cli_runner: CliRunner) -> None:
+def test_config_profile_show_does_not_suggest_retired_activation_for_missing_record(cli_runner: CliRunner) -> None:
     _stage_bucket_manifest("operator", label="operator")
 
     result = cli_runner.invoke(profile_app, ["show", "operator"])
@@ -154,7 +154,7 @@ def test_config_profile_show_does_not_suggest_switch_for_missing_record(cli_runn
     assert result.exit_code == 2, result.output
     assert "readiness\tmissing_profile_record" in result.output
     assert "next_action\taeat config repair profile --profile operator" in result.output
-    assert "next_action\taeat config profile switch operator" not in result.output
+    assert "switch" not in result.output
 
 
 def test_config_profile_create_refuses_manifest_only_profile(cli_runner: CliRunner) -> None:
@@ -333,8 +333,8 @@ def test_config_profile_edit_refuses_missing_profile_without_creating_bucket(cli
     assert read_profile_bucket("ghost") is None
 
 
-def test_config_profile_switch_emits_profile_activated_event(cli_runner: CliRunner) -> None:
-    """`config profile switch` records a typed PROFILE_ACTIVATED event in the
+def test_config_unlock_emits_profile_activated_event(cli_runner: CliRunner) -> None:
+    """`config unlock` records a typed PROFILE_ACTIVATED event in the
     bucket-event-history catalogue so downstream auditors can replay
     the activation timeline. Distinct from PROFILE_SELECTED (which
     captures workflow-state-level selection).
@@ -344,7 +344,7 @@ def test_config_profile_switch_emits_profile_activated_event(cli_runner: CliRunn
     from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 
     _seed("operator")
-    result = cli_runner.invoke(profile_app, ["switch", "operator"])
+    result = cli_runner.invoke(root_app, ["config", "unlock", "operator"])
     assert result.exit_code == 0, result.output
 
     # The bucket-event-history catalogue is encrypted; reading it requires an
@@ -421,10 +421,10 @@ def test_config_profile_list_excludes_a_tombstoned_profile(cli_runner: CliRunner
     assert "<none>" in result.output
 
 
-def test_config_profile_switch_refuses_a_tombstoned_profile(cli_runner: CliRunner) -> None:
-    """Switching to a tombstoned profile is refused, not silently activated.
+def test_config_unlock_refuses_a_tombstoned_profile(cli_runner: CliRunner) -> None:
+    """Unlocking a tombstoned profile is refused, not silently activated.
 
-    Closes the leak where ``switch`` made a deleted profile the active
+    Closes the leak where activation made a deleted profile the active
     one with exit code 0.
     """
 
@@ -432,7 +432,7 @@ def test_config_profile_switch_refuses_a_tombstoned_profile(cli_runner: CliRunne
 
     _seed("operator")
     assert cli_runner.invoke(profile_app, ["delete", "operator", "--yes"]).exit_code == 0
-    result = cli_runner.invoke(profile_app, ["switch", "operator"])
+    result = cli_runner.invoke(root_app, ["config", "unlock", "operator"])
     assert result.exit_code != 0, result.output
     # The tombstoned profile was not made active.
     assert resolve_active_bucket_id() is None
@@ -983,14 +983,14 @@ def test_profile_import_label_lands_second_copy_under_new_name(
 # bucket session opened for it.
 
 
-def test_switch_to_surviving_profile_after_deleting_the_active_one(
+def test_unlock_surviving_profile_after_deleting_the_active_one(
     _per_bucket_backend: Path,
 ) -> None:
     """Deleting the active profile must not lock the operator out of survivors.
 
-    Reproduces the delete-active lockout: with two profiles, ``switch``
-    the first so it is active, ``delete`` it, then ``switch`` to the
-    surviving profile. The final switch must succeed and make the
+    Reproduces the delete-active lockout: with two profiles, ``unlock``
+    the first so it is active, ``delete`` it, then ``unlock`` the
+    surviving profile. The final unlock must succeed and make the
     regression active. Before the fix it refused with ``no active bucket
     session`` — the very recovery command the refusal recommended.
     """
@@ -999,24 +999,24 @@ def test_switch_to_surviving_profile_after_deleting_the_active_one(
     from ....core import resolve_active_bucket_id
 
     runner = CliRunner()
-    # Both profiles are setup for the switch/delete test; seed both so the
+    # Both profiles are setup for the unlock/delete test; seed both so the
     # wizard create does not hit the cross-bucket tax-id scan against a closed
     # per-bucket session.
     _seed("alpha")
     _seed("beta")
 
     dispose_engine()
-    assert runner.invoke(root_app, ["config", "profile", "switch", "alpha"]).exit_code == 0
+    assert runner.invoke(root_app, ["config", "unlock", "alpha"]).exit_code == 0
 
     dispose_engine()
     deleted = runner.invoke(root_app, ["config", "profile", "delete", "alpha", "--yes"])
     assert deleted.exit_code == 0, deleted.output
 
-    # The active-profile pointer is now cleared. ``switch`` must still
+    # The active-profile pointer is now cleared. ``unlock`` must still
     # succeed — it is the verb that establishes a session, not one that
     # requires a pre-existing one.
     dispose_engine()
-    switched = runner.invoke(root_app, ["config", "profile", "switch", "beta"])
+    switched = runner.invoke(root_app, ["config", "unlock", "beta"])
     assert switched.exit_code == 0, switched.output
     assert "active_profile\tbeta" in switched.output
 
@@ -1026,13 +1026,13 @@ def test_switch_to_surviving_profile_after_deleting_the_active_one(
     assert resolve_active_bucket_id() == survivor.bucket_id
 
 
-def test_first_switch_from_a_no_active_profile_state_succeeds(
+def test_first_unlock_from_a_no_active_profile_state_succeeds(
     _per_bucket_backend: Path,
 ) -> None:
-    """``switch`` works from a cold no-active-profile state.
+    """``unlock`` works from a cold no-active-profile state.
 
     ``create`` lands a profile and leaves it active; logging out clears
-    the pointer so no session resolves at root-callback time. ``switch``
+    the pointer so no session resolves at root-callback time. ``unlock``
     must still open its own session and activate the named profile.
     """
     from ....adapters.persistence.storage.sql.engine import dispose_engine
@@ -1047,7 +1047,7 @@ def test_first_switch_from_a_no_active_profile_state_succeeds(
     assert resolve_active_bucket_id() is None
 
     dispose_engine()
-    switched = runner.invoke(root_app, ["config", "profile", "switch", "solo"])
+    switched = runner.invoke(root_app, ["config", "unlock", "solo"])
     assert switched.exit_code == 0, switched.output
     assert "active_profile\tsolo" in switched.output
 
@@ -1088,7 +1088,7 @@ def test_delete_active_profile_states_the_pointer_was_cleared(
 
     ``delete <active> --yes`` must not silently clear the active-profile
     pointer. The result output must state the active profile was cleared
-    and steer the operator at ``switch`` / ``create``.
+    and steer the operator at ``unlock`` / ``create``.
     """
     from ....adapters.persistence.storage.sql.engine import dispose_engine
 
@@ -1096,7 +1096,7 @@ def test_delete_active_profile_states_the_pointer_was_cleared(
     _create_via_cli(runner, "alpha")
 
     dispose_engine()
-    assert runner.invoke(root_app, ["config", "profile", "switch", "alpha"]).exit_code == 0
+    assert runner.invoke(root_app, ["config", "unlock", "alpha"]).exit_code == 0
 
     dispose_engine()
     deleted = runner.invoke(root_app, ["config", "profile", "delete", "alpha", "--yes"])
@@ -1106,7 +1106,7 @@ def test_delete_active_profile_states_the_pointer_was_cleared(
     assert "active_profile\t<none>" in deleted.output
     assert "notice\t" in deleted.output
     flat = deleted.output.replace("\n", " ")
-    assert "switch" in flat and "create" in flat
+    assert "unlock" in flat and "create" in flat
 
 
 def test_delete_non_active_profile_omits_the_cleared_pointer_notice(
@@ -1127,7 +1127,7 @@ def test_delete_non_active_profile_omits_the_cleared_pointer_notice(
     _seed("beta")
     # Make "beta" the active profile (simulating "active after the second
     # create") so delete of inactive "alpha" can be verified.
-    assert runner.invoke(root_app, ["config", "profile", "switch", "beta"]).exit_code == 0
+    assert runner.invoke(root_app, ["config", "unlock", "beta"]).exit_code == 0
 
     # ``beta`` is active; delete the inactive ``alpha``.
     dispose_engine()
@@ -1219,7 +1219,7 @@ def test_show_tombstoned_profile_is_session_context_independent(
 
     # Context 1: ``beta`` session active.
     dispose_engine()
-    assert runner.invoke(root_app, ["config", "profile", "switch", "beta"]).exit_code == 0
+    assert runner.invoke(root_app, ["config", "unlock", "beta"]).exit_code == 0
     dispose_engine()
     with_session = runner.invoke(root_app, ["config", "profile", "show", "alpha"])
 

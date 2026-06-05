@@ -32,7 +32,6 @@ _LEGACY_MODULE_LINE_BUDGETS = {
     "src/aeat/application/ledger/tests/test_actions.py": 2514,
     "src/aeat/application/auth/_operator.py": 1400,
     "src/aeat/application/live/__init__.py": 1892,
-    "src/aeat/application/modelo/_actions.py": 3653,
     "src/aeat/application/modelo/tests/test_file_flow.py": 2109,
     "src/aeat/application/overview/__init__.py": 1461,
     "src/aeat/application/overview/tests/test_calendar.py": 1458,
@@ -55,16 +54,12 @@ _LEGACY_CALLABLE_LINE_BUDGETS = {
     ("src/aeat/adapters/outbound/aeat/auth/_clave_movil.py", "_fresh_login_locked"): 184,
     ("src/aeat/adapters/outbound/google/_calc_sheets_apply.py", "apply_export_plan"): 222,
     ("src/aeat/application/ledger/_actions_split_merge.py", "merge_transactions"): 221,
-    ("src/aeat/application/modelo/_actions.py", "amend_modelo_revision"): 273,
-    ("src/aeat/application/modelo/_actions.py", "verify_modelo_revision"): 262,
-    ("src/aeat/application/modelo/_actions.py", "import_external_filing_evidence"): 235,
     ("src/aeat/application/modelo/_export.py", "export_modelo_revision"): 194,
     ("src/aeat/application/overview/__init__.py", "build_overview_calendar"): 189,
     ("src/aeat/core/observability/_context.py", "run_context"): 188,
     ("src/aeat/domain/calculations/registry/_validate_revision_sections.py", "validate_revision_definition"): 196,
     ("src/aeat/domain/iva_compensation/_reconciliation.py", "reconcile_iva_compensation_wallet"): 270,
     ("src/aeat/entrypoints/cli/_config/_profile_bundle.py", "register_profile_bundle_commands"): 221,
-    ("src/aeat/entrypoints/cli/_config/_profile_censo.py", "register"): 191,
     ("src/aeat/entrypoints/cli/_config/_repair_cli.py", "register_repair_maintenance_commands"): 279,
     ("src/aeat/entrypoints/cli/_ledger.py", "ledger_classify"): 194,
     ("src/aeat/entrypoints/cli/_ledger_evidence_cli.py", "register_evidence_commands"): 206,
@@ -84,7 +79,7 @@ def _tracked_python_files() -> tuple[Path, ...]:
         capture_output=True,
     )
     paths = tuple(Path(raw.decode("utf-8")) for raw in result.stdout.split(b"\0") if raw)
-    return tuple(PROJECT_ROOT / path for path in paths if path.suffix == ".py")
+    return tuple(PROJECT_ROOT / path for path in paths if path.suffix == ".py" and (PROJECT_ROOT / path).exists())
 
 
 def _relative(path: Path) -> str:

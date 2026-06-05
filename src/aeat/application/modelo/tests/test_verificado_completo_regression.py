@@ -20,15 +20,19 @@ real formula engine — no mocks, no stubs, no tautological assertions.
 
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
+from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaObservation, InputKind, RegistryModeloObservation
 from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.justificante import Justificante, JustificanteRepository
 from ....domain.modelos import ExternalEvidenceKind
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
@@ -38,6 +42,7 @@ from ....domain.modelos._verification_report import (
     VerificationCompletenessStatus,
 )
 from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
+from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, cross_period_dependency_requirements
 from .. import (
@@ -76,6 +81,27 @@ def _workflow_profile() -> TaxpayerProfile:
     )
 
 
+def _persist_justificante_metadata(csv: str, *, modelo: str, filing_year: int, period: str) -> None:
+    pdf_bytes = f"%PDF-1.4\n% synthetic justificante {csv}\n%%EOF\n".encode()
+    JustificanteRepository().save(
+        Justificante(
+            csv=csv,
+            modelo=modelo,
+            period=period,
+            ejercicio=str(filing_year),
+            presentation_id=None,
+            presented_at=_T0,
+            tax_id="X1234567L",
+            total_a_ingresar=None,
+            total_a_devolver=None,
+            verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
+            source_pdf_path=Path("var") / "justificantes" / f"{csv}.pdf",
+            source_pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
+            parsed_at=_T0,
+        )
+    )
+
+
 @pytest.fixture
 def repos(tmp_path):
     """Real encrypted SQLite repos over a fresh isolated profile."""
@@ -96,7 +122,7 @@ def _seed_clean_cross_period_sources_for_m130(
     calculation_repository: CalculationRevisionCatalogueRepository,
     filing_repository: ModeloRecordCatalogueRepository,
     bucket_event_repository: BucketEventHistoryRepository,
-) -> None:
+) -> CalculationObservationRepository:
     snapshot = resources().modelos.authority.snapshot(
         work_unit.modelo,
         filing_year=work_unit.filing_year,
@@ -120,13 +146,18 @@ def _seed_clean_cross_period_sources_for_m130(
             bucket_event_repository=bucket_event_repository,
             clock=_T0,
         )
+        evidence_reference_id = f"JUST-{requirement.source_modelo}-{requirement.filing_year}-{requirement.period}"
+        _persist_justificante_metadata(
+            evidence_reference_id,
+            modelo=requirement.source_modelo,
+            filing_year=requirement.filing_year,
+            period=requirement.period,
+        )
         import_external_filing_evidence(
             work_unit_id=source_work_unit.work_unit_id,
             casilla_values=values,
             evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-            evidence_reference_id=(
-                f"JUST-{requirement.source_modelo}-{requirement.filing_year}-{requirement.period}"
-            ),
+            evidence_reference_id=evidence_reference_id,
             actor="aeat-import-test",
             work_unit_repository=work_unit_repository,
             calculation_repository=calculation_repository,
@@ -147,6 +178,7 @@ def _seed_clean_cross_period_sources_for_m130(
             source_kind="aeat_sede_justificante",
             captured_at=_T0,
         )
+    return observation_repository
 
 
 def test_verify_refuses_when_required_casillas_absent_m130(repos) -> None:
@@ -272,7 +304,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos) -> None:
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    _seed_clean_cross_period_sources_for_m130(
+    observation_repo = _seed_clean_cross_period_sources_for_m130(
         work_unit,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -286,8 +318,10 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos) -> None:
         workflow_profile=_workflow_profile(),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        filing_repository=filing_repo,
         verification_repository=vr_repo,
         bucket_event_repository=bv_repo,
+        calculation_observation_repository=observation_repo,
         clock=_T2,
     )
 

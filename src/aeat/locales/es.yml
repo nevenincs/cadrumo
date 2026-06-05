@@ -1655,20 +1655,10 @@ cli:
           en este CLI. Base legal: RD Legislativo 5/2004 TRLIRNR y Art. 28 TRLIRNR.
           Presenta la declaración mediante el trámite G320 de la Sede de la AEAT en
           sede.agenciatributaria.gob.es.'
-        create_stub_modelo_600_refused: Modelo %{modelo} (ITP-AJD, transmisiones patrimoniales
-          y actos juridicos documentados) no esta soportado para crear unidades de
-          trabajo en este CLI. Este impuesto lo gestionan las comunidades autonomas;
-          presenta la autoliquidacion ante la administracion autonomica competente.
-        create_stub_modelo_620_refused: Modelo %{modelo} (ITP-AJD, transmisiones de
-          vehiculos usados) no esta soportado para crear unidades de trabajo en este
-          CLI. Presenta la autoliquidacion ante la administracion autonomica competente.
-        create_stub_modelo_650_refused: 'Modelo %{modelo} (ISD sucesiones) no esta
-          soportado para crear unidades de trabajo en este CLI. Base legal: Ley 29/1987
-          LISyD; el plazo ordinario es de seis meses desde el fallecimiento. Presenta
-          la declaracion ante la administracion autonomica competente.'
-        create_stub_modelo_660_refused: Modelo %{modelo} (ISD caudal relicto, acompanante
-          del Modelo 650) no esta soportado para crear unidades de trabajo en este
-          CLI. Presenta la declaracion ante la administracion autonomica competente.
+        create_stub_modelo_600_refused: 'Modelo %{modelo} (ITP-AJD, transmisiones patrimoniales y actos juridicos documentados) no esta soportado para crear unidades de trabajo en este CLI. Fundamento legal: Ley 28/1990 y competencia autonomica ITPyAJD; presente ante la Hacienda / CCAA competente.'
+        create_stub_modelo_620_refused: 'Modelo %{modelo} (ITP-AJD, transmisiones de vehiculos usados) no esta soportado para crear unidades de trabajo en este CLI. Fundamento legal: Ley 28/1990 y competencia autonomica ITPyAJD; presente la autoliquidacion ante la Hacienda / CCAA competente.'
+        create_stub_modelo_650_refused: 'Modelo %{modelo} (ISD sucesiones) no esta soportado para crear unidades de trabajo en este CLI. Fundamento legal: Ley 29/1987 LISyD y Art. 67 RISD; plazo ordinario de 6 meses desde el fallecimiento. Presente ante la Hacienda autonomica competente.'
+        create_stub_modelo_660_refused: 'Modelo %{modelo} (ISD caudal relicto, acompanante del Modelo 650) no esta soportado para crear unidades de trabajo en este CLI. Fundamento legal: Ley 29/1987 LISyD; presente ante la Hacienda autonomica competente.'
         create_stub_modelo_714_refused: 'Modelo %{modelo} (Impuesto sobre el Patrimonio)
           no esta soportado para crear unidades de trabajo en este CLI. Base legal:
           Ley 19/1991 Art. 28 y Orden HAC/1023/2021. Presenta la declaracion en la
@@ -2174,8 +2164,6 @@ cli:
       rename_target_help: Nuevo nombre del perfil
       show_help: Muestra los datos de un perfil
       show_name_help: Id del perfil a mostrar (por defecto el perfil activo)
-      switch_help: Activa un perfil existente
-      switch_name_help: Nombre del perfil que quieres activar
       unknown_profile: 'Perfil desconocido: %{name}. Ejecuta ''aeat config profile
         list'' para ver los perfiles registrados.'
       use_help: Seleccionar un perfil existente como perfil activo

@@ -18,6 +18,7 @@ Scope: verify residual modelo amendment/import extraction leaves `_actions.py` u
 - Verified public `aeat.application.modelo` exports and legacy private `_actions.py` compatibility aliases resolve to the extracted implementations.
 - Verified entrypoint, adapter, and domain code do not import private modelo application submodules.
 - Confirmed `src/aeat/application/modelo/_actions.py` is 258 lines after the extraction wave.
+- Confirmed `src/aeat/application/modelo/tests/test_file_flow.py` remains below its legacy budget at 2097 lines after moving justificante metadata seeding into `justificante_metadata.py`.
 
 ## Outcome
 
@@ -25,4 +26,4 @@ The modelo application action root is below the hard size budget and remains a f
 
 ## Notes
 
-Verification passed for Ruff, compileall, 100 focused amendment/import/export/filing tests, 115 focused filing/verification/source-mesh tests, 114 focused CLI modelo tests, facade smoke imports, and the private-submodule consumer scan. The repository-wide size budget test still fails on unrelated overview and config callable offenders, not on modelo.
+Verification passed for Ruff, compileall, 92 focused application modelo tests, 66 focused import/file/export tests, 36 focused CLI modelo work/export/history tests, 8 architecture-boundary tests, facade smoke imports, and the private-submodule consumer scan. The repository-wide size budget test still fails on unrelated stale git inventory plus overview/config callable offenders, not on modelo production modules.

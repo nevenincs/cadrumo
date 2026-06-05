@@ -1,29 +1,8 @@
 """End-to-end tests for the modelo calculate / verify / file flow.
 
-Every test in this module wires the full set of catalogue
-repositories (work unit, calculation revision, filing record,
-verification report, bucket-event history) over a fresh encrypted
-SQLite database. No monkeypatches, no in-memory fakes, no stubs:
-each ``save`` encrypts, each ``load`` decrypts, every domain write
-also lands a bucket-scoped event row.
-
-Coverage:
-
-* Two ``calculate`` invocations under one work unit produce two
-  distinct ``CalculationRevision`` records (the "toilet-break"
-  scenario) and emit a ``modelo.calculation.created`` event each.
-* ``mark_revision_verificado_completo`` requires DRAFT state.
-* ``verify_modelo_revision`` reads real registry truth and emits
-  ``modelo.verification.passed`` / ``modelo.verification.refused``.
-* ``file_modelo_revision`` requires VERIFICADO_COMPLETO state and
-  emits ``modelo.filed`` (plus ``modelo.filed_superseded`` when a
-  prior filing exists).
-* Filing advances the work unit's pointer fields atomically.
-* Re-filing supersedes the prior filing record + revision without
-  losing audit history.
-* The filing-record catalogue ``current_for(...)`` /
-  ``history_for(...)`` queries resolve the canonical answer and
-  full audit chain.
+The tests wire real encrypted repositories and bucket events. They cover
+revision creation, verification, filing, supersession, pointer updates, and
+filing-record catalogue history without mocks or in-memory substitutes.
 """
 
 from __future__ import annotations
@@ -105,6 +84,7 @@ from .. import (
     verify_modelo_revision,
 )
 from .._actions import workflow_period_for_work_unit
+from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -276,6 +256,14 @@ def _seed_clean_cross_period_sources(
                 filing_year=filing_year,
                 period=period,
             )
+            evidence_reference_id = f"JUST-{source_modelo}-{filing_year}-{period}"
+            persist_justificante_metadata(
+                evidence_reference_id,
+                modelo=source_modelo,
+                filing_year=filing_year,
+                period=period,
+                captured_at=_T0,
+            )
             source_work_unit = create_work_unit(
                 bucket_id=work_unit.bucket_id,
                 modelo=source_modelo,
@@ -289,7 +277,7 @@ def _seed_clean_cross_period_sources(
                 work_unit_id=source_work_unit.work_unit_id,
                 casilla_values=values,
                 evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-                evidence_reference_id=f"JUST-{source_modelo}-{filing_year}-{period}",
+                evidence_reference_id=evidence_reference_id,
                 actor="aeat-import-test",
                 work_unit_repository=work_unit_repository,
                 calculation_repository=calculation_repository,

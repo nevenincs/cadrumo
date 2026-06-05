@@ -39,6 +39,10 @@ related:
   - '[[2026-06-05-cross-period-filing-clean-state-W04-P11-S43]]'
   - '[[2026-06-05-cross-period-filing-clean-state-W04-P11-S44]]'
   - '[[2026-06-05-cross-period-filing-clean-state-W04-P11-summary]]'
+  - '[[2026-06-05-cross-period-filing-clean-state-W05-P12-S45]]'
+  - '[[2026-06-05-cross-period-filing-clean-state-W05-P12-S46]]'
+  - '[[2026-06-05-cross-period-filing-clean-state-W05-P13-S47]]'
+  - '[[2026-06-05-cross-period-filing-clean-state-W05-P13-S48]]'
   - '[[2026-06-05-cross-period-filing-clean-state-adr]]'
   - '[[2026-06-05-cross-period-filing-clean-state-code-review-audit]]'
   - '[[2026-06-05-cross-period-filing-clean-state-plan]]'
@@ -96,6 +100,10 @@ Auto-generated index of all documents tagged with `#cross-period-filing-clean-st
 - `2026-06-05-cross-period-filing-clean-state-W04-P11-S44` - `cross-period-filing-clean-state` `W04.P11.S44` exec - doctor and feature index checks
 - `2026-06-05-cross-period-filing-clean-state-W04-P11-S42` - `cross-period-filing-clean-state` `W04.P11.S42` exec - calculation clean-state gate
 - `2026-06-05-cross-period-filing-clean-state-W04-P11-summary` - `cross-period-filing-clean-state` `W04.P11` summary
+- `2026-06-05-cross-period-filing-clean-state-W05-P12-S45` - `cross-period-filing-clean-state` `W05.P12.S45` exec - member-scoped filing history contract
+- `2026-06-05-cross-period-filing-clean-state-W05-P12-S46` - `cross-period-filing-clean-state` `W05.P12.S46` exec - member-scoped filing identity
+- `2026-06-05-cross-period-filing-clean-state-W05-P13-S47` - `cross-period-filing-clean-state` `W05.P13.S47` exec - member-scoped group proof wiring
+- `2026-06-05-cross-period-filing-clean-state-W05-P13-S48` - `cross-period-filing-clean-state` `W05.P13.S48` exec - member-scoped workflow coverage
 
 ### plan
 
