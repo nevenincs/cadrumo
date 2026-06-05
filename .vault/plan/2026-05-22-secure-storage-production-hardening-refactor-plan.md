@@ -1102,4 +1102,4 @@ Retire residual convention exceptions or make them explicit, localized, and priv
 
 Prove CLI and application output flows use the centralized redaction boundary rather than ad hoc logging or print behavior.
 
-- [ ] `W20.P42.S456` - Audit and harden centralized log/print/output redaction enrollment across CLI, diagnostics, repair, live, profile, and remote-mirror surfaces, adding guard coverage for any bypass found; `src/aeat/core; src/aeat/entrypoints/cli; src/aeat/application`.
+- [x] `W20.P42.S456` - Audit and harden centralized log/print/output redaction enrollment across CLI, diagnostics, repair, live, profile, and remote-mirror surfaces, adding guard coverage for any bypass found; `src/aeat/core; src/aeat/entrypoints/cli; src/aeat/application`.

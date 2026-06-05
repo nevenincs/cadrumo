@@ -27,6 +27,18 @@ Review checked the S455 diff for local path leakage in successful parser records
 
 Status: no action required.
 
+## S456-001 | LOW | Application wizard direct output remains an allow-listed Typer write
+
+S456 intentionally keeps one direct `_typer.echo` call in `application.wizard._commands` because the wizard command factory lives outside the CLI entrypoint package. The risk is that the allow-list could become a paper exception if the helper stopped using central rendering.
+
+Status: resolved in S456. The helper now renders text through `render_command_output(format_name="text", ...)` before the Typer write, and `test_wizard_success_text_uses_central_output_redaction` captures real output to prove UUID-like profile labels are redacted.
+
+## S456-002 | INFO | Redaction inventory review passed
+
+Review checked the corrected inventory root, `_typer.echo` alias detection, application wizard scan scope, and the existing CLI output redaction gates. The integration inventory now runs cleanly when selected with `-m 'unit or integration'`.
+
+Status: no action required.
+
 ## S460-002 | MEDIUM | Operator-surface contract under-declared root custody verbs
 
 The accepted operator-surface contract only declared `config unlock` while the CLI mounted first-class `config lock`, `config unlock`, `config rekey`, `config recover`, `config show-recovery`, and `config verify-recovery`. S460 now adds an explicit custody domain and mounted command-family rows for each root-level custody child.
