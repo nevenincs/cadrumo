@@ -633,3 +633,25 @@ inventory, and Semgrep inventory; dependency and dead-code lanes are currently
 green. The shared worktree also contains unrelated documentation-build diffs in
 `justfile` and `pyproject.toml`; those do not change the S60 quality-audit
 recipes or policy lanes reviewed here.
+
+## W06-001 | INFO | Modelo CLI command-complexity extraction review found no defects
+
+Status: verified with scoped residual.
+
+The W06.P19.S74 review found no behavior defect in the `_modelo.py` command
+complexity extraction. The command callbacks still own Typer option signatures
+and envelope emission, while query selection, row projection, calculate input
+parsing, calculate advisory output, and amend preflight parsing moved into
+private helpers in the same module. No new public command surface or alternate
+application path was introduced.
+
+Focused verification passed Ruff, compileall, bindings-list behavior tests,
+work-calculate behavior tests, and an amend help probe. Complexity measurements
+showed `bindings_list` reduced from Radon C (20) to B (10), `work_calculate`
+from C (19) to A (4), and no `_modelo.py` function above the Complexipy
+threshold of 20.
+
+Residual: `_modelo.py` still has 26 pre-existing Ty diagnostics in row-splat
+and revision-object typing areas, and the module maintainability index remains
+C (0.00). Those are not hidden by this review and remain candidates for later
+typed cleanup/module decomposition.

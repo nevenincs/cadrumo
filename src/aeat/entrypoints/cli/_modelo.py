@@ -41,11 +41,13 @@ from ...application.modelo import (
     ModeloRecordNotFoundError,
     ModeloWorkAddress,
     ModeloWorkAddressNotFoundError,
+    ModeloWorkCalculationServiceResult,
     ModeloWorkRevisionConflictError,
     ModeloWorkSelectorContradictionError,
     ModeloWorkUnitNotFoundError,
     ModeloWorkVisibleTargetAmbiguousError,
     VerificationReportNotFoundError,
+    WorkCalculateInputBundle,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     amend_modelo_revision,
@@ -896,6 +898,75 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
         ) from exc
 
 
+def _bindings_report_for_target(
+    service: RegistryQueryService,
+    target: str,
+    *,
+    year: int | None,
+    period: str | None,
+    as_of: str | None,
+):
+    if year is not None and period is not None:
+        resolved_year, resolved_period = _resolve_year_period(year, period, modelo=target)
+        return _run_query(
+            lambda: service.bindings_for_scope(
+                target,
+                filing_year=resolved_year,
+                period=resolved_period,
+                as_of=_as_of(as_of),
+            )
+        )
+    if year is not None:
+        return _run_query(
+            lambda: service.bindings_for_year(
+                target,
+                filing_year=year,
+                as_of=_as_of(as_of),
+            )
+        )
+    return _run_query(lambda: service.bindings(target, period=period, as_of=_as_of(as_of)))
+
+
+def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[dict[str, object]], list[str]]:
+    rows = report.rows
+    if missing:
+        profile_resolved = _profile_resolved_binding_ids(report)
+        # A ``constant_value`` binding carries its own literal and is always
+        # available, so it is never "missing". No modelo declares one today
+        # (every binding sources from manual_input / previous_filing /
+        # profile / a ledger or operation aggregation), so this clause drops
+        # nothing in the current registry; it is kept because constant_value
+        # is a deliberate source kind in the readiness vocabulary, correct
+        # for the day a registry binding adopts it. The profile-resolved
+        # exclusion is the clause that actually narrows the set today.
+        rows = tuple(row for row in rows if row.source != "constant_value" and row.binding_id not in profile_resolved)
+
+    merged_rows: list[dict[str, object]] = []
+    text_rows: list[str] = []
+    for row in rows:
+        readiness = _readiness_for_source(row.source)
+        merged_rows.append(
+            {
+                "modelo": report.code,
+                "revision": report.revision,
+                "filing_year": report.filing_year,
+                "period": report.period,
+                "binding_id": row.binding_id,
+                "source": row.source,
+                "readiness": readiness,
+                "typed_enum": row.typed_enum,
+                "input_channel": row.input_channel,
+                "borrador_capable": row.borrador_capable,
+            }
+        )
+        text_rows.append(
+            f"{report.code}\t{report.revision}\t{report.period or '-'}\t"
+            f"{row.binding_id}\t{row.source}\t{readiness}\t{row.typed_enum or '-'}\t"
+            f"{row.input_channel}\t{row.borrador_capable}"
+        )
+    return merged_rows, text_rows
+
+
 @bindings_app.command("list", help=tr("cli.app.modelo.bindings.list_help"))
 def bindings_list(
     ctx: typer.Context,
@@ -942,29 +1013,7 @@ def bindings_list(
     per_modelo_reports = []
     for target in targets:
         try:
-            if year is not None and period is not None:
-                resolved_year, resolved_period = _resolve_year_period(year, period, modelo=target)
-                report = _run_query(
-                    lambda code=target, fy=resolved_year, rp=resolved_period: service.bindings_for_scope(
-                        code,
-                        filing_year=fy,
-                        period=rp,
-                        as_of=_as_of(as_of),
-                    )
-                )
-            elif year is not None:
-                # --year alone: resolve the revision covering that year
-                # rather than the latest revision, so a multi-revision
-                # modelo (e.g. Modelo 100) reports the right binding ids.
-                report = _run_query(
-                    lambda code=target, fy=year: service.bindings_for_year(
-                        code,
-                        filing_year=fy,
-                        as_of=_as_of(as_of),
-                    )
-                )
-            else:
-                report = _run_query(lambda code=target: service.bindings(code, period=period, as_of=_as_of(as_of)))
+            report = _bindings_report_for_target(service, target, year=year, period=period, as_of=as_of)
         except Exception:
             if modelo is not None:
                 raise
@@ -974,40 +1023,9 @@ def bindings_list(
     merged_rows: list[dict[str, object]] = []
     text_rows: list[str] = []
     for report in per_modelo_reports:
-        rows = report.rows
-        if missing:
-            profile_resolved = _profile_resolved_binding_ids(report)
-            # A ``constant_value`` binding carries its own literal and is always
-            # available, so it is never "missing". No modelo declares one today
-            # (every binding sources from manual_input / previous_filing /
-            # profile / a ledger or operation aggregation), so this clause drops
-            # nothing in the current registry; it is kept because constant_value
-            # is a deliberate source kind in the readiness vocabulary, correct
-            # for the day a registry binding adopts it. The profile-resolved
-            # exclusion is the clause that actually narrows the set today.
-            rows = tuple(
-                row for row in rows if row.source != "constant_value" and row.binding_id not in profile_resolved
-            )
-        for row in rows:
-            merged_rows.append(
-                {
-                    "modelo": report.code,
-                    "revision": report.revision,
-                    "filing_year": report.filing_year,
-                    "period": report.period,
-                    "binding_id": row.binding_id,
-                    "source": row.source,
-                    "readiness": _readiness_for_source(row.source),
-                    "typed_enum": row.typed_enum,
-                    "input_channel": row.input_channel,
-                    "borrador_capable": row.borrador_capable,
-                }
-            )
-            text_rows.append(
-                f"{report.code}\t{report.revision}\t{report.period or '-'}\t"
-                f"{row.binding_id}\t{row.source}\t{_readiness_for_source(row.source)}\t{row.typed_enum or '-'}\t"
-                f"{row.input_channel}\t{row.borrador_capable}"
-            )
+        report_rows, report_text_rows = _binding_list_rows_for_report(report, missing=missing)
+        merged_rows.extend(report_rows)
+        text_rows.extend(report_text_rows)
     from ._common import _emit_envelope
     from ._modelo_payloads import ModeloBindingsListResult
 
@@ -1515,6 +1533,162 @@ def _parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:
     return hijo_id, meses
 
 
+def _optional_decimal_option(raw: str | None, *, translation_key: str, default: str) -> Decimal | None:
+    if raw is None:
+        return None
+    try:
+        return Decimal(raw)
+    except (InvalidOperation, ValueError) as exc:
+        raise typer.BadParameter(
+            tr(
+                translation_key,
+                value=raw,
+                default=default,
+            )
+        ) from exc
+
+
+def _work_calculate_input_bundle_from_cli(
+    *,
+    work_unit_id: str,
+    casilla: list[str] | None,
+    binding: list[str] | None,
+    relation: list[str] | None,
+    row: list[str] | None,
+    borrador_snapshot_id: str | None,
+    prestacion_inss_exenta: str | None,
+    meses_trabajo_con_hijo_menor_3: list[str] | None,
+    rescate_plan_pensiones_capital: str | None,
+    rescate_plan_pensiones_aportaciones_pre_2007: str | None,
+    rescate_plan_pensiones_aportaciones_totales: str | None,
+    sal_beneficio_neto: str | None,
+    sal_reserva_dotada: str | None,
+    sal_capital_social: str | None,
+    autoconsumo_promotor_base: str | None,
+) -> WorkCalculateInputBundle:
+    casilla_pairs = dict(_parse_casilla_override(spec) for spec in (casilla or ()))
+    binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
+    relation_pairs = dict(
+        _parse_kv_spec(spec, flag="--relation", transform=lambda value: value) for spec in relation or ()
+    )
+    detail_rows: tuple[ModeloDetailRow, ...] = tuple(_parse_row_spec(spec) for spec in (row or ()))
+    meses_pairs: tuple[tuple[str, int], ...] = tuple(
+        _parse_meses_trabajo_hijo_spec(spec) for spec in (meses_trabajo_con_hijo_menor_3 or ())
+    )
+    try:
+        return build_work_calculate_input_bundle(
+            work_unit_id=work_unit_id,
+            casilla_overrides=casilla_pairs,
+            binding_overrides=binding_pairs,
+            relation_overrides=relation_pairs,
+            detail_rows=detail_rows,
+            borrador_snapshot_id=borrador_snapshot_id,
+            prestacion_inss_exenta=_optional_decimal_option(
+                prestacion_inss_exenta,
+                translation_key="cli.app.modelo.work.prestacion_inss_exenta_not_decimal",
+                default="--prestacion-inss-exenta must be a decimal amount; received: {value}",
+            ),
+            meses_trabajo_con_hijo_menor_3=meses_pairs,
+            rescate_plan_pensiones_capital=_optional_decimal_option(
+                rescate_plan_pensiones_capital,
+                translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
+                default="--rescate-plan-pensiones-* values must be decimals.",
+            ),
+            rescate_plan_pensiones_aportaciones_pre_2007=_optional_decimal_option(
+                rescate_plan_pensiones_aportaciones_pre_2007,
+                translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
+                default="--rescate-plan-pensiones-* values must be decimals.",
+            ),
+            rescate_plan_pensiones_aportaciones_totales=_optional_decimal_option(
+                rescate_plan_pensiones_aportaciones_totales,
+                translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
+                default="--rescate-plan-pensiones-* values must be decimals.",
+            ),
+            sal_beneficio_neto=_optional_decimal_option(
+                sal_beneficio_neto,
+                translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
+                default="--sal-* values must be decimals.",
+            ),
+            sal_reserva_dotada=_optional_decimal_option(
+                sal_reserva_dotada,
+                translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
+                default="--sal-* values must be decimals.",
+            ),
+            sal_capital_social=_optional_decimal_option(
+                sal_capital_social,
+                translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
+                default="--sal-* values must be decimals.",
+            ),
+            autoconsumo_promotor_base=_optional_decimal_option(
+                autoconsumo_promotor_base,
+                translation_key="cli.app.modelo.work.autoconsumo_promotor_base_not_decimal",
+                default="--autoconsumo-promotor-base must be a decimal amount; received: {value}",
+            ),
+        )
+    except (LookupError, ValueError, WorkUnitNotFoundError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+
+def _work_calculate_saved_confirmation(revision: CalculationRevision, work_unit: WorkUnit) -> str:
+    return tr(
+        "cli.app.modelo.work.calculate_saved",
+        default=(
+            "Saved as draft calculation revision %{revision_id} "
+            "(state: %{state}). It is persisted and can be resumed later; "
+            "list revisions with "
+            "`aeat app modelo work revisions --modelo %{modelo} --year %{year} --period %{period}` "
+            "and re-inspect this one with `aeat app modelo work revision %{revision_id}`."
+        ),
+        revision_id=revision.calculation_revision_id,
+        state=revision.state.value,
+        modelo=work_unit.modelo,
+        year=work_unit.filing_year,
+        period=work_unit.period,
+    )
+
+
+def _work_calculate_modality_output(
+    calculation_result: ModeloWorkCalculationServiceResult,
+) -> tuple[dict[str, object], list[str]]:
+    modality = calculation_result.modality
+    if modality is None:
+        return {}, []
+    return (
+        {
+            "modality": modality.modality,
+            "modality_reason": modality.reason,
+        },
+        [f"modality\t{modality.modality}"],
+    )
+
+
+def _work_calculate_authorization_output(
+    calculation_result: ModeloWorkCalculationServiceResult,
+    *,
+    work_unit: WorkUnit,
+) -> tuple[dict[str, object], list[str]]:
+    advisory = calculation_result.authorization_advisory
+    if advisory is None:
+        return {}, []
+    advisory_text = tr(
+        "cli.app.modelo.work.calculate_unauthorized_advisory",
+        modelo=str(work_unit.modelo),
+        default=(
+            "ADVISORY: modelo %{modelo} calculation backend is UNAUTHORIZED — it has not "
+            "yet been proven by an end-to-end test across at least two renta years "
+            "(multi-year-renta authorization gate). The result was computed and saved, "
+            "but treat it as provisional until the modelo is authorized."
+        ),
+    )
+    return (
+        {
+            "authorization_advisory": advisory_text,
+            "authorization_state": advisory.state,
+        },
+        [f"authorization_state\t{advisory.state}", advisory_text],
+    )
+
+
 @work_app.command("calculate", help=tr("cli.app.modelo.work.calculate_help"))
 def work_calculate(
     ctx: typer.Context,
@@ -1771,91 +1945,23 @@ def work_calculate(
         ModeloIvaWalletReconciliationBlocked,
     )
 
-    prestacion_inss_exenta_decimal: Decimal | None = None
-    if prestacion_inss_exenta is not None:
-        try:
-            prestacion_inss_exenta_decimal = Decimal(prestacion_inss_exenta)
-        except (InvalidOperation, ValueError) as exc:
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.work.prestacion_inss_exenta_not_decimal",
-                    value=prestacion_inss_exenta,
-                    default="--prestacion-inss-exenta must be a decimal amount; received: {value}",
-                )
-            ) from exc
-
-    meses_pairs: tuple[tuple[str, int], ...] = ()
-    if meses_trabajo_con_hijo_menor_3:
-        meses_pairs = tuple(_parse_meses_trabajo_hijo_spec(spec) for spec in meses_trabajo_con_hijo_menor_3)
-
-    def _optional_decimal(raw: str | None, *, translation_key: str, default: str) -> Decimal | None:
-        if raw is None:
-            return None
-        try:
-            return Decimal(raw)
-        except (InvalidOperation, ValueError) as exc:
-            raise typer.BadParameter(
-                tr(
-                    translation_key,
-                    value=raw,
-                    default=default,
-                )
-            ) from exc
-
-    casilla_pairs = dict(_parse_casilla_override(spec) for spec in (casilla or ()))
-    binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
-    relation_pairs = dict(
-        _parse_kv_spec(spec, flag="--relation", transform=lambda value: value) for spec in relation or ()
+    calculation_inputs = _work_calculate_input_bundle_from_cli(
+        work_unit_id=work_unit_id,
+        casilla=casilla,
+        binding=binding,
+        relation=relation,
+        row=row,
+        borrador_snapshot_id=borrador_snapshot_id,
+        prestacion_inss_exenta=prestacion_inss_exenta,
+        meses_trabajo_con_hijo_menor_3=meses_trabajo_con_hijo_menor_3,
+        rescate_plan_pensiones_capital=rescate_plan_pensiones_capital,
+        rescate_plan_pensiones_aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
+        rescate_plan_pensiones_aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
+        sal_beneficio_neto=sal_beneficio_neto,
+        sal_reserva_dotada=sal_reserva_dotada,
+        sal_capital_social=sal_capital_social,
+        autoconsumo_promotor_base=autoconsumo_promotor_base,
     )
-    detail_rows: tuple[ModeloDetailRow, ...] = tuple(_parse_row_spec(spec) for spec in (row or ()))
-    try:
-        calculation_inputs = build_work_calculate_input_bundle(
-            work_unit_id=work_unit_id,
-            casilla_overrides=casilla_pairs,
-            binding_overrides=binding_pairs,
-            relation_overrides=relation_pairs,
-            detail_rows=detail_rows,
-            borrador_snapshot_id=borrador_snapshot_id,
-            prestacion_inss_exenta=prestacion_inss_exenta_decimal,
-            meses_trabajo_con_hijo_menor_3=meses_pairs,
-            rescate_plan_pensiones_capital=_optional_decimal(
-                rescate_plan_pensiones_capital,
-                translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
-                default="--rescate-plan-pensiones-* values must be decimals.",
-            ),
-            rescate_plan_pensiones_aportaciones_pre_2007=_optional_decimal(
-                rescate_plan_pensiones_aportaciones_pre_2007,
-                translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
-                default="--rescate-plan-pensiones-* values must be decimals.",
-            ),
-            rescate_plan_pensiones_aportaciones_totales=_optional_decimal(
-                rescate_plan_pensiones_aportaciones_totales,
-                translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
-                default="--rescate-plan-pensiones-* values must be decimals.",
-            ),
-            sal_beneficio_neto=_optional_decimal(
-                sal_beneficio_neto,
-                translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
-                default="--sal-* values must be decimals.",
-            ),
-            sal_reserva_dotada=_optional_decimal(
-                sal_reserva_dotada,
-                translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
-                default="--sal-* values must be decimals.",
-            ),
-            sal_capital_social=_optional_decimal(
-                sal_capital_social,
-                translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
-                default="--sal-* values must be decimals.",
-            ),
-            autoconsumo_promotor_base=_optional_decimal(
-                autoconsumo_promotor_base,
-                translation_key="cli.app.modelo.work.autoconsumo_promotor_base_not_decimal",
-                default="--autoconsumo-promotor-base must be a decimal amount; received: {value}",
-            ),
-        )
-    except (LookupError, ValueError, WorkUnitNotFoundError) as exc:
-        raise typer.BadParameter(str(exc)) from exc
 
     try:
         calculation_result = calculate_modelo_work_revision(
@@ -1883,51 +1989,14 @@ def work_calculate(
     # result was persisted. Each calculate writes a `borrador` revision
     # that survives the session; the confirmation line states that
     # explicitly and names the verbs to resume or re-inspect it.
-    revision = calculation_result.revision
+    calculation_revision = calculation_result.revision
     unit_for_modality = calculation_result.work_unit
-    saved_confirmation = tr(
-        "cli.app.modelo.work.calculate_saved",
-        default=(
-            "Saved as draft calculation revision %{revision_id} "
-            "(state: %{state}). It is persisted and can be resumed later; "
-            "list revisions with "
-            "`aeat app modelo work revisions --modelo %{modelo} --year %{year} --period %{period}` "
-            "and re-inspect this one with `aeat app modelo work revision %{revision_id}`."
-        ),
-        revision_id=revision.calculation_revision_id,
-        state=revision.state.value,
-        modelo=unit_for_modality.modelo,
-        year=unit_for_modality.filing_year,
-        period=unit_for_modality.period,
+    saved_confirmation = _work_calculate_saved_confirmation(calculation_revision, unit_for_modality)
+    modality_payload, modality_lines = _work_calculate_modality_output(calculation_result)
+    authorization_payload, authorization_lines = _work_calculate_authorization_output(
+        calculation_result,
+        work_unit=unit_for_modality,
     )
-    modality_payload: dict[str, object] = {}
-    modality_lines: list[str] = []
-    if calculation_result.modality is not None:
-        modality_payload = {
-            "modality": calculation_result.modality.modality,
-            "modality_reason": calculation_result.modality.reason,
-        }
-        modality_lines = [f"modality\t{calculation_result.modality.modality}"]
-
-    authorization_payload: dict[str, object] = {}
-    authorization_lines: list[str] = []
-    if calculation_result.authorization_advisory is not None:
-        advisory_state = calculation_result.authorization_advisory.state
-        advisory_text = tr(
-            "cli.app.modelo.work.calculate_unauthorized_advisory",
-            modelo=str(unit_for_modality.modelo),
-            default=(
-                "ADVISORY: modelo %{modelo} calculation backend is UNAUTHORIZED — it has not "
-                "yet been proven by an end-to-end test across at least two renta years "
-                "(multi-year-renta authorization gate). The result was computed and saved, "
-                "but treat it as provisional until the modelo is authorized."
-            ),
-        )
-        authorization_payload = {
-            "authorization_advisory": advisory_text,
-            "authorization_state": advisory_state,
-        }
-        authorization_lines = [f"authorization_state\t{advisory_state}", advisory_text]
 
     from ._common import _emit_envelope
     from ._modelo_payloads import WorkCalculateResult
@@ -1936,7 +2005,7 @@ def work_calculate(
         {
             "saved": True,
             "saved_confirmation": saved_confirmation,
-            **_calculation_revision_payload(revision).model_dump(mode="python"),
+            **_calculation_revision_payload(calculation_revision).model_dump(mode="python"),
             **modality_payload,
             **authorization_payload,
         }
@@ -1944,7 +2013,7 @@ def work_calculate(
     plazo_lines = _work_unit_plazo_lines(unit_for_modality)
     lines = [
         "operation\tmodelo.work.calculate",
-        *_calculation_revision_lines(revision),
+        *_calculation_revision_lines(calculation_revision),
         *modality_lines,
         *plazo_lines,
         *authorization_lines,
@@ -2586,6 +2655,58 @@ def _parse_amendment_casilla(spec: str) -> tuple[str, Decimal]:
     )
 
 
+def _required_amendment_inputs(
+    *,
+    from_filing_record_id: str | None,
+    kind: str | None,
+    reason: str | None,
+    set_overrides: list[str] | None,
+) -> tuple[str, str, str, tuple[str, ...]]:
+    missing: list[str] = []
+    if not from_filing_record_id or not from_filing_record_id.strip():
+        missing.append("--from-filing-record")
+    if not kind or not kind.strip():
+        missing.append("--kind")
+    if not reason or not reason.strip():
+        missing.append("--reason")
+    if not set_overrides:
+        missing.append("--set")
+    if missing:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.amend_missing_options",
+                missing=", ".join(missing),
+            )
+        )
+    assert from_filing_record_id is not None
+    assert kind is not None
+    assert reason is not None
+    return from_filing_record_id, kind, reason, tuple(set_overrides or ())
+
+
+def _parse_amendment_kind(kind: str) -> CalculationRevisionAmendmentKind:
+    try:
+        return CalculationRevisionAmendmentKind(kind.strip())
+    except ValueError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.invalid_amendment_kind",
+                choices=", ".join(repr(k.value) for k in CalculationRevisionAmendmentKind),
+                kind=kind,
+            )
+        ) from exc
+
+
+def _parse_amendment_overrides(set_overrides: tuple[str, ...]) -> dict[str, Decimal]:
+    overrides: dict[str, Decimal] = {}
+    for spec in set_overrides:
+        key, value = _parse_amendment_casilla(spec)
+        overrides[key] = value
+    if not overrides:
+        raise typer.BadParameter(tr("cli.app.modelo.work.amend_set_required"))
+    return overrides
+
+
 @work_app.command("amend", help=tr("cli.app.modelo.work.amend_help"))
 def work_amend(
     ctx: typer.Context,
@@ -2627,47 +2748,15 @@ def work_amend(
     refusal instead of forcing the operator to rediscover them one
     invocation at a time.
     """
-    missing: list[str] = []
-    if not from_filing_record_id or not from_filing_record_id.strip():
-        missing.append("--from-filing-record")
-    if not kind or not kind.strip():
-        missing.append("--kind")
-    if not reason or not reason.strip():
-        missing.append("--reason")
-    if not set_overrides:
-        missing.append("--set")
-    if missing:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.amend_missing_options",
-                missing=", ".join(missing),
-            )
-        )
-
-    # The batch check above guarantees all four required inputs are
-    # present and non-blank; narrow the optional types for the calls.
-    assert from_filing_record_id is not None
-    assert kind is not None
-    assert reason is not None
-
+    from_filing_record_id, kind, reason, set_specs = _required_amendment_inputs(
+        from_filing_record_id=from_filing_record_id,
+        kind=kind,
+        reason=reason,
+        set_overrides=set_overrides,
+    )
     _require_active_profile()
-    try:
-        amendment_kind = CalculationRevisionAmendmentKind(kind.strip())
-    except ValueError as exc:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.invalid_amendment_kind",
-                choices=", ".join(repr(k.value) for k in CalculationRevisionAmendmentKind),
-                kind=kind,
-            )
-        ) from exc
-
-    overrides: dict[str, Decimal] = {}
-    for spec in set_overrides or ():
-        key, value = _parse_amendment_casilla(spec)
-        overrides[key] = value
-    if not overrides:
-        raise typer.BadParameter(tr("cli.app.modelo.work.amend_set_required"))
+    amendment_kind = _parse_amendment_kind(kind)
+    overrides = _parse_amendment_overrides(set_specs)
 
     try:
         record = amend_modelo_revision(

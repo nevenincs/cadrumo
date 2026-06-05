@@ -571,6 +571,47 @@ Execution note:
   separately if the audit recipe is intended to collect both checker matrices
   in one pass even while Ty remains red.
 
+## HEALTH-018 | CLOSED | Modelo CLI command callbacks reduced below C-level complexity
+
+`W06.P19.S74` reduced the remaining modelo CLI command callback complexity
+without changing Typer registration or command semantics. The slice extracted
+bindings-list target resolution and row projection, work-calculate input parsing
+and output advisory assembly, and work-amend option/amendment parsing into
+private helpers.
+
+Current focused complexity result:
+
+- `bindings_list` moved from Radon C (20) to B (10).
+- `work_calculate` moved from Radon C (19) to A (4).
+- `work_amend` no longer appears in the high-complexity command list; its
+  branch preflight now lives in `_required_amendment_inputs`.
+- Complexipy reports no `_modelo.py` function above the project threshold of
+  20; the top `_modelo.py` cognitive entries are `_parse_row_spec` and
+  `_resolve_revision_for_cli`, not command callbacks.
+
+Verification:
+
+- `uv run --no-sync ruff check src/aeat/entrypoints/cli/_modelo.py` passed.
+- Focused real CLI tests passed for bindings-list missing/year behavior,
+  work-calculate borrador/help/default behavior, saved-result confirmation, and
+  result-summary rendering.
+- `uv run --no-sync python -m compileall -q src/aeat/entrypoints/cli/_modelo.py`
+  passed.
+- `just audit-complexity-production` still exits 1 on other production
+  hotspots, but the filtered output no longer lists `_modelo.py` functions
+  above the cognitive threshold.
+
+Residual:
+
+- `uv run --no-sync ty check src/aeat/entrypoints/cli/_modelo.py --output-format concise`
+  still reports 26 diagnostics in pre-existing row-splat and revision-object
+  typing areas. The S74 refactor removed the local calculate-revision variable
+  shadowing diagnostic introduced during extraction, but this step is not a
+  full `_modelo.py` type cleanup.
+- `_modelo.py` maintainability index remains C (0.00) because the module is
+  still very large. Further module decomposition remains valid future work, but
+  S74 closes the command callback complexity objective.
+
 ## Suggested Workstreams
 
 1. Repair packaging environment deterministically: schedule a clean `uv sync` window
