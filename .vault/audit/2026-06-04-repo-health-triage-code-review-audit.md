@@ -655,3 +655,27 @@ Residual: `_modelo.py` still has 26 pre-existing Ty diagnostics in row-splat
 and revision-object typing areas, and the module maintainability index remains
 C (0.00). Those are not hidden by this review and remain candidates for later
 typed cleanup/module decomposition.
+
+## W06-002 | INFO | Registry formula complexity extraction review found no defects
+
+Status: verified with scoped residual.
+
+The W06.P19.S75 review found no behavior defect in the registry formula helper
+extraction. `initial_values` now delegates unknown-input, computed-input,
+previous-filing projection, and per-casilla value construction checks to private
+helpers while preserving the same validation error classes, translated messages,
+and context keys. The M210 `m210_resolve_rate` evaluator now validates its four
+arguments into a typed private argument bundle and delegates baseline lookup,
+convenio-row lookup, and convenio-rate parsing to private helpers without adding
+a new operator path or changing sentinel handling.
+
+Focused verification passed Ruff, Ty, Radon, Complexipy, and 53 registry/modelo
+tests covering the formula runtime plus M130 and M210 surfaces. Complexity
+measurements now place `initial_values` at Radon A (4) and Complexipy 0, and
+`_evaluate_m210_resolve_rate` at Radon B (6) and Complexipy 6.
+
+Residual: `calculate_registry_snapshot` remains Radon D (22) in
+`_formula_runtime.py`, and the broader M200 registry probe still fails on missing
+previous-filing binding materialization for casilla `01494`. Those residuals are
+not hidden by the S75 extraction and should remain candidates for later registry
+runtime and M200 binding hardening work.
