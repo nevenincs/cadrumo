@@ -97,6 +97,8 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P07-S64]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P07-S65]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P07-S66]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P07-S67]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P07-S68]]'
   - '[[2026-06-05-codebase-monolith-decomposition-adr]]'
   - '[[2026-06-05-codebase-monolith-decomposition-code-review-audit]]'
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
@@ -211,6 +213,8 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W03-P07-S64` - W03.P07.S64 Registry Binding Verification
 - `2026-06-05-codebase-monolith-decomposition-W03-P07-S65` - W03.P07.S65 Registry Schema Decomposition
 - `2026-06-05-codebase-monolith-decomposition-W03-P07-S66` - W03.P07.S66 Registry Schema Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P07-S67` - W03.P07.S67 Registry Record Design Decomposition
+- `2026-06-05-codebase-monolith-decomposition-W03-P07-S68` - W03.P07.S68 Registry Record Design Verification
 
 ### plan
 
