@@ -191,7 +191,7 @@ Normalize lint scope and retire compatibility surfaces that conflict with the no
 - [x] `W05.P16.S55` - Normalize Ruff scope for scratch and probe files; `pyproject.toml`.
 - [x] `W05.P16.S56` - Resolve undefined modelo envelope emitter reference; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W05.P16.S57` - Canonicalize filing-status token and remove shim surface; `src/aeat/application/operator_surface/_filing_status_token.py`.
-- [ ] `W05.P16.S58` - Remove parsing private compatibility aliases; `src/aeat/core/parsing/__init__.py`.
+- [x] `W05.P16.S58` - Remove parsing private compatibility aliases; `src/aeat/core/parsing/__init__.py`.
 - [ ] `W05.P16.S59` - Review fail-closed HTTPX fallback naming and registration; `src/aeat/adapters/outbound/aeat/browser/_httpx_fallback.py`.
 
 ### Phase `W05.P17` - closeout baseline and review

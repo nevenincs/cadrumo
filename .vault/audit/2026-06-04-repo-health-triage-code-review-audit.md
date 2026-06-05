@@ -559,3 +559,22 @@ work-id hinting passed. The new architecture guard tests pass; the size-budget
 guard currently reports only unrelated dirty live-IVA WIP in `_app_live.py`
 (`2135` working-tree lines versus budget `2117`). That residual is not part of
 S56 and remains visible for the W05.P17 full quality-audit baseline.
+
+## W05-007 | INFO | Parsing package public-surface review found no defects
+
+Status: verified with broader CLI residuals.
+
+The W05.P16.S58 review found no defect in removing private compatibility
+aliases from `aeat.core.parsing.__init__`. The package initializer now exposes
+only the public parser names while the implementation modules retain their
+private helpers for package-local tests and targeted internal consumers.
+
+Focused verification passed Ruff for the touched parsing and M036 CLI files,
+passed the parsing package tests, and passed the parsing enrollment inventory.
+The inventory caught one adjacent direct `date.fromisoformat()` bypass in the
+M036 CLI surface; that caller now uses the public `parse_iso8601_date` boundary.
+Broader CLI verification still reports two unrelated residual failures:
+`test_work_calculate_enters_bucket_source_mesh_calculation_boundary` is a stale
+source-inspection assertion after modelo CLI decomposition, and
+`test_app_ledger_create_manual_transaction_persists_in_active_bucket` now feeds
+an update rejected by the taxable-base plus IVA invariant.
