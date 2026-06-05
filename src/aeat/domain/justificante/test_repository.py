@@ -16,6 +16,7 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
 )
 from ...adapters.persistence.storage.errors import ClassificationError
+from ...tests.aeat_literal_fixtures import JUSTIFICANTE_VERIFY_PATH_FIXTURE, aeat_url
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ._repository import JustificanteRepository
 from ._schema import Justificante
@@ -36,7 +37,9 @@ def _make_justificante(tmp_path: Path, *, csv: str = "ABCD1234EFGH5678") -> Just
         tax_id="00000000T",
         total_a_ingresar=Decimal("10.00"),
         total_a_devolver=None,
-        verification_url=TypeAdapter(AnyHttpUrl).validate_python("https://sede.agenciatributaria.gob.es/verify"),
+        verification_url=TypeAdapter(AnyHttpUrl).validate_python(
+            aeat_url("sede", JUSTIFICANTE_VERIFY_PATH_FIXTURE),
+        ),
         source_pdf_path=pdf,
         source_pdf_sha256=hashlib.sha256(pdf.read_bytes()).hexdigest(),
         parsed_at=datetime(2026, 4, 12, 0, 0, 0, tzinfo=UTC),
