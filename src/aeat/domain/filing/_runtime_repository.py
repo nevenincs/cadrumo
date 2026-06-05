@@ -22,11 +22,13 @@ def resolve_filing_repository_bucket_id(bucket_id: str | None) -> str:
         if trimmed:
             return trimmed
         raise ModeloDraftError(
+            context={"reason": "blank_explicit_bucket_id"},
             translated_message="application.workflow.errors.no_active_profile_bucket",
         )
     active = resolve_active_bucket_id()
     if active is None:
         raise ModeloDraftError(
+            context={"reason": "missing_active_profile_bucket"},
             translated_message="application.workflow.errors.no_active_profile_bucket",
         )
     return active
