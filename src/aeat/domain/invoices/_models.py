@@ -95,21 +95,36 @@ def _coerce_date(value: object) -> date:
     if isinstance(value, date):
         return value
     if isinstance(value, str):
-        result = _parse_iso8601_date(value)
+        try:
+            result = _parse_iso8601_date(value)
+        except ValueError as exc:
+            raise InvoiceValidationError(str(exc)) from exc
         if result is None:
-            raise TypeError("expected a date or ISO-8601 string")
+            raise InvoiceValidationError("expected a date or ISO-8601 string")
         return result
-    raise TypeError("expected a date or ISO-8601 string")
+    raise InvoiceValidationError("expected a date or ISO-8601 string")
 
 
 def _normalise_invoice_enum_fields(payload: dict[str, object]) -> dict[str, object]:
     if "kind" in payload and isinstance(payload["kind"], str):
-        payload["kind"] = InvoiceKind(payload["kind"])
+        try:
+            payload["kind"] = InvoiceKind(payload["kind"])
+        except ValueError as exc:
+            raise InvoiceValidationError("kind must be an InvoiceKind") from exc
     if "payment_status" in payload and isinstance(payload["payment_status"], str):
-        payload["payment_status"] = PaymentStatus(payload["payment_status"])
+        try:
+            payload["payment_status"] = PaymentStatus(payload["payment_status"])
+        except ValueError as exc:
+            raise InvoiceValidationError("payment_status must be a PaymentStatus") from exc
     if "iva_category" in payload and isinstance(payload["iva_category"], str):
         stripped = payload["iva_category"].strip()
-        payload["iva_category"] = IvaCategory(stripped) if stripped else None
+        if stripped:
+            try:
+                payload["iva_category"] = IvaCategory(stripped)
+            except ValueError as exc:
+                raise InvoiceValidationError("iva_category must be an IvaCategory") from exc
+        else:
+            payload["iva_category"] = None
     return payload
 
 
