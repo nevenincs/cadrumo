@@ -143,7 +143,7 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
 
     import json as _json
 
-    from ._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -200,7 +200,7 @@ def test_transaction_catalogue_inner_classification_mismatch_is_structured(
 
     import json as _json
 
-    from ._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -252,7 +252,7 @@ def test_transaction_catalogue_inner_schema_version_mismatch_is_structured(
 
     import json as _json
 
-    from ._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -344,7 +344,7 @@ def test_transaction_catalogue_grandfathers_missing_source_jurisdiction_key(
 
     import json as _json
 
-    from ._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -396,7 +396,7 @@ def test_transaction_catalogue_preserves_group_label_through_encrypted_storage(
 ) -> None:
     """group_label must survive the encrypted-envelope roundtrip.
 
-    Anchors the operator-assigned organisational grouping axis (legacy-plan.legacy-step) at
+    Anchors the operator-assigned organisational grouping axis (accepted contract) at
     the persistence boundary: a Transaction carrying a non-default
     ``group_label`` saved through the repository must load back equal (strict
     pydantic equality), with the label preserved verbatim. A save-drops /
@@ -437,7 +437,7 @@ def test_transaction_catalogue_grandfathers_missing_group_label_key(
 
     import json as _json
 
-    from ._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)

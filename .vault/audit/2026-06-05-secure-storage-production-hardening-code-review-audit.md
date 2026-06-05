@@ -230,3 +230,30 @@ or perform filesystem IO.
 `SubmissionRepositoryProtocol` references `ModeloPresentado` and declares the narrow
 load/list/iterate surface consumed by domain/application code. It does not import the
 concrete `SubmissionRepository` or adapter-layer secure-storage classes.
+
+## S367-CR-001 | PASS | Transaction models are not a manifest-discovery owner
+
+Reviewed the S367 scope as `vaultspec-code-reviewer`. `_models.py` defines strict
+pydantic value records, deterministic transaction identifiers, immutable catalogue
+validation, and `BucketTransactionRef`. It has no active-profile resolution, storage
+runtime inspection, settings/environment access, filesystem IO, SQL access, or
+secure-object construction.
+
+## S367-CR-002 | PASS | Transaction persistence is runtime-bound and encrypted
+
+The concrete storage owner remains `TransactionCatalogueRepository`: it binds to a
+bucket, resolves the secure-object repository through storage runtime, writes
+`TX_BUCKET_NAMESPACE`, and persists `Envelope[TransactionCatalogue]` payloads at
+`SensitivityClass.FINANCIAL`.
+
+## S367-CR-003 | FIXED | Anti-drift tests targeted the wrong import package
+
+The focused transaction roundtrip suite initially failed because five anti-drift tests
+imported repository constants from the tests package. The imports now target the
+production parent package, and the transaction roundtrip suite passes.
+
+## S367-CR-004 | PASS | Locale audit stays canonical
+
+`python -m aeat.locales audit` passes after verifying the intracom operation-type CLI
+refusal keys are recognized by the locale scanner. No manual locale YAML edits were
+needed.
