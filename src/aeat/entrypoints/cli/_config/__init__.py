@@ -46,6 +46,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import tr
 from ....core.logging import default_log_file_path as _default_log_file_path
+from ....core.logging import get_logger as _get_logger
 from ....core.redaction import (
     CLI_BUCKET_ID_PLACEHOLDER,
     CLI_PROFILE_ID_PLACEHOLDER,
@@ -63,6 +64,8 @@ from ._errors import ConfigBoundaryError as _ConfigBoundaryError
 
 if typing.TYPE_CHECKING:
     from ....domain.buckets import BucketEvent, BucketEventType
+
+_log = _get_logger(__name__)
 
 _wizard_create_command = _build_wizard_command(_get_setup_flow(), mode="create")
 _wizard_edit_command = _build_wizard_command(_get_setup_flow(), mode="edit")
@@ -265,6 +268,7 @@ def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
                 newlines_seen += block.count(b"\n")
             tail_bytes = b"".join(reversed(blocks))
     except OSError:
+        _log.debug("config repair logs could not read configured log file", exc_info=True)
         return ()
     text = tail_bytes.decode("utf-8", errors="replace")
     return tuple(redact_for_cli_output(line) for line in text.splitlines()[-count:])
@@ -519,6 +523,7 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
         )
         raise typer.Exit(code=2) from exc
     except Exception as exc:
+        _log.debug("config repair profile wrapped unexpected profile-record exception", exc_info=True)
         boundary = _ConfigBoundaryError(exc)
         payload = {
             "profile_id": profile_id,
@@ -959,6 +964,7 @@ def _assert_profile_record_present(ctx: typer.Context, *, profile_id: str, bucke
         _emit_profile_record_unreadable(ctx, profile_id=profile_id, bucket_id=bucket_id, label=label, error=exc)
         raise typer.Exit(code=2) from exc
     except Exception as exc:
+        _log.debug("config profile readiness wrapped unexpected profile-record exception", exc_info=True)
         boundary = _ConfigBoundaryError(exc)
         _emit_profile_record_unreadable(ctx, profile_id=profile_id, bucket_id=bucket_id, label=label, error=boundary)
         raise typer.Exit(code=2) from boundary
@@ -1103,6 +1109,7 @@ def config_profile_show(
         )
         raise typer.Exit(code=2) from exc
     except Exception as exc:
+        _log.debug("config profile show wrapped unexpected profile-record exception", exc_info=True)
         boundary = _ConfigBoundaryError(exc)
         _emit_profile_record_unreadable(
             ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label, error=boundary
@@ -1724,6 +1731,7 @@ def config_profile_import(
     except _AeatError:
         raise
     except Exception as exc:
+        _log.debug("config profile import rejected invalid portable bundle", exc_info=True)
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.import_invalid_bundle",
             context={"error": str(exc)},
@@ -1959,6 +1967,7 @@ def config_status(
     try:
         projection = project_answers(_get_setup_flow(), values)
     except ValidationError:
+        _log.debug("config profile status projection validation failed; reporting profile incomplete")
         result = ConfigStatusResult(
             active_profile=active_profile,
             profile_id=active_uuid,

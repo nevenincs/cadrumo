@@ -34,8 +34,8 @@ before you rely on `aeat`.
 :link-type: doc
 :class-card: aeat-route-card
 
-Use this when you are new to `aeat` and want the shortest path from a ready
-profile and ledger to a local export.
+Use this when you are new to `aeat` and want the shortest path through profile,
+transactions, calculation, verification, and local export.
 :::
 
 :::{grid-item-card} Set Up Your Taxpayer Profile
@@ -52,8 +52,16 @@ profile to use.
 :link-type: doc
 :class-card: aeat-route-card
 
-Use this when your bank records are not yet in the ledger or still need tax
-classification.
+Use this when records are not yet in the ledger or still need review.
+:::
+
+:::{grid-item-card} Classify Transactions
+:link: how-to/classify-transactions
+:link-type: doc
+:class-card: aeat-route-card
+
+Use this when imported rows need business, personal, mixed-use, category, or
+tax-field decisions.
 :::
 
 :::{grid-item-card} Plan Your Filing Calendar
@@ -95,7 +103,6 @@ how official rule sources are tracked.
 :hidden:
 :caption: Where to start
 
-getting-started
 how-to/quickstart
 tutorials/index
 ```
@@ -106,9 +113,12 @@ tutorials/index
 
 how-to/index
 how-to/profile-setup
+how-to/authenticate-with-aeat
 how-to/censo-update
 how-to/import-bank-statements
+how-to/classify-transactions
 how-to/classify-with-llm
+how-to/review-calculation-values
 how-to/filing-calendar
 how-to/filing-spine
 how-to/modelo-303
