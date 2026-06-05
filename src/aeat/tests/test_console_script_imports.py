@@ -31,7 +31,7 @@ import sys
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 def test_aeat_package_imports_in_process() -> None:

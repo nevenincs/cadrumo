@@ -21,4 +21,4 @@ The command is registered and reaches the live auth flow. Fresh AEAT verificatio
 
 ## Notes
 
-The service persists one snapshot per modelo/year query and remains read-only.
+The service persists one aggregate snapshot for the whole bulk refresh and remains read-only.

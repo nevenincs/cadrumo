@@ -9,10 +9,9 @@ gathered under ``src/aeat/...`` pass through the same enforcement surface:
    reads. Without this, populating ``env/.env`` and running
    ``just test-live`` silently skips every ``live_read`` test because
    pytest never sources dotenv files itself.
-2. Apply the nine-marker collection hook so any item carrying
-   ``live_write`` (or missing the access/domain markers) is dropped /
-   raised on. The hook body lives in :mod:`aeat.tests._marker_hook`; this
-   conftest is a thin wrapper.
+2. Apply the hexagonal marker collection hook so any item missing the
+   execution/architecture markers is raised on. The hook body lives in
+   :mod:`aeat.tests._marker_hook`; this conftest is a thin wrapper.
 
 See ``src/aeat/tests/README.md`` and charter ``#116`` for the full taxonomy.
 """

@@ -271,7 +271,6 @@ convention = "google"
 # audience-scoped out of the test surface (tests are excluded from autodoc
 # and interrogate too).
 "src/aeat/**/test_*.py" = ["S101", "T20", "D"]
-"src/aeat/**/_test_*.py" = ["S101", "T20", "D"]
 "src/aeat/tests/**/*.py" = ["S101", "T20", "D"]
 "src/aeat/**/conftest.py" = ["D"]
 # Sphinx build configuration is tooling, not the documented package API.
@@ -335,28 +334,8 @@ convention = "google"
 # Encrypted-column tests deliberately use literal "secret_text" / "secret_*"
 # as column / attribute names; ruff's S105/S106 heuristic flags them as
 # hardcoded passwords when they are in fact attribute identifiers.
-"src/aeat/adapters/persistence/storage/_test_encrypted_columns.py" = [
-  "S101",
-  "S105",
-  "S106"
-]
-"src/aeat/adapters/persistence/storage/master_key/_test_master_key.py" = [
-  "S101",
-  "S105",
-  "S106"
-]
 # Redaction tests construct synthetic bearer-shaped strings to verify
 # the rule patterns; ruff's S105 heuristic flags the synthetic literals.
-"src/aeat/adapters/persistence/storage/_test_redaction.py" = [
-  "S101",
-  "S105",
-  "S106"
-]
-"src/aeat/adapters/persistence/storage/_test_secret_store.py" = [
-  "S101",
-  "S105",
-  "S106"
-]
 # Typer requires `typer.Argument(...)` / `typer.Option(...)` literally inside
 # parameter defaults; B008 flags this idiom but it is the documented usage.
 "src/aeat/entrypoints/cli/**/*.py" = ["B008"]
@@ -429,12 +408,10 @@ convention = "google"
 # literal argv (no user/untrusted input), in an isolated subprocess so the
 # build's package imports and global state do not leak into the test process.
 "src/aeat/tests/test_docs_build.py" = ["S603"]
-"src/aeat/adapters/persistence/storage/_test_path_safety.py" = ["S105"]
 "src/aeat/adapters/persistence/storage/bucket/test_lockfile.py" = ["S603"]
 "src/aeat/adapters/persistence/storage/test_substrate_smoke.py" = ["S603"]
 "src/aeat/domain/calculations/registry/test_cross_domain_snapshot_registration.py" = ["S603"]
 "src/aeat/adapters/persistence/storage/master_key/_master_key.py" = ["S105"]
-"src/aeat/adapters/persistence/storage/crypto/_test_encrypted_columns.py" = ["S105", "S106"]
 "src/aeat/adapters/outbound/aeat/browser/test_live_evasion.py" = ["S603"]
 # `ATTRIBUTION_PASS_THROUGH` is a tax-routing verdict / enum value, not a
 # password literal; ruff's S105 heuristic flags the constant name.
@@ -580,26 +557,20 @@ search_path = ["src", "stubs"]
 [tool.pytest.ini_options]
 testpaths = ["src/aeat"]
 pythonpath = ["src"]
-python_files = ["test_*.py", "_test_*.py"]
-addopts = "-v --tb=short -m 'unit and not docs and not workbook_parity' --strict-markers"
+python_files = ["test_*.py"]
+addopts = "-v --tb=short -m 'unit' --strict-markers"
 asyncio_mode = "strict"
 markers = [
   "unit: deterministic tests with no external I/O",
-  "live_read: opt-in tests that READ from a real external service; see src/aeat/tests/README.md",
-  "live_write: permanently forbidden external write-shaped tests; collection-dropped with no bypass",
-  "domain_inbound: exercises adapters.inbound.* (financial providers, borrador, declaracion, identity, sanitizer, pdf shared)",
-  "domain_outbound: exercises adapters.outbound.* (aeat auth/browser/sede/export/verify, llm)",
-  "domain_export: sub-marker on adapters.outbound.aeat.export.* (fichero-BOE serialise / verify pipelines)",
-  "domain_persistence: exercises adapters.persistence.* (storage substrate)",
-  "domain_model: exercises domain.* business model + computation (modelos, registry, manuals, deadlines, profile, rental, ...)",
-  "domain_application: exercises application.* use-cases / orchestration (filing, workflow, sync, setup, review, verification)",
-  "domain_core: exercises core.* foundational cross-cutting (config, logging, errors, paths, observability, identity, i18n, env_io)",
-  "flaky: opt-in retry via pytest-rerunfailures; live_read / live_write tests only",
-  "fixture_tier_l3: test uses synthetic generator output; no fixtures on disk",
-  "docs: documentation build and conformance gate; runs a real sphinx-build, excluded from the fast unit lane and run via just docs-check",
-  "workbook_parity: LibreOffice subprocess parity tests; excluded from the default unit lane (adds 60-90s wallclock) and run via just test-workbook-parity",
-  "slow: empirical-duration outlier (~2 s+); deselectable via -m 'not slow' for faster local dev iterations; outlier capture owned by discovery1-2",
-  "inventory: structural inventory / fingerprint sweep tests that walk the full src tree; excluded from -k filtered runs that target a single surface",
+  "integration: deterministic in-process tests that cross architectural layers",
+  "aeat_live: opt-in tests that read from a real external service; see src/aeat/tests/README.md",
+  "hex_domain: exercises domain.* business model and computation",
+  "hex_application: exercises application.* use-cases and orchestration",
+  "hex_inbound_adapter: exercises adapters.inbound.* boundaries",
+  "hex_outbound_adapter: exercises adapters.outbound.* boundaries",
+  "hex_persistence_adapter: exercises adapters.persistence.* boundaries",
+  "hex_entrypoint: exercises entrypoints.* command and presentation surfaces",
+  "hex_core: exercises core.* foundational cross-cutting utilities",
 ]
 
 # ── Coverage (pytest-cov) ────────────────────────────────────────────────────
@@ -608,7 +579,6 @@ source = ["src/aeat"]
 branch = true
 omit = [
   "*/test_*.py",
-  "*/_test_*.py",
   "src/aeat/tests/*",
 ]
 
@@ -643,7 +613,7 @@ skips = ["B101"]
 # Per-rule per-glob skips for colocated test files mirror the bundled
 # src/aeat/tests tree's noise profile.
 [tool.bandit.assert_used]
-skips = ["*/test_*.py", "*/_test_*.py", "**/conftest.py"]
+skips = ["*/test_*.py", "**/conftest.py"]
 
 # ── Interrogate (docstring coverage) ─────────────────────────────────────────
 # Without configuration interrogate counts every public symbol missing a
@@ -680,7 +650,6 @@ exclude = [
   "stubs",
   "src/aeat/tests",
   "src/aeat/**/test_*.py",
-  "src/aeat/**/_test_*.py",
 ]
 
 # ── pydoclint (docstring-vs-signature accuracy) ──────────────────────────────
@@ -697,7 +666,7 @@ check-yield-types = false
 check-class-attributes = false
 skip-checking-short-docstrings = true
 allow-init-docstring = true
-exclude = 'tests|test_|_test_'
+exclude = 'tests|test_'
 
 # ── Vulture (dead-code) ──────────────────────────────────────────────────────
 # Vulture defaults to confidence threshold 60 which surfaces many
@@ -709,7 +678,6 @@ min_confidence = 80
 paths = ["src/aeat"]
 exclude = [
   "*test_*.py",
-  "*_test_*.py",
   "*/tests/*",
   "*\\tests\\*",
   "stubs",

@@ -22,7 +22,7 @@ from ..core.config import PROJECT_ROOT, CertificateBackend, Settings
 from ..core.external_constants import load_external_constants
 from .env_scope import isolated_aeat_env as _isolated_aeat_env
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 ENV_EXAMPLE_PATH = PROJECT_ROOT / "env" / ".env.example"
 

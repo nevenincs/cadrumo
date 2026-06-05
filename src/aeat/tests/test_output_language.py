@@ -18,7 +18,7 @@ from ..core.config import override_settings
 from ..core.i18n._render import output_language
 from .secure_sql import isolated_profile_storage_root
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 @pytest.fixture

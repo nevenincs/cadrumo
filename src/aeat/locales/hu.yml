@@ -739,6 +739,8 @@ application:
         %{work_unit_id}.'
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
+      work_period_token_invalid: 'A --period ''%{token}'' nem ervenyes idoszak-token a(z) %{modelo} modellhez. Adja meg kulon: --year %{year}, es hasznalja ezek egyiket: %{tokens}.'
+      work_period_token_unrecognised: 'A --period ''%{token}'' nem felismerheto. Adja meg kulon: --year %{year}, es hasznaljon idoszak-tokent, peldaul 0A, Q1, 1T vagy 01.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
@@ -1640,8 +1642,6 @@ cli:
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
         name_help: Opcionális megjelenítési név a munkaegységhez.
         name_required: Adja meg a --name erteket.
-        natural_target_required: Adjon meg pontos munkaegyseg-azonositot, vagy cimezze
-          a bevallast --modelo, --year es --period megadasaval.
         notes_help: Opcionális megjegyzések a benyújtási rekordhoz.
         output_language_help: A megjelenített üzenetek kimeneti nyelve.
         override_help: 'Kötési érték KEY=VALUE szintaxissal (ismételhető); futtassa:
@@ -4010,6 +4010,7 @@ errors:
       revision.
     refused_workflow_resume: A korábbi munkafolyamat-futás nem folytatható.
     unsupported_currency: A megadott devizakód nem támogatott.
+    modelo_work_period_token: 'Ervenytelen modello idoszak.'
   snapshot:
     modelo_not_registered: A modello nincs regisztrálva a nyilvántartásban.
   storage:

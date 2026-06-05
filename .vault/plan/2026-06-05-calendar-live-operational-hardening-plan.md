@@ -60,7 +60,7 @@ Run focused automated checks, live read-only command verification, execution rec
 
 - [x] `W03.P03.S06` - Run focused unit and CLI verification; `src/aeat/entrypoints/cli/test_registry_cli.py`.
 - [x] `W03.P03.S07` - Run live read-only operational verification; `.vault/audit/2026-06-05-calendar-live-operational-hardening-live-verification-audit.md`.
-- [ ] `W03.P03.S08` - Persist execution records and code review audit; `.vault/exec/2026-06-05-calendar-live-operational-hardening`.
+- [x] `W03.P03.S08` - Persist execution records and code review audit; `.vault/exec/2026-06-05-calendar-live-operational-hardening`.
 
 ## Description
 

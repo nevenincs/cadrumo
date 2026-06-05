@@ -1044,6 +1044,11 @@ class WorkResumeResult(OutputSchema):
 
     operation: str = "modelo.work.resume"
     prior_workflow_run_id: str
+    resolved_source: str | None = None
+    work_unit_id: str | None = None
+    short_work_unit_id: str | None = None
+    calculation_revision_id: str | None = None
+    short_calculation_revision_id: str | None = None
     modelo: str
     period: str
     aborted_reason: str

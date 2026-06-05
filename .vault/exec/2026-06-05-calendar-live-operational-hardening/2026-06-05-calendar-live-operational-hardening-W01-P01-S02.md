@@ -22,4 +22,4 @@ related:
 
 ## Notes
 
-The boundary matches the current registry construct, which declares no filed-declarations live read surface for Modelo 721.
+The boundary is derived from registry revision metadata. Follow-up verification also proved Modelo 151 reports locally when its 2024 revision lacks a filed-declarations live read surface.

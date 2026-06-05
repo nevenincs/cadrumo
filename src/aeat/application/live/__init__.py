@@ -151,6 +151,7 @@ from ._snapshot_base import (
     SnapshotRepository,
 )
 
+
 class FiledDataCaptureReport(BaseModel):
     """Read-only filed-declaration capture report."""
 
@@ -834,7 +835,7 @@ async def capture_filed_data_bulk(
             failures=tuple(failures),
         )
 
-    session, settings = await _active_verified_session()
+    session, settings = await _active_verified_session(operation="live-expedientes-read")
 
     async with (
         _shared_playwright(session) as playwright,

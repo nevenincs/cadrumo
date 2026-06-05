@@ -40,8 +40,8 @@ from ...application.modelo import (
     ModeloCalculationRevisionSelectorNotFoundError,
     ModeloCalculationRevisionSelectorStateError,
     ModeloRecordNotFoundError,
-    ModeloWorkAddress,
     ModeloWorkAddressNotFoundError,
+    ModeloWorkPeriodTokenError,
     ModeloWorkRevisionConflictError,
     ModeloWorkSelectorContradictionError,
     ModeloWorkUnitNotFoundError,
@@ -52,31 +52,23 @@ from ...application.modelo import (
     WorkUnitNotFoundError,
     amend_modelo_revision,
     declared_modelo_period_tokens,
-    file_modelo_revision,
     get_filing_record,
     get_verification_report,
     get_work_unit,
     guard_active_profile_foral_ccaa,
-    list_calculation_revisions,
     list_filing_records,
     list_verification_reports,
-    modelo_202_modality_for_work_unit,
-    resolve_exportable_modelo_calculation_revision_address,
-    resolve_fileable_modelo_calculation_revision_address,
-    resolve_modelo_calculation_revision_address,
-    resolve_modelo_work_address_unit,
-    resolve_verifiable_modelo_calculation_revision_address,
-    verify_modelo_revision,
+    modelo_work_address_from_operator_target,
+    normalize_modelo_work_period,
+    resolve_modelo_revision_for_operator_target,
+    resolve_modelo_work_unit_for_operator_target,
 )
 from ...core.errors import AeatError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...core.logging import get_logger
-from ...domain.calculations.registry import (
-    RegistryValidationError,
-    parse_modelo_period,
-)
-from ._common import _profile_to_taxpayer, activate_subcommand_output_language
+from ...domain.calculations.registry import RegistryValidationError
+from ._common import activate_subcommand_output_language
 from ._modelo_cli_support import (
     bad_parameter_from_error as _bad_parameter_from_error,
 )
@@ -124,19 +116,10 @@ from ._modelo_maritime_cli import register_maritime_commands
 from ._modelo_projection_cli import register_projection_commands
 from ._modelo_readiness_cli import register_readiness_commands
 from ._modelo_rendering import (
-    calculation_revision_lines as _calculation_revision_lines,
-)
-from ._modelo_rendering import (
-    calculation_revision_payload as _calculation_revision_payload,
-)
-from ._modelo_rendering import (
     filing_record_lines as _filing_record_lines,
 )
 from ._modelo_rendering import (
     filing_record_payload as _filing_record_payload,
-)
-from ._modelo_rendering import (
-    short_id as _short_id,
 )
 from ._modelo_rendering import (
     verification_report_lines as _verification_report_lines,
@@ -147,7 +130,9 @@ from ._modelo_rendering import (
 from ._modelo_work import create_work_app
 from ._modelo_work_calculate_cli import register_work_calculate_commands
 from ._modelo_work_lifecycle_cli import register_work_lifecycle_commands
+from ._modelo_work_revision_cli import register_work_revision_commands
 from ._modelo_work_runs_cli import register_work_run_commands
+from ._modelo_work_verification_cli import register_work_verification_commands
 
 _log = get_logger(__name__)
 
@@ -172,28 +157,19 @@ def _work_address_for_cli(
     period: str | None,
     revision: str | None,
     bucket_id: str | None = None,
-) -> ModeloWorkAddress:
+) -> object:
     exact_id = _validate_work_unit_id(work_unit_id) if work_unit_id is not None else None
-    if modelo is not None and year is not None and period is not None:
-        year, period = _resolve_year_period(year, period, modelo=modelo)
-    elif exact_id is None:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.natural_target_required",
-                default=(
-                    "Pass an exact work-unit id, or address the filing with "
-                    "--modelo, --year, and --period."
-                ),
-            )
+    try:
+        return modelo_work_address_from_operator_target(
+            work_unit_id=exact_id,
+            modelo=modelo,
+            year=year,
+            period=period,
+            registry_revision_id=revision,
+            bucket_id=bucket_id,
         )
-    return ModeloWorkAddress(
-        work_unit_id=exact_id,
-        modelo=modelo,
-        filing_year=year,
-        period=period,
-        registry_revision_id=revision,
-        bucket_id=bucket_id,
-    )
+    except ModeloWorkPeriodTokenError as exc:
+        raise _bad_parameter_from_localized_context(exc) from exc
 
 
 def _resolve_work_unit_for_cli(
@@ -205,16 +181,15 @@ def _resolve_work_unit_for_cli(
     revision: str | None = None,
     bucket_id: str | None = None,
 ) -> WorkUnit:
+    exact_id = _validate_work_unit_id(work_unit_id) if work_unit_id is not None else None
     try:
-        return resolve_modelo_work_address_unit(
-            _work_address_for_cli(
-                work_unit_id=work_unit_id,
-                modelo=modelo,
-                year=year,
-                period=period,
-                revision=revision,
-                bucket_id=bucket_id,
-            )
+        return resolve_modelo_work_unit_for_operator_target(
+            work_unit_id=exact_id,
+            modelo=modelo,
+            year=year,
+            period=period,
+            registry_revision_id=revision,
+            bucket_id=bucket_id,
         )
     except (
         ModeloWorkUnitNotFoundError,
@@ -222,6 +197,7 @@ def _resolve_work_unit_for_cli(
         ModeloWorkVisibleTargetAmbiguousError,
         ModeloWorkRevisionConflictError,
         ModeloWorkAddressNotFoundError,
+        ModeloWorkPeriodTokenError,
     ) as exc:
         raise _selector_bad_parameter(exc) from exc
 
@@ -238,60 +214,29 @@ def _resolve_revision_for_cli(
     selector: str = ModeloCalculationRevisionSelector.CURRENT.value,
     default_for: str | None = None,
 ) -> CalculationRevision:
+    parsed_selector = _parse_revision_selector(selector)
+    validated_revision_id = (
+        _validate_calculation_revision_id(calculation_revision_id) if calculation_revision_id is not None else None
+    )
+    exact_work_id = _validate_work_unit_id(work_unit_id) if work_unit_id is not None else None
     try:
-        if (
-            calculation_revision_id is not None
-            and work_unit_id is None
-            and modelo is None
-            and year is None
-            and period is None
-            and registry_revision is None
-            and bucket_id is None
-        ):
-            address = ModeloWorkAddress()
-        else:
-            address = _work_address_for_cli(
-                work_unit_id=work_unit_id,
-                modelo=modelo,
-                year=year,
-                period=period,
-                revision=registry_revision,
-                bucket_id=bucket_id,
-            )
-        parsed_selector = _parse_revision_selector(selector)
-        validated_revision_id = (
-            _validate_calculation_revision_id(calculation_revision_id)
-            if calculation_revision_id is not None
-            else None
-        )
-        if default_for == "verify":
-            return resolve_verifiable_modelo_calculation_revision_address(
-                address=address,
-                calculation_revision_id=validated_revision_id,
-                selector=parsed_selector,
-            )
-        if default_for == "file":
-            return resolve_fileable_modelo_calculation_revision_address(
-                address=address,
-                calculation_revision_id=validated_revision_id,
-                selector=parsed_selector,
-            )
-        if default_for == "export":
-            return resolve_exportable_modelo_calculation_revision_address(
-                address=address,
-                calculation_revision_id=validated_revision_id,
-                selector=parsed_selector,
-            )
-        return resolve_modelo_calculation_revision_address(
-            address=address,
+        return resolve_modelo_revision_for_operator_target(
             calculation_revision_id=validated_revision_id,
+            work_unit_id=exact_work_id,
+            modelo=modelo,
+            year=year,
+            period=period,
+            registry_revision_id=registry_revision,
+            bucket_id=bucket_id,
             selector=parsed_selector,
+            default_for=default_for,
         )
     except (
         ModeloWorkAddressNotFoundError,
         ModeloCalculationRevisionSelectorNotFoundError,
         ModeloCalculationRevisionSelectorStateError,
         ModeloCalculationRevisionSelectorAmbiguousError,
+        ModeloWorkPeriodTokenError,
     ) as exc:
         raise _selector_bad_parameter(exc) from exc
 
@@ -362,44 +307,10 @@ def _resolve_year_period(year: int, period: str, *, modelo: str | None = None) -
     ``modelo`` is supplied the error instead explains the composition
     and enumerates the registry-declared period tokens for that modelo.
     """
-    token = period.strip()
-    if not token:
-        raise typer.BadParameter(tr("cli.common.errors.period_empty"))
-    lowered = token.lower()
-    # When the token matches a registry-declared period for the modelo
-    # verbatim (case-insensitively) it is already the registry period —
-    # return it directly. This is the only path that resolves the
-    # non-date censo / event tokens ("alta", "modificacion", "baja",
-    # "AD-HOC") declared by censo modelos (036, 308, ...); for quarterly
-    # / annual modelos it short-circuits to the same value the
-    # composition branches below would produce.
-    declared = _declared_period_tokens(modelo)
-    declared_match = next((d for d in declared if d.lower() == lowered), None)
-    if declared_match is not None:
-        return year, declared_match
-    if lowered in {"annual", "anual", "0a"}:
-        composed = f"{year}"
-    elif lowered in {"q1", "1t", "1"}:
-        composed = f"{year}Q1"
-    elif lowered in {"q2", "2t", "2"}:
-        composed = f"{year}Q2"
-    elif lowered in {"q3", "3t", "3"}:
-        composed = f"{year}Q3"
-    elif lowered in {"q4", "4t", "4"}:
-        composed = f"{year}Q4"
-    elif lowered.isdigit() and len(lowered) == 2:
-        composed = f"{year}-{lowered}"
-    elif lowered.isdigit() and len(lowered) == 4:
-        # A bare four-digit token is itself a year — the operator
-        # likely repeated the filing year into --period. Composing it
-        # would yield "<year>-<token>"; refuse with a clear hint.
-        raise typer.BadParameter(_period_token_error(year, token, modelo))
-    else:
-        composed = f"{year}{token}" if token.upper().startswith("Q") else f"{year}-{token}"
     try:
-        return parse_modelo_period(composed)
-    except RegistryValidationError as exc:
-        raise typer.BadParameter(_period_token_error(year, token, modelo, fallback=str(exc))) from exc
+        return normalize_modelo_work_period(year, period, modelo=modelo)
+    except ModeloWorkPeriodTokenError as exc:
+        raise _bad_parameter_from_localized_context(exc) from exc
 
 
 def _period_token_error(
@@ -822,177 +733,15 @@ def work_compare_taxation(
     _emit_envelope(ctx, command="modelo.work.compare_taxation", result=result, lines=lines)
 
 
-@work_app.command("revisions", help=tr("cli.app.modelo.work.revisions_help"))
-def work_revisions(
-    ctx: typer.Context,
-    work_unit_id: Annotated[
-        str | None,
-        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
-    ] = None,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-    ] = None,
-    period: Annotated[
-        str | None,
-        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-    ] = None,
-    revision: Annotated[
-        str | None,
-        typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-    ] = None,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    """List calculation revisions, optionally filtered to one work unit."""
-    activate_subcommand_output_language(ctx, output_language)
-    _require_active_profile()
-    resolved_work_unit_id = work_unit_id
-    if work_unit_id is not None or modelo is not None or year is not None or period is not None:
-        unit = _resolve_work_unit_for_cli(
-            work_unit_id=work_unit_id,
-            modelo=modelo,
-            year=year,
-            period=period,
-            revision=revision,
-            bucket_id=bucket_id,
-        )
-        resolved_work_unit_id = unit.work_unit_id
-    revisions = list_calculation_revisions(work_unit_id=resolved_work_unit_id)
-    from ._common import _emit_envelope
-    from ._modelo_payloads import WorkRevisionsResult
-
-    result = WorkRevisionsResult.model_validate(
-        {
-            "work_unit_id_filter": resolved_work_unit_id,
-            "revision_count": len(revisions),
-            "revisions": [_calculation_revision_payload(rev) for rev in revisions],
-        }
-    )
-    lines = [
-        "operation\tmodelo.work.revisions",
-        f"work_unit_id_filter\t{resolved_work_unit_id or ''}",
-        f"revision_count\t{len(revisions)}",
-        "short_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at",
-    ]
-    lines.extend(
-        "\t".join(
-            (
-                _short_id(rev.calculation_revision_id) or "",
-                rev.calculation_revision_id,
-                _short_id(rev.work_unit_id) or "",
-                rev.work_unit_id,
-                rev.state.value,
-                rev.created_at.isoformat(),
-            )
-        )
-        for rev in revisions
-    )
-    _emit_envelope(ctx, command="modelo.work.revisions", result=result, lines=lines)
-
-
-@work_app.command("revision", help=tr("cli.app.modelo.work.revision_show_help"))
-def work_revision(
-    ctx: typer.Context,
-    calculation_revision_id: Annotated[
-        str | None,
-        typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
-    ] = None,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-    ] = None,
-    period: Annotated[
-        str | None,
-        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-    ] = None,
-    registry_revision: Annotated[
-        str | None,
-        typer.Option("--registry-revision", help=tr("cli.app.modelo.work.revision_help")),
-    ] = None,
-    work_unit_id: Annotated[
-        str | None,
-        typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help")),
-    ] = None,
-    select: Annotated[
-        str,
-        typer.Option("--select", help=tr("cli.app.modelo.work.revision_selector_help", default="Revision selector.")),
-    ] = ModeloCalculationRevisionSelector.CURRENT.value,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    """Show one stored calculation revision's persisted casilla values.
-
-    Read-only: the persisted revision is rendered as-is, never
-    recomputed. Use ``work revisions`` to discover a revision id.
-    """
-    activate_subcommand_output_language(ctx, output_language)
-    _require_active_profile()
-    try:
-        revision = _resolve_revision_for_cli(
-            calculation_revision_id=calculation_revision_id,
-            work_unit_id=work_unit_id,
-            modelo=modelo,
-            year=year,
-            period=period,
-            registry_revision=registry_revision,
-            bucket_id=bucket_id,
-            selector=select,
-        )
-    except CalculationRevisionNotFoundError as exc:
-        if calculation_revision_id is not None:
-            raise _bad_parameter_from_error(exc) from exc
-        raise _selector_bad_parameter(exc) from exc
-    modality_payload_r: dict[str, object] = {}
-    modality_lines_r: list[str] = []
-    unit_for_modality_r = get_work_unit(revision.work_unit_id)
-    modality_summary_r = modelo_202_modality_for_work_unit(unit_for_modality_r)
-    if modality_summary_r is not None:
-        modality_payload_r = {
-            "modality": modality_summary_r.modality,
-            "modality_reason": modality_summary_r.reason,
-        }
-        modality_lines_r = [f"modality\t{modality_summary_r.modality}"]
-
-    from ._common import _emit_envelope
-    from ._modelo_payloads import WorkRevisionResult
-
-    result = WorkRevisionResult.model_validate(
-        {
-            **_calculation_revision_payload(revision).model_dump(mode="python"),
-            **modality_payload_r,
-        }
-    )
-    lines = [
-        "operation\tmodelo.work.revision",
-        *_calculation_revision_lines(revision),
-        *modality_lines_r,
-    ]
-    _emit_envelope(ctx, command="modelo.work.revision", result=result, lines=lines)
+register_work_revision_commands(
+    work_app,
+    activate_output_language=activate_subcommand_output_language,
+    require_active_profile=_require_active_profile,
+    resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
+    resolve_revision_for_cli=_resolve_revision_for_cli,
+    bad_parameter_from_error=_bad_parameter_from_error,
+    selector_bad_parameter=_selector_bad_parameter,
+)
 
 
 @work_app.command(
@@ -1101,203 +850,15 @@ def work_history(
     _emit_envelope(ctx, command="modelo.work.history", result=result, lines=lines)
 
 
-@work_app.command("verify", help=tr("cli.app.modelo.work.verify_help"))
-def work_verify(
-    ctx: typer.Context,
-    calculation_revision_id: Annotated[
-        str | None,
-        typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
-    ] = None,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-    ] = None,
-    period: Annotated[
-        str | None,
-        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-    ] = None,
-    revision: Annotated[
-        str | None,
-        typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-    ] = None,
-    work_unit_id: Annotated[
-        str | None,
-        typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help")),
-    ] = None,
-    select: Annotated[
-        str,
-        typer.Option("--select", help=tr("cli.app.modelo.work.revision_selector_help", default="Revision selector.")),
-    ] = ModeloCalculationRevisionSelector.CURRENT.value,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
-    actor: Annotated[
-        str | None,
-        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ] = None,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    """Verify a draft calculation revision against the verified-complete contract.
-
-    Produces a structured verification report. On success, the
-    revision transitions to ``verificado_completo``. On failure, the
-    revision is not mutated and the report explains the missing
-    inputs or blocking findings.
-    """
-    activate_subcommand_output_language(ctx, output_language)
-    _require_active_profile()
-    # ModeloWorkflowGateError is intentionally NOT wrapped in
-    # typer.BadParameter: it is a workflow-state refusal (e.g.
-    # NO_PENDING_OBLIGATION), not a user-input error. Letting it
-    # propagate to the command error boundary renders it through its
-    # registered REFUSED code rather than a Click "Invalid value:"
-    # header that misframes a workflow gate as a bad CLI argument.
-    try:
-        from ...application.workflow import workflow_state_repository
-
-        selected_revision = _resolve_revision_for_cli(
-            calculation_revision_id=calculation_revision_id,
-            work_unit_id=work_unit_id,
-            modelo=modelo,
-            year=year,
-            period=period,
-            registry_revision=revision,
-            bucket_id=bucket_id,
-            selector=select,
-            default_for="verify",
-        )
-        workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
-        report = verify_modelo_revision(
-            selected_revision.calculation_revision_id,
-            actor=actor or _resolve_default_actor(),
-            workflow_profile=workflow_profile,
-        )
-    except CalculationRevisionNotFoundError as exc:
-        if calculation_revision_id is not None:
-            raise _calculation_revision_not_found_bad_parameter(calculation_revision_id, exc) from exc
-        raise _bad_parameter_from_error(exc) from exc
-    except (
-        CalculationRevisionStateError,
-        WorkUnitNotFoundError,
-    ) as exc:
-        raise _bad_parameter_from_error(exc) from exc
-
-    from ._common import _emit_envelope
-    from ._modelo_payloads import WorkVerifyResult
-
-    result = WorkVerifyResult.model_validate(_verification_report_payload(report).model_dump(mode="python"))
-    lines = ["operation\tmodelo.work.verify", *_verification_report_lines(report)]
-    _emit_envelope(ctx, command="modelo.work.verify", result=result, lines=lines)
-
-    if not report.granted_verificado_completo:
-        raise typer.Exit(code=1)
-
-
-@work_app.command("file", help=tr("cli.app.modelo.work.file_help"))
-def work_file(
-    ctx: typer.Context,
-    calculation_revision_id: Annotated[
-        str | None,
-        typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
-    ] = None,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-    ] = None,
-    period: Annotated[
-        str | None,
-        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-    ] = None,
-    revision: Annotated[
-        str | None,
-        typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-    ] = None,
-    work_unit_id: Annotated[
-        str | None,
-        typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help")),
-    ] = None,
-    select: Annotated[
-        str,
-        typer.Option("--select", help=tr("cli.app.modelo.work.revision_selector_help", default="Revision selector.")),
-    ] = ModeloCalculationRevisionSelector.CURRENT.value,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
-    actor: Annotated[
-        str | None,
-        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ] = None,
-    notes: Annotated[
-        str | None,
-        typer.Option("--notes", help=tr("cli.app.modelo.work.notes_help")),
-    ] = None,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    """Mark a verified modelo revision as internally filed. Does NOT submit to AEAT."""
-    activate_subcommand_output_language(ctx, output_language)
-    _require_active_profile()
-    # ModeloWorkflowGateError is a workflow-state refusal, not a
-    # user-input error — it propagates to the command error boundary
-    # so it renders through its registered REFUSED code rather than a
-    # Click "Invalid value:" header.
-    try:
-        from ...application.workflow import workflow_state_repository
-
-        selected_revision = _resolve_revision_for_cli(
-            calculation_revision_id=calculation_revision_id,
-            work_unit_id=work_unit_id,
-            modelo=modelo,
-            year=year,
-            period=period,
-            registry_revision=revision,
-            bucket_id=bucket_id,
-            selector=select,
-            default_for="file",
-        )
-        workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
-        record = file_modelo_revision(
-            selected_revision.calculation_revision_id,
-            actor=actor or _resolve_default_actor(),
-            workflow_profile=workflow_profile,
-            notes=notes,
-        )
-    except CalculationRevisionNotFoundError as exc:
-        if calculation_revision_id is not None:
-            raise _calculation_revision_not_found_bad_parameter(calculation_revision_id, exc) from exc
-        raise _bad_parameter_from_error(exc) from exc
-    except (
-        CalculationRevisionStateError,
-        WorkUnitNotFoundError,
-    ) as exc:
-        raise _bad_parameter_from_error(exc) from exc
-
-    from ._common import _emit_envelope
-    from ._modelo_payloads import WorkFileResult
-
-    result = WorkFileResult.model_validate(_filing_record_payload(record).model_dump(mode="python"))
-    lines = ["operation\tmodelo.work.file", *_filing_record_lines(record)]
-    lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
-    _emit_envelope(ctx, command="modelo.work.file", result=result, lines=lines)
+register_work_verification_commands(
+    work_app,
+    activate_output_language=activate_subcommand_output_language,
+    require_active_profile=_require_active_profile,
+    resolve_revision_for_cli=_resolve_revision_for_cli,
+    resolve_default_actor=_resolve_default_actor,
+    bad_parameter_from_error=_bad_parameter_from_error,
+    calculation_revision_not_found_bad_parameter=_calculation_revision_not_found_bad_parameter,
+)
 
 
 register_work_run_commands(
@@ -2283,7 +1844,6 @@ def modelo_reconcile_from_justificante_verb(
 
 register_export_commands(
     app,
-    resolve_revision_for_cli=_resolve_revision_for_cli,
     bad_parameter_from_error=_bad_parameter_from_error,
     selector_bad_parameter=_selector_bad_parameter,
     resolve_default_actor=_resolve_default_actor,

@@ -116,6 +116,7 @@ related:
   - '[[2026-06-05-modelo-addressing-ux-W02-P04-S15]]'
   - '[[2026-06-05-modelo-addressing-ux-W02-P04-S16]]'
   - '[[2026-06-05-modelo-addressing-ux-code-review-audit]]'
+  - '[[2026-06-05-modelo-addressing-ux-follow-up-queue-adr]]'
   - '[[2026-06-05-modelo-addressing-ux-plan]]'
   - '[[2026-06-05-modelo-addressing-ux-vault-curation-audit]]'
   - '[[2026-06-05-modelo-addressing-ux-w01-p11-s40-exec]]'
@@ -130,6 +131,28 @@ related:
   - '[[2026-06-05-modelo-addressing-ux-w03-p06-s22-exec]]'
   - '[[2026-06-05-modelo-addressing-ux-w03-p06-s23-exec]]'
   - '[[2026-06-05-modelo-addressing-ux-w03-p06-s24-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w04-p07-s25-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w04-p07-s26-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w04-p07-s27-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w04-p08-s28-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w04-p08-s29-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w04-p08-s30-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w04-p08-s31-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w04-p08-s46-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w04-p08-s47-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p09-s32-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p09-s33-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p09-s34-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p09-s35-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p10-s36-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p10-s37-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p10-s38-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p10-s39-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p13-s48-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p13-s49-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p13-s50-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p13-s51-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p13-s52-exec]]'
 ---
 
 # `modelo-addressing-ux` feature index
@@ -141,6 +164,7 @@ Auto-generated index of all documents tagged with `#modelo-addressing-ux`.
 ### adr
 
 - `2026-06-04-modelo-addressing-ux-adr` - `modelo-addressing-ux` adr: `natural-key modelo work addressing` | (**status:** `accepted`)
+- `2026-06-05-modelo-addressing-ux-follow-up-queue-adr` - Modelo Addressing UX Follow-Up ADR Queue
 
 ### audit
 
@@ -268,6 +292,28 @@ Auto-generated index of all documents tagged with `#modelo-addressing-ux`.
 - `2026-06-05-modelo-addressing-ux-w03-p06-s22-exec` - W03.P06.S22 row flag parsing persistence and rendering
 - `2026-06-05-modelo-addressing-ux-w03-p06-s23-exec` - W03.P06.S23 lowered calculate command budget
 - `2026-06-05-modelo-addressing-ux-w03-p06-s24-exec` - W03.P06.S24 calculate boundary exact and semantic audits
+- `2026-06-05-modelo-addressing-ux-w04-p07-s25-exec` - W04.P07.S25 resume interface contract
+- `2026-06-05-modelo-addressing-ux-w04-p07-s26-exec` - W04.P07.S26 resume ADR gate
+- `2026-06-05-modelo-addressing-ux-w04-p07-s27-exec` - W04.P07.S27 resume ambiguity refusal and candidate guidance
+- `2026-06-05-modelo-addressing-ux-w04-p08-s28-exec` - W04.P08.S28 Workflow Resume Resolution
+- `2026-06-05-modelo-addressing-ux-w04-p08-s29-exec` - W04.P08.S29 Work Resume CLI Natural Key
+- `2026-06-05-modelo-addressing-ux-w04-p08-s30-exec` - W04.P08.S30 Resume Exact Id Validation
+- `2026-06-05-modelo-addressing-ux-w04-p08-s31-exec` - W04.P08.S31 Resume CLI Tests
+- `2026-06-05-modelo-addressing-ux-w04-p08-s46-exec` - W04.P08.S46 Resume Facade Routing
+- `2026-06-05-modelo-addressing-ux-w04-p08-s47-exec` - W04.P08.S47 Resume Projection Guidance
+- `2026-06-05-modelo-addressing-ux-w05-p09-s32-exec` - W05.P09.S32 slice plan status and check
+- `2026-06-05-modelo-addressing-ux-w05-p09-s33-exec` - W05.P09.S33 decomposition step records
+- `2026-06-05-modelo-addressing-ux-w05-p09-s34-exec` - W05.P09.S34 focused regression cadence
+- `2026-06-05-modelo-addressing-ux-w05-p09-s35-exec` - W05.P09.S35 architecture and semantic gates
+- `2026-06-05-modelo-addressing-ux-w05-p10-s36-exec` - W05.P10.S36 Final Residual Risk Matrix
+- `2026-06-05-modelo-addressing-ux-w05-p10-s37-exec` - W05.P10.S37 Final Code Review
+- `2026-06-05-modelo-addressing-ux-w05-p10-s38-exec` - W05.P10.S38 Follow-Up ADR Queue
+- `2026-06-05-modelo-addressing-ux-w05-p10-s39-exec` - W05.P10.S39 Final Plan Validation
+- `2026-06-05-modelo-addressing-ux-w05-p13-s48-exec` - W05.P13.S48 Centralized Addressing Migration
+- `2026-06-05-modelo-addressing-ux-w05-p13-s49-exec` - W05.P13.S49 Centralized Addressing Static Guard
+- `2026-06-05-modelo-addressing-ux-w05-p13-s50-exec` - W05.P13.S50 Exact Centralized Addressing Audit
+- `2026-06-05-modelo-addressing-ux-w05-p13-s51-exec` - W05.P13.S51 Semantic Centralized Addressing Audit
+- `2026-06-05-modelo-addressing-ux-w05-p13-s52-exec` - W05.P13.S52 Centralized Addressing Verification
 
 ### plan
 

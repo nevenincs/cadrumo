@@ -798,6 +798,8 @@ application:
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
+      work_period_token_invalid: '--period ''%{token}'' no es un token de periodo valido para el modelo %{modelo}. Indica --year %{year} por separado y usa uno de: %{tokens}.'
+      work_period_token_unrecognised: '--period ''%{token}'' no se reconoce. Indica --year %{year} por separado y usa un token de periodo como 0A, Q1, 1T o 01.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
@@ -1724,8 +1726,6 @@ cli:
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         name_help: Nombre de visualización opcional de la unidad de trabajo
         name_required: Proporcione --name.
-        natural_target_required: Pase un id exacto de unidad de trabajo, o indique
-          la declaracion con --modelo, --year y --period.
         notes_help: Notas opcionales asociadas al filing record
         output_language_help: Idioma de salida para los mensajes renderizados.
         override_help: Valor de binding con sintaxis KEY=VALUE (repetible); ejecuta
@@ -4179,6 +4179,7 @@ errors:
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
     unsupported_currency: El código de moneda indicado no es compatible.
+    modelo_work_period_token: 'Periodo de modelo no valido.'
   snapshot:
     modelo_not_registered: El modelo no esta registrado en el registro.
   storage:

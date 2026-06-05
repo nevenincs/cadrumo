@@ -11,16 +11,6 @@ related:
   - '[[2026-06-04-modelo-addressing-ux-code-review-audit]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `modelo-addressing-ux` `modelo CLI decomposition continuous plan` plan
 
 ## Description
@@ -123,18 +113,18 @@ Confirm the resume interface is covered by the accepted ADR or stop for a new AD
 
 - [x] `W04.P07.S25` - record the resume interface contract for natural-key selectors and legacy exact-id support; `.vault/exec/2026-06-05-modelo-addressing-ux`.
 - [x] `W04.P07.S26` - open a new ADR before implementation if resume requires hidden state or a new legally meaningful selector axis; `.vault/adr`.
-- [ ] `W04.P07.S27` - define resume ambiguity refusal and candidate guidance for modelo year period addressing; `src/aeat/application/workflow`.
+- [x] `W04.P07.S27` - define resume ambiguity refusal and candidate guidance for modelo year period addressing; `src/aeat/application/workflow`.
 
 ### Phase `W04.P08` - resume implementation
 
 Add natural-key resume selection while keeping exact UUID or work identifier resume as documented legacy compatibility.
 
-- [ ] `W04.P08.S28` - extend workflow resume resolution to accept modelo year period and selector inputs; `src/aeat/application/workflow`.
-- [ ] `W04.P08.S29` - update work resume CLI to support natural-key flags and legacy exact-id target; `src/aeat/entrypoints/cli/_modelo_work_runs_cli.py`.
-- [ ] `W04.P08.S30` - reuse shared exact-id shape validation for the legacy resume escape hatch; `src/aeat/entrypoints/cli/_modelo_cli_support.py`.
-- [ ] `W04.P08.S31` - cover natural-key resume exact-id resume and ambiguity refusal with real CLI tests; `src/aeat/entrypoints/cli/test_work_resume.py`.
-- [ ] `W04.P08.S46` - route work resume modelo year period and revision selector resolution through the centralized modelo addressing facade before workflow-run lookup; `src/aeat/application/workflow`.
-- [ ] `W04.P08.S47` - project resumable workflow runs back to modelo visible filing targets and short exact identifiers for operator guidance; `src/aeat/entrypoints/cli/_modelo_work_runs_cli.py`.
+- [x] `W04.P08.S28` - extend workflow resume resolution to accept modelo year period and selector inputs; `src/aeat/application/workflow`.
+- [x] `W04.P08.S29` - update work resume CLI to support natural-key flags and legacy exact-id target; `src/aeat/entrypoints/cli/_modelo_work_runs_cli.py`.
+- [x] `W04.P08.S30` - reuse shared exact-id shape validation for the legacy resume escape hatch; `src/aeat/entrypoints/cli/_modelo_cli_support.py`.
+- [x] `W04.P08.S31` - cover natural-key resume exact-id resume and ambiguity refusal with real CLI tests; `src/aeat/entrypoints/cli/test_work_resume.py`.
+- [x] `W04.P08.S46` - route work resume modelo year period and revision selector resolution through the centralized modelo addressing facade before workflow-run lookup; `src/aeat/application/workflow`.
+- [x] `W04.P08.S47` - project resumable workflow runs back to modelo visible filing targets and short exact identifiers for operator guidance; `src/aeat/entrypoints/cli/_modelo_work_runs_cli.py`.
 
 ## Wave `W05` - continuous verification and handoff
 
@@ -153,20 +143,20 @@ Define repeatable verification gates for every extraction slice instead of relyi
 
 Finish the continuous decomposition plan only when the legacy root has shrunk and residual risks are explicitly tracked or closed.
 
-- [ ] `W05.P10.S36` - persist final residual risk matrix for remaining legacy CLI debt; `.vault/exec/2026-06-05-modelo-addressing-ux`.
-- [ ] `W05.P10.S37` - run vaultspec code review over the full decomposition surface; `.vault/audit`.
-- [ ] `W05.P10.S38` - update follow-up ADR queue for unresolved architecture questions; `.vault/adr`.
-- [ ] `W05.P10.S39` - validate the plan and report completion or remaining open steps; `.vault/plan/2026-06-05-modelo-addressing-ux-plan.md`.
+- [x] `W05.P10.S36` - persist final residual risk matrix for remaining legacy CLI debt; `.vault/exec/2026-06-05-modelo-addressing-ux`.
+- [x] `W05.P10.S37` - run vaultspec code review over the full decomposition surface; `.vault/audit`.
+- [x] `W05.P10.S38` - update follow-up ADR queue for unresolved architecture questions; `.vault/adr`.
+- [x] `W05.P10.S39` - validate the plan and report completion or remaining open steps; `.vault/plan/2026-06-05-modelo-addressing-ux-plan.md`.
 
 ### Phase `W05.P13` - centralized addressing closure guards
 
 Prove the new addressing facade is the only policy surface for modelo visible-target exact-id and revision-pick resolution across CLI modules and adjacent command groups before final handoff.
 
-- [ ] `W05.P13.S48` - rewire calculate verify file export project compare reconcile history and resume command modules to consume centralized addressing results instead of local selector branching; `src/aeat/entrypoints/cli`.
-- [ ] `W05.P13.S49` - add a static guard forbidding CLI-local raw-id regexes direct selector policy and duplicated work-address parsing outside centralized helpers; `src/aeat/entrypoints/cli/test_architecture_boundaries.py`.
-- [ ] `W05.P13.S50` - run exact audit for duplicated raw-id regexes local selector branching legacy ID-first resume text and decentralized revision-pick handling; `rg centralized-addressing closure audit`.
-- [ ] `W05.P13.S51` - run semantic vaultspec-rag audit proving CLI and workflow surfaces consume centralized addressing instead of reinventing resolver policy; `vaultspec-rag centralized-addressing closure audit`.
-- [ ] `W05.P13.S52` - run focused application CLI work resume export project compare reconcile and docs conformance tests after centralized addressing migration; `src/aeat/application/modelo src/aeat/entrypoints/cli docs`.
+- [x] `W05.P13.S48` - rewire calculate verify file export project compare reconcile history and resume command modules to consume centralized addressing results instead of local selector branching; `src/aeat/entrypoints/cli`.
+- [x] `W05.P13.S49` - add a static guard forbidding CLI-local raw-id regexes direct selector policy and duplicated work-address parsing outside centralized helpers; `src/aeat/entrypoints/cli/test_architecture_boundaries.py`.
+- [x] `W05.P13.S50` - run exact audit for duplicated raw-id regexes local selector branching legacy ID-first resume text and decentralized revision-pick handling; `rg centralized-addressing closure audit`.
+- [x] `W05.P13.S51` - run semantic vaultspec-rag audit proving CLI and workflow surfaces consume centralized addressing instead of reinventing resolver policy; `vaultspec-rag centralized-addressing closure audit`.
+- [x] `W05.P13.S52` - run focused application CLI work resume export project compare reconcile and docs conformance tests after centralized addressing migration; `src/aeat/application/modelo src/aeat/entrypoints/cli docs`.
 
 ## Steps
 

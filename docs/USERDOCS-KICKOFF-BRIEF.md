@@ -82,8 +82,8 @@ examples, troubleshooting, conceptual coverage), and navigation (a real landing
   zero-context newcomer-clarity reviewer). Prose style:
   `.claude/skills/vaultspec-documentation/references/prose-style-rules.md`.
 - **Ground every command against the live CLI.** Verify each `aeat ...` verb and
-  flag by actually running `aeat <path> --help` (or the command) before citing
-  it. Never invent commands, flags, or outputs. The grounded-tutorial pass
+  flag by actually running that command's live `--help` output (or the command)
+  before citing it. Never invent commands, flags, or outputs. The grounded-tutorial pass
   caught that Modelo 303 `calculate` is currently broken (§6) precisely because
   it ran the CLI.
 
