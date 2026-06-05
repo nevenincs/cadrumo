@@ -239,7 +239,7 @@ Resolve dependency, dead-code, Ruff, security, and duplication advisory findings
 - [x] `W06.P20.S79` - Resolve dependency declaration drift findings; `pyproject.toml`.
 - [x] `W06.P20.S80` - Resolve Vulture dead-code candidate findings; `src/aeat`.
 - [x] `W06.P20.S81` - Split Semgrep security policy by source class; `.semgrepignore`.
-- [ ] `W06.P20.S82` - Reduce remaining duplication clone groups or record ratchets; `src/aeat`.
+- [x] `W06.P20.S82` - Reduce remaining duplication clone groups or record ratchets; `src/aeat`.
 
 ### Phase `W06.P21` - final all-green ratchet and review
 

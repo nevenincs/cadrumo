@@ -956,3 +956,36 @@ Residual carried forward:
 
 - The broader repository still has unrelated dirty preflight/export-test WIP in
   the shared worktree; S81 did not absorb it.
+
+## HEALTH-024-S82 | CLOSED | 2026-06-05 Duplication residual ratchet
+
+W06.P20.S82 reran the configured jscpd duplication lane and preserved the
+current clone set as an explicit ratchet instead of hiding or scattering
+cross-domain refactors through the hygiene row.
+
+Verification:
+
+- `just audit-duplication` completed.
+- jscpd analyzed 853 Python files and 163,121 lines.
+- jscpd reported 36 clone groups.
+- Current duplicated lines: 650, or 0.4%.
+- Current duplicated tokens: 6,487, or 0.63%.
+
+Current clone-family ratchet:
+
+- AEAT Sede NIF/GROI checker shapes.
+- Registry previous-filing binding and relation validation helpers.
+- Registry NIF-IVA/GROI oracle helpers.
+- Modelo work CLI rendering/addressing blocks.
+- Registry CLI command-output blocks.
+- Ledger business-invoice CLI blocks from current shared worktree state.
+- Ledger model paired record blocks.
+- Live borrador/censo acquisition blocks.
+- Declaracion/justificante error hierarchy blocks.
+
+Residual carried forward:
+
+- The duplication lane remains advisory-red with 36 clone groups.
+- The next safe duplication slices should start with one cohesive subsystem at a
+  time: Sede checker shared helpers, registry relation/binding helpers, modelo
+  work CLI output helpers, then registry CLI output helpers.
