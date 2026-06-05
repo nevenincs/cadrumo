@@ -275,5 +275,3 @@ def import_external_filing_evidence(
     )
 
     return new_filing
-
-

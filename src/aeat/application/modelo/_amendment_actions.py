@@ -315,5 +315,3 @@ def amend_modelo_revision(
     )
 
     return new_filing
-
-
