@@ -9,7 +9,9 @@ no plaintext submission JSON or envelope file lands on disk.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, cast
+
+from pydantic import ValidationError
 
 from ...adapters.persistence.storage import SecureBoundRepository, SensitivityClass
 from ...core.logging import get_logger
@@ -51,20 +53,35 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
         Returns:
             Iterator over :class:`ModeloPresentado` records.
         """
-        from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+        from ...adapters.persistence.storage.sql import SecureObjectRecord
 
-        for submission_id in self.iter_ids():
-            try:
-                payload = self.load(submission_id)
-            except (ClassificationError, EnvelopeVersionError):
+        envelope_cls = self._envelope_cls()
+        records: list[tuple[str, ModeloPresentado]] = []
+        for item in self.secure_object_repository.iter_records_with_failures(
+            self.namespace,
+            expected_class=self.sensitivity,
+            max_supported_version=self.schema_version,
+        ):
+            if not isinstance(item, SecureObjectRecord):
                 _log.warning(
-                    "iter_submissions: skipping submission id=%s due to secure-object error",
-                    submission_id,
+                    "iter_submissions: skipping unreadable submission row_id=%s reason=%s",
+                    getattr(item, "row_id", "unknown"),
+                    getattr(item, "reason", "unknown"),
+                )
+                continue
+            try:
+                envelope = envelope_cls.model_validate_json(item.payload)
+            except ValidationError:
+                _log.warning(
+                    "iter_submissions: skipping invalid submission payload object_key=%s",
+                    item.object_key.hex(),
                     exc_info=True,
                 )
                 continue
-            if payload is not None:
-                yield payload
+            payload = cast(ModeloPresentado, envelope.payload)
+            records.append((payload.submission_id, payload))
+        for _, payload in sorted(records, key=lambda record: record[0]):
+            yield payload
 
 
 __all__ = [
