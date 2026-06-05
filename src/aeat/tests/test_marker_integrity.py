@@ -41,30 +41,41 @@ _HEX_MARKERS = frozenset(
     }
 )
 _EXPECTED_CONFIGURED_MARKERS = _EXECUTION_MARKERS | _HEX_MARKERS
+_LEGACY_READ_MARKER = "live_" + "read"
+_LEGACY_WRITE_MARKER = "live_" + "write"
+_LEGACY_DOMAIN_MARKERS = frozenset(
+    "domain_" + suffix
+    for suffix in (
+        "application",
+        "core",
+        "export",
+        "inbound",
+        "model",
+        "outbound",
+        "persistence",
+    )
+)
+_LEGACY_FIXTURE_TIER_MARKER = "fixture_" + "tier_l3"
 _CAMPAIGN_METADATA_PATTERNS = (
     re.compile(r"\btest_w\d+_p\d+", re.IGNORECASE),
     re.compile(r"\bW\d{1,3}(?:\.P\d{1,3})?(?:\.S\d{1,4})?\b"),
     re.compile(r"\bP\d{1,3}\.S\d{1,4}\b"),
     re.compile(r"\bS\d{2,4}\b"),
 )
-_FORBIDDEN_MARKERS = frozenset(
-    {
-        "docs",
-        "domain_application",
-        "domain_core",
-        "domain_export",
-        "domain_inbound",
-        "domain_model",
-        "domain_outbound",
-        "domain_persistence",
-        "fixture_tier_l3",
-        "flaky",
-        "inventory",
-        "live_read",
-        "live_write",
-        "slow",
-        "workbook_parity",
-    }
+_FORBIDDEN_MARKERS = (
+    frozenset(
+        {
+            "docs",
+            _LEGACY_FIXTURE_TIER_MARKER,
+            "flaky",
+            "inventory",
+            _LEGACY_READ_MARKER,
+            _LEGACY_WRITE_MARKER,
+            "slow",
+            "workbook_" + "parity",
+        }
+    )
+    | _LEGACY_DOMAIN_MARKERS
 )
 _LIVE_ENV_NAME = "AEAT_LIVE_TESTS_ENABLED"
 _LIVE_TEST_OPT_IN_TOKENS = ("AEAT_LIVE_TESTS_ENABLED", "aeat_live_tests_enabled")

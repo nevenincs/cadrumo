@@ -46,7 +46,7 @@ execution-scope modules must be split into separate files.
 | `aeat_live` | Opt-in read-only tests against a real external service. | `uv run pytest -m aeat_live` |
 
 Automated AEAT write-shaped tests remain forbidden. There is no
-`live_write` marker and no selectable write-test lane.
+selectable write-test marker or write-test lane.
 
 ### Hexagonal Layer
 

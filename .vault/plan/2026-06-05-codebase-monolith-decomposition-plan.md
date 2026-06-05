@@ -109,9 +109,24 @@ Persist the current over-1250-line module inventory and callable-size/cognitive-
 
 Reduce remaining CLI roots below the 1250-line objective through focused command registrars while preserving CLI-as-transport and backend-owned business logic.
 
+### Phase `W02.P02` - ledger root continuation
+
+Continue extracting coherent ledger command groups until _ledger.py moves materially toward the 1250-line objective without CLI-owned accounting policy.
+
+
+### Phase `W02.P03` - live and modelo root continuation
+
+Continue reducing _app_live.py, _modelo.py, and config CLI roots after ledger slices, preserving command registrations and tests.
+
+
 ## Wave `W03` - application and domain monolith decomposition
 
 Decompose application/domain/backend monoliths only after ADR-backed boundary decisions identify safe seams and public facade preservation rules.
+
+### Phase `W03.P04` - ADR bounded backend decomposition
+
+Queue and execute ADR-backed decomposition for application, domain, adapter, persistence, and core modules over 1250 lines where safe boundaries require design decisions.
+
 
 ## Description
 
