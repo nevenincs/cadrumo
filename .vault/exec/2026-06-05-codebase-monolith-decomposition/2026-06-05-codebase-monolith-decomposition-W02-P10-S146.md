@@ -8,22 +8,21 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
 ---
 
-# W02.P10.S146 Config And Budget Verification
+# W02.P10.S146 Config and Size-Budget Verification
 
-## Scope
-
-Verify residual config callable splits and the size-budget inventory repair.
+Scope: verify residual config callable splits and hard size-budget inventory no longer fail on stale paths or config registrar callables.
 
 ## Description
 
-- Ran ruff and compile checks for config custody, profile censo, and the size-budget guard.
-- Ran marker-enabled config custody/profile lifecycle tests.
-- Ran the hard size-budget guard after the current overview and parser test splits.
+- Verified changed config custody and censo modules with Ruff.
+- Verified focused config CLI behavior across custody, profile censo, auth, repair, apoderado, Google sync, and bucket-history tests.
+- Verified hard size-budget checks pass across tracked Python modules and production callables.
+- Verified the plan with `vaultspec-core vault plan check`.
 
 ## Outcome
 
-Config marker lane passed with 73 tests. The codebase size-budget guard passed with 2 tests.
+Residual config registrar splits are complete and the hard size-budget gate passes for the current tracked worktree.
 
 ## Notes
 
-Default pytest deselected config tests until the marker lane was enabled.
+Passing checks: 57 focused config CLI tests; 17 application censo service tests; 11 profile censo CLI tests; `src/aeat/tests/test_codebase_size_budgets.py`; and plan check with only the known inserted-step monotonicity warning.

@@ -132,6 +132,7 @@ Close any CLI roots still above the hard module budget after first-pass registra
 - [x] `W02.P10.S145` - repair hard size-budget inventory for deleted or moved tracked paths and shrunken modelo compatibility modules; `src/aeat/tests/test_codebase_size_budgets.py src/aeat/application/modelo src/aeat/entrypoints/cli/tests`.
 - [x] `W02.P10.S146` - verify residual config callable splits and hard size-budget inventory no longer fail on stale paths or config registrar callables; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests src/aeat/tests/test_codebase_size_budgets.py`.
 - [x] `W02.P10.S150` - move profile censo bucket-event emission from config CLI into the user-profile application service; `src/aeat/application/user_profile/_censo_sync.py src/aeat/application/user_profile/__init__.py src/aeat/entrypoints/cli/_config/_profile_censo.py src/aeat/entrypoints/cli/tests/test_profile_censo_verbs.py`.
+- [x] `W02.P10.S151` - split config secret-custody command registration into a focused transport helper without moving custody policy into CLI; `src/aeat/entrypoints/cli/_config/_custody.py src/aeat/entrypoints/cli/_config/_custody_secret.py src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py`.
 
 ## Wave `W03` - application and domain monolith decomposition
 
@@ -223,12 +224,17 @@ Decompose oversized core modules, then enforce hard codebase-wide module and cal
 
 - [x] `W04.P09.S83` - decompose core config module by settings source and validation concern behind the core config facade; `src/aeat/core/config.py src/aeat/core/*.py`.
 - [x] `W04.P09.S84` - verify core config behavior and facade imports after decomposition; `src/aeat/core/tests src/aeat/tests`.
-- [ ] `W04.P09.S85` - decompose core error registry domain module behind the core errors facade; `src/aeat/core/errors/registry/_domain.py src/aeat/core/errors/registry/*.py`.
-- [ ] `W04.P09.S86` - verify core domain error registry behavior and facade imports after decomposition; `src/aeat/core/errors/tests src/aeat/core/tests`.
-- [ ] `W04.P09.S87` - decompose core error registry application module behind the core errors facade; `src/aeat/core/errors/registry/_application.py src/aeat/core/errors/registry/*.py`.
-- [ ] `W04.P09.S88` - verify core application error registry behavior and facade imports after decomposition; `src/aeat/core/errors/tests src/aeat/core/tests`.
-- [ ] `W04.P09.S89` - decompose core error registry adapters module behind the core errors facade; `src/aeat/core/errors/registry/_adapters.py src/aeat/core/errors/registry/*.py`.
-- [ ] `W04.P09.S90` - verify core adapter error registry behavior and facade imports after decomposition; `src/aeat/core/errors/tests src/aeat/core/tests`.
+- [x] `W04.P09.S85` - decompose core error registry domain module behind the core errors facade; `src/aeat/core/errors/registry/_domain.py src/aeat/core/errors/registry/*.py`.
+- [x] `W04.P09.S86` - verify core domain error registry behavior and facade imports after decomposition; `src/aeat/core/errors/tests src/aeat/core/tests`.
+- [x] `W04.P09.S87` - decompose core error registry application module behind the core errors facade; `src/aeat/core/errors/registry/_application.py src/aeat/core/errors/registry/*.py`.
+- [x] `W04.P09.S88` - verify core application error registry behavior and facade imports after decomposition; `src/aeat/core/errors/tests src/aeat/core/tests`.
+- [x] `W04.P09.S89` - decompose core error registry adapters module behind the core errors facade; `src/aeat/core/errors/registry/_adapters.py src/aeat/core/errors/registry/*.py`.
+- [x] `W04.P09.S90` - verify core adapter error registry behavior and facade imports after decomposition; `src/aeat/core/errors/tests src/aeat/core/tests`.
+- [ ] `W04.P09.S152` - repair broad core meta-test path and external-constant alias failures discovered during S86 verification; `src/aeat/core/tests/test_external_constants.py src/aeat/core/tests/test_file_permissions.py src/aeat/adapters/outbound/aeat/sede/_declarations.py src/aeat/core/tests`.
+- [ ] `W04.P09.S156` - decompose remaining oversized production modules before enabling hard 1250-line module guard; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py src/aeat/adapters/outbound/aeat/auth/_clave_movil.py src/aeat/adapters/outbound/aeat/sede/_declarations.py src/aeat/core/config.py src/aeat/domain/calculations/registry/_record_design.py`.
+- [ ] `W04.P09.S153` - decompose remaining oversized CLI transport registrars without moving business logic into entrypoints; `src/aeat/entrypoints/cli/_config/_profile_bundle.py src/aeat/entrypoints/cli/_config/_repair_cli.py src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_evidence_cli.py src/aeat/entrypoints/cli/_ledger_read_cli.py src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py src/aeat/entrypoints/cli/_modelo_projection_cli.py`.
+- [ ] `W04.P09.S154` - decompose remaining oversized non-CLI production callables behind existing backend facades; `src/aeat/adapters/outbound/google/_calc_sheets_apply.py src/aeat/application/ledger/_actions_split_merge.py src/aeat/core/observability/_context.py src/aeat/domain/calculations/registry/_validate_revision_sections.py src/aeat/domain/iva_compensation/_reconciliation.py`.
+- [ ] `W04.P09.S155` - verify no-legacy hard module and callable budgets after production residual decomposition; `src/aeat/tests/test_codebase_size_budgets.py src/aeat`.
 - [ ] `W04.P09.S91` - replace shrinking legacy size budgets with hard codebase-wide 1250-line and callable-complexity guards; `src/aeat/tests src/aeat/entrypoints/cli/tests`.
 - [ ] `W04.P09.S92` - run final codebase monolith decomposition feature gate and refresh RAG index; `.vault/plan/2026-06-05-codebase-monolith-decomposition-plan.md src/aeat`.
 

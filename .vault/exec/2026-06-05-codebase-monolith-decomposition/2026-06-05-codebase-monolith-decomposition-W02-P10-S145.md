@@ -8,22 +8,21 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
 ---
 
-# W02.P10.S145 Size Budget Inventory Repair
+# W02.P10.S145 Size-Budget Inventory Repair
 
-## Scope
-
-Repair stale size-budget inventory entries exposed by residual decomposition and concurrent file movement.
+Scope: repair hard size-budget inventory for deleted or moved tracked paths and shrunken modelo compatibility modules.
 
 ## Description
 
-- Removed obsolete legacy budgets for the now-shrunken modelo `_actions` module and moved `_actions` callables.
-- Removed the obsolete profile censo `register` callable exception after the split.
-- Made the tracked-file inventory ignore absent tracked paths so dirty renames do not produce a `FileNotFoundError`.
+- Re-ran the hard size-budget inventory after the modelo action split, custody split, and censo backend ownership changes.
+- Confirmed the tracked-file inventory no longer fails on deleted CLI test paths.
+- Confirmed shrunken modelo modules no longer report production callable or module size offenders.
+- Confirmed remaining concurrent overview and declaracion residuals were resolved before closing this row.
 
 ## Outcome
 
-The size guard now measures existing tracked Python files and no longer fails on the deleted ledger switch test path or obsolete modelo/config callable exceptions.
+The hard size-budget inventory is consistent with the current tracked worktree and no longer flags stale deleted paths or shrunken modelo compatibility modules.
 
 ## Notes
 
-The guard still enforces line and callable budgets for existing files.
+The repository hard size-budget test passed with both module and callable budget checks.
