@@ -479,7 +479,7 @@ Current register count: `301` production candidate files.
 | `AFR-188` | `src/aeat/core/config.py` | `active-profile, manifest-bucket, master-key, sql-route, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-189` | `src/aeat/core/corpus_manifest/__init__.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-190` | `src/aeat/core/env_io.py` | `master-key, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
-| `AFR-191` | `src/aeat/core/errors/registry/_adapters.py` | `master-key` | `runtime-default` | `W12.P20.S78` | pending |
+| `AFR-191` | `src/aeat/core/errors/registry/_adapters.py` | `master-key` | `runtime-default` | `W12.P20.S78` | closed |
 | `AFR-192` | `src/aeat/core/errors/registry/_application.py` | `active-profile` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-193` | `src/aeat/core/errors/registry/_core.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-194` | `src/aeat/core/external_constants.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
@@ -840,7 +840,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S290` - Close `AFR-188` for `src/aeat/core/config.py` with signals `active-profile, manifest-bucket, master-key, sql-route, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/core/config.py`.
 - [x] `W12.P26.S291` - Close `AFR-189` for `src/aeat/core/corpus_manifest/__init__.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/corpus_manifest/__init__.py`.
 - [x] `W12.P26.S292` - Close `AFR-190` for `src/aeat/core/env_io.py` with signals `master-key, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/core/env_io.py`.
-- [ ] `W12.P26.S293` - Close `AFR-191` for `src/aeat/core/errors/registry/_adapters.py` with signals `master-key`, target `runtime-default`, and owner `W12.P20.S78`; `src/aeat/core/errors/registry/_adapters.py`.
+- [x] `W12.P26.S293` - Close `AFR-191` for `src/aeat/core/errors/registry/_adapters.py` with signals `master-key`, target `runtime-default`, and owner `W12.P20.S78`; `src/aeat/core/errors/registry/_adapters.py`.
 - [x] `W12.P26.S294` - Close `AFR-192` for `src/aeat/core/errors/registry/_application.py` with signals `active-profile`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/core/errors/registry/_application.py`.
 - [ ] `W12.P26.S295` - Close `AFR-193` for `src/aeat/core/errors/registry/_core.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/errors/registry/_core.py`.
 - [ ] `W12.P26.S296` - Close `AFR-194` for `src/aeat/core/external_constants.py` with signals `plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/core/external_constants.py`.
