@@ -240,7 +240,7 @@ def test_registered_schema_envelope_round_trips(command_path: str) -> None:
 
 
 # ---------------------------------------------------------------------
-# Zero-bare-emit gate (emit-envelope-schema-burndown W06.P27.S206)
+# Zero-bare-emit gate (emit-envelope-schema-burndown legacy-plan-step)
 # ---------------------------------------------------------------------
 
 # Production CLI sites that legitimately emit through the bare ``_emit``

@@ -1,6 +1,6 @@
 """Real-behavior tests for AggregationConfigError registry and composition paths.
 
-Covers S44: assert AggregationConfigError is in ERROR_REGISTRY, round-trips
+Covers legacy-step: assert AggregationConfigError is in ERROR_REGISTRY, round-trips
 through build_error_envelope, and is raised by each replaced service-composition
 invariant site.
 """
@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 # ---------------------------------------------------------------------------
-# Registry and envelope round-trip (S44 primary gate)
+# Registry and envelope round-trip (legacy-step primary gate)
 # ---------------------------------------------------------------------------
 
 
@@ -344,7 +344,7 @@ def test_site9_result_rejects_provider_payload_type_mismatch() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S164: StrEnum surface coverage — every source-kind constant uses AggregationSourceKind
+# legacy-step: StrEnum surface coverage — every source-kind constant uses AggregationSourceKind
 # ---------------------------------------------------------------------------
 
 

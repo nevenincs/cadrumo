@@ -2,19 +2,19 @@
 
 Verifies three observable contracts exposed at the CLI boundary:
 
-S23 — the registered user-profile schema accepts ``worker_class =
+legacy-step — the registered user-profile schema accepts ``worker_class =
 "trabajador_del_mar"`` (and rejects unknown enum values). The CLI profile
 edit path loads its schema from the same registry, so schema acceptance
 at this layer is the canonical CLI-input contract for the fact.
 
-S24 — when the maritime exemption application service resolves an
+legacy-step — when the maritime exemption application service resolves an
 Art. 7.p) or REBECA observation, the typed envelope that the CLI emit
 boundary serialises carries ``legal_refs`` traceable to BOE-A-2006-20764
 (Art. 7.p) / Ley 35/2006) and BOE-A-1994-16100 (REBECA / Ley 19/1994).
 The flat ``casilla_values`` view is a derived projection; the canonical
 contract is the typed observations.
 
-S25 — the RETMAR mandatory-filing warning surface is the
+legacy-step — the RETMAR mandatory-filing warning surface is the
 ``ProfileCompletenessError`` registered with the central error-code
 registry. The CLI error boundary (``aeat.entrypoints.cli._errors``)
 renders any ``AeatError`` via its registered ``message_key``. This
@@ -50,7 +50,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 class TestWorkerClassProfileFactAcceptance:
-    """S23 — registered user-profile schema accepts ``worker_class``."""
+    """legacy-step — registered user-profile schema accepts ``worker_class``."""
 
     def test_schema_declares_worker_class_field(self) -> None:
         schema = load_user_profile_schema()
@@ -72,7 +72,7 @@ class TestWorkerClassProfileFactAcceptance:
 
 
 class TestMaritimeExemptionEnvelopeCarriesLegalRefs:
-    """S24 — emit envelope from the resolution service carries legal_refs."""
+    """legacy-step — emit envelope from the resolution service carries legal_refs."""
 
     def test_art_7p_envelope_carries_boe_anchor(self) -> None:
         result = resolve_maritime_exemption(
@@ -119,7 +119,7 @@ class TestMaritimeExemptionEnvelopeCarriesLegalRefs:
 
 
 class TestRetmarMandatoryFilingWarningSurface:
-    """S25 — RETMAR warning rides the registered CLI error envelope."""
+    """legacy-step — RETMAR warning rides the registered CLI error envelope."""
 
     def test_da41_inactive_error_is_registered_with_refused_category(self) -> None:
         code = get_registered_error_code(MaritimeExemptionInactiveError)

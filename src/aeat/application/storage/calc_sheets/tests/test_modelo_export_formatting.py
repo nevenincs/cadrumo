@@ -1,4 +1,4 @@
-"""Section-header + start/final anchor formatting facets (W03.P03.S12/S13).
+"""Section-header + start/final anchor formatting facets (legacy-plan-step/legacy-step).
 
 The export must mirror the official AEAT workbook presentation: casilla sections
 rendered as bold headers and an explicit labelled start (Entradas) / final

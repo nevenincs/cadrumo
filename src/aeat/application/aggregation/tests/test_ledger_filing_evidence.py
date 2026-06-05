@@ -1,4 +1,4 @@
-"""Ledger filing evidence: capture, fingerprint binding, encrypted roundtrip (W01).
+"""Ledger filing evidence: capture, fingerprint binding, encrypted roundtrip (legacy-plan).
 
 Asserts the bundled fact basis (modelo-export-evidence-parity ADR):
 - ``compute_ledger_filing_evidence`` projects the typed tax facts and binds each

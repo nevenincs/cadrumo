@@ -8,7 +8,7 @@ marker token prefixes either INLINE on the same line OR within 3 lines
 immediately preceding:
 
 - ``TYPE-IGNORE-RATIONALE-``  — primary marker for type-system suppression
-- ``CAST-RATIONALE-``         — W6/W18 cast escape-hatch markers (covers type-ignore semantically)
+- ``CAST-RATIONALE-``         — legacy-plan/legacy-plan cast escape-hatch markers (covers type-ignore semantically)
 - ``ANY-RETURN-RATIONALE-``   — return-type escape markers
 - ``KWARGS-ANY-RATIONALE-``   — kwargs/param Any escape markers
 - ``ADAPTER-INTERNAL-ALIAS-RATIONALE-``  — third-party untyped resource aliases
@@ -23,7 +23,7 @@ Every ``# type: ignore`` in production code must carry a
 ``TYPE-IGNORE-RATIONALE-<scope>`` token within 3 lines, or be enrolled in
 ``_KNOWN_VIOLATING_LINES`` for paydown in a subsequent wave.
 
-Structural prevention (W26.P55)
+Structural prevention (legacy-plan)
 ---------------------------------
 This test AST-free line-walks **all** production Python files under ``src/aeat/``
 (excluding test files: names starting with ``test_`` or ending with ``_test.py``).
@@ -32,7 +32,7 @@ lines for any of the recognised marker token prefixes.
 
 If no marker is found, the site is recorded as ``(relative-posix-path, line-number)``.
 
-The ratchet records the 99 pre-existing sites found at W26.P55 authoring time.
+The ratchet records the 99 pre-existing sites found at legacy-plan authoring time.
 New sites must either carry a rationale marker or be accompanied by a ratchet
 expansion PR with a documented reason.
 
@@ -75,14 +75,14 @@ _CONTEXT_LINES = 3
 _TYPE_IGNORE_RE = re.compile(r"#\s*type:\s*ignore")
 
 # ---------------------------------------------------------------------------
-# Known pre-existing violating sites (W26.P55 backlog — 99 sites).
+# Known pre-existing violating sites (legacy-plan backlog — 99 sites).
 # Each entry is (relative-posix-path-from-src/aeat/, 1-based line number).
 # DO NOT add new sites — add a rationale marker instead.
 # Remove an entry after adding its marker to lock that site at zero.
 # ---------------------------------------------------------------------------
 _KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset(
     {
-        # W26.P59 paydown removed 28 entries (S668-S670); S672 removed 3; S673 removed 1 (7 remain).
+        # legacy-plan paydown removed 28 entries (legacy-step); legacy-step removed 3; legacy-step removed 1 (7 remain).
         ("application/live/_snapshot_base.py", 511),
         ("application/workflow/_adapters.py", 105),
         ("application/workflow/_adapters.py", 110),

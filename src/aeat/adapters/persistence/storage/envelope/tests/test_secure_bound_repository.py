@@ -235,7 +235,7 @@ def test_secure_bound_repository_underlying_iterator_still_reports_partial_failu
 
 
 # ---------------------------------------------------------------------------
-# S190: envelope payload type preservation across the generic boundary
+# legacy-step: envelope payload type preservation across the generic boundary
 # ---------------------------------------------------------------------------
 
 
@@ -268,7 +268,7 @@ def test_envelope_payload_type_is_preserved_across_generic_boundary(
 
 
 # ---------------------------------------------------------------------------
-# S192: typed factory yields the correct envelope subtype per payload
+# legacy-step: typed factory yields the correct envelope subtype per payload
 # ---------------------------------------------------------------------------
 
 
@@ -320,7 +320,7 @@ def test_envelope_for_payload_type_returns_correct_parameterised_class() -> None
 
 
 # ---------------------------------------------------------------------------
-# S196: CI assertion that cast rationale markers are present in source
+# legacy-step: CI assertion that cast rationale markers are present in source
 # ---------------------------------------------------------------------------
 
 

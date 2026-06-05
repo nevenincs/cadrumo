@@ -6,7 +6,7 @@ layout package imports cleanly. This gate proves the inverse: every
 to an attribute that actually exists on ``aeat.X``.
 
 Closes the foreign-WIP failure pattern that surfaced three times in
-the linkage-P02.S08 + M303 session — a sibling agent added an import
+the linkage-legacy-plan-step + M303 session — a sibling agent added an import
 to a caller without adding the matching name to the target package's
 ``__init__.py`` imports / ``__all__``. The consumer module then
 raises ``ImportError`` the next time any test collection walks it,
@@ -139,7 +139,7 @@ _IMPORT_TRIPLES: list[tuple[Path, str, str]] = _collect_import_pairs()
 
 # Committed-baseline allow-list of broken cross-module imports the gate
 # captured on its first run. Each entry is a known finding tracked as a
-# follow-up (see ``W09.P20`` in the schema-hardening plan). The gate
+# follow-up (see ``legacy-plan`` in the schema-hardening plan). The gate
 # asserts the live set of broken triples equals this baseline exactly:
 # any NEW broken import fails fast (the regression we want to catch),
 # and any allow-list entry that becomes resolvable also fails (so a
@@ -244,7 +244,7 @@ def test_at_least_one_aeat_cross_module_import_was_collected() -> None:
 # the discipline). Trim caps as packages clean up; the close state
 # is an empty mapping.
 _INIT_MISSING_FROM_ALL_BASELINE: dict[str, int] = {
-    # Peer-introduced drift (suite-redgreen-2026-06-02 plan P05.S16):
+    # Peer-introduced drift (suite-redgreen-2026-06-02 plan legacy-plan-step):
     # these entries set the regression cap at the current count so the
     # gate ratchets shut as packages clean up their __all__ exports.
     # Decrement the cap (never increment) as imports get listed.

@@ -1,15 +1,15 @@
-"""Regression test for Modelo 100 2024 cuota íntegra — Cluster T fix (S115/S249).
+"""Regression test for Modelo 100 2024 cuota íntegra — Cluster T fix (legacy-step/legacy-step).
 
 Cluster T root cause: casillas 0511/0512 (mínimo del contribuyente
 estatal/autonómica) lacked a formula in the 2024 registry revision, so the
-engine silently defaulted them to 0.  The fix (S114) adds parameter
+engine silently defaulted them to 0.  The fix (legacy-step) adds parameter
 ``renta-2024-minimo-contribuyente-base-2024`` (5,550 EUR, LIRPF Art. 57) and
 two computed formulas that populate 0511/0512.
 
-S115 tests: Pere-shape profile (single taxpayer, Catalonia, base liquidable
+legacy-step tests: Pere-shape profile (single taxpayer, Catalonia, base liquidable
 general 35,400 EUR, no ahorro base, no family supplements).
 
-S249 tests: Supplement scenarios exercising casillas 0513 (mínimo por
+legacy-step tests: Supplement scenarios exercising casillas 0513 (mínimo por
 descendientes, LIRPF Art. 58) and 0515 (mínimo por ascendientes, LIRPF Art. 59)
 as operator-supplied manual inputs.  These casillas follow the same input_kind
 = manual pattern as 2025 — the engine does not auto-compute them from birth dates
@@ -45,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # -----------------------------------------------------------------------
 # Expected values — derived from LIRPF 2024 tables, not engine output.
 #
-# Base liquidable general: 35,400 EUR (Pere shape per S115 spec).
+# Base liquidable general: 35,400 EUR (Pere shape per legacy-step spec).
 #
 # Escala estatal (LIRPF Art. 63, unchanged 2024):
 #   0-12,450        @ 9.500% -> 1,182.75
@@ -74,7 +74,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #   0546 = 4,650.03 - 582.75 = 4,067.28
 # -----------------------------------------------------------------------
 
-# S353 fix: casilla 0505 is now computed via formula renta-2024-base-liquidable-
+# legacy-step fix: casilla 0505 is now computed via formula renta-2024-base-liquidable-
 # general-sometida-a-gravamen (max(0, 0500 - 0527)).  Tests must supply the leaf
 # manual casilla 0003 (trabajo ingresos íntegros) rather than 0505 directly.
 # With 0003=35400 and all reductions zero the chain produces:
@@ -96,10 +96,10 @@ def m100_2024_snapshot(registry_authority: ValidatedRegistryAuthority):
 
 
 def test_m100_2024_minimo_contribuyente_computed_not_zero(m100_2024_snapshot) -> None:
-    """After S114 fix, casilla 0511 must equal the LIRPF Art. 57 base value.
+    """After legacy-step fix, casilla 0511 must equal the LIRPF Art. 57 base value.
 
-    This is the regression guard for Cluster T: before S114, casilla 0511
-    defaulted to 0 (no formula, no binding in 2024 revision). After S114 it
+    This is the regression guard for Cluster T: before legacy-step, casilla 0511
+    defaulted to 0 (no formula, no binding in 2024 revision). After legacy-step it
     is computed from the parameter ``renta-2024-minimo-contribuyente-base-2024``.
     """
     result = calculate_registry_snapshot(
@@ -205,14 +205,14 @@ def test_m100_2024_cuota_integra_estatal_is_positive(m100_2024_snapshot) -> None
 
 
 # -----------------------------------------------------------------------
-# S249 supplement scenarios — LIRPF Art. 57.2/57.3, Art. 58, Art. 59.
+# legacy-step supplement scenarios — LIRPF Art. 57.2/57.3, Art. 58, Art. 59.
 #
 # Casillas 0513 (mínimo por descendientes) and 0515 (mínimo por
 # ascendientes) are manual input casillas — operators supply the statutory
 # amounts directly, as on the AEAT form.  Casilla 0511 is computed (5,550
-# EUR from the S114 formula); 0513/0515 are added on top via inputs.
+# EUR from the legacy-step formula); 0513/0515 are added on top via inputs.
 #
-# Pere age 70 profile (S249-A): base liquidable general 35,400 EUR.
+# Pere age 70 profile (legacy-step-A): base liquidable general 35,400 EUR.
 #   Mínimo contribuyente base: 5,550 EUR (0511 — computed).
 #   Mínimo contribuyente edad 65-74 supplement: +1,150 EUR (Art. 57.2).
 #   Casilla 0513 as operator input (age supplement = 1,150 EUR on the form,
@@ -228,20 +228,20 @@ def test_m100_2024_cuota_integra_estatal_is_positive(m100_2024_snapshot) -> None
 # descendants).  The operator supplies 1,150 there for a 65-74 contribuyente
 # with no actual descendants.
 #
-# Escala estatal — tarifa(35400) = 4,399.75 (from S115 derivation).
+# Escala estatal — tarifa(35400) = 4,399.75 (from legacy-step derivation).
 # Mínimo with age supplement: 5,550 + 1,150 = 6,700 EUR (LIRPF Art. 57.2).
 # tarifa_estatal(6700):
 #   0-6,700 @ 9.500% = 636.50
 #
 # Cuota íntegra estatal (0545) = 4,399.75 - 636.50 = 3,763.25 EUR.
 #
-# Escala autonómica Cataluña 2024 — tarifa_cat(35400) = 4,650.03 (from S115).
+# Escala autonómica Cataluña 2024 — tarifa_cat(35400) = 4,650.03 (from legacy-step).
 # tarifa_cat(6700):
 #   0-6,700 @ 10.500% = 703.50
 #
 # Cuota íntegra autonómica (0546) = 4,650.03 - 703.50 = 3,946.53 EUR.
 #
-# Two descendants (one under 3) scenario (S249-B):
+# Two descendants (one under 3) scenario (legacy-step-B):
 # base = 35,400 EUR; mínimo contribuyente = 5,550 (computed).
 # Mínimo descendientes (Art. 58): first child 2,400 + second child 2,700
 #   + under-3 supplement 3,000 = 8,100 EUR total -> casilla 0513 = 8,100.
@@ -252,7 +252,7 @@ def test_m100_2024_cuota_integra_estatal_is_positive(m100_2024_snapshot) -> None
 #
 # Cuota íntegra estatal = 4,399.75 - 1,326.75 = 3,073.00 EUR.
 #
-# Ascendant over 75 scenario (S249-C):
+# Ascendant over 75 scenario (legacy-step-C):
 # base = 35,400 EUR; mínimo contribuyente = 5,550 (computed).
 # Mínimo ascendientes (Art. 59): 1,150 (>65) + 1,400 (>75) = 2,550 EUR
 #   -> casilla 0515 = 2,550.
@@ -413,7 +413,7 @@ def test_m100_2024_cuota_estatal_ascendant_over_75(
 
 
 # -----------------------------------------------------------------------
-# S353 tests — LIRPF Art. 56 casilla 0505 formula derivation.
+# legacy-step tests — LIRPF Art. 56 casilla 0505 formula derivation.
 #
 # Root cause: casilla 0505 (base liquidable general sometida a gravamen)
 # was manual — when not supplied the engine used 0 and cuota silently
@@ -452,7 +452,7 @@ _EXPECTED_CUOTA_ESTATAL_14896_WITH_ANUALIDADES = Decimal("602.87")
 def test_s353_0505_computed_from_0500_no_anualidades(m100_2024_snapshot) -> None:
     """Casilla 0505 is computed as max(0, 0500) when no anualidades are present.
 
-    S353 regression guard: before the fix, 0505 was manual and silently stayed
+    legacy-step regression guard: before the fix, 0505 was manual and silently stayed
     0, making cuota íntegra 0.  After the fix, 0505 = 0500 = base liquidable
     = 14,896 EUR and cuota is non-zero per LIRPF 2024 Art. 62-63 tables.
     """
@@ -555,7 +555,7 @@ def test_s353_anti_tautology_anualidades_changes_cuota(m100_2024_snapshot) -> No
 
 
 # -----------------------------------------------------------------------
-# S361 tests — M100 2024 settlement-chain tail (renta-2024-final-settlement).
+# legacy-step tests — M100 2024 settlement-chain tail (renta-2024-final-settlement).
 #
 # Root cause: casillas 0587, 0595, 0598, 0609, 0610, 0670 had no formulas
 # in the 2024 revision; all stayed at 0 forever.
@@ -587,7 +587,7 @@ _RETENCION_3648 = Decimal("3648")  # doubled retención for anti-tautology
 def test_s361_0587_equals_sum_of_liquida_incrementada(m100_2024_snapshot) -> None:
     """Casilla 0587 must equal 0585 + 0586 per renta-2024-cuota-liquida-incrementada-total.
 
-    S361 regression guard: before the fix, 0587 had no formula and stayed 0
+    legacy-step regression guard: before the fix, 0587 had no formula and stayed 0
     even when 0585 and 0586 were computed and positive. After the fix, 0587 is
     computed and equals the sum of both cuota liquida incrementada values.
     Authority: LIRPF Art. 50, AEAT forma BOE 2024.

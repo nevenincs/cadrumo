@@ -1,6 +1,6 @@
-"""Real-CLI boundary tests: stored-data drift vs. input-time validation (S07).
+"""Real-CLI boundary tests: stored-data drift vs. input-time validation (legacy-step).
 
-Two scenarios exercise the ``command_error_boundary`` discriminator added in S06:
+Two scenarios exercise the ``command_error_boundary`` discriminator added in legacy-step:
 
 1. A drifted stored profile — the on-disk profile record is mutated to be
    schema-incompatible, then a CLI verb that loads the profile is run.
@@ -122,7 +122,7 @@ def _corrupt_stored_profile(profile_id: str, runtime_profile: TestRuntimeProfile
 
 
 # ---------------------------------------------------------------------------
-# S07.1 — drifted stored profile surfaces CliStoredDataValidationBoundaryError
+# legacy-step.1 — drifted stored profile surfaces CliStoredDataValidationBoundaryError
 # ---------------------------------------------------------------------------
 
 
@@ -132,7 +132,7 @@ def test_drifted_stored_profile_surfaces_stored_data_boundary_message(
     """A drifted stored profile must produce the repair-oriented stored-data
     boundary message, not the generic validation or unexpected-error text.
 
-    The ``command_error_boundary`` S06 discriminator routes
+    The ``command_error_boundary`` legacy-step discriminator routes
     ``StoredProfileDriftError`` → ``CliStoredDataValidationBoundaryError``,
     whose registered locale key is ``errors.storage.stored_data_validation_boundary``.
     The English text reads:
@@ -186,7 +186,7 @@ def test_drifted_stored_profile_boundary_is_distinct_from_unexpected_error(
 
 
 # ---------------------------------------------------------------------------
-# S07.2 — malformed CLI input surfaces CliValidationBoundaryError (distinct)
+# legacy-step.2 — malformed CLI input surfaces CliValidationBoundaryError (distinct)
 # ---------------------------------------------------------------------------
 
 

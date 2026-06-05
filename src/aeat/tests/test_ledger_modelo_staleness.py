@@ -1,11 +1,11 @@
-"""Ledger→modelo staleness + finalized-modelo edit blocking (W09.P16).
+"""Ledger→modelo staleness + finalized-modelo edit blocking (legacy-plan).
 
 A modelo revision verified from the ledger captures an immutable content
 fingerprint over its contributing rows (the modelo-filing-ledger-snapshot ADR).
 When a contributing row's tax facts later drift, the staleness evaluator surfaces
-it — a filed revision is never silently stale (S48/S49). Conversely, once a
+it — a filed revision is never silently stale (legacy-step/legacy-step). Conversely, once a
 revision is finalized, the blocking guard refuses destructive edits to its source
-rows (S50). These two mechanisms are complementary: the block protects finalized
+rows (legacy-step). These two mechanisms are complementary: the block protects finalized
 filings, the staleness sweep is the defense-in-depth that catches any drift that
 reaches a snapshot-backed revision.
 """
@@ -117,7 +117,7 @@ def _verified_revision(snapshot, tx_id: str) -> CalculationRevision:
     )
 
 
-# --- S48/S49: modify a contributing row → drift is surfaced, never silent ----
+# --- legacy-step/legacy-step: modify a contributing row → drift is surfaced, never silent ----
 def test_modifying_contributing_row_surfaces_staleness_not_silent() -> None:
     original = _txn(taxable_base=Decimal("100.00"))
     tx_id = original.transaction_id
@@ -165,7 +165,7 @@ def test_removing_contributing_row_surfaces_staleness() -> None:
     assert verdict.removed == (tx_id,)
 
 
-# --- S50: a finalized modelo blocks destructive edits to its source rows -----
+# --- legacy-step: a finalized modelo blocks destructive edits to its source rows -----
 @pytest.fixture
 def _profile(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:

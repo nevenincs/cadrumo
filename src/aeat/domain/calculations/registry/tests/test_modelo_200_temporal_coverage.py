@@ -90,7 +90,7 @@ def _snapshot_2024():
 def test_pyme_sl_2024_cuota_resolves_without_bracket_no_window() -> None:
     """A 2024 IS filing for an SL (pyme/micro-empresa profile) must not raise.
 
-    Before the S56 backfill the ``is.modelo-200.tipo-gravamen-pyme``
+    Before the legacy-step backfill the ``is.modelo-200.tipo-gravamen-pyme``
     bracket table had no window for dates in 2024, so
     ``_formula_runtime.apply_bracket_table`` raised
     ``bracket_no_window``.  The 2024 bracket at 23 % (LIS Art. 29
@@ -139,7 +139,7 @@ def test_pyme_sl_2024_cuota_resolves_without_bracket_no_window() -> None:
 def test_pyme_bracket_2024_window_is_present_in_registry() -> None:
     """The 2024 pyme bracket window exists at 23 % in the registry.
 
-    After the S56 backfill ``is.modelo-200.tipo-gravamen-pyme`` must carry a
+    After the legacy-step backfill ``is.modelo-200.tipo-gravamen-pyme`` must carry a
     window covering 2024-01-01 to 2024-12-31 with ``marginal_rate = 0.23``.
     This tests the registry encoding directly against the LIS Art. 29 2024
     authority; it is not a recomputation of the formula.
@@ -162,7 +162,7 @@ def test_pyme_bracket_2024_window_is_present_in_registry() -> None:
 def test_coverage_validator_fires_on_deliberate_gap() -> None:
     """``_bracket_coverage_gaps`` catches a gap in a fixture parameter.
 
-    This is an anti-tautology probe: if the gap detector never fires the S58
+    This is an anti-tautology probe: if the gap detector never fires the legacy-step
     regression test cannot distinguish a silent gap from a covered one.
     A ``ParameterDefinition`` fixture is constructed with ``bracket_axis =
     "filing_period"`` and brackets covering only 2025-01-01 onward — matching

@@ -42,7 +42,7 @@ def test_ledger_provider_id_covers_all_known_values() -> None:
 def test_no_bare_string_dispatch_survivors_in_actions() -> None:
     """_actions.py dispatch chain contains no bare-string provider-ID comparisons.
 
-    After the S399 migration every if-branch uses identity comparison on
+    After the legacy-step migration every if-branch uses identity comparison on
     LedgerProviderID members; bare string literals of the form
     ``provider_id == "csv"`` or ``provider_id in {"ofx", "qfx"}`` must not
     survive.

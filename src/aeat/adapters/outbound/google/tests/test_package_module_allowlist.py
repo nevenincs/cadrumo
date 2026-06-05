@@ -25,28 +25,28 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "_api.py",
         "_calc_sheets_apply.py",
         "_calc_sheets_pull.py",
-        "_document_link_resolver.py",  # follow-up S03: scope-compatible Drive doclink resolution
+        "_document_link_resolver.py",  # follow-up legacy-step: scope-compatible Drive doclink resolution
         "_errors.py",
         "_oauth_flow.py",
         "_profile_binding.py",
         "_records.py",
         "_session_store.py",
-        "test_api.py",  # S198: execute_request typed response + error-translation contract
+        "test_api.py",  # legacy-step: execute_request typed response + error-translation contract
         "test_apply_adapter_helpers.py",
         "test_calc_sheets_apply.py",
-        "test_calc_sheets_apply_evidence.py",  # W05: online Evidencia render + offline/online evidence parity
-        "test_calc_sheets_export_integration.py",  # W05/S05: offline request-pipeline integration for the live export
-        "test_calc_sheets_offline_online_conformance.py",  # W03.P04.S16: offline/online renderer conformance
-        "test_calc_sheets_pull_typing.py",  # S200: _ValueRange / _GoogleResource type-narrowing contract
+        "test_calc_sheets_apply_evidence.py",  # legacy-plan: online Evidencia render + offline/online evidence parity
+        "test_calc_sheets_export_integration.py",  # legacy-plan/legacy-step: offline request-pipeline integration for the live export
+        "test_calc_sheets_offline_online_conformance.py",  # legacy-plan-step: offline/online renderer conformance
+        "test_calc_sheets_pull_typing.py",  # legacy-step: _ValueRange / _GoogleResource type-narrowing contract
         "test_calc_sheets_row_set_headers.py",
         "test_column_index_to_letters.py",
         "test_compute_from_pull.py",
-        "test_document_link_resolver.py",  # follow-up S03: doclink resolver scope-refusal + parse contract
+        "test_document_link_resolver.py",  # follow-up legacy-step: doclink resolver scope-refusal + parse contract
         "test_grid_resize.py",
-        "test_oauth_flow.py",  # S132: OAuth local-server failures stay inside GoogleAuthError
+        "test_oauth_flow.py",  # legacy-step: OAuth local-server failures stay inside GoogleAuthError
         "test_oauth_live.py",
         "test_package_module_allowlist.py",
-        "test_profile_binding.py",  # S133: active-profile resolver localized refusal contract
+        "test_profile_binding.py",  # legacy-step: active-profile resolver localized refusal contract
         "test_pull_adapter_helpers.py",
         "test_pull_result_roundtrip.py",
         "test_records.py",

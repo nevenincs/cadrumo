@@ -112,7 +112,7 @@ def _collect_populated_builders(
 
 
 def test_snapshot_files_still_exist() -> None:
-    """Every file listed in the S223 audit snapshot must still exist on disk.
+    """Every file listed in the legacy-step audit snapshot must still exist on disk.
 
     If a roundtrip test file is renamed or deleted the snapshot becomes stale.
     This test surfaces that drift before the next saturation audit runs blind.

@@ -121,7 +121,7 @@ def test_questionary_prompter_translates_no_console_error() -> None:
     assert "No console screen buffer attached" not in message
 
 
-# ── S68: QuestionaryPrompter.emit_progress routes through structured logger ───
+# ── legacy-step: QuestionaryPrompter.emit_progress routes through structured logger ───
 
 
 def test_emit_progress_routes_through_logger_not_stdout(

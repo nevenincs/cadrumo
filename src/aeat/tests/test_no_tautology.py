@@ -17,7 +17,7 @@ Explicitly NOT treated as tautological:
 - ``assert x is not None`` — meaningful null guard.
 - ``assert x`` — meaningful truthiness check on a computed value.
 
-S211 enumeration result: zero tautological assertions found in the current
+legacy-step enumeration result: zero tautological assertions found in the current
 production test surface.  The test asserts this inventory stays at zero.
 """
 

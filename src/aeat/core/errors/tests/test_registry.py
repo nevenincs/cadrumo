@@ -190,7 +190,7 @@ def test_core_error_prefixes_are_grep_stable() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S54 — error-registry logger carries SecretScrubbingFilter
+# legacy-step — error-registry logger carries SecretScrubbingFilter
 # ---------------------------------------------------------------------------
 
 

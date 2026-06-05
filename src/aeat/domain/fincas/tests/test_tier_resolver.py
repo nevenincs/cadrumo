@@ -424,7 +424,7 @@ def _finca_with_use_type(use_type: UseType) -> Finca:
 class TestUseTypeReduccionGate:
     """LIRPF art. 23.2 reducción applies only to VIVIENDA_ARRENDADA use type.
 
-    Authority: cross-domain-continuity plan W02.P11.S363
+    Authority: cross-domain-continuity plan legacy-plan-step
     (R9-ROBERTO-HIGH). The reducción attaches to ``arrendamientos
     destinados a vivienda permanente``; the second paragraph of art.
     23.2 carves out touristic / temporary rentals, and the use-type

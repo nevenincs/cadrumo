@@ -237,7 +237,7 @@ def test_comparison_result_structure_is_typed(snapshot_2025) -> None:
 # base liquidable. Authoring a meaningful coverage test requires identifying
 # the elective-application casilla under construct
 # 2026-renta-anexo-c-base-liquidable-negativa-aplicada and supplying it
-# alongside the binding. Tracked under session-honest-followups P02.S10 +
+# alongside the binding. Tracked under session-honest-followups legacy-plan-step +
 # task #149.
 
 
@@ -281,7 +281,7 @@ def test_taxation_comparison_module_imports_cleanly() -> None:
     """aeat.application.modelo._taxation_comparison must import without error.
 
     Exercises that the module's top-level imports and TYPE_CHECKING block
-    clean-up (S155) did not break the production import path.
+    clean-up (legacy-step) did not break the production import path.
     """
     import importlib
 

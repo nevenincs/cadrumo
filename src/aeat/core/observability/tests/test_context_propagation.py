@@ -214,7 +214,7 @@ class TestRunIdPropagation:
 class TestRunSinkScrubbing:
     """Real-behavior tests: JSONL sink records are scrubbed before persistence.
 
-    The :func:`attach_run_sink` helper (S63) installs a
+    The :func:`attach_run_sink` helper (legacy-step) installs a
     :class:`aeat.core.logging.SecretScrubbingFilter` on the sink before
     attaching it to the root logger.  The JSONL serialiser also applies
     the DIAGNOSTIC-class redaction rule set, which SHA256-prefixes any

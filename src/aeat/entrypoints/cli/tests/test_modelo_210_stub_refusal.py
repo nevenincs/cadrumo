@@ -102,7 +102,7 @@ def test_work_create_210_refusal_fires_before_profile_check(
 
 
 def test_guard_stub_modelo_210_skipped_when_engine_live_flag_is_set() -> None:
-    """S391: _guard_stub_modelo returns silently for modelo 210 when the
+    """legacy-step: _guard_stub_modelo returns silently for modelo 210 when the
     aeat_m210_engine_live Settings flag is True. Other stub-only modelos
     continue to refuse unconditionally.
 
@@ -131,7 +131,7 @@ def test_guard_stub_modelo_210_skipped_when_engine_live_flag_is_set() -> None:
 
 
 def test_guard_stub_modelo_210_refuses_when_engine_live_flag_is_unset() -> None:
-    """S391 control: with the flag default (False), modelo 210 still
+    """legacy-step control: with the flag default (False), modelo 210 still
     refuses with the canonical Path-B stub message. Companion to the
     flag-True test above; preserves the original-contract assertion
     under the default Settings() — no override, real ContextVar state.

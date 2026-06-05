@@ -463,7 +463,7 @@ def test_censo_snapshot_not_found_error_accepts_structured_kwargs() -> None:
     assert error.suggestion == "aeat config profile censo refresh"
 
 
-# ---- SnapshotRepository structural-conformance gate (S56) -----------------
+# ---- SnapshotRepository structural-conformance gate (legacy-step) -----------------
 # Rule 9-A: conformance is STRUCTURAL (isinstance against the @runtime_checkable
 # Protocol), NOT explicit inheritance. Concrete repos must NOT inherit from
 # SnapshotRepository — the isinstance check verifies structural conformance.

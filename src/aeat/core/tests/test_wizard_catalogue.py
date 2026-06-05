@@ -32,7 +32,7 @@ def _source_of(module_path: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# S320 gate 1: SETUP_FLOW / WIZARD_FLOWS round-trip identity from core
+# legacy-step gate 1: SETUP_FLOW / WIZARD_FLOWS round-trip identity from core
 # ---------------------------------------------------------------------------
 
 
@@ -83,7 +83,7 @@ def test_wizard_flows_contains_setup_flow() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S320 gate 2: no deferred lazy upward imports remain in domain modules
+# legacy-step gate 2: no deferred lazy upward imports remain in domain modules
 # ---------------------------------------------------------------------------
 
 _UPWARD_PATTERN = "from ...application.wizard._catalogue import"

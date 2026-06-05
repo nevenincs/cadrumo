@@ -627,7 +627,7 @@ def test_manuals_http_timeout_is_settings() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S178 — BINARY_MIME_TYPE centralisation tests
+# legacy-step — BINARY_MIME_TYPE centralisation tests
 # ---------------------------------------------------------------------------
 
 
@@ -656,7 +656,7 @@ def test_google_drive_reads_binary_mime_from_external_constants() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S175 / S176 — DEFAULT_CURRENCY centralisation tests
+# legacy-step / legacy-step — DEFAULT_CURRENCY centralisation tests
 # ---------------------------------------------------------------------------
 
 
@@ -765,7 +765,7 @@ def test_declarations_filed_artefact_uses_binary_mime_constant() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S238 / S239 / S240 — CLASSIFIED_BY_MANUAL single-source-of-truth tests
+# legacy-step / legacy-step / legacy-step — CLASSIFIED_BY_MANUAL single-source-of-truth tests
 # ---------------------------------------------------------------------------
 
 
@@ -847,7 +847,7 @@ def test_no_local_classified_by_manual_shadow_in_application_or_domain() -> None
     sentinel by assigning the bare string ``"manual"`` to a module-level variable whose
     name contains ``classified_by`` or ``manual_classified``.
 
-    This is the regression guard against the pattern removed in S238/S239:
+    This is the regression guard against the pattern removed in legacy-step/legacy-step:
     ``_MANUAL_CLASSIFIED_BY = "manual"`` or ``CLASSIFIED_BY_MANUAL = "manual"`` defined
     locally instead of imported from ``aeat.core.external_constants``.
     """
@@ -891,7 +891,7 @@ def test_no_local_classified_by_manual_shadow_in_application_or_domain() -> None
 
 
 # ---------------------------------------------------------------------------
-# S301 / S302 / S303 — JSON_MIME_TYPE and CSV_MIME_TYPE centralisation tests
+# legacy-step / legacy-step / legacy-step — JSON_MIME_TYPE and CSV_MIME_TYPE centralisation tests
 # ---------------------------------------------------------------------------
 
 
@@ -1042,7 +1042,7 @@ def test_no_bare_json_mime_literal_in_declarations() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S19 — M347_THRESHOLD_EUR centralisation tests
+# legacy-step — M347_THRESHOLD_EUR centralisation tests
 # ---------------------------------------------------------------------------
 
 
@@ -1110,7 +1110,7 @@ def test_no_bare_threshold_347_literal_in_counterpart() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S20 — MODELO_720_REPORTING_THRESHOLD_EUR centralisation tests
+# legacy-step — MODELO_720_REPORTING_THRESHOLD_EUR centralisation tests
 # ---------------------------------------------------------------------------
 
 

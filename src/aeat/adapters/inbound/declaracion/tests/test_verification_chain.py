@@ -1122,7 +1122,7 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
     # The five previous_filing bindings must be explicitly supplied or the engine
     # raises RegistryValidationError. For the two compensation casillas whose values
     # were extracted from the corpus PDF (boxes 97 and 662), use the extracted value
-    # as the binding value — the P08.S50 consistency check requires inputs and
+    # as the binding value — the legacy-plan-step consistency check requires inputs and
     # binding_values to agree when both are populated. For the three reconciliation
     # casillas (devengada/deducible/resultado from M303), supply zero because no
     # M303 quarterly filings exist for the sanitised corpus specimens.

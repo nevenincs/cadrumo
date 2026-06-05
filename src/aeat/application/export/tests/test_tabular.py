@@ -88,7 +88,7 @@ def test_serialize_tabular_rows_rejects_unknown_fields() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Registry membership — S06
+# Registry membership — legacy-step
 # ---------------------------------------------------------------------------
 
 
@@ -145,7 +145,7 @@ def test_export_field_error_code_attributes() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Envelope round-trip — S06
+# Envelope round-trip — legacy-step
 # ---------------------------------------------------------------------------
 
 
@@ -178,7 +178,7 @@ def test_export_field_error_build_error_envelope() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Locale translated_message key — S06
+# Locale translated_message key — legacy-step
 # ---------------------------------------------------------------------------
 
 
@@ -223,7 +223,7 @@ def test_export_field_error_locale_key_present_in_catalogue() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Real raise sites — S06: seven replaced ValueError sites
+# Real raise sites — legacy-step: seven replaced ValueError sites
 # ---------------------------------------------------------------------------
 
 

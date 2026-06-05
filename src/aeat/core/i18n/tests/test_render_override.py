@@ -42,14 +42,14 @@ def test_output_language_ignores_invalid_override_then_falls_back() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S117/S118 — DEFAULT_OUTPUT_LANGUAGE constant routes every "es" fallback
+# legacy-step/legacy-step — DEFAULT_OUTPUT_LANGUAGE constant routes every "es" fallback
 # ---------------------------------------------------------------------------
 
 
 def test_default_output_language_equals_es() -> None:
     """DEFAULT_OUTPUT_LANGUAGE is the canonical Spanish fallback constant.
 
-    After S117 every ``"es"`` fallback string in _cached_output_language is
+    After legacy-step every ``"es"`` fallback string in _cached_output_language is
     replaced by this constant. Locking its value here ensures accidental
     changes fail loudly and that the module exports it.
     """

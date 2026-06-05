@@ -1,4 +1,4 @@
-"""CLI surface tests for ``aeat app ledger ratios`` (W77.P373.S2146).
+"""CLI surface tests for ``aeat app ledger ratios`` (legacy-plan-step).
 
 Pins the 5-verb ratios subgroup (list / set / unset / eligible /
 validate) against the real ratios backend, plus exercises the help-text
@@ -7,9 +7,9 @@ to the destructive-action safeguard tests; the ratios `unset` verb is
 non-destructive of accounting state (clears one per-category override
 that the operator can recompute) so it has no `--yes` requirement.
 
-The bucket-maintenance verbs (W77.P374.S2150) are not yet mounted, so
-this file covers only the ratios half of S2146; the bucket-maintenance
-half lands when S2150 is closed.
+The bucket-maintenance verbs (legacy-plan-step) are not yet mounted, so
+this file covers only the ratios half of legacy-step; the bucket-maintenance
+half lands when legacy-step is closed.
 """
 
 from __future__ import annotations

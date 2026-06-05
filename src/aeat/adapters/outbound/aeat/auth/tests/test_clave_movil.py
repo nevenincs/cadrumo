@@ -1174,7 +1174,7 @@ class TestResume:
         asyncio.run(run_resume())
 
 
-# ── S66: auth waiting banner routes through structured logger ─────────────────
+# ── legacy-step: auth waiting banner routes through structured logger ─────────────────
 
 
 def test_render_progress_banner_emits_via_logger_not_stdout(

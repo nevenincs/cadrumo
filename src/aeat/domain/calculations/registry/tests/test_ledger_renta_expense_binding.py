@@ -128,7 +128,7 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
             # declaration-type=1 → individual filing (per Orden HAC/277/2026 art. 3
             # TIPOTRIBUTACION code 1; the joint-filing code is 2)
             "renta-2025-profile-declaration-type": Decimal("1"),
-            # Neutral not-married marriage axis (peer S213 made these required;
+            # Neutral not-married marriage axis (peer legacy-step made these required;
             # mirrors the convention in test_renta_chain_behaviour and
             # test_registry_scenarios).
             "renta-2025-profile-marriage-full-year": Decimal("0"),

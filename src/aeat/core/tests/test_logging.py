@@ -264,7 +264,7 @@ def test_secret_scrubbing_uses_context_hints_for_list_args_too() -> None:
 def test_pdfminer_logger_level_governed_by_dictconfig() -> None:
     """dictConfig must set the pdfminer logger to WARNING via the loggers block.
 
-    Verifies S57: configure_logging() centralises pdfminer silencing so
+    Verifies legacy-step: configure_logging() centralises pdfminer silencing so
     neither _pdfplumber.py nor _record_design.py need to mutate it locally.
     """
     import logging
@@ -290,7 +290,7 @@ def test_pdfminer_logger_level_governed_by_dictconfig() -> None:
 def test_pdfplumber_and_record_design_do_not_mutate_pdfminer_logger() -> None:
     """Neither _pdfplumber nor _record_design should re-mutate the pdfminer logger.
 
-    Verifies S60: importing both modules and calling configure_logging()
+    Verifies legacy-step: importing both modules and calling configure_logging()
     leaves the pdfminer logger at WARNING — confirming the per-module
     context-manager silencers have been removed and centralized config governs.
     """
@@ -325,7 +325,7 @@ def test_pdfplumber_and_record_design_do_not_mutate_pdfminer_logger() -> None:
 def test_pikepdf_core_logger_level_governed_by_dictconfig() -> None:
     """dictConfig must set pikepdf._core to WARNING via the loggers block.
 
-    Verifies S73: configure_logging() centralises pikepdf._core silencing so
+    Verifies legacy-step: configure_logging() centralises pikepdf._core silencing so
     src/aeat/__init__.py no longer needs a bootstrap-time setLevel mutation.
     The level must survive a second configure_logging() call (the guard resets).
     """
@@ -375,7 +375,7 @@ def test_non_sensitive_fields_pass_through_unchanged() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S204 — _scrub_value overload contract: type preserved per input shape
+# legacy-step — _scrub_value overload contract: type preserved per input shape
 # ---------------------------------------------------------------------------
 
 
@@ -455,7 +455,7 @@ def test_scrub_value_nested_mapping_scrubs_recursively() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S225 / S226 — attach_run_sink / detach_run_sink symmetry
+# legacy-step / legacy-step — attach_run_sink / detach_run_sink symmetry
 # ---------------------------------------------------------------------------
 
 

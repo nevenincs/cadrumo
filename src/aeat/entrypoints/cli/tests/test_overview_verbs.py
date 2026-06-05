@@ -1,14 +1,14 @@
 """CLI surface tests for ``aeat app overview`` + retired-noun negatives.
 
-Closes two W81 Steps in one file:
+Closes two legacy-plan Steps in one file:
 
-- W81.P393.S2247: Add CLI surface tests for every overview verb per
+- legacy-plan-step: Add CLI surface tests for every overview verb per
   the adjudicated grammar (status / calendar / agenda / backlog /
   explain). Each verb is exercised against an isolated profile so the
   mount + help path + empty-bucket envelope all reach the operator.
 
-- W81.P393.S2248: Add negative tests asserting `aeat deadlines` and
-  related retired noun-groups are unknown commands. The W71 verb tree
+- legacy-plan-step: Add negative tests asserting `aeat deadlines` and
+  related retired noun-groups are unknown commands. The legacy-plan verb tree
   retired the standalone `deadlines` noun-group in favour of mounting
   deadline-shaped surfaces under `aeat app overview`. Operators
   reaching for `aeat deadlines ...` must see Click's "No such command"
@@ -43,7 +43,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 # ---------------------------------------------------------------------------
-# S2247 — overview verb surface tests
+# legacy-step — overview verb surface tests
 # ---------------------------------------------------------------------------
 
 
@@ -68,7 +68,7 @@ def test_overview_status_returns_envelope_on_empty_bucket(cli_runner: CliRunner)
 
 
 # ---------------------------------------------------------------------------
-# S2248 — retired-noun-group negatives
+# legacy-step — retired-noun-group negatives
 # ---------------------------------------------------------------------------
 
 
@@ -88,7 +88,7 @@ def test_retired_deadlines_noun_group_is_unknown(
     retired_verb: list[str],
 ) -> None:
     """Reaching for `aeat deadlines ...` (or `aeat app deadlines ...`)
-    must surface Click's "No such command" refusal. The W71 verb tree
+    must surface Click's "No such command" refusal. The legacy-plan verb tree
     retired the standalone deadlines noun-group; its surfaces live
     under `aeat app overview` (calendar, agenda, backlog)."""
 

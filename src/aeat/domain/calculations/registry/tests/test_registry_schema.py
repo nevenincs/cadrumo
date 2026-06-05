@@ -1051,7 +1051,7 @@ def test_validator_allows_modelo_145_communication_link_for_non_filing_casillas(
 
 
 def test_validator_rejects_verification_predicate_with_unknown_operator() -> None:
-    """P09.S63: predicate with an unknown DSL operator must fail at registry-load.
+    """legacy-plan-step: predicate with an unknown DSL operator must fail at registry-load.
 
     The runtime DSL evaluator falls through to ``return True`` for any
     unrecognised expression — silent-pass is the documented behaviour
@@ -1060,7 +1060,7 @@ def test_validator_rejects_verification_predicate_with_unknown_operator() -> Non
     silently passes the predicate gate and the cap rule is lost
     without diagnostic.
 
-    The P09.S63 hardening rejects unknown operators at registry-load
+    The legacy-plan-step hardening rejects unknown operators at registry-load
     time. The known set is enumerated in
     ``_validate_surfaces._KNOWN_VERIFICATION_PREDICATE_OPERATORS``:
     ``all_nonzero``, ``any_nonzero``, ``cap_le_when_positive``.
@@ -1084,7 +1084,7 @@ def test_validator_rejects_verification_predicate_with_unknown_operator() -> Non
 
 
 def test_validator_rejects_verification_predicate_with_malformed_expression() -> None:
-    """P09.S63: predicate whose expression is not a parseable DSL call fails."""
+    """legacy-plan-step: predicate whose expression is not a parseable DSL call fails."""
 
     modelo, catalogues = _committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
@@ -1103,7 +1103,7 @@ def test_validator_rejects_verification_predicate_with_malformed_expression() ->
 
 
 def test_validator_accepts_known_verification_predicate_operators() -> None:
-    """P09.S63: the cap_le_when_positive predicate declared by P08.S48 must pass.
+    """legacy-plan-step: the cap_le_when_positive predicate declared by legacy-plan-step must pass.
 
     Pins that the committed M130 cap predicate
     (modelo-130-c15-cap-by-c14, expression
@@ -1113,7 +1113,7 @@ def test_validator_accepts_known_verification_predicate_operators() -> None:
     """
 
     modelo, catalogues = _committed_modelo("130")
-    # No mutation — committed M130 carries the predicate from P08.S48.
+    # No mutation — committed M130 carries the predicate from legacy-plan-step.
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
 

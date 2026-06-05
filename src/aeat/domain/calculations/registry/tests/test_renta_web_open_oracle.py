@@ -237,7 +237,7 @@ def test_overall_verdict_mismatch_when_any_field_mismatched_even_with_unverifiab
 
 
 # ---------------------------------------------------------------------------
-# S126 — ReplayPayload roundtrip: validate strictly + round-trip through driver
+# legacy-step — ReplayPayload roundtrip: validate strictly + round-trip through driver
 # ---------------------------------------------------------------------------
 
 

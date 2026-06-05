@@ -1764,7 +1764,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
 
 
 # ---------------------------------------------------------------------------
-# S102: empty-NIF raise carries translated_message (offline)
+# legacy-step: empty-NIF raise carries translated_message (offline)
 # ---------------------------------------------------------------------------
 
 
@@ -1807,7 +1807,7 @@ def _whitespace_nif_session() -> AeatSession:
 
 
 def test_capture_filed_declaration_empty_nif_carries_translated_message() -> None:
-    """S102-A: capture_filed_declaration_observation raises SedeNavigationError with
+    """legacy-step-A: capture_filed_declaration_observation raises SedeNavigationError with
     translated_message when AeatSession.identity_nif is whitespace-only."""
     import asyncio
 
@@ -1840,7 +1840,7 @@ def test_capture_filed_declaration_empty_nif_carries_translated_message() -> Non
 
 
 def test_capture_filed_declaration_empty_nif_locale_key_resolves_to_real_copy() -> None:
-    """S102-B: the empty-identity-nif locale key resolves to non-placeholder copy."""
+    """legacy-step-B: the empty-identity-nif locale key resolves to non-placeholder copy."""
     from .....core.i18n import tr
 
     resolved = tr("adapters.sede.errors.empty_identity_nif")

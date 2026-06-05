@@ -1,4 +1,4 @@
-"""Idempotency regression tests for `aeat config profile import` (S109).
+"""Idempotency regression tests for `aeat config profile import` (legacy-step).
 
 ADR D5 idempotency contract:
   - Re-importing the same bundle twice produces exactly ONE profile; the
@@ -77,7 +77,7 @@ def _create_minimal_profile_and_export(tmp_path: Path, bundle_path: Path) -> str
 
 
 # ---------------------------------------------------------------------------
-# S109 — import-twice produces one profile, not two
+# legacy-step — import-twice produces one profile, not two
 # ---------------------------------------------------------------------------
 
 
@@ -134,7 +134,7 @@ def test_reimport_same_bundle_is_refused(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# S109 — label collision with different UUID is refused
+# legacy-step — label collision with different UUID is refused
 # ---------------------------------------------------------------------------
 
 
@@ -200,7 +200,7 @@ def test_label_collision_different_uuid_refused_even_with_explicit_label(tmp_pat
 
 
 # ---------------------------------------------------------------------------
-# S109 — anti-tautology proof: mutated profile_id creates a second profile
+# legacy-step — anti-tautology proof: mutated profile_id creates a second profile
 # ---------------------------------------------------------------------------
 
 

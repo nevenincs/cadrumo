@@ -992,7 +992,7 @@ def test_switch_to_surviving_profile_after_deleting_the_active_one(
     Reproduces the delete-active lockout: with two profiles, ``switch``
     the first so it is active, ``delete`` it, then ``switch`` to the
     surviving profile. The final switch must succeed and make the
-    survivor active. Before the fix it refused with ``no active bucket
+    regression active. Before the fix it refused with ``no active bucket
     session`` — the very recovery command the refusal recommended.
     """
     from ...adapters.persistence.storage.sql.engine import dispose_engine

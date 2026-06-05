@@ -270,7 +270,7 @@ class TestIvaRemoteStateCliSurface:
                 sys.exit(0)
             sys.exit(2)
             """
-        completed = subprocess.run(  # noqa: S603 - fixed interpreter args for subprocess cleanup regression
+        completed = subprocess.run(  # noqa: legacy-step - fixed interpreter args for subprocess cleanup regression
             [sys.executable, "-c", textwrap.dedent(code), canary],
             capture_output=True,
             text=True,
@@ -284,7 +284,7 @@ class TestIvaRemoteStateCliSurface:
     def test_watchdog_reaps_new_playwright_temp_profile_process(self) -> None:
         preexisting = _playwright_profile_tokens(_process_command_inventory())
         profile_canary = "playwright_chromiumdev_profile-aeatS92Canary"
-        proc = subprocess.Popen(  # noqa: S603 - fixed interpreter args for process-reaper regression
+        proc = subprocess.Popen(  # noqa: legacy-step - fixed interpreter args for process-reaper regression
             [
                 sys.executable,
                 "-c",
@@ -395,7 +395,7 @@ def _live_process_command_lines() -> str:
             "Select-Object -ExpandProperty CommandLine | "
             "ConvertTo-Json -Compress"
         )
-        completed = subprocess.run(  # noqa: S603 - fixed PowerShell process-inventory command
+        completed = subprocess.run(  # noqa: legacy-step - fixed PowerShell process-inventory command
             [powershell, "-NoProfile", "-Command", script],
             check=True,
             capture_output=True,
@@ -412,7 +412,7 @@ def _live_process_command_lines() -> str:
     ps = shutil.which("ps")
     if ps is None:
         pytest.skip("ps is required for process inventory")
-    completed = subprocess.run(  # noqa: S603 - fixed ps process-inventory command
+    completed = subprocess.run(  # noqa: legacy-step - fixed ps process-inventory command
         [ps, "-axo", "args="],
         check=True,
         capture_output=True,

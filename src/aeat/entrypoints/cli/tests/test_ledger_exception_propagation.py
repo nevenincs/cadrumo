@@ -1,6 +1,6 @@
 """Verify that non-NoActiveProfileError exceptions propagate unchanged.
 
-S32 assertion: after S31 narrows the broad ``except Exception`` catch in
+legacy-step assertion: after legacy-step narrows the broad ``except Exception`` catch in
 ``_ratios_bucket_id``, ``_ratios_bucket_and_profile``, and
 ``_rule_bucket_id`` to ``except NoActiveProfileError``, any unexpected
 exception (e.g. a corrupt active-profile pointer file producing a
@@ -23,9 +23,9 @@ The call chain under test:
             → ``BucketPointer.from_toml(corrupt_text)``
               → ``pydantic.ValidationError`` (not AeatError)
 
-Before S31: the broad ``except Exception`` caught this and produced the
+Before legacy-step: the broad ``except Exception`` caught this and produced the
 profile-create guidance — masking the real error.
-After S31: only ``NoActiveProfileError`` is caught; the
+After legacy-step: only ``NoActiveProfileError`` is caught; the
 ``pydantic.ValidationError`` propagates to the CLI boundary and surfaces
 as a ``CliValidationBoundaryError`` ("validation" / "repair").
 """
@@ -69,8 +69,8 @@ def _corrupt_pointer_root(tmp_path: Path) -> Iterator[Path]:
     ``BucketPointer.model_validate`` raises a ``pydantic.ValidationError`` — which
     is NOT an ``AeatError`` subclass.
 
-    Before S31 this exception was silently reclassified as the "no active
-    profile" refusal by the broad ``except Exception`` clause.  After S31
+    Before legacy-step this exception was silently reclassified as the "no active
+    profile" refusal by the broad ``except Exception`` clause.  After legacy-step
     only ``NoActiveProfileError`` is caught; the ``pydantic.ValidationError``
     propagates to the top-level CLI error boundary and surfaces as the
     validation-boundary envelope.
@@ -110,9 +110,9 @@ def test_corrupt_pointer_does_not_produce_profile_create_guidance(
     """A corrupt pointer file raises a non-AeatError that must NOT be swallowed
     as the 'no active profile' refusal.
 
-    Before S31 the broad ``except Exception`` caught every exception and
+    Before legacy-step the broad ``except Exception`` caught every exception and
     converted it to the same profile-create guidance, hiding the real error.
-    After S31 only ``NoActiveProfileError`` is caught; the
+    After legacy-step only ``NoActiveProfileError`` is caught; the
     ``pydantic.ValidationError`` from the corrupt pointer propagates to the
     top-level CLI error boundary and surfaces as a validation-boundary
     envelope — a categorically different response that mentions "repair" or

@@ -1,4 +1,4 @@
-"""Real-CLI roundtrip for the v2 bundled profile export/import (S107).
+"""Real-CLI roundtrip for the v2 bundled profile export/import (legacy-step).
 
 ADR D3 requirement:
   Every domain object in the bundle's four financial-history categories

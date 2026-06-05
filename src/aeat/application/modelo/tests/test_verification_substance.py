@@ -1,12 +1,12 @@
-"""Verification substance tests: Layer 1 + Layer 2 predicate gate (S75, S76).
+"""Verification substance tests: Layer 1 + Layer 2 predicate gate (legacy-step, legacy-step).
 
-S75: Unit tests for the predicate DSL evaluator (_evaluate_predicate_expression,
+legacy-step: Unit tests for the predicate DSL evaluator (_evaluate_predicate_expression,
      _evaluate_verification_predicates).
 
-S76: Regression — Modelo 130 with all casilla values zero (specifically casilla
+legacy-step: Regression — Modelo 130 with all casilla values zero (specifically casilla
      02 Gastos absent) is NOT granted verificado_completo. The Layer 1
      required=true gate on casilla 02 blocks the transition; this test pins
-     that the enforcement is in place after S73.
+     that the enforcement is in place after legacy-step.
 """
 
 from __future__ import annotations
@@ -49,7 +49,7 @@ _T2 = datetime(2026, 4, 14, 14, 0, 0, tzinfo=UTC)
 
 
 # ---------------------------------------------------------------------------
-# S75: unit tests for _evaluate_predicate_expression
+# legacy-step: unit tests for _evaluate_predicate_expression
 # ---------------------------------------------------------------------------
 
 
@@ -98,7 +98,7 @@ def test_cap_le_when_positive_passes_when_limited_within_ceiling() -> None:
 def test_cap_le_when_positive_fails_when_limited_exceeds_ceiling() -> None:
     """cap_le_when_positive: fails when ceiling > 0 AND limited > ceiling.
 
-    P08.S47 case: M131 C11 (resultados negativos anteriores) MUST NOT
+    legacy-plan-step case: M131 C11 (resultados negativos anteriores) MUST NOT
     exceed C10 (cuota positiva del trimestre) per AEAT instructions
     "en ningún caso podrá figurar en la casilla 11 un importe superior
     a la cantidad positiva consignada en la casilla 10".
@@ -108,7 +108,7 @@ def test_cap_le_when_positive_fails_when_limited_exceeds_ceiling() -> None:
 
 
 def test_cap_le_when_positive_emits_blocking_rule_finding_for_violated_predicate() -> None:
-    """P08.S60 integration test: a violated cap_le_when_positive predicate produces a BLOCKING_RULE finding.
+    """legacy-plan-step integration test: a violated cap_le_when_positive predicate produces a BLOCKING_RULE finding.
 
     Constructs the exact M130 C15-cap predicate used in the
     registry (modelo-130-c15-cap-by-c14) and runs it through
@@ -134,7 +134,7 @@ def test_cap_le_when_positive_emits_blocking_rule_finding_for_violated_predicate
 
 
 def test_cap_le_when_positive_emits_no_finding_when_within_cap() -> None:
-    """P08.S60 integration test: a satisfied cap predicate produces no finding."""
+    """legacy-plan-step integration test: a satisfied cap predicate produces no finding."""
     predicate = VerificationPredicateDefinition(
         predicate_id="modelo-130-c15-cap-by-c14",
         legal_refs=("rd-439-2007:art-110",),
@@ -169,7 +169,7 @@ def test_cap_le_when_positive_holds_when_ceiling_is_zero_or_negative() -> None:
 def test_unknown_expression_does_not_block() -> None:
     """An unrecognised expression pattern does not produce a blocking finding."""
     values: dict[str, Decimal] = {}
-    # Passes through — unknown DSL extensions do not block in W04
+    # Passes through — unknown DSL extensions do not block in legacy-plan
     assert _evaluate_predicate_expression('threshold(["01"], 100)', values, _workflow_profile()) is True
 
 
@@ -381,7 +381,7 @@ def test_advisory_predicate_emits_no_finding_when_condition_not_met() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S76: M130 all-zero regression
+# legacy-step: M130 all-zero regression
 # ---------------------------------------------------------------------------
 
 
@@ -411,9 +411,9 @@ def repos(tmp_path):
 def test_m130_all_zero_without_gastos_is_blocked(repos) -> None:
     """M130 revision with casilla 02 (Gastos) absent is blocked even when other casillas are zero.
 
-    S76 regression: Layer 1 required=true on casilla 02 must block the
-    VERIFICADO_COMPLETO transition when Gastos is not supplied. Before S73
-    this filing would have been granted; after S73 it is blocked.
+    legacy-step regression: Layer 1 required=true on casilla 02 must block the
+    VERIFICADO_COMPLETO transition when Gastos is not supplied. Before legacy-step
+    this filing would have been granted; after legacy-step it is blocked.
     """
     wu_repo, cr_repo, vr_repo, bv_repo = repos
 
@@ -481,7 +481,7 @@ def test_m130_all_zero_without_gastos_is_blocked(repos) -> None:
 
 
 def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
-    """P10.S68: the canonical predicate-operator set MUST be runtime-evaluable.
+    """legacy-plan-step: the canonical predicate-operator set MUST be runtime-evaluable.
 
     The single source of truth lives at
     aeat.domain.calculations.registry.KNOWN_VERIFICATION_PREDICATE_OPERATORS.
@@ -543,7 +543,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
 
 
 def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c14(repos) -> None:
-    """P09.S64: end-to-end integration test for the M130 C15 ≤ C14 cap predicate.
+    """legacy-plan-step: end-to-end integration test for the M130 C15 ≤ C14 cap predicate.
 
     Drives the full registry-load → snapshot → calculate_modelo_revision →
     verify_modelo_revision pipeline with a scenario where the prior-quarter
@@ -552,7 +552,7 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     surface a BLOCKING_RULE finding citing the
     modelo-130-c15-cap-by-c14 predicate.
 
-    The earlier S60 test exercised the predicate evaluator with literal
+    The earlier legacy-step test exercised the predicate evaluator with literal
     casilla values; this test exercises the FULL production pipeline —
     a registry-load typo / binding-aggregation regression / predicate-
     declaration drift would all surface here.
@@ -625,10 +625,10 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
 
 
 def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c10(repos) -> None:
-    """P10.S69: M131 cap-predicate end-to-end integration (symmetry with S64).
+    """legacy-plan-step: M131 cap-predicate end-to-end integration (symmetry with legacy-step).
 
     M131 declares modelo-131-<rev>-c11-cap-by-c10 on all 4 revisions
-    via cap_le_when_positive(["11", "10"]). P09.S64 covered M130;
+    via cap_le_when_positive(["11", "10"]). legacy-plan-step covered M130;
     this Step extends parallel coverage to M131. AEAT M131
     instructions cite the same cap rule verbatim: "en ningún caso
     podrá figurar en la casilla 11 un importe superior a la
@@ -691,14 +691,14 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
 
 
 # ---------------------------------------------------------------------------
-# S211: tampering regression — mutating a persisted observation is detected
+# legacy-step: tampering regression — mutating a persisted observation is detected
 # ---------------------------------------------------------------------------
 
 
 def test_observation_tampering_is_detected_by_verify_path(repos) -> None:
     """Mutating a stored observation value between calculate and verify is caught.
 
-    S211 regression: the observation provenance cross-check added in S210
+    legacy-step regression: the observation provenance cross-check added in legacy-step
     must detect when observations[i].value diverges from casilla_values for
     the same casilla. The verify path raises StoredCalculationDriftError and
     refuses VERIFICADO_COMPLETO.
@@ -786,7 +786,7 @@ def test_observation_tampering_is_detected_by_verify_path(repos) -> None:
 
 
 # ---------------------------------------------------------------------------
-# S318: legal_refs / source_refs threading through verification findings
+# legacy-step: legal_refs / source_refs threading through verification findings
 # ---------------------------------------------------------------------------
 
 # M130 casilla 02 oracle values drawn from:
@@ -811,7 +811,7 @@ def test_missing_required_casilla_finding_carries_registry_provenance(repos) -> 
     """A MISSING_REQUIRED_CASILLA finding must carry legal_refs and source_refs
     drawn from the registry casilla definition.
 
-    S318 regression: before this fix findings had empty legal_refs/source_refs,
+    legacy-step regression: before this fix findings had empty legal_refs/source_refs,
     making provenance invisible at the operator-facing verify surface.
 
     Expected values are drawn from the M130 casilla 02 TOML definition (the

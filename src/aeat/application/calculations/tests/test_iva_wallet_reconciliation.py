@@ -40,7 +40,7 @@ _OTHER_TAXPAYER_REF = "other-synthetic-taxpayer"
 
 def test_sede_observation_satisfies_the_domain_wallet_protocol() -> None:
     """The Sede adapter observation structurally satisfies the domain wallet port the
-    reconciliation logic consumes, so the domain never imports the adapter (DB-26 S89)."""
+    reconciliation logic consumes, so the domain never imports the adapter (DB-26 legacy-step)."""
     wallet = _wallet(Decimal("100.00"))
     assert isinstance(wallet, IvaCompensationWalletObservationProtocol)
 
@@ -300,7 +300,7 @@ def test_public_wallet_reconciliation_refuses_mismatched_wallet_taxpayer() -> No
 
 
 # ---------------------------------------------------------------------------
-# S42 — IvaWalletReconciliationError registry and raise-site coverage
+# legacy-step — IvaWalletReconciliationError registry and raise-site coverage
 # ---------------------------------------------------------------------------
 
 

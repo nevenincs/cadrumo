@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _fully_populated_answers() -> SetupAnswers:
-    """A SetupAnswers with every W01 taxpayer-axis field non-default."""
+    """A SetupAnswers with every legacy-plan taxpayer-axis field non-default."""
 
     return SetupAnswers(
         tax_id="12345678Z",
@@ -160,7 +160,7 @@ class TestTaxpayerProfileProjection:
     def test_undeclared_axes_project_to_safe_empty_defaults(self) -> None:
         """A profile with no taxpayer-axis facts projects to undeclared.
 
-        The W01 schema is data-only — the engine still behaves as
+        The legacy-plan schema is data-only — the engine still behaves as
         today — but an undeclared taxpayer model must not invent a
         default entity type or regime.
         """

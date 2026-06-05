@@ -1,4 +1,4 @@
-"""Aggregate real-behavior test: every master_key cluster error envelope-round-trips (S254).
+"""Aggregate real-behavior test: every master_key cluster error envelope-round-trips (legacy-step).
 
 Each error class in the master_key cluster must:
 1. Be a registered AeatError subclass with a bound ErrorCode in ERROR_REGISTRY.

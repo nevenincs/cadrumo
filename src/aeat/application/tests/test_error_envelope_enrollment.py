@@ -1,4 +1,4 @@
-"""Real-behavior enrollment test for application-layer survivor error classes.
+"""Real-behavior enrollment test for application-layer regression error classes.
 
 Asserts that every error class promoted by the codebase-solidification
 campaign is enrolled in :data:`aeat.core.errors.ERROR_REGISTRY` and
@@ -51,7 +51,7 @@ def _assert_enrolled(error_cls: type[AeatError], message: str = "test trigger") 
 
 
 # ---------------------------------------------------------------------------
-# S266 — RepositorySetupError
+# legacy-step — RepositorySetupError
 # ---------------------------------------------------------------------------
 
 
@@ -63,7 +63,7 @@ def test_repository_setup_error_enrolled() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S267 — ProfileLabelAmbiguousError
+# legacy-step — ProfileLabelAmbiguousError
 # ---------------------------------------------------------------------------
 
 
@@ -75,7 +75,7 @@ def test_profile_label_ambiguous_error_enrolled() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S268 — RepairIntegrityError and RepairDecisionNotFoundError
+# legacy-step — RepairIntegrityError and RepairDecisionNotFoundError
 # ---------------------------------------------------------------------------
 
 
@@ -100,7 +100,7 @@ def test_repair_decision_not_found_is_subtype_of_repair_integrity() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S269 — SnapshotNotFoundError (now AeatError + KeyError)
+# legacy-step — SnapshotNotFoundError (now AeatError + KeyError)
 # ---------------------------------------------------------------------------
 
 

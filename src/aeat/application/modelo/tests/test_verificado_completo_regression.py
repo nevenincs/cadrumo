@@ -1,6 +1,6 @@
 """Regression tests for the verificado-completo required-input gate and drift detection.
 
-S76: acceptance gate for Layer-1 verification strategy (S72-S75):
+legacy-step: acceptance gate for Layer-1 verification strategy (legacy-step):
 
 1. A Modelo 130 revision calculated without the required manual input
    casillas is NOT granted verificado_completo.
@@ -8,7 +8,7 @@ S76: acceptance gate for Layer-1 verification strategy (S72-S75):
    the registry marks ``required = true`` and ``input_kind = "manual"``.
 3. Supplying all required casillas causes the transition to be granted.
 
-S211: tamper-detection regression:
+legacy-step: tamper-detection regression:
 
 4. Mutating a persisted casilla value after calculate raises
    StoredCalculationDriftError on verify — the content-address mismatch
@@ -234,7 +234,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos) -> None:
 def test_tampered_revision_raises_drift_error(repos) -> None:
     """_assert_revision_content_integrity raises StoredCalculationDriftError on drift.
 
-    S211 regression: verify_modelo_revision calls _assert_revision_content_integrity
+    legacy-step regression: verify_modelo_revision calls _assert_revision_content_integrity
     before granting VERIFICADO_COMPLETO.  The check is exercised by constructing a
     CalculationRevision via model_construct (bypassing _enforce_invariants) with a
     casilla_values mapping that does not match the stored calculation_revision_id.

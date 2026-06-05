@@ -11,7 +11,7 @@ Classification rules:
   is documented in ``_DOCUMENTED_BOUNDARY_MOCKS``.
 - **Drift**: any mock import not in the documented set.
 
-Current inventory (W22.P54.S652 update):
+Current inventory (legacy-plan-step update):
   Zero ``unittest.mock`` or ``pytest_mock`` imports found under
   ``src/aeat/``.  The codebase uses constructor injection with inline
   callables for boundary-injection sites rather than the mock library.

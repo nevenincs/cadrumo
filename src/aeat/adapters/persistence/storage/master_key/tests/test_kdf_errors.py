@@ -1,4 +1,4 @@
-"""Real-behavior tests for KeyDerivationError at every migrated raise in _kdf.py (S248).
+"""Real-behavior tests for KeyDerivationError at every migrated raise in _kdf.py (legacy-step).
 
 Asserts that:
 - `derive_kek` raises `KeyDerivationError` (not bare ValueError) for each
