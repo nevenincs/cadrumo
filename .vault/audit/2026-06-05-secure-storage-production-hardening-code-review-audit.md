@@ -489,3 +489,23 @@ source split.
 
 Focused `ruff check`, application review tests, review CLI integration tests, and
 `python -m aeat.locales audit` passed.
+
+## S388-CR-001 | PASS | Review payloads are schema-only
+
+Reviewed the S388 scope as `vaultspec-code-reviewer`. `_review_payloads.py` declares
+strict `OutputSchema` subclasses for review queue/view JSON output and registers both
+envelopes with the CLI schema registry. It imports the shared `BucketId` alias from
+core identity and does not open storage routes, active-profile pointers, manifests, or
+remote providers.
+
+## S388-CR-002 | PASS | Remote-provider signal is a downstream contract
+
+The payload schema carries bucket ids, owner surfaces, next commands, and legal
+reference tuples projected by the application review operator. It does not perform
+provider IO, mirror persistence, redaction-sensitive rendering, or environment
+wrangling.
+
+## S388-CR-003 | PASS | Validation passed
+
+Focused `ruff check`, payload roundtrip integration tests, and `python -m aeat.locales
+audit` passed.
