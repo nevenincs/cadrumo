@@ -29,6 +29,12 @@ _logger = get_logger(__name__)
 # enum at runtime. Kept in sync with
 # :class:`aeat.application.auth.AuthProviderKind` by code review.
 _AUTH_KIND_CERTIFICATE = "certificate"
+_PREFLIGHT_DRAFT_STALE = "domain.submission.preflight.draft_stale"
+_PREFLIGHT_DRAFT_NOT_APPROVED = "domain.submission.preflight.draft_not_approved"
+_PREFLIGHT_ERROR_FINDINGS = "domain.submission.preflight.error_findings"
+_PREFLIGHT_DEADLINE_CLOSED = "domain.submission.preflight.deadline_closed"
+_PREFLIGHT_AUTH_DESCRIBE_FAILED = "domain.submission.preflight.auth_describe_failed"
+_PREFLIGHT_AUTH_NOT_READY = "domain.submission.preflight.auth_not_ready"
 
 
 def _describe_provider_operator_impact(description: AuthProviderDescriptionLike) -> str:
@@ -135,8 +141,16 @@ class Preflight:
         if status_value != ModeloDraftStatus.APROBADO.value:
             _logger.debug("preflight gate-1 fail: draft status=%s", draft.status)
             if status_value == ModeloDraftStatus.APROBACION_CADUCADA.value:
-                raise SubmissionPreflightError("draft approval is stale; review and approve the draft again")
-            raise SubmissionPreflightError(f"draft not approved for submission (status={status_value})")
+                raise SubmissionPreflightError(
+                    "draft approval is stale",
+                    translated_message=_PREFLIGHT_DRAFT_STALE,
+                    context={"status": status_value},
+                )
+            raise SubmissionPreflightError(
+                "draft not approved for submission",
+                translated_message=_PREFLIGHT_DRAFT_NOT_APPROVED,
+                context={"status": status_value},
+            )
         _logger.debug("preflight gate-1 ok: draft is approved")
 
         error_findings = tuple(f for f in draft.findings if _enum_value(getattr(f, "severity", None)) == "error")
@@ -146,7 +160,9 @@ class Preflight:
                 len(error_findings),
             )
             raise SubmissionPreflightError(
-                f"draft has {len(error_findings)} ERROR-severity finding(s); resolve them before submission"
+                "draft has error-severity findings",
+                translated_message=_PREFLIGHT_ERROR_FINDINGS,
+                context={"finding_count": len(error_findings)},
             )
         _logger.debug("preflight gate-2 ok: no error findings")
 
@@ -160,7 +176,9 @@ class Preflight:
                 today,
             )
             raise SubmissionPreflightError(
-                f"deadline window for modelo {draft.modelo} period {draft.period} is not open on {today.isoformat()}"
+                "deadline window is closed",
+                translated_message=_PREFLIGHT_DEADLINE_CLOSED,
+                context={"modelo": draft.modelo, "period": draft.period, "today": today.isoformat()},
             )
         else:
             _logger.debug("preflight gate-3 ok: deadline window is open")
@@ -169,7 +187,11 @@ class Preflight:
             description = self.auth_provider.describe()
         except AeatError as exc:
             _logger.warning("preflight gate-4 fail: auth provider describe raised", exc_info=True)
-            raise SubmissionPreflightError(f"auth provider failed to describe itself: {exc}") from exc
+            raise SubmissionPreflightError(
+                "auth provider failed to describe itself",
+                translated_message=_PREFLIGHT_AUTH_DESCRIBE_FAILED,
+                context={"cause_type": type(exc).__name__},
+            ) from exc
         if not description.configured or not description.available:
             _logger.debug(
                 "preflight gate-4 fail: auth provider unavailable kind=%s configured=%s available=%s",
@@ -178,9 +200,14 @@ class Preflight:
                 description.available,
             )
             raise SubmissionPreflightError(
-                f"auth provider {_enum_value(description.kind)} is not ready "
-                f"(configured={description.configured} available={description.available}). "
-                f"{_describe_provider_operator_impact(description)}"
+                "auth provider is not ready",
+                translated_message=_PREFLIGHT_AUTH_NOT_READY,
+                context={
+                    "kind": _enum_value(description.kind),
+                    "configured": description.configured,
+                    "available": description.available,
+                    "operator_impact": _describe_provider_operator_impact(description),
+                },
             )
         _logger.debug(
             "preflight gate-4 ok: auth provider ready (kind=%s expires_on=%s)",
