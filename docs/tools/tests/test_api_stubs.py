@@ -7,7 +7,7 @@ Run ``python -m docs.tools.apidocs scaffold`` to regenerate stubs; run
 
 Run via::
 
-    uv run --no-sync pytest src/aeat/tests/test_docs_api_stubs.py -m docs -q
+    uv run --no-sync pytest docs/tools/tests/test_api_stubs.py -m "unit and hex_core" -q
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ import pytest
 
 from docs.tools.apidocs import ApiStubManager
 
-pytestmark = [pytest.mark.docs, pytest.mark.unit, pytest.mark.domain_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _SRC_AEAT = _REPO_ROOT / "src" / "aeat"

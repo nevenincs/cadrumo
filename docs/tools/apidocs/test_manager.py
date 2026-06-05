@@ -6,7 +6,7 @@ import pytest
 
 from .manager import ApiStubManager, DriftResult, ScaffoldResult
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_scaffold_produces_conformant_tree(tmp_path: pytest.TempPathFactory) -> None:
