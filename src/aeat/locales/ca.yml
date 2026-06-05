@@ -2450,6 +2450,7 @@ cli:
         Executa `aeat app ledger categories` per veure tots els identificadors reconeguts.
       unknown_provider: 'Proveïdor d''importació --provider {provider!r} desconegut.
         Proveïdors reconeguts: {providers}.'
+      invalid_category: 'Categoria de despesa desconeguda ''{category}''. Categories conegudes: {known}. Executa ''aeat app ledger categories'' per veure valors valids de --category-id.'
     export:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       format_help: Format de serialització d'exportació

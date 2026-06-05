@@ -2324,6 +2324,7 @@ cli:
         app ledger categories` to list every recognised id.
       unknown_provider: 'Unknown import --provider {provider!r}. Recognised providers:
         {providers}.'
+      invalid_category: 'Unknown spending category ''{category}''. Known categories: {known}. Run ''aeat app ledger categories'' for valid --category-id values.'
     export:
       actor_help: Operator name recorded on the bucket event
       format_help: Export serialization format
