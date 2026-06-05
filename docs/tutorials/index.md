@@ -17,7 +17,9 @@ is the modelo, year, and period you prepare.
 You need:
 
 * A working `aeat` command. If you need to install it, start with
-  [Get started](../getting-started.md).
+  [Quickstart: produce a modelo file](../how-to/quickstart.md).
+* A taxpayer profile. For every profile setup flag and question, see
+  [Set up your taxpayer profile](../how-to/profile-setup.md).
 * The sample transaction file included with this tutorial.
 
 ## Step 1: Create your taxpayer profile
@@ -78,7 +80,7 @@ To confirm the review status changed to `reviewed`, run:
 aeat app ledger list
 ```
 
-## Step 4: Start the tax form
+## Step 4: Create a new draft
 
 Create the Modelo 130 draft for the first quarter of 2026:
 
@@ -104,12 +106,14 @@ need to choose one.
 Calculate the draft by repeating the same visible filing target:
 
 ```bash
-aeat app modelo work calculate --modelo 130 --year 2026 --period 1T --casilla 01=12000.00 --casilla 02=4000.00 --binding irpf.previous_year_economic_activity_net_income=0
+aeat app modelo work calculate --modelo 130 --year 2026 --period 1T
 ```
 
-Use the `--binding` flag here because the previous year's net income is not in
-the current quarter's ledger. The command saves the draft for the same filing
-target.
+The command saves the draft for the same filing target. If calculation or
+verification reports a missing manual value, prior-period value, or binding,
+pause the tutorial and use
+[Review and supply calculation inputs](../how-to/review-calculation-values.md)
+to inspect the modelo casillas and decide the correct value.
 
 ## Step 6: Verify your draft
 
@@ -163,6 +167,8 @@ period.
 For task-focused procedures, read the [how-to guides](../how-to/index.md). To
 understand the advanced filing workspace and revision model, read
 [How filings, work units, and calculation revisions fit together](../how-to/filing-spine.md).
+For manual casilla values, offsets, and binding mechanics, read
+[Review and supply calculation inputs](../how-to/review-calculation-values.md).
 
 If a command stops or the local state looks wrong, use
 [Diagnose and repair your local setup](../how-to/troubleshooting.md).
