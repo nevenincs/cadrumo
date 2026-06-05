@@ -507,3 +507,21 @@ portal suite, and passed the external-constants literal-centralization gate plus
 overview calendar CLI tests. The gate caught residual bare Sede URL literals in
 overview tests; those tests now use declared fixture helpers instead of raw
 host strings.
+
+## W05-004 | INFO | Remote-state planned-operation gate review found no defects
+
+Status: verified with tracked residual.
+
+The W05.P15.S54 review found no behavioral defect in the remote-state guard
+changes. The new `assert_remote_operations_allowed` helper preserves the
+existing fail-closed semantics while removing duplicated preflight loops from
+the live-parity oracle path. The committed-registry gate uses real production
+oracles and registry snapshots, not fakes, to prove that every currently bound
+oracle plan is accepted by its declared read-only guard policy.
+
+Focused verification passed for Ruff on touched registry surfaces, remote-state
+guard tests, live-parity tests, and all three production oracle adapter test
+files. The review also recorded a non-blocking registry edge: M100 Renta WEB
+Open has a production oracle and guard policy but no committed `oracle_id`
+binding yet, so the S54 gate is ready for M100 but only covers it after that
+separate legal-data binding lands.
