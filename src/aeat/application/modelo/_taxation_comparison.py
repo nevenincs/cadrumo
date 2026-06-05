@@ -245,7 +245,7 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
 
     Raises :class:`TaxationComparisonError` when the work unit's modelo
     does not support the comparison (e.g. not Modelo 100).
-    Raises :class:`~aeat.application.modelo._actions.WorkUnitNotFoundError`
+    Raises :class:`~aeat.application.modelo._action_errors.WorkUnitNotFoundError`
     when ``work_unit_id`` does not exist in the active bucket.
     """
     from ...domain.calculations.registry import RegistrySnapshotError
