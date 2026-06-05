@@ -30,12 +30,10 @@ import re as _re
 from collections.abc import Mapping
 from datetime import date, datetime
 from decimal import Decimal
-from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from ...application.auth import AuthProviderKind, select_provider
-from ...core.config import Settings, load_settings
+from ...core.config import Settings
 from ...core.errors import CoreNotFoundError
 from ...core.i18n import tr
 from ...core.time import now as _utc_now
@@ -49,19 +47,17 @@ from ...domain.calculations.registry import (
     M210_RATE_SENTINELS,
     CasillaDefinition,
     CasillaObservation,
-    ConvenioRateRow,
     InputKind,
     ModeloRevision,
     RegistryCalculationEntry,
     RegistryCalculationResult,
     RegistrySnapshot,
-    RegistrySnapshotError,
     VerificationPredicateDefinition,
     calculate_registry_snapshot,
     input_casilla_alias_map,
 )
 from ...domain.contribuyente._ccaa import CCAA
-from ...domain.deadlines import DeadlineEngine, FiscalResidency, IVARegime, TaxpayerProfile
+from ...domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
@@ -120,9 +116,8 @@ from ...domain.modelos._work_unit import (
     WorkUnitState,
     derive_work_unit_id,
 )
-from ...domain.period import PeriodValidationError, parse_canonical_period, period_end_date
-from ...domain.submission import ModeloDraftStatus, SubmissionEngine
-from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
+from ...domain.period import period_end_date
+from ...domain.transactions import TransactionCatalogueRepository
 from ..aggregation._ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
@@ -132,36 +127,39 @@ from ..calculations import (
     CrossPeriodCleanStateVerdict,
     evaluate_cross_period_clean_state,
 )
-from ..filing import (
-    approve_draft,
-    build_draft,
-    build_runtime_schema_provider,
-    filing_profile_from_taxpayer,
-)
 from ..live import Borrador100SnapshotRepository
 from ..workflow import (
-    DeadlineEngineAdapter,
-    ModeloInputs,
-    RegistryModeloDraftProtocol,
     WorkflowAbortReason,
     WorkflowEngine,
-    WorkflowInputMismatchError,
     WorkflowPurpose,
     WorkflowResult,
     WorkflowRunRepository,
     WorkflowStage,
+)
+from ..workflow import (
+    WorkflowInputMismatchError as WorkflowInputMismatchError,
 )
 from . import _iva_wallet_gate
 from ._binding_resolution import (
     resolve_bound_casilla_inputs_for_available_bindings,
     resolve_calculation_binding_inputs,
 )
+from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
 from ._revision_persistence import (
     emit_bucket_event as _emit_bucket_event,
 )
 from ._revision_persistence import (
     persist_calculation_revision,
     persist_filed_revision,
+)
+from ._workflow_gate import (
+    _RevisionInputsProvider as _RevisionInputsProvider,
+)
+from ._workflow_gate import (
+    build_revision_workflow_engine as _build_revision_workflow_engine,
+)
+from ._workflow_gate import (
+    workflow_period_for_work_unit,
 )
 
 if TYPE_CHECKING:
@@ -359,200 +357,6 @@ def _default_name(*, modelo: str, filing_year: int, period: str) -> str:
     care to name the unit.
     """
     return f"{modelo}-{filing_year}-{period}"
-
-
-@lru_cache(maxsize=512)
-def _deadline_window_period_for_registry_period(
-    *,
-    modelo: str,
-    filing_year: int,
-    registry_period: str,
-) -> str | None:
-    """Return the exact deadline-window period token declared by the registry."""
-    try:
-        snapshot = _authority_via_resources().snapshot(modelo, filing_year=filing_year, period=registry_period)
-    except RegistrySnapshotError:
-        return None
-
-    for window in snapshot.revision.deadline_windows:
-        try:
-            window_year, window_registry_period = parse_canonical_period(window.period)
-        except PeriodValidationError:
-            continue
-        if window_year == filing_year and window_registry_period == registry_period:
-            return str(window.period)
-    return None
-
-
-def workflow_period_for_work_unit(work_unit: WorkUnit) -> str:
-    """Return the canonical period token consumed by WorkflowEngine.
-
-    The work unit stores the period as a short registry token (``"1T"``,
-    ``"0A"``, ``"03"``, ``"1P"``); the :class:`WorkflowEngine` consumes a
-    year-qualified token using the modelo's registry-declared deadline-window
-    spelling (``"2026Q1"``, ``"2026-1T"``, ``"2026"``, ``"2026-03"``,
-    ``"2026P1"``).  This is the single producer of that mapping, used by the
-    workflow gate and by run-id resolution so they cannot diverge.
-    """
-    if work_unit.period.endswith("T") and len(work_unit.period) == 2:
-        declared = _deadline_window_period_for_registry_period(
-            modelo=work_unit.modelo,
-            filing_year=work_unit.filing_year,
-            registry_period=work_unit.period,
-        )
-        if declared is not None:
-            return declared
-        return f"{work_unit.filing_year}-{work_unit.period}"
-    if len(work_unit.period) == 2 and work_unit.period.startswith("Q") and work_unit.period[1] in "1234":
-        registry_period = f"{work_unit.period[1]}T"
-        declared = _deadline_window_period_for_registry_period(
-            modelo=work_unit.modelo,
-            filing_year=work_unit.filing_year,
-            registry_period=registry_period,
-        )
-        if declared is not None:
-            return declared
-        return f"{work_unit.filing_year}Q{work_unit.period[1]}"
-    if work_unit.period == "0A":
-        return str(work_unit.filing_year)
-    if len(work_unit.period) == 2 and work_unit.period.isdigit():
-        return f"{work_unit.filing_year}-{work_unit.period}"
-    # Pago-fraccionado tokens (``"1P"`` / ``"2P"`` / ``"3P"``) compose to
-    # ``"YYYYPn"`` so the workflow engine and registry token resolver share
-    # the same year-qualified form.
-    if len(work_unit.period) == 2 and work_unit.period.endswith("P") and work_unit.period[0] in "123":
-        return f"{work_unit.filing_year}P{work_unit.period[0]}"
-    # Fallback: validate via the canonical parser; raise on unrecognised tokens.
-    parse_canonical_period(work_unit.period)
-    return work_unit.period
-
-
-class _RevisionInputsProvider:
-    """Loads immutable calculation-revision inputs for the workflow gate."""
-
-    def __init__(self, *, revision: CalculationRevision, work_unit: WorkUnit) -> None:
-        self._revision = revision
-        self._modelo = work_unit.modelo
-        self._period = workflow_period_for_work_unit(work_unit)
-
-    def load_inputs(
-        self,
-        *,
-        modelo: str,
-        period: str,
-        profile: TaxpayerProfile,
-    ) -> ModeloInputs:
-        del profile
-        if modelo != self._modelo or period != self._period:
-            raise WorkflowInputMismatchError(
-                "workflow input request does not match calculation revision",
-                translated_message="application.modelo.errors.workflow_input_mismatch",
-                context={
-                    "expected_modelo": self._modelo,
-                    "expected_period": self._period,
-                    "requested_modelo": modelo,
-                    "requested_period": period,
-                },
-            )
-        return {
-            **dict(self._revision.inputs_snapshot),
-            **dict(self._revision.binding_overrides),
-        }
-
-
-class _RevisionDraftBuilder:
-    """Builds and locally approves the draft backed by the target revision."""
-
-    def __init__(self, *, work_unit: WorkUnit, actor: str, clock: datetime) -> None:
-        self._work_unit = work_unit
-        self._actor = actor
-        self._clock = clock
-        self._schema_provider = build_runtime_schema_provider(
-            filing_year=work_unit.filing_year,
-            period=work_unit.period,
-            modelos=(work_unit.modelo,),
-        )
-
-    def build(
-        self,
-        *,
-        modelo: str,
-        period: str,
-        profile: TaxpayerProfile,
-        inputs: ModeloInputs,
-        fail_on_warning: bool = False,
-    ) -> RegistryModeloDraftProtocol:
-        draft = build_draft(
-            modelo=modelo,
-            period=period,
-            profile=filing_profile_from_taxpayer(profile),
-            inputs=inputs,
-            schema_provider=self._schema_provider,
-            fail_on_warning=fail_on_warning,
-        )
-        if draft.status is not ModeloDraftStatus.LISTO_PARA_PRESENTAR:
-            return draft
-        return approve_draft(
-            draft,
-            bucket_id=self._work_unit.bucket_id,
-            approved_by=self._actor,
-            schema_provider=self._schema_provider,
-            transaction_catalogue=TransactionCatalogue(),
-            approved_at=self._clock,
-        )
-
-
-class _RevisionDeadlineWindowChecker:
-    """Checks the same deadline schedule the workflow gate already computed."""
-
-    def __init__(self, *, profile: TaxpayerProfile, engine: DeadlineEngine) -> None:
-        self._profile = profile
-        self._engine = engine
-
-    def is_window_open(self, modelo: str, period: str, today: date) -> bool:
-        year, _ = parse_canonical_period(period)
-        schedule = self._engine.compute(self._profile, year, today=today)
-        return any(
-            obligation.modelo == modelo
-            and obligation.period == period
-            and obligation.opens_on <= today <= obligation.closes_on
-            for obligation in schedule.obligations
-        )
-
-
-def _build_revision_workflow_engine(
-    *,
-    revision: CalculationRevision,
-    work_unit: WorkUnit,
-    profile: TaxpayerProfile,
-    actor: str,
-    clock: datetime,
-    settings: Settings | None,
-) -> WorkflowEngine:
-    cfg = settings or load_settings()
-    deadline_engine = DeadlineEngine()
-    provider_kind = (
-        AuthProviderKind(cfg.aeat_auth_provider.value)
-        if cfg.aeat_auth_provider is not None
-        else AuthProviderKind.CERTIFICATE
-    )
-    submission_engine = SubmissionEngine(
-        auth_provider=select_provider(provider_kind, settings=cfg),
-        deadline_checker=_RevisionDeadlineWindowChecker(profile=profile, engine=deadline_engine),
-        settings=cfg,
-    )
-    return WorkflowEngine(
-        deadline_engine=DeadlineEngineAdapter(deadline_engine),
-        filing_draft_builder=_RevisionDraftBuilder(work_unit=work_unit, actor=actor, clock=clock),
-        submission_engine=submission_engine,
-        session=None,
-        certificate_bundle=None,
-        inputs_provider=_RevisionInputsProvider(
-            revision=revision,
-            work_unit=work_unit,
-        ),
-        settings=cfg,
-    )
 
 
 def _run_revision_workflow_gate(
@@ -2097,153 +1901,6 @@ def _evaluate_predicate_expression(
         return not (field_value is None or (isinstance(field_value, str) and not field_value.strip()))
 
     return True
-
-
-def _resolve_m210_rate(
-    profile: TaxpayerProfile,
-    tipo_renta: str,
-    year: int,
-    snapshot: RegistrySnapshot,
-) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
-    """Resolve the M210 rate for (profile, tipo_renta, year).
-
-    Returns a (rate, findings) pair across three distinct branches:
-
-    1. **Baseline parameter absent** — the ``m210-tipo-gravamen-2025``
-       parameter is not loaded on the snapshot at all. This is a
-       registry-load coherence issue; the helper returns ``(None, [])``
-       defensively rather than emitting an operator-facing finding.
-
-    2. **Per-row absent, no treaty country** — the baseline parameter
-       is loaded but has no row for the requested ``tipo_renta`` (e.g.
-       pension, not yet covered in the registry baseline corpus) AND the
-       profile declares no ``country_of_fiscal_residence``. The helper
-       returns ``(None, [finding])`` with the
-       ``m210-baseline-tipo-deferred`` BLOCKING kind, citing the
-       deferral and pointing the operator at the treaty-claim
-       alternative.
-
-    3. **Treaty country declared** — the profile carries a
-       ``country_of_fiscal_residence``; the helper proceeds to Convenio
-       dispatch regardless of whether the baseline row is present.
-       If the (country, tipo_renta) Convenio row is missing the helper
-       emits ``m210-convenio-rate-missing``; if it carries the
-       ``NOT_YET_AUTHORED`` sentinel it emits
-       ``m210-convenio-rate-not-yet-authored``; otherwise it returns
-       the Convenio rate (which REPLACES the baseline per ADR §D2.4
-       self-execution doctrine).
-
-    The treaty-country signal comes from
-    ``profile.country_of_fiscal_residence``: a non-None value combined
-    with ``profile.fiscal_residency == NON_RESIDENT_IRNR`` is the IRNR
-    treaty-overlay activation surface; the ``convenio_aplicable``
-    property already derives the BOE treaty reference from that field.
-    """
-    # Build the (cc, tipo_renta) -> ConvenioRateRow lookup dict from
-    # the snapshot's parameter rows at function entry. O(N) per call
-    # is acceptable for Phase 1 with three rows; the cache-at-load-time
-    # optimization is a Phase 2 deferral.
-    baseline_param = None
-    convenio_param = None
-    for parameter in snapshot.revision.parameters:
-        if parameter.id == "m210-tipo-gravamen-2025":
-            baseline_param = parameter
-        elif parameter.id == "m210-convenio-rates":
-            convenio_param = parameter
-
-    if baseline_param is None:
-        return None, []
-
-    baseline_rate: Decimal | None = None
-    for entry in baseline_param.keyed_brackets:
-        if (
-            entry.key == tipo_renta
-            and entry.valid_from.year <= year
-            and (entry.valid_to is None or entry.valid_to.year >= year)
-        ):
-            try:
-                baseline_rate = Decimal(entry.value)
-            except (ArithmeticError, ValueError):
-                return None, []
-            break
-
-    treaty_country = profile.country_of_fiscal_residence
-    if treaty_country is None:
-        if baseline_rate is None:
-            baseline_legal_refs = tuple(str(r) for r in baseline_param.legal_refs)
-            baseline_source_refs = tuple(str(r) for r in baseline_param.source_refs)
-            finding = ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                severity=ModeloVerificationFindingSeverity.BLOCKING,
-                message=(
-                    f"M210 baseline tipo_renta={tipo_renta!r} year={year} is "
-                    "deferred to a future Phase per corpus-blocking; "
-                    "predicate 'm210-baseline-tipo-deferred' fires"
-                ),
-                next_action=tr(
-                    "application.modelo.findings.m210_baseline_tipo_deferred.next_action",
-                    tipo_renta=tipo_renta,
-                ),
-                legal_refs=baseline_legal_refs,
-                source_refs=baseline_source_refs,
-            )
-            return None, [finding]
-        return baseline_rate, []
-
-    cc = treaty_country.upper()
-
-    convenio_lookup: dict[tuple[str, str], ConvenioRateRow] = {}
-    if convenio_param is not None:
-        for row in convenio_param.convenio_rates:
-            if row.valid_from.year <= year and (row.valid_to is None or row.valid_to.year >= year):
-                convenio_lookup[(row.country_code, row.tipo_renta)] = row
-
-    matched_row = convenio_lookup.get((cc, tipo_renta))
-    legal_refs: tuple[str, ...] = tuple(str(r) for r in convenio_param.legal_refs) if convenio_param is not None else ()
-    source_refs: tuple[str, ...] = (
-        tuple(str(r) for r in convenio_param.source_refs) if convenio_param is not None else ()
-    )
-
-    if matched_row is None:
-        finding = ModeloVerificationFinding(
-            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-            severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message=(
-                f"M210 Convenio rate row missing for country={cc!r} "
-                f"tipo_renta={tipo_renta!r} year={year}; "
-                "predicate 'm210-convenio-rate-missing' fires"
-            ),
-            next_action=tr(
-                "application.modelo.findings.m210_convenio_rate_missing.next_action",
-                cc=cc,
-                tipo_renta=tipo_renta,
-            ),
-            legal_refs=legal_refs,
-            source_refs=source_refs,
-        )
-        return None, [finding]
-
-    if matched_row.rate == "NOT_YET_AUTHORED":
-        finding = ModeloVerificationFinding(
-            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-            severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message=(
-                f"M210 Convenio rate row for country={cc!r} "
-                f"tipo_renta={tipo_renta!r} year={year} carries the "
-                "NOT_YET_AUTHORED placeholder; predicate "
-                "'m210-convenio-rate-not-yet-authored' fires"
-            ),
-            next_action=tr(
-                "application.modelo.findings.m210_convenio_rate_not_yet_authored.next_action",
-                cc=cc,
-                tipo_renta=tipo_renta,
-            ),
-            legal_refs=legal_refs,
-            source_refs=source_refs,
-        )
-        return None, [finding]
-
-    return Decimal(matched_row.rate), []
 
 
 def _rewrite_m210_sentinels(
