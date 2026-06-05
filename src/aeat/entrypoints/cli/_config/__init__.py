@@ -7,8 +7,6 @@ through :class:`BucketEventHistoryRepository`.
 from __future__ import annotations
 
 import typing
-from collections.abc import Mapping
-from datetime import datetime
 from pathlib import Path
 
 import click
@@ -26,12 +24,6 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import tr
 from ....core.logging import get_logger as _get_logger
-from ....core.redaction import (
-    CLI_BUCKET_ID_PLACEHOLDER,
-    CLI_PROFILE_ID_PLACEHOLDER,
-    redact_for_cli_output,
-    redact_structured_for_cli_output,
-)
 from ....core.time import now as _now
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from .._command_suggestions import AeatTyperGroup as _AeatTyperGroup
@@ -42,11 +34,19 @@ from .._errors import command_error_boundary as _command_error_boundary
 from ._apoderado import apoderado_app, register_apoderado_commands
 from ._auth import auth_app
 from ._auth_diagnostics import auth_diagnostics_app
+from ._bucket_history import _parse_bucket_event_types, register_bucket_history_commands
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
 from ._repair_cli import register_repair_maintenance_commands
+from ._repair_profile import (
+    profile_record_missing_next_action as _profile_record_missing_next_action,
+)
+from ._repair_profile import (
+    profile_record_unreadable_next_action as _profile_record_unreadable_next_action,
+)
+from ._repair_profile import register_repair_profile_command
 
 if typing.TYPE_CHECKING:
-    from ....domain.buckets import BucketEvent, BucketEventType
+    from ....domain.buckets import BucketEventType
 
 _log = _get_logger(__name__)
 
@@ -91,238 +91,6 @@ def config_root(
         document = _build_help_document("config")
         _emit(ctx, document, _render_help_text(document).splitlines())
         raise typer.Exit()
-
-
-@repair_app.command(
-    "profile",
-    help=tr("cli.config.repair.profile_help"),
-)
-def repair_profile(
-    ctx: typer.Context,
-    profile: str | None = typer.Option(
-        None,
-        "--profile",
-        help=tr("cli.config.repair.profile_name_help"),
-    ),
-    clear_active: bool = typer.Option(
-        False,
-        "--clear-active",
-        help=tr("cli.config.repair.profile_clear_active_help"),
-    ),
-    repair_manifest_status: bool = typer.Option(
-        False,
-        "--repair-manifest-status",
-        help=tr(
-            "cli.config.repair.profile_repair_manifest_status_help",
-            default="Backfill a legacy active bucket manifest status from the encrypted profile record.",
-        ),
-    ),
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.yes_help")),
-) -> None:
-    """Inspect profile health or safely repair a degraded active-profile pointer/manifest."""
-    from ....application.workflow import (
-        repair_active_profile_manifest_status,
-        repair_active_profile_pointer,
-    )
-    from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
-
-    if clear_active and repair_manifest_status:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.repair.profile_one_action",
-        )
-    if profile is not None and not clear_active and not repair_manifest_status:
-        _emit_profile_record_status(ctx, profile)
-        return
-    if profile is not None:
-        resolved = _resolve_profile_by_label(profile)
-        if resolved.bucket_id != _resolve_active_bucket_id():
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.repair.profile_clear_active_mismatch",
-                context={"profile": profile},
-            )
-    if (clear_active or repair_manifest_status) and not yes:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.repair.profile_requires_yes",
-        )
-    from .._config_payloads import RepairProfileResult
-
-    if repair_manifest_status:
-        result = repair_active_profile_manifest_status(confirmed=yes)
-        health = result.after or result.before
-        lines = [
-            f"dry_run\t{result.dry_run}",
-            f"repaired\t{result.repaired}",
-            f"active_profile\t{CLI_PROFILE_ID_PLACEHOLDER if health.active_profile else ''}",
-            f"status\t{health.status}",
-            f"manifest_status\t{result.status or ''}",
-            f"reason\t{result.reason}",
-        ]
-        if health.profile_record_error:
-            lines.append(f"profile_record_error\t{health.profile_record_error}")
-        if health.next_action:
-            lines.append(f"next_action\t{health.next_action}")
-        repair_payload = RepairProfileResult.model_validate(
-            _redact_profile_repair_payload(result.model_dump(mode="json"))
-        )
-        _emit_envelope(ctx, command="config.repair.profile", result=repair_payload, lines=lines)
-        return
-    result = repair_active_profile_pointer(clear_active=clear_active, confirmed=yes)
-    health = result.after or result.before
-    payload = _redact_profile_repair_payload(result.model_dump(mode="json"))
-    lines = [
-        f"dry_run\t{result.dry_run}",
-        f"cleared_pointer\t{result.cleared_pointer}",
-        f"active_profile\t{CLI_PROFILE_ID_PLACEHOLDER if health.active_profile else ''}",
-        f"source\t{health.source}",
-        f"status\t{health.status}",
-        f"registered_bucket\t{health.registered_bucket}",
-        f"profile_record_present\t{health.profile_record_present}",
-        f"repairable_by_clearing_pointer\t{health.repairable_by_clearing_pointer}",
-    ]
-    if health.profile_record_error:
-        lines.append(f"profile_record_error\t{health.profile_record_error}")
-    if health.next_action:
-        lines.append(f"next_action\t{health.next_action}")
-    repair_payload = RepairProfileResult.model_validate(payload)
-    _emit_envelope(ctx, command="config.repair.profile", result=repair_payload, lines=lines)
-
-
-def _redact_profile_repair_payload(payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
-    """Return a paste-safe repair payload with internal profile ids removed."""
-    redacted = redact_structured_for_cli_output(payload)
-    if not isinstance(redacted, dict):
-        return {}
-    return redacted
-
-
-def _profile_record_missing_next_action(profile_id: str, *, label: str) -> str:
-    if profile_id == _resolve_active_bucket_id():
-        return "aeat config repair profile --clear-active --yes"
-    return f"aeat config repair profile --profile {label}"
-
-
-def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
-    """Emit a non-secret status report for one registered profile bucket.
-
-    ``label`` is the operator-facing profile name; it resolves to the
-    immutable bucket UUID via the manifest scan.
-    """
-    from ....domain.user_profile import ProfileNotFoundError
-    from .._config_payloads import RepairProfileResult
-
-    pointer = _resolve_profile_by_label(label)
-    profile_id = pointer.bucket_id
-    try:
-        record = _read_profile_record(profile_id=profile_id, bucket_id=profile_id)
-    except ProfileNotFoundError:
-        payload = {
-            "profile_id": profile_id,
-            "bucket_id": profile_id,
-            "display_name": pointer.label,
-            "registered_bucket": True,
-            "profile_record_present": False,
-            "status": "missing_profile_record",
-            "next_action": _profile_record_missing_next_action(profile_id, label=pointer.label),
-        }
-        repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
-        _emit_envelope(
-            ctx,
-            command="config.repair.profile",
-            result=repair_payload,
-            lines=(
-                "readiness\tmissing_profile_record",
-                f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}",
-                f"bucket_id\t{CLI_BUCKET_ID_PLACEHOLDER}",
-                f"display_name\t{pointer.label}",
-                "registered_bucket\tpresent",
-                "profile_record\tmissing",
-                f"next_action\t{payload['next_action']}",
-            ),
-        )
-        raise typer.Exit(code=2) from None
-    except _AeatError as exc:
-        payload = {
-            "profile_id": profile_id,
-            "bucket_id": profile_id,
-            "display_name": pointer.label,
-            "registered_bucket": True,
-            "profile_record_present": False,
-            "status": "profile_record_unreadable",
-            "error": f"{type(exc).__name__}: {str(exc).splitlines()[0] if str(exc) else type(exc).__name__}",
-            "next_action": _profile_record_unreadable_next_action(profile_id, label=pointer.label),
-        }
-        repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
-        _emit_envelope(
-            ctx,
-            command="config.repair.profile",
-            result=repair_payload,
-            lines=(
-                "readiness\tprofile_record_unreadable",
-                f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}",
-                f"bucket_id\t{CLI_BUCKET_ID_PLACEHOLDER}",
-                f"display_name\t{pointer.label}",
-                "registered_bucket\tpresent",
-                "profile_record\tunreadable",
-                f"next_action\t{payload['next_action']}",
-            ),
-        )
-        raise typer.Exit(code=2) from exc
-    except Exception as exc:
-        _log.debug("config repair profile wrapped unexpected profile-record exception", exc_info=True)
-        boundary = _ConfigBoundaryError(exc)
-        payload = {
-            "profile_id": profile_id,
-            "bucket_id": profile_id,
-            "display_name": pointer.label,
-            "registered_bucket": True,
-            "profile_record_present": False,
-            "status": "profile_record_unreadable",
-            "error": f"{type(exc).__name__}: {str(exc).splitlines()[0] if str(exc) else type(exc).__name__}",
-            "next_action": _profile_record_unreadable_next_action(profile_id, label=pointer.label),
-        }
-        repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
-        _emit_envelope(
-            ctx,
-            command="config.repair.profile",
-            result=repair_payload,
-            lines=(
-                "readiness\tprofile_record_unreadable",
-                f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}",
-                f"bucket_id\t{CLI_BUCKET_ID_PLACEHOLDER}",
-                f"display_name\t{pointer.label}",
-                "registered_bucket\tpresent",
-                "profile_record\tunreadable",
-                f"next_action\t{payload['next_action']}",
-            ),
-        )
-        raise typer.Exit(code=2) from boundary
-    payload = {
-        "profile_id": profile_id,
-        "bucket_id": profile_id,
-        "display_name": record.display_name,
-        "registered_bucket": True,
-        "profile_record_present": True,
-        "status": record.status.value,
-        "next_action": f"aeat config profile switch {pointer.label}",
-    }
-    repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
-    _emit_envelope(
-        ctx,
-        command="config.repair.profile",
-        result=repair_payload,
-        lines=(
-            "readiness\tready",
-            f"display_name\t{record.display_name}",
-            f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}",
-            f"bucket_id\t{CLI_BUCKET_ID_PLACEHOLDER}",
-            "registered_bucket\tpresent",
-            "profile_record\tpresent",
-            f"status\t{record.status.value}",
-            f"next_action\t{payload['next_action']}",
-        ),
-    )
-
-
 
 
 def _profile_state():
@@ -609,12 +377,6 @@ def _emit_profile_record_missing(ctx: typer.Context, *, profile_id: str, bucket_
             f"next_action\t{payload['next_action']}",
         ),
     )
-
-
-def _profile_record_unreadable_next_action(profile_id: str, *, label: str) -> str:
-    if profile_id == _resolve_active_bucket_id():
-        return "aeat config repair profile --clear-active --yes"
-    return f"aeat config repair profile --profile {label}"
 
 
 def _emit_profile_record_unreadable(
@@ -1666,181 +1428,18 @@ def config_reset(
     )
 
 
-@bucket_app.command("history", help=tr("cli.config.bucket.history_help"))
-def bucket_history(
-    ctx: typer.Context,
-    bucket_id: typing.Annotated[
-        str,
-        typer.Argument(help=tr("cli.config.bucket.bucket_id_help")),
-    ],
-    event_type: typing.Annotated[
-        list[str] | None,
-        typer.Option(
-            "--event-type",
-            help=tr("cli.config.bucket.event_type_help"),
-        ),
-    ] = None,
-    since: typing.Annotated[
-        str | None,
-        typer.Option(
-            "--since",
-            help=tr("cli.config.bucket.since_help"),
-        ),
-    ] = None,
-    until: typing.Annotated[
-        str | None,
-        typer.Option(
-            "--until",
-            help=tr("cli.config.bucket.until_help"),
-        ),
-    ] = None,
-    object_id: typing.Annotated[
-        str | None,
-        typer.Option(
-            "--object-id",
-            help=tr("cli.config.bucket.object_id_help"),
-        ),
-    ] = None,
-    actor: typing.Annotated[
-        str | None,
-        typer.Option(
-            "--actor",
-            help=tr("cli.config.bucket.actor_help"),
-        ),
-    ] = None,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    """Browse the append-only bucket-event history."""
-    _activate_subcommand_output_language(ctx, output_language)
-    from ....domain.buckets import BucketEventHistoryRepository
-
-    selected = _parse_bucket_event_types(event_type)
-    since_dt = _parse_bucket_history_instant(since, flag="--since")
-    until_dt = _parse_bucket_history_instant(until, flag="--until")
-    if since_dt is not None and until_dt is not None and since_dt > until_dt:
-        raise typer.BadParameter(tr("cli.config.bucket.history.since_after_until"))
-    object_id_token = object_id.strip() if object_id else None
-    actor_token = actor.strip() if actor else None
-
-    catalogue = BucketEventHistoryRepository().load()
-    events = tuple(
-        event
-        for event in catalogue.for_bucket(bucket_id, event_types=selected)
-        if _bucket_history_event_matches(
-            event,
-            since_dt=since_dt,
-            until_dt=until_dt,
-            object_id_token=object_id_token,
-            actor_token=actor_token,
-        )
-    )
-    from .._config_payloads import BucketHistoryResult
-
-    bucket_result = BucketHistoryResult(
-        operation="config.bucket.history",
-        bucket_id=bucket_id,
-        event_types=[t.value for t in selected] if selected else None,
-        since=since_dt.isoformat() if since_dt else None,
-        until=until_dt.isoformat() if until_dt else None,
-        object_id=object_id_token,
-        actor=actor_token,
-        events=[dict(_bucket_history_event_payload(event)) for event in events],
-    )
-    lines = ["operation\tconfig.bucket.history", f"bucket_id\t{bucket_id}", f"event_count\t{len(events)}"] + [
-        f"{e.occurred_at.isoformat()}\t{e.event_type.value}\t{e.object_type.value}\t{e.object_id}\t{e.actor}"
-        for e in events
-    ]
-    _emit_envelope(ctx, command="config.bucket.history", result=bucket_result, lines=lines)
-
-
-def _parse_bucket_event_types(event_type: list[str] | None) -> tuple[BucketEventType, ...] | None:
-    """Parse the ``--event-type`` flag tuple, raising :class:`typer.BadParameter` on unknown values.
-
-    Returns ``None`` when no filter was supplied so the catalogue
-    walker reads the full event stream; otherwise returns a typed
-    tuple of :class:`BucketEventType`.
-    """
-    if not event_type:
-        return None
-    from ....domain.buckets import BucketEventType
-
-    parsed: list[BucketEventType] = []
-    for value in event_type:
-        token = value.strip()
-        try:
-            parsed.append(BucketEventType(token))
-        except ValueError as exc:
-            # str(exc) here is Python's raw "'x' is not a valid
-            # BucketEventType" — untranslated and dev-flavoured. Surface a
-            # localized refusal naming the bad token and the valid set.
-            raise typer.BadParameter(
-                tr(
-                    "cli.config.bucket.history.invalid_event_type",
-                    value=token,
-                    valid=", ".join(member.value for member in BucketEventType),
-                ),
-            ) from exc
-    return tuple(parsed)
-
-
-def _parse_bucket_history_instant(raw: str | None, *, flag: str) -> datetime | None:
-    """Parse one ``--since`` / ``--until`` value into a :class:`datetime`, or ``None`` when absent."""
-    if not raw:
-        return None
-
-    try:
-        return datetime.fromisoformat(raw.strip())
-    except ValueError as exc:
-        raise typer.BadParameter(
-            tr("cli.config.bucket.history.invalid_timestamp", flag=flag, raw=raw),
-        ) from exc
-
-
-def _bucket_history_event_matches(
-    event: BucketEvent,
-    *,
-    since_dt: datetime | None,
-    until_dt: datetime | None,
-    object_id_token: str | None,
-    actor_token: str | None,
-) -> bool:
-    """Return True when ``event`` passes every active history filter.
-
-    Filters checked, in order: --since (lower bound), --until
-    (upper bound), --object-id (exact match), --actor (exact match).
-    ``None`` for any filter means the gate is open.
-    """
-    if since_dt is not None and event.occurred_at < since_dt:
-        return False
-    if until_dt is not None and event.occurred_at > until_dt:
-        return False
-    if object_id_token is not None and event.object_id != object_id_token:
-        return False
-    return not (actor_token is not None and event.actor != actor_token)
-
-
-def _bucket_history_event_payload(event: BucketEvent) -> Mapping[str, object]:
-    """Project one bucket event onto its JSON payload row."""
-    return {
-        "event_id": event.event_id,
-        "event_type": event.event_type.value,
-        "occurred_at": event.occurred_at.isoformat(),
-        "actor": event.actor,
-        "object_type": event.object_type.value,
-        "object_id": event.object_id,
-        "payload": dict(event.payload),
-    }
-
-
 from ._profile_censo import register as _register_profile_censo
 
 _register_profile_censo(profile_app)
 
+register_repair_profile_command(
+    repair_app,
+    resolve_profile_by_label=_resolve_profile_by_label,
+    read_profile_record=_read_profile_record,
+)
+register_repair_maintenance_commands(repair_app)
+register_bucket_history_commands(bucket_app)
+app.add_typer(repair_app, name="repair")
 app.add_typer(profile_app, name="profile")
 register_apoderado_commands(auth_app, resolve_active_profile_pointer=_resolve_active_profile_pointer)
 auth_app.add_typer(auth_diagnostics_app, name="diagnostics")
@@ -1851,5 +1450,15 @@ from ._google import google_app as _google_app
 
 app.add_typer(_google_app, name="google")
 
-__all__ = ["apoderado_app", "app", "auth_app", "tr"]
+__all__ = [
+    "_parse_bucket_event_types",
+    "apoderado_app",
+    "app",
+    "auth_app",
+    "bucket_app",
+    "profile_app",
+    "repair_app",
+    "tr",
+]
+
 

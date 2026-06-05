@@ -8,21 +8,20 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
 ---
 
-# W02.P05.S100 Modelo Import Regression Verification
+# W02.P05.S100 - verify modelo work help import regression
 
-Scope: W02.P05 dirty worktree regression exposed by output-language parity.
+Scope: `src/aeat/entrypoints/cli/_modelo*.py`, `src/aeat/entrypoints/cli/tests/test_output_language_parity.py`.
 
 ## Description
 
-- Reproduce the output-language parity failure against modelo work and ledger ratios help surfaces.
-- Confirm the failing import path resolves to the ledger application `_decimal_to_string` shared serializer.
-- Verify the current worktree exports `_decimal_to_string` from `_actions_common.py`.
-- Rerun focused and full output-language parity tests in fresh pytest processes.
+- Re-run the `app modelo work calculate --help` path in a fresh Python process with exception capture disabled.
+- Re-run the full output-language parity module after the dirty modelo fragments settled.
+- Confirm whether the earlier `NameError: lru_cache is not defined` failure still reproduces.
 
 ## Outcome
 
-The import regression is no longer present in the current worktree. Full output-language parity passes for all enrolled CLI surfaces.
+The direct help probe exited 0, and `test_output_language_parity.py` reported 40 passing tests. No code change was required for this edge.
 
 ## Notes
 
-No code edit was required in this step because the shared serializer was already present in `_actions_common.py` by the time the focused verification reran.
+The earlier parity failure was recorded in S99 because it occurred during verification of the config bucket-history extraction. The fresh-process rerun cleared the concern.

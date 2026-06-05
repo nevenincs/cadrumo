@@ -176,6 +176,22 @@ Close remaining oversized CLI roots through explicit residual extraction tranche
 - [x] `W02.P05.S51` - extract the selected residual config root command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
 - [x] `W02.P05.S52` - verify residual config root behavior and ratchet config size budget; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
 - [x] `W02.P05.S93` - Migrate stale ledger integration fixtures to UUID-safe profile registration; `src/aeat/entrypoints/cli/tests/test_ledger_validation_paths.py; src/aeat/entrypoints/cli/tests/test_ledger_ux_defect_cluster.py`.
+- [x] `W02.P05.S94` - select the next residual config repair command group using exact discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/tests`.
+- [x] `W02.P05.S95` - extract the selected config repair command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
+- [x] `W02.P05.S96` - verify config repair behavior and ratchet config size budget; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P05.S97` - select the next config bucket/history command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P05.S98` - extract the selected config bucket/history command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
+- [x] `W02.P05.S99` - verify config bucket/history behavior and ratchet config size budget; `src/aeat/entrypoints/cli/tests/test_profile_lifecycle_verbs.py src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P05.S100` - verify dirty modelo work fragment import regression exposed by output-language parity does not reproduce in a fresh process; `src/aeat/entrypoints/cli/_modelo*.py src/aeat/entrypoints/cli/tests/test_output_language_parity.py`.
+- [ ] `W02.P05.S101` - select the next config profile command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests`.
+- [ ] `W02.P05.S102` - extract the selected config profile command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
+- [ ] `W02.P05.S103` - verify config profile behavior and ratchet config size budget; `src/aeat/entrypoints/cli/tests/test_profile_lifecycle_verbs.py src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [ ] `W02.P05.S104` - select the next ledger residual command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/tests`.
+- [ ] `W02.P05.S105` - extract the selected ledger residual command group into a focused registrar module; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_*.py`.
+- [ ] `W02.P05.S106` - verify ledger residual behavior and ratchet ledger size budget; `src/aeat/entrypoints/cli/tests/test_ledger* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [ ] `W02.P05.S107` - select a coherent split for oversized modelo CLI tests using exact discovery; `src/aeat/entrypoints/cli/tests/test_modelo.py src/aeat/entrypoints/cli/tests`.
+- [ ] `W02.P05.S108` - split selected modelo CLI tests into focused test modules; `src/aeat/entrypoints/cli/tests/test_modelo.py src/aeat/entrypoints/cli/tests/test_modelo_*.py`.
+- [ ] `W02.P05.S109` - verify split modelo CLI tests and ratchet test module size budget; `src/aeat/entrypoints/cli/tests/test_modelo.py src/aeat/entrypoints/cli/tests/test_modelo_*.py src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
 
 ## Wave `W03` - application and domain monolith decomposition
 
@@ -192,8 +208,8 @@ Queue and execute ADR-backed decomposition for application, domain, adapter, per
 
 Decompose oversized application service modules by use-case boundary while preserving top-level application facades and keeping adapters out of application internals.
 
-- [ ] `W03.P06.S53` - decompose application modelo actions by use-case helpers behind the public modelo application facade; `src/aeat/application/modelo/_actions.py src/aeat/application/modelo/*.py`.
-- [ ] `W03.P06.S54` - verify application modelo action behavior and facade imports after decomposition; `src/aeat/application/modelo/tests src/aeat/entrypoints/cli/tests/test_modelo*`.
+- [x] `W03.P06.S53` - decompose application modelo actions by use-case helpers behind the public modelo application facade; `src/aeat/application/modelo/_actions.py src/aeat/application/modelo/*.py`.
+- [x] `W03.P06.S54` - verify application modelo action behavior and facade imports after decomposition; `src/aeat/application/modelo/tests src/aeat/entrypoints/cli/tests/test_modelo*`.
 - [ ] `W03.P06.S55` - decompose application ledger actions by orchestration boundary behind the public ledger application facade; `src/aeat/application/ledger/_actions.py src/aeat/application/ledger/*.py`.
 - [ ] `W03.P06.S56` - verify application ledger action behavior and facade imports after decomposition; `src/aeat/application/ledger/tests src/aeat/entrypoints/cli/tests/test_ledger*`.
 - [ ] `W03.P06.S57` - decompose application live package root by service family while preserving public live facade imports; `src/aeat/application/live/__init__.py src/aeat/application/live/*.py`.
