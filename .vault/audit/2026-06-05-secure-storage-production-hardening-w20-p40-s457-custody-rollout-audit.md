@@ -26,12 +26,18 @@ through `mint_recovery_envelope` and `save_recovery_envelope`, loads them throug
 available for their existing low-level tests but no longer drive the new config
 custody verbs.
 
-## S457-003 | PASS | Bucket/profile lifecycle remains the lock and unlock path
+## S457-003 | PASS | Custody verbs own the bucket session lifecycle
 
 `config unlock` selects the requested or active profile through the canonical
 profile lifecycle span, while `config lock` uses the same active-profile logout
 primitive as the existing profile command. This preserves the accepted
-bucket-session lifecycle rather than adding a parallel lock path.
+bucket-session lifecycle rather than adding a parallel lock path. The recovery
+and rekey verbs remain bootstrap-exempt at the root callback so the handler can
+resolve passphrase or recovery material, but the application custody service now
+opens an internal `activate_master_key_provider()` span when enrolling recovery,
+rekeying, or proving a recovered key after rewrap. `verify-recovery` remains an
+envelope-only recovery-code check, so operators can validate the recovery phrase
+even after the current passphrase is no longer available.
 
 ## S457-004 | PASS | Locale work used the required CLI path
 
@@ -55,6 +61,14 @@ The S457 CLI gate exposed a backend `NameError` in
 used `json.dumps` without importing `json`. Restoring the import was necessary
 to keep profile creation and secure-object writes functional under the verified
 backend path.
+
+## S457-007 | PASS | Code review findings resolved or assigned
+
+The mandatory review found a high lifecycle-proof gap and a medium repair-policy
+coverage gap. Both are fixed in this slice. The remaining low findings are
+assigned to already-open follow-up rows: env-harness hardening remains under
+`W20.P40.S452`, and canonical recovery guidance/copy remains under
+`W20.P40.S458`.
 
 Disposition: close `W20.P40.S457`. Remaining W20 work stays open for passphrase
 bootstrap/redaction hardening, stale guidance replacement, guard narrowing,

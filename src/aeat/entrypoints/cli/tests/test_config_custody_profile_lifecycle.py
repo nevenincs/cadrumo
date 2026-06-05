@@ -250,6 +250,10 @@ def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path)
     assert rekeyed.returncode == 0, _combined_output(rekeyed)
     assert "rekeyed\tyes" in rekeyed.stdout
 
+    verified_after_rekey = _run_aeat(tmp_path, ("config", "verify-recovery", "--recovery-key", recovery_key))
+    assert verified_after_rekey.returncode == 0, _combined_output(verified_after_rekey)
+    assert "verified\tyes" in verified_after_rekey.stdout
+
     shown_after_rekey = _run_aeat(
         tmp_path,
         ("config", "profile", "show"),

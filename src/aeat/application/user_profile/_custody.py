@@ -130,10 +130,6 @@ def verify_recovery_code(*, mnemonic: str, settings: Settings | None = None) -> 
     try:
         envelope = load_recovery_envelope(path)
         verified = verify_recovery_mnemonic(envelope=envelope, mnemonic=mnemonic)
-        if verified:
-            provider = get_master_key_provider(settings_override=_settings(settings))
-            with activate_master_key_provider(provider):
-                pass
     except (OSError, RecoveryVerificationError, SecretStoreError, StorageValidationError) as exc:
         _log.debug("recovery-code verification failed error_type=%s", type(exc).__name__, exc_info=True)
         return CustodyRecoveryVerification(recovery_path=path, verified=False)

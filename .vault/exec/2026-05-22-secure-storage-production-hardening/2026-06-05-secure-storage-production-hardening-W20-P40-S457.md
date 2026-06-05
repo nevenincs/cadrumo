@@ -34,7 +34,13 @@ profile lifecycle session path, and locale-backed CLI copy.
   recovery-envelope persistence.
 - Mirrored recovery enrollment into the active profile manifest so the
   plaintext bucket status cannot drift from the persisted recovery envelope.
-- Added the `config recover` repair policy row and command-surface coverage for
+- Added internal bucket-session activation spans to recovery enrollment,
+  passphrase rekey, and recovery rebind so the root-exempt custody verbs still
+  prove the active bucket lifecycle where the operation depends on the current or
+  recovered secret store. `verify-recovery` intentionally remains independent of
+  the current passphrase.
+- Added `config recover`, `config rekey`, `config show-recovery`, and
+  `config verify-recovery` repair policy rows and command-surface coverage for
   the nested custody registration module.
 
 ## Outcome
@@ -43,6 +49,9 @@ The first-class config custody verbs are implemented and verified against the
 file secret-store backend. Recovery enrollment persists a typed
 `RecoveryRecord` envelope and does not persist the plaintext mnemonic; recovery
 verification and recovery rebind consume the same accepted facade.
+Root bootstrap exemptions remain necessary for these verbs, but the custody
+service now owns the bucket-session proof inside operations that need an active
+or recovered secret store.
 
 Validation:
 
