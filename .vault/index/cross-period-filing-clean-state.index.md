@@ -23,6 +23,7 @@ related:
   - '[[2026-06-05-cross-period-filing-clean-state-W02-P05-S28]]'
   - '[[2026-06-05-cross-period-filing-clean-state-W02-P06-S29]]'
   - '[[2026-06-05-cross-period-filing-clean-state-W02-P06-S30]]'
+  - '[[2026-06-05-cross-period-filing-clean-state-W03-P09-S37]]'
   - '[[2026-06-05-cross-period-filing-clean-state-adr]]'
   - '[[2026-06-05-cross-period-filing-clean-state-code-review-audit]]'
   - '[[2026-06-05-cross-period-filing-clean-state-plan]]'
@@ -64,6 +65,7 @@ Auto-generated index of all documents tagged with `#cross-period-filing-clean-st
 - `2026-06-05-cross-period-filing-clean-state-W02-P05-S28` - `cross-period-filing-clean-state` `W02.P05.S28` exec - dependency inventory tests
 - `2026-06-05-cross-period-filing-clean-state-W02-P06-S29` - `cross-period-filing-clean-state` `W02.P06.S29` exec - filing-state blockers
 - `2026-06-05-cross-period-filing-clean-state-W02-P06-S30` - `cross-period-filing-clean-state` `W02.P06.S30` exec - blocker tests
+- `2026-06-05-cross-period-filing-clean-state-W03-P09-S37` - `cross-period-filing-clean-state` `W03.P09.S37` exec - expected member coverage proof
 
 ### plan
 

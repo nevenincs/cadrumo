@@ -57,8 +57,6 @@ from ._secure_object_schema import (
     build_revision_ancestor_ids,
     coerce_raw_bytes,
     copy_row_to_quarantine,
-    database_bytes,
-    database_datetime,
     ensure_quarantine_table,
     ensure_table_revision_metadata_columns,
     is_duplicate_column_race,
@@ -438,96 +436,7 @@ class SecureObjectRepository:
             how many rows were quarantined per namespace.
         """
         self._check_session_freshness()
-        self._ensure_quarantine_table()
-        with session_scope(self._engine) as session:
-            quarantined_at = _utc_now().isoformat()
-            namespaces = (
-                session.execute(text("SELECT DISTINCT namespace FROM secure_objects ORDER BY namespace"))
-                .scalars()
-                .all()
-            )
-            per_namespace: list[SecureObjectNamespaceIntegrity] = []
-            for namespace in namespaces:
-                rows = session.execute(
-                    text(
-                        "SELECT id, object_key, classification, schema_version, written_at, "
-                        "revision_id, previous_revision_id, revision_ancestor_ids, "
-                        "previous_payload_hash, payload_hash, "
-                        "ciphertext_hash, revision_written_at, write_provenance, source_event_id, "
-                        "conflict_policy, payload "
-                        "FROM secure_objects WHERE namespace = :namespace"
-                    ).bindparams(bindparam("namespace", value=namespace))
-                ).all()
-                quarantined = 0
-                retained = 0
-                for raw in rows:
-                    payload_bytes = raw.payload if isinstance(raw.payload, bytes) else bytes(raw.payload)
-                    object_key_value = (
-                        raw.object_key
-                        if isinstance(raw.object_key, bytes | bytearray | memoryview)
-                        else str(raw.object_key).encode(UTF_8_ENCODING)
-                    )
-                    object_key_bytes = bytes(object_key_value)
-                    try:
-                        decrypt_encrypted_bytes_column(payload_bytes)
-                    except DecryptionError as exc:
-                        _log.debug(
-                            "secure_objects: quarantining unreadable row id=%s namespace=%s (%s)",
-                            int(raw.id),
-                            namespace,
-                            exc,
-                        )
-                        session.execute(
-                            text(
-                                "INSERT INTO secure_objects_quarantine "
-                                "(source_id, namespace, object_key, classification, schema_version, "
-                                " written_at, revision_id, previous_revision_id, previous_payload_hash, "
-                                " revision_ancestor_ids, payload_hash, ciphertext_hash, "
-                                " revision_written_at, write_provenance, "
-                                " source_event_id, conflict_policy, payload, quarantined_at) "
-                                "VALUES (:source_id, :namespace, :object_key, :classification, "
-                                "        :schema_version, :written_at, :revision_id, "
-                                "        :previous_revision_id, :previous_payload_hash, "
-                                "        :revision_ancestor_ids, :payload_hash, "
-                                "        :ciphertext_hash, :revision_written_at, :write_provenance, "
-                                "        :source_event_id, :conflict_policy, :payload, :quarantined_at)"
-                            ),
-                            {
-                                "source_id": int(raw.id),
-                                "namespace": namespace,
-                                "object_key": object_key_bytes,
-                                "classification": str(raw.classification),
-                                "schema_version": int(raw.schema_version),
-                                "written_at": raw.written_at,
-                                "revision_id": raw.revision_id,
-                                "previous_revision_id": raw.previous_revision_id,
-                                "revision_ancestor_ids": raw.revision_ancestor_ids,
-                                "previous_payload_hash": raw.previous_payload_hash,
-                                "payload_hash": raw.payload_hash,
-                                "ciphertext_hash": raw.ciphertext_hash,
-                                "revision_written_at": raw.revision_written_at,
-                                "write_provenance": raw.write_provenance,
-                                "source_event_id": raw.source_event_id,
-                                "conflict_policy": raw.conflict_policy,
-                                "payload": payload_bytes,
-                                "quarantined_at": quarantined_at,
-                            },
-                        )
-                        session.execute(
-                            text("DELETE FROM secure_objects WHERE id = :id"),
-                            {"id": int(raw.id)},
-                        )
-                        quarantined += 1
-                    else:
-                        retained += 1
-                per_namespace.append(
-                    SecureObjectNamespaceIntegrity(
-                        namespace=namespace,
-                        readable=retained,
-                        unreadable=quarantined,
-                    )
-                )
-        return tuple(per_namespace)
+        return _quarantine_unreadable_rows(self._engine, logger=_log)
 
     def probe_namespace_integrity(self, namespace: str) -> SecureObjectNamespaceIntegrity:
         """Count decryptable and undecryptable rows in ``namespace``.
@@ -540,30 +449,7 @@ class SecureObjectRepository:
         prior keychain master-key generation.
         """
         self._check_session_freshness()
-        readable = 0
-        unreadable = 0
-        with session_scope(self._engine) as session:
-            stmt = text("SELECT payload FROM secure_objects WHERE namespace = :namespace").bindparams(
-                bindparam("namespace", value=namespace)
-            )
-            rows = session.execute(stmt).all()
-        for raw in rows:
-            try:
-                decrypt_encrypted_bytes_column(bytes(raw.payload))
-            except DecryptionError as exc:
-                _log.debug(
-                    "secure_objects probe: unreadable row in namespace=%s (%s)",
-                    namespace,
-                    exc,
-                )
-                unreadable += 1
-            else:
-                readable += 1
-        return SecureObjectNamespaceIntegrity(
-            namespace=namespace,
-            readable=readable,
-            unreadable=unreadable,
-        )
+        return _probe_namespace_integrity(self._engine, namespace, logger=_log)
 
     def iter_namespace_decryptability(self, namespace: str) -> Iterator[SecureObjectDecryptabilityRow]:
         """Yield :class:`SecureObjectDecryptabilityRow` metadata for one namespace.
@@ -574,61 +460,7 @@ class SecureObjectRepository:
         diagnostics.
         """
         self._check_session_freshness()
-        with session_scope(self._engine) as session:
-            stmt = (
-                text(
-                    "SELECT id, object_key, classification, schema_version, written_at, payload "
-                    "FROM secure_objects WHERE namespace = :namespace "
-                    "ORDER BY object_key"
-                )
-                .bindparams(bindparam("namespace", value=namespace))
-                .columns(
-                    id=_orm.SecureObjectRow.__table__.c.id.type,
-                    object_key=_orm.SecureObjectRow.__table__.c.object_key.type,
-                    classification=_orm.SecureObjectRow.__table__.c.classification.type,
-                    schema_version=_orm.SecureObjectRow.__table__.c.schema_version.type,
-                    written_at=_orm.SecureObjectRow.__table__.c.written_at.type,
-                )
-            )
-            rows = session.execute(stmt).all()
-        for raw in rows:
-            object_key_raw = raw.object_key
-            if isinstance(object_key_raw, bytes):
-                object_key_value = object_key_raw
-            elif isinstance(object_key_raw, str):
-                object_key_value = object_key_raw.encode(UTF_8_ENCODING)
-            else:
-                object_key_value = bytes(object_key_raw)
-            payload_raw = raw.payload
-            if isinstance(payload_raw, bytes):
-                payload_value = payload_raw
-            elif isinstance(payload_raw, str):
-                payload_value = payload_raw.encode(UTF_8_ENCODING)
-            else:
-                payload_value = bytes(payload_raw)
-            try:
-                decrypt_encrypted_bytes_column(payload_value)
-            except DecryptionError as exc:
-                yield SecureObjectDecryptabilityRow(
-                    namespace=namespace,
-                    row_id=int(raw.id),
-                    object_key=object_key_value,
-                    classification=str(raw.classification),
-                    schema_version=int(raw.schema_version),
-                    written_at=raw.written_at,
-                    readable=False,
-                    reason=str(exc),
-                )
-            else:
-                yield SecureObjectDecryptabilityRow(
-                    namespace=namespace,
-                    row_id=int(raw.id),
-                    object_key=object_key_value,
-                    classification=str(raw.classification),
-                    schema_version=int(raw.schema_version),
-                    written_at=raw.written_at,
-                    readable=True,
-                )
+        yield from _iter_namespace_decryptability(self._engine, namespace)
 
     def list_keys(self, namespace: str) -> tuple[str, ...]:
         """Return stored lookup digests under ``namespace`` as hex strings.
