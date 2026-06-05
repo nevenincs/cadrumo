@@ -989,3 +989,31 @@ Residual carried forward:
 - The next safe duplication slices should start with one cohesive subsystem at a
   time: Sede checker shared helpers, registry relation/binding helpers, modelo
   work CLI output helpers, then registry CLI output helpers.
+
+## HEALTH-025-S83 | OPEN | 2026-06-05 Hard gate attempt blocked by topology and environment
+
+W06.P21.S83 attempted the hard-gate suite and found the current shifted
+worktree is not green.
+
+Gate matrix:
+
+- `just verify-shims`: pass.
+- `just tooling-doctor`: fail, because `uv pip check` reports broken or
+  incomplete `torch` metadata in `.venv`.
+- `just audit-structure`: fail, because import-linter contracts still address
+  many tests at their pre-relocation module names and now see relocated
+  `tests/` packages as contract violations.
+- `just lint`: fail before Ruff, because `uv run` tries to reinstall
+  `torch==2.12.0` and cannot rename `torch\lib\c10.dll` on Windows.
+- `just typecheck`: fail, dominated by unresolved relative imports from the
+  active relocated-test topology.
+- `just test`: fail before pytest, blocked by the same `torch\lib\c10.dll`
+  install/rename failure as `just lint`.
+
+Residual carried forward:
+
+- S83 remains open; no green hard-gate claim is made.
+- Repair the relocated-test import surface, update structural policy to the new
+  `tests/` module names without weakening production contracts, and clear the
+  local venv torch lock through a non-destructive environment repair before
+  rerunning the hard gate suite.
