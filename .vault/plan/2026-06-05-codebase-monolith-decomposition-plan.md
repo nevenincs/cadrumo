@@ -116,11 +116,14 @@ Reduce remaining CLI roots below the 1250-line objective through focused command
 Continue extracting coherent ledger command groups until _ledger.py moves materially toward the 1250-line objective without CLI-owned accounting policy.
 
 - [ ] `W02.P02.S03` - select the next coherent ledger command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W02.P02.S04` - extract the selected ledger command group into a focused registrar module; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_*.py`.
+- [ ] `W02.P02.S05` - verify selected ledger behavior and ratchet ledger root size after extraction; `src/aeat/entrypoints/cli/tests/test_ledger* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
 
 ### Phase `W02.P03` - live and modelo root continuation
 
 Continue reducing _app_live.py, _modelo.py, and config CLI roots after ledger slices, preserving command registrations and tests.
 
+- [ ] `W02.P03.S06` - continue extracting live, modelo, and config CLI command groups until each root is below 1250 lines; `src/aeat/entrypoints/cli`.
 
 ## Wave `W03` - application and domain monolith decomposition
 
