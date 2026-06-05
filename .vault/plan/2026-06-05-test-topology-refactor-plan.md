@@ -143,7 +143,7 @@ Run mechanical fd gates, marker integrity, targeted pytest collection, vaultspec
 - [x] `W05.P12.S38` - Run final fd topology and naming gates; `fd final gates`.
 - [x] `W05.P12.S39` - Run marker integrity and pytest collection gates; `pytest collection gates`.
 - [x] `W05.P12.S40` - Run vaultspec-core rule sync and status checks; `vaultspec-core sync`.
-- [ ] `W05.P12.S41` - Run vaultspec-rag index and semantic verification searches; `vaultspec-rag verification`.
+- [x] `W05.P12.S41` - Run vaultspec-rag index and semantic verification searches; `vaultspec-rag verification`.
 
 ### Phase `W05.P13` - persist closeout evidence
 
@@ -152,7 +152,7 @@ Update durable docs and execution records so future agents can discover the fina
 - [ ] `W05.P13.S42` - Update test topology documentation with approved vocabulary; `test documentation surfaces`.
 - [ ] `W05.P13.S43` - Persist execution summaries and closeout evidence; `.vault/exec/2026-06-05-test-topology-refactor`.
 - [ ] `W05.P13.S44` - Prepare final handoff with residual risk and follow-up rules; `closeout report`.
-- [ ] `W05.P13.S45` - Resolve resident RAG code-index jobs and rerun semantic searches; `vaultspec-rag service`.
+- [x] `W05.P13.S45` - Resolve resident RAG code-index jobs and rerun semantic searches; `vaultspec-rag service`.
 
 ## Parallelization
 
