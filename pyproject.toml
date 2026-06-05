@@ -196,6 +196,15 @@ dev = [
 target-version = "py313"
 line-length = 120
 src = ["src"]
+extend-exclude = [
+  # Root scratch/probe artifacts are one-off investigation tools owned by
+  # vault-tracked execution slices, not production package code.
+  "run_p04_s11_test.py",
+  "scratch_probe*.py",
+  "test_attachment_fix.py",
+  "test_m714.py",
+  "scripts/classify_m200.py",
+]
 
 [tool.ruff.lint]
 select = [

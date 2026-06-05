@@ -525,3 +525,19 @@ files. The review also recorded a non-blocking registry edge: M100 Renta WEB
 Open has a production oracle and guard policy but no committed `oracle_id`
 binding yet, so the S54 gate is ready for M100 but only covers it after that
 separate legal-data binding lands.
+
+## W05-005 | INFO | Ruff scratch/probe scope review found no defects
+
+Status: verified with scoped residual.
+
+The W05.P16.S55 review found no defect in adding Ruff `extend-exclude` entries
+for root one-off investigation scripts and the M200 classifier scratch script.
+The exclusions match the diagnostic audit's scratch/probe paths and do not
+exclude package source under `src/aeat`.
+
+Focused verification confirmed `pyproject.toml` passes Ruff and the full Ruff
+invocation no longer reports `scratch_probe`, `run_p04_s11_test`,
+`test_attachment_fix`, `test_m714`, or `classify_m200` paths. The full Ruff
+lane still exits nonzero for unrelated scheduled findings in package and test
+code; those remain open under the later W05/W06 rows rather than being hidden
+by this scope correction.
