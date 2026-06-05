@@ -23,6 +23,7 @@ _LOGGER = get_logger(__name__)
 _CALCULATION_NAMESPACE = "aeat.domain.modelos.calculation_revisions"
 _CALCULATION_OBJECT_KEY = "catalogue"
 _CALCULATION_CATALOGUE_VERSION = 1
+_CALCULATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"
 
 
 class CalculationRevisionPersistenceError(ModeloError):
@@ -81,7 +82,7 @@ class CalculationRevisionCatalogueRepository:
         an empty ``CalculationRevisionCatalogue`` is returned rather than raising.
 
         Returns:
-            The persisted ``CalculationRevisionCatalogue``, or an empty one when no
+            The persisted :class:`CalculationRevisionCatalogue`, or an empty one when no
             record exists.
 
         Raises:
@@ -103,19 +104,49 @@ class CalculationRevisionCatalogueRepository:
         except (ClassificationError, EnvelopeVersionError) as exc:
             _LOGGER.error("calculation-revision catalogue integrity error", exc_info=True)
             raise CalculationRevisionPersistenceError(
-                f"calculation-revision catalogue integrity error: {type(exc).__name__}: {exc}"
+                "calculation-revision catalogue integrity error",
+                translated_message=_CALCULATION_PERSISTENCE_MESSAGE,
+                context={
+                    "reason": "secure_object_integrity",
+                    "cause_type": type(exc).__name__,
+                },
             ) from exc
         if record is None:
             return CalculationRevisionCatalogue()
         envelope = Envelope[CalculationRevisionCatalogue].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not SensitivityClass.FINANCIAL:
+            _LOGGER.error(
+                "calculation-revision catalogue classification mismatch",
+                extra={
+                    "expected_classification": SensitivityClass.FINANCIAL.value,
+                    "actual_classification": envelope.classification.value,
+                },
+            )
             raise CalculationRevisionPersistenceError(
-                f"calculation-revision catalogue has classification {envelope.classification}; FINANCIAL expected"
+                "calculation-revision catalogue classification mismatch",
+                translated_message=_CALCULATION_PERSISTENCE_MESSAGE,
+                context={
+                    "reason": "classification_mismatch",
+                    "expected_classification": SensitivityClass.FINANCIAL.value,
+                    "actual_classification": envelope.classification.value,
+                },
             )
         if envelope.schema_version > _CALCULATION_CATALOGUE_VERSION:
+            _LOGGER.error(
+                "calculation-revision catalogue envelope version unsupported",
+                extra={
+                    "stored_schema_version": envelope.schema_version,
+                    "max_supported_version": _CALCULATION_CATALOGUE_VERSION,
+                },
+            )
             raise CalculationRevisionPersistenceError(
-                f"calculation-revision catalogue is at version {envelope.schema_version}; "
-                f"consumer supports up to {_CALCULATION_CATALOGUE_VERSION}"
+                "calculation-revision catalogue envelope version unsupported",
+                translated_message=_CALCULATION_PERSISTENCE_MESSAGE,
+                context={
+                    "reason": "unsupported_envelope_version",
+                    "stored_schema_version": envelope.schema_version,
+                    "max_supported_version": _CALCULATION_CATALOGUE_VERSION,
+                },
             )
         return envelope.payload
 

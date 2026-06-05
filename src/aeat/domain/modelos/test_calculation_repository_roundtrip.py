@@ -36,6 +36,7 @@ from ._calculation_repository import (
     _CALCULATION_NAMESPACE,
     _CALCULATION_OBJECT_KEY,
     CalculationRevisionCatalogueRepository,
+    CalculationRevisionPersistenceError,
 )
 from ._calculation_revision import (
     CalculationRevision,
@@ -202,3 +203,72 @@ def test_calculation_revision_catalogue_dropped_observations_surfaces_at_load(
         "boundary is tautological and every roundtrip in the suite "
         "is suspect."
     )
+
+
+def test_calculation_revision_catalogue_wrong_inner_classification_is_localized(
+    tmp_path: Path,
+) -> None:
+    """A corrupted envelope classification raises a translated persistence error."""
+
+    from ...adapters.persistence.storage import Envelope
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        envelope = Envelope[CalculationRevisionCatalogue](
+            schema_version=_CALCULATION_CATALOGUE_VERSION,
+            written_at=datetime.now(UTC).replace(microsecond=0),
+            classification=SensitivityClass.AUDIT,
+            payload=CalculationRevisionCatalogue(),
+        )
+        profile.repository.save(
+            namespace=_CALCULATION_NAMESPACE,
+            object_key=_CALCULATION_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_CALCULATION_CATALOGUE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+        with pytest.raises(CalculationRevisionPersistenceError) as raised:
+            CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    assert raised.value.translated_message == "errors.fail.fail_modelo_calculation_revision_persistence"
+    assert raised.value.context == {
+        "reason": "classification_mismatch",
+        "expected_classification": "financial",
+        "actual_classification": "audit",
+    }
+
+
+def test_calculation_revision_catalogue_unsupported_storage_version_is_localized(
+    tmp_path: Path,
+) -> None:
+    """A future inner envelope schema version raises a translated persistence error."""
+
+    from ...adapters.persistence.storage import Envelope
+
+    stored_schema_version = _CALCULATION_CATALOGUE_VERSION + 1
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        envelope = Envelope[CalculationRevisionCatalogue](
+            schema_version=stored_schema_version,
+            written_at=datetime.now(UTC).replace(microsecond=0),
+            classification=SensitivityClass.FINANCIAL,
+            payload=CalculationRevisionCatalogue(),
+        )
+        profile.repository.save(
+            namespace=_CALCULATION_NAMESPACE,
+            object_key=_CALCULATION_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_CALCULATION_CATALOGUE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+        with pytest.raises(CalculationRevisionPersistenceError) as raised:
+            CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    assert raised.value.translated_message == "errors.fail.fail_modelo_calculation_revision_persistence"
+    assert raised.value.context == {
+        "reason": "unsupported_envelope_version",
+        "stored_schema_version": stored_schema_version,
+        "max_supported_version": _CALCULATION_CATALOGUE_VERSION,
+    }
