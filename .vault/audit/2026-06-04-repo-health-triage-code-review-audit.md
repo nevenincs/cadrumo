@@ -787,3 +787,20 @@ Verification passed `just audit-security`, scoped Ruff, scoped Ty, and focused
 FX/registry pytest.
 
 Residual: none for the configured Semgrep production-security lane.
+
+## W06-009 | INFO | Duplication lane recorded an explicit residual ratchet
+
+Status: verified advisory-red.
+
+The W06.P20.S82 review found no hidden green claim. The duplication lane still
+reports 36 clone groups, but the plan row allows either reduction or ratchet
+recording. Given the breadth of the clone families and the concurrent dirty
+shared-worktree state, an evidence-only residual ratchet is safer than a
+cross-domain refactor.
+
+Verification passed by running `just audit-duplication`. Current baseline:
+853 Python files analyzed, 36 clone groups, 650 duplicated lines, 6,487
+duplicated tokens.
+
+Residual: duplication remains advisory-red. Work should continue in cohesive
+subsystem slices rather than as one broad cleanup.
