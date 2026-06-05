@@ -629,7 +629,7 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
 
     M131 declares modelo-131-<rev>-c11-cap-by-c10 on all 4 revisions
     via cap_le_when_positive(["11", "10"]). The companion test covers M130;
-    this Step extends parallel coverage to M131. AEAT M131
+    this test extends parallel coverage to M131. AEAT M131
     instructions cite the same cap rule verbatim: "en ningún caso
     podrá figurar en la casilla 11 un importe superior a la
     cantidad positiva consignada en la casilla 10".
