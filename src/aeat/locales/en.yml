@@ -413,10 +413,7 @@ application:
         certificate_file_unresolved: The certificate path '%{certificate_path}' does
           not resolve to an existing file. Run `aeat config auth configure --provider
           certificate --file PATH` with a path to your PKCS#12 (.p12/.pfx) bundle.
-        dangling_active_profile: Active profile pointer '%{active_profile}' does not
-          resolve to a registered profile bucket. Run `aeat config profile list` to
-          inspect registered profiles, then `aeat config profile switch NAME` or `aeat
-          config profile create NAME`.
+        dangling_active_profile: 'Active profile pointer ''%{active_profile}'' does not resolve to a registered profile bucket. Run aeat config profile list to inspect registered profiles, then aeat config unlock NAME or aeat config profile create NAME.'
         no_active_bucket: No active profile bucket; run `aeat config profile create
           NAME` before configuring auth.
         unreadable_active_profile: Active profile '%{active_profile}' has a bucket
@@ -907,8 +904,7 @@ application:
       lifecycle_schema_validation_failed: The profile data does not match the user-profile
         schema.
       no_active_profile_selected: No active profile selected.
-      profile_already_exists: Profile '%{profile}' already exists; run `aeat config
-        profile switch NAME` to activate it or `aeat config profile delete NAME` first.
+      profile_already_exists: 'Profile ''%{profile}'' already exists; run aeat config unlock NAME to activate it or aeat config profile delete NAME first.'
       profile_bucket_directory_removal_failed: Profile bucket directory could not
         be removed.
       profile_create_route_mismatch: Profile create route '%{route}' does not match
@@ -1872,8 +1868,7 @@ cli:
           locked or unavailable.
         loopback_bind: 'Could not open a local port to complete Google sign-in: {detail}'
         network: 'Could not reach Google: {detail}'
-        profile_unbound: No active profile. Run `aeat config profile switch <name>`
-          or pass `--profile`.
+        profile_unbound: 'No active profile. Run aeat config unlock NAME or pass --profile.'
         scope_insufficient: The access granted for Google is missing required permissions.
           Run `aeat config google login` and accept every permission.
         storage: 'Could not reach Google Drive storage: {detail}'
@@ -1981,9 +1976,7 @@ cli:
       create_epilog: 'Minimal freelancer profile: --entity-type natural_person --tax-id
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Initialize a new active profile and config bucket.
-      delete_active_cleared: The deleted profile was the active one; the active-profile
-        pointer has been cleared. Run 'aeat config profile switch NAME' or 'aeat config
-        profile create NAME' to resume work.
+      delete_active_cleared: 'The deleted profile was the active one; the active-profile pointer has been cleared. Run aeat config unlock NAME or aeat config profile create NAME to resume work.'
       delete_help: Delete a profile and its on-disk state (--yes confirms)
       delete_name_help: Profile name to delete
       delete_requires_yes: Deletion is destructive. Re-run 'aeat config profile delete
@@ -2013,9 +2006,7 @@ cli:
       import_path_help: Path to the profile bundle JSON file
       import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
       logout_help: Sign out of the active profile by clearing the local pointer
-      logout_session_warning: Logout cleared the active-profile pointer. Subsequent
-        verbs in this terminal will refuse with NoActiveBucketSessionError until you
-        run `aeat config profile switch NAME` (or open a new terminal and re-select).
+      logout_session_warning: 'Logout cleared the active-profile pointer. Subsequent verbs in this terminal will refuse with NoActiveBucketSessionError until you run aeat config unlock NAME or open a new terminal and re-select.'
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <DNI/NIE/NIF/CIF>` first.
       preflight_filing_year_help: Four-digit filing year.
@@ -3194,9 +3185,7 @@ errors:
       version this build does not support. Update the application.
     auth_storage_master_key_material_missing: No master-key material exists. The secure
       store has not been provisioned yet.
-    auth_storage_master_key_passphrase_mismatch: The passphrase does not unwrap the
-      master key. Re-enter it; if you have forgotten it, recover with your recovery
-      key.
+    auth_storage_master_key_passphrase_mismatch: 'The passphrase does not unwrap the master key. Re-enter it; if you have forgotten it, run aeat config recover --recovery-key <WORDS>.'
     auth_storage_master_key_unavailable: The master key could not be acquired from
       any provider. Check the keychain or the file-fallback passphrase.
   calc:
@@ -3707,8 +3696,7 @@ errors:
       try again.
     auth_profile_identity_mismatch: The active profile identity cannot own the requested
       authentication session.
-    bootstrap_already_complete: A profile already exists; first-run setup runs only
-      once. Use `aeat config profile switch NAME` to change profile.
+    bootstrap_already_complete: 'Secure storage bootstrap is already complete. Use aeat config unlock NAME to activate an existing profile or aeat config profile create NAME to add another profile.'
     censo_apply_conflict: The censo cannot be applied because there is in-flight work
       on a dependent unit. Resolve the pending state first.
     censo_field_validation: The AEAT censo returned a value the schema cannot accept.
@@ -3749,8 +3737,7 @@ errors:
       a modelo work unit.
     modelo_work_selector_revision_conflict: The selected modelo work unit belongs
       to a different revision.
-    profile_already_registered: A profile with that name already exists. Use `aeat
-      config profile switch NAME` to switch to it.
+    profile_already_registered: 'A profile with that name already exists. Use aeat config unlock NAME to switch to it.'
     profile_import_collision: The imported profile identifier collides with an existing
       one.
     profile_locked: This operation requires an unlocked profile. Run `aeat config
@@ -3935,8 +3922,7 @@ errors:
       at least 8 characters long.
     refused_storage_secret_already_exists: A secret with that key already exists.
       Use the overwrite option to replace it.
-    refused_storage_session_expired: The active session expired due to inactivity.
-      Re-activate it with `aeat config profile switch NAME`.
+    refused_storage_session_expired: 'The active session expired due to inactivity. Re-activate it with aeat config unlock NAME.'
     refused_storage_unsecured_mode: The unsecured storage backend was requested without
       the required opt-in. It is not safe for real data.
     refused_taxation_comparison: The conjunta-vs-individual taxation comparison cannot
@@ -3993,7 +3979,7 @@ errors:
         before an active profile bucket is selected.
       cold_bootstrap_explicit_database_refused: Cold-bootstrap storage cannot bypass
         an explicit database route.
-      no_active_session: 'No active bucket session is open. Run `aeat config unlock NAME` to unlock a profile.'
+      no_active_session: 'No active bucket session is open. Run aeat config unlock NAME to unlock a profile.'
       no_detail: No detailed readiness issue was reported.
       not_ready: 'Storage runtime is not ready for profile-bound storage: %{details}'
       route_bucket_mismatch: The database route does not match the active bucket session.
@@ -4001,8 +3987,8 @@ errors:
         bucket.
       session_changed: The active bucket session changed. Unlock the target profile
         again.
-      session_expired: 'The active bucket session has expired. Run `aeat config unlock NAME` to re-activate the profile.'
-      session_sealed: 'The active bucket session is sealed. Run `aeat config unlock NAME` to re-activate the profile.'
+      session_expired: 'The active bucket session has expired. Run aeat config unlock NAME to re-activate the profile.'
+      session_sealed: 'The active bucket session is sealed. Run aeat config unlock NAME to re-activate the profile.'
       unsecured_backend: The active bucket session uses the unsecured backend. Production
         profile-bound storage requires file or keyring custody.
     stored_data_validation_boundary: A stored profile or workflow record no longer

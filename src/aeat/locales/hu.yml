@@ -921,9 +921,7 @@ application:
       lifecycle_profile_tombstoned_rename: Törölt profil nem nevezhető át.
       lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználóiprofil-sémának.
       no_active_profile_selected: Nincs kiválasztva aktív profil.
-      profile_already_exists: A(z) "%{profile}" profil már létezik; aktiváláshoz futtassa
-        az `aeat config profile switch NÉV` parancsot, vagy törölje az `aeat config
-        profile delete NÉV` paranccsal.
+      profile_already_exists: 'A(z) %{profile} profil mar letezik; futtasd aeat config unlock NAME az aktivalashoz, vagy aeat config profile delete NAME a torleshez.'
       profile_bucket_directory_removal_failed: A profil konyvtara nem tavolithato
         el.
       profile_create_route_mismatch: A profil létrehozási útvonala ("%{route}") nem
@@ -1936,8 +1934,7 @@ cli:
         loopback_bind: 'Nem sikerült helyi portot megnyitni a Google-bejelentkezés
           befejezéséhez: {detail}'
         network: 'Nem sikerült elérni a Google-t: {detail}'
-        profile_unbound: 'Nincs aktív profil. Futtassa: `aeat config profile switch
-          <név>` vagy adja meg a `--profile` kapcsolót.'
+        profile_unbound: 'Nincs aktiv profil. Futtasd aeat config unlock NAME, vagy add meg a --profile kapcsolot.'
         scope_insufficient: 'A Google-hozzáféréshez megadott engedélyek nem elegendők.
           Futtassa: `aeat config google login` és fogadjon el minden engedélyt.'
         storage: 'Nem sikerült elérni a Google Drive tárolót: {detail}'
@@ -2058,9 +2055,7 @@ cli:
         --tax-id <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet
         --accept-defaults'
       create_help: Új aktív profil és konfigurációs bucket inicializálása.
-      delete_active_cleared: 'A törölt profil volt az aktív; az aktív-profil-mutató
-        törölve. Futtassa: `aeat config profile switch NÉV` vagy `aeat config profile
-        create NÉV` a folytatáshoz.'
+      delete_active_cleared: 'A torolt profil volt az aktiv; az aktiv profil mutato torolve lett. Futtasd aeat config unlock NAME vagy aeat config profile create NAME a folytatashoz.'
       delete_help: Profil és lemezen lévő állapot törlése (--yes megerősíti).
       delete_name_help: A törölni kívánt profil neve.
       delete_requires_yes: 'A törlés visszafordíthatatlan. Futtassa újra: `aeat config
@@ -2090,10 +2085,7 @@ cli:
       import_path_help: A profilcsomag JSON-fájljának elérési útja.
       import_uuid_collision: A csomagban lévő UUID ütközik egy meglévő profillal.
       logout_help: Kijelentkezés az aktív profilból a helyi mutató törlésével.
-      logout_session_warning: 'A kijelentkezés törölte az aktív-profil-mutatót. Ebben
-        a terminálban a következő parancsok NoActiveBucketSessionError hibával utasítanak
-        el, amíg nem futtatja: `aeat config profile switch NÉV` (vagy nyit egy új
-        terminált és újra kiválaszt).'
+      logout_session_warning: 'A kijelentkezes torolte az aktiv profil mutatot. Ebben a terminalban a kovetkezo parancsok NoActiveBucketSessionError hibaval elutasitanak, amig nem futtatod az aeat config unlock NAME parancsot, vagy nem nyitsz uj terminalt es valasztasz ujra.'
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <DNI/NIE/NIF/CIF>`.'
       preflight_filing_year_help: Bevallási év (négy számjegy).
@@ -3311,8 +3303,7 @@ errors:
       használ, amelyet ez a verzió nem támogat. Frissítse az alkalmazást.
     auth_storage_master_key_material_missing: Nincs főkulcs-anyag. A biztonságos tároló
       még nincs kiosztva.
-    auth_storage_master_key_passphrase_mismatch: A jelmondat nem oldja fel a főkulcsot.
-      Adja meg újra; ha elfelejtette, állítsa helyre a helyreállítási kulccsal.
+    auth_storage_master_key_passphrase_mismatch: 'A jelmondat nem oldja fel a fokulcsot. Add meg ujra; ha elfelejtetted, futtasd aeat config recover --recovery-key <WORDS>.'
     auth_storage_master_key_unavailable: A főkulcsot egyetlen szolgáltatótól sem sikerült
       beszerezni. Ellenőrizze a kulcstárat vagy a fájl-tartalék jelmondat.
   calc:
@@ -4040,14 +4031,12 @@ errors:
       bucket-tel.
     refused_storage_bucket_no_active: Nem oldható fel aktív bucket. Válasszon ki egy
       profilt, és próbálja újra.
-    refused_storage_master_key_no_active_session: A titkosításhoz aktív munkamenet
-      szükséges. Futtassa az  parancsot, és próbálja újra.
+    refused_storage_master_key_no_active_session: 'A titkosításhoz aktív munkamenet szükséges. Futtassa: `aeat config unlock NAME`, majd próbálja újra.'
     refused_storage_passphrase_too_short: A jelmondat túl rövid. Legalább 8 karakterből
       kell állnia.
     refused_storage_secret_already_exists: Ilyen kulcsú titkos adat már létezik. Használja
       a felülírás lehetőséget a csere érdekében.
-    refused_storage_session_expired: Az aktív munkamenet inaktivitás miatt lejárt.
-      Aktiválja újra az  paranccsal.
+    refused_storage_session_expired: 'Az aktiv munkamenet inaktivitas miatt lejart. Aktivalt ujra az aeat config unlock NAME paranccsal.'
     refused_storage_unsecured_mode: A nem biztonságos tároló háttérrendszert az szükséges
       engedélyezés nélkül kérték. Valós adatokhoz nem biztonságos.
     refused_taxation_comparison: A közös-vs-egyéni adózás összehasonlítása nem végezhető
@@ -4105,7 +4094,7 @@ errors:
         bucket kiválasztása előtt érhető el.
       cold_bootstrap_explicit_database_refused: A hidegindítási tároló nem kerülheti
         meg a megadott adatbázis-útvonalat.
-      no_active_session: 'Nincs nyitott aktív bucket-munkamenet. Profil feloldásához futtassa: `aeat config unlock NAME`.'
+      no_active_session: 'Nincs aktiv bucket-munkamenet. Futtasd aeat config unlock NAME a profil feloldasahoz.'
       no_detail: Nem jelentetett részletes készültségi problémát.
       not_ready: 'A tárolási futtatókörnyezet nem áll készen profil-kötött tároláshoz:
         %{details}'
@@ -4113,8 +4102,8 @@ errors:
       route_not_active_bucket: Az adatbázis-útvonal nincs aktív profil bucket-hez
         csatolva.
       session_changed: Az aktív bucket-munkamenet megváltozott. Oldja fel újra a célprofilt.
-      session_expired: 'Az aktív bucket-munkamenet lejárt. Profil újraaktiválásához futtassa: `aeat config unlock NAME`.'
-      session_sealed: 'Az aktív bucket-munkamenet le van zárva. Profil újraaktiválásához futtassa: `aeat config unlock NAME`.'
+      session_expired: 'Az aktiv bucket-munkamenet lejart. Futtasd aeat config unlock NAME a profil ujraaktivalasahoz.'
+      session_sealed: 'Az aktiv bucket-munkamenet le van zarva. Futtasd aeat config unlock NAME a profil ujraaktivalasahoz.'
       unsecured_backend: Az aktív bucket-munkamenet a nem biztonságos háttérrendszert
         használja. A gyártási profil-kötött tároláshoz fájl- vagy kulcstár-felügyelet
         szükséges.
