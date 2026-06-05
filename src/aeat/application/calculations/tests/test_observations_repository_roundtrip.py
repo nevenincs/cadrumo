@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry._bindings import (
+from ....domain.calculations.registry import (
     CasillaObservation,
     RegistryModeloObservation,
 )

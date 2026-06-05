@@ -156,6 +156,57 @@ class ConfigProfileSwitchResult(OutputSchema):
     active_profile: str
 
 
+@register_schema("config.unlock")
+class ConfigUnlockResult(OutputSchema):
+    """JSON envelope for ``aeat config unlock``."""
+
+    active_profile: str
+
+
+@register_schema("config.lock")
+class ConfigLockResult(OutputSchema):
+    """JSON envelope for ``aeat config lock``."""
+
+    locked_profile: str
+    active_profile: str | None = None
+    session_warning: str
+
+
+@register_schema("config.rekey")
+class ConfigRekeyResult(OutputSchema):
+    """JSON envelope for ``aeat config rekey``."""
+
+    secret_store_dir: str
+    rekeyed: bool
+
+
+@register_schema("config.recover")
+class ConfigRecoverResult(OutputSchema):
+    """JSON envelope for ``aeat config recover``."""
+
+    recovery_path: str
+    secret_store_dir: str
+    recovered: bool
+
+
+@register_schema("config.show_recovery")
+class ConfigShowRecoveryResult(OutputSchema):
+    """JSON envelope for ``aeat config show-recovery``."""
+
+    recovery_path: str
+    recovery_enrolled: bool
+    rotated: bool = False
+    mnemonic: str | None = None
+
+
+@register_schema("config.verify_recovery")
+class ConfigVerifyRecoveryResult(OutputSchema):
+    """JSON envelope for ``aeat config verify-recovery``."""
+
+    recovery_path: str
+    verified: bool
+
+
 @register_schema("config.profile.show")
 class ConfigProfileShowResult(OutputSchema):
     """JSON envelope for ``aeat config profile show``.

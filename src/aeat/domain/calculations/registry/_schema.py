@@ -12,7 +12,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from enum import StrEnum
 from itertools import pairwise
 from typing import Annotated, Literal
 
@@ -53,6 +52,9 @@ from ._ids import (
     WorkbookParityRefId,
 )
 from ._record_spec import ENCODING_ALIAS_MAP
+from ._schema_input_kind import InputKind, InputKindValue
+from ._schema_rounding import RegistryRoundingCode as RegistryRoundingCode
+from ._schema_rounding import RegistryRoundingCodeValue
 
 
 def _coerce_decimal(value: object) -> object:
@@ -90,49 +92,6 @@ Used as the value type for casillas declaring `data_type = "nif"`,
 and by any cross-domain consumer (filing draft assembly, oracle
 replay, export layouts) that needs to validate a NIF, NIE, or CIF
 identifier independently of a casilla declaration.
-"""
-
-
-class InputKind(StrEnum):
-    """Registry-authoritative classification of how a casilla value is supplied.
-
-    Each member's string value matches the TOML literal used in registry
-    source files so serialisation is transparent across every persistence
-    boundary (TOML, JSON, SQL, CLI).
-    """
-
-    MANUAL = "manual"
-    BOUND = "bound"
-    COMPUTED = "computed"
-    INFORMATIONAL = "informational"
-
-
-def _coerce_input_kind(value: object) -> object:
-    """Coerce a TOML string literal to the canonical InputKind member.
-
-    Accepts an ``InputKind`` instance directly (no-op) or a plain string
-    matching one of the declared member values.  Rejects non-string and
-    non-member inputs at the schema boundary so every persisted and
-    deserialised casilla carries a typed enum value.
-    """
-    if isinstance(value, InputKind):
-        return value
-    if isinstance(value, str):
-        try:
-            return InputKind(value)
-        except ValueError:
-            raise RegistryValidationError(
-                f"input_kind {value!r} is not a recognised InputKind member; "
-                f"expected one of {[m.value for m in InputKind]}"
-            ) from None
-    raise RegistryValidationError(f"input_kind must be a string, got {type(value).__name__!r}")
-
-
-InputKindValue = Annotated[InputKind, BeforeValidator(_coerce_input_kind)]
-"""Annotated InputKind that coerces TOML string literals to enum members.
-
-Use this as the field type on pydantic models that ingest TOML or JSON
-payloads where ``input_kind`` is stored as a plain string.
 """
 
 
@@ -1744,34 +1703,11 @@ class DataBindingDefinition(RegistryModel):
     aeat_prefilled: bool = False
 
 
-class RegistryRoundingCode(StrEnum):
-    """Closed rounding-code vocabulary for formula results.
-
-    Shared by the formula evaluator and the calc-sheets translator. The TOML
-    loader hydrates the raw string into this enum at the boundary; ``None``
-    (absent) means no rounding is applied to the formula result.
-    """
-
-    MONEY_2 = "money-2"
-    INTEGER = "integer"
-
-
-def _coerce_rounding_code(value: object) -> object:
-    """Hydrate a raw TOML rounding string into :class:`RegistryRoundingCode`.
-
-    RegistryModel runs in strict mode (no implicit str -> StrEnum coercion), so
-    the loader's raw string is converted to the enum here at the boundary.
-    """
-    if isinstance(value, str) and not isinstance(value, RegistryRoundingCode):
-        return RegistryRoundingCode(value)
-    return value
-
-
 class FormulaDefinition(RegistryModel):
     id: FormulaId
     target: CasillaId
     expression: FormulaExpression
-    rounding: Annotated[RegistryRoundingCode | None, BeforeValidator(_coerce_rounding_code)] = None
+    rounding: RegistryRoundingCodeValue = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)

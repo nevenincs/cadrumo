@@ -266,6 +266,10 @@ def _ledger_update_transaction(transaction_id: str) -> dict[str, object]:
             transaction_id,
             "--amount",
             "-121.50",
+            "--taxable-base",
+            "100.41",
+            "--iva-amount",
+            "21.09",
             "--direction",
             "OUTGOING",
             "--description",
@@ -293,11 +297,11 @@ def _ledger_classify_transaction(transaction_id: str) -> dict[str, object]:
             "--category-id",
             "software_suscripcion",
             "--taxable-base",
-            "100.00",
+            "100.41",
             "--iva-rate",
             "0.21",
             "--iva-amount",
-            "21.00",
+            "21.09",
         ]
     )
     transaction = cast(dict[str, object], classified["transaction"])

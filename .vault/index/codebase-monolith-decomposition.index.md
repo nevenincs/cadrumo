@@ -47,6 +47,9 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S110]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S111]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S112]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P10-S116]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P10-S117]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P10-S118]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S32]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S33]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S34]]'
@@ -90,6 +93,10 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S60]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S61]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S62]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P07-S63]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P07-S64]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P07-S65]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P07-S66]]'
   - '[[2026-06-05-codebase-monolith-decomposition-adr]]'
   - '[[2026-06-05-codebase-monolith-decomposition-code-review-audit]]'
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
@@ -154,6 +161,9 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S110` - W02.P05.S110 - extract modelo audit commands
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S111` - W02.P05.S111 - verify modelo audit extraction
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S112` - W02.P05.S112 Modelo Natural-Key Cross-Period Coverage Reconciliation
+- `2026-06-05-codebase-monolith-decomposition-W02-P10-S116` - W02.P10.S116 Config Custody Slice Discovery
+- `2026-06-05-codebase-monolith-decomposition-W02-P10-S117` - W02.P10.S117 Config Custody Registrar Extraction
+- `2026-06-05-codebase-monolith-decomposition-W02-P10-S118` - W02.P10.S118 Config Custody Verification
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S32` - `codebase-monolith-decomposition` `W02.P05.S32`
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S33` - `codebase-monolith-decomposition` `W02.P05.S33`
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S34` - W02.P05.S34 - verify ledger rule extraction
@@ -197,6 +207,10 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S60` - W03.P06.S60 Auth Operator Verification
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S61` - W03.P06.S61 Workflow Engine Helper Extraction
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S62` - W03.P06.S62 Workflow Engine Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P07-S63` - W03.P07.S63 Registry Binding Decomposition
+- `2026-06-05-codebase-monolith-decomposition-W03-P07-S64` - W03.P07.S64 Registry Binding Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P07-S65` - W03.P07.S65 Registry Schema Decomposition
+- `2026-06-05-codebase-monolith-decomposition-W03-P07-S66` - W03.P07.S66 Registry Schema Verification
 
 ### plan
 

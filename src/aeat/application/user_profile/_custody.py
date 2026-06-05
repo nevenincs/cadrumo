@@ -1,0 +1,194 @@
+"""Application-owned custody operations for the profile secret store."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from pathlib import Path
+
+from pydantic import BaseModel
+
+from ...adapters.persistence.storage.errors import DecryptionError, SecretStoreError, StorageValidationError
+from ...adapters.persistence.storage.master_key import (
+    FileFallbackMasterKeyProvider,
+    decode_mnemonic,
+    generate_recovery_key,
+    get_master_key_provider,
+    load_wrapped_master_key,
+    save_wrapped_master_key,
+    unwrap_master_key,
+    wrap_master_key,
+)
+from ...core._models import STRICT_FROZEN_CONFIG
+from ...core.config import Settings, load_settings
+from ...core.logging import get_logger
+
+_RECOVERY_WRAP_FILENAME = "master.recovery.key"
+_log = get_logger(__name__)
+
+
+class CustodyRecoveryEnrollment(BaseModel):
+    """Result of minting or rotating the persisted recovery wrapper."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    recovery_path: Path
+    mnemonic: str
+    rotated: bool
+
+
+class CustodyRecoveryStatus(BaseModel):
+    """Current recovery-wrapper status for the configured secret store."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    recovery_path: Path
+    recovery_enrolled: bool
+
+
+class CustodyRecoveryVerification(BaseModel):
+    """Result of checking an operator-supplied recovery mnemonic."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    recovery_path: Path
+    verified: bool
+
+
+class CustodyRekeyResult(BaseModel):
+    """Result of rewrapping the master key under a new file-backend passphrase."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    secret_store_dir: Path
+    rekeyed: bool
+
+
+class CustodyRecoverResult(BaseModel):
+    """Result of recovering the master key from the recovery wrapper."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    recovery_path: Path
+    secret_store_dir: Path
+    recovered: bool
+
+
+def _settings(settings: Settings | None = None) -> Settings:
+    return settings if settings is not None else load_settings()
+
+
+def recovery_wrap_path(settings: Settings | None = None) -> Path:
+    """Return the configured persisted recovery-wrapper path."""
+    return Path(_settings(settings).aeat_secret_store_dir) / _RECOVERY_WRAP_FILENAME
+
+
+def inspect_recovery_status(settings: Settings | None = None) -> CustodyRecoveryStatus:
+    """Inspect whether the configured recovery wrapper exists."""
+    path = recovery_wrap_path(settings)
+    return CustodyRecoveryStatus(recovery_path=path, recovery_enrolled=path.is_file())
+
+
+def mint_recovery_code(settings: Settings | None = None) -> CustodyRecoveryEnrollment:
+    """Mint a new recovery mnemonic and persist its master-key wrapper.
+
+    The mnemonic is returned exactly once. The plaintext words are not
+    persisted; only the wrapped master key lands in the secret-store
+    directory.
+    """
+    resolved = _settings(settings)
+    path = recovery_wrap_path(resolved)
+    rotated = path.exists()
+    provider = get_master_key_provider(settings_override=resolved)
+    master_key = provider.get_master_key()
+    recovery_key = generate_recovery_key()
+    wrapped = wrap_master_key(master_key=master_key, recovery_key=recovery_key)
+    save_wrapped_master_key(wrapped, path)
+    return CustodyRecoveryEnrollment(recovery_path=path, mnemonic=recovery_key.mnemonic, rotated=rotated)
+
+
+def verify_recovery_code(*, mnemonic: str, settings: Settings | None = None) -> CustodyRecoveryVerification:
+    """Return whether ``mnemonic`` unwraps the configured recovery wrapper."""
+    path = recovery_wrap_path(settings)
+    try:
+        wrapped = load_wrapped_master_key(path)
+        recovery_key = decode_mnemonic(mnemonic)
+        unwrap_master_key(wrapped=wrapped, recovery_key_bytes=recovery_key)
+    except (OSError, DecryptionError, SecretStoreError, StorageValidationError) as exc:
+        _log.debug("recovery-code verification failed error_type=%s", type(exc).__name__)
+        return CustodyRecoveryVerification(recovery_path=path, verified=False)
+    return CustodyRecoveryVerification(recovery_path=path, verified=True)
+
+
+def _file_provider_for_new_passphrase(
+    *,
+    settings: Settings,
+    new_passphrase: str,
+) -> FileFallbackMasterKeyProvider:
+    return FileFallbackMasterKeyProvider(
+        store_dir=Path(settings.aeat_secret_store_dir),
+        passphrase_callback=lambda: new_passphrase,
+    )
+
+
+def rekey_secret_store(
+    *,
+    new_passphrase: str,
+    settings: Settings | None = None,
+) -> CustodyRekeyResult:
+    """Rewrap the current master key under ``new_passphrase``."""
+    resolved = _settings(settings)
+    current_provider = get_master_key_provider(settings_override=resolved)
+    master_key = current_provider.get_master_key()
+    new_provider = _file_provider_for_new_passphrase(settings=resolved, new_passphrase=new_passphrase)
+    new_provider.complete_recovery(master_key)
+    return CustodyRekeyResult(secret_store_dir=Path(resolved.aeat_secret_store_dir), rekeyed=True)
+
+
+def recover_secret_store(
+    *,
+    mnemonic: str,
+    new_passphrase: str,
+    settings: Settings | None = None,
+) -> CustodyRecoverResult:
+    """Recover the master key from ``mnemonic`` and bind it to ``new_passphrase``."""
+    resolved = _settings(settings)
+    path = recovery_wrap_path(resolved)
+    wrapped = load_wrapped_master_key(path)
+    master_key = unwrap_master_key(wrapped=wrapped, recovery_key_bytes=decode_mnemonic(mnemonic))
+    new_provider = _file_provider_for_new_passphrase(settings=resolved, new_passphrase=new_passphrase)
+    new_provider.complete_recovery(master_key)
+    return CustodyRecoverResult(
+        recovery_path=path,
+        secret_store_dir=Path(resolved.aeat_secret_store_dir),
+        recovered=True,
+    )
+
+
+def recover_secret_store_with_callback(
+    *,
+    mnemonic: str,
+    passphrase_callback: Callable[[], str],
+    settings: Settings | None = None,
+) -> CustodyRecoverResult:
+    """Recover the master key using a caller-owned passphrase callback."""
+    return recover_secret_store(
+        mnemonic=mnemonic,
+        new_passphrase=passphrase_callback(),
+        settings=settings,
+    )
+
+
+__all__ = [
+    "CustodyRecoverResult",
+    "CustodyRecoveryEnrollment",
+    "CustodyRecoveryStatus",
+    "CustodyRecoveryVerification",
+    "CustodyRekeyResult",
+    "inspect_recovery_status",
+    "mint_recovery_code",
+    "recover_secret_store",
+    "recover_secret_store_with_callback",
+    "recovery_wrap_path",
+    "rekey_secret_store",
+    "verify_recovery_code",
+]
