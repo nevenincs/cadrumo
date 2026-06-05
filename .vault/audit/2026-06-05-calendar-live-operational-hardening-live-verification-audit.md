@@ -18,6 +18,8 @@ The 2024 full `filed capture-all` rerun completed against AEAT after adding the 
 
 `app live filed capture-all --modelo 721 --from-year 2024 --to-year 2024` returned without live session acquisition and emitted one structured failure row: `LiveApplicationInputError`, Modelo 721, year 2024, message that AEAT declarations register does not offer Modelo 721 and the registry revision declares no filed-declarations live read surface.
 
+Follow-up verification after review fixes ran `app live filed capture-all --modelo 151 --modelo 721 --from-year 2024 --to-year 2024`; it returned without live auth, captured zero observations, and emitted two structured registry-derived unsupported-boundary rows.
+
 ## LIVE-003 | INFO | Notifications latest local facade verified
 
 `app live notifications latest` loaded the latest persisted notification snapshot and reported one row with snapshot id `3c170c19cad77259c2dedd230feab117c6700c9a15e4818533a3e5b139b86e44`. This is local-only readback over a snapshot captured in the preceding live verification.

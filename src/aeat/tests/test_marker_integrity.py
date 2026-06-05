@@ -1,9 +1,9 @@
-"""AST-backed integrity audit for the nine-marker taxonomy.
+"""AST-backed integrity audit for the hexagonal test-marker taxonomy.
 
 Walks every test module under ``src/aeat/`` and asserts that each
 carries a single top-level ``pytestmark = [...]`` assignment containing
-exactly one access marker (``unit`` / ``live_read`` / ``live_write``)
-and at least one ``domain_*`` marker.
+exactly one execution-scope marker (``unit`` / ``integration`` /
+``aeat_live``) and at least one ``hex_*`` marker.
 
 The walker uses :mod:`ast` only; it does not import the test modules.
 The file self-validates because the discovery glob includes itself.
@@ -20,14 +20,27 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SRC_AEAT = Path(__file__).resolve().parents[1]
 _REPO_ROOT = _SRC_AEAT.parents[1]
 _FIXTURES_DIR = _SRC_AEAT / "tests" / "fixtures"
-_ACCESS_MARKERS = frozenset({"unit", "live_read", "live_write"})
-_DOMAIN_MARKERS = frozenset(
+_EXECUTION_MARKERS = frozenset({"unit", "integration", "aeat_live"})
+_HEX_MARKERS = frozenset(
     {
+        "hex_application",
+        "hex_core",
+        "hex_domain",
+        "hex_entrypoint",
+        "hex_inbound_adapter",
+        "hex_outbound_adapter",
+        "hex_persistence_adapter",
+    }
+)
+_EXPECTED_CONFIGURED_MARKERS = _EXECUTION_MARKERS | _HEX_MARKERS
+_FORBIDDEN_MARKERS = frozenset(
+    {
+        "docs",
         "domain_application",
         "domain_core",
         "domain_export",
@@ -35,10 +48,15 @@ _DOMAIN_MARKERS = frozenset(
         "domain_model",
         "domain_outbound",
         "domain_persistence",
+        "fixture_tier_l3",
+        "flaky",
+        "inventory",
+        "live_read",
+        "live_write",
+        "slow",
+        "workbook_parity",
     }
 )
-_AUXILIARY_MARKERS = frozenset({"docs", "flaky", "fixture_tier_l3", "workbook_parity", "slow", "inventory"})
-_EXPECTED_CONFIGURED_MARKERS = _ACCESS_MARKERS | _DOMAIN_MARKERS | _AUXILIARY_MARKERS
 _LIVE_ENV_NAME = "AEAT_LIVE_TESTS_ENABLED"
 _LIVE_TEST_OPT_IN_TOKENS = ("AEAT_LIVE_TESTS_ENABLED", "aeat_live_tests_enabled")
 _LIVE_TEST_OPT_IN_AUTHORITY_FILES = frozenset(
@@ -57,35 +75,29 @@ _LIVE_TEST_OPT_IN_SCAN_ROOTS = (
 
 
 def _discover_test_modules() -> list[Path]:
-    """Return every ``test_*.py`` and ``_test_*.py`` module under ``src/aeat/``.
+    """Return every ``test_*.py`` module under ``src/aeat/``.
 
     Excludes ``__init__.py`` and any module beneath
     ``src/aeat/tests/fixtures/`` (those are fixture-generator helpers
     that ship alongside the bundled fixtures, not project test modules).
     """
-    globs = ("**/test_*.py", "**/_test_*.py")
     collected: set[Path] = set()
-    for glob in globs:
-        for path in _SRC_AEAT.glob(glob):
-            if path.name == "__init__.py":
-                continue
-            try:
-                path.relative_to(_FIXTURES_DIR)
-            except ValueError:
-                if _module_defines_test_functions(path):
-                    collected.add(path)
+    for path in _SRC_AEAT.glob("**/test_*.py"):
+        if path.name == "__init__.py":
+            continue
+        try:
+            path.relative_to(_FIXTURES_DIR)
+        except ValueError:
+            if _module_defines_test_functions(path):
+                collected.add(path)
     return sorted(collected)
 
 
 def _module_defines_test_functions(path: Path) -> bool:
     """Return True if ``path`` declares any ``def test_*`` function at module level.
 
-    Modules named ``_test_<topic>.py`` are sometimes private helpers that
-    expose utilities to tests (the leading underscore signals "private",
-    the ``test_`` segment names the consumer family). Such helpers carry
-    no test functions themselves and must not be required to declare
-    ``pytestmark``. This filter keeps the marker-integrity gate honest
-    by scoping it to actual test modules.
+    This filter keeps the marker-integrity gate honest by scoping it to
+    actual test modules.
     """
     try:
         source = path.read_text(encoding="utf-8")
@@ -203,7 +215,7 @@ def _placement_error(path: Path) -> str | None:
 
 
 def _function_level_marker_violations(path: Path) -> list[str]:
-    """Return function/class decorators that misuse access or domain markers."""
+    """Return function/class decorators that misuse execution or hex markers."""
     source = path.read_text(encoding="utf-8")
     tree = ast.parse(source, filename=str(path))
     violations: list[str] = []
@@ -212,7 +224,7 @@ def _function_level_marker_violations(path: Path) -> list[str]:
             continue
         for decorator in node.decorator_list:
             name = _pytest_mark_name(decorator)
-            if name in _ACCESS_MARKERS or (name is not None and name.startswith("domain_")):
+            if name in _EXECUTION_MARKERS or (name is not None and name.startswith("hex_")):
                 violations.append(f"{path.relative_to(_REPO_ROOT)}:{decorator.lineno}: @{name}")
     return violations
 
@@ -267,8 +279,8 @@ def _live_env_runtime_violations(path: Path) -> list[str]:
     names, error = _extract_pytestmark_names(path)
     if error is not None:
         return []
-    access = names & _ACCESS_MARKERS
-    if access & {"live_read", "live_write"}:
+    execution = names & _EXECUTION_MARKERS
+    if execution & {"aeat_live"}:
         return []
     if _imports_access_gate(path):
         return []
@@ -296,7 +308,6 @@ def _is_test_infrastructure_path(path: Path) -> bool:
         "tests" in parts
         or path.name == "conftest.py"
         or path.name.startswith("test_")
-        or path.name.endswith("_test.py")
     )
 
 
@@ -324,17 +335,22 @@ _MODULES = _discover_test_modules()
     ids=[str(p.relative_to(_REPO_ROOT)).replace("\\", "/") for p in _MODULES],
 )
 def test_module_carries_valid_pytestmark(module_path: Path) -> None:
-    """Every test module must declare a valid nine-marker ``pytestmark``."""
+    """Every test module must declare a valid hexagonal ``pytestmark``."""
     names, error = _extract_pytestmark_names(module_path)
     relative = module_path.relative_to(_REPO_ROOT)
     assert error is None, f"{relative}: {error}"
 
-    access = names & _ACCESS_MARKERS
-    assert len(access) == 1, f"{relative}: must carry exactly one of {sorted(_ACCESS_MARKERS)}; found {sorted(access)}"
+    execution = names & _EXECUTION_MARKERS
+    assert len(execution) == 1, (
+        f"{relative}: must carry exactly one of {sorted(_EXECUTION_MARKERS)}; found {sorted(execution)}"
+    )
 
-    domains = {name for name in names if name.startswith("domain_")}
-    assert len(domains) >= 1, f"{relative}: must carry at least one `domain_*` marker; found {sorted(names)}"
-    assert domains <= _DOMAIN_MARKERS, f"{relative}: unknown domain marker(s) {sorted(domains - _DOMAIN_MARKERS)}"
+    hex_markers = {name for name in names if name.startswith("hex_")}
+    assert len(hex_markers) >= 1, f"{relative}: must carry at least one `hex_*` marker; found {sorted(names)}"
+    assert hex_markers <= _HEX_MARKERS, f"{relative}: unknown hex marker(s) {sorted(hex_markers - _HEX_MARKERS)}"
+
+    forbidden = names & _FORBIDDEN_MARKERS
+    assert not forbidden, f"{relative}: forbidden legacy marker(s) {sorted(forbidden)}"
 
 
 @pytest.mark.parametrize(
@@ -349,11 +365,11 @@ def test_module_pytestmark_is_first_test_statement(module_path: Path) -> None:
 
 
 def test_no_function_level_access_or_domain_markers() -> None:
-    """Access and domain markers are module-level only."""
+    """Execution and hex markers are module-level only."""
     violations: list[str] = []
     for module_path in _MODULES:
         violations.extend(_function_level_marker_violations(module_path))
-    assert not violations, "function-level access/domain markers are forbidden:\n" + "\n".join(violations)
+    assert not violations, "function-level execution/hex markers are forbidden:\n" + "\n".join(violations)
 
 
 def test_live_test_env_runtime_access_is_live_or_gate_scoped() -> None:
@@ -362,7 +378,7 @@ def test_live_test_env_runtime_access_is_live_or_gate_scoped() -> None:
     for module_path in _MODULES:
         violations.extend(_live_env_runtime_violations(module_path))
     assert not violations, (
-        "runtime AEAT_LIVE_TESTS_ENABLED access is only allowed in live_read/live_write tests "
+        "runtime AEAT_LIVE_TESTS_ENABLED access is only allowed in aeat_live tests "
         "or focused access-gate tests:\n" + "\n".join(violations)
     )
 
@@ -381,6 +397,33 @@ def test_live_test_opt_in_token_is_not_used_by_production_live_read_paths() -> N
     assert not violations, "production modules must not gate live reads on the pytest opt-in:\n" + "\n".join(
         violations
     )
+
+
+def test_test_modules_live_under_tests_directories_and_use_test_prefix() -> None:
+    """Every test module must live below a ``tests`` directory and use ``test_``."""
+    misplaced = [
+        str(path.relative_to(_REPO_ROOT))
+        for path in _SRC_AEAT.rglob("test_*.py")
+        if "tests" not in path.relative_to(_REPO_ROOT).parts
+    ]
+    underscore_prefixed = [str(path.relative_to(_REPO_ROOT)) for path in _SRC_AEAT.rglob("_test_*.py")]
+    suffix_style = [str(path.relative_to(_REPO_ROOT)) for path in _SRC_AEAT.rglob("*_test.py")]
+    assert not misplaced, "test-prefixed files outside tests directories:\n" + "\n".join(misplaced)
+    assert not underscore_prefixed, "underscore-prefixed test files are forbidden:\n" + "\n".join(
+        underscore_prefixed
+    )
+    assert not suffix_style, "suffix-style test files are forbidden:\n" + "\n".join(suffix_style)
+
+
+def test_source_tests_do_not_reference_retired_marker_names() -> None:
+    """Retired marker names must not remain in durable source test surfaces."""
+    violations: list[str] = []
+    for module_path in _MODULES:
+        text = module_path.read_text(encoding="utf-8")
+        for marker in sorted(_FORBIDDEN_MARKERS):
+            if f"pytest.mark.{marker}" in text:
+                violations.append(f"{module_path.relative_to(_REPO_ROOT)}: pytest.mark.{marker}")
+    assert not violations, "retired marker usage remains:\n" + "\n".join(violations)
 
 
 def test_discovery_found_modules() -> None:

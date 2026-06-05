@@ -791,6 +791,8 @@ application:
       work_unit_not_found: No s'ha trobat cap unitat de treball de modelo amb id=%{work_unit_id}.
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
+      work_period_token_invalid: '--period ''%{token}'' no es un token de periode valid per al modelo %{modelo}. Indica --year %{year} per separat i usa un de: %{tokens}.'
+      work_period_token_unrecognised: '--period ''%{token}'' no es reconeix. Indica --year %{year} per separat i usa un token de periode com 0A, Q1, 1T o 01.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
@@ -1697,8 +1699,6 @@ cli:
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         name_help: Nom de visualització opcional de la unitat de treball
         name_required: Proporcioneu --name.
-        natural_target_required: Passeu un id exacte d unitat de treball, o indiqueu
-          la declaracio amb --modelo, --year i --period.
         notes_help: Notes opcionals associades al filing record
         output_language_help: Idioma de sortida per als missatges renderitzats.
         override_help: Valor de binding amb sintaxi KEY=VALUE (repetible); executa
@@ -4132,6 +4132,7 @@ errors:
       revision.
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
     unsupported_currency: El codi de moneda indicat no és compatible.
+    modelo_work_period_token: 'Periode de model no valid.'
   snapshot:
     modelo_not_registered: El model no esta registrat al registre.
   storage:

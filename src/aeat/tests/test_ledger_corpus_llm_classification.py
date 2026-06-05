@@ -29,7 +29,7 @@ from ..domain.transactions import BusinessClassification, Transaction, Transacti
 from ..domain.transactions._errors import LLMClassifierError
 from ..domain.transactions._llm import build_claude_classifier
 
-pytestmark = [pytest.mark.live_read, pytest.mark.domain_application]
+pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]
 
 _CORPUS = Path(__file__).parent / "fixtures" / "financial" / "ledger-corpus"
 _ACCOUNTS = ("bbva-business-eur.csv", "caixabank-personal.csv", "revolut-multi.csv")

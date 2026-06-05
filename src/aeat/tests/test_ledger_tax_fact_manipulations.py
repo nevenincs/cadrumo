@@ -41,7 +41,7 @@ from ..domain.transactions import (
     TransactionLifecycleState,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CENT = Decimal("0.01")
 _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)

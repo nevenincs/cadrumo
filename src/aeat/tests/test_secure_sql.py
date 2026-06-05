@@ -25,7 +25,7 @@ from .secure_sql import (
     isolated_runtime_profile,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _CONTROL_BUCKET_ID = "contamination-control"
 _CONTROL_KEK = b"c" * 32

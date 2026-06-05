@@ -724,6 +724,8 @@ application:
       work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
+      work_period_token_invalid: '--period ''%{token}'' is not a valid period token for modelo %{modelo}. Pass --year %{year} separately and use one of: %{tokens}.'
+      work_period_token_unrecognised: '--period ''%{token}'' is not recognised. Pass --year %{year} separately and use a period token such as 0A, Q1, 1T, or 01.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
@@ -1600,8 +1602,6 @@ cli:
         modelo_help: Tax form code (e.g. 303, 130, 100)
         name_help: Optional display name for the work unit
         name_required: Supply --name.
-        natural_target_required: Pass an exact work-unit id, or address the filing
-          with modelo, year, and period.
         notes_help: Optional notes attached to the filing record
         output_language_help: Output language for rendered messages.
         override_help: Binding value with KEY=VALUE syntax (repeatable); run `aeat
@@ -3908,6 +3908,7 @@ errors:
       revision.
     refused_workflow_resume: The prior workflow run cannot be resumed.
     unsupported_currency: The currency code provided is not supported.
+    modelo_work_period_token: 'Invalid modelo period token.'
   snapshot:
     modelo_not_registered: Model is not registered in the registry.
   storage:

@@ -50,7 +50,7 @@ from ..domain.transactions import (
 )
 from ..tests.secure_sql import isolated_runtime_profile
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
 
