@@ -88,6 +88,8 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S58]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S59]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S60]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S61]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S62]]'
   - '[[2026-06-05-codebase-monolith-decomposition-adr]]'
   - '[[2026-06-05-codebase-monolith-decomposition-code-review-audit]]'
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
@@ -193,6 +195,8 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S58` - W03.P06.S58 - verify application live decomposition
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S59` - W03.P06.S59 Auth Operator Decomposition
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S60` - W03.P06.S60 Auth Operator Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P06-S61` - W03.P06.S61 Workflow Engine Helper Extraction
+- `2026-06-05-codebase-monolith-decomposition-W03-P06-S62` - W03.P06.S62 Workflow Engine Verification
 
 ### plan
 

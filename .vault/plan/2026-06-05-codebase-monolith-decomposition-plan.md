@@ -10,6 +10,16 @@ related:
   - '[[2026-06-05-modelo-work-revision-cli-decomposition-plan]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `codebase-monolith-decomposition` `codebase-wide monolith and cognitive complexity decomposition` plan
 
 ## Wave `W01` - global inventory and guard baseline
@@ -110,6 +120,14 @@ Close remaining oversized CLI roots through explicit residual extraction tranche
 - [x] `W02.P05.S111` - verify modelo audit behavior and repair-policy discovery after extraction; `src/aeat/entrypoints/cli/tests/test_audit_verbs.py src/aeat/entrypoints/cli/tests/test_root_grammar_invariants.py src/aeat/entrypoints/cli/tests/test_repair_policy_coverage.py`.
 - [x] `W02.P05.S112` - reconcile modelo natural-key CLI verification coverage with cross-period clean-state requirements; `src/aeat/entrypoints/cli/tests/test_modelo_work_natural_key.py src/aeat/application/modelo/tests/test_cross_period_clean_state_* src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py`.
 
+### Phase `W02.P10` - residual CLI root second pass
+
+Close any CLI roots still above the hard module budget after first-pass registrar extraction, preserving CLI-as-transport and backend-owned policy.
+
+- [ ] `W02.P10.S116` - select the next residual config CLI closure group using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests`.
+- [ ] `W02.P10.S117` - extract the selected residual config CLI group into focused transport registrar modules; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
+- [ ] `W02.P10.S118` - verify residual config CLI behavior and ratchet config module size budget; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+
 ## Wave `W03` - application and domain monolith decomposition
 
 Decompose application/domain/backend monoliths only after ADR-backed boundary decisions identify safe seams and public facade preservation rules.
@@ -133,8 +151,8 @@ Decompose oversized application service modules by use-case boundary while prese
 - [x] `W03.P06.S58` - verify application live behavior and public live facade imports after decomposition; `src/aeat/application/live/tests src/aeat/entrypoints/cli/tests/test_live*`.
 - [x] `W03.P06.S59` - decompose application auth operator module by credential and authority workflows behind the auth facade; `src/aeat/application/auth/_operator.py src/aeat/application/auth/*.py`.
 - [x] `W03.P06.S60` - verify application auth operator behavior and facade imports after decomposition; `src/aeat/application/auth/tests src/aeat/entrypoints/cli/_config/tests`.
-- [ ] `W03.P06.S61` - decompose application workflow engine by execution and adapter orchestration helpers behind the workflow facade; `src/aeat/application/workflow/_engine.py src/aeat/application/workflow/*.py`.
-- [ ] `W03.P06.S62` - verify application workflow engine behavior and facade imports after decomposition; `src/aeat/application/workflow/tests src/aeat/tests`.
+- [x] `W03.P06.S61` - decompose application workflow engine by execution and adapter orchestration helpers behind the workflow facade; `src/aeat/application/workflow/_engine.py src/aeat/application/workflow/*.py`.
+- [x] `W03.P06.S62` - verify application workflow engine behavior and facade imports after decomposition; `src/aeat/application/workflow/tests src/aeat/tests`.
 - [x] `W03.P06.S113` - extract live IVA remote-state outcome and redaction helpers behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/_remote_state_outcomes.py src/aeat/application/live/tests/test_iva_remote_state_acquisition.py src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py`.
 - [x] `W03.P06.S114` - extract live filed-data selection and listing helpers behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/_filed_data.py src/aeat/application/live/tests src/aeat/entrypoints/cli/tests/test_registry_cli.py`.
 - [x] `W03.P06.S115` - extract live filed-data capture service orchestration behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/_session.py src/aeat/application/live/_filed_observation_persistence.py src/aeat/application/live/_filed_data_capture.py src/aeat/application/live/tests/test_filed_bulk_capture.py src/aeat/application/live/tests/test_filed_capture_calculation_history.py src/aeat/entrypoints/cli/tests/test_registry_cli.py`.
