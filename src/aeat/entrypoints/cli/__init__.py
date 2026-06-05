@@ -519,6 +519,19 @@ def _app_root(
         raise typer.Exit()
 
 
+_LAZY_COMMAND_MODULES: frozenset[str] = frozenset(
+    {
+        "._app_live",
+        "._config",
+        "._ledger",
+        "._modelo",
+        "._overview",
+        "._review",
+        ".registry",
+    }
+)
+
+
 def _lazy_loader(module_name: str, group_label: str) -> Callable[[], typer.Typer]:
     """Build a deferred factory importing ``module_name``'s ``app`` Typer.
 
@@ -532,8 +545,11 @@ def _lazy_loader(module_name: str, group_label: str) -> Callable[[], typer.Typer
     def _factory() -> typer.Typer:
         from importlib import import_module
 
+        if module_name not in _LAZY_COMMAND_MODULES:
+            raise RuntimeError(f"unregistered lazy CLI module: {module_name}")
         try:
-            module = import_module(module_name, __name__)
+            # Module names are constrained to `_LAZY_COMMAND_MODULES`.
+            module = import_module(module_name, __name__)  # nosemgrep
         except ModuleNotFoundError as error:
             return _import_failure_surface(group_label, error)
         return module.app
