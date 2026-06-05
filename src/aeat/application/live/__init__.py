@@ -34,22 +34,10 @@ from ...adapters.outbound.aeat.sede import (
     IvaCompensationWalletObservation as _IvaCompensationWalletObservation,
 )
 from ...adapters.outbound.aeat.sede import (
-    SedeParseError as _SedeParseError,
-)
-from ...adapters.outbound.aeat.sede import (
-    capture_previous_filing_observations as _capture_previous_filing_observations,
-)
-from ...adapters.outbound.aeat.sede import (
-    capture_relation_source_observations as _capture_relation_source_observations,
-)
-from ...adapters.outbound.aeat.sede import (
     fetch_iva_compensation_wallet as _fetch_iva_compensation_wallet,
 )
 from ...adapters.outbound.aeat.sede import (
     open_declarations_register as _open_declarations_register,
-)
-from ...adapters.outbound.aeat.sede import (
-    registry_observation_from_filed_declaration as _registry_observation_from_filed_declaration,
 )
 from ...adapters.outbound.aeat.sede import (
     shared_playwright as _shared_playwright,
@@ -74,13 +62,7 @@ from ...application.calculations import (
     IvaWalletDecisionRepository as _IvaWalletDecisionRepository,
 )
 from ...application.calculations import (
-    iva_compensation_state_from_filed_observation as _iva_compensation_state_from_filed_observation,
-)
-from ...application.calculations import (
     iva_wallet_decision_key as _iva_wallet_decision_key,
-)
-from ...application.calculations import (
-    observation_key as _observation_key,
 )
 from ...application.calculations import (
     reconcile_modelo_303_iva_compensation as _reconcile_modelo_303_iva_compensation,
@@ -91,16 +73,8 @@ from ...core.config import Settings as _Settings
 from ...core.config import load_settings as _load_settings
 from ...core.errors import AeatError as _AeatError
 from ...core.hashing import sha256_hex as _sha256_hex
-from ...core.resources import bundled_path as _bundled_path
 from ...core.resources import resources as _resources
 from ...core.time import now
-from ...domain.calculations.registry import (
-    CasillaObservation as _CasillaObservation,
-)
-from ...domain.calculations.registry import (
-    RegistryModeloObservation as _RegistryModeloObservation,
-)
-from ...domain.calculations.registry import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
 from ...domain.iva_compensation._carry_forward import (
     IvaCompensationCarryForwardLot as _IvaCompensationCarryForwardLot,
 )
@@ -109,9 +83,6 @@ from ...domain.iva_compensation._carry_forward import (
 )
 from ...domain.iva_compensation._carry_forward import (
     build_iva_compensation_carry_forward_report as _build_iva_compensation_carry_forward_report,
-)
-from ...domain.iva_compensation._carry_forward import (
-    derive_303_compensation_available as _derive_303_compensation_available,
 )
 from ...domain.iva_compensation._reconciliation import (
     IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource,
@@ -143,6 +114,28 @@ from ._filed_data import (
     filed_data_listing_row,
     select_declarations_for_capture,
 )
+from ._filed_data_capture import (
+    capture_filed_data,
+    capture_filed_data_bulk,
+    capture_source_filed_data,
+    filed_data_capture_failure_row,
+    list_filed_data,
+)
+from ._filed_data_capture import (
+    capture_report_path as _capture_report_path,
+)
+from ._filed_observation_persistence import (
+    latest_declarations_by_period as _latest_declarations_by_period,
+)
+from ._filed_observation_persistence import (
+    persist_filed_calculation_observation,
+)
+from ._filed_observation_persistence import (
+    persist_iva_compensation_history_observations_strict as _persist_iva_compensation_history_observations_strict,
+)
+from ._filed_observation_persistence import (
+    persist_latest_filed_calculation_observations as _persist_latest_filed_calculation_observations,
+)
 from ._remote_state_models import (
     BulkFiledDataCaptureReport,
     ExpedientesBulkCaptureFailureRow,
@@ -170,6 +163,7 @@ from ._remote_state_models import (
 from ._remote_state_outcomes import auth_outcome as _auth_outcome
 from ._remote_state_outcomes import bounded_context_text as _bounded_context_text
 from ._remote_state_outcomes import surface_outcome as _surface_outcome
+from ._session import active_verified_session as _active_verified_session
 from ._snapshot_base import (
     SecureSnapshotRepository,
     SnapshotLifecycleState,
@@ -193,403 +187,6 @@ class IvaRemoteStateAcquisitionManifestRepository(_SecureBoundRepository[IvaRemo
     def extract_identifier(self, payload: IvaRemoteStateAcquisitionManifest) -> str:
         """Return the acquisition's stable string identifier."""
         return payload.acquisition_id
-
-
-def filed_data_capture_failure_row(
-    *,
-    modelo: str,
-    year: int,
-    error: BaseException,
-    declaration: _Declaracion | None = None,
-) -> FiledDataCaptureFailureRow:
-    """Map one failed declaration-register read or capture into a report row."""
-    return FiledDataCaptureFailureRow(
-        modelo=declaration.modelo if declaration is not None else modelo,
-        year=declaration.ejercicio if declaration is not None else year,
-        period=declaration.period if declaration is not None else None,
-        expediente_id=declaration.expediente_id if declaration is not None else None,
-        error_type=error.__class__.__name__,
-        message=_bounded_context_text(error),
-    )
-
-
-def _unsupported_filed_capture_failure_row(
-    *,
-    modelo: str,
-    year: int,
-    reason: str,
-) -> FiledDataCaptureFailureRow:
-    return FiledDataCaptureFailureRow(
-        modelo=modelo,
-        year=year,
-        error_type="LiveApplicationInputError",
-        message=reason,
-    )
-
-
-def _filed_capture_unsupported_reason(*, modelo: str, year: int) -> str | None:
-    registry_modelos = {str(definition.id): definition for definition in _resources().modelos.all()}
-    definition = registry_modelos.get(modelo)
-    if definition is None:
-        return f"registry has no modelo definition for {modelo!r}"
-    revisions = tuple(
-        revision for revision in definition.revisions.values() if revision.period_selector.includes_year(year)
-    )
-    if not revisions:
-        return f"registry has no revision for modelo {modelo!r} filing year {year}"
-    filed_read_refs = tuple(
-        ref
-        for revision in revisions
-        for ref in revision.live_cross_references
-        if ref.surface == "authenticated_read_surface" and ref.id.endswith("filed-declarations-read")
-    )
-    if filed_read_refs:
-        return None
-    return (
-        f"AEAT declarations register does not offer modelo {modelo!r}; "
-        "registry revision declares no filed-declarations live read surface"
-    )
-
-
-async def list_filed_data(
-    *,
-    modelo: str,
-    year_from: int,
-    year_to: int,
-) -> FiledDataListingReport:
-    """List filed declaration rows through the active AEAT session without downloading artefacts.
-
-    Returns a :class:`FiledDataListingReport` with the discovered
-    declaration rows for the requested modelo and year range.
-    """
-    if year_from > year_to:
-        raise LiveApplicationInputError(
-            message="from-year must be less than or equal to to-year",
-            translated_message="live.errors.year_range_invalid",
-        )
-
-    session, settings = await _active_verified_session(operation="live-expedientes-read")
-    rows: list[FiledDataListingRow] = []
-    async with (
-        _shared_playwright(session) as playwright,
-        _open_declarations_register(
-            session,
-            settings=settings,
-            playwright=playwright,
-        ) as register,
-    ):
-        for year in range(year_to, year_from - 1, -1):
-            declarations = await register.walk(
-                modelo=modelo,
-                ejercicio=year,
-            )
-            rows.extend(filed_data_listing_row(declaration) for declaration in declarations)
-    return FiledDataListingReport(
-        modelo=modelo,
-        year_from=year_from,
-        year_to=year_to,
-        row_count=len(rows),
-        rows=tuple(rows),
-    )
-
-
-async def capture_filed_data(
-    *,
-    modelo: str,
-    year: int,
-    output_root: Path,
-    period: str | None = None,
-    expediente_id: str | None = None,
-    limit: int | None = None,
-) -> FiledDataCaptureReport:
-    """Capture filed-declaration artefacts through the active AEAT session.
-
-    Returns a :class:`FiledDataCaptureReport` summarising the captured
-    artefacts and any acquisition errors.
-    """
-    session, _settings = await _active_verified_session()
-    store = _FiledDeclaracionObservationStore(output_root)
-    observation_paths: list[str] = []
-    artefact_refs: list[str] = []
-    observations_for_calculation: list[_FiledDeclaracionObservation] = []
-    casilla_count = 0
-
-    async with (
-        _shared_playwright(session) as playwright,
-        _open_declarations_register(
-            session,
-            playwright=playwright,
-        ) as register,
-    ):
-        declarations = await register.walk(
-            modelo=modelo,
-            ejercicio=year,
-        )
-        selected = select_declarations_for_capture(
-            declarations,
-            period=period,
-            expediente_id=expediente_id,
-            limit=limit,
-        )
-        for declaration in selected:
-            observation = await register.capture_observation(
-                declaration,
-                artefact_sink=store.persist_artefact,
-            )
-            manifest_path = store.persist_observation(observation)
-            observation_paths.append(_capture_report_path(manifest_path, output_root=output_root))
-            artefact_refs.extend(
-                storage_ref
-                for artefact in observation.artefacts
-                for storage_ref in (artefact.storage_ref,)
-                if storage_ref is not None
-            )
-            casilla_count += len(observation.casillas)
-            observations_for_calculation.append(observation)
-
-    calculation_observation_keys = _persist_latest_filed_calculation_observations(tuple(observations_for_calculation))
-
-    return FiledDataCaptureReport(
-        output_root=str(output_root),
-        modelo=modelo,
-        year=year,
-        captured_count=len(observation_paths),
-        observation_paths=tuple(observation_paths),
-        artefact_refs=tuple(artefact_refs),
-        casilla_count=casilla_count,
-        calculation_observation_count=len(calculation_observation_keys),
-        calculation_observation_keys=tuple(calculation_observation_keys),
-    )
-
-
-async def capture_filed_data_bulk(
-    *,
-    year_from: int,
-    year_to: int,
-    output_root: Path,
-    modelos: tuple[str, ...] | None = None,
-) -> BulkFiledDataCaptureReport:
-    """Capture filed-declaration artefacts for registry modelos across a year range.
-
-    The live AEAT form is queried one ``(modelo, year)`` pair at a
-    time, but the browser/auth session is shared across the whole run.
-    Unsupported modelos, page drift, or per-declaration extraction
-    failures are reported in ``failures`` and do not silently disappear.
-    """
-    if year_from > year_to:
-        raise LiveApplicationInputError(
-            message="from-year must be less than or equal to to-year",
-            translated_message="live.errors.year_range_invalid",
-        )
-
-    resolved_modelos = modelos if modelos is not None else tuple(str(m.id) for m in _resources().modelos.all())
-    store = _FiledDeclaracionObservationStore(output_root)
-    observation_paths: list[str] = []
-    artefact_refs: list[str] = []
-    observations_for_calculation: list[_FiledDeclaracionObservation] = []
-    failures: list[FiledDataCaptureFailureRow] = []
-    casilla_count = 0
-    query_pairs: list[tuple[str, int]] = []
-    for code in resolved_modelos:
-        for year in range(year_to, year_from - 1, -1):
-            unsupported_reason = _filed_capture_unsupported_reason(modelo=code, year=year)
-            if unsupported_reason is not None:
-                failures.append(
-                    _unsupported_filed_capture_failure_row(modelo=code, year=year, reason=unsupported_reason)
-                )
-                continue
-            query_pairs.append((code, year))
-
-    if not query_pairs:
-        return BulkFiledDataCaptureReport(
-            output_root=str(output_root),
-            modelos=tuple(resolved_modelos),
-            year_from=year_from,
-            year_to=year_to,
-            captured_count=0,
-            failed_count=len(failures),
-            observation_paths=(),
-            artefact_refs=(),
-            casilla_count=0,
-            calculation_observation_count=0,
-            calculation_observation_keys=(),
-            failures=tuple(failures),
-        )
-
-    session, settings = await _active_verified_session(operation="live-expedientes-read")
-
-    async with (
-        _shared_playwright(session) as playwright,
-        _open_declarations_register(
-            session,
-            settings=settings,
-            playwright=playwright,
-        ) as register,
-    ):
-        for code, year in query_pairs:
-            try:
-                declarations = await register.walk(modelo=code, ejercicio=year)
-            except Exception as exc:
-                failures.append(filed_data_capture_failure_row(modelo=code, year=year, error=exc))
-                continue
-            for declaration in declarations:
-                try:
-                    observation = await register.capture_observation(
-                        declaration,
-                        artefact_sink=store.persist_artefact,
-                    )
-                except Exception as exc:
-                    failures.append(
-                        filed_data_capture_failure_row(
-                            modelo=code,
-                            year=year,
-                            declaration=declaration,
-                            error=exc,
-                        )
-                    )
-                    continue
-                manifest_path = store.persist_observation(observation)
-                observation_paths.append(_capture_report_path(manifest_path, output_root=output_root))
-                artefact_refs.extend(
-                    storage_ref
-                    for artefact in observation.artefacts
-                    for storage_ref in (artefact.storage_ref,)
-                    if storage_ref is not None
-                )
-                casilla_count += len(observation.casillas)
-                observations_for_calculation.append(observation)
-
-    calculation_observation_keys = _persist_latest_filed_calculation_observations(tuple(observations_for_calculation))
-    return BulkFiledDataCaptureReport(
-        output_root=str(output_root),
-        modelos=tuple(resolved_modelos),
-        year_from=year_from,
-        year_to=year_to,
-        captured_count=len(observation_paths),
-        failed_count=len(failures),
-        observation_paths=tuple(observation_paths),
-        artefact_refs=tuple(artefact_refs),
-        casilla_count=casilla_count,
-        calculation_observation_count=len(calculation_observation_keys),
-        calculation_observation_keys=tuple(calculation_observation_keys),
-        failures=tuple(failures),
-    )
-
-
-async def capture_source_filed_data(
-    *,
-    modelo: str,
-    year: int,
-    period: str,
-    output_root: Path,
-    registry_root: Path | None = None,
-    source_root: Path | None = None,
-) -> SourceFiledDataCaptureReport:
-    """Capture filed observations required by a target filing's registry dependencies.
-
-    Returns:
-        :class:`SourceFiledDataCaptureReport`: The capture report.
-    """
-    from ...core.resources import resources as _resources
-
-    session, settings = await _active_verified_session()
-    if registry_root is None and source_root is None:
-        authority = _resources().modelos.authority
-    else:
-        authority = _ValidatedRegistryAuthority.load(
-            registry_root or _bundled_path("registry", "aeat"),
-            source_root=source_root or _bundled_path(),
-        )
-    snapshot = authority.snapshot(
-        modelo,
-        filing_year=year,
-        period=period,
-    )
-    store = _FiledDeclaracionObservationStore(output_root)
-    observation_paths: list[str] = []
-    artefact_refs: list[str] = []
-    observations_for_calculation: list[_FiledDeclaracionObservation] = []
-    casilla_count = 0
-    seen: set[tuple[str, int, str, str]] = set()
-
-    async with _shared_playwright(session) as playwright:
-        observations = (
-            await _capture_previous_filing_observations(
-                session,
-                snapshot.revision,
-                filing_year=year,
-                period=period,
-                settings=settings,
-                playwright=playwright,
-                artefact_sink=store.persist_artefact,
-            )
-        ) + (
-            await _capture_relation_source_observations(
-                session,
-                snapshot.revision,
-                filing_year=year,
-                period=period,
-                settings=settings,
-                playwright=playwright,
-                artefact_sink=store.persist_artefact,
-            )
-        )
-    for observation in observations:
-        key = (observation.modelo, observation.ejercicio, observation.period, observation.expediente_id)
-        if key in seen:
-            continue
-        seen.add(key)
-        manifest_path = store.persist_observation(observation)
-        observation_paths.append(_capture_report_path(manifest_path, output_root=output_root))
-        artefact_refs.extend(
-            storage_ref
-            for artefact in observation.artefacts
-            for storage_ref in (artefact.storage_ref,)
-            if storage_ref is not None
-        )
-        casilla_count += len(observation.casillas)
-        observations_for_calculation.append(observation)
-
-    calculation_observation_keys = _persist_latest_filed_calculation_observations(tuple(observations_for_calculation))
-
-    return SourceFiledDataCaptureReport(
-        output_root=str(output_root),
-        target_modelo=modelo,
-        target_year=year,
-        target_period=period,
-        captured_count=len(observation_paths),
-        observation_paths=tuple(observation_paths),
-        artefact_refs=tuple(artefact_refs),
-        casilla_count=casilla_count,
-        calculation_observation_count=len(calculation_observation_keys),
-        calculation_observation_keys=tuple(calculation_observation_keys),
-    )
-
-
-def _capture_report_path(path: Path, *, output_root: Path) -> str:
-    try:
-        return path.relative_to(output_root).as_posix()
-    except ValueError:
-        return str(path)
-
-
-def persist_filed_calculation_observation(
-    observation: _FiledDeclaracionObservation,
-    *,
-    repository: _CalculationObservationRepository | None = None,
-) -> str:
-    """Promote one AEAT filed-declaration observation into calculation history."""
-    registry_observation = _registry_observation_from_filed_declaration(observation)
-    registry_observation = _with_derived_303_compensation_available(registry_observation)
-    repo = repository if repository is not None else _CalculationObservationRepository()
-    repo.save_observation(
-        registry_observation,
-        source_kind="aeat_sede_justificante",
-        captured_at=observation.presented_at,
-    )
-    if observation.modelo == "303":
-        _IvaCompensationHistoryRepository().save_period(_iva_compensation_state_from_filed_observation(observation))
-    return _observation_key(registry_observation.modelo, registry_observation.filing_year, registry_observation.period)
 
 
 def list_iva_compensation_history(
@@ -946,143 +543,6 @@ def _taxpayer_ref(taxpayer_nif: str) -> str:
 def _evidence_ref(value: str) -> str:
     digest = _sha256_hex(value.strip().encode("utf-8"))
     return f"sha256:{digest[:12]}"
-
-
-def _persist_latest_filed_calculation_observations(
-    observations: tuple[_FiledDeclaracionObservation, ...],
-) -> tuple[str, ...]:
-    """Persist only the latest captured observation per modelo/year/period."""
-    latest: dict[tuple[str, int, str], _FiledDeclaracionObservation] = {}
-    for observation in observations:
-        key = (observation.modelo, observation.ejercicio, observation.period)
-        current = latest.get(key)
-        if current is None or (observation.presented_at, observation.expediente_id) > (
-            current.presented_at,
-            current.expediente_id,
-        ):
-            latest[key] = observation
-    return tuple(
-        key
-        for _key, observation in sorted(latest.items())
-        for key in _persist_filed_calculation_observation_if_extractable(observation)
-    )
-
-
-def _persist_iva_compensation_history_observations_strict(
-    observations: tuple[_FiledDeclaracionObservation, ...],
-) -> tuple[str, ...]:
-    """Persist latest Modelo 303 observations and verify each history row reloads."""
-    latest: dict[tuple[int, str], _FiledDeclaracionObservation] = {}
-    for observation in observations:
-        if observation.modelo != "303":
-            raise LiveApplicationInputError(
-                translated_message="live.errors.iva_history_modelo_303_only",
-                context={"modelo": observation.modelo},
-            )
-        key = (observation.ejercicio, observation.period)
-        current = latest.get(key)
-        if current is None or (observation.presented_at, observation.expediente_id) > (
-            current.presented_at,
-            current.expediente_id,
-        ):
-            latest[key] = observation
-
-    keys: list[str] = []
-    history_repo = _IvaCompensationHistoryRepository()
-    for (_year, _period), observation in sorted(latest.items()):
-        try:
-            key = persist_filed_calculation_observation(observation)
-        except _SedeParseError as exc:
-            raise LiveApplicationError(
-                f"filed Modelo 303 {observation.ejercicio}/{observation.period} "
-                "could not be promoted into IVA compensation history"
-            ) from exc
-        if history_repo.load_period(observation.ejercicio, observation.period) is None:
-            raise LiveApplicationError(
-                f"secure IVA compensation history did not reload after persisting "
-                f"Modelo 303 {observation.ejercicio}/{observation.period}"
-            )
-        keys.append(key)
-    return tuple(keys)
-
-
-def _latest_declarations_by_period(declarations: tuple[_Declaracion, ...]) -> tuple[_Declaracion, ...]:
-    """Return one latest accepted declaration per period from register rows."""
-    latest: dict[str, _Declaracion] = {}
-    for declaration in declarations:
-        current = latest.get(declaration.period)
-        if current is None:
-            latest[declaration.period] = declaration
-            continue
-        current_rank = (current.estado.upper() == "ALTA", current.presented_at, current.expediente_id)
-        candidate_rank = (declaration.estado.upper() == "ALTA", declaration.presented_at, declaration.expediente_id)
-        if candidate_rank > current_rank:
-            latest[declaration.period] = declaration
-    return tuple(latest[key] for key in sorted(latest, key=_history_period_sort_key))
-
-
-def _history_period_sort_key(period: str) -> tuple[int, str]:
-    upper = period.upper()
-    if upper.endswith("T") and upper[:-1].isdigit():
-        return (int(upper[:-1]), upper)
-    if upper.isdigit():
-        return (int(upper), upper)
-    return (100, upper)
-
-
-def _persist_filed_calculation_observation_if_extractable(
-    observation: _FiledDeclaracionObservation,
-) -> tuple[str, ...]:
-    try:
-        return (persist_filed_calculation_observation(observation),)
-    except _SedeParseError:
-        return ()
-
-
-def _with_derived_303_compensation_available(
-    observation: _RegistryModeloObservation,
-) -> _RegistryModeloObservation:
-    """Add the internal Modelo 303 carry-forward value from official filed casillas."""
-    if observation.modelo != "303":
-        return observation
-    target_id = "iva.compensacion-disponible-fin-periodo"
-    if target_id in observation.casilla_values:
-        return observation
-    posterior = _casilla_decimal(
-        observation.casilla_values,
-        "87",
-        "iva.compensacion-pendiente-periodos-posteriores",
-    )
-    resultado = _casilla_decimal(observation.casilla_values, "69", "iva.resultado")
-    if posterior is None or resultado is None:
-        return observation
-
-    available = _derive_303_compensation_available(posterior=posterior, resultado=resultado)
-    snapshot = _resources().modelos.authority.snapshot(
-        "303",
-        filing_year=observation.filing_year,
-        period=observation.period,
-    )
-    casilla = next(item for item in snapshot.revision.casillas if item.id == target_id)
-    formula = next(item for item in snapshot.revision.formulas if item.target == target_id)
-    derived = _CasillaObservation(
-        casilla_id=target_id,
-        value=available,
-        formula_id=formula.id,
-        operand_refs=("87", "69"),
-        operand_values=(posterior, resultado),
-        legal_refs=tuple(casilla.legal_refs),
-        source_refs=tuple(casilla.source_refs),
-    )
-    return observation.model_copy(update={"observations": (*observation.observations, derived)})
-
-
-def _casilla_decimal(values: dict[str, Decimal], *casilla_ids: str) -> Decimal | None:
-    for casilla_id in casilla_ids:
-        value = values.get(casilla_id)
-        if value is not None:
-            return value
-    return None
 
 
 def persist_and_reconcile_iva_compensation_wallet(
@@ -1780,21 +1240,6 @@ def _iva_remote_state_surface_manifest(
     )
 
 
-async def _active_verified_session(
-    *,
-    operation: str = "live-filed-read",
-    target_url: str | None = None,
-) -> tuple[_AeatSession, _Settings]:
-    settings = _load_settings()
-    _AeatAccessGate(settings).require_live_read()
-    result = await _ensure_authenticated_aeat_session(
-        settings,
-        operation=operation,
-        target_url=target_url,
-    )
-    return result.session, settings
-
-
 def __getattr__(name: str):
     """Lazy-load the heavy service classes through the package boundary.
 
@@ -1867,6 +1312,7 @@ __all__ = [
     "VerifyService",
     "VerifySurface",
     "VerifyVerdict",
+    "_persist_latest_filed_calculation_observations",
     "borrador_100_snapshot_object_key",
     "build_iva_remote_state_acquisition_report",
     "capture_expedientes_bulk",
@@ -1879,6 +1325,7 @@ __all__ = [
     "capture_source_filed_data",
     "classify_live_iva_acquisition_failure",
     "derive_borrador_100_snapshot_id",
+    "filed_data_capture_failure_row",
     "filed_data_listing_row",
     "list_filed_data",
     "list_iva_compensation_history",
