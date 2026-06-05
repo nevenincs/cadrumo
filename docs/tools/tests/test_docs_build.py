@@ -194,8 +194,8 @@ def test_sphinx_nitpicky_build_is_clean(tmp_path: Path) -> None:
 
     Uses the ``dummy`` builder, not ``html``: the gate only asserts that the
     full parse and cross-reference resolution (where ``-n`` nitpicky warnings
-    fire) raise no warnings under ``-W``; it does not need rendered HTML, so the
-    write phase is skipped. ``-j auto`` parallelises the autodoc read across
+    fire) raise no warnings under ``-W``; it does not need rendered HTML, so
+    rendered-page emission is skipped. ``-j auto`` parallelises the autodoc read across
     every core, since the cost is dominated by importing and introspecting the
     several-hundred ``automodule`` stubs. Together these cut the build from tens
     of minutes to a fraction without weakening the check.
