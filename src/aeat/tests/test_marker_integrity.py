@@ -76,6 +76,13 @@ _CAMPAIGN_METADATA_PATTERNS = (
     re.compile(r"\.vault/ad" + r"r", re.IGNORECASE),
     re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}[-_a-z0-9]*ad" + r"r", re.IGNORECASE),
 )
+_PROCESS_SYMBOL_METADATA_PATTERNS = (
+    re.compile(r"(^|[_-])ad" + r"r($|[_-])", re.IGNORECASE),
+    re.compile(r"(^|[_-])pha" + r"se($|[_-])", re.IGNORECASE),
+    re.compile(r"(^|[_-])wa" + r"ve($|[_-])", re.IGNORECASE),
+    re.compile(r"pa" + r"ln", re.IGNORECASE),
+    re.compile(r"(^|[_-])p" + r"r($|[_-])", re.IGNORECASE),
+)
 _FORBIDDEN_MARKERS = (
     frozenset(
         {
@@ -181,6 +188,45 @@ def _campaign_metadata_violations(path: Path) -> list[str]:
                 relative = path.relative_to(_REPO_ROOT)
                 violations.append(f"{relative}:{token.start[0]}: {token.string.strip()[:160]}")
                 break
+    return violations
+
+
+def _process_symbol_metadata_violations(path: Path) -> list[str]:
+    """Return process identifiers found in test symbols or pytest case ids."""
+    source = path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(path))
+    violations: list[str] = []
+    relative = path.relative_to(_REPO_ROOT)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef) and any(
+            pattern.search(node.name) for pattern in _PROCESS_SYMBOL_METADATA_PATTERNS
+        ):
+            violations.append(f"{relative}:{node.lineno}: {node.name}")
+        if isinstance(node, ast.Call):
+            violations.extend(_process_pytest_id_violations(path, node))
+    return violations
+
+
+def _process_pytest_id_violations(path: Path, node: ast.Call) -> list[str]:
+    violations: list[str] = []
+    func_text = ast.unparse(node.func)
+    relative = path.relative_to(_REPO_ROOT)
+    for keyword in node.keywords:
+        if keyword.arg == "id" and isinstance(keyword.value, ast.Constant) and isinstance(keyword.value.value, str):
+            value = keyword.value.value
+            if any(pattern.search(value) for pattern in _PROCESS_SYMBOL_METADATA_PATTERNS):
+                violations.append(f"{relative}:{keyword.value.lineno}: {value}")
+        if (
+            "parametrize" not in func_text
+            or keyword.arg != "ids"
+            or not isinstance(keyword.value, ast.List | ast.Tuple)
+        ):
+            continue
+        for element in keyword.value.elts:
+            if not isinstance(element, ast.Constant) or not isinstance(element.value, str):
+                continue
+            if any(pattern.search(element.value) for pattern in _PROCESS_SYMBOL_METADATA_PATTERNS):
+                violations.append(f"{relative}:{element.lineno}: {element.value}")
     return violations
 
 
@@ -504,6 +550,14 @@ def test_source_test_comments_and_docstrings_do_not_reference_campaign_metadata(
     for module_path in _MODULES:
         violations.extend(_campaign_metadata_violations(module_path))
     assert not violations, "campaign metadata remains in comments/docstrings:\n" + "\n".join(violations)
+
+
+def test_source_test_symbol_names_and_ids_do_not_reference_process_metadata() -> None:
+    """Durable test names and pytest ids must not carry process metadata."""
+    violations: list[str] = []
+    for module_path in _MODULES:
+        violations.extend(_process_symbol_metadata_violations(module_path))
+    assert not violations, "process metadata remains in test symbols/ids:\n" + "\n".join(violations)
 
 
 def test_discovery_found_modules() -> None:
