@@ -113,9 +113,9 @@ Close remaining oversized CLI roots through explicit residual extraction tranche
 - [x] `W02.P05.S104` - select the next ledger residual command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/tests`.
 - [x] `W02.P05.S105` - extract the selected ledger residual command group into a focused registrar module; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_*.py`.
 - [x] `W02.P05.S106` - verify ledger residual behavior and ratchet ledger size budget; `src/aeat/entrypoints/cli/tests/test_ledger* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
-- [ ] `W02.P05.S107` - select a coherent split for oversized modelo CLI tests using exact discovery; `src/aeat/entrypoints/cli/tests/test_modelo.py src/aeat/entrypoints/cli/tests`.
-- [ ] `W02.P05.S108` - split selected modelo CLI tests into focused test modules; `src/aeat/entrypoints/cli/tests/test_modelo.py src/aeat/entrypoints/cli/tests/test_modelo_*.py`.
-- [ ] `W02.P05.S109` - verify split modelo CLI tests and ratchet test module size budget; `src/aeat/entrypoints/cli/tests/test_modelo.py src/aeat/entrypoints/cli/tests/test_modelo_*.py src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P05.S107` - select a coherent split for oversized modelo CLI tests using exact discovery; `src/aeat/entrypoints/cli/tests/test_modelo.py src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P05.S108` - retire the selected modelo CLI test split as unnecessary after current line-count discovery; `src/aeat/entrypoints/cli/tests/test_modelo.py src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P05.S109` - verify modelo CLI test module remains below threshold and focused tests pass; `src/aeat/entrypoints/cli/tests/test_modelo.py src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
 - [x] `W02.P05.S110` - extract residual modelo audit command group into a focused registrar module; `src/aeat/entrypoints/cli/_modelo.py src/aeat/entrypoints/cli/_modelo_audit_cli.py`.
 - [x] `W02.P05.S111` - verify modelo audit behavior and repair-policy discovery after extraction; `src/aeat/entrypoints/cli/tests/test_audit_verbs.py src/aeat/entrypoints/cli/tests/test_root_grammar_invariants.py src/aeat/entrypoints/cli/tests/test_repair_policy_coverage.py`.
 - [x] `W02.P05.S112` - reconcile modelo natural-key CLI verification coverage with cross-period clean-state requirements; `src/aeat/entrypoints/cli/tests/test_modelo_work_natural_key.py src/aeat/application/modelo/tests/test_cross_period_clean_state_* src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py`.
@@ -146,7 +146,7 @@ Decompose oversized application service modules by use-case boundary while prese
 - [ ] `W03.P06.S61` - decompose application workflow engine by execution and adapter orchestration helpers behind the workflow facade; `src/aeat/application/workflow/_engine.py src/aeat/application/workflow/*.py`.
 - [ ] `W03.P06.S62` - verify application workflow engine behavior and facade imports after decomposition; `src/aeat/application/workflow/tests src/aeat/tests`.
 - [x] `W03.P06.S113` - extract live IVA remote-state outcome and redaction helpers behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/_remote_state_outcomes.py src/aeat/application/live/tests/test_iva_remote_state_acquisition.py src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py`.
-- [ ] `W03.P06.S114` - extract live filed-data selection and listing helpers behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/_filed_data.py src/aeat/application/live/tests src/aeat/entrypoints/cli/tests/test_registry_cli.py`.
+- [x] `W03.P06.S114` - extract live filed-data selection and listing helpers behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/_filed_data.py src/aeat/application/live/tests src/aeat/entrypoints/cli/tests/test_registry_cli.py`.
 - [ ] `W03.P06.S115` - extract live filed-data capture service orchestration behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/_filed_data_capture.py src/aeat/application/live/tests/test_filed_bulk_capture.py src/aeat/entrypoints/cli/tests/test_registry_cli.py`.
 
 ### Phase `W03.P07` - domain registry decomposition
