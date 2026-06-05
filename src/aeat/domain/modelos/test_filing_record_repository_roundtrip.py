@@ -33,7 +33,13 @@ from ._filing_record import (
     ModeloRecordStatus,
     derive_filing_record_id,
 )
-from ._filing_repository import _FILING_CATALOGUE_VERSION, ModeloRecordCatalogueRepository
+from ._filing_repository import (
+    _FILING_CATALOGUE_VERSION,
+    _FILING_NAMESPACE,
+    _FILING_OBJECT_KEY,
+    ModeloRecordCatalogueRepository,
+    ModeloRecordPersistenceError,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -161,8 +167,6 @@ def test_filing_record_catalogue_supersession_chain_drift_surfaces_at_load(
 
     import json as _json
 
-    from ._filing_repository import _FILING_NAMESPACE, _FILING_OBJECT_KEY
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID)
         original = _populated_catalogue()
@@ -195,3 +199,72 @@ def test_filing_record_catalogue_supersession_chain_drift_surfaces_at_load(
 
         with pytest.raises(ValidationError):
             ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+
+def test_filing_record_catalogue_wrong_inner_classification_is_localized(
+    tmp_path: Path,
+) -> None:
+    """A corrupted envelope classification raises a translated persistence error."""
+
+    from ...adapters.persistence.storage import Envelope
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        envelope = Envelope[ModeloRecordCatalogue](
+            schema_version=_FILING_CATALOGUE_VERSION,
+            written_at=datetime.now(UTC).replace(microsecond=0),
+            classification=SensitivityClass.AUDIT,
+            payload=ModeloRecordCatalogue(),
+        )
+        profile.repository.save(
+            namespace=_FILING_NAMESPACE,
+            object_key=_FILING_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_FILING_CATALOGUE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+        with pytest.raises(ModeloRecordPersistenceError) as raised:
+            ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    assert raised.value.translated_message == "errors.fail.fail_modelo_filing_record_persistence"
+    assert raised.value.context == {
+        "reason": "classification_mismatch",
+        "expected_classification": "financial",
+        "actual_classification": "audit",
+    }
+
+
+def test_filing_record_catalogue_unsupported_inner_version_is_localized(
+    tmp_path: Path,
+) -> None:
+    """A future inner envelope schema version raises a translated persistence error."""
+
+    from ...adapters.persistence.storage import Envelope
+
+    stored_schema_version = _FILING_CATALOGUE_VERSION + 1
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        envelope = Envelope[ModeloRecordCatalogue](
+            schema_version=stored_schema_version,
+            written_at=datetime.now(UTC).replace(microsecond=0),
+            classification=SensitivityClass.FINANCIAL,
+            payload=ModeloRecordCatalogue(),
+        )
+        profile.repository.save(
+            namespace=_FILING_NAMESPACE,
+            object_key=_FILING_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_FILING_CATALOGUE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+        with pytest.raises(ModeloRecordPersistenceError) as raised:
+            ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    assert raised.value.translated_message == "errors.fail.fail_modelo_filing_record_persistence"
+    assert raised.value.context == {
+        "reason": "unsupported_envelope_version",
+        "stored_schema_version": stored_schema_version,
+        "max_supported_version": _FILING_CATALOGUE_VERSION,
+    }

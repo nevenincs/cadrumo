@@ -24,6 +24,7 @@ _LOGGER = get_logger(__name__)
 _FILING_NAMESPACE = "aeat.domain.modelos.filing_records"
 _FILING_OBJECT_KEY = "catalogue"
 _FILING_CATALOGUE_VERSION = 1
+_FILING_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_filing_record_persistence"
 
 
 class ModeloRecordPersistenceError(ModeloError):
@@ -96,19 +97,49 @@ class ModeloRecordCatalogueRepository:
         except (ClassificationError, EnvelopeVersionError) as exc:
             _LOGGER.error("filing-record catalogue integrity error", exc_info=True)
             raise ModeloRecordPersistenceError(
-                f"filing-record catalogue integrity error: {type(exc).__name__}: {exc}"
+                "filing-record catalogue integrity error",
+                translated_message=_FILING_PERSISTENCE_MESSAGE,
+                context={
+                    "reason": "secure_object_integrity",
+                    "cause_type": type(exc).__name__,
+                },
             ) from exc
         if record is None:
             return ModeloRecordCatalogue()
         envelope = Envelope[ModeloRecordCatalogue].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not SensitivityClass.FINANCIAL:
+            _LOGGER.error(
+                "filing-record catalogue classification mismatch",
+                extra={
+                    "expected_classification": SensitivityClass.FINANCIAL.value,
+                    "actual_classification": envelope.classification.value,
+                },
+            )
             raise ModeloRecordPersistenceError(
-                f"filing-record catalogue has classification {envelope.classification}; FINANCIAL expected"
+                "filing-record catalogue classification mismatch",
+                translated_message=_FILING_PERSISTENCE_MESSAGE,
+                context={
+                    "reason": "classification_mismatch",
+                    "expected_classification": SensitivityClass.FINANCIAL.value,
+                    "actual_classification": envelope.classification.value,
+                },
             )
         if envelope.schema_version > _FILING_CATALOGUE_VERSION:
+            _LOGGER.error(
+                "filing-record catalogue envelope version unsupported",
+                extra={
+                    "stored_schema_version": envelope.schema_version,
+                    "max_supported_version": _FILING_CATALOGUE_VERSION,
+                },
+            )
             raise ModeloRecordPersistenceError(
-                f"filing-record catalogue is at version {envelope.schema_version}; "
-                f"consumer supports up to {_FILING_CATALOGUE_VERSION}"
+                "filing-record catalogue envelope version unsupported",
+                translated_message=_FILING_PERSISTENCE_MESSAGE,
+                context={
+                    "reason": "unsupported_envelope_version",
+                    "stored_schema_version": envelope.schema_version,
+                    "max_supported_version": _FILING_CATALOGUE_VERSION,
+                },
             )
         return envelope.payload
 
