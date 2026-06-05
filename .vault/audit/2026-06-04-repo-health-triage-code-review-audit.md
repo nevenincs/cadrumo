@@ -761,3 +761,29 @@ suppression. `just audit-dead-code` runs Vulture with `pyproject.toml` and exits
 0 with no current findings.
 
 Residual: none for the configured Vulture lane.
+
+## W06-008 | INFO | Semgrep security burn-down found no remaining findings
+
+Status: verified green.
+
+The W06.P20.S81 review found the prior Semgrep findings resolved without
+weakening `.semgrepignore` into a production-source blanket exclusion. The
+source-class policy still excludes mirrored legal data, tests, and explicit
+test-support modules from the stock security lane, while production findings are
+handled in source with exact allowlists or line-level rationale.
+
+Material checks:
+
+- ECB refresh now accepts only the canonical HTTPS ECB eurofxref endpoint before
+  calling `urllib.request.urlopen`.
+- Extraction-profile parser imports are constrained to the registry and inbound
+  declaracion parser authority prefixes.
+- CLI lazy imports are constrained to the registered command-module set.
+- Controlled bootstrap SQL, POSIX private directory mode, Python `>=3.13`
+  importlib.resources usage, and hard-coded cross-domain registration imports
+  carry exact Semgrep rationale at the audited line.
+
+Verification passed `just audit-security`, scoped Ruff, scoped Ty, and focused
+FX/registry pytest.
+
+Residual: none for the configured Semgrep production-security lane.

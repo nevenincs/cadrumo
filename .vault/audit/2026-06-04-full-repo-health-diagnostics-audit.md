@@ -932,3 +932,27 @@ Verification:
 Residual carried forward:
 
 - None for the Vulture dead-code lane in the current configured scope.
+
+## HEALTH-023-S81 | CLOSED | 2026-06-05 Semgrep security lane zero finding state
+
+W06.P20.S81 reran the Semgrep production-security lane, resolved the 11 current
+blocking findings, and clarified `.semgrepignore` policy so production-source
+findings are fixed or justified at the audited line rather than hidden through
+production exclusions.
+
+Verification:
+
+- `just audit-security` exits 0.
+- Semgrep reports 0 findings and 0 blocking findings.
+- The scan covers 988 tracked targets and runs 323 rules.
+- `.semgrepignore` continues to exclude mirrored registry/corpus data, tests,
+  and explicit test-support files, and now states that production-source
+  exclusions must not be added to force a green scan.
+- Scoped Ruff and Ty checks passed for every touched production file.
+- Focused pytest passed for ECB refresh behavior and the registry extraction
+  parser validation regression.
+
+Residual carried forward:
+
+- The broader repository still has unrelated dirty preflight/export-test WIP in
+  the shared worktree; S81 did not absorb it.

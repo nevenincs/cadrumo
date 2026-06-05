@@ -243,7 +243,12 @@ class SecureObjectRepository:
         for name, column_type in missing:
             try:
                 with self._engine.begin() as connection:
-                    connection.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {name} {column_type}"))
+                    connection.execute(
+                        # Identifiers come from local revision-metadata constants.
+                        text(  # nosemgrep
+                            f"ALTER TABLE {table_name} ADD COLUMN {name} {column_type}"
+                        )
+                    )
             except OperationalError as exc:
                 if self._is_duplicate_column_race(table_name, name, exc):
                     _log.debug(
@@ -428,7 +433,8 @@ class SecureObjectRepository:
         """Create the quarantine archive table with the secure-object metadata shape."""
         with self._engine.begin() as connection:
             connection.execute(
-                text(
+                # Static bootstrap DDL; no user-controlled SQL reaches this statement.
+                text(  # nosemgrep
                     "CREATE TABLE IF NOT EXISTS secure_objects_quarantine ("
                     "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
                     "  source_id INTEGER NOT NULL,"
@@ -830,7 +836,7 @@ class SecureObjectRepository:
         return tuple(per_namespace)
 
     def probe_namespace_integrity(self, namespace: str) -> SecureObjectNamespaceIntegrity:
-        """Count decryptable vs undecryptable rows in ``namespace``, returning a :class:`SecureObjectNamespaceIntegrity`.
+        """Count decryptable and undecryptable rows in ``namespace``.
 
         This method answers a strictly crypto-layer question -- can the
         ``payload`` ciphertext be unwrapped under the current master key
