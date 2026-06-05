@@ -485,6 +485,17 @@ class CensoSyncService:
         )
 
 
+def build_censo_sync_service(*, bucket_id: str) -> CensoSyncService:
+    """Build the production censo service with bucket-scoped event history wired."""
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ...domain.buckets import BucketEventHistoryRepository
+
+    return CensoSyncService(
+        bucket_id=bucket_id,
+        events=BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id)),
+    )
+
+
 def _raw_afectacion_ratio(censo_facts: Mapping[str, str]) -> Decimal | None:
     total_raw = censo_facts.get("vivienda_office.total_m2")
     office_raw = censo_facts.get("vivienda_office.office_m2")
