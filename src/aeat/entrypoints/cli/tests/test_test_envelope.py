@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from .test_envelope import unwrap_schema_envelope
+from .envelope_helpers import unwrap_schema_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

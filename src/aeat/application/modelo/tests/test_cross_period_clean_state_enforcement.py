@@ -3,26 +3,35 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from ....core.resources import resources
+from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
+    ModeloVerificationFindingKind,
     derive_calculation_revision_id,
     upsert_calculation_revision,
 )
 from ....tests.secure_sql import isolated_runtime_profile
+from ...calculations import (
+    CalculationObservationRepository,
+    CrossPeriodExpectedMemberSet,
+    cross_period_dependency_requirements,
+)
 from .. import (
     ModeloCrossPeriodCleanStateError,
     ModeloExportCommand,
     create_work_unit,
     export_modelo_revision,
     file_modelo_revision,
+    verify_modelo_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -41,13 +50,19 @@ def _workflow_profile() -> TaxpayerProfile:
     )
 
 
-def _seed_verified_m390_revision(*, bucket_id: str) -> str:
-    snapshot = resources().modelos.authority.snapshot("390", filing_year=2025, period="0A")
+def _seed_verified_revision(
+    *,
+    bucket_id: str,
+    modelo: str,
+    filing_year: int,
+    period: str,
+) -> str:
+    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
     work_unit = create_work_unit(
         bucket_id=bucket_id,
-        modelo="390",
-        filing_year=2025,
-        period="0A",
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
         revision_id=snapshot.revision.id,
         clock=_CLOCK,
     )
@@ -71,9 +86,48 @@ def _seed_verified_m390_revision(*, bucket_id: str) -> str:
     return revision_id
 
 
+def _seed_draft_revision(
+    *,
+    bucket_id: str,
+    modelo: str,
+    filing_year: int,
+    period: str,
+) -> str:
+    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+    work_unit = create_work_unit(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        revision_id=snapshot.revision.id,
+        clock=_CLOCK,
+    )
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit.work_unit_id,
+        inputs_snapshot={},
+        binding_overrides={},
+        casilla_values={},
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit.work_unit_id,
+        state=CalculationRevisionState.BORRADOR,
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+    )
+    repo = CalculationRevisionCatalogueRepository()
+    repo.save(upsert_calculation_revision(repo.load(), revision))
+    return revision_id
+
+
 def test_export_refuses_verified_cross_period_revision_without_clean_sources(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cross-period-export") as profile:
-        revision_id = _seed_verified_m390_revision(bucket_id=profile.bucket_id)
+        revision_id = _seed_verified_revision(
+            bucket_id=profile.bucket_id,
+            modelo="390",
+            filing_year=2025,
+            period="0A",
+        )
 
         with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
             export_modelo_revision(
@@ -91,7 +145,12 @@ def test_export_refuses_verified_cross_period_revision_without_clean_sources(tmp
 
 def test_file_refuses_verified_cross_period_revision_without_clean_sources(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cross-period-file") as profile:
-        revision_id = _seed_verified_m390_revision(bucket_id=profile.bucket_id)
+        revision_id = _seed_verified_revision(
+            bucket_id=profile.bucket_id,
+            modelo="390",
+            filing_year=2025,
+            period="0A",
+        )
 
         with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
             file_modelo_revision(
@@ -102,3 +161,112 @@ def test_file_refuses_verified_cross_period_revision_without_clean_sources(tmp_p
             )
 
     assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
+
+
+@pytest.mark.parametrize(
+    ("modelo", "filing_year", "period"),
+    (
+        ("390", 2025, "0A"),
+        ("180", 2026, "0A"),
+        ("190", 2026, "0A"),
+        ("193", 2026, "0A"),
+        ("100", 2025, "0A"),
+        ("202", 2026, "2P"),
+        ("200", 2026, "0A"),
+    ),
+)
+def test_file_refuses_declared_cross_period_modelos_without_clean_sources(
+    tmp_path: Path,
+    modelo: str,
+    filing_year: int,
+    period: str,
+) -> None:
+    bucket_id = f"cross-period-{modelo}-{period}".lower()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
+        revision_id = _seed_verified_revision(
+            bucket_id=profile.bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+        )
+
+        with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
+            file_modelo_revision(
+                revision_id,
+                actor="operator-test",
+                workflow_profile=_workflow_profile(),
+                clock=_CLOCK,
+            )
+
+    assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
+
+
+def test_verify_modelo_303_reports_clean_state_blocker_for_carry_forward_dependency(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cross-period-303") as profile:
+        revision_id = _seed_draft_revision(
+            bucket_id=profile.bucket_id,
+            modelo="303",
+            filing_year=2026,
+            period="2T",
+        )
+
+        report = verify_modelo_revision(
+            revision_id,
+            actor="operator-test",
+            workflow_profile=_workflow_profile(),
+            clock=_CLOCK,
+        )
+
+    assert any(
+        finding.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN
+        and "modelo=303" in finding.message
+        for finding in report.findings
+    )
+
+
+def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cross-period-353") as profile:
+        snapshot = resources().modelos.authority.snapshot("353", filing_year=2026, period="12")
+        requirement = next(
+            item for item in cross_period_dependency_requirements(snapshot) if item.requires_member_fan_in
+        )
+        CalculationObservationRepository().save_observation(
+            RegistryModeloObservation(
+                modelo="322",
+                filing_year=2026,
+                period="12",
+                observations=tuple(
+                    CasillaObservation(casilla_id=casilla_id, value=Decimal(index + 1))
+                    for index, casilla_id in enumerate(requirement.source_casillas)
+                ),
+            ),
+            source_kind="aeat_sede_justificante",
+            captured_at=_CLOCK,
+            member_nif="A00000000",
+        )
+        revision_id = _seed_verified_revision(
+            bucket_id=profile.bucket_id,
+            modelo="353",
+            filing_year=2026,
+            period="12",
+        )
+
+        with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
+            file_modelo_revision(
+                revision_id,
+                actor="operator-test",
+                workflow_profile=_workflow_profile(),
+                cross_period_expected_member_sets=(
+                    CrossPeriodExpectedMemberSet(
+                        source_modelo="322",
+                        filing_year=2026,
+                        period="12",
+                        member_nifs=("A00000000", "B00000001"),
+                    ),
+                ),
+                clock=_CLOCK,
+            )
+
+    message = str(exc_info.value)
+    assert "incomplete_group_member_coverage" in message
+    assert "missing_expected_group_member_roster" not in message

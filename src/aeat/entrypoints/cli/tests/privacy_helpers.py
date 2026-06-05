@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
-from .test_envelope import unwrap_schema_envelope
+from .envelope_helpers import unwrap_schema_envelope
 
 
 def assert_public_profile_id_redacted(output: str, raw_profile_id: str) -> None:

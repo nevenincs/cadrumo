@@ -12,6 +12,15 @@ related:
   - '[[2026-06-05-cross-period-calculation-guards-reference]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 <!-- RETIRED: S03, S04, S05, S07, S09, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20 -->
 
@@ -80,24 +89,24 @@ This Wave applies the shared clean-state backend across every declared cross-per
 
 Prove summary modelos with quarterly or periodic feeder declarations refuse filing-grade workflows unless every feeder filing is clean.
 
-- [ ] `W03.P07.S31` - Cover Modelo 390 annual IVA summary clean-state requirements; `src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`.
-- [ ] `W03.P07.S32` - Cover retention summary clean-state requirements; `src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`.
-- [ ] `W03.P07.S33` - Cover Renta payment-source clean-state requirements; `src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`.
+- [x] `W03.P07.S31` - Cover Modelo 390 annual IVA summary clean-state requirements; `src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`.
+- [x] `W03.P07.S32` - Cover retention summary clean-state requirements; `src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`.
+- [x] `W03.P07.S33` - Cover Renta payment-source clean-state requirements; `src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`.
 
 ### Phase `W03.P08` - prior-year and carry-forward modelos
 
 Prove modelos that consume prior-year baselines or prior-period carry-forward use the same clean-state backend and do not bypass it through preview prefill.
 
-- [ ] `W03.P08.S34` - Cover Modelo 303 carry-forward clean-state requirements; `src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`.
-- [ ] `W03.P08.S35` - Cover Modelo 202 prior-year source clean-state requirements; `src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`.
-- [ ] `W03.P08.S36` - Cover patrimonio and foreign-asset prior-year clean-state requirements; `src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
+- [x] `W03.P08.S34` - Cover Modelo 303 carry-forward clean-state requirements; `src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`.
+- [x] `W03.P08.S35` - Cover Modelo 202 prior-year source clean-state requirements; `src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`.
+- [x] `W03.P08.S36` - Cover patrimonio and foreign-asset prior-year clean-state requirements; `src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
 
 ### Phase `W03.P09` - group fan-in completeness
 
 Bind group aggregate dependencies to expected member coverage so a group modelo cannot become filing-grade from partial member observations.
 
 - [x] `W03.P09.S37` - Add expected member coverage proof for group fan-in; `src/aeat/application/calculations/_cross_period_clean_state.py`.
-- [ ] `W03.P09.S38` - Cover Modelo 353 incomplete member fan-in refusal; `src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`.
+- [x] `W03.P09.S38` - Cover Modelo 353 incomplete member fan-in refusal; `src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`.
 
 ## Wave `W04` - operator repair and quality closure
 
@@ -107,8 +116,8 @@ This Wave turns blocker verdicts into repairable operator paths, validates full-
 
 Surface typed clean-state blockers with actionable repair commands for importing evidence, refreshing live state, reconciling mismatch, or proving non-applicability.
 
-- [ ] `W04.P10.S39` - Add blocker-to-repair diagnostic mapping; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W04.P10.S40` - Cover operator repair messages for clean-state blockers; `src/aeat/application/modelo/tests/test_cross_period_clean_state_gates.py`.
+- [x] `W04.P10.S39` - Add blocker-to-repair diagnostic mapping; `src/aeat/application/modelo/_actions.py`.
+- [x] `W04.P10.S40` - Cover operator repair messages for clean-state blockers; `src/aeat/application/modelo/tests/test_cross_period_clean_state_gates.py`.
 
 ### Phase `W04.P11` - final quality gates
 

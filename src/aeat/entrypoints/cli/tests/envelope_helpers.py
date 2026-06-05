@@ -1,12 +1,12 @@
 """Shared test helper: unwrap the CLI ``--json`` SchemaEnvelope.
 
-Every migrated CLI command emits a typed envelope shaped as
+Envelope-aware CLI commands emit a typed payload shaped as
 ``{"schema_version": int, "command": str, "result": {...},
 "warnings": [...]}`` through ``_emit_envelope``. Test assertions
-generally target the inner ``result`` mapping; pre-migration
-commands emit the bare payload directly.
+generally target the inner ``result`` mapping; commands that return a
+plain payload directly are passed through unchanged.
 
-This module is the single source of the helper that ~12 test
+This module is the single source of the helper that multiple test
 modules previously duplicated inline under the name ``_payload``
 each with the same docstring and body. New tests should import
 :func:`unwrap_schema_envelope` from here rather than re-declaring it.
@@ -26,7 +26,7 @@ def unwrap_schema_envelope(output: str) -> dict:
     Returns:
         The decoded inner ``result`` mapping if the payload is a
         SchemaEnvelope; otherwise the parsed top-level mapping
-        unchanged (pre-migration commands still emit bare payloads).
+        unchanged.
     """
     raw = json.loads(output)
     if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:

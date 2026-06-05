@@ -11,7 +11,7 @@ from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .test_envelope import unwrap_schema_envelope as _payload
+from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -141,7 +141,11 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
     assert payload["calculation_revision_id"] == calculation_revision_id
     assert payload["granted_verificado_completo"] is False
     assert payload["findings"][0]["kind"] == "cross_period_dependency_unclean"
-    assert "Import or capture the upstream justificante" in payload["findings"][0]["next_action"]
+    assert (
+        "aeat app live filed capture-sources --modelo 130 --year 2025 --period 1T"
+        in payload["findings"][0]["next_action"]
+    )
+    assert "aeat app modelo reconcile-from-justificante PATH WORK_UNIT_ID" in payload["findings"][0]["next_action"]
 
 
 def test_work_create_refuses_conflicting_registry_revision_for_visible_target() -> None:

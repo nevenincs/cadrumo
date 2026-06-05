@@ -45,7 +45,7 @@ from ....domain.calculations.registry import (
 from ....domain.deadlines._models import IVARegime, TaxpayerProfile
 from ....domain.deadlines.taxpayer_model import EntityType
 from ....tests.secure_sql import isolated_profile_storage_root
-from .test_envelope import unwrap_schema_envelope as _payload
+from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

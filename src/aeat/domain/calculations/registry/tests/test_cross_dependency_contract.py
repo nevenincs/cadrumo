@@ -80,12 +80,14 @@ def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
     for modelo in modelos:
         for revision in modelo.revisions.values():
             for relation in revision.relations:
-                # `previous_period` relations model intra-modelo
-                # prior-period carry-forward (a modelo reading its own
-                # earlier filing); they legitimately self-reference,
-                # unlike true cross-model relations.
-                if relation.kind != "previous_period":
-                    assert relation.source_modelo != modelo.id, f"{modelo.id}/{revision.id}/{relation.id}"
+                # Intra-modelo dependencies are valid when they read a
+                # previous period or a prior filing year; same-period
+                # self-source relations would be circular.
+                if relation.source_modelo == modelo.id:
+                    selector = relation.source_revision_selector or {}
+                    assert relation.kind == "previous_period" or selector.get("filing_year_delta", 0) < 0, (
+                        f"{modelo.id}/{revision.id}/{relation.id}"
+                    )
                 _assert_relation_role_contract(relation, scope=f"{modelo.id}/{revision.id}/{relation.id}")
 
 
