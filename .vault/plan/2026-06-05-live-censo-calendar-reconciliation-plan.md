@@ -51,6 +51,10 @@ Make the unresolved live acceptance gap explicit: pull Modelo 036/censo informat
 
 Verify that authenticated live censo evidence is the source of profile enrolment facts, that derived Modelo obligations are enumerated from the reconciled legal situation, and that calendar evidence distinguishes local ready-to-file state from AEAT submitted and justificante-verified state.
 
+- [ ] `W03.P03.S05` - Run live Modelo 036 censo refresh and capture exact authenticated result or external blocker; `.vault/exec/2026-06-05-live-censo-calendar-reconciliation`.
+- [ ] `W03.P03.S06` - Reconcile live censo snapshot into profile-derived taxpayer model and obligation enrolment facts; `src/aeat/application/user_profile/_censo_sync.py`.
+- [ ] `W03.P03.S07` - Verify reconciled taxpayer obligations project to actual calendar entries with real filing dates; `src/aeat/application/overview/__init__.py`.
+- [ ] `W03.P03.S08` - Verify calendar evidence includes live-backed filings messages and justificante states without conflating local filing readiness; ``src/aeat/entrypoints/cli/_overview.py``.
 
 ## Description
 
