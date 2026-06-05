@@ -131,8 +131,8 @@ Decompose oversized application service modules by use-case boundary while prese
 - [x] `W03.P06.S56` - verify application ledger action behavior and facade imports after decomposition; `src/aeat/application/ledger/tests src/aeat/entrypoints/cli/tests/test_ledger*`.
 - [x] `W03.P06.S57` - decompose application live package root by service family while preserving public live facade imports; `src/aeat/application/live/__init__.py src/aeat/application/live/*.py`.
 - [x] `W03.P06.S58` - verify application live behavior and public live facade imports after decomposition; `src/aeat/application/live/tests src/aeat/entrypoints/cli/tests/test_live*`.
-- [ ] `W03.P06.S59` - decompose application auth operator module by credential and authority workflows behind the auth facade; `src/aeat/application/auth/_operator.py src/aeat/application/auth/*.py`.
-- [ ] `W03.P06.S60` - verify application auth operator behavior and facade imports after decomposition; `src/aeat/application/auth/tests src/aeat/entrypoints/cli/_config/tests`.
+- [x] `W03.P06.S59` - decompose application auth operator module by credential and authority workflows behind the auth facade; `src/aeat/application/auth/_operator.py src/aeat/application/auth/*.py`.
+- [x] `W03.P06.S60` - verify application auth operator behavior and facade imports after decomposition; `src/aeat/application/auth/tests src/aeat/entrypoints/cli/_config/tests`.
 - [ ] `W03.P06.S61` - decompose application workflow engine by execution and adapter orchestration helpers behind the workflow facade; `src/aeat/application/workflow/_engine.py src/aeat/application/workflow/*.py`.
 - [ ] `W03.P06.S62` - verify application workflow engine behavior and facade imports after decomposition; `src/aeat/application/workflow/tests src/aeat/tests`.
 - [x] `W03.P06.S113` - extract live IVA remote-state outcome and redaction helpers behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/_remote_state_outcomes.py src/aeat/application/live/tests/test_iva_remote_state_acquisition.py src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py`.
