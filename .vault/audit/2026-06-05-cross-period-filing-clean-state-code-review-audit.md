@@ -39,3 +39,7 @@ The W04.P11 gate refreshed the cross-period feature index and removed this plan'
 ## CROSS-PERIOD-007 | INFO | Final focused gates found no cross-period blockers
 
 Reviewed the final W04.P11 evidence after closing S36 and S40-S43. Registry cross-dependency tests passed with 47 tests, focused calculation clean-state tests passed with 16 tests, and Modelo workflow clean-state tests passed with 20 tests. No critical, high, or medium findings were found in the cross-period feature-local evidence. The only unresolved verification limitation is that the full `application/calculations/tests` folder timed out during an attempted broad run; the focused clean-state calculation gate passed and the timeout is recorded in the S42 exec note.
+
+## CROSS-PERIOD-008 | INFO | Profile-derived grupo roster gap is closed in the current tree
+
+The earlier CROSS-PERIOD-003 finding is superseded by the current profile state surface: `CrossPeriodGroupMemberRoster` is carried on `TaxpayerProfile`, wizard axis parsing accepts group member roster keys, and Modelo verification/export project profile rosters into `CrossPeriodExpectedMemberSet` before evaluating cross-period clean state. Focused real-behavior coverage passed for taxpayer profile modelling, wizard roundtrip parsing, and Modelo clean-state enforcement with 101 tests, and ruff passed on the profile, wizard, verification, export, and enforcement-test files.

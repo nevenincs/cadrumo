@@ -26,7 +26,8 @@ from ...core.errors import AeatError
 from ...core.logging import get_logger
 from ...domain.calculations.registry import CasillaId
 from ...domain.modelos._calculation_revision import CalculationRevision
-from ._actions import _resolve_registry_snapshot_for_work_unit, get_work_unit
+from ._actions import get_work_unit
+from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 
 _log = get_logger(__name__)
 

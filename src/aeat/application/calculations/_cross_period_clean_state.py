@@ -37,7 +37,6 @@ _OFFICIAL_SOURCE_KINDS: Final = frozenset(
 _JUSTIFICANTE_VERIFIED_EXTERNAL_EVIDENCE_KINDS: Final = frozenset(
     {
         "aeat_justificante_pdf",
-        "aeat_live_capture",
     }
 )
 

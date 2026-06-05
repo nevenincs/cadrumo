@@ -75,10 +75,10 @@ from ._actions import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     WorkUnitNotFoundError,
-    _emit_bucket_event,
     _require_cross_period_clean_state,
     _require_persisted_iva_compensation_decision_matches_revision,
 )
+from ._revision_persistence import emit_bucket_event as _emit_bucket_event
 from ._verification_actions import _cross_period_expected_member_sets_from_profile
 
 #: AEAT-assigned program-identifier code stamped into the optional

@@ -24,4 +24,6 @@ Completed the final quality gate phase for the cross-period filing clean-state f
 
 Registry cross-dependency tests passed with 47 tests. Focused calculation clean-state tests passed with 16 tests. Modelo workflow clean-state tests passed with 20 tests. Lint, plan validation, and feature-index regeneration were run for the cross-period surfaces.
 
+Additional profile-roster verification passed with 101 tests covering taxpayer profile modelling, wizard axis roundtrip parsing, and Modelo clean-state enforcement from profile-derived grupo member rosters. Ruff also passed on the profile, wizard, verification, export, and enforcement-test files.
+
 The broader `src/aeat/application/calculations/tests` folder run timed out after roughly six minutes, so the calculation gate is recorded as focused clean-state evidence rather than an all-calculations pass. `vaultspec-core doctor` still exits non-zero from unrelated vault metadata in other active features, not from `cross-period-filing-clean-state`.
