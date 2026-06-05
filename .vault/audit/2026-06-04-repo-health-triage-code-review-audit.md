@@ -610,3 +610,26 @@ and app help tests, live-filed help tests, and compileall for the touched
 surfaces. Because the shared worktree still carries unrelated overview
 calendar-event WIP and live-IVA watchdog WIP, the S57 commit stages only the
 filing-status relocation hunks for `overview/__init__.py` and `_app_live.py`.
+
+## W05-010 | INFO | Closeout review found no new W05 blocking defects
+
+Status: verified with advisory-red residuals.
+
+The W05.P17.S61 closeout review found no new HIGH or CRITICAL defects in the
+closed W05 remediation slices. The review rechecked the W05 review log, the
+full repo-health diagnostics audit, the current vault plan, and the filing
+status relocation surface that had required staged-hunk isolation.
+
+Focused verification confirmed the retired `_filing_status_token.py` and
+overview `_status.py` files are absent, `FilingStatus` resolves from
+`aeat.application.operator_surface`, the live CLI registers the `filed` group
+through that enum, and the vault plan validates. Earlier HIGH/CRITICAL findings
+in this audit are marked remediated and remain superseded by their documented
+fixes.
+
+Residuals remain deliberately visible rather than hidden: the S60 quality audit
+baseline is advisory red for type, structure, production complexity, duplication
+inventory, and Semgrep inventory; dependency and dead-code lanes are currently
+green. The shared worktree also contains unrelated documentation-build diffs in
+`justfile` and `pyproject.toml`; those do not change the S60 quality-audit
+recipes or policy lanes reviewed here.
