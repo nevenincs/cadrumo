@@ -439,8 +439,8 @@ def test_delete_mirrors_the_tombstone_onto_the_manifest(_backend: Path) -> None:
     exclude the profile without unlocking the encrypted bucket.
     """
 
-    from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
-    from ...adapters.persistence.storage.bucket._manifest_io import read_manifest
+    from ....adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
+    from ....adapters.persistence.storage.bucket._manifest_io import read_manifest
 
     repository = ProfileRepository()
     created = _create(repository, label="Soft Delete", facts=_VALID_FACTS)
@@ -461,7 +461,7 @@ def test_tombstoned_profile_is_excluded_from_the_live_scan(_backend: Path) -> No
     tombstoned profile by UUID.
     """
 
-    from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
+    from ....adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
 
     repository = ProfileRepository()
     created = _create(repository, label="Vanishing", facts=_VALID_FACTS)

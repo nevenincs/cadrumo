@@ -283,3 +283,22 @@ construct repositories, inspect environment variables, or persist profile data.
 The focused verification suite initially failed because `test_registry_contract.py`
 used over-deep relative imports. The imports now target the production modules and the
 schema/registry suite passes.
+
+## S373-CR-001 | PASS | User-profile values are not storage runtime code
+
+Reviewed the S373 scope as `vaultspec-code-reviewer`. `_values.py` defines strict
+pydantic profile fact, live profile, and snapshot value records plus UUID/hash helpers.
+It has no active-profile pointer reads, manifest scanning, storage runtime inspection,
+settings/environment access, filesystem IO, SQL access, or secure-object construction.
+
+## S373-CR-002 | PASS | Active-profile and manifest-bucket are semantic signals
+
+The scanner hit lifecycle and bucket vocabulary in model comments and field names.
+Those signals describe the persisted domain shape but do not implement discovery or
+runtime storage behavior.
+
+## S373-CR-003 | FIXED | Profile repository verification imports regressed
+
+The focused verification suite initially failed because `test_profile_repository.py`
+local imports resolved to `aeat.application.adapters`. The imports now use the correct
+package depth and the 28-test user-profile verification suite passes.
