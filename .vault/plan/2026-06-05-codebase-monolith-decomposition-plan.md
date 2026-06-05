@@ -167,9 +167,9 @@ Decompose oversized calculation registry modules by schema, binding, applicabili
 - [x] `W03.P07.S66` - verify registry schema behavior and facade imports after decomposition; `src/aeat/domain/calculations/registry/tests/test_registry_schema.py src/aeat/domain/calculations/registry/tests`.
 - [x] `W03.P07.S67` - decompose registry record design module by record authority surface behind the registry facade; `src/aeat/domain/calculations/registry/_record_design.py src/aeat/domain/calculations/registry/*.py`.
 - [x] `W03.P07.S68` - verify registry record design behavior and facade imports after decomposition; `src/aeat/domain/calculations/registry/tests src/aeat/tests`.
-- [ ] `W03.P07.S69` - decompose registry applicability module by applicability rule family behind the registry facade; `src/aeat/domain/calculations/registry/_applicability.py src/aeat/domain/calculations/registry/*.py`.
-- [ ] `W03.P07.S70` - verify registry applicability behavior and facade imports after decomposition; `src/aeat/domain/calculations/registry/tests/test_applicability* src/aeat/domain/calculations/registry/tests`.
-- [ ] `W03.P07.S71` - decompose registry workbook parity module by parity concern behind the registry facade; `src/aeat/domain/calculations/registry/_workbook_parity.py src/aeat/domain/calculations/registry/*.py`.
+- [x] `W03.P07.S69` - decompose registry applicability module by applicability rule family behind the registry facade; `src/aeat/domain/calculations/registry/_applicability.py src/aeat/domain/calculations/registry/*.py`.
+- [x] `W03.P07.S70` - verify registry applicability behavior and facade imports after decomposition; `src/aeat/domain/calculations/registry/tests/test_applicability* src/aeat/domain/calculations/registry/tests`.
+- [x] `W03.P07.S71` - decompose registry workbook parity module by parity concern behind the registry facade; `src/aeat/domain/calculations/registry/_workbook_parity.py src/aeat/domain/calculations/registry/*.py`.
 - [ ] `W03.P07.S72` - verify registry workbook parity behavior and facade imports after decomposition; `src/aeat/domain/calculations/registry/tests src/aeat/adapters/outbound/google/tests`.
 
 ### Phase `W03.P08` - adapter and persistence decomposition
