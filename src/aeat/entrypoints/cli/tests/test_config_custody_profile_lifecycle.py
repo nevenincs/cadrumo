@@ -11,6 +11,7 @@ from textwrap import dedent
 
 import pytest
 
+from ....adapters.persistence.storage.master_key import RecoveryRecord
 from ....core.paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -215,7 +216,13 @@ def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path)
     recovery_line = next(line for line in enrolled.stdout.splitlines() if line.startswith("recovery_key\t"))
     recovery_key = recovery_line.split("\t", 1)[1]
     assert len(recovery_key.split()) == 24
-    assert (tmp_path / "secrets" / "master.recovery.key").is_file()
+    recovery_path = tmp_path / "secrets" / "master.recovery.key"
+    assert recovery_path.is_file()
+    recovery_document = recovery_path.read_text(encoding="utf-8")
+    recovery_record = RecoveryRecord.model_validate_json(recovery_document)
+    assert recovery_record.mnemonic_word_count == 24
+    assert recovery_record.hkdf_info == "aeat.recovery-key.master-wrap.v1"
+    assert recovery_key not in recovery_document
 
     verified = _run_aeat(tmp_path, ("config", "verify-recovery", "--recovery-key", recovery_key))
     assert verified.returncode == 0, _combined_output(verified)

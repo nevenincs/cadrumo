@@ -87,6 +87,7 @@ from ._master_key_derivation import (
     KDF_PARAMS_VERSION,
     SALT_SIZE,
     derive_kek,
+    derive_kek_with_params,
 )
 from ._master_key_records import (
     EnvelopeDocument,
@@ -728,10 +729,10 @@ class FileFallbackMasterKeyProvider:
         except ValidationError as exc:
             raise _master_key_unavailable_error("master.kdf must be a JSON object.") from exc
         on_disk_version = preview.version
-        if on_disk_version != _KDF_PARAMS_VERSION:
+        if on_disk_version != KDF_PARAMS_VERSION:
             raise MasterKeyKdfVersionError(
                 f"master.kdf at {self._kdf_params_path} is version {on_disk_version!r}; "
-                f"this build expects version {_KDF_PARAMS_VERSION}.",
+                f"this build expects version {KDF_PARAMS_VERSION}.",
             )
         try:
             params = _KdfParameters.model_validate_json(raw_text)
@@ -761,11 +762,11 @@ class FileFallbackMasterKeyProvider:
             ) from exc
 
     def _mint_new(self, passphrase: bytes) -> bytes:
-        salt = secrets.token_bytes(_SALT_SIZE)
+        salt = secrets.token_bytes(SALT_SIZE)
         params = _KdfParameters(
-            memory_cost=_ARGON2_MEMORY_COST_KIB,
-            time_cost=_ARGON2_TIME_COST,
-            parallelism=_ARGON2_PARALLELISM,
+            memory_cost=ARGON2_MEMORY_COST_KIB,
+            time_cost=ARGON2_TIME_COST,
+            parallelism=ARGON2_PARALLELISM,
             salt_b64=_b64encode(salt),
         )
         kek = self._derive_kek_with_params(passphrase, salt, params)
@@ -825,11 +826,11 @@ class FileFallbackMasterKeyProvider:
                 f"recovered master key must be {KEY_SIZE} bytes; got {len(master_key)}",
             )
         passphrase = self._resolve_passphrase()
-        salt = secrets.token_bytes(_SALT_SIZE)
+        salt = secrets.token_bytes(SALT_SIZE)
         params = _KdfParameters(
-            memory_cost=_ARGON2_MEMORY_COST_KIB,
-            time_cost=_ARGON2_TIME_COST,
-            parallelism=_ARGON2_PARALLELISM,
+            memory_cost=ARGON2_MEMORY_COST_KIB,
+            time_cost=ARGON2_TIME_COST,
+            parallelism=ARGON2_PARALLELISM,
             salt_b64=_b64encode(salt),
         )
         kek = self._derive_kek_with_params(passphrase, salt, params)
@@ -903,14 +904,12 @@ class FileFallbackMasterKeyProvider:
 
     @staticmethod
     def _derive_kek_with_params(passphrase: bytes, salt: bytes, params: _KdfParameters) -> bytes:
-        return _argon2_hash_secret_raw(
-            secret=passphrase,
-            salt=salt,
-            time_cost=params.time_cost,
+        return derive_kek_with_params(
+            passphrase,
+            salt,
             memory_cost=params.memory_cost,
+            time_cost=params.time_cost,
             parallelism=params.parallelism,
-            hash_len=KEY_SIZE,
-            type=_Argon2Type.ID,
         )
 
 
