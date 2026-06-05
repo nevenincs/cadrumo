@@ -848,6 +848,7 @@ def _emit_wizard_success(mode: WizardPersistMode, profile_name: str) -> None:
 
     from ...core.click_context import json_output_requested
     from ...core.json_contract import emit_json_success
+    from ...core.output_rendering import render_command_output
 
     verb = tr("wizard.commands.status.created" if mode == "create" else "wizard.commands.status.updated")
     payload: dict[str, object] = {
@@ -863,11 +864,15 @@ def _emit_wizard_success(mode: WizardPersistMode, profile_name: str) -> None:
         emit_json_success(command_path, payload)
         return
 
-    _typer.echo(f"profile\t{profile_name}")
-    _typer.echo(f"{tr('application.wizard.output_labels.status')}\t{verb}")
+    lines = [
+        f"profile\t{profile_name}",
+        f"{tr('application.wizard.output_labels.status')}\t{verb}",
+    ]
     if mode == "create":
-        _typer.echo(f"active_profile\t{profile_name}")
-    _typer.echo(f"next\t{payload['next']}")
+        lines.append(f"active_profile\t{profile_name}")
+    lines.append(f"next\t{payload['next']}")
+    rendered = render_command_output(format_name="text", payload=payload, lines=lines)
+    _typer.echo(rendered.text)
 
 
 def _execute_wizard_command(
