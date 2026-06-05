@@ -1,6 +1,6 @@
 """Inventory gate for production CLI output surfaces.
 
-The centralized-output-redaction ADR makes ``_emit``/``_emit_envelope`` and
+The centralized-output-redaction contract makes ``_emit``/``_emit_envelope`` and
 ``write_stderr`` the owned output boundaries. This test keeps direct output
 exceptions explicit so new ``typer.echo``, ``print``, or stream writes do not
 silently bypass the redacted renderer.

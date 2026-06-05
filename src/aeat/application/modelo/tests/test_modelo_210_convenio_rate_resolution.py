@@ -1,6 +1,6 @@
 """M210 persona regression tests for ``_resolve_m210_rate``.
 
-Covers the testimonial personas required by the M210 IRNR engine ADR:
+Covers the testimonial personas required by the M210 IRNR engine contract:
 
 - Olivia (GB / general): the Convenio Art 7 row coincides with the
   TRLIRNR Art 25.1.a baseline rate (24%); the override path resolves
@@ -388,7 +388,7 @@ def test_rewrite_m210_sentinels_resolves_known_rate_in_place(
 # representante-fiscal gate (profile_field_required operator)
 #
 # TRLIRNR Art 10 letter applies only to non-EU residents. Per
-# m210-irnr-full-engine ADR §D2.5 the implementation uses the broader
+# m210-irnr-full-engine contract §D2.5: the implementation uses the broader
 # ue_eee_status filter as the escape hatch — EEA-resident IRNR filers
 # are exempt because of the bilateral mutual-assistance regime.
 # ---------------------------------------------------------------------------
@@ -397,7 +397,7 @@ def test_rewrite_m210_sentinels_resolves_known_rate_in_place(
 def _irnr_profile_without_representante(country_code: str) -> TaxpayerProfile:
     """Build a NON_RESIDENT_IRNR profile without a fiscal representative.
 
-    EEA countries (e.g. FR) are exempt per ADR D2.5 so the
+    EEA countries (e.g. FR) are exempt per contract D2.5 so the
     TaxpayerProfile model validator does not require the representante
     fields. For non-EEA countries (e.g. AR) the validator would refuse
     construction without ``representante_fiscal_nif``; callers that

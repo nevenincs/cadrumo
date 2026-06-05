@@ -504,8 +504,7 @@ def test_verification_chain_m303_parser_extracts_all_profile_casillas(pdf_stem: 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
     assert set(extracted.keys()) == {
-        # Primitive cuota leaves (Route A of the parser-engine-totals-impedance
-        # ADR, 2026-06-02): the engine sums these into iva.cuota-devengada-total
+        # Primitive cuota leaves: the engine sums these into iva.cuota-devengada-total
         # and iva.cuota-deducible-total so resultado-regimen-general is
         # recomputed from primitives rather than copied from the printed total.
         "iva.repercutido.general",

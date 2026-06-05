@@ -35,7 +35,7 @@ If no marker is found, the site is recorded as ``(relative-posix-path, line-numb
 
 The ratchet records the 99 pre-existing sites found at ratchet history authoring time.
 New sites must either carry a rationale marker or be accompanied by a ratchet
-expansion PR with a documented reason.
+expansion with a documented reason.
 
 Paydown
 -------

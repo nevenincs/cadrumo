@@ -189,7 +189,7 @@ def _modelo_303_engine_inputs() -> dict[str, Decimal]:
         # 100% State attribution. The engine consumes this through the
         # M303 C65 binding (bound to the derived profile fact
         # ``tax_residence.state_attribution_ratio``) after the dual-keying
-        # ADR's profile-binding pivot.
+        # profile-binding contract pivot.
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
 

@@ -73,14 +73,13 @@ def test_work_create_151_refuses_with_legal_authority_message(
 def test_work_create_151_has_no_placeholder_registry_definition(
     _isolated_cli_backend: Path,
 ) -> None:
-    """M151 Phase-A registry presence must be legally grounded.
+    """M151 registry presence must be legally grounded.
 
-    Phase-A Patrimonio landed M151 with manual-casilla schema (commit
-    bc7a80df5). The work-create refusal still fires (sibling test
+    The registry carries a manual-casilla definition, but the
+    calculation engine and form-flow remain unsupported. The
+    work-create refusal still fires (sibling test
     test_work_create_151_refuses_with_legal_authority_message proves
-    that) — Phase-A carries the registry definition but the calculation
-    engine and form-flow are out of scope until Phase-B. The contract
-    this test defends: when M151 IS in the registry, it MUST be
+    that). The contract this test defends: when M151 IS in the registry, it MUST be
     grounded by the binding legal authority (Ley 35/2006 Art. 93 LIRPF
     Beckham + the form-approval order corpus).
     """

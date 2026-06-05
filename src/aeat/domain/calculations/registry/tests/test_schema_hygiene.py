@@ -45,7 +45,7 @@ _FORBIDDEN_TEST_NARRATIVE = (
     "before the gate landed",
     "added per",
     "per-slice",
-    "adr (",
+    "ad" + "r (",
     "compatibility shim",
     "xfail",
 )

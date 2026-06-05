@@ -1,7 +1,7 @@
 """Design-system facets: font, role fills, freezes, filters, widths, wrap.
 
 The export must mirror the official AEAT modelo look uniformly across both
-transports (modelo-export-mirrors-official-structure ADR). This locks the engine
+transports per the official-structure contract. This locks the engine
 emitting the typed styling facets and the offline openpyxl workbook rendering
 them — the slate header band, blue-grey section banners, pale-yellow operator
 inputs, grey computed cells, green result accent, the monospace family, frozen

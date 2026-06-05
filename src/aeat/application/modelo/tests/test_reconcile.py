@@ -141,7 +141,7 @@ def test_modelo_reconcile_emits_modelo_reconciled_event() -> None:
 
 def test_modelo_reconcile_refuses_declaration_source_until_parser_lands() -> None:
     """The declaration-PDF parser has not shipped; the service refuses
-    cleanly per the app-modelo-shape ADR's two-source requirement so
+    cleanly per the app-modelo-shape contract's two-source requirement so
     operators get a typed error rather than a silent-degraded path."""
 
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
@@ -176,7 +176,7 @@ def test_modelo_reconcile_refuses_cross_bucket_work_unit(tmp_path: Path) -> None
     is refused. Bucket events must scope to the active bucket; allowing
     the service to emit into a foreign bucket would let any caller
     pollute another operator's history. Locks the safety gate from
-    the bucket-event-history ADR §implementation."""
+    the bucket-event-history contract §implementation."""
 
     foreign_bucket_id = "other-bucket-7" * 4
     revision_id = "r" + "1" * 63
@@ -214,7 +214,7 @@ def test_modelo_reconcile_refuses_cross_bucket_work_unit(tmp_path: Path) -> None
 def test_modelo_reconcile_refuses_malformed_evidence(tmp_path: Path) -> None:
     """A path that is not a valid AEAT justificante surfaces as
     ``ReconciliationEvidenceInvalidError``. Locks the contract from
-    the complementaria-external-filing-path ADR 2026-05-15 amendment."""
+    the complementaria-external-filing-path contract amendment."""
 
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
     not_a_justificante = tmp_path / "garbage.pdf"

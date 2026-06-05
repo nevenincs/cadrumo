@@ -1,6 +1,6 @@
 """Tests for the ``isolated_two_bucket_runtime`` multi-bucket fixture.
 
-Authority: ``2026-06-03-multi-bucket-test-fixture-adr``. Verifies
+Authority: multi-bucket test fixture contract. Verifies
 the fixture's contract: both buckets exist on disk with distinct
 manifests; primary is the active profile by default;
 ``switch_to_secondary`` swaps the active pointer for its block;

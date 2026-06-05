@@ -1,6 +1,6 @@
 """Anti-tautology proof: a failed atomic create rolls back cleanly.
 
-Disaster ADR Ruling 3 gives the atomic provisioner an all-or-nothing
+Disaster rollback contract gives the atomic provisioner an all-or-nothing
 contract: the five-write sequence (directory, manifest, session,
 encrypted record, pointer) must reverse steps 1-3 if the encrypted-
 record write fails, so the operator never sees a half-created profile.
@@ -97,7 +97,7 @@ def test_failed_atomic_create_raises_and_leaves_no_profile(_backend: Path) -> No
 
     The incomplete fact set makes the schema validator reject the
     record inside ``ProfileLifecycleService.register`` — the
-    disaster-ADR step-4 failure. The rollback must clear the manifest
+disaster contract step-4 failure. The rollback must clear the manifest
     and the active-profile pointer so neither the manifest scan nor
     the pointer chain reports a phantom ``victim`` profile.
     """

@@ -2,7 +2,7 @@
 
 Modelo 210 (IRNR autoliquidación no residentes sin establecimiento permanente
 — RDLeg 5/2004 TRLIRNR) is filed ad-hoc by non-resident landlords and other
-IRNR-obligated filers. Its Phase-1 engine (m210-irnr-full-engine ADR §D2.2)
+IRNR-obligated filers. Its primary engine (m210-irnr-full-engine contract §D2.2)
 resolves: rendimientos_integros → base_imponible (op=copy, TRLIRNR art. 24.1)
 → tipo_gravamen (m210_resolve_rate op, TRLIRNR arts. 25.1.a / 25.1.f /
 Convenio override) → cuota_integra (base × tipo) → cuota_diferencial (cuota
@@ -11,19 +11,19 @@ minus retenciones).
 The cross-renta continuity under test: a non-resident UK landlord (Gran
 Bretaña, GB) with a Convenio row files the same property-rental declaration
 for two consecutive renta years (2025, 2026). The GB/general Convenio row
-in the Phase-1 seed carries rate=0.24, which coincides with the TRLIRNR
+in the initial seed carries rate=0.24, which coincides with the TRLIRNR
 Art 25.1.a baseline (24%). The invariant: the same country_of_fiscal_residence
 (GB / general) resolves to the same tipo_gravamen (0.24) via the Convenio
 override path in both years, and yields a cuota_integra equal to the Convenio
 rate times the declared base in both years — treaty-rate determinism across
 annual groupings.
 
-GB is chosen because it has an explicit Convenio row in the Phase-1 seed
-(the only Phase-1 country with a non-sentinel entry for tipo_renta=general),
+GB is chosen because it has an explicit Convenio row in the primary seed
+(the only initial country with a non-sentinel entry for tipo_renta=general),
 making the override path exercisable without authoring new registry data.
 
 This module is the multi-year-renta authorization enrollment for Modelo 210.
-It drives the REAL Phase-1 engine (real registry authority, real
+It drives the REAL primary engine (real registry authority, real
 calculate_registry_snapshot, real formula evaluation — no mocks) for two
 distinct renta years (2025, 2026), recording each through the
 :class:`EnrollmentRecorder` and cross-checking via
@@ -35,7 +35,7 @@ cuota_integra is base × 0.19, where 0.19 comes from the registry parameter
 table (not the test author). The assertion is that the engine reads the
 parameter and applies it; a hardcoded 19% in the engine would still satisfy
 the assertion but a parameter-table regression (e.g. the rate silently changed
-to 0.00) would fail it. The M210 phase1 Khadija anti-tautology mutation test
+to 0.00) would fail it. The M210 anti-tautology mutation test for the primary
 (test_modelo_210_phase1.py) proves the engine reads the registry parameter;
 this test's job is cross-renta grounding across two annual groupings.
 
@@ -68,12 +68,12 @@ _MODELO = "210"
 _YEAR_N = 2025
 _YEAR_N_PLUS_1 = 2026
 
-# UK landlord scenario (Olivia persona from ADR §D2.4): GB/general Convenio
+# UK landlord scenario (Olivia persona from section D2.4): GB/general Convenio
 # row carries rate=0.24, coinciding with the TRLIRNR Art 25.1.a baseline.
 # The Convenio override path is exercised (country_of_fiscal_residence is
 # non-None); the resolved rate equals the statutory baseline. This is the
-# only Phase-1 Convenio row with a real (non-sentinel) entry for a
-# resolvable tipo_renta, making it the canonical Phase-1 enrollment scenario.
+# only primary Convenio row with a real (non-sentinel) entry for a
+# resolvable tipo_renta, making it the canonical baseline enrollment scenario.
 _COUNTRY_GB = "GB"
 _TIPO_RENTA = "general"
 _TIPO_GRAVAMEN_CONVENIO = Decimal("0.24")  # GB/general Convenio row = TRLIRNR art.25.1.a
@@ -92,13 +92,13 @@ def _calculate_210(
     filing_year: int,
     base: Decimal,
 ) -> tuple[dict, int]:
-    """Run the REAL M210 Phase-1 engine for a FR EU-resident landlord.
+    """Run the REAL M210 primary engine for a FR EU-resident landlord.
 
     Supplies:
     - rendimientos_integros (manual money casilla) = base
     - tipo_renta (manual text casilla) = "ue_residente"
     - m210-2025-profile-country-of-fiscal-residence (enum binding) = "FR"
-    - gastos_deducibles / retencion_practicada = 0 (Phase-1 deductions deferred)
+    - gastos_deducibles / retencion_practicada = 0 (primary deductions deferred)
 
     Returns the casilla_values dict and the produced-value count.
     """
@@ -115,7 +115,7 @@ def _calculate_210(
         "retencion_practicada": Decimal("0"),
     }
     # resolve_bound_casilla_inputs handles bound casillas that the engine requires;
-    # M210 Phase-1 has no previous_filing bindings, so this is a no-op here.
+    # M210 primary has no previous_filing bindings, so this is a no-op here.
     bound = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
     inputs = {**bound, **casilla_inputs}
     result = calculate_registry_snapshot(
@@ -184,7 +184,7 @@ def test_cuota_integra_differs_between_years_due_to_distinct_bases(tmp_path: Pat
 def test_modelo_210_irnr_continuity_enrolls_two_renta_years(tmp_path: Path) -> None:
     """End-to-end enrollment: FR ue_residente landlord across two renta years (2025, 2026).
 
-    Drives the REAL M210 Phase-1 engine for both annual groupings (real
+    Drives the REAL M210 primary engine for both annual groupings (real
     registry authority, real formula evaluation — no mocks). Records each
     year through :class:`EnrollmentRecorder` (calculation mode, evidenced
     by produced casilla count) and cross-checks via
@@ -196,13 +196,13 @@ def test_modelo_210_irnr_continuity_enrolls_two_renta_years(tmp_path: Path) -> N
     - Cuotas are distinct because bases are distinct (no cross-year bleed).
 
     Grounded in TRLIRNR Art 25.1.a (general non-resident IRNR rate 24%) and
-    the GB/general Convenio entry in the Phase-1 Convenio seed (rate=0.24,
+    the GB/general Convenio entry in the primary Convenio seed (rate=0.24,
     year-stable per RDLeg 5/2004 arts. 24-25).
     """
     recorder = EnrollmentRecorder(_MODELO)
 
     with isolated_runtime_profile(tmp_path=tmp_path):
-        # Year N: real Phase-1 engine run.
+        # Year N: real primary-engine run.
         values_n, produced_n = _calculate_210(filing_year=_YEAR_N, base=_BASE_YEAR_N)
         recorder.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
 

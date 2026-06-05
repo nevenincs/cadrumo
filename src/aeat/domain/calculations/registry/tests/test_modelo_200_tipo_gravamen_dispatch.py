@@ -16,7 +16,7 @@ Two surfaces are covered:
   (17/20 for periods initiated in 2025, 19/21 for 2026) are asserted
   against the LIS Art. 29 text (BOE-A-2014-12328) and the AEAT Manual de
   Sociedades "Tipos de gravamen vigentes" / AEAT folleto actividades
-  económicas 4.3 — the external authority the corporate-entity ADR §5
+  económicas 4.3 — the external authority the corporate-entity design §5
   records. Asserting that the registry encodes exactly the grounded
   rates checks the registry *against* the specification; it is not a
   tautological re-application of a registry formula.
@@ -105,7 +105,7 @@ def test_micro_empresa_rate_is_a_two_bracket_scale_not_a_flat_value() -> None:
     on the rest for periods initiated in 2025, and 19 % / 21 % for 2026
     (AEAT Manual de Sociedades "Tipos de gravamen vigentes"; AEAT folleto
     actividades económicas 4.3, the authority recorded in the
-    corporate-entity ADR §5). The previous registry encoding — a single
+    corporate-entity design §5). The previous registry encoding — a single
     flat ``23`` — matched no LIS Art. 29 micro-empresa tranche; the
     parameter must instead be a ``bracket_table`` carrying both windows.
     """
@@ -232,7 +232,7 @@ def test_tipo_gravamen_dispatch_raises_when_legal_entity_form_is_unsupplied() ->
 
     The dispatch refuses to default a rate: an undeclared legal form
     yields a ``RegistryValidationError`` rather than a silent guess —
-    the corporate-entity ADR's "a wrong tax is worse than an incomplete
+    the corporate-entity design's "a wrong tax is worse than an incomplete
     answer" constraint enforced at the rate level.
     """
     with pytest.raises(RegistryValidationError, match="has no supplied value"):

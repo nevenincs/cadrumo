@@ -1,7 +1,7 @@
 """Encrypted-SQL persistence-boundary roundtrip for the corporate-tax profile facts.
 
 Two OPTIONAL profile facts gate the IS calculation pathways adjudicated
-by the corporate-entity calculation ADR:
+by the corporate-entity calculation contract:
 
 - ``taxpayer_type.incn_prior_12_months`` — Decimal | None, gating the
   Modelo 202 modality split at the 6.000.000 EUR threshold (LIS Art.

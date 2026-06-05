@@ -1,7 +1,7 @@
 """CLI surface tests for `aeat app modelo audit {show, check, export, replay}`.
 
 The four verbs are the ratified audit surface from the evidence-bundle
-ADR. These real-behavior tests drive each verb through the Typer
+contract. These real-behavior tests drive each verb through the Typer
 runner against a real EvidenceBundleService and an isolated SQLite +
 filesystem backend. No mocks. The bundles under test are built by the
 same service the CLI handlers call so the round-trip exercises the
@@ -90,7 +90,7 @@ def test_audit_check_reports_verification_state(cli_runner: CliRunner) -> None:
 
 
 def test_audit_export_writes_zip_archive(cli_runner: CliRunner, tmp_path: Path) -> None:
-    """Export with no payloads marks the bundle INCOMPLETE; the ADR
+    """Export with no payloads marks the bundle INCOMPLETE; the contract
     requires --force-incomplete to bypass. The archive must still
     write manifest.json as the LAST member."""
 
@@ -120,7 +120,7 @@ def test_audit_export_writes_zip_archive(cli_runner: CliRunner, tmp_path: Path) 
 def test_audit_export_refuses_incomplete_without_force(cli_runner: CliRunner, tmp_path: Path) -> None:
     """Without `--force-incomplete`, an incomplete bundle (no payloads
     available to the CLI in this scenario) must refuse to write the
-    archive. Locks the safety gate from the evidence-bundle ADR."""
+    archive. Locks the evidence-bundle safety gate."""
 
     bundle_id = _seed_bundle()
     output = tmp_path / "bundle.zip"
@@ -235,7 +235,7 @@ def test_audit_help_text_uses_accepted_vocabulary(cli_runner: CliRunner) -> None
 
 
 def test_audit_replay_help_disclaims_aeat_contact() -> None:
-    """The evidence-bundle ADR mandates replay never contacts AEAT.
+    """The evidence-bundle contract mandates replay never contacts AEAT.
 
     The replay help text must say so explicitly in every shipped locale
     so operators never assume replay re-submits or re-verifies against

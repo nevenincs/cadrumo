@@ -132,7 +132,7 @@ def test_modelo_130_first_period_carry_forward_is_absent_by_design(modelo_130_re
 def test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is_rejected(modelo_130_registry) -> None:
     """Strict-rejection recovered via consistency hardening.
 
-    The original ADR mandated `RegistryValidationError` when any
+    The original design mandated `RegistryValidationError` when any
     bound-casilla input was supplied. The P03 narrowing accepted
     the production `resolve_bound_casilla_inputs` projection
     pattern (inputs mirrors binding_values for runtime ergonomics).

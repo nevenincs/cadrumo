@@ -46,7 +46,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 def test_archive_bundle_round_trips_three_rows(tmp_path: Path) -> None:
     """Three rows survive save -> iter_all_records_raw -> wipe -> save_with_raw_key -> load.
 
-    The restore phase passes the original plaintext payloads into
+    The restore pass inserts the original plaintext payloads through
     :meth:`save_with_raw_key` (since the column encrypts on insert);
     the raw-row walk's ``payload`` is the on-wire ciphertext intended
     for a remote mirror, not for direct re-insertion under the same

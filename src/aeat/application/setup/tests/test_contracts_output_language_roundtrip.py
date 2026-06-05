@@ -1,8 +1,8 @@
 """Roundtrip: InitializeWorkspaceCommand output_language field type migration.
 
 Every output_language field referencing the language axis must consume OutputLanguage
-enum per the dual-keying ADR pattern (2026-06-01-output-language-typed-constant-migration-adr.md,
-D3). This test pins the roundtrip contract: InitializeWorkspaceCommand must accept
+ enum per the dual-keying contract pattern (output-language typed-constant
+migration). This test pins the roundtrip contract: InitializeWorkspaceCommand must accept
 OutputLanguage members and None, validate enum membership, and reject invalid strings.
 """
 

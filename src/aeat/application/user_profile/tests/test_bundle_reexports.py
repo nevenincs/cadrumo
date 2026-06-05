@@ -1,10 +1,10 @@
 """Public-surface gate for the portable bundle symbols.
 
-The `BucketMaintenanceService` composition-pattern ADR
-(`2026-06-03-cli-workflow-redesign-adr`) names the bundle serialiser
+The `BucketMaintenanceService` composition-pattern contract
+identifies the bundle serialiser
 and deserialiser as preconditions whose re-export to the application
 package `__all__` MUST land before the export / import maintenance
-verbs can compose them. This test pins the surface so a future
+verbs can compose them. This test pins the contract surface so a future
 refactor cannot silently retract a re-export and force the service
 to dot into the private `_bundle` submodule again.
 

@@ -1,16 +1,16 @@
 """Real-CLI roundtrip for the v2 bundled profile export/import (contract).
 
-ADR D3 requirement:
+Bundle roundtrip requirement:
   Every domain object in the bundle's four financial-history categories
   must survive export/import with strict pydantic equality.
 
-ADR D3 anti-tautology proof (mandatory):
+Bundle anti-tautology proof:
   Mutate one ``legal_refs`` entry in the exported JSON before re-import.
   Assert that ``model_validate`` raises ``ValidationError`` OR that the
   re-imported revision's ``legal_refs`` does not equal the original.
   A passing test that never mutates is tautological.
 
-ADR D5:
+Profile identity contract:
   The bundle's ``profile_id`` UUID is preserved across import; the
   imported profile's ``profile_id`` equals the exported one's.
   UUID collision is refused; label collision with a different UUID is
@@ -293,14 +293,14 @@ def test_v2_bundle_export_import_roundtrip(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Anti-tautology proof — ADR D3 mandate
+# Anti-tautology proof for provenance preservation
 # ---------------------------------------------------------------------------
 
 
 def test_v2_bundle_anti_tautology_legal_refs_mutation(tmp_path: Path) -> None:
     """Mutating legal_refs in the exported JSON must surface as inequality.
 
-    ADR D3 mandates this probe.  Export a bundle, mutate one ``legal_refs``
+    Export a bundle, mutate one ``legal_refs``
     entry, then re-validate the mutated JSON.  The mutated data must either
     fail ``ValidationError`` OR the re-loaded revision's ``legal_refs`` must
     differ from the original.

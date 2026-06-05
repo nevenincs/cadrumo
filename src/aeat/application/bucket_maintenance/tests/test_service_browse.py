@@ -7,9 +7,9 @@ service returns one inventory row per namespace with the correct
 row count. A substring-filter case pins the ``namespace_filter``
 behaviour. Read-only verb: no bucket event is asserted.
 
-Authority: ``2026-06-03-cli-workflow-redesign-adr`` (composition
-pattern, ``browse`` verb — namespace-level inventory only; key-level
-browse with ``SensitivityClass`` redaction is a follow-up Step).
+Authority: workflow-composition contract, ``browse`` verb: namespace-level
+inventory only; key-level browse with ``SensitivityClass`` redaction remains
+outside this contract.
 """
 
 from __future__ import annotations

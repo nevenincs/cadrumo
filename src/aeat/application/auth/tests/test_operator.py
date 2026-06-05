@@ -150,7 +150,7 @@ def test_configure_operator_auth_event_payload_records_certificate_path(tmp_path
 def test_configure_operator_auth_refuses_when_no_active_profile_bucket(tmp_path: Path) -> None:
     """``configure_operator_auth`` refuses with
     :class:`AuthConfigureNoActiveBucketError` when no active profile
-    bucket exists. The bucket-event-history ADR requires every event
+bucket exists. The bucket-event-history contract requires every event
     to be scoped to a bucket id; running provider configuration before
     ``aeat config profile create NAME`` activates a profile would either silently drop
     the audit event or require deferred replay. Surfacing the refusal
@@ -177,7 +177,7 @@ def test_configure_operator_auth_reserved_provider_emits_no_event() -> None:
     """Reserved-provider slots (``clave_pin``, ``clave_permanente``,
     ``dnie_pkcs``) must "fail closed without mutating config,
     credentials, sessions, locks, or events" per the config-auth-shape
-    ADR. Surfacing the refusal must precede every persisted side
+    contract. Surfacing the refusal must precede every persisted side
     effect."""
 
     from .._operator import AuthProviderReservedError
@@ -689,7 +689,7 @@ def test_clave_live_auth_guard_rejects_mismatched_active_profile_identity() -> N
 
 def test_configure_operator_auth_repeated_calls_append_distinct_events() -> None:
     """Repeated ``configure_operator_auth`` calls append distinct events
-    to the append-only catalogue. The bucket-event-history ADR records
+to the append-only catalogue. The bucket-event-history contract records
     immutable ids; two emissions that share content but differ in
     timestamp produce two distinct ``event_id`` hashes by construction
     because ``derive_bucket_event_id`` mixes the timestamp into the

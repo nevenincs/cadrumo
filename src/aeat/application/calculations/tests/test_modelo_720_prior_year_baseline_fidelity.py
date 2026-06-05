@@ -7,7 +7,7 @@ this module covers the part that can be built now:
 **Part 1 — data-fidelity roundtrip (IMPLEMENTED):**
 Year-N and year-N+1 asset-row observations are persisted via the real
 CalculationObservationRepository and reloaded with strict pydantic equality.
-The scenario mirrors the A3 ADR enrollment scenario:
+The scenario mirrors the A3 contract enrollment scenario:
 - Year N: cuentas €60,000 (C-class account, above €50,000 initial threshold per
   RD 1065/2007 arts. 42-bis–42-ter / Orden HAP/72/2013 art. 2) + valores €55,000.
 - Year N+1: cuentas €85,000 (+€25,000 > €20,000 delta → re-declaration required
@@ -58,7 +58,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _MODELO = "720"
 
 #: The two distinct renta ejercicios the fidelity test spans.
-#: Grounded in A3 ADR scenario: Year N declares cuentas 60k + valores 55k;
+#: Grounded in A3 contract scenario: Year N declares cuentas 60k + valores 55k;
 #: Year N+1 declares cuentas 85k (+25k > €20k delta) + valores 65k (+10k ≤ €20k).
 _YEAR_N = 2023
 _YEAR_N_PLUS_1 = 2024
@@ -72,7 +72,7 @@ _INITIAL_THRESHOLD_EUR = Decimal("50000.00")
 
 #: Re-declaration delta threshold per arts. 42-bis.5 / 42-ter.5 / 54-bis.7
 #: (€20,000 increment over last-declared baseline triggers re-declaration obligation).
-#: This is the value the A3 ADR specifies as MODELO_720_REDECLARATION_DELTA_EUR;
+#: This is the value the A3 contract specifies as MODELO_720_REDECLARATION_DELTA_EUR;
 #: referenced here for scenario documentation only (not yet an external_constants entry).
 _REDECLARATION_DELTA_EUR = Decimal("20000.00")
 

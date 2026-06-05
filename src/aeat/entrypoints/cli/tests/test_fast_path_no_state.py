@@ -1,6 +1,6 @@
 """Fast-path proof: ``aeat --version`` and ``aeat --help`` never touch state.
 
-Disaster ADR Ruling 4 closes the cold-start 10-minute hang: the
+The fast-path contract closes the cold-start 10-minute hang: the
 ``--version`` and ``--help`` surfaces must return without reading
 encrypted state, opening a master-key session, or running registry
 validation. The original disaster routed ``--version`` through a full
@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 
 # In-process budget for a state-free surface. `--version` resolves in
 # ~15 ms and `--help` in ~25 ms once imports are warm; 200 ms is the
-# disaster-ADR Ruling 4 ceiling with generous headroom. A re-introduced
+# fast-path ceiling with generous headroom. A re-introduced
 # registry parse or state read overshoots this by 100x or more.
 _FAST_PATH_BUDGET_MS = 200.0
 

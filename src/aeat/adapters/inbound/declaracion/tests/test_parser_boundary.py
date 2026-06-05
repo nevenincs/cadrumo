@@ -622,7 +622,7 @@ def test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy(
     # Decimal and the profile correctly locates the label on the correct line.
     values = {value.casilla_id: value.printed_value for value in filing.values}
     assert set(values.keys()) == {
-        # Primitive cuota leaves (Route A of parser-engine-totals-impedance ADR).
+        # Primitive cuota leaves for parser-to-engine total reconstruction.
         "iva.repercutido.general",
         "iva.repercutido.reducido",
         "iva.repercutido.super-reducido",
@@ -810,7 +810,7 @@ def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, y
 
     # All 18 profile casillas (6 primitives + 12 form-page totals) must be present.
     assert set(values.keys()) == {
-        # Primitive cuota leaves (Route A of parser-engine-totals-impedance ADR).
+        # Primitive cuota leaves for parser-to-engine total reconstruction.
         "iva.repercutido.general",
         "iva.repercutido.reducido",
         "iva.repercutido.super-reducido",
@@ -947,7 +947,7 @@ def test_parser_extracts_modelo_303_old_template_profile_targets_from_corpus(
     # for every 2021-2022 specimen. The legacy 2009-y-siguientes revision has no
     # iva.autoconsumo.promotor.base casilla — only five primitives are extracted.
     assert set(values.keys()) == {
-        # Primitive cuota leaves (Route A of parser-engine-totals-impedance ADR).
+        # Primitive cuota leaves for parser-to-engine total reconstruction.
         "iva.repercutido.general",
         "iva.repercutido.reducido",
         "iva.repercutido.super-reducido",

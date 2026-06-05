@@ -66,7 +66,7 @@ def test_url_method_guard_includes_canonical_write_verb_tokens() -> None:
 
 def _open_policy() -> RemoteStateGuardPolicy:
     # AEAT-hosted policies must not advertise synthetic input per the
-    # no-synthetic-sede-live-surfaces ADR.
+    # no-synthetic-sede-live-surfaces contract.
     return RemoteStateGuardPolicy(
         id="m303-open",
         evidence_tier="executable_parity_evidence",
@@ -159,7 +159,8 @@ def test_remote_state_guard_supports_allowed_browser_action_wildcards() -> None:
 
 def test_oracle_bound_cross_reference_policy_gets_consult_action_allow_list() -> None:
     # GROI is an authenticated_simulator on an AEAT host; per the
-    # no-synthetic-sede-live-surfaces ADR synthetic_data_allowed must be false.
+    # no-synthetic-sede-live-surfaces contract synthetic_data_allowed must
+    # be false.
     decision = LiveCrossReferenceDecision(
         id="modelo-349-groi-spanish-counterparty-check",
         evidence_tier="executable_parity_evidence",
@@ -192,7 +193,7 @@ def test_oracle_bound_cross_reference_policy_gets_consult_action_allow_list() ->
         assert_remote_operation_allowed(policy, RemoteOperation(kind="browser_action", action="unreviewed-click"))
 
 
-# --- AEAT-host synthetic-data invariant tests (no-synthetic-sede-live-surfaces ADR) ---
+# --- AEAT-host synthetic-data invariant tests (no-synthetic-sede-live-surfaces contract) ---
 
 
 def test_schema_rejects_aeat_hosted_live_cross_reference_with_synthetic_data_allowed() -> None:

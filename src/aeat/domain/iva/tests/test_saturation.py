@@ -8,7 +8,7 @@ with AEAT half-up rounding). Expected rate fractions are asserted against the
 grounded ``rates.toml`` values (Spain general 21 / reduced 10 / super-reduced 4
 / zero 0), not hand-computed from a formula under test.
 
-Authority: ``2026-06-04-llm-ledger-classification-adr``.
+Authority: ``llm-ledger-classification-design``.
 """
 
 from __future__ import annotations

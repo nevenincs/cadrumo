@@ -1,7 +1,6 @@
 """E2E continuity: Modelo 353 grupo-entidades monthly aggregation of member 322s.
 
-Exercises the LANDED A2 ``per_grupo_member`` cross-member aggregation (ADR
-``2026-06-02-modelo-multiyear-renta-353-grupo-aggregation``): the
+Exercises the LANDED A2 ``per_grupo_member`` cross-member aggregation (contract):
 ``_PreviousModeloSelector`` ``grouping = "per_grupo_member"`` axis, the opt-in
 enumerate-then-sum resolver branch, the three ``modelo-353-prev-322-*``
 bindings, and the member-NIF-widened observation storage
@@ -23,7 +22,7 @@ is the monthly, cross-MEMBER analogue of the annual, cross-PERIOD, single-filer
 390←303 reconciliation: the 353 ``modelo-353-prev-322-*`` bindings are
 ``source = "previous_filing"`` with ``grouping = "per_grupo_member"``,
 ``source_period_offset_from_target = 0`` (same month) and
-``aggregation = { op = "sum" }`` (A2 ADR Part 1).
+``aggregation = { op = "sum" }`` (A2 contract Part 1).
 
 Two axes, asserted separately:
 - Inv1 (cross-member): for mes 12 of year N, each 353 reconciliation casilla

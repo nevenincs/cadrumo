@@ -660,7 +660,7 @@ class TestVerifyPurpose:
 
     Verification asserts a calculation is internally sound; it has no
     honest dependency on the AEAT filing calendar (see the work-verify
-    deadline-independence ADR). For ``VERIFY`` the ``COMPUTING_DEADLINES``
+    deadline-independence contract). For ``VERIFY`` the ``COMPUTING_DEADLINES``
     stage never aborts with ``NO_PENDING_OBLIGATION`` or
     ``DEADLINE_PASSED``, and the preflight stage skips the filing-window
     gate. ``FILE`` (the default) keeps both as hard refusals.

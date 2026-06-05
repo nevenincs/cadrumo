@@ -5,8 +5,7 @@ required at the service boundary; the active bucket cannot be
 deleted; a happy-path delete composes the soft tombstone with the
 hard directory removal and emits ``BUCKET_DELETED`` between them.
 
-Authority: ``2026-06-03-cli-workflow-redesign-adr`` (composition
-pattern, ``delete`` verb).
+Authority: workflow-composition contract (``delete`` verb).
 """
 
 from __future__ import annotations

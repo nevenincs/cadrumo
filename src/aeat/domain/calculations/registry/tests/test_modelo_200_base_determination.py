@@ -1,8 +1,8 @@
 """Modelo 200 base-determination chain (resultado contable -> base imponible).
 
 Locks the durable fix for the silent zero-base under-declaration recorded in
-ADR ``2026-06-02-modelo-200-base-determination`` and grounded in the companion
-reference ``2026-06-02-modelo-200-base-determination``. The base imponible
+the base-determination design note and grounded in the companion
+reference artifact. The base imponible
 ``DP200014:00552`` was a free-standing manual entry: a positive resultado
 contable with no entered base verified ``complete`` at zero tax. It is now
 COMPUTED from the Liquidación I -> III chain:

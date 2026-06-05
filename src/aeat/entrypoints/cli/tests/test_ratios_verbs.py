@@ -237,7 +237,7 @@ def test_ratios_list_surfaces_censo_mismatch_without_hiding_rows(
 
 
 def test_ratios_set_silent_for_non_home_office_category(cli_runner: CliRunner) -> None:
-    """The override-warning event is HOME_OFFICE-scoped per the ADR:
+    """The override-warning event is HOME_OFFICE-scoped:
     other categories don't carry the censo-binding contract."""
 
     from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
