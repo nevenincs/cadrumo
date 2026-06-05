@@ -1,4 +1,4 @@
-"""Real-behavior tests for EncryptionError at every migrated raise in _dek_wrap.py (legacy-step).
+"""Real-behavior tests for EncryptionError at every migrated raise in _dek_wrap.py (contract).
 
 Asserts that:
 - `wrap_dek` and `_associated_data` raise `EncryptionError` for each invalid

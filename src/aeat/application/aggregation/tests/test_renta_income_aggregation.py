@@ -234,7 +234,7 @@ def test_inactive_transaction_skipped_silently() -> None:
 
 
 def test_non_quarterly_period_raises() -> None:
-    from ._errors import AggregationPeriodError
+    from .._errors import AggregationPeriodError
 
     catalogue = TransactionCatalogue.from_transactions(())
     with pytest.raises(AggregationPeriodError):
@@ -302,7 +302,7 @@ def test_casilla_01_target_matches_expected_binding_contract() -> None:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step: irpf_category filter + taxable_base_sum fact
+# contract: irpf_category filter + taxable_base_sum fact
 # Grounded in RD 439/2007 art. 110.2 — only actividades económicas feed M130.
 # ---------------------------------------------------------------------------
 

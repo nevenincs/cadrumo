@@ -1,4 +1,4 @@
-"""Section-header + start/final anchor formatting facets (legacy-plan-step/legacy-step).
+"""Section-header + start/final anchor formatting facets (accepted contract/contract).
 
 The export must mirror the official AEAT workbook presentation: casilla sections
 rendered as bold headers and an explicit labelled start (Entradas) / final

@@ -105,7 +105,7 @@ class TestClassificationGate:
         assert b"130" not in raw
 
     def test_foreign_class_object_refused(self) -> None:
-        from ...adapters.persistence.storage import Envelope, SensitivityClass
+        from ....adapters.persistence.storage import Envelope, SensitivityClass
 
         history = _make_history(modelo="130")
         bad = Envelope[ModeloHistory](

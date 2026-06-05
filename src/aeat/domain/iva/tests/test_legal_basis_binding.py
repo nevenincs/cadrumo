@@ -197,8 +197,8 @@ def test_liva_art_161_recargo_matches_iva_tier_alignment() -> None:
 
 
 def test_liva_art_161_missing_recargo_parameter_raises_iva_catalogue_error() -> None:
-    from ..calculations.registry import load_legal_parameters_only
-    from ._recargo_equivalencia import _rates_from_catalogue
+    from ...calculations.registry import load_legal_parameters_only
+    from .._recargo_equivalencia import _rates_from_catalogue
 
     parameters = dict(load_legal_parameters_only(bundled_path("registry", "aeat")))
     del parameters["liva-art-161:recargo-rate-tabaco"]
@@ -221,7 +221,7 @@ def test_lirpf_art_85_corpus_excerpt_quotes_imputation_rates() -> None:
 
 
 def test_lirpf_art_85_imputacion_substrate_matches_boe_text() -> None:
-    from ..fincas._imputacion_parameters import load_imputacion_parameters
+    from ...fincas._imputacion_parameters import load_imputacion_parameters
 
     parameters = load_imputacion_parameters()
     assert parameters.recent_revision_rate == Decimal("0.011")  # 1.1 %
@@ -278,7 +278,7 @@ def test_registry_tree_loader_recognises_all_rate_articles() -> None:
     that backs the IVA + IRPF rate substrate. If any article is missing
     from the catalogue, downstream modelo bindings can't reference it
     and validation fails — this test catches the regression upstream."""
-    from ..calculations.registry import load_registry_tree
+    from ...calculations.registry import load_registry_tree
 
     _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     assert "ley-37-1992:art-90" in catalogues.legal

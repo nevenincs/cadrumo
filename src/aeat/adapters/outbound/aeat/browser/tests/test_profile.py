@@ -32,7 +32,7 @@ def test_importing_profile_module_does_not_construct_settings() -> None:
     settings instance.
     """
 
-    from . import profile as profile_module
+    from .. import profile as profile_module
 
     # No pre-built settings instance is held at module scope.
     assert not hasattr(profile_module, "_BROWSER_DEFAULTS")
@@ -44,7 +44,7 @@ def test_importing_profile_module_does_not_construct_settings() -> None:
 def test_profile_resolves_browser_defaults_on_construction(tmp_path: Path) -> None:
     """An unsupplied locale/timezone is filled from Settings at construction."""
 
-    from .....core.config import Settings
+    from ......core.config import Settings
 
     settings = Settings()
     profile = Profile(name="defaults", storage_state_path=tmp_path / "state.json")

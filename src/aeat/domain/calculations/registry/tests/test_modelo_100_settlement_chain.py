@@ -1,4 +1,4 @@
-"""Regression tests for Modelo 100 2024 settlement-chain tail (legacy-step).
+"""Regression tests for Modelo 100 2024 settlement-chain tail (contract).
 
 Covers the six casillas added by the renta-2024-final-settlement construct:
   0587 — cuota líquida incrementada total (0585 + 0586)
@@ -8,8 +8,8 @@ Covers the six casillas added by the renta-2024-final-settlement construct:
   0610 — cuota diferencial (0595 - 0609)
   0670 — resultado de la declaración (0610 ± ajustes)
 
-Before legacy-step, all six casillas had ``input_kind = "manual"`` and no formula
-in the 2024 revision, so they stayed at 0.  After legacy-step they are
+Before contract, all six casillas had ``input_kind = "manual"`` and no formula
+in the 2024 revision, so they stayed at 0.  After contract they are
 ``input_kind = "computed"`` with matching formula TOMLs in
 ``revisions/2024/formulas/0169-0174-*.toml`` and the
 ``renta-2024-final-settlement`` construct.
@@ -148,10 +148,10 @@ def m100_2024_snapshot(registry_authority: ValidatedRegistryAuthority):
 
 
 def test_s361_0587_cuota_liquida_total_is_computed(m100_2024_snapshot) -> None:
-    """After legacy-step, casilla 0587 must equal 0585 + 0586 (not stay at zero).
+    """After contract, casilla 0587 must equal 0585 + 0586 (not stay at zero).
 
-    legacy-step regression guard: before the fix, 0587 had no formula in the 2024
-    revision and defaulted to 0.  After legacy-step the formula
+    contract regression guard: before the fix, 0587 had no formula in the 2024
+    revision and defaulted to 0.  After contract the formula
     ``renta-2024-cuota-liquida-incrementada-total`` computes 0587 = 0585 + 0586.
 
     Oracle: LIRPF 2024 Art. 63 estatal + Madrid CAM 2024 autonomic escala.
@@ -160,7 +160,7 @@ def test_s361_0587_cuota_liquida_total_is_computed(m100_2024_snapshot) -> None:
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
         # 0003 is the leaf manual trabajo casilla; with all reductions zero the
-        # chain produces 0500 = 0505 = 55500 (same technique as legacy-step tests).
+        # chain produces 0500 = 0505 = 55500 (same technique as contract tests).
         inputs={"0003": _BASE_LIQUIDABLE_GENERAL, "0153": _RETENCIONES_ARRENDAMIENTOS},
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
@@ -184,7 +184,7 @@ def test_s361_0587_cuota_liquida_total_is_computed(m100_2024_snapshot) -> None:
 
 
 def test_s361_0609_total_pagos_a_cuenta_computed_from_0598(m100_2024_snapshot) -> None:
-    """After legacy-step, casilla 0609 must aggregate retenciones including 0598.
+    """After contract, casilla 0609 must aggregate retenciones including 0598.
 
     The formula ``renta-2024-total-pagos-a-cuenta`` sums 0592-0606.  With only
     0153 (arrendamientos retenciones) supplied, 0598 = 1,824 (copy formula
@@ -216,7 +216,7 @@ def test_s361_0609_total_pagos_a_cuenta_computed_from_0598(m100_2024_snapshot) -
 
 
 def test_s361_0610_cuota_diferencial_computed(m100_2024_snapshot) -> None:
-    """After legacy-step, casilla 0610 must equal 0595 - 0609.
+    """After contract, casilla 0610 must equal 0595 - 0609.
 
     Oracle (see module docstring):
       0595 = 14,453.60 (cuota resultante = 0587 with no deductions)
@@ -241,7 +241,7 @@ def test_s361_0610_cuota_diferencial_computed(m100_2024_snapshot) -> None:
 
 
 def test_s361_0670_resultado_declaracion_computed(m100_2024_snapshot) -> None:
-    """After legacy-step, casilla 0670 must equal 0610 for a taxpayer with no adjustments.
+    """After contract, casilla 0670 must equal 0610 for a taxpayer with no adjustments.
 
     For a simple landlord with no instalment payments (0611-0669 all zero),
     0670 = 0610.
@@ -269,9 +269,9 @@ def test_s361_0670_resultado_declaracion_computed(m100_2024_snapshot) -> None:
 def test_s361_settlement_chain_not_zero_for_non_zero_base(m100_2024_snapshot) -> None:
     """Any non-zero base liquidable general must produce non-zero settlement chain.
 
-    This is the weakest regression guard: before legacy-step, every one of
+    This is the weakest regression guard: before contract, every one of
     0587/0595/0609/0610/0670 was 0 regardless of inputs, because no formula
-    existed in the 2024 revision.  After legacy-step, the chain must produce non-zero
+    existed in the 2024 revision.  After contract, the chain must produce non-zero
     values for a taxpayer with taxable base above the mínimo personal threshold.
     """
     result = calculate_registry_snapshot(

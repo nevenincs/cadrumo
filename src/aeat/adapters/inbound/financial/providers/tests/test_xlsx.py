@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from ......tests import FIXTURES_DIR
-from ... import XlsxProvider
+from .. import XlsxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

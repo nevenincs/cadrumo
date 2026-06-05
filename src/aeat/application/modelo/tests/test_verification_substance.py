@@ -1,12 +1,12 @@
-"""Verification substance tests: Layer 1 + Layer 2 predicate gate (legacy-step, legacy-step).
+"""Verification substance tests: Layer 1 + Layer 2 predicate gate (contract, contract).
 
-legacy-step: Unit tests for the predicate DSL evaluator (_evaluate_predicate_expression,
+contract: Unit tests for the predicate DSL evaluator (_evaluate_predicate_expression,
      _evaluate_verification_predicates).
 
-legacy-step: Regression — Modelo 130 with all casilla values zero (specifically casilla
+contract: Regression — Modelo 130 with all casilla values zero (specifically casilla
      02 Gastos absent) is NOT granted verificado_completo. The Layer 1
      required=true gate on casilla 02 blocks the transition; this test pins
-     that the enforcement is in place after legacy-step.
+     that the enforcement is in place after contract.
 """
 
 from __future__ import annotations
@@ -49,7 +49,7 @@ _T2 = datetime(2026, 4, 14, 14, 0, 0, tzinfo=UTC)
 
 
 # ---------------------------------------------------------------------------
-# legacy-step: unit tests for _evaluate_predicate_expression
+# contract: unit tests for _evaluate_predicate_expression
 # ---------------------------------------------------------------------------
 
 
@@ -98,7 +98,7 @@ def test_cap_le_when_positive_passes_when_limited_within_ceiling() -> None:
 def test_cap_le_when_positive_fails_when_limited_exceeds_ceiling() -> None:
     """cap_le_when_positive: fails when ceiling > 0 AND limited > ceiling.
 
-    legacy-plan-step case: M131 C11 (resultados negativos anteriores) MUST NOT
+    accepted contract case: M131 C11 (resultados negativos anteriores) MUST NOT
     exceed C10 (cuota positiva del trimestre) per AEAT instructions
     "en ningún caso podrá figurar en la casilla 11 un importe superior
     a la cantidad positiva consignada en la casilla 10".
@@ -108,7 +108,7 @@ def test_cap_le_when_positive_fails_when_limited_exceeds_ceiling() -> None:
 
 
 def test_cap_le_when_positive_emits_blocking_rule_finding_for_violated_predicate() -> None:
-    """legacy-plan-step integration test: a violated cap_le_when_positive predicate produces a BLOCKING_RULE finding.
+    """accepted contract integration test: a violated cap_le_when_positive predicate produces a BLOCKING_RULE finding.
 
     Constructs the exact M130 C15-cap predicate used in the
     registry (modelo-130-c15-cap-by-c14) and runs it through
@@ -134,7 +134,7 @@ def test_cap_le_when_positive_emits_blocking_rule_finding_for_violated_predicate
 
 
 def test_cap_le_when_positive_emits_no_finding_when_within_cap() -> None:
-    """legacy-plan-step integration test: a satisfied cap predicate produces no finding."""
+    """accepted contract integration test: a satisfied cap predicate produces no finding."""
     predicate = VerificationPredicateDefinition(
         predicate_id="modelo-130-c15-cap-by-c14",
         legal_refs=("rd-439-2007:art-110",),
@@ -169,7 +169,7 @@ def test_cap_le_when_positive_holds_when_ceiling_is_zero_or_negative() -> None:
 def test_unknown_expression_does_not_block() -> None:
     """An unrecognised expression pattern does not produce a blocking finding."""
     values: dict[str, Decimal] = {}
-    # Passes through — unknown DSL extensions do not block in legacy-plan
+    # Passes through — unknown DSL extensions do not block in accepted contract
     assert _evaluate_predicate_expression('threshold(["01"], 100)', values, _workflow_profile()) is True
 
 
@@ -355,7 +355,7 @@ def test_advisory_predicate_emits_warning_advisory_finding_when_condition_met() 
     # Exactly 70% ratio: retenciones 10500 / rendimientos 15000
     casilla_values: dict[str, Decimal] = {"06": Decimal("10500"), "01": Decimal("15000")}
 
-    from ...domain.modelos._verification_report import ModeloVerificationFindingSeverity
+    from ....domain.modelos._verification_report import ModeloVerificationFindingSeverity
 
     findings = _evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
 
@@ -381,7 +381,7 @@ def test_advisory_predicate_emits_no_finding_when_condition_not_met() -> None:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step: M130 all-zero regression
+# contract: M130 all-zero regression
 # ---------------------------------------------------------------------------
 
 
@@ -411,9 +411,9 @@ def repos(tmp_path):
 def test_m130_all_zero_without_gastos_is_blocked(repos) -> None:
     """M130 revision with casilla 02 (Gastos) absent is blocked even when other casillas are zero.
 
-    legacy-step regression: Layer 1 required=true on casilla 02 must block the
-    VERIFICADO_COMPLETO transition when Gastos is not supplied. Before legacy-step
-    this filing would have been granted; after legacy-step it is blocked.
+    contract regression: Layer 1 required=true on casilla 02 must block the
+    VERIFICADO_COMPLETO transition when Gastos is not supplied. Before contract
+    this filing would have been granted; after contract it is blocked.
     """
     wu_repo, cr_repo, vr_repo, bv_repo = repos
 
@@ -481,7 +481,7 @@ def test_m130_all_zero_without_gastos_is_blocked(repos) -> None:
 
 
 def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
-    """legacy-plan-step: the canonical predicate-operator set MUST be runtime-evaluable.
+    """accepted contract: the canonical predicate-operator set MUST be runtime-evaluable.
 
     The single source of truth lives at
     aeat.domain.calculations.registry.KNOWN_VERIFICATION_PREDICATE_OPERATORS.
@@ -499,7 +499,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     removes that regex without updating the canonical set, this
     test fires.
     """
-    from . import _actions
+    from .. import _actions
 
     probe_expressions: dict[str, str] = {
         "all_nonzero": 'all_nonzero(["01", "02"])',
@@ -543,7 +543,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
 
 
 def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c14(repos) -> None:
-    """legacy-plan-step: end-to-end integration test for the M130 C15 ≤ C14 cap predicate.
+    """accepted contract: end-to-end integration test for the M130 C15 ≤ C14 cap predicate.
 
     Drives the full registry-load → snapshot → calculate_modelo_revision →
     verify_modelo_revision pipeline with a scenario where the prior-quarter
@@ -552,7 +552,7 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     surface a BLOCKING_RULE finding citing the
     modelo-130-c15-cap-by-c14 predicate.
 
-    The earlier legacy-step test exercised the predicate evaluator with literal
+    The earlier contract test exercised the predicate evaluator with literal
     casilla values; this test exercises the FULL production pipeline —
     a registry-load typo / binding-aggregation regression / predicate-
     declaration drift would all surface here.
@@ -625,10 +625,10 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
 
 
 def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c10(repos) -> None:
-    """legacy-plan-step: M131 cap-predicate end-to-end integration (symmetry with legacy-step).
+    """accepted contract: M131 cap-predicate end-to-end integration (symmetry with contract).
 
     M131 declares modelo-131-<rev>-c11-cap-by-c10 on all 4 revisions
-    via cap_le_when_positive(["11", "10"]). legacy-plan-step covered M130;
+    via cap_le_when_positive(["11", "10"]). accepted contract covered M130;
     this Step extends parallel coverage to M131. AEAT M131
     instructions cite the same cap rule verbatim: "en ningún caso
     podrá figurar en la casilla 11 un importe superior a la
@@ -691,14 +691,14 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
 
 
 # ---------------------------------------------------------------------------
-# legacy-step: tampering regression — mutating a persisted observation is detected
+# contract: tampering regression — mutating a persisted observation is detected
 # ---------------------------------------------------------------------------
 
 
 def test_observation_tampering_is_detected_by_verify_path(repos) -> None:
     """Mutating a stored observation value between calculate and verify is caught.
 
-    legacy-step regression: the observation provenance cross-check added in legacy-step
+    contract regression: the observation provenance cross-check added in contract
     must detect when observations[i].value diverges from casilla_values for
     the same casilla. The verify path raises StoredCalculationDriftError and
     refuses VERIFICADO_COMPLETO.
@@ -754,8 +754,8 @@ def test_observation_tampering_is_detected_by_verify_path(repos) -> None:
     # injection of inconsistent state). The runtime check is a defense-in-depth
     # layer against raw storage corruption that bypasses pydantic. We bypass
     # model_validator here via model_construct to simulate that scenario.
-    from ...domain.calculations.registry import CasillaObservation
-    from ._actions import _assert_revision_content_integrity
+    from ....domain.calculations.registry import CasillaObservation
+    from .._actions import _assert_revision_content_integrity
 
     target_obs = revision.observations[0]
     tampered_obs = CasillaObservation.model_construct(
@@ -786,7 +786,7 @@ def test_observation_tampering_is_detected_by_verify_path(repos) -> None:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step: legal_refs / source_refs threading through verification findings
+# contract: legal_refs / source_refs threading through verification findings
 # ---------------------------------------------------------------------------
 
 # M130 casilla 02 oracle values drawn from:
@@ -811,7 +811,7 @@ def test_missing_required_casilla_finding_carries_registry_provenance(repos) -> 
     """A MISSING_REQUIRED_CASILLA finding must carry legal_refs and source_refs
     drawn from the registry casilla definition.
 
-    legacy-step regression: before this fix findings had empty legal_refs/source_refs,
+    contract regression: before this fix findings had empty legal_refs/source_refs,
     making provenance invisible at the operator-facing verify surface.
 
     Expected values are drawn from the M130 casilla 02 TOML definition (the
@@ -891,7 +891,7 @@ def test_missing_casilla_finding_legal_refs_empty_when_casilla_def_absent() -> N
     Proves the provenance threading is structural (not a constant default)
     and would fail the previous test if the casilla lookup returned None.
     """
-    from ._actions import _missing_required_casilla_finding
+    from .._actions import _missing_required_casilla_finding
 
     finding = _missing_required_casilla_finding("99", "wu-test-id", casilla_def=None)
     assert finding.legal_refs == (), "finding with no casilla_def must carry empty legal_refs"

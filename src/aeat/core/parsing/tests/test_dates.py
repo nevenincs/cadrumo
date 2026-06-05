@@ -1,6 +1,6 @@
 """Real-behaviour tests for :mod:`aeat.core.parsing._dates`.
 
-Contract under test (legacy-step / legacy-step):
+Contract under test (contract / contract):
 
 * :func:`_parse_iso8601_date` — accepts ``YYYY-MM-DD``; REJECTS
   ``DD/MM/YYYY`` and ``DD-MM-YYYY`` with :exc:`ValueError`.

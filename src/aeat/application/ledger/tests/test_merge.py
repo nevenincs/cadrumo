@@ -306,7 +306,7 @@ def test_split_then_merge_chain_is_addressable_via_event_for_object(secure_objec
         bucket_event_repository=event_repository,
         occurred_at=datetime(2026, 5, 5, 9, 0, tzinfo=UTC),
     )
-    from ...domain.buckets import BucketEventObjectType
+    from ....domain.buckets import BucketEventObjectType
 
     catalogue = event_repository.load()
     chain = tuple(

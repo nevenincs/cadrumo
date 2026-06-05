@@ -152,7 +152,7 @@ def test_explain_applicable_flag_matches_derived_verdict() -> None:
     only for an APPLICABLE verdict. explain and the operational views
     cannot diverge because both derive from the same rule table."""
 
-    from ...domain.calculations.registry.applicability import derive_modelo_applicability
+    from ....domain.calculations.registry.applicability import derive_modelo_applicability
 
     profile = _autonomo_profile()
     result = build_overview_explain(profile, modelo="303", year=2026)
@@ -172,11 +172,11 @@ def test_scheduling_rationale_propagates_genuine_registry_fault() -> None:
     scheduling rationale. The narrowed catch lets the genuine fault
     surface (round-4 #40)."""
 
-    from ...domain.deadlines._errors import (
+    from ....domain.deadlines._errors import (
         NoDeadlineWindowsError,
         ScheduleComputationError,
     )
-    from ._explain import _scheduling_rationale
+    from .._explain import _scheduling_rationale
 
     class _CorruptRegistryEngine:
         """Raises the genuine registry-integrity fault on explain."""
@@ -210,8 +210,8 @@ def test_scheduling_rationale_degrades_on_benign_no_windows() -> None:
     catch narrowing — a year with no registered windows is a normal
     data gap, not an error."""
 
-    from ...domain.deadlines._errors import NoDeadlineWindowsError
-    from ._explain import _scheduling_rationale
+    from ....domain.deadlines._errors import NoDeadlineWindowsError
+    from .._explain import _scheduling_rationale
 
     class _NoWindowsEngine:
         """Raises the benign no-windows fault on explain."""

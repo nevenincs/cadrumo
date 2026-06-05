@@ -79,17 +79,17 @@ Repair imports, discovery settings, package initializers, and collection helpers
 
 Update imports, relative paths, fixture lookup, resource paths, and package initializers broken by moving files into tests directories.
 
-- [ ] `W02.P05.S15` - Repair relative imports created by tests directory insertion; `src/aeat`.
-- [ ] `W02.P05.S16` - Repair fixture imports and conftest lookup after relocation; `src/aeat`.
-- [ ] `W02.P05.S17` - Repair resource paths that depended on old test module locations; `src/aeat`.
+- [x] `W02.P05.S15` - Repair relative imports created by tests directory insertion; `src/aeat`.
+- [x] `W02.P05.S16` - Repair fixture imports and conftest lookup after relocation; `src/aeat`.
+- [x] `W02.P05.S17` - Repair resource paths that depended on old test module locations; `src/aeat`.
 
 ### Phase `W02.P06` - align pytest and coverage discovery
 
 Update pytest discovery, marker integrity scans, coverage omit rules, and any collection helpers so they target only the new topology.
 
-- [ ] `W02.P06.S18` - Restrict pytest python_files discovery to test-prefixed modules; `pyproject.toml`.
-- [ ] `W02.P06.S19` - Update marker integrity discovery to scan relocated tests folders; `src/aeat/tests/test_marker_integrity.py`.
-- [ ] `W02.P06.S20` - Update coverage and test documentation topology references; `test documentation surfaces`.
+- [x] `W02.P06.S18` - Restrict pytest python_files discovery to test-prefixed modules; `pyproject.toml`.
+- [x] `W02.P06.S19` - Update marker integrity discovery to scan relocated tests folders; `src/aeat/tests/test_marker_integrity.py`.
+- [x] `W02.P06.S20` - Update coverage and test documentation topology references; `test documentation surfaces`.
 
 ## Wave `W03` - hexagonal marker standardisation
 
@@ -99,26 +99,26 @@ Replace legacy marker sprawl with the ADR vocabulary and make marker integrity e
 
 Replace legacy domain, runtime, inventory, parity, slow, and fixture-tier markers with the accepted execution and hexagonal marker vocabulary.
 
-- [ ] `W03.P07.S21` - Replace pytest marker registry with execution and hexagonal markers; `pyproject.toml`.
-- [ ] `W03.P07.S22` - Remove legacy runtime and metadata marker names; `marker registry`.
-- [ ] `W03.P07.S23` - Remove forbidden external mutation marker representations; `marker registry`.
+- [x] `W03.P07.S21` - Replace pytest marker registry with execution and hexagonal markers; `pyproject.toml`.
+- [x] `W03.P07.S22` - Remove legacy runtime and metadata marker names; `marker registry`.
+- [x] `W03.P07.S23` - Remove forbidden external mutation marker representations; `marker registry`.
 
 ### Phase `W03.P08` - harden marker integrity gates
 
 Make integrity tests reject missing tests path segments, invalid filenames, missing module pytestmark, non-hexagonal markers, metadata markers, and any forbidden external mutation representation.
 
-- [ ] `W03.P08.S24` - Enforce exactly one execution-scope marker per test module; `src/aeat/tests/test_marker_integrity.py`.
-- [ ] `W03.P08.S25` - Enforce at least one hexagonal layer marker per test module; `src/aeat/tests/test_marker_integrity.py`.
-- [ ] `W03.P08.S26` - Enforce tests directory and test prefix topology in integrity gates; `src/aeat/tests/test_marker_integrity.py`.
-- [ ] `W03.P08.S27` - Reject campaign metadata and forbidden mutation tokens in test surfaces; `src/aeat/tests/test_marker_integrity.py`.
+- [x] `W03.P08.S24` - Enforce exactly one execution-scope marker per test module; `src/aeat/tests/test_marker_integrity.py`.
+- [x] `W03.P08.S25` - Enforce at least one hexagonal layer marker per test module; `src/aeat/tests/test_marker_integrity.py`.
+- [x] `W03.P08.S26` - Enforce tests directory and test prefix topology in integrity gates; `src/aeat/tests/test_marker_integrity.py`.
+- [x] `W03.P08.S27` - Reject campaign metadata and forbidden mutation tokens in test surfaces; `src/aeat/tests/test_marker_integrity.py`.
 
 ### Phase `W03.P09` - classify online and integration tests
 
 Assign Google, online-call, integration, and offline deterministic tests to the correct execution marker and hexagonal ownership marker.
 
-- [ ] `W03.P09.S28` - Assign unit and integration markers to offline tests by behavior; `src/aeat`.
-- [ ] `W03.P09.S29` - Assign aeat_live markers to allowed online and Google tests; `src/aeat`.
-- [ ] `W03.P09.S30` - Assign hexagonal ownership markers to every relocated test module; `src/aeat`.
+- [x] `W03.P09.S28` - Assign unit and integration markers to offline tests by behavior; `src/aeat`.
+- [x] `W03.P09.S29` - Assign aeat_live markers to allowed online and Google tests; `src/aeat`.
+- [x] `W03.P09.S30` - Assign hexagonal ownership markers to every relocated test module; `src/aeat`.
 
 ## Wave `W04` - metadata removal and semantic consolidation
 
@@ -128,18 +128,18 @@ Remove campaign metastate from durable test surfaces and use the refreshed RAG i
 
 Erase vaultspec wave, phase, step, closure, transient inventory, and migration bookkeeping terms from durable test names, comments, docstrings, parameter IDs, and inventories.
 
-- [ ] `W04.P10.S31` - Remove vaultspec wave phase step and closure tokens from test names; `src/aeat`.
-- [ ] `W04.P10.S32` - Remove transient inventory and migration metadata from test comments; `src/aeat`.
-- [ ] `W04.P10.S33` - Remove metadata-derived parameter IDs and helper names; `src/aeat`.
+- [x] `W04.P10.S31` - Remove vaultspec wave phase step and closure tokens from test names; `src/aeat`.
+- [x] `W04.P10.S32` - Remove transient inventory and migration metadata from test comments; `src/aeat`.
+- [x] `W04.P10.S33` - Remove metadata-derived parameter IDs and helper names; `src/aeat`.
 
 ### Phase `W04.P11` - rag-backed duplicate consolidation
 
 Refresh the RAG index and use semantic searches to locate overlapping tests by domain, marker, behavior, and removed metastate tokens before consolidating duplicates.
 
-- [ ] `W04.P11.S34` - Restart and index vaultspec-rag after relocation batches; `vaultspec-rag index`.
-- [ ] `W04.P11.S35` - Search moved domains for duplicate assertions and stale ownership; `vaultspec-rag search`.
-- [ ] `W04.P11.S36` - Consolidate duplicate tests into the narrowest owning domain; `src/aeat`.
-- [ ] `W04.P11.S37` - Record semantic search terms and consolidation decisions; `semantic verification record`.
+- [x] `W04.P11.S34` - Restart and index vaultspec-rag after relocation batches; `vaultspec-rag index`.
+- [x] `W04.P11.S35` - Search moved domains for duplicate assertions and stale ownership; `vaultspec-rag search`.
+- [x] `W04.P11.S36` - Consolidate duplicate tests into the narrowest owning domain; `src/aeat`.
+- [x] `W04.P11.S37` - Record semantic search terms and consolidation decisions; `semantic verification record`.
 
 ## Wave `W05` - closeout verification and documentation
 

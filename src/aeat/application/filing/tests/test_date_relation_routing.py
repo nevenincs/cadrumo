@@ -82,7 +82,7 @@ def test_date_inputs_for_ids_parses_iso_date_strings() -> None:
 
 def test_date_inputs_for_ids_rejects_non_iso_value() -> None:
     """A corrupt (non-ISO) date value is refused, not silently dropped."""
-    from ...domain.filing._errors import ModeloBuilderError
+    from ....domain.filing._errors import ModeloBuilderError
 
     with pytest.raises(ModeloBuilderError):
         _date_inputs_for_ids({_M100_BIRTH_DATE_BINDING: "not-a-date"}, {_M100_BIRTH_DATE_BINDING})

@@ -212,7 +212,7 @@ class TestRevisionIdWithDetailRows:
     """
 
     def test_revision_id_changes_when_rows_differ(self) -> None:
-        from ._calculation_revision import derive_calculation_revision_id
+        from .._calculation_revision import derive_calculation_revision_id
 
         base_kwargs = {
             "work_unit_id": "a" * 64,
@@ -239,7 +239,7 @@ class TestRevisionIdWithDetailRows:
 
     def test_revision_id_stable_when_rows_identical(self) -> None:
         """Same rows → same id regardless of call order."""
-        from ._calculation_revision import derive_calculation_revision_id
+        from .._calculation_revision import derive_calculation_revision_id
 
         rows = (
             Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("40"), importe=Decimal("4000")),
@@ -263,7 +263,7 @@ class TestRevisionIdWithDetailRows:
 
     def test_row_order_canonical_same_id(self) -> None:
         """Row insertion order must NOT affect the id (rows are sorted by nif)."""
-        from ._calculation_revision import derive_calculation_revision_id
+        from .._calculation_revision import derive_calculation_revision_id
 
         row_a = Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("40"), importe=Decimal("4000"))
         row_b = Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("60"), importe=Decimal("6000"))
@@ -285,7 +285,7 @@ class TestRevisionIdWithDetailRows:
 
     def test_changing_one_row_importe_changes_id(self) -> None:
         """Anti-tautology: mutating one row's importe changes the revision id."""
-        from ._calculation_revision import derive_calculation_revision_id
+        from .._calculation_revision import derive_calculation_revision_id
 
         def _id(importe_1: str, importe_2: str) -> str:
             return derive_calculation_revision_id(
@@ -588,7 +588,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
         object has no attribute 'nif'``. All four must now derive a
         64-char hex id without raising.
         """
-        from ._calculation_revision import derive_calculation_revision_id
+        from .._calculation_revision import derive_calculation_revision_id
 
         base = {
             "work_unit_id": "a" * 64,
@@ -612,7 +612,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
         Exercises the sort-key path with heterogeneous ``row_type`` and
         heterogeneous tax-id field names in the same call.
         """
-        from ._calculation_revision import derive_calculation_revision_id
+        from .._calculation_revision import derive_calculation_revision_id
 
         rows = (
             self._member_row(),
@@ -636,7 +636,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
         (not silently dropped or coerced to a constant) via the sort key
         that previously crashed.
         """
-        from ._calculation_revision import derive_calculation_revision_id
+        from .._calculation_revision import derive_calculation_revision_id
 
         base = {
             "work_unit_id": "c" * 64,
@@ -674,7 +674,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
         Validates the sort key is stable across the full union: the same
         four rows submitted in two different orderings yield the same id.
         """
-        from ._calculation_revision import derive_calculation_revision_id
+        from .._calculation_revision import derive_calculation_revision_id
 
         base = {
             "work_unit_id": "d" * 64,

@@ -438,7 +438,7 @@ class TestFileFallbackProvider:
         # inherit from MasterKeyUnavailableError so legacy catchers
         # still work, but the typed subclass lets the CLI render a
         # class-specific actionable hint.
-        from ..errors import MasterKeyPassphraseMismatchError
+        from ...errors import MasterKeyPassphraseMismatchError
 
         with pytest.raises(MasterKeyPassphraseMismatchError) as excinfo:
             FileFallbackMasterKeyProvider(
@@ -573,7 +573,7 @@ class TestKeyringFailureSurfaces:
     """The keyring provider surfaces failures via ``KeyringUnavailableError``."""
 
     def test_malformed_stored_value_raises(self) -> None:
-        from ._master_key import KEYRING_USERNAME
+        from .._master_key import KEYRING_USERNAME
 
         service = f"aeat:test:{secrets.token_hex(8)}"
         client = _InMemoryKeyringClient(seeded={(service, KEYRING_USERNAME): "not!base64!"})
@@ -582,7 +582,7 @@ class TestKeyringFailureSurfaces:
             provider.get_master_key()
 
     def test_wrong_size_stored_value_raises(self) -> None:
-        from ._master_key import KEYRING_USERNAME
+        from .._master_key import KEYRING_USERNAME
 
         service = f"aeat:test:{secrets.token_hex(8)}"
         too_short = base64.b64encode(b"short").decode("ascii")
@@ -628,8 +628,8 @@ class TestTornStateGate:
         # Crash after master.key, before master.kdf and salt.
         (store_dir / "master.key").write_bytes(b"orphan-master-key")
 
-        from ..errors import MasterKeyMaterialMissingError
-        from . import FileFallbackMasterKeyProvider
+        from ...errors import MasterKeyMaterialMissingError
+        from .. import FileFallbackMasterKeyProvider
 
         provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
         with pytest.raises(MasterKeyMaterialMissingError, match="torn state") as excinfo:
@@ -650,8 +650,8 @@ class TestTornStateGate:
             encoding=UTF_8_ENCODING,
         )
 
-        from ..errors import MasterKeyMaterialMissingError
-        from . import FileFallbackMasterKeyProvider
+        from ...errors import MasterKeyMaterialMissingError
+        from .. import FileFallbackMasterKeyProvider
 
         provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
         with pytest.raises(MasterKeyMaterialMissingError, match="torn state"):
@@ -669,8 +669,8 @@ class TestTornStateGate:
         )
         (store_dir / "salt").write_bytes(b"\x00" * 16)
 
-        from ..errors import MasterKeyMaterialMissingError
-        from . import FileFallbackMasterKeyProvider
+        from ...errors import MasterKeyMaterialMissingError
+        from .. import FileFallbackMasterKeyProvider
 
         provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
         with pytest.raises(MasterKeyMaterialMissingError, match="torn state"):
@@ -682,7 +682,7 @@ class TestTornStateGate:
     ) -> None:
         # No artefacts at all require explicit enrollment; the read path
         # must not silently create key material.
-        from . import FileFallbackMasterKeyProvider
+        from .. import FileFallbackMasterKeyProvider
 
         provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
         with pytest.raises(MasterKeyMaterialMissingError, match="not provisioned"):
@@ -705,8 +705,8 @@ class TestSecurityHardening:
         cache between sub-tests), and a popped source would block the
         second cache-miss read on ``getpass`` in non-TTY contexts.
         """
-        from .....core.config import load_settings
-        from ._master_key import _default_passphrase_callback
+        from ......core.config import load_settings
+        from .._master_key import _default_passphrase_callback
 
         with override_settings(aeat_secret_passphrase="smoke-passphrase"):
             assert _default_passphrase_callback() == "smoke-passphrase"
@@ -718,13 +718,13 @@ class TestSecurityHardening:
             assert _default_passphrase_callback() == "smoke-passphrase"
 
     def test_passphrase_strips_trailing_crlf(self) -> None:
-        from ._master_key import _default_passphrase_callback
+        from .._master_key import _default_passphrase_callback
 
         with override_settings(aeat_secret_passphrase="value-with-newline\n"):
             assert _default_passphrase_callback() == "value-with-newline"
 
     def test_passphrase_whitespace_only_rejected(self) -> None:
-        from ._master_key import _default_passphrase_callback
+        from .._master_key import _default_passphrase_callback
 
         with override_settings(aeat_secret_passphrase="\r\n"), pytest.raises(SecretStoreError):
             _default_passphrase_callback()
@@ -827,7 +827,7 @@ class TestFactory:
         # auto falls back to file unconditionally — there is no
         # keychain-backed master key that a file-fallback could
         # diverge from.
-        from ..errors import KeyringUnavailableError
+        from ...errors import KeyringUnavailableError
 
         def _probe_fail() -> None:
             raise KeyringUnavailableError("simulated no-op fail.Keyring backend")
@@ -856,7 +856,7 @@ class TestFactory:
         # switches to ``AEAT_SECRET_STORE_BACKEND=file``.
         from keyring.errors import KeyringError
 
-        from ..errors import MasterKeyKeychainLockedError
+        from ...errors import MasterKeyKeychainLockedError
 
         def _locked(*_args: object, **_kwargs: object) -> None:
             raise KeyringError("simulated locked keychain")
@@ -880,7 +880,7 @@ class TestFactory:
         # already provisioned both).
         from keyring.errors import KeyringError
 
-        from . import FileFallbackMasterKeyProvider
+        from .. import FileFallbackMasterKeyProvider
 
         def _locked(*_args: object, **_kwargs: object) -> None:
             raise KeyringError("simulated locked keychain")

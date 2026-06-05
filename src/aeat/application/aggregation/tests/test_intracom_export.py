@@ -1,6 +1,6 @@
 """Persona test: Marc — intracom goods supply vs DOMESTIC_NOT_SUBJECT services.
 
-Scenario (ADR legacy-step):
+Scenario (ADR contract):
   Marc sells both physical goods and IT-consultancy services to a German
   GmbH (counterparty EU member state: 'de').
 

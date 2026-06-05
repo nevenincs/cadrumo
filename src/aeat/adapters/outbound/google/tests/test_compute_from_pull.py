@@ -45,7 +45,7 @@ def _modelo_130_snapshot():
 def _matching_metadata(snapshot) -> PullMetadata:
     """Build a PullMetadata that matches the snapshot's registry-SHA stamp."""
 
-    from ....application.storage.calc_sheets import registry_sha
+    from .....application.storage.calc_sheets import registry_sha
 
     return PullMetadata(
         modelo_id=snapshot.modelo.id,

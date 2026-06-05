@@ -238,12 +238,12 @@ class TestJustificanteErrorRehome:
     """#305 — JustificanteError inherits the shared PDF-import root."""
 
     def test_justificante_error_is_pdf_filing_import_error(self) -> None:
-        from ..pdf import PdfModeloImportError
+        from ...pdf import PdfModeloImportError
 
         assert issubclass(JustificanteError, PdfModeloImportError)
 
     def test_justificante_error_still_aeat_error(self) -> None:
-        from ....core.errors import AeatError
+        from .....core.errors import AeatError
 
         assert issubclass(JustificanteError, AeatError)
 
@@ -353,7 +353,7 @@ class TestJustificanteParseErrorStructuredAttributes:
 
     def test_missing_field_raised_by_require(self, tmp_path: Path) -> None:
         """_require() populates missing=(field,) on the raised error."""
-        from ._extract import _require
+        from .._extract import _require
 
         with pytest.raises(JustificanteParseError) as exc_info:
             _require(None, "modelo")
@@ -361,7 +361,7 @@ class TestJustificanteParseErrorStructuredAttributes:
 
     def test_empty_text_raises_missing_text(self, tmp_path: Path) -> None:
         """Empty text raises with missing=('text',)."""
-        from ._extract import extract_justificante
+        from .._extract import extract_justificante
 
         pdf = tmp_path / "empty.pdf"
         pdf.write_bytes(b"%PDF-1.4\n%%EOF\n")

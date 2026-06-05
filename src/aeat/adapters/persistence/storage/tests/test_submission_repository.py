@@ -147,7 +147,7 @@ class TestClassificationGate:
         assert repo.load(filing.submission_id) == filing
 
     def test_foreign_class_object_refused(self) -> None:
-        from . import Envelope
+        from .. import Envelope
 
         filing = _make_filing()
         bad = Envelope[ModeloPresentado](

@@ -1,4 +1,4 @@
-"""Real-behavior tests for the locales developer CLI (legacy-step/legacy-step).
+"""Real-behavior tests for the locales developer CLI (behavior contract).
 
 Verifies that every ``typer.echo`` call in the locales CLI is routed
 through ``tr()`` so operator-facing output observes the configured
@@ -103,7 +103,7 @@ def test_locales_cli_keys_render_differently_across_supported_languages() -> Non
 
 
 def test_default_output_language_constant_is_es() -> None:
-    """DEFAULT_OUTPUT_LANGUAGE equals 'es' (legacy-step/legacy-step — constant introduction).
+    """DEFAULT_OUTPUT_LANGUAGE equals 'es' (behavior contract — constant introduction).
 
     The constant was introduced as the canonical spelling of the Spanish
     fallback. Every 'es' fallback in _render.py now references this

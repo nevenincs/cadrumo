@@ -155,7 +155,7 @@ def test_modelo_390_declares_annual_compensation_result_fields() -> None:
 
 
 def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations() -> None:
-    from . import (
+    from .. import (
         CasillaObservation,
         RegistryModeloObservation,
         resolve_previous_filing_binding_values,
@@ -245,8 +245,8 @@ def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations()
 
 
 def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations() -> None:
-    from ...iva import IvaCategory, IvaFlowDirection, IvaRateKind
-    from . import (
+    from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+    from .. import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )

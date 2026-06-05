@@ -297,7 +297,7 @@ def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
 def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
     """A populated ``RegistrySnapshotRef`` survives strict JSON round-trip on ModeloDraft."""
 
-    from ._schema import RegistrySnapshotRef
+    from .._schema import RegistrySnapshotRef
 
     now = datetime.now(UTC).replace(microsecond=0)
     ref = RegistrySnapshotRef(
@@ -340,7 +340,7 @@ def test_workbook_parity_reference_output_cells_roundtrip() -> None:
     suffix were stripped silently.
     """
 
-    from ._schema import WorkbookParityReference
+    from .._schema import WorkbookParityReference
 
     original = WorkbookParityReference(
         id="m130-1t-parity",
@@ -427,7 +427,7 @@ def test_workflow_step_details_typed_envelope_roundtrip() -> None:
 
     from datetime import timedelta
 
-    from ....application.workflow._models import (
+    from .....application.workflow._models import (
         WorkflowStage,
         WorkflowStep,
         WorkflowStepDetails,

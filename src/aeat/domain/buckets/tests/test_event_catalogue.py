@@ -340,7 +340,7 @@ def test_bucket_event_type_includes_workspace_bootstrap_kinds() -> None:
     enum members keeps the bootstrap surface from regressing back
     into free-string actions."""
 
-    from ._event import BucketEventType
+    from .._event import BucketEventType
 
     assert BucketEventType.AUTH_PROVIDER_CONFIGURED.value == "auth.provider.configured"
     assert BucketEventType.CONFIG_ENV_UPDATED.value == "config.env.updated"
@@ -353,7 +353,7 @@ def test_bucket_event_type_includes_profile_lifecycle_extensions() -> None:
     archive-aware lifecycle transitions in the bucket-event-history
     catalogue."""
 
-    from ._event import BucketEventType
+    from .._event import BucketEventType
 
     assert BucketEventType.PROFILE_EXPORTED.value == "profile.exported"
     assert BucketEventType.PROFILE_IMPORTED.value == "profile.imported"
@@ -366,7 +366,7 @@ def test_bucket_event_type_includes_bucket_maintenance_kinds() -> None:
     have dedicated canonical enum slots so the maintenance audit
     trail does not collide with content-mutation events."""
 
-    from ._event import BucketEventType
+    from .._event import BucketEventType
 
     assert BucketEventType.BUCKET_EXPORTED.value == "bucket.exported"
     assert BucketEventType.BUCKET_IMPORTED.value == "bucket.imported"
@@ -385,10 +385,10 @@ def test_bucket_event_type_includes_censo_declaration_kinds() -> None:
     stale-cascade logic can react.
 
     Authority: 2026-06-03-m036-lifecycle-verbs-research +
-    cli-workflow-redesign-epic plan Step legacy-plan-step.
+    cli-workflow-redesign-epic plan Step accepted contract.
     """
 
-    from ._event import BucketEventType
+    from .._event import BucketEventType
 
     assert BucketEventType.CENSO_DECLARATION_ALTA.value == "modelo.036.declaration.alta"
     assert BucketEventType.CENSO_DECLARATION_MODIFICACION.value == "modelo.036.declaration.modificacion"
@@ -409,7 +409,7 @@ def test_bucket_event_object_type_includes_bucket_container() -> None:
     2026-05-12-cli-workflow-redesign-bucket-adr.
     """
 
-    from ._event import BucketEventObjectType
+    from .._event import BucketEventObjectType
 
     assert BucketEventObjectType.BUCKET.value == "bucket"
 
@@ -420,7 +420,7 @@ def test_bucket_event_type_includes_ledger_ratios_mutation_kinds() -> None:
     bucket-event-history catalogue rather than skipping the audit
     trail entirely."""
 
-    from ._event import BucketEventType
+    from .._event import BucketEventType
 
     assert BucketEventType.LEDGER_RATIOS_SET.value == "ledger.ratios.set"
     assert BucketEventType.LEDGER_RATIOS_UNSET.value == "ledger.ratios.unset"

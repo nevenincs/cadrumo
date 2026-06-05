@@ -90,9 +90,9 @@ def test_decode_operator_edits_returns_empty_for_no_ids() -> None:
 def test_decode_operator_edits_reads_decimal_from_value_range() -> None:
     """Use a real casilla pulled from the live registry to exercise the helper."""
 
-    from ....core.resources import bundled_path
-    from ....domain.calculations.registry import ValidatedRegistryAuthority
-    from ....domain.calculations.registry._schema import InputKind
+    from .....core.resources import bundled_path
+    from .....domain.calculations.registry import ValidatedRegistryAuthority
+    from .....domain.calculations.registry._schema import InputKind
 
     authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
     snapshot = authority.snapshot("130", filing_year=2024, period="2T")

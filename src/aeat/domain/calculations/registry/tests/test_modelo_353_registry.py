@@ -101,8 +101,8 @@ def test_modelo_353_declares_iva_aggregation_bindings() -> None:
 def test_modelo_353_iva_bindings_resolve_against_substrate_observations() -> None:
     from decimal import Decimal
 
-    from ...iva import IvaCategory, IvaFlowDirection, IvaRateKind
-    from . import (
+    from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+    from .. import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )

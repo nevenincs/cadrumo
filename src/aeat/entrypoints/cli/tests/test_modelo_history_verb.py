@@ -1,6 +1,6 @@
 """CLI surface tests for ``aeat app modelo history``.
 
-Closes the legacy-step history-test gap (legacy-plan-step): every verb in the
+Closes the contract history-test gap (accepted contract): every verb in the
 link/check/preflight/reconcile/history five-verb backend-wired set now
 carries a dedicated CLI surface test exercising the real backend
 (:class:`BucketEventHistoryRepository`).

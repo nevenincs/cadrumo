@@ -130,7 +130,7 @@ def test_modelo_130_first_period_carry_forward_is_absent_by_design(modelo_130_re
 
 
 def test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is_rejected(modelo_130_registry) -> None:
-    """ADR Decision Z2 strict-rejection recovered via legacy-plan-step hardening.
+    """ADR Decision Z2 strict-rejection recovered via accepted contract hardening.
 
     The original ADR mandated `RegistryValidationError` when any
     bound-casilla input was supplied. The P03 narrowing accepted
@@ -141,7 +141,7 @@ def test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is
     binding_values entry. The silent-zero hazard re-emerges in
     disguise.
 
-    The legacy-plan-step hardening closes the hole: previous_filing bound
+    The accepted contract hardening closes the hole: previous_filing bound
     casillas in inputs MUST be accompanied by the matching
     binding_values[binding_id] entry. This test pins the strict-
     rejection contract for the smuggle-via-inputs-only pattern.
@@ -179,9 +179,9 @@ def test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is
 def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarter_saldo(
     modelo_130_registry, target_period: str, prior_period: str, filing_date_month: int
 ) -> None:
-    """legacy-plan-step: extend regression coverage to 3T and 4T quarters.
+    """accepted contract: extend regression coverage to 3T and 4T quarters.
 
-    legacy-plan-step covered 2T-resolves-from-1T. Structurally the cap rule is
+    accepted contract covered 2T-resolves-from-1T. Structurally the cap rule is
     identical for 3T→2T and 4T→3T, but the parametrised coverage
     locks the full quarterly chain so a future cap regression that
     only affects 3T or 4T cannot land silently.
@@ -250,10 +250,10 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
 
 
 def test_modelo_130_previous_filing_bound_inputs_must_match_binding_values(modelo_130_registry) -> None:
-    """legacy-plan-step hardening: inputs and binding_values must agree on bound carry-forward values.
+    """accepted contract hardening: inputs and binding_values must agree on bound carry-forward values.
 
-    legacy-plan-step introduced the smuggle-rejection (input present, binding
-    value absent). This test pins the consistency-check that legacy-plan-step
+    accepted contract introduced the smuggle-rejection (input present, binding
+    value absent). This test pins the consistency-check that accepted contract
     adds: when BOTH maps declare the same bound casilla but with
     DIFFERENT values, the runtime must reject the inconsistency
     rather than silently pick the binding_values entry. The source-
@@ -368,7 +368,7 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(mode
 
 # Note: the "silently_ignored" test that previously lived here
 # (pinned the amendment's narrowed contract) was superseded by
-# legacy-plan-step — the strict-rejection contract is now restored for the
+# accepted contract — the strict-rejection contract is now restored for the
 # smuggle-via-inputs-only pattern. The new
 # test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is_rejected
 # above is the harder gate.

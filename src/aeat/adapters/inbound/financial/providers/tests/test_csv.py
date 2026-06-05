@@ -15,7 +15,7 @@ import pytest
 from ......core.config import override_settings
 from ......core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from ......tests import FIXTURES_DIR
-from ... import CsvProvider
+from .. import CsvProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -74,7 +74,7 @@ def test_csv_provider_ignores_invalid_configured_encoding_name() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Canonical fallback chain — real-behavior decode tests (legacy-step)
+# Canonical fallback chain — real-behavior decode tests (contract)
 # ---------------------------------------------------------------------------
 # Each sub-test feeds bytes that are only valid in ONE of the four encodings
 # in CSV_ENCODING_FALLBACK_CHAIN.  The preferred codec is set to an invalid

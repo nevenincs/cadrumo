@@ -182,7 +182,7 @@ def test_input_casilla_alias_map_resolves_registry_number_to_canonical_id() -> N
     ``110`` to the canonical id while leaving the id mapped to itself.
     """
 
-    from ._runtime_graph import input_casilla_alias_map
+    from .._runtime_graph import input_casilla_alias_map
 
     service = _service()
     described = service.describe_modelo("303", period="1T")

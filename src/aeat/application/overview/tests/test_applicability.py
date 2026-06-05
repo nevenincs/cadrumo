@@ -853,8 +853,8 @@ def test_seed_legal_refs_resolve_against_the_registry() -> None:
     law-only slug would fail loudly here.
     """
 
-    from ...core.resources import bundled_path
-    from ...domain.calculations.registry import ValidatedRegistryAuthority
+    from ....core.resources import bundled_path
+    from ....domain.calculations.registry import ValidatedRegistryAuthority
 
     authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
     registered_legal_ids = set(authority.catalogues.legal)

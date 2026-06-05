@@ -237,8 +237,8 @@ def test_loaded_certificate_does_not_leak_secrets(
 
 @pytest.mark.parametrize("backend", list(CertificateBackend))
 def test_select_backend_returns_matching_class(backend: CertificateBackend) -> None:
-    from ._certificate_backends._httpx_fallback import HttpxFallbackBackend
-    from ._certificate_backends._playwright_context import (
+    from .._certificate_backends._httpx_fallback import HttpxFallbackBackend
+    from .._certificate_backends._playwright_context import (
         PlaywrightContextBackend,
     )
 
@@ -294,7 +294,7 @@ def test_playwright_preload_rejects_unmarked_context(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from .certificate import CertificateError
+    from ..certificate import CertificateError
 
     p12 = _build_pkcs12_bundle(tmp_path)
     bundle = CertificateBundle(
@@ -337,7 +337,7 @@ def test_playwright_client_certificates_kwarg_materialises_secret(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from ._certificate_backends._playwright_context import (
+    from .._certificate_backends._playwright_context import (
         build_client_certificates_kwarg,
     )
 
@@ -365,8 +365,8 @@ def test_httpx_fallback_preload_rejects_browser_path(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from ._certificate_backends._httpx_fallback import HttpxFallbackBackend
-    from ._errors import AuthConfigurationError
+    from .._certificate_backends._httpx_fallback import HttpxFallbackBackend
+    from .._errors import AuthConfigurationError
 
     p12 = _build_pkcs12_bundle(tmp_path)
     bundle = CertificateBundle(
@@ -385,7 +385,7 @@ def test_httpx_fallback_preload_rejects_browser_path(
 def test_settings_loads_cert_env_vars(tmp_path: Path) -> None:
     from pydantic_settings import SettingsConfigDict
 
-    from .....core.config import Settings
+    from ......core.config import Settings
 
     class IsolatedSettings(Settings):
         model_config = SettingsConfigDict(env_file=None)
@@ -455,7 +455,7 @@ def test_settings_rejects_removed_certificate_backends() -> None:
     import pydantic
     from pydantic_settings import SettingsConfigDict
 
-    from .....core.config import Settings
+    from ......core.config import Settings
 
     class IsolatedSettings(Settings):
         model_config = SettingsConfigDict(env_file=None)

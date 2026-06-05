@@ -6,13 +6,13 @@ satisfies only the interface required by the code under test and avoids any
 import from ``unittest.mock``.
 
 Coverage:
-- legacy-step-A: BrowserAdapterTypeError is bound in ERROR_REGISTRY.
-- legacy-step-B: build_error_envelope produces a valid envelope for BrowserAdapterTypeError.
-- legacy-step-C: _open_renta_web_open_session raises BrowserAdapterTypeError when
+- contract-A: BrowserAdapterTypeError is bound in ERROR_REGISTRY.
+- contract-B: build_error_envelope produces a valid envelope for BrowserAdapterTypeError.
+- contract-C: _open_renta_web_open_session raises BrowserAdapterTypeError when
   new_page() returns a non-Page.
-- legacy-step-D: collect_nif_iva_check_observations raises BrowserAdapterTypeError when
+- contract-D: collect_nif_iva_check_observations raises BrowserAdapterTypeError when
   new_page() returns a non-Page.
-- legacy-step-E: collect_groi_observations raises BrowserAdapterTypeError when
+- contract-E: collect_groi_observations raises BrowserAdapterTypeError when
   new_page() returns a non-Page.
 """
 
@@ -75,7 +75,7 @@ async def _fake_browser_factory(_settings: Any) -> _FakeBrowserSession:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step-A: registry binding
+# contract-A: registry binding
 # ---------------------------------------------------------------------------
 
 
@@ -84,7 +84,7 @@ def test_browser_adapter_type_error_is_registered_in_error_registry() -> None:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step-B: envelope round-trip
+# contract-B: envelope round-trip
 # ---------------------------------------------------------------------------
 
 
@@ -100,7 +100,7 @@ def test_browser_adapter_type_error_round_trips_through_build_error_envelope() -
 
 
 # ---------------------------------------------------------------------------
-# legacy-step-C: _renta_web_open_session raise
+# contract-C: _renta_web_open_session raise
 # ---------------------------------------------------------------------------
 
 
@@ -119,7 +119,7 @@ def test_open_renta_web_open_session_raises_browser_adapter_type_error_on_wrong_
 
 
 # ---------------------------------------------------------------------------
-# legacy-step-D: nif_iva_check raise
+# contract-D: nif_iva_check raise
 # ---------------------------------------------------------------------------
 
 
@@ -145,7 +145,7 @@ def test_collect_nif_iva_check_observations_raises_browser_adapter_type_error_on
 
 
 # ---------------------------------------------------------------------------
-# legacy-step-E: groi_check raise
+# contract-E: groi_check raise
 # ---------------------------------------------------------------------------
 
 

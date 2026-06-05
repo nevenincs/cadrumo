@@ -1,4 +1,4 @@
-"""Offline modelo export evidence roundtrip coverage (legacy-plan-step)."""
+"""Offline modelo export evidence roundtrip coverage (accepted contract)."""
 
 from __future__ import annotations
 

@@ -76,7 +76,7 @@ def test_first_run_create_succeeds_and_points_at_the_new_profile(_backend: Path)
     first_id = pointer.bucket_id
 
     # The pointer resolves to a real, registered profile bucket.
-    from ..workflow._profile_bucket_scan import read_profile_bucket_by_id
+    from ...workflow._profile_bucket_scan import read_profile_bucket_by_id
 
     assert read_profile_bucket_by_id(first_id) is not None
 
@@ -108,6 +108,6 @@ def test_failed_create_restores_the_prior_active_profile_pointer(_backend: Path)
 
     # The surviving pointer still resolves to a registered, readable
     # profile — no `missing_profile_record` torn state.
-    from ..workflow._profile_bucket_scan import read_profile_bucket_by_id
+    from ...workflow._profile_bucket_scan import read_profile_bucket_by_id
 
     assert read_profile_bucket_by_id(surviving_id) is not None

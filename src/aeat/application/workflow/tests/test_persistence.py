@@ -132,9 +132,9 @@ def test_reset_workflow_state_emit_failure_leaves_row_intact() -> None:
     module monkeypatching, no test double or Mock.
     """
 
-    from ...adapters.persistence.storage import WORKFLOW_STATE_NAMESPACE
-    from ._models import WorkflowState
-    from ._persistence import WorkflowStateRepository
+    from ....adapters.persistence.storage import WORKFLOW_STATE_NAMESPACE
+    from .._models import WorkflowState
+    from .._persistence import WorkflowStateRepository
 
     def _raise(**_: object) -> None:
         raise _EmitError("simulated downstream emit failure")
@@ -167,8 +167,8 @@ def test_fingerprint_state_classifies_healthy_envelope_as_readable() -> None:
     state, so the classification must reflect that.
     """
 
-    from ._models import WorkflowState
-    from ._persistence import WorkflowStateRepository
+    from .._models import WorkflowState
+    from .._persistence import WorkflowStateRepository
 
     repository = WorkflowStateRepository()
     repository.save(WorkflowState())
@@ -183,7 +183,7 @@ def test_fingerprint_state_classifies_healthy_envelope_as_readable() -> None:
 def test_fingerprint_state_classifies_absent_envelope_as_absent() -> None:
     """With no state envelope persisted the fingerprint classifies as ``absent``."""
 
-    from ._persistence import WorkflowStateRepository
+    from .._persistence import WorkflowStateRepository
 
     fingerprint = WorkflowStateRepository().fingerprint_state()
 
@@ -195,8 +195,8 @@ def test_fingerprint_state_classifies_absent_envelope_as_absent() -> None:
 def test_fingerprint_state_honours_explicit_reason_class_override() -> None:
     """An explicit ``reason_class`` from a caller that knows the trigger wins."""
 
-    from ._models import WorkflowState
-    from ._persistence import WorkflowStateRepository
+    from .._models import WorkflowState
+    from .._persistence import WorkflowStateRepository
 
     repository = WorkflowStateRepository()
     repository.save(WorkflowState())

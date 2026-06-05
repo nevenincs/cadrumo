@@ -129,7 +129,7 @@ def test_redaction_strips_audit_class_defaults() -> None:
 
 def test_path_safety_rejects_traversal(tmp_path: Path) -> None:
     """The substrate's typed path helpers refuse traversal attempts."""
-    from . import PathContainmentError
+    from .. import PathContainmentError
 
     with pytest.raises(PathContainmentError, match=r"owning root|within|stay"):
         safe_subpath(tmp_path, "../escape", context="smoke")
@@ -137,7 +137,7 @@ def test_path_safety_rejects_traversal(tmp_path: Path) -> None:
 
 def test_file_lock_serializes_writers(tmp_path: Path) -> None:
     """A second non-blocking acquire fails immediately while the lock is held."""
-    from . import LockAcquisitionError
+    from .. import LockAcquisitionError
 
     target = tmp_path / "shared.json"
     with (
@@ -182,7 +182,7 @@ def test_cross_process_lock_contention(tmp_path: Path) -> None:
     the sentinel is observed before attempting the contention probe.
     Deterministic on every platform; no opt-in env var required.
     """
-    from . import LockAcquisitionError
+    from .. import LockAcquisitionError
 
     target = tmp_path / "contended.json"
     proc = subprocess.Popen(

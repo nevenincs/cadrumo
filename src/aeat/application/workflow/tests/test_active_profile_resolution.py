@@ -97,14 +97,14 @@ def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
     """
     from datetime import UTC, datetime
 
-    from ...adapters.persistence.storage.bucket import (
+    from ....adapters.persistence.storage.bucket import (
         BucketLifecycleStatus,
         BucketManifest,
         bucket_paths,
         provision_bucket_directory,
         write_manifest,
     )
-    from ...adapters.persistence.storage.master_key import KdfParams
+    from ....adapters.persistence.storage.master_key import KdfParams
 
     now = datetime.now(UTC).replace(microsecond=0)
     provision_bucket_directory(root, bucket_id)
@@ -175,7 +175,7 @@ def test_resolve_profile_bucket_raises_on_an_ambiguous_label(tmp_path: Path) -> 
     ValueError — which the CLI / diagnostics catch sites must match exactly to
     surface a clean refusal instead of a raw traceback.
     """
-    from ._errors import ProfileLabelAmbiguousError
+    from .._errors import ProfileLabelAmbiguousError
 
     _write_live_bucket(tmp_path, bucket_id="51c1fa97-28e1-4700-ac1e-ed7cf094d37b", label="operator")
     _write_live_bucket(tmp_path, bucket_id="62d2ab08-39f2-4811-bd2a-fe48fd105e4a", label="operator")

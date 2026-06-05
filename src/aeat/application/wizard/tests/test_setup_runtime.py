@@ -57,7 +57,7 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             # ── taxpayer biographic (visible: natural person) ──
             "",  # taxpayer-sex
             "",  # taxpayer-marital-status
-            "",  # situacion-familiar (Art. 82 LIRPF axis, legacy-step)
+            "",  # situacion-familiar (Art. 82 LIRPF axis, contract)
             # taxpayer-marriage-date SKIPPED (conditional on marital-status == CASADO)
             "",  # taxpayer-birth-date
             "",  # taxpayer-disability-grade
@@ -193,7 +193,7 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             # ── taxpayer biographic (visible: natural person) ──
             "",  # taxpayer-sex
             "",  # taxpayer-marital-status
-            "",  # situacion-familiar (Art. 82 LIRPF axis, legacy-step)
+            "",  # situacion-familiar (Art. 82 LIRPF axis, contract)
             # taxpayer-marriage-date SKIPPED (conditional on marital-status == CASADO)
             "",  # taxpayer-birth-date
             "",  # taxpayer-disability-grade
@@ -287,7 +287,7 @@ def test_legal_entity_intra_section_gate_walks_legal_entity_form() -> None:
     same section. A section-wide upfront evaluation hid this question.
     """
 
-    from ._commands import _scripted_from_canonical
+    from .._commands import _scripted_from_canonical
 
     canonical = _non_interactive_canonical(_LEGAL_ENTITY_FLAGS)
     explicit = frozenset(_LEGAL_ENTITY_FLAGS)
@@ -302,7 +302,7 @@ def test_legal_entity_does_not_walk_spouse_or_irpf_personal_questions() -> None:
     """A legal entity is never asked the spouse / personal-IRPF or the
     IRPF income-category questions — they are gated to natural persons."""
 
-    from ._commands import _scripted_from_canonical
+    from .._commands import _scripted_from_canonical
 
     canonical = _non_interactive_canonical(_LEGAL_ENTITY_FLAGS)
     explicit = frozenset(_LEGAL_ENTITY_FLAGS)
@@ -330,7 +330,7 @@ def test_explicit_flag_forces_a_gated_question_visible() -> None:
     it asked because the operator named ``--activity`` on the command
     line (``force_visible``)."""
 
-    from ._commands import _scripted_from_canonical
+    from .._commands import _scripted_from_canonical
 
     flags = {
         "entity-type": "natural_person",
@@ -351,7 +351,7 @@ def test_landlord_without_activity_flag_is_not_asked_for_activity() -> None:
     """A pure landlord (only capital_inmobiliario, no --activity flag)
     is never asked for an economic activity — the gate stays closed."""
 
-    from ._commands import _scripted_from_canonical
+    from .._commands import _scripted_from_canonical
 
     flags = {
         "entity-type": "natural_person",

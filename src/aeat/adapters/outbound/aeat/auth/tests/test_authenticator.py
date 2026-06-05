@@ -450,7 +450,7 @@ def _settings_factory():
     bundle path). Tests pass the bundle ``Path`` as the single
     positional argument; extra Settings overrides go through ``**``.
     """
-    from .....tests.settings_scope import settings_factory as _scoped_factory
+    from ......tests.settings_scope import settings_factory as _scoped_factory
 
     with _scoped_factory() as scoped:
 
@@ -834,7 +834,7 @@ async def test_authenticate_falls_back_after_stale_persisted_session(
 ) -> None:
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
-    from .....core.auth_session_keys import aeat_auth_session_storage_state_path
+    from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 
     storage_state_path = aeat_auth_session_storage_state_path(_BUCKET_ID, "storage")
     stale_storage_state: dict[str, object] = {"cookies": [], "origins": []}
@@ -1190,7 +1190,7 @@ async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path, _setti
     cert = authenticator.load_certificate()
     from typing import cast
 
-    from . import BrowserContextLike
+    from .. import BrowserContextLike
 
     context = _RecordingBrowserContext(cert, recognised=True)
     authenticator._context = cast(BrowserContextLike, context)
@@ -1225,7 +1225,7 @@ async def test_concurrent_close_and_verify_login_race(tmp_path: Path, _settings_
     """
     from typing import cast
 
-    from . import BrowserContextLike
+    from .. import BrowserContextLike
 
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)

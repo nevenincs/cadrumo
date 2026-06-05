@@ -165,8 +165,8 @@ _BOUNDARY_ROUNDTRIP_INVENTORY: tuple[tuple[str, str], ...] = (
 def test_persistence_boundary_roundtrip_tests_exist() -> None:
     """Every declared persistence boundary must have a roundtrip test on disk.
 
-    Verifies legacy-step/legacy-step: the inventory above is the canonical record of
-    boundaries touched by legacy-plan-P08.  Each entry must have an existing
+    Verifies behavior contract: the inventory above is the canonical record of
+    boundaries touched by ratchet history-P08.  Each entry must have an existing
     test file.  Missing files indicate a boundary was declared without a
     roundtrip test — a roundtrip-discipline violation.
     """

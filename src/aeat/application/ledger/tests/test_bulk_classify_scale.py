@@ -1,4 +1,4 @@
-"""Scale gate for ``bulk_classify_from_csv`` (legacy-plan-step).
+"""Scale gate for ``bulk_classify_from_csv`` (accepted contract).
 
 The per-row implementation re-encrypted the entire transaction catalogue on
 every update, so a 270-row batch cost ~400s of O(n) re-encryption. The

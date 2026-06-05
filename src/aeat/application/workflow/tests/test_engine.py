@@ -854,7 +854,7 @@ class TestSiteUnavailableArm:
         # Proves the alert's run_id reflects the resolved obligation,
         # not the "-"/"-" placeholder hash.
         assert result.obligation is not None
-        from ._models import compute_run_id as _compute_run_id
+        from .._models import compute_run_id as _compute_run_id
 
         placeholder_hash = _compute_run_id(
             tax_id=fx.profile.tax_id,
@@ -883,7 +883,7 @@ class TestGateProjectionAgreement:
         """Build a :class:`WorkflowEngine` driven by the production
         :class:`DeadlineEngine`, so the gate computes the genuine
         registry-backed schedule rather than a test seam's."""
-        from ...domain.deadlines import DeadlineEngine
+        from ....domain.deadlines import DeadlineEngine
 
         fx = _fixtures()
         return WorkflowEngine(
@@ -902,7 +902,7 @@ class TestGateProjectionAgreement:
         """A target present in the shared schedule clears the gate, and
         the projection's ``pending_obligations`` carries that same
         ``(modelo, period)``."""
-        from ...application.state_projection import _build_pending_obligations
+        from ....application.state_projection import _build_pending_obligations
 
         profile = _profile()
         today = date(2026, 4, 12)
@@ -927,7 +927,7 @@ class TestGateProjectionAgreement:
         """A target absent from the shared schedule aborts the gate with
         ``NO_PENDING_OBLIGATION``, and the projection's
         ``pending_obligations`` carries no such ``(modelo, period)``."""
-        from ...application.state_projection import _build_pending_obligations
+        from ....application.state_projection import _build_pending_obligations
 
         profile = _profile()
         today = date(2026, 4, 12)
@@ -953,8 +953,8 @@ class TestGateProjectionAgreement:
         ``pending_obligations`` are byte-for-byte the same ``(modelo,
         period, opens_on, closes_on, status)`` rows — proving a single
         producer feeds both."""
-        from ...application.state_projection import _build_pending_obligations
-        from ...domain.deadlines import DeadlineEngine, compute_obligation_schedule
+        from ....application.state_projection import _build_pending_obligations
+        from ....domain.deadlines import DeadlineEngine, compute_obligation_schedule
 
         profile = _profile()
         today = date(2026, 4, 12)

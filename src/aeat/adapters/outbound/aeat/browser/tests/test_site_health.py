@@ -232,7 +232,7 @@ class TestMantenimientoTitleOnlyGuard:
             "<body><p>Welcome to our tax portal. All services are up.</p>"
             "<p>Please log in to continue.</p></body></html>"
         )
-        from ._site_health_parsers import _extract_title, _matches_mantenimiento
+        from .._site_health_parsers import _extract_title, _matches_mantenimiento
 
         lowered = html.lower()
         title = _extract_title(html, lowered)
@@ -367,7 +367,7 @@ class TestRateLimitRetryAfter:
 
 
 def _evidence(**overrides: object) -> SiteHealthEvidence:
-    from ._site_health import _URL_ADAPTER
+    from .._site_health import _URL_ADAPTER
 
     base: dict[str, Any] = {
         "url": _URL_ADAPTER.validate_python(_PROBE_URL),
@@ -389,7 +389,7 @@ class TestSiteHealthModels:
         assert ev.detected_markers == ("marker",)
 
     def test_evidence_rejects_unknown_key(self) -> None:
-        from ._site_health import _URL_ADAPTER
+        from .._site_health import _URL_ADAPTER
 
         valid_url = _URL_ADAPTER.validate_python(_PROBE_URL)
         with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):

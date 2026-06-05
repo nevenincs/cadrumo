@@ -181,7 +181,7 @@ def test_effective_usage_ratio_applies_multiplier_to_chosen_ratio() -> None:
     """effective_usage_ratio = chosen_ratio * statutory_multiplier;
     rule.None multiplier means no factor (effective = chosen)."""
 
-    from . import effective_usage_ratio
+    from .. import effective_usage_ratio
 
     suministros = ProportionalityRule(
         kind=ProportionalityKind.USAGE_RATIO_HOME_AREA,
@@ -206,8 +206,8 @@ def test_effective_usage_ratio_refuses_non_usage_ratio_rules() -> None:
     kinds (caller is responsible for routing rules to the right
     evaluator)."""
 
-    from . import effective_usage_ratio
-    from ._errors import CategoryValidationError
+    from .. import effective_usage_ratio
+    from .._errors import CategoryValidationError
 
     rule = ProportionalityRule(
         kind=ProportionalityKind.FULL_DEDUCTIBLE,

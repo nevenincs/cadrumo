@@ -11,7 +11,7 @@ of the following marker tokens in the preceding 3 source lines:
   sites when the same rationale applies to the full signature)
 - ``ADAPTER-INTERNAL-ALIAS-RATIONALE-``  — for third-party untyped resources
 
-Structural prevention (legacy-plan)
+Structural prevention (ratchet history)
 --------------------------------
 This test AST-walks **all** production Python files under ``src/aeat/``
 (excluding test files) so every new file added by any future campaign is
@@ -53,7 +53,7 @@ _MARKER_TOKENS: tuple[str, ...] = (
 _CONTEXT_LINES = 3
 
 # ---------------------------------------------------------------------------
-# Known pre-existing violating sites (legacy-plan backlog).
+# Known pre-existing violating sites (ratchet history backlog).
 # Each entry is (relative-posix-path-from-src/aeat/, function-def-lineno).
 # New sites must NOT be added here — add a marker comment or use the concrete
 # type instead.  Removing an entry after fixing locks that site at zero.

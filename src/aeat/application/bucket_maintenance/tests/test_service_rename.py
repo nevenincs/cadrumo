@@ -73,7 +73,7 @@ def registered_profile(runtime: TestRuntimeProfile) -> None:
     repository so the encrypted record and the manifest both reflect
     the same starting state.
     """
-    from ..user_profile import (
+    from ...user_profile import (
         ProfileLifecycleService,
         ProfileValidationService,
         UserProfileLifecycleRepository,

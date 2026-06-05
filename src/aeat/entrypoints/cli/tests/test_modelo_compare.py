@@ -1,4 +1,4 @@
-"""Regression test for `aeat app modelo compare` (legacy-step).
+"""Regression test for `aeat app modelo compare` (contract).
 
 The compare verb resolves the most recent VERIFICADO_COMPLETO (or BORRADOR)
 revision for each of two filing years and emits per-casilla delta rows
@@ -166,7 +166,7 @@ def _calculate_m130(work_unit_id: str, ingresos: str, gastos: str) -> dict[str, 
 
 
 # ---------------------------------------------------------------------------
-# Regression tests — legacy-step
+# Regression tests — contract
 # ---------------------------------------------------------------------------
 
 

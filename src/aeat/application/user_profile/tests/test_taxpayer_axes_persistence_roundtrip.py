@@ -88,7 +88,7 @@ def _required_facts(schema) -> list[UserProfileFact]:
 # - irpf_income_categories: a multi-member set in non-sorted input order
 #   so the canonical-string projection is exercised on a real set
 # - irpf.estimation_regime: a non-default regime
-# - iva.regime: REAGP (the legacy-plan-added member, not GENERAL)
+# - iva.regime: REAGP (the accepted contract-added member, not GENERAL)
 # - iva.sii_enrolled / iva.redeme_enrolled: both True (default False)
 _TAXPAYER_AXIS_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
@@ -129,7 +129,7 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
 
     facts = tuple(_required_facts(schema)) + _TAXPAYER_AXIS_FACTS
     # iva.regime is required; override the placeholder with the real
-    # legacy-plan-added REAGP token so the regime axis is exercised non-default.
+    # accepted contract-added REAGP token so the regime axis is exercised non-default.
     facts = tuple(UserProfileFact(path="iva.regime", value="REAGP") if f.path == "iva.regime" else f for f in facts)
 
     state = register_active_profile(
@@ -178,7 +178,7 @@ def test_v1_shaped_record_without_taxpayer_axes_loads_under_v2_schema(
 ) -> None:
     """A record carrying no taxpayer-axis facts loads cleanly under v2.
 
-    The legacy-plan schema change is additive: every taxpayer-axis field is
+    The accepted contract schema change is additive: every taxpayer-axis field is
     ``required = false``. A v1-shaped record — one persisted before the
     taxpayer axes existed, and therefore carrying none of those facts —
     must still load through the encrypted boundary without error and

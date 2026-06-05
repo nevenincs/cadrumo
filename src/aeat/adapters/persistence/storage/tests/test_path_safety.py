@@ -130,7 +130,7 @@ class TestErrorCodeBinding:
     """``PathContainmentError`` binds to the registered INTEGRITY code."""
 
     def test_class_binds_to_registered_code(self) -> None:
-        from ....core.errors._registry import bind_error_code
+        from .....core.errors._registry import bind_error_code
 
         bound = bind_error_code(PathContainmentError)
         assert bound.code == "INTEGRITY_STORAGE_PATH_CONTAINMENT"

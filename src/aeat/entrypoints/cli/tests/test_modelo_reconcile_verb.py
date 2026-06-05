@@ -162,7 +162,7 @@ def test_reconcile_by_flag_lands_in_modelo_reconciled_event(cli_runner: CliRunne
     every reconciliation to the active profile even when a teammate
     ran the command."""
 
-    from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
 

@@ -1045,3 +1045,4 @@ def test_persisted_blocked_wallet_decision_is_replayed_by_modelo_303_calculation
                 clock=_DECIDED_AT,
             )
         assert len(calc_repo.load()) == 0
+0

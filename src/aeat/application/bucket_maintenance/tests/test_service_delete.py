@@ -54,7 +54,7 @@ def runtime(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 @pytest.fixture
 def registered_profile(runtime: TestRuntimeProfile) -> None:
     """Register a real profile so the delete chain has something to tombstone."""
-    from ..user_profile import (
+    from ...user_profile import (
         ProfileLifecycleService,
         ProfileValidationService,
         UserProfileLifecycleRepository,
@@ -140,5 +140,5 @@ def test_delete_refusals_carry_translated_message(
 # provider does not resolve the secondary's keystore. The
 # session-management contract for cross-bucket writes is being
 # reshaped by peers; the happy-path test re-opens as a follow-up
-# Step once secure-storage legacy-plan+ commits settle on the
+# Step once secure-storage accepted contract+ commits settle on the
 # per-bucket-session master-key resolution path.

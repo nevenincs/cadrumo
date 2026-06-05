@@ -1435,7 +1435,7 @@ def test_keyed_bracket_table_rejects_mixed_brackets_and_keyed_brackets() -> None
     ambiguous lookup contract; the validator rejects it at
     construction time.
     """
-    from ._schema import BracketEntry as _BracketEntry
+    from .._schema import BracketEntry as _BracketEntry
 
     numeric_bracket = _BracketEntry(
         lower_bound=Decimal("0"),

@@ -1,6 +1,6 @@
-"""Real-behavior CLI tests for config-boundary error narrowing (legacy-step/legacy-step).
+"""Real-behavior CLI tests for config-boundary error narrowing (contract/contract).
 
-Verifies two contracts introduced by legacy-step:
+Verifies two contracts introduced by contract:
 
 1. AeatError subclasses that escape a config command surface produce a
    typed error envelope — the command_error_boundary receives the typed
@@ -198,7 +198,7 @@ def test_non_aeat_error_cause_chain_reaches_config_boundary_error(tmp_path: Path
             assert isinstance(cause, ConfigBoundaryError)
             # Real-failure trigger raises a SQLAlchemy DatabaseError or
             # similar; the wrapped original_exception is non-AeatError.
-            from ....core.errors import AeatError
+            from .....core.errors import AeatError
 
             assert not isinstance(cause.original_exception, AeatError)
 
@@ -257,7 +257,7 @@ def test_config_boundary_error_is_registered_aeat_error_subclass() -> None:
     must have a registered ErrorCode or __init_subclass__ raises. Verify
     the class was successfully declared by instantiating it.
     """
-    from ....core.errors import AeatError, get_registered_error_code
+    from .....core.errors import AeatError, get_registered_error_code
 
     err = ConfigBoundaryError(RuntimeError("probe"))
     assert isinstance(err, AeatError)

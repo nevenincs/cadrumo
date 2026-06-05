@@ -168,9 +168,9 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from ...adapters.persistence.storage.sql._orm import SecureObjectRow
-    from ...adapters.persistence.storage.sql.session import session_scope
-    from ._complementaria_repository import _AMENDMENT_NAMESPACE
+    from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ....adapters.persistence.storage.sql.session import session_scope
+    from .._complementaria_repository import _AMENDMENT_NAMESPACE
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         try:

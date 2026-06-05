@@ -139,9 +139,9 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from ....persistence.storage.sql._orm import SecureObjectRow
-    from ....persistence.storage.sql.session import session_scope
-    from ._observation_store import _OBSERVATION_NAMESPACE
+    from .....persistence.storage.sql._orm import SecureObjectRow
+    from .....persistence.storage.sql.session import session_scope
+    from .._observation_store import _OBSERVATION_NAMESPACE
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")

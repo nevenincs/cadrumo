@@ -254,8 +254,10 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
     from ._actions import (
         WorkUnitNotFoundError,
         _authority_via_resources,
-        _resolve_bound_casilla_inputs_for_available_bindings,
+    )
+    from ._binding_resolution import (
         _resolve_declaration_period_inputs,
+        resolve_bound_casilla_inputs_for_available_bindings,
     )
 
     wu_repo = WorkUnitCatalogueRepository()
@@ -307,7 +309,7 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
         filing_year=work_unit.filing_year,
         period=work_unit.period,
     )
-    bound_inputs = _resolve_bound_casilla_inputs_for_available_bindings(
+    bound_inputs = resolve_bound_casilla_inputs_for_available_bindings(
         snapshot.revision,
         resolution.binding_values,
     )

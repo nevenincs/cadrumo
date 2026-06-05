@@ -221,7 +221,7 @@ def test_diagnostic_payload_rejects_non_object_json() -> None:
     """_payload() raises ValueError when the JSON root is not an object."""
     import json as _json
 
-    from ._diagnostics import _payload
+    from .._diagnostics import _payload
 
     with pytest.raises(ValueError, match="not a JSON object"):
         _payload(_json.dumps([1, 2, 3]).encode(UTF_8_ENCODING))

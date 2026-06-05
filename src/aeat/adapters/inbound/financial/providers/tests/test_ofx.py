@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from ......tests import FIXTURES_DIR
-from ... import OfxProvider
+from .. import OfxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

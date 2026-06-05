@@ -32,7 +32,7 @@ def _source_of(module_path: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step gate 1: SETUP_FLOW / WIZARD_FLOWS round-trip identity from core
+# contract gate 1: SETUP_FLOW / WIZARD_FLOWS round-trip identity from core
 # ---------------------------------------------------------------------------
 
 
@@ -40,8 +40,8 @@ def test_setup_flow_round_trip_identity() -> None:
     """get_setup_flow() returns the exact SETUP_FLOW object from _catalogue."""
 
     # Import _catalogue first — its module body calls register_wizard_catalogue.
-    from ..application.wizard import _catalogue as catalogue
-    from .wizard_catalogue import get_setup_flow
+    from ...application.wizard import _catalogue as catalogue
+    from ..wizard_catalogue import get_setup_flow
 
     assert get_setup_flow() is catalogue.SETUP_FLOW, (
         "get_setup_flow() must return the identical SETUP_FLOW object "
@@ -52,8 +52,8 @@ def test_setup_flow_round_trip_identity() -> None:
 def test_wizard_flows_round_trip_identity() -> None:
     """get_wizard_flows() returns the exact WIZARD_FLOWS tuple from _catalogue."""
 
-    from ..application.wizard import _catalogue as catalogue
-    from .wizard_catalogue import get_wizard_flows
+    from ...application.wizard import _catalogue as catalogue
+    from ..wizard_catalogue import get_wizard_flows
 
     assert get_wizard_flows() is catalogue.WIZARD_FLOWS, (
         "get_wizard_flows() must return the identical WIZARD_FLOWS tuple "
@@ -64,7 +64,7 @@ def test_wizard_flows_round_trip_identity() -> None:
 def test_setup_flow_id_is_setup() -> None:
     """The registered SETUP_FLOW carries the canonical 'setup' identifier."""
 
-    from .wizard_catalogue import get_setup_flow
+    from ..wizard_catalogue import get_setup_flow
 
     flow = get_setup_flow()
     assert flow.id == "setup", f"Expected flow.id == 'setup', got {flow.id!r}"
@@ -73,7 +73,7 @@ def test_setup_flow_id_is_setup() -> None:
 def test_wizard_flows_contains_setup_flow() -> None:
     """WIZARD_FLOWS is a tuple that contains the SETUP_FLOW descriptor."""
 
-    from .wizard_catalogue import get_setup_flow, get_wizard_flows
+    from ..wizard_catalogue import get_setup_flow, get_wizard_flows
 
     flows = get_wizard_flows()
     assert isinstance(flows, tuple), f"WIZARD_FLOWS must be a tuple, got {type(flows)}"
@@ -83,7 +83,7 @@ def test_wizard_flows_contains_setup_flow() -> None:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step gate 2: no deferred lazy upward imports remain in domain modules
+# contract gate 2: no deferred lazy upward imports remain in domain modules
 # ---------------------------------------------------------------------------
 
 _UPWARD_PATTERN = "from ...application.wizard._catalogue import"
@@ -125,8 +125,8 @@ def test_no_deferred_upward_import_in_profile_keys() -> None:
 def test_wizard_catalogue_exports_are_callable() -> None:
     """All public symbols in aeat.core.wizard_catalogue are importable and callable."""
 
-    from . import wizard_catalogue
-    from .errors import CoreError
+    from .. import wizard_catalogue
+    from ..errors import CoreError
 
     assert callable(wizard_catalogue.register_wizard_catalogue)
     assert callable(wizard_catalogue.get_setup_flow)

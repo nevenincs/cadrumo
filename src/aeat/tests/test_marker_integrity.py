@@ -61,6 +61,7 @@ _CAMPAIGN_METADATA_PATTERNS = (
     re.compile(r"\bW\d{1,3}(?:\.P\d{1,3})?(?:\.S\d{1,4})?\b"),
     re.compile(r"\bP\d{1,3}\.S\d{1,4}\b"),
     re.compile(r"\bS\d{2,4}\b"),
+    re.compile(r"\blegacy-(?:plan|step)"),
 )
 _FORBIDDEN_MARKERS = (
     frozenset(
@@ -449,7 +450,7 @@ def test_pyproject_marker_registry_is_pruned_and_unique() -> None:
     assert set(configured) == _EXPECTED_CONFIGURED_MARKERS
 
 
-def test_live_test_opt_in_token_is_not_used_by_production_live_read_paths() -> None:
+def test_live_test_opt_in_token_is_not_used_by_production_aeat_live_paths() -> None:
     """The live-test opt-in env var must remain test/core-gate infrastructure only."""
     violations = _production_live_test_opt_in_violations()
     assert not violations, "production modules must not gate live reads on the pytest opt-in:\n" + "\n".join(

@@ -166,7 +166,7 @@ class TestRunContextRunIdValidation:
         ``_build_initial_context`` so no directory is ever created for
         a rejected run_id.
         """
-        from . import RunTraceValidationError
+        from .. import RunTraceValidationError
 
         with override_settings(aeat_runs_dir=str(tmp_path)):
             for bad in ("../escape", "not-hex", "0" * 17, "ABCDEF0123456789"):
@@ -214,7 +214,7 @@ class TestRunIdPropagation:
 class TestRunSinkScrubbing:
     """Real-behavior tests: JSONL sink records are scrubbed before persistence.
 
-    The :func:`attach_run_sink` helper (legacy-step) installs a
+    The :func:`attach_run_sink` helper (contract) installs a
     :class:`aeat.core.logging.SecretScrubbingFilter` on the sink before
     attaching it to the root logger.  The JSONL serialiser also applies
     the DIAGNOSTIC-class redaction rule set, which SHA256-prefixes any
@@ -256,8 +256,8 @@ class TestRunSinkScrubbing:
         tmp_path: Path,
     ) -> None:
         """The sink handler must carry a SecretScrubbingFilter after attach_run_sink."""
-        from ..logging import SecretScrubbingFilter, attach_run_sink
-        from ._sink import JsonlRunSink
+        from ...logging import SecretScrubbingFilter, attach_run_sink
+        from .._sink import JsonlRunSink
 
         with override_settings(aeat_runs_dir=str(tmp_path)):
             sink = JsonlRunSink(tmp_path / "test_events.jsonl", run_id="a" * 16)

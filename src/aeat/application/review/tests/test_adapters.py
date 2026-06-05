@@ -388,7 +388,7 @@ def _draft(
 
 def _write_draft(settings: Settings, draft: ModeloDraft) -> Path:
     """Persist ``draft`` through the ModeloDraftRepository (ciphertext-at-rest)."""
-    from ...domain.filing import ModeloDraftRepository
+    from ....domain.filing import ModeloDraftRepository
 
     del settings
     repository = ModeloDraftRepository()
@@ -403,7 +403,7 @@ def test_drafts_pending_returns_empty_when_source_missing(tmp_path: Path) -> Non
 
 
 def test_drafts_pending_load_failure_context_omits_raw_storage_error(tmp_path: Path) -> None:
-    from ...domain.filing import ModeloDraftRepository
+    from ....domain.filing import ModeloDraftRepository
 
     settings = _build_settings(tmp_path)
     with profile_create_storage_span("test"):

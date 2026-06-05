@@ -92,7 +92,7 @@ def test_planned_operations_lists_get_navigate_fill_scrape_and_discard() -> None
 
 
 def test_live_driver_plans_casilla_override_and_scrape_navigation() -> None:
-    from ....adapters.outbound.aeat.sede._renta_web_open import RentaWebOpenSedeDriver
+    from .....adapters.outbound.aeat.sede._renta_web_open import RentaWebOpenSedeDriver
 
     payload = b'{"casilla_overrides": {"0528": "5000,00"}, "scrape_casillas": ["0695"]}'
     plan = RentaWebOpenSedeDriver().planned_operations(payload, expected={"0180": object()})
@@ -237,7 +237,7 @@ def test_overall_verdict_mismatch_when_any_field_mismatched_even_with_unverifiab
 
 
 # ---------------------------------------------------------------------------
-# legacy-step — ReplayPayload roundtrip: validate strictly + round-trip through driver
+# contract — ReplayPayload roundtrip: validate strictly + round-trip through driver
 # ---------------------------------------------------------------------------
 
 
@@ -245,8 +245,8 @@ def test_replay_payload_roundtrip_via_renta_web_open_driver() -> None:
     """ReplayPayload.model_validate accepts the canonical JSON shape and the
     Renta WEB Open replay driver round-trips the same envelope faithfully."""
 
-    from ._live_parity import ReplayPayload
-    from ._renta_web_open_oracle import RentaWebOpenReplayDriver
+    from .._live_parity import ReplayPayload
+    from .._renta_web_open_oracle import RentaWebOpenReplayDriver
 
     raw = json.dumps(
         {
@@ -271,7 +271,7 @@ def test_replay_payload_roundtrip_via_renta_web_open_driver() -> None:
 def test_replay_payload_strict_rejects_extra_fields_renta_web_open() -> None:
     """extra=forbid on ReplayPayload raises ValidationError for unknown keys."""
 
-    from ._live_parity import ReplayPayload
+    from .._live_parity import ReplayPayload
 
     with pytest.raises(ValidationError, match="Extra"):
         ReplayPayload.model_validate({"observed": {}, "stray_key": "oops"})
@@ -280,7 +280,7 @@ def test_replay_payload_strict_rejects_extra_fields_renta_web_open() -> None:
 def test_replay_payload_strict_rejects_non_string_value_in_observed_renta_web_open() -> None:
     """Mapping[str, str] under strict mode rejects non-string values."""
 
-    from ._live_parity import ReplayPayload
+    from .._live_parity import ReplayPayload
 
     with pytest.raises(ValidationError):
         ReplayPayload.model_validate({"observed": {"0180": 12345.67}})

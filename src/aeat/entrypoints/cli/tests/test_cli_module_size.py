@@ -16,12 +16,12 @@ _DEFAULT_MODULE_LINE_LIMIT = 800
 _DEFAULT_COMMAND_LINE_LIMIT = 180
 
 _LEGACY_MODULE_LINE_BUDGETS = {
-    "_app_live.py": 2061,
+    "_app_live.py": 1882,
     "_config/__init__.py": 2890,
     "_config/_google.py": 1399,
-    "_ledger.py": 4084,
+    "_ledger.py": 3314,
     "_ledger_payloads.py": 918,
-    "_modelo.py": 1881,
+    "_modelo.py": 1648,
     "_modelo_payloads.py": 1240,
 }
 

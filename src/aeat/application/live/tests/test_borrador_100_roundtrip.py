@@ -184,8 +184,8 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from ...adapters.persistence.storage.sql._orm import SecureObjectRow
-    from ...adapters.persistence.storage.sql.session import session_scope
+    from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ....adapters.persistence.storage.sql.session import session_scope
 
     bucket_id = "renta-2024-bucket"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
@@ -224,7 +224,7 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
         # Surgically delete ``superseded_by_snapshot_id`` from the
         # persisted JSON envelope payload, then attempt to load. The
         # column accessor handles encrypt/decrypt automatically.
-        from ._borrador_100 import (
+        from .._borrador_100 import (
             BORRADOR_100_SNAPSHOT_NAMESPACE,
             borrador_100_snapshot_object_key,
         )
