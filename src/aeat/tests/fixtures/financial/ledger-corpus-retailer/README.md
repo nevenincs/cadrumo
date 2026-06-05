@@ -2,7 +2,7 @@
 
 A second, smaller hand-authored corpus for a **different taxpayer in a different
 profile bucket**, exercising the **cross-profile runtime-pegged ledger** goal and
-the **recargo de equivalencia regime** end-to-end (W13). It is the regime
+the **recargo de equivalencia regime** end-to-end. It is the regime
 counterpart to the Marta autónoma corpus, where an RE line is only a non-retailer
 anomaly.
 

@@ -31,6 +31,6 @@ import pytest
 def _isolated_aeat_root(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Point `Settings.aeat_local_storage_root` at the test's `tmp_path`."""
 
-    if request.node.get_closest_marker("live_read") or request.node.get_closest_marker("live_write"):
+    if request.node.get_closest_marker("aeat_live"):
         return
     monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))

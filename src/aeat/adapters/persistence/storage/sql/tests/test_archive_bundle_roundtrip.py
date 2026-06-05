@@ -110,7 +110,7 @@ def _save_archive_bundle_rows(
     *,
     rows: tuple[tuple[str, str, SensitivityClass, int, bytes], ...],
 ) -> None:
-    """Phase 1: original saves under natural keys."""
+    """Save original rows under natural keys."""
     for namespace, natural_key, classification, schema_version, payload in rows:
         repo.save(
             namespace=namespace,
@@ -127,7 +127,7 @@ def _assert_raw_bundle_is_ciphertext(
     *,
     rows: tuple[tuple[str, str, SensitivityClass, int, bytes], ...],
 ) -> None:
-    """Phase 2 asserts: the iter_all_records_raw walk yields ciphertext + HMAC keys.
+    """Assert the iter_all_records_raw walk yields ciphertext + HMAC keys.
 
     Every raw row carries a 32-byte HMAC digest of the natural key
     and a ``bytes`` payload that MUST be the on-wire ciphertext.
@@ -159,7 +159,7 @@ def _index_bundle_by_namespace(
 
 
 def _wipe_and_recreate_secure_objects_table(engine: Engine, *, repo: SecureObjectRepository) -> None:
-    """Phase 3: drop the table, recreate it empty, and assert the raw walk yields nothing."""
+    """Drop the table, recreate it empty, and assert the raw walk yields nothing."""
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
     assert tuple(repo.iter_all_records_raw()) == ()
@@ -171,7 +171,7 @@ def _restore_rows_under_hashed_keys(
     rows: tuple[tuple[str, str, SensitivityClass, int, bytes], ...],
     bundle_by_namespace: dict[str, dict[bytes, SecureObjectRawRow]],
 ) -> None:
-    """Phase 3b: replay each plaintext under the captured HMAC digest via save_with_raw_key."""
+    """Replay each plaintext under the captured HMAC digest via save_with_raw_key."""
     for namespace, _natural_key, classification, schema_version, payload in rows:
         ns_entries = bundle_by_namespace[namespace]
         assert len(ns_entries) == 1
@@ -192,7 +192,7 @@ def _assert_rows_load_back_through_natural_keys(
     *,
     rows: tuple[tuple[str, str, SensitivityClass, int, bytes], ...],
 ) -> None:
-    """Phase 4: load each row back through its natural key and assert payload + class + version."""
+    """Load each row back through its natural key and assert payload + class + version."""
     for namespace, natural_key, classification, schema_version, payload in rows:
         loaded = repo.load(
             namespace,

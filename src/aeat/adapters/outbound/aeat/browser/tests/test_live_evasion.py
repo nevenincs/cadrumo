@@ -143,7 +143,7 @@ async def _wait_for_descendants(
 async def test_live_bot_detection_probe(tmp_path) -> None:
     """Test the browser session against a live bot detection probe.
 
-    Gated by the ``live_read`` module-level marker (excluded from the default
+    Gated by the ``aeat_live`` module-level marker (excluded from the default
     ``just test`` selection) and by ``AEAT_LIVE_TESTS_ENABLED`` when invoked
     via ``just test-live``.
     """

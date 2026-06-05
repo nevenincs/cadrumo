@@ -2,7 +2,7 @@
 
 Performs a tiny real round trip against the Anthropic API when
 ``AEAT_LLM_ANTHROPIC_API_KEY`` is configured; the test self-skips
-otherwise. Tagged ``live_read`` so it is excluded from the default unit
+otherwise. Tagged ``aeat_live`` so it is excluded from the default unit
 test selection.
 """
 
