@@ -2,8 +2,7 @@
 
 Runs a real nitpicky, warnings-as-errors Sphinx build and asserts it
 succeeds. Every unresolved cross-reference or malformed directive fails the
-build. The test carries the ``docs`` marker so it is excluded from the fast
-unit lane and run via ``just docs-check``; it builds into a ``tmp_path`` and
+build. The test carries the active ``unit`` and ``hex_core`` markers; it builds into a ``tmp_path`` and
 sets ``AEAT_DOCS_OFFLINE`` so intersphinx inventories are not fetched.
 """
 
@@ -18,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_core, pytest.mark.docs]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _DOCS = _REPO_ROOT / "docs"

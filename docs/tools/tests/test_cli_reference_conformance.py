@@ -18,7 +18,7 @@ Three independent conformance assertions:
 
 All three walk the live materialised CLI tree via a subprocess, so they are
 honest about the actual command surface rather than any curated contract tuple.
-Each test carries the ``docs`` marker and is excluded from the fast unit lane.
+Each test carries the active ``unit`` and ``hex_entrypoint`` markers.
 
 Language pinning: a fresh subprocess with ``AEAT_OUTPUT_LANGUAGE=en`` ensures
 ``tr()`` help strings resolve to English before any CLI module is imported.
@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.docs, pytest.mark.unit, pytest.mark.domain_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _DOCS_CLI_DIR = Path(__file__).parent.parent.parent.parent.parent / "docs" / "cli"
 

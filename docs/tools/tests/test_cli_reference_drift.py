@@ -7,9 +7,8 @@ emits. Without this gate, a verb/flag/help-text drift silently
 diverges from the published reference and the docs-check lane
 catches it only at the next manual regen.
 
-Marked for the docs-check lane (``-m docs``) so the fast unit
-gate is unaffected; ``just docs-check`` runs it as part of the
-documentation pipeline.
+Marked as ``unit`` plus ``hex_entrypoint`` because it verifies the CLI
+reference projection without making external calls.
 """
 
 from __future__ import annotations
@@ -20,7 +19,7 @@ import pytest
 
 from docs.tools.cli_reference import generate_cli_reference_in_subprocess
 
-pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.domain_persistence]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _DOCS_ROOT = Path("docs")
 
