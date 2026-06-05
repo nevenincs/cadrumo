@@ -8,21 +8,22 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
 ---
 
-# W02.P10.S146 Config Budget Verification
+# W02.P10.S146 Config And Budget Verification
 
-Scope: `src/aeat/entrypoints/cli/_config/tests`; `src/aeat/entrypoints/cli/tests`; `src/aeat/tests/test_codebase_size_budgets.py`.
+## Scope
+
+Verify residual config callable splits and the size-budget inventory repair.
 
 ## Description
 
-- Verified the residual config callable splits and stale-path budget repair together.
-- Re-ran locale audit after removing retired profile `switch` help strings and tightening stub-refusal legal anchors.
+- Ran ruff and compile checks for config custody, profile censo, and the size-budget guard.
+- Ran marker-enabled config custody/profile lifecycle tests.
+- Ran the hard size-budget guard after the current overview and parser test splits.
 
 ## Outcome
 
-- `ruff check` passed on the touched config, locale-adjacent test, and budget files.
-- `python -m aeat.locales audit` passed for `ca`, `en`, `es`, and `hu`.
-- `pytest -m "unit or integration"` passed for config lifecycle, cross-profile unlock, config surface inventory, profile lifecycle, CLI module size, and codebase size-budget checks.
+Config marker lane passed with 73 tests. The codebase size-budget guard passed with 2 tests.
 
 ## Notes
 
-- No skipped or xfailed verification was introduced.
+Default pytest deselected config tests until the marker lane was enabled.

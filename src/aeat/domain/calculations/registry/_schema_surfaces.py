@@ -625,7 +625,7 @@ def _normalise_fichero_boe_encoding(declared: str) -> str:
 # (_validate_surfaces.validate_verification_expectation_section)
 # uses this set to reject unknown operators at authoring time. The
 # runtime evaluator
-# (aeat.application.modelo._actions._evaluate_predicate_expression)
+# (aeat.application.modelo._verification_actions._evaluate_predicate_expression)
 # carries its own regex per operator but MUST keep its set of operators
 # identical to this constant — drift between the two sets is a
 # silent-pass hazard at the predicate layer (a typo would silently pass

@@ -8,20 +8,22 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
 ---
 
-# W02.P10.S143 Custody Registrar Split
+# W02.P10.S143 Config Custody Registrar Split
 
-Scope: `src/aeat/entrypoints/cli/_config/_custody.py`; `src/aeat/entrypoints/cli/_config/tests`.
+## Scope
+
+Split the residual oversized config custody command registrar into focused transport helpers.
 
 ## Description
 
-- Split the residual config custody registrar into focused root-command registration helpers.
-- Preserve root `config unlock`, `lock`, `rekey`, `recover`, `show-recovery`, and `verify-recovery` transport semantics.
+- Extracted unlock, lock, rekey, recover, show-recovery, and verify-recovery command registration into separate helpers.
+- Kept command bodies as CLI transport: activate output language, delegate to application services, emit typed payloads, and translate boundary errors.
+- Left custody policy in backend services.
 
 ## Outcome
 
-- `register_custody_commands` is now a thin registrar that delegates to per-command helpers.
-- Verified by `ruff check` on the touched config files and by config lifecycle tests.
+`register_custody_commands` is now a small composition function and no longer exceeds the callable budget.
 
 ## Notes
 
-- No policy moved into CLI; the command helpers continue to call application services.
+No command behavior or option shape was changed.

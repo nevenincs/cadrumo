@@ -8,21 +8,24 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
 ---
 
-# W03.P11.S141 Modelo Facade Reach-Through Cleanup
+# W03.P11.S141 Modelo Internal Facade Cleanup
 
-Scope: remove residual modelo application-internal reach-through to `_actions.py` where focused backend modules own the implementation.
+## Scope
+
+Remove residual modelo application-internal imports from the `_actions` compatibility facade where focused backend modules already own the implementation.
 
 ## Description
 
-- Rechecked semantic and direct discovery for modelo work-unit, revision, export, projection, and calculation flows before changing imports.
-- Confirmed `_calculate_input.py`, `_export.py`, `_projection.py`, `_work_addressing.py`, and filing helpers already import focused backend modules rather than the `_actions.py` compatibility facade.
-- Changed the public `aeat.application.modelo` facade to re-export calculation, amendment, import, filing, verification, and IVA wallet symbols from their focused backend modules instead of the `_actions.py` compatibility bundle.
-- Kept `_actions.py` available for legacy compatibility exports and application-private tests that intentionally exercise compatibility aliases or private helpers.
+- Redirect `WorkUnitNotFoundError` imports to `_action_errors`.
+- Redirect work lifecycle imports to `_work_lifecycle`.
+- Redirect calculation revision imports to `_calculation_actions`.
+- Redirect IVA wallet and clean-state helpers to their owning backend modules.
+- Preserve `_actions` as a compatibility export facade for package consumers and existing tests.
 
 ## Outcome
 
-The public package initializer is now the consumer-facing facade while `_actions.py` remains a legacy compatibility facade. Production entrypoints, adapters, and domain modules do not reach into private modelo application modules.
+Modelo sibling services now call owning backend modules directly instead of using `_actions` as an internal dependency hub.
 
 ## Notes
 
-Ruff, compileall, public facade smoke imports, architecture-boundary tests, and private-submodule consumer scans passed after the cleanup. No CLI business logic was added.
+The public package facade and `_actions` compatibility exports remain intentionally available.
