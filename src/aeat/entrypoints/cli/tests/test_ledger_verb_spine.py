@@ -87,16 +87,16 @@ def test_ledger_link_check_preflight_sit_at_noun_group_root() -> None:
 # replaced by a similarly-named alias) that an exact-set match might still
 # happen to satisfy if both the missing and the extra are accounted for in the
 # expected set update.
-_W71_CRUD_SPINE_COUNT: int = 7  # add, view, list, update, remove, archive, reset
+_CRUD_SPINE_COUNT: int = 7  # add, view, list, update, remove, archive, reset
 _RATIFIED_ORTHOGONAL_AXIS_COUNT: int = 3  # link, check, preflight
 _RATIFIED_WORKFLOW_AXIS_COUNT: int = 13  # allocate attach categories classify
 # export history import merge review split stash status track
 _EXPECTED_LEDGER_VERB_COUNT: int = (
-    _W71_CRUD_SPINE_COUNT + _RATIFIED_ORTHOGONAL_AXIS_COUNT + _RATIFIED_WORKFLOW_AXIS_COUNT
+    _CRUD_SPINE_COUNT + _RATIFIED_ORTHOGONAL_AXIS_COUNT + _RATIFIED_WORKFLOW_AXIS_COUNT
 )
 
 
-def test_ledger_verb_count_matches_w71_canonical_spine() -> None:
+def test_ledger_verb_count_matches_canonical_spine() -> None:
     """The mounted `aeat app ledger` verb count matches the accepted contract canonical
     spine (CRUD + ratified orthogonal axes + ratified workflow axes).
 
@@ -108,7 +108,7 @@ def test_ledger_verb_count_matches_w71_canonical_spine() -> None:
     registered_count = len(ledger_app.registered_commands)
     assert registered_count == _EXPECTED_LEDGER_VERB_COUNT, (
         f"ledger verb count drifted: expected {_EXPECTED_LEDGER_VERB_COUNT} "
-        f"(W71 CRUD {_W71_CRUD_SPINE_COUNT} + orthogonal axes "
+        f"(CRUD {_CRUD_SPINE_COUNT} + orthogonal axes "
         f"{_RATIFIED_ORTHOGONAL_AXIS_COUNT} + workflow axes "
         f"{_RATIFIED_WORKFLOW_AXIS_COUNT}); got {registered_count}: "
         f"{sorted(cmd.name for cmd in ledger_app.registered_commands)!r}"

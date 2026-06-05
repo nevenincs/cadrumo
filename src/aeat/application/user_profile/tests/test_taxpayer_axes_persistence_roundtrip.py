@@ -200,7 +200,7 @@ def test_v1_shaped_record_without_taxpayer_axes_loads_under_v2_schema(
     state = register_active_profile(
         WorkflowState(),
         profile_id="v1-shaped-record",
-        display_name="Pre-W01 operator",
+        display_name="Pre-existing operator",
         facts=v1_shaped_facts,
         secure_objects=secure_objects,
         schema=schema,

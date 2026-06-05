@@ -1,8 +1,8 @@
 """Online modelo-export request-pipeline integration (accepted contract / follow-up contract).
 
 The live Drive/Sheets write itself is validated by manual operator testing
-(``aeat config google sync calc export`` against a real account) — external-write
-tests are project-forbidden (``live_write`` is collection-dropped). What CAN and
+(``aeat config google sync calc export`` against a real account) — write-shaped
+online tests are project-forbidden. What CAN and
 MUST be gated in CI is that, for a real modelo, the apply adapter assembles the
 COMPLETE set of Google-Sheets API write requests from the plan with no network:
 values, live formulas, the Evidencia surface, number formats, and the
@@ -71,9 +71,9 @@ def test_apply_request_pipeline_is_complete_for_a_real_modelo() -> None:
 
 
 def test_apply_design_request_set_is_complete_for_a_real_modelo() -> None:
-    # S: the online apply renders the full design system — monospace base font,
-    # role-tinted styled ranges, sized columns, frozen header rows, and basic
-    # filters — mirroring the offline materialiser from the same plan facets.
+    # The online apply renders the full design system: monospace base font,
+    # role-tinted styled ranges, sized columns, frozen header rows, and filters
+    # mirroring the offline materialiser from the same plan facets.
     plan = _m130_plan()
     sheet_id_by_tab = {
         "Entradas": 0,

@@ -520,7 +520,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
 
     missing_probes = KNOWN_VERIFICATION_PREDICATE_OPERATORS.difference(probe_expressions)
     assert not missing_probes, (
-        f"P10.S68 probe map is missing entries for known operators {sorted(missing_probes)!r}; "
+        f"Probe map is missing entries for known operators {sorted(missing_probes)!r}; "
         "extend probe_expressions and regex_attr_names when adding a new operator to the canonical set"
     )
 

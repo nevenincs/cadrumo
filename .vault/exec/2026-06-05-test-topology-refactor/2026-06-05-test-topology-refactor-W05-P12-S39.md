@@ -21,7 +21,7 @@ Pytest collection gates.
 
 ## Outcome
 
-Marker integrity passed 2070 checks; collection reported 12832 selected, 1368 deselected, 14200 total.
+Marker integrity passed 2070 checks. The final full `src/aeat` collection attempt was blocked by unrelated concurrent CLI Google decomposition work: `src/aeat/entrypoints/cli/_config/_google.py` references `register_google_folder_commands` before that symbol is defined.
 
 ## Notes
 

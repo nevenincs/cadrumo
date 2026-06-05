@@ -57,7 +57,7 @@ def test_modelo_131_corpus_carries_provenance_document() -> None:
 
     provenance = modelo_131_corpus / "PROVENANCE.md"
     assert provenance.is_file(), (
-        f"PROVENANCE.md missing at {provenance}; the P08.S47 cap predicate "
+        f"PROVENANCE.md missing at {provenance}; the cap predicate "
         "grounding claim depends on this document's existence and content"
     )
 

@@ -1,4 +1,4 @@
-"""Generic live-test gate for ``@pytest.mark.live`` tests.
+"""Generic live-test gate for ``@pytest.mark.aeat_live`` tests.
 
 Test-support helper shared across the package. Live-gated tests under
 both ``src/aeat/adapters/...`` and ``src/aeat/entrypoints/...`` import

@@ -586,7 +586,7 @@ class Settings(BaseSettings):
     # a wider opt-in surface than the test-gate intent allows.
     aeat_live_tests_enabled: str = Field(
         default="",
-        description="Opt-in flag (set to '1') to run @pytest.mark.live_read tests against real external services",
+        description="Opt-in flag (set to '1') to run @pytest.mark.aeat_live tests against real external services",
     )
 
     # ── Replay IPC ──────────────────────────────────────────────────────────
