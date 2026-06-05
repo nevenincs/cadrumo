@@ -1,8 +1,9 @@
-# Work with transaction data
+# Work with Transactions
 
-Use this guide when your ledger is not ready yet. It covers importing bank
-statements, adding transactions by hand, reviewing rows, editing or removing
-rows, and handing the ledger to classification and calculation.
+Use this guide when your ledger is not ready yet. It is the transaction
+quickstart: import rows, add a missing row by hand, review and export the
+ledger, correct rows, attach references, split or merge rows, then hand the
+ledger to classification and calculation.
 
 The ledger is local to the active taxpayer profile. `aeat` does not
 automatically sync your bank. It imports only when you run an import command,
@@ -16,6 +17,8 @@ You need:
 - a working `aeat` command
 - an active taxpayer profile; see [Set up your taxpayer profile](profile-setup.md)
 - a bank statement file or directory, unless you are adding transactions by hand
+- for AEAT census-derived home-office ratios, reviewed censo facts; see
+  [Link Modelo 036 census information](censo-update.md)
 
 Confirm the active profile before you write transaction data:
 
@@ -62,18 +65,61 @@ aeat app ledger import ./processed.csv --provider csv --verify --source ./statem
 Use `--period` only when you intentionally want to tag the import with a fiscal
 period.
 
-## Add a transaction manually
+## Add one transaction manually
 
 Use `ledger add` when a transaction is missing from imported statements:
 
 ```bash
-aeat app ledger add --date 2026-03-15 --amount -49.99 --direction OUTGOING --description "Software subscription"
+aeat app ledger add --date 2026-03-15 --amount=-49.99 --direction OUTGOING --description "Software subscription"
 ```
 
 Required fields are date, signed amount, direction, and description. Optional
 fields include value date, currency, counterparty, classification, business
 percentage, category id, taxable base, IVA rate, IVA amount, IRPF category,
 notes, and source jurisdiction.
+
+For a received payment or issued invoice, use `INCOMING`:
+
+```bash
+aeat app ledger add --date 2026-03-20 --amount 121.00 --direction INCOMING --description "Client payment"
+```
+
+For an expense or incoming supplier invoice, use `OUTGOING`:
+
+```bash
+aeat app ledger add --date 2026-03-21 --amount=-60.50 --direction OUTGOING --description "Office supplies"
+```
+
+Use the invoice commands when you also need to track whether an invoice exists
+separately from the bank movement:
+
+```bash
+aeat app ledger payable-invoice --help
+aeat app ledger collectible-invoice --help
+```
+
+Payable invoices are supplier invoices you owe. Collectible invoices are
+customer invoices owed to you.
+
+## Understand transaction fields
+
+`ledger view` and `ledger export` use the same core ledger fields:
+
+- identity and status: `transaction_id`, `bucket_id`, `lifecycle_state`
+- dates: `booked_date`, `value_date`, `effective_date`
+- money: `amount`, `currency`, `value_in_eur`, `fx_rate`
+- movement: `direction`, `counterparty`, `description`, `source_jurisdiction`
+- classification: `business_classification`, `business_pct`, `category_id`
+- IVA and IRPF: `taxable_base`, `iva_rate`, `iva_amount`, `irpf_category`
+- proportionality: `usage_ratio_id`, `prorrata_reference`
+- evidence and notes: `purchase_invoice_evidence_id`, `attachment_ids`,
+  `notes`, `created_by`, `created_source_command`
+
+Use [Classify transactions](classify-transactions.md) for category, IVA, IRPF,
+and shared-expense decisions. Use
+[Review and supply calculation inputs](review-calculation-values.md) when a
+modelo calculation says a casilla, binding, offset, or manual value is still
+missing.
 
 ## Review rows
 
@@ -104,6 +150,37 @@ aeat app ledger history <transaction-id>
 aeat app ledger track <transaction-id>
 ```
 
+For a broader review queue, use:
+
+```bash
+aeat app ledger review --filter period=2026Q1
+aeat app ledger check
+```
+
+`review` helps inspect selected ledger rows. `check` reports aggregate ledger
+anomalies across periods and is local-only.
+
+## Export rows for review
+
+Export the active ledger to a file:
+
+```bash
+aeat app ledger export --output ./ledger-2026-q1.csv --period 2026Q1
+```
+
+The `--period` filter keeps the export aligned with the tutorial transaction
+dates. A transaction dated `2026-03-15` belongs in `2026Q1`, so it appears in
+the command above. Use a whole year when that is the review scope:
+
+```bash
+aeat app ledger export --output ./ledger-2026.xlsx --export-format xlsx --period 2026
+```
+
+Exports are review snapshots. They are not a general edit-and-reimport
+mutation path for existing ledger rows. To change saved rows, use `ledger
+update`, `ledger classify`, `ledger allocate`, `ledger split`, or `ledger
+merge`.
+
 ## Update a row
 
 Use `ledger update` for editable transaction fields:
@@ -116,6 +193,56 @@ aeat app ledger update --id <transaction-id> --taxable-base 100.00 --iva-rate 0.
 Use this for corrections such as date, value date, amount, direction, currency,
 counterparty, description, taxable base, IVA rate, IVA amount, IRPF category,
 notes, or group label.
+
+Add or modify notes when you need a short operator explanation:
+
+```bash
+aeat app ledger update --id <transaction-id> --notes "Receipt checked against supplier PDF"
+```
+
+Attach secure purchase evidence or a stored attachment id when you already have
+one:
+
+```bash
+aeat app ledger attach --id <transaction-id> --purchase-invoice-evidence-id <evidence-id>
+aeat app ledger attach --id <transaction-id> --attachment-id <attachment-id>
+```
+
+Record a Gmail, Google Drive, or URL reference without downloading the remote
+document:
+
+```bash
+aeat app ledger doclink --id <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
+```
+
+`doclink` stores the link reference locally and binds it to the row. It never
+fetches the remote document.
+
+## Split and re-join a transaction
+
+Use `split` when one bank movement contains parts that need different
+categories or business percentages. For example, split a `-121.00` movement
+into software and personal parts:
+
+```bash
+aeat app ledger split --id <transaction-id> --child-amount=-100.00 --child-description "Software business part" --child-amount=-21.00 --child-description "Personal part" --reason "mixed receipt" --yes
+```
+
+The command creates child transactions and records split lineage. Then classify
+each child:
+
+```bash
+aeat app ledger classify --id <business-child-id> --classification BUSINESS --category-id <category-id>
+aeat app ledger classify --id <personal-child-id> --classification PERSONAL
+```
+
+If the split was wrong, merge the complete child cohort:
+
+```bash
+aeat app ledger merge --child-id <business-child-id> --child-id <personal-child-id> --reason "undo split" --yes
+```
+
+Partial merges are refused; provide every child from the split group.
 
 ## Remove, archive, or stash a row
 
@@ -156,6 +283,59 @@ Use [Classify transactions](classify-transactions.md) for the full
 classification workflow, including bulk CSV classification, mixed-use
 allocation, tax fields, and LLM-assisted suggestions.
 
+For repeated descriptions, stored rules can classify matching unclassified
+transactions automatically:
+
+```bash
+aeat app ledger rule add --description-pattern "software" --classification BUSINESS --category-id <category-id>
+aeat app ledger rule apply --dry-run
+aeat app ledger rule apply
+```
+
+For model-assisted suggestions, use
+[Classify transactions with an LLM](classify-with-llm.md). That
+page explains provider setup, what row data is sent to the local provider, what
+is previewed, what is applied, and how to override the result.
+
+## Batch edit classifications
+
+Use batch classification when many reviewed rows need the same kind of
+classification update. The implemented batch path is `ledger classify
+--from-csv`; it accepts `transaction_id`, `classification`, and optional
+`category_id`.
+
+1. Filter and export the rows you want to review:
+
+   ```bash
+   aeat app ledger list --filter period=2026Q1 --filter classification=NOT_YET_PROCESSED
+   aeat app ledger export --output ./ledger-2026-q1-review.csv --period 2026Q1
+   ```
+
+2. Build a small classification CSV from the reviewed transaction ids:
+
+   ```text
+   transaction_id,classification,category_id
+   <expense-id>,BUSINESS,<category-id>
+   <personal-id>,PERSONAL,
+   ```
+
+3. Apply it:
+
+   ```bash
+   aeat app ledger classify --from-csv ./classifications.csv
+   ```
+
+4. Review afterwards:
+
+   ```bash
+   aeat app ledger list --filter period=2026Q1
+   aeat app ledger preflight --period 2026Q1
+   ```
+
+This batch path does not bulk edit descriptions, amounts, IVA fields, notes, or
+attachments. Edit those one row at a time with `ledger update`, `ledger attach`,
+or `ledger doclink`.
+
 ## Check readiness for a filing period
 
 Run preflight before calculating a modelo:
@@ -177,6 +357,11 @@ aeat app ledger status --period 2026Q1
 Continue to calculation only when the active profile and target period are
 ready enough for the modelo you are preparing.
 
+For calculation review in Google Sheets, see
+[Review calculations with Google Sheets](review-with-google-sheets.md). That
+workflow exports a modelo calculation surface to Sheets; it is separate from
+ledger CSV/XLSX export.
+
 ## If a command stops with an error
 
 If a command reports that no profile is active, the period is invalid, or the
@@ -186,6 +371,8 @@ ledger is not ready, use
 ## Next steps
 
 - [Classify transactions](classify-transactions.md)
+- [Classify transactions with an LLM](classify-with-llm.md)
+- [Review calculations with Google Sheets](review-with-google-sheets.md)
 - [Quickstart: produce a modelo file](quickstart.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [CLI reference](../cli/index.rst)

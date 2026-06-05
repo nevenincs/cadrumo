@@ -5,22 +5,14 @@ tags:
 date: '2026-06-05'
 tier: L3
 related:
+  - '[[2026-06-05-modelo-work-revision-cli-decomposition-adr]]'
   - '[[2026-06-04-modelo-addressing-ux-adr]]'
   - '[[2026-06-04-modelo-addressing-ux-research]]'
   - '[[2026-06-05-modelo-addressing-ux-plan]]'
-  - '[[2026-06-05-modelo-addressing-ux-follow-up-adr-queue]]'
+  - '[[2026-06-05-modelo-addressing-ux-follow-up-queue-adr]]'
   - '[[2026-06-05-modelo-addressing-ux-code-review-audit]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `modelo-work-revision-cli-decomposition` `revision command extraction` plan
 

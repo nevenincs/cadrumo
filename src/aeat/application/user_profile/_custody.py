@@ -7,20 +7,21 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage.errors import DecryptionError, SecretStoreError, StorageValidationError
+from ...adapters.persistence.storage import RecoveryVerificationError
+from ...adapters.persistence.storage.errors import SecretStoreError, StorageValidationError
 from ...adapters.persistence.storage.master_key import (
     FileFallbackMasterKeyProvider,
-    decode_mnemonic,
-    generate_recovery_key,
     get_master_key_provider,
-    load_wrapped_master_key,
-    save_wrapped_master_key,
-    unwrap_master_key,
-    wrap_master_key,
+    load_recovery_envelope,
+    mint_recovery_envelope,
+    save_recovery_envelope,
+    unwrap_recovery_envelope,
+    verify_recovery_mnemonic,
 )
 from ...core._models import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
+from ...core.time import now as utc_now
 
 _RECOVERY_WRAP_FILENAME = "master.recovery.key"
 _log = get_logger(__name__)
@@ -100,23 +101,21 @@ def mint_recovery_code(settings: Settings | None = None) -> CustodyRecoveryEnrol
     rotated = path.exists()
     provider = get_master_key_provider(settings_override=resolved)
     master_key = provider.get_master_key()
-    recovery_key = generate_recovery_key()
-    wrapped = wrap_master_key(master_key=master_key, recovery_key=recovery_key)
-    save_wrapped_master_key(wrapped, path)
-    return CustodyRecoveryEnrollment(recovery_path=path, mnemonic=recovery_key.mnemonic, rotated=rotated)
+    minted = mint_recovery_envelope(dek=master_key, created_at=utc_now())
+    save_recovery_envelope(minted.envelope, path)
+    return CustodyRecoveryEnrollment(recovery_path=path, mnemonic=minted.mnemonic, rotated=rotated)
 
 
 def verify_recovery_code(*, mnemonic: str, settings: Settings | None = None) -> CustodyRecoveryVerification:
     """Return whether ``mnemonic`` unwraps the configured recovery wrapper."""
     path = recovery_wrap_path(settings)
     try:
-        wrapped = load_wrapped_master_key(path)
-        recovery_key = decode_mnemonic(mnemonic)
-        unwrap_master_key(wrapped=wrapped, recovery_key_bytes=recovery_key)
-    except (OSError, DecryptionError, SecretStoreError, StorageValidationError) as exc:
-        _log.debug("recovery-code verification failed error_type=%s", type(exc).__name__)
+        envelope = load_recovery_envelope(path)
+        verified = verify_recovery_mnemonic(envelope=envelope, mnemonic=mnemonic)
+    except (OSError, RecoveryVerificationError, SecretStoreError, StorageValidationError) as exc:
+        _log.debug("recovery-code verification failed error_type=%s", type(exc).__name__, exc_info=True)
         return CustodyRecoveryVerification(recovery_path=path, verified=False)
-    return CustodyRecoveryVerification(recovery_path=path, verified=True)
+    return CustodyRecoveryVerification(recovery_path=path, verified=verified)
 
 
 def _file_provider_for_new_passphrase(
@@ -153,8 +152,8 @@ def recover_secret_store(
     """Recover the master key from ``mnemonic`` and bind it to ``new_passphrase``."""
     resolved = _settings(settings)
     path = recovery_wrap_path(resolved)
-    wrapped = load_wrapped_master_key(path)
-    master_key = unwrap_master_key(wrapped=wrapped, recovery_key_bytes=decode_mnemonic(mnemonic))
+    envelope = load_recovery_envelope(path)
+    master_key = unwrap_recovery_envelope(envelope=envelope, mnemonic=mnemonic)
     new_provider = _file_provider_for_new_passphrase(settings=resolved, new_passphrase=new_passphrase)
     new_provider.complete_recovery(master_key)
     return CustodyRecoverResult(

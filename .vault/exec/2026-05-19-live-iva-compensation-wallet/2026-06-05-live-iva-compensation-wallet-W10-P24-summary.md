@@ -7,12 +7,6 @@ related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
 ---
 
-<!-- PHASE SUMMARY:
-     This file rolls up every Step Record belonging to one Phase
-     of the originating plan. Each Step (S##) in the Phase produces
-     one Step Record in `.vault/exec/`; this summary aggregates
-     them, lists modified / created files across the Phase, and
-     reports verification status. -->
 
 # `live-iva-compensation-wallet` `W10.P24` summary
 

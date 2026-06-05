@@ -6,9 +6,6 @@ related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
 ---
 
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path. -->
 
 # W10.P24.S98 vaultspec-rag service diagnostics
 

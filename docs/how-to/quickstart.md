@@ -43,7 +43,7 @@ aeat app ledger import ./statement.csv --provider auto
 aeat app ledger list
 ```
 
-Use [Work with transaction data](import-bank-statements.md) for the full
+Use [Work with Transactions](import-bank-statements.md) for the full
 transaction workflow: import, add, update, remove, review, classify, allocate,
 and run readiness checks.
 
@@ -165,7 +165,7 @@ receipt, see [How to reconcile a filed modelo against its justificante](reconcil
 
 - [Set up your taxpayer profile](profile-setup.md) if profile facts are still
   incomplete.
-- [Work with transaction data](import-bank-statements.md) when your ledger is
+- [Work with Transactions](import-bank-statements.md) when your ledger is
   not ready yet.
 - [Classify transactions](classify-transactions.md) before calculating from
   imported rows.

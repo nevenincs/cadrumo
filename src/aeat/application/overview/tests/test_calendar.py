@@ -9,7 +9,7 @@ from decimal import Decimal
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede._declarations import Declaracion
+from ....adapters.outbound.aeat.sede import Declaracion
 from ....adapters.outbound.aeat.sede._notifications import RemoteNotification
 from ....adapters.outbound.aeat.sede._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
@@ -92,12 +92,13 @@ def _modelo_record(
 def _filed_declaration_observation(
     *,
     artefacts: tuple[FiledDeclaracionArtefact, ...],
+    expediente_id: str = "12345678901234567890",
 ) -> FiledDeclaracionObservation:
     return FiledDeclaracionObservation(
         modelo="303",
         ejercicio=2025,
         period="1T",
-        expediente_id="12345678901234567890",
+        expediente_id=expediente_id,
         status="ALTA",
         presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
         authenticated_identity="X1234567L",
@@ -621,6 +622,100 @@ def test_calendar_entry_carries_distinct_local_and_aeat_states() -> None:
     assert row.local_filing_state is OverviewLocalFilingState.READY_TO_FILE
     assert row.aeat_submission_state is OverviewAeatSubmissionState.SUBMITTED_OBSERVED
     assert row.justificante_verified is False
+
+
+def test_calendar_event_carries_verified_justificante_from_filed_observation() -> None:
+    event = calendar_events_from_expedientes_snapshots(
+        (
+            PersistedExpedientesSnapshot(
+                snapshot_id="1" * 64,
+                bucket_id="bucket-1",
+                captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
+                source_url=_SOURCE_URL,
+                declarations=(
+                    Declaracion(
+                        modelo="303",
+                        ejercicio=2025,
+                        period="1T",
+                        expediente_id="12345678901234567890",
+                        estado="ALTA",
+                        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+                    ),
+                ),
+                persisted_at=datetime(2025, 4, 16, 10, 5, tzinfo=UTC),
+            ),
+        ),
+        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+    )
+    evidence = calendar_filing_evidence_from_sources(
+        filed_declaration_observations=(
+            _filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),
+        ),
+    )
+
+    calendar = build_overview_calendar(
+        _profile(),
+        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+        today=date(2025, 4, 10),
+        events=event,
+        filing_evidence=evidence,
+    )
+
+    assert len(calendar.events) == 1
+    assert calendar.events[0].aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
+    assert calendar.events[0].justificante_verified is True
+
+
+def test_calendar_event_justificante_verification_is_expediente_specific() -> None:
+    event = calendar_events_from_expedientes_snapshots(
+        (
+            PersistedExpedientesSnapshot(
+                snapshot_id="2" * 64,
+                bucket_id="bucket-1",
+                captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
+                source_url=_SOURCE_URL,
+                declarations=(
+                    Declaracion(
+                        modelo="303",
+                        ejercicio=2025,
+                        period="1T",
+                        expediente_id="12345678901234567890",
+                        estado="ALTA",
+                        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+                    ),
+                    Declaracion(
+                        modelo="303",
+                        ejercicio=2025,
+                        period="1T",
+                        expediente_id="12345678901234567891",
+                        estado="ALTA",
+                        presented_at=datetime(2025, 4, 16, 9, 30, tzinfo=UTC),
+                    ),
+                ),
+                persisted_at=datetime(2025, 4, 16, 10, 5, tzinfo=UTC),
+            ),
+        ),
+        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+    )
+    evidence = calendar_filing_evidence_from_sources(
+        filed_declaration_observations=(
+            _filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),
+        ),
+    )
+
+    calendar = build_overview_calendar(
+        _profile(),
+        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+        today=date(2025, 4, 10),
+        events=event,
+        filing_evidence=evidence,
+    )
+
+    by_ref = {observed.reference_id: observed for observed in calendar.events}
+    assert by_ref["12345678901234567890"].aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
+    assert by_ref["12345678901234567890"].justificante_verified is True
+    assert by_ref["12345678901234567891"].aeat_submission_state is OverviewAeatSubmissionState.SUBMITTED_OBSERVED
+    assert by_ref["12345678901234567891"].justificante_verified is False
 
 
 # ---------------------------------------------------------------------

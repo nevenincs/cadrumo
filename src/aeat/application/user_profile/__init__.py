@@ -48,6 +48,7 @@ if TYPE_CHECKING:
         CensoSyncError,
     )
     from ._censo_sync import (
+        CENSO_DERIVED_SOURCE_TAG,
         CENSO_SOURCE_TAG,
         CensoApplyResult,
         CensoComparisonStatus,
@@ -166,6 +167,7 @@ def __getattr__(name: str):
 
         return getattr(_censo_errors, name)
     if name in (
+        "CENSO_DERIVED_SOURCE_TAG",
         "CENSO_SOURCE_TAG",
         "CensoApplyResult",
         "CensoComparisonStatus",

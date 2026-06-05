@@ -54,6 +54,14 @@ aeat config profile create my-profile
 That interactive path asks the same profile questions described below. Use the
 sections below to decide each answer before you rely on the profile.
 
+The visible prompt labels are Spanish. They include `Tipo de entidad`, `Forma
+juridica`, `Categorias de renta IRPF`, net-turnover and new-entity questions,
+tax id, visible name, surnames or business name, economic activity, fiscal
+postcode, filing-obligation start date, taxation type code, CLI output
+language, and conditional sex, marital, family, spouse, IVA, withholding,
+residency, and notes questions. The exact prompt list depends on earlier
+answers.
+
 For the exact current flag names, enum values, and command-generated help text,
 run:
 
@@ -77,7 +85,8 @@ legal-entity form applies to legal entities.
 
 `--legal-entity-form`
 : Use this only for a legal entity. It records the legal form such as `sl`,
-  `sa`, `cooperativa`, or another supported form.
+  `sa`, `sal`, `sll`, `cooperativa`, `sociedad_civil_mercantil`,
+  `sin_fines_lucrativos`, or `other`.
 
 `--irpf-income-categories`
 : Use this for a natural person. Repeat it for each IRPF income category that
@@ -242,7 +251,8 @@ They influence calendars, applicability checks, and modelo readiness.
 
 `--irpf-estimation-regime`
 : IRPF estimation regime for economic activity, such as direct normal, direct
-  simplified, or objective estimation.
+  simplified, or objective estimation. Current CLI tokens include
+  `directa_normal`, `directa_simplificada`, and `objetiva`.
 
 `--irpf-special-regime`
 : IRPF special regime, normally `general`; use `impatriado` only for the
@@ -274,7 +284,9 @@ They influence calendars, applicability checks, and modelo readiness.
 
 `--tax-residence-ccaa`
 : Autonomous community for Spanish IRPF residents. The setup flow does not use
-  this for non-resident IRNR profiles.
+  this for non-resident IRNR profiles. The active implementation accepts common
+  regime CCAA values; `pais_vasco` and `navarra` are refused with the foral
+  regime message.
 
 ### Notes
 
@@ -354,6 +366,12 @@ Deletion is local and destructive. The profile is removed from ordinary list,
 switch, and app workflows. If it was active, `aeat` clears the active-profile
 pointer.
 
+Clear the active profile without deleting it:
+
+```bash
+aeat config profile logout
+```
+
 ## Export and import a profile
 
 Export writes a portable JSON package:
@@ -375,9 +393,10 @@ name:
 aeat config profile import ./ana-real-profile.json --label ana-restored
 ```
 
-Portable profile JSON can contain taxpayer facts and local filing data. Store it
-as sensitive tax data and do not send it in support requests unless you have
-redacted it.
+Portable profile JSON contains raw profile data, including raw taxpayer
+identity such as `identity.tax_id`. It can also contain local filing data.
+Store it as sensitive tax data and do not send it in support requests unless
+you have redacted it.
 
 ## Show profile contents and privacy notes
 
@@ -393,12 +412,12 @@ Display a named profile:
 aeat config profile show ana-real
 ```
 
-`profile show` is meant for local review. The normal CLI rendering redacts some
-identity values, such as tax identifiers, but the profile still represents
-personal tax data. There is no `profile show --reveal` flag in the current help
-surface. If you need to share profile information for support, prefer a small
-redacted excerpt that keeps only the relevant field names and non-sensitive
-values.
+`profile show` is meant for local review. The normal CLI rendering redacts tax
+ids as a short hash such as `sha256:<8hex>`, but it can still show names,
+activity, residence, regime, and other personal facts. There is no `profile
+show --reveal` flag in the current help surface. If you need to share profile
+information for support, prefer a small redacted excerpt that keeps only the
+relevant field names and non-sensitive values.
 
 ## If setup looks wrong
 
@@ -408,7 +427,8 @@ are working under the wrong profile, use
 
 ## Next steps
 
-- [Work with transaction data](import-bank-statements.md)
+- [Work with Transactions](import-bank-statements.md)
+- [Link Modelo 036 census information](censo-update.md)
 - [Plan your filing calendar](filing-calendar.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [CLI reference](../cli/index.rst)

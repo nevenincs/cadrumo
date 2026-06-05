@@ -1,5 +1,7 @@
 ---
-tags: ['#exec', '#codebase-monolith-decomposition']
+tags:
+  - '#exec'
+  - '#codebase-monolith-decomposition'
 date: '2026-06-05'
 step_id: 'S66'
 related:
@@ -8,25 +10,23 @@ related:
 
 # W03.P07.S66 Registry Schema Verification
 
-Scope: `src/aeat/domain/calculations/registry/tests/test_registry_schema.py src/aeat/domain/calculations/registry/tests`.
+Scope: `src/aeat/domain/calculations/registry/tests/test_registry_schema.py`, `src/aeat/domain/calculations/registry/tests`.
 
 ## Description
 
-- Verify `InputKind` and `RegistryRoundingCode` still resolve through `aeat.domain.calculations.registry`.
-- Verify `_schema.py` still re-exports the moved typed-axis symbols for existing internal imports.
-- Run focused schema, internal-only casilla, and referential-integrity tests.
-- Run ruff over the decomposed schema files.
+- Verified split schema-family modules with lint and compilation.
+- Ran focused schema behavior tests covering core schema, committed registry schema validation, and scalar data-type aliases.
+- Verified public registry facade imports for moved schema classes.
 
 ## Outcome
 
 Verification passed:
 
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/tests/test_schema.py src/aeat/domain/calculations/registry/tests/test_internal_only_casilla.py src/aeat/domain/calculations/registry/tests/test_referential_integrity.py -q --tb=short` passed with 71 tests.
-- `uv run --no-sync ruff check src/aeat/domain/calculations/registry/_schema.py src/aeat/domain/calculations/registry/_schema_input_kind.py src/aeat/domain/calculations/registry/_schema_rounding.py` passed.
-- Package facade smoke import confirmed `InputKind` resolves from `_schema_input_kind` and `RegistryRoundingCode` resolves from `_schema_rounding` while preserving `_schema` identity re-exports.
-- `rg` found no application or CLI imports into the new private schema typed-axis modules.
-- `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-06-05-codebase-monolith-decomposition-plan.md` passed with only existing warning `PLAN022`.
+- `uv run --no-sync ruff check --fix src/aeat/domain/calculations/registry/_schema.py src/aeat/domain/calculations/registry/_schema_base.py src/aeat/domain/calculations/registry/_schema_scalars.py src/aeat/domain/calculations/registry/_schema_formula.py src/aeat/domain/calculations/registry/_schema_surfaces.py src/aeat/domain/calculations/registry/_schema_input_kind.py src/aeat/domain/calculations/registry/_schema_rounding.py src/aeat/domain/calculations/registry/__init__.py` passed.
+- `uv run --no-sync python -m compileall` passed for `_schema.py` and all split schema-family modules.
+- `uv run --no-sync pytest src/aeat/domain/calculations/registry/tests/test_schema.py src/aeat/domain/calculations/registry/tests/test_registry_schema.py src/aeat/domain/calculations/registry/tests/test_year_data_type.py src/aeat/domain/calculations/registry/tests/test_period_code_data_type.py src/aeat/domain/calculations/registry/tests/test_country_code_data_type.py src/aeat/domain/calculations/registry/tests/test_iban_data_type.py src/aeat/domain/calculations/registry/tests/test_nif_data_type.py src/aeat/domain/calculations/registry/tests/test_long_tail_data_types.py -q` passed: 338 tests.
+- Facade smoke import passed for `CasillaDefinition`, `DecimalValue`, `FormulaExpression`, `ParameterDefinition`, `DatedValue`, and `RegistryRoundingCode`.
 
 ## Notes
 
-The plan warning `PLAN022` remains the known canonical-id monotonicity warning from earlier plan structure, not a schema decomposition failure.
+No schema behavior was intentionally changed. The extraction keeps compatibility imports in `_schema.py` because existing domain tests and consumers import schema names from that module directly.

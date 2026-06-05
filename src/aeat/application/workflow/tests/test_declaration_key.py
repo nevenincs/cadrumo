@@ -22,7 +22,7 @@ from .. import declaration_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_WORKFLOW_DIR = Path(__file__).parent
+_WORKFLOW_DIR = Path(__file__).parents[1]
 
 
 def _production_def_count(name: str) -> dict[str, int]:

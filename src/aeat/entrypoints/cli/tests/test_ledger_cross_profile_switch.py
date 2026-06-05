@@ -25,6 +25,7 @@ from ....application.user_profile._orchestration import profile_create_storage_s
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
+from ....tests import FIXTURES_DIR
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import app
 from .._config import profile_app
@@ -32,7 +33,7 @@ from .._config import profile_app
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _RUNNER = CliRunner()
-_FIX = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "financial"
+_FIX = FIXTURES_DIR / "financial"
 _MARTA_CSV = _FIX / "ledger-corpus" / "n26-savings.csv"
 _RETAILER_CSV = _FIX / "ledger-corpus-retailer" / "bbva-retail-eur.csv"
 

@@ -25,7 +25,7 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SRC_ROOT = Path(__file__).parent.parent.parent.parent  # src/aeat
-_DOMAIN_CANONICAL = Path(__file__).parent / "_applicability.py"
+_DOMAIN_CANONICAL = Path(__file__).parent.parent / "_applicability.py"
 
 
 def _assignment_targets(tree: ast.AST) -> set[str]:

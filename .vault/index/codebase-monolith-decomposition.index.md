@@ -221,6 +221,8 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W03-P07-S70` - W03.P07.S70 Registry Applicability Verification
 - `2026-06-05-codebase-monolith-decomposition-W03-P07-S71` - W03.P07.S71 Registry Workbook Parity Decomposition
 - `2026-06-05-codebase-monolith-decomposition-W03-P07-S72` - W03.P07.S72 Registry Workbook Parity Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P08-S73` - W03.P08.S73 AEAT Sede Declarations Decomposition
+- `2026-06-05-codebase-monolith-decomposition-W03-P08-S74` - W03.P08.S74 AEAT Sede Declarations Verification
 
 ### plan
 

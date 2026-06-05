@@ -8,7 +8,9 @@ logic and are not surfaced as operator-facing CLI help.
 """
 from __future__ import annotations
 
+import hashlib
 from datetime import date as _date
+from pathlib import Path
 
 import typer
 
@@ -18,6 +20,7 @@ from ...application.overview import (
     build_overview_calendar,
     build_overview_calendar_events,
     build_overview_status_report,
+    calendar_filing_evidence_from_sources,
 )
 from ...core.i18n import tr
 from ...core.logging import get_logger
@@ -68,6 +71,67 @@ def _local_live_calendar_events(bucket_id: str, rng: OverviewCalendarRange):
         expedientes_snapshots=tuple(expedientes),
         notification_snapshots=tuple(notifications),
     )
+
+
+def _local_calendar_filing_evidence(bucket_id: str, events: tuple):
+    """Return local/AEAT filing evidence rows from persisted local stores."""
+    try:
+        from ...adapters.outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
+        from ...application.calculations import CalculationObservationRepository
+        from ...domain.modelos import ModeloRecordCatalogueRepository
+
+        filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
+        filed_observation_store = FiledDeclaracionObservationStore(Path("var/aeat/filed-declarations"))
+        filed_declaration_observations = _calendar_verified_filed_declaration_observations(
+            filed_observation_store
+        )
+        calculation_observations = tuple(CalculationObservationRepository().iter_records())
+    except Exception:
+        logger.warning(
+            "overview calendar: failed to load local filing evidence for bucket %s",
+            bucket_id,
+            exc_info=True,
+        )
+        return ()
+    return calendar_filing_evidence_from_sources(
+        filing_records=filing_records,
+        observed_events=events,
+        filed_declaration_observations=tuple(filed_declaration_observations),
+        calculation_observations=calculation_observations,
+    )
+
+
+def _calendar_verified_filed_declaration_observations(store):
+    """Return filed observations with justificante PDF refs proven loadable."""
+    verified_observations = []
+    for observation in store.list_observations():
+        verified_artefacts = []
+        for artefact in observation.artefacts:
+            if artefact.kind != "justificante_pdf":
+                verified_artefacts.append(artefact)
+                continue
+            if _stored_filed_artefact_matches(store, artefact):
+                verified_artefacts.append(artefact)
+                continue
+            verified_artefacts.append(artefact.model_copy(update={"storage_ref": None}))
+        verified_observations.append(observation.model_copy(update={"artefacts": tuple(verified_artefacts)}))
+    return tuple(verified_observations)
+
+
+def _stored_filed_artefact_matches(store, artefact) -> bool:
+    storage_ref = artefact.storage_ref
+    if not storage_ref:
+        return False
+    try:
+        body = store.load_artefact(storage_ref)
+    except Exception:
+        logger.warning(
+            "overview calendar: ignored unreadable filed-declaration artefact %s",
+            storage_ref,
+            exc_info=True,
+        )
+        return False
+    return len(body) == artefact.byte_count and hashlib.sha256(body).hexdigest() == artefact.sha256
 
 
 @app.command("status", help=tr("cli.overview.status_help"))
@@ -202,13 +266,16 @@ def overview_calendar(
     bucket_id = current.active_profile_bucket_id()
     if bucket_id is None:
         raise _bad(tr("cli.config.errors.no_active_profile"))
+    events = _local_live_calendar_events(bucket_id, rng)
+    filing_evidence = _local_calendar_filing_evidence(bucket_id, events)
     cal: OverviewCalendar = build_overview_calendar(
         _profile_to_taxpayer(current),
         rng,
         today=_date.today(),
         raw_values=raw_values,
         show_suppressed=show_suppressed,
-        events=_local_live_calendar_events(bucket_id, rng),
+        events=events,
+        filing_evidence=filing_evidence,
     )
     if not cal.taxpayer_model_declared:
         # The taxpayer model is undeclared — the engine refuses
@@ -238,6 +305,9 @@ def overview_calendar(
             f"\tcloses={entry.closes_on.isoformat()}"
             f"\tadjusted={entry.adjusted_closes_on.isoformat()}"
             f"\tshift={entry.shift_reason}"
+            f"\tlocal={entry.filing_evidence.local_filing_state.value}"
+            f"\taeat={entry.filing_evidence.aeat_submission_state.value}"
+            f"\tjustificante={str(entry.filing_evidence.justificante_verified).lower()}"
         )
     for warning in cal.warnings:
         lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
@@ -258,6 +328,10 @@ def overview_calendar(
             parts.append(f"period={event.period}")
         if event.status:
             parts.append(f"status={event.status}")
+        if event.aeat_submission_state:
+            parts.append(f"aeat={event.aeat_submission_state.value}")
+        if event.justificante_verified is not None:
+            parts.append(f"justificante={str(event.justificante_verified).lower()}")
         lines.append("\t".join(parts))
     if cal.completeness.computable_modelos:
         lines.append(
@@ -312,6 +386,10 @@ def _overview_calendar_all_profiles(
         try:
             with profile_storage_session(bucket_id):
                 record = repository.load(bucket_id)
+                raw_values = record_to_values(record.record)
+                taxpayer = projection_for_taxpayer(record.record, tax_id_default="00000000T")
+                events = _local_live_calendar_events(bucket_id, rng)
+                filing_evidence = _local_calendar_filing_evidence(bucket_id, events)
         except Exception:
             logger.warning(
                 "overview calendar: skipping unreadable profile %s (%s)",
@@ -322,15 +400,14 @@ def _overview_calendar_all_profiles(
             all_lines.append(f"profile_skipped\t{bucket_id}\t{pointer.label}")
             continue
 
-        raw_values = record_to_values(record.record)
-        taxpayer = projection_for_taxpayer(record.record, tax_id_default="00000000T")
         cal = build_overview_calendar(
             taxpayer,
             rng,
             today=today,
             raw_values=raw_values,
             show_suppressed=show_suppressed,
-            events=_local_live_calendar_events(bucket_id, rng),
+            events=events,
+            filing_evidence=filing_evidence,
         )
 
         all_lines.append(f"profile\t{bucket_id}\t{pointer.label}")
@@ -343,6 +420,9 @@ def _overview_calendar_all_profiles(
                 f"\tcloses={entry.closes_on.isoformat()}"
                 f"\tadjusted={entry.adjusted_closes_on.isoformat()}"
                 f"\tshift={entry.shift_reason}"
+                f"\tlocal={entry.filing_evidence.local_filing_state.value}"
+                f"\taeat={entry.filing_evidence.aeat_submission_state.value}"
+                f"\tjustificante={str(entry.filing_evidence.justificante_verified).lower()}"
             )
         if not cal.taxpayer_model_declared:
             all_lines.append(
@@ -352,10 +432,19 @@ def _overview_calendar_all_profiles(
         for warning in cal.warnings:
             all_lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
         for event in cal.events:
-            all_lines.append(
-                f"event\t{event.event_type.value}\t{event.event_date.isoformat()}\t"
-                f"{event.source}\t{event.reference_id}\t{event.summary}"
-            )
+            parts = [
+                "event",
+                event.event_type.value,
+                event.event_date.isoformat(),
+                event.source,
+                event.reference_id,
+                event.summary,
+            ]
+            if event.aeat_submission_state:
+                parts.append(f"aeat={event.aeat_submission_state.value}")
+            if event.justificante_verified is not None:
+                parts.append(f"justificante={str(event.justificante_verified).lower()}")
+            all_lines.append("\t".join(parts))
         for suppressed in cal.suppressed_entries:
             all_lines.append(
                 f"suppressed\t{suppressed.modelo}\t{suppressed.period}"

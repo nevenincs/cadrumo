@@ -152,7 +152,7 @@ def test_portals_by_category_auth_is_sorted() -> None:
     assert values == sorted(values)
 
 
-def test_portals_by_category_counts_match_adr() -> None:
+def test_portals_by_category_counts_match_reference_breakdown() -> None:
     """Per-category counts match the canonical breakdown."""
     assert len(portals_by_category(PortalCategory.AUTH)) == 8
     assert len(portals_by_category(PortalCategory.FILING)) == 19

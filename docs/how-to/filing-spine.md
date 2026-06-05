@@ -1,109 +1,229 @@
 # How filings, work units, and calculation revisions fit together
 
-`aeat` supports local preparation, verification, export, and reconciliation of
-Spanish tax filings before manual Agencia Estatal de Administración Tributaria
-(AEAT) portal submission. The command line now centres the common workflow on
-the filing that an operator can see: active profile, modelo, filing year, and
-period.
+Use this guide when you already know the basic modelo flow and want to
+understand what `aeat` saves between commands.
 
-## Visible filing target
+The common command-line interface is the same one used in the quickstart:
 
-The visible filing target is:
+```bash
+aeat app modelo work create --modelo 303 --year 2026 --period 1T
+aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
+aeat app modelo work verify --modelo 303 --year 2026 --period 1T
+aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
+```
 
-- the active profile,
-- the modelo code,
-- the filing year,
-- and the period.
+`--modelo`, `--year`, and `--period` are the normal way to name the filing you
+are working on. Use that shape for routine create, calculate, verify, file,
+export, status, history, and revision commands.
 
-For example, Modelo 303 for the first quarter of 2026 is addressed as:
+## Start with the visible filing target
+
+A filing target is the filing as you see it:
+
+- the active profile
+- the modelo code
+- the filing year
+- the period
+
+For example, `--modelo 303 --year 2026 --period 1T` means "Modelo 303, first
+quarter of 2026, for the active profile."
+
+That same visible target works across the normal workflow:
 
 ```bash
 aeat app modelo work status --modelo 303 --year 2026 --period 1T
+aeat app modelo work revisions --modelo 303 --year 2026 --period 1T
+aeat app modelo work revision --modelo 303 --year 2026 --period 1T
 ```
 
-This is the normal operator-facing address. The same shape works across create,
-calculate, verify, file, export, reconcile, status, and revision-listing
-commands.
+If no saved work exists yet, create it first:
 
-Internally, the resolver also binds the target to the registry revision that
-defines the modelo for that filing period. If more than one active work unit
-could satisfy the same visible target because of a registry-revision conflict,
-the command refuses and asks you to choose the intended revision explicitly.
+```bash
+aeat app modelo work create --modelo 303 --year 2026 --period 1T
+```
 
-## Internal IDs
+Running the same create command again does not create a duplicate. It returns
+the existing saved work for that filing.
 
-Work-unit IDs and calculation-revision IDs still exist. They remain
-content-addressed identifiers for audit, replay, storage, and machine consumers.
-The command line may print them, and advanced scripts may pass them, but routine
-filing work should not depend on manually carrying them between commands.
+## How the visible target becomes an ID
 
-## Work-unit selection
+`aeat` stores each saved filing workspace under a `work_unit_id`. This ID is not
+a UUID and not a workflow run ID. It is a 64-character SHA-256 identifier.
 
-When you pass modelo, year, and period, the command first searches the active
-profile for that visible filing target. It does not silently create a second
-active work unit for the same target.
+The ID is derived from:
 
-If no active work unit exists,
-`aeat app modelo work create --modelo 303 --year 2026 --period 1T` can
-provision one.
-If more than one candidate would match, the command refuses and reports
-candidates instead of guessing.
+- the active profile's storage bucket
+- the modelo
+- the filing year
+- the period
+- the registry revision for that modelo and period
 
-If a requested registry revision conflicts with the existing work unit, the
-command refuses with conflict guidance.
+The registry revision is the ruleset `aeat` uses for that modelo period. For
+most commands you do not need to choose it. `aeat` resolves it from the modelo,
+year, and period. Use `--revision` only when you need to target a specific
+registry revision.
 
-The work unit is the filing workspace. It is the singleton for the resolved
-filing target in the active profile, and it owns the pointers that make later
-commands ergonomic:
+To see the saved work ID, list or inspect work:
 
-- the current calculation revision,
-- the filed calculation revision,
-- and the current filing record, when a filing record exists.
+```bash
+aeat app modelo work list
+aeat app modelo work status --modelo 303 --year 2026 --period 1T
+```
 
-## Calculation revisions
+After you have the `work_unit_id`, address the same saved work by ID:
 
-A work unit can contain multiple calculation revisions. Re-running calculation
-for the same visible target saves another revision under the same work unit.
-The new or reused draft becomes the current calculation revision for that work
-unit.
+```bash
+aeat app modelo work status <work-unit-id>
+aeat app modelo work calculate <work-unit-id>
+aeat app modelo work revisions <work-unit-id>
+```
 
-The supported revision selectors are:
+Prefer the visible target for hand-run commands. Use the ID when an automation
+has already stored it, or when `aeat` reports that more than one saved work item
+matches the same modelo, year, and period.
 
-- `current`,
-- `latest-draft`,
-- `latest-verified`,
-- `filed`,
-- and an explicit calculation-revision ID for exact replay.
+## What a work unit is
 
-Commands choose revisions according to their own semantics:
+A work unit is the saved workspace for one filing target. It is the thing that
+connects later commands to the same local filing work.
 
-- `aeat app modelo work calculate --modelo ... --year ... --period ...` creates
-  or reuses a draft revision and sets it as current.
-- `aeat app modelo work verify --modelo ... --year ... --period ...` defaults
-  to the current draft revision for that filing.
-- `aeat app modelo work file --modelo ... --year ... --period ...` defaults to
-  the current verified revision and records a local filed marker.
-- `aeat app modelo export --modelo ... --year ... --period ... --output PATH`
-  prefers the filed revision, then the current verified revision.
+For example, this command creates or reuses the work unit for Modelo 303 Q1
+2026:
 
-These defaults are command-specific. They are not a generic "latest revision"
-rule. Use `--select` when you need a different revision selector.
+```bash
+aeat app modelo work create --modelo 303 --year 2026 --period 1T
+```
 
-## Exact-addressing options
+The work unit stores filing-level metadata. It also points to important saved
+records, such as:
 
-Exact work-unit and calculation-revision IDs remain useful when:
+- the current calculation revision
+- the filed calculation revision, if you marked one as filed locally
+- the current local filing record, if one exists
 
-- an automation already stores the exact ID,
-- an audit needs to replay a specific revision,
-- a visible target is ambiguous and the operator wants to select one candidate
-  explicitly,
-- or a machine consumer needs content-addressed stability.
+No separate command "switches" the current work unit. The active profile is
+global, but the filing work is selected on each command. To work on a different
+filing, pass a different visible target or pass a different `work_unit_id`:
 
-For everyday command-line use, prefer modelo, year, and period.
+```bash
+aeat app modelo work status --modelo 303 --year 2026 --period 2T
+aeat app modelo work status <another-work-unit-id>
+```
+
+## What a calculation revision is
+
+A calculation revision is one saved calculation result inside a work unit.
+
+When you run calculate, `aeat` saves a draft calculation revision:
+
+```bash
+aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
+```
+
+Re-running calculation does not edit the old result. It saves another revision,
+or reuses the same one if the inputs and outputs are identical. The work unit's
+current calculation pointer moves to the draft that the command saved or
+reused.
+
+List the saved calculation revisions for a filing:
+
+```bash
+aeat app modelo work revisions --modelo 303 --year 2026 --period 1T
+```
+
+Show the current revision's persisted values:
+
+```bash
+aeat app modelo work revision --modelo 303 --year 2026 --period 1T
+```
+
+If you need to inspect one exact calculation, pass its
+`calculation_revision_id`:
+
+```bash
+aeat app modelo work revision <calculation-revision-id>
+```
+
+Do not confuse the IDs:
+
+- `work_unit_id` identifies the saved filing workspace
+- `calculation_revision_id` identifies one saved calculation result
+- registry revision ID identifies the modelo ruleset, such as
+  `2019-y-siguientes`
+- workflow run ID identifies an interrupted workflow run, not a filing or a
+  calculation
+
+## How verify, file, and export choose a revision
+
+Most commands start from the visible filing target and then choose the relevant
+calculation revision under that work unit.
+
+Verification defaults to the current draft revision:
+
+```bash
+aeat app modelo work verify --modelo 303 --year 2026 --period 1T
+```
+
+Local filing defaults to the current verified revision:
+
+```bash
+aeat app modelo work file --modelo 303 --year 2026 --period 1T
+```
+
+`work file` records a local filed marker. It does not submit anything to AEAT.
+
+Export defaults to the filed revision if one exists. Otherwise, it uses the
+current verified revision:
+
+```bash
+aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
+```
+
+These defaults are command-specific. They are not a general "latest revision"
+rule.
+
+If you need a different saved calculation, use `--select` with the visible
+target:
+
+```bash
+aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-draft
+aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
+aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select filed
+```
+
+You can also pass exact IDs on commands that accept them:
+
+```bash
+aeat app modelo work verify <calculation-revision-id>
+aeat app modelo work file <calculation-revision-id>
+aeat app modelo export <work-unit-id> --revision <calculation-revision-id> --output ./modelo-303.boe
+```
+
+For the complete option list, see the [CLI reference](../cli/index.rst).
+
+## When to use exact IDs
+
+Use modelo, year, and period unless you have a reason to be more exact.
+
+Exact IDs are useful when:
+
+- an automation already stored a `work_unit_id` or `calculation_revision_id`
+- you need to replay or inspect one saved calculation
+- the same visible target is ambiguous because multiple active work units match
+- support or audit work needs the exact saved record shown in command output
+
+If a visible target is ambiguous, `aeat` refuses to guess and prints candidate
+work units. Choose one candidate by passing its `work_unit_id`, or narrow the
+target with the registry `--revision` when that is the intended distinction.
 
 ## Next steps
 
-- [How to run the shortest Modelo lifecycle](quickstart.md) - the shortest
-  procedure from ready profile to exported file.
-- [How-to guides](index.md) - model-specific filing recipes.
+- [Quickstart: produce a modelo file](quickstart.md) - the shortest path from
+  profile to exported file.
+- [Review and supply calculation inputs](review-calculation-values.md) - how to
+  inspect saved values, missing bindings, and manual inputs.
+- [Review calculations with Google Sheets](review-with-google-sheets.md) - how
+  to inspect calculation workbooks outside the terminal.
+- [Reconcile a filing](reconcile.md) - how to compare a filed modelo with its
+  justificante.
 - [Command reference](../cli/index.rst) - exact flags and selector options.

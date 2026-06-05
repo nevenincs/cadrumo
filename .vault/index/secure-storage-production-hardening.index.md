@@ -773,6 +773,7 @@ related:
   - '[[2026-06-05-secure-storage-production-hardening-W18-P38-summary]]'
   - '[[2026-06-05-secure-storage-production-hardening-W19-P39-S450]]'
   - '[[2026-06-05-secure-storage-production-hardening-W20-P40-S451]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W20-P40-S459]]'
   - '[[2026-06-05-secure-storage-production-hardening-code-review-audit]]'
   - '[[2026-06-05-secure-storage-production-hardening-error-registry-hygiene-audit]]'
   - '[[2026-06-05-secure-storage-production-hardening-w12-p26-register-reconciliation-audit]]'
@@ -1691,6 +1692,7 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 - `2026-06-05-secure-storage-production-hardening-W18-P38-summary` - `secure-storage-production-hardening` `W18.P38` summary
 - `2026-06-05-secure-storage-production-hardening-W19-P39-S450` - W19.P39.S450 - Refresh secure-storage guard inventories
 - `2026-06-05-secure-storage-production-hardening-W20-P40-S451` - W20.P40.S451 - Verify custody command and API exposure
+- `2026-06-05-secure-storage-production-hardening-W20-P40-S459` - W20.P40.S459 - Implement config lock and unlock aliases
 
 ### plan
 

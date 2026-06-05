@@ -23,13 +23,14 @@ from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....domain.transactions import derive_transaction_id
+from ....tests import FIXTURES_DIR
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _RUNNER = CliRunner()
-_CORPUS = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "financial" / "ledger-corpus"
+_CORPUS = FIXTURES_DIR / "financial" / "ledger-corpus"
 _ACCOUNT = "bbva-business-eur.csv"
 _FIXTURE = _CORPUS / "classify" / "bbva-business-eur.classify.csv"
 

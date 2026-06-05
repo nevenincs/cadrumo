@@ -2,24 +2,31 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from pydantic import AnyHttpUrl
 from typer.testing import CliRunner
 
-from ....adapters.outbound.aeat.sede._declarations import Declaracion
+from ....adapters.outbound.aeat.sede import Declaracion
 from ....adapters.outbound.aeat.sede._notifications import NotificationsSnapshot, RemoteNotification
+from ....adapters.outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
+from ....adapters.outbound.aeat.sede._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
+from ....application.calculations import CalculationObservationRepository
 from ....application.live import ExpedientesCapture, ExpedientesService, NotificationsService
-from ....application.user_profile._orchestration import profile_create_storage_span
+from ....application.user_profile._orchestration import profile_create_storage_span, profile_storage_session
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
+from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import app
+from .._overview import _local_calendar_filing_evidence
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -180,6 +187,98 @@ def test_calendar_json_includes_local_live_snapshot_events(cli_runner: CliRunner
         ("filing", "12345678901234567890"),
         ("message", "2596230606502"),
     }
+    filing_event = next(event for event in events if event["reference_id"] == "12345678901234567890")
+    assert filing_event["aeat_submission_state"] == "submitted_observed"
+    assert filing_event["justificante_verified"] is False
+
+
+def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -> None:
+    observation = RegistryModeloObservation(
+        modelo="303",
+        filing_year=2025,
+        period="1T",
+        observations=(CasillaObservation(casilla_id="01", value=Decimal("10.00")),),
+    )
+    with profile_storage_session("operator"):
+        CalculationObservationRepository().save_observation(
+            observation,
+            source_kind="aeat_sede_justificante",
+            captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+        )
+        artefact_body = b"modelo-303-2025-1T-justificante"
+        store = FiledDeclaracionObservationStore(Path("var/aeat/filed-declarations"))
+        artefact = store.persist_artefact(
+            ("303", 2025, "1T", "12345678901234567890"),
+            FiledDeclaracionArtefact(
+                kind="justificante_pdf",
+                source_url=_SOURCE_URL,
+                content_type="application/pdf",
+                byte_count=len(artefact_body),
+                sha256=hashlib.sha256(artefact_body).hexdigest(),
+                captured_at=datetime(2025, 4, 16, 12, 1, tzinfo=UTC),
+            ),
+            artefact_body,
+        )
+        store.persist_observation(
+            FiledDeclaracionObservation(
+                modelo="303",
+                ejercicio=2025,
+                period="1T",
+                expediente_id="12345678901234567890",
+                status="ALTA",
+                presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+                authenticated_identity="X1234567L",
+                artefacts=(artefact,),
+            )
+        )
+        store.persist_observation(
+            FiledDeclaracionObservation(
+                modelo="303",
+                ejercicio=2025,
+                period="2T",
+                expediente_id="12345678901234567891",
+                status="ALTA",
+                presented_at=datetime(2025, 7, 15, 9, 30, tzinfo=UTC),
+                authenticated_identity="X1234567L",
+                artefacts=(
+                    FiledDeclaracionArtefact(
+                        kind="justificante_pdf",
+                        source_url=_SOURCE_URL,
+                        content_type="application/pdf",
+                        byte_count=32,
+                        sha256="f" * 64,
+                        captured_at=datetime(2025, 7, 16, 12, 1, tzinfo=UTC),
+                        storage_ref="secure-object:financial:" + "f" * 64,
+                    ),
+                ),
+            )
+        )
+
+    with profile_create_storage_span("second"):
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id="second",
+                display_name="Second Operator",
+                enforce_unique_tax_id=False,
+            ),
+        )
+
+    with profile_storage_session("second"):
+        second_evidence = _local_calendar_filing_evidence("second", ())
+    with profile_storage_session("operator"):
+        operator_evidence = _local_calendar_filing_evidence("operator", ())
+
+    assert second_evidence == ()
+    by_period = {row.period: row for row in operator_evidence}
+    assert sorted((row.modelo, row.filing_year, row.period) for row in operator_evidence) == [
+        ("303", 2025, "1T"),
+        ("303", 2025, "2T"),
+    ]
+    assert by_period["1T"].aeat_submission_state.value == "justificante_verified"
+    assert by_period["1T"].justificante_verified is True
+    assert by_period["2T"].aeat_submission_state.value == "submitted_observed"
+    assert by_period["2T"].justificante_verified is False
 
 
 def test_all_profiles_flag_iterates_every_registered_profile(cli_runner: CliRunner) -> None:
