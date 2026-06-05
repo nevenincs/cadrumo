@@ -6,7 +6,10 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
+from ...core.logging import get_logger
 from ...domain.modelos._work_unit import WorkUnit
+
+_LOG = get_logger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,6 +38,7 @@ def modelo_work_plazo_summary(
     today: date | None = None,
 ) -> ModeloWorkPlazoSummary | None:
     """Return deadline and recargo information for a work unit, when known."""
+    from ...domain.deadlines._errors import DeadlineValidationError
     from ...domain.deadlines._plazo import resolve_filing_closes_on
     from ...domain.deadlines._recargo import build_recovery_for_overdue
 
@@ -56,7 +60,16 @@ def modelo_work_plazo_summary(
             modelo=str(work_unit.modelo),
             period=work_unit.period,
         )
-    except (ValueError, Exception):
+    except DeadlineValidationError:
+        _LOG.debug(
+            "modelo work plazo recargo resolution failed; returning overdue summary without recargo "
+            "modelo=%s filing_year=%s period=%s days_overdue=%s",
+            work_unit.modelo,
+            work_unit.filing_year,
+            work_unit.period,
+            days_overdue,
+            exc_info=True,
+        )
         return ModeloWorkPlazoSummary(closes_on=closes_on, days_overdue=days_overdue)
 
     band = recovery.recargo_band
