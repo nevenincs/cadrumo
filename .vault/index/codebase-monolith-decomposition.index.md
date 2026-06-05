@@ -79,6 +79,7 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P04-S08]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S113]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S114]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S115]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S53]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S54]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S55]]'
@@ -183,6 +184,7 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W03-P04-S08` - W03.P04.S08 Codebase Size Guard Expansion
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S113` - W03.P06.S113 Live IVA Remote-State Outcome Extraction
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S114` - W03.P06.S114 Live Filed-Data Helper Extraction
+- `2026-06-05-codebase-monolith-decomposition-W03-P06-S115` - W03.P06.S115 Live Filed-Data Capture Extraction
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S53` - W03.P06.S53 - decompose application modelo action helpers
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S54` - W03.P06.S54 - verify application modelo action decomposition
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S55` - W03.P06.S55 Ledger Actions Facade Decomposition
