@@ -3253,9 +3253,6 @@ errors:
       Ellenőrizze, hogy telepítve és aktív-e egy hitelesítő tároló.
     auth_storage_master_key_kdf_version: A főkulcsfájl egy kulcsszármaztatási verziót
       használ, amelyet ez a verzió nem támogat. Frissítse az alkalmazást.
-    auth_storage_master_key_keychain_locked: Az operációs rendszer kulcstára zárolt.
-      Oldja fel a zárolást (Touch ID, Windows Hello vagy a hitelesítőkezelő), és próbálja
-      újra.
     auth_storage_master_key_material_missing: Nincs főkulcs-anyag. A biztonságos tároló
       még nincs kiosztva.
     auth_storage_master_key_passphrase_mismatch: A jelmondat nem oldja fel a főkulcsot.
@@ -3754,6 +3751,7 @@ errors:
       van szükség. Futtassa az  parancsot, és próbálja újra.
     locked_storage_lock_acquisition: A kizárólagos fájlzárat nem sikerült beszerezni
       az időkorláton belül. Egy másik folyamat tartja; várjon, és próbálja újra.
+    locked_storage_master_key_keychain: 'Az operációs rendszer kulcstára zárolt. Oldja fel a zárolást (Touch ID, Windows Hello vagy a hitelesítőkezelő), és próbálja újra.'
   refused:
     auth_configure_no_active_bucket: Hitelesítés nem konfigurálható aktív profil nélkül.
       Hozzon létre profilt az  paranccsal, és próbálja újra.

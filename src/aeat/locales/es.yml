@@ -3340,9 +3340,6 @@ errors:
     auth_storage_master_key_kdf_version: El archivo de clave maestra usa una versión
       de derivación de clave que esta versión de la aplicación no admite. Actualiza
       la aplicación.
-    auth_storage_master_key_keychain_locked: El llavero del sistema operativo está
-      bloqueado. Desbloquéalo (Touch ID, Windows Hello o el desbloqueo del gestor
-      de credenciales) y vuelve a intentarlo.
     auth_storage_master_key_material_missing: No existe material de clave maestra.
       El almacenamiento seguro aún no está aprovisionado.
     auth_storage_master_key_passphrase_mismatch: La frase de contraseña no abre la
@@ -3897,6 +3894,7 @@ errors:
       desbloqueado. Ejecuta `aeat config unlock` y vuelve a intentarlo.
     locked_storage_lock_acquisition: No se pudo obtener el bloqueo exclusivo de archivo
       dentro del tiempo de espera. Otro proceso lo retiene; espera y vuelve a intentarlo.
+    locked_storage_master_key_keychain: 'El llavero del sistema operativo está bloqueado. Desbloquéalo (Touch ID, Windows Hello o el desbloqueo del gestor de credenciales) y vuelve a intentarlo.'
   refused:
     auth_configure_no_active_bucket: No se puede configurar la autenticación sin un
       perfil activo. Crea un perfil con `aeat config profile create NOMBRE` y vuelve
