@@ -302,3 +302,24 @@ runtime storage behavior.
 The focused verification suite initially failed because `test_profile_repository.py`
 local imports resolved to `aeat.application.adapters`. The imports now use the correct
 package depth and the 28-test user-profile verification suite passes.
+
+## S374-CR-001 | PASS | CLI root is the intended bootstrap-custody gate
+
+Reviewed the S374 scope as `vaultspec-code-reviewer`. `entrypoints/cli/__init__.py`
+assembles the lazy command tree, resolves profile labels to bucket UUIDs, applies
+bootstrap exemptions, delegates write-route authorization to `inspect_storage_write_policy`,
+and opens the active bucket session for non-exempt subcommands.
+
+## S374-CR-002 | PASS | Deprecated config init is not exposed
+
+The root CLI module mounts the lazy `config` subtree and current `app` namespace only.
+Focused retired-command tests pass, including the guard that retired `config init`
+phrases do not leak into runtime surfaces.
+
+## S374-CR-003 | FIXED | Click protected_args deprecation surfaced in bootstrap path
+
+The focused CLI tests passed but emitted a deprecation warning from the public
+`ctx.protected_args` property. `_verb_path_from_context()` now prefers `ctx.args` and
+falls back to Click 8's internal protected-argument storage without touching the
+deprecated public API. The CLI tests pass with `DeprecationWarning` promoted to an
+error for `aeat.entrypoints.cli.__init__`.
