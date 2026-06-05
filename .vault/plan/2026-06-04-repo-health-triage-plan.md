@@ -198,7 +198,7 @@ Normalize lint scope and retire compatibility surfaces that conflict with the no
 
 Record the post-remediation advisory baseline and complete final code review before any new hard ratchets are promoted.
 
-- [ ] `W05.P17.S60` - Run full quality-audit and persist updated baseline; `.vault/audit`.
+- [x] `W05.P17.S60` - Run full quality-audit and persist updated baseline; `.vault/audit`.
 - [ ] `W05.P17.S61` - Run final code review over all closed repo-health slices; `.vault/audit`.
 - [ ] `W05.P17.S62` - Update execution records and plan closure state; `.vault/exec`.
 

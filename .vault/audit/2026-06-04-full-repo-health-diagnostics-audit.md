@@ -519,6 +519,58 @@ Residual:
   `_require_persisted_iva_compensation_decision_matches_revision` is imported
   from `aeat.application.modelo._actions` but not present there.
 
+## HEALTH-017 | OPEN | W05 post-remediation quality-audit baseline remains advisory red
+
+`W05.P17.S60` reran the full `just quality-audit` surface after the W05 shim
+and policy cleanup slices. The top-level recipe completed because the advisory
+lanes are error-tolerant, but several underlying recipes still fail on tracked
+debt. This is a baseline record, not an all-green claim.
+
+Current lane status:
+
+- `just quality-audit` exited 0 at the top level after running all advisory
+  recipes.
+- `uv run --no-sync ty check src --output-format concise` exited 1 with 800
+  diagnostics. The first current cluster is BOE/export encoding and
+  deserialisation typing, followed by Sede browser/session object narrowing,
+  Google API protocol tests, secure storage tests, generated justificante
+  fixtures, and top-level ratchet tests.
+- `uv run --no-sync pyright src/aeat --level warning --warnings` exited 1 with
+  2055 errors and 514 warnings.
+- `uv run --no-sync pyright src/aeat/domain src/aeat/application --level warning --warnings`
+  exited 1 with 811 errors and 510 warnings.
+- `just audit-structure` exited 1 on the layered architecture contract. Current
+  representative violations are domain submission/filing/transaction tests and
+  `domain.submission._repository` importing adapter storage SQL surfaces,
+  core tests importing domain portal constants, and application tests reaching
+  adapters through `aeat.tests.secure_sql`.
+- `just audit-deps` exited 0: Deptry reported no dependency issues across 882
+  scanned files.
+- `just audit-dead-code` exited 0: Vulture reported no current findings under
+  the configured allowlist.
+- `just audit-complexity-production` exited 1. The current production cognitive
+  queue is led by `resolve_previous_filing_binding_values` at 44,
+  `_push_secure_object_mirror_rows` and `calculation_closure_identities` at 37,
+  `_iter_cross_revision_casilla_divergences` at 34, `initial_values` at 33,
+  `classify_live_iva_acquisition_failure` at 32, and two registry/runtime
+  functions at 30. This directly feeds S74-S77 follow-up work.
+- `just audit-duplication` exited 0 while reporting 23 Python clone groups:
+  850 files, 160265 lines, 997233 tokens, 411 duplicated lines, and 4032
+  duplicated tokens.
+- `just audit-security` exited 0 while Semgrep reported 11 blocking findings
+  across 891 tracked targets. The current findings are the ECB dynamic urllib
+  use, master-key chmod permissions, SQLAlchemy `text` construction in secure
+  objects, Python 3.7 importlib compatibility findings, and dynamic import
+  findings in registry snapshot/profile validation plus CLI module loading.
+
+Execution note:
+
+- The `typecheck-audit` recipe still stops after Ty fails, so its full-tree
+  Pyright line is not reached inside `just quality-audit`. S60 therefore ran
+  full-tree Pyright directly and records that result here. This should be fixed
+  separately if the audit recipe is intended to collect both checker matrices
+  in one pass even while Ty remains red.
+
 ## Suggested Workstreams
 
 1. Repair packaging environment deterministically: schedule a clean `uv sync` window
@@ -533,7 +585,7 @@ Residual:
 4. Complexity refactor queue: start with CLI `_modelo.py`, registry formula
    runtime, registry bindings/schema, CLI `_ledger.py`, and modelo/ledger action
    services.
-5. Dependency hygiene: resolve the six Deptry findings and decide whether `torch`
-   and `formulas` are runtime, optional, or stale dependencies.
+5. Dependency hygiene: keep Deptry green and guard against dependency drift in
+   the final W06 gates.
 6. Semgrep policy: split production source scans from mirrored official data and
    intentional redaction/security tests before treating security counts as a gate.
