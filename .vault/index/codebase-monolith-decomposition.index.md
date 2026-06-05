@@ -35,6 +35,11 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P03-S30]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P03-S31]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S100]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S101]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S102]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S103]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S110]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S111]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S32]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S33]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S34]]'
@@ -117,7 +122,12 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W02-P03-S29` - W02.P03.S29 - residual modelo audit selection
 - `2026-06-05-codebase-monolith-decomposition-W02-P03-S30` - W02.P03.S30 - residual modelo audit extraction
 - `2026-06-05-codebase-monolith-decomposition-W02-P03-S31` - W02.P03.S31 - residual modelo audit verification
-- `2026-06-05-codebase-monolith-decomposition-W02-P05-S100` - W02.P05.S100 Modelo Import Regression Verification
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S100` - W02.P05.S100 - verify modelo work help import regression
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S101` - W02.P05.S101 Config Profile Slice Discovery
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S102` - W02.P05.S102 - extract config profile bundle commands
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S103` - W02.P05.S103 - verify config profile bundle extraction
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S110` - W02.P05.S110 - extract modelo audit commands
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S111` - W02.P05.S111 - verify modelo audit extraction
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S32` - `codebase-monolith-decomposition` `W02.P05.S32`
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S33` - `codebase-monolith-decomposition` `W02.P05.S33`
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S34` - W02.P05.S34 - verify ledger rule extraction

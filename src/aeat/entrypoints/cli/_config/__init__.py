@@ -6,9 +6,6 @@ through :class:`BucketEventHistoryRepository`.
 
 from __future__ import annotations
 
-import typing
-from pathlib import Path
-
 import click
 import typer
 
@@ -24,7 +21,6 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import tr
 from ....core.logging import get_logger as _get_logger
-from ....core.time import now as _now
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from .._command_suggestions import AeatTyperGroup as _AeatTyperGroup
 from .._common import _emit, _emit_envelope
@@ -36,6 +32,7 @@ from ._auth import auth_app
 from ._auth_diagnostics import auth_diagnostics_app
 from ._bucket_history import _parse_bucket_event_types, register_bucket_history_commands
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
+from ._profile_bundle import register_profile_bundle_commands
 from ._repair_cli import register_repair_maintenance_commands
 from ._repair_profile import (
     profile_record_missing_next_action as _profile_record_missing_next_action,
@@ -44,9 +41,6 @@ from ._repair_profile import (
     profile_record_unreadable_next_action as _profile_record_unreadable_next_action,
 )
 from ._repair_profile import register_repair_profile_command
-
-if typing.TYPE_CHECKING:
-    from ....domain.buckets import BucketEventType
 
 _log = _get_logger(__name__)
 
@@ -130,75 +124,6 @@ def _resolve_active_profile_pointer():
     if active is None:
         return None
     return read_profile_bucket_by_id(active)
-
-
-def _validate_bundle_schema_version(bundle: object) -> None:
-    """Raise UnsupportedBundleSchemaVersionError if bundle version is not supported."""
-    from ....application.user_profile import (
-        SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
-        UnsupportedBundleSchemaVersionError,
-    )
-
-    version = getattr(bundle, "bundle_schema_version", None)
-    if version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
-        raise UnsupportedBundleSchemaVersionError(
-            f"bundle_schema_version {version!r} is not supported; "
-            f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}",
-            translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
-        )
-
-
-def _emit_profile_lifecycle_event(
-    *,
-    event_type: BucketEventType,
-    bucket_id: str,
-    object_id: str,
-    payload: dict[str, str],
-) -> None:
-    """Append a profile-lifecycle event to the bucket-event-history catalogue.
-
-    Closes W74.P357.S2067 for the export + import verbs: the symmetric
-    PROFILE_EXPORTED / PROFILE_IMPORTED events join the existing
-    PROFILE_BUCKET_CREATED / PROFILE_VALUES_UPDATED / PROFILE_TOMBSTONED /
-    PROFILE_DUPLICATED / PROFILE_ACTIVATED emissions already wired in the
-    application-layer ProfileLifecycleService / orchestration. Records the
-    event through the canonical derive_bucket_event_id + repository pair so
-    downstream auditors can reconstruct the sequence from the on-disk
-    catalogue.
-    """
-    from ....domain.buckets import (
-        BucketEvent,
-        BucketEventHistoryCatalogue,
-        BucketEventHistoryRepository,
-        BucketEventObjectType,
-        derive_bucket_event_id,
-    )
-
-    occurred_at = _now().replace(microsecond=0)
-    actor = "operator"
-    event_id = derive_bucket_event_id(
-        bucket_id=bucket_id,
-        event_type=event_type,
-        occurred_at=occurred_at,
-        actor=actor,
-        object_type=BucketEventObjectType.PROFILE,
-        object_id=object_id,
-        payload=payload,
-    )
-    event = BucketEvent(
-        event_id=event_id,
-        bucket_id=bucket_id,
-        event_type=event_type,
-        occurred_at=occurred_at,
-        actor=actor,
-        object_type=BucketEventObjectType.PROFILE,
-        object_id=object_id,
-        payload_version=1,
-        payload=payload,
-    )
-    repo = BucketEventHistoryRepository()
-    catalogue = repo.load()
-    repo.save(BucketEventHistoryCatalogue(events={**catalogue.events, event_id: event}))
 
 
 def _atomic_create_profile(*, display_name, facts, profile_id: str | None = None) -> str:
@@ -944,258 +869,6 @@ def config_profile_rename(
 
 
 @profile_app.command(
-    "export",
-    help=tr(
-        "cli.config.profile.export_help",
-        default="Write a portable profile bundle to PATH.",
-    ),
-)
-def config_profile_export(
-    ctx: typer.Context,
-    name: str | None = typer.Argument(
-        None,
-        help=tr("cli.config.profile.export_name_help", default="Profile to export; defaults to active."),
-    ),
-    out: Path = typer.Option(
-        ...,
-        "--to",
-        help=tr("cli.config.profile.export_out_help", default="Destination path for the JSON bundle."),
-    ),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    """Serialize a profile bundle to a JSON file.
-
-    The bundle wraps the live :class:`UserProfileRecord` read through
-    the canonical lifecycle service. ``config profile import`` is the
-    symmetric reader and re-provisions the record into a fresh bucket
-    via the atomic-create provisioner.
-    """
-    from ....application.user_profile import serialize_profile_bundle
-    _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile import profile_storage_session
-    from ....domain.user_profile import ProfileNotFoundError
-    from ....domain.user_profile._portable_export import UserProfilePortableExport
-
-    _profile_state().load()
-    if name is not None:
-        pointer = _resolve_profile_by_label(name)
-    else:
-        pointer = _resolve_active_profile_pointer()
-        if pointer is None:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.errors.no_active_profile",
-            )
-    from ....domain.buckets import BucketEventType
-
-    # Serialize the bundle and record the PROFILE_EXPORTED lifecycle event in
-    # one bucket session: the bucket-event-history repository is profile-bound
-    # storage and routes to the active bucket session, so the emit must run
-    # inside an open session — not after the span closes.
-    def _serialize_and_record() -> UserProfilePortableExport:
-        serialized = serialize_profile_bundle(bucket_id=pointer.bucket_id)
-        _emit_profile_lifecycle_event(
-            event_type=BucketEventType.PROFILE_EXPORTED,
-            bucket_id=pointer.bucket_id,
-            object_id=pointer.bucket_id,
-            payload={
-                "display_name": pointer.label or "",
-                "out": str(out),
-                "schema_version": str(serialized.bundle_schema_version),
-            },
-        )
-        return serialized
-
-    try:
-        from ....adapters.persistence.storage import has_active_bucket_session
-        from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
-
-        if pointer.bucket_id == _resolve_active_bucket_id() and has_active_bucket_session():
-            bundle = _serialize_and_record()
-        else:
-            with profile_storage_session(pointer.bucket_id):
-                bundle = _serialize_and_record()
-    except ProfileNotFoundError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.unknown_profile",
-            context={"name": pointer.label},
-        ) from exc
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(bundle.model_dump_json(indent=2), encoding="utf-8")
-    from .._config_payloads import ConfigProfileExportResult
-
-    export_result = ConfigProfileExportResult(
-        profile_id=pointer.bucket_id,
-        display_name=pointer.label,
-        out=str(out),
-        schema_version=bundle.bundle_schema_version,
-    )
-    _emit_envelope(
-        ctx,
-        command="config.profile.export",
-        result=export_result,
-        lines=(
-            f"profile_id\t{pointer.bucket_id}",
-            f"display_name\t{pointer.label}",
-            f"out\t{out}",
-            f"schema_version\t{bundle.bundle_schema_version}",
-        ),
-    )
-
-
-@profile_app.command(
-    "import",
-    help=tr(
-        "cli.config.profile.import_help",
-        default="Register a portable profile bundle from PATH into the active bucket.",
-    ),
-)
-def config_profile_import(
-    ctx: typer.Context,
-    path: Path = typer.Argument(
-        ..., help=tr("cli.config.profile.import_path_help", default="Path to the JSON bundle.")
-    ),
-    label: str | None = typer.Option(
-        None,
-        "--label",
-        help=tr("cli.config.profile.import_label_help"),
-    ),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    """Read a portable profile bundle from a JSON file and register it.
-
-    The imported profile lands in its **own** bucket through the
-    canonical atomic-create provisioner (``register_active_profile``):
-    bucket directory + manifest + encrypted record + active pointer
-    in one all-or-nothing sequence. The imported bundle is recovery
-    from a backup archive, so it becomes the new active profile. A
-    crash mid-import rolls every write back, leaving no phantom bucket.
-
-    ``--label`` overrides the operator-facing display name. Re-importing
-    an exported profile into a storage root that already carries it
-    would otherwise dead-end on a duplicate-label refusal; ``--label``
-    lands the second copy under a fresh, non-colliding label while
-    still minting its own immutable UUID identity.
-    """
-    _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile import (
-        ProfileAlreadyRegisteredError,
-        UnsupportedBundleSchemaVersionError,
-        deserialize_profile_bundle,
-        profile_storage_session,
-    )
-    from ....application.workflow import (
-        read_profile_bucket as _read_profile_bucket,
-    )
-    from ....application.workflow import read_profile_bucket_by_id
-    from ....domain.user_profile._portable_export import UserProfilePortableExport
-
-    if not path.is_file():
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.import_missing_bundle",
-            context={"path": str(path)},
-        )
-    try:
-        bundle = UserProfilePortableExport.model_validate_json(path.read_text(encoding="utf-8"))
-    except _AeatError:
-        raise
-    except Exception as exc:
-        _log.debug("config profile import rejected invalid portable bundle", exc_info=True)
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.import_invalid_bundle",
-            context={"error": str(exc)},
-        ) from exc
-    try:
-        _validate_bundle_schema_version(bundle)
-    except UnsupportedBundleSchemaVersionError as exc:
-        raise _CliRefusedBoundaryError(str(exc)) from exc
-    record = bundle.profile
-    bundle_profile_id = record.profile_id
-
-    # D5 two-tier collision guard. When --label is absent the operator intends
-    # identity-preserving recovery: keep the bundle UUID (D5). When --label is
-    # supplied the operator wants a fresh independent copy under a new name; in
-    # that case mint a new UUID so the two profiles coexist without collision.
-    explicit_label = label.strip() if label is not None and label.strip() else None
-    fresh_uuid_mode = explicit_label is not None
-
-    # Tier 1 (identity-preserving path): refuse if the bundle UUID already exists.
-    if not fresh_uuid_mode and read_profile_bucket_by_id(bundle_profile_id) is not None:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.import_uuid_collision",
-            context={"profile_id": bundle_profile_id},
-        )
-
-    target_label = explicit_label if explicit_label is not None else record.display_name
-    # Tier 2: refuse if the target label is taken by any existing profile.
-    existing = _read_profile_bucket(target_label)
-    if existing is not None:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.import_label_taken_different_id",
-            context={"name": target_label},
-        )
-    try:
-        # Preserve the bundle's profile_id only on the identity-preserving path
-        # (no --label). When --label is supplied, _atomic_create_profile mints a
-        # fresh UUID so the new copy is a distinct identity.
-        target_id = _atomic_create_profile(
-            display_name=target_label,
-            facts=record.facts,
-            profile_id=None if fresh_uuid_mode else bundle_profile_id,
-        )
-    except ProfileAlreadyRegisteredError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.already_exists",
-            context={"name": target_label},
-        ) from exc
-    from ....domain.buckets import BucketEventType
-    from .._config_payloads import ConfigProfileImportResult
-
-    # Import v2 financial-history objects into the newly-provisioned bucket
-    # and record the PROFILE_IMPORTED lifecycle event in the same span: the
-    # bucket-event-history repository is profile-bound storage and routes to
-    # the active bucket session, so it must run inside the open session.
-    with profile_storage_session(target_id):
-        deserialize_profile_bundle(bundle, target_bucket_id=target_id)
-        _emit_profile_lifecycle_event(
-            event_type=BucketEventType.PROFILE_IMPORTED,
-            bucket_id=target_id,
-            object_id=target_id,
-            payload={
-                "display_name": target_label,
-                "source_path": str(path),
-                "schema_version": str(bundle.bundle_schema_version),
-                "fresh_uuid_mode": str(fresh_uuid_mode).lower(),
-            },
-        )
-
-    import_result = ConfigProfileImportResult(
-        profile_id=target_id,
-        display_name=target_label,
-        schema_version=bundle.bundle_schema_version,
-    )
-    _emit_envelope(
-        ctx,
-        command="config.profile.import",
-        result=import_result,
-        lines=(
-            f"profile_id\t{target_id}",
-            f"display_name\t{target_label}",
-            f"schema_version\t{bundle.bundle_schema_version}",
-        ),
-    )
-
-
-@profile_app.command(
     "logout",
     help=tr(
         "cli.config.profile.logout_help",
@@ -1431,6 +1104,13 @@ def config_reset(
 from ._profile_censo import register as _register_profile_censo
 
 _register_profile_censo(profile_app)
+register_profile_bundle_commands(
+    profile_app,
+    profile_state=_profile_state,
+    resolve_profile_by_label=_resolve_profile_by_label,
+    resolve_active_profile_pointer=_resolve_active_profile_pointer,
+    atomic_create_profile=_atomic_create_profile,
+)
 
 register_repair_profile_command(
     repair_app,

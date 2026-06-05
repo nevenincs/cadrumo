@@ -367,8 +367,7 @@ def test_config_profile_show_emits_active_profile_facts(cli_runner: CliRunner) -
     assert result.exit_code == 0, result.output
     assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert "display_name\toperator" in result.output
-    # NIF is identity-class data; centralized output redaction (ADR
-    # 2026-05-28-centralized-output-redaction) rewrites it to a
+    # NIF is identity-class data; centralized output redaction rewrites it to a
     # sha256 fingerprint before it reaches stdout. Assert the
     # redaction shape; assert the raw value does NOT leak.
     assert "identity.tax_id\tsha256:" in result.output
@@ -382,7 +381,7 @@ def test_config_profile_show_named_profile_includes_canonical_facts(cli_runner: 
     assert result.exit_code == 0, result.output
     assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert "display_name\tspouse" in result.output
-    # Per centralized-output-redaction ADR: NIF redacted to sha256
+    # Centralized output redaction: NIF redacted to sha256
     # fingerprint at the rendering boundary; raw value must not leak.
     assert "identity.tax_id\tsha256:" in result.output
     assert "00000000T" not in result.output
@@ -462,7 +461,7 @@ def test_deleted_profile_name_is_reusable_by_create_and_rename(
 ) -> None:
     """After ``delete`` the freed display name is reusable.
 
-    Per the profile-UUID-identity ADR, display-name uniqueness is
+    Per the profile-UUID identity contract, display-name uniqueness is
     enforced only among live profiles; a tombstoned profile's name is
     free to reuse by both ``create`` and ``rename``.
     """
@@ -509,7 +508,7 @@ def test_config_profile_duplicate_copies_to_new_id(cli_runner: CliRunner) -> Non
     )
     assert result.exit_code == 0, result.output
     # The duplicate lands under a freshly minted profile id; per the
-    # centralized-output-redaction ADR (2026-05-28), raw profile ids are
+    # centralized-output-redaction contract, raw profile ids are
     # rewritten to a `<profile-id>` placeholder at the rendering
     # boundary before reaching stdout. Assert the placeholder shape; the
     # invariant the test guards is that a NEW record was created (the
@@ -863,7 +862,7 @@ def test_profile_rename_keeps_record_readable_under_unchanged_key(
     assert show_result.exit_code == 0, f"show failed: {show_result.output}"
     assert "record_validity\tvalid" in show_result.output, show_result.output
     assert "missing_profile_record" not in show_result.output, show_result.output
-    # Per centralized-output-redaction ADR: raw profile id is rewritten
+    # Centralized output redaction: raw profile id is rewritten
     # to a `<profile-id>` placeholder at the rendering boundary. The
     # identity-stability invariant is verified above via the direct
     # lifecycle-service read (`record.profile_id == uuid_before`); the
