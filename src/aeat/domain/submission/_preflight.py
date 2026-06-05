@@ -29,12 +29,12 @@ _logger = get_logger(__name__)
 # enum at runtime. Kept in sync with
 # :class:`aeat.application.auth.AuthProviderKind` by code review.
 _AUTH_KIND_CERTIFICATE = "certificate"
-_PREFLIGHT_DRAFT_STALE = "errors.refused.submission_preflight_draft_stale"
-_PREFLIGHT_DRAFT_NOT_APPROVED = "errors.refused.submission_preflight_draft_not_approved"
-_PREFLIGHT_ERROR_FINDINGS = "errors.refused.submission_preflight_error_findings"
-_PREFLIGHT_DEADLINE_CLOSED = "errors.refused.submission_preflight_deadline_closed"
-_PREFLIGHT_AUTH_DESCRIBE_FAILED = "errors.refused.submission_preflight_auth_describe_failed"
-_PREFLIGHT_AUTH_NOT_READY = "errors.refused.submission_preflight_auth_not_ready"
+_PREFLIGHT_DRAFT_STALE_LOCALE_KEY = "errors.refused.submission_preflight_draft_stale"
+_PREFLIGHT_DRAFT_NOT_APPROVED_LOCALE_KEY = "errors.refused.submission_preflight_draft_not_approved"
+_PREFLIGHT_ERROR_FINDINGS_LOCALE_KEY = "errors.refused.submission_preflight_error_findings"
+_PREFLIGHT_DEADLINE_CLOSED_LOCALE_KEY = "errors.refused.submission_preflight_deadline_closed"
+_PREFLIGHT_AUTH_DESCRIBE_FAILED_LOCALE_KEY = "errors.refused.submission_preflight_auth_describe_failed"
+_PREFLIGHT_AUTH_NOT_READY_LOCALE_KEY = "errors.refused.submission_preflight_auth_not_ready"
 
 
 def _describe_provider_operator_impact(description: AuthProviderDescriptionLike) -> str:
@@ -143,12 +143,12 @@ class Preflight:
             if status_value == ModeloDraftStatus.APROBACION_CADUCADA.value:
                 raise SubmissionPreflightError(
                     "draft approval is stale",
-                    translated_message=_PREFLIGHT_DRAFT_STALE,
+                    translated_message=_PREFLIGHT_DRAFT_STALE_LOCALE_KEY,
                     context={"status": status_value},
                 )
             raise SubmissionPreflightError(
                 "draft not approved for submission",
-                translated_message=_PREFLIGHT_DRAFT_NOT_APPROVED,
+                translated_message=_PREFLIGHT_DRAFT_NOT_APPROVED_LOCALE_KEY,
                 context={"status": status_value},
             )
         _logger.debug("preflight gate-1 ok: draft is approved")
@@ -161,7 +161,7 @@ class Preflight:
             )
             raise SubmissionPreflightError(
                 "draft has error-severity findings",
-                translated_message=_PREFLIGHT_ERROR_FINDINGS,
+                translated_message=_PREFLIGHT_ERROR_FINDINGS_LOCALE_KEY,
                 context={"finding_count": len(error_findings)},
             )
         _logger.debug("preflight gate-2 ok: no error findings")
@@ -177,7 +177,7 @@ class Preflight:
             )
             raise SubmissionPreflightError(
                 "deadline window is closed",
-                translated_message=_PREFLIGHT_DEADLINE_CLOSED,
+                translated_message=_PREFLIGHT_DEADLINE_CLOSED_LOCALE_KEY,
                 context={"modelo": draft.modelo, "period": draft.period, "today": today.isoformat()},
             )
         else:
@@ -189,7 +189,7 @@ class Preflight:
             _logger.warning("preflight gate-4 fail: auth provider describe raised", exc_info=True)
             raise SubmissionPreflightError(
                 "auth provider failed to describe itself",
-                translated_message=_PREFLIGHT_AUTH_DESCRIBE_FAILED,
+                translated_message=_PREFLIGHT_AUTH_DESCRIBE_FAILED_LOCALE_KEY,
                 context={"cause_type": type(exc).__name__},
             ) from exc
         if not description.configured or not description.available:
@@ -201,7 +201,7 @@ class Preflight:
             )
             raise SubmissionPreflightError(
                 "auth provider is not ready",
-                translated_message=_PREFLIGHT_AUTH_NOT_READY,
+                translated_message=_PREFLIGHT_AUTH_NOT_READY_LOCALE_KEY,
                 context={
                     "kind": _enum_value(description.kind),
                     "configured": description.configured,

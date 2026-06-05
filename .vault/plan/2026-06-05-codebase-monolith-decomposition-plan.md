@@ -104,6 +104,8 @@ Establish authoritative current-state evidence for every production and test mod
 
 Persist the current over-1250-line module inventory and callable-size/cognitive-complexity inventory with exact and semantic discovery evidence.
 
+- [ ] `W01.P01.S01` - inventory every Python module over 1250 lines and classify production versus test scope; `src/aeat`.
+- [ ] `W01.P01.S02` - inventory high-length and high-branching callables as a cognitive-complexity proxy; `src/aeat`.
 
 ## Wave `W02` - CLI monolith decomposition
 
@@ -113,6 +115,7 @@ Reduce remaining CLI roots below the 1250-line objective through focused command
 
 Continue extracting coherent ledger command groups until _ledger.py moves materially toward the 1250-line objective without CLI-owned accounting policy.
 
+- [ ] `W02.P02.S03` - select the next coherent ledger command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_ledger.py`.
 
 ### Phase `W02.P03` - live and modelo root continuation
 

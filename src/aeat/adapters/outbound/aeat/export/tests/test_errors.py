@@ -21,10 +21,10 @@ def test_every_error_inherits_aeat_error() -> None:
 
 
 def test_export_errors_are_canonical_access_gate_errors() -> None:
-    from .....core.access_gate import (
+    from ......core.access_gate import (
         LiveSubmitForbiddenError as CoreLiveSubmitForbiddenError,
     )
-    from .....domain.submission import (
+    from ......domain.submission import (
         SubmissionError as DomainSubmissionError,
     )
     from .....domain.submission import (

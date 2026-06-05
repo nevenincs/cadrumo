@@ -72,7 +72,7 @@ class _FailingAuthProvider:
     kind = AuthProviderKind.CERTIFICATE
 
     def describe(self) -> AuthProviderDescription:
-        from .....core.errors import AeatError
+        from ......core.errors import AeatError
 
         raise AeatError("no smartcard")
 
