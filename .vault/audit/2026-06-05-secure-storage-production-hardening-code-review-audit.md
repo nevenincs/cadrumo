@@ -509,3 +509,27 @@ wrangling.
 
 Focused `ruff check`, payload roundtrip integration tests, and `python -m aeat.locales
 audit` passed.
+
+## S389-CR-001 | PASS | Root landing rendering is presentation-only
+
+Reviewed the S389 scope as `vaultspec-code-reviewer`. `_root_landing.py` consumes a
+`RootLandingReport` and emits localized CLI lines. It does not resolve active-profile
+pointers, inspect manifests, load settings, construct storage repositories, read
+environment variables, or catch exceptions.
+
+## S389-CR-002 | PASS | Active-profile state is projected upstream
+
+The renderer only branches on `landing.active_profile is not None` and interpolates the
+already-projected profile label into localized text. The root callback and application
+operator-surface builder own discovery.
+
+## S389-CR-003 | FIXED | Root-help assertion matched stale tax-id placeholder
+
+The installed-console refusal now guides operators with `--tax-id DNI/NIE/NIF/CIF`.
+The root-help test still asserted the older `--tax-id NIF` substring, so the assertion
+now matches the current localized guidance.
+
+## S389-CR-004 | PASS | Validation passed
+
+Focused `ruff check`, root-help/operator-surface integration tests, and `python -m
+aeat.locales audit` passed.
