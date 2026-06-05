@@ -91,7 +91,7 @@ def _collect_violations(
 
     When *source_tree_ast* is supplied (test path), consume the cached
     parsed AST per file and read the raw source text only to render line
-    snippets. When omitted (external callers via ``test_w18_p50_closure``
+    snippets. When omitted (external callers via ``retired_campaign_aggregate``
     importlib path), fall back to the original walk-and-parse so the
     helper's public signature stays no-arg compatible.
     """
