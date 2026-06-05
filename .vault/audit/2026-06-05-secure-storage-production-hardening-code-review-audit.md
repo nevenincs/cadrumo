@@ -162,3 +162,17 @@ The new tests write real secure-object payloads through `isolated_runtime_profil
 then load through the repository under test. They assert typed localized errors for
 classification drift and future inner envelope versions without fakes, monkeypatches,
 or tautological source mirroring.
+
+## S359-CR-001 | PASS | Work-unit model remains manifest-discovery only
+
+Reviewed the S359 scope as `vaultspec-code-reviewer`. `_work_unit.py` defines typed
+value records, deterministic id derivation, lifecycle state, and catalogue invariants.
+It does not instantiate secure-object repositories, resolve active-profile storage,
+read settings, inspect environment variables, or perform filesystem IO.
+
+## S359-CR-002 | PASS | Storage ownership is not duplicated
+
+The encrypted `WorkUnitCatalogue` repository remains
+`src/aeat/domain/modelos/_repository.py`, already closed under S356 as
+`runtime-default`. S359 therefore correctly closes as `manifest-discovery` without
+adding a second storage abstraction.
