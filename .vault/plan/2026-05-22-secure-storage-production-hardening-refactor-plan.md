@@ -29,6 +29,16 @@ related:
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 Retired steps: `S422`, `S423`.
 
 # `secure-storage-production-hardening` `refactor` plan
@@ -1075,7 +1085,7 @@ Close the oldest custody and passphrase observations with current command-surfac
 - [x] `W20.P40.S451` - Verify recovery lock unlock rekey recover show-recovery and verify-recovery command/API exposure against the accepted custody architecture and add missing owner rows for absent accepted operations; `src/aeat/entrypoints/cli/_config; src/aeat/adapters/persistence/storage/master_key`.
 - [ ] `W20.P40.S452` - Harden passphrase environment bootstrap and central redaction handling so passphrase material is one-shot where feasible, logs/prints stay centrally redacted, and remaining env-based custody tests have explicit Settings-backed justification; `src/aeat/core; src/aeat/adapters/persistence/storage/master_key; src/aeat/entrypoints/cli`.
 - [x] `W20.P40.S457` - Implement first-class config custody verbs for lock unlock rekey recover show-recovery and verify-recovery using the accepted recovery facade and bucket session lifecycle; `src/aeat/entrypoints/cli/_config; src/aeat/adapters/persistence/storage/master_key; src/aeat/locales`.
-- [ ] `W20.P40.S458` - Replace stale custody and recovery guidance with canonical config custody verbs and locale-backed recovery copy; `src/aeat/adapters/persistence/storage/master_key; src/aeat/adapters/persistence/storage/runtime.py; src/aeat/core/errors/registry; src/aeat/locales`.
+- [x] `W20.P40.S458` - Replace stale custody and recovery guidance with canonical config custody verbs and locale-backed recovery copy; `src/aeat/adapters/persistence/storage/master_key; src/aeat/adapters/persistence/storage/runtime.py; src/aeat/core/errors/registry; src/aeat/locales`.
 - [x] `W20.P40.S459` - Implement and localize the first-class `config lock` and `config unlock` custody aliases through the existing profile lifecycle session path, with real CLI coverage; `src/aeat/entrypoints/cli/_config; src/aeat/entrypoints/cli/tests; src/aeat/locales`.
 
 ### Phase `W20.P41` - convention and provenance privacy follow-up

@@ -771,3 +771,29 @@ mnemonics; when a recovery envelope already exists it tells the operator to rota
 instead. The stale ADR/copy mismatch for existing recovery-code display remains owned
 by open row `W20.P40.S458`, which covers canonical custody guidance and locale-backed
 recovery copy.
+
+## S458-CR-001 | PASS | Custody guidance now names canonical verbs
+
+Reviewed the S458 guidance surface after the master-key/runtime updates. The scoped
+master-key and runtime-readiness messages now point at `aeat config recover`,
+`aeat config rekey`, and `aeat config unlock NAME` instead of vague recovery-flow
+prose or `config profile switch` where the accepted first-class custody verbs should
+be used.
+
+## S458-CR-002 | PASS | Error registry suggestions align with command surface
+
+The storage adapter registry suggestions for expired sessions, missing active
+sessions, locked bucket sessions, and recovery verification now point at the
+first-class custody verbs. Focused error-registry enforcement passed with the current
+registry layout.
+
+## S458-CR-003 | PASS | Locale updates were CLI-mediated and parse-clean
+
+Runtime and storage-refusal locale leaves were updated through
+`python -m aeat.locales set`. A PowerShell backtick escaping accident was repaired and
+the final `python -m aeat.locales audit` passed for `ca`, `en`, `es`, and `hu`.
+
+## S458-CR-004 | PASS | Focused validation passed
+
+Focused ruff, master-key provider/adverse-session tests, error-registry tests, and
+locale audit passed. No high or medium S458 findings remain open.
