@@ -77,11 +77,13 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S99]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P04-S07]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S113]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S114]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S53]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S54]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S55]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S56]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S57]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S58]]'
   - '[[2026-06-05-codebase-monolith-decomposition-adr]]'
   - '[[2026-06-05-codebase-monolith-decomposition-code-review-audit]]'
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
@@ -142,7 +144,7 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S106` - W02.P05.S106 Ledger Read Verification
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S107` - W02.P05.S107 - select modelo CLI test split
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S108` - W02.P05.S108 - split modelo registry surface tests
-- `2026-06-05-codebase-monolith-decomposition-W02-P05-S109` - W02.P05.S109 - verify modelo CLI test split
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S109` - W02.P05.S109 Modelo Test Verification
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S110` - W02.P05.S110 - extract modelo audit commands
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S111` - W02.P05.S111 - verify modelo audit extraction
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S112` - W02.P05.S112 Modelo Natural-Key Cross-Period Coverage Reconciliation
@@ -176,11 +178,13 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S99` - W02.P05.S99 - verify config bucket history extraction
 - `2026-06-05-codebase-monolith-decomposition-W03-P04-S07` - W03.P04.S07 Backend ADR Queue
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S113` - W03.P06.S113 Live IVA Remote-State Outcome Extraction
+- `2026-06-05-codebase-monolith-decomposition-W03-P06-S114` - W03.P06.S114 Live Filed-Data Helper Extraction
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S53` - W03.P06.S53 - decompose application modelo action helpers
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S54` - W03.P06.S54 - verify application modelo action decomposition
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S55` - W03.P06.S55 Ledger Actions Facade Decomposition
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S56` - W03.P06.S56 Ledger Actions Verification
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S57` - W03.P06.S57 Live Root Model Extraction
+- `2026-06-05-codebase-monolith-decomposition-W03-P06-S58` - W03.P06.S58 - verify application live decomposition
 
 ### plan
 
