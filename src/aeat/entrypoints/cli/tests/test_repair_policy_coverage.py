@@ -16,6 +16,7 @@ _CLI_DIR = Path(__file__).resolve().parents[1]
 
 _POLICY_COMMAND_MODULES: tuple[tuple[Path, str, tuple[str, ...]], ...] = (
     (_CLI_DIR / "_config" / "__init__.py", "app", ("config",)),
+    (_CLI_DIR / "_config" / "_custody.py", "app", ("config",)),
     (_CLI_DIR / "_config" / "_bucket_history.py", "bucket_app", ("config", "bucket")),
     (_CLI_DIR / "_config" / "_profile_bundle.py", "profile_app", ("config", "profile")),
     (_CLI_DIR / "_config" / "_repair_cli.py", "repair_app", ("config", "repair")),

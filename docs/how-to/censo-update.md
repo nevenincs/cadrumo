@@ -4,6 +4,10 @@ Use this guide to pull your AEAT census information into the active local
 profile and compare it with what you entered by hand. In Spain, this census
 information is tied to Modelo 036 registration and changes.
 
+Modelo 036 is the active implemented censo foundation in `aeat`. Modelo 037 is
+historical/inactive in this workflow and is treated as superseded by Modelo
+036.
+
 The censo commands read from AEAT and save local profile data only after you
 review and apply it. They do not file Modelo 036, do not submit changes to
 AEAT, and do not modify AEAT records.
@@ -25,10 +29,10 @@ aeat config profile status
 
 ## Why link censo information
 
-Modelo 036 census facts are official AEAT facts about the taxpayer's registered
-tax situation. Pulling them into `aeat` helps you check whether the local
-profile matches AEAT records before you plan deadlines, classify some expenses,
-or calculate modelos.
+Modelo 036 census facts are AEAT facts about the taxpayer's registered tax
+situation. Pulling them into `aeat` helps you check whether the local profile
+matches AEAT records before you plan deadlines, classify some expenses, or
+calculate modelos.
 
 The implemented censo/profile flow can affect:
 
@@ -38,6 +42,8 @@ The implemented censo/profile flow can affect:
 - selected withholding percentage facts, where AEAT publishes them
 - home-office area facts, which can seed home-office usage ratios for relevant
   expense categories
+- censo stale metadata on modelo work units, so later review can see whether
+  the work used fresh or older local censo facts
 - local audit history for censo pulls and censo applies
 
 If you do not link censo information, you can still work with a manually entered
@@ -45,7 +51,8 @@ profile. The consequence is that profile-dependent workflows use your manual
 facts only. Calendar and filing-calendar checks may be less reliable if the
 activity start date, tax regime, IVA regime, Renta/IRPF regime, or enrollment
 facts are incomplete or wrong. Home-office ratios derived from censo floor-area
-facts will not be available.
+facts will not be available. If a persisted HOME_OFFICE override conflicts with
+the guardrails, the ledger ratio guard can refuse it.
 
 Use [Plan your filing calendar](filing-calendar.md) after profile and censo
 review. Use modelo-specific guides, such as
@@ -62,6 +69,10 @@ aeat config profile censo refresh
 
 This uses the active profile and the configured AEAT authentication. It saves a
 snapshot under the profile. It does not apply those values to the profile yet.
+It is a live read guarded by `live-censo-read`, so it requires an authenticated
+AEAT session.
+
+If AEAT returns no usable censo facts, refresh can stop with a no-facts error.
 
 ## Review the snapshot
 
@@ -79,6 +90,9 @@ aeat config profile censo show --snapshot-id <snapshot-id>
 
 Review that the facts belong to the taxpayer and match what you expect from the
 AEAT censo surface.
+
+`show`, `compare`, and `apply` need a saved snapshot. If no snapshot exists,
+they refuse instead of inventing censo values.
 
 ## Compare AEAT censo with your profile
 
@@ -107,7 +121,9 @@ Manually entered facts from other sources are preserved so you can still compare
 manual profile values with AEAT-reported values.
 
 If the snapshot includes home-office floor-area facts, apply can seed local
-home-office usage ratios for categories that use that censo-derived ratio.
+home-office usage ratios for categories that use that censo-derived ratio. If
+the snapshot has no valid area facts, no censo-derived `business_pct` is seeded
+and home-office classification falls back to manual or saved ratio workflow.
 
 ## Record a Modelo 036 filing done outside aeat
 
@@ -134,7 +150,7 @@ aeat config profile validate
 If the profile still reports missing facts, edit those fields directly:
 
 ```bash
-aeat config profile edit <profile-name> --quiet --<field-flag> <value>
+aeat config profile edit <profile-name> --quiet --activity <value>
 ```
 
 For modelo-specific readiness, use profile preflight:
@@ -159,5 +175,5 @@ refuses because no censo snapshot exists.
 - [Authenticate with AEAT](authenticate-with-aeat.md)
 - [Set up your taxpayer profile](profile-setup.md)
 - [Plan your filing calendar](filing-calendar.md)
-- [Work with transaction data](import-bank-statements.md)
+- [Work with Transactions](import-bank-statements.md)
 - [Review and supply calculation inputs](review-calculation-values.md)

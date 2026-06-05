@@ -50,7 +50,21 @@ Pull, compare, and apply AEAT census facts for the active profile.
 See what may be due and why a modelo applies.
 :::
 
-:::{grid-item-card} Transaction Data
+:::{grid-item-card} Filing Periods
+:link: filing-periods
+:link-type: doc
+
+Understand quarters, annual period codes, dates, and year-end.
+:::
+
+:::{grid-item-card} AEAT Notifications
+:link: check-aeat-notifications
+:link-type: doc
+
+Capture, list, and view read-only DEHu notification snapshots.
+:::
+
+:::{grid-item-card} Work with Transactions
 :link: import-bank-statements
 :link-type: doc
 
@@ -69,6 +83,13 @@ Classify rows manually, in bulk, with allocation, or with LLM assistance.
 :link-type: doc
 
 Review casillas, missing values, offsets, bindings, and revisions.
+:::
+
+:::{grid-item-card} Google Sheets Review
+:link: review-with-google-sheets
+:link-type: doc
+
+Export, pull, and verify calculation workbooks in Google Sheets.
 :::
 
 :::{grid-item-card} Reconcile a Filing
@@ -113,6 +134,13 @@ Prepare the annual IVA summary.
 Preview, apply, reject, or override local LLM suggestions.
 :::
 
+:::{grid-item-card} LLM Provider Setup
+:link: setup-llm-classification
+:link-type: doc
+
+Check provider CLIs, PATH visibility, authentication, and smoke tests.
+:::
+
 :::{grid-item-card} Troubleshooting
 :link: troubleshooting
 :link-type: doc
@@ -131,16 +159,20 @@ records.
 
 quickstart
 profile-setup
-authenticate-with-aeat
 censo-update
 filing-calendar
+filing-periods
+check-aeat-notifications
 import-bank-statements
 classify-transactions
 classify-with-llm
+setup-llm-classification
 review-calculation-values
+review-with-google-sheets
 filing-spine
 modelo-303
 modelo-390
 reconcile
 troubleshooting
+authenticate-with-aeat
 ```

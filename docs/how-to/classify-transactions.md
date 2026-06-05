@@ -53,6 +53,12 @@ aeat app ledger classify --id <transaction-id> --classification BUSINESS --categ
 Income rows usually do not need `--category-id`; `aeat` can use transaction
 direction and ledger income aggregation.
 
+Use `OUTGOING` plus an expense category for supplier purchases and other
+deductible expenses. Use `INCOMING` for issued invoices, client payments, or
+services rendered to customers. If you also track invoice records separately,
+use `aeat app ledger payable-invoice --help` for supplier invoices and
+`aeat app ledger collectible-invoice --help` for customer invoices.
+
 ## Add tax fields when needed
 
 If a row needs regulated tax fields, add only the fields that apply:
@@ -64,6 +70,15 @@ aeat app ledger classify --id <transaction-id> --classification BUSINESS --categ
 Common fields include taxable base, IVA rate, IVA amount, IVA category, IRPF
 category, and counterparty EU member state for intracommunity IVA cases. Use
 `aeat app ledger classify --help` for the exact current option list.
+
+For ordinary domestic IVA, use the taxable base, rate, and amount shown by the
+invoice. For example, a EUR 121.00 purchase with 21 percent IVA usually has
+`--taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00`. Use
+`--iva-category` when the transaction needs an explicit IVA treatment, such as
+domestic reduced rates, exempt/not-subject operations, intracommunity
+operations, exports, imports, reverse charge, recargo de equivalencia, or
+simplified-regime treatment. The command help lists the accepted IVA category
+tokens.
 
 ## Classify mixed-use transactions
 
@@ -84,6 +99,29 @@ mixed use. Use `--usage-ratio-id` only when you have already created a reusable
 usage ratio for the profile. Use `--prorrata-reference` only for IVA workflows
 that need a prorrata reference.
 
+For shared expenses, first check which category ratios are supported:
+
+```bash
+aeat app ledger ratios eligible
+aeat app ledger ratios list
+```
+
+Set or replace a category-level business-use ratio only when the category
+supports it:
+
+```bash
+aeat app ledger ratios set <category-id> 0.5
+aeat app ledger ratios validate
+```
+
+For home-office expenses, you normally either classify the row as `MIXED` with
+an explicit `--business-pct`, or use a supported category ratio when your
+profile has one. If you have linked and applied Modelo 036 censo facts with
+valid home-office area data, `aeat` can seed censo-derived home-office ratios
+for relevant categories. See
+[Link Modelo 036 census information](censo-update.md) before relying on that
+ratio.
+
 ## Classify many rows from CSV
 
 For bulk review, `classify --from-csv` reads a CSV with columns
@@ -93,8 +131,59 @@ For bulk review, `classify --from-csv` reads a CSV with columns
 aeat app ledger classify --from-csv ./classifications.csv
 ```
 
+The CSV path is the implemented batch-editing workflow for classifications.
+Use it when filtered review shows many rows that can be classified safely from
+their descriptions, counterparties, and source documents.
+
+Recommended workflow:
+
+1. Select rows with `ledger list`:
+
+   ```bash
+   aeat app ledger list --filter period=2026Q1 --filter classification=NOT_YET_PROCESSED
+   ```
+
+2. Export the period as a review snapshot:
+
+   ```bash
+   aeat app ledger export --output ./ledger-2026-q1.csv --period 2026Q1
+   ```
+
+3. Prepare a narrow CSV containing only the rows you mean to change:
+
+   ```text
+   transaction_id,classification,category_id
+   <business-expense-id>,BUSINESS,<category-id>
+   <private-row-id>,PERSONAL,
+   ```
+
+4. Apply and review:
+
+   ```bash
+   aeat app ledger classify --from-csv ./classifications.csv
+   aeat app ledger list --filter period=2026Q1
+   aeat app ledger preflight --period 2026Q1
+   ```
+
 Keep bulk files as review artifacts. They are useful when you later need to
-explain how a period was classified.
+explain how a period was classified. This path does not batch-update amounts,
+descriptions, IVA values, notes, attachments, or split/merge state; use the
+transaction workflow for those row-level edits.
+
+## Apply stored rules automatically
+
+Rules classify active unclassified transactions whose descriptions match a
+case-insensitive regular expression:
+
+```bash
+aeat app ledger rule add --description-pattern "software" --classification BUSINESS --category-id <category-id>
+aeat app ledger rule list
+aeat app ledger rule apply --dry-run
+aeat app ledger rule apply
+```
+
+Run `--dry-run` first. Use `--reaffirm` only when you intentionally want rules
+to reclassify rows that already have a manual or previous classification.
 
 ## Use an LLM suggestion
 
@@ -102,7 +191,7 @@ An LLM can suggest business/personal/mixed classification and, when possible,
 an expense category. It does not set regulated tax figures such as taxable base,
 IVA rate, IVA amount, IVA category, or IRPF category.
 
-Use [Classify a transaction with an LLM](classify-with-llm.md) for the full
+Use [Classify transactions with an LLM](classify-with-llm.md) for the full
 provider, preview, apply, and override flow.
 
 ## Confirm readiness
@@ -130,6 +219,8 @@ with `ledger view` before calculating.
 
 ## Next steps
 
-- [Work with transaction data](import-bank-statements.md)
+- [Work with Transactions](import-bank-statements.md)
+- [Classify transactions with an LLM](classify-with-llm.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
+- [Review calculations with Google Sheets](review-with-google-sheets.md)
 - [CLI reference](../cli/index.rst)

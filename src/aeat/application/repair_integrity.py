@@ -672,6 +672,11 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
             owner_domains=("profile_lifecycle",),
             namespace_policies=(_PROFILE_BUNDLE_POLICY,),
         ),
+        _surface(
+            "config recover",
+            command_family="recovery",
+            owner_domains=("secure_storage",),
+        ),
         _surface("config bucket history", command_family="audit", owner_domains=("bucket_lifecycle",)),
         _surface(
             "app ledger import",

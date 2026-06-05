@@ -50,6 +50,16 @@ related:
   - '[[2026-06-04-repo-health-triage-W05-P17-S62]]'
   - '[[2026-06-04-repo-health-triage-W05-P17-summary]]'
   - '[[2026-06-04-repo-health-triage-W06-P19-S74]]'
+  - '[[2026-06-04-repo-health-triage-W06-P19-S75]]'
+  - '[[2026-06-04-repo-health-triage-W06-P19-S76]]'
+  - '[[2026-06-04-repo-health-triage-W06-P19-S77]]'
+  - '[[2026-06-04-repo-health-triage-W06-P19-summary]]'
+  - '[[2026-06-04-repo-health-triage-W06-P20-S78]]'
+  - '[[2026-06-04-repo-health-triage-W06-P20-S79]]'
+  - '[[2026-06-04-repo-health-triage-W06-P20-S80]]'
+  - '[[2026-06-04-repo-health-triage-W06-P20-S81]]'
+  - '[[2026-06-04-repo-health-triage-W06-P20-S82]]'
+  - '[[2026-06-04-repo-health-triage-W06-P21-S83]]'
   - '[[2026-06-04-repo-health-triage-adr]]'
   - '[[2026-06-04-repo-health-triage-audit]]'
   - '[[2026-06-04-repo-health-triage-code-review-audit]]'
@@ -200,6 +210,16 @@ Auto-generated index of all documents tagged with `#repo-health-triage`.
 - `2026-06-04-repo-health-triage-W05-P17-S62` - W05.P17.S62 close execution records
 - `2026-06-04-repo-health-triage-W05-P17-summary` - `repo-health-triage` `W05.P17` summary
 - `2026-06-04-repo-health-triage-W06-P19-S74` - W06.P19.S74 modelo CLI command complexity reduction
+- `2026-06-04-repo-health-triage-W06-P19-S75` - W06.P19.S75 registry formula complexity reduction
+- `2026-06-04-repo-health-triage-W06-P19-S76` - W06.P19.S76 ledger projection complexity reduction
+- `2026-06-04-repo-health-triage-W06-P19-S77` - W06.P19.S77 complexity residual ratchet
+- `2026-06-04-repo-health-triage-W06-P19-summary` - `repo-health-triage` `W06.P19` summary
+- `2026-06-04-repo-health-triage-W06-P20-S78` - W06.P20.S78 Ruff scratch/probe scope verification
+- `2026-06-04-repo-health-triage-W06-P20-S79` - W06.P20.S79 Dependency Declaration Drift Verification
+- `2026-06-04-repo-health-triage-W06-P20-S80` - W06.P20.S80 Vulture Dead-Code Verification
+- `2026-06-04-repo-health-triage-W06-P20-S81` - W06.P20.S81 Semgrep Security Policy Burn-Down
+- `2026-06-04-repo-health-triage-W06-P20-S82` - W06.P20.S82 Duplication Ratchet
+- `2026-06-04-repo-health-triage-W06-P21-S83` - W06.P21.S83 Hard Gate Attempt
 
 ### plan
 

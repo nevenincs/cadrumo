@@ -7,23 +7,22 @@ generated output envelopes.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from itertools import pairwise
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
+from pydantic import BeforeValidator, Field, field_validator, model_validator
 
-from ....core._period import StandardPeriodCode
 from ....core._tax_domain import TaxDomain
 from ....core.aggregation import AggregationSourceKind, RowSetGroupingKind
 from ....core.classification import SensitivityClass
-from ....core.decimal import coerce_decimal
-from ....core.identity import IdentityError, validate_spanish_tax_id
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
+
+# Scalar and annotated value types live in `_schema_scalars`; these assignments
+# preserve the historical `_schema` import surface for tests and consumers.
+from . import _schema_scalars as _scalars
 from ._aeat_hosts import first_aeat_host
 from ._errors import RegistryValidationError
 from ._ids import (
@@ -34,7 +33,6 @@ from ._ids import (
     CrossReferenceId,
     DeadlineWindowId,
     DependencyClassificationId,
-    ExportFieldId,
     ExportLayoutId,
     ExtractionProfileId,
     FormulaId,
@@ -42,7 +40,6 @@ from ._ids import (
     ModeloId,
     OracleId,
     ParameterId,
-    RecordId,
     RelationId,
     RevisionId,
     SourceRefId,
@@ -51,465 +48,134 @@ from ._ids import (
     WorkbookFixtureId,
     WorkbookParityRefId,
 )
-from ._record_spec import ENCODING_ALIAS_MAP
 from ._schema_input_kind import InputKind, InputKindValue
 from ._schema_rounding import RegistryRoundingCode as RegistryRoundingCode
 from ._schema_rounding import RegistryRoundingCodeValue
 
+__all__ = [
+    "AlgorithmBindingDefinition",
+    "AlgorithmProviderDefinition",
+    "ApplicationLinkDefinition",
+    "BboxAnchorSpec",
+    "BracketEntry",
+    "CalculationClass",
+    "CalculationCompletenessCasilla",
+    "CalculationCompletenessManifest",
+    "CasillaAlias",
+    "CasillaConstraints",
+    "CasillaContinuidadEvolutionDefinition",
+    "CasillaDefinition",
+    "CasillaFieldKind",
+    "CasillaFieldKindValue",
+    "ConstructDefinition",
+    "ConvenioRateRow",
+    "DataBindingDefinition",
+    "DateAxis",
+    "DatedValue",
+    "DeadlineWindowDefinition",
+    "DecimalValue",
+    "DependencyClassificationDefinition",
+    "EvidenceTier",
+    "ExportFieldDefinition",
+    "ExportLayoutDefinition",
+    "ExportRecordDefinition",
+    "ExtractionProfileDefinition",
+    "ExtractionTargetDefinition",
+    "FormulaDefinition",
+    "FormulaExpression",
+    "FormulaOperator",
+    "InputKind",
+    "InputKindValue",
+    "KeyedBracketEntry",
+    "LegalParameter",
+    "LegalReference",
+    "LegalRefs",
+    "LiveCrossReferenceDecision",
+    "ModeloDefinition",
+    "ModeloFilingCapability",
+    "ModeloRevision",
+    "ModeloScheduleDefinition",
+    "ParameterDefinition",
+    "ProfilePredicateDefinition",
+    "RegistryCatalogues",
+    "RegistryModel",
+    "RegistryRoundingCode",
+    "RegistryRoundingCodeValue",
+    "RegistrySnapshot",
+    "RegistrySnapshotRef",
+    "RegistryVerificationPolicy",
+    "ReviewStatus",
+    "SensitivityClassField",
+    "SourceCitation",
+    "SourceCitationText",
+    "SourceReference",
+    "SourceRefs",
+    "SupportRemovalDecisionDefinition",
+    "VerificationExpectationDefinition",
+    "VerificationPredicateDefinition",
+    "WorkbookParityReference",
+]
 
-def _coerce_decimal(value: object) -> object:
-    if isinstance(value, bool | float):
-        raise RegistryValidationError("decimal values must not be booleans or floats")
-    if isinstance(value, Decimal):
-        return value
-    result = coerce_decimal(value)
-    return result if result is not None else value
-
-
-DecimalValue = Annotated[Decimal, BeforeValidator(_coerce_decimal)]
-
-
-def _validate_nif_string(value: object) -> object:
-    """Validate a Spanish NIF / NIE / CIF identifier and return its canonical form.
-
-    Delegates to the shared `validate_spanish_tax_id` algorithm in
-    `aeat.core.identity._tax_id` and re-raises domain `IdentityError`
-    as `RegistryValidationError` so the schema boundary surfaces
-    identifier-format problems through its established error type.
-    """
-    if not isinstance(value, str):
-        raise RegistryValidationError(f"NIF value must be a string, got {type(value).__name__}")
-    try:
-        return validate_spanish_tax_id(value)
-    except IdentityError as exc:
-        raise RegistryValidationError(f"invalid NIF / NIE / CIF identifier: {exc}") from exc
-
-
-NifString = Annotated[str, BeforeValidator(_validate_nif_string)]
-"""Canonical Spanish tax-identifier string.
-
-Used as the value type for casillas declaring `data_type = "nif"`,
-and by any cross-domain consumer (filing draft assembly, oracle
-replay, export layouts) that needs to validate a NIF, NIE, or CIF
-identifier independently of a casilla declaration.
-"""
-
-
-def _coerce_modelo_year(value: object) -> object:
-    """Coerce a fiscal-year input to an int within the registry-supported window.
-
-    Accepts an int directly or a non-empty string of digits. Rejects
-    booleans (which are int subclasses in Python), floats, and any
-    value outside ``RegistrySnapshotRef.modelo_year``'s declared
-    ``ge=2000, le=2099`` range.
-    """
-    if isinstance(value, bool):
-        raise RegistryValidationError("year value must not be a boolean")
-    if isinstance(value, float):
-        raise RegistryValidationError("year value must not be a float")
-    if isinstance(value, str):
-        if not value.strip():
-            raise RegistryValidationError("year value must not be blank")
-        try:
-            value = int(value)
-        except ValueError as exc:
-            raise RegistryValidationError(f"year value {value!r} is not a valid integer") from exc
-    return value
-
-
-ModeloYear = Annotated[int, BeforeValidator(_coerce_modelo_year), Field(ge=2000, le=2099)]
-"""Canonical fiscal-year integer for the registry boundary.
-
-Mirrors the ``RegistrySnapshotRef.modelo_year`` bound so a casilla
-declaring ``data_type = "year"`` and the snapshot coordinate agree
-on the supported window. Consumers that need to validate a year
-value independently of a casilla declaration should type their
-field as ``ModeloYear``.
-"""
-
-
-_STANDARD_PERIOD_CODES = frozenset(StandardPeriodCode)
-_EXT_PATTERN = re.compile(r"^EXT-[1-4]T$")
-_AD_HOC_PATTERN = re.compile(r"^AD-HOC$")
-_EVENT_PATTERN = re.compile(r"^EVENT-\d+$")
-
-
-def _validate_period_code(value: object) -> object:
-    """Validate a filing-period code against the registry-supported set.
-
-    Accepted forms (from the fiscal-period inventory):
-
-    - StandardPeriodCode: 1T-4T (quarterly), 1P-4P (instalment), 0A (annual), 01-12 (monthly).
-    - ``EXT-1T``-``EXT-4T``: OSS extra-Union scheme quarters (modelo 369).
-    - ``AD-HOC``: ad-hoc / event-driven (modelos 308, 309).
-    - ``EVENT-N``: numbered event filings.
-
-    Modellers introducing a new form must extend this validator.
-    """
-    if not isinstance(value, str):
-        raise RegistryValidationError(f"period_code value must be a string, got {type(value).__name__}")
-    if value in _STANDARD_PERIOD_CODES:
-        return value
-    if _EXT_PATTERN.match(value) or _AD_HOC_PATTERN.match(value) or _EVENT_PATTERN.match(value):
-        return value
-    raise RegistryValidationError(f"period_code value {value!r} does not match a supported filing-period form")
-
-
-PeriodCode = Annotated[str, BeforeValidator(_validate_period_code)]
-"""Canonical filing-period code for the registry boundary.
-
-Used as the value type for casillas declaring
-``data_type = "period_code"``, and by any cross-domain consumer
-(snapshot coordinates, oracle replay, export layouts) that needs to
-validate a period token independently of a casilla declaration.
-"""
-
-
-_COUNTRY_CODE_RE = re.compile(r"^[A-Z]{2}$")
-
-
-def _validate_country_code(value: object) -> object:
-    """Validate a two-character ISO 3166-1 alpha-2 country code.
-
-    Format-only validation: enforces uppercase ASCII letters and
-    exact length 2. Membership against the AEAT-supported country
-    list is delegated to per-casilla `constraints.enum` declarations
-    (Plan B) and to the semantic-role consistency layer (Plan C).
-    Country casillas declaring `data_type = "country_code"` are
-    expected to either (a) carry an `enum` constraint enumerating
-    the supported codes, or (b) accept any ISO alpha-2 code with
-    downstream business validation.
-    """
-    if not isinstance(value, str):
-        raise RegistryValidationError(f"country_code value must be a string, got {type(value).__name__}")
-    if not _COUNTRY_CODE_RE.match(value):
-        raise RegistryValidationError(
-            f"country_code value {value!r} must be a two-character uppercase ISO alpha-2 code"
-        )
-    return value
-
-
-CountryCode = Annotated[str, BeforeValidator(_validate_country_code)]
-"""Two-character country code for the registry boundary.
-
-Used as the value type for casillas declaring
-``data_type = "country_code"``. Membership against the
-AEAT-supported country list is layered through per-casilla `enum`
-constraints (Plan B) and semantic-role consistency (Plan C); this
-alias enforces only the alpha-2 shape.
-"""
-
-
-_IBAN_SHAPE_RE = re.compile(r"^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$")
-
-
-def _iban_mod_97(canonical: str) -> int:
-    """Compute the IBAN mod-97 check residue for an already-canonical IBAN."""
-    rearranged = canonical[4:] + canonical[:4]
-    numeric = "".join(ch if ch.isdigit() else str(ord(ch) - ord("A") + 10) for ch in rearranged)
-    return int(numeric) % 97
-
-
-def _validate_iban_string(value: object) -> object:
-    """Validate an IBAN: country code, check digits, BBAN, and mod-97 residue.
-
-    The validator strips whitespace and hyphens, uppercases, then
-    enforces ISO 13616 shape (`CC kk BBAN`, total 15-34 chars) and
-    the mod-97 check (the integer formed by moving the leading
-    four chars to the tail and converting letters to digits must be
-    congruent to 1 mod 97).
-    """
-    if not isinstance(value, str):
-        raise RegistryValidationError(f"iban value must be a string, got {type(value).__name__}")
-    canonical = value.replace(" ", "").replace("-", "").upper()
-    if not canonical:
-        raise RegistryValidationError("iban value must not be blank")
-    if not _IBAN_SHAPE_RE.match(canonical):
-        raise RegistryValidationError(f"iban value {value!r} does not match the ISO 13616 shape")
-    if _iban_mod_97(canonical) != 1:
-        raise RegistryValidationError(f"iban value {value!r} fails the mod-97 check")
-    return canonical
-
-
-IbanString = Annotated[str, BeforeValidator(_validate_iban_string)]
-"""Canonical IBAN string for the registry boundary.
-
-Used as the value type for casillas declaring ``data_type = "iban"``
-and by any cross-domain consumer that needs to validate an IBAN
-independently of a casilla declaration.
-"""
-
-
-def _validate_name_string(value: object) -> object:
-    """Validate a personal or entity name: non-empty unicode within length bounds."""
-    if not isinstance(value, str):
-        raise RegistryValidationError(f"name value must be a string, got {type(value).__name__}")
-    stripped = value.strip()
-    if not stripped:
-        raise RegistryValidationError("name value must not be blank")
-    if len(stripped) > 200:
-        raise RegistryValidationError(f"name value exceeds 200 characters: {len(stripped)}")
-    return stripped
-
-
-PersonOrEntityName = Annotated[str, BeforeValidator(_validate_name_string)]
-"""Personal or entity name for the registry boundary."""
-
-
-_NIF_IVA_RE = re.compile(r"^[A-Z]{2}[A-Z0-9]{2,12}$")
-
-
-def _validate_nif_iva_string(value: object) -> object:
-    """Validate an intracomunitario NIF-IVA: ISO country prefix plus identifier body."""
-    if not isinstance(value, str):
-        raise RegistryValidationError(f"nif_iva value must be a string, got {type(value).__name__}")
-    canonical = value.replace(" ", "").replace("-", "").upper()
-    if not _NIF_IVA_RE.match(canonical):
-        raise RegistryValidationError(
-            f"nif_iva value {value!r} must start with a two-letter country code "
-            "followed by 2-12 alphanumeric characters"
-        )
-    return canonical
-
-
-NifIvaString = Annotated[str, BeforeValidator(_validate_nif_iva_string)]
-"""Intracomunitario NIF-IVA string for the registry boundary."""
-
-
-_CCAA_CODES = frozenset(
-    {
-        "01",
-        "02",
-        "03",
-        "04",
-        "05",
-        "06",
-        "07",
-        "08",
-        "09",
-        "10",
-        "11",
-        "12",
-        "13",
-        "14",
-        "15",
-        "16",
-        "17",
-        "18",
-        "19",
-    }
+from ._schema_base import (
+    CalculationClass,
+    DateAxis,
+    EvidenceTier,
+    FormulaOperator,
+    LegalRefs,
+    ModeloFilingCapability,
+    RegistryModel,
+    ReviewStatus,
+    SensitivityClassField,
+    SourceCitation,
+    SourceCitationText,
+    SourceRefs,
+)
+from ._schema_formula import (
+    BracketEntry,
+    ConvenioRateRow,
+    DatedValue,
+    FormulaExpression,
+    KeyedBracketEntry,
+    ParameterDefinition,
+)
+from ._schema_surfaces import (
+    AlgorithmBindingDefinition,
+    AlgorithmProviderDefinition,
+    CalculationCompletenessCasilla,
+    CalculationCompletenessManifest,
+    CasillaAlias,
+    CasillaConstraints,
+    CasillaContinuidadEvolutionDefinition,
+    CasillaDefinition,
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+    RelationDefinition,
 )
 
+DecimalValue = _scalars.DecimalValue
+NifString = _scalars.NifString
+ModeloYear = _scalars.ModeloYear
+PeriodCode = _scalars.PeriodCode
+CountryCode = _scalars.CountryCode
+IbanString = _scalars.IbanString
+PersonOrEntityName = _scalars.PersonOrEntityName
+NifIvaString = _scalars.NifIvaString
+CCAACode = _scalars.CCAACode
+ProvinceCode = _scalars.ProvinceCode
+PostalCode = _scalars.PostalCode
+MunicipalityCode = _scalars.MunicipalityCode
+BicString = _scalars.BicString
+CalendarDate = _scalars.CalendarDate
+WorkbookCellRefStr = _scalars.WorkbookCellRefStr
+BindingSelectorValue = _scalars.BindingSelectorValue
+BindingSelectorMap = _scalars.BindingSelectorMap
+_coerce_modelo_year = _scalars._coerce_modelo_year
+_validate_country_code = _scalars._validate_country_code
+_validate_iban_string = _scalars._validate_iban_string
+_validate_nif_string = _scalars._validate_nif_string
+_validate_period_code = _scalars._validate_period_code
 
-def _validate_ccaa_code(value: object) -> object:
-    """Validate an autonomous-community code against the AEAT-supported set."""
-    if not isinstance(value, str):
-        raise RegistryValidationError(f"ccaa_code value must be a string, got {type(value).__name__}")
-    if value not in _CCAA_CODES:
-        raise RegistryValidationError(
-            f"ccaa_code value {value!r} is not in the supported AEAT autonomous-community set"
-        )
-    return value
-
-
-CCAACode = Annotated[str, BeforeValidator(_validate_ccaa_code)]
-"""Autonomous-community code for the registry boundary."""
-
-
-_PROVINCE_CODE_RE = re.compile(r"^(0[1-9]|[1-4][0-9]|5[0-2])$")
-
-
-def _validate_province_code(value: object) -> object:
-    """Validate a Spanish province code (01-52)."""
-    if not isinstance(value, str):
-        raise RegistryValidationError(f"province_code value must be a string, got {type(value).__name__}")
-    if not _PROVINCE_CODE_RE.match(value):
-        raise RegistryValidationError(
-            f"province_code value {value!r} must be a two-digit Spanish province code (01-52)"
-        )
-    return value
-
-
-ProvinceCode = Annotated[str, BeforeValidator(_validate_province_code)]
-"""Two-digit Spanish province code for the registry boundary."""
-
-
-_POSTAL_CODE_RE = re.compile(r"^\d{5}$")
-
-
-def _validate_postal_code(value: object) -> object:
-    """Validate a Spanish postal code (five digits)."""
-    if not isinstance(value, str):
-        raise RegistryValidationError(f"postal_code value must be a string, got {type(value).__name__}")
-    if not _POSTAL_CODE_RE.match(value):
-        raise RegistryValidationError(f"postal_code value {value!r} must be a five-digit Spanish postal code")
-    return value
-
-
-PostalCode = Annotated[str, BeforeValidator(_validate_postal_code)]
-"""Five-digit Spanish postal code for the registry boundary."""
-
-
-_MUNICIPALITY_CODE_RE = re.compile(r"^\d{5}$")
-
-
-def _validate_municipality_code(value: object) -> object:
-    """Validate a five-digit INE municipality code."""
-    if not isinstance(value, str):
-        raise RegistryValidationError(f"municipality_code value must be a string, got {type(value).__name__}")
-    if not _MUNICIPALITY_CODE_RE.match(value):
-        raise RegistryValidationError(f"municipality_code value {value!r} must be a five-digit INE municipality code")
-    return value
-
-
-MunicipalityCode = Annotated[str, BeforeValidator(_validate_municipality_code)]
-"""Five-digit INE municipality code for the registry boundary."""
-
-
-_BIC_RE = re.compile(r"^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$")
-
-
-def _validate_bic_string(value: object) -> object:
-    """Validate a SWIFT BIC (ISO 9362): 8 or 11 characters."""
-    if not isinstance(value, str):
-        raise RegistryValidationError(f"bic value must be a string, got {type(value).__name__}")
-    canonical = value.replace(" ", "").upper()
-    if not _BIC_RE.match(canonical):
-        raise RegistryValidationError(f"bic value {value!r} must be 8 or 11 alphanumeric characters per ISO 9362")
-    return canonical
-
-
-BicString = Annotated[str, BeforeValidator(_validate_bic_string)]
-"""SWIFT BIC for the registry boundary."""
-
-
-_DATE_DDMMAAAA_RE = re.compile(r"^(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])\d{4}$")
-_DATE_ISO_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$")
-
-
-def _validate_calendar_date(value: object) -> object:
-    """Validate a calendar date in either ISO 8601 or AEAT `ddmmaaaa` form."""
-    if not isinstance(value, str):
-        raise RegistryValidationError(f"date value must be a string, got {type(value).__name__}")
-    if not (_DATE_ISO_RE.match(value) or _DATE_DDMMAAAA_RE.match(value)):
-        raise RegistryValidationError(f"date value {value!r} must be ISO 8601 (yyyy-mm-dd) or AEAT ddmmaaaa")
-    return value
-
-
-CalendarDate = Annotated[str, BeforeValidator(_validate_calendar_date)]
-"""Calendar date string in ISO 8601 or AEAT `ddmmaaaa` form."""
-
-_WORKBOOK_CELL_REF_RE = re.compile(r"^(?:(?P<sheet>'[^']+'|[^!]+)!)?(?P<coordinate>\$?[A-Z]{1,3}\$?\d+)$")
-
-
-def _validate_workbook_cell_ref_str(value: object) -> object:
-    if isinstance(value, str) and not _WORKBOOK_CELL_REF_RE.match(value):
-        raise RegistryValidationError(f"invalid workbook cell reference {value!r}")
-    return value
-
-
-WorkbookCellRefStr = Annotated[str, BeforeValidator(_validate_workbook_cell_ref_str)]
-
-
-BindingSelectorValue = str | int | DecimalValue | bool | tuple[str, ...]
-"""Closed union of the value shapes a binding-selector entry can hold.
-
-The selector field on :class:`DataBindingDefinition` and related
-selector fields on relation definitions store this union. Per-source
-typed selector models (declared in :mod:`_bindings`) consume the
-raw mapping and re-validate against a strict frozen schema for the
-binding's declared ``source``; the snapshot-time
-``_validate_binding_selector_shapes`` gate runs that check on every
-binding once at snapshot build.
-"""
-
-BindingSelectorMap = Mapping[str, BindingSelectorValue]
-"""Mapping shape for an as-stored binding selector.
-
-Named alias rather than an inline ``Mapping[str, ...]`` so consumer
-code can express the type intent and discover the per-source typed
-companion models declared in :mod:`_bindings` via the alias name.
-"""
-
-
-def _coerce_sensitivity_class(value: object) -> object:
-    if isinstance(value, SensitivityClass):
-        return value
-    if isinstance(value, str):
-        return SensitivityClass(value)
-    return value
-
-
-SensitivityClassField = Annotated[SensitivityClass, BeforeValidator(_coerce_sensitivity_class)]
-
-CalculationClass = Literal["filing", "informative", "summary"]
-ModeloFilingCapability = Literal["borrador", "renta_ledger_default"]
-"""Discriminator for the calculation role of a ModeloDefinition.
-
-- ``filing``: The modelo computes and submits filing-grade amounts.
-  Most modelos fall into this class.
-- ``informative``: The modelo collects and reports data but does not
-  compute filing-grade amounts. Revisions must have empty ``formulas``
-  and empty ``relations``; every casilla must be ``manual`` or
-  ``informational``. Modelo 232 is the canonical example.
-- ``summary``: The modelo aggregates other modelos (e.g. 390 over 303)
-  and may declare cross-model relations but is not a filing modelo.
-"""
-
-ReviewStatus = Literal["reviewed"]
-DateAxis = Literal["filing_period", "devengo_date", "transaction_date", "invoice_date", "submission_date"]
-EvidenceTier = Literal[
-    "legal_authority",
-    "official_source_guidance",
-    "executable_parity_evidence",
-    "layout_authority",
-]
-LegalRefs = Annotated[tuple[LegalRefId, ...], Field(min_length=1)]
-SourceRefs = Annotated[tuple[SourceRefId, ...], Field(min_length=1)]
-SourceCitationText = Annotated[tuple[str, ...], Field(min_length=1)]
-ContinuidadId = Annotated[
-    str,
-    Field(
-        min_length=1,
-        max_length=128,
-        pattern=r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$",
-    ),
-]
-FormulaOperator = Literal[
-    "add",
-    "subtract",
-    "multiply",
-    "divide",
-    "percent",
-    "less_than",
-    "less_equal",
-    "greater_than",
-    "greater_equal",
-    "equal",
-    "sum",
-    "min",
-    "max",
-    "clamp",
-    "negate",
-    "copy",
-    "if_then_else",
-    "lookup_parameter",
-    "lookup_bracket",
-    "lookup_bracket_by_ccaa",
-    "m210_resolve_rate",
-    "lookup_parameter_by_entity_type",
-    "lookup_bracket_by_entity_type",
-    "previous_period_value",
-    "previous_period_sum",
-    "cross_model_sum",
-    "age_at_year_end",
-]
-
-
-class RegistryModel(BaseModel):
-    """Strict frozen base for registry schema objects."""
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class RegistrySnapshotRef(RegistryModel):
@@ -702,20 +368,6 @@ class LegalParameter(RegistryModel):
     reviewed_at: date | None = None
     reviewed_by: str | None = None
     notes: str | None = None
-
-
-class SourceCitation(RegistryModel):
-    source_ref: SourceRefId
-    required_text: SourceCitationText
-
-    @field_validator("required_text")
-    @classmethod
-    def _required_text_non_empty(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        if any(not item.strip() for item in value):
-            raise RegistryValidationError("source citation required_text entries must be non-empty")
-        if len(set(value)) != len(value):
-            raise RegistryValidationError("source citation required_text entries must be unique")
-        return value
 
 
 class BboxAnchorSpec(RegistryModel):
@@ -1304,374 +956,6 @@ class ModeloScheduleDefinition(RegistryModel):
         return self
 
 
-def _normalise_dispatch_table_entries(value: object) -> object:
-    if not isinstance(value, Mapping) or "dispatch_table_entries" not in value:
-        return value
-    # TOML fragments always parse to string-keyed tables; ``isinstance`` narrows
-    # to Mapping[Unknown, object] because the key type is erased by the object
-    # parameter.  The annotation below re-attaches the known str key type at
-    # this single TOML deserialization boundary.
-    # TYPE-IGNORE-RATIONALE-TOML-STR-KEY-ERASURE:
-    # TOML deserialization erases str-key type after isinstance narrowing;
-    # annotation re-attaches the known str key at the boundary.
-    mapping: Mapping[str, object] = value  # type: ignore[assignment]
-    if "dispatch_table" in mapping:
-        raise RegistryValidationError("formula leaf must use dispatch_table or dispatch_table_entries, not both")
-
-    raw_entries = mapping["dispatch_table_entries"]
-    if not isinstance(raw_entries, tuple | list):
-        raise RegistryValidationError("dispatch_table_entries must be an array")
-
-    dispatch_table: dict[str, object] = {}
-    for raw_entry in raw_entries:
-        if not isinstance(raw_entry, Mapping):
-            raise RegistryValidationError("dispatch_table_entries entries must be tables")
-        # TYPE-IGNORE-RATIONALE-TOML-STR-KEY-ERASURE:
-    # TOML deserialization erases str-key type after isinstance narrowing;
-    # annotation re-attaches the known str key at the boundary.
-        entry: Mapping[str, object] = raw_entry  # type: ignore[assignment]
-        if set(entry) != {"key", "parameter"}:
-            raise RegistryValidationError("dispatch_table_entries entries must declare key and parameter")
-        key = entry["key"]
-        if not isinstance(key, str):
-            raise RegistryValidationError("dispatch_table_entries key must be a string")
-        if key in dispatch_table:
-            raise RegistryValidationError(f"dispatch_table_entries duplicate key {key!r}")
-        dispatch_table[key] = entry["parameter"]
-
-    normalised = dict(mapping)
-    normalised.pop("dispatch_table_entries")
-    normalised["dispatch_table"] = dispatch_table
-    return normalised
-
-
-class FormulaExpression(RegistryModel):
-    op: FormulaOperator | None = None
-    args: tuple[FormulaExpression, ...] = ()
-    casilla: CasillaId | None = None
-    binding: BindingId | None = None
-    date_binding: BindingId | None = None
-    parameter: ParameterId | None = None
-    relation: RelationId | None = None
-    literal: DecimalValue | None = None
-    dispatch_table: Mapping[str, ParameterId] | None = None
-
-    @model_validator(mode="before")
-    @classmethod
-    def _normalise_dispatch_table_entries(cls, value: object) -> object:
-        return _normalise_dispatch_table_entries(value)
-
-    @model_validator(mode="after")
-    def _validate_expression(self) -> FormulaExpression:
-        populated_leaves = [
-            self.casilla is not None,
-            self.binding is not None,
-            self.date_binding is not None,
-            self.parameter is not None,
-            self.relation is not None,
-            self.literal is not None,
-            self.dispatch_table is not None,
-        ]
-        if self.op is None:
-            if self.args:
-                raise RegistryValidationError("formula leaf must not declare args")
-            if sum(populated_leaves) != 1:
-                raise RegistryValidationError("formula leaf must declare exactly one source")
-            if self.dispatch_table is not None and not self.dispatch_table:
-                raise RegistryValidationError("dispatch_table leaf must declare at least one entry")
-            return self
-        if sum(populated_leaves):
-            raise RegistryValidationError("formula operator must not declare leaf sources")
-        if not self.args:
-            raise RegistryValidationError("formula operator must declare args")
-        return self
-
-
-class DatedValue(RegistryModel):
-    value: DecimalValue
-    date_axis: DateAxis
-    valid_from: date
-    valid_to: date | None = None
-
-    @model_validator(mode="after")
-    def _validate_window(self) -> DatedValue:
-        if self.valid_to is not None and self.valid_to < self.valid_from:
-            raise RegistryValidationError("dated value valid_to must be on or after valid_from")
-        return self
-
-
-class BracketEntry(RegistryModel):
-    """One row of a piecewise-linear bracket schedule (e.g. an IRPF escala).
-
-    Each entry encodes a half-open base-amount interval ``[lower_bound, upper_bound]``
-    plus the cuota previously accumulated up to ``lower_bound`` (``fixed_addition``)
-    and the marginal rate applied to the slice above ``lower_bound``. A ``None``
-    ``upper_bound`` declares the open-ended top bracket.
-
-    Cuota for a base amount ``base`` resolved by `lookup_bracket`:
-        cuota = fixed_addition + marginal_rate * (base - lower_bound)
-    """
-
-    lower_bound: DecimalValue
-    upper_bound: DecimalValue | None = None
-    fixed_addition: DecimalValue
-    marginal_rate: DecimalValue
-    valid_from: date
-    valid_to: date | None = None
-
-    @model_validator(mode="after")
-    def _validate_bracket(self) -> BracketEntry:
-        if self.upper_bound is not None and self.upper_bound < self.lower_bound:
-            raise RegistryValidationError("bracket upper_bound must be on or after lower_bound")
-        if self.valid_to is not None and self.valid_to < self.valid_from:
-            raise RegistryValidationError("bracket valid_to must be on or after valid_from")
-        if self.lower_bound < Decimal("0"):
-            raise RegistryValidationError("bracket lower_bound must be non-negative")
-        if self.marginal_rate < Decimal("0"):
-            raise RegistryValidationError("bracket marginal_rate must be non-negative")
-        return self
-
-
-class KeyedBracketEntry(RegistryModel):
-    """One row of a string-keyed rate-lookup table.
-
-    Sister shape to :class:`BracketEntry` for parameters that dispatch on
-    a categorical enum value rather than a piecewise-linear numeric
-    interval. Each row binds a ``key`` (e.g. an IRNR ``tipo_renta`` code:
-    ``general`` / ``ue_residente`` / ``ganancia_patrimonial`` /
-    ``inmobiliaria``) to a ``value`` (typically a Decimal rate) within a
-    ``valid_from``/``valid_to`` window. Lookup is exact-match on
-    ``(key, year)`` — there is no notion of interval overlap because the
-    domain is enum-discrete, not numeric-continuous.
-
-    First consumer: M210 IRNR Phase 1 ``m210-tipo-gravamen-2025`` per
-    the m210-irnr-full-engine ADR.
-    """
-
-    key: str = Field(min_length=1, max_length=64)
-    value: DecimalValue
-    valid_from: date
-    valid_to: date | None = None
-
-    @model_validator(mode="after")
-    def _validate_keyed_bracket(self) -> KeyedBracketEntry:
-        if self.valid_to is not None and self.valid_to < self.valid_from:
-            raise RegistryValidationError("keyed_bracket valid_to must be on or after valid_from")
-        return self
-
-
-class ConvenioRateRow(RegistryModel):
-    """One row of an IRNR Convenio doble imposición rate-override table.
-
-    Sister shape to :class:`KeyedBracketEntry` for parameters that
-    dispatch on a ``(country_code, tipo_renta)`` pair returning the
-    treaty rate that REPLACES the TRLIRNR baseline when a profile
-    declares ``convenio_doble_imposicion_country``. The replacement
-    semantics (not stacking) is enforced at lookup time by the runtime
-    helper authored in S389b.
-
-    The ``rate`` field is a string carrying either a parseable Decimal
-    (e.g. ``"0.10"``) or the literal ``"NOT_YET_AUTHORED"`` sentinel
-    that triggers a BLOCKING finding at lookup time. The sentinel
-    allows the parameter to carry a placeholder row for a country +
-    tipo_renta combination whose Convenio article number is known
-    but whose rate has not been corpus-verified yet, without
-    deferring the entire row to a follow-up Step.
-
-    First consumer: M210 IRNR Phase 1 ``m210-convenio-rates`` per
-    the m210-irnr-full-engine ADR §D2.4.
-    """
-
-    country_code: str = Field(min_length=2, max_length=2, pattern=r"^[A-Z]{2}$")
-    tipo_renta: str = Field(min_length=1, max_length=64)
-    rate: str = Field(min_length=1, max_length=32)
-    legal_ref_anchor: str = Field(min_length=1, max_length=128)
-    notes: str | None = Field(default=None, max_length=512)
-    valid_from: date
-    valid_to: date | None = None
-
-    @model_validator(mode="after")
-    def _validate_convenio_rate_row(self) -> ConvenioRateRow:
-        if self.valid_to is not None and self.valid_to < self.valid_from:
-            raise RegistryValidationError("convenio_rate_row valid_to must be on or after valid_from")
-        # The rate field is either the NOT_YET_AUTHORED sentinel or a
-        # parseable Decimal string. Parsing here surfaces malformed
-        # values at construction time rather than at lookup time.
-        if self.rate != "NOT_YET_AUTHORED":
-            try:
-                Decimal(self.rate)
-            except (ArithmeticError, ValueError) as exc:
-                raise RegistryValidationError(
-                    f"convenio_rate_row rate must be a parseable Decimal or 'NOT_YET_AUTHORED'; got {self.rate!r}"
-                ) from exc
-        return self
-
-
-def _brackets_overlap_in_same_window(prev: BracketEntry, current: BracketEntry) -> bool:
-    """Return True when two adjacent brackets share a valid_from window and overlap.
-
-    The pre-sorted iteration walks ``(valid_from, lower_bound)``
-    order so two brackets only need to be compared when they share
-    the ``valid_from`` key. Overlap is defined against a closed-
-    open interval: ``prev.upper_bound`` is exclusive, so
-    ``current.lower_bound`` reaching strictly below it is the
-    violation. A ``prev.upper_bound`` of ``None`` (open-ended)
-    short-circuits to "no overlap" — the open right edge is the
-    caller's escape hatch.
-    """
-    if prev.valid_from != current.valid_from:
-        return False
-    if prev.upper_bound is None:
-        return False
-    return current.lower_bound < prev.upper_bound
-
-
-class ParameterDefinition(RegistryModel):
-    id: ParameterId
-    data_type: Literal[
-        "decimal",
-        "money",
-        "integer",
-        "ratio",
-        "text",
-        "boolean",
-        "bracket_table",
-        "keyed_bracket_table",
-        "convenio_rate_table",
-    ]
-    unit: str
-    values: tuple[DatedValue, ...] = Field(default_factory=tuple)
-    brackets: tuple[BracketEntry, ...] = Field(default_factory=tuple)
-    keyed_brackets: tuple[KeyedBracketEntry, ...] = Field(default_factory=tuple)
-    convenio_rates: tuple[ConvenioRateRow, ...] = Field(default_factory=tuple)
-    bracket_axis: DateAxis | None = None
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-    source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
-
-    @model_validator(mode="after")
-    def _validate_bracket_table(self) -> ParameterDefinition:
-        if self.data_type == "bracket_table":
-            self._validate_bracket_table_shape()
-        elif self.data_type == "keyed_bracket_table":
-            self._validate_keyed_bracket_table_shape()
-        elif self.data_type == "convenio_rate_table":
-            self._validate_convenio_rate_table_shape()
-        else:
-            self._validate_non_bracket_table_shape()
-        return self
-
-    def _validate_bracket_table_shape(self) -> None:
-        """Verify a bracket_table parameter has brackets, no values, an axis, and no overlaps.
-
-        Four contracts:
-        * non-empty ``brackets`` tuple
-        * no ``values`` (dated scalar map is mutually exclusive)
-        * ``bracket_axis`` declared
-        * no two brackets sharing the same ``valid_from`` window
-          overlap on their ``lower_bound`` / ``upper_bound``
-          interval (closed-open)
-        """
-        if not self.brackets:
-            raise RegistryValidationError(f"parameter {self.id!r} declares bracket_table but has no brackets")
-        if self.values:
-            raise RegistryValidationError(f"parameter {self.id!r} cannot mix bracket_table and dated values")
-        if self.keyed_brackets:
-            raise RegistryValidationError(f"parameter {self.id!r} cannot mix bracket_table and keyed_brackets")
-        if self.convenio_rates:
-            raise RegistryValidationError(f"parameter {self.id!r} cannot mix bracket_table and convenio_rates")
-        if self.bracket_axis is None:
-            raise RegistryValidationError(f"parameter {self.id!r} bracket_table requires a bracket_axis")
-        sorted_brackets = sorted(self.brackets, key=lambda b: (b.valid_from, b.lower_bound))
-        for prev, current in pairwise(sorted_brackets):
-            if _brackets_overlap_in_same_window(prev, current):
-                raise RegistryValidationError(
-                    f"parameter {self.id!r} brackets {prev.lower_bound}-{prev.upper_bound} "
-                    f"and {current.lower_bound}-{current.upper_bound} overlap within the same window"
-                )
-
-    def _validate_keyed_bracket_table_shape(self) -> None:
-        """Verify a keyed_bracket_table parameter has a valid keyed shape.
-
-        Four contracts mirror the numeric ``bracket_table`` shape:
-        * non-empty ``keyed_brackets`` tuple
-        * no ``values`` (dated scalar map is mutually exclusive)
-        * no ``brackets`` (numeric-interval table is mutually exclusive)
-        * no two ``keyed_brackets`` share the same ``(key, valid_from)``
-          pair (exact-match lookup requires a unique row per key per
-          window; duplicates would make the lookup non-deterministic)
-        """
-        if not self.keyed_brackets:
-            raise RegistryValidationError(
-                f"parameter {self.id!r} declares keyed_bracket_table but has no keyed_brackets"
-            )
-        if self.values:
-            raise RegistryValidationError(f"parameter {self.id!r} cannot mix keyed_bracket_table and dated values")
-        if self.brackets:
-            raise RegistryValidationError(f"parameter {self.id!r} cannot mix keyed_bracket_table and numeric brackets")
-        if self.convenio_rates:
-            raise RegistryValidationError(f"parameter {self.id!r} cannot mix keyed_bracket_table and convenio_rates")
-        seen: set[tuple[str, date]] = set()
-        for row in self.keyed_brackets:
-            pair = (row.key, row.valid_from)
-            if pair in seen:
-                raise RegistryValidationError(
-                    f"parameter {self.id!r} keyed_brackets contains duplicate (key, valid_from) pair {pair!r}"
-                )
-            seen.add(pair)
-
-    def _validate_convenio_rate_table_shape(self) -> None:
-        """Verify a convenio_rate_table parameter carries unique convenio rate rows.
-
-        Mirrors the keyed_bracket_table contract structure:
-        * non-empty ``convenio_rates`` tuple
-        * no ``values`` (dated scalar map is mutually exclusive)
-        * no ``brackets`` (numeric-interval table is mutually exclusive)
-        * no ``keyed_brackets`` (single-key shape is mutually exclusive)
-        * no two ``convenio_rates`` share the same
-          ``(country_code, tipo_renta, valid_from)`` triple — the
-          runtime lookup is exact-match on the pair within the active
-          window, so duplicates would make the result non-deterministic
-        """
-        if not self.convenio_rates:
-            raise RegistryValidationError(
-                f"parameter {self.id!r} declares convenio_rate_table but has no convenio_rates"
-            )
-        if self.values:
-            raise RegistryValidationError(f"parameter {self.id!r} cannot mix convenio_rate_table and dated values")
-        if self.brackets:
-            raise RegistryValidationError(f"parameter {self.id!r} cannot mix convenio_rate_table and numeric brackets")
-        if self.keyed_brackets:
-            raise RegistryValidationError(f"parameter {self.id!r} cannot mix convenio_rate_table and keyed_brackets")
-        seen: set[tuple[str, str, date]] = set()
-        for row in self.convenio_rates:
-            triple = (row.country_code, row.tipo_renta, row.valid_from)
-            if triple in seen:
-                raise RegistryValidationError(
-                    f"parameter {self.id!r} convenio_rates contains duplicate "
-                    f"(country_code, tipo_renta, valid_from) triple {triple!r}"
-                )
-            seen.add(triple)
-
-    def _validate_non_bracket_table_shape(self) -> None:
-        """Reject brackets / keyed_brackets / convenio_rates / bracket_axis on a non-bracket-table parameter."""
-        if self.brackets:
-            raise RegistryValidationError(
-                f"parameter {self.id!r} declares brackets but data_type is {self.data_type!r}; use 'bracket_table'"
-            )
-        if self.keyed_brackets:
-            raise RegistryValidationError(
-                f"parameter {self.id!r} declares keyed_brackets but data_type is {self.data_type!r}; "
-                "use 'keyed_bracket_table'"
-            )
-        if self.convenio_rates:
-            raise RegistryValidationError(
-                f"parameter {self.id!r} declares convenio_rates but data_type is {self.data_type!r}; "
-                "use 'convenio_rate_table'"
-            )
-        if self.bracket_axis is not None:
-            raise RegistryValidationError(f"parameter {self.id!r} declares bracket_axis but is not a bracket_table")
-
 
 class DataBindingDefinition(RegistryModel):
     id: BindingId
@@ -1713,592 +997,7 @@ class FormulaDefinition(RegistryModel):
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
 
 
-class CasillaContinuidadEvolutionDefinition(RegistryModel):
-    """Declared cross-revision evolution for one casilla continuity chain."""
 
-    id: RecordId
-    continuidad_id: ContinuidadId
-    from_revision: RevisionId
-    to_revision: RevisionId
-    evolution_kind: Literal[
-        "unchanged",
-        "label_evolved",
-        "legal_refs_evolved",
-        "label_and_legal_refs_evolved",
-        "repurposed",
-        "retired",
-    ]
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-    @model_validator(mode="after")
-    def _validate_revision_pair(self) -> CasillaContinuidadEvolutionDefinition:
-        if self.from_revision == self.to_revision:
-            raise RegistryValidationError(
-                f"casilla continuidad evolution {self.id!r} must span two different revisions"
-            )
-        return self
-
-
-class CasillaAlias(RegistryModel):
-    """A label variant for a casilla, carrying its own legal grounding.
-
-    Used by Plan C's semantic-role validator: two casillas in
-    different modelos can share a ``semantic_role`` even though
-    their primary ``label`` strings differ verbatim, provided each
-    declares the divergent phrasing via an ``aliases`` entry with
-    a documented BOE or AEAT source.
-    """
-
-    label: str = Field(min_length=1, max_length=512)
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-
-class CasillaConstraints(RegistryModel):
-    """Declarative value constraints applied after a casilla is evaluated.
-
-    Captures the legal sign / range rules AEAT mandates per LIRPF /
-    LIVA / LIS articles: a withholding casilla cannot carry a
-    negative value, a deductibility cap restricts the maximum, a
-    non-negativity floor on a cuota líquida prevents arithmetic
-    underflow propagating through downstream formulas.
-
-    Each constraint declares its own legal grounding so the engine
-    can surface a BOE permalink in the violation envelope when a
-    computed value falls outside the declared bounds. The runtime
-    raises a typed `CasillaConstraintViolationError`; the Sheets apply
-    adapter renders the same record as a `setDataValidation` rule
-    on the corresponding cell so the operator sees the constraint
-    directly in the workbook UI.
-    """
-
-    sign: Literal["any", "non_negative", "non_positive"] = "any"
-    min_value: DecimalValue | None = None
-    max_value: DecimalValue | None = None
-    pattern: str | None = None
-    min_length: int | None = Field(default=None, ge=0)
-    max_length: int | None = Field(default=None, ge=0)
-    enum: tuple[str, ...] | None = None
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-    @model_validator(mode="after")
-    def _validate_bounds(self) -> CasillaConstraints:
-        if self.min_value is not None and self.max_value is not None and self.min_value > self.max_value:
-            raise RegistryValidationError(
-                f"casilla constraints: min_value {self.min_value} > max_value {self.max_value}"
-            )
-        if self.sign == "non_negative" and self.max_value is not None and self.max_value < Decimal("0"):
-            raise RegistryValidationError(
-                "casilla constraints: sign='non_negative' is incompatible with negative max_value"
-            )
-        if self.sign == "non_positive" and self.min_value is not None and self.min_value > Decimal("0"):
-            raise RegistryValidationError(
-                "casilla constraints: sign='non_positive' is incompatible with positive min_value"
-            )
-        if self.min_length is not None and self.max_length is not None and self.min_length > self.max_length:
-            raise RegistryValidationError(
-                f"casilla constraints: min_length {self.min_length} > max_length {self.max_length}"
-            )
-        if self.enum is not None and len(self.enum) == 0:
-            raise RegistryValidationError("casilla constraints: enum must declare at least one value")
-        if self.enum is not None and len(set(self.enum)) != len(self.enum):
-            raise RegistryValidationError("casilla constraints: enum values must be unique")
-        if self.pattern is not None:
-            try:
-                re.compile(self.pattern)
-            except re.error as exc:
-                raise RegistryValidationError(
-                    f"casilla constraints: pattern {self.pattern!r} is not a valid regex: {exc}"
-                ) from exc
-        return self
-
-    def violates(self, value: Decimal) -> str | None:
-        """Return a short reason string if a Decimal `value` violates this constraint, else None.
-
-        Numeric-only violation check preserved for downstream consumers
-        of computed casilla values. Text constraints (`pattern`,
-        `min_length`, `max_length`, `enum`) are surfaced through the
-        sibling :meth:`violates_text` method.
-        """
-        if self.sign == "non_negative" and value < Decimal("0"):
-            return f"value {value} violates sign=non_negative"
-        if self.sign == "non_positive" and value > Decimal("0"):
-            return f"value {value} violates sign=non_positive"
-        if self.min_value is not None and value < self.min_value:
-            return f"value {value} below min_value {self.min_value}"
-        if self.max_value is not None and value > self.max_value:
-            return f"value {value} above max_value {self.max_value}"
-        return None
-
-    def violates_text(self, value: str) -> str | None:
-        """Return a short reason string if a text `value` violates the text constraints, else None.
-
-        Checks the four text-shape constraints introduced by Plan B:
-        ``pattern``, ``min_length``, ``max_length``, and ``enum``. Used
-        by consumers that resolve a casilla value into a string at
-        evaluation time.
-        """
-        length = len(value)
-        if self.min_length is not None and length < self.min_length:
-            return f"value length {length} below min_length {self.min_length}"
-        if self.max_length is not None and length > self.max_length:
-            return f"value length {length} above max_length {self.max_length}"
-        if self.pattern is not None and not re.fullmatch(self.pattern, value):
-            return f"value {value!r} does not match pattern {self.pattern!r}"
-        if self.enum is not None and value not in self.enum:
-            return f"value {value!r} not in enum {self.enum!r}"
-        return None
-
-
-class CasillaDefinition(RegistryModel):
-    """A single AEAT casilla within a modelo revision.
-
-    A casilla's identity is the pair ``(segmento, number)``. For
-    single-segment modelos ``segmento`` is unset and ``number`` alone is
-    unique within the revision. Multi-segment AEAT modelos (e.g. Modelo
-    200) reuse the same five-digit ``number`` across distinct record
-    segments with a different meaning in each; those casillas carry the
-    AEAT record-segment code in ``segmento`` to disambiguate.
-    """
-
-    id: CasillaId
-    number: str
-    segmento: str | None = Field(
-        default=None,
-        min_length=1,
-        max_length=32,
-        description=(
-            "AEAT record-segment code (e.g. 'DP200014') for multi-segment "
-            "modelos that reuse a casilla number across record segments. "
-            "Unset for single-segment modelos; a casilla's identity is the "
-            "pair (segmento, number)."
-        ),
-    )
-    label: str
-    section: tuple[str, ...]
-    data_type: Literal[
-        "decimal",
-        "money",
-        "integer",
-        "ratio",
-        "text",
-        "boolean",
-        "nif",
-        "year",
-        "period_code",
-        "country_code",
-        "iban",
-        "name",
-        "nif_iva",
-        "ccaa_code",
-        "province_code",
-        "postal_code",
-        "municipality_code",
-        "bic",
-        "date",
-    ] = "money"
-    required: bool = False
-    input_kind: InputKindValue = InputKind.MANUAL
-    formula: FormulaId | None = None
-    binding: BindingId | None = None
-    export_refs: tuple[ExportFieldId, ...] = ()
-    constraints: CasillaConstraints | None = None
-    form_number: str | None = Field(default=None, min_length=1, max_length=16)
-    continuidad_id: ContinuidadId | None = Field(
-        default=None,
-        description=(
-            "Stable cross-revision continuity key for non-overlapping annual "
-            "forms. When present, it identifies the legal concept continuity "
-            "chain independently of the revision-local casilla id."
-        ),
-    )
-    semantic_role: str | None = Field(default=None, min_length=1, max_length=128)
-    semantic_role_cardinality: Literal["shared", "intentional_singleton"] = "shared"
-    semantic_role_cardinality_reason: str | None = Field(default=None, min_length=1, max_length=256)
-    aliases: tuple[CasillaAlias, ...] = ()
-    internal_only: bool = Field(
-        default=False,
-        description=(
-            "App-internal computed casilla that participates in the calculation "
-            "graph but is intentionally absent from the AEAT-published Diseño de "
-            "Registros. Typically a regulatory ceiling or intermediate the app "
-            "materialises as a casilla so verification predicates and downstream "
-            "formulas can reference it. An internal_only casilla MUST be computed "
-            "(``input_kind = COMPUTED``), MUST carry no ``export_refs``, and MUST "
-            "carry legal_refs / source_refs grounding the internal computation in "
-            "real regulatory authority."
-        ),
-    )
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-    @model_validator(mode="after")
-    def _validate_input_kind(self) -> CasillaDefinition:
-        if self.input_kind == InputKind.COMPUTED and self.formula is None:
-            raise RegistryValidationError(f"computed casilla {self.id!r} must declare formula")
-        if self.input_kind == InputKind.COMPUTED and self.binding is not None:
-            raise RegistryValidationError(f"computed casilla {self.id!r} must not declare binding")
-        if self.input_kind == InputKind.BOUND and self.binding is None:
-            raise RegistryValidationError(f"bound casilla {self.id!r} must declare binding")
-        if self.input_kind == InputKind.BOUND and self.formula is not None:
-            raise RegistryValidationError(f"bound casilla {self.id!r} must not declare formula")
-        if self.internal_only and self.export_refs:
-            raise RegistryValidationError(
-                f"internal_only casilla {self.id!r} must not declare export_refs "
-                "(an app-internal casilla cannot also be exported to a fichero record)"
-            )
-        if self.internal_only and self.input_kind != InputKind.COMPUTED:
-            raise RegistryValidationError(
-                f"internal_only casilla {self.id!r} must be computed "
-                "(an internal ceiling has no legitimate computation surface unless formula-derived)"
-            )
-        if self.semantic_role_cardinality == "intentional_singleton":
-            if self.semantic_role is None:
-                raise RegistryValidationError(
-                    f"casilla {self.id!r} declares intentional singleton role cardinality without semantic_role"
-                )
-            if self.semantic_role_cardinality_reason is None:
-                raise RegistryValidationError(
-                    f"casilla {self.id!r} declares intentional singleton role cardinality without reason"
-                )
-        elif self.semantic_role_cardinality_reason is not None:
-            raise RegistryValidationError(
-                f"casilla {self.id!r} declares semantic_role_cardinality_reason "
-                "without intentional singleton cardinality"
-            )
-        return self
-
-
-class CalculationCompletenessCasilla(RegistryModel):
-    """One required ``(segmento, number)`` casilla in a calculation-completeness manifest.
-
-    A casilla's identity is the pair ``(segmento, number)``. A
-    single-segment modelo leaves ``segmento`` unset, so the pair degrades
-    to ``(None, number)`` and the manifest enumerates bare numbers.
-
-    ``number`` carries the registry ``number`` of the closure casilla
-    verbatim. Only Modelo 200's casilla numbers are five-digit AEAT
-    Diseño tags; the other calculation-bearing modelos identify casillas
-    by semantic slug (``iva.cuota-devengada-total``) or short ordinal
-    (``01``-``19``), so the manifest carries whatever vocabulary the
-    modelo's registry uses. The field is unbounded above to match the
-    unconstrained ``CasillaDefinition.number``.
-
-    The manifest enumerates only the casillas inside a modelo's
-    *calculation closure* — formula targets, the casillas referenced
-    inside any formula expression, formula and binding endpoint casillas,
-    and verification-expectation operands. Pure accounting-statement
-    data-entry fields that feed no calculation are intentionally absent
-    from this required set.
-    """
-
-    number: str = Field(min_length=1)
-    segmento: str | None = Field(
-        default=None,
-        min_length=1,
-        max_length=32,
-        description=(
-            "AEAT record-segment code (e.g. 'DP200014') for multi-segment "
-            "modelos that reuse a casilla number across record segments. "
-            "Unset for single-segment modelos."
-        ),
-    )
-
-    def identity(self) -> tuple[str | None, str]:
-        """Return the ``(segmento, number)`` identity pair for this casilla."""
-        return (self.segmento, self.number)
-
-
-class CalculationCompletenessManifest(RegistryModel):
-    """The required calculation-closure casilla set for a modelo revision.
-
-    Enumerates the ``(segmento, number)`` casillas in a modelo's
-    *calculation closure* — the casillas the cross-connecting
-    calculation engine traverses: every formula target, every casilla
-    referenced inside a formula expression, every binding and relation
-    endpoint casilla, and every verification-expectation operand. It is
-    derived from the official AEAT Diseño de Registros *intersected
-    with* the modelo's calculation surface — Diseño-authoritative on
-    each casilla's segment, number, and label, but bounded to what the
-    engine needs (an off-load-path derivation step, never parsed on the
-    snapshot-build hot path) and checked into the registry as reviewed
-    data.
-
-    The registry validator enforces ``manifest-required ⊆ declared``
-    plus a ``(segmento, number)`` identity check and a
-    ``legal_refs`` / ``source_refs`` grounding check on each required
-    casilla. A casilla the revision declares but the manifest does not
-    list (a pure accounting-statement field) is *not* a failure.
-
-    ``manual_extraction`` flags a manifest authored from a manual read
-    of a PDF-only Diseño that resists machine extraction; the
-    off-load-path drift re-verification skips the machine re-derivation
-    for such manifests and records ``manual_extraction_reason`` instead
-    of failing silently.
-    """
-
-    source_ref: SourceRefId = Field(
-        description="Catalogue source id of the AEAT Diseño de Registros the manifest was derived from."
-    )
-    casillas: tuple[CalculationCompletenessCasilla, ...]
-    manual_extraction: bool = False
-    manual_extraction_reason: str | None = Field(default=None, min_length=1, max_length=512)
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-    @model_validator(mode="after")
-    def _validate_manifest(self) -> CalculationCompletenessManifest:
-        if not self.casillas:
-            raise RegistryValidationError("calculation-completeness manifest must enumerate at least one casilla")
-        identities = [casilla.identity() for casilla in self.casillas]
-        duplicates = sorted({pair for pair in identities if identities.count(pair) > 1})
-        if duplicates:
-            rendered = ", ".join(
-                f"{number!r}" if segmento is None else f"{number!r} within segmento {segmento!r}"
-                for segmento, number in duplicates
-            )
-            raise RegistryValidationError(
-                f"calculation-completeness manifest declares duplicate casilla identities: {rendered}"
-            )
-        if self.source_ref not in self.source_refs:
-            raise RegistryValidationError(
-                "calculation-completeness manifest source_ref must be included in source_refs"
-            )
-        if self.manual_extraction and self.manual_extraction_reason is None:
-            raise RegistryValidationError(
-                "calculation-completeness manifest with manual_extraction must declare manual_extraction_reason"
-            )
-        if not self.manual_extraction and self.manual_extraction_reason is not None:
-            raise RegistryValidationError(
-                "calculation-completeness manifest declares manual_extraction_reason without manual_extraction"
-            )
-        return self
-
-    def identities(self) -> frozenset[tuple[str | None, str]]:
-        """Return the frozenset of required ``(segmento, number)`` identity pairs."""
-        return frozenset(casilla.identity() for casilla in self.casillas)
-
-
-class AlgorithmProviderDefinition(RegistryModel):
-    id: str
-    import_path: str
-    callable_name: str
-    deterministic: Literal[True]
-    side_effect_free: Literal[True]
-    allowed_input_schema: Mapping[str, str]
-    output_schema: Mapping[str, str]
-    trace_contract: str
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-
-class AlgorithmBindingDefinition(RegistryModel):
-    id: str
-    provider: str
-    target: CasillaId | str
-    inputs: Mapping[str, BindingId | CasillaId | ParameterId | RelationId]
-    outputs: Mapping[str, CasillaId | str]
-    constants: tuple[ParameterId, ...] = ()
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-
-class RelationDefinition(RegistryModel):
-    id: RelationId
-    kind: Literal["previous_period", "annual_summary", "cross_model_output"]
-    dependency_role: Literal[
-        "profile_schedule",
-        "periodic_to_annual_summary",
-        "instalment_to_final_settlement",
-        "direct_calculation",
-        "factual_evidence",
-    ]
-    source_modelo: ModeloId
-    source_revision_selector: Mapping[str, str | int]
-    source_output: CasillaId
-    target_binding: BindingId
-    period_alignment: Mapping[str, str | int]
-    source_periods: tuple[str, ...] = ()
-    target_periods: tuple[str, ...] = ()
-    source_period_offset_from_target: int | None = None
-    aggregation: Mapping[str, str | int | DecimalValue | bool] | None = None
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-    @field_validator("source_periods", "target_periods")
-    @classmethod
-    def _relation_periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        if len(set(value)) != len(value):
-            raise RegistryValidationError("relation periods must be unique")
-        return value
-
-    @model_validator(mode="after")
-    def _validate_dependency_role(self) -> RelationDefinition:
-        if self.kind == "annual_summary" and self.dependency_role != "periodic_to_annual_summary":
-            raise RegistryValidationError(
-                f"annual summary relation {self.id!r} must use periodic_to_annual_summary role"
-            )
-        if self.source_period_offset_from_target is not None:
-            # The offset declares "for each target_period, derive source_period
-            # by adding the offset to the target's ordinal". It is incompatible
-            # with explicit source_periods which fixes a single static source set.
-            if self.source_periods:
-                raise RegistryValidationError(
-                    f"relation {self.id!r} cannot declare source_periods together with source_period_offset_from_target"
-                )
-            if self.source_period_offset_from_target == 0:
-                raise RegistryValidationError(f"relation {self.id!r} source_period_offset_from_target must be non-zero")
-        return self
-
-
-class ExportFieldDefinition(RegistryModel):
-    id: ExportFieldId
-    offset: int | None = Field(default=None, ge=0)
-    length: int | None = Field(default=None, gt=0)
-    kind: CasillaFieldKindValue
-    casilla: CasillaId | None = None
-    binding: BindingId | None = None
-    literal: str | None = None
-    header_key: str | None = None
-    draft_attribute: Literal["modelo", "period", "profile_tax_id", "filing_year", "period_code"] | None = None
-    computed_key: Literal["envelope_closing_tag"] | None = None
-    data_type: Literal["text", "integer", "decimal", "money", "date", "boolean"]
-    required: bool
-    padding: Literal["left_zero", "left_space", "right_space", "none"]
-    justification: Literal["left", "right", "none"]
-    date_format: str | None = None
-    signed: bool
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-    @model_validator(mode="after")
-    def _validate_field_kind(self) -> ExportFieldDefinition:
-        if self.kind == CasillaFieldKind.CASILLA and self.casilla is None:
-            raise RegistryValidationError(f"export field {self.id!r} must declare casilla")
-        if self.kind == CasillaFieldKind.BINDING and self.binding is None:
-            raise RegistryValidationError(f"export field {self.id!r} must declare binding")
-        if self.kind == CasillaFieldKind.LITERAL and self.literal is None:
-            raise RegistryValidationError(f"export field {self.id!r} must declare literal")
-        if self.kind == CasillaFieldKind.HEADER and self.header_key is None:
-            raise RegistryValidationError(f"export field {self.id!r} must declare header_key")
-        if self.kind == CasillaFieldKind.DRAFT and self.draft_attribute is None:
-            raise RegistryValidationError(f"export field {self.id!r} must declare draft_attribute")
-        if self.kind == CasillaFieldKind.COMPUTED and self.computed_key is None:
-            raise RegistryValidationError(f"export field {self.id!r} must declare computed_key")
-        if self.kind == CasillaFieldKind.FILLER and self.length is None:
-            raise RegistryValidationError(f"export field {self.id!r} filler must declare length")
-        return self
-
-
-class RecordDiscriminator(RegistryModel):
-    """Record-shape discriminator for record types that share literal prefixes.
-
-    A record's literal-prefix matcher cannot tell two records apart when they
-    share their leading literal fields (AEAT models several Tipo-2 record
-    sub-shapes that all start with the same record-type literal). The
-    discriminator declares a contiguous byte range whose populated-or-blank
-    pattern uniquely identifies this record subtype, letting the parser pick
-    the correct record while reading binding-row sequences.
-    """
-
-    offset: int = Field(ge=1)
-    length: int = Field(gt=0)
-    requires: Literal["blank", "non_blank"]
-
-
-class ExportRecordDefinition(RegistryModel):
-    id: RecordId
-    record_type: str
-    order: int = Field(ge=0)
-    encoding: str
-    line_ending: Literal["crlf", "lf", "none"]
-    required: bool = True
-    repeat: Literal["binding_rows"] | None = None
-    binding_record: str | None = None
-    row_field_casillas: Mapping[str, CasillaId] = Field(default_factory=dict)
-    discriminator: RecordDiscriminator | None = None
-    requires_positive_casilla: CasillaId | None = None
-    fields: tuple[ExportFieldDefinition, ...] = Field(default_factory=tuple)
-
-    @field_validator("binding_record")
-    @classmethod
-    def _binding_record_non_empty(cls, value: str | None) -> str | None:
-        if value is not None and not value.strip():
-            raise RegistryValidationError("export record binding_record must be non-empty")
-        return value
-
-
-class ExportLayoutDefinition(RegistryModel):
-    id: ExportLayoutId
-    format: Literal["fixed_width", "xml_dictionary"] = "fixed_width"
-    dictionary_source_ref: SourceRefId | None = None
-    source_refs: SourceRefs
-    legal_refs: LegalRefs
-    records: tuple[ExportRecordDefinition, ...] = Field(default_factory=tuple)
-
-    @model_validator(mode="after")
-    def _validate_layout_format(self) -> ExportLayoutDefinition:
-        if self.format == "xml_dictionary":
-            if self.dictionary_source_ref is None:
-                raise RegistryValidationError(f"export layout {self.id!r} must declare dictionary_source_ref")
-            if self.dictionary_source_ref not in self.source_refs:
-                raise RegistryValidationError(
-                    f"export layout {self.id!r} dictionary source must be included in source_refs"
-                )
-        return self
-
-    @model_validator(mode="after")
-    def _validate_encoding_consistency(self) -> ExportLayoutDefinition:
-        """Enforce one encoding per fixed-width export layout.
-
-        AEAT publishes one wire encoding per modelo-year fichero-BOE
-        spec; mixing encodings across records inside a single layout
-        is a registry-author error that would produce a payload no
-        single decoder can faithfully re-parse. ``latin-1`` and
-        ``iso-8859-1`` are normalised to the same encoding before
-        comparison (Python codec aliases for the same charset).
-
-        Cross-domain encoding-lock: every record within one layout
-        must declare an encoding that normalises to the same value.
-        XML-dictionary layouts have no record-level encoding (the
-        records tuple is typically empty), so this check is a no-op
-        for them.
-        """
-        if self.format != "fixed_width":
-            return self
-        normalised: dict[str, str] = {}
-        for record in self.records:
-            normalised[record.id] = _normalise_fichero_boe_encoding(record.encoding)
-        unique_encodings = set(normalised.values())
-        if len(unique_encodings) > 1:
-            per_record = ", ".join(f"{record_id}={encoding!r}" for record_id, encoding in sorted(normalised.items()))
-            raise RegistryValidationError(
-                f"export layout {self.id!r} declares inconsistent encodings "
-                f"across its records: {per_record}. A single fichero-BOE "
-                f"layout must use one wire encoding so the published payload "
-                f"decodes uniformly."
-            )
-        return self
-
-
-def _normalise_fichero_boe_encoding(declared: str) -> str:
-    """Return the canonical form of a fichero-BOE encoding declaration."""
-    return ENCODING_ALIAS_MAP.get(declared.strip().lower(), declared.strip().lower())
-
-
-# Single source of truth for the predicate-DSL operator names. The
-# registry-load validator
-# (_validate_surfaces.validate_verification_expectation_section)
-# uses this set to reject unknown operators at authoring time. The
-# runtime evaluator
-# (aeat.application.modelo._actions._evaluate_predicate_expression)
-# carries its own regex per operator but MUST keep its set of operators
-# identical to this constant — drift between the two sets is a
-# silent-pass hazard at the predicate layer (a typo would silently pass
-# the gate that's missing the operator). A gate test asserts the
-# runtime evaluator recognises every name in this constant.
 KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
     {
         "advisory_when_ratio_ge",

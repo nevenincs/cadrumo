@@ -30,7 +30,8 @@ from ......core.config import Settings
 from ......core.i18n import tr
 from ......tests.secure_sql import isolated_runtime_profile
 from .._authenticator import AeatLoginAssertionError
-from .._clave_movil import ClaveMovilAuthProvider, _ClaveMovilSessionMetadata
+from .._clave_movil import ClaveMovilAuthProvider
+from .._clave_movil_metadata import ClaveMovilSessionMetadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -180,7 +181,7 @@ def test_probe_persisted_session_expired_carries_translated_message(
 
     # Build an expired metadata record.
     expired_at = datetime.now(UTC) - timedelta(hours=1)
-    metadata = _ClaveMovilSessionMetadata(
+    metadata = ClaveMovilSessionMetadata(
         authenticated_at=expired_at - timedelta(hours=8),
         idle_deadline=expired_at,
         identity_nif="12345678Z",
@@ -223,7 +224,7 @@ def test_resume_locked_hash_mismatch_carries_translated_message(
     storage_state_path = provider._storage_state_path()
 
     now = datetime.now(UTC)
-    metadata = _ClaveMovilSessionMetadata(
+    metadata = ClaveMovilSessionMetadata(
         authenticated_at=now - timedelta(hours=1),
         idle_deadline=now + timedelta(hours=7),
         identity_nif="12345678Z",

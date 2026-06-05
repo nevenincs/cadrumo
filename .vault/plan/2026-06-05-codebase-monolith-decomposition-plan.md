@@ -176,14 +176,14 @@ Decompose oversized calculation registry modules by schema, binding, applicabili
 
 Decompose oversized outbound adapter and persistence modules along external contract and storage boundary lines while preserving typed boundary errors.
 
-- [ ] `W03.P08.S73` - decompose AEAT sede declarations adapter by declaration workflow behind the outbound AEAT facade; `src/aeat/adapters/outbound/aeat/sede/_declarations.py src/aeat/adapters/outbound/aeat/sede/*.py`.
-- [ ] `W03.P08.S74` - verify AEAT sede declarations adapter behavior and facade imports after decomposition; `src/aeat/adapters/outbound/aeat/sede/tests src/aeat/entrypoints/cli/tests/test_live*`.
-- [ ] `W03.P08.S75` - decompose AEAT auth adapters by clave movil and authenticator workflow behind the outbound AEAT auth facade; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py src/aeat/adapters/outbound/aeat/auth/_authenticator.py src/aeat/adapters/outbound/aeat/auth/*.py`.
-- [ ] `W03.P08.S76` - verify AEAT auth adapter behavior and facade imports after decomposition; `src/aeat/adapters/outbound/aeat/auth/tests src/aeat/entrypoints/cli/_config/tests`.
-- [ ] `W03.P08.S77` - decompose Google calc sheets apply adapter by Sheets API write concern behind the outbound Google facade; `src/aeat/adapters/outbound/google/_calc_sheets_apply.py src/aeat/adapters/outbound/google/*.py`.
-- [ ] `W03.P08.S78` - verify Google calc sheets apply behavior and facade imports after decomposition; `src/aeat/adapters/outbound/google/tests src/aeat/entrypoints/cli/_config/tests/test_google*`.
-- [ ] `W03.P08.S79` - decompose SQL secure objects persistence by row, crypto, and repository concerns behind the storage facade; `src/aeat/adapters/persistence/storage/sql/secure_objects.py src/aeat/adapters/persistence/storage/sql/*.py`.
-- [ ] `W03.P08.S80` - verify SQL secure objects persistence behavior and facade imports after decomposition; `src/aeat/adapters/persistence/storage/sql/tests src/aeat/tests/test_storage_decimal_redaction_error_typing.py`.
+- [x] `W03.P08.S73` - decompose AEAT sede declarations adapter by declaration workflow behind the outbound AEAT facade; `src/aeat/adapters/outbound/aeat/sede/_declarations.py src/aeat/adapters/outbound/aeat/sede/*.py`.
+- [x] `W03.P08.S74` - verify AEAT sede declarations adapter behavior and facade imports after decomposition; `src/aeat/adapters/outbound/aeat/sede/tests src/aeat/entrypoints/cli/tests/test_live*`.
+- [x] `W03.P08.S75` - decompose AEAT auth adapters by clave movil and authenticator workflow behind the outbound AEAT auth facade; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py src/aeat/adapters/outbound/aeat/auth/_authenticator.py src/aeat/adapters/outbound/aeat/auth/*.py`.
+- [x] `W03.P08.S76` - verify AEAT auth adapter behavior and facade imports after decomposition; `src/aeat/adapters/outbound/aeat/auth/tests src/aeat/entrypoints/cli/_config/tests`.
+- [x] `W03.P08.S77` - decompose Google calc sheets apply adapter by Sheets API write concern behind the outbound Google facade; `src/aeat/adapters/outbound/google/_calc_sheets_apply.py src/aeat/adapters/outbound/google/*.py`.
+- [x] `W03.P08.S78` - verify Google calc sheets apply behavior and facade imports after decomposition; `src/aeat/adapters/outbound/google/tests src/aeat/entrypoints/cli/_config/tests/test_google*`.
+- [x] `W03.P08.S79` - decompose SQL secure objects persistence by row, crypto, and repository concerns behind the storage facade; `src/aeat/adapters/persistence/storage/sql/secure_objects.py src/aeat/adapters/persistence/storage/sql/*.py`.
+- [x] `W03.P08.S80` - verify SQL secure objects persistence behavior and facade imports after decomposition; `src/aeat/adapters/persistence/storage/sql/tests src/aeat/tests/test_storage_decimal_redaction_error_typing.py`.
 - [ ] `W03.P08.S81` - decompose master key storage adapter by derivation, rotation, and persistence concerns behind the storage facade; `src/aeat/adapters/persistence/storage/master_key/_master_key.py src/aeat/adapters/persistence/storage/master_key/*.py`.
 - [ ] `W03.P08.S82` - verify master key storage behavior and facade imports after decomposition; `src/aeat/adapters/persistence/storage/master_key/tests src/aeat/adapters/persistence/storage/tests`.
 

@@ -68,6 +68,7 @@ class CensoApplyPayload(OutputSchema):
     snapshot_id: str
     written_paths: list[str] = []
     unchanged_paths: list[str] = []
+    derived_paths: list[str] = []
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class var shadows ConfigDict descriptor; mypy
     # assignment check is incorrect.

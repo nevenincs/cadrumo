@@ -175,6 +175,8 @@ related:
   - '[[2026-06-05-live-iva-compensation-wallet-W10-P24-S101]]'
   - '[[2026-06-05-live-iva-compensation-wallet-W10-P24-S102]]'
   - '[[2026-06-05-live-iva-compensation-wallet-W10-P24-S93]]'
+  - '[[2026-06-05-live-iva-compensation-wallet-W10-P24-S98]]'
+  - '[[2026-06-05-live-iva-compensation-wallet-W10-P24-summary]]'
 ---
 
 # `live-iva-compensation-wallet` feature index
@@ -356,6 +358,8 @@ Auto-generated index of all documents tagged with `#live-iva-compensation-wallet
 - `2026-06-05-live-iva-compensation-wallet-W10-P24-S101` - W10.P24.S101 fresh Clave auth reliability
 - `2026-06-05-live-iva-compensation-wallet-W10-P24-S102` - W10.P24.S102 auth diagnostic show contract repair
 - `2026-06-05-live-iva-compensation-wallet-W10-P24-S93` - W10.P24.S93 live IVA evidence retry
+- `2026-06-05-live-iva-compensation-wallet-W10-P24-S98` - W10.P24.S98 vaultspec-rag service diagnostics
+- `2026-06-05-live-iva-compensation-wallet-W10-P24-summary` - `live-iva-compensation-wallet` `W10.P24` summary
 
 ### plan
 

@@ -2,19 +2,16 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections.abc import Iterator
 from datetime import datetime
 from typing import Final, Protocol, cast
 
-from pydantic import BaseModel, Field
 from sqlalchemy import Engine, bindparam, delete, inspect, select, text, update
 from sqlalchemy.engine import RowMapping
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass
 from .....core.errors import resolve_error_message
 from .....core.external_constants import UTF_8_ENCODING
@@ -37,12 +34,24 @@ from ..errors import (
     StorageValidationError,
 )
 from . import _orm
+from ._secure_object_crypto import derive_revision_id, sha256_hex
+from ._secure_object_records import (
+    DEFAULT_WRITE_PROVENANCE,
+    SecureObjectDecryptabilityRow,
+    SecureObjectListItem,
+    SecureObjectMetadata,
+    SecureObjectNamespaceIntegrity,
+    SecureObjectRawRow,
+    SecureObjectRecord,
+    SecureObjectUnreadable,
+    SecureObjectWrite,
+)
 from .engine import get_engine
 from .session import session_scope
 
 _log = get_logger(__name__)
 
-_DEFAULT_WRITE_PROVENANCE = "secure-object-repository"
+_DEFAULT_WRITE_PROVENANCE = DEFAULT_WRITE_PROVENANCE
 _DEFAULT_CONFLICT_POLICY = "last-write-wins"
 # SQL column-type constants — centralised so every DDL site stays consistent.
 _VARCHAR_64: Final[str] = "VARCHAR(64)"
@@ -64,143 +73,6 @@ class _RowcountResult(Protocol):
     """Structural result shape for SQLAlchemy DML rowcount checks."""
 
     rowcount: int
-
-
-class SecureObjectRecord(BaseModel):
-    """One decrypted sensitive object loaded from the SQL backend.
-
-    Strict frozen pydantic v2 record so every load/list path emits a
-    validated boundary-crossing payload (per the project's pydantic
-    mandate).
-    """
-
-    model_config = _STRICT_FROZEN
-
-    namespace: str = Field(min_length=1)
-    object_key: bytes
-    classification: SensitivityClass
-    schema_version: int = Field(ge=1)
-    written_at: datetime
-    payload: bytes
-
-
-class SecureObjectMetadata(BaseModel):
-    """Row-level metadata for one stored secure object, decryption-free.
-
-    Surfaced by :meth:`SecureObjectRepository.peek_metadata` so callers
-    (notably the workflow-state reset recovery path) can fingerprint a
-    row's wire envelope without decrypting it. Carries the columns the
-    database stores alongside the ciphertext payload plus the raw
-    payload byte length.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    namespace: str = Field(min_length=1)
-    classification: str = Field(min_length=1)
-    schema_version: int = Field(ge=1)
-    written_at: datetime
-    byte_length: int = Field(ge=0)
-
-
-class SecureObjectWrite(BaseModel):
-    """One encrypted secure-object upsert prepared for a unit of work."""
-
-    model_config = _STRICT_FROZEN
-
-    namespace: str = Field(min_length=1)
-    object_key: str = Field(min_length=1)
-    classification: SensitivityClass
-    schema_version: int = Field(ge=1)
-    written_at: datetime
-    payload: bytes = Field(min_length=1)
-    write_provenance: str = Field(default=_DEFAULT_WRITE_PROVENANCE, min_length=1, max_length=255)
-    source_event_id: str | None = Field(default=None, min_length=1, max_length=128)
-    expected_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
-
-
-class SecureObjectUnreadable(BaseModel):
-    """One stored secure object that cannot be decrypted under the current master key.
-
-    Surfaced by :meth:`SecureObjectRepository.iter_records_with_failures`
-    so iterating consumers can count and report the unreadable subset
-    rather than aborting on the first failure. The plaintext is
-    cryptographically unrecoverable from this process — the master key
-    under which the row was sealed is no longer available.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    namespace: str = Field(min_length=1)
-    row_id: int = Field(ge=0)
-    object_key: bytes
-    classification: str = Field(min_length=1)
-    schema_version: int = Field(ge=1)
-    written_at: datetime
-    reason: str = Field(min_length=1)
-
-
-SecureObjectListItem = SecureObjectRecord | SecureObjectUnreadable
-
-
-class SecureObjectRawRow(BaseModel):
-    """One stored row surfaced without classification / version validation or decryption.
-
-    Used by the outbound sync coordinator to walk every persisted object and mirror its on-wire
-    payload to a remote storage provider without ever touching the
-    plaintext domain data. The repository keeps `payload` as the
-    raw on-wire ciphertext bytes; mirroring consumers feed those bytes
-    directly into `StorageProvider.put`.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    row_id: int = Field(ge=0)
-    namespace: str = Field(min_length=1)
-    object_key: bytes
-    classification: str = Field(min_length=1)
-    schema_version: int = Field(ge=1)
-    written_at: datetime
-    payload: bytes
-    revision_id: str | None = Field(default=None, min_length=64, max_length=64)
-    previous_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
-    revision_ancestor_ids: tuple[str, ...] = ()
-    previous_payload_hash: str | None = Field(default=None, min_length=64, max_length=64)
-    payload_hash: str | None = Field(default=None, min_length=64, max_length=64)
-    ciphertext_hash: str | None = Field(default=None, min_length=64, max_length=64)
-    revision_written_at: datetime | None = None
-
-
-class SecureObjectNamespaceIntegrity(BaseModel):
-    """Per-namespace decryptability counts for the integrity diagnostic.
-
-    Unlike ``SecureObjectListItem``, this report answers only the
-    crypto-layer question ``can the payload be decrypted under the current
-    master key`` -- classification and schema-version contracts are
-    intentionally ignored. Used by ``aeat config repair`` to surface rows
-    sealed under a rotated master key.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    namespace: str = Field(min_length=1)
-    readable: int = Field(ge=0)
-    unreadable: int = Field(ge=0)
-
-
-class SecureObjectDecryptabilityRow(BaseModel):
-    """Row-level decryptability metadata without plaintext payload disclosure."""
-
-    model_config = _STRICT_FROZEN
-
-    namespace: str = Field(min_length=1)
-    row_id: int = Field(ge=0)
-    object_key: bytes
-    classification: str = Field(min_length=1)
-    schema_version: int = Field(ge=1)
-    written_at: datetime
-    readable: bool
-    reason: str | None = None
 
 
 class SecureObjectRepository:
@@ -1385,9 +1257,9 @@ class SecureObjectRepository:
             previous_revision_ancestor_ids = self._parse_revision_ancestor_ids(previous_metadata.revision_ancestor_ids)
             previous_payload_hash = (
                 previous_metadata.payload_hash
-                or hashlib.sha256(
+                or sha256_hex(
                     previous_metadata.payload,
-                ).hexdigest()
+                )
             )
         elif expected_revision_id is not None:
             raise self._revision_conflict(
@@ -1483,9 +1355,9 @@ class SecureObjectRepository:
         ).one()
         object_key = raw.object_key if isinstance(raw.object_key, bytes) else bytes(raw.object_key)
         ciphertext = raw.payload if isinstance(raw.payload, bytes) else bytes(raw.payload)
-        payload_hash = hashlib.sha256(payload).hexdigest()
-        ciphertext_hash = hashlib.sha256(ciphertext).hexdigest()
-        revision_id = self._derive_revision_id(
+        payload_hash = sha256_hex(payload)
+        ciphertext_hash = sha256_hex(ciphertext)
+        revision_id = derive_revision_id(
             namespace=namespace,
             object_key=object_key,
             schema_version=schema_version,
@@ -1532,30 +1404,6 @@ class SecureObjectRepository:
             },
             translated_message="errors.fail.fail_storage_secure_object_revision_conflict",
         )
-
-    def _derive_revision_id(
-        self,
-        *,
-        namespace: str,
-        object_key: bytes,
-        schema_version: int,
-        written_at: datetime,
-        payload_hash: str,
-        ciphertext_hash: str,
-        previous_revision_id: str | None,
-        previous_payload_hash: str | None,
-    ) -> str:
-        parts = (
-            namespace,
-            object_key.hex(),
-            str(schema_version),
-            written_at.isoformat(),
-            payload_hash,
-            ciphertext_hash,
-            previous_revision_id or "",
-            previous_payload_hash or "",
-        )
-        return hashlib.sha256("\x1f".join(parts).encode(UTF_8_ENCODING)).hexdigest()
 
     def peek_metadata(self, namespace: str, object_key: str) -> SecureObjectMetadata | None:
         """Return :class:`SecureObjectMetadata` for one object without decrypting it.

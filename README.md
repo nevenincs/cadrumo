@@ -65,7 +65,7 @@ The full documentation lives under [`docs/`](docs/index.md):
 
 - [Quickstart](docs/how-to/quickstart.md) - the short path from profile and ledger to a modelo file.
 - [Set up your taxpayer profile](docs/how-to/profile-setup.md) - create a profile and switch between several.
-- [Work with transaction data](docs/how-to/import-bank-statements.md) - import, add, edit, classify, and review ledger rows.
+- [Work with Transactions](docs/how-to/import-bank-statements.md) - import, add, edit, classify, and review ledger rows.
 - [Tutorial](docs/tutorials/index.md) - build your first modelo end to end.
 - [How-to recipes](docs/how-to/index.md) - set up profiles, link censo facts, work with transactions, file 303 or 390, verify, export, and diagnose problems.
 - [Explanation](docs/explanation/index.md) - how the pipeline works and why `aeat` never files.

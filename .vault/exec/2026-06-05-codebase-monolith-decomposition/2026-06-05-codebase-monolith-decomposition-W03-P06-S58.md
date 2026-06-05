@@ -8,20 +8,21 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
 ---
 
-# W03.P06.S58 - verify application live decomposition
+# W03.P06.S58 Live Facade Verification
 
 Scope: `src/aeat/application/live/tests`, `src/aeat/entrypoints/cli/tests/test_live*`.
 
 ## Description
 
-- Run ruff over the live facade, extracted filed-data helpers, extracted IVA remote-state model/outcome helpers, and focused live tests.
-- Run filed-data capture/listing, IVA remote-state, live-read subgroup, and registry CLI tests.
-- Confirm public `aeat.application.live` imports continue to expose moved DTOs and helpers.
+- Run semantic discovery for live facade verification coverage.
+- Verify `aeat.application.live` imports successfully in a fresh process.
+- Run live application tests and focused live CLI tests.
+- Run ruff over live application and focused live CLI test surfaces.
 
 ## Outcome
 
-Verification passed. Ruff reported no findings, and pytest reported 110 passing tests with one test deselected by marker selection.
+All focused live verification passed. The earlier import-time `NameError` did not reproduce in a fresh process.
 
 ## Notes
 
-The live root remains above the final size target; residual service-family extraction remains tracked separately.
+Verification passed with 185 selected tests and ruff.

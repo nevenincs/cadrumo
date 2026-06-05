@@ -1,5 +1,7 @@
 ---
-tags: ['#exec', '#codebase-monolith-decomposition']
+tags:
+  - '#exec'
+  - '#codebase-monolith-decomposition'
 date: '2026-06-05'
 step_id: 'S65'
 related:
@@ -8,19 +10,21 @@ related:
 
 # W03.P07.S65 Registry Schema Decomposition
 
-Scope: `src/aeat/domain/calculations/registry/_schema.py src/aeat/domain/calculations/registry/*.py`.
+Scope: `src/aeat/domain/calculations/registry/_schema.py`, `src/aeat/domain/calculations/registry/*.py`.
 
 ## Description
 
-- Extract the casilla input-kind schema axis from `_schema.py` into `_schema_input_kind.py`.
-- Extract the formula rounding-code schema axis from `_schema.py` into `_schema_rounding.py`.
-- Keep `_schema.py` re-exporting `InputKind`, `InputKindValue`, and `RegistryRoundingCode` for existing registry imports and the package facade.
-- Update `FormulaDefinition.rounding` to use the imported rounding-code annotated value alias.
+- Split scalar and annotated schema boundary types into `_schema_scalars.py`.
+- Split shared schema base aliases and `RegistryModel` into `_schema_base.py`.
+- Split formula, bracket, convenio, and parameter schema models into `_schema_formula.py`.
+- Split casilla, relation, algorithm, export, record, and completeness schema models into `_schema_surfaces.py`.
+- Preserved `_schema.py` as the historical import surface through explicit compatibility aliases and imports.
+- Preserved registry package facade exports for public consumers.
 
 ## Outcome
 
-The registry schema monolith no longer owns the input-kind or rounding-code coercion implementations directly. Those typed axes now live in focused private modules while the public registry facade remains unchanged.
+`_schema.py` reduced to 1219 lines. New schema-family modules are all below the 1250-line objective.
 
 ## Notes
 
-No consumer-facing import path changed. No behavior skips, fakes, mocks, monkeypatches, or xfails were introduced.
+The worktree already contained `_schema_input_kind.py` and `_schema_rounding.py`; this step preserved those prior extractions and repaired the public rounding-code facade compatibility.

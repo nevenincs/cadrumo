@@ -33,11 +33,38 @@ class OverviewCalendarEntryPayload(OutputSchema):
 
     modelo: str
     period: str
-    user_state: str
     opens_on: str
     closes_on: str
     adjusted_closes_on: str
     shift_reason: str | None = None
+    holiday_refs: list[str] = []
+    jurisdictions: list[str] = []
+    payment_cutoff_on: str | None = None
+    status: str
+    user_state: str
+    recovery: dict | None = None
+    filing_year: int | None = None
+    filing_evidence: OverviewCalendarFilingEvidencePayload
+
+
+class OverviewCalendarFilingEvidencePayload(OutputSchema):
+    """Filing evidence nested in a calendar entry."""
+
+    modelo: str | None = None
+    filing_year: int | None = None
+    period: str | None = None
+    local_filing_state: str
+    local_filing_record_id: str | None = None
+    local_calculation_revision_id: str | None = None
+    local_filed_at: str | None = None
+    aeat_submission_state: str
+    aeat_submitted_at: str | None = None
+    aeat_reference_id: str | None = None
+    aeat_snapshot_id: str | None = None
+    aeat_evidence_kind: str | None = None
+    justificante_required: bool
+    justificante_verified: bool
+    evidence_source: str | None = None
 
 
 class OverviewCalendarEventPayload(OutputSchema):
@@ -54,6 +81,8 @@ class OverviewCalendarEventPayload(OutputSchema):
     period: str | None = None
     status: str | None = None
     source_url: str | None = None
+    aeat_submission_state: str | None = None
+    justificante_verified: bool | None = None
 
 
 class OverviewCalendarWarningPayload(OutputSchema):
@@ -62,6 +91,54 @@ class OverviewCalendarWarningPayload(OutputSchema):
     code: str
     message: str
     fix_command: str
+    affected_modelos: list[str] = []
+
+
+class OverviewCalendarRangePayload(OutputSchema):
+    """Calendar range nested in a calendar result."""
+
+    from_date: str
+    to_date: str
+
+
+class OverviewCalendarCompletenessPayload(OutputSchema):
+    """Completeness summary nested in a calendar result."""
+
+    explicitly_set_keys: list[str] = []
+    defaulted_keys: list[str] = []
+    computable_modelos: list[str] = []
+    defaulted_modelos: list[str] = []
+
+
+class OverviewSuppressedCalendarEntryPayload(OutputSchema):
+    """Suppressed calendar row nested in a calendar result."""
+
+    modelo: str
+    period: str
+    verdict: str
+    reason: str
+
+
+class OverviewCalendarPayload(OutputSchema):
+    """Typed application calendar payload nested in CLI results."""
+
+    range: OverviewCalendarRangePayload
+    entries: list[OverviewCalendarEntryPayload] = []
+    generated_at: str
+    warnings: list[OverviewCalendarWarningPayload] = []
+    completeness: OverviewCalendarCompletenessPayload
+    taxpayer_model_declared: bool
+    incomplete_reason: str | None = None
+    suppressed_entries: list[OverviewSuppressedCalendarEntryPayload] = []
+    events: list[OverviewCalendarEventPayload] = []
+
+
+class OverviewCalendarProfilePayload(OutputSchema):
+    """One profile block in all-profiles calendar mode."""
+
+    profile_id: str
+    label: str
+    calendar: OverviewCalendarPayload
 
 
 class OverviewAgendaEntryPayload(OutputSchema):
@@ -113,11 +190,11 @@ class OverviewCalendarResult(OutputSchema):
 
     from_date: str | None = None
     to_date: str | None = None
-    entries: list[dict] = []
-    events: list[dict] = []
-    warnings: list[dict] = []
-    suppressed_entries: list[dict] = []
-    profiles: list[dict] = []
+    entries: list[OverviewCalendarEntryPayload] = []
+    events: list[OverviewCalendarEventPayload] = []
+    warnings: list[OverviewCalendarWarningPayload] = []
+    suppressed_entries: list[OverviewSuppressedCalendarEntryPayload] = []
+    profiles: list[OverviewCalendarProfilePayload] = []
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.

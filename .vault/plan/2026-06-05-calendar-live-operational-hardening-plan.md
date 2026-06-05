@@ -5,6 +5,7 @@ tags:
 date: '2026-06-05'
 tier: L3
 related:
+  - '[[2026-06-05-calendar-live-operational-hardening-adr]]'
   - '[[2026-06-04-calendar-live-filing-integration-research]]'
   - '[[2026-06-04-calendar-live-filing-integration-reference]]'
   - '[[2026-06-04-calendar-live-filing-integration-adr]]'
@@ -13,15 +14,6 @@ related:
   - '[[2026-06-02-modelo-721-cripto-data-fidelity-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `calendar-live-operational-hardening` `implementation` plan
 

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.sede._declarations import Declaracion
+from ....adapters.outbound.aeat.sede import Declaracion
 from ....adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile

@@ -221,6 +221,10 @@ def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path)
     assert verified.returncode == 0, _combined_output(verified)
     assert "verified\tyes" in verified.stdout
 
+    rejected = _run_aeat(tmp_path, ("config", "verify-recovery", "--recovery-key", "not a valid recovery key"))
+    assert rejected.returncode == 2, _combined_output(rejected)
+    assert "verified\tno" in rejected.stdout
+
     rotated_value = "correct horse battery staple"
     rekeyed = _run_aeat(
         tmp_path,

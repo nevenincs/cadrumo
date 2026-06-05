@@ -171,4 +171,6 @@ to AEAT.
 - [Quickstart: produce a modelo file](quickstart.md)
 - [Standard prepare-and-export workflow](filing-spine.md)
 - [How to prepare a Modelo 303 quarterly filing](modelo-303.md)
+- [How to prepare the annual Modelo 390 summary](modelo-390.md)
+- [Review calculations with Google Sheets](review-with-google-sheets.md)
 - [CLI reference](../cli/index.rst)

@@ -45,10 +45,10 @@ from .._clave_movil import (
     ClaveMovilFailureMode,
     _auth_browser_action_policy,
     _classify_identity,
-    _ClaveMovilSessionMetadata,
     _extract_verification_code_from_html,
     _render_progress_banner,
 )
+from .._clave_movil_metadata import ClaveMovilSessionMetadata
 from .._providers import AuthProviderKind, ClaveMovilSessionDetail
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -571,7 +571,7 @@ class TestAuthenticateFresh:
             assert not session.storage_state_path.with_suffix(".meta.json").exists()
             persisted = _session_store.load(session.storage_state_path)
             assert persisted is not None
-            metadata = _ClaveMovilSessionMetadata.model_validate_json(json.dumps(persisted.metadata, default=str))
+            metadata = ClaveMovilSessionMetadata.model_validate_json(json.dumps(persisted.metadata, default=str))
             assert metadata.identity_nif == "12345678Z"
             assert metadata.used_non_qr_fallback is False
             assert metadata.verification_code == "YLL"
