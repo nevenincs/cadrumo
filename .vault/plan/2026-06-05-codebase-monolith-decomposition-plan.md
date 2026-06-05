@@ -193,8 +193,8 @@ Close application package and service roots that remain oversized after first-pa
 
 - [x] `W03.P11.S119` - decompose residual modelo application actions by natural-key work and revision workflow behind the modelo facade; `src/aeat/application/modelo/_actions.py src/aeat/application/modelo/*.py`.
 - [x] `W03.P11.S120` - verify residual modelo application behavior and public facade imports after action decomposition; `src/aeat/application/modelo/tests src/aeat/entrypoints/cli/tests/test_modelo*`.
-- [ ] `W03.P11.S121` - decompose residual live package root exports into focused private modules behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/*.py`.
-- [ ] `W03.P11.S122` - verify residual live package behavior and public facade imports after root decomposition; `src/aeat/application/live/tests src/aeat/entrypoints/cli/tests/test_live*`.
+- [x] `W03.P11.S121` - decompose residual live package root exports into focused private modules behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/*.py`.
+- [x] `W03.P11.S122` - verify residual live package behavior and public facade imports after root decomposition; `src/aeat/application/live/tests src/aeat/entrypoints/cli/tests/test_live*`.
 - [ ] `W03.P11.S123` - decompose overview application root by calendar and filing summary services behind the overview facade; `src/aeat/application/overview/__init__.py src/aeat/application/overview/*.py`.
 - [ ] `W03.P11.S124` - verify overview application behavior and public facade imports after root decomposition; `src/aeat/application/overview/tests src/aeat/entrypoints/cli/tests/test_overview*`.
 - [x] `W03.P11.S133` - extract residual modelo calculation and bucket-aggregation workflows behind the modelo application facade without moving policy to CLI; `src/aeat/application/modelo/_actions.py src/aeat/application/modelo/_calculation_actions.py src/aeat/application/modelo/_calculation_helpers.py src/aeat/application/modelo/tests`.
@@ -205,6 +205,8 @@ Close application package and service roots that remain oversized after first-pa
 - [x] `W03.P11.S138` - verify residual modelo filing extraction preserves filing records supersession and public facade imports; `src/aeat/application/modelo/tests src/aeat/entrypoints/cli/tests/test_modelo*`.
 - [x] `W03.P11.S139` - extract residual modelo amendment and external filing import workflows behind the modelo application facade; `src/aeat/application/modelo/_actions.py src/aeat/application/modelo/_amendment_actions.py src/aeat/application/modelo/_external_import_actions.py src/aeat/application/modelo/tests`.
 - [x] `W03.P11.S140` - verify residual modelo amendment import extraction leaves _actions under the 1250-line budget and preserves facade-only consumers; `src/aeat/application/modelo src/aeat/entrypoints/cli src/aeat/tests/test_codebase_size_budgets.py`.
+- [ ] `W03.P11.S141` - remove residual modelo application-internal reach-through to the _actions compatibility facade where focused backend modules already own the implementation; `src/aeat/application/modelo/_history.py src/aeat/application/modelo/_calculate_input.py src/aeat/application/modelo/_projection.py src/aeat/application/modelo/_result_summary.py src/aeat/application/modelo/_work_addressing.py src/aeat/application/modelo/_export.py src/aeat/application/modelo/_taxation_comparison.py`.
+- [ ] `W03.P11.S142` - verify residual modelo facade-bound import cleanup preserves application behavior boundary guards and _actions compatibility exports; `src/aeat/application/modelo/tests src/aeat/entrypoints/cli/tests/test_architecture_boundaries.py src/aeat/tests/test_codebase_size_budgets.py`.
 
 ## Wave `W04` - core and final static guard closure
 
