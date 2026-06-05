@@ -133,6 +133,8 @@ Decompose application/domain/backend monoliths only after ADR-backed boundary de
 
 Queue and execute ADR-backed decomposition for application, domain, adapter, persistence, and core modules over 1250 lines where safe boundaries require design decisions.
 
+- [ ] `W03.P04.S07` - queue ADRs for application/domain/adapter/core monoliths whose decomposition requires boundary decisions; `.vault/adr src/aeat/application src/aeat/domain src/aeat/adapters src/aeat/core`.
+- [ ] `W03.P04.S08` - add or extend static guards proving no Python module exceeds 1250 lines and no tracked callable exceeds the complexity budget; `src/aeat/tests src/aeat/entrypoints/cli/tests`.
 
 ## Description
 
