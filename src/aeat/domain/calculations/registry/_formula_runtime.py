@@ -63,6 +63,14 @@ M210_NOT_YET_AUTHORED_SENTINEL = _M210_NOT_YET_AUTHORED_SENTINEL
 M210_RATE_SENTINELS = _M210_RATE_SENTINELS
 
 
+@dataclass(frozen=True, slots=True)
+class _M210ResolveRateArgs:
+    tipo_casilla: str
+    baseline_parameter: str
+    convenio_parameter: str
+    country_binding: str
+
+
 class RegistryCalculationEntry(BaseModel):
     """One trace row emitted by the registry formula runtime.
 
@@ -505,6 +513,41 @@ def _evaluate_m210_resolve_rate(expression: FormulaExpression, ctx: _EvalContext
     NOT_YET_AUTHORED placeholder). The verification layer rewrites
     the sentinels into BLOCKING findings post-engine.
     """
+    args = _m210_resolve_rate_args(expression)
+    tipo_renta = ctx.text_values.get(args.tipo_casilla, "")
+    ctx.operand_refs.append(args.tipo_casilla)
+    if not tipo_renta:
+        ctx.operand_values.append(_M210_DEFERRED_TIPO_SENTINEL)
+        return _M210_DEFERRED_TIPO_SENTINEL
+
+    baseline_param = ctx.parameters.get(args.baseline_parameter)
+    convenio_param = ctx.parameters.get(args.convenio_parameter)
+    ctx.operand_refs.extend((args.baseline_parameter, args.convenio_parameter, args.country_binding))
+    baseline_rate = _m210_baseline_rate(baseline_param, tipo_renta=tipo_renta, year=ctx.filing_year)
+    country = ctx.enum_binding_values.get(args.country_binding) or ""
+
+    if not country:
+        if baseline_rate is None:
+            ctx.operand_values.append(_M210_DEFERRED_TIPO_SENTINEL)
+            return _M210_DEFERRED_TIPO_SENTINEL
+        ctx.operand_values.append(baseline_rate)
+        return baseline_rate
+
+    matched_row = _m210_convenio_rate_row(
+        convenio_param,
+        country_code=country.upper(),
+        tipo_renta=tipo_renta,
+        year=ctx.filing_year,
+    )
+    if matched_row is None:
+        ctx.operand_values.append(_M210_CONVENIO_MISSING_SENTINEL)
+        return _M210_CONVENIO_MISSING_SENTINEL
+    rate = _m210_rate_from_convenio_row(matched_row.rate)
+    ctx.operand_values.append(rate)
+    return rate
+
+
+def _m210_resolve_rate_args(expression: FormulaExpression) -> _M210ResolveRateArgs:
     op = "m210_resolve_rate"
     if len(expression.args) != 4:
         raise RegistryValidationError(f"formula op {op!r} expects 4 args, got {len(expression.args)}")
@@ -517,70 +560,57 @@ def _evaluate_m210_resolve_rate(expression: FormulaExpression, ctx: _EvalContext
         raise RegistryValidationError(f"formula op {op!r} requires args[2] to be a parameter leaf")
     if country_arg.binding is None:
         raise RegistryValidationError(f"formula op {op!r} requires args[3] to be a binding leaf")
+    return _M210ResolveRateArgs(
+        tipo_casilla=tipo_arg.casilla,
+        baseline_parameter=baseline_arg.parameter,
+        convenio_parameter=convenio_arg.parameter,
+        country_binding=country_arg.binding,
+    )
 
-    tipo_renta = ctx.text_values.get(tipo_arg.casilla, "")
-    ctx.operand_refs.append(tipo_arg.casilla)
-    if not tipo_renta:
-        ctx.operand_values.append(_M210_DEFERRED_TIPO_SENTINEL)
-        return _M210_DEFERRED_TIPO_SENTINEL
 
-    baseline_param = ctx.parameters.get(baseline_arg.parameter)
-    convenio_param = ctx.parameters.get(convenio_arg.parameter)
-    ctx.operand_refs.append(baseline_arg.parameter)
-    ctx.operand_refs.append(convenio_arg.parameter)
-    ctx.operand_refs.append(country_arg.binding)
+def _m210_baseline_rate(
+    parameter: ParameterDefinition | None,
+    *,
+    tipo_renta: str,
+    year: int,
+) -> Decimal | None:
+    if parameter is None:
+        return None
+    for entry in parameter.keyed_brackets:
+        if entry.key == tipo_renta and entry.valid_from.year <= year and (
+            entry.valid_to is None or entry.valid_to.year >= year
+        ):
+            try:
+                return Decimal(entry.value)
+            except (ArithmeticError, ValueError):
+                return None
+    return None
 
-    year = ctx.filing_year
 
-    baseline_rate: Decimal | None = None
-    if baseline_param is not None:
-        for entry in baseline_param.keyed_brackets:
-            if (
-                entry.key == tipo_renta
-                and entry.valid_from.year <= year
-                and (entry.valid_to is None or entry.valid_to.year >= year)
-            ):
-                try:
-                    baseline_rate = Decimal(entry.value)
-                except (ArithmeticError, ValueError):
-                    baseline_rate = None
-                break
+def _m210_convenio_rate_row(
+    parameter: ParameterDefinition | None,
+    *,
+    country_code: str,
+    tipo_renta: str,
+    year: int,
+):
+    if parameter is None:
+        return None
+    for row in parameter.convenio_rates:
+        if row.country_code == country_code and row.tipo_renta == tipo_renta and row.valid_from.year <= year and (
+            row.valid_to is None or row.valid_to.year >= year
+        ):
+            return row
+    return None
 
-    country = ctx.enum_binding_values.get(country_arg.binding) or ""
 
-    if not country:
-        if baseline_rate is None:
-            ctx.operand_values.append(_M210_DEFERRED_TIPO_SENTINEL)
-            return _M210_DEFERRED_TIPO_SENTINEL
-        ctx.operand_values.append(baseline_rate)
-        return baseline_rate
-
-    cc = country.upper()
-    matched_row = None
-    if convenio_param is not None:
-        for row in convenio_param.convenio_rates:
-            if (
-                row.country_code == cc
-                and row.tipo_renta == tipo_renta
-                and row.valid_from.year <= year
-                and (row.valid_to is None or row.valid_to.year >= year)
-            ):
-                matched_row = row
-                break
-
-    if matched_row is None:
-        ctx.operand_values.append(_M210_CONVENIO_MISSING_SENTINEL)
-        return _M210_CONVENIO_MISSING_SENTINEL
-    if matched_row.rate == "NOT_YET_AUTHORED":
-        ctx.operand_values.append(_M210_NOT_YET_AUTHORED_SENTINEL)
+def _m210_rate_from_convenio_row(rate: str) -> Decimal:
+    if rate == "NOT_YET_AUTHORED":
         return _M210_NOT_YET_AUTHORED_SENTINEL
     try:
-        rate = Decimal(matched_row.rate)
+        return Decimal(rate)
     except (ArithmeticError, ValueError):
-        ctx.operand_values.append(_M210_CONVENIO_MISSING_SENTINEL)
         return _M210_CONVENIO_MISSING_SENTINEL
-    ctx.operand_values.append(rate)
-    return rate
 
 
 def _evaluate_lookup_parameter_by_entity_type(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:

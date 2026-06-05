@@ -14,6 +14,15 @@ related:
   - '[[2026-05-26-secure-storage-test-hygiene-audit]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `repo-health-triage` `diagnostic remediation` plan
 
@@ -218,7 +227,7 @@ Separate production complexity from ratchet-test complexity, then decompose the 
 - [x] `W06.P19.S72` - Add ratchet-test complexity lane for top-level package tests; `justfile`.
 - [x] `W06.P19.S73` - Reduce wizard command catalogue cognitive complexity; `src/aeat/application/wizard/_commands.py`.
 - [x] `W06.P19.S74` - Reduce remaining modelo CLI command cognitive complexity; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W06.P19.S75` - Reduce registry formula initial-value cognitive complexity; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
+- [x] `W06.P19.S75` - Reduce registry formula initial-value cognitive complexity; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
 - [ ] `W06.P19.S76` - Reduce ledger list and review projection cognitive complexity; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W06.P19.S77` - Persist complexity all-green baseline or explicit residual ratchets; `.vault/audit`.
 

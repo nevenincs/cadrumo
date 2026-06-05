@@ -732,3 +732,42 @@ Execution notes:
    the final W06 gates.
 6. Semgrep policy: split production source scans from mirrored official data and
    intentional redaction/security tests before treating security counts as a gate.
+
+## HEALTH-019-S75 | CLOSED | 2026-06-05 registry formula complexity reduction
+
+W06.P19.S75 reduced the planned registry formula initial-value hotspot and the
+adjacent M210 rate resolver hotspot without changing registry schema semantics.
+
+Complexity deltas:
+
+- `src/aeat/domain/calculations/registry/_formula_initial_values.py::initial_values`
+  moved from Radon E (35) and Complexipy 33 to Radon A (4) and Complexipy 0.
+- `src/aeat/domain/calculations/registry/_formula_runtime.py::_evaluate_m210_resolve_rate`
+  moved from Radon D (27) and Complexipy 30 to Radon B (6) and Complexipy 6.
+- `src/aeat/domain/calculations/registry/_formula_initial_values.py` now has no
+  function above Radon B or Complexipy 8.
+- `src/aeat/domain/calculations/registry/_formula_runtime.py` still has
+  `calculate_registry_snapshot` at Radon D (22) and Complexipy 17. That is a
+  remaining runtime orchestration hotspot, not part of the S75 initial-value/M210
+  resolver scope.
+
+Focused verification:
+
+- `uv run --no-sync ruff check src/aeat/domain/calculations/registry/_formula_runtime.py src/aeat/domain/calculations/registry/_formula_initial_values.py`
+  passed.
+- `uv run --no-sync ty check src/aeat/domain/calculations/registry/_formula_runtime.py src/aeat/domain/calculations/registry/_formula_initial_values.py --output-format concise`
+  passed.
+- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_formula_runtime.py src/aeat/domain/calculations/registry/test_modelo_130_registry.py src/aeat/domain/calculations/registry/test_modelo_210_registry.py src/aeat/application/modelo/test_modelo_210_phase1.py -q`
+  passed with 53 tests.
+- `uv run --no-sync radon cc src/aeat/domain/calculations/registry/_formula_initial_values.py src/aeat/domain/calculations/registry/_formula_runtime.py -s`
+  captured the reduced Radon grades.
+- `uv run --no-sync complexipy src/aeat/domain/calculations/registry/_formula_initial_values.py src/aeat/domain/calculations/registry/_formula_runtime.py --max-complexity-allowed 20`
+  passed for the touched files.
+
+Residual carried forward:
+
+- A broader M200 registry test probe still fails before reaching the requested
+  assertion surface because previous-filing bound casilla `01494` requires the
+  unresolved binding
+  `modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores`.
+  This was left visible and not bypassed by the complexity refactor.
