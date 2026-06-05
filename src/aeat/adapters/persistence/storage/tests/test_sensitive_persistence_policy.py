@@ -89,12 +89,12 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "tempfile.NamedTemporaryFile",
     ): "legacy encrypted envelope backend is not allowed from governed sensitive surfaces",
     (
-        "src/aeat/adapters/persistence/storage/master_key/_master_key.py",
+        "src/aeat/adapters/persistence/storage/master_key/_master_key_io.py",
         "atomic_write_secure_bytes",
         "os.open",
     ): "master-key backend writes key material with restrictive file modes",
     (
-        "src/aeat/adapters/persistence/storage/master_key/_master_key.py",
+        "src/aeat/adapters/persistence/storage/master_key/_master_key_io.py",
         "atomic_write_secure_bytes",
         "os.write",
     ): "master-key backend writes key material through a private fd",
@@ -244,12 +244,12 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "sidecar_path.write_text",
     ): "local-filesystem storage adapter writes the non-sensitive object-metadata sidecar",
     (
-        "src/aeat/adapters/outbound/aeat/sede/_declarations.py",
+        "src/aeat/adapters/outbound/aeat/sede/_declarations_observations.py",
         "_write_all_fd",
         "os.write",
     ): "declaration-PDF parser bridge writes through a pre-created private fd",
     (
-        "src/aeat/adapters/outbound/aeat/sede/_declarations.py",
+        "src/aeat/adapters/outbound/aeat/sede/_declarations_observations.py",
         "_temporary_sensitive_pdf_path",
         "tempfile.mkstemp",
     ): (

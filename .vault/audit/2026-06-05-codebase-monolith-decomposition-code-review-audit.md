@@ -54,3 +54,27 @@ Reviewed the completed W03.P07 `S63` through `S66` slice. The registry binding r
 Verification recorded in the step logs covers ruff, compile checks, 83 invoice/counterpart/ledger binding tests, 42 detail-record and selector-shape tests, 338 schema and scalar data-type tests, facade smoke imports, and plan validation.
 
 Residual risks are non-blocking for this slice and already reflected in open plan rows or broad-suite output: the full registry package suite currently has unrelated failures in stale path-gate tests, Modelo 100/200 bound-input fixture drift, registry data-drift gates, workbook parity size baseline, schema hygiene drift, and tautology gates across other modules. These should not be conflated with the binding/schema decomposition, whose focused behavior lanes are green.
+
+## REVIEW-007 | LOW | No blocking findings in SQL secure-object persistence decomposition
+
+Reviewed the completed W03.P08 `S79` and `S80` slice. The SQL secure-object repository remains the consumer-facing facade while row records, revision crypto, schema bootstrap/quarantine DDL, legacy object-key migration, and decryptability diagnostics live in focused private modules. The storage package facade continues to export `SecureObjectRepository` and public secure-object record types; application, entrypoint, and domain consumers do not reach into the new private helper modules.
+
+Verification recorded in the step logs covers RAG grounding, direct import discovery, ruff, compileall, focused SQL secure-object/archive/redaction tests, runtime storage and migrated-repository tests, line-budget confirmation for `secure_objects.py`, and plan validation.
+
+Residual risk is outside this slice: W03.P08 still has open master-key decomposition and verification rows, and the broader repository still contains oversized adapter, application, core, fixture, and test modules tracked by the remaining open plan rows.
+
+## REVIEW-008 | LOW | No blocking findings in master-key bucket-DEK decomposition
+
+Reviewed the completed W03.P08 `S81` and `S82` slice. The provider classes, factory, and activation API remain available through the storage and master-key facades, while bucket-DEK keystore pathing, key-schedule lookup, idle-window resolution, wrapped-DEK serialization, and unwrap-or-mint behavior now live in a focused private helper module. The extraction keeps fail-closed error behavior and the unsecured-mode NIF canary in the master-key activation path.
+
+Verification recorded in the step logs covers RAG grounding, direct blast-radius discovery, ruff, compileall, the full master-key test package, runtime storage and migrated-repository tests, ephemeral-key hygiene tests, public facade import smoke, private-helper consumer search, `_master_key.py` line-budget confirmation, and plan validation.
+
+Residual risks are outside this slice: the next open rows move back to residual application roots, core config/errors, and oversized test/fixture files. The codebase-wide hard size and callable-complexity gates remain open finalization work.
+
+## REVIEW-009 | LOW | No blocking findings in S81/S82 pre-commit master-key review
+
+Reviewed the final pre-commit W03.P08 `S81` and `S82` diff. The public master-key provider classes and factory functions remain in the master-key facade, while bucket-DEK keystore pathing, key-schedule resolution, idle-window lookup, wrapped-DEK document IO, unwrap-or-mint behavior, and the unsecured-backend tax-id classifier now live in focused private helper modules. This preserves storage facade imports and keeps security-sensitive activation behavior delegated to backend storage code rather than leaking into consumers.
+
+Verification recorded in the step logs covers direct import discovery, ruff, 212 master-key tests, 264 storage tests, public facade smoke imports, vault frontmatter and link checks, `_master_key.py` line-budget confirmation at 1241 lines, and plan validation with only the known PLAN022 monotonic-order warning.
+
+Residual risk is outside this slice: the remaining open plan rows still cover oversized modelo/live/overview application roots, core configuration and error registries, oversized fixtures/tests, and final hard size/complexity gates.

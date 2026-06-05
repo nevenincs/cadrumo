@@ -184,14 +184,14 @@ Decompose oversized outbound adapter and persistence modules along external cont
 - [x] `W03.P08.S78` - verify Google calc sheets apply behavior and facade imports after decomposition; `src/aeat/adapters/outbound/google/tests src/aeat/entrypoints/cli/_config/tests/test_google*`.
 - [x] `W03.P08.S79` - decompose SQL secure objects persistence by row, crypto, and repository concerns behind the storage facade; `src/aeat/adapters/persistence/storage/sql/secure_objects.py src/aeat/adapters/persistence/storage/sql/*.py`.
 - [x] `W03.P08.S80` - verify SQL secure objects persistence behavior and facade imports after decomposition; `src/aeat/adapters/persistence/storage/sql/tests src/aeat/tests/test_storage_decimal_redaction_error_typing.py`.
-- [ ] `W03.P08.S81` - decompose master key storage adapter by derivation, rotation, and persistence concerns behind the storage facade; `src/aeat/adapters/persistence/storage/master_key/_master_key.py src/aeat/adapters/persistence/storage/master_key/*.py`.
-- [ ] `W03.P08.S82` - verify master key storage behavior and facade imports after decomposition; `src/aeat/adapters/persistence/storage/master_key/tests src/aeat/adapters/persistence/storage/tests`.
+- [x] `W03.P08.S81` - decompose master key storage adapter by derivation, rotation, and persistence concerns behind the storage facade; `src/aeat/adapters/persistence/storage/master_key/_master_key.py src/aeat/adapters/persistence/storage/master_key/*.py`.
+- [x] `W03.P08.S82` - verify master key storage behavior and facade imports after decomposition; `src/aeat/adapters/persistence/storage/master_key/tests src/aeat/adapters/persistence/storage/tests`.
 
 ### Phase `W03.P11` - residual application root closure
 
 Close application package and service roots that remain oversized after first-pass decomposition while preserving public package facades and keeping business logic out of entrypoints.
 
-- [ ] `W03.P11.S119` - decompose residual modelo application actions by natural-key work and revision workflow behind the modelo facade; `src/aeat/application/modelo/_actions.py src/aeat/application/modelo/*.py`.
+- [x] `W03.P11.S119` - decompose residual modelo application actions by natural-key work and revision workflow behind the modelo facade; `src/aeat/application/modelo/_actions.py src/aeat/application/modelo/*.py`.
 - [ ] `W03.P11.S120` - verify residual modelo application behavior and public facade imports after action decomposition; `src/aeat/application/modelo/tests src/aeat/entrypoints/cli/tests/test_modelo*`.
 - [ ] `W03.P11.S121` - decompose residual live package root exports into focused private modules behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/*.py`.
 - [ ] `W03.P11.S122` - verify residual live package behavior and public facade imports after root decomposition; `src/aeat/application/live/tests src/aeat/entrypoints/cli/tests/test_live*`.

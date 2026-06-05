@@ -33,6 +33,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 
+from .....core.errors import resolve_error_message
 from .....core.logging import get_logger
 from .....core.time import now
 from ..bucket._errors import BucketLockedError
@@ -56,8 +57,15 @@ class NoActiveBucketSessionError(SecretStoreError):
     """
 
     def __init__(self, detail: str | None = None) -> None:
-        super().__init__(detail, translated_message="errors.refused.refused_storage_master_key_no_active_session")
+        super().__init__(
+            context={"detail": detail} if detail else None,
+            translated_message="errors.refused.refused_storage_master_key_no_active_session",
+        )
         self._detail = detail
+
+    def __str__(self) -> str:
+        """Render the locale-backed remediation message while keeping positional args empty."""
+        return resolve_error_message(self)
 
 
 @contextmanager
