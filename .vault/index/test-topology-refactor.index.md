@@ -46,10 +46,13 @@ related:
   - '[[2026-06-05-test-topology-refactor-W05-P12-S39]]'
   - '[[2026-06-05-test-topology-refactor-W05-P12-S40]]'
   - '[[2026-06-05-test-topology-refactor-W05-P12-S41]]'
+  - '[[2026-06-05-test-topology-refactor-W05-P12-summary]]'
   - '[[2026-06-05-test-topology-refactor-W05-P13-S42]]'
   - '[[2026-06-05-test-topology-refactor-W05-P13-S43]]'
   - '[[2026-06-05-test-topology-refactor-W05-P13-S44]]'
+  - '[[2026-06-05-test-topology-refactor-W05-P13-S45]]'
   - '[[2026-06-05-test-topology-refactor-adr]]'
+  - '[[2026-06-05-test-topology-refactor-code-review-audit]]'
   - '[[2026-06-05-test-topology-refactor-plan]]'
 ---
 
@@ -62,6 +65,10 @@ Auto-generated index of all documents tagged with `#test-topology-refactor`.
 ### adr
 
 - `2026-06-05-test-topology-refactor-adr` - `test-topology-refactor` adr: `hexagonal tests folders with marker-complete metadata-free suites` | (**status:** `accepted`)
+
+### audit
+
+- `2026-06-05-test-topology-refactor-code-review-audit` - `test-topology-refactor` Code Review
 
 ### exec
 
@@ -106,9 +113,11 @@ Auto-generated index of all documents tagged with `#test-topology-refactor`.
 - `2026-06-05-test-topology-refactor-W05-P12-S39` - `test-topology-refactor` `W05.P12.S39`
 - `2026-06-05-test-topology-refactor-W05-P12-S40` - `test-topology-refactor` `W05.P12.S40`
 - `2026-06-05-test-topology-refactor-W05-P12-S41` - `test-topology-refactor` `W05.P12.S41`
+- `2026-06-05-test-topology-refactor-W05-P12-summary` - `test-topology-refactor` `W05.P12` summary
 - `2026-06-05-test-topology-refactor-W05-P13-S42` - `test-topology-refactor` `W05.P13.S42`
 - `2026-06-05-test-topology-refactor-W05-P13-S43` - `test-topology-refactor` `W05.P13.S43`
 - `2026-06-05-test-topology-refactor-W05-P13-S44` - `test-topology-refactor` `W05.P13.S44`
+- `2026-06-05-test-topology-refactor-W05-P13-S45` - `test-topology-refactor` `W05.P13.S45`
 
 ### plan
 
