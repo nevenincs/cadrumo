@@ -12,7 +12,6 @@ detailed :class:`CasillaObservation` data on command output.
 from __future__ import annotations
 
 import json
-import re
 from collections.abc import Callable
 from datetime import date
 from decimal import Decimal, InvalidOperation
@@ -42,21 +41,16 @@ from ...application.modelo import (
     ModeloRecordNotFoundError,
     ModeloWorkAddress,
     ModeloWorkAddressNotFoundError,
-    ModeloWorkRegistryYearMismatchError,
     ModeloWorkRevisionConflictError,
     ModeloWorkSelectorContradictionError,
-    ModeloWorkUnitCandidate,
     ModeloWorkUnitNotFoundError,
     ModeloWorkVisibleTargetAmbiguousError,
     VerificationReportNotFoundError,
-    WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     amend_modelo_revision,
     build_work_calculate_input_bundle,
     calculate_modelo_work_revision,
-    discard_work_unit,
-    ensure_modelo_work_unit_for_visible_target,
     file_modelo_revision,
     get_filing_record,
     get_verification_report,
@@ -65,11 +59,7 @@ from ...application.modelo import (
     list_calculation_revisions,
     list_filing_records,
     list_verification_reports,
-    list_work_units,
     modelo_202_modality_for_work_unit,
-    modelo_work_create_applicability_refusal,
-    modelo_work_create_refusal_locale_key,
-    rename_work_unit,
     resolve_exportable_modelo_calculation_revision_address,
     resolve_fileable_modelo_calculation_revision_address,
     resolve_modelo_calculation_revision_address,
@@ -77,7 +67,7 @@ from ...application.modelo import (
     resolve_verifiable_modelo_calculation_revision_address,
     verify_modelo_revision,
 )
-from ...core.errors import AeatError, resolve_error_message
+from ...core.errors import AeatError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...core.logging import get_logger
@@ -90,12 +80,10 @@ from ...domain.calculations.registry import (
     RegistryValidationError,
     parse_modelo_period,
 )
-from ...domain.contribuyente import parse_tax_region
 from ...domain.modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
 )
-from ...domain.modelos._filing_record import ModeloRecord
 from ...domain.modelos._row_models import (
     Modelo184MemberRow,
     Modelo232VinculadaRow,
@@ -104,83 +92,77 @@ from ...domain.modelos._row_models import (
     ModeloDetailRow,
     validate_m349_nif_format,
 )
-from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
 from ._common import _parse_iso_date, _profile_to_taxpayer, activate_subcommand_output_language
+from ._modelo_cli_support import (
+    bad_parameter_from_error as _bad_parameter_from_error,
+)
+from ._modelo_cli_support import (
+    bad_parameter_from_localized_context as _bad_parameter_from_localized_context,
+)
+from ._modelo_cli_support import (
+    calculation_revision_not_found_bad_parameter as _calculation_revision_not_found_bad_parameter,
+)
+from ._modelo_cli_support import (
+    parse_revision_selector as _parse_revision_selector,
+)
+from ._modelo_cli_support import (
+    resolve_default_actor as _resolve_default_actor,
+)
+from ._modelo_cli_support import (
+    selector_bad_parameter as _selector_bad_parameter,
+)
+from ._modelo_cli_support import (
+    validate_calculation_revision_id as _validate_calculation_revision_id,
+)
+from ._modelo_cli_support import (
+    validate_work_unit_id as _validate_work_unit_id,
+)
+from ._modelo_export_cli import register_export_commands
 from ._modelo_iva_wallet_cli import register_iva_wallet_commands
 from ._modelo_m036_cli import register_m036_commands
 from ._modelo_maritime_cli import register_maritime_commands
 from ._modelo_projection_cli import register_projection_commands
+from ._modelo_readiness_cli import register_readiness_commands
 from ._modelo_rendering import (
     calculation_revision_lines as _calculation_revision_lines,
+)
+from ._modelo_rendering import (
     calculation_revision_payload as _calculation_revision_payload,
+)
+from ._modelo_rendering import (
     filing_record_lines as _filing_record_lines,
+)
+from ._modelo_rendering import (
     filing_record_payload as _filing_record_payload,
+)
+from ._modelo_rendering import (
     short_id as _short_id,
+)
+from ._modelo_rendering import (
     verification_report_lines as _verification_report_lines,
+)
+from ._modelo_rendering import (
     verification_report_payload as _verification_report_payload,
-    work_unit_lines as _work_unit_lines,
-    work_unit_payload as _work_unit_payload,
+)
+from ._modelo_rendering import (
     work_unit_plazo_lines as _work_unit_plazo_lines,
 )
 from ._modelo_work import create_work_app
+from ._modelo_work_lifecycle_cli import register_work_lifecycle_commands
+from ._modelo_work_runs_cli import register_work_run_commands
 
 _log = get_logger(__name__)
 
 if TYPE_CHECKING:
     from ...application.modelo import ModeloReconciliationReport
-    from ...domain.calculations.registry import ModeloRevision
-
-_WORK_UNIT_ID_RE = r"^[0-9a-f]{64}$"
-"""SHA-256 hex digest expected as the canonical work-unit identifier."""
 
 _CASILLA_MAX_LEN = 64
 _BINDING_MAX_LEN = 128
-_BARE_NUMERIC_RE = re.compile(r"^\d+$")
-
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 _CASILLA_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(CasillaId)
 
 _OUTPUT_LANGUAGE_CLI = click.Choice(SUPPORTED_OUTPUT_LANGUAGES)
-
-
-def _validate_work_unit_id(value: str) -> str:
-    """Validate that *value* is a 64-character lowercase hex string.
-
-    Raises :class:`typer.BadParameter` if the format is wrong so that
-    invalid identifiers are rejected at the CLI boundary rather than
-    surfacing as an opaque application-layer error.
-    """
-    stripped = value.strip()
-    if not re.fullmatch(_WORK_UNIT_ID_RE, stripped):
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.invalid_work_unit_id",
-                default=(f"work_unit_id must be a 64-character lowercase hex string (SHA-256 digest); got {value!r}"),
-            )
-        )
-    return stripped
-
-
-def _validate_calculation_revision_id(value: str) -> str:
-    """Validate that *value* is a 64-character lowercase hex string.
-
-    A ``calculation_revision_id`` is a SHA-256 digest, sharing the same
-    shape as a ``work_unit_id``. Rejecting a malformed identifier at the
-    CLI boundary keeps the application layer free of input-shape checks.
-    """
-    stripped = value.strip()
-    if not re.fullmatch(_WORK_UNIT_ID_RE, stripped):
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.invalid_calculation_revision_id",
-                default=(
-                    "calculation_revision_id must be a 64-character lowercase "
-                    f"hex string (SHA-256 digest); got {value!r}"
-                ),
-            )
-        )
-    return stripped
 
 
 app = typer.Typer(
@@ -188,137 +170,6 @@ app = typer.Typer(
     help=tr("cli.app.modelo.app_help"),
     no_args_is_help=True,
 )
-
-
-def _bad_parameter_from_error(exc: BaseException) -> typer.BadParameter:
-    """Render registered domain errors before crossing the Typer boundary."""
-    return typer.BadParameter(resolve_error_message(exc))
-
-
-def _bad_parameter_from_localized_context(exc: BaseException) -> typer.BadParameter:
-    """Render local projection refusals that intentionally are not error-code registered."""
-    key = getattr(exc, "translated_message", None)
-    context = getattr(exc, "context", None) or {}
-    if isinstance(key, str) and key:
-        return typer.BadParameter(tr(key, **context))
-    return typer.BadParameter(str(exc))
-
-
-def _calculation_revision_not_found_bad_parameter(
-    calculation_revision_id: str, exc: CalculationRevisionNotFoundError
-) -> typer.BadParameter:
-    """Render a not-found calc-revision id, hinting when it is really a work-unit id.
-
-    ``work verify`` and ``work file`` consume a ``calculation_revision_id``,
-    while ``work calculate`` consumes a ``work_unit_id`` — both are 64-character
-    SHA-256 digests, so an operator's first instinct (reuse the id from ``work
-    create``) lands a *work-unit* id where a *calculation-revision* id is
-    required and fails with a bare not-found. When the supplied id resolves to a
-    real work unit, name the mismatch and the verb that mints the
-    calculation-revision id, so the error is instructive rather than a dead end.
-    A lookup failure here falls back to the plain rendered error — the hint is
-    best-effort, never masking. (``modelo export`` already takes a
-    ``work_unit_id``, so it has no work-unit/calc-revision confusion to hint.)
-    """
-    stripped = calculation_revision_id.strip()
-    try:
-        # get_work_unit returns the WorkUnit or raises WorkUnitNotFoundError;
-        # a successful return means the operator passed a work-unit id here.
-        unit = get_work_unit(stripped)
-    except Exception:
-        _log.debug(
-            "calculation revision hint lookup failed; falling back to registered error rendering",
-            exc_info=True,
-        )
-        return _bad_parameter_from_error(exc)
-    return typer.BadParameter(
-        tr(
-            "cli.app.modelo.work.id_is_work_unit_not_calc_revision_natural",
-            default=(
-                "This id is a work-unit-id, but verify/file need a calculation-revision-id. "
-                "For the common path, run 'aeat app modelo work calculate --modelo %{modelo} "
-                "--year %{year} --period %{period}' and then rerun verify/file for that "
-                "same modelo/year/period. Exact ids remain available as an advanced escape hatch."
-            ),
-            modelo=unit.modelo,
-            year=unit.filing_year,
-            period=unit.period,
-        )
-    )
-
-
-def _work_candidate_lines(candidates: tuple[ModeloWorkUnitCandidate, ...]) -> str:
-    rows = [
-        "candidates:",
-        "short_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent\tfiled\tname",
-    ]
-    for candidate in candidates:
-        rows.append(
-            "\t".join(
-                (
-                    candidate.short_work_unit_id,
-                    str(candidate.modelo),
-                    str(candidate.filing_year),
-                    candidate.period,
-                    candidate.revision_id,
-                    candidate.state.value,
-                    _short_id(candidate.current_calculation_revision_id) or "",
-                    _short_id(candidate.filed_calculation_revision_id) or "",
-                    candidate.work_unit_id,
-                )
-            )
-        )
-    return "\n".join(rows)
-
-
-def _selector_bad_parameter(exc: BaseException) -> typer.BadParameter:
-    if isinstance(exc, ModeloWorkVisibleTargetAmbiguousError):
-        return typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.selector_ambiguous",
-                default=(
-                    "More than one active work unit matches this modelo/year/period. "
-                    "Choose a registry revision or pass an explicit work-unit id.\n{candidates}"
-                ),
-                candidates=_work_candidate_lines(exc.candidates),
-            )
-        )
-    if isinstance(exc, ModeloWorkRevisionConflictError):
-        return typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.selector_revision_conflict",
-                default=(
-                    "An active work unit already exists for this modelo/year/period with "
-                    "registry revision {existing_revision}; requested {requested_revision}. "
-                    "Resume the existing work unit, discard it explicitly, or pass an exact id."
-                ),
-                existing_revision=exc.existing.revision_id,
-                requested_revision=exc.requested_revision_id,
-            )
-        )
-    if isinstance(exc, ModeloCalculationRevisionSelectorAmbiguousError):
-        candidates = "\n".join(
-            f"{candidate.short_calculation_revision_id}\t{candidate.state.value}\t{candidate.created_at}"
-            for candidate in exc.candidates
-        )
-        return typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.revision_selector_ambiguous",
-                default=(
-                    "More than one calculation revision matches this selector. "
-                    "Choose one explicitly.\n{candidates}"
-                ),
-                candidates=candidates,
-            )
-        )
-    if isinstance(exc, ModeloWorkAddressNotFoundError):
-        return typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.selector_not_found",
-                default="No active work unit matches this modelo/year/period. Run `aeat app modelo work create` first.",
-            )
-        )
-    return typer.BadParameter(str(exc))
 
 
 def _work_address_for_cli(
@@ -381,21 +232,6 @@ def _resolve_work_unit_for_cli(
         ModeloWorkAddressNotFoundError,
     ) as exc:
         raise _selector_bad_parameter(exc) from exc
-
-
-def _parse_revision_selector(value: str) -> ModeloCalculationRevisionSelector:
-    try:
-        return ModeloCalculationRevisionSelector(value)
-    except ValueError as exc:
-        choices = ", ".join(selector.value for selector in ModeloCalculationRevisionSelector)
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.invalid_revision_selector",
-                default="Unknown revision selector {value!r}; choose one of: {choices}.",
-                value=value,
-                choices=choices,
-            )
-        ) from exc
 
 
 def _resolve_revision_for_cli(
@@ -468,29 +304,6 @@ def _resolve_revision_for_cli(
         raise _selector_bad_parameter(exc) from exc
 
 
-def _resolve_default_actor() -> str:
-    """Return the active profile display_name, or a permanent fallback label.
-
-    Per the actor attribution specification, ``--by`` defaults to the active profile's
-    display name. When no active profile exists or the bucket is empty the
-    fallback label keeps the audit record populated rather than raising.
-    """
-    try:
-        from ...application.workflow import workflow_state_repository
-        from ...core import resolve_active_bucket_id
-
-        state = workflow_state_repository().load()
-        record = state.active_profile_record()
-        if record is not None and record.display_name:
-            return record.display_name
-        active = resolve_active_bucket_id()
-        if active:
-            return active
-    except Exception:
-        _log.debug("default actor lookup failed; falling back to operator label", exc_info=True)
-    return "operator"
-
-
 def _require_active_profile() -> None:
     """Refuse cold-start work commands with the clean no-active-profile message.
 
@@ -531,161 +344,7 @@ def _run_query[T](call: Callable[[], T]) -> T:
         raise _bad_parameter_from_error(exc) from exc
 
 
-@app.command(
-    "readiness",
-    help=tr(
-        "cli.app.modelo.readiness_help",
-        default="Report whether the active profile is ready to file one modelo / year / period.",
-    ),
-)
-def modelo_readiness(
-    ctx: typer.Context,
-    modelo: Annotated[
-        str,
-        typer.Option("--modelo", help=tr("cli.app.modelo.readiness.modelo_help", default="Modelo code (e.g. 303).")),
-    ],
-    revision_id: Annotated[
-        str,
-        typer.Option(
-            "--revision-id",
-            help=tr("cli.app.modelo.readiness.revision_help", default="Registry revision id."),
-        ),
-    ],
-    filing_year: Annotated[
-        int,
-        typer.Option("--year", help=tr("cli.app.modelo.readiness.year_help", default="Filing year.")),
-    ],
-    period: Annotated[
-        str | None,
-        typer.Option(
-            "--period",
-            help=tr("cli.app.modelo.readiness.period_help", default="Period token (e.g. Q1, annual)."),
-        ),
-    ] = None,
-) -> None:
-    """Report active-profile readiness for one modelo target.
-
-    Carries the behaviour previously surfaced as
-    ``aeat config profile preflight``. Lives on the modelo surface so
-    the readiness check sits alongside the other modelo verbs that
-    operate on ``(modelo, revision, year, period)`` tuples.
-
-    Consumes the canonical :func:`build_operator_state_projection`: the
-    readiness datum is computed once in the projection, so this surface
-    cannot disagree with any other operator-facing surface.
-    """
-    from ...application.state_projection import (
-        ModeloReadinessRequest,
-        build_operator_state_projection,
-    )
-    from ...core import resolve_active_bucket_id
-    from ...core.i18n import tr as _tr
-    from ...domain.user_profile import ProfileNotFoundError
-    from ._errors import CliRefusedBoundaryError
-
-    if resolve_active_bucket_id() is None:
-        raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
-    request = ModeloReadinessRequest(
-        modelo=modelo,
-        revision_id=revision_id,
-        filing_year=filing_year,
-        period=period or "",
-    )
-    try:
-        projection = build_operator_state_projection(modelo_readiness_requests=(request,))
-    except ProfileNotFoundError as exc:
-        raise CliRefusedBoundaryError(
-            _tr("cli.config.profile.unknown_profile", name=resolve_active_bucket_id() or "")
-        ) from exc
-    if not projection.modelo_readiness:
-        raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
-    report = projection.modelo_readiness[0]
-    report.model_dump(mode="json")
-    lines = [
-        f"profile_id\t{report.profile_id}",
-        f"modelo\t{modelo}",
-        f"revision_id\t{revision_id}",
-        f"filing_year\t{filing_year}",
-        f"period\t{period or ''}",
-        "readiness_scope\tprofile_and_source_preflight_not_manual_casilla_completeness",
-        f"ready\t{report.ready}",
-        f"profile_ready\t{report.profile_ready}",
-        f"missing\t{len(report.missing)}",
-        f"ledger_preflight_required\t{report.ledger_preflight_required}",
-        f"ledger_ready\t{report.ledger_ready if report.ledger_ready is not None else ''}",
-        f"ledger_period\t{report.ledger_period or ''}",
-        f"ledger_checked\t{report.ledger_checked_transaction_count}",
-        f"ledger_issues\t{len(report.ledger_issues)}",
-        # ``ready`` means the profile/source preflight passed — NOT that the AEAT
-        # filing-obligation window is open. Once the revision is verified-complete
-        # the local finish line is ``modelo export`` (a fichero-BOE artefact; a
-        # sibling of ``work``, not a ``work`` subcommand); the optional internal
-        # ``work file`` step needs an open obligation window.
-        "finish_line\texport verified-complete revision via 'aeat app modelo export' (local finish line)",
-    ]
-    from ._common import _emit_envelope
-    from ._modelo_payloads import (
-        LedgerIssuePayload,
-        ModeloReadinessMissingRequirementPayload,
-        ModeloReadinessResult,
-    )
-
-    readiness_result = ModeloReadinessResult(
-        profile_id=str(report.profile_id),
-        modelo=modelo,
-        revision_id=revision_id,
-        filing_year=filing_year,
-        period=period or "",
-        ready=report.ready,
-        profile_ready=report.profile_ready,
-        missing=[
-            ModeloReadinessMissingRequirementPayload(
-                section_key=req.section_key,
-                field_key=req.field_key,
-                selector=req.selector,
-            )
-            for req in report.missing
-        ],
-        ledger_preflight_required=report.ledger_preflight_required,
-        ledger_ready=report.ledger_ready,
-        ledger_period=report.ledger_period,
-        ledger_checked_transaction_count=report.ledger_checked_transaction_count,
-        ledger_issues=[
-            LedgerIssuePayload(
-                transaction_id=issue.transaction_id,
-                reason=issue.reason.value,
-                detail=issue.detail,
-            )
-            for issue in report.ledger_issues
-        ],
-    )
-    lines = [
-        f"profile_id\t{report.profile_id}",
-        f"modelo\t{modelo}",
-        f"revision_id\t{revision_id}",
-        f"filing_year\t{filing_year}",
-        f"period\t{period or ''}",
-        "readiness_scope\tprofile_and_source_preflight_not_manual_casilla_completeness",
-        f"ready\t{report.ready}",
-        f"profile_ready\t{report.profile_ready}",
-        f"missing\t{len(report.missing)}",
-        f"ledger_preflight_required\t{report.ledger_preflight_required}",
-        f"ledger_ready\t{report.ledger_ready if report.ledger_ready is not None else ''}",
-        f"ledger_period\t{report.ledger_period or ''}",
-        f"ledger_checked\t{report.ledger_checked_transaction_count}",
-        f"ledger_issues\t{len(report.ledger_issues)}",
-        # ``ready`` means the profile/source preflight passed — NOT that the AEAT
-        # filing-obligation window is open. Once the revision is verified-complete
-        # the local finish line is ``modelo export`` (a fichero-BOE artefact; a
-        # sibling of ``work``, not a ``work`` subcommand); the optional internal
-        # ``work file`` step needs an open obligation window.
-        "finish_line\texport verified-complete revision via 'aeat app modelo export' (local finish line)",
-    ]
-    for requirement in report.missing:
-        lines.append(f"{requirement.section_key}.{requirement.field_key}\t{requirement.selector}")
-    for issue in report.ledger_issues:
-        lines.append(f"ledger_issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
-    _emit_envelope(ctx, command="modelo.readiness", result=readiness_result, lines=lines)
+register_readiness_commands(app)
 
 
 @app.command("list")
@@ -1681,67 +1340,6 @@ work_app = create_work_app()
 app.add_typer(work_app, name="work")
 
 
-_FILING_YEAR_MIN = 2000
-_FILING_YEAR_MAX = 2099
-"""Filing-year bounds enforced by :class:`WorkUnit` (``ge=2000, le=2099``).
-
-Validating the bound at the CLI boundary turns an out-of-range year
-into a clean, translated, value-naming refusal instead of a generic
-pydantic-validation boundary error.
-"""
-
-
-def _validate_filing_year(year: int) -> None:
-    """Refuse a filing year outside the registry-supported range.
-
-    ``--year 1899`` previously composed the token ``1899-Q1``, passed
-    the period regex, then failed deep in :class:`WorkUnit` validation
-    and surfaced only the generic English "command input failed
-    validation" boundary error. The refusal now names the bad year and
-    renders in the operator's language.
-    """
-    if not _FILING_YEAR_MIN <= year <= _FILING_YEAR_MAX:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.year_out_of_range",
-                year=year,
-                minimum=_FILING_YEAR_MIN,
-                maximum=_FILING_YEAR_MAX,
-            )
-        )
-
-
-def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> None:
-    """Render the application applicability refusal for work creation."""
-    from ._errors import CliRefusedBoundaryError
-
-    refusal = modelo_work_create_applicability_refusal(
-        modelo,
-        allow_not_applicable=allow_not_applicable,
-    )
-    if refusal is None:
-        return
-    raise CliRefusedBoundaryError(
-        translated_message="cli.app.modelo.work.create_not_applicable_refused",
-        context={
-            "modelo": refusal.modelo,
-            "reason": refusal.reason,
-        },
-    )
-
-
-def _guard_stub_modelo(modelo: str) -> None:
-    """Render the application refusal for a stub-modelo create request."""
-    from ._errors import CliRefusedBoundaryError
-
-    modelo_code = modelo.strip()
-    locale_key = modelo_work_create_refusal_locale_key(modelo_code)
-    if locale_key is None:
-        return
-
-    raise CliRefusedBoundaryError(tr(locale_key, modelo=modelo_code))
-
-
 #: Registry-validation translated-message keys that signal an
 #: unsatisfied calculation input the operator can supply with
 #: ``--binding`` / ``--relation``. The first ``work calculate`` of a
@@ -1798,461 +1396,17 @@ def _missing_binding_guidance(error: RegistryValidationError, work_unit_id: str)
     )
 
 
-@work_app.command("create", help=tr("cli.app.modelo.work.create_help"))
-def work_create(
-    ctx: typer.Context,
-    modelo: Annotated[
-        str,
-        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-    ],
-    year: Annotated[
-        int,
-        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-    ],
-    period: Annotated[
-        str,
-        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-    ],
-    revision: Annotated[
-        str | None,
-        typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-    ] = None,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
-    name: Annotated[
-        str | None,
-        typer.Option("--name", help=tr("cli.app.modelo.work.name_help")),
-    ] = None,
-    actor: Annotated[
-        str | None,
-        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ] = None,
-    allow_not_applicable: Annotated[
-        bool,
-        typer.Option(
-            "--allow-not-applicable",
-            help=tr(
-                "cli.app.modelo.work.allow_not_applicable_help",
-                default=(
-                    "Crear la unidad de trabajo aunque el modelo no aplique al tipo de contribuyente del perfil activo."
-                ),
-            ),
-        ),
-    ] = False,
-    causante_ccaa_raw: Annotated[
-        str | None,
-        typer.Option(
-            "--causante-ccaa",
-            help=tr(
-                "cli.app.modelo.work.causante_ccaa_help",
-                default=(
-                    "CCAA de residencia habitual del causante (ISD Modelo 650/660) o CCAA donde se ubica el bien "
-                    "transmitido (ITPyAJD Modelo 600/620). Determina la Hacienda competente (Ley 22/2009 Art. 32). "
-                    "País Vasco y Navarra son regímenes forales; consulta la Hacienda autonómica correspondiente."
-                ),
-            ),
-        ),
-    ] = None,
-) -> None:
-    """Create or load a modelo work unit. Idempotent on the four-axis key."""
-    # User-input validation order: stub guard runs before registry lookup
-    # because several stub modelos (210, 600, 620, 650, 660) are not
-    # registry-registered; _validate_registry_target would refuse them
-    # with a generic "Modelo desconocido" before the legally-grounded
-    # refusal fires.  Registry-registered stubs (151, 714, 721) are
-    # intercepted equally early.
-    _validate_filing_year(year)
-    requested_revision = revision.strip() if revision is not None else None
-    # Foral guard: parse before the stub guard so the operator receives a
-    # domain-correct ForalRegimeError rather than a generic "modelo not yet
-    # supported" message when a foral CCAA is supplied.  The
-    # command_error_boundary decorator surfaces AeatError (including
-    # ForalRegimeError) on stderr and exits; no try/except needed here.
-    causante_ccaa = parse_tax_region(causante_ccaa_raw) if causante_ccaa_raw is not None else None
-    _guard_stub_modelo(modelo)
-    resolved_year, resolved_period = _resolve_year_period(year, period, modelo=modelo)
-    _require_active_profile()
-    # Foral defence-in-depth: rejects profiles whose stored tax_residence.ccaa
-    # fact carries a foral token that bypassed the wizard-layer guard (e.g.
-    # direct persistence insert or migration).  ForalRegimeError surfaces via
-    # command_error_boundary with the Ley 12/2002 redirect message.
-    _guard_foral_profile_ccaa()
-    # Round-4 M4: refuse a work unit for a modelo the active profile's
-    # taxpayer model positively excludes (a natural person has no
-    # Modelo 202; an attribution entity runs no cuota). The guard runs
-    # once the profile is known and before the bucket database is
-    # opened by create_work_unit.
-    _guard_modelo_applicability(modelo, allow_not_applicable=allow_not_applicable)
-    # --bucket-id is an explicit override; without it the work unit binds
-    # to the active profile's bucket (never the literal string "default").
-    resolved_bucket = bucket_id if bucket_id is not None else _active_bucket_id()
-    resolved_actor = actor or _resolve_default_actor()
-
-    try:
-        ensure_result = ensure_modelo_work_unit_for_visible_target(
-            bucket_id=resolved_bucket,
-            modelo=modelo,
-            filing_year=resolved_year,
-            period=resolved_period,
-            registry_revision_id=requested_revision,
-            name=name,
-            actor=resolved_actor,
-            causante_ccaa=causante_ccaa,
-        )
-    except ModeloWorkRegistryYearMismatchError as exc:
-        raise typer.BadParameter(str(exc)) from exc
-    except RegistrySnapshotError as exc:
-        raise typer.BadParameter(str(exc)) from exc
-    except (
-        ModeloWorkSelectorContradictionError,
-        ModeloWorkUnitNotFoundError,
-        ModeloWorkVisibleTargetAmbiguousError,
-        ModeloWorkRevisionConflictError,
-    ) as exc:
-        raise _selector_bad_parameter(exc) from exc
-
-    reused = ensure_result.reused
-    unit = ensure_result.work_unit
-    name_applied = ensure_result.name_applied
-
-    status = "reused" if reused else "created"
-    if reused:
-        if name_applied is not None:
-            status_message = tr(
-                    "cli.app.modelo.work.create_reused_renamed",
-                    default=(
-                        "Existing work unit returned (idempotent on modelo/year/period); "
-                        "nothing new was created. The supplied --name was applied as a rename "
-                        "to %{name}."
-                    ),
-                name=name_applied,
-            )
-        elif name is not None and name.strip():
-            status_message = tr(
-                    "cli.app.modelo.work.create_reused_name_match",
-                    default=(
-                        "Existing work unit returned (idempotent on modelo/year/period); "
-                        "nothing new was created. The supplied --name matches the stored name."
-                    ),
-            )
-        else:
-            status_message = tr(
-                    "cli.app.modelo.work.create_reused",
-                    default=(
-                        "Existing work unit returned (idempotent on modelo/year/period); "
-                        "nothing new was created. Rename it with `aeat app modelo work rename`."
-                    ),
-            )
-        operation = "modelo.work.reuse"
-    else:
-        status_message = tr(
-            "cli.app.modelo.work.create_created",
-            default="New work unit created.",
-        )
-        operation = "modelo.work.create"
-
-    from ._common import _emit_envelope
-    from ._modelo_payloads import WorkCreateResult
-
-    result = WorkCreateResult.model_validate(
-        {
-            "operation": operation,
-            "status": status,
-            "status_message": status_message,
-            "name_applied": name_applied,
-            "applicability_guard_bypassed": allow_not_applicable,
-            **_work_unit_payload(unit).model_dump(mode="python"),
-        }
-    )
-    lines = [
-        f"operation\t{operation}",
-        f"status\t{status}",
-        *_work_unit_lines(unit),
-        status_message,
-    ]
-    # Pre-calificación Art. 96.3 LIRPF: when the operator creates a Modelo 100
-    # work unit and the profile declares multiple pagadores with secondary income
-    # exceeding €1,500, surface the filing-obligation advisory so they know the
-    # income-threshold exemption does not apply. Reads the active bucket's
-    # session directly — the root callback already opened it — instead of
-    # nesting a fresh profile_storage_session, which would re-derive a
-    # different DEK whenever the substrate binds key material out of band.
-    if modelo == "100":
-        from ...application.overview import build_filing_obligation_advisories as _build_filing_obligation_advisories
-        from ...application.user_profile import ProfileRepository, record_to_values
-        from ...core import resolve_active_bucket_id
-
-        _bucket = resolve_active_bucket_id()
-        if _bucket is not None:
-            _rec = ProfileRepository().load(_bucket)
-            _raw = record_to_values(_rec.record) if _rec is not None else None
-            for _advisory_key in _build_filing_obligation_advisories(_raw):
-                lines.append(tr(_advisory_key))
-    # The envelope key is pinned to the leaf-command path so the
-    # JSON-contract registry has exactly one key per CLI leaf. The
-    # create-vs-reuse distinction lives in the payload ``operation``
-    # field, which is the durable consumer-facing signal.
-    _emit_envelope(ctx, command="modelo.work.create", result=result, lines=lines)
-
-
-@work_app.command("list", help=tr("cli.app.modelo.work.list_help"))
-def work_list(
-    ctx: typer.Context,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
-    include_discarded: Annotated[
-        bool,
-        typer.Option(
-            "--include-discarded",
-            help=tr("cli.app.modelo.work.include_discarded_help"),
-        ),
-    ] = False,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    """List modelo work units. Discarded units are excluded unless asked."""
-    activate_subcommand_output_language(ctx, output_language)
-    _require_active_profile()
-    units = list_work_units(bucket_id=bucket_id, include_discarded=include_discarded)
-    from ._common import _emit_envelope
-    from ._modelo_payloads import WorkListResult
-
-    result = WorkListResult.model_validate(
-        {
-            "bucket_id_filter": bucket_id,
-            "include_discarded": include_discarded,
-            "work_unit_count": len(units),
-            "work_units": [_work_unit_payload(unit) for unit in units],
-        }
-    )
-    lines = [
-        "operation\tmodelo.work.list",
-        f"bucket_id_filter\t{bucket_id or ''}",
-        f"include_discarded\t{include_discarded}",
-        f"work_unit_count\t{len(units)}",
-        "short_work_unit_id\twork_unit_id\tbucket_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent_revision\tfiled_revision\tname",
-    ]
-    lines.extend(
-        "\t".join(
-            (
-                _short_id(unit.work_unit_id) or "",
-                unit.work_unit_id,
-                unit.bucket_id,
-                str(unit.modelo),
-                str(unit.filing_year),
-                unit.period,
-                unit.revision_id,
-                unit.state.value,
-                _short_id(unit.current_calculation_revision_id) or "",
-                _short_id(unit.filed_calculation_revision_id) or "",
-                unit.name,
-            )
-        )
-        for unit in units
-    )
-    _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines)
-
-
-@work_app.command("status", help=tr("cli.app.modelo.work.status_help"))
-def work_status(
-    ctx: typer.Context,
-    work_unit_id: Annotated[
-        str | None,
-        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
-    ] = None,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-    ] = None,
-    period: Annotated[
-        str | None,
-        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-    ] = None,
-    revision: Annotated[
-        str | None,
-        typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-    ] = None,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    """View one work unit's metadata."""
-    activate_subcommand_output_language(ctx, output_language)
-    _require_active_profile()
-    unit = _resolve_work_unit_for_cli(
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        revision=revision,
-        bucket_id=bucket_id,
-    )
-    from ._common import _emit_envelope
-    from ._modelo_payloads import WorkStatusResult
-
-    result = WorkStatusResult.model_validate(_work_unit_payload(unit).model_dump(mode="python"))
-    lines = ["operation\tmodelo.work.status", *_work_unit_lines(unit)]
-    _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines)
-
-
-@work_app.command("rename", help=tr("cli.app.modelo.work.rename_help"))
-def work_rename(
-    ctx: typer.Context,
-    work_unit_id: Annotated[
-        str | None,
-        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
-    ] = None,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-    ] = None,
-    period: Annotated[
-        str | None,
-        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-    ] = None,
-    revision: Annotated[
-        str | None,
-        typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-    ] = None,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
-    name: Annotated[
-        str | None,
-        typer.Option("--name", help=tr("cli.app.modelo.work.name_help")),
-    ] = None,
-    actor: Annotated[
-        str | None,
-        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ] = None,
-) -> None:
-    """Update one work unit's display name (preserves work_unit_id)."""
-    _require_active_profile()
-    if name is None or not name.strip():
-        raise typer.BadParameter(tr("cli.app.modelo.work.name_required", default="Supply --name."))
-    unit = _resolve_work_unit_for_cli(
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        revision=revision,
-        bucket_id=bucket_id,
-    )
-    try:
-        unit = rename_work_unit(unit.work_unit_id, name, actor=actor or _resolve_default_actor())
-    except (WorkUnitNotFoundError, WorkUnitMutationRefusedError) as exc:
-        raise _bad_parameter_from_error(exc) from exc
-    from ._common import _emit_envelope
-    from ._modelo_payloads import WorkRenameResult
-
-    result = WorkRenameResult.model_validate(_work_unit_payload(unit).model_dump(mode="python"))
-    lines = ["operation\tmodelo.work.rename", *_work_unit_lines(unit)]
-    _emit_envelope(ctx, command="modelo.work.rename", result=result, lines=lines)
-
-
-@work_app.command("discard", help=tr("cli.app.modelo.work.discard_help"))
-def work_discard(
-    ctx: typer.Context,
-    work_unit_id: Annotated[
-        str | None,
-        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
-    ] = None,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-    ] = None,
-    period: Annotated[
-        str | None,
-        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-    ] = None,
-    revision: Annotated[
-        str | None,
-        typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-    ] = None,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
-    actor: Annotated[
-        str | None,
-        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ] = None,
-    reason: Annotated[
-        str | None,
-        typer.Option("--reason", help=tr("cli.app.modelo.work.reason_help")),
-    ] = None,
-    confirmed: Annotated[
-        bool,
-        typer.Option("--yes", help=tr("cli.app.modelo.work.discard_yes_help")),
-    ] = False,
-) -> None:
-    """Transition a work unit to discarded state.
-
-    The discard is an audit-grade state transition: revision
-    payloads are preserved, the work unit is marked discarded
-    with actor + reason captured, and subsequent mutations are
-    rejected. Discarded units are excluded from default
-    ``aeat app modelo work list`` output.
-
-    The transition is gated by ``--yes``, symmetric with
-    ``config profile delete``: an unconfirmed run is refused with
-    the exact re-run command.
-    """
-    target_label = work_unit_id or f"{modelo or '?'} {year or '?'} {period or '?'}"
-    if not confirmed:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.discard_requires_yes",
-                work_unit_id=target_label,
-            )
-        )
-    _require_active_profile()
-    unit = _resolve_work_unit_for_cli(
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        revision=revision,
-        bucket_id=bucket_id,
-    )
-    try:
-        unit = discard_work_unit(unit.work_unit_id, actor=actor or _resolve_default_actor(), reason=reason)
-    except (WorkUnitNotFoundError, WorkUnitAlreadyDiscardedError) as exc:
-        raise _bad_parameter_from_error(exc) from exc
-    from ._common import _emit_envelope
-    from ._modelo_payloads import WorkDiscardResult
-
-    result = WorkDiscardResult.model_validate(_work_unit_payload(unit).model_dump(mode="python"))
-    lines = ["operation\tmodelo.work.discard", *_work_unit_lines(unit)]
-    _emit_envelope(ctx, command="modelo.work.discard", result=result, lines=lines)
+register_work_lifecycle_commands(
+    work_app,
+    activate_output_language=activate_subcommand_output_language,
+    require_active_profile=_require_active_profile,
+    guard_foral_profile_ccaa=_guard_foral_profile_ccaa,
+    resolve_year_period=_resolve_year_period,
+    resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
+    resolve_default_actor=_resolve_default_actor,
+    bad_parameter_from_error=_bad_parameter_from_error,
+    selector_bad_parameter=_selector_bad_parameter,
+)
 
 
 filing_record_app = typer.Typer(
@@ -2262,196 +1416,6 @@ filing_record_app = typer.Typer(
     add_completion=False,
 )
 app.add_typer(filing_record_app, name="filing-record")
-
-
-def _calculation_revision_payload(rev: CalculationRevision) -> CalculationRevisionPayload:
-    from ._modelo_payloads import CalculationRevisionPayload, ObservationPayload
-
-    # Typed CasillaObservation envelope carrying full per-casilla
-    # provenance (formula_id, operand_refs, operand_values,
-    # legal_refs, source_refs). Without this projection the CLI
-    # JSON would strip every regulatory grounding signal.
-    observations = tuple(
-        ObservationPayload(
-            casilla_id=obs.casilla_id,
-            value=str(obs.value),
-            formula_id=obs.formula_id,
-            operand_refs=tuple(obs.operand_refs),
-            operand_values=tuple(str(v) for v in obs.operand_values),
-            legal_refs=tuple(obs.legal_refs),
-            source_refs=tuple(obs.source_refs),
-        )
-        for obs in rev.observations
-    )
-    return CalculationRevisionPayload(
-        calculation_revision_id=rev.calculation_revision_id,
-        work_unit_id=rev.work_unit_id,
-        state=rev.state.value,
-        casilla_values={k: str(v) for k, v in rev.casilla_values.items()},
-        observations=observations,
-        # Headline result summary: registry-declared result-to-pay /
-        # result-to-refund total plus the modelo's key computed
-        # casillas, so the JSON consumer gets the same lead figures the
-        # text surface shows.
-        result_summary=_result_summary_payload(rev),
-        binding_overrides={key: str(value) for key, value in rev.binding_overrides.items()},
-        inputs_snapshot=dict(rev.inputs_snapshot),
-        created_at=rev.created_at.isoformat(),
-        updated_at=rev.updated_at.isoformat(),
-        verified_at=rev.verified_at.isoformat() if rev.verified_at else None,
-        verified_by=rev.verified_by,
-        filed_at=rev.filed_at.isoformat() if rev.filed_at else None,
-        filed_by=rev.filed_by,
-        superseded_at=rev.superseded_at.isoformat() if rev.superseded_at else None,
-    )
-
-
-def _result_summary_lines(rev: CalculationRevision) -> list[str]:
-    """Return the headline-result summary block for a calculation revision.
-
-    Leads ``work calculate`` / ``work revision`` text output: a flat
-    dump of every casilla (2235 rows for Modelo 100) buries the figures
-    an operator looks for. The summary surfaces the registry-declared
-    result-to-pay / result-to-refund total and the modelo's key
-    computed casillas above the full table. Returns an empty list when
-    no registry-grounded summary is available; the full table then
-    stands alone.
-    """
-    from ...application.modelo import calculation_result_summary
-
-    summary = calculation_result_summary(rev)
-    if summary is None or not summary.rows:
-        return []
-    header = tr(
-        "cli.app.modelo.work.result_summary_header",
-        default="result summary  %{modelo} %{year} %{period}",
-        modelo=summary.modelo,
-        year=summary.filing_year,
-        period=summary.period,
-    )
-    lines = [header, "role\tcasilla\tvalue\tlabel"]
-    for row in summary.rows:
-        lines.append(f"{row.role}\t{row.casilla_id}\t{row.value}\t{row.label}")
-    return lines
-
-
-def _result_summary_payload(rev: CalculationRevision) -> tuple[ResultSummaryRowPayload, ...]:
-    """Return the headline-result summary rows for the JSON payload."""
-    from ...application.modelo import calculation_result_summary
-    from ._modelo_payloads import ResultSummaryRowPayload
-
-    summary = calculation_result_summary(rev)
-    if summary is None:
-        return ()
-    return tuple(
-        ResultSummaryRowPayload(
-            role=row.role,
-            casilla_id=row.casilla_id,
-            value=str(row.value),
-            label=row.label,
-        )
-        for row in summary.rows
-    )
-
-
-def _calculation_revision_lines(rev: CalculationRevision) -> list[str]:
-    lines = [
-        f"calculation_revision_id\t{rev.calculation_revision_id}",
-        f"work_unit_id\t{rev.work_unit_id}",
-        f"state\t{rev.state.value}",
-        f"created_at\t{rev.created_at.isoformat()}",
-        f"updated_at\t{rev.updated_at.isoformat()}",
-    ]
-    if rev.verified_at is not None:
-        lines.append(f"verified_at\t{rev.verified_at.isoformat()}")
-        lines.append(f"verified_by\t{rev.verified_by}")
-    if rev.filed_at is not None:
-        lines.append(f"filed_at\t{rev.filed_at.isoformat()}")
-        lines.append(f"filed_by\t{rev.filed_by}")
-    if rev.superseded_at is not None:
-        lines.append(f"superseded_at\t{rev.superseded_at.isoformat()}")
-    # The headline result summary leads the casilla table so the key
-    # figures are readable without scanning the full dump.
-    summary_lines = _result_summary_lines(rev)
-    if summary_lines:
-        lines.extend(summary_lines)
-    for casilla, value in sorted(rev.casilla_values.items()):
-        lines.append(f"casilla\t{casilla}\t{value}")
-    # Surface the typed detail rows (repeating Registro-Tipo-2 records of
-    # informativas: M184 comuneros, M347/M349 contrapartes, M232 vinculadas).
-    # These are persisted on the revision but live outside the flat
-    # casilla_values map (the casilla schema carries only the row template),
-    # so without this they were invisible in the revision view — an operator
-    # entering N members saw the empty template casillas and believed the rows
-    # were silently dropped.
-    for index, detail_row in enumerate(rev.detail_rows, start=1):
-        fields = detail_row.model_dump(mode="json", exclude={"row_type"})
-        field_str = " ".join(f"{key}={value}" for key, value in fields.items())
-        lines.append(f"detail_row\t{index}\t{detail_row.row_type}\t{field_str}")
-    return lines
-
-
-def _filing_record_payload(record: ModeloRecord) -> ModeloRecordPayload:
-    from ._modelo_payloads import ExternalEvidencePayload, ModeloRecordPayload
-
-    external_evidence: ExternalEvidencePayload | None = None
-    if record.external_evidence is not None:
-        external_evidence = ExternalEvidencePayload(
-            kind=record.external_evidence.kind.value,
-            reference_id=record.external_evidence.reference_id,
-            imported_at=record.external_evidence.imported_at.isoformat(),
-        )
-    return ModeloRecordPayload(
-        filing_record_id=record.filing_record_id,
-        work_unit_id=record.work_unit_id,
-        calculation_revision_id=record.calculation_revision_id,
-        bucket_id=record.bucket_id,
-        modelo=str(record.modelo),
-        filing_year=record.filing_year,
-        period=record.period,
-        filed_at=record.filed_at.isoformat(),
-        filed_by=record.filed_by,
-        notes=record.notes,
-        aeat_accepted=record.aeat_accepted,
-        status=record.status.value,
-        superseded_at=record.superseded_at.isoformat() if record.superseded_at else None,
-        superseded_by_filing_record_id=record.superseded_by_filing_record_id,
-        external_evidence=external_evidence,
-        amends_filing_record_id=record.amends_filing_record_id,
-        kind="internal_filing",
-        live_submission=False,
-    )
-
-
-def _filing_record_lines(record: ModeloRecord) -> list[str]:
-    lines = [
-        f"filing_record_id\t{record.filing_record_id}",
-        f"work_unit_id\t{record.work_unit_id}",
-        f"calculation_revision_id\t{record.calculation_revision_id}",
-        f"bucket_id\t{record.bucket_id}",
-        f"modelo\t{record.modelo}",
-        f"filing_year\t{record.filing_year}",
-        f"period\t{record.period}",
-        f"filed_at\t{record.filed_at.isoformat()}",
-        f"filed_by\t{record.filed_by}",
-        f"status\t{record.status.value}",
-        f"aeat_accepted\t{str(record.aeat_accepted).lower()}",
-    ]
-    if record.notes is not None:
-        lines.append(f"notes\t{record.notes}")
-    if record.superseded_at is not None:
-        lines.append(f"superseded_at\t{record.superseded_at.isoformat()}")
-    if record.superseded_by_filing_record_id is not None:
-        lines.append(f"superseded_by_filing_record_id\t{record.superseded_by_filing_record_id}")
-    if record.external_evidence is not None:
-        lines.append(f"external_evidence.kind\t{record.external_evidence.kind.value}")
-        lines.append(f"external_evidence.reference_id\t{record.external_evidence.reference_id}")
-        lines.append(f"external_evidence.imported_at\t{record.external_evidence.imported_at.isoformat()}")
-    if record.amends_filing_record_id is not None:
-        lines.append(f"amends_filing_record_id\t{record.amends_filing_record_id}")
-    lines.append("kind\tinternal_filing")
-    lines.append("live_submission\tfalse")
-    return lines
 
 
 def _validate_casilla_key(key: str, spec: str) -> None:
@@ -2512,25 +1476,6 @@ def _parse_casilla_override(spec: str) -> tuple[str, str]:
     )
 
 
-def _casilla_revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
-    """Return the registry revision for a work unit's modelo + filing scope.
-
-    Loads the work unit from the active profile's bucket, then fetches
-    the registry snapshot for its ``(modelo, filing_year, period)``
-    triple. The result is used by :func:`_normalise_casilla_key` so
-    bare-numeric ``--casilla`` tokens can be resolved against the real
-    casilla catalogue before the calculation is dispatched.
-    """
-    unit = get_work_unit(work_unit_id)
-    authority = _service()._authority
-    snapshot = authority.snapshot(
-        str(unit.modelo),
-        filing_year=unit.filing_year,
-        period=unit.period,
-    )
-    return snapshot.revision
-
-
 def _parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:
     """Parse one ``HIJO_ID=MESES`` token from ``--meses-trabajo-con-hijo-menor-3``.
 
@@ -2568,76 +1513,6 @@ def _parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:
             )
         )
     return hijo_id, meses
-
-
-def _normalise_casilla_key(key: str, revision: ModeloRevision) -> str:
-    """Resolve a bare-numeric ``--casilla`` key to its qualified CasillaId.
-
-    When the operator supplies a bare integer token (e.g. ``"69"`` or
-    ``"552"``), this function searches ``revision.casillas`` for entries
-    whose ``number`` attribute is numerically equal to the supplied token
-    (leading zeros stripped on both sides for comparison).
-
-    - Exactly one match → return the qualified ``casilla.id``
-      (e.g. ``"iva.resultado"`` or ``"DP200014:00552"``).
-    - Multiple matches → raise :class:`typer.BadParameter` naming each
-      candidate id so the operator can supply the unambiguous form.
-    - No match → raise :class:`typer.BadParameter` listing the casilla
-      prefixes available for this revision (S60 improved error).
-    - Non-numeric key → return unchanged (already qualified or format
-      validation will reject it).
-    """
-    if not _BARE_NUMERIC_RE.fullmatch(key):
-        return key
-
-    # Numeric equality across zero-padding; "69", "069", "00069" all match.
-    # `_BARE_NUMERIC_RE.fullmatch` upstream guarantees `key` is all digits, so
-    # `int(...)` is total; casilla.number falls back to "0" on a missing token
-    # so the same canonicalisation runs against every catalogued casilla.
-    key_numeric = int(key)
-
-    def _as_int(value: str | None) -> int | None:
-        if not value:
-            return None
-        try:
-            return int(value)
-        except ValueError:
-            return None
-
-    matches = [c for c in revision.casillas if _as_int(c.number) == key_numeric]
-    if len(matches) == 1:
-        return str(matches[0].id)
-
-    if len(matches) > 1:
-        candidates = ", ".join(str(c.id) for c in sorted(matches, key=lambda c: str(c.id)))
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.casilla_bare_numeric_ambiguous",
-                default=(
-                    f"--casilla {key!r} matches multiple casillas in this revision: "
-                    f"{candidates}. Supply the qualified PREFIX:NNNNN form to disambiguate."
-                ),
-                key=key,
-                candidates=candidates,
-            )
-        )
-
-    # No match — build a helpful suggestion listing the available
-    # segmento prefixes so the operator knows the key shape for
-    # this revision (S60).
-    prefixes: list[str] = sorted({str(c.id).split(":")[0] for c in revision.casillas if ":" in str(c.id)})
-    prefix_hint = f" Available prefixes for this revision: {', '.join(prefixes)}." if prefixes else ""
-    raise typer.BadParameter(
-        tr(
-            "cli.app.modelo.work.casilla_bare_numeric_unknown",
-            default=(
-                f"--casilla {key!r} does not match any casilla number in this revision."
-                f"{prefix_hint} Use `aeat app modelo casillas <MODELO>` to list valid casilla IDs."
-            ),
-            key=key,
-            prefix_hint=prefix_hint,
-        )
-    )
 
 
 @work_app.command("calculate", help=tr("cli.app.modelo.work.calculate_help"))
@@ -3488,72 +2363,6 @@ def work_history(
     _emit_envelope(ctx, command="modelo.work.history", result=result, lines=lines)
 
 
-def _verification_report_payload(report: VerificationReport) -> VerificationReportPayload:
-    from ._modelo_payloads import FindingPayload, VerificationReportPayload
-
-    return VerificationReportPayload(
-        verification_report_id=report.verification_report_id,
-        calculation_revision_id=report.calculation_revision_id,
-        completeness_status=report.completeness_status.value,
-        granted_verificado_completo=report.granted_verificado_completo,
-        resolved_casillas=list(report.resolved_casillas),
-        missing_required_casillas=list(report.missing_required_casillas),
-        run_at=report.run_at.isoformat(),
-        verified_by=report.verified_by,
-        findings=[
-            FindingPayload(
-                kind=f.kind.value,
-                severity=f.severity.value,
-                casilla_id=f.casilla_id,
-                expectation_id=f.expectation_id,
-                message=f.message,
-                next_action=f.next_action,
-                legal_refs=list(f.legal_refs),
-                source_refs=list(f.source_refs),
-            )
-            for f in report.findings
-        ],
-    )
-
-
-def _verification_report_lines(report: VerificationReport) -> list[str]:
-    lines = [
-        f"verification_report_id\t{report.verification_report_id}",
-        f"calculation_revision_id\t{report.calculation_revision_id}",
-        f"completeness_status\t{report.completeness_status.value}",
-        f"granted_verificado_completo\t{str(report.granted_verificado_completo).lower()}",
-        f"run_at\t{report.run_at.isoformat()}",
-        f"verified_by\t{report.verified_by}",
-        f"resolved_casilla_count\t{len(report.resolved_casillas)}",
-        f"missing_required_casilla_count\t{len(report.missing_required_casillas)}",
-        f"finding_count\t{len(report.findings)}",
-    ]
-    for casilla in report.missing_required_casillas:
-        lines.append(f"missing_casilla\t{casilla}")
-    for finding in report.findings:
-        next_action = finding.next_action or ""
-        casilla = finding.casilla_id or ""
-        lines.append(
-            "\t".join(
-                (
-                    "finding",
-                    finding.kind.value,
-                    finding.severity.value,
-                    casilla,
-                    finding.message,
-                    next_action,
-                )
-            )
-        )
-        if finding.legal_refs:
-            lines.append(f"finding_legal_refs\t{casilla}\t{', '.join(finding.legal_refs)}")
-        if finding.source_refs:
-            lines.append(f"finding_source_refs\t{casilla}\t{', '.join(finding.source_refs)}")
-    if not report.granted_verificado_completo:
-        lines.append(f"next_action\taeat app modelo work verification-report list {report.calculation_revision_id}")
-    return lines
-
-
 @work_app.command("verify", help=tr("cli.app.modelo.work.verify_help"))
 def work_verify(
     ctx: typer.Context,
@@ -3753,189 +2562,11 @@ def work_file(
     _emit_envelope(ctx, command="modelo.work.file", result=result, lines=lines)
 
 
-_WORKFLOW_RUN_ID_RE = r"[0-9a-f]{16}"
-
-
-def _resolve_workflow_run_id(target: str) -> str:
-    """Resolve a ``work resume`` argument to a 16-character run id.
-
-    The operator may pass either the run id directly, or the
-    64-character work-unit id — the only identifier most operators
-    have to hand. A run id is a hash an operator cannot derive, so a
-    work-unit id is resolved to the latest persisted run for that
-    work unit's ``(modelo, period)``.
-
-    Args:
-        target: Raw argument string supplied by the operator — either a
-            16-character workflow run id or a 64-character work-unit id.
-
-    Returns:
-        The resolved 16-character workflow run id.
-
-    Raises:
-        _bad_parameter_from_error: When the work unit does not exist or
-            no run targets it yet.
-        typer.BadParameter: When ``target`` is neither a 16-character
-            run id nor a 64-character work-unit id.
-    """
-    from ...application.modelo import workflow_period_for_work_unit
-    from ...application.workflow import WorkflowError, find_latest_run_for_period
-
-    stripped = target.strip()
-    if re.fullmatch(_WORKFLOW_RUN_ID_RE, stripped):
-        return stripped
-    if re.fullmatch(_WORK_UNIT_ID_RE, stripped):
-        try:
-            unit = get_work_unit(stripped)
-        except WorkUnitNotFoundError as exc:
-            raise _bad_parameter_from_error(exc) from exc
-        try:
-            run = find_latest_run_for_period(
-                modelo=unit.modelo,
-                period=workflow_period_for_work_unit(unit),
-            )
-        except WorkflowError as exc:
-            raise _bad_parameter_from_error(exc) from exc
-        return run.run_id
-    raise typer.BadParameter(
-        tr(
-            "cli.app.modelo.work.resume_invalid_target",
-            default=(
-                "resume target must be a 16-character workflow run id or a "
-                "64-character work-unit id; got {target!r}. "
-                "Run `aeat app modelo work runs` to list run ids."
-            ),
-            target=target,
-        )
-    )
-
-
-@work_app.command(
-    "runs",
-    help=tr(
-        "cli.app.modelo.work.runs_help",
-        default=(
-            "List persisted workflow runs with their run ids, newest first. "
-            "Use a run id with `aeat app modelo work resume`. Local-only: "
-            "never contacts AEAT."
-        ),
-    ),
+register_work_run_commands(
+    work_app,
+    activate_output_language=activate_subcommand_output_language,
+    bad_parameter_from_error=_bad_parameter_from_error,
 )
-def work_runs(
-    ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    """List persisted workflow runs so an operator can discover run ids."""
-    activate_subcommand_output_language(ctx, output_language)
-    from ...application.workflow import list_runs
-
-    runs = list_runs()
-    from ._common import _emit_envelope
-    from ._modelo_payloads import WorkflowRunPayload, WorkRunsResult
-
-    result = WorkRunsResult(
-        run_count=len(runs),
-        runs=[
-            WorkflowRunPayload(
-                run_id=run.run_id,
-                modelo=run.obligation.modelo if run.obligation is not None else None,
-                period=run.obligation.period if run.obligation is not None else None,
-                final_stage=run.final_stage.value,
-                aborted_reason=(run.aborted_reason.value if run.aborted_reason is not None else None),
-                started_at=run.started_at.isoformat(),
-            )
-            for run in runs
-        ],
-    )
-    lines = [
-        "operation\tmodelo.work.runs",
-        f"run_count\t{len(runs)}",
-        "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at",
-    ]
-    lines.extend(
-        "\t".join(
-            (
-                run.run_id,
-                run.obligation.modelo if run.obligation is not None else "-",
-                run.obligation.period if run.obligation is not None else "-",
-                run.final_stage.value,
-                run.aborted_reason.value if run.aborted_reason is not None else "-",
-                run.started_at.isoformat(),
-            )
-        )
-        for run in runs
-    )
-    _emit_envelope(ctx, command="modelo.work.runs", result=result, lines=lines)
-
-
-@work_app.command(
-    "resume",
-    help=tr(
-        "cli.app.modelo.work.resume_help",
-        default=(
-            "Validate that an aborted workflow run may be retried. Emits the "
-            "(modelo, period, obligation) context the engine would consume to "
-            "drive a fresh attempt. Accepts a workflow run id or a work-unit "
-            "id. Local-only: never contacts AEAT."
-        ),
-    ),
-)
-def work_resume(
-    ctx: typer.Context,
-    target: Annotated[
-        str,
-        typer.Argument(
-            help=tr(
-                "cli.app.modelo.work.resume_target_help",
-                default=(
-                    "16-character workflow run id, or the 64-character "
-                    "work-unit id (its latest run is resolved automatically). "
-                    "Run `aeat app modelo work runs` to list run ids."
-                ),
-            ),
-        ),
-    ],
-) -> None:
-    """Surface the workflow-resume preconditions and resumable context."""
-    from ...application.workflow import (
-        WorkflowError,
-        WorkflowResumeRefusedError,
-        resume_modelo_workflow,
-    )
-
-    workflow_run_id = _resolve_workflow_run_id(target)
-
-    try:
-        result = resume_modelo_workflow(workflow_run_id)
-    except (WorkflowResumeRefusedError, WorkflowError) as exc:
-        raise _bad_parameter_from_error(exc) from exc
-
-    from ._common import _emit_envelope
-    from ._modelo_payloads import WorkResumeResult
-
-    resume_result = WorkResumeResult(
-        prior_workflow_run_id=result.resumed_from_run_id,
-        modelo=result.modelo,
-        period=result.period,
-        aborted_reason=result.aborted_reason.value,
-        obligation=result.obligation.model_dump(mode="json"),
-    )
-    lines = [
-        "operation\tmodelo.work.resume",
-        f"prior_workflow_run_id\t{result.resumed_from_run_id}",
-        f"modelo\t{result.modelo}",
-        f"period\t{result.period}",
-        f"aborted_reason\t{result.aborted_reason.value}",
-        f"opens_on\t{result.obligation.opens_on.isoformat()}",
-        f"closes_on\t{result.obligation.closes_on.isoformat()}",
-        f"obligation_status\t{result.obligation.status.value}",
-    ]
-    _emit_envelope(ctx, command="modelo.work.resume", result=resume_result, lines=lines)
 
 
 def _parse_amendment_casilla(spec: str) -> tuple[str, Decimal]:
@@ -4905,161 +3536,13 @@ def modelo_reconcile_from_justificante_verb(
     _render_reconciliation_report(ctx, report, command="modelo.reconcile_from_justificante")
 
 
-@app.command(
-    "export",
-    help=tr(
-        "cli.app.modelo.export.help",
-        default=(
-            "Export a verified-complete or filed modelo revision to a local "
-            "AEAT-compatible fichero-BOE file. Local-only; never contacts AEAT."
-        ),
-    ),
+register_export_commands(
+    app,
+    resolve_revision_for_cli=_resolve_revision_for_cli,
+    bad_parameter_from_error=_bad_parameter_from_error,
+    selector_bad_parameter=_selector_bad_parameter,
+    resolve_default_actor=_resolve_default_actor,
 )
-def modelo_export_verb(
-    ctx: typer.Context,
-    work_unit_id: Annotated[
-        str | None,
-        typer.Argument(
-            help=tr(
-                "cli.app.modelo.export.work_unit_id_help",
-                default="Work unit id (SHA-256 or unambiguous prefix).",
-            ),
-        ),
-    ] = None,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-    ] = None,
-    period: Annotated[
-        str | None,
-        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-    ] = None,
-    registry_revision: Annotated[
-        str | None,
-        typer.Option("--registry-revision", help=tr("cli.app.modelo.work.revision_help")),
-    ] = None,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
-    select: Annotated[
-        str,
-        typer.Option("--select", help=tr("cli.app.modelo.work.revision_selector_help", default="Revision selector.")),
-    ] = ModeloCalculationRevisionSelector.CURRENT.value,
-    output: Annotated[
-        Path | None,
-        typer.Option(
-            "--output",
-            help=tr(
-                "cli.app.modelo.export.output_help",
-                default="Path to write the fichero-BOE artefact to.",
-            ),
-        ),
-    ] = None,
-    revision: Annotated[
-        str | None,
-        typer.Option(
-            "--revision",
-            help=tr(
-                "cli.app.modelo.export.revision_help",
-                default=(
-                    "Calculation revision id to export; defaults to the work unit's "
-                    "most recent verified-complete or filed revision."
-                ),
-            ),
-        ),
-    ] = None,
-    actor: Annotated[
-        str | None,
-        typer.Option(
-            "--by",
-            help=tr(
-                "cli.app.modelo.export.actor_help",
-                default="Operator label recorded into the MODELO_EXPORTED event.",
-            ),
-        ),
-    ] = None,
-) -> None:
-    """Export a verified-complete or filed modelo revision to disk."""
-    from ...application.modelo import (
-        ModeloExportCommand,
-        ModeloExportCrossBucketRefusedError,
-        ModeloExportNoActiveBucketError,
-        ModeloIvaWalletReconciliationBlocked,
-        export_modelo_revision,
-    )
-    from ...application.workflow import workflow_state_repository
-
-    workflow_state = workflow_state_repository().load()
-    workflow_profile = _profile_to_taxpayer(workflow_state)
-    if output is None:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.export.errors.output_required",
-                default="Supply --output PATH for the fichero-BOE artefact.",
-            )
-        )
-
-    try:
-        selected_revision = _resolve_revision_for_cli(
-            calculation_revision_id=revision,
-            work_unit_id=work_unit_id,
-            modelo=modelo,
-            year=year,
-            period=period,
-            registry_revision=registry_revision,
-            bucket_id=bucket_id,
-            selector=select,
-            default_for="export",
-        )
-    except CalculationRevisionNotFoundError as exc:
-        if revision is not None:
-            raise _bad_parameter_from_error(exc) from exc
-        raise _selector_bad_parameter(exc) from exc
-    target_revision_id = selected_revision.calculation_revision_id
-
-    try:
-        result = export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=target_revision_id,
-                output_path=output,
-                actor=actor or _resolve_default_actor(),
-            ),
-            workflow_profile=workflow_profile,
-        )
-    except (
-        CalculationRevisionNotFoundError,
-        CalculationRevisionStateError,
-        WorkUnitNotFoundError,
-        ModeloExportCrossBucketRefusedError,
-        ModeloExportNoActiveBucketError,
-        ModeloIvaWalletReconciliationBlocked,
-    ) as exc:
-        raise _bad_parameter_from_error(exc) from exc
-
-    from ._common import _emit_envelope
-    from ._modelo_payloads import ModeloExportPayload as _ModeloExportPayload
-
-    export_result = _ModeloExportPayload.from_result(result)
-    lines = [
-        "operation\tmodelo.export",
-        f"work_unit_id\t{result.work_unit_id}",
-        f"calculation_revision_id\t{result.calculation_revision_id}",
-        f"bucket\t{result.bucket_id}",
-        f"modelo\t{result.modelo}",
-        f"filing_year\t{result.filing_year}",
-        f"period\t{result.period}",
-        f"output_path\t{result.output_path}",
-        f"byte_size\t{result.byte_size}",
-        f"file_sha256\t{result.file_sha256}",
-        f"format\t{result.format}",
-        f"bucket_event_id\t{result.bucket_event_id}",
-    ]
-    _emit_envelope(ctx, command="modelo.export", result=export_result, lines=lines)
 
 
 register_projection_commands(
