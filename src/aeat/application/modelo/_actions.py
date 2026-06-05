@@ -125,6 +125,7 @@ from ..aggregation._ledger_filing_snapshot import (
 from ..calculations import (
     CalculationObservationRepository,
     CrossPeriodCleanStateVerdict,
+    CrossPeriodExpectedMemberSet,
     evaluate_cross_period_clean_state,
 )
 from ..live import Borrador100SnapshotRepository
@@ -2091,6 +2092,7 @@ def _cross_period_clean_state_verdict_for_work_unit(
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
+    expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
 ) -> CrossPeriodCleanStateVerdict | None:
     from ...domain.calculations.registry import RegistrySnapshotError
 
@@ -2109,6 +2111,7 @@ def _cross_period_clean_state_verdict_for_work_unit(
         filing_repository=filing_repository,
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
+        expected_member_sets=expected_member_sets,
     )
 
 
@@ -2155,6 +2158,7 @@ def _require_cross_period_clean_state(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     iva_compensation_decision: object | None = None,
+    expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
 ) -> None:
     verdict = _cross_period_clean_state_verdict_for_work_unit(
         work_unit,
@@ -2162,6 +2166,7 @@ def _require_cross_period_clean_state(
         filing_repository=filing_repository,
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
+        expected_member_sets=expected_member_sets,
     )
     findings = _cross_period_clean_state_findings(
         verdict,
@@ -2232,6 +2237,7 @@ def verify_modelo_revision(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     calculation_observation_repository: CalculationObservationRepository | None = None,
+    cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     workflow_engine: WorkflowEngine | None = None,
     workflow_runs_dir: Path | None = None,
     settings: Settings | None = None,
@@ -2371,6 +2377,7 @@ def verify_modelo_revision(
                 filing_repository=fr_repo,
                 calculation_repository=cr_repo,
                 verification_repository=vr_repo,
+                expected_member_sets=cross_period_expected_member_sets,
             ),
             iva_compensation_decision=iva_compensation_decision,
         )
@@ -2882,6 +2889,7 @@ def file_modelo_revision(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     calculation_observation_repository: CalculationObservationRepository | None = None,
+    cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     workflow_engine: WorkflowEngine | None = None,
     workflow_runs_dir: Path | None = None,
     settings: Settings | None = None,
@@ -2984,6 +2992,7 @@ def file_modelo_revision(
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
         iva_compensation_decision=iva_compensation_decision,
+        expected_member_sets=cross_period_expected_member_sets,
     )
 
     now = clock or _utc_now()
