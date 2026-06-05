@@ -29,5 +29,7 @@ Calculation and bucket-aggregation workflows now live in focused application mod
 - `uv run --no-sync ruff check src/aeat/application/modelo/_actions.py src/aeat/application/modelo/_calculation_actions.py src/aeat/application/modelo/_calculation_helpers.py src/aeat/application/modelo/__init__.py`
 - `uv run --no-sync python -m compileall src/aeat/application/modelo/_actions.py src/aeat/application/modelo/_calculation_actions.py src/aeat/application/modelo/_calculation_helpers.py`
 - `uv run --no-sync pytest -q --tb=short src/aeat/application/modelo/tests/test_actions.py src/aeat/application/modelo/tests/test_history.py src/aeat/application/modelo/tests/test_selectors.py src/aeat/application/modelo/tests/test_work_addressing.py`
+- `uv run --no-sync pytest src/aeat/application/modelo/tests/test_source_mesh_calculation.py -q`
+- `uv run --no-sync pytest src/aeat/application/modelo/tests/test_actions.py src/aeat/application/modelo/tests/test_source_mesh_calculation.py src/aeat/application/modelo/tests/test_work_addressing.py -q`
 
-Result: lint passed, compile passed, and 46 focused modelo application tests passed.
+Result: lint passed, compile passed, 46 focused modelo application tests passed, 4 source-mesh calculation tests passed, and the combined 30-test calculation application lane passed.

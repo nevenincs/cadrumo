@@ -24,13 +24,11 @@ modelo has an obligation schedule.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
-from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.time import now as _utc_now
 from ...domain.buckets import (
@@ -39,7 +37,6 @@ from ...domain.buckets import (
     BucketEventType,
 )
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -65,29 +62,14 @@ from ...domain.modelos._filing_repository import (
 from ...domain.modelos._protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
-    VerificationReportCatalogueRepositoryProtocol,
     WorkUnitCatalogueRepositoryProtocol,
 )
 from ...domain.modelos._repository import (
     WorkUnitCatalogueRepository,
     upsert_work_unit,
 )
-from ...domain.modelos._verification_report import (
-    VerificationReport,
-)
-from ...domain.modelos._verification_repository import (
-    VerificationReportCatalogueRepository,
-)
 from ...domain.modelos._work_unit import (
     WorkUnitState,
-)
-from ..calculations import (
-    CalculationObservationRepository,
-    CrossPeriodExpectedMemberSet,
-)
-from ..workflow import (
-    WorkflowEngine,
-    WorkflowRunRepository,
 )
 from ..workflow import (
     WorkflowInputMismatchError as WorkflowInputMismatchError,
@@ -154,6 +136,21 @@ from ._calculation_helpers import (
 from ._calculation_helpers import (
     resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit,
 )
+from ._filing_actions import (
+    file_modelo_revision as file_modelo_revision,
+)
+from ._filing_actions import (
+    get_filing_record as get_filing_record,
+)
+from ._filing_actions import (
+    get_verification_report as get_verification_report,
+)
+from ._filing_actions import (
+    list_filing_records as list_filing_records,
+)
+from ._filing_actions import (
+    list_verification_reports as list_verification_reports,
+)
 from ._registry_helpers import (
     assert_revision_content_integrity as _assert_revision_content_integrity,
 )
@@ -168,9 +165,6 @@ from ._registry_helpers import (
 )
 from ._revision_persistence import (
     emit_bucket_event as _emit_bucket_event,
-)
-from ._revision_persistence import (
-    persist_filed_revision,
 )
 from ._verification_actions import (
     _PREDICATE_ADVISORY_WHEN_RATIO_GE as _PREDICATE_ADVISORY_WHEN_RATIO_GE,
@@ -245,17 +239,11 @@ from ._workflow_gate import (
     _RevisionInputsProvider as _RevisionInputsProvider,
 )
 from ._workflow_gate import (
-    build_revision_workflow_engine as _build_revision_workflow_engine,
-)
-from ._workflow_gate import (
-    run_revision_workflow_gate as _run_revision_workflow_gate,
-)
-from ._workflow_gate import (
     workflow_period_for_work_unit,
 )
 
 if TYPE_CHECKING:
-    from ..calculations._observations_repository import IvaWalletDecisionRepository
+    pass
 
 ModeloIvaWalletReconciliationBlocked = _iva_wallet_gate.ModeloIvaWalletReconciliationBlocked
 ModeloIvaWalletReconciliationBlockedError = _iva_wallet_gate.ModeloIvaWalletReconciliationBlockedError
@@ -268,240 +256,6 @@ resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva
 _resolve_m210_rate = _m210_rate.resolve_m210_rate
 
 
-
-
-def file_modelo_revision(
-    calculation_revision_id: str,
-    *,
-    actor: str,
-    workflow_profile: TaxpayerProfile,
-    notes: str | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
-    verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
-    calculation_observation_repository: CalculationObservationRepository | None = None,
-    cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
-    workflow_engine: WorkflowEngine | None = None,
-    workflow_runs_dir: Path | None = None,
-    settings: Settings | None = None,
-    clock: datetime | None = None,
-) -> ModeloRecord:
-    """File a verified-complete revision as the current filed answer.
-
-    State transitions performed atomically (from the caller's
-    perspective — each repository save is sequenced):
-
-    1. Verify the revision is in ``VERIFICADO_COMPLETO`` state.
-    2. Run the workflow gate for the revision's modelo and period.
-    3. Look up any existing current filing record for the same
-       (bucket, modelo, year, period) tuple.
-    4. If a prior current filing exists:
-        * mark the prior filing record ``SUPERSEDED`` with
-          ``superseded_at`` and ``superseded_by_filing_record_id``;
-        * transition the prior filed calculation revision from
-          ``FILED`` to ``FILED_SUPERSEDED``.
-    5. Create the new filing record with status ``CURRENT``.
-    6. Transition the target calculation revision from
-       ``VERIFICADO_COMPLETO`` to ``FILED``.
-    7. Advance the work unit's ``filed_calculation_revision_id``
-       and ``current_filing_record_id`` pointers.
-
-    Args:
-        calculation_revision_id: The id of the verified-complete revision
-            to file.
-        actor: Operator identifier recorded in the filing record and audit
-            trail.
-        workflow_profile: The :class:`TaxpayerProfile` used to evaluate workflow
-            gate conditions.
-        notes: Optional operator-supplied filing notes.
-        work_unit_repository: Optional work-unit catalogue repository override.
-        calculation_repository: Optional calculation-revision catalogue
-            repository override.
-        filing_repository: Optional filing-record catalogue repository
-            override.
-        verification_repository: Optional verification-report catalogue
-            repository override used by the cross-period clean-state proof.
-        bucket_event_repository: Optional bucket-event history repository
-            override.
-        iva_compensation_decision_repository: Optional IVA wallet decision
-            repository override.
-        calculation_observation_repository: Optional calculation-observation
-            repository override used by the cross-period clean-state proof.
-        cross_period_expected_member_sets: Optional expected grupo member
-            rosters used by the cross-period clean-state proof.
-        workflow_engine: Optional workflow engine override for the preflight
-            gate.
-        workflow_runs_dir: Optional workflow runs directory override.
-        settings: Optional settings override.
-        clock: Optional UTC timestamp override.
-
-    Returns:
-        The newly created :class:`ModeloRecord` in ``CURRENT`` status.
-
-    Raises:
-        CalculationRevisionNotFoundError: When the revision id is
-            absent.
-        CalculationRevisionStateError: When the revision is not in
-            ``VERIFICADO_COMPLETO`` state.
-        WorkUnitNotFoundError: When the revision's parent work
-            unit cannot be loaded.
-    """
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
-    vr_repo = verification_repository or VerificationReportCatalogueRepository()
-    obs_repo = calculation_observation_repository or CalculationObservationRepository()
-    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
-    run_repo = WorkflowRunRepository(objects=bv_repo.secure_object_repository)
-
-    revisions = cr_repo.load()
-    target = revisions.get(calculation_revision_id)
-    if target is None:
-        raise CalculationRevisionNotFoundError(
-            translated_message="application.modelo.errors.calculation_revision_not_found",
-            context={"calculation_revision_id": calculation_revision_id},
-        )
-    if target.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
-        raise CalculationRevisionStateError(
-            f"calculation revision {calculation_revision_id!r} is in state "
-            f"{target.state.value!r}; only VERIFICADO_COMPLETO revisions can be filed"
-        )
-
-    work_units = wu_repo.load()
-    work_unit = work_units.get(target.work_unit_id)
-    if work_unit is None:
-        raise WorkUnitNotFoundError(
-            f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}"
-        )
-    iva_compensation_decision = _require_iva_compensation_revision_match(
-        work_unit,
-        target,
-        repository=iva_compensation_decision_repository,
-    )
-    _require_cross_period_clean_state(
-        work_unit,
-        observation_repository=obs_repo,
-        filing_repository=fr_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        iva_compensation_decision=iva_compensation_decision,
-        expected_member_sets=cross_period_expected_member_sets,
-    )
-
-    now = clock or _utc_now()
-    gate_engine = workflow_engine or _build_revision_workflow_engine(
-        revision=target,
-        work_unit=work_unit,
-        profile=workflow_profile,
-        actor=actor.strip(),
-        clock=now,
-        settings=settings,
-    )
-    _run_revision_workflow_gate(
-        engine=gate_engine,
-        profile=workflow_profile,
-        work_unit=work_unit,
-        today=now.date(),
-        runs_dir=workflow_runs_dir,
-        run_repository=run_repo,
-    )
-
-    return persist_filed_revision(
-        target=target,
-        work_unit=work_unit,
-        work_units=work_units,
-        notes=notes,
-        actor=actor,
-        now=now,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        work_unit_repository=wu_repo,
-        bucket_event_repository=bv_repo,
-    )
-
-
-def list_filing_records(
-    *,
-    bucket_id: str | None = None,
-    include_superseded: bool = False,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
-) -> tuple[ModeloRecord, ...]:
-    """List :class:`ModeloRecord` filing records, optionally filtered to a bucket.
-
-    Superseded records are excluded unless ``include_superseded``
-    is true. Results are sorted by ``(bucket_id, filing_year,
-    modelo, period, filed_at)``.
-    """
-    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
-    catalogue = fr_repo.load()
-    records = tuple(
-        record
-        for record in catalogue.values()
-        if (bucket_id is None or record.bucket_id == bucket_id)
-        and (include_superseded or record.status is ModeloRecordStatus.VIGENTE)
-    )
-    return tuple(
-        sorted(
-            records,
-            key=lambda r: (r.bucket_id, r.filing_year, str(r.modelo), r.period, r.filed_at),
-        )
-    )
-
-
-def get_filing_record(
-    filing_record_id: str,
-    *,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
-) -> ModeloRecord:
-    """Return the :class:`ModeloRecord` for the given id, or raise."""
-    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
-    catalogue = fr_repo.load()
-    record = catalogue.get(filing_record_id)
-    if record is None:
-        raise ModeloRecordNotFoundError(
-            translated_message="application.modelo.errors.filing_record_not_found",
-            context={"filing_record_id": filing_record_id},
-        )
-    return record
-
-
-def list_verification_reports(
-    *,
-    calculation_revision_id: str | None = None,
-    verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
-) -> tuple[VerificationReport, ...]:
-    """List :class:`VerificationReport` records, optionally filtered to one calculation revision.
-
-    Results are sorted by ``(calculation_revision_id, run_at)``.
-    """
-    vr_repo = verification_repository or VerificationReportCatalogueRepository()
-    catalogue = vr_repo.load()
-    reports = tuple(
-        r
-        for r in catalogue.values()
-        if calculation_revision_id is None or r.calculation_revision_id == calculation_revision_id
-    )
-    return tuple(sorted(reports, key=lambda r: (r.calculation_revision_id, r.run_at)))
-
-
-def get_verification_report(
-    verification_report_id: str,
-    *,
-    verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
-) -> VerificationReport:
-    """Return one :class:`VerificationReport` by id, or raise."""
-    vr_repo = verification_repository or VerificationReportCatalogueRepository()
-    catalogue = vr_repo.load()
-    report = catalogue.get(verification_report_id)
-    if report is None:
-        raise VerificationReportNotFoundError(
-            translated_message="application.modelo.errors.verification_report_not_found",
-            context={"verification_report_id": verification_report_id},
-        )
-    return report
 
 
 def amend_modelo_revision(

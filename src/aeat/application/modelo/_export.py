@@ -79,6 +79,7 @@ from ._actions import (
     _require_cross_period_clean_state,
     _require_persisted_iva_compensation_decision_matches_revision,
 )
+from ._verification_actions import _cross_period_expected_member_sets_from_profile
 
 #: AEAT-assigned program-identifier code stamped into the optional
 #: ``program_version`` export header. AEAT requires a 4-character
@@ -499,7 +500,10 @@ def export_modelo_revision(
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
         iva_compensation_decision=iva_wallet_decision,
-        expected_member_sets=cross_period_expected_member_sets,
+        expected_member_sets=_cross_period_expected_member_sets_from_profile(
+            workflow_profile,
+            cross_period_expected_member_sets,
+        ),
     )
     iva_wallet_provenance = _iva_wallet_decision_export_provenance(iva_wallet_decision)
 

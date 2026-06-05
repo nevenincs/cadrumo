@@ -181,6 +181,59 @@ def test_secret_scrubbing_handles_colon_assignments() -> None:
     assert "token: <redacted>" in rendered
 
 
+def test_secret_scrubbing_redacts_unquoted_multiword_passphrase_assignment() -> None:
+    """Passphrase assignments should not leak words after the first space."""
+
+    logger, root_logger, handler, stream = _capture_logger_output()
+    previous_root_level = root_logger.level
+    root_logger.setLevel(logging.INFO)
+    try:
+        logger.info(
+            "passphrase=correct horse battery staple status=locked",
+            extra={
+                "cookie": "<redacted>",
+                "bearer_header": "<redacted>",
+                "region": "es",
+            },
+        )
+    finally:
+        root_logger.removeHandler(handler)
+        root_logger.setLevel(previous_root_level)
+
+    rendered = stream.getvalue()
+    assert "correct" not in rendered
+    assert "horse" not in rendered
+    assert "battery" not in rendered
+    assert "staple" not in rendered
+    assert "passphrase=<redacted>" in rendered
+    assert "status=locked" in rendered
+
+
+def test_secret_scrubbing_redacts_quoted_multiword_passphrase_assignment() -> None:
+    """Quoted passphrase assignments should be redacted as one sensitive value."""
+
+    logger, root_logger, handler, stream = _capture_logger_output()
+    previous_root_level = root_logger.level
+    root_logger.setLevel(logging.INFO)
+    try:
+        logger.info(
+            'passphrase="correct horse battery staple"; status=locked',
+            extra={
+                "cookie": "<redacted>",
+                "bearer_header": "<redacted>",
+                "region": "es",
+            },
+        )
+    finally:
+        root_logger.removeHandler(handler)
+        root_logger.setLevel(previous_root_level)
+
+    rendered = stream.getvalue()
+    assert "correct horse battery staple" not in rendered
+    assert "passphrase=<redacted>" in rendered
+    assert "status=locked" in rendered
+
+
 def test_secret_scrubbing_applies_shared_shape_rules_to_plain_text_args() -> None:
     """NIF, URL, and bearer-token shapes should not need local log key hints."""
 
@@ -212,7 +265,7 @@ def test_secret_scrubbing_applies_shared_shape_rules_to_plain_text_args() -> Non
     assert "callback=https://example.test" in rendered
     assert "private/path" not in rendered
     assert "token=secret" not in rendered
-    assert "session=token=<redacted>" in rendered
+    assert "session=token:<redacted>" in rendered
 
 
 def test_secret_scrubbing_preserves_exc_info_for_downstream_handlers() -> None:
