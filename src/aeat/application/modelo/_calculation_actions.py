@@ -64,6 +64,15 @@ _taxpayer_nif_for_bucket = _iva_wallet_gate.taxpayer_nif_for_bucket
 iva_wallet_blocked_message = _iva_wallet_gate.iva_wallet_blocked_message
 resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva_compensation_decision_for_calculation
 
+
+_BUCKET_AGGREGATION_OWNED_SOURCES = frozenset(
+    {
+        "ledger_iva_aggregation",
+        "ledger_renta_expense_aggregation",
+    }
+)
+
+
 def _canonical_decimal_str(value: Decimal) -> str:
     """Stable string form of a Decimal for content-addressing."""
     if value.is_zero():
@@ -423,6 +432,12 @@ def calculate_modelo_revision_from_bucket_aggregation(
     if casilla_inputs is not None:
         casilla_inputs = _normalize_casilla_input_aliases(snapshot.revision, casilla_inputs)
 
+    _reject_caller_overrides_of_source_bindings(
+        revision=snapshot.revision,
+        owned_sources=_BUCKET_AGGREGATION_OWNED_SOURCES,
+        caller_binding_values=binding_values or {},
+        caller_casilla_inputs=casilla_inputs or {},
+    )
     source_resolution = merge_source_resolutions(
         (
             LedgerIvaAggregationSourceResolver(transaction_repository=transaction_repository).resolve(

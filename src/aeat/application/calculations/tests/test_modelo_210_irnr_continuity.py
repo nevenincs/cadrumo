@@ -35,9 +35,9 @@ cuota_integra is base × 0.19, where 0.19 comes from the registry parameter
 table (not the test author). The assertion is that the engine reads the
 parameter and applies it; a hardcoded 19% in the engine would still satisfy
 the assertion but a parameter-table regression (e.g. the rate silently changed
-to 0.00) would fail it. The M210 anti-tautology mutation test for the primary
-(test_modelo_210_phase1.py) proves the engine reads the registry parameter;
-this test's job is cross-renta grounding across two annual groupings.
+to 0.00) would fail it. The M210 convenio-rate mutation test proves the
+engine reads the registry parameter; this test's job is cross-renta grounding
+across two annual groupings.
 
 Registry extension note: the M210 2025 revision was extended to open-ended
 (valid_to removed, period_selector year_from=2025) because the TRLIRNR

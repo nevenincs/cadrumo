@@ -7,9 +7,11 @@ continues to export the operator-facing services from `aeat.application.modelo`.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 from datetime import date, datetime
 from functools import lru_cache
+from pathlib import Path
 
 from ...application.auth import AuthProviderKind, select_provider
 from ...core.config import Settings, load_settings
@@ -32,7 +34,12 @@ from ..workflow import (
     RegistryModeloDraftProtocol,
     WorkflowEngine,
     WorkflowInputMismatchError,
+    WorkflowPurpose,
+    WorkflowResult,
+    WorkflowRunRepository,
+    WorkflowStage,
 )
+from ._action_errors import ModeloWorkflowGateError
 
 
 @lru_cache(maxsize=512)
@@ -227,8 +234,37 @@ def build_revision_workflow_engine(
     )
 
 
+def run_revision_workflow_gate(
+    *,
+    engine: WorkflowEngine,
+    profile: TaxpayerProfile,
+    work_unit: WorkUnit,
+    today: date,
+    runs_dir: Path | None,
+    run_repository: WorkflowRunRepository,
+    resumed_from: str | None = None,
+    purpose: WorkflowPurpose = WorkflowPurpose.FILE,
+) -> WorkflowResult:
+    """Run and persist the workflow gate for one modelo work unit."""
+    result = asyncio.run(
+        engine.run_for_period(
+            profile,
+            work_unit.modelo,
+            workflow_period_for_work_unit(work_unit),
+            today=today,
+            resumed_from=resumed_from,
+            purpose=purpose,
+        )
+    )
+    run_repository.save(result, runs_dir=runs_dir)
+    if result.final_stage is WorkflowStage.ABORTED:
+        raise ModeloWorkflowGateError(result)
+    return result
+
+
 __all__ = [
     "_RevisionInputsProvider",
     "build_revision_workflow_engine",
+    "run_revision_workflow_gate",
     "workflow_period_for_work_unit",
 ]

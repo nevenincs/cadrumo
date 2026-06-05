@@ -166,7 +166,7 @@ def test_declarations_page_shape_context_redacts_url_query_and_input_values() ->
     context = _declarations_page_shape_context(
         html,
         landing_url=f"{_DECLARATIONS_LISTING_URL}?token=QUERY-CANARY",
-        phase="post_buscar",
+        stage="post_buscar",
         modelo="303",
         ejercicio=2026,
     )

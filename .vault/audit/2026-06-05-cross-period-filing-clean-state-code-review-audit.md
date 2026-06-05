@@ -31,3 +31,7 @@ During the S32-S35 validation pass, the Modelo action decomposition had moved ac
 ## CROSS-PERIOD-005 | INFO | Current S31 and W04.P10 review found no blocking findings
 
 Reviewed the current justificante-grade clean-state gate, repair diagnostics, Modelo action reexports, and focused tests after the S31 and W04.P10 changes. No critical, high, or medium findings were found locally. The focused lint gate, package import contract check, plan check, and combined clean-state pytest gate passed. A read-only review subagent was started but did not finish within the verification window and was shut down without findings being returned.
+
+## CROSS-PERIOD-006 | INFO | Final doctor failure is outside this feature
+
+The W04.P11 gate refreshed the cross-period feature index and removed this plan's generated annotation warning. `vaultspec-core doctor` still exits non-zero because `live-censo-calendar-reconciliation` has a plan without ADR or research references, plus unrelated warnings for `codebase-monolith-decomposition`. No remaining doctor warning or error names `cross-period-filing-clean-state`.

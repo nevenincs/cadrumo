@@ -319,7 +319,7 @@ async def _capture_iva_compensation_history_with_session(
             if progress_context is not None:
                 progress_context.update(
                     {
-                        "phase": "walk_declarations_register",
+                        "stage": "walk_declarations_register",
                         "modelo": "303",
                         "ejercicio": year,
                     }
@@ -329,7 +329,7 @@ async def _capture_iva_compensation_history_with_session(
                 if progress_context is not None:
                     progress_context.update(
                         {
-                            "phase": "capture_declaration_observation",
+                            "stage": "capture_declaration_observation",
                             "modelo": declaration.modelo,
                             "ejercicio": declaration.ejercicio,
                             "period": declaration.period,
@@ -792,7 +792,7 @@ async def _capture_iva_compensation_wallet_with_session(
     if progress_context is not None:
         progress_context.update(
             {
-                "phase": "fetch_iva_compensation_wallet",
+                "stage": "fetch_iva_compensation_wallet",
                 "target_year": target_year,
                 "target_period": target_period,
             }
@@ -888,7 +888,7 @@ async def _capture_iva_remote_state_for_active_storage(
 
         try:
             filed_progress: dict[str, object] = {
-                "phase": "not_started",
+                "stage": "not_started",
                 "modelo": "303",
                 "year_from": year_from,
                 "year_to": year_to,
@@ -915,7 +915,7 @@ async def _capture_iva_remote_state_for_active_storage(
 
         try:
             wallet_progress: dict[str, object] = {
-                "phase": "not_started",
+                "stage": "not_started",
                 "target_year": target_year,
                 "target_period": target_period,
             }
@@ -972,7 +972,7 @@ async def _capture_iva_compensation_history_by_year_with_session(
         if progress_context is not None:
             progress_context.update(
                 {
-                    "phase": "capture_year",
+                    "stage": "capture_year",
                     "modelo": "303",
                     "ejercicio": year,
                     "year_from": year_from,
