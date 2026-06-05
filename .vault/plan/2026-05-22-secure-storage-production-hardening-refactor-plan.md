@@ -29,16 +29,6 @@ related:
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 <!-- RETIRED: S422, S423 -->
 
 # `secure-storage-production-hardening` `refactor` plan
@@ -564,7 +554,7 @@ Current register count: `301` production candidate files.
 | `AFR-273` | `src/aeat/entrypoints/cli/_app_live.py` | `secure-object, active-profile, manifest-bucket, plain-file` | `runtime-default` | `W12.P21.S83` | closed |
 | `AFR-274` | `src/aeat/entrypoints/cli/_bootstrap_exempt.py` | `master-key` | `runtime-default` | `W12.P20.S78` | closed |
 | `AFR-275` | `src/aeat/entrypoints/cli/_common.py` | `active-profile, manifest-bucket, sql-route` | `manifest-discovery` | `W12.P22.S90` | closed |
-| `AFR-276` | `src/aeat/entrypoints/cli/_config/__init__.py` | `secure-object, active-profile, manifest-bucket, master-key, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-276` | `src/aeat/entrypoints/cli/_config/__init__.py` | `secure-object, active-profile, manifest-bucket, master-key, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-277` | `src/aeat/entrypoints/cli/_config/_google.py` | `secure-object, active-profile, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-278` | `src/aeat/entrypoints/cli/_config/_profile_census.py` | `active-profile, manifest-bucket` | `bootstrap-custody` | `W12.P22.S89` | pending |
 | `AFR-279` | `src/aeat/entrypoints/cli/_errors.py` | `master-key` | `runtime-default` | `W12.P20.S78` | closed |
