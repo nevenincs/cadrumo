@@ -182,6 +182,7 @@ def test_recovery_verification_error_round_trips_through_build_error_envelope() 
 
     assert envelope.code == "AUTH_STORAGE_BUCKET_RECOVERY_VERIFICATION"
     assert envelope.category == "AUTH"
+    assert envelope.suggestion == "aeat config recover --recovery-key <WORDS>"
     assert not envelope.retryable
 
 
