@@ -17,7 +17,7 @@ _DEFAULT_COMMAND_LINE_LIMIT = 180
 
 _LEGACY_MODULE_LINE_BUDGETS = {
     "_app_live.py": 1882,
-    "_config/__init__.py": 2705,
+    "_config/__init__.py": 2500,
     "_config/_google.py": 1399,
     "_ledger.py": 3314,
     "_ledger_payloads.py": 918,

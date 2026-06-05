@@ -55,7 +55,9 @@ def _active_profile_pointer() -> object:
     return pointer
 
 
-@scopes_app.command("list", help=tr("cli.config.auth.apoderado.scopes.list_help", default="List accepted apoderado scopes"))
+@scopes_app.command(
+    "list", help=tr("cli.config.auth.apoderado.scopes.list_help", default="List accepted apoderado scopes")
+)
 def apoderado_scopes_list(
     ctx: typer.Context,
     output_language: OutputLanguage | None = typer.Option(
