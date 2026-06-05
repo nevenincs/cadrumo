@@ -29,8 +29,7 @@ related:
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
 ---
 
-
-<!-- RETIRED: S422, S423 -->
+Retired steps: `S422`, `S423`.
 
 # `secure-storage-production-hardening` `refactor` plan
 
@@ -1016,16 +1015,16 @@ Ensure every secure-storage audit observation is inventoried, mapped to an ownin
 
 Extract all open audit observations and assign each to an existing step, a new step, or an explicit disposition.
 
-- [ ] `W16.P35.S417` - Inventory secure-storage audit artifacts and extract each open observation, blocker, residual risk, review follow-up, and approved exception into a single observation pool; `.vault/audit`.
-- [ ] `W16.P35.S418` - Map every observation-pool item to an existing Step id, newly required Step id, or explicit out-of-scope disposition; `.vault/plan`.
+- [x] `W16.P35.S417` - Inventory secure-storage audit artifacts and extract each open observation, blocker, residual risk, review follow-up, and approved exception into a single observation pool; `.vault/audit`.
+- [x] `W16.P35.S418` - Map every observation-pool item to an existing Step id, newly required Step id, or explicit out-of-scope disposition; `.vault/plan`.
 
 ### Phase `W16.P36` - observation adoption and closeout
 
 Persist remaining owners, add missing executable rows, and enforce review-time owner linkage for future secure-storage findings.
 
-- [ ] `W16.P36.S419` - Persist observation-pool closeout with remaining owners, deferrals, and review signoff; `.vault/audit`.
+- [x] `W16.P36.S419` - Persist observation-pool closeout with remaining owners, deferrals, and review signoff; `.vault/audit`.
 - [x] `W16.P36.S420` - Add missing plan rows or wave assignments for secure-storage observations that lack an existing executable owner; `.vault/plan`.
-- [ ] `W16.P36.S421` - Add a recurring guard that future secure-storage audit findings cite an owning plan row before execution continues; `.vault/audit`.
+- [x] `W16.P36.S421` - Add a recurring guard that future secure-storage audit findings cite an owning plan row before execution continues; `.vault/audit`.
 
 ## Wave `W17` - ledger side-store migration follow-up
 
@@ -1054,3 +1053,38 @@ Assign one executable closeout row to each pending modelo projection, selector, 
 - [x] `W18.P38.S447` - Close AFR-299 for src/aeat/application/modelo/_iva_wallet_seed.py with signals active-profile, manifest-bucket, plain-file, target manifest-discovery, and owner W18.P38.S447; `src/aeat/application/modelo/_iva_wallet_seed.py`.
 - [x] `W18.P38.S448` - Close AFR-300 for src/aeat/entrypoints/cli/_modelo_projection_cli.py with signals active-profile, plain-file, target manifest-discovery, and owner W18.P38.S448; `src/aeat/entrypoints/cli/_modelo_projection_cli.py`.
 - [x] `W18.P38.S449` - Close AFR-301 for src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py with signals active-profile, manifest-bucket, plain-file, target manifest-discovery, and owner W18.P38.S449; `src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py`.
+
+## Wave `W19` - secure-storage guard verification repair
+
+Keep the secure-storage guard tests aligned with current split-module paths so runtime rollout verification remains executable after concurrent refactors.
+
+### Phase `W19.P39` - guard inventory path alignment
+
+Refresh secure-storage guard approvals and production-write inventory paths after test and application split-module moves, without weakening the guard assertions.
+
+- [x] `W19.P39.S450` - Refresh secure-storage guard approval paths and production-write inventory after split-module moves; `src/aeat/adapters/persistence/storage/tests/test_hardening_convention_guards.py; src/aeat/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`.
+
+## Wave `W20` - observation-pool adopted follow-ups
+
+Adopt the remaining W16 observation-pool work that is still real after the broad runtime rollout: recovery API exposure, passphrase and redaction handling, residual environment/test exceptions, filing localization, provenance path privacy, and central CLI redaction enrollment. These rows are follow-up work, not W16 blockers, because W16's job is to make every observation owned.
+
+### Phase `W20.P40` - custody API and secret redaction follow-up
+
+Close the oldest custody and passphrase observations with current command-surface evidence and centralized redaction behavior.
+
+- [ ] `W20.P40.S451` - Verify recovery, lock, unlock, rekey, recover, show-recovery, and verify-recovery command/API exposure against the accepted custody architecture, remove stale recovery guidance, and add missing rows or ADR coverage if an accepted operation remains absent; `src/aeat/entrypoints/cli/_config; src/aeat/adapters/persistence/storage/master_key`.
+- [ ] `W20.P40.S452` - Harden passphrase environment bootstrap and central redaction handling so passphrase material is one-shot where feasible, logs/prints stay centrally redacted, and remaining env-based custody tests have explicit Settings-backed justification; `src/aeat/core; src/aeat/adapters/persistence/storage/master_key; src/aeat/entrypoints/cli`.
+
+### Phase `W20.P41` - convention and provenance privacy follow-up
+
+Retire residual convention exceptions or make them explicit, localized, and privacy-safe.
+
+- [ ] `W20.P41.S453` - Retire or narrow residual direct environment, monkeypatch, explicit-route, and literal filesystem-layout allowances from the secure-storage guard inventories, preserving only tests whose direct subject is the centralized Settings or low-level SQL contract; `src/aeat/tests; src/aeat/adapters/persistence/storage/tests; .vault/audit`.
+- [ ] `W20.P41.S454` - Localize remaining filing/modelo builder and calculation error messages through `tr()` and `python -m aeat.locales`, preserving AEAT core exception hierarchy and registry-backed error codes; `src/aeat/application/filing; src/aeat/application/modelo; src/aeat/locales`.
+- [ ] `W20.P41.S455` - Review inbound parser and provenance path handling for raw PDF paths, byte-stream source labels, `source_pdf_path`, financial provenance, justificante provenance, PDF dispatch cache keys, and sanitizer hash disclosure; redact or normalize path-bearing data where it can reach persisted state, logs, or user-facing errors; `src/aeat/adapters/inbound; src/aeat/application`.
+
+### Phase `W20.P42` - central redaction enrollment proof
+
+Prove CLI and application output flows use the centralized redaction boundary rather than ad hoc logging or print behavior.
+
+- [ ] `W20.P42.S456` - Audit and harden centralized log/print/output redaction enrollment across CLI, diagnostics, repair, live, profile, and remote-mirror surfaces, adding guard coverage for any bypass found; `src/aeat/core; src/aeat/entrypoints/cli; src/aeat/application`.
