@@ -115,10 +115,22 @@ Reviewed the W03.P11 `S123` and `S124` overview root decomposition. Calendar DTO
 
 Verification covers Ruff, compileall, 147 focused overview application tests, 49 focused overview CLI tests, and 26 focused core logging tests. The verification surfaced and repaired a logging-redaction regression where placeholder-bearing sensitive assignments removed the placeholder but left `LogRecord.args` populated. Residual risk remains outside this slice: `src/aeat/application/overview/tests/test_calendar.py` is still oversized and should be handled in a test-surface decomposition row.
 
-## REVIEW-016 | LOW | No blocking findings in config budget and modelo facade closure
+## REVIEW-016 | LOW | No blocking findings in modelo internal import cleanup
+
+Reviewed the W03.P11 `S141` modelo import-boundary cleanup. The public modelo facade imports focused action owners directly, and internal helpers now use focused modules instead of reaching through `_actions.py`. `_actions.py` remains as a legacy compatibility facade for tests and private callers, but application-internal code no longer depends on it.
+
+Verification covers Ruff, compileall, direct private-import scan, 26 focused history/selector/work-addressing/source-mesh tests, 30 filing-flow tests, 15 export tests, 36 verification-substance tests, and 8 architecture-boundary tests. `S142` remains open because its global size-budget check currently depends on concurrent uncommitted config/budget inventory work.
+
+## REVIEW-017 | LOW | No blocking findings in config budget and modelo facade closure
 
 Reviewed the combined W02.P10 `S143` through `S146` and W03.P11 `S141` through `S142` closure. Config custody and profile-censo registrars now delegate to focused command-registration helpers while preserving root custody verbs and keeping policy in application services. The retired `config profile switch` surface is removed from command registration, payload schemas, locale help, and lifecycle tests in favor of root `config unlock`. The hard size-budget inventory no longer carries stale modelo allowances or deleted tracked paths.
 
 Reviewed the modelo facade cleanup after focused modules became the implementation owners. `aeat.application.modelo` now imports public symbols directly from calculation, amendment, external import, filing, verification, and IVA-wallet modules; `_actions.py` remains only as a compatibility facade. Production scans across entrypoints, adapters, domain, and non-test modelo modules no longer find `_actions` reach-through or stale `_actions` documentation references.
 
 Verification covers Ruff, compileall, locale audit, public facade smoke imports, private-submodule scans, 142 focused modelo application tests, 121 focused modelo CLI tests, 74 config/profile CLI tests, 10 architecture-boundary and codebase size-budget tests, and plan validation with only the known PLAN022 monotonic-order warning.
+
+## REVIEW-018 | LOW | No blocking findings in residual test-surface split and size guard closure
+
+Reviewed the W05.P12 `S147` through `S149` residual test-surface closure. The overview calendar taxpayer-model/entity-type/no-window regression group now lives in a focused calendar test module, while the original calendar test module retains shared fixtures and core calendar behavior. The declaracion parser synthetic-fixture regression group now lives in a focused parser test module, while the original parser boundary module retains boundary tests and PDF helper functions used by earlier tests.
+
+Verification covers Ruff, compileall, 61 overview calendar tests, 102 declaracion parser tests, the 2-test hard codebase size-budget guard, and plan validation with only the known PLAN022 monotonic-order warning. The split tests preserve real fixture and real calendar behavior; no mocks, skips, xfails, or duplicated production logic were introduced.

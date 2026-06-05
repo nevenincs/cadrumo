@@ -41,6 +41,7 @@ from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import ProfileId
 from ...core.logging import get_logger
 from ...core.time import now
+from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.user_profile._values import UserProfileFact, UserProfileRecord
 from ..live._censo import (
     CensoSnapshot,
@@ -154,12 +155,14 @@ class CensoSyncService:
         bucket_id: str,
         snapshots: CensoSnapshotService | None = None,
         profiles: UserProfileLifecycleRepository | None = None,
+        events: BucketEventHistoryRepositoryProtocol | None = None,
     ) -> None:
         self._bucket_id = bucket_id.strip()
         if not self._bucket_id:
             raise CensoSyncError(translated_message="errors.censo.bucket_id_blank")
         self._snapshots = snapshots or CensoSnapshotService(bucket_id=self._bucket_id)
         self._profiles = profiles or UserProfileLifecycleRepository(bucket_id=self._bucket_id)
+        self._events = events
 
     @property
     def bucket_id(self) -> str:
@@ -185,12 +188,18 @@ class CensoSyncService:
                 translated_message="errors.censo.sede_no_censo",
                 context={"profile_id": profile_id},
             )
-        return self._snapshots.capture(
+        snapshot = self._snapshots.capture(
             profile_id=profile_id,
             captured_at=now(),
             source_url=source_url,
             censo_facts=facts,
         )
+        self._emit_censo_event(
+            event_type_value="profile.censo.refreshed",
+            profile_id=profile_id,
+            snapshot_id=snapshot.snapshot_id,
+        )
+        return snapshot
 
     async def refresh_censo_from_sede(
         self,
@@ -237,12 +246,18 @@ class CensoSyncService:
                 translated_message="errors.censo.sede_g313_no_censo",
                 context={"profile_id": profile_id},
             )
-        return self._snapshots.capture(
+        snapshot = self._snapshots.capture(
             profile_id=profile_id,
             captured_at=now(),
             source_url=G313_LAUNCHER_URL,
             censo_facts=facts,
         )
+        self._emit_censo_event(
+            event_type_value="profile.censo.refreshed",
+            profile_id=profile_id,
+            snapshot_id=snapshot.snapshot_id,
+        )
+        return snapshot
 
     def show_censo(
         self,
@@ -310,9 +325,9 @@ class CensoSyncService:
         wizard) are preserved untouched so operator-entered values stay
         addressable for the compare verb.
 
-        Emits no events itself; the caller (CLI handler) is responsible
-        for surfacing ``CENSO_APPLIED`` on the bucket-event-history
-        catalogue so the stale-cascade walker can react.
+        Emits ``CENSO_APPLIED`` on the bucket-event-history catalogue
+        itself so the stale-cascade walker can react without the CLI
+        owning event-enrolment policy.
 
         Raises :exc:`CensoApplyConflictError` when the profile is
         absent — there is nothing to stamp facts onto.
@@ -356,7 +371,7 @@ class CensoSyncService:
                 unchanged.append(path)
             else:
                 written.append(path)
-        return CensoApplyResult(
+        result = CensoApplyResult(
             snapshot_id=snapshot.snapshot_id,
             profile_id=profile_id.strip(),
             written_paths=tuple(written),
@@ -364,6 +379,12 @@ class CensoSyncService:
             derived_paths=tuple(sorted(fact.path for fact in derived_facts)),
             seeded_home_office_categories=seeded,
         )
+        self._emit_censo_event(
+            event_type_value="profile.censo.applied",
+            profile_id=profile_id,
+            snapshot_id=result.snapshot_id,
+        )
+        return result
 
     def _seed_home_office_usage_ratios_from_snapshot(
         self,
@@ -422,6 +443,46 @@ class CensoSyncService:
         if snapshot is None:
             return None
         return _raw_afectacion_ratio(snapshot.censo_facts)
+
+    def _emit_censo_event(self, *, event_type_value: str, profile_id: str, snapshot_id: str) -> None:
+        if self._events is None:
+            return
+        from ...domain.buckets import (
+            BucketEvent,
+            BucketEventObjectType,
+            BucketEventType,
+            append_bucket_event,
+            derive_bucket_event_id,
+        )
+
+        event_type = BucketEventType(event_type_value)
+        occurred_at = now()
+        payload = {"profile_id": profile_id, "snapshot_id": snapshot_id}
+        event_id = derive_bucket_event_id(
+            bucket_id=self._bucket_id,
+            event_type=event_type,
+            occurred_at=occurred_at,
+            actor="operator",
+            object_type=BucketEventObjectType.PROFILE,
+            object_id=profile_id,
+            payload=payload,
+        )
+        self._events.save(
+            append_bucket_event(
+                self._events.load(),
+                BucketEvent(
+                    event_id=event_id,
+                    bucket_id=self._bucket_id,
+                    event_type=event_type,
+                    occurred_at=occurred_at,
+                    actor="operator",
+                    object_type=BucketEventObjectType.PROFILE,
+                    object_id=profile_id,
+                    payload=payload,
+                    payload_version=1,
+                ),
+            ),
+        )
 
 
 def _raw_afectacion_ratio(censo_facts: Mapping[str, str]) -> Decimal | None:
@@ -524,4 +585,5 @@ __all__ = [
     "CensoFieldComparison",
     "CensoProfileComparison",
     "CensoSyncService",
+    "build_censo_sync_service",
 ]

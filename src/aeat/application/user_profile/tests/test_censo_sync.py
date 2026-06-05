@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_runtime_profile
@@ -29,6 +30,7 @@ from .. import (
     CensoSyncError,
     CensoSyncService,
     UserProfileLifecycleRepository,
+    build_censo_sync_service,
 )
 from .._projections import projection_for_taxpayer
 
@@ -85,6 +87,23 @@ def test_refresh_captures_active_snapshot(secure_store: SecureObjectRepository) 
 
     assert snapshot.state is SnapshotLifecycleState.ACTIVE
     assert snapshot.censo_facts["censo.establecimiento_type"] == "propio"
+
+
+def test_refresh_with_production_factory_enrolls_censo_event(secure_store: SecureObjectRepository) -> None:
+    service = build_censo_sync_service(bucket_id="b1")
+
+    snapshot = service.refresh_censo(
+        profile_id="operator",
+        source_url=_G313,
+        fact_source=_facts,
+    )
+
+    catalogue = BucketEventHistoryRepository(objects=secure_store).load()
+    events = catalogue.for_bucket("b1", event_types=(BucketEventType.CENSO_REFRESHED,))
+    assert len(events) == 1
+    assert events[0].bucket_id == "b1"
+    assert events[0].object_id == "operator"
+    assert events[0].payload["snapshot_id"] == snapshot.snapshot_id
 
 
 def test_refresh_refuses_when_sede_returns_no_facts(secure_store: SecureObjectRepository) -> None:

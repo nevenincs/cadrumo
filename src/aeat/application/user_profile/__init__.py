@@ -56,6 +56,7 @@ if TYPE_CHECKING:
         CensoFieldComparison,
         CensoProfileComparison,
         CensoSyncService,
+        build_censo_sync_service,
     )
     from ._commands import (
         DuplicateProfileCommand,
@@ -175,6 +176,7 @@ def __getattr__(name: str):
         "CensoFieldComparison",
         "CensoProfileComparison",
         "CensoSyncService",
+        "build_censo_sync_service",
     ):
         from . import _censo_sync
 
@@ -312,6 +314,7 @@ __all__ = [
     "UserProfileRecord",
     "UserProfileSnapshotRepository",
     "UserProfileStatus",
+    "build_censo_sync_service",
     "build_lifecycle_service",
     "delete_profile_with_lifecycle_span",
     "deserialize_profile_bundle",

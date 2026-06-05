@@ -131,6 +131,7 @@ Close any CLI roots still above the hard module budget after first-pass registra
 - [x] `W02.P10.S144` - split residual profile censo command registration into focused transport helpers without moving censo policy into CLI; `src/aeat/entrypoints/cli/_config/_profile_censo.py src/aeat/entrypoints/cli/_config/tests`.
 - [x] `W02.P10.S145` - repair hard size-budget inventory for deleted or moved tracked paths and shrunken modelo compatibility modules; `src/aeat/tests/test_codebase_size_budgets.py src/aeat/application/modelo src/aeat/entrypoints/cli/tests`.
 - [x] `W02.P10.S146` - verify residual config callable splits and hard size-budget inventory no longer fail on stale paths or config registrar callables; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests src/aeat/tests/test_codebase_size_budgets.py`.
+- [x] `W02.P10.S150` - move profile censo bucket-event emission from config CLI into the user-profile application service; `src/aeat/application/user_profile/_censo_sync.py src/aeat/application/user_profile/__init__.py src/aeat/entrypoints/cli/_config/_profile_censo.py src/aeat/entrypoints/cli/tests/test_profile_censo_verbs.py`.
 
 ## Wave `W03` - application and domain monolith decomposition
 
@@ -220,8 +221,8 @@ Close core over-limit modules and replace shrinking legacy budgets with hard cod
 
 Decompose oversized core modules, then enforce hard codebase-wide module and callable budgets with no silent legacy growth.
 
-- [ ] `W04.P09.S83` - decompose core config module by settings source and validation concern behind the core config facade; `src/aeat/core/config.py src/aeat/core/*.py`.
-- [ ] `W04.P09.S84` - verify core config behavior and facade imports after decomposition; `src/aeat/core/tests src/aeat/tests`.
+- [x] `W04.P09.S83` - decompose core config module by settings source and validation concern behind the core config facade; `src/aeat/core/config.py src/aeat/core/*.py`.
+- [x] `W04.P09.S84` - verify core config behavior and facade imports after decomposition; `src/aeat/core/tests src/aeat/tests`.
 - [ ] `W04.P09.S85` - decompose core error registry domain module behind the core errors facade; `src/aeat/core/errors/registry/_domain.py src/aeat/core/errors/registry/*.py`.
 - [ ] `W04.P09.S86` - verify core domain error registry behavior and facade imports after decomposition; `src/aeat/core/errors/tests src/aeat/core/tests`.
 - [ ] `W04.P09.S87` - decompose core error registry application module behind the core errors facade; `src/aeat/core/errors/registry/_application.py src/aeat/core/errors/registry/*.py`.
@@ -244,6 +245,9 @@ Decompose oversized real-behavior tests and support generators by behavioral sur
 - [ ] `W05.P12.S127` - split oversized inbound and outbound adapter tests by external contract surface; `src/aeat/adapters/inbound/declaracion/tests/test_verification_chain.py src/aeat/adapters/inbound/declaracion/tests/test_parser_boundary.py src/aeat/adapters/outbound/aeat/sede/tests/test_declarations.py src/aeat/adapters/outbound/aeat/auth/tests/test_authenticator.py src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects.py src/aeat/adapters/persistence/storage/tests/test_runtime_migrated_repositories.py`.
 - [ ] `W05.P12.S128` - split oversized registry tests by schema and referential-integrity concern; `src/aeat/domain/calculations/registry/tests/test_registry_schema.py src/aeat/domain/calculations/registry/tests/test_referential_integrity.py src/aeat/domain/calculations/registry/tests`.
 - [ ] `W05.P12.S129` - verify split test and fixture surfaces plus hard size-budget inventory; `src/aeat/tests/test_codebase_size_budgets.py src/aeat/tests/fixtures/justificantes src/aeat/application src/aeat/adapters src/aeat/domain/calculations/registry/tests`.
+- [x] `W05.P12.S147` - split the current overview calendar taxpayer-model and entity-type regression group into a focused test module without duplicating calendar business logic; `src/aeat/application/overview/tests/test_calendar.py src/aeat/application/overview/tests/test_calendar_taxpayer_model.py`.
+- [x] `W05.P12.S148` - split the current declaracion parser synthetic-fixture regression group into a focused test module without duplicating parser business logic; `src/aeat/adapters/inbound/declaracion/tests/test_parser_boundary.py src/aeat/adapters/inbound/declaracion/tests/test_parser_synthetic_fixtures.py`.
+- [x] `W05.P12.S149` - verify the current overview/parser split surfaces and hard size-budget guard after residual test decomposition; `src/aeat/application/overview/tests src/aeat/adapters/inbound/declaracion/tests src/aeat/tests/test_codebase_size_budgets.py`.
 
 ### Phase `W05.P13` - residual hard guard closure
 

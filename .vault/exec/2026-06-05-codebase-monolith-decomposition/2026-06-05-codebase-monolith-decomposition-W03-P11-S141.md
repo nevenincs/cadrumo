@@ -8,24 +8,20 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
 ---
 
-# W03.P11.S141 Modelo Internal Facade Cleanup
+# W03.P11.S141 Modelo Internal Import Cleanup
 
-## Scope
-
-Remove residual modelo application-internal imports from the `_actions` compatibility facade where focused backend modules already own the implementation.
+Scope: remove residual modelo application-internal reach-through to the `_actions` compatibility facade where focused backend modules already own the implementation.
 
 ## Description
 
-- Redirect `WorkUnitNotFoundError` imports to `_action_errors`.
-- Redirect work lifecycle imports to `_work_lifecycle`.
-- Redirect calculation revision imports to `_calculation_actions`.
-- Redirect IVA wallet and clean-state helpers to their owning backend modules.
-- Preserve `_actions` as a compatibility export facade for package consumers and existing tests.
+- Repointed the public modelo facade to focused action modules for calculation, filing, amendment, external import, verification, and IVA wallet exports.
+- Repointed internal modelo helpers away from `_actions.py` and toward focused owners such as `_calculation_actions.py`, `_work_lifecycle.py`, `_action_errors.py`, and `_registry_resources.py`.
+- Preserved `_actions.py` as a compatibility facade for legacy private test imports while removing application-internal reach-through.
 
 ## Outcome
 
-Modelo sibling services now call owning backend modules directly instead of using `_actions` as an internal dependency hub.
+`rg` found no remaining `_actions` imports inside `src/aeat/application/modelo`. Public package exports continue to resolve through `aeat.application.modelo`.
 
 ## Notes
 
-The public package facade and `_actions` compatibility exports remain intentionally available.
+Verification passed for Ruff, compileall, 26 focused history/selector/work-addressing/source-mesh tests, 30 filing-flow tests, 15 export tests, 36 verification-substance tests, and 8 architecture-boundary tests. S142 remains open because the global size-budget gate currently depends on concurrent uncommitted config/budget WIP.
