@@ -494,22 +494,22 @@ Current register count: `301` production candidate files.
 | `AFR-213` | `src/aeat/diagnostics/profile.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-214` | `src/aeat/domain/_secure_storage_runtime.py` | `secure-object, runtime, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S84` | closed |
 | `AFR-215` | `src/aeat/domain/attachments/_models.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
-| `AFR-216` | `src/aeat/domain/auth/apoderamientos/_catalogue.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
-| `AFR-217` | `src/aeat/domain/buckets/__init__.py` | `secure-object` | `runtime-default` | `W12.P21.S83` | pending |
-| `AFR-218` | `src/aeat/domain/buckets/_event.py` | `manifest-bucket, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
-| `AFR-219` | `src/aeat/domain/buckets/_event_repository.py` | `secure-object, runtime, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S83` | pending |
-| `AFR-220` | `src/aeat/domain/calculations/registry/_bindings.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
-| `AFR-221` | `src/aeat/domain/calculations/registry/_export_parse.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
-| `AFR-222` | `src/aeat/domain/calculations/registry/_formula_runtime.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
-| `AFR-223` | `src/aeat/domain/calculations/registry/_legal.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
-| `AFR-224` | `src/aeat/domain/calculations/registry/_loader.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
-| `AFR-225` | `src/aeat/domain/calculations/registry/_parity_tapes.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
-| `AFR-226` | `src/aeat/domain/calculations/registry/_record_design.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
-| `AFR-227` | `src/aeat/domain/calculations/registry/_schema.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
-| `AFR-228` | `src/aeat/domain/calculations/registry/_snapshot.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
-| `AFR-229` | `src/aeat/domain/calculations/registry/_sources.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
-| `AFR-230` | `src/aeat/domain/calculations/registry/_validate_evidence.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
-| `AFR-231` | `src/aeat/domain/calculations/registry/_workbook_parity.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-216` | `src/aeat/domain/auth/apoderamientos/_catalogue.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
+| `AFR-217` | `src/aeat/domain/buckets/__init__.py` | `secure-object` | `runtime-default` | `W12.P21.S83` | closed |
+| `AFR-218` | `src/aeat/domain/buckets/_event.py` | `manifest-bucket, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
+| `AFR-219` | `src/aeat/domain/buckets/_event_repository.py` | `secure-object, runtime, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S83` | closed |
+| `AFR-220` | `src/aeat/domain/calculations/registry/_bindings.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
+| `AFR-221` | `src/aeat/domain/calculations/registry/_export_parse.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
+| `AFR-222` | `src/aeat/domain/calculations/registry/_formula_runtime.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
+| `AFR-223` | `src/aeat/domain/calculations/registry/_legal.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
+| `AFR-224` | `src/aeat/domain/calculations/registry/_loader.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
+| `AFR-225` | `src/aeat/domain/calculations/registry/_parity_tapes.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
+| `AFR-226` | `src/aeat/domain/calculations/registry/_record_design.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
+| `AFR-227` | `src/aeat/domain/calculations/registry/_schema.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
+| `AFR-228` | `src/aeat/domain/calculations/registry/_snapshot.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
+| `AFR-229` | `src/aeat/domain/calculations/registry/_sources.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
+| `AFR-230` | `src/aeat/domain/calculations/registry/_validate_evidence.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
+| `AFR-231` | `src/aeat/domain/calculations/registry/_workbook_parity.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-232` | `src/aeat/domain/categories/_registry.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-233` | `src/aeat/domain/deadlines/_engine.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-234` | `src/aeat/domain/deadlines/_festivos.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
