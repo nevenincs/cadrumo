@@ -1,4 +1,4 @@
-"""Offline registry-grounded modelo-export parity gate (accepted contract).
+"""Offline registry-grounded modelo-export parity gate.
 
 The export workbook must mirror the official AEAT casilla structure. This gate
 asserts, purely offline (no Sheets / network), that the plan produced by

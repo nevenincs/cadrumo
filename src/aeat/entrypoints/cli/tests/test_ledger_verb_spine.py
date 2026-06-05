@@ -79,8 +79,8 @@ def test_ledger_link_check_preflight_sit_at_noun_group_root() -> None:
     )
 
 
-# accepted contract: count-side companion to the set-equality roster gate above.
-# The accepted contract canonical spine for `aeat app ledger` is the CRUD spine (add / view /
+# Count-side companion to the set-equality roster gate above.
+# The canonical spine for `aeat app ledger` is the CRUD spine (add / view /
 # list / update / remove / archive / reset) plus the ratified orthogonal axes
 # (link / check / preflight) plus the ratified workflow axes (allocate / attach
 # / categories / classify / doclink / export / history / import / merge /
@@ -99,7 +99,7 @@ _EXPECTED_LEDGER_VERB_COUNT: int = (
 
 
 def test_ledger_verb_count_matches_canonical_spine() -> None:
-    """The mounted `aeat app ledger` verb count matches the accepted contract canonical
+    """The mounted `aeat app ledger` verb count matches the canonical
     spine (CRUD + ratified orthogonal axes + ratified workflow axes).
 
     Count-side companion to :func:`test_ledger_verb_roster_matches_canonical_spine`.
@@ -136,7 +136,7 @@ def test_ledger_orthogonal_verb_help_states_local_only(
     )
 
 
-# accepted contract: help-text enumeration gate. The `aeat app ledger --help`
+# Help-text enumeration gate. The `aeat app ledger --help`
 # and `aeat app modelo --help` surfaces are the operator's first encounter
 # with the noun-group's verb tree; if a canonical verb is mounted but
 # omitted from help (e.g. by a missing tr() entry), the operator cannot
@@ -216,8 +216,8 @@ def test_modelo_top_level_verb_roster_matches_canonical_spine() -> None:
     assert not extras, f"modelo verbs added without test update: {sorted(extras)}"
 
 
-# accepted contract — bucket_app maintenance-verb pre-landing state pinned.
-# Per accepted contract + accepted contract the bucket noun-group will gain
+# Bucket_app maintenance-verb pre-landing state pinned.
+# The bucket noun-group will gain
 # six maintenance verbs (browse, search, export, import, rename, delete)
 # once BucketMaintenanceService lands. Until then, only `history` is
 # mounted. This test pins the current state so when contract lands the
@@ -228,7 +228,7 @@ EXPECTED_BUCKET_APP_VERBS: frozenset[str] = frozenset({"history"})
 
 def test_bucket_app_verb_roster_pins_pre_s2150_state() -> None:
     """Bucket noun-group today carries only `history`; the six maintenance
-    verbs (per accepted contract + accepted contract) are not yet mounted.
+    verbs are not yet mounted.
 
     When contract lands this assertion fires, which is the intended flag:
     the implementer must update :data:`EXPECTED_BUCKET_APP_VERBS` to

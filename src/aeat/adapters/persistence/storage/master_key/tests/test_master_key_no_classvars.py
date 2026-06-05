@@ -8,7 +8,7 @@ survive a bucket switch. Cache state moves to the per-bucket
 Walks the AST of ``_master_key.py`` and asserts that
 :class:`KeyringMasterKeyProvider` and :class:`FileFallbackMasterKeyProvider`
 declare zero class-level annotations naming :class:`typing.ClassVar`.
-This is the regression gate the plan Step accepted contract mandates.
+This is the regression gate for the master-key substrate invariant.
 """
 
 from __future__ import annotations

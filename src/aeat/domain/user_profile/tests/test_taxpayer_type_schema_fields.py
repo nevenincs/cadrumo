@@ -94,7 +94,7 @@ def test_uses_objective_estimation_boolean_is_retained(
     """The legacy objective-estimation boolean stays alongside the enum.
 
     Registry schedule predicates / model selectors still test
-    ``uses_objective_estimation_irpf``; the accepted contract schema adds the
+    ``uses_objective_estimation_irpf``; the taxpayer-type schema adds the
     structured ``estimation_regime`` enum without removing the boolean
     the engine has not yet been rewired off.
     """

@@ -1,4 +1,4 @@
-"""Destructive-action safeguard regression (accepted contract).
+"""Destructive-action safeguard regression.
 
 Asserts that every destructive ledger / config verb refuses to run
 without an explicit ``--yes`` (or ``--dry-run`` where allowed). The

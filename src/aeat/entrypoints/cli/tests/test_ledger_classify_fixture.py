@@ -1,4 +1,4 @@
-"""Derived classify --from-csv fixture: drift guard + apply journey (accepted contract.contract).
+"""Derived classify --from-csv fixture: drift guard + apply journey.
 
 The committed ``classify/*.classify.csv`` fixtures pair each corpus row's
 content-addressed id with the oracle classification. This module (1) regenerates

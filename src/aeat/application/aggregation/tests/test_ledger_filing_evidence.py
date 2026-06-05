@@ -1,6 +1,6 @@
-"""Ledger filing evidence: capture, fingerprint binding, encrypted roundtrip (accepted contract).
+"""Ledger filing evidence: capture, fingerprint binding, encrypted roundtrip.
 
-Asserts the bundled fact basis (modelo-export-evidence-parity ADR):
+Asserts the bundled fact basis for modelo export evidence parity:
 - ``compute_ledger_filing_evidence`` projects the typed tax facts and binds each
   row to its fingerprint;
 - the evidence rides inside the encrypted ``CalculationRevision`` envelope and

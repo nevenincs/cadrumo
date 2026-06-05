@@ -354,7 +354,7 @@ def test_list_profiles_returns_sorted_listings(secure_objects, schema) -> None:
 
 
 # ---------------------------------------------------------------------------
-# accepted contract — service-contract tests for the read + validate paths
+# Service-contract tests for the read + validate paths.
 # ---------------------------------------------------------------------------
 
 
@@ -387,7 +387,7 @@ def test_validator_surfaces_missing_required_field_as_issue(schema) -> None:
     a structured issue (not a silent pass).
 
     This pins the validator contract that ``aeat config profile
-    validate`` (accepted contract) and lifecycle.register both depend on."""
+    validate`` and lifecycle.register both depend on."""
 
     validator = ProfileValidationService(schema=schema)
     # An empty fact tuple violates every required-field constraint.

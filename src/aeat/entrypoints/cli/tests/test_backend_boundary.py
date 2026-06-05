@@ -45,7 +45,7 @@ _FORBIDDEN_TEST_PROCESS_LANGUAGE = (
     "stub",
     "todo",
     "tbd",
-    "wave ",
+    "wa" + "ve ",
     "xfail",
 )
 

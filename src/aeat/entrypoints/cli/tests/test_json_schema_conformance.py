@@ -241,13 +241,13 @@ def test_registered_schema_envelope_round_trips(command_path: str) -> None:
 
 
 # ---------------------------------------------------------------------
-# Zero-bare-emit gate (emit-envelope-schema-burndown accepted contract)
+# Zero-bare-emit gate for the envelope-schema contract.
 # ---------------------------------------------------------------------
 
 # Production CLI sites that legitimately emit through the bare ``_emit``
 # helper rather than the OutputSchema-gated ``_emit_envelope``. Each
 # entry carries a durable rationale per the metastate-zero-tolerance
-# ADR — these are not metastate lists; they encode a per-entry
+# These are not metastate lists; they encode a per-entry
 # constraint-shape decision about which surfaces are typed payloads
 # vs unstructured operator-facing prose.
 _BARE_EMIT_EXEMPTIONS: frozenset[tuple[str, str]] = frozenset(

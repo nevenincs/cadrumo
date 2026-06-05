@@ -86,7 +86,7 @@ def test_secure_object_registry_names_application_namespaces() -> None:
 
 
 def test_secure_object_registry_names_live_m036_declaration_namespace() -> None:
-    """The M036 declarative-recording verbs (#629 accepted contract)
+    """The M036 declarative-recording verbs
     persist operator declarations through this namespace. Authority:
     2026-06-03-m036-lifecycle-verbs-research.
     """
