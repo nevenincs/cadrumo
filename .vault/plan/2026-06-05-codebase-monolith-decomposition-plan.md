@@ -144,6 +144,9 @@ Continue reducing _app_live.py, _modelo.py, and config CLI roots after ledger sl
 - [ ] `W02.P03.S26` - select the next residual live CLI command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/tests`.
 - [ ] `W02.P03.S27` - extract the selected residual live CLI command group into a focused registrar module; `src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/_app_live_*.py`.
 - [ ] `W02.P03.S28` - verify residual live CLI behavior and ratchet live root size budget; `src/aeat/entrypoints/cli/tests/test_live* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [ ] `W02.P03.S29` - select the next residual modelo CLI command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_modelo.py src/aeat/entrypoints/cli/tests`.
+- [ ] `W02.P03.S30` - extract the selected residual modelo CLI command group into a focused registrar module; `src/aeat/entrypoints/cli/_modelo.py src/aeat/entrypoints/cli/_modelo_*.py`.
+- [ ] `W02.P03.S31` - verify residual modelo CLI behavior and ratchet modelo root size budget; `src/aeat/entrypoints/cli/tests/test_modelo* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
 
 ## Wave `W03` - application and domain monolith decomposition
 
