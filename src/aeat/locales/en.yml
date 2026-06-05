@@ -3909,6 +3909,12 @@ errors:
     refused_workflow_resume: The prior workflow run cannot be resumed.
     unsupported_currency: The currency code provided is not supported.
     modelo_work_period_token: 'Invalid modelo period token.'
+    submission_preflight_draft_stale: 'Draft approval is stale; review and approve the draft again.'
+    submission_preflight_draft_not_approved: 'Draft is not approved for submission (status={status}).'
+    submission_preflight_error_findings: 'Draft has {finding_count} ERROR-severity finding(s); resolve them before submission.'
+    submission_preflight_deadline_closed: 'Deadline window for modelo {modelo} period {period} is not open on {today}.'
+    submission_preflight_auth_describe_failed: 'Auth provider failed to describe itself ({cause_type}).'
+    submission_preflight_auth_not_ready: 'Auth provider {kind} is not ready (configured={configured} available={available}). {operator_impact}'
   snapshot:
     modelo_not_registered: Model is not registered in the registry.
   storage:

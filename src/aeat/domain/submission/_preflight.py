@@ -29,12 +29,12 @@ _logger = get_logger(__name__)
 # enum at runtime. Kept in sync with
 # :class:`aeat.application.auth.AuthProviderKind` by code review.
 _AUTH_KIND_CERTIFICATE = "certificate"
-_PREFLIGHT_DRAFT_STALE = "domain.submission.preflight.draft_stale"
-_PREFLIGHT_DRAFT_NOT_APPROVED = "domain.submission.preflight.draft_not_approved"
-_PREFLIGHT_ERROR_FINDINGS = "domain.submission.preflight.error_findings"
-_PREFLIGHT_DEADLINE_CLOSED = "domain.submission.preflight.deadline_closed"
-_PREFLIGHT_AUTH_DESCRIBE_FAILED = "domain.submission.preflight.auth_describe_failed"
-_PREFLIGHT_AUTH_NOT_READY = "domain.submission.preflight.auth_not_ready"
+_PREFLIGHT_DRAFT_STALE = "errors.refused.submission_preflight_draft_stale"
+_PREFLIGHT_DRAFT_NOT_APPROVED = "errors.refused.submission_preflight_draft_not_approved"
+_PREFLIGHT_ERROR_FINDINGS = "errors.refused.submission_preflight_error_findings"
+_PREFLIGHT_DEADLINE_CLOSED = "errors.refused.submission_preflight_deadline_closed"
+_PREFLIGHT_AUTH_DESCRIBE_FAILED = "errors.refused.submission_preflight_auth_describe_failed"
+_PREFLIGHT_AUTH_NOT_READY = "errors.refused.submission_preflight_auth_not_ready"
 
 
 def _describe_provider_operator_impact(description: AuthProviderDescriptionLike) -> str:
