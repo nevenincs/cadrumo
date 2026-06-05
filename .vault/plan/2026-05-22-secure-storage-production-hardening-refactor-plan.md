@@ -954,7 +954,18 @@ Reconcile fresh persona testimony with current secure-storage, readiness, repair
 
 - [x] `W13.P27.S396` - Reconcile fresh persona audits and repair plans with secure-storage readiness ownership; `.vault/audit`.
 - [x] `W13.P27.S397` - Record research requirements for persona findings that lack enough architectural backing; `.vault/research`.
-- [ ] `W13.P27.S398` - Classify unresolved persona findings as secure-storage, CLI workflow, capability, or separate-plan work; `.vault/plan`.
+- [x] `W13.P27.S398` - Classify unresolved persona findings as secure-storage, CLI workflow, capability, or separate-plan work; `.vault/plan`.
+
+#### S398 classification register
+
+S398 classifies the unresolved testimonial findings after S396 reconciliation and S397 research. This register is binding for W13.P28 sequencing: only secure-storage-owned rows proceed to S399 retest and S400 repair adoption inside this plan.
+
+| Finding | Classification | Secure-storage disposition | Next owner |
+|---|---|---|---|
+| FRESH-004 manual route discoverability | CLI workflow / capability discovery | Not secure-storage-owned on current evidence. Registry manual/source authority and formula reference output are the relevant surfaces; no storage readiness, custody, repair, or profile-bound evidence failure is shown. | External CLI/capability plan if an alias, help bridge, or richer formula hint is desired. |
+| FRESH-007 profile-filtered obligation explanation | CLI workflow / capability discovery | Not secure-storage-owned on current evidence. `overview explain` and calendar own applicability reasoning; the remaining issue is post-profile guidance/discovery unless a future retest proves the overview surface cannot read the stored profile through runtime. | External CLI/capability plan for next-action guidance; reopen here only if runtime-backed profile reads fail. |
+| FRESH-011 undecryptable stored draft readiness blocker | Secure-storage readiness / repair integrity | Secure-storage-owned. Existing architecture already requires degraded storage readiness and fail-closed filing-grade behavior; W15 repair privacy/integrity rows provide the current diagnostic and redaction baseline. | S399 retest, then S400 only if retest finds a secure-storage repair gap. |
+| REPAIR-PROFILE-PRIVACY-001 repair-profile identifier leakage | Secure-storage repair privacy | Secure-storage-owned but already remediated. This wave treats it as a regression-check input, not a new repair row. | S399/S401 synthesis only unless retest leaks raw identifiers. |
 
 ### Phase `W13.P28` - testimonial retest and repair adoption
 

@@ -51,6 +51,12 @@ Review checked the S397 research requirements against semantic vault search resu
 
 Status: no action required.
 
+## S398-001 | INFO | Persona classification register review passed
+
+Review checked the S398 plan register against the S396 reconciliation and S397 research requirements. The classification keeps manual-route and profile-guidance findings in CLI workflow or capability ownership, limits W13.P28 secure-storage retesting to unreadable stored-draft readiness plus repair-profile privacy regression, and prevents S400 repair adoption without S399 evidence.
+
+Status: no action required.
+
 ## S460-002 | MEDIUM | Operator-surface contract under-declared root custody verbs
 
 The accepted operator-surface contract only declared `config unlock` while the CLI mounted first-class `config lock`, `config unlock`, `config rekey`, `config recover`, `config show-recovery`, and `config verify-recovery`. S460 now adds an explicit custody domain and mounted command-family rows for each root-level custody child.
