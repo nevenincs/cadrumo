@@ -7,7 +7,7 @@ gathered under ``src/aeat/...`` pass through the same enforcement surface:
    the ``AEAT_LIVE_TESTS_ENABLED`` gate in ``src/aeat/tests/conftest.py`` sees
    the same value the rest of the project's pydantic-settings stack
    reads. Without this, populating ``env/.env`` and running
-   ``just test-live`` silently skips every ``live_read`` test because
+   ``just test-live`` silently skips every ``aeat_live`` test because
    pytest never sources dotenv files itself.
 2. Apply the hexagonal marker collection hook so any item missing the
    execution/architecture markers is raised on. The hook body lives in

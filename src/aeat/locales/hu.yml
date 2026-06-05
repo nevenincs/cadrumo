@@ -4011,6 +4011,12 @@ errors:
     refused_workflow_resume: A korábbi munkafolyamat-futás nem folytatható.
     unsupported_currency: A megadott devizakód nem támogatott.
     modelo_work_period_token: 'Ervenytelen modello idoszak.'
+    submission_preflight_draft_stale: 'A tervezet jóváhagyása lejárt; ellenőrizze és hagyja jóvá újra a tervezetet.'
+    submission_preflight_draft_not_approved: 'A tervezet nincs jóváhagyva benyújtásra (állapot={status}).'
+    submission_preflight_error_findings: 'A tervezetben {finding_count} ERROR súlyosságú megállapítás van; javítsa ezeket benyújtás előtt.'
+    submission_preflight_deadline_closed: 'A(z) {modelo} modell {period} időszakának határidő-ablaka nincs nyitva ezen a napon: {today}.'
+    submission_preflight_auth_describe_failed: 'A hitelesítési szolgáltató nem tudta leírni magát ({cause_type}).'
+    submission_preflight_auth_not_ready: 'A(z) {kind} hitelesítési szolgáltató nem áll készen (configured={configured} available={available}). {operator_impact}'
   snapshot:
     modelo_not_registered: A modello nincs regisztrálva a nyilvántartásban.
   storage:
