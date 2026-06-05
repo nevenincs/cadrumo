@@ -91,8 +91,14 @@ Reviewed the W03.P11 `S133` calculation extraction. The public `aeat.application
 
 Verification covers ruff, compileall, public and legacy facade import smoke, plan validation, and 46 focused modelo application tests. Residual risk remains tracked by the open `S134` verification row and later filing/amendment/import extraction rows because `_actions.py` remains above the final 1250-line budget at 2107 lines.
 
-## REVIEW-011 | LOW | No blocking findings in modelo facade and CLI verification slice
+## REVIEW-012 | LOW | No blocking findings in modelo facade and CLI verification slice
 
 Reviewed W03.P11 `S120` after the public facade import regression was repaired. `aeat.application.modelo` now imports canonical action errors from `_action_errors.py`, work-unit lifecycle actions from `_work_lifecycle.py`, workflow actions from `_actions.py`, and workflow-period resolution from `_workflow_gate.py`, while entrypoint code continues to consume the top-level facade. The CLI test import in `test_profile_export_roundtrip.py` was also corrected to avoid private `_actions.py` reach-through.
 
 Verification covers ruff, compileall, direct facade smoke imports, 46 focused application modelo tests, 134 focused modelo CLI tests, 8 CLI architecture-boundary tests, 4 profile export roundtrip tests, and a private modelo application import scan across entrypoints/adapters/domain returning no matches.
+
+## REVIEW-013 | LOW | No blocking findings in modelo residual action closure
+
+Reviewed the W03.P11 `S135` through `S140` residual modelo action closure. Verification, filing, amendment, and external import workflows now live in focused private modules while `src/aeat/application/modelo/_actions.py` remains a compatibility facade and `aeat.application.modelo` remains the public boundary. The extraction keeps clean-state, IVA wallet, amendment evidence, import custody, supersession, and bucket-event policy in the application layer; no policy moved to CLI.
+
+Verification covers Ruff, compileall, 100 focused amendment/import/export/filing tests, 115 focused filing/verification/source-mesh tests, 114 focused modelo CLI tests, public and legacy facade smoke imports, a private-submodule consumer scan across entrypoints/adapters/domain, and direct line-budget confirmation that `_actions.py` is 258 lines. The repository-wide size-budget gate still reports unrelated overview and config callable offenders, so that residual risk remains tracked outside the modelo closure.
