@@ -165,6 +165,24 @@ from ._revision_persistence import (
     persist_filed_revision,
 )
 from ._verification_actions import (
+    _PREDICATE_ADVISORY_WHEN_RATIO_GE as _PREDICATE_ADVISORY_WHEN_RATIO_GE,
+)
+from ._verification_actions import (
+    _PREDICATE_ALL_NONZERO as _PREDICATE_ALL_NONZERO,
+)
+from ._verification_actions import (
+    _PREDICATE_ANY_NONZERO as _PREDICATE_ANY_NONZERO,
+)
+from ._verification_actions import (
+    _PREDICATE_CAP_LE_WHEN_POSITIVE as _PREDICATE_CAP_LE_WHEN_POSITIVE,
+)
+from ._verification_actions import (
+    _PREDICATE_IMPLIES_NONZERO as _PREDICATE_IMPLIES_NONZERO,
+)
+from ._verification_actions import (
+    _PREDICATE_PROFILE_FIELD_REQUIRED as _PREDICATE_PROFILE_FIELD_REQUIRED,
+)
+from ._verification_actions import (
     _collect_revision_verification_findings as _collect_revision_verification_findings,
 )
 from ._verification_actions import (
@@ -172,6 +190,15 @@ from ._verification_actions import (
 )
 from ._verification_actions import (
     _dt12_reduccion_advisory_finding as _dt12_reduccion_advisory_finding,
+)
+from ._verification_actions import (
+    _evaluate_advisory_predicate_fires as _evaluate_advisory_predicate_fires,
+)
+from ._verification_actions import (
+    _evaluate_applicability_filter as _evaluate_applicability_filter,
+)
+from ._verification_actions import (
+    _evaluate_predicate_expression as _evaluate_predicate_expression,
 )
 from ._verification_actions import (
     _evaluate_verification_predicates as _evaluate_verification_predicates,
@@ -184,6 +211,9 @@ from ._verification_actions import (
 )
 from ._verification_actions import (
     _require_cross_period_clean_state as _require_cross_period_clean_state,
+)
+from ._verification_actions import (
+    _rewrite_m210_sentinels as _rewrite_m210_sentinels,
 )
 from ._verification_actions import (
     verify_modelo_revision as verify_modelo_revision,
@@ -1018,4 +1048,5 @@ __all__ = [
     "rename_work_unit",
     "verify_modelo_revision",
     "workflow_period_for_work_unit",
+    "_assert_revision_content_integrity",
 ]

@@ -655,7 +655,7 @@ application:
       calculation_revision_not_found: Nem található számítás-revízió id=%{calculation_revision_id}
         azonosítóval.
       caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
-        bucket-derived source bound casillas: %{casillas}.'
+        bucket-derived source-bound casillas: %{casillas}.'
       computed_casilla_binding_conflict: 'A bucket-alapú bemenetek számított mezőket
         céloznak, amelyek nem írhatók felül külső kötéssel. Érintett mezők: %{computed_casillas}.'
       cross_period_clean_state_incomplete: A keresztidoszaki tiszta allapot igazolasa
@@ -2752,7 +2752,7 @@ cli:
         profile_rename: Profil átnevezése és mappájának áthelyezése.
         profile_show: Egy profil adatainak megjelenítése.
         profile_status: Az aktív profil készültségének megjelenítése.
-        profile_switch: Az aktív profil váltása.
+        profile_switch: 'Profil feloldasa es aktivalasa.'
         section_authentication: Hitelesítés
         section_bucket_inspection: Bucket ellenorzes
         section_diagnostics: Diagnosztika

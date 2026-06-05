@@ -223,7 +223,7 @@ def _emit_profile_record_status(
         "registered_bucket": True,
         "profile_record_present": True,
         "status": record.status.value,
-        "next_action": f"aeat config profile switch {pointer.label}",
+        "next_action": f"aeat config unlock {pointer.label}",
     }
     repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
     _emit_envelope(

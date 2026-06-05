@@ -125,7 +125,7 @@ def test_bucket_calculation_rejects_source_owned_bound_casilla_overrides(
         revision_id=revision_id,
     )
 
-    with pytest.raises(ModeloAggregationBindingError, match="source-bound casillas"):
+    with pytest.raises(ModeloAggregationBindingError, match=r"source[- ]bound casillas"):
         calculate_modelo_revision_from_bucket_aggregation(
             work_unit.work_unit_id,
             actor="operator-A",

@@ -2,7 +2,7 @@
 tags:
   - '#exec'
   - '#cross-period-filing-clean-state'
-date: '2026-06-05'
+date: '2026-06-06'
 step_id: 'S42'
 related:
   - '[[2026-06-05-cross-period-filing-clean-state-plan]]'
@@ -13,12 +13,14 @@ related:
 
 ## Description
 
-Ran the application calculation clean-state test module after the justificante-grade evidence and repair diagnostics changes.
+Ran the focused application calculation tests for cross-period clean-state proof and Modelo 353 group aggregation continuity.
 
 ## Outcome
 
-The calculation clean-state gate passed with 13 tests.
+The clean-state calculation gate passed with 16 tests. The run covered the typed proof service, dependency inventory, blocker classification, justificante verification blocker, group expected-member proof, and the 353 per-member aggregation continuity path.
 
 ## Notes
 
-An earlier parallel run hit a transient shared i18n YAML loader failure while locale files were dirty in the shared worktree. The same gate passed when rerun serially after the locale files parsed cleanly.
+Command passed: `uv run --no-sync pytest src/aeat/application/calculations/tests/test_cross_period_clean_state.py src/aeat/application/calculations/tests/test_modelo_353_grupo_aggregation_continuity.py -q`.
+
+The broader `uv run --no-sync pytest src/aeat/application/calculations/tests -q` command was attempted first and timed out after roughly six minutes. This step is therefore closed on focused clean-state evidence, not a complete all-calculation-tests pass.

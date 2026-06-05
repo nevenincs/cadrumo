@@ -710,7 +710,7 @@ application:
         filing year %{filing_year}, period %{period} could not be resolved.
       calculation_revision_not_found: No existe ninguna revisión de cálculo con id=%{calculation_revision_id}.
       caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
-        bucket-derived source bound casillas: %{casillas}.'
+        bucket-derived source-bound casillas: %{casillas}.'
       computed_casilla_binding_conflict: 'Las entradas procedentes del bucket tienen
         como destino casillas calculadas; no se pueden sobreescribir con binding externo.
         Casillas afectadas: %{computed}.'
@@ -2807,7 +2807,7 @@ cli:
         profile_rename: Renombrar un perfil de contribuyente.
         profile_show: Mostrar los datos del perfil activo.
         profile_status: Mostrar el estado del perfil activo.
-        profile_switch: Cambiar al perfil de contribuyente indicado.
+        profile_switch: 'Desbloquear y activar un perfil.'
         section_authentication: Autenticacion AEAT
         section_bucket_inspection: Inspeccion de bucket
         section_diagnostics: Diagnostico

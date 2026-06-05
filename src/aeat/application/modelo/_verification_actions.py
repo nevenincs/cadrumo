@@ -1132,5 +1132,3 @@ def _classify_verification_outcome(
         return VerificationCompletenessStatus.INCOMPLETE, False
     return VerificationCompletenessStatus.BLOCKED, False
 
-
-
