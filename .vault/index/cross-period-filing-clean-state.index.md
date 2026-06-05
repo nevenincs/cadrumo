@@ -92,10 +92,10 @@ Auto-generated index of all documents tagged with `#cross-period-filing-clean-st
 - `2026-06-05-cross-period-filing-clean-state-W04-P10-S40` - `cross-period-filing-clean-state` `W04.P10.S40` exec - repair message tests
 - `2026-06-05-cross-period-filing-clean-state-W04-P10-summary` - `cross-period-filing-clean-state` `W04.P10` summary
 - `2026-06-05-cross-period-filing-clean-state-W04-P11-S41` - `cross-period-filing-clean-state` `W04.P11.S41` exec - registry cross-dependency gate
-- `2026-06-05-cross-period-filing-clean-state-W04-P11-S42` - `cross-period-filing-clean-state` `W04.P11.S42` exec - calculation clean-state gate
 - `2026-06-05-cross-period-filing-clean-state-W04-P11-S43` - `cross-period-filing-clean-state` `W04.P11.S43` exec - Modelo workflow clean-state gate
 - `2026-06-05-cross-period-filing-clean-state-W04-P11-S44` - `cross-period-filing-clean-state` `W04.P11.S44` exec - doctor and feature index checks
 - `2026-06-05-cross-period-filing-clean-state-W04-P11-summary` - `cross-period-filing-clean-state` `W04.P11` summary
+- `2026-06-05-cross-period-filing-clean-state-W04-P11-S42` - `cross-period-filing-clean-state` `W04.P11.S42` exec - calculation clean-state gate
 
 ### plan
 

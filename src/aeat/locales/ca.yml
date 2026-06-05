@@ -703,7 +703,7 @@ application:
         filing year %{filing_year}, period %{period} could not be resolved.
       calculation_revision_not_found: No s'ha trobat cap revisió de càlcul amb id=%{calculation_revision_id}.
       caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
-        bucket-derived source-bound casillas: %{casillas}.'
+        bucket-derived source-bound casillas (source bound casillas): %{casillas}.'
       computed_casilla_binding_conflict: 'Les entrades procedents del bucket apunten
         a caselles calculades i no es poden sobreescriure amb binding extern. Caselles
         afectades: %{computed}.'

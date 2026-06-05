@@ -43,6 +43,15 @@ Verify the censo-to-calendar path with focused non-live tests first, then record
 - [x] `W02.P02.S03` - Run focused lint/tests plus live censo/calendar CLI verification; `.vault/exec/2026-06-05-live-censo-calendar-reconciliation`.
 - [x] `W02.P02.S04` - Run code review and persist audit; `.vault/audit/2026-06-05-live-censo-calendar-reconciliation-code-review-audit.md`.
 
+## Wave `W03` - live 036 reconciliation proof
+
+Make the unresolved live acceptance gap explicit: pull Modelo 036/censo information, reconcile it into the taxpayer profile, enumerate legally applicable Modelo obligations, and prove the calendar shows both app-ready and AEAT-submitted/justificante states from live-backed snapshots.
+
+### Phase `W03.P03` - live censo obligation calendar gate
+
+Verify that authenticated live censo evidence is the source of profile enrolment facts, that derived Modelo obligations are enumerated from the reconciled legal situation, and that calendar evidence distinguishes local ready-to-file state from AEAT submitted and justificante-verified state.
+
+
 ## Description
 
 This plan closes the explicit live-censo calendar gap: Modelo obligations must derive from the taxpayer's legal situation, and the calendar must prove whether it used live censo-backed facts, profile facts, or refused because the necessary facts were not present.
