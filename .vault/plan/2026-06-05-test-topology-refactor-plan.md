@@ -13,15 +13,6 @@ related:
   - '[[2026-06-04-module-test-coverage-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `test-topology-refactor` `execution` plan
 
@@ -151,7 +142,7 @@ Run mechanical fd gates, marker integrity, targeted pytest collection, vaultspec
 
 - [x] `W05.P12.S38` - Run final fd topology and naming gates; `fd final gates`.
 - [x] `W05.P12.S39` - Run marker integrity and pytest collection gates; `pytest collection gates`.
-- [ ] `W05.P12.S40` - Run vaultspec-core rule sync and status checks; `vaultspec-core sync`.
+- [x] `W05.P12.S40` - Run vaultspec-core rule sync and status checks; `vaultspec-core sync`.
 - [ ] `W05.P12.S41` - Run vaultspec-rag index and semantic verification searches; `vaultspec-rag verification`.
 
 ### Phase `W05.P13` - persist closeout evidence
