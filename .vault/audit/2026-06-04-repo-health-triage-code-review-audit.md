@@ -594,3 +594,19 @@ Focused verification passed Ruff for the fallback, certificate dispatcher, and
 certificate tests. The certificate test suite passed, including backend
 selection, HTTPX fallback preload refusal, settings registration, and handshake
 failure behavior.
+
+## W05-009 | WARN | Filing-status token relocation remains blocked by overview WIP
+
+Status: blocked, not closed.
+
+The W05.P16.S57 review confirmed `_filing_status_token.py` is a token-only shim
+that should be deleted, but the correct no-shim fix is a symbol relocation, not
+a second token module. `FilingStatus` needs one lightweight canonical home that
+both the operator-surface contract and overview export consume. Importing
+`application.overview._status` from the operator-surface contract is not safe
+because Python executes the heavy `overview` package initializer first.
+
+The required overview consumer/export file, `src/aeat/application/overview/__init__.py`,
+already contains unrelated calendar-event WIP in the shared worktree. Per the
+atomic relocation rule, S57 must remain open until that file can be edited as
+part of one relocation commit without overwriting another agent's work.
