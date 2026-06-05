@@ -20,6 +20,7 @@ from ...core.setup_answers import SetupAnswers, project_answers
 from ...core.wizard_catalogue import get_setup_flow
 from ._errors import ProfileError
 from ._models import (
+    CrossPeriodGroupMemberRoster,
     FiscalResidency,
     IrpfIncomeCategory,
     IrpfSpecialRegime,
@@ -127,6 +128,7 @@ def taxpayer_profile_from_mapping(
             redeme_enrolled=typed.iva_redeme_enrolled,
             intracommunity_operations_exceed_50000_eur=typed.iva_intracommunity_operations_exceed_50000_eur,
         ),
+        cross_period_group_member_rosters=_parse_cross_period_group_member_rosters(canonical),
         enrollment=ModeloEnrollment(
             large_company=typed.enrollment_large_company,
             public_administration_budget_gt_6000000=typed.enrollment_public_administration_budget_gt_6000000,
@@ -231,6 +233,51 @@ def _parse_days_in_spain(canonical: dict[str, str]) -> dict[int, int]:
                 if days is not None:
                     result[int(year_part)] = days
     return result
+
+
+def _parse_cross_period_group_member_rosters(canonical: dict[str, str]) -> tuple[CrossPeriodGroupMemberRoster, ...]:
+    """Parse profile-declared member rosters for grouped cross-period fan-in.
+
+    Supported profile fact keys:
+
+    - ``cross_period.group_member_roster.<source_modelo>.<year>.<period>``
+    - ``iva_grupo.member_roster.<source_modelo>.<year>.<period>``
+    - ``iva_grupo.member_roster.<year>.<period>`` (defaults source modelo to 322)
+    """
+    rosters: list[CrossPeriodGroupMemberRoster] = []
+    for key, raw in canonical.items():
+        source_modelo, filing_year, period = _parse_group_member_roster_key(key)
+        if source_modelo is None or filing_year is None or period is None:
+            continue
+        member_nifs = tuple(token.strip() for token in raw.replace(";", ",").split(",") if token.strip())
+        if not member_nifs:
+            continue
+        rosters.append(
+            CrossPeriodGroupMemberRoster(
+                source_modelo=source_modelo,
+                filing_year=filing_year,
+                period=period,
+                member_nifs=member_nifs,
+            )
+        )
+    return tuple(
+        sorted(
+            rosters,
+            key=lambda item: (item.source_modelo, item.filing_year, item.period),
+        )
+    )
+
+
+def _parse_group_member_roster_key(key: str) -> tuple[str | None, int | None, str | None]:
+    for prefix in ("cross_period.group_member_roster.", "iva_grupo.member_roster."):
+        if not key.startswith(prefix):
+            continue
+        parts = key[len(prefix) :].split(".")
+        if len(parts) == 3 and parts[1].isdigit():
+            return parts[0], int(parts[1]), parts[2]
+        if len(parts) == 2 and parts[0].isdigit():
+            return "322", int(parts[0]), parts[1]
+    return None, None, None
 
 
 def _stringify(raw: object) -> str:

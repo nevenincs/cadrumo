@@ -139,6 +139,23 @@ class TestTaxpayerProfileProjection:
         assert profile.iva.sii_enrolled is True
         assert profile.iva.redeme_enrolled is True
 
+    def test_mapping_projection_carries_cross_period_group_roster(self) -> None:
+        profile = taxpayer_profile_from_mapping(
+            {
+                "identity.tax_id": "12345678Z",
+                "activities.description": "Grupo IVA",
+                "cross_period.group_member_roster.322.2026.12": "B00000001, A00000000",
+                "iva_grupo.member_roster.2026.11": "C00000002;D00000003",
+            },
+            tax_id_default="00000000T",
+        )
+
+        assert [item.source_modelo for item in profile.cross_period_group_member_rosters] == ["322", "322"]
+        assert [item.filing_year for item in profile.cross_period_group_member_rosters] == [2026, 2026]
+        assert [item.period for item in profile.cross_period_group_member_rosters] == ["11", "12"]
+        assert profile.cross_period_group_member_rosters[0].member_nifs == ("C00000002", "D00000003")
+        assert profile.cross_period_group_member_rosters[1].member_nifs == ("A00000000", "B00000001")
+
     def test_objetiva_regime_derives_objective_estimation_boolean(self) -> None:
         """The projection keeps uses_objective_estimation_irpf consistent.
 

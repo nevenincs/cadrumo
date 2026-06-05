@@ -48,12 +48,14 @@ def _tx(
     *,
     taxable_base: Decimal = Decimal("100.00"),
     iva_amount: Decimal = Decimal("21.00"),
+    raw_amount: Decimal = Decimal("-121.00"),
+    category_id: str = "material_oficina",
 ) -> Transaction:
     raw = RawTransaction(
         transaction_id=provider_id,
         booked_date=date(2026, 4, 5),
         value_date=date(2026, 4, 5),
-        amount=Decimal("-121.00"),
+        amount=raw_amount,
         currency="EUR",
         counterparty="Proveedor",
         description=f"row {provider_id}",
@@ -75,7 +77,7 @@ def _tx(
             "taxable_base": taxable_base,
             "iva_rate": Decimal("0.21"),
             "iva_amount": iva_amount,
-            "category_id": "material_oficina",
+            "category_id": category_id,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
             "classified_by": "manual",
@@ -175,7 +177,7 @@ def test_stale_filed_revisions_flags_only_drifted_finalized_revisions() -> None:
     # Unchanged ledger -> nothing flagged.
     assert stale_filed_revisions(revisions=revisions, catalogue=cat) == ()
     # A material edit to a contributor -> the filed revision is flagged stale.
-    edited = _tx("row-a", taxable_base=Decimal("90.00"), iva_amount=Decimal("18.90"))
+    edited = _tx("row-a", category_id="software")
     drifted = TransactionCatalogue.from_transactions((edited,))
     flagged = stale_filed_revisions(revisions=revisions, catalogue=drifted)
     assert len(flagged) == 1
@@ -188,7 +190,7 @@ def test_drift_in_contributor_is_detected_for_ledger_fed_modelo() -> None:
     cat = TransactionCatalogue.from_transactions((original,))
     ids = (original.transaction_id,)
     snap = compute_ledger_filing_snapshot(source_transaction_ids=ids, catalogue=cat, captured_at=_NOW)
-    edited = _tx("row-a", taxable_base=Decimal("90.00"), iva_amount=Decimal("18.90"))
+    edited = _tx("row-a", category_id="software")
     drifted = TransactionCatalogue.from_transactions((edited,))
     verdict = evaluate_ledger_filing_staleness(snap, drifted)
     assert verdict.is_stale is True

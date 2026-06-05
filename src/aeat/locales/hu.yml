@@ -4036,7 +4036,7 @@ errors:
       kell állnia.
     refused_storage_secret_already_exists: Ilyen kulcsú titkos adat már létezik. Használja
       a felülírás lehetőséget a csere érdekében.
-    refused_storage_session_expired: 'Az aktiv munkamenet inaktivitas miatt lejart. Aktivalt ujra az aeat config unlock NAME paranccsal.'
+    refused_storage_session_expired: 'Az aktiv munkamenet inaktivitas miatt lejart. Aktivald ujra az aeat config unlock NAME paranccsal.'
     refused_storage_unsecured_mode: A nem biztonságos tároló háttérrendszert az szükséges
       engedélyezés nélkül kérték. Valós adatokhoz nem biztonságos.
     refused_taxation_comparison: A közös-vs-egyéni adózás összehasonlítása nem végezhető

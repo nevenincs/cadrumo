@@ -70,6 +70,7 @@ class MountedCommandDomain(StrEnum):
 
     FIRST_RUN = "first_run"
     PROFILE = "profile"
+    CUSTODY = "custody"
     BUCKET = "bucket"
     AUTH = "auth"
     DIAGNOSTICS = "diagnostics"

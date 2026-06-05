@@ -17,6 +17,7 @@ import pytest
 from pydantic import ValidationError
 
 from .. import (
+    CrossPeriodGroupMemberRoster,
     EntityType,
     FiscalResidency,
     IrpfEstimationRegime,
@@ -62,6 +63,14 @@ def _fully_populated_taxpayer() -> TaxpayerProfile:
             redeme_enrolled=True,
             intracommunity_operations_exceed_50000_eur=True,
         ),
+        cross_period_group_member_rosters=(
+            CrossPeriodGroupMemberRoster(
+                source_modelo="322",
+                filing_year=2026,
+                period="12",
+                member_nifs=("B00000001", "A00000000"),
+            ),
+        ),
     )
 
 
@@ -86,6 +95,14 @@ class TestTaxpayerModelRoundTrip:
         assert restored.iva_regime is IVARegime.REAGP
         assert restored.iva.sii_enrolled is True
         assert restored.iva.redeme_enrolled is True
+        assert restored.cross_period_group_member_rosters == (
+            CrossPeriodGroupMemberRoster(
+                source_modelo="322",
+                filing_year=2026,
+                period="12",
+                member_nifs=("A00000000", "B00000001"),
+            ),
+        )
 
     def test_objetiva_regime_round_trips_with_derived_objective_boolean(self) -> None:
         """An OBJETIVA regime derives uses_objective_estimation_irpf and survives."""

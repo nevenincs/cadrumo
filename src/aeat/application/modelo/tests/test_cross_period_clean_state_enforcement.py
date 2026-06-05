@@ -10,7 +10,7 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
-from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.deadlines import CrossPeriodGroupMemberRoster, IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepository,
@@ -264,6 +264,58 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_p
                         member_nifs=("A00000000", "B00000001"),
                     ),
                 ),
+                clock=_CLOCK,
+            )
+
+    message = str(exc_info.value)
+    assert "incomplete_group_member_coverage" in message
+    assert "missing_expected_group_member_roster" not in message
+
+
+def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cross-period-353-profile-roster") as profile:
+        snapshot = resources().modelos.authority.snapshot("353", filing_year=2026, period="12")
+        requirement = next(
+            item for item in cross_period_dependency_requirements(snapshot) if item.requires_member_fan_in
+        )
+        CalculationObservationRepository().save_observation(
+            RegistryModeloObservation(
+                modelo="322",
+                filing_year=2026,
+                period="12",
+                observations=tuple(
+                    CasillaObservation(casilla_id=casilla_id, value=Decimal(index + 1))
+                    for index, casilla_id in enumerate(requirement.source_casillas)
+                ),
+            ),
+            source_kind="aeat_sede_justificante",
+            captured_at=_CLOCK,
+            member_nif="A00000000",
+        )
+        revision_id = _seed_verified_revision(
+            bucket_id=profile.bucket_id,
+            modelo="353",
+            filing_year=2026,
+            period="12",
+        )
+        workflow_profile = _workflow_profile().model_copy(
+            update={
+                "cross_period_group_member_rosters": (
+                    CrossPeriodGroupMemberRoster(
+                        source_modelo="322",
+                        filing_year=2026,
+                        period="12",
+                        member_nifs=("A00000000", "B00000001"),
+                    ),
+                )
+            }
+        )
+
+        with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
+            file_modelo_revision(
+                revision_id,
+                actor="operator-test",
+                workflow_profile=workflow_profile,
                 clock=_CLOCK,
             )
 

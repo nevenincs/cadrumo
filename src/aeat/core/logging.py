@@ -65,7 +65,9 @@ _SENSITIVE_ASSIGNMENT_KEYS: tuple[str, ...] = (*sorted(SCRUB_FIELD_PATTERNS, key
 _SENSITIVE_ASSIGNMENT_RE = re.compile(
     r"(?<![A-Za-z0-9])(?P<key>"
     + "|".join(re.escape(pattern) for pattern in _SENSITIVE_ASSIGNMENT_KEYS)
-    + r")(?![A-Za-z0-9])\s*[:=]\s*(?P<value>[^,\s;]+)",
+    + r")(?![A-Za-z0-9])(?P<separator>\s*[:=]\s*)"
+    + r"(?P<value>\"[^\"]*\"|'[^']*'|[^,;\r\n]+?)"
+    + r"(?=$|[,;\r\n]|\s+[A-Za-z0-9_.-]+\s*[:=])",
     flags=re.IGNORECASE,
 )
 _BEARER_TOKEN_RE = re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+\b")
@@ -107,7 +109,10 @@ def _scrub_text(value: str, *, key: str | None = None) -> str:
         lambda match: (
             match.group(0)
             if _PERCENT_PLACEHOLDER_VALUE_RE.fullmatch(match.group("value"))
-            else f"{match.group('key')}={_redacted_value(match.group('key'), match.group('value'))}"
+            else (
+                f"{match.group('key')}{match.group('separator')}"
+                f"{_redacted_value(match.group('key'), match.group('value'))}"
+            )
         ),
         scrubbed,
     )
