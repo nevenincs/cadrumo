@@ -13,6 +13,7 @@ from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core import resolve_active_bucket_id
 from ....core.config import Settings
+from ....core.i18n import tr
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._ledger import ratios_app
 
@@ -71,6 +72,13 @@ def test_ratios_set_refuses_unknown_category(cli_runner: CliRunner) -> None:
 def test_ratios_set_refuses_out_of_bounds(cli_runner: CliRunner) -> None:
     result = cli_runner.invoke(ratios_app, ["set", "vehiculo_combustible", "1.5"])
     assert result.exit_code != 0
+
+
+def test_ratios_set_refuses_non_decimal_with_localized_message(cli_runner: CliRunner) -> None:
+    result = cli_runner.invoke(ratios_app, ["set", "vehiculo_combustible", "not-decimal"])
+
+    assert result.exit_code != 0
+    assert tr("cli.ledger.errors.invalid_decimal", label="ratio", raw="not-decimal") in result.output
 
 
 def test_ratios_eligible_lists_categories(cli_runner: CliRunner) -> None:
