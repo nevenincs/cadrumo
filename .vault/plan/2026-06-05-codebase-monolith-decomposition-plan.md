@@ -20,87 +20,11 @@ related:
      - NEVER use [[wiki-links]] or markdown links in the
        document body. -->
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #plan) and one feature tag.
-     Replace codebase-monolith-decomposition with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-     tier is mandatory for new plans. Allowed: L1, L2, L3, L4.
-     L1 = Steps only. L2 = Phases above Steps. L3 = Waves above
-     Phases above Steps. L4 = Epic above Waves above Phases above
-     Steps; PM association required. Pre-existing plans without this
-     field default to L2.
-
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar]]'. The related field
-     carries the AUTHORISING documents (ADR, research, reference, prior
-     plan) for every Step in this plan; Steps inherit this chain;
-     per-row reference footers do not exist.
-
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
-
-
-<!-- HIERARCHY AND TIERS:
-     Epic > Wave > Phase > Step. Step is the canonical leaf-row
-     noun. Execution-log artifact: <Step Record>.
-     Tier is declared in frontmatter as tier: L1/L2/L3/L4
-     (mandatory for new plans; pre-existing plans without the
-     field default to L2 and the writer adds the field on first
-     edit). The tier selects containers:
-       L1 = Steps only.
-       L2 = Phases above Steps.
-       L3 = Waves above Phases above Steps.
-       L4 = Epic above Waves above Phases above Steps; MUST declare
-            a project-management association in the Epic intent
-            block prose.
-     Selection is by complexity criteria, not container counting.
-     Writer never invents containers to qualify a tier. -->
-
-<!-- IDENTIFIERS AND ROW CONTRACT:
-     S##, P##, W## are flat, per-document, append-only, immutable.
-     Promotion adds containers without renumbering. Gaps are not
-     reused.
-     Display paths are computed from current grouping:
-       Step path:    L1 S##   L2 P##.S##   L3/L4 W##.P##.S##
-       Phase heading:        L2 P##       L3/L4 W##.P##
-       Wave heading:                      L3/L4 W##
-     Row format:
-       - [ ] `<display-path>` - imperative-verb action; `path/to/file`.
-     Two-state checkboxes only ([ ] open, [x] closed). No per-row
-     reference footers; wiki-links and markdown links are forbidden
-     in plan body. Authorising documents go in the plan's `related:`
-     frontmatter once.
-     ASCII spaced hyphens everywhere; em-dash (U+2014) and en-dash
-     (U+2013) are forbidden. Step rows within a Phase are
-     contiguous. -->
-
-<!-- NO COMPRESSION:
-     N self-similar actions = N rows. Never collapse into "for each
-     X, do Y" / "across all callers, do Z" / "in every module,
-     replace W". The rule applies at every tier including L1. -->
-
-<!-- VAULTSPEC-CORE VAULT PLAN CLI:
-     The `vaultspec-core vault plan` CLI is the canonical surface for
-     structural manipulation of this plan document. Writers and
-     executors MUST use `vaultspec-core vault plan step add/insert/move/
-     remove/check/uncheck/toggle/edit`,
-     `vaultspec-core vault plan phase add/move/remove/edit`,
-     `vaultspec-core vault plan wave add/move/remove/edit`,
-     `vaultspec-core vault plan epic intent`, and
-     `vaultspec-core vault plan tier promote/demote` for every
-     identifier-affecting change rather than hand-editing the row
-     grammar. Hand edits are tolerated by the parser but flagged by
-     `vaultspec-core vault plan check`; canonical-identifier preservation is
-     guaranteed only when the CLI performs the mutation. See the
-     CLI ADR (2026-05-06-plan-hardening-adr) for the full
-     subcommand surface. -->
-
 # `codebase-monolith-decomposition` `codebase-wide monolith and cognitive complexity decomposition` plan
 
 ## Wave `W01` - global inventory and guard baseline
 
 Establish authoritative current-state evidence for every production and test module over 1250 lines and every high-scoring function before selecting decomposition slices.
-
-<!-- One-line headline summary plan. -->
 
 ### Phase `W01.P01` - inventory baseline
 
@@ -187,8 +111,8 @@ Close remaining oversized CLI roots through explicit residual extraction tranche
 - [x] `W02.P05.S102` - extract the selected config profile command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
 - [x] `W02.P05.S103` - verify config profile behavior and ratchet config size budget; `src/aeat/entrypoints/cli/tests/test_profile_lifecycle_verbs.py src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
 - [x] `W02.P05.S104` - select the next ledger residual command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/tests`.
-- [ ] `W02.P05.S105` - extract the selected ledger residual command group into a focused registrar module; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_*.py`.
-- [ ] `W02.P05.S106` - verify ledger residual behavior and ratchet ledger size budget; `src/aeat/entrypoints/cli/tests/test_ledger* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P05.S105` - extract the selected ledger residual command group into a focused registrar module; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_*.py`.
+- [x] `W02.P05.S106` - verify ledger residual behavior and ratchet ledger size budget; `src/aeat/entrypoints/cli/tests/test_ledger* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
 - [ ] `W02.P05.S107` - select a coherent split for oversized modelo CLI tests using exact discovery; `src/aeat/entrypoints/cli/tests/test_modelo.py src/aeat/entrypoints/cli/tests`.
 - [ ] `W02.P05.S108` - split selected modelo CLI tests into focused test modules; `src/aeat/entrypoints/cli/tests/test_modelo.py src/aeat/entrypoints/cli/tests/test_modelo_*.py`.
 - [ ] `W02.P05.S109` - verify split modelo CLI tests and ratchet test module size budget; `src/aeat/entrypoints/cli/tests/test_modelo.py src/aeat/entrypoints/cli/tests/test_modelo_*.py src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
@@ -215,12 +139,14 @@ Decompose oversized application service modules by use-case boundary while prese
 - [x] `W03.P06.S54` - verify application modelo action behavior and facade imports after decomposition; `src/aeat/application/modelo/tests src/aeat/entrypoints/cli/tests/test_modelo*`.
 - [x] `W03.P06.S55` - decompose application ledger actions by orchestration boundary behind the public ledger application facade; `src/aeat/application/ledger/_actions.py src/aeat/application/ledger/*.py`.
 - [x] `W03.P06.S56` - verify application ledger action behavior and facade imports after decomposition; `src/aeat/application/ledger/tests src/aeat/entrypoints/cli/tests/test_ledger*`.
-- [ ] `W03.P06.S57` - decompose application live package root by service family while preserving public live facade imports; `src/aeat/application/live/__init__.py src/aeat/application/live/*.py`.
+- [x] `W03.P06.S57` - decompose application live package root by service family while preserving public live facade imports; `src/aeat/application/live/__init__.py src/aeat/application/live/*.py`.
 - [ ] `W03.P06.S58` - verify application live behavior and public live facade imports after decomposition; `src/aeat/application/live/tests src/aeat/entrypoints/cli/tests/test_live*`.
 - [ ] `W03.P06.S59` - decompose application auth operator module by credential and authority workflows behind the auth facade; `src/aeat/application/auth/_operator.py src/aeat/application/auth/*.py`.
 - [ ] `W03.P06.S60` - verify application auth operator behavior and facade imports after decomposition; `src/aeat/application/auth/tests src/aeat/entrypoints/cli/_config/tests`.
 - [ ] `W03.P06.S61` - decompose application workflow engine by execution and adapter orchestration helpers behind the workflow facade; `src/aeat/application/workflow/_engine.py src/aeat/application/workflow/*.py`.
 - [ ] `W03.P06.S62` - verify application workflow engine behavior and facade imports after decomposition; `src/aeat/application/workflow/tests src/aeat/tests`.
+- [ ] `W03.P06.S113` - extract live IVA compensation and remote-state acquisition services behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/_iva_remote_state.py src/aeat/application/live/tests/test_iva_remote_state_acquisition.py src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py`.
+- [ ] `W03.P06.S114` - extract live filed-data listing and capture services behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/_filed_data.py src/aeat/application/live/tests src/aeat/entrypoints/cli/tests/test_registry_cli.py`.
 
 ### Phase `W03.P07` - domain registry decomposition
 

@@ -18,9 +18,9 @@ from .._ledger import app as ledger_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-# Canonical ledger verb roster. Adding a verb here without the
-# corresponding ADR amendment is a contract drift; removing one
-# breaks an established CLI surface. Sorted alphabetically.
+# Canonical ledger verb roster. Adding a verb here without updating the
+# reviewed surface contract is drift; removing one breaks an established
+# CLI surface. Sorted alphabetically.
 EXPECTED_LEDGER_VERBS: frozenset[str] = frozenset(
     {
         "add",
@@ -59,7 +59,7 @@ def test_ledger_verb_roster_matches_canonical_spine() -> None:
 
     A missing verb means a service was un-mounted; an extra verb
     indicates an un-reviewed addition to the noun-group. Both cases
-    require an ADR amendment + an update to this expected set."""
+    require an explicit contract update to this expected set."""
 
     registered = frozenset(cmd.name for cmd in ledger_app.registered_commands)
     missing = EXPECTED_LEDGER_VERBS - registered
@@ -202,8 +202,8 @@ EXPECTED_MODELO_TOP_LEVEL_VERBS: frozenset[str] = frozenset(
 def test_modelo_top_level_verb_roster_matches_canonical_spine() -> None:
     """The set of top-level `aeat app modelo` verbs equals the canonical roster.
 
-    Missing or extra entries are a contract drift that requires an explicit
-    update to :data:`EXPECTED_MODELO_TOP_LEVEL_VERBS` plus an ADR amendment.
+    Missing or extra entries are contract drift that requires an explicit
+    update to :data:`EXPECTED_MODELO_TOP_LEVEL_VERBS`.
     Subgroup verbs (`work verify`, `audit export`, etc.) are governed by
     their own per-subgroup gates, not by this roster."""
 

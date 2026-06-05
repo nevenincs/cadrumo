@@ -39,6 +39,8 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S102]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S103]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S104]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S105]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S106]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S110]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S111]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S112]]'
@@ -75,6 +77,7 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S54]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S55]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S56]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S57]]'
   - '[[2026-06-05-codebase-monolith-decomposition-adr]]'
   - '[[2026-06-05-codebase-monolith-decomposition-code-review-audit]]'
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
@@ -131,6 +134,8 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S102` - W02.P05.S102 - extract config profile bundle commands
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S103` - W02.P05.S103 Config Profile Verification
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S104` - W02.P05.S104 Ledger Residual Slice Discovery
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S105` - W02.P05.S105 - extract ledger read commands
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S106` - W02.P05.S106 - verify ledger read extraction
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S110` - W02.P05.S110 - extract modelo audit commands
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S111` - W02.P05.S111 - verify modelo audit extraction
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S112` - W02.P05.S112 Modelo Natural-Key Cross-Period Coverage Reconciliation
@@ -167,6 +172,7 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S54` - W03.P06.S54 - verify application modelo action decomposition
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S55` - W03.P06.S55 Ledger Actions Facade Decomposition
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S56` - W03.P06.S56 Ledger Actions Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P06-S57` - W03.P06.S57 Live Root Model Extraction
 
 ### plan
 
