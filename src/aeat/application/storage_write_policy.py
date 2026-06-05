@@ -60,6 +60,8 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "app ledger track",
     "app ledger export",
     "app ledger import",
+    "app ledger rule add",
+    "app ledger rule apply",
     "app ledger ratios set",
     "app ledger ratios unset",
     "app ledger payable-invoice add",

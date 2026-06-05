@@ -95,6 +95,8 @@ def test_read_only_and_recovery_verbs_do_not_trigger_write_policy(tmp_path: Path
     ("verb_path", "expected"),
     (
         ("app ledger link tx --invoice-id inv", True),
+        ("app ledger rule add --description-pattern fuel --classification expense", True),
+        ("app ledger rule apply --dry-run", True),
         ("app modelo work file abc", True),
         ("config profile censo refresh", True),
         ("config profile switch operator", False),
