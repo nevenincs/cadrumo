@@ -1,12 +1,13 @@
 """Unified access gate for live AEAT reads and permanent write refusal.
 
-The gate consolidates the env-var preconditions that guard live AEAT
-read call-sites. Live AEAT writes are permanently forbidden, so the
-write-side helper always raises a typed refusal. The gate is consumed
-by the repair CLI for surfacing a "Live access gate" row and by every
-live-read module (filing history, missing-filing detection, AEAT
-messages, IVA balance tracking) that needs a typed precondition
-rather than per-call-site ``if os.environ[...] != "1"`` boilerplate.
+The gate consolidates live-test preconditions for pytest-driven live
+reads while keeping operator-facing live reads as operational surfaces.
+Live AEAT writes are permanently forbidden, so the write-side helper
+always raises a typed refusal. The gate is consumed by the repair CLI
+for surfacing a "Live access gate" row and by every live-read module
+(filing history, missing-filing detection, AEAT messages, IVA balance
+tracking) that needs a typed precondition rather than per-call-site
+``if os.environ[...] != "1"`` boilerplate in tests.
 
 The gate is always constructed inline from a
 :class:`aeat.core.config.Settings` instance at the call site. It is
@@ -26,6 +27,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
+from ..config import LIVE_READ_TEST_OPT_IN_ENV_VAR
 from ._authorization import (
     AUTHORIZATION_MANIFEST_DIRNAME,
     CANONICAL_MODELO_FLEET,
@@ -52,12 +54,11 @@ if TYPE_CHECKING:
     from ..config import Settings
 
 
-_LIVE_TESTS_ENV = "AEAT_LIVE_TESTS_ENABLED"
 _PYTEST_CURRENT_TEST_ENV = "PYTEST_CURRENT_TEST"
 
 
 class AeatGateEnvSnapshot(BaseModel):
-    """Frozen snapshot of the env vars that still matter for live AEAT access.
+    """Frozen snapshot of the env vars that still matter for live-test access.
 
     The record is safe to log and safe to serialise into historical
     audit payloads. Values are raw strings as read from ``os.environ``;
@@ -84,7 +85,7 @@ class AeatGateEnvSnapshot(BaseModel):
             with their raw string values.
         """
         return {
-            _LIVE_TESTS_ENV: self.aeat_live_tests_enabled,
+            LIVE_READ_TEST_OPT_IN_ENV_VAR: self.aeat_live_tests_enabled,
             _PYTEST_CURRENT_TEST_ENV: self.pytest_current_test,
         }
 
@@ -103,22 +104,39 @@ class AeatAccessGate:
 
     settings: Settings
 
-    def require_live_read(self) -> None:
-        """Refuse live AEAT reads when the Settings precondition is off.
+    def _pytest_current_test_value(self, pytest_current_test: str | None = None) -> str:
+        """Return pytest's current-test marker, with an explicit test seam."""
+        return os.environ.get(_PYTEST_CURRENT_TEST_ENV, "") if pytest_current_test is None else pytest_current_test
+
+    def live_read_requires_test_opt_in(self, *, pytest_current_test: str | None = None) -> bool:
+        """Return whether the current live read is executing under pytest.
+
+        ``AEAT_LIVE_TESTS_ENABLED`` is a test runner opt-in, not an
+        operational CLI switch. A live read in a normal operator shell
+        still passes through auth/profile/read-only guards, but it is
+        not refused by the pytest-only environment variable.
+        """
+        return bool(self._pytest_current_test_value(pytest_current_test))
+
+    def require_live_read(self, *, pytest_current_test: str | None = None) -> None:
+        """Refuse pytest-driven live AEAT reads unless the test opt-in is on.
 
         Routes the check through :class:`aeat.core.config.Settings`
-        (specifically the ``aeat_live_tests_enabled: bool`` field) so
+        (specifically the ``aeat_live_tests_enabled`` field) so
         every config read in the codebase flows through a single
-        validated surface — no direct ``os.environ.get`` access for
-        AEAT-prefixed variables.
+        validated surface. Outside pytest this method deliberately
+        permits the read to continue to the operational auth/profile
+        and read-only remote-state guards.
 
         Raises:
-            AeatLiveReadNotEnabledError: When
+            AeatLiveReadNotEnabledError: During pytest execution, when
                 ``Settings.aeat_live_tests_enabled`` is not ``"1"``.
         """
-        if self.settings.aeat_live_tests_enabled != "1":
+        if self.live_read_requires_test_opt_in(pytest_current_test=pytest_current_test) and (
+            self.settings.aeat_live_tests_enabled != "1"
+        ):
             raise AeatLiveReadNotEnabledError(
-                f"live AEAT reads require {_LIVE_TESTS_ENV} set to the literal "
+                f"pytest live AEAT reads require {LIVE_READ_TEST_OPT_IN_ENV_VAR} set to the literal "
                 f"value 1 (the exact string '1', not 'true'/'yes'/'on'); "
                 f"current value: {self.settings.aeat_live_tests_enabled!r}"
             )
@@ -160,9 +178,7 @@ class AeatAccessGate:
             A :class:`AeatGateEnvSnapshot` capturing the current
             gate-relevant variables.
         """
-        resolved_pytest = (
-            os.environ.get(_PYTEST_CURRENT_TEST_ENV, "") if pytest_current_test is None else pytest_current_test
-        )
+        resolved_pytest = self._pytest_current_test_value(pytest_current_test)
         return AeatGateEnvSnapshot(
             aeat_live_tests_enabled=self.settings.aeat_live_tests_enabled,
             pytest_current_test=resolved_pytest,
