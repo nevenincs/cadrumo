@@ -585,5 +585,4 @@ __all__ = [
     "CensoFieldComparison",
     "CensoProfileComparison",
     "CensoSyncService",
-    "build_censo_sync_service",
 ]
