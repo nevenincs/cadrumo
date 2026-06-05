@@ -578,3 +578,19 @@ Broader CLI verification still reports two unrelated residual failures:
 source-inspection assertion after modelo CLI decomposition, and
 `test_app_ledger_create_manual_transaction_persists_in_active_bucket` now feeds
 an update rejected by the taxable-base plus IVA invariant.
+
+## W05-008 | INFO | HTTPX certificate fallback review found no defects
+
+Status: verified.
+
+The W05.P16.S59 review found no defect in the shifted HTTPX fallback location.
+The planned browser path no longer exists; the active implementation lives under
+`auth/_certificate_backends/_httpx_fallback.py` and is selected only through
+`CertificateBackend.HTTPX_FALLBACK`. `preload()` refuses browser-context use
+with `AuthConfigurationError`, and `verify()` returns a closed handshake failure
+without writing decrypted PEM/key material to temporary files.
+
+Focused verification passed Ruff for the fallback, certificate dispatcher, and
+certificate tests. The certificate test suite passed, including backend
+selection, HTTPX fallback preload refusal, settings registration, and handshake
+failure behavior.
