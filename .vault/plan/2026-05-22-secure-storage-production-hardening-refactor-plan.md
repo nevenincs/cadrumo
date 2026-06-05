@@ -644,7 +644,7 @@ Close the runtime rollout only after mechanical checks prove the application no 
 
 - [x] `W12.P25.S100` - Run the mechanical scanner from the active-profile runtime audit and persist a before/after delta for production and test signals; `.vault/audit`.
 - [x] `W12.P25.S101` - Run focused storage, profile lifecycle, CLI, workflow, domain repository, outbound adapter, and test-runtime gates after runtime migration; `src/aeat`.
-- [ ] `W12.P25.S102` - Persist a final runtime rollout review proving direct constructors, explicit-route tests, manifest discovery, bootstrap custody, side-store exceptions, and remote mirrors each have one accepted disposition; `.vault/audit`.
+- [x] `W12.P25.S102` - Persist a final runtime rollout review proving direct constructors, explicit-route tests, manifest discovery, bootstrap custody, side-store exceptions, and remote mirrors each have one accepted disposition; `.vault/audit`.
 
 ### Phase `W12.P26` - affected-file CLI closure ledger
 
