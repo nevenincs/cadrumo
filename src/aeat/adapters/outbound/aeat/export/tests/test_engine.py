@@ -29,7 +29,7 @@ from ......domain.submission import (
 )
 from ......tests.secure_sql import isolated_runtime_profile
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 @pytest.fixture(autouse=True)

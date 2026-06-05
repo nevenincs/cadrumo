@@ -8,7 +8,7 @@ from ......core.access_gate import LiveSubmitForbiddenError
 from ......core.errors import AeatError
 from ......domain.submission import SubmissionError, SubmissionPreflightError
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def test_every_error_inherits_aeat_error() -> None:
