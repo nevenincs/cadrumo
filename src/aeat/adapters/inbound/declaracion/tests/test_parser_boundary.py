@@ -14,6 +14,7 @@ from .....core.errors import AeatError
 from .....core.resources import resources
 from .....domain.justificante._errors import PdfModeloImportError
 from .....tests import FIXTURES_DIR
+from ...pdf._utils import source_pdf_reference_path
 from .. import DeclaracionParseError, TemplateNotDetectedError, parse_declaracion
 from .._parser import _extract_pages_words
 
@@ -114,6 +115,8 @@ def test_parser_extracts_legal_entity_nif_from_pdf() -> None:
     pdf_path = FIXTURES_DIR / "justificantes" / "130" / "2022-2T.pdf"
     filing = parse_declaracion(pdf_path, modelo_override="130", año_override=2022, period_override="2T")
     assert filing.tax_id == "Y0000001S"
+    assert filing.source_pdf_path == source_pdf_reference_path(filing.source_pdf_sha256)
+    assert pdf_path.name not in str(filing.source_pdf_path)
 
 
 def test_parser_debug_log_does_not_expose_source_filename(caplog: pytest.LogCaptureFixture) -> None:

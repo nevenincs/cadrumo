@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from .....domain.calculations.registry import ExtractionProfileDefinition, ExtractionTargetDefinition
+from ...pdf._utils import source_pdf_reference_path
 from .. import ArtefactKind, BorradorObservation, BorradorParseError, BorradorParseMode, parse_borrador
 
 pytestmark = [
@@ -125,6 +126,19 @@ class TestArtefactKindDetection:
         assert filing.artefact_kind is ArtefactKind.DECLARACION
         assert filing.csv == "MNOP4321QRST8765"
 
+    def test_unrecognised_error_omits_source_filename(self, tmp_path: Path) -> None:
+        pdf = _generate_pdf(tmp_path, artefact_kind="UNRECOGNISED")
+        sensitive_pdf = tmp_path / "12345678Z-renta-borrador.pdf"
+        pdf.rename(sensitive_pdf)
+
+        with pytest.raises(BorradorParseError) as exc_info:
+            parse_borrador(sensitive_pdf)
+
+        rendered = str(exc_info.value)
+        assert sensitive_pdf.name not in rendered
+        assert str(sensitive_pdf) not in rendered
+        assert "<input-pdf>" in rendered
+
 
 class TestObservedValues:
     """Extract printed casilla rows without claiming Modelo 100 completeness."""
@@ -139,6 +153,8 @@ class TestObservedValues:
         assert extracted == {casilla_id: Decimal(raw) for casilla_id, raw in _OBSERVED_VALUES.items()}
         assert filing.registry_extraction_profile_id is None
         assert filing.extraction_coverage is None
+        assert filing.source_pdf_path == source_pdf_reference_path(filing.source_pdf_sha256)
+        assert pdf.name not in str(filing.source_pdf_path)
 
     def test_parse_logs_do_not_expose_source_filename(
         self,

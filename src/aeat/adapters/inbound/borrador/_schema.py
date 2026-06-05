@@ -82,7 +82,8 @@ class BorradorObservation(BaseModel):
             to this parse, when the caller requested coverage validation.
         extraction_coverage: Observed target-casilla coverage when a
             registry extraction profile was supplied.
-        source_pdf_path: Absolute path of the parsed PDF.
+        source_pdf_path: Privacy-preserving source reference derived from
+            the parsed PDF digest.
         source_pdf_sha256: Lowercase hex SHA-256 of source bytes.
         parsed_at: UTC timestamp at parse completion.
         csv: AEAT CSV if the artefact is a ``DECLARACION``; ``None`` for

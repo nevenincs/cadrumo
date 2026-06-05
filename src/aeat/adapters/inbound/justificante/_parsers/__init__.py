@@ -12,13 +12,16 @@ importing the corresponding ``extract_text_*`` helper.
 
 from __future__ import annotations
 
-from functools import lru_cache
+from collections import OrderedDict
 from pathlib import Path
 
 from .....domain.justificante._errors import JustificanteParseError
 from .....domain.justificante._schema import JustificanteParserBackend
+from ...pdf._utils import sha256_file
 
 _INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
+_TEXT_CACHE_MAXSIZE = 256
+_TEXT_CACHE: OrderedDict[tuple[str, str, int, int], str] = OrderedDict()
 
 
 def extract_text(pdf_path: Path, backend: JustificanteParserBackend) -> str:
@@ -34,6 +37,7 @@ def extract_text(pdf_path: Path, backend: JustificanteParserBackend) -> str:
     try:
         resolved = pdf_path.expanduser().resolve()
         stat = resolved.stat()
+        source_digest = sha256_file(resolved)
     except OSError as exc:
         raise JustificanteParseError(
             f"justificante PDF could not be read: {_INPUT_PDF_SOURCE_LABEL}",
@@ -42,13 +46,21 @@ def extract_text(pdf_path: Path, backend: JustificanteParserBackend) -> str:
             missing=("source_pdf",),
         ) from exc
     backend_value = backend.value if hasattr(backend, "value") else str(backend)
-    return _extract_text_cached(str(resolved), backend_value, stat.st_size, stat.st_mtime_ns)
+    cache_key = (source_digest, backend_value, stat.st_size, stat.st_mtime_ns)
+    cached = _TEXT_CACHE.get(cache_key)
+    if cached is not None:
+        _TEXT_CACHE.move_to_end(cache_key)
+        return cached
+
+    text = _extract_text_uncached(resolved, backend_value)
+    _TEXT_CACHE[cache_key] = text
+    _TEXT_CACHE.move_to_end(cache_key)
+    if len(_TEXT_CACHE) > _TEXT_CACHE_MAXSIZE:
+        _TEXT_CACHE.popitem(last=False)
+    return text
 
 
-@lru_cache(maxsize=256)
-def _extract_text_cached(path: str, backend_value: str, byte_count: int, modified_ns: int) -> str:
-    del byte_count, modified_ns
-    pdf_path = Path(path)
+def _extract_text_uncached(pdf_path: Path, backend_value: str) -> str:
     normalized_backend = backend_value.lower()
     if normalized_backend == JustificanteParserBackend.PDFPLUMBER.value.lower():
         from ._pdfplumber_backend import extract_text_pdfplumber

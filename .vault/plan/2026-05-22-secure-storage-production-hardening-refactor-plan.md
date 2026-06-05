@@ -1088,7 +1088,7 @@ Close the oldest custody and passphrase observations with current command-surfac
 - [x] `W20.P40.S458` - Replace stale custody and recovery guidance with canonical config custody verbs and locale-backed recovery copy; `src/aeat/adapters/persistence/storage/master_key; src/aeat/adapters/persistence/storage/runtime.py; src/aeat/core/errors/registry; src/aeat/locales`.
 - [x] `W20.P40.S459` - Implement and localize the first-class `config lock` and `config unlock` custody aliases through the existing profile lifecycle session path, with real CLI coverage; `src/aeat/entrypoints/cli/_config; src/aeat/entrypoints/cli/tests; src/aeat/locales`.
 - [x] `W20.P40.S460` - Close post-S458 stale guidance drift by routing runtime, diagnostics, operator help, repair next actions, registry suggestions, and locale recovery copy to canonical `config unlock` and `config recover` verbs; `src/aeat/adapters/persistence/storage; src/aeat/application; src/aeat/entrypoints/cli; src/aeat/core/errors/registry; src/aeat/locales`.
-- [ ] `W20.P40.S461` - Decide and implement the `config profile switch` compatibility contract after `config unlock` adoption: either retire the command surface with migration coverage or keep it as an explicit compatibility alias hidden from recovery guidance; `src/aeat/entrypoints/cli/_config; src/aeat/entrypoints/cli/tests; src/aeat/locales; .vault/adr`.
+- [x] `W20.P40.S461` - Decide and implement the `config profile switch` compatibility contract after `config unlock` adoption: either retire the command surface with migration coverage or keep it as an explicit compatibility alias hidden from recovery guidance; `src/aeat/entrypoints/cli/_config; src/aeat/entrypoints/cli/tests; src/aeat/locales; .vault/adr`.
 
 ### Phase `W20.P41` - convention and provenance privacy follow-up
 
@@ -1096,7 +1096,7 @@ Retire residual convention exceptions or make them explicit, localized, and priv
 
 - [x] `W20.P41.S453` - Retire or narrow residual direct environment, monkeypatch, explicit-route, and literal filesystem-layout allowances from the secure-storage guard inventories, preserving only tests whose direct subject is the centralized Settings or low-level SQL contract; `src/aeat/tests; src/aeat/adapters/persistence/storage/tests; .vault/audit`.
 - [ ] `W20.P41.S454` - Localize remaining filing/modelo builder and calculation error messages through `tr()` and `python -m aeat.locales`, preserving AEAT core exception hierarchy and registry-backed error codes; `src/aeat/application/filing; src/aeat/application/modelo; src/aeat/locales`.
-- [ ] `W20.P41.S455` - Review inbound parser and provenance path handling for raw PDF paths, byte-stream source labels, `source_pdf_path`, financial provenance, justificante provenance, PDF dispatch cache keys, and sanitizer hash disclosure; `redact or normalize path-bearing data where it can reach persisted state, logs, or user-facing errors; `src/aeat/adapters/inbound; src/aeat/application`.
+- [x] `W20.P41.S455` - Review inbound parser and provenance path handling for raw PDF paths, byte-stream source labels, `source_pdf_path`, financial provenance, justificante provenance, PDF dispatch cache keys, and sanitizer hash disclosure; `redact or normalize path-bearing data where it can reach persisted state, logs, or user-facing errors; `src/aeat/adapters/inbound; src/aeat/application`.
 
 ### Phase `W20.P42` - central redaction enrollment proof
 

@@ -703,6 +703,7 @@ related:
   - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s393-review-audit]]'
   - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s394-review-audit]]'
   - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s395-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P25-S102]]'
   - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S287]]'
   - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S288]]'
   - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S289]]'
@@ -773,10 +774,14 @@ related:
   - '[[2026-06-05-secure-storage-production-hardening-W18-P38-summary]]'
   - '[[2026-06-05-secure-storage-production-hardening-W19-P39-S450]]'
   - '[[2026-06-05-secure-storage-production-hardening-W20-P40-S451]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W20-P40-S452]]'
   - '[[2026-06-05-secure-storage-production-hardening-W20-P40-S457]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W20-P40-S458]]'
   - '[[2026-06-05-secure-storage-production-hardening-W20-P40-S459]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W20-P41-S453]]'
   - '[[2026-06-05-secure-storage-production-hardening-code-review-audit]]'
   - '[[2026-06-05-secure-storage-production-hardening-error-registry-hygiene-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p25-s102-runtime-rollout-closeout-audit]]'
   - '[[2026-06-05-secure-storage-production-hardening-w12-p26-register-reconciliation-audit]]'
   - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s287-review-audit]]'
   - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s288-review-audit]]'
@@ -844,7 +849,14 @@ related:
   - '[[2026-06-05-secure-storage-production-hardening-w18-p38-s449-review-audit]]'
   - '[[2026-06-05-secure-storage-production-hardening-w18-p38-split-module-review-audit]]'
   - '[[2026-06-05-secure-storage-production-hardening-w20-p40-s451-custody-api-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w20-p40-s452-passphrase-redaction-audit]]'
   - '[[2026-06-05-secure-storage-production-hardening-w20-p40-s457-custody-rollout-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w20-p40-s458-guidance-rollout-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w20-p41-s453-guard-inventory-audit]]'
+  - '[[2026-06-06-secure-storage-production-hardening-W20-P40-S460]]'
+  - '[[2026-06-06-secure-storage-production-hardening-W20-P41-S455]]'
+  - '[[2026-06-06-secure-storage-production-hardening-code-review-audit]]'
+  - '[[2026-06-06-secure-storage-production-hardening-w20-p41-s455-provenance-path-audit]]'
 ---
 
 # `secure-storage-production-hardening` feature index
@@ -1166,6 +1178,7 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 - `2026-06-04-secure-storage-production-hardening-w12-p26-s395-review-audit` - `secure-storage-production-hardening` `W12.P26.S395` Review
 - `2026-06-05-secure-storage-production-hardening-code-review-audit` - `secure-storage-production-hardening` Code Review
 - `2026-06-05-secure-storage-production-hardening-error-registry-hygiene-audit` - `secure-storage-production-hardening` Error Registry Hygiene
+- `2026-06-05-secure-storage-production-hardening-w12-p25-s102-runtime-rollout-closeout-audit` - `secure-storage-production-hardening` `W12.P25.S102` runtime rollout closeout
 - `2026-06-05-secure-storage-production-hardening-w12-p26-register-reconciliation-audit` - `secure-storage-production-hardening` W12.P26 Register Reconciliation
 - `2026-06-05-secure-storage-production-hardening-w12-p26-s287-review-audit` - `secure-storage-production-hardening` Code Review
 - `2026-06-05-secure-storage-production-hardening-w12-p26-s288-review-audit` - `secure-storage-production-hardening` Code Review
@@ -1233,7 +1246,12 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 - `2026-06-05-secure-storage-production-hardening-w18-p38-s449-review-audit` - `secure-storage-production-hardening` `W18.P38.S449` Review
 - `2026-06-05-secure-storage-production-hardening-w18-p38-split-module-review-audit` - `secure-storage-production-hardening` `W18.P38` split-module review
 - `2026-06-05-secure-storage-production-hardening-w20-p40-s451-custody-api-audit` - `secure-storage-production-hardening` `W20.P40.S451` custody API audit
+- `2026-06-05-secure-storage-production-hardening-w20-p40-s452-passphrase-redaction-audit` - `secure-storage-production-hardening` `W20.P40.S452` passphrase and redaction audit
 - `2026-06-05-secure-storage-production-hardening-w20-p40-s457-custody-rollout-audit` - `secure-storage-production-hardening` `W20.P40.S457` custody rollout audit
+- `2026-06-05-secure-storage-production-hardening-w20-p40-s458-guidance-rollout-audit` - `secure-storage-production-hardening` `W20.P40.S458` guidance rollout audit
+- `2026-06-05-secure-storage-production-hardening-w20-p41-s453-guard-inventory-audit` - `secure-storage-production-hardening` `W20.P41.S453` guard inventory audit
+- `2026-06-06-secure-storage-production-hardening-code-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-06-secure-storage-production-hardening-w20-p41-s455-provenance-path-audit` - S455 provenance path audit
 
 ### exec
 
@@ -1625,6 +1643,7 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 - `2026-06-04-secure-storage-production-hardening-W12-P26-S395` - `secure-storage-production-hardening` `W12.P26.S395`
 - `2026-06-04-secure-storage-production-hardening-w12-p26-s393-locale-key-registry-repair-exec` - W12.P26.S393 - Locale-key registry repair
 - `2026-05-22-secure-storage-production-hardening-W12-P26-S321` - W12.P26.S321 bucket event repository
+- `2026-06-05-secure-storage-production-hardening-W12-P25-S102` - W12.P25.S102 - Final runtime rollout disposition review
 - `2026-06-05-secure-storage-production-hardening-W12-P26-S287` - W12.P26.S287 - Close AFR-185 for active-profile pointer I/O
 - `2026-06-05-secure-storage-production-hardening-W12-P26-S288` - W12.P26.S288 - Close AFR-186 for core TOML helpers
 - `2026-06-05-secure-storage-production-hardening-W12-P26-S289` - W12.P26.S289 - Close AFR-187 for access-gate exports
@@ -1695,8 +1714,13 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 - `2026-06-05-secure-storage-production-hardening-W18-P38-summary` - `secure-storage-production-hardening` `W18.P38` summary
 - `2026-06-05-secure-storage-production-hardening-W19-P39-S450` - W19.P39.S450 - Refresh secure-storage guard inventories
 - `2026-06-05-secure-storage-production-hardening-W20-P40-S451` - W20.P40.S451 - Verify custody command and API exposure
+- `2026-06-05-secure-storage-production-hardening-W20-P40-S452` - W20.P40.S452 - Harden passphrase bootstrap and redaction
 - `2026-06-05-secure-storage-production-hardening-W20-P40-S457` - W20.P40.S457 - Implement first-class config custody verbs
+- `2026-06-05-secure-storage-production-hardening-W20-P40-S458` - W20.P40.S458 - Replace stale custody and recovery guidance
 - `2026-06-05-secure-storage-production-hardening-W20-P40-S459` - W20.P40.S459 - Implement config lock and unlock aliases
+- `2026-06-05-secure-storage-production-hardening-W20-P41-S453` - W20.P41.S453 - Narrow secure-storage guard inventories
+- `2026-06-06-secure-storage-production-hardening-W20-P40-S460` - W20.P40.S460 - Close stale custody guidance drift
+- `2026-06-06-secure-storage-production-hardening-W20-P41-S455` - W20.P41.S455 inbound provenance privacy
 
 ### plan
 
