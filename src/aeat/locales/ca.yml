@@ -1942,6 +1942,7 @@ cli:
         client_unregistered: no hi ha cap client OAuth registrat per al perfil {profile}
         no_metadata_for_refresh: no hi ha cap sessió OAuth per al perfil {profile};
           no es pot renovar sense un inici de sessió previ
+        sync_push_limit_requires_dry_run: 'La sincronitzacio push de Google no pot usar --limit llevat que --dry-run estigui activat, perque una execucio real acotada crearia un manifest remot parcial.'
       errors:
         auth_failed: 'L''autenticació amb Google ha fallat: {detail}'
         browser_open: 'No s''ha pogut obrir un navegador per autoritzar l''accés a

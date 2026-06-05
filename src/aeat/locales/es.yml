@@ -1968,6 +1968,7 @@ cli:
           {profile}
         no_metadata_for_refresh: no hay sesión OAuth para el perfil {profile}; no
           se puede renovar sin un inicio de sesión previo
+        sync_push_limit_requires_dry_run: 'La sincronizacion push de Google no puede usar --limit salvo que --dry-run este activado, porque una ejecucion real acotada crearia un manifiesto remoto parcial.'
       errors:
         auth_failed: 'La autenticación con Google falló: {detail}'
         browser_open: 'No se pudo abrir un navegador para autorizar el acceso a Google:

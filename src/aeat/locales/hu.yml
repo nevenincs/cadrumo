@@ -1891,6 +1891,7 @@ cli:
         client_unregistered: Nincs regisztrált OAuth-ügyfél a(z) {profile} profilhoz.
         no_metadata_for_refresh: Nincs OAuth-munkamenet a(z) {profile} profilhoz;
           korábbi bejelentkezés nélkül nem lehet megújítani.
+        sync_push_limit_requires_dry_run: 'A Google sync push csak --dry-run mellett hasznalhat --limit kapcsolot, mert egy korlatozott eles futas reszleges tavoli tukor manifestet hozna letre.'
       errors:
         auth_failed: 'Google-hitelesítés sikertelen: {detail}'
         browser_open: 'Nem sikerült megnyitni a böngészőt a Google-hozzáférés engedélyezéséhez:
