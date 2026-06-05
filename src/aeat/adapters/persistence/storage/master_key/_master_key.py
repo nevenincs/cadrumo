@@ -95,6 +95,7 @@ from ._master_key_io import (
     _default_passphrase_callback,
     atomic_write_secure_bytes,
 )
+from ._master_key_ephemeral import EphemeralMasterKeyProvider as EphemeralMasterKeyProvider
 from ._master_key_records import (
     EnvelopeDocument,
     _KdfParameters,
@@ -801,107 +802,6 @@ class FileFallbackMasterKeyProvider:
             time_cost=params.time_cost,
             parallelism=params.parallelism,
         )
-
-
-class EphemeralMasterKeyProvider:
-    """In-memory master-key provider used exclusively by tests.
-
-    The key is generated once per provider instance and never persisted.
-    Doubles as a context manager: ``with EphemeralMasterKeyProvider():
-    ...`` opens a :class:`BucketSession` bound to the provider's key
-    bytes and activates it via :func:`activate_session` so column-
-    level decrypt and encrypt operations inside the block resolve
-    through :func:`get_active_master_key`. On exit the session is
-    closed (zeroising its buffers) and the ContextVar is restored.
-
-    The provider remains a plain :class:`MasterKeyProvider`
-    (``get_master_key()`` returns the same bytes) so blob-store,
-    secret-store, and envelope code paths that take an injected
-    ``master_key_provider`` continue to work unchanged inside the
-    ``with`` block.
-    """
-
-    def __init__(self, *, key: bytes | None = None) -> None:
-        """Construct a provider with an optional fixed key.
-
-        Args:
-            key: Optional 32-byte key. When ``None``, a fresh random key is minted.
-
-        Raises:
-            SecretStoreError: When ``key`` is provided but is not exactly 32 bytes.
-        """
-        if key is None:
-            key = secrets.token_bytes(KEY_SIZE)
-        if len(key) != KEY_SIZE:
-            raise SecretStoreError(
-                f"ephemeral master key must be {KEY_SIZE} bytes; got {len(key)}",
-            )
-        self._key = key
-        self._session: BucketSession | None = None
-        self._activation_cm: AbstractContextManager[None] | None = None
-
-    def get_master_key(self) -> bytes:
-        """Return the in-memory master key minted for this provider instance.
-
-        The key is the same bytes for the provider's lifetime and is never
-        persisted; this method exists so the provider satisfies the
-        ``MasterKeyProvider`` protocol that production blob-store,
-        secret-store, and envelope paths depend on.
-
-        Returns:
-            The 32-byte AES-256 master key held in memory.
-        """
-        return self._key
-
-    def provision_master_key(self) -> bytes:
-        """Return the in-memory key without minting fresh material.
-
-        For the ephemeral provider, enrollment and retrieval are the same
-        operation: the key already exists in memory and nothing is
-        persisted, so this returns the instance key unchanged.
-
-        Returns:
-            The 32-byte AES-256 master key held in memory.
-        """
-        return self._key
-
-    def __enter__(self) -> object:
-        if self._session is not None:
-            from ._errors import MasterKeyReentrantError
-
-            raise MasterKeyReentrantError(type(self).__name__)
-
-        from ._active_session import activate_session
-        from ._bucket_session import BucketSession
-
-        session = BucketSession.open(
-            bucket_id="ephemeral",
-            kek=self._key,
-            dek=self._key,
-            idle_minutes=60,
-            opened_at=now(),
-            unsecured_backend=False,
-        )
-        activation = activate_session(session)
-        activation.__enter__()
-        self._session = session
-        self._activation_cm = activation
-        return session
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc: BaseException | None,
-        tb: TracebackType | None,
-    ) -> None:
-        activation = self._activation_cm
-        session = self._session
-        self._activation_cm = None
-        self._session = None
-        if activation is not None:
-            activation.__exit__(exc_type, exc, tb)
-        if session is not None:
-            session.close()
 
 
 def _bucket_dek_path(*, storage_root: Path, bucket_id: str) -> Path:
