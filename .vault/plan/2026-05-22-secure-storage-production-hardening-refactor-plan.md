@@ -29,6 +29,16 @@ related:
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 <!-- RETIRED: S422, S423 -->
 
 # `secure-storage-production-hardening` `refactor` plan
@@ -915,7 +925,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S375` - Close `AFR-273` for `src/aeat/entrypoints/cli/_app_live.py` with signals `secure-object, active-profile, manifest-bucket, plain-file`, target `runtime-default`, and owner `W12.P21.S83`; `src/aeat/entrypoints/cli/_app_live.py`.
 - [x] `W12.P26.S376` - Close `AFR-274` for `src/aeat/entrypoints/cli/_bootstrap_exempt.py` with signals `master-key`, target `runtime-default`, and owner `W12.P20.S78`; `src/aeat/entrypoints/cli/_bootstrap_exempt.py`.
 - [x] `W12.P26.S377` - Close `AFR-275` for `src/aeat/entrypoints/cli/_common.py` with signals `active-profile, manifest-bucket, sql-route`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/entrypoints/cli/_common.py`.
-- [ ] `W12.P26.S378` - Close `AFR-276` for `src/aeat/entrypoints/cli/_config/__init__.py` with signals `secure-object, active-profile, manifest-bucket, master-key, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W12.P26.S378` - Close `AFR-276` for `src/aeat/entrypoints/cli/_config/__init__.py` with signals `secure-object, active-profile, manifest-bucket, master-key, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `W12.P26.S379` - Close `AFR-277` for `src/aeat/entrypoints/cli/_config/_google.py` with signals `secure-object, active-profile, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/entrypoints/cli/_config/_google.py`.
 - [ ] `W12.P26.S380` - Close `AFR-278` for `src/aeat/entrypoints/cli/_config/_profile_census.py` with signals `active-profile, manifest-bucket`, target `bootstrap-custody`, and owner `W12.P22.S89`; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
 - [x] `W12.P26.S381` - Close `AFR-279` for `src/aeat/entrypoints/cli/_errors.py` with signals `master-key`, target `runtime-default`, and owner `W12.P20.S78`; `src/aeat/entrypoints/cli/_errors.py`.
