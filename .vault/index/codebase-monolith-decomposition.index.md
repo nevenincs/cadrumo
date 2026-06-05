@@ -47,9 +47,6 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S110]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S111]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S112]]'
-  - '[[2026-06-05-codebase-monolith-decomposition-W02-P10-S116]]'
-  - '[[2026-06-05-codebase-monolith-decomposition-W02-P10-S117]]'
-  - '[[2026-06-05-codebase-monolith-decomposition-W02-P10-S118]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S32]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S33]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S34]]'
@@ -78,6 +75,9 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S97]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S98]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S99]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P10-S116]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P10-S117]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P10-S118]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P04-S07]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P04-S08]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S113]]'
@@ -101,6 +101,18 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P07-S68]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P07-S69]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P07-S70]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P07-S71]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P07-S72]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P08-S73]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P08-S74]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P08-S75]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P08-S76]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P08-S77]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P08-S78]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P08-S79]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P08-S80]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P08-S81]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P08-S82]]'
   - '[[2026-06-05-codebase-monolith-decomposition-adr]]'
   - '[[2026-06-05-codebase-monolith-decomposition-code-review-audit]]'
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
@@ -165,9 +177,6 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S110` - W02.P05.S110 - extract modelo audit commands
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S111` - W02.P05.S111 - verify modelo audit extraction
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S112` - W02.P05.S112 Modelo Natural-Key Cross-Period Coverage Reconciliation
-- `2026-06-05-codebase-monolith-decomposition-W02-P10-S116` - W02.P10.S116 Config Custody Slice Discovery
-- `2026-06-05-codebase-monolith-decomposition-W02-P10-S117` - W02.P10.S117 Config Custody Registrar Extraction
-- `2026-06-05-codebase-monolith-decomposition-W02-P10-S118` - W02.P10.S118 Config Custody Verification
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S32` - `codebase-monolith-decomposition` `W02.P05.S32`
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S33` - `codebase-monolith-decomposition` `W02.P05.S33`
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S34` - W02.P05.S34 - verify ledger rule extraction
@@ -196,6 +205,9 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S97` - W02.P05.S97 Config Bucket History Selection
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S98` - W02.P05.S98 - extract config bucket history
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S99` - W02.P05.S99 - verify config bucket history extraction
+- `2026-06-05-codebase-monolith-decomposition-W02-P10-S116` - W02.P10.S116 Config Custody Slice Discovery
+- `2026-06-05-codebase-monolith-decomposition-W02-P10-S117` - W02.P10.S117 Config Custody Registrar Extraction
+- `2026-06-05-codebase-monolith-decomposition-W02-P10-S118` - W02.P10.S118 Config Custody Verification
 - `2026-06-05-codebase-monolith-decomposition-W03-P04-S07` - W03.P04.S07 Backend ADR Queue
 - `2026-06-05-codebase-monolith-decomposition-W03-P04-S08` - W03.P04.S08 Codebase Size Guard Expansion
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S113` - W03.P06.S113 Live IVA Remote-State Outcome Extraction
@@ -206,7 +218,7 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S55` - W03.P06.S55 Ledger Actions Facade Decomposition
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S56` - W03.P06.S56 Ledger Actions Verification
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S57` - W03.P06.S57 Live Root Model Extraction
-- `2026-06-05-codebase-monolith-decomposition-W03-P06-S58` - W03.P06.S58 - verify application live decomposition
+- `2026-06-05-codebase-monolith-decomposition-W03-P06-S58` - W03.P06.S58 Live Facade Verification
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S59` - W03.P06.S59 Auth Operator Decomposition
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S60` - W03.P06.S60 Auth Operator Verification
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S61` - W03.P06.S61 Workflow Engine Helper Extraction
@@ -223,6 +235,14 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W03-P07-S72` - W03.P07.S72 Registry Workbook Parity Verification
 - `2026-06-05-codebase-monolith-decomposition-W03-P08-S73` - W03.P08.S73 AEAT Sede Declarations Decomposition
 - `2026-06-05-codebase-monolith-decomposition-W03-P08-S74` - W03.P08.S74 AEAT Sede Declarations Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P08-S75` - W03.P08.S75 AEAT Auth Adapter Decomposition
+- `2026-06-05-codebase-monolith-decomposition-W03-P08-S76` - W03.P08.S76 AEAT Auth Adapter Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P08-S77` - W03.P08.S77 Google Calc Sheets Apply Decomposition
+- `2026-06-05-codebase-monolith-decomposition-W03-P08-S78` - W03.P08.S78 Google Calc Sheets Apply Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P08-S79` - W03.P08.S79 SQL Secure Objects Decomposition
+- `2026-06-05-codebase-monolith-decomposition-W03-P08-S80` - W03.P08.S80 SQL Secure Objects Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P08-S81` - W03.P08.S81 Master Key Storage Decomposition
+- `2026-06-05-codebase-monolith-decomposition-W03-P08-S82` - W03.P08.S82 Master Key Storage Verification
 
 ### plan
 

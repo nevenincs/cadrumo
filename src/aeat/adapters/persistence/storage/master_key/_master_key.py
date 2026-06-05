@@ -41,11 +41,10 @@ from __future__ import annotations
 import base64
 import binascii
 import contextlib
-import json
 import os
 import secrets
 import sqlite3
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
@@ -79,6 +78,7 @@ from ..errors import (
     SecretStoreError,
     UnsecuredModeRefusedError,
 )
+from ._master_key_bucket_dek import idle_minutes_for_bucket, load_or_mint_bucket_dek
 from ._master_key_derivation import (
     ARGON2_MEMORY_COST_KIB,
     ARGON2_PARALLELISM,
@@ -87,6 +87,7 @@ from ._master_key_derivation import (
     SALT_SIZE,
     derive_kek_with_params,
 )
+from ._master_key_ephemeral import EphemeralMasterKeyProvider as EphemeralMasterKeyProvider
 from ._master_key_io import (
     PASSPHRASE_ENV_VAR,
     PassphraseCallback,
@@ -95,13 +96,12 @@ from ._master_key_io import (
     _default_passphrase_callback,
     atomic_write_secure_bytes,
 )
-from ._master_key_ephemeral import EphemeralMasterKeyProvider as EphemeralMasterKeyProvider
 from ._master_key_records import (
     EnvelopeDocument,
     _KdfParameters,
     _KdfVersionEnvelope,
-    _WrappedBucketDekDocument,
 )
+from ._master_key_tax_id import looks_like_real_tax_id as looks_like_real_tax_id
 
 NIST_PASSPHRASE_MIN_LENGTH: Final[int] = 8
 """NIST SP 800-63B §5.1.1.1 verifier-side minimum passphrase length."""
@@ -804,105 +804,6 @@ class FileFallbackMasterKeyProvider:
         )
 
 
-def _bucket_dek_path(*, storage_root: Path, bucket_id: str) -> Path:
-    """Return the separated keystore path for one bucket's wrapped DEK."""
-    from .._namespace_registry import BUCKET_DEK_FILENAME
-    from ..bucket._keystore_paths import keystore_path, validate_keystore_separation
-
-    validate_keystore_separation(storage_root, bucket_id)
-    return keystore_path(storage_root, bucket_id) / BUCKET_DEK_FILENAME
-
-
-def _bucket_key_schedule(*, storage_root: Path, bucket_id: str):
-    """Return the bucket's key schedule, or ``None`` when no manifest exists.
-
-    Tolerates a manifest that is missing the ``status`` field (legacy format
-    before lifecycle-status was introduced) so that a session can still be
-    opened to allow the repair command to backfill the missing field.
-    """
-    from ..bucket._layout import bucket_paths
-    from ..bucket._manifest_io import MISSING_BUCKET_MANIFEST_MESSAGE, read_manifest
-    from ..errors import StorageValidationError
-
-    try:
-        return read_manifest(bucket_paths(storage_root, bucket_id)).key_schedule
-    except StorageValidationError as exc:
-        if str(exc) == MISSING_BUCKET_MANIFEST_MESSAGE:
-            return None
-        if "missing required lifecycle status" in str(exc):
-            # Legacy manifest without status; parse key_schedule directly so
-            # the session can open and the repair command can backfill status.
-            import tomllib
-
-            from ..bucket._layout import bucket_paths as _bp
-            from ..bucket._manifest import BucketKeySchedule
-            from ..bucket._manifest_io import manifest_path
-
-            paths = _bp(storage_root, bucket_id)
-            payload: dict[str, object] = dict(tomllib.loads(manifest_path(paths).read_text(encoding=_UTF_8_ENCODING)))
-            raw = payload.get("key_schedule")
-            if raw is not None:
-                return BucketKeySchedule(str(raw))
-        raise
-
-
-def _wrapped_dek_from_document(document: _WrappedBucketDekDocument):
-    from ._dek_wrap import WrappedDek
-
-    try:
-        nonce = _b64decode(document.nonce_b64)
-        ciphertext = _b64decode(document.ciphertext_b64)
-        tag = _b64decode(document.tag_b64)
-    except (ValueError, binascii.Error) as exc:
-        raise _master_key_unavailable_error("bucket DEK document carries malformed base64.") from exc
-    try:
-        return WrappedDek(nonce=nonce, ciphertext=ciphertext, tag=tag)
-    except ValidationError as exc:
-        raise _master_key_unavailable_error("bucket DEK document carries malformed field lengths.") from exc
-
-
-def _document_from_wrapped_dek(wrapped) -> _WrappedBucketDekDocument:
-    return _WrappedBucketDekDocument(
-        nonce_b64=_b64encode(wrapped.nonce),
-        ciphertext_b64=_b64encode(wrapped.ciphertext),
-        tag_b64=_b64encode(wrapped.tag),
-    )
-
-
-def _read_wrapped_bucket_dek(path: Path):
-    try:
-        document = _WrappedBucketDekDocument.model_validate_json(path.read_text(encoding=_UTF_8_ENCODING))
-    except (OSError, ValueError, ValidationError) as exc:
-        raise _master_key_unavailable_error("failed to read bucket DEK document.") from exc
-    return _wrapped_dek_from_document(document)
-
-
-def _write_wrapped_bucket_dek(path: Path, wrapped) -> None:
-    document = _document_from_wrapped_dek(wrapped)
-    payload = json.dumps(
-        document.model_dump(mode="json"),
-        indent=2,
-        sort_keys=True,
-    ).encode(_UTF_8_ENCODING)
-    atomic_write_secure_bytes(path, payload + b"\n")
-
-
-def _idle_minutes_for_bucket(*, storage_root: Path, bucket_id: str, default_minutes: int) -> int:
-    """Resolve the idle window from the bucket manifest, falling back to settings."""
-    from ..bucket._layout import bucket_paths
-    from ..bucket._manifest_io import MISSING_BUCKET_MANIFEST_MESSAGE, read_manifest
-    from ..errors import StorageValidationError
-
-    try:
-        manifest = read_manifest(bucket_paths(storage_root, bucket_id))
-    except StorageValidationError as exc:
-        if str(exc) == MISSING_BUCKET_MANIFEST_MESSAGE:
-            return default_minutes
-        raise
-    configured = manifest.idle_lock_minutes
-    return configured if configured is not None else default_minutes
-
-
 def _extract_profile_tax_ids(envelope_payload: bytes) -> tuple[str, ...] | None:
     """Extract profile tax-id facts from a decrypted user-profile envelope."""
     try:
@@ -965,76 +866,6 @@ def _refuse_unsecured_active_bucket_with_real_profile(session: BucketSession) ->
             refuse_unsecured_with_real_nif(tax_id, provider=UnsecuredMasterKeyProvider())
 
 
-def _load_or_mint_bucket_dek(
-    *,
-    kek: bytes,
-    storage_root: Path,
-    bucket_id: str,
-    allow_bootstrap_mint: bool,
-) -> bytes:
-    """Unwrap the per-bucket DEK, or mint it for a not-yet-registered bucket.
-
-    Existing buckets without a separated DEK file are treated as legacy
-    pre-hardening stores and keep using the KEK as the data key. This is
-    intentionally compatibility-preserving: silently minting a fresh DEK
-    for a bucket that already has encrypted rows would make those rows
-    unrecoverable.
-    """
-    from ..bucket._manifest import BucketKeySchedule
-    from ._dek_wrap import unwrap_dek, wrap_dek
-
-    path = _bucket_dek_path(storage_root=storage_root, bucket_id=bucket_id)
-    key_schedule = _bucket_key_schedule(storage_root=storage_root, bucket_id=bucket_id)
-    if key_schedule is None:
-        if allow_bootstrap_mint:
-            if path.is_file():
-                wrapped = _read_wrapped_bucket_dek(path)
-                try:
-                    return unwrap_dek(kek=kek, wrapped=wrapped, bucket_id=bucket_id)
-                except DecryptionError as exc:
-                    raise _master_key_unavailable_error(
-                        "staged bucket DEK did not authenticate under the active master key; "
-                        "verify the selected profile, passphrase, and secret-store backend.",
-                    ) from exc
-            dek = secrets.token_bytes(KEY_SIZE)
-            wrapped = wrap_dek(kek=kek, dek=dek, bucket_id=bucket_id)
-            _write_wrapped_bucket_dek(path, wrapped)
-            return dek
-        raise MasterKeyMaterialMissingError(
-            f"bucket {bucket_id!r} has no manifest; run `aeat config profile create NAME` "
-            "to create a profile before invoking commands that decrypt or persist stored records.",
-        )
-
-    if key_schedule is BucketKeySchedule.LEGACY_MASTER_KEY:
-        _log.warning(
-            "bucket %s has no separated DEK document; using legacy master-key data path",
-            bucket_id,
-        )
-        return kek
-
-    if key_schedule is BucketKeySchedule.BUCKET_DEK_V1:
-        if not path.is_file():
-            raise MasterKeyMaterialMissingError(
-                f"bucket {bucket_id!r} is enrolled in the bucket-dek-v1 key schedule "
-                f"but its wrapped DEK is missing at {path}; run the profile recovery "
-                "flow or restore the bucket keystore from backup before decrypting or "
-                "persisting records.",
-            )
-        wrapped = _read_wrapped_bucket_dek(path)
-        try:
-            return unwrap_dek(kek=kek, wrapped=wrapped, bucket_id=bucket_id)
-        except DecryptionError as exc:
-            raise _master_key_unavailable_error(
-                "bucket DEK did not authenticate under the active master key; "
-                "verify the selected profile, passphrase, and secret-store backend.",
-            ) from exc
-
-    raise MasterKeyMaterialMissingError(
-        f"bucket {bucket_id!r} has unsupported key schedule {key_schedule!r}; "
-        "run the profile recovery flow before decrypting or persisting records.",
-    )
-
-
 # Published deterministic key for the unsecured-mode provider. Public by
 # design — the goal is to keep the substrate's encryption pipeline intact
 # (every record is still a CipherEnvelope / EncryptedBlob) while making
@@ -1090,13 +921,13 @@ def _provider_enter(
     if isinstance(provider, UnsecuredMasterKeyProvider):
         dek_bytes = key_bytes
     else:
-        dek_bytes = _load_or_mint_bucket_dek(
+        dek_bytes = load_or_mint_bucket_dek(
             kek=key_bytes,
             storage_root=settings.aeat_local_storage_root,
             bucket_id=bucket_id,
             allow_bootstrap_mint=allow_bucket_dek_enrollment,
         )
-    idle_minutes = _idle_minutes_for_bucket(
+    idle_minutes = idle_minutes_for_bucket(
         storage_root=settings.aeat_local_storage_root,
         bucket_id=bucket_id,
         default_minutes=settings.aeat_bucket_default_idle_lock_minutes,
@@ -1240,49 +1071,6 @@ class UnsecuredMasterKeyProvider:
         tb: TracebackType | None,
     ) -> None:
         _provider_exit(self, exc_type, exc, tb)
-
-
-# Synthetic-NIF allow-list: tax-id-shaped strings that are valid under
-# the Spanish checksum algorithm but conventionally used as placeholders
-# in fixtures, tutorials, and tests. Any tax-id that is NOT in this set
-# AND is structurally valid is treated as REAL and refused by the
-# unsecured-mode canary. The list is intentionally small — tightening
-# the canary at the boundary is preferred over a permissive heuristic.
-_SYNTHETIC_TAX_IDS: Final[frozenset[str]] = frozenset(
-    {
-        "00000000T",  # all-zero NIF body — Hacienda's documented placeholder.
-        "X0000000T",  # all-zero NIE body.
-        "Z0000000T",  # all-zero NIE body, alt prefix.
-        "Y0000000Z",  # all-zero NIE body, alt prefix + check.
-        "B00000000",  # all-zero CIF body, common test prefix.
-    }
-)
-
-
-def looks_like_real_tax_id(value: str) -> bool:
-    """Return ``True`` when ``value`` parses as a real Spanish tax id.
-
-    Used by the unsecured-mode NIF-canary to refuse the unsecured
-    backend whenever the operator profile carries a real NIF / NIE /
-    CIF. Synthetic placeholders (all-zero bodies, documented test
-    sentinels — see :data:`_SYNTHETIC_TAX_IDS`) return ``False``.
-
-    Args:
-        value: Raw tax identifier (already-canonical or operator-input).
-
-    Returns:
-        ``True`` when the value validates under the Hacienda checksum
-        algorithm AND is not a synthetic placeholder. ``False`` for
-        invalid inputs and for synthetic placeholders alike — both
-        cases are safe to allow under the unsecured backend.
-    """
-    from .....core.identity import IdentityError, validate_spanish_tax_id
-
-    try:
-        canonical = validate_spanish_tax_id(value)
-    except (ValueError, IdentityError):
-        return False
-    return canonical not in _SYNTHETIC_TAX_IDS
 
 
 def refuse_unsecured_with_real_nif(
