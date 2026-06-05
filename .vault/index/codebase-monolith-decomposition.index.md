@@ -219,6 +219,8 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W03-P07-S68` - W03.P07.S68 Registry Record Design Verification
 - `2026-06-05-codebase-monolith-decomposition-W03-P07-S69` - W03.P07.S69 Registry Applicability Decomposition
 - `2026-06-05-codebase-monolith-decomposition-W03-P07-S70` - W03.P07.S70 Registry Applicability Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P07-S71` - W03.P07.S71 Registry Workbook Parity Decomposition
+- `2026-06-05-codebase-monolith-decomposition-W03-P07-S72` - W03.P07.S72 Registry Workbook Parity Verification
 
 ### plan
 
