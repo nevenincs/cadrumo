@@ -26,19 +26,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import Any, TypedDict
 
 import typer
 from pydantic import BaseModel, ConfigDict, ValidationError
-
-if TYPE_CHECKING:
-    from ....adapters.outbound.google._calc_sheets_pull import PullResult, RowSetEdit
-    from ....domain.calculations.registry import (
-        RegistryCalculationResult,
-        RegistrySnapshot,
-    )
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check with the registry validator. build_snapshot
@@ -52,21 +44,14 @@ from ....adapters.outbound.google import (
     GoogleAuthValidationError,
     OAuthClient,
 )
-from ....adapters.outbound.google._calc_sheets_apply import (
-    CalcSheetsApplyResult,
-    apply_export_plan,
-)
 from ....adapters.outbound.google._oauth_flow import run_login_flow
 from ....adapters.outbound.google._profile_binding import resolve_active_profile
-from ....adapters.outbound.google._records import DriveConfig
 from ....adapters.outbound.google._session_store import (
     delete_session,
     load_client,
-    load_drive_config,
     load_metadata,
     load_token,
     save_client,
-    save_drive_config,
     save_metadata,
     save_token,
 )
@@ -86,43 +71,29 @@ from ....adapters.outbound.storage import (
     put_remote_mirror_namespace_manifest,
     remote_mirror_object_key_hmac,
 )
-from ....adapters.outbound.storage._factory import (
-    _build_google_credentials,
-    _resolve_drive_root_folder_id,
-)
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRawRow, SecureObjectRepository
-from ....application.storage.calc_sheets import (
-    OperatorInputs,
-    RelationValues,
-    build_export_plan,
-)
 from ....core.config import load_settings
-from ....core.decimal import coerce_decimal
 from ....core.i18n import tr
-from ....domain.calculations.registry import (
-    RegistrySnapshotError,
-    RegistryValidationError,
-)
-from ....domain.calculations.registry import bundled_authority as _bundled_authority
 from .._common import _emit_envelope
-from .._errors import CliRefusedBoundaryError
+from ._google_errors import _google_refusal
+from ._google_folder import register_google_folder_commands
 from ._google_payloads import (
-    GoogleFolderGetResult,
-    GoogleFolderSetResult,
     GoogleLoginResult,
     GoogleLogoutResult,
     GoogleRegisterResult,
     GoogleStatusResult,
-    GoogleSyncCalcExportResult,
-    GoogleSyncCalcPullResult,
-    GoogleSyncCalcVerifyDivergencePayload,
-    GoogleSyncCalcVerifyResult,
     GoogleSyncDegradedManifestPayload,
     GoogleSyncFailedManifestPayload,
     GoogleSyncFailedObjectPayload,
     GoogleSyncProbeResult,
     GoogleSyncPushResult,
+)
+from ._google_sync_calc import (
+    google_sync_calc_export,
+    google_sync_calc_pull,
+    google_sync_calc_verify,
+    register_google_sync_calc_commands,
 )
 
 google_app = typer.Typer(
@@ -130,69 +101,6 @@ google_app = typer.Typer(
     help=tr("cli.config.google.help"),
     no_args_is_help=True,
 )
-
-# `aeat config google …` commands catch the broad GoogleAuthError base
-# (and OutboundStorageError on Drive paths). `str(exc)` of either is the
-# adapter's English message, so wrapping it straight into a refusal
-# leaks English into every locale. Map the concrete exception type to a
-# `cli.config.google.errors.*` key so the operator-facing refusal frame
-# renders in the active output language.
-_GOOGLE_ERROR_KEY_SUFFIX: dict[str, str] = {
-    "GoogleAuthValidationError": "validation",
-    "GoogleAuthClientNotRegisteredError": "client_not_registered",
-    "GoogleAuthClientRevokedError": "client_revoked",
-    "GoogleAuthRevokedError": "token_revoked",
-    "GoogleAuthExpiredError": "token_expired",
-    "GoogleAuthScopeInsufficientError": "scope_insufficient",
-    "GoogleAuthNetworkError": "network",
-    "GoogleAuthLoopbackBindError": "loopback_bind",
-    "GoogleAuthBrowserOpenError": "browser_open",
-    "GoogleAuthUnsecuredModeRefusedError": "unsecured_mode",
-    "GoogleAuthKeychainLockedError": "keychain_locked",
-    "GoogleAuthProfileUnboundError": "profile_unbound",
-    "OutboundStorageError": "storage",
-}
-
-
-def _refusal_detail(exc: GoogleAuthError | OutboundStorageError) -> str:
-    """Return the locale-rendered ``{detail}`` text for a wrapped failure.
-
-    Errors raised inside the `aeat config google` wrappers themselves
-    carry a `translated_message` key (a `cli.config.google.detail.*`
-    namespace) plus interpolation `context`; those render through
-    `tr()` so the adapter-specific detail is localised. Errors that
-    bubble up from the Google adapter with only a positional English
-    `message` keep `str(exc)` — the adapter boundary owns that text.
-    """
-    translated_message = getattr(exc, "translated_message", None)
-    if translated_message is not None:
-        context = getattr(exc, "context", None) or {}
-        return tr(translated_message, **context)
-    return str(exc)
-
-
-def _google_refusal(exc: GoogleAuthError | OutboundStorageError) -> CliRefusedBoundaryError:
-    """Wrap a Google adapter failure in a locale-rendered CLI refusal.
-
-    Dispatches on the concrete exception type to a
-    `cli.config.google.errors.*` translation key — the f-string key
-    registers that namespace with the locale scanner. The failure's
-    detail rides along as ``{detail}`` for the keys that interpolate
-    it, localised via `translated_message` when the wrapper raised it;
-    an unrecognised type falls back to the generic ``auth_failed``
-    frame.
-    """
-    suffix = _GOOGLE_ERROR_KEY_SUFFIX.get(type(exc).__name__, "auth_failed")
-    # Static-key inventory: cli.config.google.errors.{validation,client_not_registered,
-    # client_revoked,token_revoked,token_expired,scope_insufficient,network,
-    # loopback_bind,browser_open,unsecured_mode,keychain_locked,profile_unbound,
-    # storage,auth_failed} — all suffixes are from the bounded _GOOGLE_ERROR_KEY_SUFFIX
-    # table above, so each key is a compile-time constant reachable by the locale scanner.
-    return CliRefusedBoundaryError(
-        translated_message=f"cli.config.google.errors.{suffix}",
-        context={"detail": _refusal_detail(exc)},
-    )
-
 
 class OAuthClientPayload(TypedDict):
     """Typed shape for a Cloud Console Desktop OAuth client JSON file.
@@ -457,70 +365,7 @@ def google_logout(
         ),
     )
 
-
-folder_app = typer.Typer(
-    name="folder",
-    help=tr("cli.config.google.folder.help"),
-    no_args_is_help=True,
-)
-
-
-@folder_app.command("set", help=tr("cli.config.google.folder.set_help"))
-def google_folder_set(
-    ctx: typer.Context,
-    folder_id: str = typer.Argument(..., help=tr("cli.config.google.folder.folder_id_help")),
-) -> None:
-    """Persist the Drive root folder id under the active profile."""
-    try:
-        active = resolve_active_profile()
-    except GoogleAuthError as exc:
-        raise _google_refusal(exc) from exc
-
-    config = DriveConfig(root_folder_id=folder_id.strip())
-    save_drive_config(active, config)
-    folder_set_result = GoogleFolderSetResult(profile=active, root_folder_id=config.root_folder_id)
-    _emit_envelope(
-        ctx,
-        command="config.google.folder.set",
-        result=folder_set_result,
-        lines=(
-            "operation\tconfig.google.folder.set",
-            f"profile\t{active}",
-            f"root_folder_id\t{config.root_folder_id}",
-        ),
-    )
-
-
-@folder_app.command("get", help=tr("cli.config.google.folder.get_help"))
-def google_folder_get(
-    ctx: typer.Context,
-) -> None:
-    """Show the persisted Drive root folder id for the active profile."""
-    try:
-        active = resolve_active_profile()
-    except GoogleAuthError as exc:
-        raise _google_refusal(exc) from exc
-
-    config = load_drive_config(active)
-    folder_get_result = GoogleFolderGetResult(
-        profile=active,
-        configured=config is not None,
-        root_folder_id=config.root_folder_id if config is not None else None,
-    )
-    _emit_envelope(
-        ctx,
-        command="config.google.folder.get",
-        result=folder_get_result,
-        lines=(
-            "operation\tconfig.google.folder.get",
-            f"profile\t{active}",
-            f"configured\t{config is not None}",
-            f"root_folder_id\t{config.root_folder_id if config is not None else '<unset>'}",
-        ),
-    )
-
-
-google_app.add_typer(folder_app, name="folder")
+register_google_folder_commands(google_app, google_refusal=_google_refusal)
 
 
 sync_app = typer.Typer(
@@ -876,519 +721,7 @@ def google_sync_push(
     _emit_envelope(ctx, command="config.google.sync.push", result=push_result, lines=tuple(lines))
 
 
-calc_app = typer.Typer(
-    name="calc",
-    help=tr("cli.config.google.sync.calc.help"),
-    no_args_is_help=True,
-)
-
-
-def _resolve_credentials_and_root(profile: str) -> tuple[object, str]:
-    """Hydrate refreshable Google credentials + the configured Drive root."""
-    settings = load_settings()
-    credentials = _build_google_credentials(profile=profile)
-    root_folder_id = _resolve_drive_root_folder_id(profile=profile, settings=settings)
-    if not root_folder_id:
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.google.sync.calc.export.root_folder_required",
-        )
-    return credentials, root_folder_id
-
-
-def _load_snapshot(modelo: str, period: str, year: int):
-    authority = _bundled_authority()
-    if modelo not in {candidate.id for candidate in authority.modelos}:
-        available = ", ".join(sorted(candidate.id for candidate in authority.modelos))
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.google.sync.calc.export.unknown_modelo",
-            context={"modelo": modelo, "available": available},
-        )
-    try:
-        return authority.snapshot(modelo, filing_year=year, period=period)
-    except (RegistrySnapshotError, RegistryValidationError) as exc:
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.google.sync.calc.export.snapshot_failure",
-            context={"modelo": modelo, "period": period, "year": year, "detail": str(exc)},
-        ) from exc
-
-
-@calc_app.command("export", help=tr("cli.config.google.sync.calc.export_help"))
-def google_sync_calc_export(
-    ctx: typer.Context,
-    modelo: str = typer.Option(..., "--modelo", help=tr("cli.config.google.sync.calc.export.modelo_help")),
-    period: str = typer.Option(..., "--period", help=tr("cli.config.google.sync.calc.export.period_help")),
-    year: int = typer.Option(
-        ..., "--year", help=tr("cli.config.google.sync.calc.export.year_help"), min=2000, max=2099
-    ),
-    prefill_relations: bool = typer.Option(
-        False,
-        "--prefill-relations/--no-prefill-relations",
-        help=tr("cli.config.google.sync.calc.export.prefill_relations_help"),
-    ),
-) -> None:
-    """Export the registry calculation surface for a modelo + period to a Google Sheets workbook.
-
-    Writes the workbook to the operator's ``aeat-vault/`` directory.
-
-    Materialises Entradas (operator inputs), Cálculos (formula cells with
-    per-casilla ROUND-wrapped Decimal parity), Procedencia (audit trail),
-    Tarifas (parameter + relation mirrors), and Guía (engine version +
-    registry SHA stamps the pull adapter validates against).
-
-    When `--prefill-relations` is set, the engine consults the local
-    `CalculationObservationRepository` for prior filings of the
-    relations' source modelos, pre-resolves the relation values via
-    `resolve_relations_from_local_store`, and stamps each prefilled
-    Tarifas cell with provenance metadata (source modelo + filing year
-    + periods + resolution timestamp). Without prior filings in the
-    local store the flag is a no-op and the workbook ships with blank
-    relation cells the operator fills by hand.
-    """
-    from ....application.calculations import resolve_relations_from_local_store
-
-    try:
-        active = resolve_active_profile()
-    except GoogleAuthError as exc:
-        raise _google_refusal(exc) from exc
-
-    try:
-        credentials, root_folder_id = _resolve_credentials_and_root(active)
-    except (GoogleAuthError, OutboundStorageError) as exc:
-        raise _google_refusal(exc) from exc
-
-    snapshot = _load_snapshot(modelo, period, year)
-    if prefill_relations:
-        plan = build_export_plan(
-            snapshot,
-            operator_inputs=OperatorInputs(),
-            relation_resolver=resolve_relations_from_local_store,
-        )
-    else:
-        plan = build_export_plan(
-            snapshot,
-            operator_inputs=OperatorInputs(),
-            relation_values=RelationValues(),
-        )
-
-    try:
-        result: CalcSheetsApplyResult = apply_export_plan(
-            plan,
-            credentials=credentials,
-            root_folder_id=root_folder_id,
-        )
-    except (GoogleAuthError, OutboundStorageError) as exc:
-        raise _google_refusal(exc) from exc
-
-    export_result = GoogleSyncCalcExportResult(
-        profile=active,
-        modelo=snapshot.modelo.id,
-        revision=snapshot.revision.id,
-        period=snapshot.period,
-        year=snapshot.filing_year,
-        engine_version=plan.metadata.engine_version,
-        registry_sha=plan.metadata.registry_sha,
-        root_folder_id=root_folder_id,
-        folder_id=result.folder_id,
-        spreadsheet_id=result.spreadsheet_id,
-        spreadsheet_url=result.spreadsheet_url,
-        value_cells_written=result.value_cells_written,
-        formula_cells_written=result.formula_cells_written,
-        protected_ranges_written=result.protected_ranges_written,
-        tab_count=result.tab_count,
-    )
-    _emit_envelope(
-        ctx,
-        command="config.google.sync.calc.export",
-        result=export_result,
-        lines=(
-            "operation\tconfig.google.sync.calc.export",
-            f"profile\t{active}",
-            f"modelo\t{snapshot.modelo.id}",
-            f"revision\t{snapshot.revision.id}",
-            f"period\t{snapshot.period}",
-            f"year\t{snapshot.filing_year}",
-            f"engine_version\t{plan.metadata.engine_version}",
-            f"registry_sha\t{plan.metadata.registry_sha}",
-            f"folder_id\t{result.folder_id}",
-            f"spreadsheet_id\t{result.spreadsheet_id}",
-            f"spreadsheet_url\t{result.spreadsheet_url}",
-            f"value_cells_written\t{result.value_cells_written}",
-            f"formula_cells_written\t{result.formula_cells_written}",
-            f"protected_ranges_written\t{result.protected_ranges_written}",
-            f"tab_count\t{result.tab_count}",
-        ),
-    )
-
-
-@calc_app.command("verify", help=tr("cli.config.google.sync.calc.verify_help"))
-def google_sync_calc_verify(
-    ctx: typer.Context,
-    modelo: str = typer.Option(..., "--modelo", help=tr("cli.config.google.sync.calc.export.modelo_help")),
-    period: str = typer.Option(..., "--period", help=tr("cli.config.google.sync.calc.export.period_help")),
-    year: int = typer.Option(
-        ..., "--year", help=tr("cli.config.google.sync.calc.export.year_help"), min=2000, max=2099
-    ),
-    scenario_path: Path | None = typer.Option(
-        None,
-        "--scenario",
-        help=tr("cli.config.google.sync.calc.verify.scenario_help"),
-        exists=True,
-        file_okay=True,
-        dir_okay=False,
-        readable=True,
-    ),
-) -> None:
-    """Run a three-way parity check (AEAT oracle, local Decimal runtime, Sheets).
-
-    The scenario file is a JSON document carrying operator inputs,
-    bindings, relations, and an optional AEAT-published expected
-    output map. When omitted every casilla is taken as zero and only
-    backend↔Sheets parity is checked; verdict surfaces as
-    `inconclusive` in that case.
-    """
-    from decimal import Decimal
-
-    from ....application.storage.calc_sheets._parity_harness import (
-        OperatorInputScenario,
-        verify_modelo_parity,
-    )
-
-    try:
-        active = resolve_active_profile()
-    except GoogleAuthError as exc:
-        raise _google_refusal(exc) from exc
-
-    try:
-        credentials, root_folder_id = _resolve_credentials_and_root(active)
-    except (GoogleAuthError, OutboundStorageError) as exc:
-        raise _google_refusal(exc) from exc
-
-    snapshot = _load_snapshot(modelo, period, year)
-
-    if scenario_path is None:
-        scenario = OperatorInputScenario(scenario_label="empty-defaults")
-    else:
-        raw = json.loads(scenario_path.read_text(encoding="utf-8"))
-
-        def _to_decimal_map(node: object) -> dict[str, Decimal]:
-            if not isinstance(node, dict):
-                return {}
-            return {str(k): coerce_decimal(v) or Decimal("0") for k, v in node.items()}
-
-        scenario = OperatorInputScenario(
-            inputs_by_number=_to_decimal_map(raw.get("inputs_by_number")),
-            bindings=_to_decimal_map(raw.get("bindings")),
-            enum_bindings={str(k): str(v) for k, v in (raw.get("enum_bindings") or {}).items()},
-            relation_values=_to_decimal_map(raw.get("relation_values")),
-            expected_by_number=_to_decimal_map(raw.get("expected_by_number")),
-            scenario_label=str(raw.get("scenario_label") or scenario_path.stem),
-        )
-
-    report = verify_modelo_parity(snapshot, scenario, credentials=credentials, root_folder_id=root_folder_id)
-
-    verify_result = GoogleSyncCalcVerifyResult(
-        profile=active,
-        modelo=report.modelo_id,
-        revision=report.revision_id,
-        period=report.period,
-        year=report.filing_year,
-        spreadsheet_id=report.spreadsheet_id,
-        spreadsheet_url=report.spreadsheet_url,
-        verdict=report.verdict,
-        aeat_oracle_present=report.aeat_oracle_present,
-        computed_count=len(report.casillas),
-        divergence_count=len(report.divergences),
-        divergences=[
-            GoogleSyncCalcVerifyDivergencePayload(
-                casilla=c.casilla_number,
-                label=c.label,
-                local=str(c.local) if c.local is not None else None,
-                sheets=str(c.sheets) if c.sheets is not None else None,
-                aeat=str(c.aeat) if c.aeat is not None else None,
-            )
-            for c in report.divergences
-        ],
-    )
-    lines: list[str] = [
-        "operation\tconfig.google.sync.calc.verify",
-        f"profile\t{active}",
-        f"modelo\t{report.modelo_id}",
-        f"revision\t{report.revision_id}",
-        f"period\t{report.period}",
-        f"year\t{report.filing_year}",
-        f"spreadsheet_url\t{report.spreadsheet_url}",
-        f"verdict\t{report.verdict}",
-        f"aeat_oracle_present\t{report.aeat_oracle_present}",
-        f"computed_count\t{len(report.casillas)}",
-        f"divergence_count\t{len(report.divergences)}",
-    ]
-    for div in report.divergences:
-        lines.append(f"divergence\t{div.casilla_number}\tlocal={div.local}\tsheets={div.sheets}\taeat={div.aeat}")
-    _emit_envelope(ctx, command="config.google.sync.calc.verify", result=verify_result, lines=tuple(lines))
-
-
-@calc_app.command("pull", help=tr("cli.config.google.sync.calc.pull_help"))
-def google_sync_calc_pull(
-    ctx: typer.Context,
-    modelo: str = typer.Option(..., "--modelo", help=tr("cli.config.google.sync.calc.export.modelo_help")),
-    period: str = typer.Option(..., "--period", help=tr("cli.config.google.sync.calc.export.period_help")),
-    year: int = typer.Option(
-        ..., "--year", help=tr("cli.config.google.sync.calc.export.year_help"), min=2000, max=2099
-    ),
-    spreadsheet_id: str = typer.Option(
-        ...,
-        "--spreadsheet-id",
-        help=tr("cli.config.google.sync.calc.pull.spreadsheet_id_help"),
-        min=1,
-    ),
-    compute: bool = typer.Option(
-        False,
-        "--compute/--no-compute",
-        help=tr("cli.config.google.sync.calc.pull.compute_help"),
-    ),
-    assemble_observations: bool = typer.Option(
-        False,
-        "--assemble-observations/--no-assemble-observations",
-        help=tr("cli.config.google.sync.calc.pull.assemble_observations_help"),
-    ),
-) -> None:
-    """Read operator-edited cells back from a workbook into typed records.
-
-    The workbook's developer-metadata stamps must match the supplied
-    snapshot's `(modelo, revision, period, year)` quadruple. A
-    `metadata_match=stale` result returns the edits but signals that
-    the workbook was compiled against a different registry slice;
-    callers should refuse to apply stale edits to the local store.
-    """
-    from ....adapters.outbound.google._calc_sheets_pull import (
-        compute_from_pull,
-        pull_operator_edits,
-    )
-
-    try:
-        active = resolve_active_profile()
-    except GoogleAuthError as exc:
-        raise _google_refusal(exc) from exc
-
-    try:
-        credentials, _ = _resolve_credentials_and_root(active)
-    except (GoogleAuthError, OutboundStorageError) as exc:
-        raise _google_refusal(exc) from exc
-
-    snapshot = _load_snapshot(modelo, period, year)
-
-    try:
-        result: PullResult = pull_operator_edits(
-            snapshot,
-            spreadsheet_id=spreadsheet_id,
-            credentials=credentials,
-        )
-    except (GoogleAuthError, OutboundStorageError) as exc:
-        raise _google_refusal(exc) from exc
-
-    populated_operator = [e for e in result.operator_edits if e.value is not None]
-    populated_bindings = [e for e in result.binding_edits if e.value is not None]
-    populated_relations = [e for e in result.relation_edits if e.value is not None]
-    populated_row_sets = [rs for rs in result.row_set_edits if rs.cells]
-    row_set_cells_total = sum(len(rs.cells) for rs in populated_row_sets)
-
-    assembled_groupings, assembled_observation_count = _assemble_pull_observations(
-        populated_row_sets=populated_row_sets,
-        snapshot=snapshot,
-        enabled=assemble_observations,
-    )
-
-    computed_casillas = _compute_pull_casillas(
-        snapshot=snapshot,
-        result=result,
-        enabled=compute,
-        compute_from_pull=compute_from_pull,
-    )
-
-    payload: dict[str, object] = {
-        "operation": "config.google.sync.calc.pull",
-        "profile": active,
-        "modelo": snapshot.modelo.id,
-        "revision": snapshot.revision.id,
-        "period": snapshot.period,
-        "year": snapshot.filing_year,
-        "spreadsheet_id": result.spreadsheet_id,
-        "metadata_match": result.metadata_match,
-        "metadata": {
-            "modelo_id": result.metadata.modelo_id,
-            "revision_id": result.metadata.revision_id,
-            "filing_year": result.metadata.filing_year,
-            "period": result.metadata.period,
-            "engine_version": result.metadata.engine_version,
-            "registry_sha": result.metadata.registry_sha,
-            "exported_at": result.metadata.exported_at,
-        },
-        "cells_read": result.cells_read,
-        "operator_edits_total": len(result.operator_edits),
-        "operator_edits_populated": len(populated_operator),
-        "binding_edits_populated": len(populated_bindings),
-        "relation_edits_populated": len(populated_relations),
-        "operator_edits": [
-            {
-                "casilla": e.casilla_number,
-                "label": e.label,
-                "value": str(e.value) if e.value is not None else None,
-            }
-            for e in populated_operator
-        ],
-        "binding_edits": [
-            {"binding": e.binding, "value": str(e.value) if e.value is not None else None} for e in populated_bindings
-        ],
-        "relation_edits": [
-            {"relation": e.relation, "value": str(e.value) if e.value is not None else None}
-            for e in populated_relations
-        ],
-        "row_set_edits_populated": len(populated_row_sets),
-        "row_set_cells_populated": row_set_cells_total,
-        "assembled_groupings": assembled_groupings,
-        "assembled_observation_count": assembled_observation_count,
-        "row_set_edits": [
-            {
-                "grouping": rs.grouping,
-                "cells": [
-                    {
-                        "binding": c.binding,
-                        "row_index": c.row_index,
-                        "value": str(c.value) if c.value is not None else None,
-                    }
-                    for c in rs.cells
-                ],
-            }
-            for rs in populated_row_sets
-        ],
-        "computed": computed_casillas,
-    }
-    lines: list[str] = [
-        "operation\tconfig.google.sync.calc.pull",
-        f"profile\t{active}",
-        f"modelo\t{snapshot.modelo.id}",
-        f"revision\t{snapshot.revision.id}",
-        f"period\t{snapshot.period}",
-        f"year\t{snapshot.filing_year}",
-        f"spreadsheet_id\t{result.spreadsheet_id}",
-        f"metadata_match\t{result.metadata_match}",
-        f"metadata.modelo_id\t{result.metadata.modelo_id}",
-        f"metadata.revision_id\t{result.metadata.revision_id}",
-        f"metadata.registry_sha\t{result.metadata.registry_sha}",
-        f"cells_read\t{result.cells_read}",
-        f"operator_edits_populated\t{len(populated_operator)}",
-        f"binding_edits_populated\t{len(populated_bindings)}",
-        f"relation_edits_populated\t{len(populated_relations)}",
-        f"row_set_edits_populated\t{len(populated_row_sets)}",
-        f"row_set_cells_populated\t{row_set_cells_total}",
-    ]
-    for e in populated_operator:
-        lines.append(f"casilla\t{e.casilla_number}\t{e.value}\t{e.label}")
-    for e in populated_bindings:
-        lines.append(f"binding\t{e.binding}\t{e.value}")
-    for e in populated_relations:
-        lines.append(f"relation\t{e.relation}\t{e.value}")
-    for rs in populated_row_sets:
-        for c in rs.cells:
-            lines.append(f"row_set\t{rs.grouping}\t{c.row_index}\t{c.binding}\t{c.value}")
-    for assembled in assembled_groupings:
-        lines.append(
-            f"assembled\t{assembled['grouping']}\t{assembled['source_kind']}\t{assembled['observation_count']}"
-        )
-    for entry in computed_casillas:
-        lines.append(f"computed\t{entry['casilla_id']}\t{entry['value']}\t{entry['formula_id']}")
-    pull_result = GoogleSyncCalcPullResult.model_validate(payload)
-    _emit_envelope(ctx, command="config.google.sync.calc.pull", result=pull_result, lines=tuple(lines))
-
-
-def _assemble_pull_observations(
-    *,
-    populated_row_sets: list[RowSetEdit],
-    snapshot: RegistrySnapshot,
-    enabled: bool,
-) -> tuple[list[dict[str, object]], int]:
-    """Per-grouping assemble-observations fan-out for the pull command.
-
-    Returns ``(groupings, total_observation_count)``. When ``enabled``
-    is false (assemble-observations flag not passed), returns
-    ``([], 0)``. Storage errors raised by the application service are
-    re-wrapped as :class:`CliRefusedBoundaryError` so the CLI emits a
-    typed error envelope.
-    """
-    if not enabled:
-        return [], 0
-    from ....application.calculations import assemble_observations_for_grouping
-
-    groupings: list[dict[str, object]] = []
-    total = 0
-    for row_set in populated_row_sets:
-        try:
-            source_kind, observations = assemble_observations_for_grouping(
-                row_set.grouping,
-                row_set.cells,
-                snapshot.revision,
-                filing_year=snapshot.filing_year,
-            )
-        except OutboundStorageError as exc:
-            raise _google_refusal(exc) from exc
-        total += len(observations)
-        groupings.append(
-            {
-                "grouping": row_set.grouping,
-                "source_kind": source_kind,
-                "observation_count": len(observations),
-                "observations": [obs.model_dump(mode="json") for obs in observations],
-            }
-        )
-    return groupings, total
-
-
-def _compute_pull_casillas(
-    *,
-    snapshot: RegistrySnapshot,
-    result: PullResult,
-    enabled: bool,
-    compute_from_pull: Callable[[RegistrySnapshot, PullResult], RegistryCalculationResult],
-) -> list[dict[str, object]]:
-    """Compute casillas from the pulled edits, refusing stale workbook stamps.
-
-    Evaluates the pulled edits against the immutable :class:`RegistrySnapshot`
-    via ``compute_from_pull``. When ``enabled`` is false (compute flag not
-    passed), returns an
-    empty list. A pull whose ``metadata_match`` is anything other
-    than ``"matches"`` raises :class:`CliRefusedBoundaryError` —
-    computing against a stale workbook would silently apply edits
-    against a different registry slice.
-
-    Each emitted entry carries the formula's ``legal_refs`` and
-    ``source_refs`` projected from :class:`RegistryCalculationEntry`,
-    so the operator-facing JSON payload preserves regulatory
-    grounding for every computed casilla.
-    """
-    if not enabled:
-        return []
-    if result.metadata_match != "matches":
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.google.sync.calc.pull.compute_refused_stale",
-            context={"metadata_match": result.metadata_match},
-        )
-    try:
-        calc = compute_from_pull(snapshot, result)
-    except OutboundStorageError as exc:
-        raise _google_refusal(exc) from exc
-    return [
-        {
-            "casilla_id": entry.target,
-            "value": str(entry.value),
-            "formula_id": entry.formula_id,
-            "legal_refs": list(entry.legal_refs),
-            "source_refs": list(entry.source_refs),
-        }
-        for entry in calc.entries
-    ]
-
-
-sync_app.add_typer(calc_app, name="calc")
+register_google_sync_calc_commands(sync_app)
 google_app.add_typer(sync_app, name="sync")
 
 
@@ -1397,4 +730,5 @@ google_app.add_typer(sync_app, name="sync")
 _ = (load_token, REQUIRED_SCOPES)
 
 
-__all__ = ["google_app"]
+__all__ = ["google_app", "google_sync_calc_export", "google_sync_calc_pull", "google_sync_calc_verify"]
+
