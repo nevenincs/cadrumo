@@ -5,6 +5,8 @@ tags:
 date: '2026-06-05'
 tier: L3
 related:
+  - '[[2026-06-05-codebase-monolith-decomposition-adr]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-research]]'
   - '[[2026-06-05-modelo-work-revision-cli-decomposition-plan]]'
 ---
 
@@ -135,18 +137,44 @@ Continue reducing _app_live.py, _modelo.py, and config CLI roots after ledger sl
 - [x] `W02.P03.S17` - select the next config CLI command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/_google.py src/aeat/entrypoints/cli/_config/tests`.
 - [x] `W02.P03.S18` - extract the selected config CLI command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
 - [x] `W02.P03.S19` - verify selected config CLI behavior and ratchet config root size after extraction; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
-- [ ] `W02.P03.S20` - select the next residual config or google CLI command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/_google.py src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests`.
-- [ ] `W02.P03.S21` - extract the selected residual config or google CLI command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
-- [ ] `W02.P03.S22` - verify residual config or google CLI behavior and ratchet affected root size budgets; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
-- [ ] `W02.P03.S23` - select the next residual ledger CLI command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/tests`.
-- [ ] `W02.P03.S24` - extract the selected residual ledger CLI command group into a focused registrar module; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_*.py`.
-- [ ] `W02.P03.S25` - verify residual ledger CLI behavior and ratchet ledger root size budget; `src/aeat/entrypoints/cli/tests/test_ledger* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
-- [ ] `W02.P03.S26` - select the next residual live CLI command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/tests`.
-- [ ] `W02.P03.S27` - extract the selected residual live CLI command group into a focused registrar module; `src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/_app_live_*.py`.
-- [ ] `W02.P03.S28` - verify residual live CLI behavior and ratchet live root size budget; `src/aeat/entrypoints/cli/tests/test_live* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
-- [ ] `W02.P03.S29` - select the next residual modelo CLI command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_modelo.py src/aeat/entrypoints/cli/tests`.
-- [ ] `W02.P03.S30` - extract the selected residual modelo CLI command group into a focused registrar module; `src/aeat/entrypoints/cli/_modelo.py src/aeat/entrypoints/cli/_modelo_*.py`.
-- [ ] `W02.P03.S31` - verify residual modelo CLI behavior and ratchet modelo root size budget; `src/aeat/entrypoints/cli/tests/test_modelo* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P03.S20` - select the next residual config or google CLI command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/_google.py src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P03.S21` - extract the selected residual config or google CLI command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
+- [x] `W02.P03.S22` - verify residual config or google CLI behavior and ratchet affected root size budgets; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P03.S23` - select the next residual ledger CLI command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P03.S24` - extract the selected residual ledger CLI command group into a focused registrar module; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_*.py`.
+- [x] `W02.P03.S25` - verify residual ledger CLI behavior and ratchet ledger root size budget; `src/aeat/entrypoints/cli/tests/test_ledger* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P03.S26` - select the next residual live CLI command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P03.S27` - extract the selected residual live CLI command group into a focused registrar module; `src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/_app_live_*.py`.
+- [x] `W02.P03.S28` - verify residual live CLI behavior and ratchet live root size budget; `src/aeat/entrypoints/cli/tests/test_live* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P03.S29` - select the next residual modelo CLI command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_modelo.py src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P03.S30` - extract the selected residual modelo CLI command group into a focused registrar module; `src/aeat/entrypoints/cli/_modelo.py src/aeat/entrypoints/cli/_modelo_*.py`.
+- [x] `W02.P03.S31` - verify residual modelo CLI behavior and ratchet modelo root size budget; `src/aeat/entrypoints/cli/tests/test_modelo* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+
+### Phase `W02.P05` - residual CLI root closure
+
+Close remaining oversized CLI roots through explicit residual extraction tranches before backend ADR decomposition, preserving CLI transport-only behavior and public facade imports.
+
+- [x] `W02.P05.S32` - select the next ledger root closure command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P05.S33` - extract the selected ledger root closure command group into a focused registrar module; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_*.py`.
+- [x] `W02.P05.S34` - verify ledger root closure behavior and ratchet ledger size budget; `src/aeat/entrypoints/cli/tests/test_ledger* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P05.S35` - select the next config root closure command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/tests`.
+- [x] `W02.P05.S36` - extract the selected config root closure command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
+- [x] `W02.P05.S37` - verify config root closure behavior and ratchet config size budget; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P05.S38` - select the next live root closure command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P05.S39` - extract the selected live root closure command group into a focused registrar module; `src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/_app_live_*.py`.
+- [x] `W02.P05.S40` - verify live root closure behavior and ratchet live size budget; `src/aeat/entrypoints/cli/tests/test_live* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P05.S41` - select the next modelo root closure command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_modelo.py src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P05.S42` - extract the selected modelo root closure command group into a focused registrar module; `src/aeat/entrypoints/cli/_modelo.py src/aeat/entrypoints/cli/_modelo_*.py`.
+- [x] `W02.P05.S43` - verify modelo root closure behavior and ratchet modelo size budget; `src/aeat/entrypoints/cli/tests/test_modelo* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P05.S44` - select the next google config closure command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/_google.py src/aeat/entrypoints/cli/_config/tests`.
+- [x] `W02.P05.S45` - extract the selected google config closure command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/_google.py src/aeat/entrypoints/cli/_config/*.py`.
+- [x] `W02.P05.S46` - verify google config closure behavior and ratchet google size budget; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [ ] `W02.P05.S47` - select the next residual ledger root command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/tests`.
+- [ ] `W02.P05.S48` - extract the selected residual ledger root command group into a focused registrar module; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_*.py`.
+- [ ] `W02.P05.S49` - verify residual ledger root behavior and ratchet ledger size budget; `src/aeat/entrypoints/cli/tests/test_ledger* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [ ] `W02.P05.S50` - select the next residual config root command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/tests`.
+- [ ] `W02.P05.S51` - extract the selected residual config root command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
+- [ ] `W02.P05.S52` - verify residual config root behavior and ratchet config size budget; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
 
 ## Wave `W03` - application and domain monolith decomposition
 
@@ -158,6 +186,40 @@ Queue and execute ADR-backed decomposition for application, domain, adapter, per
 
 - [ ] `W03.P04.S07` - queue ADRs for application/domain/adapter/core monoliths whose decomposition requires boundary decisions; `.vault/adr src/aeat/application src/aeat/domain src/aeat/adapters src/aeat/core`.
 - [ ] `W03.P04.S08` - add or extend static guards proving no Python module exceeds 1250 lines and no tracked callable exceeds the complexity budget; `src/aeat/tests src/aeat/entrypoints/cli/tests`.
+
+### Phase `W03.P06` - application service facade decomposition
+
+Decompose oversized application service modules by use-case boundary while preserving top-level application facades and keeping adapters out of application internals.
+
+- [ ] `W03.P06.S53` - decompose application modelo actions by use-case helpers behind the public modelo application facade; `src/aeat/application/modelo/_actions.py src/aeat/application/modelo/*.py`.
+- [ ] `W03.P06.S54` - verify application modelo action behavior and facade imports after decomposition; `src/aeat/application/modelo/tests src/aeat/entrypoints/cli/tests/test_modelo*`.
+- [ ] `W03.P06.S55` - decompose application ledger actions by orchestration boundary behind the public ledger application facade; `src/aeat/application/ledger/_actions.py src/aeat/application/ledger/*.py`.
+- [ ] `W03.P06.S56` - verify application ledger action behavior and facade imports after decomposition; `src/aeat/application/ledger/tests src/aeat/entrypoints/cli/tests/test_ledger*`.
+- [ ] `W03.P06.S57` - decompose application live package root by service family while preserving public live facade imports; `src/aeat/application/live/__init__.py src/aeat/application/live/*.py`.
+- [ ] `W03.P06.S58` - verify application live behavior and public live facade imports after decomposition; `src/aeat/application/live/tests src/aeat/entrypoints/cli/tests/test_live*`.
+- [ ] `W03.P06.S59` - decompose application auth operator module by credential and authority workflows behind the auth facade; `src/aeat/application/auth/_operator.py src/aeat/application/auth/*.py`.
+- [ ] `W03.P06.S60` - verify application auth operator behavior and facade imports after decomposition; `src/aeat/application/auth/tests src/aeat/entrypoints/cli/_config/tests`.
+- [ ] `W03.P06.S61` - decompose application workflow engine by execution and adapter orchestration helpers behind the workflow facade; `src/aeat/application/workflow/_engine.py src/aeat/application/workflow/*.py`.
+- [ ] `W03.P06.S62` - verify application workflow engine behavior and facade imports after decomposition; `src/aeat/application/workflow/tests src/aeat/tests`.
+
+### Phase `W03.P07` - domain registry decomposition
+
+Decompose oversized calculation registry modules by schema, binding, applicability, parity, and record-design ownership without importing application or adapter layers.
+
+
+### Phase `W03.P08` - adapter and persistence decomposition
+
+Decompose oversized outbound adapter and persistence modules along external contract and storage boundary lines while preserving typed boundary errors.
+
+
+## Wave `W04` - core and final static guard closure
+
+Close core over-limit modules and replace shrinking legacy budgets with hard codebase-wide line and callable guards once all decomposition evidence is clean.
+
+### Phase `W04.P09` - core module and hard guard closure
+
+Decompose oversized core modules, then enforce hard codebase-wide module and callable budgets with no silent legacy growth.
+
 
 ## Description
 
