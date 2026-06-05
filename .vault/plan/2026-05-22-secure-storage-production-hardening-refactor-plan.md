@@ -572,7 +572,7 @@ Current register count: `301` production candidate files.
 | `AFR-291` | `src/aeat/locales/_ast_scanner.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-292` | `src/aeat/locales/cli.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-293` | `src/aeat/locales/manager.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
-| `AFR-294` | `src/aeat/application/modelo/_projection.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W12.P26.S294` | pending |
+| `AFR-294` | `src/aeat/application/modelo/_projection.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W18.P38.S442` | closed |
 | `AFR-295` | `src/aeat/application/modelo/_selectors.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P26.S383` | pending |
 | `AFR-296` | `src/aeat/application/modelo/_work_addressing.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P26.S383` | pending |
 | `AFR-297` | `src/aeat/application/modelo/_work_create_policy.py` | `active-profile, plain-file` | `manifest-discovery` | `W12.P26.S383` | pending |
@@ -1045,7 +1045,7 @@ Close pending affected-file rows introduced by modelo split-module work so the r
 
 Assign one executable closeout row to each pending modelo projection, selector, work-addressing, work-policy, plazo, IVA wallet, and CLI split module.
 
-- [ ] `W18.P38.S442` - Close AFR-294 for src/aeat/application/modelo/_projection.py with signals active-profile, manifest-bucket, plain-file, target manifest-discovery, and owner W18.P38.S442; `src/aeat/application/modelo/_projection.py`.
+- [x] `W18.P38.S442` - Close AFR-294 for src/aeat/application/modelo/_projection.py with signals active-profile, manifest-bucket, plain-file, target manifest-discovery, and owner W18.P38.S442; `src/aeat/application/modelo/_projection.py`.
 - [ ] `W18.P38.S443` - Close AFR-295 for src/aeat/application/modelo/_selectors.py with signals active-profile, manifest-bucket, target manifest-discovery, and owner W18.P38.S443; `src/aeat/application/modelo/_selectors.py`.
 - [ ] `W18.P38.S444` - Close AFR-296 for src/aeat/application/modelo/_work_addressing.py with signals active-profile, manifest-bucket, target manifest-discovery, and owner W18.P38.S444; `src/aeat/application/modelo/_work_addressing.py`.
 - [ ] `W18.P38.S445` - Close AFR-297 for src/aeat/application/modelo/_work_create_policy.py with signals active-profile, plain-file, target manifest-discovery, and owner W18.P38.S445; `src/aeat/application/modelo/_work_create_policy.py`.

@@ -644,3 +644,19 @@ as `var/aeat/parity`. The repair adds `Settings.aeat_registry_parity_store_dir`,
 documents `AEAT_REGISTRY_PARITY_STORE_DIR`, resolves omitted `--store-root` values via
 `load_settings()`, and preserves explicit operator paths. The focused parity settings
 resolver test and `.env.example`/`Settings` alignment tests passed.
+
+## S442-CR-001 | PASS | Modelo projection stays a delegated manifest-discovery surface
+
+Reviewed `src/aeat/application/modelo/_projection.py` as the S442 scope. The module
+does not construct secure-object repositories, inspect bucket manifests, open SQL
+routes, read environment variables, or persist files directly. It delegates active
+profile-derived inputs to `resolve_profile_sourced_bindings()` and existing modelo
+actions, so the `manifest-discovery` disposition is appropriate for this split-module
+closeout.
+
+## S442-CR-002 | PASS | Exception, locale, and validation gates passed
+
+Projection and comparison exceptions derive from `AeatError` and are enrolled in the
+central application error registry. Focused ruff, modelo projection integration tests,
+modelo CLI spine selection, error-registry tests, and `python -m aeat.locales audit`
+passed.
