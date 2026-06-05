@@ -140,3 +140,25 @@ The new tests import the production helper and `WorkUnitPersistenceError`, verif
 centralized settings fallback, and exercise the real runtime factory's unready-runtime
 rejection path. No fakes, mocks, stubs, monkeypatches, skips, or mirrored business
 logic were introduced.
+
+## S358-CR-001 | PASS | Runtime-default construction is preserved
+
+Reviewed the S358 production diff as `vaultspec-code-reviewer`.
+`VerificationReportCatalogueRepository` still defaults through
+`resolve_modelo_repository_bucket_id` and `secure_objects_for_modelo_bucket`; no direct
+SQL repository construction was introduced.
+
+## S358-CR-002 | PASS | Error hardening reduces leakage without swallowing causes
+
+The changed load path keeps `exc_info=True` logging for secure-object integrity
+exceptions and adds explicit error logs for classification and envelope-version drift.
+Raised `VerificationReportPersistenceError` instances now carry a locale key and
+structured context rather than raw exception strings. The original exception remains
+chained for the caught storage-integrity arm.
+
+## S358-CR-003 | PASS | Tests exercise real encrypted persistence
+
+The new tests write real secure-object payloads through `isolated_runtime_profile` and
+then load through the repository under test. They assert typed localized errors for
+classification drift and future inner envelope versions without fakes, monkeypatches,
+or tautological source mirroring.
