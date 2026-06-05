@@ -709,3 +709,17 @@ profile-bound storage route mismatch before the reviewed command is reached, and
 the backend help-vocabulary test still fails because `ledger review --help` does
 not contain the expected `classification` filter token. Those failures remain
 visible for later CLI/storage hardening work.
+
+## W06-004 | INFO | Complexity residual ratchet review found no hidden green claim
+
+Status: verified advisory-red.
+
+The W06.P19.S77 review found no evidence that the phase summary or diagnostics
+claim all-green complexity status. The committed baseline records the production
+and top-level test complexity lanes as failing, preserves the full over-threshold
+ratchet list, and identifies the next likely complexity targets. This is an
+explicit residual ratchet rather than a silent pass.
+
+Verification reran `just audit-complexity-production` and
+`just audit-complexity-tests`; both still exit 1. The production over-threshold
+count is 24, and the top-level test over-threshold count is 8.
