@@ -10,7 +10,6 @@ related:
   - '[[2026-06-05-modelo-work-revision-cli-decomposition-plan]]'
 ---
 
-
 # `codebase-monolith-decomposition` `codebase-wide monolith and cognitive complexity decomposition` plan
 
 ## Wave `W01` - global inventory and guard baseline
@@ -120,7 +119,7 @@ Decompose application/domain/backend monoliths only after ADR-backed boundary de
 Queue and execute ADR-backed decomposition for application, domain, adapter, persistence, and core modules over 1250 lines where safe boundaries require design decisions.
 
 - [x] `W03.P04.S07` - queue ADRs for application/domain/adapter/core monoliths whose decomposition requires boundary decisions; `.vault/adr src/aeat/application src/aeat/domain src/aeat/adapters src/aeat/core`.
-- [ ] `W03.P04.S08` - add or extend static guards proving no Python module exceeds 1250 lines and no tracked callable exceeds the complexity budget; `src/aeat/tests src/aeat/entrypoints/cli/tests`.
+- [x] `W03.P04.S08` - add or extend static guards proving no Python module exceeds 1250 lines and no tracked callable exceeds the complexity budget; `src/aeat/tests src/aeat/entrypoints/cli/tests`.
 
 ### Phase `W03.P06` - application service facade decomposition
 
@@ -138,7 +137,7 @@ Decompose oversized application service modules by use-case boundary while prese
 - [ ] `W03.P06.S62` - verify application workflow engine behavior and facade imports after decomposition; `src/aeat/application/workflow/tests src/aeat/tests`.
 - [x] `W03.P06.S113` - extract live IVA remote-state outcome and redaction helpers behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/_remote_state_outcomes.py src/aeat/application/live/tests/test_iva_remote_state_acquisition.py src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py`.
 - [x] `W03.P06.S114` - extract live filed-data selection and listing helpers behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/_filed_data.py src/aeat/application/live/tests src/aeat/entrypoints/cli/tests/test_registry_cli.py`.
-- [ ] `W03.P06.S115` - extract live filed-data capture service orchestration behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/_filed_data_capture.py src/aeat/application/live/tests/test_filed_bulk_capture.py src/aeat/entrypoints/cli/tests/test_registry_cli.py`.
+- [ ] `W03.P06.S115` - extract live filed-data capture service orchestration behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/_session.py src/aeat/application/live/_filed_observation_persistence.py src/aeat/application/live/_filed_data_capture.py src/aeat/application/live/tests/test_filed_bulk_capture.py src/aeat/application/live/tests/test_filed_capture_calculation_history.py src/aeat/entrypoints/cli/tests/test_registry_cli.py`.
 
 ### Phase `W03.P07` - domain registry decomposition
 
