@@ -1227,6 +1227,39 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._iva_wallet_seed.ModeloIvaWalletSeedError",
+        ErrorCode(
+            code="ERROR_MODELO_IVA_WALLET_SEED",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_modelos",
+            default_suggestion="aeat app modelo iva-wallet seed --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._iva_wallet_seed.ModeloIvaWalletSeedNoTaxpayerError",
+        ErrorCode(
+            code="REFUSED_MODELO_IVA_WALLET_SEED_NO_TAXPAYER",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.iva_wallet.seed_no_nif",
+            default_suggestion="aeat config profile edit",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._iva_wallet_seed.ModeloIvaWalletSeedNegativeAmountError",
+        ErrorCode(
+            code="REFUSED_MODELO_IVA_WALLET_SEED_NEGATIVE_AMOUNT",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.iva_wallet.seed_negative_amount",
+            default_suggestion="aeat app modelo iva-wallet seed --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._actions.ModeloRecordNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_FILING_RECORD_NOT_FOUND",
