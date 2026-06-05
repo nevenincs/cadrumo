@@ -423,6 +423,10 @@ class Settings(BaseSettings):
         gt=0,
         description="Subprocess timeout (seconds) for the LibreOffice binary XLS conversion fall-back",
     )
+    aeat_registry_parity_store_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "audit" / "registry" / "parity",
+        description="Directory where registry parity tape artifacts are archived by default",
+    )
     aeat_calc_sheets_recalc_delay_s: float = Field(
         default=2.0,
         gt=0,
@@ -1287,6 +1291,7 @@ class Settings(BaseSettings):
         "aeat_secret_store_dir",
         "aeat_blob_store_dir",
         "aeat_audit_dir",
+        "aeat_registry_parity_store_dir",
         "aeat_manuals_root",
         "aeat_normatives_root",
         "aeat_iva_catalogue_root",

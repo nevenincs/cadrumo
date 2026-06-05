@@ -613,18 +613,19 @@ Focused `ruff check`, TTY locale integration tests, profile lifecycle integratio
 error-registry tests, JSON schema conformance tests, and `python -m aeat.locales audit`
 passed.
 
-## S392-CR-001 | PASS | Registry CLI is read-only and storage-free
+## S392-CR-001 | PASS | Registry CLI read paths stay read-only
 
 Reviewed the S392 scope as `vaultspec-code-reviewer`. `registry.py` delegates to
-application registry verification services and resolves default roots through
-`bundled_path()`. It does not resolve active profiles, inspect manifests, construct
-secure-object repositories, open SQL routes, persist data, or call remote providers.
+application registry verification services and resolves default registry/source read
+roots through `bundled_path()`. The `verify-filed-state` command is correctly treated
+as a runtime-default surface because it loads filed-state observations through the
+encrypted observation store rather than direct filesystem-only paths.
 
 ## S392-CR-002 | PASS | Operator path inputs stay explicit
 
 The registry, source, workbook, scenario, tape, and output paths are explicit Typer
-`Path` options. Defaults point at bundled resources or the local parity archive path;
-there is no fallback to profile storage or ambient secure-storage roots.
+`Path` options. Defaults point at bundled resources or centralized settings; there is
+no fallback to ambient profile roots for operator-provided export paths.
 
 ## S392-CR-003 | PASS | Output contract is schema-backed
 
@@ -635,3 +636,11 @@ The JSON schema conformance gate passed for the current CLI tree.
 
 Focused `ruff check`, registry CLI integration tests, schema conformance tests, and
 `python -m aeat.locales audit` passed.
+
+## S392-CR-005 | PASS | Settings centralization repaired parity tape default
+
+Second-pass review found the `registry parity run` default tape archive root hardcoded
+as `var/aeat/parity`. The repair adds `Settings.aeat_registry_parity_store_dir`,
+documents `AEAT_REGISTRY_PARITY_STORE_DIR`, resolves omitted `--store-root` values via
+`load_settings()`, and preserves explicit operator paths. The focused parity settings
+resolver test and `.env.example`/`Settings` alignment tests passed.
