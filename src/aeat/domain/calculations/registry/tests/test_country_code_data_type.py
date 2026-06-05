@@ -2,8 +2,8 @@
 
 The alias enforces alpha-2 shape (two uppercase ASCII letters).
 Membership against the AEAT-supported country list is layered on
-through per-casilla `enum` constraints (Plan B) and semantic-role
-consistency (Plan C); this surface validates the shape only.
+through per-casilla `enum` constraints and semantic-role
+consistency; this surface validates the shape only.
 """
 
 from __future__ import annotations

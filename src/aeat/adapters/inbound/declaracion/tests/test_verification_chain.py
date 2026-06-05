@@ -211,7 +211,7 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "130" / f"{pdf_stem}.pdf"
 
-    # Step 1: parse
+    # Parse the declaration.
     try:
         filing = parse_declaracion(
             pdf_path,
@@ -229,7 +229,7 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
-    # Step 2: skip specimens where casilla 19 was not extracted
+    # Skip specimens where casilla 19 was not extracted.
     if "19" not in extracted:
         # The corpus PDF is a partial filing — casilla 19 blank.
         # Still run the engine so BINDING-GAP and FORMULA-MISMATCH can be
@@ -241,7 +241,7 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
         )
         closure_extracted = extracted["19"]
 
-    # Step 3: build leaf inputs.
+    # Build leaf inputs.
     # The fixture prints only c03 (rendimiento neto) and c19 (closure).  Box 03 is
     # now computed (03 = 01 - 02) so it cannot go into engine inputs.  Reconstruct
     # the canonical leaf decomposition: c01 = extracted_c03 (all income, no expenses),
@@ -271,7 +271,7 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
         "irpf.previous_year_economic_activity_net_income": Decimal("0"),
     }
 
-    # Step 4: resolve snapshot and run engine
+    # Resolve snapshot and run engine.
     snapshot = _registry_snapshot("130", year, period)
     filing_period_date = _period_to_date(year, period)
 
@@ -294,7 +294,7 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
             f"  binding_values supplied: {sorted(binding_values)}"
         )
 
-    # Step 5: verify engine computes casilla 03 = 01 - 02
+    # Verify engine computes casilla 03 = 01 - 02.
     engine_values = dict(result.values)
 
     input_01 = inputs.get("01", Decimal("0"))
@@ -309,7 +309,7 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
         f"expected 01({input_01!r}) - 02({input_02!r}) = {input_01 - input_02!r}"
     )
 
-    # Step 6: compare engine casilla 19 against extracted value
+    # Compare engine casilla 19 against extracted value.
     if closure_extracted is not None:
         engine_19 = engine_values.get("19")
         assert engine_19 is not None, (
@@ -378,7 +378,7 @@ def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "111" / f"{pdf_stem}.pdf"
 
-    # Step 1: parse
+    # Parse the declaration.
     try:
         filing = parse_declaracion(
             pdf_path,
@@ -391,7 +391,7 @@ def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
-    # Step 2: build inputs — exclude computed casillas 28 and 30
+    # Build inputs: exclude computed casillas 28 and 30.
     inputs: dict[str, Decimal] = {}
     for casilla_id, value in extracted.items():
         if casilla_id in _COMPUTED_CASILLAS_M111:
@@ -399,7 +399,7 @@ def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
         if isinstance(value, Decimal):
             inputs[casilla_id] = value
 
-    # Step 3: resolve snapshot and run engine
+    # Resolve snapshot and run engine.
     snapshot = _registry_snapshot("111", year, period)
     filing_period_date = _period_to_date(year, period)
 
@@ -427,7 +427,7 @@ def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
     _CASILLA_28_LEAVES = frozenset({"03", "06", "09", "12", "15", "18", "21", "24", "27"})
     has_leaf_inputs = bool(inputs.keys() & _CASILLA_28_LEAVES)
 
-    # Step 4: verify casilla 28 (when extracted and leaf inputs are present)
+    # Verify casilla 28 when extracted and leaf inputs are present.
     if "28" in extracted and has_leaf_inputs:
         extracted_28 = extracted["28"]
         assert isinstance(extracted_28, Decimal)
@@ -440,7 +440,7 @@ def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
             f"  inputs: {inputs}"
         )
 
-    # Step 5: verify casilla 30 (when extracted and leaf inputs are present)
+    # Verify casilla 30 when extracted and leaf inputs are present.
     if "30" in extracted and has_leaf_inputs:
         extracted_30 = extracted["30"]
         assert isinstance(extracted_30, Decimal)
@@ -1275,7 +1275,7 @@ def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_re
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "180" / "2024-0A.pdf"
 
-    # Step 1: parse the printed M180 form — these are the AEAT-grounded expected values.
+    # Parse the printed M180 form: these are the AEAT-grounded expected values.
     try:
         filing = parse_declaracion(
             pdf_path,
@@ -1288,7 +1288,7 @@ def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_re
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
-    # Step 2: build M115 quarterly observations whose sum matches the M180 fixture totals.
+    # Build M115 quarterly observations whose sum matches the M180 fixture totals.
     # Values chosen so that sum(Q1..Q4) equals each extracted M180 closure value.
     # M115 casilla 01 (integer): 1+1+1+0 = 3 == extracted["decl.total-perceptores"]
     # M115 casilla 02 (money):   3000+3000+3000+3000 = 12000.00 == extracted["decl.base-total"]
@@ -1309,7 +1309,7 @@ def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_re
         for period, casilla_values in sorted(_m115_quarterly.items())
     )
 
-    # Step 3: resolve relation_values for the M180 2023-y-siguientes snapshot.
+    # Resolve relation_values for the M180 2023-y-siguientes snapshot.
     snapshot = _registry_snapshot("180", 2024, "0A")
     try:
         relation_values = resolve_relation_values_from_observations(
@@ -1325,7 +1325,7 @@ def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_re
             f"  error: {exc}"
         )
 
-    # Step 4: run the calculation engine.
+    # Run the calculation engine.
     try:
         result = calculate_registry_snapshot(
             snapshot,
@@ -1341,7 +1341,7 @@ def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_re
             f"  relation_values keys: {sorted(relation_values)}"
         )
 
-    # Step 5: assert engine closure values == AEAT-grounded extracted values.
+    # Assert engine closure values match AEAT-grounded extracted values.
     engine_values = dict(result.values)
 
     for casilla_id in ("decl.total-perceptores", "decl.base-total", "decl.retenciones-total"):
@@ -2041,14 +2041,14 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
 
     engine_values = dict(result.values)
 
-    # Step 1: Engine MUST produce computed closure casillas — formula chain structural check.
+    # Engine MUST produce computed closure casillas: formula chain structural check.
     for closure_id in ("0545", "0546", "0585", "0586"):
         assert engine_values.get(closure_id) is not None, (
             f"FORMULA-MISMATCH [M100/{year}-0A corpus-limited]: casilla {closure_id!r} absent "
             f"from engine result — formula evaluation order issue."
         )
 
-    # Step 2: Engine-computed values for 0545 and 0546 must NOT equal the sanitised
+    # Engine-computed values for 0545 and 0546 must NOT equal the sanitised
     # extracted values — this is the empirical CORPUS-LIMITED confirmation.
     # The engine computes from real tax bracket tables; the corpus has garbage values
     # (sanitised amount ~1,001,000 with appended box numbers).
@@ -2071,7 +2071,7 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
         f"{extracted_0546!r} — same sanitisation guard as 0545."
     )
 
-    # Step 3: Leaf input 0171 must be extracted by the declaracion_pdf profile.
+    # Leaf input 0171 must be extracted by the declaracion_pdf profile.
     assert "0171" in extracted, "PARSER-GAP [M100/2021-0A corpus-limited]: casilla '0171' absent from extracted values."
     assert isinstance(extracted["0171"], Decimal), (
         f"PARSER-GAP [M100/2021-0A corpus-limited]: casilla '0171' is not Decimal: {type(extracted['0171']).__name__!r}"
