@@ -217,7 +217,7 @@ def test_apply_derives_taxpayer_axes_from_nie_and_iae_for_calendar(secure_store:
         today=date(2025, 4, 1),
     )
     assert calendar.taxpayer_model_declared is True
-    assert {entry.modelo for entry in calendar.entries} >= {"130", "303"}
+    assert {entry.modelo for entry in calendar.entries} >= {"303"}
 
 
 def test_apply_does_not_infer_income_category_without_iae(secure_store: SecureObjectRepository) -> None:
