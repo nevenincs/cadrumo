@@ -141,8 +141,20 @@ Reviewed W02.P10 `S150` after correcting the service wiring boundary. Censo refr
 
 Verification covers Ruff, compileall for user-profile and config modules, profile censo CLI tests, user-profile repository tests, architecture-boundary tests, codebase size-budget tests, and a direct scan confirming the censo service no longer imports `runtime_repository` or `secure_object_repository_for_bucket`.
 
-## REVIEW-019 | LOW | No blocking findings in censo event-enrollment boundary correction
+## REVIEW-020 | LOW | No blocking findings in censo event-enrollment boundary correction
 
-Reviewed W02.P10 `S150`. The config censo CLI now constructs its service through the `aeat.application.user_profile` facade and no longer imports storage, bucket-event repositories, or event enums. `CensoSyncService` owns refresh/apply event emission, and `build_censo_sync_service` is exported as the application-level factory so consumers do not reach into private modules.
+Reviewed W02.P10 `S150`. `CensoSyncService` owns refresh/apply event emission, while the config censo CLI remains the concrete composition point for bucket-scoped storage and bucket-event repositories. The user-profile application facade does not add a storage-wiring factory, so the slice removes duplicated event-authoring policy from the CLI without introducing a new application-to-adapter import.
 
-Verification covers Ruff, compileall, a CLI boundary search for event/storage wiring, 17 application censo service tests, 11 marker-enabled CLI censo tests, the 2-test hard size-budget guard, and plan validation with only the known PLAN022 monotonic-order warning.
+Verification covers Ruff, compileall, direct application import scans for removed storage wiring, 17 application censo service tests, 11 marker-enabled CLI censo tests, the 2-test hard size-budget guard, and plan validation with only the known PLAN022 monotonic-order warning.
+
+## REVIEW-021 | LOW | No blocking findings in domain error registry and custody split
+
+Reviewed W04.P09 `S85` and `S86` plus W02.P10 `S151`. The domain error registry keeps `_domain.py` as the aggregate facade and moves ordered declarations into three private shards. A direct before/after registry comparison against `HEAD` confirmed all 210 domain entries preserve order and `ErrorCode` payloads. The config custody root now delegates secret-store verbs to `_custody_secret.py` while leaving custody policy in application services.
+
+Verification covers Ruff, compileall, direct registry equality comparison, public registry lookup smoke, 39 focused core error and boundary tests, 106 focused config/custody CLI tests, and the 2-test hard size-budget guard. The broad `src/aeat/core/tests` lane failed on unrelated stale meta-test paths and one external-constant alias assertion; that residual is tracked as W04.P09 `S152`.
+
+## REVIEW-022 | LOW | No blocking findings in application and adapter error registry shard closure
+
+Reviewed W04.P09 `S87` through `S90`. The application and adapter error registry modules now remain as aggregate facades over private ordered shards. The shard files keep declaration order and `ErrorCode` payloads intact, and each aggregate continues to expose `_DECLARED_ERROR_CODES` for the core registry package.
+
+Verification covers Ruff, compileall for `src/aeat/core/errors/registry`, 34 core error tests, registry aggregate smoke checks for application and adapter entries, selected core boundary/output checks, and the hard codebase size-budget guard. Broad core meta-test failures remain tracked separately as W04.P09 `S152`.

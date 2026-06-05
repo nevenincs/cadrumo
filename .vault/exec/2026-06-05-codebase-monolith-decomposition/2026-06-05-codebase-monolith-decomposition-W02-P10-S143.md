@@ -8,22 +8,21 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
 ---
 
-# W02.P10.S143 Config Custody Registrar Split
+# W02.P10.S143 Config Custody Split
 
-## Scope
-
-Split the residual oversized config custody command registrar into focused transport helpers.
+Scope: split residual config custody command registration into focused transport helpers without moving custody policy into CLI.
 
 ## Description
 
-- Extracted unlock, lock, rekey, recover, show-recovery, and verify-recovery command registration into separate helpers.
-- Kept command bodies as CLI transport: activate output language, delegate to application services, emit typed payloads, and translate boundary errors.
-- Left custody policy in backend services.
+- Split secret-store custody verbs from `_custody.py` into `_custody_secret.py`.
+- Kept `_custody.py` as the unlock and root custody registrar facade.
+- Preserved application-owned custody operations through `aeat.application.user_profile` calls.
+- Verified the split modules stay below callable and module size budgets.
 
 ## Outcome
 
-`register_custody_commands` is now a small composition function and no longer exceeds the callable budget.
+The config custody CLI surface remains transport-only and no longer concentrates unlock, lock, rekey, recovery, and recovery verification handlers in one file.
 
 ## Notes
 
-No command behavior or option shape was changed.
+Ruff passed for the changed config custody modules. Focused config CLI tests passed across 57 real-behavior tests. The root custody module is 93 lines and the focused secret custody module is 266 lines, with no callable over the 180-line default.
