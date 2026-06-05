@@ -533,3 +533,45 @@ now matches the current localized guidance.
 
 Focused `ruff check`, root-help/operator-surface integration tests, and `python -m
 aeat.locales audit` passed.
+
+## S390-CR-001 | PASS | CLI schema module is a re-export boundary
+
+Reviewed the S390 scope as `vaultspec-code-reviewer`. `_schemas.py` imports and
+re-exports the canonical schema registry, output base classes, envelope type, and JSON
+emit helpers from `aeat.core.json_contract`. It does not create storage repositories,
+read active-profile pointers, inspect manifests, load settings, access environment
+variables, perform remote IO, or catch exceptions.
+
+## S390-CR-002 | FIXED | Config payload schemas were not loaded before the exact registry gate
+
+The JSON schema conformance test documented that payload modules must be imported before
+the gate compares CLI leaves to `SCHEMA_REGISTRY`, but config payloads were missing from
+that import setup. The gate now imports `_config_payloads`; the assertion remains an
+exact registry-to-leaf match with no allowlist.
+
+## S390-CR-003 | PASS | IVA wallet seed errors have centralized base and registry
+
+Validation surfaced existing Modelo IVA wallet seed errors whose base still derived from
+bare `Exception` earlier in the shared-worktree run and lacked central `ErrorCode`
+declarations. Current HEAD now has the seed base deriving from `ModeloError`, and the
+declarations live in the core registry.
+
+## S390-CR-004 | TRACKED | Cross-period clean-state locale repair belongs to its source slice
+
+The shared dirty worktree also contains a cross-period clean-state implementation with a
+new localized refusal key. The locale leaf was created locally through `python -m
+aeat.locales`, but it is not staged in S390 because the owning source class is not
+present in committed HEAD. It remains tracked with the cross-period slice.
+
+## S390-CR-005 | FIXED | Config repair extraction kept schema gate and locale keys aligned
+
+The config repair callback moved to `_config/_repair_cli.py`, so the zero-bare-emit gate
+now consumes the documented exemption path set instead of hard-coding only
+`_config/__init__.py`. The extracted repair integrity commands also gained nested
+localized help strings through `python -m aeat.locales`.
+
+## S390-CR-006 | PASS | Validation passed
+
+Focused `ruff check`, CLI schema conformance integration tests, error-registry
+enforcement tests, and `python -m aeat.locales audit` passed in the current shared
+worktree.
