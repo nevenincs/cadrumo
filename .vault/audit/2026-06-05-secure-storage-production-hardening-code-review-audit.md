@@ -442,3 +442,21 @@ with `exc_info=True`, so the warning path is not silent.
 
 No locale leaves were added. Focused `ruff check`, ratios integration tests, and
 `python -m aeat.locales audit` passed.
+
+## S386-CR-001 | PASS | Overview rendering is presentation-only
+
+Reviewed the S386 scope as `vaultspec-code-reviewer`. `_overview_rendering.py` consumes
+an `OverviewStatusReport` and emits localized text lines. It does not resolve
+active-profile pointers, scan manifests, construct storage repositories, load settings,
+read environment variables, or catch exceptions.
+
+## S386-CR-002 | PASS | Active-profile signal is projected upstream
+
+The renderer's only active-profile behavior is selecting the application-projected
+display label for prose and falling back to the projected bucket id if the label is
+missing. No storage discovery happens in the renderer.
+
+## S386-CR-003 | PASS | Locale and focused validation passed
+
+No locale leaves were added. Focused `ruff check`, overview rendering integration
+tests, and `python -m aeat.locales audit` passed.
