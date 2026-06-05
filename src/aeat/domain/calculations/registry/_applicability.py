@@ -87,7 +87,6 @@ remaining registered modelos is intentionally deferred, marked at
 from __future__ import annotations
 
 from datetime import date
-from decimal import Decimal
 from enum import StrEnum
 
 from pydantic import BaseModel, Field
@@ -99,6 +98,8 @@ from ...deadlines.taxpayer_model import (
     IrpfIncomeCategory,
     TaxpayerProfile,
 )
+from ._applicability_modelo202 import Modelo202Modality, Modelo202ModalityVerdict, derive_modelo_202_modality
+from ._applicability_payer_facts import PayerFact, payer_fact_holds
 
 _SEED_COVERAGE_NOTICE = (
     "Seed coverage only — the modelos in this table are the core "
@@ -141,71 +142,6 @@ class ApplicabilityVerdict(StrEnum):
     NOT_APPLICABLE = "not_applicable"
     ATTRIBUTION_PASS_THROUGH = "attribution_pass_through"
     INCOMPLETE = "incomplete"
-
-
-class PayerFact(StrEnum):
-    """A withholding-payer / trade fact a modelo's applicability needs.
-
-    Several modelos — Modelo 111 / 115 (retenciones e ingresos a cuenta)
-    and their annual companions Modelo 190 / 180, plus Modelo 349 / 347
-    (operaciones intracomunitarias / con terceros) — apply only when the
-    taxpayer performs a specific *fact* (pays salaries, pays rent subject
-    to retención, trades intracommunity, exceeds the third-party
-    threshold). The :class:`~aeat.domain.deadlines.TaxpayerProfile`
-    carries each as a plain boolean.
-
-    A plain boolean has no tri-state: a ``False`` value cannot be
-    distinguished from "not declared". Applicability therefore can only
-    be asserted in the positive direction — a ``True`` fact yields
-    :attr:`ApplicabilityVerdict.APPLICABLE`. A ``False`` fact yields
-    :attr:`ApplicabilityVerdict.INCOMPLETE` (the engine refuses to guess
-    a ``NOT_APPLICABLE`` it cannot positively justify — incomplete facts
-    must never silently exempt a taxpayer from a filing obligation).
-
-    Attributes:
-        PAYS_WITHHELD_INCOME: The taxpayer pays salaries (rendimientos
-            del trabajo) or professional fees subject to retención —
-            the Modelo 111 / 190 trigger.
-        PAYS_RENT_WITH_RETENCION: The taxpayer pays alquiler de inmueble
-            urbano subject to retención — the Modelo 115 / 180 trigger.
-        TRADES_INTRACOMMUNITY: The taxpayer performs operaciones
-            intracomunitarias — the Modelo 349 trigger.
-        EXCEEDS_THIRD_PARTY_THRESHOLD: The taxpayer's third-party
-            transactions exceeded the Modelo 347 declaration threshold.
-        BIENES_EXTRANJERO_ABOVE_THRESHOLD: The taxpayer holds bienes
-            en el extranjero (foreign assets declared in Modelo 720)
-            with aggregate value above the legal declaration threshold
-            (DADisp. Adicional 18ª Ley 58/2003). The boolean has no
-            tri-state: a ``False`` value is indistinguishable from "not
-            declared", so an undeclared fact yields ``INCOMPLETE``.
-    """
-
-    PAYS_WITHHELD_INCOME = "pays_withheld_income"
-    PAYS_RENT_WITH_RETENCION = "pays_rent_with_retencion"
-    TRADES_INTRACOMMUNITY = "trades_intracommunity"
-    EXCEEDS_THIRD_PARTY_THRESHOLD = "exceeds_third_party_threshold"
-    BIENES_EXTRANJERO_ABOVE_THRESHOLD = "bienes_extranjero_above_threshold"
-
-
-def _payer_fact_holds(profile: TaxpayerProfile, fact: PayerFact) -> bool:
-    """Return whether ``profile`` positively declares the payer ``fact``.
-
-    Only a positive (``True``) declaration is a confident yes. The
-    :class:`~aeat.domain.deadlines.TaxpayerProfile` booleans default to
-    ``False``, which is indistinguishable from "not declared" — see
-    :class:`PayerFact`.
-    """
-    match fact:
-        case PayerFact.PAYS_WITHHELD_INCOME:
-            return profile.has_employees or profile.pays_professionals_with_retencion
-        case PayerFact.PAYS_RENT_WITH_RETENCION:
-            return profile.pays_rent_with_retencion
-        case PayerFact.TRADES_INTRACOMMUNITY:
-            return profile.does_intracomunitario
-        case PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD:
-            return profile.third_party_transactions_above_347_threshold
-        case PayerFact.BIENES_EXTRANJERO_ABOVE_THRESHOLD:
-            return profile.bienes_extranjero_above_threshold
 
 
 class ModeloApplicability(BaseModel):
@@ -380,7 +316,7 @@ class ModeloApplicabilityRule(BaseModel):
         # asserted in the positive direction — the underlying boolean has
         # no tri-state, so an absent fact yields INCOMPLETE rather than a
         # NOT_APPLICABLE the engine cannot positively justify.
-        if self.required_payer_fact is not None and not _payer_fact_holds(profile, self.required_payer_fact):
+        if self.required_payer_fact is not None and not payer_fact_holds(profile, self.required_payer_fact):
             return _undetermined_applicability(self.modelo)
         return ModeloApplicability(
             modelo=self.modelo,
@@ -1272,169 +1208,6 @@ def derive_modelo_applicability(
     if rule is None:
         return _incomplete_applicability(modelo, unruled=True)
     return rule.evaluate(profile)
-
-
-# ---------------------------------------------------------------------
-# Modelo 202 pago-fraccionado modality gate — LIS Art. 40 (BOE-A-2014-12328)
-# ---------------------------------------------------------------------
-#
-# Modelo 202 carries two pago-fraccionado modalities:
-#
-#   * LIS Art. 40.2 (cuota method) — instalment = 18 % of the cuota
-#     íntegra of the last filed period. Available by default.
-#   * LIS Art. 40.3 (base-imponible method) — instalment computed on
-#     the taxable base of the first 3 / 9 / 11 months. Mandatory when
-#     the importe neto de la cifra de negocios (INCN) of the prior 12
-#     months exceeded 6.000.000 EUR (LIS Art. 40.3; AEAT "Cálculo pago
-#     fraccionado según la modalidad regulada en el artículo 40.3 LIS").
-#
-# This gate derives the available modality from the
-# :class:`~aeat.domain.deadlines.TaxpayerProfile` INCN fact rather than
-# letting the operator pick the wrong one. An undeclared INCN yields
-# the INCOMPLETE verdict: the engine refuses to guess a modality
-# (corporate-entity ADR §3, parent ADR's safe default).
-
-_MODELO_202_MODALITY_LEGAL_REFS: tuple[str, ...] = (
-    "ley-27-2014:art-40",
-    "ley-27-2014:art-40-3",
-)
-"""Scoped registry citation keys grounding the Modelo 202 modality gate.
-
-``ley-27-2014:art-40`` carries the general pago-fraccionado regime;
-``ley-27-2014:art-40-3`` carries the 6.000.000 EUR INCN mandatory-Art.
-40.3 threshold (grounded against the BOE-A-2014-12328 corpus).
-Both keys resolve in the registry ``legal/is.toml`` table.
-"""
-
-# LIS Art. 40.3 mandatory-modality threshold: INCN of the prior 12
-# months exceeded 6.000.000 EUR. Encoded here as a Decimal to feed the
-# strict-equality / strict-comparison test against the profile fact
-# without float rounding.
-_MODELO_202_ART_40_3_INCN_THRESHOLD: Decimal = Decimal("6000000")
-
-
-class Modelo202Modality(StrEnum):
-    """The pago-fraccionado modality available to a Modelo 202 filer.
-
-    The modality is derived from the taxpayer profile's INCN of the
-    prior 12 months (LIS Art. 40.3). The engine never offers a modality
-    the regulation forbids and never guesses when the profile cannot
-    decide.
-
-    Attributes:
-        ART_40_2_OPTIONAL: LIS Art. 40.2 (cuota method) — available
-            because the profile's INCN does not exceed the 6.000.000
-            EUR threshold; the profile may also reach Art. 40.3
-            optionally.
-        ART_40_3_MANDATORY: LIS Art. 40.3 (base-imponible method) —
-            the only modality available because the profile's INCN
-            exceeded the 6.000.000 EUR threshold in the prior 12
-            months. Art. 40.2 is not offered.
-        INCOMPLETE: The profile's INCN is undeclared or the profile is
-            not a Modelo 202 filer (entity type unsupported). The
-            engine refuses to guess a modality.
-    """
-
-    ART_40_2_OPTIONAL = "art_40_2_optional"
-    ART_40_3_MANDATORY = "art_40_3_mandatory"
-    INCOMPLETE = "incomplete"
-
-
-class Modelo202ModalityVerdict(BaseModel):
-    """The derived Modelo 202 modality verdict and its grounding.
-
-    Attributes:
-        modality: The :class:`Modelo202Modality` available to the
-            profile.
-        reason: Operator-facing prose explaining the verdict.
-        legal_refs: Scoped registry citation keys grounding the rule;
-            always at least one (LIS Art. 40 plus, where decisive, LIS
-            Art. 40.3).
-    """
-
-    model_config = _STRICT_FROZEN
-
-    modality: Modelo202Modality
-    reason: str = Field(min_length=1)
-    legal_refs: tuple[str, ...] = Field(min_length=1)
-
-
-_MODELO_202_ART_40_3_MANDATORY_REASON = (
-    "Modelo 202 modalidad obligatoria: el artículo 40.3 de la LIS impone "
-    "el método de la base imponible (3 / 9 / 11 primeros meses) cuando el "
-    "importe neto de la cifra de negocios de los doce meses anteriores ha "
-    "superado los 6.000.000 €. La modalidad del artículo 40.2 (cuota) no "
-    "está disponible."
-)
-
-_MODELO_202_ART_40_2_OPTIONAL_REASON = (
-    "Modelo 202 modalidad por defecto: el artículo 40.2 de la LIS permite "
-    "el método de la cuota (18 %) cuando el importe neto de la cifra de "
-    "negocios de los doce meses anteriores no ha superado los 6.000.000 €. "
-    "La modalidad del artículo 40.3 sigue siendo opcional."
-)
-
-_MODELO_202_INCOMPLETE_REASON = (
-    "No se puede determinar la modalidad del Modelo 202: el importe neto "
-    "de la cifra de negocios de los doce meses anteriores no está "
-    "declarado. Sin este dato el motor no infiere modalidad — un pago "
-    "fraccionado equivocado es peor que una respuesta incompleta. Declare "
-    "el INCN con 'aeat config profile edit'."
-)
-
-_MODELO_202_NOT_APPLICABLE_REASON = (
-    "Modalidad del Modelo 202 no aplicable: el perfil declarado no es un "
-    "contribuyente del Impuesto sobre Sociedades. La modalidad solo se "
-    "deriva para entidades jurídicas obligadas al pago fraccionado del IS."
-)
-
-
-def derive_modelo_202_modality(profile: TaxpayerProfile) -> Modelo202ModalityVerdict:
-    """Derive the Modelo 202 pago-fraccionado modality as a :class:`Modelo202ModalityVerdict` for ``profile``.
-
-    The verdict is driven by the LIS Art. 40.3 INCN threshold
-    (6.000.000 EUR over the prior 12 months):
-
-    * INCN > 6.000.000 EUR → Art. 40.3 is mandatory; Art. 40.2 is not
-      offered.
-    * INCN ≤ 6.000.000 EUR → both modalities are reachable; the
-      verdict reports Art. 40.2 as the default with Art. 40.3 still
-      optional in the rationale.
-    * INCN undeclared → INCOMPLETE; the engine refuses to guess a
-      modality (corporate-entity ADR §3).
-
-    A profile whose entity type is not a Modelo 202 filer (natural
-    person, attribution entity, or undeclared) returns INCOMPLETE with
-    a rationale pointing at the entity-type axis. The modality
-    question only meaningfully applies to an IS contribuyente.
-
-    Args:
-        profile: The :class:`TaxpayerProfile` whose INCN and entity type drive the modality verdict.
-    """
-    if profile.entity_type is None or profile.entity_type is not EntityType.LEGAL_ENTITY:
-        return Modelo202ModalityVerdict(
-            modality=Modelo202Modality.INCOMPLETE,
-            reason=_MODELO_202_NOT_APPLICABLE_REASON,
-            legal_refs=_MODELO_202_MODALITY_LEGAL_REFS,
-        )
-    incn = profile.incn_prior_12_months
-    if incn is None:
-        return Modelo202ModalityVerdict(
-            modality=Modelo202Modality.INCOMPLETE,
-            reason=_MODELO_202_INCOMPLETE_REASON,
-            legal_refs=_MODELO_202_MODALITY_LEGAL_REFS,
-        )
-    if incn > _MODELO_202_ART_40_3_INCN_THRESHOLD:
-        return Modelo202ModalityVerdict(
-            modality=Modelo202Modality.ART_40_3_MANDATORY,
-            reason=_MODELO_202_ART_40_3_MANDATORY_REASON,
-            legal_refs=_MODELO_202_MODALITY_LEGAL_REFS,
-        )
-    return Modelo202ModalityVerdict(
-        modality=Modelo202Modality.ART_40_2_OPTIONAL,
-        reason=_MODELO_202_ART_40_2_OPTIONAL_REASON,
-        legal_refs=_MODELO_202_MODALITY_LEGAL_REFS,
-    )
 
 
 __all__ = [
