@@ -4,9 +4,8 @@ Mounts the operator-facing censo-sync surface on the existing
 ``config profile`` subgroup. The backend is
 :class:`aeat.application.user_profile.CensoSyncService`; this module is the
 thin Typer layer that resolves the active profile/bucket, calls the
-service, emits payload + text, and surfaces typed refusals. Censo lifecycle
-events are appended to the profile event log through
-:class:`BucketEventHistoryRepository`.
+application service, emits payload + text, and surfaces typed refusals.
+Censo lifecycle event enrollment is owned by the application service.
 
 ``refresh`` is mounted but refuses with a typed CLI boundary error
 until the sede G313 driver lands - the verb is visible in ``--help``
@@ -20,8 +19,6 @@ import typer
 
 from ....core.errors import resolve_error_message
 from ....core.i18n import tr
-from ....core.identity import BucketId
-from ....core.time import now
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
 from ._profile_censo_payloads import (
@@ -32,7 +29,7 @@ from ._profile_censo_payloads import (
 )
 
 
-def _active_pointer() -> tuple[BucketId, BucketId]:
+def _active_pointer() -> tuple[str, str]:
     from ....application.workflow import read_profile_bucket_by_id
     from ....core import resolve_active_bucket_id
 
@@ -50,50 +47,13 @@ def _active_pointer() -> tuple[BucketId, BucketId]:
 
 
 def _build_service(bucket_id: str):
-    from ....application.user_profile import CensoSyncService
-
-    return CensoSyncService(bucket_id=bucket_id)
-
-
-def _emit_censo_event(*, bucket_id: str, event_type, profile_id: str, snapshot_id: str) -> None:
-
     from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-    from ....domain.buckets import (
-        BucketEvent,
-        BucketEventHistoryRepository,
-        BucketEventObjectType,
-        append_bucket_event,
-        derive_bucket_event_id,
-    )
+    from ....application.user_profile import CensoSyncService
+    from ....domain.buckets import BucketEventHistoryRepository
 
-    occurred_at = now()
-    payload = {"profile_id": profile_id, "snapshot_id": snapshot_id}
-    event_id = derive_bucket_event_id(
+    return CensoSyncService(
         bucket_id=bucket_id,
-        event_type=event_type,
-        occurred_at=occurred_at,
-        actor="operator",
-        object_type=BucketEventObjectType.PROFILE,
-        object_id=profile_id,
-        payload=payload,
-    )
-    repo = BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
-    catalogue = repo.load()
-    repo.save(
-        append_bucket_event(
-            catalogue,
-            BucketEvent(
-                event_id=event_id,
-                bucket_id=bucket_id,
-                event_type=event_type,
-                occurred_at=occurred_at,
-                actor="operator",
-                object_type=BucketEventObjectType.PROFILE,
-                object_id=profile_id,
-                payload=payload,
-                payload_version=1,
-            ),
-        ),
+        events=BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id)),
     )
 
 
@@ -110,7 +70,6 @@ def _register_censo_refresh(censo_app: typer.Typer) -> None:
         import asyncio
 
         from ....application.user_profile import CensoNotAvailableError
-        from ....domain.buckets import BucketEventType
 
         profile_id, bucket_id = _active_pointer()
         service = _build_service(bucket_id)
@@ -118,12 +77,6 @@ def _register_censo_refresh(censo_app: typer.Typer) -> None:
             snapshot = asyncio.run(service.refresh_censo_from_sede(profile_id=profile_id))
         except CensoNotAvailableError as exc:
             raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
-        _emit_censo_event(
-            bucket_id=bucket_id,
-            event_type=BucketEventType.CENSO_REFRESHED,
-            profile_id=profile_id,
-            snapshot_id=snapshot.snapshot_id,
-        )
         typed_refresh = CensoRefreshResult(
             snapshot_id=snapshot.snapshot_id,
             profile_id=snapshot.profile_id,
@@ -264,7 +217,6 @@ def _register_censo_apply(censo_app: typer.Typer) -> None:
             CensoApplyConflictError,
             CensoNotAvailableError,
         )
-        from ....domain.buckets import BucketEventType
 
         profile_id, bucket_id = _active_pointer()
         service = _build_service(bucket_id)
@@ -277,12 +229,6 @@ def _register_censo_apply(censo_app: typer.Typer) -> None:
             raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
         except CensoApplyConflictError as exc:
             raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
-        _emit_censo_event(
-            bucket_id=bucket_id,
-            event_type=BucketEventType.CENSO_APPLIED,
-            profile_id=profile_id,
-            snapshot_id=result.snapshot_id,
-        )
         typed_apply = CensoApplyPayload.from_result(result)
         lines = [
             f"snapshot_id\t{result.snapshot_id}",

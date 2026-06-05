@@ -18,11 +18,11 @@ from datetime import date
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
-from urllib.parse import unquote
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from ._config_storage_route import classify_storage_route_for_settings, settings_for_bucket_route
 from .errors import ActiveProfilePointerError, CoreValidationError
 from .external_constants import DEFAULT_CURRENCY, DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path
@@ -1332,38 +1332,7 @@ def classify_storage_route(settings: Settings | None = None) -> StorageRouteClas
         resolved database URL was explicitly supplied, derived from the
         active bucket, or inferred as the root fallback.
     """
-    resolved = settings or load_settings()
-    database_url = resolved.aeat_database_url
-    database_path = _sqlite_database_path(database_url)
-    if "aeat_database_url" in resolved.model_fields_set:
-        return StorageRouteClassification(
-            kind=StorageRouteKind.EXPLICIT_DATABASE_URL,
-            database_url=database_url,
-            database_path=database_path,
-        )
-    root_fallback = _normalized_path(resolved.aeat_local_storage_root / "aeat.db")
-    if database_path is not None and _normalized_path(database_path) == root_fallback:
-        return StorageRouteClassification(
-            kind=StorageRouteKind.ROOT_FALLBACK_DATABASE,
-            database_url=database_url,
-            database_path=database_path,
-        )
-    bucket_id = _bucket_id_for_route(
-        database_path=database_path,
-        storage_root=resolved.aeat_local_storage_root,
-    )
-    if bucket_id:
-        return StorageRouteClassification(
-            kind=StorageRouteKind.ACTIVE_BUCKET_DATABASE,
-            database_url=database_url,
-            database_path=database_path,
-            bucket_id=bucket_id,
-        )
-    return StorageRouteClassification(
-        kind=StorageRouteKind.EXPLICIT_DATABASE_URL,
-        database_url=database_url,
-        database_path=database_path,
-    )
+    return classify_storage_route_for_settings(settings or load_settings())
 
 
 def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None = None) -> Settings:
@@ -1378,42 +1347,7 @@ def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None =
         A :class:`Settings` instance with ``aeat_database_url`` resolved
         to the per-bucket SQLite path for ``bucket_id``.
     """
-    trimmed = bucket_id.strip()
-    if not trimmed:
-        raise CoreValidationError("bucket_id must not be blank")
-    base = source or load_settings()
-    if "aeat_database_url" in base.model_fields_set:
-        raise CoreValidationError("cannot derive an active profile bucket route from an explicit database URL")
-    values = base.model_dump()
-    values.pop("aeat_database_url", None)
-    values["aeat_active_profile"] = trimmed
-    derived = Settings.model_validate(values)
-    explicit_fields = (base.model_fields_set - {"aeat_database_url"}) | {"aeat_active_profile"}
-    object.__setattr__(derived, "__pydantic_fields_set__", explicit_fields)
-    return derived
-
-
-def _sqlite_database_path(database_url: str) -> Path | None:
-    if not database_url.startswith("sqlite:///"):
-        return None
-    return Path(unquote(database_url.removeprefix("sqlite:///")))
-
-
-def _normalized_path(path: Path) -> Path:
-    return path.expanduser().resolve()
-
-
-def _bucket_id_for_route(*, database_path: Path | None, storage_root: Path) -> str:
-    if database_path is None:
-        return ""
-    try:
-        relative = _normalized_path(database_path).relative_to(_normalized_path(storage_root))
-    except ValueError:
-        return ""
-    parts = relative.parts
-    if len(parts) == 4 and parts[0] == "buckets" and parts[2:] == ("db", "aeat.db"):
-        return parts[1]
-    return ""
+    return settings_for_bucket_route(bucket_id, source or load_settings())
 
 
 def load_settings() -> Settings:
