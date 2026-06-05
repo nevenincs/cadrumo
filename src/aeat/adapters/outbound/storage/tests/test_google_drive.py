@@ -24,7 +24,7 @@ def _provider() -> GoogleDriveProvider:
 
 
 def test_google_drive_module_does_not_construct_settings_at_import_time() -> None:
-    tree = ast.parse(Path(__file__).with_name("_google_drive.py").read_text(encoding="utf-8"))
+    tree = ast.parse(Path(__file__).parent.parent.joinpath("_google_drive.py").read_text(encoding="utf-8"))
     offenders = [
         node.lineno
         for node in ast.walk(tree)
