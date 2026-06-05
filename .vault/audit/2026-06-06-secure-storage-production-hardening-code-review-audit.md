@@ -39,6 +39,12 @@ Review checked the corrected inventory root, `_typer.echo` alias detection, appl
 
 Status: no action required.
 
+## S396-001 | INFO | Persona readiness reconciliation review passed
+
+Review checked the S396 disposition matrix against the fresh persona findings inventory, the fresh persona repair plan, secure-storage repair-profile privacy audit, and W15 repair privacy execution records. The reconciliation does not over-assign capability findings to secure-storage and keeps S397/S398 as the owners for research/classification gaps.
+
+Status: no action required.
+
 ## S460-002 | MEDIUM | Operator-surface contract under-declared root custody verbs
 
 The accepted operator-surface contract only declared `config unlock` while the CLI mounted first-class `config lock`, `config unlock`, `config rekey`, `config recover`, `config show-recovery`, and `config verify-recovery`. S460 now adds an explicit custody domain and mounted command-family rows for each root-level custody child.

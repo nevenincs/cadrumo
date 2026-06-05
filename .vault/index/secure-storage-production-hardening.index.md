@@ -853,10 +853,12 @@ related:
   - '[[2026-06-05-secure-storage-production-hardening-w20-p40-s457-custody-rollout-audit]]'
   - '[[2026-06-05-secure-storage-production-hardening-w20-p40-s458-guidance-rollout-audit]]'
   - '[[2026-06-05-secure-storage-production-hardening-w20-p41-s453-guard-inventory-audit]]'
+  - '[[2026-06-06-secure-storage-production-hardening-W13-P27-S396]]'
   - '[[2026-06-06-secure-storage-production-hardening-W20-P40-S460]]'
   - '[[2026-06-06-secure-storage-production-hardening-W20-P41-S455]]'
   - '[[2026-06-06-secure-storage-production-hardening-W20-P42-S456]]'
   - '[[2026-06-06-secure-storage-production-hardening-code-review-audit]]'
+  - '[[2026-06-06-secure-storage-production-hardening-w13-p27-s396-persona-readiness-reconciliation-audit]]'
   - '[[2026-06-06-secure-storage-production-hardening-w20-p41-s455-provenance-path-audit]]'
   - '[[2026-06-06-secure-storage-production-hardening-w20-p42-s456-redaction-enrollment-audit]]'
 ---
@@ -1253,6 +1255,7 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 - `2026-06-05-secure-storage-production-hardening-w20-p40-s458-guidance-rollout-audit` - `secure-storage-production-hardening` `W20.P40.S458` guidance rollout audit
 - `2026-06-05-secure-storage-production-hardening-w20-p41-s453-guard-inventory-audit` - `secure-storage-production-hardening` `W20.P41.S453` guard inventory audit
 - `2026-06-06-secure-storage-production-hardening-code-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-06-secure-storage-production-hardening-w13-p27-s396-persona-readiness-reconciliation-audit` - S396 persona readiness ownership reconciliation
 - `2026-06-06-secure-storage-production-hardening-w20-p41-s455-provenance-path-audit` - S455 provenance path audit
 - `2026-06-06-secure-storage-production-hardening-w20-p42-s456-redaction-enrollment-audit` - S456 redaction enrollment audit
 
@@ -1722,6 +1725,7 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 - `2026-06-05-secure-storage-production-hardening-W20-P40-S458` - W20.P40.S458 - Replace stale custody and recovery guidance
 - `2026-06-05-secure-storage-production-hardening-W20-P40-S459` - W20.P40.S459 - Implement config lock and unlock aliases
 - `2026-06-05-secure-storage-production-hardening-W20-P41-S453` - W20.P41.S453 - Narrow secure-storage guard inventories
+- `2026-06-06-secure-storage-production-hardening-W13-P27-S396` - W13.P27.S396 persona readiness reconciliation
 - `2026-06-06-secure-storage-production-hardening-W20-P40-S460` - W20.P40.S460 - Close stale custody guidance drift
 - `2026-06-06-secure-storage-production-hardening-W20-P41-S455` - W20.P41.S455 inbound provenance privacy
 - `2026-06-06-secure-storage-production-hardening-W20-P42-S456` - W20.P42.S456 central redaction enrollment
