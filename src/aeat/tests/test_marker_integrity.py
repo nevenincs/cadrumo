@@ -1,6 +1,6 @@
 """AST-backed integrity audit for the hexagonal test-marker taxonomy.
 
-Walks every test module under ``src/aeat/`` and asserts that each
+Walks every source-controlled test module under ``src/aeat/`` and ``docs/`` and asserts that each
 carries a single top-level ``pytestmark = [...]`` assignment containing
 exactly one execution-scope marker (``unit`` / ``integration`` /
 ``aeat_live``) and exactly one ``hex_*`` marker.

@@ -11,6 +11,7 @@ from ...adapters.persistence.storage import RecoveryVerificationError
 from ...adapters.persistence.storage.errors import SecretStoreError, StorageValidationError
 from ...adapters.persistence.storage.master_key import (
     FileFallbackMasterKeyProvider,
+    activate_master_key_provider,
     get_master_key_provider,
     load_recovery_envelope,
     mint_recovery_envelope,
@@ -89,6 +90,21 @@ def inspect_recovery_status(settings: Settings | None = None) -> CustodyRecovery
     return CustodyRecoveryStatus(recovery_path=path, recovery_enrolled=path.is_file())
 
 
+def _mark_active_profile_recovery_enrolled(settings: Settings) -> None:
+    """Mirror recovery enrollment into the active profile manifest."""
+    from ...adapters.persistence.storage.bucket import bucket_paths, read_manifest, write_manifest
+    from ...core import resolve_active_bucket_id
+
+    active_profile = resolve_active_bucket_id()
+    if active_profile is None:
+        return
+    paths = bucket_paths(Path(settings.aeat_local_storage_root), active_profile)
+    manifest = read_manifest(paths)
+    if manifest.recovery_enrolled:
+        return
+    write_manifest(paths, manifest.model_copy(update={"recovery_enrolled": True}))
+
+
 def mint_recovery_code(settings: Settings | None = None) -> CustodyRecoveryEnrollment:
     """Mint a new recovery mnemonic and persist its master-key wrapper.
 
@@ -100,9 +116,11 @@ def mint_recovery_code(settings: Settings | None = None) -> CustodyRecoveryEnrol
     path = recovery_wrap_path(resolved)
     rotated = path.exists()
     provider = get_master_key_provider(settings_override=resolved)
-    master_key = provider.get_master_key()
+    with activate_master_key_provider(provider):
+        master_key = provider.get_master_key()
     minted = mint_recovery_envelope(dek=master_key, created_at=utc_now())
     save_recovery_envelope(minted.envelope, path)
+    _mark_active_profile_recovery_enrolled(resolved)
     return CustodyRecoveryEnrollment(recovery_path=path, mnemonic=minted.mnemonic, rotated=rotated)
 
 
@@ -112,6 +130,10 @@ def verify_recovery_code(*, mnemonic: str, settings: Settings | None = None) -> 
     try:
         envelope = load_recovery_envelope(path)
         verified = verify_recovery_mnemonic(envelope=envelope, mnemonic=mnemonic)
+        if verified:
+            provider = get_master_key_provider(settings_override=_settings(settings))
+            with activate_master_key_provider(provider):
+                pass
     except (OSError, RecoveryVerificationError, SecretStoreError, StorageValidationError) as exc:
         _log.debug("recovery-code verification failed error_type=%s", type(exc).__name__, exc_info=True)
         return CustodyRecoveryVerification(recovery_path=path, verified=False)
@@ -137,9 +159,12 @@ def rekey_secret_store(
     """Rewrap the current master key under ``new_passphrase``."""
     resolved = _settings(settings)
     current_provider = get_master_key_provider(settings_override=resolved)
-    master_key = current_provider.get_master_key()
+    with activate_master_key_provider(current_provider):
+        master_key = current_provider.get_master_key()
     new_provider = _file_provider_for_new_passphrase(settings=resolved, new_passphrase=new_passphrase)
     new_provider.complete_recovery(master_key)
+    with activate_master_key_provider(new_provider):
+        pass
     return CustodyRekeyResult(secret_store_dir=Path(resolved.aeat_secret_store_dir), rekeyed=True)
 
 
@@ -156,6 +181,8 @@ def recover_secret_store(
     master_key = unwrap_recovery_envelope(envelope=envelope, mnemonic=mnemonic)
     new_provider = _file_provider_for_new_passphrase(settings=resolved, new_passphrase=new_passphrase)
     new_provider.complete_recovery(master_key)
+    with activate_master_key_provider(new_provider):
+        pass
     return CustodyRecoverResult(
         recovery_path=path,
         secret_store_dir=Path(resolved.aeat_secret_store_dir),
