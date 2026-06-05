@@ -5,8 +5,8 @@ tags:
 date: '2026-05-26'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
-  - '[[2026-05-26-live-iva-compensation-wallet-w09-p01-s01]]'
-  - '[[2026-05-26-live-iva-compensation-wallet-w09-p01-s03]]'
+  - '[[2026-05-26-live-iva-compensation-wallet-w09-p01-s01-exec]]'
+  - '[[2026-05-26-live-iva-compensation-wallet-w09-p01-s03-exec]]'
   - '[[2026-05-26-securestorage-repair-policy-adr-adjudication-research]]'
   - '[[2026-05-22-secure-storage-production-hardening-architecture-adr]]'
   - '[[2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-adr]]'

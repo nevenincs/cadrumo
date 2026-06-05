@@ -43,7 +43,9 @@ When you pass modelo, year, and period, the command first searches the active
 profile for that visible filing target. It does not silently create a second
 active work unit for the same target.
 
-If no active work unit exists, `aeat app modelo work create` can provision one.
+If no active work unit exists,
+`aeat app modelo work create --modelo 303 --year 2026 --period 1T` can
+provision one.
 If more than one candidate would match, the command refuses and reports
 candidates instead of guessing.
 
@@ -80,7 +82,7 @@ Commands choose revisions according to their own semantics:
 - `aeat app modelo work verify --modelo ... --year ... --period ...` defaults
   to the current draft revision for that filing.
 - `aeat app modelo work file --modelo ... --year ... --period ...` defaults to
-  the current verified revision and marks it as internally filed.
+  the current verified revision and records a local filed marker.
 - `aeat app modelo export --modelo ... --year ... --period ... --output PATH`
   prefers the filed revision, then the current verified revision.
 
@@ -105,6 +107,3 @@ For everyday command-line use, prefer modelo, year, and period.
   procedure from ready profile to exported file.
 - [How-to guides](index.md) - model-specific filing recipes.
 - [Command reference](../cli/index.rst) - exact flags and selector options.
-- [Glossary](../glossary.md) - definitions of modelo, casilla, work unit,
-  calculation revision, registry revision, fichero-BOE, and justificante.
-- Report a problem on the [issue tracker](https://github.com/wgergely/aeat/issues).

@@ -7,6 +7,7 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-verified-complete-adr]]"
   - "[[2026-05-21-taxpayer-type-applicability-adr]]"
   - "[[2026-05-26-cross-domain-continuity-plan]]"
+  - '[[2026-06-04-cross-domain-continuity-research]]'
 ---
 
 # `cross-domain-continuity` adr: `verification-predicate-strategy` | (**status:** `accepted`)

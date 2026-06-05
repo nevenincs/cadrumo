@@ -22,7 +22,10 @@ from ...domain.calculations.registry._bindings import (
     CasillaObservation,
     RegistryModeloObservation,
 )
-from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
+from ...domain.iva_compensation._reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationReconciliationDecision,
+)
 from ...tests.secure_sql import isolated_runtime_profile
 from ._observations_repository import (
     CalculationObservationRepository,
@@ -331,3 +334,91 @@ def test_iva_wallet_reconciliation_decisions_keep_immutable_history(
         database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
         assert b"12345678Z" not in database_bytes
         assert b"12345678Z:2026:2T" not in database_bytes
+
+
+def test_iva_wallet_reconciliation_decision_roundtrip_preserves_separate_authority_sources(
+    tmp_path: Path,
+) -> None:
+    """A persisted override decision keeps wallet, local, filed-history, and override sources distinct."""
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repo = IvaWalletDecisionRepository()
+        decided_at = datetime(2026, 5, 21, 12, 0, 0, tzinfo=UTC)
+        wallet_captured_at = datetime(2026, 5, 21, 9, 0, 0, tzinfo=UTC)
+        authority_sources = (
+            IvaCompensationAuthoritySource(
+                source_kind="aeat_wallet",
+                amount=Decimal("1200"),
+                source_locator="https://example.test/wallet",
+                captured_at=wallet_captured_at,
+            ),
+            IvaCompensationAuthoritySource(
+                source_kind="local_recurrence",
+                amount=Decimal("800"),
+                source_locator="local-recurrence:modelo-303-compensacion-pendiente-anteriores",
+                captured_at=decided_at,
+                source_modelo="303",
+                source_filing_year=2025,
+                source_periods=("4T",),
+            ),
+            IvaCompensationAuthoritySource(
+                source_kind="filed_history_observation",
+                amount=Decimal("800"),
+                source_locator="binding:modelo-303-compensacion-pendiente-anteriores",
+                captured_at=decided_at,
+                source_modelo="303",
+                source_filing_year=2025,
+                source_periods=("4T",),
+            ),
+            IvaCompensationAuthoritySource(
+                source_kind="taxpayer_override",
+                amount=Decimal("1000"),
+                source_locator="operator-note:iva-wallet-review-2026-2T",
+                captured_at=decided_at,
+            ),
+        )
+        decision = IvaCompensationReconciliationDecision(
+            taxpayer_nif="12345678Z",
+            target_year=2026,
+            target_period="2T",
+            selected_authority="taxpayer_override",
+            selected_amount=Decimal("1000"),
+            wallet_amount=Decimal("1200"),
+            local_recurrence_amount=Decimal("800"),
+            override_amount=Decimal("1000"),
+            divergence="override",
+            blocked=False,
+            stale_wallet=False,
+            reason="Operator reviewed separate AEAT, filed-history, local, and override evidence.",
+            wallet_captured_at=wallet_captured_at,
+            authority_sources=authority_sources,
+            decided_at=decided_at,
+        )
+
+        repo.save_decision(decision)
+        loaded = repo.load_decision("12345678Z", 2026, "2T")
+
+        assert loaded == decision
+        assert loaded is not None
+        assert loaded.selected_authority == "taxpayer_override"
+        assert loaded.selected_amount == Decimal("1000")
+        assert loaded.wallet_amount == Decimal("1200")
+        assert loaded.local_recurrence_amount == Decimal("800")
+        assert loaded.override_amount == Decimal("1000")
+        assert tuple(source.source_kind for source in loaded.authority_sources) == (
+            "aeat_wallet",
+            "local_recurrence",
+            "filed_history_observation",
+            "taxpayer_override",
+        )
+        assert tuple(source.amount for source in loaded.authority_sources) == (
+            Decimal("1200"),
+            Decimal("800"),
+            Decimal("800"),
+            Decimal("1000"),
+        )
+        assert repo.load_decision_history("12345678Z", 2026, "2T") == (decision,)
+        assert repo.list_decisions() == (decision,)
+        database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
+        assert b"12345678Z" not in database_bytes
+        assert b"operator-note:iva-wallet-review-2026-2T" not in database_bytes

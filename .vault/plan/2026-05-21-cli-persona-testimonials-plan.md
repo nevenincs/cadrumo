@@ -5,9 +5,12 @@ tags:
 date: '2026-05-21'
 tier: L2
 related:
-  - "[[2026-05-20-cli-persona-testimonials-audit]]"
-  - "[[2026-05-20-cli-persona-testimonials-research]]"
-  - "[[2026-05-20-test-fidelity-sweep-audit]]"
+  - '[[2026-05-20-cli-persona-testimonials-audit]]'
+  - '[[2026-05-20-cli-persona-testimonials-research]]'
+  - '[[2026-05-20-test-fidelity-sweep-audit]]'
+  - '[[2026-05-21-cli-persona-testimonials-audit]]'
+  - '[[2026-05-21-cli-persona-testimonials-audit]]'
+  - '[[2026-06-04-cli-persona-testimonials-adr]]'
 ---
 
 
@@ -77,9 +80,9 @@ and the test-fidelity sweep. Each phase is a remediation wave; granular
 execution state is maintained in the coordinator task list (task ids
 cross-referenced per step). Complexity tier: L2 (Phases > Steps).
 
-Source artefacts: `[[2026-05-20-cli-persona-testimonials-audit]]`,
-`[[2026-05-20-cli-persona-testimonials-research]]`,
-`[[2026-05-20-test-fidelity-sweep-audit]]`.
+Source artefacts: ``2026-05-20-cli-persona-testimonials-audit``,
+``2026-05-20-cli-persona-testimonials-research``,
+``2026-05-20-test-fidelity-sweep-audit``.
 
 ## P01 — i18n naked-string remediation — COMPLETE
 
@@ -115,7 +118,7 @@ Wave delivered: 8 commits, ~55 operator-facing naked strings eliminated,
 
 ## P06 — tooling & follow-ups
 
-- [x] S01 aeat.locales ErrorCode message_key scope decision — task #522 — investigated; decision persisted in [[2026-05-21-cli-persona-testimonials-audit]]. Remediation split to S05.
+- [x] S01 aeat.locales ErrorCode message_key scope decision — task #522 — investigated; decision persisted in `2026-05-21-cli-persona-testimonials-audit`. Remediation split to S05.
 - [x] S02 i18n aeat config google error wrappers — task #523 (6491aeceb + 8e0f15b7b) — _google_refusal helper + 14 cli.config.google.errors.* keys × 4 locales.
 - [x] S03 audit help-text vocabulary drift (aede996da) — task #524
 - [ ] S04 registry drift: modelo-200 casilla 00592 — task #514 (concurrent #476 campaign)
@@ -126,4 +129,3 @@ Wave delivered: 8 commits, ~55 operator-facing naked strings eliminated,
 This plan is the durable wave tracker; the coordinator task list is the
 live granular tracker. Update both as steps complete: check the step
 here, mark the task completed, and record the commit SHA.
-

@@ -172,6 +172,11 @@ dev = [
   "sphinx-markdown-builder>=0.6",
   "furo>=2024.8",
   "myst-parser>=4.0",
+  "sphinx-copybutton>=0.5.2",
+  "sphinx-design>=0.6",
+  "sphinx-notfound-page>=1.1",
+  "sphinxext-opengraph>=0.9",
+  "sphinx-sitemap>=2.6",
   # Documentation conformance enforcement: docstring presence/style,
   # signature-vs-docstring accuracy, and RST formatting.
   "pydoclint>=0.6",
@@ -503,8 +508,8 @@ convention = "google"
 # controlled. S603 ("subprocess without shell=True") is a heuristic ban
 # that doesn't recognise our controlled-argv pattern; granted per-file.
 "src/aeat/core/test_profile.py" = ["S603"]
-"src/aeat/entrypoints/cli/_doc_reference.py" = ["S603", "F401"]
-"src/aeat/entrypoints/cli/test_doc_reference_conformance.py" = ["F401"]
+"docs/tools/cli_reference.py" = ["S603", "F401"]
+"docs/tools/tests/test_cli_reference_conformance.py" = ["F401"]
 "src/aeat/entrypoints/cli/test_cold_start_wizard_registration.py" = ["S603"]
 "src/aeat/entrypoints/cli/test_config_custody_profile_lifecycle.py" = ["S603"]
 "src/aeat/entrypoints/cli/test_lazy_command_tree.py" = ["S603"]

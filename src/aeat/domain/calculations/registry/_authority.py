@@ -93,6 +93,9 @@ class ValidatedRegistryAuthority:
         The manifest is the single writable authorization surface; the CI
         meta-test reads it through this accessor to cross-check each
         enrolling claim against the recorder evidence.
+
+        Returns:
+            The loaded :class:`AuthorizationManifest` object.
         """
         return self._authorization_manifest
 

@@ -6,18 +6,10 @@ date: '2026-06-01'
 tier: L3
 related:
   - '[[2026-06-01-domain-boundary-audit-adr]]'
+  - '[[2026-04-30-aeat-restructure-research]]'
   - '[[2026-06-01-domain-boundary-audit-audit]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `domain-boundary-audit` `Domain boundary remediation` plan
 

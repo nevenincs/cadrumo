@@ -5,13 +5,13 @@ tags:
 date: '2026-05-21'
 related:
   - "[[2026-05-21-taxpayer-type-applicability-adr]]"
-  - "[[2026-05-21-persona-fleet-round3-findings]]"
+  - "[[2026-05-21-persona-fleet-round3-findings-audit]]"
 ---
 
 # `cli-workflow-redesign` research: grounding the three-axis taxpayer model
 
 This is the research phase (Implementation step 1) of
-[[2026-05-21-taxpayer-type-applicability-adr]]. The ADR accepts the
+`2026-05-21-taxpayer-type-applicability-adr`. The ADR accepts the
 direction — the profile gains a structured three-axis taxpayer model
 (entity type, tax regime, special enrolments) and modelos / calendar /
 calculations / brackets / special rules derive from it — but mandates
@@ -22,7 +22,7 @@ the gap against the current codebase.
 The defect the ADR closes: the `overview` applicability engine
 hard-codes an `AutonomoProfile` and so reports **Modelo 130
 applicable and overdue** for the landlord persona Bernat
-([[2026-05-21-persona-fleet-round3-findings]] Q1) whose only income
+(`2026-05-21-persona-fleet-round3-findings-audit` Q1) whose only income
 is *rendimientos del capital inmobiliario*.
 
 ## Scope and honesty boundary

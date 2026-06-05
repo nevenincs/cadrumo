@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#setup-wizard'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-12-setup-wizard-adr]]'
   - '[[2026-04-12-setup-wizard-plan]]'

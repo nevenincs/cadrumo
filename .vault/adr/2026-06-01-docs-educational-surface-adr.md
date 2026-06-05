@@ -4,9 +4,11 @@ tags:
   - '#docs-educational-surface'
 date: '2026-06-01'
 related:
-  - "[[2026-05-30-docs-architecture-adr]]"
-  - "[[2026-05-30-docs-cli-conformance-adr]]"
-  - "[[2026-06-01-docs-cli-buildtime-adr]]"
+  - '[[2026-05-30-docs-architecture-adr]]'
+  - '[[2026-05-30-docs-architecture-research]]'
+  - '[[2026-05-30-docs-cli-conformance-adr]]'
+  - '[[2026-06-01-docs-cli-buildtime-adr]]'
+  - '[[2026-06-04-docs-educational-surface-research]]'
 ---
 
 # `docs-educational-surface` adr: `educational surface: a Diataxis doc set with a single-source conformance contract` | (**status:** `accepted`)

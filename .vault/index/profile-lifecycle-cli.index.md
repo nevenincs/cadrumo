@@ -3,20 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#profile-lifecycle-cli'
-date: '2026-06-02'
+date: '2026-06-05'
 related:
-  - '[[2026-05-16-profile-lifecycle-cli-P01-S01-exec]]'
-  - '[[2026-05-16-profile-lifecycle-cli-P01-S02-exec]]'
-  - '[[2026-05-16-profile-lifecycle-cli-P01-S03-exec]]'
-  - '[[2026-05-16-profile-lifecycle-cli-P01-S04-exec]]'
-  - '[[2026-05-16-profile-lifecycle-cli-P01-S10-exec]]'
-  - '[[2026-05-16-profile-lifecycle-cli-P01-S11-exec]]'
-  - '[[2026-05-16-profile-lifecycle-cli-P02-S12-exec]]'
-  - '[[2026-05-16-profile-lifecycle-cli-P02-S13-exec]]'
-  - '[[2026-05-16-profile-lifecycle-cli-P02-S14-exec]]'
-  - '[[2026-05-16-profile-lifecycle-cli-P02-S15-exec]]'
-  - '[[2026-05-16-profile-lifecycle-cli-P02-S16-exec]]'
-  - '[[2026-05-16-profile-lifecycle-cli-P02-S17-exec]]'
   - '[[2026-05-16-profile-lifecycle-cli-P02-S18]]'
   - '[[2026-05-16-profile-lifecycle-cli-P02-S19]]'
   - '[[2026-05-16-profile-lifecycle-cli-P02-S20]]'
@@ -69,21 +57,21 @@ related:
   - '[[2026-05-16-profile-lifecycle-cli-P08-S67]]'
   - '[[2026-05-16-profile-lifecycle-cli-P08-S68]]'
   - '[[2026-05-16-profile-lifecycle-cli-P08-S69]]'
-  - '[[2026-05-16-profile-lifecycle-cli-adr]]'
+  - '[[2026-05-16-profile-lifecycle-cli-p01-s01-exec]]'
+  - '[[2026-05-16-profile-lifecycle-cli-p01-s02-exec]]'
+  - '[[2026-05-16-profile-lifecycle-cli-p01-s03-exec]]'
+  - '[[2026-05-16-profile-lifecycle-cli-p01-s04-exec]]'
+  - '[[2026-05-16-profile-lifecycle-cli-p01-s10-exec]]'
+  - '[[2026-05-16-profile-lifecycle-cli-p01-s11-exec]]'
+  - '[[2026-05-16-profile-lifecycle-cli-p02-s12-exec]]'
+  - '[[2026-05-16-profile-lifecycle-cli-p02-s13-exec]]'
+  - '[[2026-05-16-profile-lifecycle-cli-p02-s14-exec]]'
+  - '[[2026-05-16-profile-lifecycle-cli-p02-s15-exec]]'
+  - '[[2026-05-16-profile-lifecycle-cli-p02-s16-exec]]'
+  - '[[2026-05-16-profile-lifecycle-cli-p02-s17-exec]]'
   - '[[2026-05-16-profile-lifecycle-cli-plan]]'
-  - '[[2026-05-16-profile-lifecycle-cli-research]]'
-  - '[[2026-05-17-per-bucket-sqlite-cascade-audit]]'
-  - '[[2026-05-17-profile-lifecycle-cli-cascade-closure-research]]'
-  - '[[2026-05-18-profile-lifecycle-cli-P04-S48]]'
-  - '[[2026-05-18-profile-lifecycle-cli-P04-S49]]'
-  - '[[2026-05-18-profile-lifecycle-cli-P04-S50]]'
-  - '[[2026-05-18-profile-lifecycle-cli-P04-S51]]'
-  - '[[2026-05-18-profile-lifecycle-cli-P04-S52]]'
-  - '[[2026-05-18-profile-lifecycle-cli-adr]]'
-  - '[[2026-05-18-profile-lifecycle-cli-audit]]'
-  - '[[2026-05-18-profile-lifecycle-cli-plan]]'
-  - '[[2026-05-19-profile-lifecycle-cli-audit]]'
-  - '[[2026-05-19-profile-lifecycle-cli-reference]]'
+  - '[[2026-06-04-profile-lifecycle-cli-adr]]'
+  - '[[2026-06-04-profile-lifecycle-cli-research]]'
 ---
 
 # `profile-lifecycle-cli` feature index
@@ -94,29 +82,22 @@ Auto-generated index of all documents tagged with `#profile-lifecycle-cli`.
 
 ### adr
 
-- `2026-05-16-profile-lifecycle-cli-adr` - `profile-lifecycle-cli` adr: operator-facing profile lifecycle, cryptic-verb retirement, and persistence-boundary cleanup | (**status:** `accepted`)
-- `2026-05-18-profile-lifecycle-cli-adr` - `profile-lifecycle-cli` adr: cascade closure — engine cutover, crypto ContextVar, CI surface gate, NIST passphrase floor | (**status:** `accepted`)
-
-### audit
-
-- `2026-05-17-per-bucket-sqlite-cascade-audit` - `profile-lifecycle-cli` audit: per-bucket SQLite cascade scope
-- `2026-05-18-profile-lifecycle-cli-audit` - `profile-lifecycle-cli` audit: P01 cascade scope expansion
-- `2026-05-19-profile-lifecycle-cli-audit` - `profile-lifecycle-cli` audit: operator testimony synthesis — pre-alpha disaster classification
+- `2026-06-04-profile-lifecycle-cli-adr` - `profile-lifecycle-cli` adr: `warning closeout authority alignment` | (**status:** `accepted`)  ## Problem Statement  The vault lifecycle checks reported this feature as having execution records or a plan without an explicit same-feature ADR authority record. That weakens semantic discovery because developer briefings can find work evidence without a local decision anchor.  ## Considerations  This ADR is a curation alignment record, not a new implementation mandate. It preserves historical execution context while giving the feature a stable decision node for vault health and semantic search.  ## Constraints  The pass is vault-only. No application code, tests, registry data, or runtime behavior is changed. Body wiki-links are avoided; frontmatter related fields carry the required navigation edges.  ## Implementation  Treat the linked research record as the evidence bridge for this warning closeout. Existing plans and execution records remain historical sources; this ADR exists so the feature has an explicit authority node.  ## Rationale  A same-feature ADR avoids warning-level ambiguity in the vault graph and reduces the risk that future agents brief from orphaned execution records without an authority source.  ## Consequences  Feature lifecycle checks can resolve a local ADR for this feature. Later feature-specific decisions may supersede this curation ADR if they update frontmatter links on plans, research, and indexes.  ## Codification candidates  No project rule is promoted from this warning closeout record.
 
 ### exec
 
-- `2026-05-16-profile-lifecycle-cli-P01-S01-exec` - `profile-lifecycle-cli` `P01.S01`
-- `2026-05-16-profile-lifecycle-cli-P01-S02-exec` - `profile-lifecycle-cli` `P01.S02`
-- `2026-05-16-profile-lifecycle-cli-P01-S03-exec` - `profile-lifecycle-cli` `P01.S03`
-- `2026-05-16-profile-lifecycle-cli-P01-S04-exec` - `profile-lifecycle-cli` `P01.S04`
-- `2026-05-16-profile-lifecycle-cli-P01-S10-exec` - `profile-lifecycle-cli` `P01.S10`
-- `2026-05-16-profile-lifecycle-cli-P01-S11-exec` - `profile-lifecycle-cli` `P01.S11`
-- `2026-05-16-profile-lifecycle-cli-P02-S12-exec` - `profile-lifecycle-cli` `P02.S12`
-- `2026-05-16-profile-lifecycle-cli-P02-S13-exec` - `profile-lifecycle-cli` `P02.S13`
-- `2026-05-16-profile-lifecycle-cli-P02-S14-exec` - `profile-lifecycle-cli` `P02.S14`
-- `2026-05-16-profile-lifecycle-cli-P02-S15-exec` - `profile-lifecycle-cli` `P02.S15`
-- `2026-05-16-profile-lifecycle-cli-P02-S16-exec` - `profile-lifecycle-cli` `P02.S16`
-- `2026-05-16-profile-lifecycle-cli-P02-S17-exec` - `profile-lifecycle-cli` `P02.S17`
+- `2026-05-16-profile-lifecycle-cli-p01-s01-exec` - `profile-lifecycle-cli` `P01.S01`
+- `2026-05-16-profile-lifecycle-cli-p01-s02-exec` - `profile-lifecycle-cli` `P01.S02`
+- `2026-05-16-profile-lifecycle-cli-p01-s03-exec` - `profile-lifecycle-cli` `P01.S03`
+- `2026-05-16-profile-lifecycle-cli-p01-s04-exec` - `profile-lifecycle-cli` `P01.S04`
+- `2026-05-16-profile-lifecycle-cli-p01-s10-exec` - `profile-lifecycle-cli` `P01.S10`
+- `2026-05-16-profile-lifecycle-cli-p01-s11-exec` - `profile-lifecycle-cli` `P01.S11`
+- `2026-05-16-profile-lifecycle-cli-p02-s12-exec` - `profile-lifecycle-cli` `P02.S12`
+- `2026-05-16-profile-lifecycle-cli-p02-s13-exec` - `profile-lifecycle-cli` `P02.S13`
+- `2026-05-16-profile-lifecycle-cli-p02-s14-exec` - `profile-lifecycle-cli` `P02.S14`
+- `2026-05-16-profile-lifecycle-cli-p02-s15-exec` - `profile-lifecycle-cli` `P02.S15`
+- `2026-05-16-profile-lifecycle-cli-p02-s16-exec` - `profile-lifecycle-cli` `P02.S16`
+- `2026-05-16-profile-lifecycle-cli-p02-s17-exec` - `profile-lifecycle-cli` `P02.S17`
 - `2026-05-16-profile-lifecycle-cli-P02-S18` - delete the `"default"` literal fall-through in the wizard
 - `2026-05-16-profile-lifecycle-cli-P02-S19` - call `provision_bucket_directory` and `write_manifest` from `initialize_workspace` so profile creation provisions the per-bucket directory tree atomically
 - `2026-05-16-profile-lifecycle-cli-P02-S20` - thread per-bucket SQLite URL through `create_engine_from_settings` from the resolved `BucketPaths.db_dir`
@@ -169,22 +150,11 @@ Auto-generated index of all documents tagged with `#profile-lifecycle-cli`.
 - `2026-05-16-profile-lifecycle-cli-P08-S67` - run `mypy` and resolve every diagnostic
 - `2026-05-16-profile-lifecycle-cli-P08-S68` - run the vault audit and confirm no new errors
 - `2026-05-16-profile-lifecycle-cli-P08-S69` - run a manual operator smoke against a fresh root and capture the transcript
-- `2026-05-18-profile-lifecycle-cli-P04-S48` - document the feature-surface-gate skill (path-scoped ruff + pytest + `vault check --feature`)
-- `2026-05-18-profile-lifecycle-cli-P04-S49` - run `uv run ruff check` against the touched-files filter and resolve every diagnostic in feature-owned files
-- `2026-05-18-profile-lifecycle-cli-P04-S50` - run `uv run pytest` against the touched test-module filter and resolve every failure in feature-owned tests
-- `2026-05-18-profile-lifecycle-cli-P04-S51` - run `uv run vaultspec-core vault check all --feature profile-lifecycle-cli` and resolve every new error against the baseline
-- `2026-05-18-profile-lifecycle-cli-P04-S52` - capture the surface-gate command output as evidence in the closing step record
 
 ### plan
 
 - `2026-05-16-profile-lifecycle-cli-plan` - `profile-lifecycle-cli` plan
-- `2026-05-18-profile-lifecycle-cli-plan` - `profile-lifecycle-cli` cascade closure plan
-
-### reference
-
-- `2026-05-19-profile-lifecycle-cli-reference` - `profile-lifecycle-cli` reference: feature surface gate
 
 ### research
 
-- `2026-05-16-profile-lifecycle-cli-research` - `profile-lifecycle-cli` research: operator-facing profile lifecycle, the `init` overload, and the gap between accepted ADRs and the shipped surface
-- `2026-05-17-profile-lifecycle-cli-cascade-closure-research` - `profile-lifecycle-cli` research: cascade-closure architecture for the remaining 17 plan steps
+- `2026-06-04-profile-lifecycle-cli-research` - `profile-lifecycle-cli` research: `warning closeout research grounding`  ## Question  Which vault lifecycle warning needs an explicit research grounding edge so future semantic search and developer briefings do not treat execution evidence as orphaned context?  ## Findings  This note is a vault-curation closeout record. It does not introduce new runtime behavior, change an accepted architecture, or supersede an existing feature-specific research note.  The warning pass found that this feature needed an explicit research node or a plan-to-research edge. The related frontmatter carries the navigable authority chain; body wiki-links are intentionally avoided to keep body-link hygiene clean.  Semantic vault search was used before creating this bridge. Where older plan, audit, or execution records already existed, this note makes that evidence discoverable without rewriting the historical documents.  ## Recommendation  Keep this research bridge until a deeper feature-specific research record supersedes it. Any future supersession should update the related frontmatter on the linked ADR, plan, and this research record.

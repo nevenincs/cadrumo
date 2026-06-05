@@ -6,20 +6,16 @@ date: '2026-05-01'
 related: []
 ---
 
+# `aeat-restructure` historical placeholder exec
 
+This file was a template placeholder discovered during the 2026-06-05 VaultSpec semantic cleanup pass.
 
-# `aeat-restructure` `usage-ratios-hoist` `usage-ratios-hoist`
-
-Brief summary of work done.
-
-- Modified: `{file1}`
-- Created: `{file2}`
+It does not provide reliable execution evidence. It is retained in place for non-destructive vault history and should not brief implementation work. Use the feature's linked ADR, research, plan, audit, or concrete step records as the authority source.
 
 ## Description
 
-Detailed description of implementation details.
+The previous body contained only template markers rather than verifiable file paths, so no file-level execution summary is asserted here.
 
 ## Tests
 
-Brief description of tests and validation results.
-Link any audit reports related to `usage-ratios-hoist` or `usage-ratios-hoist`.
+No test evidence is asserted by this placeholder retirement.

@@ -6,7 +6,7 @@ date: '2026-06-02'
 step_id: 'S424'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
-  - '[[2026-06-02-secure-storage-production-hardening-W12-P24-S96-side-store-classification]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p24-s96-side-store-classification-exec]]'
 ---
 
 # `secure-storage-production-hardening` `W17.P37.S424`

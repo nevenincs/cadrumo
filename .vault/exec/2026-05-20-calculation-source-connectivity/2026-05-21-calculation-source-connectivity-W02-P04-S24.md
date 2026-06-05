@@ -1,3 +1,12 @@
+---
+tags:
+  - '#exec'
+  - '#calculation-source-connectivity'
+date: '2026-05-21'
+related:
+  - '[[2026-05-20-calculation-source-connectivity-plan]]'
+---
+
 # Execution Record: W02.P04.S24
 
 Feature: calculation-source-connectivity

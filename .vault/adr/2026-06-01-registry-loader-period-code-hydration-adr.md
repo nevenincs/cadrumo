@@ -5,8 +5,8 @@ tags:
 date: '2026-06-01'
 related:
   - "[[2026-05-20-registry-authority-flow-adr]]"
+  - '[[2026-05-20-registry-authority-flow-research]]'
 ---
-
 # `registry-loader-period-code-hydration` adr: PeriodCode validator is the compiler boundary | (**status:** `accepted`)
 
 ## Problem Statement

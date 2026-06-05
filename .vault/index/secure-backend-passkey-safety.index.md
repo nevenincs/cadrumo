@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#secure-backend-passkey-safety'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-05-14-secure-backend-passkey-bucket-p01-s01-exec]]'
   - '[[2026-05-14-secure-backend-passkey-bucket-p01-s02-exec]]'
@@ -38,22 +38,22 @@ Auto-generated index of all documents tagged with `#secure-backend-passkey-safet
 
 ### exec
 
-- `2026-05-14-secure-backend-passkey-bucket-p01-s01` - secure-backend-passkey-safety P01.S01
-- `2026-05-14-secure-backend-passkey-bucket-p01-s02` - secure-backend-passkey-safety P01.S02
-- `2026-05-14-secure-backend-passkey-bucket-p01-s03` - secure-backend-passkey-safety P01.S03
-- `2026-05-14-secure-backend-passkey-bucket-p01-s04` - secure-backend-passkey-safety P01.S04
-- `2026-05-14-secure-backend-passkey-bucket-p01-s05` - secure-backend-passkey-safety P01.S05
-- `2026-05-14-secure-backend-passkey-bucket-p01-s06` - secure-backend-passkey-safety P01.S06
-- `2026-05-14-secure-backend-passkey-bucket-p02-s01` - secure-backend-passkey-safety P02.S01
-- `2026-05-14-secure-backend-passkey-bucket-p02-s02` - secure-backend-passkey-safety P02.S02
-- `2026-05-14-secure-backend-passkey-bucket-p02-s03` - secure-backend-passkey-safety P02.S03
-- `2026-05-14-secure-backend-passkey-bucket-p02-s04` - secure-backend-passkey-safety P02.S04
-- `2026-05-14-secure-backend-passkey-bucket-p02-s05` - secure-backend-passkey-safety P02.S05
-- `2026-05-14-secure-backend-passkey-bucket-p03-s01` - secure-backend-passkey-safety P03.S01
-- `2026-05-14-secure-backend-passkey-bucket-p03-s02` - secure-backend-passkey-safety P03.S02
-- `2026-05-14-secure-backend-passkey-bucket-p03-s03` - secure-backend-passkey-safety P03.S03
-- `2026-05-14-secure-backend-passkey-bucket-p03-s04` - secure-backend-passkey-safety P03.S04
-- `2026-05-14-secure-backend-passkey-bucket-p03-s05` - secure-backend-passkey-safety P03.S05
+- `2026-05-14-secure-backend-passkey-bucket-p01-s01-exec` - secure-backend-passkey-safety P01.S01
+- `2026-05-14-secure-backend-passkey-bucket-p01-s02-exec` - secure-backend-passkey-safety P01.S02
+- `2026-05-14-secure-backend-passkey-bucket-p01-s03-exec` - secure-backend-passkey-safety P01.S03
+- `2026-05-14-secure-backend-passkey-bucket-p01-s04-exec` - secure-backend-passkey-safety P01.S04
+- `2026-05-14-secure-backend-passkey-bucket-p01-s05-exec` - secure-backend-passkey-safety P01.S05
+- `2026-05-14-secure-backend-passkey-bucket-p01-s06-exec` - secure-backend-passkey-safety P01.S06
+- `2026-05-14-secure-backend-passkey-bucket-p02-s01-exec` - secure-backend-passkey-safety P02.S01
+- `2026-05-14-secure-backend-passkey-bucket-p02-s02-exec` - secure-backend-passkey-safety P02.S02
+- `2026-05-14-secure-backend-passkey-bucket-p02-s03-exec` - secure-backend-passkey-safety P02.S03
+- `2026-05-14-secure-backend-passkey-bucket-p02-s04-exec` - secure-backend-passkey-safety P02.S04
+- `2026-05-14-secure-backend-passkey-bucket-p02-s05-exec` - secure-backend-passkey-safety P02.S05
+- `2026-05-14-secure-backend-passkey-bucket-p03-s01-exec` - secure-backend-passkey-safety P03.S01
+- `2026-05-14-secure-backend-passkey-bucket-p03-s02-exec` - secure-backend-passkey-safety P03.S02
+- `2026-05-14-secure-backend-passkey-bucket-p03-s03-exec` - secure-backend-passkey-safety P03.S03
+- `2026-05-14-secure-backend-passkey-bucket-p03-s04-exec` - secure-backend-passkey-safety P03.S04
+- `2026-05-14-secure-backend-passkey-bucket-p03-s05-exec` - secure-backend-passkey-safety P03.S05
 
 ### plan
 

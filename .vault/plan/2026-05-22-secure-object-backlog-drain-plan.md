@@ -6,8 +6,10 @@ date: '2026-05-22'
 tier: L2
 related:
   - '[[2026-05-22-secure-object-integrity-attribution-plan]]'
-  - '[[2026-05-22-secure-object-integrity-P02-S06-review]]'
-  - '[[2026-05-22-secure-object-integrity-P05-S16-review]]'
+  - '[[2026-05-22-secure-object-integrity-p02-s06-review-audit]]'
+  - '[[2026-05-22-secure-object-integrity-p05-s16-review-audit]]'
+  - '[[2026-06-04-secure-object-backlog-drain-adr]]'
+  - '[[2026-06-04-secure-object-backlog-drain-research]]'
 ---
 
 

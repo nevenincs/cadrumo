@@ -6,9 +6,8 @@ date: '2026-06-04'
 tier: L2
 related:
   - '[[2026-06-04-llm-ledger-classification-adr]]'
+  - '[[2026-06-03-llm-ledger-classification-research]]'
 ---
-
-
 # `llm-ledger-classification` `Saturate transactions with grounded rich tax metadata (stage 2): primitives, schema, saturate path, review` plan
 
 ### Phase `P01` - Grounded domain primitives

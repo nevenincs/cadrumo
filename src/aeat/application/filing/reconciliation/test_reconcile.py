@@ -13,6 +13,7 @@ from ....domain.filing import ModeloBuilderError, ModeloDraft
 from ....domain.justificante import Justificante
 from ....domain.submission import ModeloDraftStatus
 from ....tests import FIXTURES_DIR
+from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from .. import build_runtime_schema_provider
 from ..runtime import RegistrySchemaProvider
 from ..testing import build_registry_filing_draft
@@ -142,7 +143,7 @@ def _justificante_record(
         tax_id=tax_id,
         total_a_ingresar=total_a_ingresar,
         total_a_devolver=total_a_devolver,
-        verification_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=SANITIZEDCSV111"),
+        verification_url=AnyHttpUrl(justificante_cotejo_url("SANITIZEDCSV111")),
         source_pdf_path=FIXTURES_DIR / "justificantes" / modelo / "synthetic.pdf",
         source_pdf_sha256="a" * 64,
         parsed_at=_FIXED_NOW,

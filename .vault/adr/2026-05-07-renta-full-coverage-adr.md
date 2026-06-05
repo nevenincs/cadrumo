@@ -8,6 +8,7 @@ related:
   - '[[2026-05-07-renta-scope-audit-audit]]'
   - '[[2026-04-21-modelo-100-renta-research]]'
   - '[[2026-04-27-modelo-100-renta-full-calc-research]]'
+  - '[[2026-06-04-renta-full-coverage-research]]'
 ---
 
 # `renta-full-coverage` adr

@@ -5,14 +5,14 @@ tags:
 date: '2026-05-31'
 step_id: S05
 related:
-  - "[[2026-05-21-calculation-grounding-swarm-audit-r2]]"
+  - '[[2026-05-21-calculation-grounding-swarm-r2-audit]]'
 ---
 
 # calc-engine-grounding-restoration S05 — HIGH-2: Google Sheets calc CLI missing legal_refs/source_refs
 
 ## Finding
 
-Audit: `2026-05-21-calculation-grounding-swarm-audit-r2` F1 / task #566 HIGH-2.
+Audit: `2026-05-21-calculation-grounding-swarm-r2-audit` F1 / task #566 HIGH-2.
 
 `_compute_casillas_from_pull` in `_config/_google.py` returned per-entry dicts
 with only `casilla_id`, `value`, and `formula_id`. The `legal_refs` and

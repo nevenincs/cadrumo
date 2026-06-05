@@ -4,8 +4,8 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-20'
 related:
-  - "[[2026-05-20-cli-testimonial-findings-inventory]]"
-  - "[[2026-05-20-testimonial-driven-cli-verification-playbook]]"
+  - "[[2026-05-20-cli-testimonial-findings-inventory-audit]]"
+  - "[[2026-05-20-testimonial-driven-cli-verification-playbook-reference]]"
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
 ---
 

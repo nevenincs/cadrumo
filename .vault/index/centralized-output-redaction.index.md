@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#centralized-output-redaction'
-date: '2026-06-02'
+date: '2026-06-05'
 related:
   - '[[2026-05-28-centralized-output-redaction-W01-P01-S01]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P01-S02]]'
@@ -91,9 +91,10 @@ related:
   - '[[2026-05-28-centralized-output-redaction-W04-P14-S82]]'
   - '[[2026-05-28-centralized-output-redaction-W04-P14-summary]]'
   - '[[2026-05-28-centralized-output-redaction-adr]]'
+  - '[[2026-05-28-centralized-output-redaction-code-review-audit]]'
   - '[[2026-05-28-centralized-output-redaction-plan]]'
   - '[[2026-05-28-centralized-output-redaction-research]]'
-  - '[[2026-05-28-centralized-output-redaction-review]]'
+  - '[[2026-05-28-centralized-output-redaction-review-audit]]'
   - '[[2026-06-02-centralized-output-redaction-audit]]'
 ---
 
@@ -109,7 +110,8 @@ Auto-generated index of all documents tagged with `#centralized-output-redaction
 
 ### audit
 
-- `2026-05-28-centralized-output-redaction-review` - `centralized-output-redaction` Code Review
+- `2026-05-28-centralized-output-redaction-review-audit` - `centralized-output-redaction` Code Review
+- `2026-05-28-centralized-output-redaction-code-review-audit` - `centralized-output-redaction` Code Review
 - `2026-06-02-centralized-output-redaction-audit` - `centralized-output-redaction` audit: `output-surface inventory and rollout audit`
 
 ### exec

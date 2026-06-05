@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#modelo-720-prior-year-baseline'
-date: '2026-06-02'
+date: '2026-06-05'
 related:
   - '[[2026-06-02-modelo-720-prior-year-baseline-adr]]'
   - '[[2026-06-02-modelo-720-prior-year-baseline-research]]'

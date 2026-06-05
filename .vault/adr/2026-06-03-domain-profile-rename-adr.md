@@ -7,6 +7,7 @@ related:
   - "[[2026-06-01-domain-boundary-audit-adr]]"
   - "[[2026-06-01-domain-boundary-audit-plan]]"
   - "[[2026-06-01-domain-boundary-audit-audit]]"
+  - '[[2026-06-04-domain-profile-rename-research]]'
 ---
 
 # `domain-profile-rename` adr: `Rename domain/profile to domain/contribuyente (S63 target name, ADR D7)` | (**status:** `accepted`)

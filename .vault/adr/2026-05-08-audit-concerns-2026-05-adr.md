@@ -8,6 +8,7 @@ related:
   - '[[2026-05-08-renta-cuota-integra-state-scale-adr]]'
   - '[[2026-05-08-renta-cuota-integra-autonomic-scale-adr]]'
   - '[[2026-04-16-live-write-test-audit-research]]'
+  - '[[2026-06-04-audit-concerns-2026-05-research]]'
 ---
 
 # `audit-concerns-2026-05` adr

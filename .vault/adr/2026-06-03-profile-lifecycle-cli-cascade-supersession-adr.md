@@ -11,6 +11,7 @@ related:
   - '[[2026-05-19-profile-lifecycle-disaster-adr]]'
   - '[[2026-05-17-profile-lifecycle-cli-cascade-closure-research]]'
   - '[[2026-06-03-plan-triage-approach-adr]]'
+  - '[[2026-06-04-profile-lifecycle-cli-cascade-supersession-research]]'
 ---
 
 # `profile-lifecycle-cli-cascade-supersession` duplicate-date plan supersession ADR

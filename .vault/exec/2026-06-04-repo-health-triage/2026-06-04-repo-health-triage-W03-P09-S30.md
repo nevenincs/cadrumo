@@ -1,3 +1,13 @@
+---
+tags:
+  - '#exec'
+  - '#repo-health-triage'
+date: '2026-06-04'
+step_id: 'W03.P09.S30'
+related:
+  - '[[2026-06-04-repo-health-triage-plan]]'
+---
+
 # W03.P09.S30 - Extract previous-filing binding family
 
 Plan: `.vault/plan/2026-06-04-repo-health-triage-plan.md`

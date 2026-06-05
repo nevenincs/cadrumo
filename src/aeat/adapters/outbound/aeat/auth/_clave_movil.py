@@ -430,7 +430,15 @@ class ClaveMovilAuthProvider:
                 # Explicit caller targets need selector dispatch; recorded
                 # landing metadata is already carried by the session detail
                 # and remains a direct probe.
-                assertion = await self.verify(session, target_url=target_url)
+                # Persisted-session probes must never turn into a fresh
+                # Cl@ve dispatch. Explicit target probes use AEAT's selector
+                # URL, which can issue a new phone request when the stored
+                # cookies are not accepted for that target. Verify the stored
+                # landing/default authenticated page here; the downstream
+                # read surface will use the session and fail as a read error
+                # if AEAT rejects it for the target application.
+                del target_url
+                assertion = await self.verify(session, target_url=None)
                 # Refresh idle TTL on successful probe so long-running
                 # discovery sessions stay alive without re-auth. AEAT's
                 # own 18-minute idle window resets on every authenticated
@@ -471,7 +479,7 @@ class ClaveMovilAuthProvider:
             except Exception:  # cleanup on verify error then re-raise; Playwright+AeatError undocumented
                 if context is not None:
                     try:
-                        await context.close()
+                        await self._close_context(context, reason="verify cleanup")
                     except Exception as _exc:
                         log.debug(
                             "ClaveMovilAuthProvider: context.close in verify cleanup suppressed: %s",
@@ -844,13 +852,31 @@ class ClaveMovilAuthProvider:
         self._context = None
         if context is None:
             return
-        try:
-            await context.close()
-        except Exception as _exc:
-            log.debug("ClaveMovilAuthProvider: context.close in _drop_context suppressed: %s", _exc, exc_info=True)
+        await self._close_context(context, reason="_drop_context")
 
-    @staticmethod
-    async def _close_browser_session(session: BrowserSessionLike | None) -> None:
+    async def _close_context(self, context: BrowserContextLike | None, *, reason: str) -> None:
+        if context is None:
+            return
+        try:
+            await asyncio.wait_for(
+                context.close(),
+                timeout=self._settings.aeat_browser_close_timeout_ms / 1000,
+            )
+        except TimeoutError:
+            log.warning(
+                "ClaveMovilAuthProvider: context.close in %s exceeded %d ms",
+                reason,
+                self._settings.aeat_browser_close_timeout_ms,
+            )
+        except Exception as _exc:
+            log.debug(
+                "ClaveMovilAuthProvider: context.close in %s suppressed: %s",
+                reason,
+                _exc,
+                exc_info=True,
+            )
+
+    async def _close_browser_session(self, session: BrowserSessionLike | None) -> None:
         if session is None:
             return
         close = getattr(session, "close", None)
@@ -859,7 +885,15 @@ class ClaveMovilAuthProvider:
         try:
             result = close()
             if asyncio.iscoroutine(result):
-                await result
+                await asyncio.wait_for(
+                    result,
+                    timeout=self._settings.aeat_browser_close_timeout_ms / 1000,
+                )
+        except TimeoutError:
+            log.warning(
+                "ClaveMovilAuthProvider: browser session close exceeded %d ms",
+                self._settings.aeat_browser_close_timeout_ms,
+            )
         except Exception:  # BrowserSessionLike.close() exception surface is undocumented; teardown must not abort
             log.warning("ClaveMovilAuthProvider: browser session close failed", exc_info=True)
 
@@ -1031,7 +1065,7 @@ class ClaveMovilAuthProvider:
                     log.debug("ClaveMovilAuthProvider: diagnostic dump suppressed: %s", _exc, exc_info=True)
             if context is not None:
                 try:
-                    await context.close()
+                    await self._close_context(context, reason="fresh-login cleanup")
                 except Exception as _exc:
                     log.debug(
                         "ClaveMovilAuthProvider: context.close in fresh-login cleanup suppressed: %s",
@@ -1175,7 +1209,7 @@ class ClaveMovilAuthProvider:
         except Exception:  # cleanup on resume error then re-raise; Playwright+AeatError undocumented
             if context is not None:
                 try:
-                    await context.close()
+                    await self._close_context(context, reason="resume cleanup")
                 except Exception as _exc:
                     log.debug(
                         "ClaveMovilAuthProvider: context.close in resume cleanup suppressed: %s",
@@ -1384,22 +1418,23 @@ class ClaveMovilAuthProvider:
         evaluate = getattr(page, "evaluate", None)
         try:
             if evaluate is not None:
+                clave_global = json.dumps(self._clave_surface().obtener_clave_movil_browser_global)
                 cancelled = await asyncio.wait_for(
                     evaluate(
-                        """
-                        () => {
+                        f"""
+                        () => {{
                           const button = document.querySelector("#botonCancelar");
-                          if (button && typeof button.click === "function") {
+                          if (button && typeof button.click === "function") {{
                             button.click();
                             return true;
-                          }
-                          const clave = window.ObtenerClaveMovil;
-                          if (clave && typeof clave.cancelarPeticion === "function") {
+                          }}
+                          const clave = window[{clave_global}];
+                          if (clave && typeof clave.cancelarPeticion === "function") {{
                             clave.cancelarPeticion();
                             return true;
-                          }
+                          }}
                           return false;
-                        }
+                        }}
                         """
                     ),
                     timeout=_DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS,

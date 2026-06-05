@@ -8,7 +8,7 @@ related:
   - '[[2026-05-21-taxpayer-type-applicability-plan]]'
   - '[[2026-05-21-taxpayer-type-applicability-adr]]'
   - '[[2026-05-21-taxpayer-type-applicability-research]]'
-  - '[[2026-05-22-w03-s11-applicability-review]]'
+  - '[[2026-05-22-w03-s11-applicability-review-audit]]'
 ---
 
 # `cli-workflow-redesign` `W03.S11`

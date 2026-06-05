@@ -10,18 +10,9 @@ related:
   - '[[2026-05-21-cli-testimonial-audit]]'
   - '[[2026-05-26-corporate-tax-runtime-plan]]'
   - '[[2026-05-21-taxpayer-type-applicability-plan]]'
+  - '[[2026-05-26-cross-domain-continuity-adr]]'
+  - '[[2026-06-04-cross-domain-continuity-research]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 <!-- RETIRED: P02, P64, S01 -->
 
 # `cross-domain-continuity` `cross-domain continuity remediation epic - open-ended persona-driven correctness campaign` plan

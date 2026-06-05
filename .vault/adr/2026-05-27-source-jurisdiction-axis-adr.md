@@ -7,10 +7,8 @@ related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
   - "[[2026-05-27-m210-irnr-full-engine-adr]]"
   - "[[2026-05-27-dsl-conditional-predicate-adr]]"
+  - '[[2026-05-28-source-jurisdiction-axis-research]]'
 ---
-
-
-
 # `source-jurisdiction-axis` adr: `ledger source-jurisdiction axis` | (**status:** `accepted`)
 
 ## Problem Statement

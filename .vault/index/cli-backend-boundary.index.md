@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#cli-backend-boundary'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-05-08-cli-backend-boundary-adr]]'
   - '[[2026-05-08-cli-backend-boundary-plan]]'

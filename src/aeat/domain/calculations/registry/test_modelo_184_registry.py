@@ -8,9 +8,12 @@ from functools import lru_cache
 import pytest
 
 from ....core.resources import bundled_path
+from ....tests.aeat_literal_fixtures import aeat_host
 from . import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+_WWW1_HOST = aeat_host("www1")
+_WWW6_HOST = aeat_host("www6")
 
 
 @lru_cache(maxsize=1)
@@ -118,8 +121,8 @@ def test_modelo_184_live_cross_references_are_read_only() -> None:
     assert filed_ref.requires_aeat_authorization is True
     assert set(filed_ref.allowed_methods) == {"GET", "HEAD", "OPTIONS"}
     assert set(filed_ref.allowed_hosts) == {
-        "www1.agenciatributaria.gob.es",
-        "www6.agenciatributaria.gob.es",
+        _WWW1_HOST,
+        _WWW6_HOST,
     }
     forbidden = set(filed_ref.forbidden_actions)
     assert {

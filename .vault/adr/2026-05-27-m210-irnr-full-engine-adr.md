@@ -8,6 +8,7 @@ related:
   - "[[2026-04-21-calc-verification-adr]]"
   - "[[2026-04-17-modelo-303-formulas-adr]]"
   - "[[2026-05-26-cross-domain-continuity-adr]]"
+  - '[[2026-06-04-m210-irnr-full-engine-research]]'
 ---
 
 

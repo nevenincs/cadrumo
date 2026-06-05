@@ -119,7 +119,9 @@ def test_transaction_tax_fields_are_typed_and_round_trip_through_json() -> None:
 
     original = Transaction.model_validate(
         {
-            "raw": _sample_raw(),
+            # Gross 121.00 reconstitutes the 100.00 base + 21.00 IVA triple
+            # (the gross == base + iva consistency invariant on Transaction).
+            "raw": _sample_raw(amount=Decimal("-121.00")),
             "direction": TransactionDirection.OUTGOING,
             "business_classification": BusinessClassification.BUSINESS,
             "category_id": "office-supplies",

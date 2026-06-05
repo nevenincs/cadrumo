@@ -6,7 +6,7 @@ date: '2026-05-27'
 step_id: 'S23'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
-  - '[[2026-05-27-secure-storage-production-hardening-W03-P05-S23-review]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w03-p05-s23-review-audit]]'
   - '[[2026-05-27-application-namespace-registry-adoption-reference]]'
 ---
 

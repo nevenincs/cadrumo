@@ -8,6 +8,7 @@ related:
   - "[[2026-05-30-identity-primitives-adr]]"
   - "[[2026-05-28-codebase-solidification-adr]]"
   - "[[2026-05-31-transient-metastate-sweep-audit]]"
+  - '[[2026-06-04-atomic-relocation-coordination-research]]'
 ---
 
 # `atomic-relocation-coordination` adr: `every-symbol-relocation-is-a-single-atomic-commit` | (**status:** `accepted`)

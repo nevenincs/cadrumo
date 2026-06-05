@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#google-auth-ux'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-21-google-auth-ux-adr]]'
   - '[[2026-04-21-google-auth-ux-contract-review-audit]]'

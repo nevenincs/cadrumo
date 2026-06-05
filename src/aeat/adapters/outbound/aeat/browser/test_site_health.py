@@ -20,6 +20,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from .....core.config import Settings
 from .....tests import FIXTURES_DIR
 from . import (
     SiteHealthEvidence,
@@ -36,7 +37,7 @@ from ._site_health_parsers import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 _FIXTURES_ROOT = FIXTURES_DIR / "site_health"
-_PROBE_URL = "https://sede.agenciatributaria.gob.es/"
+_PROBE_URL = f"{Settings.external_constants().aeat.domains.sede}/"
 _RATE_LIMIT_DEFAULT = 300
 _JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
 
@@ -369,7 +370,7 @@ def _evidence(**overrides: object) -> SiteHealthEvidence:
     from ._site_health import _URL_ADAPTER
 
     base: dict[str, Any] = {
-        "url": _URL_ADAPTER.validate_python("https://sede.agenciatributaria.gob.es/"),
+        "url": _URL_ADAPTER.validate_python(_PROBE_URL),
         "http_status": 200,
         "html_fragment": "<html></html>",
         "detected_markers": ("marker",),
@@ -390,7 +391,7 @@ class TestSiteHealthModels:
     def test_evidence_rejects_unknown_key(self) -> None:
         from ._site_health import _URL_ADAPTER
 
-        valid_url = _URL_ADAPTER.validate_python("https://sede.agenciatributaria.gob.es/")
+        valid_url = _URL_ADAPTER.validate_python(_PROBE_URL)
         with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
             SiteHealthEvidence.model_validate(
                 {

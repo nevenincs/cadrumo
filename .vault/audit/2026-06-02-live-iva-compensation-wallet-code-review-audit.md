@@ -5,7 +5,7 @@ tags:
 date: '2026-06-02'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
-  - '[[2026-06-02-live-iva-compensation-wallet-W06-P15-S56-session-reuse-live-read]]'
+  - '[[2026-06-02-live-iva-compensation-wallet-w06-p15-s56-session-reuse-live-read-exec]]'
 ---
 
 # `live-iva-compensation-wallet` Code Review

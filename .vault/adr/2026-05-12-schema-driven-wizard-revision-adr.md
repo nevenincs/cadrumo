@@ -8,6 +8,7 @@ related:
   - '[[2026-05-12-schema-driven-wizard-adr]]'
   - '[[2026-05-12-schema-driven-wizard-reference]]'
   - '[[2026-05-12-schema-driven-wizard-research]]'
+  - '[[2026-06-04-schema-driven-wizard-revision-research]]'
 ---
 
 # `schema-driven-wizard-revision` adr

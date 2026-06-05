@@ -2,7 +2,7 @@
 tags: ["#research", "#calculation-source-connectivity"]
 date: "2026-05-20"
 related:
-  - "[[2026-05-20-cli-testimonial-findings-inventory]]"
+  - "[[2026-05-20-cli-testimonial-findings-inventory-audit]]"
 ---
 
 # `calculation-source-connectivity` research: `bridge financial input domains into modelo calculations`

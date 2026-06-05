@@ -7,6 +7,7 @@ related:
   - '[[2026-05-10-eliminate-user-cli-shim-plan]]'
   - '[[2026-05-10-cli-structural-localization-audit]]'
   - '[[2026-05-12-cli-design-research]]'
+  - '[[2026-06-04-eliminate-user-cli-shim-research]]'
 ---
 
 # ADR: Eliminating `user_cli.py` Architectural Shim

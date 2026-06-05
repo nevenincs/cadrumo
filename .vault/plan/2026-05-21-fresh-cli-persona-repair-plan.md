@@ -5,11 +5,12 @@ tags:
 date: '2026-05-21'
 tier: L2
 related:
-  - '[[2026-05-21-fresh-cli-persona-findings-inventory]]'
+  - '[[2026-05-21-fresh-cli-persona-findings-inventory-audit]]'
   - '[[2026-05-21-fresh-cli-persona-testimonials-audit]]'
+  - '[[2026-05-20-cli-state-architecture-research]]'
+  - '[[2026-05-21-fresh-cli-persona-capability-gap-design-research]]'
+  - '[[2026-06-04-cli-testimonial-adr]]'
 ---
-
-
 # `fresh-cli-persona-repair` plan
 
 ### Phase `P01` - verified CLI defects

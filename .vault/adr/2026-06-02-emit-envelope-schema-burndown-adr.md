@@ -8,6 +8,7 @@ related:
   - "[[2026-05-31-emit-envelope-schema-burndown-plan]]"
   - "[[2026-05-28-centralized-output-redaction-plan]]"
   - "[[2026-06-02-centralized-output-redaction-audit]]"
+  - '[[2026-06-04-emit-envelope-schema-burndown-research]]'
 ---
 
 # `emit-envelope-schema-burndown` adr: `emit-envelope schema burndown rollout` | (**status:** `accepted`)

@@ -7,6 +7,7 @@ related:
   - "[[2026-05-07-user-profile-schema-research]]"
   - "[[2026-05-07-user-profile-filing-export-dependencies-reference]]"
   - "[[2026-05-07-user-profile-deadline-dependencies-reference]]"
+  - '[[2026-06-04-config-cli-profile-surface-research]]'
 ---
 
 

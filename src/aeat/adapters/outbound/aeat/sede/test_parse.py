@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import pytest
 
+from .....core.config import Settings
 from .....tests import FIXTURES_DIR
 from ._errors import SedeParseError
 from ._parse import parse_expediente_detail, parse_resumen_tree
@@ -17,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 _FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"
-_SEDE_BASE = "https://www6.agenciatributaria.gob.es"
+_SEDE_BASE = Settings.external_constants().aeat.domains.www6
 
 
 class TestParseResumenTree:

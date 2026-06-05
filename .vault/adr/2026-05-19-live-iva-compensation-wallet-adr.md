@@ -8,8 +8,9 @@ related:
   - '[[2026-05-19-iva-compensation-chain-adr]]'
   - '[[2026-05-19-iva-compensation-chain-plan]]'
   - '[[2026-05-19-modelo-130-relation-regression-adr]]'
+  - '[[2026-05-26-securestorage-repair-policy-adr-adjudication-research]]'
+  - '[[2026-06-02-live-iva-compensation-consultation-research]]'
 ---
-
 # `live-iva-compensation-wallet` adr: `AEAT wallet as primary IVA compensation authority` | (**status:** `accepted`)
 
 > **Updated 2026-05-19**: Tax-domain identifier mentions in this ADR follow the Spanish-stem terminology authority. The wallet-adapter design (IvaCompensationWalletObservation, IvaCompensationReconciliationDecision, read-only Clave Movil flow, application-level reconciliation layer, blocking-decision contract, and live-write prohibition) is already Spanish-stem aligned and unaffected.

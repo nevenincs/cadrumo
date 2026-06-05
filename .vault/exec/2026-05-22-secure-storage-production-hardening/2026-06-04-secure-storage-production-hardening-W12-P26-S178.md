@@ -6,7 +6,7 @@ date: '2026-06-04'
 step_id: 'S178'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
-  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S178-review]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s178-review-audit]]'
 ---
 
 # `secure-storage-production-hardening` `W12.P26.S178`

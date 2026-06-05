@@ -190,15 +190,6 @@ def test_typer_help_sources_are_direct_translations() -> None:
     for module in Path("src/aeat").rglob("*.py"):
         if module.name.startswith(("test_", "_test_")):
             continue
-        # The `aeat.apidocs` package is an engineer-only internal tool
-        # exposed through its own `python -m` entrypoint, not the
-        # operator-facing `aeat` CLI.
-        # Their help text is intentionally English-only and outside
-        # the operator localization contract this test enforces. The
-        # exclusion is anchored to the exact package directory so an
-        # unrelated nested directory elsewhere is still scanned.
-        if module.parts[:3] == ("src", "aeat", "apidocs"):
-            continue
         tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
         failures.extend(_typer_help_violations(tree, module=module))
     assert failures == []

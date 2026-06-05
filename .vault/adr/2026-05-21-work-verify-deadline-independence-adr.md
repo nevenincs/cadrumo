@@ -4,11 +4,11 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-21'
 related:
-  - "[[2026-05-21-persona-fleet-round2-findings]]"
+  - "[[2026-05-21-persona-fleet-round2-findings-audit]]"
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-21-state-read-projection-adr]]"
+  - '[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-research]]'
 ---
-
 # `cli-workflow-redesign` adr: `work verify validates a calculation and is independent of the filing-window deadline` | (**status:** `accepted`)
 
 ## Problem Statement

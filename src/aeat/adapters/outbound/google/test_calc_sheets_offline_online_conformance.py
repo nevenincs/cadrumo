@@ -24,11 +24,11 @@ from ....application.storage.calc_sheets import (
     SheetExportPlan,
     SheetFormulaCell,
     SheetGuideContent,
+    SheetNumberFormat,
     SheetValueCell,
     TabName,
     serialize_offline_workbook,
 )
-from ....application.storage.calc_sheets import SheetNumberFormat
 from ._calc_sheets_apply import (
     _build_emphasis_format_requests,
     _build_evidence_value_data,

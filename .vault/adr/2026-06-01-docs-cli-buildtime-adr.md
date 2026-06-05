@@ -7,21 +7,7 @@ related:
   - "[[2026-06-01-docs-cli-buildtime-research]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #adr) and one feature tag.
-     Replace docs-cli-buildtime with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar]]'.
-
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `docs-cli-buildtime` adr: build-time CLI reference extraction | (**status:** `accepted`)
 

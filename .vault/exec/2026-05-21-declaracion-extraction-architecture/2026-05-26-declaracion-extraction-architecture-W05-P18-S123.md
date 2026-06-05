@@ -6,7 +6,7 @@ date: '2026-05-26'
 step_id: 'W05.P18.S123'
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-plan]]'
-  - '[[2026-05-26-declaracion-extraction-auth-gated-acquisition-status]]'
+  - '[[2026-05-26-declaracion-extraction-auth-gated-acquisition-status-audit]]'
   - '[[2026-05-26-declaracion-extraction-architecture-W05-P18-S122]]'
 ---
 

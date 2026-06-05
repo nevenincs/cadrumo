@@ -6,15 +6,8 @@ date: '2026-06-01'
 tier: L2
 related:
   - '[[2026-06-01-verification-fixture-roles-adr]]'
+  - '[[2026-06-01-verification-fixture-roles-research]]'
 ---
-
-
-
-
-
-
-
-
 # `verification-fixture-roles` `role-aware verification fixtures` plan
 
 ### Phase `P01` - sidecar provenance schema and stamp

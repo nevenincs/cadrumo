@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#casilla-db'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-12-casilla-db-adr]]'
   - '[[2026-04-12-casilla-db-phase1-step1-exec]]'

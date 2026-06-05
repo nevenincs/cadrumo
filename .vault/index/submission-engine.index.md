@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#submission-engine'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-12-submission-engine-adr]]'
   - '[[2026-04-12-submission-engine-phase1-schema-exec]]'

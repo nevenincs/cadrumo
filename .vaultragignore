@@ -1,0 +1,35 @@
+# Semantic index exclusions. Git exclusions still apply separately; this file
+# removes generated, duplicated, or low-signal text from VaultSpec RAG.
+
+# Generated provider copies of the canonical VaultSpec rule/skill surfaces.
+.agents/
+.claude/
+.codex/
+.gemini/
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+
+# Generated documentation surfaces. Keep hand-written docs/ pages indexable.
+docs/_build/
+docs/cli/
+docs/api/
+
+# Local caches, reports, and ad-hoc execution output that may appear before
+# .gitignore pruning catches up.
+.import_linter_cache/
+.playwright-mcp/
+.pytest_cache/
+.ruff_cache/
+.ty_cache/
+.pyrefly_cache/
+.complexipy_cache/
+htmlcov/
+playwright-report/
+test-results/
+scratch/
+tmp/
+tmp_*/
+temp/
+cache/
+var/

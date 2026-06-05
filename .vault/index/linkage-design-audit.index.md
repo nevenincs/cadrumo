@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#linkage-design-audit'
-date: '2026-05-26'
+date: '2026-06-05'
 related:
   - '[[2026-05-15-linkage-design-audit-audit]]'
   - '[[2026-05-15-linkage-design-audit-plan]]'
@@ -16,6 +16,7 @@ related:
   - '[[2026-05-18-linkage-design-audit-audit]]'
   - '[[2026-05-18-linkage-design-audit-plan]]'
   - '[[2026-05-26-linkage-design-audit-adr]]'
+  - '[[2026-05-26-linkage-design-audit-audit]]'
   - '[[2026-05-26-linkage-design-audit-research]]'
 ---
 
@@ -27,7 +28,7 @@ Auto-generated index of all documents tagged with `#linkage-design-audit`.
 
 ### adr
 
-- `2026-05-26-linkage-design-audit-adr` - `linkage-design-audit` ADR: `casilla-values-collapse-projection-strategy` (**status:** `accepted`)
+- `2026-05-26-linkage-design-audit-adr` - `linkage-design-audit` ADR: `boundary-typed-contracts` (**status:** `accepted`)
 
 ### audit
 
@@ -35,6 +36,7 @@ Auto-generated index of all documents tagged with `#linkage-design-audit`.
 - `2026-05-16-linkage-design-audit-audit` - `linkage-design-audit` audit: `Wave 2 close-out: model consolidation`
 - `2026-05-17-linkage-design-audit-audit` - `linkage-design-audit` audit: `Wave 3 close-out: referential integrity + envelope + hexagonal contracts`
 - `2026-05-18-linkage-design-audit-audit` - `linkage-design-audit` audit: `Wave 4 close-out`
+- `2026-05-26-linkage-design-audit-audit` - `linkage-design-audit` audit: `wave-3-close-out-after-p02-collapse`
 
 ### plan
 

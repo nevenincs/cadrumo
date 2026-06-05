@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#registry-authority-flow'
-date: '2026-05-21'
+date: '2026-06-05'
 related:
   - '[[2026-05-20-registry-authority-flow-W01-P01-S01]]'
   - '[[2026-05-20-registry-authority-flow-W01-P01-S02]]'
@@ -37,7 +37,7 @@ related:
   - '[[2026-05-20-registry-authority-flow-audit]]'
   - '[[2026-05-20-registry-authority-flow-plan]]'
   - '[[2026-05-20-registry-authority-flow-research]]'
-  - '[[2026-05-20-registry-authority-flow-review]]'
+  - '[[2026-05-20-registry-authority-flow-review-audit]]'
   - '[[2026-05-21-registry-authority-flow-W05-P09-S21]]'
   - '[[2026-05-21-registry-authority-flow-W05-P09-S22]]'
   - '[[2026-05-21-registry-authority-flow-W05-P10-S23]]'
@@ -48,6 +48,7 @@ related:
   - '[[2026-05-21-registry-authority-flow-W05-P12-S28]]'
   - '[[2026-05-21-registry-authority-flow-W05-P12-S29]]'
   - '[[2026-05-21-registry-authority-flow-W05-P12-S30]]'
+  - '[[2026-06-01-registry-loader-period-code-hydration-adr]]'
 ---
 
 # `registry-authority-flow` feature index
@@ -59,11 +60,12 @@ Auto-generated index of all documents tagged with `#registry-authority-flow`.
 ### adr
 
 - `2026-05-20-registry-authority-flow-adr` - `registry-authority-flow` adr: validated authority as the registry orchestration boundary | (**status:** `accepted`)
+- `2026-06-01-registry-loader-period-code-hydration-adr` - `registry-loader-period-code-hydration` adr: PeriodCode validator is the compiler boundary | (**status:** `accepted`)
 
 ### audit
 
 - `2026-05-20-registry-authority-flow-audit` - `registry-authority-flow` audit: registry authority flow inventory
-- `2026-05-20-registry-authority-flow-review` - `registry-authority-flow` Code Review
+- `2026-05-20-registry-authority-flow-review-audit` - `registry-authority-flow` Code Review
 
 ### exec
 

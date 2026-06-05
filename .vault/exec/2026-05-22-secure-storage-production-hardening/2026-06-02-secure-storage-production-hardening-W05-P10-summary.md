@@ -5,10 +5,10 @@ tags:
 date: '2026-06-02'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
-  - '[[2026-05-28-secure-storage-production-hardening-W05-P10-S41-review]]'
-  - '[[2026-05-28-secure-storage-production-hardening-W05-P10-S42-review]]'
-  - '[[2026-06-02-secure-storage-production-hardening-W05-P10-S43-review]]'
-  - '[[2026-06-02-secure-storage-production-hardening-W05-P10-S44-review]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p10-s41-review-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p10-s42-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w05-p10-s43-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w05-p10-s44-review-audit]]'
 ---
 
 # `secure-storage-production-hardening` `W05.P10` summary

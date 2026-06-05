@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import tomllib
 
 # Pin the CLI output language to English BEFORE any project module is imported.
 # CLI help strings are tr() values resolved at import time; the sphinx-click
@@ -17,14 +18,34 @@ from docutils import nodes
 from docutils.parsers.rst import Directive
 
 # Make `aeat` importable for autodoc without installing the wheel.
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+_PROJECT_ROOT = Path(os.environ.get("AEAT_DOCS_PROJECT_ROOT", Path(__file__).resolve().parents[1])).resolve()
+sys.path.insert(0, str(_PROJECT_ROOT / "src"))
+
+
+def _project_metadata() -> dict[str, object]:
+    """Load project metadata from ``pyproject.toml`` for Sphinx display fields."""
+    pyproject = _PROJECT_ROOT / "pyproject.toml"
+    with pyproject.open("rb") as stream:
+        return tomllib.load(stream)["project"]
+
+
+_PYPROJECT = _project_metadata()
+_PROJECT_URLS = _PYPROJECT.get("urls", {})
+_DOCS_BASE_URL = os.environ.get("AEAT_DOCS_BASE_URL", "").rstrip("/")
+_DOCS_FONT_STACK = '"Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
+_DOCS_HEADING_FONT_STACK = '"Geist", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif'
+_DOCS_MONO_FONT_STACK = '"Geist Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace'
+_REPOSITORY_URL = str(_PROJECT_URLS.get("Repository", ""))
+_ISSUES_URL = str(_PROJECT_URLS.get("Issues", ""))
+_RELEASES_URL = f"{_REPOSITORY_URL}/releases" if _REPOSITORY_URL else ""
+_LATEST_RELEASE_URL = f"{_RELEASES_URL}/latest" if _RELEASES_URL else ""
 
 # ── Project metadata ────────────────────────────────────────────────────────
-project = "aeat"
-author = "wgergely"
-copyright = f"%Y, {author}"
-release = "0.1.0"
-version = "0.1.0"
+project = str(_PYPROJECT["name"])
+author = ", ".join(author["name"] for author in _PYPROJECT.get("authors", []))
+copyright = f"2026, {author}"
+release = str(_PYPROJECT["version"])
+version = release
 
 # ── Extensions ──────────────────────────────────────────────────────────────
 extensions = [
@@ -33,8 +54,14 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx_autodoc_typehints",
+    "sphinx_copybutton",
+    "sphinx_design",
+    "sphinxext.opengraph",
+    "notfound.extension",
     "myst_parser",
 ]
+if _DOCS_BASE_URL:
+    extensions.append("sphinx_sitemap")
 
 # Source file types — both reStructuredText (autodoc stubs, index) and MyST
 # Markdown (narrative pages, generated API surface) are first-class.
@@ -43,7 +70,7 @@ source_suffix = {
     ".md": "markdown",
 }
 
-master_doc = "index"
+master_doc = os.environ.get("AEAT_DOCS_MASTER_DOC", "index")
 # English is the only documentation language. Additional languages attach
 # here - set `language`, add `locale_dirs` and `gettext_compact`, and a
 # gettext / sphinx-intl build matrix. Documentation translation must not
@@ -57,6 +84,18 @@ exclude_patterns = [
     "**/test_*.py",
     "**/_test_*.py",
 ]
+
+_DOCS_ROOT = Path(__file__).resolve().parent
+_ONLY_SOURCES = {
+    Path(item).as_posix() for item in os.environ.get("AEAT_DOCS_ONLY", "").split(os.pathsep) if item.strip()
+}
+if _ONLY_SOURCES:
+    for _source in _DOCS_ROOT.rglob("*"):
+        if _source.suffix not in {".md", ".rst"}:
+            continue
+        _relative = _source.relative_to(_DOCS_ROOT).as_posix()
+        if _relative not in _ONLY_SOURCES:
+            exclude_patterns.append(_relative)
 
 # The docs-check gate builds nitpicky (-n) with warnings-as-errors (-W), so
 # unresolved cross-references must be fixed or added to nitpick_ignore_regex
@@ -74,6 +113,9 @@ suppress_warnings = [
     "sphinx_autodoc_typehints.forward_reference",
     "sphinx_autodoc_typehints.guarded_import",
 ]
+if os.environ.get("AEAT_DOCS_SINGLE_PAGE"):
+    suppress_warnings.append("toc.excluded")
+    suppress_warnings.append("toc.not_included")
 
 # ── Autodoc / Napoleon ──────────────────────────────────────────────────────
 napoleon_google_docstring = True
@@ -176,6 +218,9 @@ intersphinx_mapping = {
     "httpx": ("https://www.python-httpx.org/", None),
     "typer": ("https://typer.tiangolo.com/", None),
 }
+_SELF_INVENTORY = Path(__file__).resolve().parent / "_build" / "html" / "objects.inv"
+if os.environ.get("AEAT_DOCS_SELF_INVENTORY") and _SELF_INVENTORY.is_file():
+    intersphinx_mapping["aeat-local"] = ((_SELF_INVENTORY.parent).as_uri() + "/", str(_SELF_INVENTORY))
 intersphinx_disabled_reftypes = ["std:doc"]
 
 # Offline-hermetic gate: the docs-check build sets AEAT_DOCS_OFFLINE to keep only
@@ -185,16 +230,157 @@ intersphinx_disabled_reftypes = ["std:doc"]
 # nitpick_ignore_regex below.
 if os.environ.get("AEAT_DOCS_OFFLINE"):
     intersphinx_mapping = {
-        name: (uri, inv)
-        for name, (uri, inv) in intersphinx_mapping.items()
-        if inv and (_INVENTORIES / Path(inv).name).is_file()
+        name: (uri, inv) for name, (uri, inv) in intersphinx_mapping.items() if inv and Path(inv).is_file()
     }
 
 # ── HTML theme ──────────────────────────────────────────────────────────────
 html_theme = "furo"
-html_title = "aeat — Spanish Tax Authority automation"
+html_title = "aeat-cli - local Spanish tax-file automation"
+html_short_title = "aeat-cli"
+html_baseurl = f"{_DOCS_BASE_URL}/" if _DOCS_BASE_URL else ""
+html_favicon = "_static/aeat-favicon.svg"
 html_static_path = ["_static"]
 templates_path = ["_templates"]
+html_css_files = ["aeat-docs.css"]
+html_js_files = ["aeat-banner-shader.js"]
+html_theme_options = {
+    "light_logo": "aeat-mark-light.svg",
+    "dark_logo": "aeat-mark-dark.svg",
+    "sidebar_hide_name": True,
+    "announcement": "aeat-site-broadcast",
+    "light_css_variables": {
+        # Vercel Geist-style product docs tokens mapped to Furo semantics.
+        "color-brand-primary": "#000000",
+        "color-brand-content": "#0070f3",
+        "color-brand-visited": "#4b5563",
+        "color-foreground-primary": "#000000",
+        "color-foreground-secondary": "#666666",
+        "color-foreground-muted": "#888888",
+        "color-foreground-border": "#999999",
+        "color-background-primary": "#ffffff",
+        "color-background-secondary": "#fafafa",
+        "color-background-hover": "#f5f5f5",
+        "color-background-hover--transparent": "#f5f5f500",
+        "color-background-border": "#eaeaea",
+        "color-card-border": "#eaeaea",
+        "color-card-background": "transparent",
+        "color-card-marginals-background": "#fafafa",
+        "color-link": "#0070f3",
+        "color-link--hover": "#005bd1",
+        "color-link--visited": "#4b5563",
+        "color-link--visited--hover": "#005bd1",
+        "color-link-underline": "#dcdcdc",
+        "color-link-underline--hover": "#0070f3",
+        "color-link-underline--visited": "#d1d5db",
+        "color-link-underline--visited--hover": "#005bd1",
+        "color-inline-code-background": "#fafafa",
+        "color-admonition-background": "#fafafa",
+        "color-admonition-title": "#000000",
+        "color-admonition-title-background": "#fafafa",
+        "color-admonition-title-background--important": "#fafafa",
+        "color-admonition-title--important": "#000000",
+        "color-admonition-title-background--warning": "#fafafa",
+        "color-admonition-title--warning": "#000000",
+        "font-stack": _DOCS_FONT_STACK,
+        "font-stack--headings": _DOCS_HEADING_FONT_STACK,
+        "font-stack--monospace": _DOCS_MONO_FONT_STACK,
+        "font-size--normal": "105%",
+    },
+    "dark_css_variables": {
+        "color-brand-primary": "#ffffff",
+        "color-brand-content": "#3291ff",
+        "color-brand-visited": "#a1a1a1",
+        "color-foreground-primary": "#ededed",
+        "color-foreground-secondary": "#a1a1a1",
+        "color-foreground-muted": "#888888",
+        "color-foreground-border": "#777777",
+        "color-background-primary": "#000000",
+        "color-background-secondary": "#111111",
+        "color-background-hover": "#1a1a1a",
+        "color-background-hover--transparent": "#1a1a1a00",
+        "color-background-border": "#333333",
+        "color-card-border": "#333333",
+        "color-card-background": "transparent",
+        "color-card-marginals-background": "#111111",
+        "color-link": "#3291ff",
+        "color-link--hover": "#52a8ff",
+        "color-link--visited": "#a1a1a1",
+        "color-link--visited--hover": "#52a8ff",
+        "color-link-underline": "#333333",
+        "color-link-underline--hover": "#3291ff",
+        "color-link-underline--visited": "#4a4a4a",
+        "color-link-underline--visited--hover": "#52a8ff",
+        "color-inline-code-background": "#111111",
+        "color-admonition-background": "#111111",
+        "color-admonition-title": "#ededed",
+        "color-admonition-title-background": "#111111",
+        "color-admonition-title-background--important": "#111111",
+        "color-admonition-title--important": "#ededed",
+        "color-admonition-title-background--warning": "#111111",
+        "color-admonition-title--warning": "#ededed",
+    },
+    "source_repository": _REPOSITORY_URL,
+    "source_branch": "main",
+    "source_directory": "docs/",
+    "top_of_page_buttons": ["view", "edit"],
+}
+
+html_context = {
+    "aeat_broadcasts": [
+        {
+            "label": "Pre-alpha",
+            "message": "Breaking changes are expected. Verify official AEAT deadlines before filing.",
+            "links": [
+                {"label": "Updates", "doc": "updates"},
+                {"label": "Latest download", "url": _LATEST_RELEASE_URL},
+                {"label": "Report an issue", "url": _ISSUES_URL},
+            ],
+        }
+    ],
+    "aeat_footer_groups": [
+        {
+            "title": "Stay current",
+            "links": [
+                {"label": "Critical updates", "doc": "updates", "fragment": "critical-updates"},
+                {"label": "Latest download", "url": _LATEST_RELEASE_URL},
+                {"label": "Release notes", "url": _RELEASES_URL},
+            ],
+        },
+        {
+            "title": "Get help",
+            "links": [
+                {"label": "Report an issue", "url": _ISSUES_URL},
+                {"label": "CLI reference", "doc": "cli/index"},
+                {"label": "How it works", "doc": "explanation/index"},
+            ],
+        },
+        {
+            "title": "Trust and responsibility",
+            "links": [
+                {"label": "Disclaimer", "doc": "disclaimer"},
+                {"label": "Events and deadlines", "doc": "updates", "fragment": "events-and-deadlines"},
+                {"label": "Repository", "url": _REPOSITORY_URL},
+            ],
+        },
+    ],
+    "aeat_footer_note": (
+        "aeat is pre-alpha, local-first software. It is not tax advice, is not affiliated with AEAT, "
+        "and never replaces official AEAT tools or professional review."
+    ),
+}
+
+# ── Publishing metadata ─────────────────────────────────────────────────────
+ogp_site_name = "aeat documentation"
+ogp_site_url = html_baseurl
+ogp_description_length = 180
+ogp_type = "website"
+ogp_image = "_static/aeat-mark-light.svg"
+
+# ── Copy buttons ────────────────────────────────────────────────────────────
+copybutton_prompt_text = r">>> |\.\.\. |\$ |PS> "
+copybutton_prompt_is_regexp = True
+copybutton_only_copy_prompt_lines = False
+copybutton_remove_prompts = True
 
 # ── MyST ────────────────────────────────────────────────────────────────────
 myst_enable_extensions = [
@@ -355,6 +541,59 @@ linkcheck_ignore = [
     r"https?://(www\.)?boe\.es.*",
 ]
 linkcheck_timeout = 30
+
+
+def _specific_build_sources() -> list[Path] | None:
+    """Return Sphinx command-line source filenames for a specific-file build.
+
+    Returns:
+        ``None`` for the normal update/full build mode, otherwise the filenames
+        passed after ``sourcedir`` and ``outputdir``.
+    """
+    docs_root = Path(__file__).resolve().parent
+    args = sys.argv[1:]
+    for index, arg in enumerate(args):
+        try:
+            if Path(arg).resolve() != docs_root:
+                continue
+        except OSError:
+            continue
+        first_filename = index + 2
+        if first_filename >= len(args):
+            return None
+        return [Path(item).resolve() for item in args[first_filename:] if not item.startswith("-")]
+    return None
+
+
+def _should_generate_cli_reference() -> bool:
+    """Return whether this Sphinx invocation needs generated ``docs/cli`` pages."""
+    if os.environ.get("AEAT_DOCS_FORCE_CLI_REFERENCE"):
+        return True
+    if os.environ.get("AEAT_DOCS_SKIP_CLI_REFERENCE"):
+        return False
+    specific_sources = _specific_build_sources()
+    if specific_sources is None:
+        return True
+    cli_root = (Path(__file__).resolve().parent / "cli").resolve()
+    return any(source == cli_root or cli_root in source.parents for source in specific_sources)
+
+
+def _should_resolve_deferred_models() -> bool:
+    """Return whether this Sphinx invocation needs diagnostics model rebuilding."""
+    if os.environ.get("AEAT_DOCS_FORCE_DEFERRED_MODELS"):
+        return True
+    if os.environ.get("AEAT_DOCS_SKIP_DEFERRED_MODELS"):
+        return False
+    specific_sources = _specific_build_sources()
+    if specific_sources is None:
+        return True
+    docs_root = Path(__file__).resolve().parent
+    diagnostic_pages = {
+        (docs_root / "api" / "aeat.application.diagnostics.rst").resolve(),
+        (docs_root / "api" / "aeat.application.auth._diagnostics.rst").resolve(),
+        (docs_root / "api" / "aeat.application.transactions._diagnostics.rst").resolve(),
+    }
+    return any(source in diagnostic_pages for source in specific_sources)
 
 
 _PY_SUFFIX_INDEX: dict[str, list[str]] = {}
@@ -531,6 +770,8 @@ def setup(app):
         Args:
             app: The Sphinx application instance (unused).
         """
+        if not _should_resolve_deferred_models():
+            return
         from aeat.application import diagnostics
 
         diagnostics._ensure_models_rebuilt()
@@ -548,7 +789,9 @@ def setup(app):
         Args:
             app: The Sphinx application instance (unused).
         """
-        from aeat.entrypoints.cli._doc_reference import generate_cli_reference
+        if not _should_generate_cli_reference():
+            return
+        from docs.tools.cli_reference import generate_cli_reference
 
         generate_cli_reference(Path(__file__).resolve().parent)
 

@@ -6,7 +6,6 @@ date: '2026-06-02'
 step_id: 'S59'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
-  - '[[2026-06-02-secure-storage-production-hardening-W07-P14-S59-residual-classification]]'
 ---
 
 # `secure-storage-production-hardening` `W07.P14.S59`

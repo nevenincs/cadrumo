@@ -6,6 +6,10 @@ date: '2026-06-02'
 related:
   - "[[2026-05-21-work-verify-deadline-independence-adr]]"
   - "[[2026-06-02-modelo-200-base-determination-adr]]"
+  - '[[2026-06-02-modelo-multiyear-renta-151-beckham-research]]'
+  - '[[2026-06-02-modelo-multiyear-renta-353-grupo-aggregation-research]]'
+  - '[[2026-06-02-modelo-multiyear-renta-income-research]]'
+  - '[[2026-06-04-modelo-multiyear-renta-research]]'
 ---
 
 

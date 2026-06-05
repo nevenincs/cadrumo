@@ -30,10 +30,10 @@ All files listed in pair tables below.
 
 ## Related
 
-- [[2026-05-31-core-authority-enums-reference]]
-- [[2026-05-31-core-authority-duplicates-reference]]
-- [[2026-05-31-core-authority-constants-reference]]
-- [[2026-05-31-core-authority-import-map-reference]]
+- `2026-05-31-core-authority-enums-reference`
+- `2026-05-31-core-authority-duplicates-reference`
+- `2026-05-31-core-authority-constants-reference`
+- `2026-05-31-core-authority-import-map-reference`
 
 ---
 

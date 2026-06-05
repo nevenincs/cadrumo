@@ -32,8 +32,14 @@ def test_override_to_one_unblocks_live_read() -> None:
         _build_gate().require_live_read()
 
 
+def test_operator_context_does_not_require_live_test_opt_in() -> None:
+    """Outside pytest, live-read gating continues to operational auth/profile checks."""
+    with override_settings(aeat_live_tests_enabled="0"):
+        _build_gate().require_live_read(pytest_current_test="")
+
+
 def test_override_to_zero_blocks_live_read() -> None:
-    """An override to anything other than '1' raises the typed refusal."""
+    """During pytest, an override to anything other than '1' raises the typed refusal."""
     with override_settings(aeat_live_tests_enabled="0"), pytest.raises(AeatLiveReadNotEnabledError):
         _build_gate().require_live_read()
 

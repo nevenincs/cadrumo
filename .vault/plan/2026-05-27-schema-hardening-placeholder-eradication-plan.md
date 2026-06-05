@@ -5,11 +5,10 @@ tags:
 date: '2026-05-27'
 tier: L2
 related:
-  - '[[2026-05-27-schema-hardening-label-artifact-inventory]]'
+  - '[[2026-05-27-schema-hardening-label-artifact-inventory-exec]]'
   - '[[2026-05-27-schema-hardening-m100-revision-drift-research]]'
+  - '[[2026-05-18-schema-hardening-adr]]'
 ---
-
-
 # `schema-hardening` `placeholder-eradication` plan
 
 ### Phase `P01` - Placeholder inventory and normalization policy

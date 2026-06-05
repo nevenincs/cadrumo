@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#schema-driven-wizard-ux'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-05-13-schema-driven-wizard-ux-audit]]'
   - '[[2026-05-13-wizard-ux-transcripts-audit]]'
@@ -18,4 +18,4 @@ Auto-generated index of all documents tagged with `#schema-driven-wizard-ux`.
 ### audit
 
 - `2026-05-13-schema-driven-wizard-ux-audit` - schema-driven wizard ux audit
-- `2026-05-13-wizard-ux-transcripts` - wizard ux transcripts — 2026-05-13
+- `2026-05-13-wizard-ux-transcripts-audit` - wizard ux transcripts — 2026-05-13

@@ -114,8 +114,12 @@ from ._protocols import (
 from ._resume import (
     WorkflowResumeContext,
     WorkflowResumeRefusedError,
+    WorkflowResumeRunAmbiguousError,
+    WorkflowResumeRunCandidate,
     find_latest_run_for_period,
+    find_unique_run_for_period,
     resume_modelo_workflow,
+    workflow_resume_candidate_lines,
 )
 
 __all__ = [
@@ -149,6 +153,8 @@ __all__ = [
     "WorkflowResult",
     "WorkflowResumeContext",
     "WorkflowResumeRefusedError",
+    "WorkflowResumeRunAmbiguousError",
+    "WorkflowResumeRunCandidate",
     "WorkflowRunRepository",
     "WorkflowStage",
     "WorkflowState",
@@ -161,6 +167,7 @@ __all__ = [
     "declaration_key",
     "default_engine",
     "find_latest_run_for_period",
+    "find_unique_run_for_period",
     "fingerprint_workflow_state",
     "list_profile_buckets",
     "list_runs",
@@ -175,5 +182,6 @@ __all__ = [
     "save_run",
     "update_declaration_pointer",
     "utc_now",
+    "workflow_resume_candidate_lines",
     "workflow_state_repository",
 ]

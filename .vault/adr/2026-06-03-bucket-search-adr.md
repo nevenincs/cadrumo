@@ -7,6 +7,7 @@ related:
   - "[[2026-06-03-cli-workflow-redesign-adr]]"
   - "[[2026-06-03-cli-workflow-redesign-research]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
+  - '[[2026-06-04-bucket-search-research]]'
 ---
 
 # `bucket-search` adr: `BucketMaintenanceService search verb scoping` | (**status:** `accepted`)

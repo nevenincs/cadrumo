@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#declaracion-extractor'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-21-declaracion-extractor-adr]]'
   - '[[2026-04-21-declaracion-extractor-plan]]'
@@ -18,7 +18,7 @@ Auto-generated index of all documents tagged with `#declaracion-extractor`.
 
 ### adr
 
-- `2026-04-21-declaracion-extractor-adr` - `declaracion-extractor` adr: `label-first-bbox-fallback-acroform-opportunistic-per-modelo-registry` | (**status:** `accepted`)
+- `2026-04-21-declaracion-extractor-adr` - `declaracion-extractor` adr: `label-first-bbox-fallback-acroform-opportunistic-per-modelo-registry` | (**status:** `superseded`)
 
 ### plan
 

@@ -7,9 +7,9 @@ tier: L2
 related:
   - '[[2026-05-27-schema-hardening-m193-standardization-plan]]'
   - '[[2026-05-27-schema-hardening-m193-standardization-P01-S04]]'
+  - '[[2026-05-18-schema-hardening-adr]]'
+  - '[[2026-05-18-schema-hardening-research]]'
 ---
-
-
 # `schema-hardening` `m347-standardization` plan
 
 ### Phase `P01` - M347 single-revision directory standardization

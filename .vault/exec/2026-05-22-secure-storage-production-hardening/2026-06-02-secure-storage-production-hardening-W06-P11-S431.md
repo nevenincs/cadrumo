@@ -6,7 +6,7 @@ date: '2026-06-02'
 step_id: 'S431'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
-  - '[[2026-06-02-secure-storage-production-hardening-W05-P10-S43-review]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w05-p10-s43-review-audit]]'
 ---
 
 # `secure-storage-production-hardening` `W06.P11.S431`
@@ -36,4 +36,4 @@ Evidence:
 - `uv run --no-sync pytest -q src/aeat/test_calc_sheets_error_hierarchy.py src/aeat/adapters/outbound/storage/test_foundation.py` passed with 22 tests.
 - Targeted Ruff over the S431 Python surfaces passed.
 
-Note: repo-native live Drive mirror validation remains blocked by `W06.P11.S430`, not by calc-sheets export or quota handling.
+Continuation note: `W06.P11.S441` reran manual Drive connector inspection on 2026-06-03. The live workbook remained present under `calc-sheets/130-1T-2025`, direct XLSX export succeeded, a bounded formula read succeeded, a bounded value read first hit live Google Sheets HTTP 429 and then succeeded after the quota window reset. Repo-native live Drive validation is no longer blocked after `W06.P11.S430`.

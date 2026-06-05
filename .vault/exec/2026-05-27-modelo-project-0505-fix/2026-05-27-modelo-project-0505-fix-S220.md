@@ -5,9 +5,7 @@ date: 2026-05-27
 tags:
   - "#exec"
   - "#modelo-project-0505-fix"
-related:
-  - "[[test_modelo_projection]]"
-  - "[[_modelo]]"
+related: []
 ---
 
 # `aeat app modelo project` 0505 computed-input crash fix — S220

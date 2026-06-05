@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#operator-workflows-expansion'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-25-operator-workflows-expansion-adr]]'
   - '[[2026-04-25-operator-workflows-expansion-phase1-step1-exec]]'

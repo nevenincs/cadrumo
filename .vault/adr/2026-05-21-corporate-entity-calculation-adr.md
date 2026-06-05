@@ -13,10 +13,10 @@ related:
 
 ## Problem Statement
 
-The parent ADR [[2026-05-21-taxpayer-type-applicability-adr]] adds a
+The parent ADR `2026-05-21-taxpayer-type-applicability-adr` adds a
 typed `entity_type` axis to the profile and derives modelos,
 calendar, calculations and brackets from it. Its plan
-[[2026-05-21-taxpayer-type-applicability-plan]] requests a child ADR
+`2026-05-21-taxpayer-type-applicability-plan` requests a child ADR
 to adjudicate the *corporate-entity calculation model* before
 W02.S08 (calculation/bracket derivation) and W03.S13 (per-entity
 rate schedules) can land.

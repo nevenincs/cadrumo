@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ...core.errors import resolve_error_message
 from ...domain.deadlines import ModeloDeadline, ObligationStatus
 from ...tests.secure_sql import isolated_runtime_profile
 from . import (
@@ -16,9 +17,11 @@ from . import (
     WorkflowResult,
     WorkflowResumeContext,
     WorkflowResumeRefusedError,
+    WorkflowResumeRunAmbiguousError,
     WorkflowStage,
     WorkflowStep,
     find_latest_run_for_period,
+    find_unique_run_for_period,
     resume_modelo_workflow,
     save_run,
 )
@@ -300,3 +303,41 @@ def test_find_latest_run_for_period_resolves_id_for_resume(tmp_path: Path) -> No
     assert context.resumed_from_run_id == run.run_id
     assert context.modelo == "130"
     assert context.period == "2026Q1"
+
+
+def test_find_unique_run_for_period_returns_single_match(tmp_path: Path) -> None:
+    run = _aborted_result(
+        run_id="a" * 16,
+        reason=WorkflowAbortReason.SITE_UNAVAILABLE,
+        obligation=_obligation("130", "2026Q1"),
+    )
+    save_run(run)
+
+    resolved = find_unique_run_for_period(modelo="130", period="2026Q1")
+
+    assert resolved.run_id == run.run_id
+
+
+def test_find_unique_run_for_period_refuses_multiple_matches_with_candidate_guidance(tmp_path: Path) -> None:
+    earlier = _aborted_result(
+        run_id="a" * 16,
+        reason=WorkflowAbortReason.SITE_UNAVAILABLE,
+        obligation=_obligation("130", "2026Q1"),
+    ).model_copy(update={"started_at": datetime(2026, 4, 10, 9, 0, tzinfo=UTC)})
+    later = _aborted_result(
+        run_id="b" * 16,
+        reason=WorkflowAbortReason.SITE_UNAVAILABLE,
+        obligation=_obligation("130", "2026Q1"),
+    ).model_copy(update={"started_at": datetime(2026, 4, 12, 9, 0, tzinfo=UTC)})
+    save_run(earlier)
+    save_run(later)
+
+    with pytest.raises(WorkflowResumeRunAmbiguousError) as raised:
+        find_unique_run_for_period(modelo="130", period="2026Q1")
+
+    assert raised.value.translated_message == "application.workflow.errors.resume_run_ambiguous"
+    assert [candidate.run_id for candidate in raised.value.candidates] == [later.run_id, earlier.run_id]
+    message = resolve_error_message(raised.value)
+    assert "run_id\tmodelo\tperiod\tfinal_stage" in message
+    assert later.run_id in message
+    assert earlier.run_id in message

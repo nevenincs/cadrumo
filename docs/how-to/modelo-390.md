@@ -1,8 +1,8 @@
 # How to prepare the annual Modelo 390 summary
 
 This guide shows you how to build, verify, and export Modelo 390, the annual
-value-added tax (VAT), or impuesto sobre el valor añadido (IVA), summary, using
-your local quarterly Modelo 303 history.
+value-added tax summary. In Spanish, value-added tax is impuesto sobre el valor
+añadido (IVA). Modelo 390 uses your local quarterly Modelo 303 history.
 
 Before you begin:
 

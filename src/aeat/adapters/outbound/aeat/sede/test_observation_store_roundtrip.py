@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
+from .....core.config import Settings
 from .....tests.secure_sql import isolated_runtime_profile
 from ._iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
 from ._observation_store import FiledDeclaracionObservationStore
@@ -37,6 +38,8 @@ from ._schema import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 _BUCKET_ID = "sede-observation"
+_AEAT = Settings.external_constants().aeat
+_COTEJO_DOCUMENT_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.cotejo_document}"
 
 
 def _populated_observation(artefact: FiledDeclaracionArtefact) -> FiledDeclaracionObservation:
@@ -75,9 +78,7 @@ def test_filed_declaration_observation_roundtrips_through_encrypted_store(
         body = b"%PDF-1.7 sede declaration sample body for roundtrip witness"
         artefact = FiledDeclaracionArtefact(
             kind="declaration_pdf",
-            source_url=AnyHttpUrl(
-                "https://www.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=TUD4V9XAUV7QJ8QV"
-            ),
+            source_url=AnyHttpUrl(f"{_COTEJO_DOCUMENT_URL}?CSV=TUD4V9XAUV7QJ8QV"),
             content_type="application/pdf",
             byte_count=len(body),
             sha256=hashlib.sha256(body).hexdigest(),
@@ -148,9 +149,7 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
         body = b"%PDF-1.7 sede declaration sample body for anti-tautology"
         artefact = FiledDeclaracionArtefact(
             kind="declaration_pdf",
-            source_url=AnyHttpUrl(
-                "https://www.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=TUD4V9XAUV7QJ8QV"
-            ),
+            source_url=AnyHttpUrl(f"{_COTEJO_DOCUMENT_URL}?CSV=TUD4V9XAUV7QJ8QV"),
             content_type="application/pdf",
             byte_count=len(body),
             sha256=hashlib.sha256(body).hexdigest(),

@@ -4,7 +4,7 @@ date: '2026-05-22'
 step_id: 'P05.S02'
 related:
   - '[[2026-05-21-cli-persona-testimonials-plan]]'
-  - '[[2026-05-21-persona-fleet-bug-inventory]]'
+  - '[[2026-05-21-persona-fleet-bug-inventory-audit]]'
   - '[[2026-05-21-cross-campaign-hardening-P09-S41]]'
 ---
 

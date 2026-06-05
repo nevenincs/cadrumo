@@ -9,17 +9,10 @@ related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-05-20-registry-authority-flow-adr]]'
   - '[[2026-05-20-registry-authority-flow-research]]'
+  - '[[2026-06-04-registry-reviewability-pressure-adr]]'
+  - '[[2026-06-04-registry-reviewability-pressure-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `registry-reviewability-pressure` `implementation` plan
 

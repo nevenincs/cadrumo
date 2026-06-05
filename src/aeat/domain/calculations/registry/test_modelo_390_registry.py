@@ -144,6 +144,9 @@ def test_modelo_390_declares_annual_compensation_result_fields() -> None:
     assert casillas["iva.anual.compensacion-ultimo-periodo-97"].number == "97"
     assert casillas["iva.anual.compensacion-generada-ejercicio-no-97"].number == "662"
     assert bindings["modelo-390-prev-303-compensacion-ultimo-periodo"].selector["period"] == "4T"
+    assert bindings["modelo-390-prev-303-compensacion-ultimo-periodo"].selector["source_casillas"] == (
+        "iva.compensacion-generada-periodo",
+    )
     assert bindings["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"].selector["source_periods"] == (
         "1T",
         "2T",
@@ -202,7 +205,7 @@ def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations()
                 CasillaObservation(casilla_id="iva.cuota-devengada-total", value=Decimal("400")),
                 CasillaObservation(casilla_id="iva.cuota-deducible-total", value=Decimal("360")),
                 CasillaObservation(casilla_id="iva.resultado-regimen-general", value=Decimal("40")),
-                CasillaObservation(casilla_id="iva.compensacion-disponible-fin-periodo", value=Decimal("400")),
+                CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=Decimal("400")),
             ),
         ),
     )
@@ -218,14 +221,14 @@ def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations()
     assert "modelo-390-prev-303-compensacion-ultimo-periodo" in resolved
     assert "modelo-390-prev-303-compensacion-generada-ejercicio-no-97" in resolved
 
-    # The ultimo-periodo binding uses selector period="4T" and sources
-    # iva.compensacion-disponible-fin-periodo. The 4T observation carries
+    # The ultimo-periodo binding uses selector period="4T" and sources the
+    # final period's generated amount to compensate. The 4T observation carries
     # that value as Decimal("400") — assert against the observation directly.
     q4_obs = next(obs for obs in observations if obs.period == "4T")
-    q4_disponible = next(
-        c.value for c in q4_obs.observations if c.casilla_id == "iva.compensacion-disponible-fin-periodo"
+    q4_generated = next(
+        c.value for c in q4_obs.observations if c.casilla_id == "iva.compensacion-generada-periodo"
     )
-    assert resolved["modelo-390-prev-303-compensacion-ultimo-periodo"] == q4_disponible
+    assert resolved["modelo-390-prev-303-compensacion-ultimo-periodo"] == q4_generated
 
     # The generada-ejercicio-no-97 binding sources iva.compensacion-generada-periodo
     # from periods 1T, 2T, 3T (selector source_periods=("1T","2T","3T")).

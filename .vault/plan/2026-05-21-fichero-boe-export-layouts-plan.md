@@ -8,6 +8,8 @@ related:
   - '[[2026-04-22-aeat-fichero-boe-export-adr]]'
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
   - '[[2026-05-20-branch-reconciliation-audit]]'
+  - '[[2026-06-04-fichero-boe-export-layouts-adr]]'
+  - '[[2026-06-04-fichero-boe-export-layouts-research]]'
 ---
 
 

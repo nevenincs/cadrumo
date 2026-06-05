@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#aeat-cli-hardening'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-05-08-aeat-cli-hardening-adr]]'
   - '[[2026-05-08-aeat-cli-hardening-inventory-audit]]'
@@ -18,6 +18,7 @@ related:
   - '[[2026-05-08-aeat-cli-hardening-w6-startup-import-error-exec]]'
   - '[[2026-05-08-aeat-cli-hardening-w7-config-doctor-exec]]'
   - '[[2026-05-08-aeat-cli-hardening-w7-version-surface-exec]]'
+  - '[[2026-06-04-aeat-cli-hardening-research]]'
 ---
 
 # `aeat-cli-hardening` feature index
@@ -50,3 +51,7 @@ Auto-generated index of all documents tagged with `#aeat-cli-hardening`.
 ### plan
 
 - `2026-05-08-aeat-cli-hardening-plan` - `aeat-cli-hardening` `Broad CLI Review And Backend Alignment` plan
+
+### research
+
+- `2026-06-04-aeat-cli-hardening-research` - `aeat-cli-hardening` research: `phase two research grounding`  ## Question  Which ADR-only feature finding needs an explicit research record so VaultSpec semantic search can brief future work from an evidence node instead of an orphaned decision?  ## Findings  This note is a Phase Two vault-curation grounding record. It does not introduce new runtime behavior, change accepted architecture, or supersede a deeper feature-specific research note.  The feature health check reported an ADR without a same-feature research document. The linked ADR records in frontmatter remain the decision sources; this research record makes the evidence path explicit and searchable.  Body wiki-links are intentionally avoided. The authoritative navigation edge is carried by frontmatter so body-link hygiene remains clean.  ## Recommendation  Keep this record as the active research bridge until a deeper feature-specific research document supersedes it and updates the related frontmatter on the ADR and index records.

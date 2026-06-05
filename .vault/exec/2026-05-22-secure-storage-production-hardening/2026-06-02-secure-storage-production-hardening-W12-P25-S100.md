@@ -6,7 +6,7 @@ date: '2026-06-02'
 step_id: 'S100'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
-  - '[[2026-06-02-secure-storage-production-hardening-W12-P25-S100-scanner-delta]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p25-s100-scanner-delta-audit]]'
 ---
 
 # W12.P25.S100 - active-profile runtime scanner delta

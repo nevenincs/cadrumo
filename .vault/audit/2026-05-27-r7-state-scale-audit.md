@@ -4,7 +4,6 @@ tags:
   - '#r7-state-scale'
 date: '2026-05-27'
 related:
-  - "[[2026-05-27-cli-testimonial-audit]]"
   - "[[2026-05-29-cross-domain-continuity-audit]]"
 ---
 

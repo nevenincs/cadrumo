@@ -24,5 +24,6 @@ Submodules
    aeat.domain.portals._categories
    aeat.domain.portals._codes
    aeat.domain.portals._errors
+   aeat.domain.portals._hosts
    aeat.domain.portals._metadata
    aeat.domain.portals._registry

@@ -6,6 +6,7 @@ date: '2026-06-03'
 related:
   - "[[2026-06-03-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
+  - '[[2026-06-04-bucket-sealed-archive-research]]'
 ---
 
 # `bucket-sealed-archive` adr: `Sealed-archive format for bucket export/import` | (**status:** `accepted`)

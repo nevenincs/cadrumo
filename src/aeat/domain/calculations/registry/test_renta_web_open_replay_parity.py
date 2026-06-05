@@ -23,6 +23,7 @@ from pathlib import Path
 import pytest
 
 from ....core.resources import bundled_path
+from ....tests.aeat_literal_fixtures import aeat_host
 from ._remote_state_guard import RemoteStateGuardPolicy, remote_state_policy_from_cross_reference
 from ._renta_web_open_oracle import (
     RentaWebOpenOracle,
@@ -33,6 +34,8 @@ from ._schema import LiveCrossReferenceDecision
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _REPLAY_DIR = bundled_path("corpus", "parity_replays", "renta_web_open")
+_SEDE_HOST = aeat_host("sede")
+_WWW2_HOST = aeat_host("www2")
 
 
 def _discovered_payloads() -> list[Path]:
@@ -47,7 +50,7 @@ def _open_simulator_policy() -> RemoteStateGuardPolicy:
         evidence_tier="executable_parity_evidence",
         surface="open_simulator",
         guard_policy_id="modelo-100-renta-web-open-read-only",
-        allowed_hosts=("sede.agenciatributaria.gob.es", "www2.agenciatributaria.gob.es"),
+        allowed_hosts=(_SEDE_HOST, _WWW2_HOST),
         allowed_methods=("GET", "POST"),
         forbidden_actions=(
             "authenticated-renta-web",

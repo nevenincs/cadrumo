@@ -6,6 +6,10 @@ date: '2026-06-01'
 tier: L3
 related:
   - '[[2026-05-30-docs-architecture-plan]]'
+  - '[[2026-05-30-docs-architecture-research]]'
+  - '[[2026-06-01-docs-educational-surface-adr]]'
+  - '[[2026-06-04-docs-navigability-adr]]'
+  - '[[2026-06-04-docs-navigability-research]]'
 ---
 
 

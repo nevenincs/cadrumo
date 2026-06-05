@@ -47,15 +47,4 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
-    (
-        "aeat.apidocs.manager.ApiDocsError",
-        ErrorCode(
-            code="ERROR_APIDOCS",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_apidocs",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
 )

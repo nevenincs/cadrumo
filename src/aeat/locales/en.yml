@@ -991,6 +991,8 @@ application:
         in {final_stage} state, not ABORTED.'
       resume_refused_terminal_reason: Workflow run {run_id} aborted for {reason},
         which is terminal by design and may not be resumed.
+      resume_run_ambiguous: More than one workflow run matches modelo {modelo}
+        period {period}. Choose an exact workflow run id. {candidates}
       run_id_invalid_blank: Run identifier must not be blank.
       run_id_invalid_separators: Run identifier must not contain path separators.
       run_not_found: 'Workflow run not found: {run_id}.'

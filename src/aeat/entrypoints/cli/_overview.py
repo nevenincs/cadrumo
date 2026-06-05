@@ -433,7 +433,7 @@ def overview_agenda(
         horizon_days=horizon_days,
         raw_values=raw_values,
     )
-    if not agenda.taxpayer_model_declared:
+    if not agenda.taxpayer_model_declared and not allow_incomplete:
         raise _bad(agenda.incomplete_reason or tr("cli.overview.taxpayer_model_undeclared"))
     if agenda.warnings and not allow_incomplete:
         warning_summary = ", ".join(warning.code for warning in agenda.warnings)

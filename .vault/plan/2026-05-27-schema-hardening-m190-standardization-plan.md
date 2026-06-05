@@ -6,10 +6,10 @@ date: '2026-05-27'
 tier: L2
 related:
   - '[[2026-05-26-schema-hardening-m130-standardization-plan]]'
-  - '[[2026-05-26-schema-hardening-m130-standardization-review]]'
+  - '[[2026-05-26-schema-hardening-m130-standardization-review-audit]]'
+  - '[[2026-05-18-schema-hardening-adr]]'
+  - '[[2026-05-18-schema-hardening-research]]'
 ---
-
-
 # `schema-hardening` `m190-standardization` plan
 
 ### Phase `P01` - M190 single-revision directory standardization

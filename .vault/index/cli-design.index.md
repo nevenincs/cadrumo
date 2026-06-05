@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#cli-design'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-05-12-cli-design-research]]'
 ---

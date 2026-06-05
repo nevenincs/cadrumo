@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#profile-output-language'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-05-13-profile-output-language-review-audit]]'
 ---
@@ -16,4 +16,4 @@ Auto-generated index of all documents tagged with `#profile-output-language`.
 
 ### audit
 
-- `2026-05-13-profile-output-language-review` - `profile-output-language` Code Review
+- `2026-05-13-profile-output-language-review-audit` - `profile-output-language` Code Review

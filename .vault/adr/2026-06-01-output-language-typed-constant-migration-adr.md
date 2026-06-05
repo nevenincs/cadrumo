@@ -6,13 +6,9 @@ date: '2026-06-01'
 related:
   - "[[2026-06-01-registry-period-code-union-cli-boundary-adr]]"
   - "[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]"
+  - '[[2026-06-04-output-language-typed-constant-migration-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `output-language-typed-constant-migration` adr: tighten OutputLanguage consumers to the typed StrEnum | (**status:** `accepted`)
 

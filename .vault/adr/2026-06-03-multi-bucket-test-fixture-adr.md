@@ -6,6 +6,7 @@ date: '2026-06-03'
 related:
   - "[[2026-06-03-cli-workflow-redesign-adr]]"
   - "[[2026-06-03-bucket-sealed-archive-adr]]"
+  - '[[2026-06-04-multi-bucket-test-fixture-research]]'
 ---
 
 # `multi-bucket-test-fixture` adr: `Multi-bucket test fixture for active-vs-target operator scenarios` | (**status:** `accepted`)

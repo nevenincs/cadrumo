@@ -5,7 +5,7 @@ tags:
 date: '2026-05-21'
 related:
   - '[[2026-05-21-fresh-cli-persona-testimonial-wave-plan]]'
-  - '[[2026-05-21-fresh-cli-persona-testimonial-briefs]]'
+  - '[[2026-05-21-fresh-cli-persona-testimonial-briefs-audit]]'
 ---
 
 # Fresh CLI persona testimonials

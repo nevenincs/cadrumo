@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#notifications-inbox'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-12-notifications-inbox-adr]]'
   - '[[2026-04-12-notifications-inbox-phase1-summary-exec]]'

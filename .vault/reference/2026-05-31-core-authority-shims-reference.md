@@ -12,7 +12,7 @@ related:
 Module(s): src/aeat/core/, src/aeat/application/, src/aeat/adapters/,
            src/aeat/entrypoints/, src/aeat/domain/
 File(s):   see per-category listings below
-Related:   [[2026-05-30-identity-primitives-adr]]
+Related:   `2026-05-30-identity-primitives-adr`
 
 ## Category 1 - Private-name re-aliases
 

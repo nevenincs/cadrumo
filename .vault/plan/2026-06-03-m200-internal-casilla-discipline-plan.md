@@ -10,15 +10,6 @@ related:
   - '[[2026-06-02-modelo-200-base-determination-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `m200-internal-casilla-discipline` `Modelo 200 internal-only casilla discipline: schema field, gate exemption, bin-aplicada-maxima migration` plan
 

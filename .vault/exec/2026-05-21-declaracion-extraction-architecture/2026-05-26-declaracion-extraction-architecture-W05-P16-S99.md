@@ -4,7 +4,7 @@ date: '2026-05-26'
 step_id: 'W05.P16.S99'
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-plan]]'
-  - '[[2026-05-22-declaracion-extraction-architecture-W04-P08-S86-W04-P09-S27-W04-P10-S29-W05-P11-S37-S95]]'
+  - '[[2026-05-22-declaracion-extraction-architecture-w04-p08-s86-w04-p09-s27-w04-p10-s29-w05-p11-s37-s95-exec]]'
 ---
 
 # W05.P16.S99 - historical pre-2025 Modelo 037 decision

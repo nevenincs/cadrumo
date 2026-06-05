@@ -94,6 +94,11 @@ from ._recargo_equivalencia import (
     load_recargo_rates,
     recargo_rate_for,
 )
+from ._saturation import (
+    IvaRateResolution,
+    resolve_category_rate,
+    split_gross_at_rate,
+)
 from ._schema import (
     EUMemberState,
     IvaCatalogue,
@@ -136,6 +141,7 @@ __all__ = [
     "IvaRateNotFoundError",
     "IvaRateOverlapError",
     "IvaRateRecord",
+    "IvaRateResolution",
     "IvaRegulation",
     "IvaSettlementSide",
     "IvaTerritorialScope",
@@ -176,7 +182,9 @@ __all__ = [
     "regime_allows_deduction",
     "requires_sectoral_separation",
     "resolve_catalogue",
+    "resolve_category_rate",
     "settlement_sides_for_flow",
+    "split_gross_at_rate",
     "sum_deductible_amounts",
     "validate_prorrata_reference",
     "verify_catalogue",

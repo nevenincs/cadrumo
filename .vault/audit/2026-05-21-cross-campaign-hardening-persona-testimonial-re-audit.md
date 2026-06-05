@@ -2,12 +2,11 @@
 tags:
   - '#audit'
   - '#cross-campaign-hardening'
-  - '#cli-testimonial'
 date: '2026-05-21'
 related:
   - '[[2026-05-21-cross-campaign-hardening-plan]]'
-  - '[[2026-05-21-persona-fleet-bug-inventory]]'
-  - '[[2026-05-21-persona-fleet-round2-findings]]'
+  - '[[2026-05-21-persona-fleet-bug-inventory-audit]]'
+  - '[[2026-05-21-persona-fleet-round2-findings-audit]]'
 ---
 
 # Cross-campaign hardening persona-testimonial re-audit

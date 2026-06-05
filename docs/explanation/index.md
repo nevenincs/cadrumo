@@ -1,174 +1,129 @@
 # Understanding the AEAT pipeline
 
-## What this explanation covers
+This page explains the conceptual design of the `aeat` application and the mental model behind its operation. Read it to understand how the system manages tax data and why it is structured this way. For guided step-by-step instructions, see the [getting-started guide](../getting-started.md) or the [Tutorial](../tutorials/index.md). For task-focused recipes, refer to the [how-to guides](../how-to/index.md).
 
-This page explains how the `aeat` tool is shaped and why it works the way it does. Read it to build a mental model of the pipeline before you use the tool. To set up a profile and run your first filing end to end, follow the [getting-started guide](../getting-started.md). For task-focused recipes - a specific import, a single modelo, a one-off repair - see the [how-to guides](../how-to/index.md).
+`aeat` is a local-first helper for self-employed individuals (*autónomos*) who file their own taxes in Spain. It runs entirely on your local machine to help you prepare your declarations before you submit them to Spain's tax agency, the *Agencia Estatal de Administración Tributaria* (AEAT). The application does not connect to the AEAT to file on your behalf; live submission is permanently excluded from the system by design. You prepare and verify your files locally, and then you upload the completed file yourself.
 
-`aeat` is a local-first assistant for self-employed individuals (autónomos) filing taxes with Spain's tax authority, the Agencia Estatal de Administración Tributaria (AEAT). It runs entirely on your machine. It builds, validates, and exports filings for you to file yourself with the AEAT. It never submits anything on your behalf. Live submission to the AEAT is permanently forbidden by design. The tool prepares the work; the human files outside the application. That boundary explains many of the choices that follow.
+---
 
-The surface divides into two top-level command families. The `config` family covers everything local to your setup: profile creation, authentication, diagnostics, and repair. The `app` family covers the actual tax work, grouped into six areas:
+## Conceptual Vocabulary
 
-- `overview` shows your workspace and filing calendar.
-- `ledger` handles bank imports and transaction review.
-- `modelo` holds the catalogue of AEAT tax forms (each a numbered filing form) and the work units built from them.
-- `live` observes AEAT data in a read-only way and never writes to it.
-- `registry` holds the local AEAT reference data.
-- `review` surfaces the items that need your attention.
+Spanish tax administration uses specific terms that define how data is structured and filed. The application reflects these terms directly:
 
-The two command roots serve two different questions: `config` answers "is this machine ready?" and `app` answers "what's my tax situation?"
+- **Modelo**: An official Spanish tax form or declaration sheet, identified by a specific number. For example, *Modelo 130* is the quarterly income tax installment, and *Modelo 303* is the quarterly VAT declaration.
+- **Casilla**: An individual numbered box or field on the official tax form (for example, box `01` or box `02`). Each box represents a specific type of income, expense, base, or tax rate.
+- **Autónomo**: A self-employed worker, sole proprietor, or freelancer registered in Spain who is subject to quarterly and annual tax declarations.
+- **AEAT**: The *Agencia Estatal de Administración Tributaria* (often called *Hacienda*), the public agency responsible for tax collection in Spain.
+- **BOE / Fichero-BOE**: The *Boletín Oficial del Estado* (Official State Gazette) publishes the official technical layouts for electronic tax filings. A *fichero-BOE* is a formatted text file that conforms strictly to these official layout rules, which is the only format the AEAT portal accepts for direct file uploads.
 
-Underneath those commands runs a single conceptual flow. You set up a profile, import your bank data into the ledger, review and classify the transactions, open a tax-form work unit and calculate it, then check the result against your workspace status. That progression - profile, import, review, calculate, verify - is the pipeline this page sets out to explain. It is a way of thinking about the tool, not a fixed sequence of commands. The rest of this explanation walks through each stage and the reasoning behind it.
+---
 
-Across every stage, a few traits hold. Each operational command works locally and never contacts the AEAT, so exploring it has no effect on your tax account. Every command returns a structured result, and the JSON output is the precise machine contract when you want to feed results into other tools. The command line itself is a thin layer: it reads your input, calls the tax logic underneath, and renders the answer. The real work lives in the application core, which keeps the tax reasoning independent of how you happen to invoke it. If you want to look up the legal references behind a modelo while you work, the `app registry citations` surface inspects the local legal-norm corpus.
+## The Two-Surface Mental Model: Config and App
 
-## How the pipeline works
+The application divides operations into two distinct surfaces to keep your workspace clear and separate your setup from your day-to-day tax work. There is no third surface.
 
-The tool moves your tax data through one continuous chain: raw transactions become classified ledger entries, those entries become casilla values (values for each numbered box on the official tax form) through a registry-driven calculation, and the calculation becomes a modelo you can validate, verify, and export. Every verb in this chain lives under `aeat app`. The chain ends at a local file. It never touches the AEAT portal.
+### Configuration Surface (`config`)
 
-### Transactions become classified ledger entries
+The configuration surface covers one-time or infrequent setup tasks. It answers the question: *Is this machine and environment ready?*
+It manages:
+- **Taxpayer Profiles**: Creating and switching between saved identities, which
+  hold the taxpayer's DNI, NIE, NIF, or CIF, plus their name and tax region.
+- **Authentication**: Managing the digital certificates used to download tax facts.
+- **Data Buckets**: Configuring the secure local directories where your data is stored.
+- **Diagnostics and Repair**: Checking setup integrity and restoring storage when needed.
 
-The ledger is where your money movements enter the tool. Use `aeat app ledger add` to record a transaction, then `aeat app ledger classify` to assign it a tax category. Classification turns a bare amount into something a modelo can read: a categorized entry carries the meaning the calculation needs, not just a number and a date. Where a transaction mixes business and personal use, `aeat app ledger allocate` records the split that the calculation later applies.
+### Application Surface (`app`)
 
-Before any of this feeds a tax form, the ledger has to be ready. `aeat app ledger preflight` and `aeat app ledger check` inspect the entries for a period and report what's incomplete. This is the first half of validation, on the input side. It confirms the raw material is sound before the calculation runs.
+The application surface is your daily workspace. It answers the question: *What is my tax situation?*
+It is organized into six functional areas:
+- **Overview**: Summarizing the active workspace status and the upcoming filing calendar.
+- **Ledger**: Managing imported bank statements, manual transactions, and classifications.
+- **Modelo**: Inspecting the catalogue of supported tax forms and managing individual work units.
+- **Live**: Inspecting your registered tax facts on the AEAT portal in a strictly read-only way.
+- **Registry**: Browsing local legal references, tax formulas, and official manuals.
+- **Review**: Listing entries, status markers, or warnings that need your manual attention.
 
-### Ledger entries become casilla values
+---
 
-A modelo calculation anchors on a *work unit* - a record keyed by modelo, year, period, and revision. Create one with `aeat app modelo work create`. The key is the identity of the calculation: ask for the same four values twice and you get the same work unit back, so repeated requests never fork into duplicate drafts.
+## The Data Pipeline: From Transactions to Export
 
-The registry is the authority behind the calculation. It defines each modelo's casillas, the bindings that say which ledger entries and profile facts feed each box, and the formulas that compute the rest. Read this authority directly with `aeat app modelo describe`, `aeat app modelo casillas`, `aeat app modelo bindings list`, and `aeat app modelo formulas`, which surfaces the legal and source references behind each value.
+Your financial records move through a one-way pipeline where data is gradually validated, combined, and structured into an official return format.
 
-Running `aeat app modelo work calculate` against the work unit applies that registry definition. It pulls your classified ledger entries and profile facts through the bindings, evaluates the formulas, and produces a casilla value for every box on the form. The result is saved as a draft revision - the tool names this lifecycle state `borrador` (draft). Each draft is identified by its own content hash. A draft is a candidate, not a finished filing. Each calculation persists a new draft, so recalculate as your inputs change and keep a history of what produced what.
+```mermaid
+graph TD
+    A["Raw Transactions\n(Bank Statements)"] --> B["Ledger Entries\n(Classified & Allocated)"]
+    B --> C["Casilla Observations\n(Formulas & Bindings)"]
+    C --> D["Filing Draft\n(Borrador State)"]
+    D --> E["Verification Gate\n(Rules Validation)"]
+    E --> F["Verified return\n(Local Export File)"]
+```
 
-### A draft becomes a verified modelo
+### Transactions Become Classified Ledger Entries
 
-`aeat app modelo work verify` is the formal validation gate. It checks a draft revision against the verified-complete contract: every required input present, every blocking condition cleared. If the draft passes, the tool promotes it to the verified-complete state (`VERIFICADO_COMPLETO`) and records a structured verification report you can read with `aeat app modelo verification-report view`. If it doesn't pass, the draft stays exactly as it was, the report names the missing inputs or blocking findings, and the command exits with an error so an automated run can't mistake a refusal for success.
+The ledger is the repository for your financial transactions. Importing raw bank records or entering transactions manually is the first step. By itself, a bank transaction is just an amount and a date; it has no tax meaning.
 
-Verification joins the ledger-side readiness checks to the formal contract. The preflight confirmed the inputs; the verify gate confirms the assembled form. Only a revision that clears this gate is fit to leave the tool.
+To make these records ready for tax calculations, they must be:
+- **Classified**: Assigned to a specific tax category (such as business income or specific expense types).
+- **Allocated**: Adjusted for business proportion when a transaction is partially personal (such as home internet or telephone bills).
 
-### A verified modelo becomes a local file
+The ledger includes readiness checks (such as preflights) that verify whether your records are complete and categorized for a given tax period. This ensures that the raw material is sound before calculation begins.
 
-Optionally mark a verified revision as filed with `aeat app modelo work file`, which moves it to the filed state (`PRESENTADO`) and records a filing record. Filing is an internal state transition. It marks the revision as the one you intend to submit and nothing more. It does not contact AEAT and does not submit anything. Inspect the record later with `aeat app modelo filing-record view`.
+### Ledger Entries Become Casilla Values
 
-The artefact you actually submit comes from `aeat app modelo export`. Export writes a verified or filed revision to a local fichero-BOE file - the fixed-width submission format AEAT accepts, named after the Boletín Oficial del Estado (BOE) file-format convention - and records that the export happened. By default it picks the most recent filed (`PRESENTADO`) revision, or the most recent verified (`VERIFICADO_COMPLETO`) one if nothing is filed yet. A work unit with no verified revision can't be exported; the tool refuses and points you back to verify first. A raw draft never reaches this stage.
+Calculations are anchored to a **work unit**, which represents a specific tax return identified by its form type (*modelo*), filing year, period, and rules revision.
 
-Every step along the chain reports through the same dual envelope: human-readable text lines for you to scan, and a typed payload for any program that consumes the output. That payload carries the casilla observations and their legal provenance, not just the flat numbers, so the *why* behind each value travels with it from the registry all the way to the export.
+The calculation process is governed by the **registry**, which is the compiled database of official tax rules. The registry contains:
+- **Casilla Definitions**: The properties and numbering of each form box.
+- **Bindings**: Rules that specify how profile facts (like your tax region) and ledger aggregates (like total quarterly business expenses) map to specific boxes.
+- **Formulas**: Mathematical relationships that compute totals, bases, and final tax results.
 
-### Where the tool stops
+When you run a calculation, the engine pulls your classified ledger entries and profile settings through these bindings, applies the formulas, and produces a value for each box (*casilla*). The resulting return is saved in the draft (`borrador`) state, identified by a unique content hash. You can recalculate as often as needed; each calculation creates a new draft without modifying previous ones.
 
-The chain is build, validate, verify, and export, then it stops. The tool produces the file; it never uploads it. Live submission to AEAT is permanently outside its boundary by design. When the export is on disk, the final move is yours: you upload the fichero-BOE file to the AEAT portal yourself. Everything before that point is local, repeatable, and fully under your control.
+### A Draft Becomes a Verified Modelo
 
-## Why the app never files for you
+Before a draft can leave the system, it must pass a strict verification gate. The verification process checks the return against all completeness rules defined in the registry. It ensures that:
+- Every required input is present.
+- Calculations are mathematically consistent.
+- No blocking conditions (such as missing profile facts or invalid taxpayer combinations) are violated.
 
-The tool is built to stop short of the one action that matters most: it never submits anything to the AEAT. That is a deliberate design choice, enforced in code, not a configuration you happened to leave switched off. Understanding where that line sits, and what the tool does instead, explains most of how the pipeline behaves.
+If the draft is complete and passes all checks, it is promoted to the verified-complete (`VERIFICADO_COMPLETO`) state, and a detailed verification report is saved. If any check fails, the return remains a draft, the report lists the specific issues, and the validation utility exits with an error code to prevent any automated system from using an incomplete draft.
 
-### The safety gate is permanent, not optional
+### A Verified Modelo Becomes a Local File
 
-Two boundaries separate the tool from the AEAT, and they behave differently.
+Once a return is verified, you can perform two final actions:
+- **Internal Filing**: You can optionally mark the return as filed (`PRESENTADO`) in your local history. This is a local bookkeeping marker to record that you have completed this return. It does not contact the tax agency or submit the return.
+- **Exporting**: The final step is exporting the return to a local *fichero-BOE* file. The export utility formats the verified or filed return into the official fixed-width text format required by the AEAT.
 
-Live writes to the AEAT are permanently refused. Any code path that would submit, mutate, or file remotely hits a single gate that always raises a typed refusal. There is no flag, environment variable, or setting that turns it on. This is the current, deliberate policy, grounded in the project's safety and legal rules; it would take a future, explicit decision to change it.
+At this point, the application's role is complete. You take the exported file and upload it to the official AEAT electronic filing portal yourself.
 
-Live reads from the AEAT are also off by default, but they have a narrow opt-in. Until you set `AEAT_LIVE_TESTS_ENABLED` to `1`, the tool never contacts the AEAT, even to read. Reads stay off until you deliberately enable them. The write side has no such switch.
+---
 
-When live reads are enabled, the only paths that reach the AEAT are capture verbs under `aeat app live` - pulling filed declarations, notifications, case files (expedientes), or wallet data. Every one is read-only and prints a safety preflight before it runs. No verb anywhere in the tool performs a filing or any other write to the AEAT.
+## Why the Application Never Files for You
 
-### What `verify` does, and what it does not promise
+The local-first design of the application establishes a clear safety boundary: it helps you organize, calculate, and verify your taxes on your machine, but the final submission is entirely in your hands.
 
-`aeat app modelo work verify` checks a draft revision against the registry's verified-complete contract. On success, the revision moves to the `VERIFICADO_COMPLETO` state and the tool returns a structured report. On failure, the revision is left untouched, the report lists the missing casillas and blocking findings - each carrying its legal references and source references - and the command exits with a non-zero status.
+### Permanent safety gates
 
-The guarantee is narrow and worth stating plainly. `verify` confirms that the draft satisfies the registry's internal completeness contract. It does not contact the AEAT, does not file, and does not check the draft against any AEAT submission endpoint. A verified-complete revision means the tool's own rules are satisfied, not that the AEAT will accept the filing. Treat the green result as "this draft is internally consistent and complete," and nothing more.
+The application enforces this boundary through two separate access levels:
 
-One note to avoid confusion: `aeat app live verify` is a separate read-only audit log for tax-identity (NIF, Número de Identificación Fiscal) and VAT-information (VIES, VAT Information Exchange System) checks. The completeness check described here is `aeat app modelo work verify`, under the `work` subgroup.
+1. **Writes are permanently blocked**: There is no code path or configuration option that allows the application to submit returns, register files, or modify data on the AEAT portal. The write boundary is an absolute, code-enforced gate that cannot be bypassed.
+2. **Reads require authentication**: The application can read tax facts from the AEAT portal, such as downloading your registered census data, for display and comparison. These operations require configured AEAT authentication and remain strictly read-only.
 
-### `file` is a local lifecycle state, not a submission
+### Meaning of "Verify" and "File"
 
-`aeat app modelo work file` reads as though it sends the return. It does not. The verb marks a verified revision as internally filed and says so in its own output, which appends a line stating that the action is internal only and does not submit to the AEAT. "Filed," in this tool, is a local lifecycle state, a record that you consider the revision final, and never a remote action.
+Because the system operates locally, these verbs have specific local meanings:
+- **Verify**: Confirms that the return is internally consistent and complete according to the rules compiled in the registry. It does not test the return against the AEAT portal or guarantee that the tax agency will accept the file.
+- **File**: A local status change that marks the return as final in your history, ensuring it cannot be accidentally modified or recalculated. It is a local archival label, not an external submission.
 
-### The hand-off boundary
+---
 
-Because the tool never submits, the real hand-off is an artefact you take elsewhere. `aeat app modelo export` writes a verified or filed revision to a local AEAT-compatible fichero-BOE file and records the operation, the output path, the byte size, and a SHA-256 of the file. It is local-only and never contacts the AEAT. That file is what you submit yourself, through the AEAT's own channels, outside this tool.
+## Tracing Numbers Back to the Law
 
-The closest the tool comes to confirming that the AEAT agreed with your figures is `aeat app modelo reconcile`, which compares a work unit against an AEAT filing-receipt PDF (justificante) you already obtained. It works on evidence you supply, not a live call, so reconciliation stays local. Together, export and reconcile frame the tool's role precisely: it builds, validates, and records the evidence; the filing itself stays in your hands.
+Tax compliance requires absolute auditability. You must be able to explain exactly where every number on your tax return comes from.
 
-## How every number cites its source
+To achieve this, the calculation engine attaches a three-part provenance record to every box (*casilla*) value:
+- **Legal References (`legal_refs`)**: The specific articles of the Spanish law (such as the *Ley del IRPF* or *Ley del IVA*) or ministerial orders that establish the tax rule.
+- **Source References (`source_refs`)**: The sections in the official AEAT manuals or publications that explain the box's purpose.
+- **Formula ID (`formula_id`)**: The identifier of the specific registry formula that calculated the value.
 
-Trust in a tax calculation comes from one thing: the ability to trace every figure back to the law that produced it. The AEAT pipeline builds that traceability into every number it computes. When you calculate a draft revision, the tool does not hand you a bare amount. It hands you the amount together with the legal reference that grounds it.
-
-That grounding travels as a three-part triple attached to each casilla:
-
-- `legal_refs` - the BOE and AEAT legal references behind the value.
-- `source_refs` - the registry provenance that records where the value came from.
-- `formula_id` - the registry formula that computed the value.
-
-These three fields originate in the modelo registry, not in the calculation code. The tool surfaces the grounding the registry declares; it never invents a legal reference. Tax semantics stay anchored to BOE and AEAT authority, never to operator preference.
-
-Run `aeat app modelo work calculate <work_unit_id>` and the result returns in two parallel forms. A flat `casilla_values` map pairs each casilla with its value for quick human reading, led by a registry-declared result summary so the headline figure to pay or to refund sits above the full casilla dump. Large forms like Modelo 100 carry thousands of casilla rows, so the typed list scales where hand-tracing cannot. Underneath the convenience view runs the contract: a typed `observations` list where each entry carries the casilla, its value, its `formula_id`, its operands, its `legal_refs`, and its `source_refs`. The flat view is for reading. The typed list is the proof.
-
-Every casilla emits an observation, not only the computed ones. An input casilla and a bound casilla each carry `legal_refs` and `source_refs` pulled from the registry casilla definition. A casilla with no `formula_id` is not a number without provenance; it is a value whose grounding is the casilla definition rather than a formula. Nothing reaches the persisted revision stripped of its regulatory signal.
-
-The same provenance contract holds across every calculation surface: re-inspecting a stored revision, listing registry formulas, reading a verification report, comparing year-over-year deltas, or projecting a year-end estimate all return the same `formula_id`, `legal_refs`, and `source_refs` triple. For per-command flag detail - including when `--explain` surfaces reference columns and when `--json` returns the complete unfiltered envelope - see the [generated CLI reference](../cli/index.rst).
-
-Text mode gates some of this grounding for readability: `formulas` hides the reference columns until you pass `--explain`, and `verify` prints reference lines only for findings that carry them. The JSON envelope behind `--json` does not gate anything. The typed observation list, with its `legal_refs` and `source_refs`, is always present there. The JSON is the complete contract; the text and flat views are the human-readable convenience laid over it.
-
-This is why the operator can defend the output. Any figure traces back through its `formula_id` to a registry formula, and through its `legal_refs` to a BOE or AEAT reference. The tool builds, calculates, verifies, and exports - it never files anything with AEAT - and every number it produces returns the evidence that grounds it.
-
-## The two-surface mental model: config and app
-
-The `aeat` tool organizes everything you do into two top-level surfaces, and that split is the first thing worth understanding. Type `aeat config` for setup and local state. Type `aeat app` for tax work. There is no third surface, and that is a deliberate architectural rule, not an accident of the current version.
-
-The two surfaces answer two different questions. `aeat config` answers "is this machine ready?" - it owns profile setup, authentication, the buckets that hold your local data, diagnostics, and repair. `aeat app` answers "what's my tax situation?" - it owns your overview, your ledger, the modelos you file, the registry that grounds those filings, and the review step before anything leaves your hands. You configure once and rarely; you work in the app continually. Keeping the two apart means the commands you reach for every day aren't tangled with the commands you ran once during onboarding.
-
-Run `aeat` with no subcommand and the tool shows a landing card instead of an error. The card lists the surfaces - `config` plus the six app areas (overview, ledger, live, modelo, registry, review) - under "Main sections," states its purpose - a local-first Spanish tax workflow for autónomos - and points you at `aeat --help`, `aeat config --help`, and `aeat app --help` for the next level of detail. The landing card is the map; the two `--help` views are the two territories.
-
-### Why the surfaces are thin
-
-Neither surface contains tax logic. Every command is a thin transport: it gathers your input, hands it to the application behind the tool, and renders what comes back. Validation, calculation, schema decisions, and persistence all live behind that boundary, expressed as typed records rather than loose values. This matters for how you read the rest of these docs. When a command refuses an input or revises a number, the command didn't decide that - the application did, on regulatory grounds, and the command is reporting the decision. The two surfaces are entry points into that backend, not the backend itself.
-
-### Why the CLI speaks your language but these docs are English
-
-The tool talks to you in the language you configure. Help text, prompts, the landing card, and error messages are all localized. Four output languages ship today: Spanish, English, Catalan, and Hungarian. A clean install with no profile and no override speaks Spanish, because the audience is Spanish autónomos and their advisors. To change the output language for a session, pass the `--language` flag before the subcommand; the [CLI reference](../cli/index.rst) documents the accepted values and placement rule.
-
-These Explanation docs, by contrast, are written and maintained in English. The localized CLI serves the operator at the keyboard in their own language; the English docs serve a narrower, more technical reader who wants the conceptual picture and is comfortable in English.
-
-One detail reinforces the split. The localized text is output only, and not everything the tool prints is output for a human. Run `aeat --version` and you get a bare machine line like `aeat 1.2.3`. It is left untranslated because tooling and continuous integration (CI) read it, not people. The tool draws a clean line between prose meant for you and data meant for a machine, and that same instinct separates the localized CLI from these English docs.
-
-## How the pieces fit together
-
-The `aeat` tool has exactly two top-level command roots, and knowing which one you're in explains almost everything about what a command does.
-
-- `aeat config` manages local state: profiles, authentication, Google sync, and repair or diagnostics.
-- `aeat app` does the operational tax work, grouped into six subgroups: overview, ledger, live, modelo, registry, and review.
-
-Every `aeat app` command operates on the active profile bucket. Create and activate a profile before any app work, or most app verbs refuse with a message explaining that no active profile resolves. Profile creation, profile import, and `aeat config repair` are the exceptions: they run without an active profile so you can bootstrap a fresh setup.
-
-### The conceptual progression
-
-The pipeline moves through four connected concerns, each building on the previous. Understanding why they are ordered this way is more useful than memorising the commands themselves - for the actual step-by-step procedure, follow the [getting-started guide](../getting-started.md) or the [tutorials](../tutorials/index.md).
-
-The first concern is the **profile**: your taxpayer identity, authentication credentials, and the storage bucket where all later work is saved. Nothing else in the tool can run until a profile is created and activated. This is a one-time setup step, not a recurring task, which is why all profile operations live under `aeat config` rather than `aeat app`.
-
-With a profile in place, the second concern is the **ledger**: the running record of your financial transactions. Transactions enter the tool, get classified by tax category, and optionally get split across business and personal proportions. The ledger is the raw material; it needs to be sound before a modelo calculation can trust it. Readiness commands like `aeat app ledger preflight` exist specifically to surface gaps before you reach the calculation stage, not after.
-
-The third concern is the **modelo lifecycle**: taking a single tax form through the states from draft to export. A work unit identifies the combination of form, year, period, and revision you intend to file. Calculating it produces a draft (borrador). Verifying it checks the draft against the completeness contract and, on success, moves it to the verified-complete state. Marking it filed (PRESENTADO) records your intention. Exporting it writes the fichero-BOE file to disk. Each state transition moves in one direction - you always move forward through the lifecycle - which is why verification is a gate rather than a hint.
-
-The fourth concern is the **cross-cutting view**: the tools that show where you stand across all modelos and periods at once. Overview, review, and registry surfaces exist alongside the lifecycle commands, not only after them. They answer questions like "which forms apply to me?" and "what still needs attention?" at any point in the work.
-
-### Where the tool stops
-
-The tool builds, validates, verifies, and exports. It never submits to AEAT.
-
-`aeat app modelo work file` only records an internal filed state - its own help says it "Does NOT submit to AEAT." `aeat app modelo export` writes a fichero-BOE file to local disk and "never contacts AEAT." You perform the actual submission outside the tool, using the exported file. This boundary is deliberate and enforced by the project's safety rules.
-
-The one place the tool reaches out to AEAT is the `aeat app live` subgroup, and that path is read-only. Commands such as `aeat app live filed capture` read observations from AEAT into your local profile. They never file, mutate, or submit anything remotely.
-
-### Understanding why a modelo applies
-
-When you want to know why the tool thinks a form applies to you, run `aeat app overview explain MODELO`. It decomposes a modelo's applicability against the active profile, surfacing the applicable flag, the registry-backed rationale, and the profile facts the decision depends on. Like the rest of the overview group, it's local-only and never contacts AEAT.
-
-### Where to go next
-
-This section explains how the pieces relate. Two other documents take you further:
-
-- To run the pipeline end to end, follow the [getting-started guide](../getting-started.md).
-- To look up any single command - its flags, output schema, and exit codes - read the [generated CLI reference](../cli/index.rst).
-
-Help text renders in English in the reference. The running tool honors `--language` (es, en, ca, or hu), so your terminal output can differ from the documented examples.
+When you run a calculation, the application returns these details alongside the values. This provenance is preserved through every step of the pipeline. It is saved in the draft revision, written to the verification report, and included in the machine-readable output. This ensures that the legal and logical explanation for every figure stays bound to the data from the registry to the exported file.

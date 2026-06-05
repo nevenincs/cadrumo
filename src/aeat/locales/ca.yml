@@ -1062,6 +1062,9 @@ application:
         en estat {final_stage}, no ABORTED.'
       resume_refused_terminal_reason: L'execució {run_id} es va avortar per {reason},
         que és terminal per disseny i no es pot reprendre.
+      resume_run_ambiguous: Més d'una execució de flux de treball coincideix amb
+        el model {modelo} període {period}. Trieu un id d'execució exacte.
+        {candidates}
       run_id_invalid_blank: L'identificador d'execució no pot estar en blanc.
       run_id_invalid_separators: L'identificador d'execució no ha de contenir separadors
         de ruta.

@@ -15,6 +15,7 @@ Subpackages
 
    aeat.application.aggregation
    aeat.application.auth
+   aeat.application.bucket_maintenance
    aeat.application.calculations
    aeat.application.evidence
    aeat.application.export

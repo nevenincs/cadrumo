@@ -7,23 +7,10 @@ related:
   - "[[2026-06-02-ledger-operator-hardening-adr]]"
   - "[[2026-05-08-ledger-renta-pipeline-adr]]"
   - "[[2026-05-14-ledger-transaction-lifecycle-adr]]"
+  - '[[2026-06-04-modelo-filing-ledger-snapshot-research]]'
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #adr) and one feature tag.
-     Replace modelo-filing-ledger-snapshot with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar]]'.
-
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `modelo-filing-ledger-snapshot` adr: `modelo filing revisions are backed by an immutable ledger snapshot` | (**status:** `accepted`)
 

@@ -8,6 +8,7 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr]]"
   - "[[2026-05-28-financial-provider-extraction-discipline-adr]]"
   - "[[2026-05-21-declaracion-extraction-architecture-adr]]"
+  - '[[2026-06-04-purchase-invoice-ocr-extraction-discipline-research]]'
 ---
 
 

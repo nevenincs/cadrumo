@@ -128,8 +128,8 @@ See Module(s) above. All file:line coordinates are in the inventory table.
 
 ## Related
 
-- [[2026-05-30-identity-primitives-adr]]
-- [[2026-05-30-identity-primitives-reference]]
+- `2026-05-30-identity-primitives-adr`
+- `2026-05-30-identity-primitives-reference`
 
 ---
 

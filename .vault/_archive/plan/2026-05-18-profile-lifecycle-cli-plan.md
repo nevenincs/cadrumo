@@ -12,6 +12,8 @@ related:
   - '[[2026-05-14-profile-bucket-lifecycle-adr]]'
   - '[[2026-05-14-secure-backend-passkey-custody-adr]]'
   - '[[2026-05-17-per-bucket-sqlite-cascade-audit]]'
+  - '[[2026-06-04-profile-lifecycle-cli-adr]]'
+  - '[[2026-06-04-profile-lifecycle-cli-research]]'
 ---
 
 

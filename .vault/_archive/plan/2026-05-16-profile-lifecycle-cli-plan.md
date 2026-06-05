@@ -12,6 +12,7 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr]]'
   - '[[2026-05-14-secure-backend-passkey-custody-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]'
+  - '[[2026-06-04-profile-lifecycle-cli-research]]'
 ---
 
 

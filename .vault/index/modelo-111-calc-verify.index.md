@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#modelo-111-calc-verify'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-27-modelo-111-calc-verify-adr]]'
   - '[[2026-04-27-modelo-111-calc-verify-plan]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#modelo-111-calc-verify`.
 
 ### adr
 
-- `2026-04-27-modelo-111-calc-verify-adr` - `modelo-111-calc-verify` ADR — child of EPIC `#316`
+- `2026-04-27-modelo-111-calc-verify-adr` - `modelo-111-calc-verify` ADR — child of EPIC `#316` | (**status:** `rejected`)
 
 ### exec
 

@@ -87,6 +87,7 @@ class AuthDiagnosticDetail(AuthDiagnosticSummary):
     dni_fecha_fingerprint: str = ""
     nie_soporte_fingerprint: str = ""
     certificate_path_fingerprint: str = ""
+    operator_report_commands: tuple[str, ...] = ()
 
 
 class AuthDiagnosticReportResult(BaseModel):
@@ -159,6 +160,7 @@ def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
         **summary.model_dump(),
         **_detail_fingerprints_from_payload(payload),
         html_excerpt=excerpt,
+        operator_report_commands=_operator_report_commands(summary.diagnostic_id or diagnostic_id),
     )
 
 
@@ -306,6 +308,13 @@ def _detail_fingerprints_from_payload(payload: _DiagnosticPayload) -> dict[str, 
         "certificate_path_fingerprint",
     )
     return {key: str(auth_attempt.get(key) or "") for key in keys}
+
+
+def _operator_report_commands(diagnostic_id: str) -> tuple[str, ...]:
+    return tuple(
+        f"aeat config auth diagnostics report {diagnostic_id} --phone-state {phone_state}"
+        for phone_state in AUTH_DIAGNOSTIC_PHONE_STATES
+    )
 
 
 def _redacted_url_summary(value: str) -> str:

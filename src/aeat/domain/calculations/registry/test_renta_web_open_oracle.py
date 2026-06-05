@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import json
 from decimal import Decimal
+from urllib.parse import urlparse
 
 import pytest
 from pydantic import ValidationError
 
 from ....core.config import Settings
+from ....tests.aeat_literal_fixtures import aeat_host
 from ._errors import RegistryValidationError
 from ._live_parity import ParityFieldComparison
 from ._remote_state_guard import (
@@ -27,6 +29,9 @@ from ._schema import LiveCrossReferenceDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
+_SEDE_HOST = aeat_host("sede")
+_WWW2_HOST = aeat_host("www2")
+
 
 def _open_simulator_policy() -> RemoteStateGuardPolicy:
     decision = LiveCrossReferenceDecision(
@@ -35,7 +40,7 @@ def _open_simulator_policy() -> RemoteStateGuardPolicy:
         surface="open_simulator",
         guard_policy_id="modelo-100-renta-web-open-read-only",
         oracle_id="modelo-100-renta-web-open",
-        allowed_hosts=("sede.agenciatributaria.gob.es", "www2.agenciatributaria.gob.es"),
+        allowed_hosts=(_SEDE_HOST, _WWW2_HOST),
         allowed_methods=("GET", "POST"),
         forbidden_actions=(
             "authenticated-renta-web",
@@ -71,7 +76,7 @@ def test_oracle_surface_kind_is_open_simulator() -> None:
 def test_landing_url_targets_aeat_sede_documentation() -> None:
     _ext = Settings.external_constants()
     landing_url = f"{_ext.aeat.domains.sede}{_ext.aeat.help_pages.renta_web_open_landing}"
-    assert "sede.agenciatributaria.gob.es" in landing_url
+    assert urlparse(landing_url).hostname == _SEDE_HOST
     assert "renta-web-open" in landing_url
 
 

@@ -8,6 +8,7 @@ related:
   - "[[2026-04-27-modelo-100-renta-full-calc-adr]]"
   - "[[2026-05-07-renta-full-coverage-adr]]"
   - "[[2026-05-08-ledger-renta-pipeline-adr]]"
+  - '[[2026-06-04-dt-12-rescate-plan-pensiones-research]]'
 ---
 
 

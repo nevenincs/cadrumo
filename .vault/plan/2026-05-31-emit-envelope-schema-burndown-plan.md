@@ -8,6 +8,7 @@ related:
   - '[[2026-04-25-json-output-contract-adr]]'
   - '[[2026-05-18-linkage-design-audit-plan]]'
   - '[[2026-05-15-linkage-design-audit-reference]]'
+  - '[[2026-06-04-emit-envelope-schema-burndown-research]]'
 ---
 
 

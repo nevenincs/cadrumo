@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#modelo-714-patrimonio-engine'
-date: '2026-06-02'
+date: '2026-06-05'
 related:
   - '[[2026-06-02-modelo-714-patrimonio-engine-adr]]'
   - '[[2026-06-02-modelo-714-patrimonio-engine-research]]'

@@ -9,15 +9,6 @@ related:
   - '[[2026-06-03-user-profile-lazy-import-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `user-profile-lazy-import` `Lazy user_profile package boundary via PEP 562` plan
 

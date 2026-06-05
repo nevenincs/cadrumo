@@ -3,7 +3,8 @@ tags:
   - '#audit'
   - '#cli-persona-testimonials'
 date: '2026-05-20'
-related: []
+related:
+  - '[[2026-05-20-test-fidelity-sweep-audit]]'
 ---
 
 
@@ -176,7 +177,7 @@ Remediation: one localised line per scope.
 ### cli — `work list` does not auto-scope to the active profile bucket
 
 Unfiltered `work list` lists across all buckets, surfacing the
-`bucket="default"` orphans from the [[2026-05-20-test-fidelity-sweep-audit]]
+`bucket="default"` orphans from the `2026-05-20-test-fidelity-sweep-audit`
 sibling bucket-isolation bug. Remediation: default the filter to the
 active bucket. Linked to the modelo-work-create bucket bug (task #513).
 
@@ -208,4 +209,3 @@ This document is inventory. Each finding becomes a structural fix paired
 with a CLI surface test, or a tracked task. Fixes route operator-facing
 text through `tr()`; no naked strings. The `logout`→`switch` lockout and
 the `verify` obligation wall are the priority criticals.
-

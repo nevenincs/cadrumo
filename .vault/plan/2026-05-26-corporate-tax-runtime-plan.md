@@ -8,6 +8,8 @@ related:
   - '[[2026-05-21-corporate-entity-calculation-adr]]'
   - '[[2026-05-21-taxpayer-type-applicability-plan]]'
   - '[[2026-05-21-cli-testimonial-audit]]'
+  - '[[2026-06-04-corporate-tax-runtime-adr]]'
+  - '[[2026-06-04-corporate-tax-runtime-research]]'
 ---
 
 

@@ -8,10 +8,10 @@ related:
   - '[[2026-04-21-declaracion-extractor-adr]]'
   - '[[2026-05-20-branch-reconciliation-audit]]'
   - '[[2026-05-30-purchase-invoice-ocr-extraction-discipline-adr]]'
+  - '[[2026-05-28-borrador-extraction-architecture-research]]'
+  - '[[2026-05-28-declaracion-extraction-architecture-research]]'
+  - '[[2026-05-30-declaracion-extraction-architecture-research]]'
 ---
-
-
-
 # `declaracion-extraction-architecture` adr: `registry-driven declaración extraction supersedes per-modelo extractor classes` | (**status:** `accepted`)
 
 ## Problem Statement

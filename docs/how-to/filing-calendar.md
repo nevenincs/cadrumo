@@ -1,59 +1,164 @@
 # Plan your filing calendar
 
-See which modelos are due and when, so you don't miss a deadline. You need an
-active profile; to create one, see
-[Set up your taxpayer profile](profile-setup.md). Every command here is local,
-applies public holidays and business-day shifts, and never contacts the Agencia
-Estatal de Administración Tributaria (AEAT).
+Use this guide to see which filing obligations `aeat` derives from your active
+profile, generate a date range calendar, and check why a modelo may apply. A
+modelo is a Spanish tax form.
 
-## See what's due now
+These commands are local. They read your profile and the local registry data.
+They do not file, submit, or contact the Agencia Estatal de Administración
+Tributaria (AEAT).
 
-Classify your obligations around today into the next due item plus due-today,
-due-soon, and overdue groups:
+## What this calendar means
 
-```
+The calendar answers this question: based on your active profile and the local
+modelo registry, which filing periods apply inside this date window?
+
+It is not an official AEAT record of your filing obligations or filing history.
+It does not prove that you filed every required form. The default overview
+calendar shows deadline state from the local deadline engine, so applicable
+obligations appear as due or late.
+
+Profile and census facts decide which modelos appear. If your taxpayer type,
+activity, Impuesto sobre el Valor Añadido (IVA) regime, or Censo registration
+details are wrong, the calendar can be wrong too. Fix those facts first with
+[Set up your taxpayer profile](profile-setup.md) or
+[Sync your taxpayer census (Censo)](censo-update.md).
+
+## Before you start
+
+You need an active taxpayer profile. If you do not have one, create it with
+[Set up your taxpayer profile](profile-setup.md).
+
+Calendar commands depend on profile facts. If your profile is incomplete, a
+command may stop and name the missing facts. Fix the profile first unless you
+are deliberately checking partial results with `--allow-incomplete`. That flag
+does not bypass a missing taxpayer model; declare the taxpayer model before you
+use `agenda`, `backlog`, or `calendar`.
+
+## See overdue and upcoming obligations
+
+To rank overdue, due-today, and upcoming obligations, run `agenda`:
+
+```bash
 aeat app overview agenda
 ```
 
-Set a different reference date with `--date YYYY-MM-DD`. Widen or narrow the
-due-soon window with `--horizon <days>` (default 14). To list overdue
-obligations you haven't filed yet, oldest first:
+The output groups obligations into:
 
+- `next_due`: the next obligation to handle
+- `due_today`: obligations due today
+- `due_soon`: obligations due within the `--horizon` period
+- `overdue`: obligations already past their deadline
+
+To plan from another reference date, use `--date`:
+
+```bash
+aeat app overview agenda --date 2026-04-15
 ```
+
+To change the horizon, use `--horizon`. The default is 14 days:
+
+```bash
+aeat app overview agenda --date 2026-04-15 --horizon 30
+```
+
+## List overdue obligations first
+
+When you want past-due obligations sorted oldest first, run `backlog`:
+
+```bash
 aeat app overview backlog
 ```
 
-## Generate a calendar over a date range
+When you need a narrower review, limit the backlog to a date window:
 
-List every deadline in a date window, with holidays and business-day shifts
-already applied:
-
+```bash
+aeat app overview backlog --from 2026-01-01 --to 2026-06-30
 ```
+
+## Generate a calendar window
+
+To generate a deadline calendar, run `calendar` with a start and end date:
+
+```bash
 aeat app overview calendar --from 2026-01-01 --to 2026-12-31
 ```
 
-Both dates are required and use ISO format (YYYY-MM-DD). Add `--all-profiles` to
-span every registered profile, or `--show-suppressed` to include non-applicable
-entries. See the [CLI reference](../cli/index.rst) for the full flag set.
+Both dates are required. Use this date format: `YYYY-MM-DD`.
 
-## Understand why a modelo applies
+The calendar applies national public holidays and business-day shifts before it
+prints deadlines. To generate the same window for every registered profile, add
+`--all-profiles`:
 
-To see why a form applies to you, decompose its applicability against your active
-profile:
-
+```bash
+aeat app overview calendar --from 2026-01-01 --to 2026-12-31 --all-profiles
 ```
+
+When you want to see obligations that `aeat` normally filters out, add
+`--show-suppressed`. Suppressed entries include obligations that do not apply,
+belong to another taxpayer attribution path, or are incomplete. Each entry
+shows the verdict and the reason.
+
+## Check why a modelo applies
+
+To check one modelo, run `overview explain` with a modelo code:
+
+```bash
 aeat app overview explain 130
 ```
 
-It reports the applicable flag, the registry-backed rationale, and the profile
-facts the decision depends on. Add `--year <year>` to evaluate a specific year.
+A modelo code is the number printed on a Spanish tax form, such as `130`, `303`,
+or `100`. The command reports whether that modelo applies, the reason from the
+local registry, and the profile facts used for the decision.
 
-## Where next
+To check a specific fiscal year, pass `--year`:
 
-- [Quickstart](quickstart.md) - build and export a modelo once you know what's due.
-- [Common filing recipes](index.md) - other modelos and tasks.
-- [Pipeline explanation](../explanation/index.md) - how calculation,
-  verification, and export connect, and why `aeat` never files.
-- [CLI reference](../cli/index.rst) - every overview flag and exit code.
-- [Glossary](../glossary.md) - the Spanish terms used here.
-- Report a problem on the [issue tracker](https://github.com/wgergely/aeat/issues).
+```bash
+aeat app overview explain 130 --year 2026
+```
+
+## Look up modelo details
+
+To list the modelo catalogue, run:
+
+```bash
+aeat app modelo list
+```
+
+To filter the catalogue to a fiscal year, pass `--year`:
+
+```bash
+aeat app modelo list --year 2026
+```
+
+Before you create filing work for one modelo, describe it:
+
+```bash
+aeat app modelo describe 130
+```
+
+When the revision depends on the filing period, pass `--period`:
+
+```bash
+aeat app modelo describe 130 --period 1T
+```
+
+Use the [CLI reference](../cli/index.rst) for the full flag list and valid
+period values.
+
+## If results look wrong
+
+If a command reports missing profile facts, update the profile with
+[Set up your taxpayer profile](profile-setup.md).
+
+If a command reports an invalid date, inactive profile, or readiness problem,
+use [Diagnose and repair your local setup](troubleshooting.md).
+
+For command flags and output fields, use [CLI reference](../cli/index.rst).
+
+## Next steps
+
+- [Import and classify a bank statement](import-bank-statements.md)
+- [Quickstart: produce a modelo file](quickstart.md)
+- [How filings, work units, and calculation revisions fit together](filing-spine.md)
+- [CLI reference](../cli/index.rst)

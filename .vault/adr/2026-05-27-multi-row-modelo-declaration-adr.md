@@ -8,6 +8,7 @@ related:
   - "[[2026-04-13-modelo-inventory-adr]]"
   - "[[2026-04-25-json-output-contract-adr]]"
   - "[[2026-05-21-corporate-entity-calculation-adr]]"
+  - '[[2026-06-04-multi-row-modelo-declaration-research]]'
 ---
 
 

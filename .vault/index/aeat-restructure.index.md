@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#aeat-restructure'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-30-aeat-restructure-adr]]'
   - '[[2026-04-30-aeat-restructure-plan]]'
@@ -91,23 +91,23 @@ Auto-generated index of all documents tagged with `#aeat-restructure`.
 - `2026-04-30-aeat-restructure-step-14-final-review-exec` - 2026-04-30-aeat-restructure step-14 final post-migration review
 - `2026-04-30-aeat-restructure-step-15-milestone-close-exec` - 2026-04-30-aeat-restructure step-15 milestone close
 - `2026-04-30-aeat-restructure-summary-exec` - 2026-04-30-aeat-restructure phase summary
-- `2026-05-01-aeat-restructure-audit-11-verify-move-exec` - `aeat-restructure` `{phase}` `{step}`
-- `2026-05-01-aeat-restructure-audit-20-aggregation-move-exec` - `aeat-restructure` `{phase}` `{step}`
+- `2026-05-01-aeat-restructure-audit-11-verify-move-exec` - `aeat-restructure` historical placeholder exec
+- `2026-05-01-aeat-restructure-audit-20-aggregation-move-exec` - `aeat-restructure` historical placeholder exec
 - `2026-05-01-aeat-restructure-audit3-access-gate-move-exec` - `aeat-restructure` audit-3 `access-gate-move`
 - `2026-05-01-aeat-restructure-audit3-google-split-exec` - `aeat-restructure` audit-3 google-split
-- `2026-05-01-aeat-restructure-categories-hoist-exec` - `aeat-restructure` `{phase}` `{step}`
+- `2026-05-01-aeat-restructure-categories-hoist-exec` - `aeat-restructure` historical placeholder exec
 - `2026-05-01-aeat-restructure-continuation-hard-cutover-exec` - `aeat-restructure` `continuation` `hard-cutover`
 - `2026-05-01-aeat-restructure-continuation-summary-exec` - `aeat-restructure` `continuation` summary
 - `2026-05-01-aeat-restructure-dead-export-prune-exec` - `aeat-restructure` `phase-post` `dead-export-prune`
 - `2026-05-01-aeat-restructure-eliminate-legacy-helpers-exec` - `aeat-restructure` `eliminate-shims` `delete-legacy-migration-helpers`
 - `2026-05-01-aeat-restructure-eliminate-shims-step-exec` - 2026-05-01-aeat-restructure eliminate-shims agent-lane scan
-- `2026-05-01-aeat-restructure-identity-alignment-exec` - `aeat-restructure` `{phase}` `{step}`
-- `2026-05-01-aeat-restructure-misc-exec` - `aeat-restructure` `{phase}` `{step}`
+- `2026-05-01-aeat-restructure-identity-alignment-exec` - `aeat-restructure` historical placeholder exec
+- `2026-05-01-aeat-restructure-misc-exec` - `aeat-restructure` historical placeholder exec
 - `2026-05-01-aeat-restructure-sync-domain-hard-cut-exec` - `aeat-restructure` `continuation` `sync-domain-hard-cut`
-- `2026-05-01-aeat-restructure-vat-hoist-exec` - `aeat-restructure` `{phase}` `{step}`
+- `2026-05-01-aeat-restructure-vat-hoist-exec` - `aeat-restructure` historical placeholder exec
 - `2026-05-01-stub-sweep-exec` - aeat-restructure eliminate-shims: application / entrypoints / core audit
 - `2026-05-01-test-stubs-pruning-exec` - `aeat-restructure` `test-pruning` `eliminate-shims-colocated-tests`
-- `2026-05-01-usage-ratios-hoist-exec` - `aeat-restructure` `usage-ratios-hoist` `usage-ratios-hoist`
+- `2026-05-01-usage-ratios-hoist-exec` - `aeat-restructure` historical placeholder exec
 - `2026-05-02-aeat-restructure-duplicate-sync-cli-hardening-exec` - `aeat-restructure` `continuation` `duplicate-sync-cli-hardening`
 
 ### plan

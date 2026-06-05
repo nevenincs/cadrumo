@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#self-healing-sync'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-12-self-healing-sync-adr]]'
   - '[[2026-04-12-self-healing-sync-audit]]'

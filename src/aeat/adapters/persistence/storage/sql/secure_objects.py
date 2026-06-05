@@ -830,7 +830,7 @@ class SecureObjectRepository:
         return tuple(per_namespace)
 
     def probe_namespace_integrity(self, namespace: str) -> SecureObjectNamespaceIntegrity:
-        """Count decryptable vs undecryptable rows in ``namespace``.
+        """Count decryptable vs undecryptable rows in ``namespace``, returning a :class:`SecureObjectNamespaceIntegrity`.
 
         This method answers a strictly crypto-layer question -- can the
         ``payload`` ciphertext be unwrapped under the current master key

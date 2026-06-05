@@ -7,14 +7,15 @@ tags:
   - '#suite-redgreen-longtail-discovery'
 related:
   - '[[2026-06-03-cli-bucket-session-test-isolation-audit]]'
-  - '[[2026-06-02-suite-redgreen-plan]]'
 ---
 
 # Suite redgreen burndown — longtail discovery (`suite-redgreen-longtail-discovery`)
 
 **Scope:** Grouping of ~120 longtail failures (reds 110-220) from suite-final-1.log by error shape and triage classification. This is a read-only discovery pass; no code edits or plan mutations.
 
-**Status:** INCOMPLETE — Full file-level mapping pending. Error stems extracted and classified; detailed test-to-file mapping requires additional parsing of full error context from log.
+**Status:** INCOMPLETE (PRIMARY PASS) — Full file-level mapping pending. Error stems extracted and classified; detailed test-to-file mapping requires additional parsing of full error context from log.
+
+**Secondary Pass Available:** W26 ratchet failures correlation (see below) — maps test-path-to-inventory-module for subset of Cluster D failures.
 
 ## Error Clusters by Triage Category
 
@@ -126,6 +127,37 @@ related:
 
 ---
 
+## W26 Ratchet Failures Correlation (Secondary Pass)
+
+**Scope:** Extracting test-path-to-inventory-module mapping for `test_w26_p55/p58/p60_closure.py` ratchet failures to identify which inventory inventory module each test failure maps to and concentration of new violations.
+
+### Inventory Module Status (as of current snapshot)
+
+| Inventory Module | Violations | Status | First 5 Files Affected |
+|------------------|-----------|--------|------------------------|
+| `test_type_ignore_rationale_inventory.py` | 7 | LOCKED | application/live/_snapshot_base.py:511, application/workflow/_adapters.py:105-151, domain/buckets/_event.py:307, entrypoints/cli/_app_live.py:1681 |
+| `test_cast_rationale_inventory.py` | (full scan pending) | ACTIVE | — |
+| `test_any_param_rationale_inventory.py` | 29 | ACTIVE | adapters/outbound/aeat/browser/_factory.py:71,176, adapters/outbound/aeat/browser/session.py:216, adapters/outbound/aeat/verify/__init__.py:123, adapters/outbound/storage/_google_drive.py:166,226,649 |
+| `test_utf8_enrollment_inventory.py` | (W11 backlog) | LOCKED | — |
+| `test_cast_rationale_inventory.py` + `test_any_param_rationale_inventory.py` | 28 + 29 = **57 total** | ACTIVE | Concentrated in adapters/outbound (browser, storage, verify) + application/live + application/auth |
+
+### Key Finding: Violation Concentration
+
+- **Type-ignore (CAST-RATIONALE, ANY-PARAM):** ~57 known violations currently enrolled in inventory ratchets
+- **Primary cluster:** adapters/outbound (21 sites: browser._factory, storage._google_drive, session.py, verify) — all pre-existing W11/W18 backlog, not new regressions
+- **Secondary cluster:** application/live (8 sites: borrador_100, censo, snapshot_base, expedientes, notifications) — mostly paydowned or hard-deferred; remaining 7 are hard-deferred markers
+- **Pattern:** Failures are ratchet "allowlist not shrunk" errors, not "new violations detected" errors — indicates prior-wave paydown incomplete or rationale-marker authoring stalled, not new code violations
+
+### Dispatch Implication
+
+Cluster D failures (28×) fall into two categories:
+1. **28 CAST-RATIONALE + ANY-PARAM:** Pre-existing violations already enrolled in inventory ratchets; paydown is **ongoing work** that requires per-site marker authoring (not inventory-allowlist expansion)
+2. **Not new regressions:** These are honesty-gate failures exposing backlog items, not regressions from current session WIP
+
+**Recommendation:** Dispatch Cluster D to Source Code Janitor as MECHANICAL with note: "Per-site marker authoring needed; ratchet allowlists are stable; no new violations detected."
+
+---
+
 **Output:** `.vault/audit/2026-06-03-suite-redgreen-longtail-discovery-audit.md`
 **Date Created:** 2026-06-03
-**Session:** Suite redgreen burndown, phase 3 (longtail discovery)
+**Session:** Suite redgreen burndown, phase 3 (longtail discovery + W26 ratchet correlation)

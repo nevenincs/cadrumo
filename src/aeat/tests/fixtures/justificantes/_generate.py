@@ -32,6 +32,8 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
+from aeat.core.external_constants import load_external_constants
+
 
 @dataclass(frozen=True)
 class _Fixture:
@@ -91,10 +93,9 @@ _FIXTURES: tuple[_Fixture, ...] = (
 )
 
 
-_VERIFY_URL = (
-    "https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-practicas-manuales/"
-    "verificacion-integridad-documentos.html"
-)
+_AEAT_CONSTANTS = load_external_constants().aeat
+_SEDE_ORIGIN = _AEAT_CONSTANTS.domains.sede
+_VERIFY_URL = f"{_SEDE_ORIGIN}{_AEAT_CONSTANTS.help_pages.csv_verification}"
 
 
 def _draw(c: canvas.Canvas, fixture: _Fixture) -> None:
@@ -241,7 +242,7 @@ def _draw_modelo_349(c: canvas.Canvas, fixture: _Modelo349Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
-    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
+    c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
 
 @dataclass(frozen=True)
@@ -363,7 +364,7 @@ def _draw_modelo_180(c: canvas.Canvas, fixture: _Modelo180Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
-    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
+    c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
 
 @dataclass(frozen=True)
@@ -466,7 +467,7 @@ def _draw_modelo_369(c: canvas.Canvas, fixture: _Modelo369Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
-    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
+    c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
 
 @dataclass(frozen=True)
@@ -588,7 +589,7 @@ def _draw_modelo_193(c: canvas.Canvas, fixture: _Modelo193Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
-    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
+    c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
 
 @dataclass(frozen=True)
@@ -718,7 +719,7 @@ def _draw_modelo_115(c: canvas.Canvas, fixture: _Modelo115Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
-    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
+    c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
 
 @dataclass(frozen=True)
@@ -827,7 +828,7 @@ def _draw_modelo_720(c: canvas.Canvas, fixture: _Modelo720Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
-    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
+    c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
 
 @dataclass(frozen=True)
@@ -930,7 +931,7 @@ def _draw_modelo_036(c: canvas.Canvas, fixture: _Modelo036Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
-    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
+    c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
 
 @dataclass(frozen=True)
@@ -1037,7 +1038,7 @@ def _draw_modelo_232(c: canvas.Canvas, fixture: _Modelo232Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
-    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
+    c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
 
 @dataclass(frozen=True)
@@ -1189,7 +1190,7 @@ def _draw_modelo_123(c: canvas.Canvas, fixture: _Modelo123Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
-    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
+    c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
 
 @dataclass(frozen=True)
@@ -1279,7 +1280,7 @@ def _draw_modelo_347(c: canvas.Canvas, fixture: _Modelo347Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
-    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
+    c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
 
 @dataclass(frozen=True)
@@ -1368,7 +1369,7 @@ def _draw_modelo_184(c: canvas.Canvas, fixture: _Modelo184Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
-    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
+    c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
 
 @dataclass(frozen=True)
@@ -1515,7 +1516,7 @@ def _draw_modelo_131(c: canvas.Canvas, fixture: _Modelo131Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
-    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
+    c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
 
 @dataclass(frozen=True)
@@ -1592,7 +1593,7 @@ def _draw_modelo_840(c: canvas.Canvas, fixture: _Modelo840Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
-    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
+    c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
 
 def _fmt_spanish(d: Decimal) -> str:
@@ -2225,7 +2226,7 @@ def _draw_modelo_303_corpus(c: canvas.Canvas, fixture: _Modelo303CorpusFixture) 
     c.drawString(
         20 * mm,
         y,
-        "https://sede.agenciatributaria.gob.es",
+        _SEDE_ORIGIN,
     )
 
 
@@ -2520,7 +2521,7 @@ def _draw_modelo_130_corpus(c: canvas.Canvas, fixture: _Modelo130CorpusFixture) 
     c.drawString(
         20 * mm,
         y,
-        "https://sede.agenciatributaria.gob.es",
+        _SEDE_ORIGIN,
     )
 
 
@@ -2761,7 +2762,7 @@ def _draw_modelo_390_corpus(c: canvas.Canvas, fixture: _Modelo390CorpusFixture) 
     c.drawString(
         20 * mm,
         y,
-        "https://sede.agenciatributaria.gob.es",
+        _SEDE_ORIGIN,
     )
 
 

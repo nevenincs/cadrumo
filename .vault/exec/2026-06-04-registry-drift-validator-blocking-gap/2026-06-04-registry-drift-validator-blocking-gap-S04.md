@@ -1,3 +1,13 @@
+---
+tags:
+  - '#exec'
+  - '#registry-drift-validator-blocking-gap'
+date: '2026-06-04'
+step_id: 'S04'
+related:
+  - '[[2026-06-04-registry-drift-validator-blocking-gap-plan]]'
+---
+
 # S04 - Verify drift-validator blocking-gap gates
 
 Plan: `.vault/plan/2026-06-04-registry-drift-validator-blocking-gap-plan.md`

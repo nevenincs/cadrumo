@@ -5,6 +5,7 @@ tags:
 date: '2026-06-03'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
+  - '[[2026-06-04-cli-workflow-redesign-epic-research]]'
 ---
 
 # `cli-workflow-redesign-epic` adr: `surface-design only-scope clarifications (S1913 + S1853)` | (**status:** `accepted`)
