@@ -203,3 +203,17 @@ The focused submission roundtrip gate initially failed because
 `domain/submission/tests/test_secure_storage_roundtrip.py` still imported
 `...adapters` after being moved under a `tests` package. The import now uses the
 correct `....adapters` package depth, and the real encrypted roundtrip tests pass.
+
+## S363-CR-001 | PASS | Submission preflight remains policy-only
+
+Reviewed the S363 scope as `vaultspec-code-reviewer`. `_preflight.py` invokes
+injected deadline and auth-provider protocols but does not directly access secure
+storage, active profiles, settings, environment variables, filesystem paths, or remote
+provider clients.
+
+## S363-CR-002 | PASS | Refusal and exception handling are explicit
+
+Preflight refusal paths use localized `errors.refused.submission_preflight_*` keys with
+structured context. Auth-provider describe failures are logged with `exc_info=True`
+and chained into `SubmissionPreflightError`, so the cause is neither swallowed nor
+exposed as raw operator-facing text.
