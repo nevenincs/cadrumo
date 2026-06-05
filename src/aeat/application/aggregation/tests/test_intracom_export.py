@@ -1,6 +1,6 @@
 """Persona test: Marc — intracom goods supply vs DOMESTIC_NOT_SUBJECT services.
 
-Scenario (ADR contract):
+Scenario (cross-border contract):
   Marc sells both physical goods and IT-consultancy services to a German
   GmbH (counterparty EU member state: 'de').
 
@@ -117,7 +117,7 @@ def test_intracom_goods_supply_populates_casilla_59() -> None:
 def test_domestic_not_subject_services_do_not_populate_casilla_59() -> None:
     """A DOMESTIC_NOT_SUBJECT (R12) services row does NOT feed casilla 59.
 
-    Per ADR D4: B2B services to EU taxable persons under art. 69 land in
+    Per cross-border contract D4: B2B services to EU taxable persons under art. 69 land in
     DOMESTIC_NOT_SUBJECT, not INTRA_COMMUNITY_SUPPLY.  The observation is
     produced (category=DOMESTIC_NOT_SUBJECT) but casilla_59_base_imponible
     returns 0 for this observation.
@@ -156,7 +156,7 @@ def test_export_third_country_populates_casilla_60() -> None:
 
 
 def test_d5_intracom_with_es_counterparty_is_rejected() -> None:
-    """INTRA_COMMUNITY_SUPPLY with Spain as counterparty is a gate failure (ADR D5)."""
+    """INTRA_COMMUNITY_SUPPLY with Spain as counterparty is a gate failure (contract D5)."""
     tx = _inbound_tx(
         "intracom-es-01",
         amount=Decimal("1000.00"),
@@ -174,7 +174,7 @@ def test_d5_intracom_with_es_counterparty_is_rejected() -> None:
 
 
 def test_d5_intracom_without_counterparty_is_rejected() -> None:
-    """INTRA_COMMUNITY_SUPPLY with no eu_member_state is a gate failure (ADR D5)."""
+    """INTRA_COMMUNITY_SUPPLY with no eu_member_state is a gate failure (contract D5)."""
     tx = _inbound_tx(
         "intracom-no-state-01",
         amount=Decimal("1000.00"),
@@ -191,7 +191,7 @@ def test_d5_intracom_without_counterparty_is_rejected() -> None:
 
 
 def test_d5_export_with_eu_member_state_is_rejected() -> None:
-    """EXPORT_THIRD_COUNTRY_ZERO_RATED with a non-None eu_member_state is rejected (ADR D5)."""
+    """EXPORT_THIRD_COUNTRY_ZERO_RATED with a non-None eu_member_state is rejected (contract D5)."""
     tx = _inbound_tx(
         "export-with-eu-01",
         amount=Decimal("800.00"),

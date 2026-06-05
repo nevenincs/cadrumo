@@ -133,7 +133,7 @@ def test_revision_id_changes_when_work_unit_id_changes() -> None:
 
 
 def test_observations_consistency_validator_accepts_matching_projection() -> None:
-    """Stage one of ADR 2026-05-26: when observations is populated, casilla_values
+    """Stage one of the staged consistency check: when observations is populated, casilla_values
     must equal the projection of observations. Matching pair validates clean."""
     from datetime import UTC, datetime
 
@@ -167,7 +167,7 @@ def test_observations_consistency_validator_accepts_matching_projection() -> Non
 
 
 def test_observations_consistency_validator_rejects_drift() -> None:
-    """Stage one of ADR 2026-05-26: when observations diverges from casilla_values,
+    """Stage one of the staged consistency check: when observations diverges from casilla_values,
     construction must raise ModeloValidationError — save/load drift surfaces at
     load time rather than at a downstream hash mismatch."""
     from datetime import UTC, datetime
@@ -202,7 +202,7 @@ def test_observations_consistency_validator_rejects_drift() -> None:
 
 
 def test_observations_consistency_validator_tolerates_empty_observations() -> None:
-    """Stage one of ADR 2026-05-26: historical revisions persisted before the
+    """Stage one of the staged consistency check: historical revisions persisted before the
     typed envelope landed carry observations=() — the validator must let them
     construct (no projection to compare against)."""
     from datetime import UTC, datetime

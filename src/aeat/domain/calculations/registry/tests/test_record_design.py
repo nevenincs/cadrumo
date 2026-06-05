@@ -421,8 +421,9 @@ def test_calculation_completeness_gate_is_live_for_every_calculation_bearing_mod
     # Dormant (no calculation closure, no completeness_manifest) revisions:
     # Modelo 308, 347, 360, 840 (informative declarations), Modelo 721 (crypto
     # data-fidelity, no calc), and Modelo 714 (Impuesto sobre el Patrimonio
-    # Phase-A — grounded but all-manual; the tarifa/límite calc engine is the
-    # deferred Phase-B). Empirically enumerated, no inconsistent revisions.
+    # Initial pass — grounded but all-manual; the tarifa/límite calc engine
+    # is the deferred follow-up pass. Empirically enumerated, no inconsistent
+    # revisions.
     assert dormant == 6
 
 
@@ -469,7 +470,7 @@ def test_calculation_closure_bounds_the_full_diseno_coverage() -> None:
     overwhelmingly accounting-statement data-entry fields that feed no
     calculation. A modelo can therefore clear the load-blocking gate
     without an exhaustive full-form backfill — the design intent of the
-    ADR amendment.
+    contract amendment.
     """
     modelos, _ = _committed_registry_tree()
     modelo_200 = next(modelo for modelo in modelos if modelo.id == "200")

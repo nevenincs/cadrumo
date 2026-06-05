@@ -10,11 +10,8 @@ every profile-bound command hard-miss with a "no registered bucket manifest"
 refusal. This module pins the fixed behaviour by driving the REAL CLI root
 callback (the normalization site) against a REAL profile created through the real
 ``config profile create`` flow: exactly the operator path the persona swarm
-missed.
-
-See the ``2026-06-03-cli-ledger-testimonials`` ADR + the ``2026-05-19``
-profile-lifecycle disaster ADR (the single canonical route resolver this fix
-feeds a UUID).
+missed. The fixed contract feeds a UUID into the single canonical route
+resolver after normalizing the operator-facing display label.
 """
 
 from __future__ import annotations

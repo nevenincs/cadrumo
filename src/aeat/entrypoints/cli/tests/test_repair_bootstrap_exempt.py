@@ -1,7 +1,7 @@
 """Roundtrip: every ``repair`` verb runs sessionless on a fresh root.
 
-Disaster ADR Ruling 6 makes the ``aeat config repair`` family
-bootstrap-exempt and state-free: every repair verb must run cleanly
+The repair bootstrap contract makes the ``aeat config repair`` family
+state-free: every repair verb must run cleanly
 without an active :class:`BucketSession` on a pristine storage root.
 The original disaster welded the escape hatch shut — every documented
 recovery verb crashed with ``NoActiveBucketSessionError`` from the

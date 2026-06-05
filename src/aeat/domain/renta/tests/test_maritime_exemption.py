@@ -52,7 +52,7 @@ class TestArt7pEligible:
         assert art_7p_eligible(facts) is True
 
     def test_foreign_flag_national_waters_is_eligible(self) -> None:
-        # The ADR states: vessel_flag != ES OR waters_type == international.
+        # The business rule is: vessel_flag != ES OR waters_type == international.
         # Either condition suffices per the binding selector.
         facts = MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
@@ -322,7 +322,7 @@ class TestCalculateArt7pExemption:
     def test_observation_carries_art7p_legal_refs(self) -> None:
         # Close gate: CasillaObservation.legal_refs must carry
         # "ley-35-2006:art-7p" per aeat-calculation-grounding rule.
-        # The ADR's registry binding uses "Ley 35/2006 Art. 7.p)".
+        # Registry binding is based on "Ley 35/2006 Art. 7.p)".
         obs = calculate_art_7p_exemption(
             annual_salary=Decimal("36500"),
             qualifying_days=100,

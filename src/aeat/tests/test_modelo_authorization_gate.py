@@ -1,6 +1,6 @@
 """Fleet-wide CI meta-test for the multi-year-renta authorization gate.
 
-The ``modelo-multiyear-renta`` ADR makes every modelo's calculation backend
+The ``modelo-multiyear-renta`` enrollment contract makes every modelo's calculation backend
 NON-FUNCTIONAL until an enrolling end-to-end persona test proves it across at
 least two distinct renta (annual) years. The directory-mode authorization
 manifest (``authorization.d/<modelo>.toml`` fragments, one per enrolled modelo,
@@ -147,7 +147,7 @@ def test_authorization_coverage_report_and_validity(capsys: pytest.CaptureFixtur
         else:
             unauthorized.append(modelo)
         # A fleet modelo that does not load and has no engine cannot be
-        # authorized by a test-only change; the ADR's engine-build sub-decision
+        # authorized by a test-only change; the engine-build contract
         # tracks these explicitly so the lag is visible, not hidden.
         if modelo not in loadable and not capability.has_engine:
             engine_build_blocked.append(modelo)

@@ -114,7 +114,7 @@ def test_no_skip_or_xfail_markers() -> None:
 
     assert not violations, (
         "Undocumented pytest.mark.skip / skipif / xfail found "
-        "(add to _DOCUMENTED_EXCEPTIONS with a follow-up Step, or remove):\n" + "\n".join(violations)
+        "(add to _DOCUMENTED_EXCEPTIONS with a durable rationale, or remove):\n" + "\n".join(violations)
     )
 
 

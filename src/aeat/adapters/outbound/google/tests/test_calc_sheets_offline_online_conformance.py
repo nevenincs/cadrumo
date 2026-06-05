@@ -4,7 +4,7 @@ One ``SheetExportPlan`` must render to structurally identical grids whether
 materialised offline (openpyxl xls) or online (Google-Sheets apply). This test
 compares, cell-for-cell, the offline workbook against the online value/formula/
 evidence writes the apply adapter would send — proving the single-builder /
-two-transport invariant (modelo-export-evidence-parity ADR) with no network.
+two-transport invariant with no network.
 """
 
 from __future__ import annotations

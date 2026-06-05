@@ -381,7 +381,7 @@ def test_modelo_202_modality_is_art_40_2_optional_at_or_below_threshold() -> Non
 def test_modelo_202_modality_is_incomplete_when_incn_undeclared() -> None:
     """An undeclared INCN yields INCOMPLETE — never a guessed modality.
 
-    The corporate-entity ADR §3 safe-default constraint: the engine
+    The corporate-entity design §3 safe-default constraint: the engine
     never picks Art. 40.2 or Art. 40.3 on its own when the INCN is
     not known. The operator must declare the prior-12-months INCN
     first.

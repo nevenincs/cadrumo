@@ -211,7 +211,7 @@ def test_modelo_200_micro_empresa_pyme_cuota_2024(
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
             # 00552 (base imponible) is now computed from the resultado
-            # contable chain after the M200 base-determination ADR:
+            # contable chain from the M200 base-determination contract:
             #   00550 = 00501 + DP200013:00417 - DP200013:00418
             #   00552 = max(00550 - 01032 - DP200014:00547, 0)
             # Supplying 00501 = 100000 and zero corrections / reserva / BIN

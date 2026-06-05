@@ -1,7 +1,7 @@
 """Tests for the :class:`IvaExemptionArticle` discriminator on
 :class:`IvaClassificationResult`.
 
-Authority: ``2026-06-03-iva-exemption-article-adr``. The discriminator
+Authority: ``iva-exemption-article-design``. The discriminator
 is optional; ``None`` preserves today's collapsed
 ``DOMESTIC_EXEMPT`` behaviour. A stamped value is only valid when the
 category is ``DOMESTIC_EXEMPT``; pairing it with any other category is
@@ -69,13 +69,13 @@ def test_classification_result_rejects_exemption_article_on_non_exempt_category(
     assert non_exempt_category.value in message
 
 
-def test_exemption_article_enum_membership_matches_adr_mvp_set() -> None:
-    """The closed enum carries exactly the four MVP slots named in the ADR.
+def test_exemption_article_enum_membership_matches_baseline_set() -> None:
+    """The closed enum carries exactly the four MVP slots named in the baseline contract.
 
-    Authority: ``2026-06-03-iva-exemption-article-adr`` Implementation
+    Authority: ``iva-exemption-article-design`` Implementation
     section locks the initial set as ART_20_UNO_8 / ART_20_UNO_14 /
-    ART_20_UNO_26 / ART_20_OTHER. New slots open per follow-up Step;
-    this test fires when a new value is added without an ADR amendment.
+    ART_20_UNO_26 / ART_20_OTHER. This test fires when a new value is
+    added without a contract update.
     """
     expected = {
         IvaExemptionArticle.ART_20_UNO_8.value,

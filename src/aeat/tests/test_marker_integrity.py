@@ -64,8 +64,14 @@ _CAMPAIGN_METADATA_PATTERNS = (
     re.compile(r"\blegacy-(?:plan|step)"),
     re.compile(r"\baccepted contract\b", re.IGNORECASE),
     re.compile(r"\bhistory-step\b", re.IGNORECASE),
+    re.compile(r"\bfollow-up step\b", re.IGNORECASE),
     re.compile(r"\bplan Step\b"),
     re.compile(r"\bwave\b", re.IGNORECASE),
+    re.compile(r"\bAD" + r"R\b"),
+    re.compile(r"\bP" + r"R\b"),
+    re.compile(r"\b[Pp]hase[- ][A-Za-z0-9]"),
+    re.compile(r"\.vault/ad" + r"r", re.IGNORECASE),
+    re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}[-_a-z0-9]*ad" + r"r", re.IGNORECASE),
 )
 _FORBIDDEN_MARKERS = (
     frozenset(

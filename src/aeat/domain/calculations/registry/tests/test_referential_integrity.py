@@ -1329,7 +1329,7 @@ def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
     non-empty-refs validator and reach the gate's defensive grounding
     branch. The gate must report the required casilla as ungrounded.
 
-    This proves the gate's grounding check is load-bearing: the ADR
+    This proves the gate's grounding check is load-bearing: the contract
     amendment requires every calculation-closure casilla to carry its
     `legal_refs` / `source_refs` provenance, and the gate enforces that
     independently of the schema-level field constraint.

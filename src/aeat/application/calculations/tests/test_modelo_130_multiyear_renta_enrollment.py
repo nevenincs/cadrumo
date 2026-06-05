@@ -1,7 +1,7 @@
 """Multi-year-renta authorization enrollment for Modelo 130.
 
 This module is the enrolling end-to-end persona test for Modelo 130 under
-the ``modelo-multiyear-renta`` ADR. It drives the REAL M130 backend (real
+the ``modelo-multiyear-renta`` contract. It drives the REAL M130 backend (real
 encrypted-SQLite observation store, the real registry authority, the real
 ``previous_filing`` binding resolver, the real registry calculation engine
 — no mocks) across two distinct renta (annual) years, records each year

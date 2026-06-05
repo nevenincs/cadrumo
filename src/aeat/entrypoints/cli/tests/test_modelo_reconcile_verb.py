@@ -95,7 +95,7 @@ def test_reconcile_mismatch_renders_diff_rows(cli_runner: CliRunner) -> None:
 
 
 def test_reconcile_refuses_when_both_source_flags_supplied(cli_runner: CliRunner, tmp_path: Path) -> None:
-    """The two source flags are mutually exclusive per the ADR.
+    """The two source flags are mutually exclusive.
     Supplying both surfaces as typer.BadParameter (exit_code != 0)
     rather than letting the service silently pick one."""
 

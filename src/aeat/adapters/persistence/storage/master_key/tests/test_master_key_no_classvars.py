@@ -1,7 +1,7 @@
 """AST guard test: master-key providers carry zero ClassVar mutable state.
 
-The substrate invariant per the profile-bucket-lifecycle ADR section
-7 forbids any module-global or class-level mutable state that could
+The profile-bucket lifecycle substrate invariant forbids any
+module-global or class-level mutable state that could
 survive a bucket switch. Cache state moves to the per-bucket
 :class:`BucketSession` instance.
 

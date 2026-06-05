@@ -1,7 +1,7 @@
 """Multi-year-renta authorization enrollment for Modelo 100 (IRPF anual).
 
 This module is the enrolling end-to-end persona test for Modelo 100 under
-the ``modelo-multiyear-renta`` ADR and its income-tax companion
+the ``modelo-multiyear-renta`` contract and its income-tax companion
 ``modelo-multiyear-renta-income`` (A4). It drives the REAL M100 calculation
 engine (``calculate_modelo_revision``) across two distinct renta (annual)
 years, records each through the :class:`EnrollmentRecorder`, and cross-checks

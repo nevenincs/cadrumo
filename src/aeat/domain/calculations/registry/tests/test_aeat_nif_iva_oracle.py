@@ -33,8 +33,8 @@ _WWW6_HOST = aeat_host("www6")
 
 
 def _aeat_policy() -> RemoteStateGuardPolicy:
-    # AEAT-hosted policies must not advertise synthetic input per the
-    # no-synthetic-sede-live-surfaces ADR.
+    # AEAT-hosted policies must not advertise synthetic input per
+    # the no-synthetic-sede-live-surfaces rule.
     return RemoteStateGuardPolicy(
         id="aeat-nif-iva-public",
         evidence_tier="executable_parity_evidence",

@@ -1,9 +1,7 @@
 """Anti-tautology proof: the M303 engine sums extracted primitive leaves.
 
-Per the engine-and-fixture co-landing rule
-(``2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr``) and the
-M303-specific spec (``2026-06-03-m303-synthetic-generator-primitive-spec-adr``,
-Findings section), a synthetic-fixture round trip that depends on the engine
+Per the engine-and-fixture co-landing rule and the M303-specific
+synthetic-generator primitive spec, a synthetic-fixture round trip that depends on the engine
 recomputing a total from extracted primitives MUST carry an anti-tautology
 test that proves the engine is actually summing the primitives — not, for
 example, copying the printed total or silently substituting a zero default.

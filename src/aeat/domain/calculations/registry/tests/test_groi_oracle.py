@@ -43,8 +43,8 @@ _WWW2_HOST = aeat_host("www2")
 
 
 def _aeat_policy() -> RemoteStateGuardPolicy:
-    # AEAT-hosted policies must not advertise synthetic input per the
-    # no-synthetic-sede-live-surfaces ADR.
+    # AEAT-hosted policies must not advertise synthetic input per
+    # the no-synthetic-sede-live-surfaces rule.
     return RemoteStateGuardPolicy(
         id="modelo-349-groi-spanish-roi-check",
         evidence_tier="executable_parity_evidence",

@@ -16,7 +16,7 @@ The multi-year contract: the same crypto position declared in ejercicio N is
 used as the prior-year baseline in ejercicio N+1. If the 31-December aggregate
 grew > €20,000 over the last-declared baseline (the re-declaration increment
 threshold per art. 42-quater), a new declaration is required in N+1 even if
-the filer would otherwise be below threshold. This mirrors the M720 A3-ADR
+the filer would otherwise be below threshold. This mirrors the M720 A3
 re-declaration trigger for bienes y derechos.
 
 This module covers the data-fidelity layer:

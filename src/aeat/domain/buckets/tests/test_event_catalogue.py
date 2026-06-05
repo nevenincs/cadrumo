@@ -184,8 +184,8 @@ def test_ledger_event_catalogue_uses_approved_transaction_vocabulary() -> None:
     assert BucketEventType.ATTACHMENT_REMOVED.value == "attachment.removed"
 
 
-def test_reverse_merge_correction_events_match_taxonomy_adr() -> None:
-    """The six correction events match the google-oauth taxonomy ADR §6 schema."""
+def test_reverse_merge_correction_events_match_taxonomy_contract() -> None:
+    """The six correction events match the google-oauth taxonomy contract schema."""
 
     assert BucketEventType.LEDGER_TRANSACTION_CORRECTION_APPLIED.value == "ledger.transaction.correction.applied"
     assert (
@@ -378,14 +378,14 @@ def test_bucket_event_type_includes_censo_declaration_kinds() -> None:
     """Modelo 036 declarative-recording verbs (operator declares an
     alta / modificacion / baja was filed at sede) have dedicated
     canonical enum slots distinct from the live-read mirror events
-    (``profile.censo.refreshed/applied``). Per the 2026-05-16 ADR
-    amendment to cli-workflow-redesign-modelo-036-037-foundation,
+    (``profile.censo.refreshed/applied``). Per the 2026-05-16 workflow
+    redesign contract for cli-workflow-redesign-modelo-036-037-foundation,
     the local app never files a 036; these events record the
     operator's declaration so downstream profile state and
     stale-cascade logic can react.
 
-    Authority: 2026-06-03-m036-lifecycle-verbs-research +
-    CLI workflow redesign contract.
+    Authority: m036 workflow lifecycle contract and CLI workflow redesign
+    contract.
     """
 
     from .._event import BucketEventType
@@ -404,9 +404,8 @@ def test_bucket_event_object_type_includes_bucket_container() -> None:
     with the lifecycle change on the encrypted profile record, blurring
     the audit-trail distinction the maintenance events exist to make.
 
-    Authority: 2026-06-03-cli-workflow-redesign-adr (composition pattern
-    preconditions Step) and the 2026-05-15 amendment to
-    2026-05-12-cli-workflow-redesign-bucket-adr.
+    Authority: cli-workflow redesign composition-pattern preconditions
+    and the 2026-05-12 cli-workflow bucket contract.
     """
 
     from .._event import BucketEventObjectType

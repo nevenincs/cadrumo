@@ -1,6 +1,6 @@
 """Per-bucket engine isolation roundtrip.
 
-Per the profile-bucket-lifecycle ADR section 2 the on-disk layout
+Per the profile-bucket lifecycle contract, the on-disk layout
 puts every bucket's SQLite database under
 ``<aeat-root>/buckets/<bucket-id>/db/aeat.db``. The Settings model
 resolves ``aeat_database_url`` through the active-profile pointer
@@ -43,7 +43,7 @@ def _state_for_label(label: str) -> WorkflowState:
 def test_two_buckets_persist_into_two_distinct_workflow_histories(tmp_path: Path) -> None:
     """Writing a WorkflowState in bucket A and bucket B yields two distinct stores.
 
-    Per ADR section 2 each bucket has its own SQLite database under
+    Each bucket has its own SQLite database under
     ``<root>/buckets/<bucket-id>/db/aeat.db``. Switching the active
     bucket switches the engine and therefore the on-disk store the
     repository writes to.
@@ -74,7 +74,7 @@ def test_two_buckets_persist_into_two_distinct_workflow_histories(tmp_path: Path
 def test_mutating_one_bucket_db_leaves_other_bucket_reads_unaffected(tmp_path: Path) -> None:
     """Anti-tautology: corrupting bucket A's database does not affect bucket B reads.
 
-    Per ADR section 2 the two databases are independent files. If a
+    The two databases are independent files. If a
     cross-bucket bleed existed (shared engine cache, shared connection
     pool, shared file handle), corrupting A's database file would
     surface as a load failure on B. The opposite must hold: B's read

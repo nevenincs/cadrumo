@@ -1,13 +1,13 @@
 """Regression-test ratchet: every public-surface field referencing the language axis must consume OutputLanguage.
 
-The dual-keying ADR pattern (per 2026-06-01-output-language-typed-constant-migration-adr.md
-D3): every field on public surfaces (settings, profile, CLI arguments, data-class fields)
+The output-language typing contract requires every field on public surfaces
+(settings, profile, CLI arguments, data-class fields)
 referencing the output language axis must either consume `OutputLanguage` directly
-or carry an explicit exemption comment citing the ADR. Internal helpers (cache keys,
+or carry an explicit exemption comment. Internal helpers (cache keys,
 normalisation functions) are exempt by name.
 
-This gate prevents future drift: any new bare-str language field gets caught at PR
-review time (test failure), not after merge.
+This gate prevents future drift: any new bare-str language field gets caught
+as a test failure before it can merge.
 """
 
 from __future__ import annotations
@@ -67,7 +67,7 @@ def test_profile_output_language_typed_or_exempt() -> None:
 
     for line_num, line in fields:
         if "str" in line and "output_language" in line.lower():
-            assert "# exempt:" in line or "ADR" in line, (
+            assert "# exempt:" in line, (
                 f"{profile_file}:{line_num} has bare str output-language field without exemption: {line.strip()}"
             )
 

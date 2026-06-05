@@ -175,7 +175,7 @@ def test_unknown_expression_does_not_block() -> None:
 
 # ---------------------------------------------------------------------------
 # implies_nonzero — conditional predicate with strictly-positive antecedent
-# Authority: .vault/adr/2026-05-27-dsl-conditional-predicate-adr.md
+# Authority: conditional predicate rule-set reference
 # ---------------------------------------------------------------------------
 
 
@@ -195,7 +195,7 @@ def test_predicate_implies_nonzero_holds_when_antecedent_negative() -> None:
     The antecedent test is strictly-positive (> 0) rather than non-zero;
     a negative antecedent — even though casillas typically cannot carry
     negative base imponible — does not engage the implication. This is
-    the defensive contract spelled out in ADR §C (constraints).
+    the defensive contract spelled out in section §C (constraints).
     """
     values: dict[str, Decimal] = {"01": Decimal("-100"), "07": Decimal("0")}
     assert _evaluate_predicate_expression('implies_nonzero(["01", "07"])', values, _workflow_profile()) is True
@@ -216,7 +216,7 @@ def test_predicate_implies_nonzero_violated_when_consequent_zero() -> None:
     """Antecedent positive AND consequent zero → predicate violated.
 
     The canonical M131 EO cuota-mínima miss: base imponible positive but
-    cuota-mínima absent. ADR D2.2 anti-tautology proof: this exact case
+    cuota-mínima absent. Contract D2.2 anti-tautology proof: this exact case
     is what `all_nonzero(["01", "07"])` would mis-flag when C01 is itself
     zero. The new operator does not have that false-positive surface.
     """
