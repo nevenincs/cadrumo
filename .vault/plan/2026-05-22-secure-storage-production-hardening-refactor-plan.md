@@ -516,7 +516,7 @@ Current register count: `301` production candidate files.
 | `AFR-235` | `src/aeat/domain/deadlines/_recargo.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-236` | `src/aeat/domain/filing/_complementaria_repository.py` | `secure-object, manifest-bucket, plain-file` | `runtime-default` | `W12.P21.S84` | closed |
 | `AFR-237` | `src/aeat/domain/filing/_repository.py` | `secure-object, secure-bound, manifest-bucket` | `runtime-default` | `W12.P21.S84` | closed |
-| `AFR-238` | `src/aeat/domain/filing/_runtime_repository.py` | `secure-object, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S84` | pending |
+| `AFR-238` | `src/aeat/domain/filing/_runtime_repository.py` | `secure-object, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S84` | closed |
 | `AFR-239` | `src/aeat/domain/fincas/_imputacion_parameters.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-240` | `src/aeat/domain/invoices/_models.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-241` | `src/aeat/domain/invoices/_repository.py` | `secure-object, runtime, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S84` | closed |
@@ -877,7 +877,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S337` - Close `AFR-235` for `src/aeat/domain/deadlines/_recargo.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/domain/deadlines/_recargo.py`.
 - [x] `W12.P26.S338` - Close `AFR-236` for `src/aeat/domain/filing/_complementaria_repository.py` with signals `secure-object, manifest-bucket, plain-file`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/filing/_complementaria_repository.py`.
 - [x] `W12.P26.S339` - Close `AFR-237` for `src/aeat/domain/filing/_repository.py` with signals `secure-object, secure-bound, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/filing/_repository.py`.
-- [ ] `W12.P26.S340` - Close `AFR-238` for `src/aeat/domain/filing/_runtime_repository.py` with signals `secure-object, active-profile, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/filing/_runtime_repository.py`.
+- [x] `W12.P26.S340` - Close `AFR-238` for `src/aeat/domain/filing/_runtime_repository.py` with signals `secure-object, active-profile, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/filing/_runtime_repository.py`.
 - [x] `W12.P26.S341` - Close `AFR-239` for `src/aeat/domain/fincas/_imputacion_parameters.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/domain/fincas/_imputacion_parameters.py`.
 - [x] `W12.P26.S342` - Close `AFR-240` for `src/aeat/domain/invoices/_models.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/domain/invoices/_models.py`.
 - [x] `W12.P26.S343` - Close `AFR-241` for `src/aeat/domain/invoices/_repository.py` with signals `secure-object, runtime, active-profile, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/invoices/_repository.py`.
