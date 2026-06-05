@@ -153,6 +153,12 @@ Reviewed W04.P09 `S85` and `S86` plus W02.P10 `S151`. The domain error registry 
 
 Verification covers Ruff, compileall, direct registry equality comparison, public registry lookup smoke, 39 focused core error and boundary tests, 106 focused config/custody CLI tests, and the 2-test hard size-budget guard. The broad `src/aeat/core/tests` lane failed on unrelated stale meta-test paths and one external-constant alias assertion; that residual is tracked as W04.P09 `S152`.
 
+## REVIEW-022 | LOW | No blocking findings in justificante generator split
+
+Reviewed W05.P12 `S125`. The committed synthetic justificante regeneration command remains `src/aeat/tests/fixtures/justificantes/_generate.py`, while shared receipt rendering and sidecar writing live in `_generate_base.py`, IVA/pagos-fraccionados corpus fixtures live in `_generate_iva_corpus.py`, and the remaining modelo families live in `_generate_misc_a.py` and `_generate_misc_b.py`.
+
+Verification covers Ruff, compileall, compatibility export smoke, 23 focused fixture/provenance tests, the 2-test hard size-budget guard, and vault frontmatter/link checks. No fixture PDFs were regenerated or changed in this slice.
+
 ## REVIEW-022 | LOW | No blocking findings in application and adapter error registry shard closure
 
 Reviewed W04.P09 `S87` through `S90`. The application and adapter error registry modules now remain as aggregate facades over private ordered shards. The shard files keep declaration order and `ErrorCode` payloads intact, and each aggregate continues to expose `_DECLARED_ERROR_CODES` for the core registry package.
