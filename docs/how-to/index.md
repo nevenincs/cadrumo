@@ -1,73 +1,143 @@
 # How-to guides
 
-These guides are short task recipes. Use them when you already know the result
-you need: set up a profile, prepare ledger records, calculate a modelo, export a
-file, reconcile a receipt, or fix a local problem.
+Pick the question closest to what you are trying to do. For exact command
+options, use the [command-line reference](../cli/index.rst).
 
-Each guide defines the terms it needs. For exact command options, use the
-[command-line reference](../cli/index.rst).
+## How do I start this?
 
-## Setup
+::::{grid} 1 2 2 3
+:gutter: 3
 
-- [Set up your taxpayer profile](profile-setup.md): create, switch, and manage
-  saved taxpayer identities.
-- [Sync your taxpayer census](censo-update.md): read AEAT censo facts, compare
-  them with the active profile, and apply the local update when appropriate.
-- [Plan your filing calendar](filing-calendar.md): see upcoming deadlines and
-  understand why a modelo applies.
+:::{grid-item-card} Quickstart
+:link: quickstart
+:link-type: doc
 
-## Ledger
+Shortest path from profile and ledger to an exported modelo file.
+:::
 
-- [Import and classify a bank statement](import-bank-statements.md): bring
-  transactions into the ledger, classify them, and run preflight before
-  calculating.
-- [Classify a transaction with an LLM](classify-with-llm.md): ask for a
-  classification suggestion, then accept, reject, or override it.
+:::{grid-item-card} Set Up a Profile
+:link: profile-setup
+:link-type: doc
 
-## Prepare and export modelos
+Create, inspect, switch, export, import, rename, or delete taxpayer profiles.
+:::
 
-- [Quickstart: produce a modelo file](quickstart.md): use the shortest path from
-  a ready profile and ledger to an exported file.
-- [Standard prepare-and-export workflow](filing-spine.md): prepare a draft,
-  check it, export it, and keep a local record.
-- [Prepare a quarterly IVA return (Modelo 303)](modelo-303.md): produce a quarterly
-  IVA declaration.
-- [Produce an annual summary (Modelo 390)](modelo-390.md): produce the annual
-  IVA summary.
+:::{grid-item-card} Authenticate with AEAT
+:link: authenticate-with-aeat
+:link-type: doc
 
-## Verify, export, upload, and check records
+Configure read-only AEAT authentication for live-read workflows.
+:::
 
-- [Quickstart: produce a modelo file](quickstart.md): verify and export when you
-  only need the shortest path.
-- [Standard prepare-and-export workflow](filing-spine.md): use this when you need
-  the repeated workflow, visible filing targets, current revisions, local file
-  markers, and exported files.
-- [Reconcile a filing against its justificante](reconcile.md): compare local
-  filing data with the receipt issued by the AEAT portal after you upload.
+::::
 
-`aeat` does not submit to the AEAT. Exported files are local files. You upload
-them yourself through official AEAT channels and keep the justificante for your
+## What do I have to do?
+
+::::{grid} 1 2 2 3
+:gutter: 3
+
+:::{grid-item-card} Link Modelo 036 Censo
+:link: censo-update
+:link-type: doc
+
+Pull, compare, and apply AEAT census facts for the active profile.
+:::
+
+:::{grid-item-card} Filing Calendar
+:link: filing-calendar
+:link-type: doc
+
+See what may be due and why a modelo applies.
+:::
+
+:::{grid-item-card} Transaction Data
+:link: import-bank-statements
+:link-type: doc
+
+Import, add, edit, remove, and review ledger rows.
+:::
+
+:::{grid-item-card} Classify Transactions
+:link: classify-transactions
+:link-type: doc
+
+Classify rows manually, in bulk, with allocation, or with LLM assistance.
+:::
+
+:::{grid-item-card} Calculation Inputs
+:link: review-calculation-values
+:link-type: doc
+
+Review casillas, missing values, offsets, bindings, and revisions.
+:::
+
+:::{grid-item-card} Reconcile a Filing
+:link: reconcile
+:link-type: doc
+
+Compare local filing data with the AEAT justificante.
+:::
+
+::::
+
+## How does this work?
+
+::::{grid} 1 2 2 3
+:gutter: 3
+
+:::{grid-item-card} Filing Workflow
+:link: filing-spine
+:link-type: doc
+
+Understand drafts, verification, export, filing markers, and history.
+:::
+
+:::{grid-item-card} Modelo 303
+:link: modelo-303
+:link-type: doc
+
+Prepare, verify, and export a quarterly IVA return.
+:::
+
+:::{grid-item-card} Modelo 390
+:link: modelo-390
+:link-type: doc
+
+Prepare the annual IVA summary.
+:::
+
+:::{grid-item-card} LLM Classification
+:link: classify-with-llm
+:link-type: doc
+
+Preview, apply, reject, or override local LLM suggestions.
+:::
+
+:::{grid-item-card} Troubleshooting
+:link: troubleshooting
+:link-type: doc
+
+Fix active-profile, storage, registry, and authentication problems.
+:::
+
+::::
+
+`aeat` does not submit to AEAT. Exported files are local files. You upload them
+yourself through official AEAT channels and keep the justificante for your
 records.
-
-## Troubleshooting and support
-
-- [Diagnose and repair your local setup](troubleshooting.md): start with status,
-  logs, stored-data checks, active-profile repair, reset guidance, and
-  authentication/connectivity checks.
-
-When you ask for help, include the command you ran and redacted output. Do not
-paste tax ids, certificate material, full bank details, full justificantes, or
-personal documents. Do not paste unredacted log files.
 
 ```{toctree}
 :hidden:
 
+quickstart
 profile-setup
+authenticate-with-aeat
 censo-update
 filing-calendar
 import-bank-statements
+classify-transactions
 classify-with-llm
-quickstart
+review-calculation-values
 filing-spine
 modelo-303
 modelo-390
