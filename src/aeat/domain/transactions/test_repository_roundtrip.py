@@ -188,6 +188,9 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
         # The original ValidationError is preserved for inspection.
         assert isinstance(exc_info.value.original_exception, ValidationError)
         assert exc_info.value.bucket_id == profile.bucket_id
+        assert exc_info.value.translated_message == "errors.storage.stored_data_validation_boundary"
+        assert exc_info.value.context == {"bucket_id": profile.bucket_id, "recovery": "aeat config repair"}
+        assert exc_info.value.suggestion == "aeat config repair"
 
 
 def test_transaction_catalogue_inner_classification_mismatch_is_structured(

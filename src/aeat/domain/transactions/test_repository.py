@@ -28,6 +28,7 @@ def test_transaction_repository_rejects_blank_bucket_with_ledger_storage_error()
     with pytest.raises(LedgerStorageError, match="bucket_id must not be blank") as exc_info:
         TransactionCatalogueRepository(bucket_id=" ")
 
+    assert exc_info.value.translated_message == "errors.fail.fail_financial_ledger_storage"
     assert exc_info.value.context == {"repository": "transaction_catalogue", "operation": "object_key"}
 
 
