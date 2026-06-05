@@ -1062,9 +1062,14 @@ application:
         en estat {final_stage}, no ABORTED.'
       resume_refused_terminal_reason: L'execució {run_id} es va avortar per {reason},
         que és terminal per disseny i no es pot reprendre.
-      resume_run_ambiguous: Més d'una execució de flux de treball coincideix amb
-        el model {modelo} període {period}. Trieu un id d'execució exacte.
-        {candidates}
+      resume_revision_selector_invalid: 'El selector de calcul {selector} no es valid per a aquest desti de represa.'
+      resume_run_ambiguous: Més d'una execució de flux de treball coincideix amb el
+        model {modelo} període {period}. Trieu un id d'execució exacte. {candidates}
+      resume_run_id_invalid: 'L id d execucio de flux {workflow_run_id} no es valid.'
+      resume_target_contradiction: 'Proporciona nomes un desti de represa. No combinis target, workflow run id, work unit id, calculation revision id ni camps visibles modelo/any/periode.'
+      resume_target_invalid: 'El desti de represa {target} no es un id d execucio de flux ni un id d unitat de treball.'
+      resume_target_required: 'Proporciona un id d execucio de flux, id d unitat de treball, id de revisio de calcul, target o desti visible modelo/any/periode.'
+      resume_visible_target_incomplete: 'El desti visible de represa requereix modelo, any i periode; s ha rebut modelo={modelo}, year={year}, period={period}.'
       run_id_invalid_blank: L'identificador d'execució no pot estar en blanc.
       run_id_invalid_separators: L'identificador d'execució no ha de contenir separadors
         de ruta.
@@ -1217,6 +1222,9 @@ cli:
       expediente_help: Identificador d'expedient AEAT
       expedientes:
         app_help: Snapshots d'expedients AEAT de només lectura
+        capture_all_help: Captura totes les dades del registre de declaracions de
+          l'AEAT i desa instantanies.
+        capture_all_modelo_help: Limita capture-all a aquest model.
         capture_help: Captura d'AEAT el registre de declaracions i desa un snapshot
         latest_help: Mostra el snapshot d'expedients més recent
         list_help: Llista els snapshots d'expedients desats
@@ -1270,6 +1278,7 @@ cli:
       notifications:
         app_help: Snapshots de notificacions DEHú de només lectura
         capture_help: Captura notificacions DEHú i desa un snapshot
+        latest_help: Mostra la instantania de notificacio DEHU mes recent.
         list_help: Llista els snapshots de notificacions DEHú desats
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
         view_help: Mostra un snapshot de notificacions DEHú
@@ -1569,10 +1578,6 @@ cli:
         casilla_help: Valor de casella amb sintaxi CASILLA=DECIMAL (repetible). CASILLA
           admet l'id de casella, el número del registre o el número de casella imprès
           al BOE mostrats per `aeat app modelo casillas`.
-        casilla_non_numeric_data_type: La casilla {key} ("{label}") té tipus de dada
-          {data_type} i no accepta valors decimals directes. Usa --binding per a aquest
-          tipus d'entrada o consulta `aeat app modelo casillas` per identificar la
-          casilla numèrica correcta.
         casilla_not_decimal: 'El valor de --casilla per a {key} no és un decimal:
           {value}.'
         causante_ccaa_help: CCAA de residència habitual del causant (ISD Modelo 650/660)
@@ -1759,9 +1764,6 @@ cli:
         resume_help: Valida si pots reintentar una execució de flux interrompuda sense
           contactar amb AEAT. Accepta un id d'execució de flux o un id d'unitat de
           treball.
-        resume_invalid_target: El destí de resume ha de ser un id d'execució de flux
-          de 16 caràcters o un id d'unitat de treball de 64 caràcters; s'ha rebut
-          {target}. Executa `aeat app modelo work runs` per llistar els ids d'execució.
         resume_target_help: Id d'execució de flux de 16 caràcters, o l'id d'unitat
           de treball de 64 caràcters (es resol automàticament la seva darrera execució).
           Executa `aeat app modelo work runs` per llistar els ids d'execució.
@@ -3369,7 +3371,6 @@ errors:
     error_aeat_core_not_found: No s'ha trobat el recurs o registre sol·licitat.
     error_aeat_observability: S'ha produït un error en la telemetria de l'aplicació.
     error_aggregation_config: S'ha violat un invariant de composició del servei d'agregació.
-    error_apidocs: errors.error.error_apidocs
     error_application_live: L'orquestració de la lectura en viu de l'AEAT ha fallat.
     error_application_live_iva_surface_timeout: La superfície de lectura d'IVA en
       viu ha esgotat el temps abans de retornar evidència de l'AEAT.
@@ -3731,6 +3732,8 @@ errors:
     validate_expects_str: La validació d'identitat espera un valor de text; s'ha obtingut
       {got_type}.
   integrity:
+    integrity_active_profile_pointer: El punter de perfil actiu no es valid; repara
+      el perfil seleccionat abans de continuar.
     integrity_aeat_core_validation: Una comprovació interna d'integritat de dades
       no s'ha superat.
     integrity_cli_output_schema: El registre d'esquemes de sortida de la CLI està
@@ -3811,7 +3814,6 @@ errors:
       dades de referència o el motor de càlcul poden estar malmesos.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
-    integrity_active_profile_pointer: 'El punter de perfil actiu no es valid; repara el perfil seleccionat abans de continuar.'
   internal:
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
@@ -3855,7 +3857,9 @@ errors:
     locked_storage_lock_acquisition: No s'ha pogut obtenir el bloqueig exclusiu de
       fitxer dins del temps d'espera. Un altre procés el reté; espera i torna-ho a
       provar.
-    locked_storage_master_key_keychain: 'L''anell de claus del sistema operatiu està bloquejat. Desbloqueja''l (Touch ID, Windows Hello o el desbloqueig del gestor de credencials) i torna-ho a provar.'
+    locked_storage_master_key_keychain: L'anell de claus del sistema operatiu està
+      bloquejat. Desbloqueja'l (Touch ID, Windows Hello o el desbloqueig del gestor
+      de credencials) i torna-ho a provar.
   refused:
     auth_configure_no_active_bucket: No es pot configurar l'autenticació sense un
       perfil actiu. Crea un perfil amb `aeat config profile create NOM` i torna-ho

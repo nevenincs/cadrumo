@@ -1001,9 +1001,14 @@ application:
         állapotban van, nem ABORTED.'
       resume_refused_terminal_reason: A(z) {run_id} futás {reason} miatt megszakadt,
         ami tervezetten terminális és nem folytatható.
-      resume_run_ambiguous: Egynél több munkafolyamat-futás illeszkedik a(z)
-        {modelo} modell {period} időszakára. Válasszon pontos futásazonosítót.
-        {candidates}
+      resume_revision_selector_invalid: 'A(z) {selector} szamitasi valaszto nem ervenyes ehhez a folytatasi celhoz.'
+      resume_run_ambiguous: Egynél több munkafolyamat-futás illeszkedik a(z) {modelo}
+        modell {period} időszakára. Válasszon pontos futásazonosítót. {candidates}
+      resume_run_id_invalid: 'A(z) {workflow_run_id} munkafolyamat-futasi azonosito ervenytelen.'
+      resume_target_contradiction: 'Csak egy folytatasi celt adjon meg. Ne kombinalja a target, workflow run id, work unit id, calculation revision id es a lathato modelo/ev/idoszak mezoket.'
+      resume_target_invalid: 'A(z) {target} folytatasi cel nem munkafolyamat-futasi azonosito es nem munkaegyseg-azonosito.'
+      resume_target_required: 'Adjon meg munkafolyamat-futasi azonosítot, munkaegyseg-azonositot, szamitasi revizio azonosítot, target erteket vagy lathato modelo/ev/idoszak celt.'
+      resume_visible_target_incomplete: 'A lathato folytatasi celhez modelo, ev es idoszak szukseges; kapott ertekek: modelo={modelo}, year={year}, period={period}.'
       run_id_invalid_blank: A futásazonosító nem lehet üres.
       run_id_invalid_separators: A futásazonosító nem tartalmazhat elérési út elválasztókat.
       run_not_found: 'Munkafolyamat-futás nem található: {run_id}.'
@@ -1159,6 +1164,9 @@ cli:
       expediente_help: AEAT expediente azonosító.
       expedientes:
         app_help: Csak olvasható AEAT expediente pillanatképek.
+        capture_all_help: Az AEAT bevallasi nyilvantartas osszes adatanak rogzitese
+          es pillanatkepek mentese.
+        capture_all_modelo_help: A capture-all muvelet korlatozasa erre a modellora.
         capture_help: AEAT bevallási nyilvántartási adatok rögzítése és pillanatkép
           mentése.
         latest_help: A legfrissebb expediente pillanatkép megjelenítése.
@@ -1210,6 +1218,7 @@ cli:
       notifications:
         app_help: Csak olvasható DEHú értesítés-pillanatképek.
         capture_help: DEHú értesítések rögzítése és pillanatkép mentése.
+        latest_help: A legutobbi DEHU ertesitesi pillanatkep megjelenitese.
         list_help: Mentett DEHú értesítés-pillanatképek listázása.
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
         view_help: DEHú értesítés-pillanatkép megjelenítése.
@@ -1515,10 +1524,6 @@ cli:
         casilla_help: Mezőérték CASILLA=DECIMAL szintaxissal (ismételhető). A CASILLA
           elfogadja a mező azonosítóját, a nyilvántartási számot vagy az `aeat app
           modelo casillas` által megjelenített BOE-n nyomtatott mezőszámot.
-        casilla_non_numeric_data_type: 'A(z) {key} ("{label}") mező adattípusa {data_type},
-          és nem fogad el decimális felülbírálásokat. Használja a --binding kapcsolót
-          ennél a beviteli típusnál, vagy futtassa: `aeat app modelo casillas` a megfelelő
-          numerikus mező azonosításához.'
         casilla_not_decimal: 'A(z) {key} mező --casilla értéke nem decimális: {value}.'
         causante_ccaa_help: Az örökhagyó autonóm közöségének kódja (IRPF öröklési
           ügyek).
@@ -1703,9 +1708,6 @@ cli:
         resume_help: Ellenőrzés, hogy megszakított munkafolyamat újraindítható-e az
           AEAT megkeresése nélkül. Munkafolyamat-futtatás azonosítóját vagy munkaegység-azonosítót
           fogad el.
-        resume_invalid_target: 'Az újraindítási célnak 16 karakteres munkafolyamat-futtatás-azonosítónak
-          vagy 64 karakteres munkaegység-azonosítónak kell lennie; kapott: {target}.
-          Futtassa: `aeat app modelo work runs` a futtatásazonosítók listázásához.'
         resume_target_help: '16 karakteres munkafolyamat-futtatás-azonosító, vagy
           a 64 karakteres munkaegység-azonosító (a legújabb futtatása automatikusan
           feloldódik). Futtassa: `aeat app modelo work runs` a futtatásazonosítók
@@ -3324,7 +3326,6 @@ errors:
     error_aeat_core_not_found: A kért erőforrás vagy rekord nem található.
     error_aeat_observability: Hiba történt az alkalmazás telemetriájában.
     error_aggregation_config: Az összesítési szolgáltatás összetételi invariáns megsértése.
-    error_apidocs: errors.error.error_apidocs
     error_application_live: Az élő AEAT-olvasási vezénylés meghiúsult.
     error_application_live_iva_surface_timeout: Az élő IVA-olvasási felület időtúllépett,
       mielőtt AEAT-bizonyítékot adott volna vissza.
@@ -3643,6 +3644,8 @@ errors:
     validate_expects_str: Az azonosítóérvényesítés szöveges értéket vár; {got_type}
       érkezett.
   integrity:
+    integrity_active_profile_pointer: Az aktivprofil-mutato ervenytelen; javitsa a
+      kivalasztott profilt a folytatas elott.
     integrity_aeat_core_validation: Belső adatintegritás-ellenőrzés meghiúsult.
     integrity_cli_output_schema: A CLI kimeneti séma nyilvántartása helytelenül van
       konfigurálva.
@@ -3716,7 +3719,6 @@ errors:
       vagy a számítási motor sérült lehet.
     profile_import_signature: A profil-archívum nem ment át az aláírás- vagy integritás-ellenőrzésen.
       Ne importáljon archívumot nem megbízható forrásból.
-    integrity_active_profile_pointer: 'Az aktivprofil-mutato ervenytelen; javitsa a kivalasztott profilt a folytatas elott.'
   internal:
     internal_cli_unexpected_boundary: A parancs váratlan belső hiba miatt meghiúsult.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
@@ -3754,7 +3756,9 @@ errors:
       van szükség. Futtassa az  parancsot, és próbálja újra.
     locked_storage_lock_acquisition: A kizárólagos fájlzárat nem sikerült beszerezni
       az időkorláton belül. Egy másik folyamat tartja; várjon, és próbálja újra.
-    locked_storage_master_key_keychain: 'Az operációs rendszer kulcstára zárolt. Oldja fel a zárolást (Touch ID, Windows Hello vagy a hitelesítőkezelő), és próbálja újra.'
+    locked_storage_master_key_keychain: Az operációs rendszer kulcstára zárolt. Oldja
+      fel a zárolást (Touch ID, Windows Hello vagy a hitelesítőkezelő), és próbálja
+      újra.
   refused:
     auth_configure_no_active_bucket: Hitelesítés nem konfigurálható aktív profil nélkül.
       Hozzon létre profilt az  paranccsal, és próbálja újra.
