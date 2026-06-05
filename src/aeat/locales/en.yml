@@ -1,7 +1,3 @@
-access_gate:
-  errors:
-    default_translatable: live AEAT submission is permanently forbidden; use produce
-      -> verify -> export and upload the file yourself in the AEAT portal
 adapters:
   aeat:
     clave_movil:
