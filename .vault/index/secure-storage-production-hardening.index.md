@@ -854,11 +854,13 @@ related:
   - '[[2026-06-05-secure-storage-production-hardening-w20-p40-s458-guidance-rollout-audit]]'
   - '[[2026-06-05-secure-storage-production-hardening-w20-p41-s453-guard-inventory-audit]]'
   - '[[2026-06-06-secure-storage-production-hardening-W13-P27-S396]]'
+  - '[[2026-06-06-secure-storage-production-hardening-W13-P27-S397]]'
   - '[[2026-06-06-secure-storage-production-hardening-W20-P40-S460]]'
   - '[[2026-06-06-secure-storage-production-hardening-W20-P41-S455]]'
   - '[[2026-06-06-secure-storage-production-hardening-W20-P42-S456]]'
   - '[[2026-06-06-secure-storage-production-hardening-code-review-audit]]'
   - '[[2026-06-06-secure-storage-production-hardening-w13-p27-s396-persona-readiness-reconciliation-audit]]'
+  - '[[2026-06-06-secure-storage-production-hardening-w13-p27-s397-persona-research-requirements]]'
   - '[[2026-06-06-secure-storage-production-hardening-w20-p41-s455-provenance-path-audit]]'
   - '[[2026-06-06-secure-storage-production-hardening-w20-p42-s456-redaction-enrollment-audit]]'
 ---
@@ -1726,6 +1728,7 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 - `2026-06-05-secure-storage-production-hardening-W20-P40-S459` - W20.P40.S459 - Implement config lock and unlock aliases
 - `2026-06-05-secure-storage-production-hardening-W20-P41-S453` - W20.P41.S453 - Narrow secure-storage guard inventories
 - `2026-06-06-secure-storage-production-hardening-W13-P27-S396` - W13.P27.S396 persona readiness reconciliation
+- `2026-06-06-secure-storage-production-hardening-W13-P27-S397` - W13.P27.S397 persona research requirements
 - `2026-06-06-secure-storage-production-hardening-W20-P40-S460` - W20.P40.S460 - Close stale custody guidance drift
 - `2026-06-06-secure-storage-production-hardening-W20-P41-S455` - W20.P41.S455 inbound provenance privacy
 - `2026-06-06-secure-storage-production-hardening-W20-P42-S456` - W20.P42.S456 central redaction enrollment
@@ -1742,3 +1745,4 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 
 - `2026-05-22-secure-storage-production-hardening-architecture-research` - `secure-storage-production-hardening` research: `architecture mandate for adverse production operation`
 - `2026-05-28-secure-storage-production-hardening-w05-p09-s40-research` - `secure-storage-production-hardening` research: `W05.P09.S40 retained export and side-store exceptions`
+- `2026-06-06-secure-storage-production-hardening-w13-p27-s397-persona-research-requirements` - `secure-storage-production-hardening` research: `S397 persona finding research requirements`

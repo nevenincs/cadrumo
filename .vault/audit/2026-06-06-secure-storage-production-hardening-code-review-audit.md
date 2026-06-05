@@ -45,6 +45,12 @@ Review checked the S396 disposition matrix against the fresh persona findings in
 
 Status: no action required.
 
+## S397-001 | INFO | Persona research requirements review passed
+
+Review checked the S397 research requirements against semantic vault search results, the fresh persona findings inventory, the capability-gap design note, the secure-storage architecture ADR, the secure-object integrity plan, and current CLI/application surface discovery. The note keeps FRESH-004 and FRESH-007 as classification questions, treats FRESH-011 as storage-owned but already architecturally backed, and requires S399 retest evidence before S400 can add any repair row.
+
+Status: no action required.
+
 ## S460-002 | MEDIUM | Operator-surface contract under-declared root custody verbs
 
 The accepted operator-surface contract only declared `config unlock` while the CLI mounted first-class `config lock`, `config unlock`, `config rekey`, `config recover`, `config show-recovery`, and `config verify-recovery`. S460 now adds an explicit custody domain and mounted command-family rows for each root-level custody child.
