@@ -217,3 +217,16 @@ Preflight refusal paths use localized `errors.refused.submission_preflight_*` ke
 structured context. Auth-provider describe failures are logged with `exc_info=True`
 and chained into `SubmissionPreflightError`, so the cause is neither swallowed nor
 exposed as raw operator-facing text.
+
+## S364-CR-001 | PASS | Submission protocols are boundary declarations only
+
+Reviewed the S364 scope as `vaultspec-code-reviewer`. `_protocols.py` declares
+structural ports and strict value types. It does not call remote providers, construct
+secure storage, resolve active profiles, read settings, inspect environment variables,
+or perform filesystem IO.
+
+## S364-CR-002 | PASS | Concrete repository coupling is avoided
+
+`SubmissionRepositoryProtocol` references `ModeloPresentado` and declares the narrow
+load/list/iterate surface consumed by domain/application code. It does not import the
+concrete `SubmissionRepository` or adapter-layer secure-storage classes.
