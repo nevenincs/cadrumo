@@ -249,16 +249,16 @@ def _tx_repo(state: WorkflowState) -> TransactionCatalogueRepository:
         raise _no_active_profile_refusal() from exc
 
 
-def _invoice_repo() -> InvoiceCatalogueRepository:
+def _invoice_repo(*, bucket_id: str | None = None) -> InvoiceCatalogueRepository:
     from ...domain.invoices import InvoiceCatalogueRepository
 
-    return InvoiceCatalogueRepository()
+    return InvoiceCatalogueRepository(bucket_id=bucket_id)
 
 
-def _draft_repo() -> ModeloDraftRepository:
+def _draft_repo(*, bucket_id: str | None = None) -> ModeloDraftRepository:
     from ...domain.filing import ModeloDraftRepository
 
-    return ModeloDraftRepository()
+    return ModeloDraftRepository(bucket_id=bucket_id)
 
 
 def _load_transactions(state: WorkflowState) -> TransactionCatalogue:
@@ -292,11 +292,12 @@ def _aggregate_filing_inputs(modelo: str, period: str, state: WorkflowState) -> 
     if modelo.strip() == "100" and _annual_filing_year(period) is not None:
         filing_year = _annual_filing_year(period)
         assert filing_year is not None
+        bucket_id = _active_bucket_id_or_bad(state)
         return _aggregate_renta_filing_inputs(
-            bucket_id=_active_bucket_id_or_bad(state),
+            bucket_id=bucket_id,
             filing_year=filing_year,
             transaction_repository=_tx_repo(state),
-            invoice_repository=_invoice_repo(),
+            invoice_repository=_invoice_repo(bucket_id=bucket_id),
         )
     return {}
 

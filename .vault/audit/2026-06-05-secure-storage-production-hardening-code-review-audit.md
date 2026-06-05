@@ -323,3 +323,24 @@ The focused CLI tests passed but emitted a deprecation warning from the public
 falls back to Click 8's internal protected-argument storage without touching the
 deprecated public API. The CLI tests pass with `DeprecationWarning` promoted to an
 error for `aeat.entrypoints.cli.__init__`.
+
+## S377-CR-001 | PASS | CLI common stays out of manifest discovery
+
+Reviewed the S377 scope as `vaultspec-code-reviewer`. `_common.py` owns CLI transport
+helpers, localized parser refusals, and typed repository accessors. It does not parse
+bucket manifests, inspect raw SQL routes, read AEAT environment variables, or construct
+secure-storage adapters directly.
+
+## S377-CR-002 | FIXED | Renta aggregation invoice repository re-resolved active profile
+
+`_aggregate_filing_inputs()` already resolved the active bucket id for the Renta
+aggregation request, but it constructed `InvoiceCatalogueRepository` through the
+implicit active-profile default. The helper now passes the resolved bucket id into the
+invoice repository, keeping transaction and invoice aggregation inputs bound to the same
+profile bucket.
+
+## S377-CR-003 | PASS | Locale and focused validation passed
+
+The `_common.py` change did not add locale keys. `python -m aeat.locales audit`, focused
+common helper tests, focused Renta aggregation tests, and selected backend-boundary
+integration checks passed.
