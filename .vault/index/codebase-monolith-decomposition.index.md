@@ -76,6 +76,7 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S98]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S99]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P04-S07]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P04-S08]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S113]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S114]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S53]]'
@@ -177,6 +178,7 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S98` - W02.P05.S98 - extract config bucket history
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S99` - W02.P05.S99 - verify config bucket history extraction
 - `2026-06-05-codebase-monolith-decomposition-W03-P04-S07` - W03.P04.S07 Backend ADR Queue
+- `2026-06-05-codebase-monolith-decomposition-W03-P04-S08` - W03.P04.S08 Codebase Size Guard Expansion
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S113` - W03.P06.S113 Live IVA Remote-State Outcome Extraction
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S114` - W03.P06.S114 Live Filed-Data Helper Extraction
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S53` - W03.P06.S53 - decompose application modelo action helpers
