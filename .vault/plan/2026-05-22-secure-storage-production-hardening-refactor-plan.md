@@ -481,7 +481,7 @@ Current register count: `301` production candidate files.
 | `AFR-190` | `src/aeat/core/env_io.py` | `master-key, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-191` | `src/aeat/core/errors/registry/_adapters.py` | `master-key` | `runtime-default` | `W12.P20.S78` | closed |
 | `AFR-192` | `src/aeat/core/errors/registry/_application.py` | `active-profile` | `manifest-discovery` | `W12.P22.S90` | closed |
-| `AFR-193` | `src/aeat/core/errors/registry/_core.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-193` | `src/aeat/core/errors/registry/_core.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-194` | `src/aeat/core/external_constants.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-195` | `src/aeat/core/file_permissions.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-196` | `src/aeat/core/i18n/_render.py` | `active-profile, manifest-bucket, sql-route, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
