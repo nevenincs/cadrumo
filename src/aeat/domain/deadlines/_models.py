@@ -248,6 +248,42 @@ class ModeloIVAProfile(BaseModel):
     redeme_enrolled: bool = False
 
 
+class CrossPeriodGroupMemberRoster(BaseModel):
+    """Expected member roster for a grouped cross-period dependency.
+
+    The roster is profile state, not a calculation artefact: grouped
+    aggregate modelos such as Modelo 353 must know the complete member
+    population before they can prove that every required upstream member
+    filing was reconciled and accepted.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    source_modelo: str = Field(default="322", min_length=1, max_length=8)
+    filing_year: int = Field(ge=2000, le=2099)
+    period: str = Field(min_length=1, max_length=8)
+    member_nifs: tuple[str, ...] = Field(min_length=1)
+
+    @field_validator("member_nifs", mode="before")
+    @classmethod
+    def _coerce_member_nifs(cls, value: object) -> object:
+        if isinstance(value, tuple):
+            return value
+        if isinstance(value, list | set | frozenset):
+            return tuple(value)
+        return value
+
+    @field_validator("member_nifs")
+    @classmethod
+    def _validate_member_nifs(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        cleaned = tuple(str(item).strip().upper() for item in value)
+        if any(not item for item in cleaned):
+            raise DeadlineValidationError("cross-period group member NIFs must be non-blank")
+        if len(set(cleaned)) != len(cleaned):
+            raise DeadlineValidationError("cross-period group member NIFs must be unique")
+        return tuple(sorted(cleaned))
+
+
 class TaxpayerProfile(BaseModel):
     """The profile of a Spanish taxpayer for filing-deadline computation.
 
@@ -293,6 +329,10 @@ class TaxpayerProfile(BaseModel):
         bienes_extranjero_above_threshold: Whether the taxpayer holds
             bienes en el extranjero above the legal threshold.
         iva: IVA-specific filing facts that can change filing cadence.
+        cross_period_group_member_rosters: Expected group-member rosters
+            keyed by upstream modelo, filing year, and period. These
+            rosters let cross-period aggregate modelos prove complete
+            member fan-in before verification, filing, or export.
         enrollment: AEAT enrollment facts that can change filing cadence.
         notes: Free-form notes for the user. Never consumed by the
             engine.
@@ -336,6 +376,7 @@ class TaxpayerProfile(BaseModel):
     third_party_transactions_above_347_threshold: bool = False
     bienes_extranjero_above_threshold: bool = False
     iva: ModeloIVAProfile = Field(default_factory=ModeloIVAProfile)
+    cross_period_group_member_rosters: tuple[CrossPeriodGroupMemberRoster, ...] = Field(default_factory=tuple)
     enrollment: ModeloEnrollment = Field(default_factory=ModeloEnrollment)
     fiscal_address_cadastral_reference: str = ""
     fiscal_address_is_habitual_vivienda: bool = False
@@ -415,6 +456,16 @@ class TaxpayerProfile(BaseModel):
             else:
                 coerced[k] = v
         return coerced
+
+    @field_validator("cross_period_group_member_rosters", mode="before")
+    @classmethod
+    def _coerce_cross_period_group_member_rosters(cls, value: object) -> object:
+        """Accept JSON arrays for the strict tuple roster field."""
+        if isinstance(value, tuple):
+            return value
+        if isinstance(value, list | set | frozenset):
+            return tuple(value)
+        return value
 
     @field_validator("irpf_income_categories", mode="before")
     @classmethod

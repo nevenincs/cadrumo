@@ -439,6 +439,28 @@ def _assert_evidence_covers_snapshot(
         )
 
 
+def _cross_period_expected_member_sets_from_profile(
+    profile: TaxpayerProfile,
+    explicit_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
+) -> tuple[CrossPeriodExpectedMemberSet, ...]:
+    """Project durable profile rosters into the clean-state proof contract.
+
+    Explicit caller-provided sets are appended last so they retain the
+    existing override semantics inside ``evaluate_cross_period_clean_state``
+    when both sources carry the same ``(modelo, year, period)`` key.
+    """
+    profile_sets = tuple(
+        CrossPeriodExpectedMemberSet(
+            source_modelo=roster.source_modelo,
+            filing_year=roster.filing_year,
+            period=roster.period,
+            member_nifs=roster.member_nifs,
+        )
+        for roster in getattr(profile, "cross_period_group_member_rosters", ())
+    )
+    return (*profile_sets, *tuple(explicit_member_sets))
+
+
 def _cross_period_clean_state_verdict_for_work_unit(
     work_unit: WorkUnit,
     *,
@@ -817,7 +839,10 @@ def verify_modelo_revision(
                 filing_repository=fr_repo,
                 calculation_repository=cr_repo,
                 verification_repository=vr_repo,
-                expected_member_sets=cross_period_expected_member_sets,
+                expected_member_sets=_cross_period_expected_member_sets_from_profile(
+                    workflow_profile,
+                    cross_period_expected_member_sets,
+                ),
             ),
             iva_compensation_decision=iva_compensation_decision,
         )

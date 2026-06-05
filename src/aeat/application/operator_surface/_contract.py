@@ -32,7 +32,7 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
         purpose="profile lifecycle, bucket lifecycle, first-run state, auth, diagnostics, and durable configuration",
         owns_storage_maintenance=True,
         owns_operational_workflow=False,
-        required_children=("profile", "bucket", "auth", "repair"),
+        required_children=("profile", "unlock", "bucket", "auth", "repair"),
     ),
     RootSurface(
         name=RootSurfaceName.APP,
@@ -193,6 +193,15 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
             "status",
             "censo",
         ),
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.CUSTODY,
+        root=RootSurfaceName.CONFIG,
+        child="unlock",
+        operator_question="unlock and activate profile custody for profile-bound backend workflows",
+        service_owner="aeat.application.user_profile",
+        commands=("unlock",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(

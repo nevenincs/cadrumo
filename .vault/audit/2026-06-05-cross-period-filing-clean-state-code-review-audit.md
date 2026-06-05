@@ -35,3 +35,7 @@ Reviewed the current justificante-grade clean-state gate, repair diagnostics, Mo
 ## CROSS-PERIOD-006 | INFO | Final doctor failure is outside this feature
 
 The W04.P11 gate refreshed the cross-period feature index and removed this plan's generated annotation warning. `vaultspec-core doctor` still exits non-zero because `live-censo-calendar-reconciliation` has a plan without ADR or research references, plus unrelated warnings for `codebase-monolith-decomposition`. No remaining doctor warning or error names `cross-period-filing-clean-state`.
+
+## CROSS-PERIOD-007 | INFO | Final focused gates found no cross-period blockers
+
+Reviewed the final W04.P11 evidence after closing S36 and S40-S43. Registry cross-dependency tests passed with 47 tests, focused calculation clean-state tests passed with 16 tests, and Modelo workflow clean-state tests passed with 20 tests. No critical, high, or medium findings were found in the cross-period feature-local evidence. The only unresolved verification limitation is that the full `application/calculations/tests` folder timed out during an attempted broad run; the focused clean-state calculation gate passed and the timeout is recorded in the S42 exec note.
