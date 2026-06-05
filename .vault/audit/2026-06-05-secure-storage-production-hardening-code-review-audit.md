@@ -176,3 +176,16 @@ The encrypted `WorkUnitCatalogue` repository remains
 `src/aeat/domain/modelos/_repository.py`, already closed under S356 as
 `runtime-default`. S359 therefore correctly closes as `manifest-discovery` without
 adding a second storage abstraction.
+
+## S361-CR-001 | PASS | Renta substrate remote-provider signal is a false positive
+
+Reviewed the S361 scope as `vaultspec-code-reviewer`. `_substrate.py` defines closed
+`StrEnum` catalogues for Renta substrate axes and has no remote-provider calls, mirror
+persistence, secure-object construction, active-profile resolution, settings access,
+environment access, or filesystem IO.
+
+## S361-CR-002 | PASS | Register provenance is preserved
+
+The plan row is closed without deleting or hiding the original scanner signal. The
+closeout documents the `remote-provider` signal as a false positive for a pure
+enum/catalogue module.
