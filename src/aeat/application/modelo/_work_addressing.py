@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Literal
 
 from ...core.resources import resources
 from ...domain.calculations.registry._temporal import select_revision
 from ...domain.contribuyente import CCAA
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos._errors import ModeloError
+from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
 from ...domain.modelos._work_unit import WorkUnit
 from ._actions import create_work_unit, get_calculation_revision, rename_work_unit
 from ._selectors import (
@@ -28,15 +30,169 @@ from ._selectors import (
 
 
 @dataclass(frozen=True, slots=True)
-class ModeloWorkAddress:
-    """Operator-facing or exact modelo work address."""
+class ModeloVisibleFilingTarget:
+    """Operator-visible modelo filing target under one bucket/profile."""
 
-    work_unit_id: str | None = None
+    modelo: str
+    filing_year: int
+    period: str
+    registry_revision_id: str | None = None
+    bucket_id: str | None = None
+
+    def to_work_address(self) -> ModeloWorkAddress:
+        """Project the visible target into the legacy-compatible address shape."""
+        return ModeloWorkAddress(
+            modelo=self.modelo,
+            filing_year=self.filing_year,
+            period=self.period,
+            registry_revision_id=self.registry_revision_id,
+            bucket_id=self.bucket_id,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloExactWorkUnitTarget:
+    """Advanced exact-addressing target for one content-addressed work unit."""
+
+    work_unit_id: WorkUnitId
+    bucket_id: str | None = None
+
+    def to_work_address(self) -> ModeloWorkAddress:
+        """Project the exact target into the legacy-compatible address shape."""
+        return ModeloWorkAddress(work_unit_id=self.work_unit_id, bucket_id=self.bucket_id)
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloRevisionPick:
+    """Command-specific calculation-revision pick under a resolved work target."""
+
+    selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT
+    calculation_revision_id: CalculationRevisionId | None = None
+    default_for: Literal["verify", "file", "export"] | None = None
+
+    def __post_init__(self) -> None:
+        if self.selector is ModeloCalculationRevisionSelector.EXPLICIT:
+            if self.calculation_revision_id is None:
+                raise ValueError("explicit revision picks require calculation_revision_id")
+            return
+        if self.calculation_revision_id is not None:
+            raise ValueError("calculation_revision_id is only valid with the explicit revision selector")
+
+    @classmethod
+    def explicit(cls, calculation_revision_id: CalculationRevisionId) -> ModeloRevisionPick:
+        """Create an exact calculation-revision pick."""
+        return cls(
+            selector=ModeloCalculationRevisionSelector.EXPLICIT,
+            calculation_revision_id=calculation_revision_id,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloResolvedWorkProjection:
+    """Support-safe projection of a resolved modelo work target."""
+
+    work_unit_id: WorkUnitId
+    short_work_unit_id: str
+    bucket_id: str
+    modelo: str
+    filing_year: int
+    period: str
+    registry_revision_id: str
+    state: str
+    current_calculation_revision_id: CalculationRevisionId | None
+    filed_calculation_revision_id: CalculationRevisionId | None
+    current_filing_record_id: str | None
+    created_at: str
+    updated_at: str
+
+    @classmethod
+    def from_work_unit(cls, work_unit: WorkUnit) -> ModeloResolvedWorkProjection:
+        """Project an internal work unit into visible support metadata."""
+        return cls(
+            work_unit_id=work_unit.work_unit_id,
+            short_work_unit_id=work_unit.work_unit_id[-12:],
+            bucket_id=work_unit.bucket_id,
+            modelo=str(work_unit.modelo),
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+            registry_revision_id=work_unit.revision_id,
+            state=work_unit.state.value,
+            current_calculation_revision_id=work_unit.current_calculation_revision_id,
+            filed_calculation_revision_id=work_unit.filed_calculation_revision_id,
+            current_filing_record_id=work_unit.current_filing_record_id,
+            created_at=work_unit.created_at.isoformat(),
+            updated_at=work_unit.updated_at.isoformat(),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloResolvedRevisionProjection:
+    """Support-safe projection of a resolved calculation revision."""
+
+    calculation_revision_id: CalculationRevisionId
+    short_calculation_revision_id: str
+    work_unit_id: WorkUnitId
+    short_work_unit_id: str
+    selector: ModeloCalculationRevisionSelector
+    state: str
+    created_at: str
+    updated_at: str
+    verified_at: str | None = None
+    filed_at: str | None = None
+
+    @classmethod
+    def from_revision(
+        cls,
+        revision: CalculationRevision,
+        *,
+        selector: ModeloCalculationRevisionSelector,
+    ) -> ModeloResolvedRevisionProjection:
+        """Project an internal calculation revision into support metadata."""
+        return cls(
+            calculation_revision_id=revision.calculation_revision_id,
+            short_calculation_revision_id=revision.calculation_revision_id[-12:],
+            work_unit_id=revision.work_unit_id,
+            short_work_unit_id=revision.work_unit_id[-12:],
+            selector=selector,
+            state=revision.state.value,
+            created_at=revision.created_at.isoformat(),
+            updated_at=revision.updated_at.isoformat(),
+            verified_at=revision.verified_at.isoformat() if revision.verified_at is not None else None,
+            filed_at=revision.filed_at.isoformat() if revision.filed_at is not None else None,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloWorkAddress:
+    """Operator-facing or exact modelo work address.
+
+    This is the legacy-compatible transport shape consumed by existing
+    callers. New code should prefer ``ModeloVisibleFilingTarget`` for
+    model/year/period addressing or ``ModeloExactWorkUnitTarget`` for
+    the advanced exact-id escape hatch, then project into this shape at
+    the application facade boundary.
+    """
+
+    work_unit_id: WorkUnitId | None = None
     modelo: str | None = None
     filing_year: int | None = None
     period: str | None = None
     registry_revision_id: str | None = None
     bucket_id: str | None = None
+
+    @classmethod
+    def from_visible_target(cls, target: ModeloVisibleFilingTarget) -> ModeloWorkAddress:
+        """Create an address from a natural modelo filing target."""
+        return target.to_work_address()
+
+    @classmethod
+    def from_exact_target(cls, target: ModeloExactWorkUnitTarget) -> ModeloWorkAddress:
+        """Create an address from an exact work-unit target."""
+        return target.to_work_address()
+
+
+type ModeloWorkTarget = ModeloVisibleFilingTarget | ModeloExactWorkUnitTarget | ModeloWorkAddress
+"""Supported work-target shapes for centralized modelo addressing."""
 
 
 class ModeloWorkAddressNotFoundError(ModeloError, LookupError):
@@ -54,6 +210,41 @@ class ModeloWorkEnsureResult:
     work_unit: WorkUnit
     reused: bool
     name_applied: str | None = None
+
+
+def work_address_for_modelo_target(target: ModeloWorkTarget) -> ModeloWorkAddress:
+    """Coerce a typed modelo work target into the selector address shape."""
+    if isinstance(target, ModeloWorkAddress):
+        return target
+    if isinstance(target, ModeloVisibleFilingTarget):
+        return target.to_work_address()
+    if isinstance(target, ModeloExactWorkUnitTarget):
+        return target.to_work_address()
+    raise TypeError(f"expected modelo work target, got {type(target).__name__}")
+
+
+def resolve_modelo_work_target(target: ModeloWorkTarget) -> ModeloWorkResolution:
+    """Resolve any supported modelo target through the shared selector boundary."""
+    return resolve_modelo_work_address(work_address_for_modelo_target(target))
+
+
+def resolve_modelo_work_unit_id(target: ModeloWorkTarget) -> WorkUnitId:
+    """Resolve a visible or exact modelo target to the authoritative work-unit id."""
+    resolution = resolve_modelo_work_target(target)
+    assert resolution.work_unit is not None
+    return resolution.work_unit.work_unit_id
+
+
+def project_modelo_work_unit(work_unit: WorkUnit) -> ModeloResolvedWorkProjection:
+    """Project an internal work unit into the visible addressing contract."""
+    return ModeloResolvedWorkProjection.from_work_unit(work_unit)
+
+
+def project_modelo_work_target(target: ModeloWorkTarget) -> ModeloResolvedWorkProjection:
+    """Resolve a target and project it back to visible modelo filing metadata."""
+    resolution = resolve_modelo_work_target(target)
+    assert resolution.work_unit is not None
+    return project_modelo_work_unit(resolution.work_unit)
 
 
 def _revision_covers_year(*, modelo: str, revision_id: str, filing_year: int) -> bool:
@@ -81,6 +272,11 @@ def resolve_registry_revision_for_work_target(
         definition = resources().modelos.authority.modelo(modelo.strip())
         return select_revision(definition, filing_year=filing_year, period=period).id
     revision_id = registry_revision_id.strip()
+    definition = resources().modelos.authority.modelo(modelo.strip())
+    if revision_id not in definition.revisions:
+        raise ModeloWorkRegistryYearMismatchError(
+            f"registry revision {revision_id!r} is not registered for modelo {modelo.strip()!r}"
+        )
     if not _revision_covers_year(modelo=modelo, revision_id=revision_id, filing_year=filing_year):
         raise ModeloWorkRegistryYearMismatchError(
             f"registry revision {revision_id!r} does not cover filing year {filing_year}"
@@ -277,17 +473,28 @@ __all__ = [
     "ModeloCalculationRevisionSelectorAmbiguousError",
     "ModeloCalculationRevisionSelectorNotFoundError",
     "ModeloCalculationRevisionSelectorStateError",
+    "ModeloExactWorkUnitTarget",
+    "ModeloResolvedRevisionProjection",
+    "ModeloResolvedWorkProjection",
+    "ModeloRevisionPick",
+    "ModeloVisibleFilingTarget",
     "ModeloWorkAddress",
     "ModeloWorkAddressNotFoundError",
     "ModeloWorkEnsureResult",
     "ModeloWorkRegistryYearMismatchError",
+    "ModeloWorkTarget",
     "ensure_modelo_work_unit_for_visible_target",
+    "project_modelo_work_target",
+    "project_modelo_work_unit",
     "resolve_exportable_modelo_calculation_revision_address",
     "resolve_fileable_modelo_calculation_revision_address",
     "resolve_modelo_calculation_revision_address",
     "resolve_modelo_work_address",
     "resolve_modelo_work_address_unit",
+    "resolve_modelo_work_target",
+    "resolve_modelo_work_unit_id",
     "resolve_optional_modelo_work_address",
     "resolve_registry_revision_for_work_target",
     "resolve_verifiable_modelo_calculation_revision_address",
+    "work_address_for_modelo_target",
 ]

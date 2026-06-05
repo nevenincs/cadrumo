@@ -1,5 +1,7 @@
 ---
-tags: ['#audit', '#modelo-addressing-ux']
+tags:
+  - '#audit'
+  - '#modelo-addressing-ux'
 date: '2026-06-04'
 related:
   - '[[2026-06-04-modelo-addressing-ux-plan]]'
@@ -9,18 +11,26 @@ related:
 
 # `modelo-addressing-ux` Code Review
 
-## W01-001 | PASS | Application selector slice has no critical or high findings
+## MODELO-UX-001 | LOW | Legacy `_modelo.py` boundary guard remains allowlist-based
 
-Reviewed W01 application changes against the accepted ADR and plan: selector request/result models, visible-target-first work-unit lookup, explicit ID contradiction checks, registry revision conflict refusal, calculation revision selectors, duplicate draft pointer persistence, error-code registry entries, and focused real-behavior tests.
+The W06 static architecture guard covers extracted `_modelo*` command modules and prevents them from importing the monolithic root or private application modules. The legacy `_modelo.py` root remains outside that strict guard and still contains known residual authority reads and private-domain/domain-internal imports. This is consistent with the W06 residual-risk record and the frozen size-budget approach, but it means future edits inside `_modelo.py` can still add boundary debt unless reviewers enforce the W06 discipline manually.
 
-No CRITICAL or HIGH issues were found. The implementation preserves internal content-addressed IDs, keeps calculation revisions multiple under one work unit, refuses ambiguity, excludes discarded work from default visible-target resolution, and avoids arbitrary export fallback when a current draft conflicts.
+Recommended follow-up: add a baseline/freeze guard for `_modelo.py` private imports and registry authority reads, similar to the size-budget freeze, so the legacy root cannot grow new boundary violations while the remaining command groups are extracted.
 
-Residual risk is deferred by plan rather than a defect in this slice: CLI rendering, localized operator guidance, narrative docs, and adjacent command compatibility remain open W02-W05 work.
+## MODELO-UX-002 | LOW | IVA wallet seed facade lacks direct application-service edge tests
 
-## W05-002 | LOW | Vault feature check rejects L3 execution-record filenames
+The CLI regression lane covers the IVA wallet seed command happy path and duplicate refusal, and the application calculations lane covers compensation history. The new `seed_iva_compensation_period_for_bucket` facade should also get direct application tests for the no-taxpayer and negative-amount errors so those policy decisions are pinned at the backend boundary, not only through CLI behavior.
 
-Final review found no CRITICAL or HIGH behavior issues in the natural-key addressing implementation. The focused application, CLI, docs, locale, ruff, raw-ID leakage, and RAG semantic gates passed, and the committed plan has no open rows.
+Recommended follow-up: add real-runtime application tests around a bucket with no `identity.tax_id` and a negative seed amount, asserting `ModeloIvaWalletSeedNoTaxpayerError` and `ModeloIvaWalletSeedNegativeAmountError`.
 
-The remaining issue is structural tooling drift: `vaultspec-core vault check all --feature modelo-addressing-ux` reports filename-pattern violations for L3 execution records such as `2026-06-04-modelo-addressing-ux-w01-p01-s01.md`. Those names match the `vaultspec-execute` L3 step-record convention, but the generic vault structure checker still expects the older `yyyy-mm-dd-<feature>-<type>.md` shape. Do not run `vaultspec-core vault repair` blindly because it would rewrite execution records across this feature and unrelated active work.
+## MODELO-UX-003 | LOW | `work_calculate` remains frozen legacy debt
 
-Recommended follow-up: reconcile the vault structure checker with the L3 execution-record naming convention, or explicitly exempt `.vault/exec/<feature>/...-w##-p##-s##.md` records from the generic filename rule.
+The plan now freezes `work_calculate` at its current command-size budget and RAG/exact audits show the calculation input business logic is owned by `application/modelo/_calculate_input.py`. The command function itself is still large because the Typer option surface is verbose and some parse/render orchestration remains local to `_modelo.py`.
+
+Recommended follow-up: extract `work calculate` into a bounded work-calculation registrar and split parsing/render helpers further, preserving the backend-owned input bundle and calculation service.
+
+## MODELO-UX-004 | LOW | Workflow-run exact-id parsing remains duplicated
+
+The final review found no blocking regression in the extracted `modelo export`, rendering, support, and workflow-run modules. One maintainability debt remains: `_modelo_work_runs_cli.py` still declares its own 64-character work-unit-id regex for the advanced `work resume <work_unit_id>` escape hatch instead of reusing the new CLI support id-shape helper. This does not change the accepted natural-key workflow and is covered by `test_work_resume.py`, but it leaves one duplicate raw-id parser to keep aligned while the CLI continues moving toward modelo/year/period matching.
+
+Recommended follow-up: have `_modelo_work_runs_cli.py` call the shared support validator, or retire the work-unit-id resume shortcut when the future period-matching workflow replaces that exact-addressing path.
