@@ -41,6 +41,9 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S104]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S105]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S106]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S107]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S108]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S109]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S110]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S111]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S112]]'
@@ -73,6 +76,7 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S98]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S99]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P04-S07]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S113]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S53]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S54]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S55]]'
@@ -135,7 +139,10 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S103` - W02.P05.S103 Config Profile Verification
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S104` - W02.P05.S104 Ledger Residual Slice Discovery
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S105` - W02.P05.S105 - extract ledger read commands
-- `2026-06-05-codebase-monolith-decomposition-W02-P05-S106` - W02.P05.S106 - verify ledger read extraction
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S106` - W02.P05.S106 Ledger Read Verification
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S107` - W02.P05.S107 - select modelo CLI test split
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S108` - W02.P05.S108 - split modelo registry surface tests
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S109` - W02.P05.S109 - verify modelo CLI test split
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S110` - W02.P05.S110 - extract modelo audit commands
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S111` - W02.P05.S111 - verify modelo audit extraction
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S112` - W02.P05.S112 Modelo Natural-Key Cross-Period Coverage Reconciliation
@@ -168,6 +175,7 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S98` - W02.P05.S98 - extract config bucket history
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S99` - W02.P05.S99 - verify config bucket history extraction
 - `2026-06-05-codebase-monolith-decomposition-W03-P04-S07` - W03.P04.S07 Backend ADR Queue
+- `2026-06-05-codebase-monolith-decomposition-W03-P06-S113` - W03.P06.S113 Live IVA Remote-State Outcome Extraction
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S53` - W03.P06.S53 - decompose application modelo action helpers
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S54` - W03.P06.S54 - verify application modelo action decomposition
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S55` - W03.P06.S55 Ledger Actions Facade Decomposition
