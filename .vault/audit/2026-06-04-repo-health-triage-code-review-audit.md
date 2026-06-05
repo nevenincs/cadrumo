@@ -595,18 +595,18 @@ certificate tests. The certificate test suite passed, including backend
 selection, HTTPX fallback preload refusal, settings registration, and handshake
 failure behavior.
 
-## W05-009 | WARN | Filing-status token relocation remains blocked by overview WIP
+## W05-009 | INFO | Filing-status token relocation review found no defects
 
-Status: blocked, not closed.
+Status: verified with staged-hunk isolation.
 
-The W05.P16.S57 review confirmed `_filing_status_token.py` is a token-only shim
-that should be deleted, but the correct no-shim fix is a symbol relocation, not
-a second token module. `FilingStatus` needs one lightweight canonical home that
-both the operator-surface contract and overview export consume. Importing
-`application.overview._status` from the operator-surface contract is not safe
-because Python executes the heavy `overview` package initializer first.
+The W05.P16.S57 review found no defect in relocating `FilingStatus` to the
+lightweight operator-surface model layer. The LIVE command-family contract and
+the live CLI now consume `FilingStatus.FILED` directly from the operator-surface
+authority. The token-only `_filing_status_token.py` shim and the overview-owned
+`_status.py` enum module are deleted, and overview no longer re-exports the enum.
 
-The required overview consumer/export file, `src/aeat/application/overview/__init__.py`,
-already contains unrelated calendar-event WIP in the shared worktree. Per the
-atomic relocation rule, S57 must remain open until that file can be edited as
-part of one relocation commit without overwriting another agent's work.
+Focused verification passed Ruff, operator-surface contract tests, curated root
+and app help tests, live-filed help tests, and compileall for the touched
+surfaces. Because the shared worktree still carries unrelated overview
+calendar-event WIP and live-IVA watchdog WIP, the S57 commit stages only the
+filing-status relocation hunks for `overview/__init__.py` and `_app_live.py`.
