@@ -991,8 +991,14 @@ application:
         in {final_stage} state, not ABORTED.'
       resume_refused_terminal_reason: Workflow run {run_id} aborted for {reason},
         which is terminal by design and may not be resumed.
-      resume_run_ambiguous: More than one workflow run matches modelo {modelo}
-        period {period}. Choose an exact workflow run id. {candidates}
+      resume_revision_selector_invalid: 'Calculation selector {selector} is not valid for this resume target.'
+      resume_run_ambiguous: More than one workflow run matches modelo {modelo} period
+        {period}. Choose an exact workflow run id. {candidates}
+      resume_run_id_invalid: 'Workflow run id {workflow_run_id} is invalid.'
+      resume_target_contradiction: 'Provide only one resume target. Do not combine target, workflow run id, work unit id, calculation revision id, or visible modelo/year/period fields.'
+      resume_target_invalid: 'Resume target {target} is not a workflow run id or work unit id.'
+      resume_target_required: 'Provide a workflow run id, work unit id, calculation revision id, target, or visible modelo/year/period target.'
+      resume_visible_target_incomplete: 'Visible resume target requires modelo, year, and period; got modelo={modelo}, year={year}, period={period}.'
       run_id_invalid_blank: Run identifier must not be blank.
       run_id_invalid_separators: Run identifier must not contain path separators.
       run_not_found: 'Workflow run not found: {run_id}.'
@@ -1137,6 +1143,8 @@ cli:
       expediente_help: AEAT expediente identifier
       expedientes:
         app_help: Read-only AEAT expediente snapshots
+        capture_all_help: Capture all AEAT declaration register data and save snapshots.
+        capture_all_modelo_help: Limit capture-all to this modelo.
         capture_help: Capture AEAT declaration register data and save a snapshot
         latest_help: Show the most recent expediente snapshot
         list_help: List saved expediente snapshots
@@ -1183,6 +1191,7 @@ cli:
       notifications:
         app_help: Read-only DEHú notification snapshots
         capture_help: Capture DEHú notifications and save a snapshot
+        latest_help: Show the most recent DEHU notification snapshot.
         list_help: List saved DEHú notification snapshots
         snapshot_id_help: Snapshot id (or unambiguous prefix)
         view_help: Show a DEHú notification snapshot
@@ -1481,9 +1490,6 @@ cli:
         casilla_help: Casilla value with CASILLA=DECIMAL syntax (repeatable). CASILLA
           accepts the casilla id, the registry number, or the BOE printed casilla
           number shown by `aeat app modelo casillas`.
-        casilla_non_numeric_data_type: Casilla {key} ("{label}") has data type {data_type}
-          and does not accept decimal overrides. Use --binding for this input type
-          or run `aeat app modelo casillas` to identify the correct numeric casilla.
         casilla_not_decimal: 'The --casilla value for {key} is not a decimal: {value}.'
         causante_ccaa_help: CCAA of habitual residence of the deceased (ISD Modelo
           650/660) or CCAA where the transferred asset is located (ITPyAJD Modelo
@@ -1659,9 +1665,6 @@ cli:
         result_summary_header: result summary  Modelo %{modelo} %{year} %{period}
         resume_help: Validate whether you can retry an interrupted workflow run without
           contacting AEAT. Accepts a workflow run id or a work-unit id.
-        resume_invalid_target: resume target must be a 16-character workflow run id
-          or a 64-character work-unit id; got {target}. Run `aeat app modelo work
-          runs` to list run ids.
         resume_target_help: 16-character workflow run id, or the 64-character work-unit
           id (its latest run is resolved automatically). Run `aeat app modelo work
           runs` to list run ids.
@@ -3207,7 +3210,6 @@ errors:
     error_aeat_core_not_found: The requested resource or record was not found.
     error_aeat_observability: An error occurred in the application telemetry.
     error_aggregation_config: An aggregation service composition invariant was violated.
-    error_apidocs: errors.error.error_apidocs
     error_application_live: The live AEAT read orchestration failed.
     error_application_live_iva_surface_timeout: Live IVA read surface timed out before
       returning AEAT evidence.
@@ -3534,6 +3536,8 @@ errors:
       by a check letter.'
     validate_expects_str: Identity validation expects a text value; got {got_type}.
   integrity:
+    integrity_active_profile_pointer: The active-profile pointer is invalid; repair
+      the selected profile before continuing.
     integrity_aeat_core_validation: An internal data-integrity check failed.
     integrity_cli_output_schema: The CLI output-schema registry is misconfigured.
     integrity_filing_amendment_validation: The amendment violates a legal or structural
@@ -3607,7 +3611,6 @@ errors:
       or the calculation engine may be corrupted.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
-    integrity_active_profile_pointer: 'The active-profile pointer is invalid; repair the selected profile before continuing.'
   internal:
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
       error.
@@ -3650,7 +3653,8 @@ errors:
       Run `aeat config unlock` and try again.
     locked_storage_lock_acquisition: The exclusive file lock could not be acquired
       within the timeout. Another process holds it; wait and try again.
-    locked_storage_master_key_keychain: 'The operating-system keychain is locked. Unlock it (Touch ID, Windows Hello or your credential-manager unlock) and try again.'
+    locked_storage_master_key_keychain: The operating-system keychain is locked. Unlock
+      it (Touch ID, Windows Hello or your credential-manager unlock) and try again.
   refused:
     auth_configure_no_active_bucket: Authentication cannot be configured without an
       active profile. Create a profile with `aeat config profile create NAME` and

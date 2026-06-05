@@ -1069,9 +1069,14 @@ application:
         puede reanudar: está en estado {final_stage}, no ABORTED.'
       resume_refused_terminal_reason: La ejecución {run_id} se abortó por {reason},
         que es terminal por diseño y no puede reanudarse.
+      resume_revision_selector_invalid: 'El selector de calculo {selector} no es valido para este destino de reanudacion.'
       resume_run_ambiguous: Más de una ejecución de flujo de trabajo coincide con
-        el modelo {modelo} período {period}. Elija un id de ejecución exacto.
-        {candidates}
+        el modelo {modelo} período {period}. Elija un id de ejecución exacto. {candidates}
+      resume_run_id_invalid: 'El id de ejecucion de flujo {workflow_run_id} no es valido.'
+      resume_target_contradiction: 'Proporciona solo un destino de reanudacion. No combines target, workflow run id, work unit id, calculation revision id ni campos visibles modelo/ano/periodo.'
+      resume_target_invalid: 'El destino de reanudacion {target} no es un id de ejecucion de flujo ni un id de unidad de trabajo.'
+      resume_target_required: 'Proporciona un id de ejecucion de flujo, id de unidad de trabajo, id de revision de calculo, target o destino visible modelo/ano/periodo.'
+      resume_visible_target_incomplete: 'El destino visible de reanudacion requiere modelo, ano y periodo; se recibio modelo={modelo}, year={year}, period={period}.'
       run_id_invalid_blank: El identificador de ejecución no debe estar en blanco.
       run_id_invalid_separators: El identificador de ejecución no debe contener separadores
         de ruta.
@@ -1223,6 +1228,9 @@ cli:
       expediente_help: Identificador de expediente AEAT
       expedientes:
         app_help: Snapshots de expedientes AEAT de solo lectura
+        capture_all_help: Captura todos los datos del registro de declaraciones de
+          AEAT y guarda instantaneas.
+        capture_all_modelo_help: Limita capture-all a este modelo.
         capture_help: Captura de AEAT el registro de declaraciones y guarda un snapshot
         latest_help: Muestra el snapshot de expedientes más reciente
         list_help: Lista los snapshots de expedientes guardados
@@ -1276,6 +1284,7 @@ cli:
       notifications:
         app_help: Snapshots de notificaciones DEHú de solo lectura
         capture_help: Captura notificaciones DEHú y guarda un snapshot
+        latest_help: Muestra la instantanea de notificacion DEHU mas reciente.
         list_help: Lista los snapshots de notificaciones DEHú guardados
         snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
         view_help: Muestra un snapshot de notificaciones DEHú
@@ -1596,10 +1605,6 @@ cli:
         casilla_help: Valor de casilla con sintaxis CASILLA=DECIMAL (repetible). CASILLA
           admite el id de casilla, el número del registro o el número de casilla impreso
           en el BOE mostrados por `aeat app modelo casillas`.
-        casilla_non_numeric_data_type: La casilla {key} ("{label}") tiene tipo de
-          dato {data_type} y no acepta valores decimales directos. Usa --binding para
-          este tipo de entrada o consulta `aeat app modelo casillas` para identificar
-          la casilla numérica correcta.
         casilla_not_decimal: 'El valor de --casilla para {key} no es un decimal: {value}.'
         causante_ccaa_help: CCAA de residencia habitual del causante (ISD Modelo 650/660)
           o CCAA donde se ubica el bien transmitido (ITPyAJD Modelo 600/620). Determina
@@ -1785,10 +1790,6 @@ cli:
         resume_help: Valida si puedes reintentar una ejecución de flujo interrumpida
           sin contactar con AEAT. Acepta un id de ejecución de flujo o un id de unidad
           de trabajo.
-        resume_invalid_target: El destino de resume debe ser un id de ejecución de
-          flujo de 16 caracteres o un id de unidad de trabajo de 64 caracteres; se
-          recibió {target}. Ejecuta `aeat app modelo work runs` para listar los ids
-          de ejecución.
         resume_target_help: Id de ejecución de flujo de 16 caracteres, o el id de
           unidad de trabajo de 64 caracteres (se resuelve automáticamente su última
           ejecución). Ejecuta `aeat app modelo work runs` para listar los ids de ejecución.
@@ -3415,7 +3416,6 @@ errors:
     error_aeat_observability: Se produjo un error en la telemetría de la aplicación.
     error_aggregation_config: Se ha violado un invariante de composición del servicio
       de agregación.
-    error_apidocs: errors.error.error_apidocs
     error_application_live: La orquestación de la lectura en vivo de la AEAT falló.
     error_application_live_iva_surface_timeout: La superficie de lectura de IVA en
       vivo agotó el tiempo antes de devolver evidencia de la AEAT.
@@ -3773,6 +3773,8 @@ errors:
     validate_expects_str: La validación de identidad espera un valor de texto; se
       obtuvo {got_type}.
   integrity:
+    integrity_active_profile_pointer: El puntero de perfil activo no es válido; repara
+      el perfil seleccionado antes de continuar.
     integrity_aeat_core_validation: Una comprobación interna de integridad de datos
       no se superó.
     integrity_cli_output_schema: El registro de esquemas de salida de la CLI está
@@ -3854,7 +3856,6 @@ errors:
       de referencia o el motor de cálculo pueden estar dañados.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
-    integrity_active_profile_pointer: 'El puntero de perfil activo no es válido; repara el perfil seleccionado antes de continuar.'
   internal:
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
@@ -3897,7 +3898,9 @@ errors:
       desbloqueado. Ejecuta `aeat config unlock` y vuelve a intentarlo.
     locked_storage_lock_acquisition: No se pudo obtener el bloqueo exclusivo de archivo
       dentro del tiempo de espera. Otro proceso lo retiene; espera y vuelve a intentarlo.
-    locked_storage_master_key_keychain: 'El llavero del sistema operativo está bloqueado. Desbloquéalo (Touch ID, Windows Hello o el desbloqueo del gestor de credenciales) y vuelve a intentarlo.'
+    locked_storage_master_key_keychain: El llavero del sistema operativo está bloqueado.
+      Desbloquéalo (Touch ID, Windows Hello o el desbloqueo del gestor de credenciales)
+      y vuelve a intentarlo.
   refused:
     auth_configure_no_active_bucket: No se puede configurar la autenticación sin un
       perfil activo. Crea un perfil con `aeat config profile create NOMBRE` y vuelve
