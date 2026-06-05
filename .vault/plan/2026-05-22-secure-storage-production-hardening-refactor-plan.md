@@ -953,7 +953,7 @@ This Wave adopts testimonial-driven CLI findings that affect storage readiness, 
 Reconcile fresh persona testimony with current secure-storage, readiness, repair, and CLI workflow plans so each finding has exactly one owning plan row or an explicit deferred disposition.
 
 - [x] `W13.P27.S396` - Reconcile fresh persona audits and repair plans with secure-storage readiness ownership; `.vault/audit`.
-- [ ] `W13.P27.S397` - Record research requirements for persona findings that lack enough architectural backing; `.vault/research`.
+- [x] `W13.P27.S397` - Record research requirements for persona findings that lack enough architectural backing; `.vault/research`.
 - [ ] `W13.P27.S398` - Classify unresolved persona findings as secure-storage, CLI workflow, capability, or separate-plan work; `.vault/plan`.
 
 ### Phase `W13.P28` - testimonial retest and repair adoption
