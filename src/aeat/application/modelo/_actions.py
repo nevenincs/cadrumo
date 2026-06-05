@@ -31,7 +31,7 @@ from collections.abc import Iterable, Mapping
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from ...core.config import Settings
 from ...core.i18n import tr
@@ -47,13 +47,10 @@ from ...domain.calculations.registry import (
     CasillaDefinition,
     CasillaObservation,
     InputKind,
-    ModeloRevision,
     RegistrySnapshot,
     VerificationPredicateDefinition,
-    calculate_registry_snapshot,
 )
-from ...domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
-from ...domain.invoices import InvoiceCatalogueRepository
+from ...domain.deadlines import FiscalResidency, TaxpayerProfile
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -91,7 +88,6 @@ from ...domain.modelos._repository import (
     WorkUnitCatalogueRepository,
     upsert_work_unit,
 )
-from ...domain.modelos._row_models import ModeloDetailRow
 from ...domain.modelos._verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -108,7 +104,6 @@ from ...domain.modelos._work_unit import (
     WorkUnit,
     WorkUnitState,
 )
-from ...domain.period import period_end_date
 from ...domain.transactions import TransactionCatalogueRepository
 from ..aggregation._ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
@@ -122,7 +117,6 @@ from ..calculations import (
     CrossPeriodExpectedMemberSet,
     evaluate_cross_period_clean_state,
 )
-from ..live import Borrador100SnapshotRepository
 from ..workflow import (
     WorkflowEngine,
     WorkflowPurpose,
@@ -155,27 +149,17 @@ from ._action_errors import (
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
 )
-from ._binding_resolution import (
-    resolve_bound_casilla_inputs_for_available_bindings,
-    resolve_calculation_binding_inputs,
-)
-from ._calculation_common import (
-    amendment_observations as _amendment_observations,
-)
-from ._calculation_common import (
-    build_typed_observations as _build_typed_observations,
-)
-from ._calculation_common import (
-    external_filing_observations as _external_filing_observations,
-)
-from ._calculation_common import (
-    load_work_unit_for_calculation as _load_work_unit_for_calculation,
-)
-from ._calculation_common import (
-    resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit,
+from ._calculation_actions import (
+    _IVA_LEDGER_EXEMPT_REGIMES as _IVA_LEDGER_EXEMPT_REGIMES,
 )
 from ._calculation_actions import (
     _iva_wallet_blocked_message as _iva_wallet_blocked_message,
+)
+from ._calculation_actions import (
+    _raise_if_ledger_preflight_blocks_calculation as _raise_if_ledger_preflight_blocks_calculation,
+)
+from ._calculation_actions import (
+    _reject_caller_overrides_of_source_bindings as _reject_caller_overrides_of_source_bindings,
 )
 from ._calculation_actions import (
     calculate_modelo_revision as calculate_modelo_revision,
@@ -192,12 +176,18 @@ from ._calculation_actions import (
 from ._calculation_actions import (
     mark_revision_verificado_completo as mark_revision_verificado_completo,
 )
+from ._calculation_helpers import (
+    amendment_observations as _amendment_observations,
+)
+from ._calculation_helpers import (
+    external_filing_observations as _external_filing_observations,
+)
+from ._calculation_helpers import (
+    resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit,
+)
 from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
 from ._registry_helpers import (
     assert_revision_content_integrity as _assert_revision_content_integrity,
-)
-from ._registry_helpers import (
-    normalize_casilla_input_aliases as _normalize_casilla_input_aliases,
 )
 from ._registry_helpers import (
     reject_incomplete_amendment_casillas as _reject_incomplete_amendment_casillas,
@@ -211,14 +201,10 @@ from ._registry_helpers import (
 from ._registry_resources import (
     authority_via_resources as _authority_via_resources,
 )
-from ._registry_resources import (
-    registry_root as _registry_root,
-)
 from ._revision_persistence import (
     emit_bucket_event as _emit_bucket_event,
 )
 from ._revision_persistence import (
-    persist_calculation_revision,
     persist_filed_revision,
 )
 from ._work_lifecycle import (
