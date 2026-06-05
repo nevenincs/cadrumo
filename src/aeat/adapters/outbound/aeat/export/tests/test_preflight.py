@@ -17,7 +17,7 @@ from ......domain.submission import (
     SubmissionPreflightError,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 if TYPE_CHECKING:
     from ......domain.submission._preflight import AuthProviderProbe, DeadlineWindowChecker

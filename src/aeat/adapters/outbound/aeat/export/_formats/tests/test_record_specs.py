@@ -42,7 +42,7 @@ from .......core.resources import resources
 from .......domain.calculations.registry import ValidatedRegistryAuthority
 from .. import RecordFieldSpec, validate_record_specs
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 # ---------------------------------------------------------------------------
 # Module discovery

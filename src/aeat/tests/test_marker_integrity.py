@@ -3,7 +3,7 @@
 Walks every test module under ``src/aeat/`` and asserts that each
 carries a single top-level ``pytestmark = [...]`` assignment containing
 exactly one execution-scope marker (``unit`` / ``integration`` /
-``aeat_live``) and at least one ``hex_*`` marker.
+``aeat_live``) and exactly one ``hex_*`` marker.
 
 The walker uses :mod:`ast` only; it does not import the test modules.
 The file self-validates because the discovery glob includes itself.
@@ -230,15 +230,16 @@ def _process_pytest_id_violations(path: Path, node: ast.Call) -> list[str]:
     return violations
 
 
-def _extract_pytestmark_names(path: Path) -> tuple[set[str], str | None]:
-    """Parse ``path`` and return the marker-name set declared at module level.
+def _extract_pytestmark_sequence(path: Path) -> tuple[tuple[str, ...], str | None]:
+    """Parse ``path`` and return the marker-name sequence declared at module level.
 
     Args:
         path: Path to the test module.
 
     Returns:
-        A tuple ``(names, error)``. ``names`` contains every name
-        extracted from the module-level ``pytestmark`` assignment.
+        A tuple ``(names, error)``. ``names`` contains every marker name
+        extracted from the module-level ``pytestmark`` assignment in declaration
+        order, preserving duplicates for audit rules.
         ``error`` is a human-readable string describing any structural
         problem (missing assignment, wrong shape, etc.), or ``None`` on
         success.
@@ -247,21 +248,27 @@ def _extract_pytestmark_names(path: Path) -> tuple[set[str], str | None]:
     try:
         tree = ast.parse(source, filename=str(path))
     except SyntaxError as exc:  # pragma: no cover - defensive
-        return set(), f"SyntaxError: {exc}"
+        return (), f"SyntaxError: {exc}"
     assign_node = _find_pytestmark_assign(tree)
     if assign_node is None:
-        return set(), "missing top-level `pytestmark = [...]` assignment"
+        return (), "missing top-level `pytestmark = [...]` assignment"
     value = assign_node.value
     if not isinstance(value, ast.List | ast.Tuple):
-        return set(), "`pytestmark` must be assigned a list or tuple literal"
-    names: set[str] = set()
+        return (), "`pytestmark` must be assigned a list or tuple literal"
+    names: list[str] = []
     for element in value.elts:
         marker_name, error = _marker_name_from_pytestmark_element(element)
         if error is not None:
-            return set(), error
+            return (), error
         assert marker_name is not None  # narrowed by error=None branch
-        names.add(marker_name)
-    return names, None
+        names.append(marker_name)
+    return tuple(names), None
+
+
+def _extract_pytestmark_names(path: Path) -> tuple[set[str], str | None]:
+    """Parse ``path`` and return the marker-name set declared at module level."""
+    names, error = _extract_pytestmark_sequence(path)
+    return set(names), error
 
 
 def _find_pytestmark_assign(tree: ast.Module) -> ast.Assign | None:
@@ -412,6 +419,18 @@ def _live_env_runtime_violations(path: Path) -> list[str]:
     return violations
 
 
+def _requires_live_gate_helper(path: Path) -> bool:
+    """Return True when a test module calls the shared live-test gate helper."""
+    source = path.read_text(encoding="utf-8")
+    if "requires_live_enabled" not in source:
+        return False
+    tree = ast.parse(source, filename=str(path))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "requires_live_enabled":
+            return True
+    return False
+
+
 def _configured_marker_names() -> list[str]:
     """Return marker names declared in ``pyproject.toml``."""
     data = tomllib.loads((_REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
@@ -454,9 +473,12 @@ _MODULES = _discover_test_modules()
 )
 def test_module_carries_valid_pytestmark(module_path: Path) -> None:
     """Every test module must declare a valid hexagonal ``pytestmark``."""
-    names, error = _extract_pytestmark_names(module_path)
+    marker_sequence, error = _extract_pytestmark_sequence(module_path)
+    names = set(marker_sequence)
     relative = module_path.relative_to(_REPO_ROOT)
     assert error is None, f"{relative}: {error}"
+    duplicates = sorted({name for name in marker_sequence if marker_sequence.count(name) > 1})
+    assert not duplicates, f"{relative}: duplicate pytestmark marker(s) {duplicates}"
 
     execution = names & _EXECUTION_MARKERS
     assert len(execution) == 1, (
@@ -464,7 +486,7 @@ def test_module_carries_valid_pytestmark(module_path: Path) -> None:
     )
 
     hex_markers = {name for name in names if name.startswith("hex_")}
-    assert len(hex_markers) >= 1, f"{relative}: must carry at least one `hex_*` marker; found {sorted(names)}"
+    assert len(hex_markers) == 1, f"{relative}: must carry exactly one `hex_*` marker; found {sorted(hex_markers)}"
     assert hex_markers <= _HEX_MARKERS, f"{relative}: unknown hex marker(s) {sorted(hex_markers - _HEX_MARKERS)}"
 
     forbidden = names & _FORBIDDEN_MARKERS
@@ -499,6 +521,18 @@ def test_live_test_env_runtime_access_is_live_or_gate_scoped() -> None:
         "runtime AEAT_LIVE_TESTS_ENABLED access is only allowed in aeat_live tests "
         "or focused access-gate tests:\n" + "\n".join(violations)
     )
+
+
+def test_live_gate_helper_usage_is_aeat_live_marked() -> None:
+    """Tests that call the shared live gate helper must be ``aeat_live`` modules."""
+    violations: list[str] = []
+    for module_path in _MODULES:
+        names, error = _extract_pytestmark_names(module_path)
+        if error is not None or "aeat_live" in names:
+            continue
+        if _requires_live_gate_helper(module_path):
+            violations.append(str(module_path.relative_to(_REPO_ROOT)))
+    assert not violations, "requires_live_enabled() used outside aeat_live tests:\n" + "\n".join(violations)
 
 
 def test_pyproject_marker_registry_is_pruned_and_unique() -> None:
