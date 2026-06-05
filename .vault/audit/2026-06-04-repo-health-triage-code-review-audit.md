@@ -804,3 +804,17 @@ duplicated tokens.
 
 Residual: duplication remains advisory-red. Work should continue in cohesive
 subsystem slices rather than as one broad cleanup.
+
+## W06-010 | INFO | Hard gate attempt correctly refused a green claim
+
+Status: blocked, not green.
+
+The W06.P21.S83 review found the hard-gate attempt accurately preserves the
+failure state. The row is not checked, and the evidence identifies two distinct
+blocker classes: local environment breakage around the locked/incomplete
+`torch` install, and the active relocated-test topology creating unresolved
+relative imports plus stale import-linter sanctioned test paths.
+
+Residual: hard gates must be rerun after topology and environment repair. The
+campaign must not close S83 while `just tooling-doctor`, `just audit-structure`,
+`just lint`, `just typecheck`, and `just test` remain red.
