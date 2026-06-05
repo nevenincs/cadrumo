@@ -134,3 +134,15 @@ Verification covers Ruff, compileall, locale audit, public facade smoke imports,
 Reviewed the W05.P12 `S147` through `S149` residual test-surface closure. The overview calendar taxpayer-model/entity-type/no-window regression group now lives in a focused calendar test module, while the original calendar test module retains shared fixtures and core calendar behavior. The declaracion parser synthetic-fixture regression group now lives in a focused parser test module, while the original parser boundary module retains boundary tests and PDF helper functions used by earlier tests.
 
 Verification covers Ruff, compileall, 61 overview calendar tests, 102 declaracion parser tests, the 2-test hard codebase size-budget guard, and plan validation with only the known PLAN022 monotonic-order warning. The split tests preserve real fixture and real calendar behavior; no mocks, skips, xfails, or duplicated production logic were introduced.
+
+## REVIEW-019 | LOW | No blocking findings in censo event boundary correction
+
+Reviewed W02.P10 `S150` after correcting the service wiring boundary. Censo refresh/apply bucket-event payload construction now lives in `CensoSyncService`, but concrete secure-object repository wiring remains in the config CLI composition helper. This avoids a new application-to-adapter factory while still removing duplicated event-authoring policy from the CLI command bodies.
+
+Verification covers Ruff, compileall for user-profile and config modules, profile censo CLI tests, user-profile repository tests, architecture-boundary tests, codebase size-budget tests, and a direct scan confirming the censo service no longer imports `runtime_repository` or `secure_object_repository_for_bucket`.
+
+## REVIEW-019 | LOW | No blocking findings in censo event-enrollment boundary correction
+
+Reviewed W02.P10 `S150`. The config censo CLI now constructs its service through the `aeat.application.user_profile` facade and no longer imports storage, bucket-event repositories, or event enums. `CensoSyncService` owns refresh/apply event emission, and `build_censo_sync_service` is exported as the application-level factory so consumers do not reach into private modules.
+
+Verification covers Ruff, compileall, a CLI boundary search for event/storage wiring, 17 application censo service tests, 11 marker-enabled CLI censo tests, the 2-test hard size-budget guard, and plan validation with only the known PLAN022 monotonic-order warning.

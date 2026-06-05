@@ -47,9 +47,14 @@ def _active_pointer() -> tuple[str, str]:
 
 
 def _build_service(bucket_id: str):
-    from ....application.user_profile import build_censo_sync_service
+    from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ....application.user_profile import CensoSyncService
+    from ....domain.buckets import BucketEventHistoryRepository
 
-    return build_censo_sync_service(bucket_id=bucket_id)
+    return CensoSyncService(
+        bucket_id=bucket_id,
+        events=BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id)),
+    )
 
 
 def _register_censo_refresh(censo_app: typer.Typer) -> None:
