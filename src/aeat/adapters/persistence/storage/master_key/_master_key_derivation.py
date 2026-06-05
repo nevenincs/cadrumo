@@ -9,7 +9,6 @@ from argon2.low_level import hash_secret_raw as _argon2_hash_secret_raw
 
 from ..crypto._crypto import KEY_SIZE
 
-
 ARGON2_MEMORY_COST_KIB: Final[int] = 19 * 1024
 """Argon2id ``memory_cost`` in KiB (19 MiB — OWASP-current top tier)."""
 
@@ -28,12 +27,30 @@ KDF_PARAMS_VERSION: Final[int] = 2
 
 def derive_kek(passphrase: bytes, salt: bytes) -> bytes:
     """Derive a 32-byte KEK from the operator's passphrase and per-store salt."""
+    return derive_kek_with_params(
+        passphrase,
+        salt,
+        memory_cost=ARGON2_MEMORY_COST_KIB,
+        time_cost=ARGON2_TIME_COST,
+        parallelism=ARGON2_PARALLELISM,
+    )
+
+
+def derive_kek_with_params(
+    passphrase: bytes,
+    salt: bytes,
+    *,
+    memory_cost: int,
+    time_cost: int,
+    parallelism: int,
+) -> bytes:
+    """Derive a 32-byte KEK with explicit persisted Argon2id parameters."""
     return _argon2_hash_secret_raw(
         secret=passphrase,
         salt=salt,
-        time_cost=ARGON2_TIME_COST,
-        memory_cost=ARGON2_MEMORY_COST_KIB,
-        parallelism=ARGON2_PARALLELISM,
+        time_cost=time_cost,
+        memory_cost=memory_cost,
+        parallelism=parallelism,
         hash_len=KEY_SIZE,
         type=_Argon2Type.ID,
     )

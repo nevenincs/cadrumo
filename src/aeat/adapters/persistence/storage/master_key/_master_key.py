@@ -86,7 +86,6 @@ from ._master_key_derivation import (
     ARGON2_TIME_COST,
     KDF_PARAMS_VERSION,
     SALT_SIZE,
-    derive_kek,
     derive_kek_with_params,
 )
 from ._master_key_records import (
