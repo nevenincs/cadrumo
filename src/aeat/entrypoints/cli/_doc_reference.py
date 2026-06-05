@@ -631,11 +631,11 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
     lazy subcommand to load, asserts no fallback surface is present, then
     renders one RST page per top-level family plus an ``index.rst``.
 
-    This function pins ``AEAT_OUTPUT_LANGUAGE=en`` before importing the CLI tree
-    so that ``tr()`` keys resolve to English strings for deterministic reference
-    output. The subprocess entry point :func:`main` provides a clean interpreter
-    boundary for callers that cannot guarantee the CLI has not already been
-    imported.
+    This function pins the output-language setting to English before importing the
+    CLI tree so that ``tr()`` keys resolve to English strings for deterministic
+    reference output. The subprocess entry point :func:`main` provides a clean
+    interpreter boundary for callers that cannot guarantee the CLI has not already
+    been imported.
 
     Args:
         docs_root: The project documentation root (the directory that contains
@@ -645,8 +645,14 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
         A mapping from relative path (e.g. ``"cli/index.rst"``) to rendered
         RST content, mirroring what was written to disk.
     """
-    os.environ["AEAT_OUTPUT_LANGUAGE"] = "en"
+    from ...core.config import override_settings
 
+    with override_settings(aeat_output_language="en"):
+        return _generate_cli_reference_loaded(docs_root)
+
+
+def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
+    """Render the CLI reference after the caller has pinned output language."""
     import click
     from typer.main import get_command as _typer_get_command
 
