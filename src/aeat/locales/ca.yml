@@ -710,6 +710,7 @@ application:
       computed_casilla_binding_conflict: 'Les entrades procedents del bucket apunten
         a caselles calculades i no es poden sobreescriure amb binding extern. Caselles
         afectades: %{computed}.'
+      cross_period_clean_state_incomplete: 'La prova d''estat net entre periodes esta incompleta per al model {modelo} {filing_year} {period}; queden {finding_count} troballa(es).'
       export_cross_bucket_refused: La revisio indicada pertany a un bucket diferent
         del bucket del perfil actiu. Canvia de perfil abans d'exportar.
       export_draft_approval_failed: No s'ha pogut aprovar l'esborrany per a la revisio

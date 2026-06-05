@@ -717,6 +717,7 @@ application:
       computed_casilla_binding_conflict: 'Las entradas procedentes del bucket tienen
         como destino casillas calculadas; no se pueden sobreescribir con binding externo.
         Casillas afectadas: %{computed}.'
+      cross_period_clean_state_incomplete: 'La prueba de estado limpio entre periodos esta incompleta para el modelo {modelo} {filing_year} {period}; quedan {finding_count} hallazgo(s).'
       export_cross_bucket_refused: La revision indicada pertenece a un bucket distinto
         del bucket del perfil activo. Cambia de perfil antes de exportar.
       export_draft_approval_failed: No se pudo aprobar el borrador para la revision
