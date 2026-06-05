@@ -23,8 +23,10 @@ from .._bindings import (
     Modelo720RowObservation,
     RefundOperationObservation,
     RelatedPartyOperationObservation,
+)
+from .._detail_record_bindings import _build_related_party_rows
+from .._withholding_bindings import (
     WithholdingObservation,
-    _build_related_party_rows,
     _build_withholding_rows,
 )
 

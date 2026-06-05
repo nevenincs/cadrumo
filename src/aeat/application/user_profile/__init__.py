@@ -75,6 +75,13 @@ if TYPE_CHECKING:
         RemoveProfileCommand,
         RenameProfileCommand,
     )
+    from ._custody import (
+        CustodyRecoverResult,
+        CustodyRecoveryEnrollment,
+        CustodyRecoveryStatus,
+        CustodyRecoveryVerification,
+        CustodyRekeyResult,
+    )
     from ._lifecycle import ProfileLifecycleService
     from ._preflight import ProfilePreflightService
     from ._projections import (
@@ -198,6 +205,22 @@ def __getattr__(name: str):
 
         return getattr(_bundle, name)
     if name in (
+        "CustodyRecoverResult",
+        "CustodyRecoveryEnrollment",
+        "CustodyRecoveryStatus",
+        "CustodyRecoveryVerification",
+        "CustodyRekeyResult",
+        "inspect_recovery_status",
+        "mint_recovery_code",
+        "recover_secret_store",
+        "recovery_wrap_path",
+        "rekey_secret_store",
+        "verify_recovery_code",
+    ):
+        from . import _custody
+
+        return getattr(_custody, name)
+    if name in (
         "ProfileAlreadyRegisteredError",
         "build_lifecycle_service",
         "delete_profile_with_lifecycle_span",
@@ -251,6 +274,11 @@ __all__ = [
     "CensoProfileComparison",
     "CensoSyncError",
     "CensoSyncService",
+    "CustodyRecoverResult",
+    "CustodyRecoveryEnrollment",
+    "CustodyRecoveryStatus",
+    "CustodyRecoveryVerification",
+    "CustodyRekeyResult",
     "DuplicateProfileCommand",
     "EditProfileFieldCommand",
     "EditProfileSectionCommand",
@@ -286,14 +314,19 @@ __all__ = [
     "deserialize_profile_bundle",
     "fact_value",
     "facts_to_values",
+    "inspect_recovery_status",
     "logout_active_profile",
+    "mint_recovery_code",
     "profile_create_storage_span",
     "profile_storage_session",
     "projection_for_taxpayer",
     "read_active_profile",
     "record_to_path_values",
     "record_to_values",
+    "recover_secret_store",
+    "recovery_wrap_path",
     "register_active_profile",
+    "rekey_secret_store",
     "remove_active_profile",
     "remove_profile_bucket_directory",
     "rename_profile",
@@ -305,4 +338,5 @@ __all__ = [
     "snapshot_to_values",
     "user_profile_snapshot_object_key",
     "user_profile_value_object_key",
+    "verify_recovery_code",
 ]

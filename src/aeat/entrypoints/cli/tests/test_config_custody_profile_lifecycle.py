@@ -19,6 +19,7 @@ _CLI_HARNESS = dedent(
     """
     from __future__ import annotations
 
+    import os
     import sys
     from pathlib import Path
 
@@ -28,12 +29,16 @@ _CLI_HARNESS = dedent(
     storage_root = Path(sys.argv[1])
     cli_args = sys.argv[2:]
     base_settings = Settings(_env_file=None)
+    passphrase = os.environ.get(
+        "AEAT_TEST_SECRET_PASSPHRASE",
+        base_settings.aeat_dev_test_database_password,
+    )
     settings = Settings(
         _env_file=None,
         aeat_local_storage_root=storage_root,
         aeat_secret_store_dir=storage_root / "secrets",
         aeat_secret_store_backend="file",
-        aeat_secret_passphrase=base_settings.aeat_dev_test_database_password,
+        aeat_secret_passphrase=passphrase,
         aeat_output_language="en",
     )
     token = config_module._settings_override.set(settings)
@@ -138,6 +143,141 @@ def test_profile_create_provisions_file_custody_and_switch_reopens_it(tmp_path: 
     retired = _run_aeat(tmp_path, ("config", "init", "--help"))
     assert retired.returncode != 0
     assert "config.init" not in _combined_output(retired)
+
+
+def test_config_lock_unlock_aliases_drive_profile_lifecycle(tmp_path: Path) -> None:
+    """Root custody aliases use the profile lifecycle session path."""
+
+    created = _run_aeat(
+        tmp_path,
+        (
+            "config",
+            "profile",
+            "create",
+            "custody",
+            "--quiet",
+            "--tax-id",
+            "12345678Z",
+            "--name",
+            "Custody Operator",
+            "--activity",
+            "design",
+            "--iva-regime",
+            "GENERAL",
+        ),
+    )
+    assert created.returncode == 0, _combined_output(created)
+
+    locked = _run_aeat(tmp_path, ("config", "lock"))
+    assert locked.returncode == 0, _combined_output(locked)
+    assert "locked_profile\t" in locked.stdout
+
+    missing_default = _run_aeat(tmp_path, ("config", "unlock"))
+    assert missing_default.returncode != 0
+    assert "No active profile" in _combined_output(missing_default) or "active profile" in _combined_output(
+        missing_default
+    )
+
+    unlocked_by_name = _run_aeat(tmp_path, ("config", "unlock", "custody"))
+    assert unlocked_by_name.returncode == 0, _combined_output(unlocked_by_name)
+    assert "active_profile\tcustody" in unlocked_by_name.stdout
+
+    unlocked_default = _run_aeat(tmp_path, ("config", "unlock"))
+    assert unlocked_default.returncode == 0, _combined_output(unlocked_default)
+    assert "active_profile\tcustody" in unlocked_default.stdout
+
+
+def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path) -> None:
+    """First-class custody verbs recover the same encrypted profile under rotated passphrases."""
+
+    created = _run_aeat(
+        tmp_path,
+        (
+            "config",
+            "profile",
+            "create",
+            "custody",
+            "--quiet",
+            "--tax-id",
+            "12345678Z",
+            "--name",
+            "Custody Operator",
+            "--activity",
+            "design",
+            "--iva-regime",
+            "GENERAL",
+        ),
+    )
+    assert created.returncode == 0, _combined_output(created)
+
+    enrolled = _run_aeat(tmp_path, ("config", "show-recovery"))
+    assert enrolled.returncode == 0, _combined_output(enrolled)
+    recovery_line = next(line for line in enrolled.stdout.splitlines() if line.startswith("recovery_key\t"))
+    recovery_key = recovery_line.split("\t", 1)[1]
+    assert len(recovery_key.split()) == 24
+    assert (tmp_path / "secrets" / "master.recovery.key").is_file()
+
+    verified = _run_aeat(tmp_path, ("config", "verify-recovery", "--recovery-key", recovery_key))
+    assert verified.returncode == 0, _combined_output(verified)
+    assert "verified\tyes" in verified.stdout
+
+    rotated_value = "correct horse battery staple"
+    rekeyed = _run_aeat(
+        tmp_path,
+        (
+            "config",
+            "rekey",
+            "--new-passphrase",
+            rotated_value,
+            "--confirm-new-passphrase",
+            rotated_value,
+        ),
+    )
+    assert rekeyed.returncode == 0, _combined_output(rekeyed)
+    assert "rekeyed\tyes" in rekeyed.stdout
+
+    shown_after_rekey = _run_aeat(
+        tmp_path,
+        ("config", "profile", "show"),
+        extra_env={"AEAT_TEST_SECRET_PASSPHRASE": rotated_value},
+    )
+    assert shown_after_rekey.returncode == 0, _combined_output(shown_after_rekey)
+    assert "display_name\tcustody" in shown_after_rekey.stdout
+
+    recovered_value = "fresh recovery passphrase"
+    recovered = _run_aeat(
+        tmp_path,
+        (
+            "config",
+            "recover",
+            "--recovery-key",
+            recovery_key,
+            "--new-passphrase",
+            recovered_value,
+            "--confirm-new-passphrase",
+            recovered_value,
+        ),
+        extra_env={"AEAT_TEST_SECRET_PASSPHRASE": rotated_value},
+    )
+    assert recovered.returncode == 0, _combined_output(recovered)
+    assert "recovered\tyes" in recovered.stdout
+
+    shown_after_recover = _run_aeat(
+        tmp_path,
+        ("config", "profile", "show"),
+        extra_env={"AEAT_TEST_SECRET_PASSPHRASE": recovered_value},
+    )
+    assert shown_after_recover.returncode == 0, _combined_output(shown_after_recover)
+    assert "display_name\tcustody" in shown_after_recover.stdout
+
+
+def test_config_help_exposes_first_class_custody_verbs(tmp_path: Path) -> None:
+    """The accepted custody verbs are mounted under the config root."""
+
+    for verb in ("lock", "unlock", "rekey", "recover", "show-recovery", "verify-recovery"):
+        help_result = _run_aeat(tmp_path, ("config", verb, "--help"))
+        assert help_result.returncode == 0, _combined_output(help_result)
+        assert verb in _combined_output(help_result)
 
 
 def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: Path) -> None:

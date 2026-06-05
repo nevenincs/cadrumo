@@ -124,9 +124,9 @@ Close remaining oversized CLI roots through explicit residual extraction tranche
 
 Close any CLI roots still above the hard module budget after first-pass registrar extraction, preserving CLI-as-transport and backend-owned policy.
 
-- [ ] `W02.P10.S116` - select the next residual config CLI closure group using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests`.
-- [ ] `W02.P10.S117` - extract the selected residual config CLI group into focused transport registrar modules; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
-- [ ] `W02.P10.S118` - verify residual config CLI behavior and ratchet config module size budget; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P10.S116` - select the next residual config CLI closure group using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P10.S117` - extract the selected residual config CLI group into focused transport registrar modules; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
+- [x] `W02.P10.S118` - verify residual config CLI behavior and ratchet config module size budget; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
 
 ## Wave `W03` - application and domain monolith decomposition
 
@@ -161,12 +161,12 @@ Decompose oversized application service modules by use-case boundary while prese
 
 Decompose oversized calculation registry modules by schema, binding, applicability, parity, and record-design ownership without importing application or adapter layers.
 
-- [ ] `W03.P07.S63` - decompose registry bindings module by binding group and relation ownership behind the registry facade; `src/aeat/domain/calculations/registry/_bindings.py src/aeat/domain/calculations/registry/*.py`.
-- [ ] `W03.P07.S64` - verify registry binding behavior and facade imports after decomposition; `src/aeat/domain/calculations/registry/tests/test_*binding* src/aeat/domain/calculations/registry/tests`.
-- [ ] `W03.P07.S65` - decompose registry schema module by schema family and validation ownership behind the registry facade; `src/aeat/domain/calculations/registry/_schema.py src/aeat/domain/calculations/registry/*.py`.
-- [ ] `W03.P07.S66` - verify registry schema behavior and facade imports after decomposition; `src/aeat/domain/calculations/registry/tests/test_registry_schema.py src/aeat/domain/calculations/registry/tests`.
-- [ ] `W03.P07.S67` - decompose registry record design module by record authority surface behind the registry facade; `src/aeat/domain/calculations/registry/_record_design.py src/aeat/domain/calculations/registry/*.py`.
-- [ ] `W03.P07.S68` - verify registry record design behavior and facade imports after decomposition; `src/aeat/domain/calculations/registry/tests src/aeat/tests`.
+- [x] `W03.P07.S63` - decompose registry bindings module by binding group and relation ownership behind the registry facade; `src/aeat/domain/calculations/registry/_bindings.py src/aeat/domain/calculations/registry/*.py`.
+- [x] `W03.P07.S64` - verify registry binding behavior and facade imports after decomposition; `src/aeat/domain/calculations/registry/tests/test_*binding* src/aeat/domain/calculations/registry/tests`.
+- [x] `W03.P07.S65` - decompose registry schema module by schema family and validation ownership behind the registry facade; `src/aeat/domain/calculations/registry/_schema.py src/aeat/domain/calculations/registry/*.py`.
+- [x] `W03.P07.S66` - verify registry schema behavior and facade imports after decomposition; `src/aeat/domain/calculations/registry/tests/test_registry_schema.py src/aeat/domain/calculations/registry/tests`.
+- [x] `W03.P07.S67` - decompose registry record design module by record authority surface behind the registry facade; `src/aeat/domain/calculations/registry/_record_design.py src/aeat/domain/calculations/registry/*.py`.
+- [x] `W03.P07.S68` - verify registry record design behavior and facade imports after decomposition; `src/aeat/domain/calculations/registry/tests src/aeat/tests`.
 - [ ] `W03.P07.S69` - decompose registry applicability module by applicability rule family behind the registry facade; `src/aeat/domain/calculations/registry/_applicability.py src/aeat/domain/calculations/registry/*.py`.
 - [ ] `W03.P07.S70` - verify registry applicability behavior and facade imports after decomposition; `src/aeat/domain/calculations/registry/tests/test_applicability* src/aeat/domain/calculations/registry/tests`.
 - [ ] `W03.P07.S71` - decompose registry workbook parity module by parity concern behind the registry facade; `src/aeat/domain/calculations/registry/_workbook_parity.py src/aeat/domain/calculations/registry/*.py`.
@@ -187,6 +187,17 @@ Decompose oversized outbound adapter and persistence modules along external cont
 - [ ] `W03.P08.S81` - decompose master key storage adapter by derivation, rotation, and persistence concerns behind the storage facade; `src/aeat/adapters/persistence/storage/master_key/_master_key.py src/aeat/adapters/persistence/storage/master_key/*.py`.
 - [ ] `W03.P08.S82` - verify master key storage behavior and facade imports after decomposition; `src/aeat/adapters/persistence/storage/master_key/tests src/aeat/adapters/persistence/storage/tests`.
 
+### Phase `W03.P11` - residual application root closure
+
+Close application package and service roots that remain oversized after first-pass decomposition while preserving public package facades and keeping business logic out of entrypoints.
+
+- [ ] `W03.P11.S119` - decompose residual modelo application actions by natural-key work and revision workflow behind the modelo facade; `src/aeat/application/modelo/_actions.py src/aeat/application/modelo/*.py`.
+- [ ] `W03.P11.S120` - verify residual modelo application behavior and public facade imports after action decomposition; `src/aeat/application/modelo/tests src/aeat/entrypoints/cli/tests/test_modelo*`.
+- [ ] `W03.P11.S121` - decompose residual live package root exports into focused private modules behind the public live facade; `src/aeat/application/live/__init__.py src/aeat/application/live/*.py`.
+- [ ] `W03.P11.S122` - verify residual live package behavior and public facade imports after root decomposition; `src/aeat/application/live/tests src/aeat/entrypoints/cli/tests/test_live*`.
+- [ ] `W03.P11.S123` - decompose overview application root by calendar and filing summary services behind the overview facade; `src/aeat/application/overview/__init__.py src/aeat/application/overview/*.py`.
+- [ ] `W03.P11.S124` - verify overview application behavior and public facade imports after root decomposition; `src/aeat/application/overview/tests src/aeat/entrypoints/cli/tests/test_overview*`.
+
 ## Wave `W04` - core and final static guard closure
 
 Close core over-limit modules and replace shrinking legacy budgets with hard codebase-wide line and callable guards once all decomposition evidence is clean.
@@ -205,6 +216,28 @@ Decompose oversized core modules, then enforce hard codebase-wide module and cal
 - [ ] `W04.P09.S90` - verify core adapter error registry behavior and facade imports after decomposition; `src/aeat/core/errors/tests src/aeat/core/tests`.
 - [ ] `W04.P09.S91` - replace shrinking legacy size budgets with hard codebase-wide 1250-line and callable-complexity guards; `src/aeat/tests src/aeat/entrypoints/cli/tests`.
 - [ ] `W04.P09.S92` - run final codebase monolith decomposition feature gate and refresh RAG index; `.vault/plan/2026-06-05-codebase-monolith-decomposition-plan.md src/aeat`.
+
+## Wave `W05` - residual test and fixture monolith closure
+
+Split oversized test modules and fixture generators into focused real-behavior surfaces so the hard module-size guard applies to production and test code without tautological test logic.
+
+### Phase `W05.P12` - test module and fixture generator closure
+
+Decompose oversized real-behavior tests and support generators by behavioral surface while preserving production imports and avoiding fake, stub, monkeypatch, skip, or xfail shortcuts.
+
+- [ ] `W05.P12.S125` - decompose oversized justificante fixture generator by fixture family and generation concern; `src/aeat/tests/fixtures/justificantes/_generate.py src/aeat/tests/fixtures/justificantes/*.py`.
+- [ ] `W05.P12.S126` - split oversized application and overview behavior tests by workflow without duplicating business logic; `src/aeat/application/ledger/tests/test_actions.py src/aeat/application/modelo/tests/test_file_flow.py src/aeat/application/overview/tests/test_calendar.py src/aeat/application/*/tests`.
+- [ ] `W05.P12.S127` - split oversized inbound and outbound adapter tests by external contract surface; `src/aeat/adapters/inbound/declaracion/tests/test_verification_chain.py src/aeat/adapters/inbound/declaracion/tests/test_parser_boundary.py src/aeat/adapters/outbound/aeat/sede/tests/test_declarations.py src/aeat/adapters/outbound/aeat/auth/tests/test_authenticator.py src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects.py src/aeat/adapters/persistence/storage/tests/test_runtime_migrated_repositories.py`.
+- [ ] `W05.P12.S128` - split oversized registry tests by schema and referential-integrity concern; `src/aeat/domain/calculations/registry/tests/test_registry_schema.py src/aeat/domain/calculations/registry/tests/test_referential_integrity.py src/aeat/domain/calculations/registry/tests`.
+- [ ] `W05.P12.S129` - verify split test and fixture surfaces plus hard size-budget inventory; `src/aeat/tests/test_codebase_size_budgets.py src/aeat/tests/fixtures/justificantes src/aeat/application src/aeat/adapters src/aeat/domain/calculations/registry/tests`.
+
+### Phase `W05.P13` - residual hard guard closure
+
+Re-run exact and semantic discovery after every residual decomposition row, close any remaining over-budget module explicitly, and finish only when the hard guard and plan validation pass.
+
+- [ ] `W05.P13.S130` - refresh exact fd rg and vaultspec-rag monolith inventory after residual decomposition; `src/aeat .vault/plan/2026-06-05-codebase-monolith-decomposition-plan.md`.
+- [ ] `W05.P13.S131` - execute final hard size and callable-complexity gates for all tracked Python modules; `src/aeat/tests/test_codebase_size_budgets.py src/aeat`.
+- [ ] `W05.P13.S132` - run final plan validation feature-surface gate and RAG refresh for monolith decomposition; `.vault/plan/2026-06-05-codebase-monolith-decomposition-plan.md src/aeat .vault/exec/2026-06-05-codebase-monolith-decomposition`.
 
 ## Description
 

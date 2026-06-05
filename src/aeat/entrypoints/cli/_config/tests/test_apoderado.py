@@ -5,8 +5,8 @@ import pytest
 from typer.testing import CliRunner
 
 from .....tests.secure_sql import isolated_profile_storage_root
+from ... import app as root_app
 from ..._errors import CliRefusedBoundaryError
-from .. import app as root_app
 from ..__init__ import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

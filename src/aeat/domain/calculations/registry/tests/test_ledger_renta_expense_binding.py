@@ -134,6 +134,11 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
             "renta-2025-profile-marriage-full-year": Decimal("0"),
             "renta-2025-profile-marriage-month-start": Decimal("0"),
             "renta-2025-profile-marriage-month-end": Decimal("0"),
+            # Casilla 1388 is a previous-filing carry. This isolated
+            # ledger-expense binding test has no prior filing fixture, so
+            # provide the same explicit neutral opening balance used by the
+            # Renta chain tests.
+            "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={relation.id: Decimal("0") for relation in revision.relations},

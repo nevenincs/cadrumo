@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 # Groupings handled by the modelo 349 / invoice + counterpart aggregation
-# resolvers in ``aeat.domain.calculations.registry._bindings`` rather than
+# resolvers in ``aeat.domain.calculations.registry`` rather than
 # by the ``_row_set_assembly`` dispatcher. Listed explicitly so a new
 # grouping value cannot sneak into the registry without surfacing here.
 _INVOICE_GROUPINGS: frozenset[str] = frozenset({"operator_clave", "operator_clave_period"})
