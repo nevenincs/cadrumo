@@ -52,6 +52,9 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S47]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S48]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S49]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S50]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S51]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P05-S52]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P04-S07]]'
   - '[[2026-06-05-codebase-monolith-decomposition-adr]]'
   - '[[2026-06-05-codebase-monolith-decomposition-code-review-audit]]'
@@ -122,6 +125,9 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S47` - W02.P05.S47 - select residual ledger root closure groups
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S48` - W02.P05.S48 - extract residual ledger root command groups
 - `2026-06-05-codebase-monolith-decomposition-W02-P05-S49` - W02.P05.S49 - verify residual ledger root extraction
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S50` - W02.P05.S50 - select residual config auth command group
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S51` - W02.P05.S51 - extract residual config auth command group
+- `2026-06-05-codebase-monolith-decomposition-W02-P05-S52` - W02.P05.S52 - verify residual config auth extraction
 - `2026-06-05-codebase-monolith-decomposition-W03-P04-S07` - W03.P04.S07 Backend ADR Queue
 
 ### plan
