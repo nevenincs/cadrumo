@@ -84,3 +84,15 @@ Residual risk is outside this slice: the remaining open plan rows still cover ov
 Reviewed the W03.P11 `S119` residual modelo action decomposition after focused gates exposed and repaired facade regressions for moved action errors and IVA wallet aliases. The package facade still exposes work-unit lifecycle actions, calculation and filing workflows, workflow-period resolution, and legacy action-error classes while the moved implementations live in private helper modules. Registry authority lookup now has one owner in `_registry_resources.py`, with `_registry_helpers.py` delegating to it rather than carrying a duplicate copy.
 
 Verification covers ruff, compileall, direct facade import smoke, and 46 focused modelo application tests. Residual risk remains tracked in the plan: `_actions.py` is still above the final module budget, so follow-up rows `S133` through `S140` now split calculation, verification, filing, amendment, and import workflows.
+
+## REVIEW-011 | LOW | No blocking findings in modelo calculation extraction
+
+Reviewed the W03.P11 `S133` calculation extraction. The public `aeat.application.modelo` facade and legacy private `_actions.py` compatibility path both resolve calculation actions to `_calculation_actions.py`, while shared observation and registry snapshot helpers live in `_calculation_helpers.py`. The extraction keeps binding resolution, IVA wallet decisions, ledger preflight, persistence, and bucket event emission in the application layer; no policy moved to CLI.
+
+Verification covers ruff, compileall, public and legacy facade import smoke, plan validation, and 46 focused modelo application tests. Residual risk remains tracked by the open `S134` verification row and later filing/amendment/import extraction rows because `_actions.py` remains above the final 1250-line budget at 2107 lines.
+
+## REVIEW-011 | LOW | No blocking findings in modelo facade and CLI verification slice
+
+Reviewed W03.P11 `S120` after the public facade import regression was repaired. `aeat.application.modelo` now imports canonical action errors from `_action_errors.py`, work-unit lifecycle actions from `_work_lifecycle.py`, workflow actions from `_actions.py`, and workflow-period resolution from `_workflow_gate.py`, while entrypoint code continues to consume the top-level facade. The CLI test import in `test_profile_export_roundtrip.py` was also corrected to avoid private `_actions.py` reach-through.
+
+Verification covers ruff, compileall, direct facade smoke imports, 46 focused application modelo tests, 134 focused modelo CLI tests, 8 CLI architecture-boundary tests, 4 profile export roundtrip tests, and a private modelo application import scan across entrypoints/adapters/domain returning no matches.
