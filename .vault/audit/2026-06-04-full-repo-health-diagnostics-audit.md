@@ -872,3 +872,31 @@ Current top-level test over-threshold ratchet:
 Next complexity targets should start with the remaining registry binding and
 record-design hotspots, followed by config Google sync, live error
 classification, and the top-level inventory-test collectors.
+
+## HEALTH-020-S78 | CLOSED | 2026-06-05 Ruff scratch/probe scope verification
+
+W06.P20.S78 verified the Ruff scope for root scratch and probe artifacts in the
+current shifted worktree. The configuration change itself was already present in
+`HEAD`: `tool.ruff.extend-exclude` excludes `run_p04_s11_test.py`,
+`scratch_probe*.py`, `test_attachment_fix.py`, `test_m714.py`, and
+`scripts/classify_m200.py`.
+
+Verification:
+
+- `git show HEAD:pyproject.toml` confirms the Ruff `extend-exclude` block is
+  already committed.
+- `uv run --no-sync ruff check . --output-format concise` no longer reports the
+  named scratch/probe paths.
+- `uv run --no-sync ruff check . --statistics` still exits 1 with 475 findings.
+  The remaining findings are outside the S78 scratch/probe scope and are now
+  dominated by docs tooling, contributor scripts, and the concurrent
+  test-topology relocation.
+
+Residual carried forward:
+
+- The full Ruff lane remains red. Representative classes are E501 line length,
+  D104 package docstrings in relocated `tests` packages, E701 one-line
+  statements in contributor scripts, S105/S106 synthetic secret literals, S603
+  subprocess probes, and import-order findings.
+- `pyproject.toml` has unrelated dirty WIP from the concurrent test-topology
+  refactor. S78 did not stage or modify that file.

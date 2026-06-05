@@ -723,3 +723,18 @@ explicit residual ratchet rather than a silent pass.
 Verification reran `just audit-complexity-production` and
 `just audit-complexity-tests`; both still exit 1. The production over-threshold
 count is 24, and the top-level test over-threshold count is 8.
+
+## W06-005 | INFO | Ruff scratch/probe scope verification found no defects
+
+Status: verified with broader Ruff residual.
+
+The W06.P20.S78 review found the scratch/probe Ruff scope already present in the
+committed `pyproject.toml` baseline. Full-tree Ruff output no longer includes the
+named root scratch/probe artifacts from HEALTH-008. The step correctly avoids
+absorbing unrelated dirty `pyproject.toml` edits from the concurrent
+test-topology refactor.
+
+Residual: `uv run --no-sync ruff check . --statistics` still exits 1 with 475
+findings across docs tooling, contributor scripts, relocated test packages, and
+production import/line-length issues. Those are not scratch/probe scope failures
+and remain visible for the later hygiene rows.
