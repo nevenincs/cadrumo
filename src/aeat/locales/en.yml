@@ -645,6 +645,7 @@ application:
         bucket-derived source-bound casillas: %{casillas}.'
       computed_casilla_binding_conflict: 'Bucket-derived inputs target computed casillas
         and cannot be overridden by external binding. Affected casillas: %{computed}.'
+      cross_period_clean_state_incomplete: 'Cross-period clean-state proof is incomplete for modelo {modelo} {filing_year} {period}; {finding_count} finding(s) remain.'
       export_cross_bucket_refused: The addressed revision belongs to a bucket other
         than the active profile bucket. Switch profile before exporting.
       export_draft_approval_failed: Could not approve the draft for calculation revision

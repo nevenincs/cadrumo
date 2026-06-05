@@ -154,6 +154,24 @@ def test_cross_period_requirements_include_relation_rollups(tmp_path: Path) -> N
     )
 
 
+def test_cross_period_clean_state_blocks_missing_group_member_sources(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        snapshot = resources().modelos.authority.snapshot("353", filing_year=2026, period="12")
+
+        verdict = evaluate_cross_period_clean_state(
+            snapshot,
+            bucket_id=_BUCKET_ID,
+            observation_repository=CalculationObservationRepository(),
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+        )
+
+    assert verdict.requires_clean_state is True
+    assert any(evidence.requirement.requires_member_fan_in for evidence in verdict.dependencies)
+    assert CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE in verdict.blockers
+
+
 def test_cross_period_clean_state_accepts_aeat_attested_reconciled_sources(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         observation_repository = CalculationObservationRepository()

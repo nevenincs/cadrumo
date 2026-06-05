@@ -658,6 +658,7 @@ application:
         bucket-derived source-bound casillas: %{casillas}.'
       computed_casilla_binding_conflict: 'A bucket-alapú bemenetek számított mezőket
         céloznak, amelyek nem írhatók felül külső kötéssel. Érintett mezők: %{computed_casillas}.'
+      cross_period_clean_state_incomplete: 'A keresztidoszaki tiszta allapot igazolasa hianyos a(z) {modelo} {filing_year} {period} modellhez; {finding_count} megallapitas maradt.'
       export_cross_bucket_refused: A megcimzett revizio nem az aktiv profil bucketjehez
         tartozik. Exportalas elott valtson profilt.
       export_draft_approval_failed: Nem sikerult jovahagyni a(z) %{calculation_revision_id}
