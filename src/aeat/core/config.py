@@ -11,6 +11,7 @@ and this module stay fully aligned.
 from __future__ import annotations
 
 import contextvars
+import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import date
@@ -22,13 +23,16 @@ from urllib.parse import unquote
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from .errors import CoreValidationError
+from .errors import ActiveProfilePointerError, CoreValidationError
 from .external_constants import DEFAULT_CURRENCY, DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path
 from .resources import bundled_path
 
 if TYPE_CHECKING:
     from .external_constants import ExternalConstants
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class SecretStoreBackend(StrEnum):
@@ -62,6 +66,10 @@ DEV_TEST_DATABASE_PASSWORD = "aeat-dev-test-database-password"
 """Shared development/test password for database-backed secure-storage tests."""
 DEV_TEST_DATABASE_PASSWORD_ENV_VAR = "AEAT_DEV_TEST_DATABASE_PASSWORD"
 """Environment variable backing :attr:`Settings.aeat_dev_test_database_password`."""
+LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD = "aeat_live_tests_enabled"
+"""Settings field backing the pytest-only live-read opt-in."""
+LIVE_READ_TEST_OPT_IN_ENV_VAR = "AEAT_LIVE_TESTS_ENABLED"
+"""Environment variable backing :attr:`Settings.aeat_live_tests_enabled`."""
 
 
 def unwrap_optional_secret(value: SecretStr | None) -> str:
@@ -247,6 +255,15 @@ class Settings(BaseSettings):
         gt=0,
         description="Selector visibility probe timeout (ms) used by GROI/NIF-IVA check stages",
     )
+    aeat_browser_close_timeout_ms: int = Field(
+        default=5_000,
+        gt=0,
+        description=(
+            "Best-effort timeout (ms) for Playwright browser context/session cleanup during AEAT live "
+            "auth and read flows. Cleanup must not leave a command hanging after the primary operation "
+            "has already failed or timed out."
+        ),
+    )
     aeat_live_iva_surface_timeout_ms: int = Field(
         default=180_000,
         gt=0,
@@ -272,6 +289,15 @@ class Settings(BaseSettings):
         description=(
             "Drain delay (ms) after a bounded live IVA read surface is cancelled, giving Playwright "
             "browser tasks time to report cancellation-only errors before the loop handler is restored."
+        ),
+    )
+    aeat_live_iva_cli_watchdog_timeout_ms: int = Field(
+        default=240_000,
+        gt=0,
+        description=(
+            "Top-level CLI watchdog timeout (ms) for the combined read-only IVA remote-state command. "
+            "This must exceed the normal auth and surface budgets but remain below operator shell/tool "
+            "timeouts so the CLI can cancel and clean up inside its own process."
         ),
     )
     # ── LLM provider endpoints ────────────────────────────────────────────
@@ -555,10 +581,9 @@ class Settings(BaseSettings):
 
     # ── Live tests ──────────────────────────────────────────────────────────
     # Typed as ``str`` (not ``bool``) so the strict-match safety property is
-    # preserved: only the literal "1" enables live reads. Pydantic's bool
-    # coercion would accept "true"/"yes"/"on" — a wider opt-in surface than
-    # the kill-switch intent allows. The AeatAccessGate consumer checks
-    # ``settings.aeat_live_tests_enabled == "1"`` rather than truth-testing.
+    # preserved for pytest live-test opt-in: only the literal "1" enables
+    # live tests. Pydantic's bool coercion would accept "true"/"yes"/"on" —
+    # a wider opt-in surface than the test-gate intent allows.
     aeat_live_tests_enabled: str = Field(
         default="",
         description="Opt-in flag (set to '1') to run @pytest.mark.live_read tests against real external services",
@@ -1060,13 +1085,17 @@ class Settings(BaseSettings):
             # one-resolver invariant the disaster ADR Ruling 2
             # mandates.
             try:
-                from ._bucket_pointer_io import read_pointer
+                from ._bucket_pointer_io import pointer_path, read_pointer
 
                 pointer = read_pointer(self.aeat_local_storage_root)
-            except Exception:
-                # BROAD-EXCEPT-RATIONALE-POINTER-READ-FALLBACK: read_pointer may raise on
-                # filesystem, encoding, or schema drift; degrade for best-effort active bucket resolution.
-                pointer = None
+            except (OSError, ValueError) as exc:
+                pointer_file = pointer_path(self.aeat_local_storage_root)
+                _LOGGER.debug(
+                    "Invalid active-profile pointer at %s; refusing root storage fallback",
+                    pointer_file,
+                    exc_info=True,
+                )
+                raise ActiveProfilePointerError(path=pointer_file) from exc
             if pointer is not None:
                 bucket_id = pointer.bucket_id.strip()
         if not bucket_id:

@@ -443,4 +443,15 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.core.errors.ActiveProfilePointerError",
+        ErrorCode(
+            code="INTEGRITY_ACTIVE_PROFILE_POINTER",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_active_profile_pointer",
+            default_suggestion="aeat config repair profile",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

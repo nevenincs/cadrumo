@@ -3854,6 +3854,7 @@ errors:
       de referencia o el motor de cálculo pueden estar dañados.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
+    integrity_active_profile_pointer: 'El puntero de perfil activo no es válido; repara el perfil seleccionado antes de continuar.'
   internal:
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
