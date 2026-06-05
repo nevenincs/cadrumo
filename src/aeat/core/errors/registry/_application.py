@@ -1329,7 +1329,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.StoredCalculationDriftError",
+        "aeat.application.modelo._action_errors.StoredCalculationDriftError",
         ErrorCode(
             code="INTEGRITY_STORED_CALCULATION_DRIFT",
             category=ErrorCategory.INTEGRITY,
@@ -1340,7 +1340,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.ModeloApplicabilityFilterError",
+        "aeat.application.modelo._action_errors.ModeloApplicabilityFilterError",
         ErrorCode(
             code="REFUSED_MODELO_APPLICABILITY_FILTER",
             category=ErrorCategory.REFUSED,

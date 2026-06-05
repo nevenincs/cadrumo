@@ -3404,6 +3404,8 @@ errors:
       {profile_id}.
     profile_not_found: El perfil {profile_id} no existeix; crea'l abans d'aplicar
       el cens.
+    snapshot_profile_mismatch: La instantània censal {snapshot_id} pertany al perfil
+      {snapshot_profile_id}, no al perfil {profile_id}.
     sede_g313_no_censo: La seu electrònica de l'AEAT (G313) no ha retornat cap cens
       llegible per al perfil {profile_id}; confirma que el teu certificat o Cl@ve
       està registrat per a aquest NIF.
@@ -4218,8 +4220,7 @@ errors:
         només està disponible abans de seleccionar un bucket de perfil actiu.
       cold_bootstrap_explicit_database_refused: L'emmagatzematge d'arrencada en fred
         no pot ometre una ruta de base de dades explícita.
-      no_active_session: No hi ha cap sessió de bucket activa. Executa `aeat config
-        profile switch NAME` per desbloquejar un perfil.
+      no_active_session: 'No hi ha cap sessió de bucket activa. Executa `aeat config unlock NAME` per desbloquejar un perfil.'
       no_detail: No s'ha informat cap detall de preparació.
       not_ready: 'El runtime d''emmagatzematge no està preparat per a emmagatzematge
         vinculat al perfil: %{details}'
@@ -4229,10 +4230,8 @@ errors:
         de perfil actiu.
       session_changed: La sessió de bucket activa ha canviat. Torna a desbloquejar
         el perfil de destinació.
-      session_expired: La sessió de bucket activa ha caducat. Executa `aeat config
-        profile switch NAME` per reactivar el perfil.
-      session_sealed: La sessió de bucket activa està segellada. Executa `aeat config
-        profile switch NAME` per reactivar el perfil.
+      session_expired: 'La sessió de bucket activa ha caducat. Executa `aeat config unlock NAME` per reactivar el perfil.'
+      session_sealed: 'La sessió de bucket activa està segellada. Executa `aeat config unlock NAME` per reactivar el perfil.'
       unsecured_backend: La sessió de bucket activa fa servir el backend no segur.
         L'emmagatzematge de producció vinculat al perfil requereix custòdia de fitxer
         o anell de claus.

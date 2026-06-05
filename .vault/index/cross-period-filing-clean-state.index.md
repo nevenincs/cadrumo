@@ -23,7 +23,17 @@ related:
   - '[[2026-06-05-cross-period-filing-clean-state-W02-P05-S28]]'
   - '[[2026-06-05-cross-period-filing-clean-state-W02-P06-S29]]'
   - '[[2026-06-05-cross-period-filing-clean-state-W02-P06-S30]]'
+  - '[[2026-06-05-cross-period-filing-clean-state-W03-P07-S31]]'
+  - '[[2026-06-05-cross-period-filing-clean-state-W03-P07-S32]]'
+  - '[[2026-06-05-cross-period-filing-clean-state-W03-P07-S33]]'
+  - '[[2026-06-05-cross-period-filing-clean-state-W03-P08-S34]]'
+  - '[[2026-06-05-cross-period-filing-clean-state-W03-P08-S35]]'
+  - '[[2026-06-05-cross-period-filing-clean-state-W03-P08-S36]]'
   - '[[2026-06-05-cross-period-filing-clean-state-W03-P09-S37]]'
+  - '[[2026-06-05-cross-period-filing-clean-state-W03-P09-S38]]'
+  - '[[2026-06-05-cross-period-filing-clean-state-W04-P10-S39]]'
+  - '[[2026-06-05-cross-period-filing-clean-state-W04-P10-S40]]'
+  - '[[2026-06-05-cross-period-filing-clean-state-W04-P10-summary]]'
   - '[[2026-06-05-cross-period-filing-clean-state-adr]]'
   - '[[2026-06-05-cross-period-filing-clean-state-code-review-audit]]'
   - '[[2026-06-05-cross-period-filing-clean-state-plan]]'
@@ -65,7 +75,17 @@ Auto-generated index of all documents tagged with `#cross-period-filing-clean-st
 - `2026-06-05-cross-period-filing-clean-state-W02-P05-S28` - `cross-period-filing-clean-state` `W02.P05.S28` exec - dependency inventory tests
 - `2026-06-05-cross-period-filing-clean-state-W02-P06-S29` - `cross-period-filing-clean-state` `W02.P06.S29` exec - filing-state blockers
 - `2026-06-05-cross-period-filing-clean-state-W02-P06-S30` - `cross-period-filing-clean-state` `W02.P06.S30` exec - blocker tests
+- `2026-06-05-cross-period-filing-clean-state-W03-P07-S31` - `cross-period-filing-clean-state` `W03.P07.S31` exec - Modelo 390 justificante clean-state refusal
+- `2026-06-05-cross-period-filing-clean-state-W03-P07-S32` - `cross-period-filing-clean-state` `W03.P07.S32` exec - retention summary clean-state requirements
+- `2026-06-05-cross-period-filing-clean-state-W03-P07-S33` - `cross-period-filing-clean-state` `W03.P07.S33` exec - Renta payment-source clean-state requirements
+- `2026-06-05-cross-period-filing-clean-state-W03-P08-S34` - `cross-period-filing-clean-state` `W03.P08.S34` exec - Modelo 303 carry-forward clean-state requirements
+- `2026-06-05-cross-period-filing-clean-state-W03-P08-S35` - `cross-period-filing-clean-state` `W03.P08.S35` exec - Modelo 202 prior-year source clean-state requirements
+- `2026-06-05-cross-period-filing-clean-state-W03-P08-S36` - `cross-period-filing-clean-state` `W03.P08.S36` exec - patrimonio and foreign-asset scope proof
 - `2026-06-05-cross-period-filing-clean-state-W03-P09-S37` - `cross-period-filing-clean-state` `W03.P09.S37` exec - expected member coverage proof
+- `2026-06-05-cross-period-filing-clean-state-W03-P09-S38` - `cross-period-filing-clean-state` `W03.P09.S38` exec - Modelo 353 member fan-in refusal
+- `2026-06-05-cross-period-filing-clean-state-W04-P10-S39` - `cross-period-filing-clean-state` `W04.P10.S39` exec - clean-state repair diagnostics
+- `2026-06-05-cross-period-filing-clean-state-W04-P10-S40` - `cross-period-filing-clean-state` `W04.P10.S40` exec - repair message tests
+- `2026-06-05-cross-period-filing-clean-state-W04-P10-summary` - `cross-period-filing-clean-state` `W04.P10` summary
 
 ### plan
 

@@ -608,10 +608,12 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     assert relation_ids == {
         "modelo-200-2024-rel-202-pagos-fraccionados",
         "modelo-200-2024-rel-self-bin-pendiente-anterior",
+        "modelo-200-2024-rel-self-dotaciones-deterioro-cumplido-anterior",
+        "modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior",
     }
-    classification = revision.dependency_classifications[0]
-    assert classification.source_modelo == "202"
-    assert classification.treatment == "direct_annual_settlement"
+    classifications = {classification.source_modelo: classification for classification in revision.dependency_classifications}
+    assert classifications["202"].treatment == "direct_annual_settlement"
+    assert classifications["200"].treatment == "factual_evidence"
 
     requirements = relation_source_requirements(revision, filing_year=2024, period="0A")
     observations = _observations_from_requirements(
@@ -629,7 +631,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
         filing_year=2024,
         period="0A",
     )
-    assert set(relation_values) == {"modelo-200-2024-rel-202-pagos-fraccionados"}
+    assert set(relation_values) == relation_ids
 
     # The modelo-202 instalment relation aggregates the three quarterly
     # pago-fraccionado instalments (00601 first, 00603 second, 00605
@@ -657,6 +659,8 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
             "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
             "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
             "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
         },
         date_context={"filing_period": date(2024, 12, 31)},
         relation_values=relation_values,

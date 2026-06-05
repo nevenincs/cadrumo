@@ -273,6 +273,26 @@ def test_cross_period_dependency_inventory_covers_renta_2025_target_modelo(
     }
 
 
+def test_cross_period_dependency_inventory_documents_patrimonio_foreign_asset_scope(
+    tmp_path: Path,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        inventories = tuple(
+            cross_period_dependency_inventory(
+                resources().modelos.authority,
+                filing_year=filing_year,
+            )
+            for filing_year in (2025, 2026)
+        )
+
+    assert all("714" not in inventory.target_modelos for inventory in inventories)
+    assert all("720" not in inventory.target_modelos for inventory in inventories)
+    assert all("721" not in inventory.target_modelos for inventory in inventories)
+    assert all("714" not in inventory.source_modelos for inventory in inventories)
+    assert all("720" not in inventory.source_modelos for inventory in inventories)
+    assert all("721" not in inventory.source_modelos for inventory in inventories)
+
+
 def test_cross_period_clean_state_blocks_missing_group_member_sources(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         snapshot = _snapshot_353()

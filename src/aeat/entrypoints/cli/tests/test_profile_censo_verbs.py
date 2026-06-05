@@ -39,36 +39,48 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _seed_active_profile() -> None:
+def _seed_active_profile(*, without_taxpayer_axes: bool = False) -> None:
     from ....application.user_profile._testing import register_minimal_profile
     from ....application.workflow._persistence import workflow_state_repository
 
     repo = workflow_state_repository()
+    overrides = {"identity.tax_id": "12345678Z", "activities.description": "software"}
+    if without_taxpayer_axes:
+        overrides.update(
+            {
+                "taxpayer_type.entity_type": "",
+                "taxpayer_type.irpf_income_categories": "",
+                "irpf.estimation_regime": "",
+            }
+        )
     repo.update(
         lambda state: register_minimal_profile(
             state,
             profile_id="default",
-            overrides={"identity.tax_id": "12345678Z", "activities.description": "software"},
+            overrides=overrides,
         )
     )
 
 
-def _capture_snapshot() -> str:
+def _capture_snapshot(*, include_iae: bool = False) -> str:
     from ....core import resolve_active_bucket_id
 
     active = resolve_active_bucket_id()
     assert active is not None, "active profile must be seeded before capture"
     service = CensoSnapshotService(bucket_id=active)
+    censo_facts = {
+        "censo.establecimiento_type": "propio",
+        "censo.elected_withholding_pct": "15",
+        "vivienda_office.total_m2": "120.00",
+        "vivienda_office.office_m2": "24.00",
+    }
+    if include_iae:
+        censo_facts["activities.iae_epigraph"] = "763"
     snapshot = service.capture(
         profile_id=active,
         captured_at=datetime.now(UTC),
         source_url=_G313,
-        censo_facts={
-            "censo.establecimiento_type": "propio",
-            "censo.elected_withholding_pct": "15",
-            "vivienda_office.total_m2": "120.00",
-            "vivienda_office.office_m2": "24.00",
-        },
+        censo_facts=censo_facts,
     )
     return snapshot.snapshot_id
 
@@ -99,6 +111,8 @@ def test_refresh_refuses_without_live_gate(cli_runner: CliRunner) -> None:
         result = cli_runner.invoke(profile_app, ["censo", "refresh"])
 
     assert result.exit_code != 0
+    haystack = (result.output + " " + str(result.exception or "")).lower()
+    assert "live aeat reads require aeat_live_tests_enabled" in haystack
 
 
 def test_show_refuses_when_no_snapshot_exists(cli_runner: CliRunner) -> None:
@@ -143,14 +157,16 @@ def test_compare_reports_per_field_status(cli_runner: CliRunner) -> None:
 
 
 def test_apply_writes_censo_facts_onto_profile(cli_runner: CliRunner) -> None:
-    _seed_active_profile()
-    _capture_snapshot()
+    _seed_active_profile(without_taxpayer_axes=True)
+    _capture_snapshot(include_iae=True)
 
     result = cli_runner.invoke(profile_app, ["censo", "apply"])
 
     assert result.exit_code == 0
     assert "written\tcenso.establecimiento_type" in result.output
     assert "written\tvivienda_office.office_m2" in result.output
+    assert "derived\ttaxpayer_type.entity_type" in result.output
+    assert "derived\ttaxpayer_type.irpf_income_categories" in result.output
 
 
 def test_compare_matches_after_apply(cli_runner: CliRunner) -> None:
@@ -217,7 +233,7 @@ def test_compare_emits_json_payload_with_typed_rows() -> None:
 
     from ....tests.cli_runner import invoke_cached_cli
 
-    _seed_active_profile()
+    _seed_active_profile(without_taxpayer_axes=True)
     _capture_snapshot()
 
     result = invoke_cached_cli(["--format", "json", "config", "profile", "censo", "compare"])
@@ -232,6 +248,9 @@ def test_compare_emits_json_payload_with_typed_rows() -> None:
     statuses = {row["path"]: row["status"] for row in payload["rows"]}
     assert statuses["censo.establecimiento_type"] == "censo_only"
     assert statuses["vivienda_office.total_m2"] == "censo_only"
+    censo_only_statuses = {row["path"]: row["status"] for row in payload["censo_only"]}
+    assert censo_only_statuses["censo.establecimiento_type"] == "censo_only"
+    assert censo_only_statuses["vivienda_office.total_m2"] == "censo_only"
 
 
 def test_apply_emits_json_payload_with_written_paths() -> None:
@@ -243,8 +262,8 @@ def test_apply_emits_json_payload_with_written_paths() -> None:
 
     from ....tests.cli_runner import invoke_cached_cli
 
-    _seed_active_profile()
-    _capture_snapshot()
+    _seed_active_profile(without_taxpayer_axes=True)
+    _capture_snapshot(include_iae=True)
 
     result = invoke_cached_cli(["--format", "json", "config", "profile", "censo", "apply"])
     assert result.exit_code == 0, result.output
@@ -254,3 +273,4 @@ def test_apply_emits_json_payload_with_written_paths() -> None:
     assert payload["snapshot_id"]
     assert "censo.establecimiento_type" in payload["written_paths"]
     assert "vivienda_office.office_m2" in payload["written_paths"]
+    assert payload["derived_paths"] == ["taxpayer_type.entity_type", "taxpayer_type.irpf_income_categories"]

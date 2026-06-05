@@ -8,6 +8,6 @@ Three layers:
 - ``l2_scrubbed_private/`` — deterministically PII-scrubbed derivatives
   of users' real filings; each file pairs with a sidecar JSON recording
   provenance + consent.
-- ``l3_synthetic/`` — reportlab-rendered parametrised test PDFs the
+- ``synthetic/`` — reportlab-rendered parametrised test PDFs the
   extractor tests run against. Source-only; PDFs generated at test time.
 """

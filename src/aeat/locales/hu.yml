@@ -3363,6 +3363,8 @@ errors:
       profilhoz.
     profile_not_found: A(z) {profile_id} profil nem létezik; censo alkalmazása előtt
       hozza létre.
+    snapshot_profile_mismatch: A(z) {snapshot_id} censo-pillanatkép a(z)
+      {snapshot_profile_id} profilhoz tartozik, nem a(z) {profile_id} profilhoz.
     sede_g313_no_censo: Az AEAT G313 szekcióból nem sikerült olvasható censot lekérni
       a(z) {profile_id} profilhoz; ellenőrizze, hogy a tanúsítványa vagy Cl@ve-je
       regisztrálva van-e.
@@ -4103,8 +4105,7 @@ errors:
         bucket kiválasztása előtt érhető el.
       cold_bootstrap_explicit_database_refused: A hidegindítási tároló nem kerülheti
         meg a megadott adatbázis-útvonalat.
-      no_active_session: Nincs nyitott aktív bucket-munkamenet. Profil feloldásához
-        futtassa az  parancsot.
+      no_active_session: 'Nincs nyitott aktív bucket-munkamenet. Profil feloldásához futtassa: `aeat config unlock NAME`.'
       no_detail: Nem jelentetett részletes készültségi problémát.
       not_ready: 'A tárolási futtatókörnyezet nem áll készen profil-kötött tároláshoz:
         %{details}'
@@ -4112,10 +4113,8 @@ errors:
       route_not_active_bucket: Az adatbázis-útvonal nincs aktív profil bucket-hez
         csatolva.
       session_changed: Az aktív bucket-munkamenet megváltozott. Oldja fel újra a célprofilt.
-      session_expired: Az aktív bucket-munkamenet lejárt. Profil újraaktiváláshoz
-        futtassa az  parancsot.
-      session_sealed: Az aktív bucket-munkamenet le van zárva. Profil újraaktiváláshoz
-        futtassa az  parancsot.
+      session_expired: 'Az aktív bucket-munkamenet lejárt. Profil újraaktiválásához futtassa: `aeat config unlock NAME`.'
+      session_sealed: 'Az aktív bucket-munkamenet le van zárva. Profil újraaktiválásához futtassa: `aeat config unlock NAME`.'
       unsecured_backend: Az aktív bucket-munkamenet a nem biztonságos háttérrendszert
         használja. A gyártási profil-kötött tároláshoz fájl- vagy kulcstár-felügyelet
         szükséges.
@@ -4752,8 +4751,7 @@ wizard:
             label: Spanyolországban szokásos lakóhellyel rendelkező – IRPF
         prompt: Adóügyi illetőségi kategória
       representante-fiscal-nif:
-        prompt: A spanyolországi adóügyi képviselő NIF/NIE száma (EU-n/EGT-n kívüli
-          esetén kötelező)
+        prompt: 'A spanyolorszagi adougyi kepviselo NIF/NIE szama (EU-n/EGT-n kivuli eseten kotelezo)'
       representante-fiscal-nombre:
         prompt: A spanyolországi adóügyi képviselő neve
       tax-residence-ccaa:

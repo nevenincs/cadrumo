@@ -221,7 +221,15 @@ def register(profile_app: typer.Typer) -> None:
             )
         except CensoNotAvailableError as exc:
             raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
-        typed_compare = CensoCompareResult.model_validate(comparison.model_dump(mode="json"))
+        comparison_payload = comparison.model_dump(mode="json")
+        comparison_payload.update(
+            {
+                "diverging": [row.model_dump(mode="json") for row in comparison.diverging],
+                "censo_only": [row.model_dump(mode="json") for row in comparison.censo_only],
+                "profile_only": [row.model_dump(mode="json") for row in comparison.profile_only],
+            }
+        )
+        typed_compare = CensoCompareResult.model_validate(comparison_payload)
         lines = [
             f"snapshot_id\t{comparison.snapshot_id}",
             f"diverging\t{len(comparison.diverging)}",

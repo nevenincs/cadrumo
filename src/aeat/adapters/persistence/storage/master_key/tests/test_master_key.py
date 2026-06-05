@@ -636,7 +636,7 @@ class TestTornStateGate:
             provider.get_master_key()
         # The runbook hints both options.
         msg = str(excinfo.value)
-        assert "profile recovery flow" in msg
+        assert "aeat config recover --recovery-key" in msg
         assert "aeat config profile create NAME" in msg
 
     def test_torn_state_master_key_plus_kdf_raises(

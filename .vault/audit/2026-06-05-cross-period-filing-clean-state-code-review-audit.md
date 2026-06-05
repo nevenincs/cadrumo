@@ -19,3 +19,15 @@ related:
 ## CROSS-PERIOD-002 | INFO | No critical or high findings in the filing-grade guard
 
 The review found the filing-grade guard wired through verification, export, and filing using the calculation package export surface and domain package reexports. Preview calculation remains permissive, while verification records blocking findings and export/filing raise `ModeloCrossPeriodCleanStateError` when required prior filings are missing, unaccepted by AEAT, lacking external evidence, unreconciled against local calculation values, or missing complete verification evidence.
+
+## CROSS-PERIOD-003 | LOW | Workflow expected-member input is not yet profile-derived
+
+The S37 backend proof accepts an explicit `CrossPeriodExpectedMemberSet` and blocks missing, incomplete, or unexpected member fan-in evidence. S38 verifies the Modelo 353 filing workflow can receive that expected roster and refuses incomplete `353<-322` fan-in. The remaining state-model edge is that no persisted profile/calendar roster surface exists yet for grupo-de-entidades members, so callers must provide the expected member set explicitly until that roster source is added.
+
+## CROSS-PERIOD-004 | LOW | Modelo action decomposition temporarily broke clean-state test imports
+
+During the S32-S35 validation pass, the Modelo action decomposition had moved action error classes to `_action_errors` while stale registry qualnames and missing `_actions` reexports left the clean-state workflow test unable to import. The error-code registry was aligned to `_action_errors`, and `_actions` now reexports the moved action errors and work-lifecycle functions expected by the public `aeat.application.modelo` package surface. Focused workflow tests and lint passed after the repair.
+
+## CROSS-PERIOD-005 | INFO | Current S31 and W04.P10 review found no blocking findings
+
+Reviewed the current justificante-grade clean-state gate, repair diagnostics, Modelo action reexports, and focused tests after the S31 and W04.P10 changes. No critical, high, or medium findings were found locally. The focused lint gate, package import contract check, plan check, and combined clean-state pytest gate passed. A read-only review subagent was started but did not finish within the verification window and was shut down without findings being returned.

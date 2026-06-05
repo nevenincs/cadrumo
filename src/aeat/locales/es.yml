@@ -3448,6 +3448,8 @@ errors:
       perfil {profile_id}.
     profile_not_found: El perfil {profile_id} no existe; créalo antes de aplicar el
       censo.
+    snapshot_profile_mismatch: La instantánea censal {snapshot_id} pertenece al perfil
+      {snapshot_profile_id}, no al perfil {profile_id}.
     sede_g313_no_censo: La sede de la AEAT (G313) no devolvió ningún censo legible
       para el perfil {profile_id}; confirma que tu certificado o Cl@ve está registrado
       para este NIF.
@@ -4265,8 +4267,7 @@ errors:
         solo está disponible antes de seleccionar un bucket de perfil activo.
       cold_bootstrap_explicit_database_refused: El almacenamiento de arranque en frío
         no puede omitir una ruta de base de datos explícita.
-      no_active_session: No hay una sesión de bucket activa. Ejecuta `aeat config
-        profile switch NAME` para desbloquear un perfil.
+      no_active_session: 'No hay una sesión de bucket activa. Ejecuta `aeat config unlock NAME` para desbloquear un perfil.'
       no_detail: No se informó ningún detalle de preparación.
       not_ready: 'El runtime de almacenamiento no está listo para almacenamiento vinculado
         a perfil: %{details}'
@@ -4276,10 +4277,8 @@ errors:
         de perfil activo.
       session_changed: La sesión de bucket activa cambió. Desbloquea de nuevo el perfil
         de destino.
-      session_expired: La sesión de bucket activa ha caducado. Ejecuta `aeat config
-        profile switch NAME` para reactivar el perfil.
-      session_sealed: La sesión de bucket activa está sellada. Ejecuta `aeat config
-        profile switch NAME` para reactivar el perfil.
+      session_expired: 'La sesión de bucket activa ha caducado. Ejecuta `aeat config unlock NAME` para reactivar el perfil.'
+      session_sealed: 'La sesión de bucket activa está sellada. Ejecuta `aeat config unlock NAME` para reactivar el perfil.'
       unsecured_backend: La sesión de bucket activa usa el backend no seguro. El almacenamiento
         de producción vinculado a perfil requiere custodia de archivo o llavero.
     stored_data_validation_boundary: Un registro de perfil o flujo de trabajo almacenado

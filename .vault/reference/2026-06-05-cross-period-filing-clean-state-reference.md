@@ -100,6 +100,21 @@ annual summaries, and cross-member fan-in.
 - These filing-record concepts are not consulted by current prefill resolvers
   before producing cross-period source values.
 
+## Filing-grade evidence requires justificante verification
+
+- The clean-state service distinguishes general external evidence from
+  filing-grade verificante evidence. AEAT CSV register evidence can support
+  filing history diagnostics, but it is not sufficient to unlock a downstream
+  cross-period filing-grade workflow.
+- Downstream dependencies now require justificante PDF evidence or AEAT live
+  filed capture evidence before an upstream filing can satisfy clean-state
+  verification. A current AEAT-accepted source filing with CSV-only evidence is
+  classified with `missing_justificante_verification`.
+- This preserves the product distinction between an app-local ready-to-file
+  calculation and the real-world AEAT submission state. Calendar and workflow
+  surfaces can show both, but filing-grade cross-period dependencies must lock
+  against the real-world AEAT state.
+
 ## Live and import paths create evidence, but do not join it into a proof
 
 - `src/aeat/application/live/__init__.py` exposes
