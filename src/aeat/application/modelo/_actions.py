@@ -144,10 +144,17 @@ from ._calculation_helpers import (
     amendment_observations as _amendment_observations,
 )
 from ._calculation_helpers import (
+    build_typed_observations as _build_typed_observations,
+)
+from ._calculation_helpers import (
     external_filing_observations as _external_filing_observations,
 )
 from ._calculation_helpers import (
     resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit,
+)
+from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
+from ._registry_helpers import (
+    assert_revision_content_integrity as _assert_revision_content_integrity,
 )
 from ._registry_helpers import (
     reject_incomplete_amendment_casillas as _reject_incomplete_amendment_casillas,
@@ -1029,6 +1036,8 @@ __all__ = [
     "WorkUnitAlreadyDiscardedError",
     "WorkUnitMutationRefusedError",
     "WorkUnitNotFoundError",
+    "_assert_revision_content_integrity",
+    "_build_typed_observations",
     "amend_modelo_revision",
     "calculate_modelo_revision",
     "calculate_modelo_revision_from_bucket_aggregation",
@@ -1048,5 +1057,4 @@ __all__ = [
     "rename_work_unit",
     "verify_modelo_revision",
     "workflow_period_for_work_unit",
-    "_assert_revision_content_integrity",
 ]

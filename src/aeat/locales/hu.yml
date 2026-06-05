@@ -655,7 +655,7 @@ application:
       calculation_revision_not_found: Nem található számítás-revízió id=%{calculation_revision_id}
         azonosítóval.
       caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
-        bucket-derived source-bound casillas: %{casillas}.'
+        bucket-derived source-bound casillas (source bound casillas): %{casillas}.'
       computed_casilla_binding_conflict: 'A bucket-alapú bemenetek számított mezőket
         céloznak, amelyek nem írhatók felül külső kötéssel. Érintett mezők: %{computed_casillas}.'
       cross_period_clean_state_incomplete: A keresztidoszaki tiszta allapot igazolasa

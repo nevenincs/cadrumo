@@ -3,7 +3,6 @@ tags:
   - '#plan'
   - '#test-topology-refactor'
 date: '2026-06-05'
-tier: L3
 related:
   - '[[2026-06-05-test-topology-refactor-adr]]'
   - '[[2026-04-12-base-module-structure-adr]]'
@@ -20,7 +19,7 @@ related:
 
 This plan implements the accepted test topology ADR. The work is deliberately ordered so the first wave is a mechanical relocation with no test execution, followed by import and discovery repair, marker vocabulary hardening, semantic duplicate consolidation, and closeout verification.
 
-The primary file-discovery command for the relocation inventory is `fd --type file '^(test_|_test_).*\.py$' src/aeat`. Final topology verification uses `fd --type file '^test_.*\.py$' src/aeat --exclude tests`, which must return no files. Naming cleanup additionally uses `fd --type file '^_test_.*\.py$' src/aeat` and `fd --type file '.*_test\.py$' src/aeat`, both of which must return no files.
+The primary file-discovery command for the relocation inventory is `fd -t f '^test_.*\.py$' src docs -E .git -E .venv -E var`. Final topology verification uses `fd -t f '^test_.*\.py$' src docs -E .git -E .venv -E var | rg -v '(^|[\\/])tests[\\/]'`, which must return no files. Naming cleanup uses `fd -t f '(^_test_.*\.py$|.*_test\.py$)' src docs . -E .git -E .venv -E var -E docs\_build`, which must return no files.
 
 ## Steps
 
