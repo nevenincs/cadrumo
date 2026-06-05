@@ -367,8 +367,10 @@ def test_calculation_completeness_manifests_match_their_calculation_surface() ->
             assert derived == manifest.identities(), (
                 f"modelo {modelo.id} revision {revision.id}: calculation-completeness "
                 "manifest has drifted from the registry calculation surface; "
-                f"manifest-only casillas: {sorted(manifest.identities() - derived, key=lambda pair: (pair[0] or '', pair[1]))}; "
-                f"closure-only casillas: {sorted(derived - manifest.identities(), key=lambda pair: (pair[0] or '', pair[1]))}"
+                "manifest-only casillas: "
+                f"{sorted(manifest.identities() - derived, key=lambda pair: (pair[0] or '', pair[1]))}; "
+                "closure-only casillas: "
+                f"{sorted(derived - manifest.identities(), key=lambda pair: (pair[0] or '', pair[1]))}"
             )
             checked += 1
 
@@ -501,7 +503,10 @@ def test_calculation_closure_bounds_the_full_diseno_coverage() -> None:
     assert exported_closure <= coverage, (
         "the calculation-completeness casilla set (minus internal_only ceilings) "
         "must be a subset of the full-Diseño coverage; closure-only pairs: "
-        + ", ".join(f"({segmento!r}, {number!r})" for segmento, number in sorted(closure_only, key=lambda pair: (pair[0] or "", pair[1])))
+        + ", ".join(
+            f"({segmento!r}, {number!r})"
+            for segmento, number in sorted(closure_only, key=lambda pair: (pair[0] or "", pair[1]))
+        )
     )
     assert len(closure) < len(coverage), (
         "the calculation closure must be strictly bounded below the full-Diseño "

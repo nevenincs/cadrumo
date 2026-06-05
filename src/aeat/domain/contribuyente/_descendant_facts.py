@@ -69,7 +69,9 @@ def descendant_facts_from_list(
 
 
 _N_RE = re.compile(
-    r"^renta_family\.descendiente\.(\d+)\.(birth_date|adoption_date|discapacidad|convivencia|custodia_compartida|meses_madre_trabajo|gastos_guarderia|nif)$"
+    r"^renta_family\.descendiente\.(\d+)\."
+    r"(birth_date|adoption_date|discapacidad|convivencia|custodia_compartida|"
+    r"meses_madre_trabajo|gastos_guarderia|nif)$"
 )
 
 
@@ -211,7 +213,10 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     return DescendantInfo(
         birth_date=birth_date,
         adoption_date=adoption_date,
-        discapacidad_grado=cast("Literal[0, 33, 65] | None", discapacidad_grado),  # CAST-RATIONALE-DISCAPACIDAD-GRADO-LITERAL-NARROW
+        discapacidad_grado=cast(
+            "Literal[0, 33, 65] | None",
+            discapacidad_grado,
+        ),  # CAST-RATIONALE-DISCAPACIDAD-GRADO-LITERAL-NARROW
         convive_con_contribuyente=convive,
         custodia_compartida=custodia,
         meses_madre_trabajo_2024=meses_madre_trabajo_2024,

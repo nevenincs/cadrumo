@@ -104,8 +104,8 @@ Establish authoritative current-state evidence for every production and test mod
 
 Persist the current over-1250-line module inventory and callable-size/cognitive-complexity inventory with exact and semantic discovery evidence.
 
-- [ ] `W01.P01.S01` - inventory every Python module over 1250 lines and classify production versus test scope; `src/aeat`.
-- [ ] `W01.P01.S02` - inventory high-length and high-branching callables as a cognitive-complexity proxy; `src/aeat`.
+- [x] `W01.P01.S01` - inventory every Python module over 1250 lines and classify production versus test scope; `src/aeat`.
+- [x] `W01.P01.S02` - inventory high-length and high-branching callables as a cognitive-complexity proxy; `src/aeat`.
 
 ## Wave `W02` - CLI monolith decomposition
 
@@ -115,15 +115,35 @@ Reduce remaining CLI roots below the 1250-line objective through focused command
 
 Continue extracting coherent ledger command groups until _ledger.py moves materially toward the 1250-line objective without CLI-owned accounting policy.
 
-- [ ] `W02.P02.S03` - select the next coherent ledger command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W02.P02.S04` - extract the selected ledger command group into a focused registrar module; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_*.py`.
-- [ ] `W02.P02.S05` - verify selected ledger behavior and ratchet ledger root size after extraction; `src/aeat/entrypoints/cli/tests/test_ledger* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P02.S03` - select the next coherent ledger command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W02.P02.S04` - extract the selected ledger command group into a focused registrar module; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_*.py`.
+- [x] `W02.P02.S05` - verify selected ledger behavior and ratchet ledger root size after extraction; `src/aeat/entrypoints/cli/tests/test_ledger* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P02.S09` - select the next residual ledger command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P02.S10` - extract the selected residual ledger command group into a focused registrar module; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_*.py`.
+- [x] `W02.P02.S11` - verify residual ledger behavior and ratchet ledger root size after extraction; `src/aeat/entrypoints/cli/tests/test_ledger* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
 
 ### Phase `W02.P03` - live and modelo root continuation
 
 Continue reducing _app_live.py, _modelo.py, and config CLI roots after ledger slices, preserving command registrations and tests.
 
-- [ ] `W02.P03.S06` - continue extracting live, modelo, and config CLI command groups until each root is below 1250 lines; `src/aeat/entrypoints/cli`.
+- [x] `W02.P03.S06` - select the next live CLI command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P03.S12` - extract the selected live CLI command group into a focused registrar module; `src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/_app_live_*.py`.
+- [x] `W02.P03.S13` - verify selected live CLI behavior and ratchet live root size after extraction; `src/aeat/entrypoints/cli/tests/test_live* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P03.S14` - select the next modelo CLI command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_modelo.py src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P03.S15` - extract the selected modelo CLI command group into a focused registrar module; `src/aeat/entrypoints/cli/_modelo.py src/aeat/entrypoints/cli/_modelo_*.py`.
+- [x] `W02.P03.S16` - verify selected modelo CLI behavior and ratchet modelo root size after extraction; `src/aeat/entrypoints/cli/tests/test_modelo* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P03.S17` - select the next config CLI command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/_google.py src/aeat/entrypoints/cli/_config/tests`.
+- [x] `W02.P03.S18` - extract the selected config CLI command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
+- [x] `W02.P03.S19` - verify selected config CLI behavior and ratchet config root size after extraction; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [ ] `W02.P03.S20` - select the next residual config or google CLI command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/_google.py src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests`.
+- [ ] `W02.P03.S21` - extract the selected residual config or google CLI command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
+- [ ] `W02.P03.S22` - verify residual config or google CLI behavior and ratchet affected root size budgets; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [ ] `W02.P03.S23` - select the next residual ledger CLI command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/tests`.
+- [ ] `W02.P03.S24` - extract the selected residual ledger CLI command group into a focused registrar module; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_*.py`.
+- [ ] `W02.P03.S25` - verify residual ledger CLI behavior and ratchet ledger root size budget; `src/aeat/entrypoints/cli/tests/test_ledger* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [ ] `W02.P03.S26` - select the next residual live CLI command group for extraction using exact and semantic discovery; `src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/tests`.
+- [ ] `W02.P03.S27` - extract the selected residual live CLI command group into a focused registrar module; `src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/_app_live_*.py`.
+- [ ] `W02.P03.S28` - verify residual live CLI behavior and ratchet live root size budget; `src/aeat/entrypoints/cli/tests/test_live* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
 
 ## Wave `W03` - application and domain monolith decomposition
 
@@ -138,83 +158,14 @@ Queue and execute ADR-backed decomposition for application, domain, adapter, per
 
 ## Description
 
-<!-- Briefly describe the proposed work. Reference `{adr}`s,
-`{research}`, `{reference}`. Supporting documentation must be read prior to
-writing the plan document. -->
+Deliver the codebase-wide monolith decomposition objective: no Python module over 1250 lines and no cognitively high-scoring function left unbroken or unbounded by an explicit guard. This plan starts from current-state inventory rather than prior assumptions, then decomposes the remaining CLI roots through focused registrars and queues ADR-backed backend decomposition for application/domain/adapter/core modules where boundaries require design decisions.
 
-## Steps
-
-<!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
-`L4`) determines the structure under this section:
-
-- `L1`: a flat list of Step rows (no Phase, Wave, or Epic).
-- `L2`: one or more `### Phase` blocks each containing Step rows.
-- `L3`: one or more `## Wave` blocks each containing Phase blocks.
-- `L4`: a `## Epic intent` block, followed by Wave blocks. -->
-
-<!-- Replace this scaffold with the tier-appropriate structure for your plan.
-Format examples for each block type are embedded below as commented
-templates. -->
-
-<!-- IMPORTANT: This document must be updated between execution runs to
-     track progress. -->
-
-<!-- PHASE BLOCK FORMAT (L2, L3, L4):
-     ### Phase `P02` - rewrite the writer-agent contract
-
-     One sentence stating what this Phase delivers.
-
-     - [ ] `P02.S01` - imperative-verb action; `path/to/file`.
-     - [ ] `P02.S02` - imperative-verb action; `path/to/file`.
-
-     At L3/L4 the Phase heading uses the ancestor-aware path
-     (### Phase `W01.P02` - ...). The intent sentence is mandatory. -->
-
-<!-- WAVE BLOCK FORMAT (L3, L4):
-     ## Wave `W01` - language-only convention rollout
-
-     One paragraph stating what this Wave delivers, which downstream
-     Wave depends on it, and which authorising documents back it.
-
-     ### Phase `W01.P01` - ...
-     ### Phase `W01.P02` - ...
-
-     The Wave intent paragraph is mandatory. -->
-
-<!-- EPIC INTENT BLOCK FORMAT (L4 only):
-     ## Epic intent
-
-     One paragraph stating the strategic goal, the external project-
-     management association (milestone name, project board identifier,
-     roadmap entry), the timeline horizon, and the teams or agents
-     involved.
-
-     ## Wave `W01` - ...
-     ## Wave `W02` - ...
-
-     The ## Epic intent block is mandatory at L4 and absent at L1, L2,
-     L3. The plan title (the level-one # heading at the top of the
-     document) is the Epic title; no separate Epic heading is emitted. -->
+The immediate execution path is conservative: keep CLI modules as transports, preserve top-level application facades for consumers, and ratchet static guards after every slice. Backend monoliths are not split by string-moving; each decomposition must preserve domain ownership, storage contracts, and public re-export surfaces.
 
 ## Parallelization
 
-<!-- State which Steps, Phases, or Waves can be executed in parallel and
-which carry hard ordering. At `L1` and `L2`, parallelism is decided
-per-Step or per-Phase. At `L3` and `L4`, Waves are sequenced by
-default (one Wave must land before the next can begin); Phases
-within a single Wave may be parallelised when they share no hard
-interdependency. -->
+Inventory and semantic discovery may run in parallel with exact `fd`/`rg` discovery. File edits, plan mutations, and budget ratchets must stay serialized. CLI command group extractions can run independently by subgroup once their command surfaces and tests are identified. Backend application/domain decomposition must be ADR-bounded before implementation because public facade and ownership decisions are part of the change.
 
 ## Verification
 
-<!-- State the mission success criteria for this plan. Each criterion
-should be a verifiable check (test passes, surface conforms,
-reviewer signs off) rather than a free-form assertion.
-
-The plan is complete when every Step in every Wave is closed
-(`- [x]`). At `L4`, the Epic-completion check additionally requires
-the declared project-management association to report the Epic
-complete.
-
-For tier-specific verification cadence, see the convention ADR
-authorising this plan via the `related:` frontmatter. -->
+The plan is complete only when current-state evidence proves no Python module in `src/aeat` exceeds 1250 lines, no tracked callable exceeds the accepted complexity/length budget, all broad static guards pass, focused behavior tests pass for every extracted surface, `vaultspec-core vault plan check` passes, and exact plus semantic discovery show command transports consume backend/application services rather than owning business policy.
