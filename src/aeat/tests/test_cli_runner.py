@@ -11,7 +11,7 @@ import pytest
 
 from .cli_runner import ClickInvokeKwargs, invoke_cached_cli
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_invoke_cached_cli_returns_result_for_help_flag() -> None:

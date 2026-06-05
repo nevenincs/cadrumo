@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_core, pytest.mark.docs]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _DOCS = _REPO_ROOT / "docs"

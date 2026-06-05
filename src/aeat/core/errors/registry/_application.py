@@ -1010,6 +1010,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._work_addressing.ModeloWorkPeriodTokenError",
+        ErrorCode(
+            code="REFUSED_MODELO_WORK_PERIOD_TOKEN",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_work_period_token",
+            default_suggestion="aeat app modelo work create --modelo MODELO --year YEAR --period PERIOD",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._export.ModeloExportCrossBucketRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_CROSS_BUCKET",

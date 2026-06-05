@@ -37,7 +37,7 @@ from .modelo_303_generator import (
     generate as generate_modelo_303,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 def _assert_pdf(pdf_bytes: bytes) -> None:

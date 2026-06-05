@@ -8,7 +8,7 @@ import pytest
 
 from ._generator_shared import format_amount
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
 @pytest.mark.parametrize(

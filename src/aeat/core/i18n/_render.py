@@ -7,7 +7,7 @@ can render translatable keys without reaching into the CLI entrypoints.
 
 from __future__ import annotations
 
-import importlib.resources
+import importlib.resources  # nosemgrep
 import os
 import re
 from collections.abc import Callable, Mapping

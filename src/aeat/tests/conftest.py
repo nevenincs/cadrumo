@@ -5,28 +5,26 @@ posture this module enforces.
 
 This module enforces the following invariants at collection time:
 
-1. The nine-marker taxonomy contract (access axis + domain axis) via the
+1. The hexagonal marker taxonomy contract via the
    shared helper in :mod:`aeat.tests._marker_hook`. Also hosted from the
    repo-root ``conftest.py`` so items collected anywhere under
    ``src/aeat/`` pass through the same enforcement surface; double
    invocation is safe because the helper enforces invariants on items
    it receives and filters in-place.
-2. No file containing a ``live_read`` or ``live_write`` item may import
+2. No file containing an ``aeat_live`` item may import
    any symbol in :data:`BANNED_LIVE_IMPORTS`.
-3. ``live_read`` items are skipped unless ``AEAT_LIVE_TESTS_ENABLED`` is
-   truthy; ``live_write`` items are dropped by the shared helper (see
-   :mod:`aeat.tests._marker_hook`).
+3. ``aeat_live`` items are skipped unless ``AEAT_LIVE_TESTS_ENABLED`` is
+   truthy.
 
 The ``env/.env`` auto-load happens at module-load time in the repo-root
 ``conftest.py``.
 
 Banned-import hits are hard ``pytest.exit`` rather than warnings.
 
-The ``source_tree_ast`` session-scoped fixture (consumed by ratchet
-inventories under ``src/aeat/test_*.py`` and elsewhere) lives at
-``src/aeat/conftest.py`` rather than here; pytest conftest discovery
-walks up from each test file, so a fixture nested under ``tests/`` is
-invisible to ratchets that live at the ``src/aeat/`` top level.
+The ``source_tree_ast`` session-scoped fixture is consumed by ratchet
+tests throughout the relocated ``tests/`` folders and lives at
+``src/aeat/conftest.py`` rather than here so pytest can discover it
+from every source test subtree.
 """
 
 from __future__ import annotations
@@ -40,8 +38,8 @@ import pytest
 
 from ._marker_hook import apply as _apply_marker_contract
 
-LIVE_ACCESS_MARKERS: frozenset[str] = frozenset({"live_read", "live_write"})
-"""Access markers that count as ``live`` for banned-import / opt-in gating."""
+LIVE_ACCESS_MARKERS: frozenset[str] = frozenset({"aeat_live"})
+"""Execution markers that count as ``live`` for banned-import / opt-in gating."""
 
 BANNED_LIVE_IMPORTS: frozenset[str] = frozenset(
     {
@@ -61,7 +59,7 @@ BANNED_LIVE_IMPORTS: frozenset[str] = frozenset(
 """Import targets that may never appear in a file containing a live-marked test."""
 
 LIVE_OPT_IN_ENV: str = "AEAT_LIVE_TESTS_ENABLED"
-"""Environment variable that opts ``live_read`` tests into execution."""
+"""Environment variable that opts ``aeat_live`` tests into execution."""
 
 _TRUTHY: frozenset[str] = frozenset({"1", "true", "yes", "on"})
 
@@ -143,25 +141,24 @@ def _check_banned_live_imports(paths: Iterable[Path]) -> list[str]:
         hits = _scan_banned_imports(path)
         if hits:
             violations.append(
-                f"{path}: imports banned symbol(s) {sorted(hits)} in a file containing a live_read or live_write item"
+                f"{path}: imports banned symbol(s) {sorted(hits)} in a file containing an aeat_live item"
             )
     return violations
 
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    """Enforce the nine-marker contract, banned-import scan, and live opt-in gate.
+    """Enforce the hexagonal marker contract, banned-import scan, and live opt-in gate.
 
     Runs ``tryfirst=True`` so it sees every collected item *before* pytest's
     built-in ``-m`` keyword filter deselects anything. This ensures the
     banned-live-import scan catches regressions even when the default
     ``-m 'unit'`` selector would otherwise deselect the offending items.
 
-    Ordering: the nine-marker contract (``_apply_marker_contract``) runs
+    Ordering: the hexagonal marker contract (``_apply_marker_contract``) runs
     first so any taxonomy violation short-circuits with a
-    :class:`pytest.UsageError` and so ``live_write`` items are dropped
-    before the banned-import and opt-in passes operate on the surviving
-    items.
+    :class:`pytest.UsageError` before the banned-import and opt-in passes
+    operate on the surviving items.
 
     Args:
         config: The active :class:`pytest.Config` for the session.
@@ -182,5 +179,5 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         skip_reason = f"Live tests disabled — set {LIVE_OPT_IN_ENV}=1 to enable"
         skip_marker = pytest.mark.skip(reason=skip_reason)
         for item in items:
-            if "live_read" in _marker_names(item):
+            if "aeat_live" in _marker_names(item):
                 item.add_marker(skip_marker)

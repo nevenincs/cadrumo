@@ -38,7 +38,7 @@ from ..domain.transactions import (
     TransactionLifecycleState,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CORPUS = Path(__file__).parent / "fixtures" / "financial" / "ledger-corpus"
 _CENT = Decimal("0.01")
@@ -72,7 +72,7 @@ def _q(value: Decimal) -> Decimal:
 
 
 def _derive_base_iva(
-    rule: dict, amount_eur_abs: Decimal
+    rule: dict, native_amount_abs: Decimal
 ) -> tuple[Decimal | None, Decimal | None, Decimal | None]:
     """Return (taxable_base, iva_rate, iva_amount) per the oracle base_mode."""
     mode = rule["base_mode"]
@@ -80,13 +80,13 @@ def _derive_base_iva(
     if mode == "gated":
         return (None, None, None)
     if mode == "no_iva":
-        return (amount_eur_abs, None, None)
+        return (native_amount_abs, None, None)
     if mode == "gross_includes_iva":
         r = rate or Decimal("0")
-        base = _q(amount_eur_abs / (Decimal("1") + r))
-        return (base, rate, _q(amount_eur_abs - base))
+        base = _q(native_amount_abs / (Decimal("1") + r))
+        return (base, rate, _q(native_amount_abs - base))
     if mode == "net_is_cash":
-        base = amount_eur_abs
+        base = native_amount_abs
         iva = _q(base * rate) if rate and rate > 0 else Decimal("0.00")
         return (base, rate, iva)
     raise AssertionError(f"unknown base_mode {mode!r}")
@@ -122,8 +122,7 @@ def _build_transactions() -> list[tuple[Transaction, dict, str]]:
                 fx_rate = normalized.rate
                 value_in_eur = abs(normalized.eur_amount)
 
-            amount_eur_abs = value_in_eur if value_in_eur is not None else abs(raw.amount)
-            taxable_base, iva_rate, iva_amount = _derive_base_iva(rule, amount_eur_abs)
+            taxable_base, iva_rate, iva_amount = _derive_base_iva(rule, abs(raw.amount))
 
             payload: dict = {
                 "raw": raw,

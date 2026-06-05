@@ -18,7 +18,7 @@ from ..adapters.persistence.storage.bucket._manifest_io import manifest_path, re
 from ..core import resolve_active_bucket_id
 from .secure_sql import isolated_two_bucket_runtime
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 _PRIMARY = "fixture-test-primary"

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import urllib.request
 from pathlib import Path
+from urllib.parse import urlparse
 
 from ....core.external_constants import UTF_8_ENCODING
 from ._ecb_provider import _BUNDLED_RATES, _parse_eurofxref
@@ -49,9 +50,15 @@ def refresh_bundled_ecb_rates(
 
 
 def _fetch(url: str) -> str:
-    if not url.startswith("https://"):
-        raise ValueError(f"refusing non-https ECB url: {url!r}")
-    with urllib.request.urlopen(url, timeout=30) as response:
+    parsed = urlparse(url)
+    if (
+        parsed.scheme != "https"
+        or parsed.netloc != "www.ecb.europa.eu"
+        or parsed.path != "/stats/eurofxref/eurofxref-hist.xml"
+    ):
+        raise ValueError(f"refusing non-https or non-ECB eurofxref URL: {url!r}")
+    # URL is constrained to the canonical ECB eurofxref HTTPS endpoint above.
+    with urllib.request.urlopen(url, timeout=30) as response:  # nosemgrep
         return response.read().decode(UTF_8_ENCODING)
 
 

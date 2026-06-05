@@ -2,31 +2,27 @@
 
 from __future__ import annotations
 
-import re
 from collections.abc import Callable
 from typing import Annotated
 
 import typer
 
-from ...application.modelo import (
-    WorkUnitNotFoundError,
-    get_work_unit,
-    workflow_period_for_work_unit,
-)
 from ...application.workflow import (
     WorkflowError,
     WorkflowResumeRefusedError,
-    find_latest_run_for_period,
     list_runs,
+    resolve_modelo_workflow_resume_target,
     resume_modelo_workflow,
 )
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ._common import _emit_envelope
+from ._modelo_cli_support import (
+    parse_revision_selector,
+    validate_calculation_revision_id,
+    validate_work_unit_id,
+)
 from ._modelo_payloads import WorkflowRunPayload, WorkResumeResult, WorkRunsResult
-
-_WORKFLOW_RUN_ID_RE = r"[0-9a-f]{16}"
-_WORK_UNIT_ID_RE = r"^[0-9a-f]{64}$"
 
 
 def register_work_run_commands(
@@ -102,91 +98,125 @@ def register_work_run_commands(
             default=(
                 "Validate that an aborted workflow run may be retried. Emits the "
                 "(modelo, period, obligation) context the engine would consume to "
-                "drive a fresh attempt. Accepts a workflow run id or a work-unit "
-                "id. Local-only: never contacts AEAT."
+                "drive a fresh attempt. Use --modelo --year --period for the "
+                "normal path; exact ids remain advanced escape hatches. Local-only: "
+                "never contacts AEAT."
             ),
         ),
     )
     def work_resume(
         ctx: typer.Context,
         target: Annotated[
-            str,
+            str | None,
             typer.Argument(
                 help=tr(
                     "cli.app.modelo.work.resume_target_help",
                     default=(
-                        "16-character workflow run id, or the 64-character "
-                        "work-unit id (its latest run is resolved automatically). "
-                        "Run `aeat app modelo work runs` to list run ids."
+                        "Optional legacy 16-character workflow run id or 64-character "
+                        "work-unit id. Prefer --modelo --year --period."
                     ),
                 ),
             ),
-        ],
+        ] = None,
+        modelo: Annotated[
+            str | None,
+            typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
+        ] = None,
+        year: Annotated[
+            int | None,
+            typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
+        ] = None,
+        period: Annotated[
+            str | None,
+            typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
+        ] = None,
+        revision: Annotated[
+            str | None,
+            typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
+        ] = None,
+        select: Annotated[
+            str | None,
+            typer.Option("--select", help=tr("cli.app.modelo.work.revision_selector_help")),
+        ] = None,
+        work_unit_id: Annotated[
+            str | None,
+            typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help")),
+        ] = None,
+        calculation_revision_id: Annotated[
+            str | None,
+            typer.Option(
+                "--calculation-revision-id",
+                help=tr("cli.app.modelo.work.calculation_revision_id_help"),
+            ),
+        ] = None,
+        bucket_id: Annotated[
+            str | None,
+            typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
+        ] = None,
+        output_language: OutputLanguage | None = typer.Option(
+            None,
+            "--output-language",
+            "--language",
+            help=tr("cli.config.auth.output_language_help"),
+        ),
     ) -> None:
         """Surface the workflow-resume preconditions and resumable context."""
-        workflow_run_id = _resolve_workflow_run_id(
-            target,
-            bad_parameter_from_error=bad_parameter_from_error,
-        )
+        activate_output_language(ctx, output_language)
 
         try:
-            result = resume_modelo_workflow(workflow_run_id)
+            resolution = resolve_modelo_workflow_resume_target(
+                target=target,
+                work_unit_id=validate_work_unit_id(work_unit_id) if work_unit_id is not None else None,
+                calculation_revision_id=(
+                    validate_calculation_revision_id(calculation_revision_id)
+                    if calculation_revision_id is not None
+                    else None
+                ),
+                modelo=modelo,
+                year=year,
+                period=period,
+                registry_revision_id=revision,
+                bucket_id=bucket_id,
+                selector=parse_revision_selector(select) if select is not None else None,
+            )
+            result = resume_modelo_workflow(resolution.run_id)
         except (WorkflowResumeRefusedError, WorkflowError) as exc:
             raise bad_parameter_from_error(exc) from exc
 
-        resume_result = WorkResumeResult(
-            prior_workflow_run_id=result.resumed_from_run_id,
-            modelo=result.modelo,
-            period=result.period,
-            aborted_reason=result.aborted_reason.value,
-            obligation=result.obligation.model_dump(mode="json"),
-        )
-        lines = [
-            "operation\tmodelo.work.resume",
-            f"prior_workflow_run_id\t{result.resumed_from_run_id}",
-            f"modelo\t{result.modelo}",
-            f"period\t{result.period}",
-            f"aborted_reason\t{result.aborted_reason.value}",
-            f"opens_on\t{result.obligation.opens_on.isoformat()}",
-            f"closes_on\t{result.obligation.closes_on.isoformat()}",
-            f"obligation_status\t{result.obligation.status.value}",
-        ]
-        _emit_envelope(ctx, command="modelo.work.resume", result=resume_result, lines=lines)
+        _emit_work_resume(ctx, result=result, resolution=resolution)
 
 
-def _resolve_workflow_run_id(
-    target: str,
-    *,
-    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
-) -> str:
-    """Resolve a work-resume argument to a 16-character workflow run id."""
-    stripped = target.strip()
-    if re.fullmatch(_WORKFLOW_RUN_ID_RE, stripped):
-        return stripped
-    if re.fullmatch(_WORK_UNIT_ID_RE, stripped):
-        try:
-            unit = get_work_unit(stripped)
-        except WorkUnitNotFoundError as exc:
-            raise bad_parameter_from_error(exc) from exc
-        try:
-            run = find_latest_run_for_period(
-                modelo=unit.modelo,
-                period=workflow_period_for_work_unit(unit),
-            )
-        except WorkflowError as exc:
-            raise bad_parameter_from_error(exc) from exc
-        return run.run_id
-    raise typer.BadParameter(
-        tr(
-            "cli.app.modelo.work.resume_invalid_target",
-            default=(
-                "resume target must be a 16-character workflow run id or a "
-                "64-character work-unit id; got {target!r}. "
-                "Run `aeat app modelo work runs` to list run ids."
-            ),
-            target=target,
-        )
+def _emit_work_resume(ctx: typer.Context, *, result: object, resolution: object) -> None:
+    resume_result = WorkResumeResult(
+        prior_workflow_run_id=result.resumed_from_run_id,
+        resolved_source=resolution.source,
+        work_unit_id=resolution.work_unit_id,
+        short_work_unit_id=resolution.short_work_unit_id,
+        calculation_revision_id=resolution.calculation_revision_id,
+        short_calculation_revision_id=resolution.short_calculation_revision_id,
+        modelo=result.modelo,
+        period=result.period,
+        aborted_reason=result.aborted_reason.value,
+        obligation=result.obligation.model_dump(mode="json"),
     )
+    lines = [
+        "operation\tmodelo.work.resume",
+        f"prior_workflow_run_id\t{result.resumed_from_run_id}",
+        f"resolved_source\t{resolution.source}",
+        f"modelo\t{result.modelo}",
+        f"period\t{result.period}",
+        f"filing_year\t{resolution.filing_year or ''}",
+        f"registry_period\t{resolution.registry_period or ''}",
+        f"short_work_unit_id\t{resolution.short_work_unit_id or ''}",
+        f"work_unit_id\t{resolution.work_unit_id or ''}",
+        f"short_calculation_revision_id\t{resolution.short_calculation_revision_id or ''}",
+        f"calculation_revision_id\t{resolution.calculation_revision_id or ''}",
+        f"aborted_reason\t{result.aborted_reason.value}",
+        f"opens_on\t{result.obligation.opens_on.isoformat()}",
+        f"closes_on\t{result.obligation.closes_on.isoformat()}",
+        f"obligation_status\t{result.obligation.status.value}",
+    ]
+    _emit_envelope(ctx, command="modelo.work.resume", result=resume_result, lines=lines)
 
 
 __all__ = ["register_work_run_commands"]

@@ -23,7 +23,7 @@ from ._generate import (
     _Modelo720Fixture,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 def test_fixture_catalogue_is_non_empty() -> None:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from pydantic import ValidationError
 
 from ...core.errors import AeatError
@@ -13,6 +15,19 @@ class UserProfileError(AeatError):
 
 class UserProfileSchemaLoadError(UserProfileError):
     """Raised when the committed user-profile schema cannot be loaded."""
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+    ) -> None:
+        """Initialise a localized user-profile schema load failure."""
+        super().__init__(
+            message,
+            context=context,
+            translated_message="errors.fail.fail_user_profile_schema_load",
+        )
 
 
 class UserProfileValidationError(UserProfileError, ValueError):

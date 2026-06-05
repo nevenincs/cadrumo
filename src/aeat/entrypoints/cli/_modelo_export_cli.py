@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from pathlib import Path
-from typing import Annotated, Protocol
+from typing import Annotated
 
 import typer
 
@@ -12,49 +11,36 @@ from ...application.modelo import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloCalculationRevisionSelector,
+    ModeloCalculationRevisionSelectorAmbiguousError,
+    ModeloCalculationRevisionSelectorNotFoundError,
+    ModeloCalculationRevisionSelectorStateError,
     ModeloExportCommand,
     ModeloExportCrossBucketRefusedError,
     ModeloExportNoActiveBucketError,
     ModeloIvaWalletReconciliationBlocked,
+    ModeloWorkAddressNotFoundError,
+    ModeloWorkPeriodTokenError,
     WorkUnitNotFoundError,
     export_modelo_revision,
+    resolve_modelo_revision_for_operator_target,
 )
 from ...application.workflow import workflow_state_repository
 from ...core.i18n import tr
 from ._common import _emit_envelope, _profile_to_taxpayer
+from ._modelo_cli_support import (
+    parse_revision_selector,
+    validate_calculation_revision_id,
+    validate_work_unit_id,
+)
 from ._modelo_payloads import ModeloExportPayload
-
-
-class _RevisionSelection(Protocol):
-    calculation_revision_id: str
-
-
-class ResolveRevisionForCli(Protocol):
-    def __call__(
-        self,
-        *,
-        calculation_revision_id: str | None,
-        work_unit_id: str | None,
-        modelo: str | None,
-        year: int | None,
-        period: str | None,
-        registry_revision: str | None,
-        bucket_id: str | None,
-        selector: str,
-        default_for: str,
-    ) -> _RevisionSelection: ...
-
-
-BadParameterRenderer = Callable[[BaseException], typer.BadParameter]
 
 
 def register_export_commands(
     app: typer.Typer,
     *,
-    resolve_revision_for_cli: ResolveRevisionForCli,
-    bad_parameter_from_error: BadParameterRenderer,
-    selector_bad_parameter: BadParameterRenderer,
-    resolve_default_actor: Callable[[], str],
+    bad_parameter_from_error,
+    selector_bad_parameter,
+    resolve_default_actor,
 ) -> None:
     """Register root-level modelo export commands against the modelo Typer app."""
 
@@ -152,20 +138,30 @@ def register_export_commands(
             )
 
         try:
-            selected_revision = resolve_revision_for_cli(
-                calculation_revision_id=revision,
-                work_unit_id=work_unit_id,
+            selected_revision = resolve_modelo_revision_for_operator_target(
+                calculation_revision_id=(
+                    validate_calculation_revision_id(revision) if revision is not None else None
+                ),
+                work_unit_id=validate_work_unit_id(work_unit_id) if work_unit_id is not None else None,
                 modelo=modelo,
                 year=year,
                 period=period,
-                registry_revision=registry_revision,
+                registry_revision_id=registry_revision,
                 bucket_id=bucket_id,
-                selector=select,
+                selector=parse_revision_selector(select),
                 default_for="export",
             )
         except CalculationRevisionNotFoundError as exc:
             if revision is not None:
                 raise bad_parameter_from_error(exc) from exc
+            raise selector_bad_parameter(exc) from exc
+        except (
+            ModeloWorkAddressNotFoundError,
+            ModeloCalculationRevisionSelectorNotFoundError,
+            ModeloCalculationRevisionSelectorStateError,
+            ModeloCalculationRevisionSelectorAmbiguousError,
+            ModeloWorkPeriodTokenError,
+        ) as exc:
             raise selector_bad_parameter(exc) from exc
         target_revision_id = selected_revision.calculation_revision_id
 

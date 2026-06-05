@@ -33,6 +33,7 @@ You MUST respect these rules at all times:
 @.codex/rules/no-tautological-calculation-tests.md
 @.codex/rules/registry-calculation-legal-grounding.md
 @.codex/rules/service-imports-via-top-level-reexports.md
+@.codex/rules/tests-live-under-domain-tests-folders.md
 @.codex/rules/vaultspec-archive-discipline.builtin.md
 @.codex/rules/vaultspec-cli.builtin.md
 @.codex/rules/vaultspec-codify.builtin.md

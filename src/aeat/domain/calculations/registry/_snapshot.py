@@ -57,7 +57,8 @@ def _install_cross_domain_snapshot_checks() -> None:
     if _cross_domain_checks_installed:
         return
     for module_name in _CROSS_DOMAIN_CHECK_MODULES:
-        importlib.import_module(module_name)
+        # Module names are controlled by the hard-coded tuple above.
+        importlib.import_module(module_name)  # nosemgrep
     _cross_domain_checks_installed = True
 
 

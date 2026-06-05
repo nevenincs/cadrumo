@@ -967,7 +967,8 @@ class FileFallbackMasterKeyProvider:
         """Chmod ``target`` to 0o700 on POSIX; no-op on Windows."""
         if os.name == "posix":
             try:
-                os.chmod(target, 0o700)
+                # Private directory mode; Semgrep's generic file-mode rule is inverted here.
+                os.chmod(target, 0o700)  # nosemgrep
             except OSError:
                 _log.debug("chmod 0o700 failed on %s; continuing", target)
 

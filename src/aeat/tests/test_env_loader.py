@@ -8,7 +8,7 @@ import pytest
 
 from ._env_loader import load_env_file, parse_env_text
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 class TestParseEnvText:

@@ -1,0 +1,162 @@
+"""Tests for the committed Modelo 184 (atribucion de rentas) registry."""
+
+from __future__ import annotations
+
+from datetime import date
+from functools import lru_cache
+
+import pytest
+
+from .....core.resources import bundled_path
+from .....tests.aeat_literal_fixtures import aeat_host
+from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+_WWW1_HOST = aeat_host("www1")
+_WWW6_HOST = aeat_host("www6")
+
+
+@lru_cache(maxsize=1)
+def _load_modelo_184() -> tuple[ModeloDefinition, RegistryCatalogues]:
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(m for m in modelos if m.id == "184")
+    return modelo, catalogues
+
+
+def test_modelo_184_registry_validator_accepts_committed_definition() -> None:
+    modelo, catalogues = _load_modelo_184()
+    # A stubbed validator would silently accept an empty modelo. Pin the
+    # committed modelo's shape so the test verifies validation actually
+    # ran against non-trivial content rather than passing trivially.
+    assert modelo.id == "184"
+    assert modelo.revisions, "184 must declare at least one revision"
+    assert any(rev.casillas for rev in modelo.revisions.values()), "184 must declare casillas"
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
+def test_modelo_184_modelo_metadata_matches_hap_2250_2015() -> None:
+    modelo, _ = _load_modelo_184()
+
+    assert modelo.title == "Entidades en régimen de atribución de rentas (informativa anual)"
+    assert modelo.tax_domain == "informative"
+    assert modelo.cadence == "annual"
+    assert modelo.jurisdiction == "ES-AEAT"
+    assert "orden-hap-2250-2015:art-1" in modelo.legal_refs
+    assert "orden-hap-2250-2015:art-4" in modelo.legal_refs
+    assert "aeat-dr-184-2025" in modelo.source_refs
+    assert "aeat-modelo-184-procedure" in modelo.source_refs
+
+
+def test_modelo_184_revision_period_selector_starts_at_2015() -> None:
+    modelo, _ = _load_modelo_184()
+    revision = modelo.revisions["2015-y-siguientes"]
+
+    assert revision.valid_from == date(2015, 10, 30)
+    assert revision.period_selector.year_from == 2015
+    assert revision.period_selector.periods == ("0A",)
+
+
+def test_modelo_184_snapshot_builds_for_each_published_filing_year() -> None:
+    modelo, catalogues = _load_modelo_184()
+
+    for filing_year in (2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026):
+        snapshot = build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=filing_year,
+            period="0A",
+        )
+        assert snapshot.revision.id == "2015-y-siguientes"
+
+
+def test_modelo_184_snapshot_exposes_legal_and_source_grounding() -> None:
+    modelo, catalogues = _load_modelo_184()
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="0A")
+
+    assert "orden-hap-2250-2015:art-1" in snapshot.legal
+    assert "orden-hap-2250-2015:art-4" in snapshot.legal
+    assert snapshot.legal["orden-hap-2250-2015:art-4"].article == "4"
+    assert "aeat-dr-184-2025" in snapshot.sources
+    assert "aeat-modelo-184-procedure" in snapshot.sources
+    assert "boe-modelo-184-2015-form" in snapshot.sources
+
+
+def test_modelo_184_february_deadline_windows_match_hap_2250_2015_art_4() -> None:
+    modelo, _ = _load_modelo_184()
+    revision = modelo.revisions["2015-y-siguientes"]
+    windows = {w.id: w for w in revision.deadline_windows}
+
+    expected = {
+        "modelo-184-2018-0a": (date(2019, 2, 1), date(2019, 2, 28)),
+        "modelo-184-2019-0a": (date(2020, 2, 1), date(2020, 2, 29)),
+        "modelo-184-2020-0a": (date(2021, 2, 1), date(2021, 2, 28)),
+        "modelo-184-2021-0a": (date(2022, 2, 1), date(2022, 2, 28)),
+        "modelo-184-2022-0a": (date(2023, 2, 1), date(2023, 2, 28)),
+        "modelo-184-2023-0a": (date(2024, 2, 1), date(2024, 2, 29)),
+        "modelo-184-2024-0a": (date(2025, 2, 1), date(2025, 2, 28)),
+        "modelo-184-2025-0a": (date(2026, 2, 1), date(2026, 2, 28)),
+        "modelo-184-2026-0a": (date(2027, 2, 1), date(2027, 2, 28)),
+    }
+
+    for window_id, (opens, closes) in expected.items():
+        assert windows[window_id].opens_on == opens
+        assert windows[window_id].closes_on == closes
+
+
+def test_modelo_184_live_cross_references_are_read_only() -> None:
+    modelo, _ = _load_modelo_184()
+    revision = modelo.revisions["2015-y-siguientes"]
+    cross_refs = {ref.id: ref for ref in revision.live_cross_references}
+
+    static_ref = cross_refs["modelo-184-static-documentation"]
+    assert static_ref.surface == "static_official_documentation"
+    assert static_ref.requires_authentication is False
+    assert "presentation" in static_ref.forbidden_actions
+    assert "signing" in static_ref.forbidden_actions
+
+    filed_ref = cross_refs["modelo-184-filed-declarations-read"]
+    assert filed_ref.surface == "authenticated_read_surface"
+    assert filed_ref.requires_authentication is True
+    assert filed_ref.requires_aeat_authorization is True
+    assert set(filed_ref.allowed_methods) == {"GET", "HEAD", "OPTIONS"}
+    assert set(filed_ref.allowed_hosts) == {
+        _WWW1_HOST,
+        _WWW6_HOST,
+    }
+    forbidden = set(filed_ref.forbidden_actions)
+    assert {
+        "presentation",
+        "signing",
+        "amendment",
+        "payment",
+        "cancellation",
+        "declaration-submission",
+        "document-submission",
+        "server-side-save",
+    }.issubset(forbidden)
+
+
+def test_modelo_184_construct_links_filing_extractor_and_verification() -> None:
+    modelo, _ = _load_modelo_184()
+    revision = modelo.revisions["2015-y-siguientes"]
+    construct = next(c for c in revision.constructs if c.id == "modelo-184-informative")
+
+    assert "modelo-184-filing" in construct.application_links
+    assert "modelo-184-extractor" in construct.application_links
+    assert "modelo-184-verification" in construct.application_links
+    assert "modelo-184-deadline" in construct.application_links
+    assert "modelo-184-portal" in construct.application_links
+    assert construct.filing_schedules == ("modelo-184-anual",)
+    assert "modelo-184-static-documentation" in construct.live_cross_references
+    assert "modelo-184-filed-declarations-read" in construct.live_cross_references
+
+
+def test_modelo_184_filing_schedule_is_annual_february() -> None:
+    modelo, _ = _load_modelo_184()
+    revision = modelo.revisions["2015-y-siguientes"]
+    schedule = next(s for s in revision.filing_schedules if s.id == "modelo-184-anual")
+
+    assert schedule.period_kind == "annual"
+    assert schedule.periods == ("0A",)
+    assert "orden-hap-2250-2015:art-4" in schedule.legal_refs

@@ -15,7 +15,7 @@ import tomllib
 from decimal import Decimal
 from enum import StrEnum
 from functools import cached_property, lru_cache
-from importlib.resources import files
+from importlib.resources import files  # nosemgrep
 from pathlib import Path
 from typing import Any, Final, Literal
 

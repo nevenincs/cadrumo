@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[3]
 _DATA_ROOT = _PROJECT_ROOT / "src" / "aeat" / "_data"

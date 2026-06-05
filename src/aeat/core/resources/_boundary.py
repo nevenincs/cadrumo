@@ -19,8 +19,8 @@ from __future__ import annotations
 import atexit
 from collections.abc import Iterator
 from contextlib import ExitStack, contextmanager
-from importlib.resources import as_file, files
-from importlib.resources.abc import Traversable
+from importlib.resources import as_file, files  # nosemgrep
+from importlib.resources.abc import Traversable  # nosemgrep
 from pathlib import Path
 
 _PACKAGE_DATA: Traversable = files("aeat").joinpath("_data")

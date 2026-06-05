@@ -791,6 +791,8 @@ application:
       work_unit_not_found: No s'ha trobat cap unitat de treball de modelo amb id=%{work_unit_id}.
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
+      work_period_token_invalid: '--period ''%{token}'' no es un token de periode valid per al modelo %{modelo}. Indica --year %{year} per separat i usa un de: %{tokens}.'
+      work_period_token_unrecognised: '--period ''%{token}'' no es reconeix. Indica --year %{year} per separat i usa un token de periode com 0A, Q1, 1T o 01.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
@@ -1697,8 +1699,6 @@ cli:
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         name_help: Nom de visualització opcional de la unitat de treball
         name_required: Proporcioneu --name.
-        natural_target_required: Passeu un id exacte d unitat de treball, o indiqueu
-          la declaracio amb --modelo, --year i --period.
         notes_help: Notes opcionals associades al filing record
         output_language_help: Idioma de sortida per als missatges renderitzats.
         override_help: Valor de binding amb sintaxi KEY=VALUE (repetible); executa
@@ -4132,6 +4132,13 @@ errors:
       revision.
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
     unsupported_currency: El codi de moneda indicat no és compatible.
+    modelo_work_period_token: 'Periode de model no valid.'
+    submission_preflight_draft_stale: 'L''aprovació de l''esborrany ha caducat; revisa i aprova l''esborrany de nou.'
+    submission_preflight_draft_not_approved: 'L''esborrany no està aprovat per a la presentació (estat={status}).'
+    submission_preflight_error_findings: 'L''esborrany té {finding_count} incidència(es) de severitat ERROR; resol-les abans de presentar.'
+    submission_preflight_deadline_closed: 'La finestra de termini per al model {modelo} període {period} no és oberta el {today}.'
+    submission_preflight_auth_describe_failed: 'El proveïdor d''autenticació no s''ha pogut descriure ({cause_type}).'
+    submission_preflight_auth_not_ready: 'El proveïdor d''autenticació {kind} no està llest (configured={configured} available={available}). {operator_impact}'
   snapshot:
     modelo_not_registered: El model no esta registrat al registre.
   storage:

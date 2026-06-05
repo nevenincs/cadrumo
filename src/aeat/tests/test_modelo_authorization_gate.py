@@ -48,7 +48,7 @@ from ..core.access_gate import (
 )
 from ..core.resources import resources
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_model, pytest.mark.inventory]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 #: The name of the cross-check every enrolling test must call. A real call to
 #: this function in the enrolling test source is the un-fakeable proof the test

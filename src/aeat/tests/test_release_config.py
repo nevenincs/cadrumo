@@ -28,7 +28,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 CONFIG_PATH = PROJECT_ROOT / "release-please-config.json"

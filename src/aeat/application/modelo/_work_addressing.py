@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ...core.resources import resources
+from ...domain.calculations.registry import RegistryValidationError, parse_modelo_period
 from ...domain.calculations.registry._temporal import select_revision
 from ...domain.contribuyente import CCAA
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
@@ -12,6 +13,7 @@ from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
 from ...domain.modelos._work_unit import WorkUnit
 from ._actions import create_work_unit, get_calculation_revision, rename_work_unit
+from ._registry_discovery import declared_modelo_period_tokens
 from ._selectors import (
     ModeloCalculationRevisionDefault,
     ModeloCalculationRevisionSelector,
@@ -200,6 +202,37 @@ class ModeloWorkRegistryYearMismatchError(ModeloError, ValueError):
     """Raised when a registry revision does not cover the filing year."""
 
 
+class ModeloWorkPeriodTokenError(ModeloError, ValueError):
+    """Raised when an operator-facing period token cannot be normalized."""
+
+    def __init__(
+        self,
+        *,
+        year: int,
+        token: str,
+        modelo: str | None,
+        declared_tokens: tuple[str, ...],
+        fallback: str | None = None,
+    ) -> None:
+        context = {
+            "year": year,
+            "token": token,
+            "modelo": modelo or "",
+            "tokens": ", ".join(declared_tokens),
+        }
+        if declared_tokens:
+            super().__init__(
+                context=context,
+                translated_message="application.modelo.errors.work_period_token_invalid",
+            )
+            return
+        del fallback
+        super().__init__(
+            context=context,
+            translated_message="application.modelo.errors.work_period_token_unrecognised",
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class ModeloWorkEnsureResult:
     """Result of resolving or creating a visible-target work unit."""
@@ -218,6 +251,149 @@ def work_address_for_modelo_target(target: ModeloWorkTarget) -> ModeloWorkAddres
     if isinstance(target, ModeloExactWorkUnitTarget):
         return target.to_work_address()
     raise TypeError(f"expected modelo work target, got {type(target).__name__}")
+
+
+def normalize_modelo_work_period(year: int, period: str, *, modelo: str | None = None) -> tuple[int, str]:
+    """Normalize an operator-facing period token into registry filing scope."""
+    token = period.strip()
+    if not token:
+        raise ModeloWorkPeriodTokenError(year=year, token=period, modelo=modelo, declared_tokens=())
+    lowered = token.lower()
+    declared = declared_modelo_period_tokens(modelo)
+    declared_match = next((declared_token for declared_token in declared if declared_token.lower() == lowered), None)
+    if declared_match is not None:
+        return year, declared_match
+    if lowered in {"annual", "anual", "0a"}:
+        composed = f"{year}"
+    elif lowered in {"q1", "1t", "1"}:
+        composed = f"{year}Q1"
+    elif lowered in {"q2", "2t", "2"}:
+        composed = f"{year}Q2"
+    elif lowered in {"q3", "3t", "3"}:
+        composed = f"{year}Q3"
+    elif lowered in {"q4", "4t", "4"}:
+        composed = f"{year}Q4"
+    elif lowered.isdigit() and len(lowered) == 2:
+        composed = f"{year}-{lowered}"
+    elif lowered.isdigit() and len(lowered) == 4:
+        raise ModeloWorkPeriodTokenError(year=year, token=token, modelo=modelo, declared_tokens=declared)
+    else:
+        composed = f"{year}{token}" if token.upper().startswith("Q") else f"{year}-{token}"
+    try:
+        return parse_modelo_period(composed)
+    except RegistryValidationError as exc:
+        raise ModeloWorkPeriodTokenError(
+            year=year,
+            token=token,
+            modelo=modelo,
+            declared_tokens=declared,
+            fallback=str(exc),
+        ) from exc
+
+
+def modelo_work_address_from_operator_target(
+    *,
+    work_unit_id: str | None,
+    modelo: str | None,
+    year: int | None,
+    period: str | None,
+    registry_revision_id: str | None,
+    bucket_id: str | None = None,
+) -> ModeloWorkAddress:
+    """Build a centralized work address from exact or visible operator input."""
+    if modelo is not None and year is not None and period is not None:
+        year, period = normalize_modelo_work_period(year, period, modelo=modelo)
+    elif work_unit_id is None:
+        raise ModeloWorkAddressNotFoundError(
+            "pass an exact work-unit id, or address the filing with modelo, year, and period"
+        )
+    return ModeloWorkAddress(
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        filing_year=year,
+        period=period,
+        registry_revision_id=registry_revision_id,
+        bucket_id=bucket_id,
+    )
+
+
+def resolve_modelo_work_unit_for_operator_target(
+    *,
+    work_unit_id: str | None = None,
+    modelo: str | None = None,
+    year: int | None = None,
+    period: str | None = None,
+    registry_revision_id: str | None = None,
+    bucket_id: str | None = None,
+) -> WorkUnit:
+    """Resolve exact or visible operator input to one active work unit."""
+    return resolve_modelo_work_address_unit(
+        modelo_work_address_from_operator_target(
+            work_unit_id=work_unit_id,
+            modelo=modelo,
+            year=year,
+            period=period,
+            registry_revision_id=registry_revision_id,
+            bucket_id=bucket_id,
+        )
+    )
+
+
+def resolve_modelo_revision_for_operator_target(
+    *,
+    calculation_revision_id: str | None,
+    work_unit_id: str | None,
+    modelo: str | None,
+    year: int | None,
+    period: str | None,
+    registry_revision_id: str | None,
+    bucket_id: str | None = None,
+    selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
+    default_for: ModeloCalculationRevisionDefault | None = None,
+) -> CalculationRevision:
+    """Resolve one calculation revision from exact or visible operator input."""
+    if (
+        calculation_revision_id is not None
+        and work_unit_id is None
+        and modelo is None
+        and year is None
+        and period is None
+        and registry_revision_id is None
+        and bucket_id is None
+    ):
+        address = ModeloWorkAddress()
+    else:
+        address = modelo_work_address_from_operator_target(
+            work_unit_id=work_unit_id,
+            modelo=modelo,
+            year=year,
+            period=period,
+            registry_revision_id=registry_revision_id,
+            bucket_id=bucket_id,
+        )
+    if default_for == "verify":
+        return resolve_verifiable_modelo_calculation_revision_address(
+            address=address,
+            calculation_revision_id=calculation_revision_id,
+            selector=selector,
+        )
+    if default_for == "file":
+        return resolve_fileable_modelo_calculation_revision_address(
+            address=address,
+            calculation_revision_id=calculation_revision_id,
+            selector=selector,
+        )
+    if default_for == "export":
+        return resolve_exportable_modelo_calculation_revision_address(
+            address=address,
+            calculation_revision_id=calculation_revision_id,
+            selector=selector,
+        )
+    return resolve_modelo_calculation_revision_address(
+        address=address,
+        calculation_revision_id=calculation_revision_id,
+        selector=selector,
+    )
 
 
 def resolve_modelo_work_target(target: ModeloWorkTarget) -> ModeloWorkResolution:
@@ -489,18 +665,23 @@ __all__ = [
     "ModeloWorkAddress",
     "ModeloWorkAddressNotFoundError",
     "ModeloWorkEnsureResult",
+    "ModeloWorkPeriodTokenError",
     "ModeloWorkRegistryYearMismatchError",
     "ModeloWorkTarget",
     "ensure_modelo_work_unit_for_visible_target",
+    "modelo_work_address_from_operator_target",
+    "normalize_modelo_work_period",
     "project_modelo_work_target",
     "project_modelo_work_unit",
     "resolve_exportable_modelo_calculation_revision_address",
     "resolve_fileable_modelo_calculation_revision_address",
     "resolve_modelo_calculation_revision_address",
+    "resolve_modelo_revision_for_operator_target",
     "resolve_modelo_revision_pick",
     "resolve_modelo_work_address",
     "resolve_modelo_work_address_unit",
     "resolve_modelo_work_target",
+    "resolve_modelo_work_unit_for_operator_target",
     "resolve_modelo_work_unit_id",
     "resolve_optional_modelo_work_address",
     "resolve_registry_revision_for_work_target",
