@@ -189,3 +189,17 @@ environment access, or filesystem IO.
 The plan row is closed without deleting or hiding the original scanner signal. The
 closeout documents the `remote-provider` signal as a false positive for a pure
 enum/catalogue module.
+
+## S362-CR-001 | PASS | Submission models are not storage or remote owners
+
+Reviewed the S362 scope as `vaultspec-code-reviewer`. `_models.py` defines strict
+pydantic records and a submission status enum only. It has no remote-provider calls,
+mirror persistence, secure-object construction, active-profile resolution, settings
+access, environment access, or filesystem IO.
+
+## S362-CR-002 | PASS | Relocated secure-storage test import was repaired
+
+The focused submission roundtrip gate initially failed because
+`domain/submission/tests/test_secure_storage_roundtrip.py` still imported
+`...adapters` after being moved under a `tests` package. The import now uses the
+correct `....adapters` package depth, and the real encrypted roundtrip tests pass.
