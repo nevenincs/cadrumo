@@ -10,16 +10,6 @@ related:
   - '[[2026-06-05-modelo-work-revision-cli-decomposition-plan]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 <!-- FRONTMATTER RULES:
      tags: one directory tag (hardcoded #plan) and one feature tag.
      Replace codebase-monolith-decomposition with a kebab-case feature tag, e.g. #foo-bar.
@@ -183,7 +173,7 @@ Close remaining oversized CLI roots through explicit residual extraction tranche
 - [x] `W02.P05.S98` - extract the selected config bucket/history command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
 - [x] `W02.P05.S99` - verify config bucket/history behavior and ratchet config size budget; `src/aeat/entrypoints/cli/tests/test_profile_lifecycle_verbs.py src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
 - [x] `W02.P05.S100` - verify dirty modelo work fragment import regression exposed by output-language parity does not reproduce in a fresh process; `src/aeat/entrypoints/cli/_modelo*.py src/aeat/entrypoints/cli/tests/test_output_language_parity.py`.
-- [ ] `W02.P05.S101` - select the next config profile command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P05.S101` - select the next config profile command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests`.
 - [ ] `W02.P05.S102` - extract the selected config profile command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/*.py`.
 - [ ] `W02.P05.S103` - verify config profile behavior and ratchet config size budget; `src/aeat/entrypoints/cli/tests/test_profile_lifecycle_verbs.py src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
 - [ ] `W02.P05.S104` - select the next ledger residual command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/tests`.
@@ -192,6 +182,9 @@ Close remaining oversized CLI roots through explicit residual extraction tranche
 - [ ] `W02.P05.S107` - select a coherent split for oversized modelo CLI tests using exact discovery; `src/aeat/entrypoints/cli/tests/test_modelo.py src/aeat/entrypoints/cli/tests`.
 - [ ] `W02.P05.S108` - split selected modelo CLI tests into focused test modules; `src/aeat/entrypoints/cli/tests/test_modelo.py src/aeat/entrypoints/cli/tests/test_modelo_*.py`.
 - [ ] `W02.P05.S109` - verify split modelo CLI tests and ratchet test module size budget; `src/aeat/entrypoints/cli/tests/test_modelo.py src/aeat/entrypoints/cli/tests/test_modelo_*.py src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
+- [x] `W02.P05.S110` - extract residual modelo audit command group into a focused registrar module; `src/aeat/entrypoints/cli/_modelo.py src/aeat/entrypoints/cli/_modelo_audit_cli.py`.
+- [x] `W02.P05.S111` - verify modelo audit behavior and repair-policy discovery after extraction; `src/aeat/entrypoints/cli/tests/test_audit_verbs.py src/aeat/entrypoints/cli/tests/test_root_grammar_invariants.py src/aeat/entrypoints/cli/tests/test_repair_policy_coverage.py`.
+- [ ] `W02.P05.S112` - reconcile modelo natural-key CLI verification coverage with cross-period clean-state requirements; `src/aeat/entrypoints/cli/tests/test_modelo_work_natural_key.py src/aeat/application/modelo/tests/test_cross_period_clean_state_* src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py`.
 
 ## Wave `W03` - application and domain monolith decomposition
 
