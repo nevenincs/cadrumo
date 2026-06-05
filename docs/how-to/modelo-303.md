@@ -12,9 +12,9 @@ Before you begin:
   target quarter. If you need a full example, follow the
   [tutorial](../tutorials/index.md).
 
-## Create the work unit
+## Create a new draft
 
-Create the work unit for the target year and quarter:
+Create the draft workspace for the target year and quarter:
 
 ```bash
 aeat app modelo work create --modelo 303 --year 2026 --period 1T
@@ -34,8 +34,9 @@ aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
 
 The command maps ledger aggregates to form boxes (*casillas*) and saves a
 calculation revision under the work unit. If you need to supply manual
-adjustments or bindings, use `--casilla` and `--binding`, for example
-`--casilla 01=12000.00`.
+adjustments, IVA compensation offsets, or bindings, use
+[Review and supply calculation inputs](review-calculation-values.md) before
+adding calculation flags.
 
 ## Verify the return
 
@@ -68,6 +69,8 @@ AEAT portal.
   `aeat app modelo bindings list --modelo 303 --year 2026 --period 1T --missing`
 - **List calculation revisions**:
   `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T`
+- **Review manual inputs, offsets, and bindings**:
+  [Review and supply calculation inputs](review-calculation-values.md)
 
 Exact IDs remain available for advanced recovery, automation, and ambiguity
 resolution, but the common workflow should use modelo, year, and period.

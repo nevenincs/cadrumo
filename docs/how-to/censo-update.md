@@ -1,82 +1,163 @@
-# Sync your taxpayer census (Censo)
+# Link Modelo 036 census information
 
-This guide shows you how to download your official taxpayer census facts
-(*censo*) from the Agencia Estatal de Administracion Tributaria (AEAT) and
-compare them with your active local profile.
+Use this guide to pull your AEAT census information into the active local
+profile and compare it with what you entered by hand. In Spain, this census
+information is tied to Modelo 036 registration and changes.
 
-Use this when your local profile may be missing your registered activity, tax
-address, or regime facts.
+The censo commands read from AEAT and save local profile data only after you
+review and apply it. They do not file Modelo 036, do not submit changes to
+AEAT, and do not modify AEAT records.
 
 ## Before you start
 
 You need:
 
-- An active taxpayer profile.
-- Your DNI, NIE, NIF, or CIF saved in that profile.
-- AEAT authentication configured for read-only access, such as a registered
-  certificate or Cl@ve session.
+- an active taxpayer profile; see [Set up your taxpayer profile](profile-setup.md)
+- the taxpayer's DNI, NIE, NIF, or CIF saved in that profile
+- AEAT authentication configured for read-only live access; see
+  [Authenticate with AEAT](authenticate-with-aeat.md)
 
-The censo commands read from AEAT and update local profile data only after you
-review and apply the downloaded facts. They never submit declarations or modify
-AEAT records.
+Check the active profile first:
 
-## Download the censo snapshot
+```bash
+aeat config profile status
+```
 
-Download your census information into a local snapshot:
+## Why link censo information
+
+Modelo 036 census facts are official AEAT facts about the taxpayer's registered
+tax situation. Pulling them into `aeat` helps you check whether the local
+profile matches AEAT records before you plan deadlines, classify some expenses,
+or calculate modelos.
+
+The implemented censo/profile flow can affect:
+
+- activity start date, which helps avoid showing obligations before the
+  taxpayer's registered activity start
+- establishment or premises facts, where AEAT publishes them
+- selected withholding percentage facts, where AEAT publishes them
+- home-office area facts, which can seed home-office usage ratios for relevant
+  expense categories
+- local audit history for censo pulls and censo applies
+
+If you do not link censo information, you can still work with a manually entered
+profile. The consequence is that profile-dependent workflows use your manual
+facts only. Calendar and filing-calendar checks may be less reliable if the
+activity start date, tax regime, IVA regime, Renta/IRPF regime, or enrollment
+facts are incomplete or wrong. Home-office ratios derived from censo floor-area
+facts will not be available.
+
+Use [Plan your filing calendar](filing-calendar.md) after profile and censo
+review. Use modelo-specific guides, such as
+[How to prepare a Modelo 303 quarterly filing](modelo-303.md), once the profile
+and ledger are ready.
+
+## Pull the latest Modelo 036 censo snapshot
+
+Pull the latest AEAT censo facts into the local snapshot store:
 
 ```bash
 aeat config profile censo refresh
 ```
 
-This retrieves the facts associated with your tax identifier from the AEAT portal
-and saves a local snapshot.
+This uses the active profile and the configured AEAT authentication. It saves a
+snapshot under the profile. It does not apply those values to the profile yet.
 
-## Review the downloaded facts
+## Review the snapshot
 
-Show the local snapshot before applying it:
+Show the latest snapshot:
 
 ```bash
 aeat config profile censo show
 ```
 
-Check that the facts match the taxpayer you intended to work on.
+Show a specific snapshot by id or unambiguous prefix:
 
-## Compare with your profile
+```bash
+aeat config profile censo show --snapshot-id <snapshot-id>
+```
 
-Preview how the official censo facts differ from your current local profile settings:
+Review that the facts belong to the taxpayer and match what you expect from the
+AEAT censo surface.
+
+## Compare AEAT censo with your profile
+
+Compare the snapshot with the current local profile:
 
 ```bash
 aeat config profile censo compare
 ```
 
-This displays the AEAT values alongside your local profile settings. Review this
-output before applying changes.
+The comparison reports matching fields, diverging fields, censo-only fields,
+and profile-only fields. Review this before applying anything. Profile-only
+facts are not automatically wrong; they may be manual facts that AEAT does not
+publish through this censo surface.
 
-## Apply the update
+## Apply reviewed censo facts
 
-Apply the downloaded censo snapshot to your local profile:
+Apply the snapshot only after review:
 
 ```bash
 aeat config profile censo apply
 ```
 
-This command updates your profile facts to match the AEAT records. Facts you
-entered manually remain untouched.
+Apply writes AEAT-reported censo facts into the local profile with censo
+provenance. Existing censo-derived facts are replaced by the new censo snapshot.
+Manually entered facts from other sources are preserved so you can still compare
+manual profile values with AEAT-reported values.
 
-## Check the profile
+If the snapshot includes home-office floor-area facts, apply can seed local
+home-office usage ratios for categories that use that censo-derived ratio.
 
-Validate the profile after applying censo facts:
+## Record a Modelo 036 filing done outside aeat
+
+If you file Modelo 036 in AEAT's sede, record that local fact separately:
+
+```bash
+aeat app modelo m036 alta --declared-on 2026-01-10 --sede-justificante <acuse>
+aeat app modelo m036 modificacion --declared-on 2026-03-15 --sede-justificante <acuse>
+aeat app modelo m036 baja --declared-on 2026-12-31 --sede-justificante <acuse>
+```
+
+These commands record that you filed the Modelo 036 alta, modificacion, or baja
+through AEAT. They never file with AEAT themselves.
+
+## Check the profile afterwards
+
+Validate the active profile after applying censo facts:
 
 ```bash
 aeat config profile status
 aeat config profile validate
 ```
 
-If the profile still reports missing facts, add them with
-`aeat config profile edit` before you calculate a modelo.
+If the profile still reports missing facts, edit those fields directly:
+
+```bash
+aeat config profile edit <profile-name> --quiet --<field-flag> <value>
+```
+
+For modelo-specific readiness, use profile preflight:
+
+```bash
+aeat config profile preflight --modelo 303 --revision-id <revision-id> --filing-year 2026 --period 1T
+```
+
+## Required or optional?
+
+Linking censo information is optional for a manually maintained profile, but it
+is strongly recommended when your filing calendar, tax regime, IVA regime,
+Renta/IRPF regime, enrollment facts, or home-office expense ratios depend on
+official census facts.
+
+It is required only for workflows where you need the local profile to be
+grounded in the AEAT-reported censo snapshot or where a command explicitly
+refuses because no censo snapshot exists.
 
 ## Next steps
 
+- [Authenticate with AEAT](authenticate-with-aeat.md)
 - [Set up your taxpayer profile](profile-setup.md)
 - [Plan your filing calendar](filing-calendar.md)
-- [Import and classify a bank statement](import-bank-statements.md)
+- [Work with transaction data](import-bank-statements.md)
+- [Review and supply calculation inputs](review-calculation-values.md)
