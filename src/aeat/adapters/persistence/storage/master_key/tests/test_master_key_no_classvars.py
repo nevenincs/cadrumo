@@ -43,7 +43,7 @@ def _is_classvar_annotation(node: ast.AST) -> bool:
 
 def test_master_key_providers_carry_zero_classvar_state() -> None:
     """The guarded providers must declare no ClassVar-annotated attributes."""
-    module_path = Path(__file__).parent / "_master_key.py"
+    module_path = Path(__file__).parent.parent / "_master_key.py"
     tree = ast.parse(module_path.read_text(encoding=UTF_8_ENCODING), filename=str(module_path))
 
     violations: list[str] = []

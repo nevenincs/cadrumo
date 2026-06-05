@@ -2308,6 +2308,8 @@ def verify_modelo_revision(
             repository override.
         calculation_observation_repository: Optional calculation-observation
             repository override used by the cross-period clean-state proof.
+        cross_period_expected_member_sets: Optional expected grupo member
+            rosters used by the cross-period clean-state proof.
         workflow_engine: Optional workflow engine override for the preflight gate.
         workflow_runs_dir: Optional workflow runs directory override.
         settings: Optional settings override.
@@ -2936,6 +2938,8 @@ def file_modelo_revision(
             repository override.
         calculation_observation_repository: Optional calculation-observation
             repository override used by the cross-period clean-state proof.
+        cross_period_expected_member_sets: Optional expected grupo member
+            rosters used by the cross-period clean-state proof.
         workflow_engine: Optional workflow engine override for the preflight
             gate.
         workflow_runs_dir: Optional workflow runs directory override.

@@ -41,7 +41,6 @@ from __future__ import annotations
 import base64
 import binascii
 import contextlib
-import getpass
 import json
 import os
 import secrets
@@ -63,7 +62,7 @@ if TYPE_CHECKING:
 
 from .....core import resolve_active_bucket_id
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from .....core.locks import exclusive_file_lock, fsync_parent_dir
+from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
 from ..crypto._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
 from ..errors import (
@@ -88,6 +87,14 @@ from ._master_key_derivation import (
     SALT_SIZE,
     derive_kek_with_params,
 )
+from ._master_key_io import (
+    PASSPHRASE_ENV_VAR,
+    PassphraseCallback,
+    _b64decode,
+    _b64encode,
+    _default_passphrase_callback,
+    atomic_write_secure_bytes,
+)
 from ._master_key_records import (
     EnvelopeDocument,
     _KdfParameters,
@@ -106,9 +113,6 @@ KEYRING_SERVICE: Final[str] = "aeat:secure-persistence"
 
 KEYRING_USERNAME: Final[str] = "master"
 """Account identifier for the master-key entry in the OS keychain."""
-
-PASSPHRASE_ENV_VAR: Final[str] = "AEAT_SECRET_PASSPHRASE"
-"""Environment variable consulted by the file backend before prompting."""
 
 _MASTER_KEY_UNAVAILABLE_MESSAGE_KEY: Final[str] = "errors.auth.auth_storage_master_key_unavailable"
 _MASTER_KEY_PASSPHRASE_MISMATCH_MESSAGE_KEY: Final[str] = (
@@ -169,119 +173,6 @@ class MasterKeyProvider(Protocol):
     ) -> None:
         """Tear down the provider's backend session on block exit."""
         ...
-
-
-def _b64encode(data: bytes) -> str:
-    return base64.b64encode(data).decode("ascii")
-
-
-def _b64decode(text: str) -> bytes:
-    return base64.b64decode(text.encode("ascii"), validate=True)
-
-
-def atomic_write_secure_bytes(target: Path, payload: bytes) -> None:
-    """Atomically write ``payload`` to ``target`` with mode ``0o600``.
-
-    Writes to a sibling tempfile created with ``O_CREAT|O_EXCL`` and
-    ``mode=0o600`` so the file lands restricted from creation (no
-    chmod-after-close TOCTOU window where a sensitive payload is
-    briefly readable by other users on the host). ``os.fsync``s the
-    fd, then ``os.replace`` atomically swaps the tempfile in. A crash
-    between create and replace leaves the original ``target``
-    untouched; the orphan tempfile is removed on the error path.
-
-    Use this for any persisted sensitive material (master-key state,
-    portable export bundles) where partial writes or world-readable
-    intermediate states are unacceptable. On Windows the mode argument
-    is ignored and the file inherits the parent directory's ACL; the
-    confidentiality posture there depends on per-user profile
-    permissions, not on POSIX mode bits.
-    """
-    target.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = target.with_name(f"{target.name}.{os.getpid()}.{secrets.token_hex(4)}.tmp")
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-    flags |= getattr(os, "O_NOINHERIT", 0)
-    flags |= getattr(os, "O_CLOEXEC", 0)
-    fd = os.open(tmp_path, flags, 0o600)
-    try:
-        try:
-            os.write(fd, payload)
-            os.fsync(fd)
-        finally:
-            os.close(fd)
-        os.replace(tmp_path, target)
-        # Flush the parent directory entry to disk on POSIX so the
-        # rename is durable across power loss (file fsync does not
-        # imply directory fsync on ext4 / xfs / etc.).
-        fsync_parent_dir(target)
-    except BaseException:
-        _log.error("master_key: atomic write failed target=%s", target, exc_info=True)
-        try:
-            os.unlink(tmp_path)
-        except OSError as cleanup_exc:
-            _log.debug(
-                "master_key: atomic write tempfile cleanup failed error_type=%s",
-                type(cleanup_exc).__name__,
-            )
-        raise
-
-
-def _zeroise(buffer: bytearray | None) -> None:
-    """Best-effort overwrite of a mutable buffer with zero bytes.
-
-    Python's `bytes` is immutable so true zeroisation requires a
-    `bytearray`. The substrate's master-key + passphrase caches use
-    bytearray buffers so a memory-disclosure bug elsewhere (e.g. a
-    debug traceback printing locals) does not surface the key bytes.
-    The atexit hook (registered below) calls this on every cached
-    buffer at shutdown.
-    """
-    if buffer is None:
-        return
-    for i in range(len(buffer)):
-        buffer[i] = 0
-
-
-PassphraseCallback = Callable[[], str]
-"""Pluggable hook for tests — callable returning the passphrase as a str."""
-
-
-def _default_passphrase_callback(getpass_fn: Callable[[str], str] | None = None) -> str:
-    """Resolve the operator's passphrase from env or stdin.
-
-    The env var is read but NOT popped from ``os.environ``. Earlier
-    revisions popped on first read with the rationale that child
-    processes spawned later would not inherit the value, but the
-    callback is invoked more than once under several legitimate flows
-    (the profile recovery flow re-resolves the passphrase after a
-    re-mint; long-running test sessions resolve it repeatedly across
-    sub-tests). After a pop, those second reads block on
-    ``getpass.getpass`` in non-TTY contexts (CI, batch jobs,
-    subprocess pipes), surfacing as opaque
-    ``MasterKeyPassphraseMismatchError`` once the operator cancels and
-    the substrate re-prompts. Keeping the env var lets every read
-    resolve consistently; subprocesses that inherit the parent's env
-    always had access to the passphrase anyway (env-var inheritance is
-    a cooperative-isolation property, not a confidentiality boundary
-    the substrate can defend on its own).
-
-    Trailing CRLF is stripped (some shells append it via
-    ``$(cat .secret)``), but interior whitespace is preserved (some
-    passphrase policies require it).
-    """
-    from .....core.config import load_settings
-
-    configured = load_settings().aeat_secret_passphrase
-    if configured is not None:
-        # Strip trailing CRLF only — the shell often appends it.
-        normalized = configured.get_secret_value().rstrip("\r\n")
-        if not normalized:
-            raise SecretStoreError(
-                f"{PASSPHRASE_ENV_VAR} is set to whitespace-only; supply a non-empty passphrase.",
-            )
-        return normalized
-    resolver = getpass_fn if getpass_fn is not None else getpass.getpass
-    return resolver("AEAT secret-store passphrase: ")
 
 
 @runtime_checkable
