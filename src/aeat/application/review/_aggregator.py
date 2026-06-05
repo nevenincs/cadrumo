@@ -78,8 +78,8 @@ class ReviewQueue:
         else:
             items = [
                 *transactions_pending(settings, bucket_id=bucket_id),
-                *invoices_pending(settings),
-                *drafts_pending(settings),
+                *invoices_pending(settings, bucket_id=bucket_id),
+                *drafts_pending(settings, bucket_id=bucket_id),
             ]
         if kinds is not None:
             items = [item for item in items if item.kind in kinds]
