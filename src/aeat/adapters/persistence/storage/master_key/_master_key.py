@@ -48,13 +48,10 @@ import secrets
 import sqlite3
 from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, Literal, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
-from argon2.low_level import Type as _Argon2Type
-from argon2.low_level import hash_secret_raw as _argon2_hash_secret_raw
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import ValidationError
 
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.time import now
 
 if TYPE_CHECKING:
@@ -83,42 +80,25 @@ from ..errors import (
     SecretStoreError,
     UnsecuredModeRefusedError,
 )
+from ._master_key_derivation import (
+    ARGON2_MEMORY_COST_KIB,
+    ARGON2_PARALLELISM,
+    ARGON2_TIME_COST,
+    KDF_PARAMS_VERSION,
+    SALT_SIZE,
+    derive_kek,
+)
+from ._master_key_records import (
+    EnvelopeDocument,
+    _KdfParameters,
+    _KdfVersionEnvelope,
+    _WrappedBucketDekDocument,
+)
 
 NIST_PASSPHRASE_MIN_LENGTH: Final[int] = 8
 """NIST SP 800-63B §5.1.1.1 verifier-side minimum passphrase length."""
 
 _log = get_logger(__name__)
-
-
-class _EnvelopeFact(BaseModel):
-    """A single fact entry within an :class:`EnvelopeDocument` payload."""
-
-    model_config = ConfigDict(extra="allow")
-
-    path: str
-    value: object = None
-
-
-class _EnvelopePayload(BaseModel):
-    """The ``payload`` dict inside an :class:`EnvelopeDocument`."""
-
-    model_config = ConfigDict(extra="allow")
-
-    facts: list[_EnvelopeFact] = Field(default_factory=list)
-
-
-class EnvelopeDocument(BaseModel):
-    """Typed representation of a decrypted user-profile envelope JSON document.
-
-    The envelope is a ``{"payload": {"facts": [...]}}`` blob stored by the
-    master-key persistence layer.  Wrapping the ``json.loads`` result in a
-    model validates the boundary at decryption time and eliminates bare
-    ``dict.get()`` chains from the consumer.
-    """
-
-    model_config = ConfigDict(extra="allow")
-
-    payload: _EnvelopePayload | None = None
 
 
 KEYRING_SERVICE: Final[str] = "aeat:secure-persistence"
@@ -129,24 +109,6 @@ KEYRING_USERNAME: Final[str] = "master"
 
 PASSPHRASE_ENV_VAR: Final[str] = "AEAT_SECRET_PASSPHRASE"
 """Environment variable consulted by the file backend before prompting."""
-
-_ARGON2_MEMORY_COST_KIB: Final[int] = 19 * 1024
-"""Argon2id ``memory_cost`` in KiB (19 MiB — OWASP-current top tier)."""
-
-_ARGON2_TIME_COST: Final[int] = 2
-"""Argon2id ``time_cost`` (number of iterations) — OWASP-current top tier."""
-
-_ARGON2_PARALLELISM: Final[int] = 1
-"""Argon2id ``parallelism`` — OWASP-current top tier."""
-
-_SALT_SIZE: Final[int] = 16
-"""Per-store salt size in bytes."""
-
-_KDF_PARAMS_VERSION: Final[int] = 2
-"""Bumped when the on-disk KDF parameter shape changes.
-
-* v2: Argon2id (memory_cost=19 MiB, time_cost=2, parallelism=1).
-"""
 
 _MASTER_KEY_UNAVAILABLE_MESSAGE_KEY: Final[str] = "errors.auth.auth_storage_master_key_unavailable"
 _MASTER_KEY_PASSPHRASE_MISMATCH_MESSAGE_KEY: Final[str] = (
@@ -207,43 +169,6 @@ class MasterKeyProvider(Protocol):
     ) -> None:
         """Tear down the provider's backend session on block exit."""
         ...
-
-
-class _KdfParameters(BaseModel):
-    """On-disk record of the Argon2id parameters used to derive the KEK."""
-
-    model_config = _STRICT_FROZEN
-
-    version: int = Field(default=_KDF_PARAMS_VERSION)
-    algorithm: Literal["argon2id"] = Field(default="argon2id")
-    memory_cost: int
-    time_cost: int
-    parallelism: int
-    salt_b64: str
-
-
-class _KdfVersionEnvelope(BaseModel):
-    """Minimal version-gate model for the master.kdf preflight check.
-
-    Reads only the ``version`` field and tolerates the rest of the
-    document so a v1 file does not trigger a strict-pydantic
-    ValidationError before the version-mismatch runbook can fire.
-    """
-
-    model_config = ConfigDict(extra="allow")
-
-    version: int | str | None = None
-
-
-class _WrappedBucketDekDocument(BaseModel):
-    """On-disk JSON envelope for one bucket's wrapped DEK."""
-
-    model_config = _STRICT_FROZEN
-
-    schema_version: Literal[1] = 1
-    nonce_b64: str
-    ciphertext_b64: str
-    tag_b64: str
 
 
 def _b64encode(data: bytes) -> str:
@@ -315,24 +240,6 @@ def _zeroise(buffer: bytearray | None) -> None:
         return
     for i in range(len(buffer)):
         buffer[i] = 0
-
-
-def _derive_kek(passphrase: bytes, salt: bytes) -> bytes:
-    """Derive a 32-byte KEK from the operator's passphrase and the per-store salt.
-
-    Uses Argon2id with the OWASP-current top-tier parameters
-    (``memory_cost=19 MiB, time_cost=2, parallelism=1``). The result is
-    a 32-byte KEK suitable for AES-256-GCM-wrapping the master key.
-    """
-    return _argon2_hash_secret_raw(
-        secret=passphrase,
-        salt=salt,
-        time_cost=_ARGON2_TIME_COST,
-        memory_cost=_ARGON2_MEMORY_COST_KIB,
-        parallelism=_ARGON2_PARALLELISM,
-        hash_len=KEY_SIZE,
-        type=_Argon2Type.ID,
-    )
 
 
 PassphraseCallback = Callable[[], str]
