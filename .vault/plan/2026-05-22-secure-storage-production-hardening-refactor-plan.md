@@ -545,7 +545,7 @@ Current register count: `301` production candidate files.
 | `AFR-264` | `src/aeat/domain/transactions/_errors.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-265` | `src/aeat/domain/transactions/_models.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-266` | `src/aeat/domain/transactions/_raw_transaction.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
-| `AFR-267` | `src/aeat/domain/transactions/_repository.py` | `secure-object, runtime, manifest-bucket` | `runtime-default` | `W12.P21.S84` | pending |
+| `AFR-267` | `src/aeat/domain/transactions/_repository.py` | `secure-object, runtime, manifest-bucket` | `runtime-default` | `W12.P21.S84` | closed |
 | `AFR-268` | `src/aeat/domain/usage_ratios/_model.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-269` | `src/aeat/domain/usage_ratios/_service.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S84` | migrated |
 | `AFR-270` | `src/aeat/domain/user_profile/_loader.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
@@ -906,7 +906,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [ ] `W12.P26.S366` - Close `AFR-264` for `src/aeat/domain/transactions/_errors.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/domain/transactions/_errors.py`.
 - [ ] `W12.P26.S367` - Close `AFR-265` for `src/aeat/domain/transactions/_models.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/domain/transactions/_models.py`.
 - [ ] `W12.P26.S368` - Close `AFR-266` for `src/aeat/domain/transactions/_raw_transaction.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/domain/transactions/_raw_transaction.py`.
-- [ ] `W12.P26.S369` - Close `AFR-267` for `src/aeat/domain/transactions/_repository.py` with signals `secure-object, runtime, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/transactions/_repository.py`.
+- [x] `W12.P26.S369` - Close `AFR-267` for `src/aeat/domain/transactions/_repository.py` with signals `secure-object, runtime, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/transactions/_repository.py`.
 - [ ] `W12.P26.S370` - Close `AFR-268` for `src/aeat/domain/usage_ratios/_model.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/domain/usage_ratios/_model.py`.
 - [x] `W12.P26.S371` - Close `AFR-269` for `src/aeat/domain/usage_ratios/_service.py` with signals `secure-object, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/usage_ratios/_service.py`.
 - [ ] `W12.P26.S372` - Close `AFR-270` for `src/aeat/domain/user_profile/_loader.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/domain/user_profile/_loader.py`.

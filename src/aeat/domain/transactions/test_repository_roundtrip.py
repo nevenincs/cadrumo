@@ -21,6 +21,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...adapters.persistence.storage import SensitivityClass
+from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     BusinessClassification,
@@ -187,6 +188,110 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
         # The original ValidationError is preserved for inspection.
         assert isinstance(exc_info.value.original_exception, ValidationError)
         assert exc_info.value.bucket_id == profile.bucket_id
+
+
+def test_transaction_catalogue_inner_classification_mismatch_is_structured(
+    tmp_path: Path,
+) -> None:
+    """Inner envelope classification drift must surface as structured storage integrity."""
+
+    import json as _json
+
+    from ._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        txn = _transaction(
+            provider_id="provider-row-1",
+            amount=Decimal("-100.00"),
+            description="Internet provider - mixed use",
+            classification=BusinessClassification.BUSINESS,
+        )
+        repo.save(TransactionCatalogue.from_transactions([txn]))
+
+        object_key = transaction_catalogue_object_key(profile.bucket_id)
+        record = profile.repository.load(
+            TX_BUCKET_NAMESPACE,
+            object_key,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_TX_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        assert envelope["classification"] == SensitivityClass.FINANCIAL.value
+        envelope["classification"] = SensitivityClass.AUDIT.value
+        profile.repository.save(
+            namespace=TX_BUCKET_NAMESPACE,
+            object_key=object_key,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
+
+        with pytest.raises(ClassificationError) as exc_info:
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_classification"
+    assert exc_info.value.context == {
+        "namespace": TX_BUCKET_NAMESPACE,
+        "object_key": object_key,
+        "bucket_id": profile.bucket_id,
+        "classification": SensitivityClass.AUDIT.value,
+        "expected": SensitivityClass.FINANCIAL.value,
+    }
+
+
+def test_transaction_catalogue_inner_schema_version_mismatch_is_structured(
+    tmp_path: Path,
+) -> None:
+    """Inner envelope schema drift must surface as structured storage integrity."""
+
+    import json as _json
+
+    from ._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        txn = _transaction(
+            provider_id="provider-row-1",
+            amount=Decimal("-100.00"),
+            description="Internet provider - mixed use",
+            classification=BusinessClassification.BUSINESS,
+        )
+        repo.save(TransactionCatalogue.from_transactions([txn]))
+
+        object_key = transaction_catalogue_object_key(profile.bucket_id)
+        record = profile.repository.load(
+            TX_BUCKET_NAMESPACE,
+            object_key,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_TX_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        assert envelope["schema_version"] == _TX_CATALOGUE_VERSION
+        envelope["schema_version"] = _TX_CATALOGUE_VERSION + 1
+        profile.repository.save(
+            namespace=TX_BUCKET_NAMESPACE,
+            object_key=object_key,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
+
+        with pytest.raises(EnvelopeVersionError) as exc_info:
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_envelope_version"
+    assert exc_info.value.context == {
+        "namespace": TX_BUCKET_NAMESPACE,
+        "object_key": object_key,
+        "bucket_id": profile.bucket_id,
+        "schema_version": _TX_CATALOGUE_VERSION + 1,
+        "expected": _TX_CATALOGUE_VERSION,
+    }
 
 
 def test_transaction_catalogue_preserves_source_jurisdiction_through_encrypted_storage(
