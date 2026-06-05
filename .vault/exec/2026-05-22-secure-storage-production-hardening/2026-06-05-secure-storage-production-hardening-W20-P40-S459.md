@@ -37,9 +37,9 @@ lock/unlock subset.
 
 ## Notes
 
-`W20.P40.S457` remains open for `rekey`, `recover`, `show-recovery`, and
-`verify-recovery`; those verbs need the recovery-envelope persistence path and
-must not be treated as complete by this alias slice.
+`W20.P40.S457` has since closed the remaining `rekey`, `recover`,
+`show-recovery`, and `verify-recovery` verbs. This record remains scoped to the
+lock/unlock alias slice.
 
 Validation:
 

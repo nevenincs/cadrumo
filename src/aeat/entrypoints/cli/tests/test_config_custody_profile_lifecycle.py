@@ -223,6 +223,9 @@ def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path)
     assert recovery_record.mnemonic_word_count == 24
     assert recovery_record.hkdf_info == "aeat.recovery-key.master-wrap.v1"
     assert recovery_key not in recovery_document
+    bucket_dir = next((tmp_path / "buckets").iterdir())
+    manifest = tomllib.loads((bucket_dir / "manifest.toml").read_text(encoding="utf-8"))
+    assert manifest["recovery_enrolled"] is True
 
     verified = _run_aeat(tmp_path, ("config", "verify-recovery", "--recovery-key", recovery_key))
     assert verified.returncode == 0, _combined_output(verified)

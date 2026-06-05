@@ -773,6 +773,7 @@ related:
   - '[[2026-06-05-secure-storage-production-hardening-W18-P38-summary]]'
   - '[[2026-06-05-secure-storage-production-hardening-W19-P39-S450]]'
   - '[[2026-06-05-secure-storage-production-hardening-W20-P40-S451]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W20-P40-S457]]'
   - '[[2026-06-05-secure-storage-production-hardening-W20-P40-S459]]'
   - '[[2026-06-05-secure-storage-production-hardening-code-review-audit]]'
   - '[[2026-06-05-secure-storage-production-hardening-error-registry-hygiene-audit]]'
@@ -843,6 +844,7 @@ related:
   - '[[2026-06-05-secure-storage-production-hardening-w18-p38-s449-review-audit]]'
   - '[[2026-06-05-secure-storage-production-hardening-w18-p38-split-module-review-audit]]'
   - '[[2026-06-05-secure-storage-production-hardening-w20-p40-s451-custody-api-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w20-p40-s457-custody-rollout-audit]]'
 ---
 
 # `secure-storage-production-hardening` feature index
@@ -1231,6 +1233,7 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 - `2026-06-05-secure-storage-production-hardening-w18-p38-s449-review-audit` - `secure-storage-production-hardening` `W18.P38.S449` Review
 - `2026-06-05-secure-storage-production-hardening-w18-p38-split-module-review-audit` - `secure-storage-production-hardening` `W18.P38` split-module review
 - `2026-06-05-secure-storage-production-hardening-w20-p40-s451-custody-api-audit` - `secure-storage-production-hardening` `W20.P40.S451` custody API audit
+- `2026-06-05-secure-storage-production-hardening-w20-p40-s457-custody-rollout-audit` - `secure-storage-production-hardening` `W20.P40.S457` custody rollout audit
 
 ### exec
 
@@ -1692,6 +1695,7 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 - `2026-06-05-secure-storage-production-hardening-W18-P38-summary` - `secure-storage-production-hardening` `W18.P38` summary
 - `2026-06-05-secure-storage-production-hardening-W19-P39-S450` - W19.P39.S450 - Refresh secure-storage guard inventories
 - `2026-06-05-secure-storage-production-hardening-W20-P40-S451` - W20.P40.S451 - Verify custody command and API exposure
+- `2026-06-05-secure-storage-production-hardening-W20-P40-S457` - W20.P40.S457 - Implement first-class config custody verbs
 - `2026-06-05-secure-storage-production-hardening-W20-P40-S459` - W20.P40.S459 - Implement config lock and unlock aliases
 
 ### plan
