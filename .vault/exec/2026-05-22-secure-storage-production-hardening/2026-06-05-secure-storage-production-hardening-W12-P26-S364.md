@@ -15,31 +15,31 @@ Scope: close `AFR-262` for `src/aeat/domain/submission/_protocols.py` with signa
 
 ## Description
 
-- Audited `_protocols.py` for concrete remote-provider, secure-storage,
-  active-profile, settings, environment, filesystem, and runtime repository behavior.
-- Confirmed the module defines structural `Protocol` ports and strict/frozen value
-  types only: auth-provider description/probe, deadline-window checker, draft shape,
-  draft loader, and submission repository port.
-- Confirmed `ModeloDraftLoader.load(Path)` is a Protocol declaration only; this file
-  does not dereference or persist plaintext paths.
-- Confirmed `SubmissionRepositoryProtocol` is a narrow domain-facing port and does not
-  import or construct the concrete secure-storage repository.
-- Closed `W12.P26.S364` through `vaultspec-core vault plan step check`; `AFR-262` is
-  closed in the register.
+- Audited `_protocols.py` for direct secure-storage access, active-profile resolution,
+  settings/environment access, filesystem IO, and remote-provider client calls.
+- Confirmed the module declares strict pydantic records and runtime-checkable
+  protocols only; it does not execute provider, storage, or filesystem behavior.
+- Confirmed the `Path` import is type-surface only for `ModeloDraftLoader.load`, and
+  the unused-name-safe `_draft_path` parameter remains intentional protocol shape.
+- Confirmed the remote-provider signal is provenance from protocol names such as
+  `AuthProviderProbe` and `DeadlineWindowChecker`, not a direct remote mirror writer.
+- Closed `W12.P26.S364` through `vaultspec-core vault plan step check` and updated
+  the `AFR-262` register status to `closed`.
 
 ## Outcome
 
-`AFR-262` is closed. `_protocols.py` is boundary-definition code, not a remote mirror
-writer, plaintext side-store owner, or secure-storage repository owner.
+`AFR-262` is closed. `_protocols.py` is a pure structural contract module for the
+submission engine and does not own plaintext state, secure storage, active buckets,
+settings, environment variables, or remote-provider IO.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/domain/submission/_protocols.py src/aeat/domain/submission/_preflight.py src/aeat/adapters/outbound/aeat/export/tests/test_preflight.py`
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/aeat/export/tests/test_preflight.py`
-- `uv run --no-sync pytest -q src/aeat/application/workflow/tests/test_engine.py -k "preflight or protocol"`
+- `uv run --no-sync ruff check src/aeat/domain/submission/_protocols.py src/aeat/domain/submission/_preflight.py src/aeat/adapters/outbound/aeat/export/tests/test_preflight.py src/aeat/adapters/outbound/aeat/export/tests/test_errors.py src/aeat/adapters/outbound/aeat/export/tests/test_engine.py`
+- `uv run --no-sync pytest -q src/aeat/adapters/outbound/aeat/export/tests/test_preflight.py src/aeat/adapters/outbound/aeat/export/tests/test_errors.py src/aeat/adapters/outbound/aeat/export/tests/test_engine.py -k "preflight or error"`
+- `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit`
 
 ## Notes
 
-The plan's `plain-file, remote-provider` signals are retained as scanner provenance.
-The closeout disposition is that this file declares ports which may be implemented by
-remote/provider or loader components elsewhere, but it does not implement those effects.
+`vaultspec-rag search` timed out on port 8766 while researching this slice, so the
+closeout relies on direct source inspection, focused gates, and the existing
+secure-storage plan and ADR chain.

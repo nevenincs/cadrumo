@@ -10,26 +10,44 @@ related:
 
 # `secure-storage-production-hardening` `W12.P26.S364` Review
 
-## S364-001 | PASS | Submission protocols are not effect owners
+## S364-001 | PASS | Protocol module has no storage or remote IO
 
-`_protocols.py` declares structural ports and strict/frozen values only. It has no
-remote-provider calls, no mirror persistence, no secure-object construction, no
-active-profile resolution, no settings/environment access, and no filesystem IO.
+`_protocols.py` is limited to strict pydantic records, `StrEnum` status values,
+runtime-checkable protocols, and type-only imports. It does not instantiate
+secure-object repositories, resolve active profiles, read settings, inspect
+environment variables, open files, or call remote-provider clients.
 
-## S364-002 | PASS | Concrete storage remains outside the protocol module
+## S364-002 | PASS | Remote-provider signal is structural provenance
 
-`SubmissionRepositoryProtocol` is a narrow domain port over `ModeloPresentado`; it does
-not import the concrete `SubmissionRepository` or adapter-layer secure-storage classes.
-The concrete encrypted repository remains outside this Protocol file.
+The scanner signal is explained by names and protocol contracts such as
+`AuthProviderProbe`, `AuthProviderDescriptionLike`, and `DeadlineWindowChecker`.
+Those protocols describe dependencies consumed elsewhere; this module does not
+perform remote reads, remote writes, or local mirror persistence.
 
-## S364-003 | PASS | Validation
+## S364-003 | PASS | Plain-file signal is type-surface only
 
-- `uv run --no-sync ruff check src/aeat/domain/submission/_protocols.py src/aeat/domain/submission/_preflight.py src/aeat/adapters/outbound/aeat/export/tests/test_preflight.py` passed.
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/aeat/export/tests/test_preflight.py` passed with 9 tests.
-- `uv run --no-sync pytest -q src/aeat/application/workflow/tests/test_engine.py -k "preflight or protocol"` passed with 5 selected tests.
+The `Path` import is used as the argument type for `ModeloDraftLoader.load`. The
+protocol does not read from the path, and the `_draft_path` parameter remains
+underscore-prefixed to satisfy lint while preserving the structural signature.
 
-Reviewer note: no critical, high, medium, or low secure-storage findings remain for
-the S364 protocol slice.
+## S364-004 | PASS | Validation
 
-Disposition: close `AFR-262`; scanner signals are port-shape provenance, not direct
-storage or remote-provider behavior.
+- `uv run --no-sync ruff check src/aeat/domain/submission/_protocols.py src/aeat/domain/submission/_preflight.py src/aeat/adapters/outbound/aeat/export/tests/test_preflight.py src/aeat/adapters/outbound/aeat/export/tests/test_errors.py src/aeat/adapters/outbound/aeat/export/tests/test_engine.py` passed.
+- `uv run --no-sync pytest -q src/aeat/adapters/outbound/aeat/export/tests/test_preflight.py src/aeat/adapters/outbound/aeat/export/tests/test_errors.py src/aeat/adapters/outbound/aeat/export/tests/test_engine.py -k "preflight or error"` passed with 14 selected tests.
+- `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
+
+## S364-005 | INFO | RAG semantic search unavailable during closure
+
+`vaultspec-rag search` against port 8766 timed out before returning semantic code
+results. No blocking issue was inferred from that outage; direct source inspection
+and focused gates cover this narrow protocol-only slice.
+
+## S364-006 | PASS | Independent reviewer found no code blockers
+
+The `vaultspec-code-reviewer` persona found no HIGH or CRITICAL blockers. It verified
+that `_protocols.py` has no direct storage, active-profile, settings/environment,
+filesystem IO, or remote-provider IO; the only finding was this closure-record
+evidence mismatch, now corrected.
+
+Disposition: close `AFR-262`; scanner signals are protocol-shape provenance, not
+direct storage, plaintext, or remote-provider behavior.
