@@ -660,3 +660,80 @@ Projection and comparison exceptions derive from `AeatError` and are enrolled in
 central application error registry. Focused ruff, modelo projection integration tests,
 modelo CLI spine selection, error-registry tests, and `python -m aeat.locales audit`
 passed.
+
+## S443-CR-001 | PASS | Modelo selectors delegate runtime custody
+
+`_selectors.py` resolves active-bucket defaults through the core active profile pointer
+and loads work-unit/calculation-revision catalogues through repository protocols. It
+does not construct secure repositories, inspect manifests directly, read raw
+environment variables, or persist data.
+
+## S444-CR-001 | PASS | Modelo work addressing is a projection facade
+
+`_work_addressing.py` converts visible/exact work targets into selector requests and
+delegates repository reads to the selector layer. It does not own secure-object routing,
+direct persistence, or raw environment reads.
+
+## S445-S449-CR-001 | PASS | Remaining split modules are delegated surfaces
+
+Work-create policy, plazo summaries, IVA wallet seed facade, projection CLI, and IVA
+wallet CLI are delegated application/CLI surfaces. Settings reads go through
+`load_settings()`, recoverable deadline failures log at debug level, command output uses
+schema-backed payloads, and secure writes remain in runtime-managed application
+services.
+
+## S443-S449-CR-002 | PASS | Validation passed
+
+Focused ruff, selector/work-addressing tests, natural-key CLI tests, IVA wallet
+integration tests, modelo projection integration tests, error-registry tests, and
+`python -m aeat.locales audit` passed.
+
+## S443-CR-001 | PASS | Modelo selectors stay delegated
+
+Reviewed `src/aeat/application/modelo/_selectors.py` as the S443 scope. The selector
+surface resolves explicit or active bucket context and delegates to work-unit and
+calculation-revision repositories. It does not construct secure storage, inspect
+manifest files, open SQL connections, read environment variables, or persist data.
+
+## S444-CR-001 | PASS | Modelo work addressing stays an application facade
+
+Reviewed `src/aeat/application/modelo/_work_addressing.py` as the S444 scope. The
+module normalizes operator-visible targets, resolves registry revisions through the
+bundled registry API, and delegates runtime work lookup to selectors/actions. Registry
+parse failures are converted to typed `ModeloError` descendants instead of being
+swallowed.
+
+## S445-CR-001 | PASS | Modelo create policy uses centralized settings
+
+Reviewed `src/aeat/application/modelo/_work_create_policy.py` as the S445 scope. The
+M210 live-engine gate uses `load_settings()`, and profile applicability checks delegate
+to workflow/profile services. The module has no direct storage, manifest, raw
+environment, or filesystem persistence authority.
+
+## S446-CR-001 | FIXED | Plazo recargo fallback narrowed and logged
+
+Reviewed `src/aeat/application/modelo/_work_plazo.py` as the S446 scope. The recargo
+fallback no longer catches all exceptions; it now catches only `DeadlineValidationError`,
+logs the recoverable registry failure at debug level with exception information, and
+allows unexpected defects to propagate.
+
+## S447-CR-001 | PASS | IVA wallet seed delegates profile and wallet custody
+
+Reviewed `src/aeat/application/modelo/_iva_wallet_seed.py` as the S447 scope. The module
+resolves taxpayer identity through the bucket/profile taxpayer service and delegates
+wallet persistence to the IVA compensation application service. Seed refusals derive
+from `ModeloError` and carry locale keys.
+
+## S448-CR-001 | PASS | Modelo projection CLI stays localized and delegated
+
+Reviewed `src/aeat/entrypoints/cli/_modelo_projection_cli.py` as the S448 scope. The
+CLI registrar requires active profile context through its callback, delegates projection
+and comparison to application services, uses `tr()` for user-facing text, and emits
+typed payload envelopes without owning storage routes.
+
+## S449-CR-001 | PASS | IVA wallet CLI stays localized and delegated
+
+Reviewed `src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py` as the S449 scope. The
+CLI registrar uses the active bucket callback, delegates wallet balance and seed
+operations to application services, localizes help and refusal text through `tr()`, and
+refuses conflicts rather than overwriting existing wallet state.
