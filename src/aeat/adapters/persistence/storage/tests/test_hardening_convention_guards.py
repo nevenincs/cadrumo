@@ -22,13 +22,10 @@ _HARDENING_TEST_SURFACES = (
     "src/aeat/adapters/persistence/storage/master_key/tests/test_kdf_params.py",
     "src/aeat/application/user_profile/tests/test_profile_repository.py",
     "src/aeat/core/tests/test_storage_route_classification.py",
+    "src/aeat/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py",
 )
 
-_ALLOWED_ENV_KEYS_BY_SURFACE = {
-    "src/aeat/adapters/persistence/storage/master_key/tests/test_master_key.py": {
-        "PASSPHRASE_ENV_VAR",
-    },
-}
+_ALLOWED_ENV_KEYS_BY_SURFACE: dict[str, set[str]] = {}
 _ALLOWED_PRODUCTION_SECURE_OBJECT_REPOSITORY_CONSTRUCTORS = {
     "src/aeat/adapters/persistence/storage/runtime.py",
     "src/aeat/adapters/persistence/storage/runtime_repository.py",
