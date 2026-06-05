@@ -74,7 +74,7 @@ def _transaction(provider_id: str) -> Transaction:
 def test_active_transaction_catalogue_repository_routes_by_active_profile_bucket(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    from ...core.config import override_settings
+    from ....core.config import override_settings
 
     first_state = _state(profile="alpha", bucket_id="bucket-alpha")
     second_state = _state(profile="beta", bucket_id="bucket-beta")
