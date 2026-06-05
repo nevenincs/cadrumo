@@ -771,3 +771,47 @@ Residual carried forward:
   unresolved binding
   `modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores`.
   This was left visible and not bypassed by the complexity refactor.
+
+## HEALTH-019-S76 | CLOSED | 2026-06-05 ledger projection complexity reduction
+
+W06.P19.S76 reduced the active ledger CLI projection hotspots in
+`src/aeat/entrypoints/cli/_ledger.py`. The plan row named list/review
+projection complexity; current discovery showed `ledger list` was already low,
+`ledger review` was moderate by Radon but below the Complexipy threshold, and
+`rule_apply` was the remaining ledger function above the Complexipy threshold.
+
+Complexity deltas:
+
+- `ledger_review` moved from Radon C (15) and Complexipy 6 to Radon A (1) and
+  Complexipy 0.
+- `rule_apply` moved from Radon C (14) and Complexipy 22 to Radon A (4) and
+  Complexipy 2.
+- `ledger_list` remains Radon A (2) and Complexipy 1.
+- The touched module now passes `complexipy ... --max-complexity-allowed 20`;
+  `ledger_classify` remains the highest ledger command by Radon at C (20) and
+  Complexipy 17.
+
+Focused verification:
+
+- `uv run --no-sync ruff check src/aeat/entrypoints/cli/_ledger.py` passed.
+- `uv run --no-sync ty check src/aeat/entrypoints/cli/_ledger.py --output-format concise`
+  passed after local typed-boundary cleanup.
+- `uv run --no-sync radon cc src/aeat/entrypoints/cli/_ledger.py -s`
+  captured the reduced Radon grades.
+- `uv run --no-sync complexipy src/aeat/entrypoints/cli/_ledger.py --max-complexity-allowed 20`
+  passed.
+- `uv run --no-sync pytest src/aeat/entrypoints/cli/test_ledger_bulk_classify.py src/aeat/entrypoints/cli/test_ledger_list_filter.py -q`
+  passed with 23 tests.
+- `uv run --no-sync pytest src/aeat/entrypoints/cli/test_cli_surface.py::test_app_ledger_import_reimport_review_round_trips_state src/aeat/entrypoints/cli/test_backend_boundary.py::test_manual_ledger_import_and_review_boundaries_stay_backend_owned -q`
+  passed when run as part of the three-test backend probe.
+
+Residuals carried forward:
+
+- `test_ledger_ux_defect_cluster.py::test_review_by_short_id_prefix_resolves_the_transaction`
+  and `test_review_by_full_id_still_resolves_the_transaction` still fail before
+  the review command is reached because import setup exits with
+  `Storage runtime is not ready for profile-bound storage: The database route
+  does not match the active bucket session`.
+- `test_backend_boundary.py::test_manual_ledger_review_help_exposes_backend_filter_vocabulary`
+  still fails because rendered `ledger review --help` does not include the
+  expected `classification` filter token.
