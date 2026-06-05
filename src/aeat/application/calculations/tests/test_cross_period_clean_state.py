@@ -505,6 +505,30 @@ def test_cross_period_clean_state_blocks_csv_register_without_justificante_verif
     assert CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION in first_quarter.blockers
 
 
+def test_cross_period_clean_state_blocks_live_capture_without_justificante_verification(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        observation_repository = CalculationObservationRepository()
+        _seed_official_303_source_filings(
+            observation_repository=observation_repository,
+            evidence_kind_by_period={"1T": ExternalEvidenceKind.AEAT_LIVE_CAPTURE},
+        )
+
+        verdict = evaluate_cross_period_clean_state(
+            _snapshot_390(),
+            bucket_id=_BUCKET_ID,
+            observation_repository=observation_repository,
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+        )
+
+    first_quarter = next(evidence for evidence in verdict.dependencies if evidence.requirement.period == "1T")
+    assert verdict.requires_clean_state is True
+    assert verdict.clean is False
+    assert first_quarter.external_evidence_kind == "aeat_live_capture"
+    assert CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION in first_quarter.blockers
+
+
 def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         work_unit = create_work_unit(

@@ -12,6 +12,15 @@ related:
   - '[[2026-06-05-cross-period-calculation-guards-reference]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 <!-- RETIRED: S03, S04, S05, S07, S09, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20 -->
 
@@ -118,6 +127,15 @@ Run focused registry, calculation, modelo workflow, export, and doctor checks an
 - [x] `W04.P11.S42` - Run calculation clean-state tests; `src/aeat/application/calculations/tests`.
 - [x] `W04.P11.S43` - Run modelo workflow clean-state tests; `src/aeat/application/modelo/tests`.
 - [x] `W04.P11.S44` - Run doctor and feature index checks; `vaultspec-core doctor`.
+
+## Wave `W05` - member-aware group filing proof
+
+Extend the filing ledger and clean-state proof so group fan-in dependencies prove each expected member filing record, not only member-scoped observations.
+
+### Phase `W05.P12` - member filing identity
+
+Add a durable member axis to upstream filed-history state so multiple group member filings can coexist and be queried independently.
+
 
 ## Description
 
