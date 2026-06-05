@@ -51,7 +51,7 @@ The **narrative user-facing set** (the focus of this initiative) lives under
   390, censo, verify+export).
 - `docs/explanation/index.md` — one Explanation of the pipeline + why it is
   human-gated + registry provenance.
-- `docs/getting-started.md`, `docs/architecture.md`, `docs/authoring-guide.md`,
+- `docs/how-to/quickstart.md`, `docs/architecture.md`, `docs/authoring-guide.md`,
   root `README.md`.
 
 A multi-lens review of this set (Diátaxis type-purity + newcomer clarity, two
