@@ -1836,6 +1836,7 @@ cli:
         client_unregistered: no OAuth client is registered for profile {profile}
         no_metadata_for_refresh: no OAuth session for profile {profile}; cannot refresh
           without a prior login
+        sync_push_limit_requires_dry_run: 'Google sync push cannot use --limit unless --dry-run is set, because a bounded non-dry-run would create a partial remote mirror manifest.'
       errors:
         auth_failed: 'Google authentication failed: {detail}'
         browser_open: 'Could not open a browser to authorise Google access: {detail}'

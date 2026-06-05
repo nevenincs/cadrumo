@@ -18,8 +18,9 @@ from .....adapters.outbound.storage import (
 )
 from .....adapters.outbound.storage._local import LocalFileSystemProvider
 from .....adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
+from .....core.i18n import tr
 from .....tests.secure_sql import isolated_runtime_profile
-from .._google import _push_secure_object_mirror_rows
+from .._google import _google_refusal, _push_secure_object_mirror_rows
 from .._google_payloads import GoogleSyncProbeResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -293,7 +294,7 @@ def test_google_sync_push_refuses_non_dry_run_limit_because_manifest_would_be_pa
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-sync-limit") as profile:
         provider = LocalFileSystemProvider(tmp_path / "mirror")
 
-        with pytest.raises(OutboundStorageValidationError, match="--limit"):
+        with pytest.raises(OutboundStorageValidationError, match="--limit") as raised:
             _push_secure_object_mirror_rows(
                 provider=provider,
                 repository=profile.repository,
@@ -301,3 +302,7 @@ def test_google_sync_push_refuses_non_dry_run_limit_because_manifest_would_be_pa
                 limit=1,
                 dry_run=False,
             )
+        refusal = _google_refusal(raised.value)
+
+        assert refusal.context is not None
+        assert refusal.context["detail"] == tr("cli.config.google.detail.sync_push_limit_requires_dry_run")

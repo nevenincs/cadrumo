@@ -363,3 +363,24 @@ portable profile bundle parsing, and status projection validation fallback.
 
 The config facade change added no locale keys. Focused `ruff check`, config boundary
 tests, repair bootstrap/reset tests, and `python -m aeat.locales audit` passed.
+
+## S379-CR-001 | PASS | Google config remains a ciphertext remote mirror
+
+Reviewed the S379 scope as `vaultspec-code-reviewer`. `_google.py` owns Google OAuth,
+Drive folder configuration, sync probes, calc-sheet transport, and secure-object mirror
+push. The mirror path obtains encrypted secure-object records from the active-bucket
+repository and uploads ciphertext payloads plus namespace manifests through the
+outbound storage provider factory.
+
+## S379-CR-002 | FIXED | Sync push limit refusal detail needed localization
+
+The non-dry-run `--limit` refusal prevents partial remote mirror manifests but only
+carried an English implementation message. The error now attaches
+`cli.config.google.detail.sync_push_limit_requires_dry_run`, locale leaves were added
+through `python -m aeat.locales set`, and the sync-push regression test asserts the
+projected refusal detail through `tr()`.
+
+## S379-CR-003 | PASS | Locale and focused validation passed
+
+Focused `ruff check`, Google sync-push integration tests, Google error-localisation
+tests, and `python -m aeat.locales audit` passed after the localized refusal change.

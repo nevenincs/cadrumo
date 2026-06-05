@@ -634,6 +634,7 @@ def _push_secure_object_mirror_rows(
             "non-dry-run Google sync push with --limit cannot produce a complete remote mirror manifest",
             context={"limit": str(limit)},
             suggestion="run without --limit, or add --dry-run for bounded inspection",
+            translated_message="cli.config.google.detail.sync_push_limit_requires_dry_run",
         )
     pushed_by_ns: dict[str, int] = {}
     skipped_by_ns: dict[str, int] = {}
