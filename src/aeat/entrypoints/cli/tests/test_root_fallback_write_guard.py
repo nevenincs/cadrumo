@@ -48,7 +48,7 @@ _GUARDED_PREDICATE_PATHS: tuple[str, ...] = (
 )
 
 _UNGARDED_PREDICATE_PATHS: tuple[str, ...] = (
-    "config profile switch does-not-exist",
+    "config unlock does-not-exist",
     "app registry inspect",
     "app ledger list",
     "app ledger view tx",
