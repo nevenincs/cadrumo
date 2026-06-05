@@ -119,3 +119,24 @@ The new tests write real secure-object payloads through `isolated_runtime_profil
 then load through the repository under test. They assert typed localized errors for
 classification drift and future inner envelope versions without fakes, monkeypatches,
 or tautological source mirroring.
+
+## S357-CR-001 | PASS | Runtime-owned construction remains centralized
+
+Reviewed the S357 production diff as `vaultspec-code-reviewer`.
+`secure_objects_for_modelo_bucket` still delegates to
+`secure_object_repository_for_bucket`; it does not construct SQL repositories, parse
+routes, or bypass storage runtime readiness checks.
+
+## S357-CR-002 | PASS | Active-profile failures are structured without changing user-facing keys
+
+`resolve_modelo_repository_bucket_id` now attaches reason context for
+`blank_explicit_bucket_id` and `missing_active_profile_bucket` while preserving the
+existing localized `application.workflow.errors.no_active_profile_bucket` message key
+and caller-selected `ModeloError` subclass.
+
+## S357-CR-003 | PASS | Tests use production helpers and runtime gates
+
+The new tests import the production helper and `WorkUnitPersistenceError`, verify the
+centralized settings fallback, and exercise the real runtime factory's unready-runtime
+rejection path. No fakes, mocks, stubs, monkeypatches, skips, or mirrored business
+logic were introduced.

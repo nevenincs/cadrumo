@@ -14,6 +14,10 @@ from ._errors import ModeloError
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ...adapters.persistence.storage import SecureObjectRepository
 
+_NO_ACTIVE_PROFILE_BUCKET_MESSAGE = "application.workflow.errors.no_active_profile_bucket"
+_BLANK_EXPLICIT_BUCKET_CONTEXT = {"reason": "blank_explicit_bucket_id"}
+_MISSING_ACTIVE_BUCKET_CONTEXT = {"reason": "missing_active_profile_bucket"}
+
 
 def resolve_modelo_repository_bucket_id(bucket_id: str | None, *, error_type: type[ModeloError]) -> str:
     """Return an explicit or active profile bucket id for modelo repositories."""
@@ -22,12 +26,14 @@ def resolve_modelo_repository_bucket_id(bucket_id: str | None, *, error_type: ty
         if trimmed:
             return trimmed
         raise error_type(
-            translated_message="application.workflow.errors.no_active_profile_bucket",
+            translated_message=_NO_ACTIVE_PROFILE_BUCKET_MESSAGE,
+            context=_BLANK_EXPLICIT_BUCKET_CONTEXT,
         )
     active = resolve_active_bucket_id()
     if active is None:
         raise error_type(
-            translated_message="application.workflow.errors.no_active_profile_bucket",
+            translated_message=_NO_ACTIVE_PROFILE_BUCKET_MESSAGE,
+            context=_MISSING_ACTIVE_BUCKET_CONTEXT,
         )
     return active
 

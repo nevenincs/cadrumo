@@ -533,7 +533,7 @@ Current register count: `301` production candidate files.
 | `AFR-252` | `src/aeat/domain/modelos/_filing_record.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-253` | `src/aeat/domain/modelos/_filing_repository.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S84` | closed |
 | `AFR-254` | `src/aeat/domain/modelos/_repository.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S84` | closed |
-| `AFR-255` | `src/aeat/domain/modelos/_runtime_repository.py` | `secure-object, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S84` | pending |
+| `AFR-255` | `src/aeat/domain/modelos/_runtime_repository.py` | `secure-object, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S84` | closed |
 | `AFR-256` | `src/aeat/domain/modelos/_verification_repository.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S84` | pending |
 | `AFR-257` | `src/aeat/domain/modelos/_work_unit.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-258` | `src/aeat/domain/normatives/_loader.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
@@ -894,7 +894,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S354` - Close `AFR-252` for `src/aeat/domain/modelos/_filing_record.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/domain/modelos/_filing_record.py`.
 - [x] `W12.P26.S355` - Close `AFR-253` for `src/aeat/domain/modelos/_filing_repository.py` with signals `secure-object, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/modelos/_filing_repository.py`.
 - [x] `W12.P26.S356` - Close `AFR-254` for `src/aeat/domain/modelos/_repository.py` with signals `secure-object, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/modelos/_repository.py`.
-- [ ] `W12.P26.S357` - Close `AFR-255` for `src/aeat/domain/modelos/_runtime_repository.py` with signals `secure-object, active-profile, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/modelos/_runtime_repository.py`.
+- [x] `W12.P26.S357` - Close `AFR-255` for `src/aeat/domain/modelos/_runtime_repository.py` with signals `secure-object, active-profile, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/modelos/_runtime_repository.py`.
 - [ ] `W12.P26.S358` - Close `AFR-256` for `src/aeat/domain/modelos/_verification_repository.py` with signals `secure-object, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/modelos/_verification_repository.py`.
 - [ ] `W12.P26.S359` - Close `AFR-257` for `src/aeat/domain/modelos/_work_unit.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/domain/modelos/_work_unit.py`.
 - [x] `W12.P26.S360` - Close `AFR-258` for `src/aeat/domain/normatives/_loader.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/domain/normatives/_loader.py`.
