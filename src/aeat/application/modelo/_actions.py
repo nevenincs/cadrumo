@@ -127,6 +127,11 @@ from ..aggregation._ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
 )
+from ..calculations import (
+    CalculationObservationRepository,
+    CrossPeriodCleanStateVerdict,
+    evaluate_cross_period_clean_state,
+)
 from ..filing import (
     approve_draft,
     build_draft,
@@ -244,6 +249,10 @@ class ExternalModeloImportError(ModeloError):
 
     Examples: empty casilla values, missing evidence reference.
     """
+
+
+class ModeloCrossPeriodCleanStateError(ModeloError):
+    """Raised when a filing-grade workflow lacks clean prior-filing proof."""
 
 
 #: Legal anchors for the modelo workflow gate. The gate enforces
@@ -2418,6 +2427,141 @@ def _assert_evidence_covers_snapshot(
         )
 
 
+def _cross_period_clean_state_verdict_for_work_unit(
+    work_unit: WorkUnit,
+    *,
+    observation_repository: CalculationObservationRepository,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
+) -> CrossPeriodCleanStateVerdict | None:
+    from ...domain.calculations.registry import RegistrySnapshotError
+
+    try:
+        snapshot = _authority_via_resources().snapshot(
+            work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+        )
+    except (FileNotFoundError, RegistrySnapshotError):
+        return None
+    return evaluate_cross_period_clean_state(
+        snapshot,
+        bucket_id=work_unit.bucket_id,
+        observation_repository=observation_repository,
+        filing_repository=filing_repository,
+        calculation_repository=calculation_repository,
+        verification_repository=verification_repository,
+    )
+
+
+def _cross_period_clean_state_findings(
+    verdict: CrossPeriodCleanStateVerdict | None,
+    *,
+    iva_compensation_decision: object | None = None,
+) -> tuple[ModeloVerificationFinding, ...]:
+    if verdict is None or verdict.clean:
+        return ()
+    findings: list[ModeloVerificationFinding] = []
+    for evidence in verdict.dependencies:
+        if evidence.clean:
+            continue
+        if _iva_wallet_decision_covers_cross_period_dependency(verdict, evidence, iva_compensation_decision):
+            continue
+        requirement = evidence.requirement
+        blocker_text = ", ".join(blocker.value for blocker in evidence.blockers)
+        origin_text = ", ".join(requirement.origin_ids)
+        findings.append(
+            ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                message=(
+                    "cross-period dependency is not clean: "
+                    f"modelo={requirement.source_modelo} year={requirement.filing_year} "
+                    f"period={requirement.period} origin={requirement.origin.value} "
+                    f"origin_ids={origin_text} blockers={blocker_text}"
+                ),
+                next_action=(
+                    "Import or capture the upstream justificante/CSV/live evidence, "
+                    "reconcile it with the local calculation, and rerun verification."
+                ),
+            )
+        )
+    return tuple(findings)
+
+
+def _require_cross_period_clean_state(
+    work_unit: WorkUnit,
+    *,
+    observation_repository: CalculationObservationRepository,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
+    iva_compensation_decision: object | None = None,
+) -> None:
+    verdict = _cross_period_clean_state_verdict_for_work_unit(
+        work_unit,
+        observation_repository=observation_repository,
+        filing_repository=filing_repository,
+        calculation_repository=calculation_repository,
+        verification_repository=verification_repository,
+    )
+    findings = _cross_period_clean_state_findings(
+        verdict,
+        iva_compensation_decision=iva_compensation_decision,
+    )
+    if not findings:
+        return
+    first = findings[0]
+    raise ModeloCrossPeriodCleanStateError(
+        first.message,
+        translated_message="application.modelo.errors.cross_period_clean_state_incomplete",
+        context={
+            "modelo": work_unit.modelo,
+            "filing_year": str(work_unit.filing_year),
+            "period": work_unit.period,
+            "finding_count": str(len(findings)),
+        },
+        suggestion=first.next_action,
+    )
+
+
+def _iva_wallet_decision_covers_cross_period_dependency(
+    verdict: CrossPeriodCleanStateVerdict,
+    evidence,
+    decision: object | None,
+) -> bool:
+    """Return whether a persisted Modelo 303 wallet decision covers the dependency."""
+    if decision is None:
+        return False
+    requirement = evidence.requirement
+    if (
+        verdict.target_modelo != "303"
+        or requirement.source_modelo != "303"
+        or not (
+            set(requirement.origin_ids)
+            & {
+                "modelo-303-compensacion-pendiente-anteriores",
+                "modelo-303-rel-self-compensacion-anteriores",
+            }
+        )
+    ):
+        return False
+    if getattr(decision, "blocked", True):
+        return False
+    if getattr(decision, "target_year", None) != verdict.target_filing_year:
+        return False
+    if getattr(decision, "target_period", None) != verdict.target_period:
+        return False
+    if getattr(decision, "selected_amount", None) is None:
+        return False
+    selected_authority = str(getattr(decision, "selected_authority", ""))
+    if selected_authority not in {"aeat_wallet", "taxpayer_override"}:
+        return False
+    source_kinds = {str(getattr(source, "source_kind", "")) for source in getattr(decision, "authority_sources", ())}
+    return bool(source_kinds & {"aeat_wallet", "taxpayer_override"})
+
+
 def verify_modelo_revision(
     calculation_revision_id: str,
     *,
@@ -2425,10 +2569,12 @@ def verify_modelo_revision(
     workflow_profile: TaxpayerProfile,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     transaction_repository: TransactionCatalogueRepository | None = None,
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
+    calculation_observation_repository: CalculationObservationRepository | None = None,
     workflow_engine: WorkflowEngine | None = None,
     workflow_runs_dir: Path | None = None,
     settings: Settings | None = None,
@@ -2486,6 +2632,8 @@ def verify_modelo_revision(
         work_unit_repository: Optional work-unit catalogue repository override.
         calculation_repository: Optional calculation-revision catalogue
             repository override.
+        filing_repository: Optional filing-record catalogue repository override
+            used by the cross-period clean-state proof.
         transaction_repository: Optional transaction catalogue repository
             override consulted by the snapshot resolver and ledger-backed
             binding checks.
@@ -2495,6 +2643,8 @@ def verify_modelo_revision(
             override.
         iva_compensation_decision_repository: Optional IVA wallet decision
             repository override.
+        calculation_observation_repository: Optional calculation-observation
+            repository override used by the cross-period clean-state proof.
         workflow_engine: Optional workflow engine override for the preflight gate.
         workflow_runs_dir: Optional workflow runs directory override.
         settings: Optional settings override.
@@ -2515,6 +2665,8 @@ def verify_modelo_revision(
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
+    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
+    obs_repo = calculation_observation_repository or CalculationObservationRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     run_repo = WorkflowRunRepository(objects=bv_repo.secure_object_repository)
 
@@ -2545,14 +2697,27 @@ def verify_modelo_revision(
         target=target,
         profile=workflow_profile,
     )
+    iva_compensation_decision = None
     try:
-        _require_iva_compensation_revision_match(
+        iva_compensation_decision = _require_iva_compensation_revision_match(
             work_unit,
             target,
             repository=iva_compensation_decision_repository,
         )
     except ModeloIvaWalletReconciliationBlocked as exc:
         findings.append(_iva_wallet_error_verification_finding(exc))
+    findings.extend(
+        _cross_period_clean_state_findings(
+            _cross_period_clean_state_verdict_for_work_unit(
+                work_unit,
+                observation_repository=obs_repo,
+                filing_repository=fr_repo,
+                calculation_repository=cr_repo,
+                verification_repository=vr_repo,
+            ),
+            iva_compensation_decision=iva_compensation_decision,
+        )
+    )
     completeness, granted = _classify_verification_outcome(
         findings=findings,
         missing_required=missing_required,
@@ -3056,8 +3221,10 @@ def file_modelo_revision(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
+    calculation_observation_repository: CalculationObservationRepository | None = None,
     workflow_engine: WorkflowEngine | None = None,
     workflow_runs_dir: Path | None = None,
     settings: Settings | None = None,
@@ -3096,10 +3263,14 @@ def file_modelo_revision(
             repository override.
         filing_repository: Optional filing-record catalogue repository
             override.
+        verification_repository: Optional verification-report catalogue
+            repository override used by the cross-period clean-state proof.
         bucket_event_repository: Optional bucket-event history repository
             override.
         iva_compensation_decision_repository: Optional IVA wallet decision
             repository override.
+        calculation_observation_repository: Optional calculation-observation
+            repository override used by the cross-period clean-state proof.
         workflow_engine: Optional workflow engine override for the preflight
             gate.
         workflow_runs_dir: Optional workflow runs directory override.
@@ -3120,6 +3291,8 @@ def file_modelo_revision(
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
+    vr_repo = verification_repository or VerificationReportCatalogueRepository()
+    obs_repo = calculation_observation_repository or CalculationObservationRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     run_repo = WorkflowRunRepository(objects=bv_repo.secure_object_repository)
 
@@ -3142,10 +3315,18 @@ def file_modelo_revision(
         raise WorkUnitNotFoundError(
             f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}"
         )
-    _require_iva_compensation_revision_match(
+    iva_compensation_decision = _require_iva_compensation_revision_match(
         work_unit,
         target,
         repository=iva_compensation_decision_repository,
+    )
+    _require_cross_period_clean_state(
+        work_unit,
+        observation_repository=obs_repo,
+        filing_repository=fr_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        iva_compensation_decision=iva_compensation_decision,
     )
 
     now = clock or _utc_now()
@@ -3784,6 +3965,7 @@ __all__ = [
     "CasillaProvenanceMissingError",
     "ExternalModeloImportError",
     "ModeloAggregationBindingError",
+    "ModeloCrossPeriodCleanStateError",
     "ModeloIvaWalletReconciliationBlocked",
     "ModeloIvaWalletReconciliationBlockedError",
     "ModeloRecordNotFoundError",

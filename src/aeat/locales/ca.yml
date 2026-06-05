@@ -2142,6 +2142,10 @@ cli:
       connectivity_target_help: Objectiu de connectivitat que cal comprovar
       help: Diagnosticar i reparar configuració local, registre, perfil, autenticació
         i logs
+      integrity:
+        objects_help: 'Comprova la integritat dels objectes segurs.'
+        registry_help: 'Comprova la integritat del registre de perfils.'
+        objects_namespace_help: 'Limita les comprovacions d''integritat d''objectes segurs a un espai de noms.'
       integrity_attribution_details_help: Inclou detalls de metadades segures per
         fila
       integrity_attribution_help: Agrupa les files d'objectes segurs no desxifrables

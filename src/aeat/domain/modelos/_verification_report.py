@@ -85,6 +85,7 @@ class ModeloVerificationFindingKind(StrEnum):
     MISSING_REQUIRED_CASILLA = "missing_required_casilla"
     RECONCILIATION_MISMATCH = "reconciliation_mismatch"
     UNRESOLVED_BINDING = "unresolved_binding"
+    CROSS_PERIOD_DEPENDENCY_UNCLEAN = "cross_period_dependency_unclean"
     INVALID_WAIVER = "invalid_waiver"
     BLOCKING_RULE = "blocking_rule"
     ADVISORY = "advisory"

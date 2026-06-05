@@ -26,6 +26,7 @@ from ....core.json_contract import SCHEMA_REGISTRY, SchemaEnvelope
 # decorators populate SCHEMA_REGISTRY before the gate inspects it.
 # The CLI loads these lazily at dispatch time, so without an explicit
 # import here the registry is empty when this test module collects.
+from .. import _config_payloads as _config_payloads
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -253,16 +254,21 @@ _BARE_EMIT_EXEMPTIONS: frozenset[tuple[str, str]] = frozenset(
     {
         (
             "src/aeat/entrypoints/cli/_config/__init__.py",
-            # help-document prose: rendered help text is operator-facing
-            # prose with no typed payload shape; not an OutputSchema candidate.
+            "help-document prose is operator-facing text, not an OutputSchema payload",
         ),
         (
             "src/aeat/entrypoints/cli/_config/__init__.py",
-            # repair-report passthrough: emits the raw model_dump of the
-            # underlying ConfigRepairReport; OutputSchema wrapping would
-            # double-validate the already-validated typed report.
+            "repair-report passthrough emits an already validated ConfigRepairReport",
+        ),
+        (
+            "src/aeat/entrypoints/cli/_config/_repair_cli.py",
+            "repair-report passthrough after config repair extraction",
         ),
     }
+)
+
+_BARE_EMIT_EXEMPTION_PATHS: frozenset[str] = frozenset(
+    path for path, _rationale in _BARE_EMIT_EXEMPTIONS
 )
 
 
@@ -289,8 +295,7 @@ def test_zero_bare_emit_sites_outside_exemption_set() -> None:
             if "_emit(ctx" not in line:
                 continue
             relative = path.as_posix()
-            if relative.startswith("src/aeat/entrypoints/cli/_config/__init__.py"):
-                # Exempt: help-document + repair-report sites documented above.
+            if relative in _BARE_EMIT_EXEMPTION_PATHS:
                 continue
             violations.append(f"{relative}:{lineno}: {line.strip()}")
     assert violations == [], (

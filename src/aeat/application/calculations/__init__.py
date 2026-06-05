@@ -18,6 +18,15 @@ from ._binding_prefill import (
     extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,
 )
+from ._cross_period_clean_state import (
+    CrossPeriodCleanStateBlocker,
+    CrossPeriodCleanStateVerdict,
+    CrossPeriodDependencyEvidence,
+    CrossPeriodDependencyOrigin,
+    CrossPeriodDependencyRequirement,
+    cross_period_dependency_requirements,
+    evaluate_cross_period_clean_state,
+)
 from ._iva_compensation_history import (
     IvaCompensationAnnualCrossCheck,
     IvaCompensationAnnualSummary,
@@ -72,6 +81,11 @@ __all__ = [
     "AssembledObservations",
     "BindingPrefillReport",
     "CalculationObservationRepository",
+    "CrossPeriodCleanStateBlocker",
+    "CrossPeriodCleanStateVerdict",
+    "CrossPeriodDependencyEvidence",
+    "CrossPeriodDependencyOrigin",
+    "CrossPeriodDependencyRequirement",
     "EnrollmentEvidence",
     "EnrollmentEvidenceError",
     "EnrollmentRecorder",
@@ -95,6 +109,8 @@ __all__ = [
     "assemble_withholding_observations",
     "assert_enrollment_matches_manifest",
     "cross_check_iva_compensation_annual_summary",
+    "cross_period_dependency_requirements",
+    "evaluate_cross_period_clean_state",
     "extract_modelo_303_local_iva_compensation_recurrence",
     "iva_compensation_annual_summary_from_filed_observation",
     "iva_compensation_period_key",

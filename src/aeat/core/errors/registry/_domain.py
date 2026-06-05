@@ -1227,6 +1227,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._actions.ModeloCrossPeriodCleanStateError",
+        ErrorCode(
+            code="REFUSED_MODELO_CROSS_PERIOD_CLEAN_STATE",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.cross_period_clean_state_incomplete",
+            default_suggestion="aeat app live filed capture-sources",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._iva_wallet_seed.ModeloIvaWalletSeedError",
         ErrorCode(
             code="ERROR_MODELO_IVA_WALLET_SEED",
