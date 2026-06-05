@@ -1087,6 +1087,8 @@ Close the oldest custody and passphrase observations with current command-surfac
 - [x] `W20.P40.S457` - Implement first-class config custody verbs for lock unlock rekey recover show-recovery and verify-recovery using the accepted recovery facade and bucket session lifecycle; `src/aeat/entrypoints/cli/_config; src/aeat/adapters/persistence/storage/master_key; src/aeat/locales`.
 - [x] `W20.P40.S458` - Replace stale custody and recovery guidance with canonical config custody verbs and locale-backed recovery copy; `src/aeat/adapters/persistence/storage/master_key; src/aeat/adapters/persistence/storage/runtime.py; src/aeat/core/errors/registry; src/aeat/locales`.
 - [x] `W20.P40.S459` - Implement and localize the first-class `config lock` and `config unlock` custody aliases through the existing profile lifecycle session path, with real CLI coverage; `src/aeat/entrypoints/cli/_config; src/aeat/entrypoints/cli/tests; src/aeat/locales`.
+- [ ] `W20.P40.S460` - Close post-S458 stale guidance drift by routing runtime, diagnostics, operator help, repair next actions, registry suggestions, and locale recovery copy to canonical `config unlock` and `config recover` verbs; `src/aeat/adapters/persistence/storage; src/aeat/application; src/aeat/entrypoints/cli; src/aeat/core/errors/registry; src/aeat/locales`.
+- [ ] `W20.P40.S461` - Decide and implement the `config profile switch` compatibility contract after `config unlock` adoption: either retire the command surface with migration coverage or keep it as an explicit compatibility alias hidden from recovery guidance; `src/aeat/entrypoints/cli/_config; src/aeat/entrypoints/cli/tests; src/aeat/locales; .vault/adr`.
 
 ### Phase `W20.P41` - convention and provenance privacy follow-up
 
