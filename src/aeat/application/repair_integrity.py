@@ -539,7 +539,7 @@ class RepairPolicyCommandSurface(BaseModel):
 
     command_family: str = Field(min_length=1)
     owner_domains: tuple[str, ...]
-    adr_links: tuple[str, ...]
+    decision_links: tuple[str, ...]
     namespace_policies: tuple[RepairPolicyNamespacePolicy, ...] = ()
 
 
@@ -564,15 +564,15 @@ _LEDGER_POLICY = RepairPolicyNamespacePolicy(
     recovery_policy="reimport_authoritative_ledger_source",
     mutation_authority="operator_requested_import_or_export_only",
 )
-_REPAIR_ADR_LINKS: tuple[str, ...] = (
+_REPAIR_DECISION_LINKS: tuple[str, ...] = (
     # Catalog itself (build_repair_policy_command_surface_catalog,
     # repair_remediation_decision_id, and the linkage-coordination
     # contract these surfaces serve as the executable mirror of).
-    "[[2026-05-26-linkage-design-audit-adr]]",
+    "[[2026-05-26-linkage-design-audit]]",
     # Repair CLI shape (the operator-facing verb surface every entry
     # in the catalog mirrors — adding a verb here without an entry
     # there is the drift the gate exists to catch).
-    "[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]",
+    "[[2026-05-13-cli-workflow-redesign-config-repair-shape]]",
 )
 
 
@@ -613,7 +613,7 @@ def _surface(
         command_path=command_path,
         command_family=command_family,
         owner_domains=owner_domains,
-        adr_links=_REPAIR_ADR_LINKS,
+        decision_links=_REPAIR_DECISION_LINKS,
         namespace_policies=namespace_policies,
     )
 
@@ -624,7 +624,7 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
     The catalog mirrors the Typer command registry for repair,
     recovery, import, export, and bucket-history surfaces. It is used
     as an executable drift gate: adding a new command in those families
-    requires an ADR-linked policy row here.
+    requires a policy row here.
     """
     return (
         _surface("config repair logs", command_family="repair", owner_domains=("diagnostics",)),
