@@ -612,6 +612,108 @@ Residual:
   still very large. Further module decomposition remains valid future work, but
   S74 closes the command callback complexity objective.
 
+## HEALTH-019 | OPEN | 2026-06-05 repository health and complexity baseline
+
+The 2026-06-05 repository-health pass reran the `just` diagnostic surface under
+the no-sync shared-worktree discipline. Commands were run sequentially to avoid
+the known `uv` virtual-environment lock contention class.
+
+Current lane status:
+
+- `just quality-audit` exited 0 because it is intentionally advisory and
+  error-tolerant.
+- `just tooling-doctor` exited 1 even though the Python audit tools are present.
+  The failure is a recipe-level probe issue: `complexipy --version` prints the
+  Typer help/usage surface and exits 1, while Complexipy itself runs through the
+  complexity recipes.
+- `just typecheck-audit` exited 1 with 801 Ty diagnostics. The dominant Ty
+  classes are `invalid-argument-type` (555), `unresolved-attribute` (94),
+  `invalid-assignment` (30), `not-subscriptable` (22), `unsupported-operator`
+  (20), and `possibly-unresolved-reference` (19).
+- `just audit-deprecation` exited 1 with 813 Pyright errors and 514 warnings
+  across `src/aeat/domain` and `src/aeat/application`. The dominant report
+  classes are `reportPrivateUsage` (386), `reportMissingParameterType` (306),
+  `reportArgumentType` (300), `reportAttributeAccessIssue` (77),
+  `reportUnusedFunction` (70), and `reportUnnecessaryIsInstance` (44).
+- `just audit-structure` exited 1: Import Linter analyzed 1969 files and 8292
+  dependencies, with 2 contracts kept and 2 broken. Current failures are the
+  core test imports of domain portal constants, the production
+  `domain.submission._repository` import of adapter SQL storage, and
+  application/domain tests reaching adapter storage through `aeat.tests.secure_sql`.
+- `just audit-deps` exited 0.
+- `just audit-dead-code` exited 0.
+- `just audit-security` exited 0 while Semgrep still reports 11 blocking
+  findings under the advisory policy: dynamic urllib in ECB refresh, master-key
+  chmod permission policy, SQLAlchemy `text` construction in secure objects,
+  Python 3.7 importlib compatibility findings, and dynamic import findings in
+  registry/profile validation plus CLI loading.
+- `just audit-duplication` exited 0 while reporting 25 Python clone groups
+  across 853 analyzed files: 451 duplicated lines (0.28%) and 4413 duplicated
+  tokens (0.44%).
+- `just audit-complexity-production` exited 1. Complexipy analyzed 885
+  production files and found 27 functions above the cognitive threshold of 20.
+- `just audit-complexity-tests` exited 1. The top-level package test ratchet
+  remains unchanged at 8 functions above the threshold.
+
+Top production cognitive-complexity hotspots:
+
+- 44: `src/aeat/domain/calculations/registry/_bindings_previous_filing.py::resolve_previous_filing_binding_values`.
+- 37: `src/aeat/entrypoints/cli/_config_google.py::_push_secure_object_mirror_rows`.
+- 37: `src/aeat/domain/calculations/registry/_record_design.py::calculation_closure_identities`.
+- 34: `src/aeat/domain/calculations/registry/_cross_revision_divergence.py::_iter_cross_revision_casilla_divergences`.
+- 33: `src/aeat/domain/calculations/registry/_formula_initial_values.py::initial_values`.
+- 32: `src/aeat/application/live/_errors.py::classify_live_iva_acquisition_failure`.
+- 30: `src/aeat/domain/calculations/registry/_formula_runtime.py::_evaluate_m210_resolve_rate`.
+- 30: `src/aeat/domain/calculations/registry/_bindings.py::_validate_invoice_fact_and_aggregation`.
+- 29: `src/aeat/domain/calculations/registry/_record_design.py::calculation_closure_numbers`.
+- 27: `src/aeat/domain/calculations/registry/_validate_semantic_role_typos.py::_semantic_role_looks_like_typo`.
+
+Top monolithic module pressure:
+
+- `src/aeat/entrypoints/cli/_ledger.py`: 3808 non-comment LOC, 95 functions,
+  max function length 194 lines at `ledger_classify`; also contains
+  `rule_apply` above the cognitive threshold.
+- `src/aeat/application/ledger/_actions.py`: 3432 non-comment LOC, 102
+  functions, max function length 221 lines at `merge_transactions`.
+- `src/aeat/application/modelo/_actions.py`: 3256 non-comment LOC, 74
+  functions, 21 classes, max function length 273 lines at
+  `amend_modelo_revision`.
+- `src/aeat/entrypoints/cli/_modelo.py`: 2790 non-comment LOC, 53 functions,
+  max function length 330 lines at `work_calculate`. S74 reduced the command
+  callback cognitive findings, but module-size pressure remains.
+- `src/aeat/entrypoints/cli/_config/__init__.py`: 2554 non-comment LOC, 58
+  functions, max function length 151 lines at `config_status`.
+- `src/aeat/domain/calculations/registry/_schema.py`: 2153 non-comment LOC, 78
+  functions, 50 classes. This is a schema-density hotspot more than a single
+  long-function hotspot.
+- `src/aeat/domain/calculations/registry/_bindings.py`: 2152 non-comment LOC,
+  90 functions, 31 classes, with `_validate_invoice_fact_and_aggregation` still
+  above the cognitive threshold.
+- `src/aeat/application/live/__init__.py`: 2151 non-comment LOC, 73 functions,
+  23 classes, max function length 117 lines.
+
+Mitigation queue implied by this pass:
+
+- Continue W06.P19 with registry runtime and binding simplification before
+  claiming production complexity green.
+- Treat ledger as both a function-complexity and module-monolith problem; small
+  helper extraction alone will not address the CLI module size.
+- Keep typechecker burn-down focused by diagnostic class. The largest immediate
+  Ty payoff is invalid argument typing; the largest scoped Pyright payoff is
+  private test reach-ins plus missing parameter annotations.
+- Repair `tooling-doctor` separately so it probes Complexipy through an actual
+  import or tiny file analysis instead of `complexipy --version`.
+- Keep dependency and Vulture lanes green; do not spend W06 capacity there
+  unless new findings appear.
+
+Execution notes:
+
+- RAG was useful for locating the ledger `rule_apply`/application-action
+  surface. Two deeper hotspot searches against the resident server timed out and
+  were not treated as blockers because direct gate evidence was available.
+- The raw diagnostic logs were written to the operator temp directory for this
+  run and were summarized here rather than committed as bulky artifacts.
+
 ## Suggested Workstreams
 
 1. Repair packaging environment deterministically: schedule a clean `uv sync` window
