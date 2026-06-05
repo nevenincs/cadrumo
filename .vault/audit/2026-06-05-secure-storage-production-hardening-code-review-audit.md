@@ -51,3 +51,15 @@ The new tests write real secure-object payloads through `isolated_runtime_profil
 then load through the repository under test. They assert typed localized errors for
 classification drift and future inner envelope versions without fakes, monkeypatches,
 or tautological source mirroring.
+
+## S354-CR-001 | PASS | Filing record closeout is model-only
+
+Reviewed the S354 closeout as `vaultspec-code-reviewer`. The plan update closes only
+`AFR-252` and `W12.P26.S354`; the production file itself remains unchanged because it
+is a strict data-model surface, not a storage runtime owner.
+
+## S354-CR-002 | PASS | Repository remediation remains correctly tracked
+
+The audit explicitly leaves `src/aeat/domain/modelos/_filing_repository.py` to
+`W12.P26.S355`. This avoids masking the repository's runtime and localized-error work
+inside a manifest-discovery row.
