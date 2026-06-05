@@ -5,8 +5,8 @@ underlying :mod:`._site_health_parsers` against real HTML strings loaded off dis
 under ``src/aeat/tests/fixtures/site_health/``. No test doubles — the parsers are exercised
 end-to-end so a fixture-side regression surfaces here first.
 
-The module is marked ``unit`` / ``domain_outbound`` so it stays inside the
-fast-path test selection.
+The module is marked ``unit`` / ``hex_outbound_adapter`` so it stays inside
+the fast-path test selection.
 """
 
 from __future__ import annotations
