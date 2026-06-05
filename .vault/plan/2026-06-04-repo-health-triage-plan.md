@@ -200,7 +200,7 @@ Record the post-remediation advisory baseline and complete final code review bef
 
 - [x] `W05.P17.S60` - Run full quality-audit and persist updated baseline; `.vault/audit`.
 - [x] `W05.P17.S61` - Run final code review over all closed repo-health slices; `.vault/audit`.
-- [ ] `W05.P17.S62` - Update execution records and plan closure state; `.vault/exec`.
+- [x] `W05.P17.S62` - Update execution records and plan closure state; `.vault/exec`.
 
 ## Wave `W06` - all-green diagnostic burn-down
 
