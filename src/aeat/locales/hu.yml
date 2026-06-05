@@ -2410,6 +2410,7 @@ cli:
         listázásához.'
       unknown_provider: 'Ismeretlen importálási --provider {provider!r}. Elismert
         szolgáltatók: {providers}.'
+      invalid_category: 'Ismeretlen koltsegkategoria: ''{category}''. Ismert kategoriak: {known}. Futtasd: ''aeat app ledger categories'' az ervenyes --category-id ertekekhez.'
     export:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       format_help: Exportálási sorosítási formátum.

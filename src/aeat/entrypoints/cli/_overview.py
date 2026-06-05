@@ -26,6 +26,7 @@ from ._common import (
     _canonical_period,
     _emit_envelope,
     _load_drafts,
+    _no_active_profile_refusal,
     _parse_iso_date,
     _profile_to_taxpayer,
     _state,
@@ -88,7 +89,7 @@ def overview_status(
     current = _state() if resolve_active_bucket_id() is not None else None
     if period is not None:
         if current is None:
-            raise _bad(tr("cli.config.errors.no_active_profile"))
+            raise _no_active_profile_refusal()
         drafts = _load_drafts()
         canonical = _canonical_period(period)
         per_modelo_drafts = [d for d in drafts if d.period == canonical]
