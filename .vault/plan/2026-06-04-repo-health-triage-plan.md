@@ -228,7 +228,7 @@ Separate production complexity from ratchet-test complexity, then decompose the 
 - [x] `W06.P19.S73` - Reduce wizard command catalogue cognitive complexity; `src/aeat/application/wizard/_commands.py`.
 - [x] `W06.P19.S74` - Reduce remaining modelo CLI command cognitive complexity; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W06.P19.S75` - Reduce registry formula initial-value cognitive complexity; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
-- [ ] `W06.P19.S76` - Reduce ledger list and review projection cognitive complexity; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W06.P19.S76` - Reduce ledger list and review projection cognitive complexity; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W06.P19.S77` - Persist complexity all-green baseline or explicit residual ratchets; `.vault/audit`.
 
 ### Phase `W06.P20` - hygiene advisory all-green burn-down

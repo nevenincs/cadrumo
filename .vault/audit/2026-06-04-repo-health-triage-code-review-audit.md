@@ -679,3 +679,33 @@ Residual: `calculate_registry_snapshot` remains Radon D (22) in
 previous-filing binding materialization for casilla `01494`. Those residuals are
 not hidden by the S75 extraction and should remain candidates for later registry
 runtime and M200 binding hardening work.
+
+## W06-003 | INFO | Ledger projection complexity extraction review found no defects
+
+Status: verified with scoped residual.
+
+The W06.P19.S76 review found no behavior defect in the ledger projection
+extraction. `ledger_review` now delegates filter parsing, backend query
+construction, detail/list payloads, and rendered lines to private helpers while
+preserving the same backend `query_ledger_review_rows` authority and envelope
+schema. `rule_apply` now delegates dry-run candidate selection, first matching
+rule lookup, dry-run payload/line rendering, and live result payload/line
+rendering to private helpers while preserving the same application service for
+live mutation.
+
+The slice also repaired local `_ledger.py` type-boundary diagnostics without
+changing runtime behavior: typed output schema class arguments, typed ledger-link
+evidence payloads, mapping access for stale filed revisions, and mutable evidence
+payload dictionaries.
+
+Focused verification passed Ruff, Ty, Radon, Complexipy, the ledger bulk
+classification suite, the ledger list-filter suite, the CLI review round-trip,
+and the backend ownership test. Complexity measurements now place `ledger_review`
+at Radon A (1) and Complexipy 0, and `rule_apply` at Radon A (4) and Complexipy
+2.
+
+Residual: two review-prefix UX tests still fail during import setup with a
+profile-bound storage route mismatch before the reviewed command is reached, and
+the backend help-vocabulary test still fails because `ledger review --help` does
+not contain the expected `classification` filter token. Those failures remain
+visible for later CLI/storage hardening work.
