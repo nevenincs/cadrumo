@@ -1,4 +1,4 @@
-"""Cross-profile switching journey: each profile's ledger is its own bucket.
+"""Cross-profile unlock journey: each profile's ledger is its own bucket.
 
 Seeds two profiles (the Marta autonoma + the recargo retailer), imports a
 distinct statement into each while that profile's session is active, then
@@ -6,8 +6,8 @@ re-activates each in turn and asserts its ledger surfaces only its own rows --
 the operator-facing cross-profile runtime-pegged ledger guarantee.
 
 The active session is opened with ``profile_create_storage_span`` -- the same
-session primitive the ``aeat config profile switch`` verb drives; re-entering a
-span is the in-process equivalent of switching the active profile between
+session primitive the ``aeat config unlock`` verb drives; re-entering a
+span is the in-process equivalent of unlocking the active profile between
 commands.
 """
 
@@ -28,7 +28,6 @@ from ....core.config import override_settings
 from ....tests import FIXTURES_DIR
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import app
-from .._config import profile_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -68,7 +67,7 @@ def _list_ids() -> set[str]:
     return {r.get("full_id") or r["transaction_id"] for r in rows}
 
 
-def test_two_profiles_keep_independent_ledgers_across_switches() -> None:
+def test_two_profiles_keep_independent_ledgers_across_unlocks() -> None:
     # Provision + load each profile into its own bucket, importing a distinct
     # statement while that profile's session is the active one.
     with profile_create_storage_span("marta"):
@@ -84,11 +83,11 @@ def test_two_profiles_keep_independent_ledgers_across_switches() -> None:
     assert marta_ids and retailer_ids
     assert marta_ids.isdisjoint(retailer_ids)
 
-    # Switching back to a profile (re-opening its session, as the `profile
-    # switch` verb does) surfaces only that profile's ledger -- no bleed-through.
+    # Unlocking a profile reopens its session and surfaces only that profile's
+    # ledger -- no bleed-through.
     with profile_create_storage_span("marta"):
-        switched = _RUNNER.invoke(profile_app, ["switch", "marta"])
-        assert switched.exit_code == 0, switched.output
+        unlocked = _RUNNER.invoke(app, ["config", "unlock", "marta"])
+        assert unlocked.exit_code == 0, unlocked.output
         back = _list_ids()
     assert back == marta_ids
     assert back.isdisjoint(retailer_ids)

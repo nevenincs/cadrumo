@@ -4,7 +4,7 @@ Every profile-creation path lands on one atomic provisioner
 (``register_active_profile``). The contract this test pins: a profile
 created through the canonical create path must read back with the same
 immutable UUID identity through ``profile list``, ``profile show``,
-``profile switch``, and a second ``profile show``. The operator
+``config unlock``, and a second ``profile show``. The operator
 addresses the profile by its display name; the UUID is the stable
 internal identity that must never drift between verbs.
 
@@ -84,7 +84,7 @@ def _create(name: str, tax_id: str = "12345678Z") -> None:
 
 
 def test_atomic_create_roundtrip_identity_is_consistent_across_verbs(_cli_storage: Path) -> None:
-    """create -> list -> show -> switch -> show all agree on one profile.
+    """create -> list -> show -> unlock -> show all agree on one profile.
 
     Profile/bucket UUIDs are redacted on the CLI surface per the centralised
     output-redaction contract; the test asserts the operator-visible identity
@@ -106,9 +106,9 @@ def test_atomic_create_roundtrip_identity_is_consistent_across_verbs(_cli_storag
     # display_name is the operator label — the positional create arg.
     assert _json(show_first)["display_name"] == "alice"
 
-    switch = _invoke(["--format", "json", "config", "profile", "switch", "alice"])
-    assert switch.exit_code == 0, switch.output
-    assert _json(switch)["active_profile"] == "alice"
+    unlock = _invoke(["--format", "json", "config", "unlock", "alice"])
+    assert unlock.exit_code == 0, unlock.output
+    assert _json(unlock)["active_profile"] == "alice"
 
     show_second = _invoke(["--format", "json", "config", "profile", "show", "alice"])
     assert show_second.exit_code == 0, show_second.output
@@ -153,13 +153,13 @@ def test_atomic_create_roundtrip_two_profiles_resolve_independently(_cli_storage
     assert listing.exit_code == 0, listing.output
     assert sorted(row["name"] for row in _json(listing)["profiles"]) == ["alice", "bob"]
 
-    switch_alice = _invoke(["--format", "json", "config", "profile", "switch", "alice"])
-    assert switch_alice.exit_code == 0, switch_alice.output
+    unlock_alice = _invoke(["--format", "json", "config", "unlock", "alice"])
+    assert unlock_alice.exit_code == 0, unlock_alice.output
     show_alice = _invoke(["--format", "json", "config", "profile", "show"])
     assert _json(show_alice)["display_name"] == "alice"
 
-    switch_bob = _invoke(["--format", "json", "config", "profile", "switch", "bob"])
-    assert switch_bob.exit_code == 0, switch_bob.output
+    unlock_bob = _invoke(["--format", "json", "config", "unlock", "bob"])
+    assert unlock_bob.exit_code == 0, unlock_bob.output
     show_bob = _invoke(["--format", "json", "config", "profile", "show"])
     assert _json(show_bob)["display_name"] == "bob"
     # The two profiles surface distinct operator-visible display_names; profile

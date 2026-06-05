@@ -27,7 +27,6 @@ def runner() -> CliRunner:
 
 
 _OPERATOR_VERBS = (
-    "switch",
     "logout",
     "show",
     "edit",
@@ -40,6 +39,7 @@ _OPERATOR_VERBS = (
 )
 
 _RETIRED_VERBS = (
+    "switch",
     "view",
     "use",
     "remove",

@@ -25,7 +25,7 @@ from ...core.errors import AeatError
 from ...core.identity import BucketId
 from ...core.time import now
 from ...domain.modelos._ids import WorkUnitId
-from ._actions import WorkUnitNotFoundError
+from ._action_errors import WorkUnitNotFoundError
 
 
 class ModeloReconciliationSourceKind(StrEnum):

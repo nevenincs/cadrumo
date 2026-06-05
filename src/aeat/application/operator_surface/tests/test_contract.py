@@ -218,9 +218,16 @@ def test_mounted_command_families_are_backend_owned_and_service_backed() -> None
     assert by_domain[MountedCommandDomain.PROFILE].root is RootSurfaceName.CONFIG
     assert by_domain[MountedCommandDomain.PROFILE].child == "profile"
     assert by_domain[MountedCommandDomain.PROFILE].service_owner == "aeat.application.user_profile"
-    assert {"create", "edit", "show", "switch", "delete", "status"}.issubset(
+    assert {"create", "edit", "show", "delete", "status"}.issubset(
         by_domain[MountedCommandDomain.PROFILE].commands
     )
+    custody_commands = {
+        command
+        for family in contract.command_families
+        if family.domain is MountedCommandDomain.CUSTODY
+        for command in family.commands
+    }
+    assert {"lock", "unlock", "rekey", "recover", "show-recovery", "verify-recovery"} == custody_commands
     assert by_domain[MountedCommandDomain.BUCKET].root is RootSurfaceName.CONFIG
     assert by_domain[MountedCommandDomain.BUCKET].child == "bucket"
     assert by_domain[MountedCommandDomain.BUCKET].commands == ("history",)

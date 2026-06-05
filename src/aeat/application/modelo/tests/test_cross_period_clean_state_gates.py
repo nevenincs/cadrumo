@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.justificante import Justificante, JustificanteRepository
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepository,
@@ -27,6 +30,7 @@ from ....domain.modelos import (
     upsert_calculation_revision,
     upsert_work_unit,
 )
+from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import (
     CalculationObservationRepository,
@@ -105,6 +109,27 @@ def _source_values(period: str, source_casillas: tuple[str, ...]) -> dict[str, D
     }
 
 
+def _persist_justificante_metadata(csv: str, *, modelo: str, period: str, filing_year: int) -> None:
+    pdf_bytes = f"%PDF-1.4\n% synthetic justificante {csv}\n%%EOF\n".encode()
+    JustificanteRepository().save(
+        Justificante(
+            csv=csv,
+            modelo=modelo,
+            period=period,
+            ejercicio=str(filing_year),
+            presentation_id=None,
+            presented_at=_CLOCK,
+            tax_id="X1234567L",
+            total_a_ingresar=None,
+            total_a_devolver=None,
+            verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
+            source_pdf_path=Path("var") / "justificantes" / f"{csv}.pdf",
+            source_pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
+            parsed_at=_CLOCK,
+        )
+    )
+
+
 def _seed_303_cross_period_sources(
     *,
     work_unit_repository: WorkUnitCatalogueRepository,
@@ -120,6 +145,14 @@ def _seed_303_cross_period_sources(
         source_casillas_by_period.setdefault(requirement.period, set()).update(requirement.source_casillas)
 
     for period, source_casillas in sorted(source_casillas_by_period.items()):
+        evidence_kind = (
+            ExternalEvidenceKind.AEAT_CSV_REGISTER
+            if period in csv_periods
+            else ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
+        )
+        evidence_reference_id = f"AEAT-{period}"
+        if evidence_kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF:
+            _persist_justificante_metadata(evidence_reference_id, modelo="303", period=period, filing_year=2025)
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="303",
@@ -134,12 +167,8 @@ def _seed_303_cross_period_sources(
         import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
             casilla_values=values,
-            evidence_kind=(
-                ExternalEvidenceKind.AEAT_CSV_REGISTER
-                if period in csv_periods
-                else ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
-            ),
-            evidence_reference_id=f"AEAT-{period}",
+            evidence_kind=evidence_kind,
+            evidence_reference_id=evidence_reference_id,
             work_unit_repository=work_unit_repository,
             calculation_repository=calculation_repository,
             filing_repository=filing_repository,

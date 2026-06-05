@@ -19,8 +19,9 @@ from ...domain.calculations.registry import (
 )
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos._work_unit import WorkUnitState
-from ._actions import list_calculation_revisions, list_work_units
+from ._calculation_actions import list_calculation_revisions
 from ._profile_binding import resolve_profile_sourced_bindings
+from ._work_lifecycle import list_work_units
 
 _LOG = get_logger(__name__)
 

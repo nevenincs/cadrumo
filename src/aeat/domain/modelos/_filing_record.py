@@ -56,6 +56,10 @@ _Notes = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
 ]
+_MemberNif = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=32),
+]
 
 
 class ModeloRecordStatus(StrEnum):
@@ -115,14 +119,17 @@ def derive_filing_record_id(
     calculation_revision_id: str,
     filed_at: datetime,
     filed_by: str,
+    member_nif: str | None = None,
 ) -> str:
     """Deterministic 64-char SHA-256 id for a filing record.
 
     The id is content-addressed by the parent work unit, the filed
     calculation revision, the filing timestamp, and the actor. Two
-    operators filing the same revision at the same instant produces
-    the same id, which is impossible in practice — the timestamp
-    guarantees uniqueness.
+    operators filing the same revision at the same instant produce
+    the same id, which is impossible in practice because the timestamp
+    guarantees uniqueness. Member-scoped group filings include the
+    member NIF in the identity; single-filer records omit it so legacy
+    record ids remain stable.
     """
     payload = {
         "work_unit_id": work_unit_id.strip(),
@@ -130,6 +137,8 @@ def derive_filing_record_id(
         "filed_at": filed_at.isoformat(),
         "filed_by": filed_by.strip(),
     }
+    if member_nif is not None:
+        payload["member_nif"] = member_nif.strip()
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
 
@@ -158,6 +167,7 @@ class ModeloRecord(BaseModel):
     modelo: ModeloCode
     filing_year: Annotated[int, Field(ge=2000, le=2099)]
     period: _Period
+    member_nif: _MemberNif | None = None
     filed_at: datetime
     filed_by: ModeloActorLabel
     notes: _Notes | None = None
@@ -184,6 +194,7 @@ class ModeloRecord(BaseModel):
             calculation_revision_id=self.calculation_revision_id,
             filed_at=self.filed_at,
             filed_by=self.filed_by,
+            member_nif=self.member_nif,
         )
         if derived != self.filing_record_id:
             raise ModeloValidationError(
@@ -209,10 +220,10 @@ class ModeloRecordCatalogue(BaseModel):
 
     Keyed by ``filing_record_id``; the model validator enforces that every
     key equals the id of the :class:`ModeloRecord` it maps to, and that at
-    most one record per (bucket_id, modelo, filing_year, period) tuple
-    carries ``status=VIGENTE``.  Iteration yields :class:`ModeloRecord`
-    values (not key–value pairs) — the override is annotated with a
-    suppression comment on ``__iter__``.
+    most one record per (bucket_id, modelo, filing_year, period,
+    member_nif) tuple carries ``status=VIGENTE``. Iteration yields
+    :class:`ModeloRecord` values (not key–value pairs) — the override is
+    annotated with a suppression comment on ``__iter__``.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -226,12 +237,18 @@ class ModeloRecordCatalogue(BaseModel):
                 raise ModeloValidationError(
                     f"catalogue key {key!r} does not match filing_record_id {record.filing_record_id!r}"
                 )
-        # Exactly one CURRENT record per (bucket, modelo, year, period) tuple.
-        currents: dict[tuple[str, str, int, str], str] = {}
+        # Exactly one CURRENT record per (bucket, modelo, year, period, member) tuple.
+        currents: dict[tuple[str, str, int, str, str | None], str] = {}
         for record in self.records.values():
             if record.status is not ModeloRecordStatus.VIGENTE:
                 continue
-            current_key = (record.bucket_id, record.modelo, record.filing_year, record.period)
+            current_key = (
+                record.bucket_id,
+                record.modelo,
+                record.filing_year,
+                record.period,
+                record.member_nif,
+            )
             if current_key in currents:
                 raise ModeloValidationError(
                     f"more than one current filing record for {current_key!r}: "
@@ -251,14 +268,17 @@ class ModeloRecordCatalogue(BaseModel):
         modelo: str,
         filing_year: int,
         period: str,
+        member_nif: str | None = None,
     ) -> ModeloRecord | None:
         """Return the current (non-superseded) :class:`ModeloRecord` for a filing tuple.
 
         Returns ``None`` when no filing has ever happened for the
-        tuple. Returns the active filing record when one exists. Never
-        returns a superseded record — callers must iterate
-        :attr:`records` directly to walk audit history.
+        tuple. ``member_nif=None`` means the single-filer or aggregate
+        record, not every member. Returns the active filing record when
+        one exists. Never returns a superseded record — callers must
+        iterate :attr:`records` directly to walk audit history.
         """
+        expected_member_nif = member_nif.strip() if member_nif is not None else None
         for record in self.records.values():
             if record.status is not ModeloRecordStatus.VIGENTE:
                 continue
@@ -267,6 +287,7 @@ class ModeloRecordCatalogue(BaseModel):
                 and record.modelo == modelo
                 and record.filing_year == filing_year
                 and record.period == period
+                and record.member_nif == expected_member_nif
             ):
                 return record
         return None
@@ -278,12 +299,14 @@ class ModeloRecordCatalogue(BaseModel):
         modelo: str,
         filing_year: int,
         period: str,
+        member_nif: str | None = None,
     ) -> tuple[ModeloRecord, ...]:
         """Return every filing record for a tuple, ordered by filed_at.
 
         Returns:
             Tuple of :class:`ModeloRecord` objects ordered by filing timestamp.
         """
+        expected_member_nif = member_nif.strip() if member_nif is not None else None
         matching = tuple(
             record
             for record in self.records.values()
@@ -291,6 +314,7 @@ class ModeloRecordCatalogue(BaseModel):
             and record.modelo == modelo
             and record.filing_year == filing_year
             and record.period == period
+            and record.member_nif == expected_member_nif
         )
         return tuple(sorted(matching, key=lambda r: r.filed_at))
 

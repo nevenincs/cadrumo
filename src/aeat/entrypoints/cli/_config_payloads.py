@@ -149,13 +149,6 @@ class ConfigListResult(OutputSchema):
     profiles: list[ProfilePointerPayload]
 
 
-@register_schema("config.profile.switch")
-class ConfigProfileSwitchResult(OutputSchema):
-    """JSON envelope for ``aeat config profile switch``."""
-
-    active_profile: str
-
-
 @register_schema("config.unlock")
 class ConfigUnlockResult(OutputSchema):
     """JSON envelope for ``aeat config unlock``."""

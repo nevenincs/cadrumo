@@ -116,7 +116,8 @@ def calculate_modelo_work_revision(
     inputs: WorkCalculateInputBundle,
 ) -> ModeloWorkCalculationServiceResult:
     """Persist a draft calculation revision and derive command-facing summaries."""
-    from ._actions import calculate_modelo_revision_from_bucket_aggregation, get_work_unit
+    from ._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
+    from ._work_lifecycle import get_work_unit
 
     revision = calculate_modelo_revision_from_bucket_aggregation(
         work_unit_id,
@@ -227,7 +228,7 @@ def _decimal(raw_value: str, *, flag: str, key: str) -> Decimal:
 
 
 def _revision_for_work_unit(work_unit_id: str):
-    from ._actions import get_work_unit
+    from ._work_lifecycle import get_work_unit
 
     unit = get_work_unit(work_unit_id)
     snapshot = resources().modelos.authority.snapshot(

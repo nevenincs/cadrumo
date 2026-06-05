@@ -97,17 +97,8 @@ def _emit_censo_event(*, bucket_id: str, event_type, profile_id: str, snapshot_i
     )
 
 
-def register(profile_app: typer.Typer) -> None:
-    """Attach the censo subgroup to ``profile_app``."""
-    censo_app = typer.Typer(
-        name="censo",
-        help=tr(
-            "cli.config.profile.censo.help",
-            default="Sync your AEAT 036 censo against this profile.",
-        ),
-        no_args_is_help=True,
-    )
-
+def _register_censo_refresh(censo_app: typer.Typer) -> None:
+    """Register the censo refresh transport command."""
     @censo_app.command(
         "refresh",
         help=tr(
@@ -146,6 +137,9 @@ def register(profile_app: typer.Typer) -> None:
         ]
         _emit_envelope(ctx, command="config.profile.censo.refresh", result=typed_refresh, lines=lines)
 
+
+def _register_censo_show(censo_app: typer.Typer) -> None:
+    """Register the censo show transport command."""
     @censo_app.command(
         "show",
         help=tr(
@@ -192,6 +186,9 @@ def register(profile_app: typer.Typer) -> None:
             lines.append(f"{path}\t{value}")
         _emit_envelope(ctx, command="config.profile.censo.show", result=typed_show, lines=lines)
 
+
+def _register_censo_compare(censo_app: typer.Typer) -> None:
+    """Register the censo compare transport command."""
     @censo_app.command(
         "compare",
         help=tr(
@@ -242,6 +239,9 @@ def register(profile_app: typer.Typer) -> None:
             )
         _emit_envelope(ctx, command="config.profile.censo.compare", result=typed_compare, lines=lines)
 
+
+def _register_censo_apply(censo_app: typer.Typer) -> None:
+    """Register the censo apply transport command."""
     @censo_app.command(
         "apply",
         help=tr(
@@ -298,6 +298,21 @@ def register(profile_app: typer.Typer) -> None:
             lines.append(f"derived\t{path}")
         _emit_envelope(ctx, command="config.profile.censo.apply", result=typed_apply, lines=lines)
 
+
+def register(profile_app: typer.Typer) -> None:
+    """Attach the censo subgroup to ``profile_app``."""
+    censo_app = typer.Typer(
+        name="censo",
+        help=tr(
+            "cli.config.profile.censo.help",
+            default="Sync your AEAT 036 censo against this profile.",
+        ),
+        no_args_is_help=True,
+    )
+    _register_censo_refresh(censo_app)
+    _register_censo_show(censo_app)
+    _register_censo_compare(censo_app)
+    _register_censo_apply(censo_app)
     profile_app.add_typer(censo_app, name="censo")
 
 

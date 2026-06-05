@@ -37,7 +37,7 @@ from ...domain.modelos._protocols import (
 )
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.modelos._verification_repository import VerificationReportCatalogueRepository
-from ._actions import WorkUnitNotFoundError
+from ._action_errors import WorkUnitNotFoundError
 
 
 class WorkUnitHistoryEvent(BaseModel):

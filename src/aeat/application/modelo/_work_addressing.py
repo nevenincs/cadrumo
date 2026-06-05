@@ -12,7 +12,7 @@ from ...domain.modelos._calculation_revision import CalculationRevision, Calcula
 from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
 from ...domain.modelos._work_unit import WorkUnit
-from ._actions import create_work_unit, get_calculation_revision, rename_work_unit
+from ._calculation_actions import get_calculation_revision
 from ._registry_discovery import declared_modelo_period_tokens
 from ._selectors import (
     ModeloCalculationRevisionDefault,
@@ -26,6 +26,7 @@ from ._selectors import (
     resolve_modelo_calculation_revision_pick,
     resolve_modelo_work_unit,
 )
+from ._work_lifecycle import create_work_unit, rename_work_unit
 
 
 @dataclass(frozen=True, slots=True)

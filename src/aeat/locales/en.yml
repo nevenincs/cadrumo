@@ -1536,20 +1536,10 @@ cli:
           Tax) is not supported for work-unit creation in this CLI. Legal basis: RD
           Legislativo 5/2004 TRLIRNR and Art. 28 TRLIRNR. File the return through
           AEAT Sede procedure G320 at sede.agenciatributaria.gob.es.'
-        create_stub_modelo_600_refused: Modelo %{modelo} (ITP-AJD, Transfer Tax and
-          Stamp Duty) is not supported for work-unit creation in this CLI. This tax
-          is managed by the Autonomous Communities; file with the relevant regional
-          tax authority.
-        create_stub_modelo_620_refused: Modelo %{modelo} (ITP-AJD, used vehicle transfers)
-          is not supported for work-unit creation in this CLI. File the self-assessment
-          with the relevant regional tax authority.
-        create_stub_modelo_650_refused: 'Modelo %{modelo} (ISD inheritances) is not
-          supported for work-unit creation in this CLI. Legal basis: Ley 29/1987 LISyD;
-          ordinary deadline is six months from death. File with the competent regional
-          tax authority.'
-        create_stub_modelo_660_refused: Modelo %{modelo} (ISD estate inventory, accompanying
-          Modelo 650) is not supported for work-unit creation in this CLI. File with
-          the competent regional tax authority.
+        create_stub_modelo_600_refused: 'Modelo %{modelo} (ITP-AJD, Transfer Tax and Stamp Duty) is not supported for work-unit creation in this CLI. Legal basis: Ley 28/1990 and regional ITPyAJD competence; file with the relevant regional Hacienda / CCAA tax authority.'
+        create_stub_modelo_620_refused: 'Modelo %{modelo} (ITP-AJD, used vehicle transfers) is not supported for work-unit creation in this CLI. Legal basis: Ley 28/1990 and regional ITPyAJD competence; file the self-assessment with the relevant regional Hacienda / CCAA tax authority.'
+        create_stub_modelo_650_refused: 'Modelo %{modelo} (ISD inheritances) is not supported for work-unit creation in this CLI. Legal basis: Ley 29/1987 LISyD and Art. 67 RISD; ordinary deadline is six months from death. File with the competent regional Hacienda tax authority.'
+        create_stub_modelo_660_refused: 'Modelo %{modelo} (ISD estate inventory, accompanying Modelo 650) is not supported for work-unit creation in this CLI. Legal basis: Ley 29/1987 LISyD; file with the competent regional Hacienda tax authority.'
         create_stub_modelo_714_refused: 'Modelo %{modelo} (Wealth Tax) is not supported
           for work-unit creation in this CLI. Legal basis: Ley 19/1991 Art. 28 and
           Orden HAC/1023/2021. File the return at AEAT Sede.'
@@ -2029,8 +2019,6 @@ cli:
       rename_target_help: New profile name
       show_help: Show the live values of a profile (defaults to the active profile)
       show_name_help: Profile id to show (defaults to the active profile)
-      switch_help: Switch the active profile
-      switch_name_help: Profile name to activate
       unknown_profile: 'Unknown profile: %{name}. Run ''aeat config profile list''
         to see registered profiles.'
       use_help: Select an existing profile as the active profile

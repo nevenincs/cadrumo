@@ -11,7 +11,7 @@ from __future__ import annotations
 from typing import Protocol, runtime_checkable
 
 from ._calculation_revision import CalculationRevisionCatalogue
-from ._filing_record import ModeloRecordCatalogue
+from ._filing_record import ModeloRecord, ModeloRecordCatalogue
 from ._verification_report import VerificationReportCatalogue
 from ._work_unit import WorkUnitCatalogue
 
@@ -76,13 +76,43 @@ class CalculationRevisionCatalogueRepositoryProtocol(Protocol):
 
 
 @runtime_checkable
+class ModeloRecordCatalogueQueryProtocol(Protocol):
+    """Query contract exposed by loaded modelo filing-record catalogues."""
+
+    def current_for(
+        self,
+        *,
+        bucket_id: str,
+        modelo: str,
+        filing_year: int,
+        period: str,
+        member_nif: str | None = None,
+    ) -> ModeloRecord | None:
+        """Return the current filing record for a filing tuple and optional group member."""
+        ...
+
+    def history_for(
+        self,
+        *,
+        bucket_id: str,
+        modelo: str,
+        filing_year: int,
+        period: str,
+        member_nif: str | None = None,
+    ) -> tuple[ModeloRecord, ...]:
+        """Return filing history for a filing tuple and optional group member."""
+        ...
+
+
+@runtime_checkable
 class ModeloRecordCatalogueRepositoryProtocol(Protocol):
     """Narrow domain-facing repository contract for modelo filing records.
 
     Any object that provides ``exists``, ``load``, and ``save`` over a
     per-bucket modelo-record catalogue satisfies this protocol. The
     concrete secure-object-backed implementation lives in
-    ``_filing_repository.py``.
+    ``_filing_repository.py``. The loaded catalogue supports member-scoped
+    ``current_for`` and ``history_for`` lookups for grupo fan-in filings.
     """
 
     @property
@@ -137,6 +167,7 @@ class VerificationReportCatalogueRepositoryProtocol(Protocol):
 
 __all__ = [
     "CalculationRevisionCatalogueRepositoryProtocol",
+    "ModeloRecordCatalogueQueryProtocol",
     "ModeloRecordCatalogueRepositoryProtocol",
     "VerificationReportCatalogueRepositoryProtocol",
     "WorkUnitCatalogueRepositoryProtocol",

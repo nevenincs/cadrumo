@@ -71,15 +71,14 @@ from ..filing import (
     export_draft,
     filing_profile_from_taxpayer,
 )
-from ._actions import (
+from . import _iva_wallet_gate
+from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     WorkUnitNotFoundError,
-    _require_cross_period_clean_state,
-    _require_persisted_iva_compensation_decision_matches_revision,
 )
 from ._revision_persistence import emit_bucket_event as _emit_bucket_event
-from ._verification_actions import _cross_period_expected_member_sets_from_profile
+from ._verification_actions import _cross_period_expected_member_sets_from_profile, _require_cross_period_clean_state
 
 #: AEAT-assigned program-identifier code stamped into the optional
 #: ``program_version`` export header. AEAT requires a 4-character
@@ -98,6 +97,9 @@ _DECLARATION_TYPE_ORDINARY = "I"
 _PROFILE_SURNAMES_PATH = "identity.surnames"
 _PROFILE_NAME_PATH = "identity.name"
 _LOGGER = get_logger(__name__)
+_require_persisted_iva_compensation_decision_matches_revision = (
+    _iva_wallet_gate.require_persisted_iva_compensation_decision_matches_revision
+)
 
 
 class ModeloIvaWalletDecisionProvenance(BaseModel):
@@ -429,6 +431,47 @@ def _resolve_export_period(work_unit: WorkUnit) -> tuple[int, str, str]:
     return filing_year, registry_period, canonical
 
 
+def _approve_export_draft(
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    workflow_profile: TaxpayerProfile,
+    actor: str,
+    approved_at: datetime,
+):
+    filing_year, registry_period, canonical_period = _resolve_export_period(work_unit)
+    schema_provider = build_runtime_schema_provider(
+        filing_year=filing_year,
+        period=registry_period,
+        modelos=(work_unit.modelo,),
+    )
+    inputs: filing_domain.ModeloInputs = {
+        **dict(revision.inputs_snapshot),
+        **dict(revision.binding_overrides),
+    }
+    try:
+        draft = build_draft(
+            modelo=work_unit.modelo,
+            period=canonical_period,
+            profile=filing_profile_from_taxpayer(workflow_profile),
+            inputs=inputs,
+            schema_provider=schema_provider,
+        )
+        approved = approve_draft(
+            draft,
+            bucket_id=work_unit.bucket_id,
+            approved_by=actor,
+            schema_provider=schema_provider,
+            approved_at=approved_at,
+        )
+    except filing_domain.FilingExportError as exc:
+        raise ModeloExportError(
+            translated_message="application.modelo.errors.export_draft_approval_failed",
+            context={"calculation_revision_id": revision.calculation_revision_id},
+        ) from exc
+    return filing_year, registry_period, approved
+
+
 def export_modelo_revision(
     command: ModeloExportCommand,
     *,
@@ -508,37 +551,13 @@ def export_modelo_revision(
     iva_wallet_provenance = _iva_wallet_decision_export_provenance(iva_wallet_decision)
 
     now = clock or _utc_now()
-    filing_year, registry_period, canonical_period = _resolve_export_period(work_unit)
-    schema_provider = build_runtime_schema_provider(
-        filing_year=filing_year,
-        period=registry_period,
-        modelos=(work_unit.modelo,),
+    filing_year, registry_period, approved = _approve_export_draft(
+        work_unit=work_unit,
+        revision=revision,
+        workflow_profile=workflow_profile,
+        actor=command.actor,
+        approved_at=now,
     )
-    inputs: filing_domain.ModeloInputs = {
-        **dict(revision.inputs_snapshot),
-        **dict(revision.binding_overrides),
-    }
-
-    try:
-        draft = build_draft(
-            modelo=work_unit.modelo,
-            period=canonical_period,
-            profile=filing_profile_from_taxpayer(workflow_profile),
-            inputs=inputs,
-            schema_provider=schema_provider,
-        )
-        approved = approve_draft(
-            draft,
-            bucket_id=work_unit.bucket_id,
-            approved_by=command.actor,
-            schema_provider=schema_provider,
-            approved_at=now,
-        )
-    except filing_domain.FilingExportError as exc:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_approval_failed",
-            context={"calculation_revision_id": command.calculation_revision_id},
-        ) from exc
 
     # Atomic-rename: write the fichero-BOE artefact to a sibling .tmp
     # path, append the MODELO_EXPORTED event, and only rename into the

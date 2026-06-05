@@ -587,6 +587,7 @@ def _cross_period_clean_state_next_action(
         CrossPeriodCleanStateBlocker.SUPERSEDED_DEPENDENCY,
         CrossPeriodCleanStateBlocker.MISSING_AEAT_ACCEPTANCE,
         CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE,
+        CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD,
         CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION,
         CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE,
     }:
@@ -703,90 +704,7 @@ def verify_modelo_revision(
     settings: Settings | None = None,
     clock: datetime | None = None,
 ) -> VerificationReport:
-    """Evaluate a draft revision against the four-layer verified-complete gate.
-
-    ``workflow_profile`` is the :class:`TaxpayerProfile` used to drive the
-    workflow engine and filing deadline checks. The ``transaction_repository``
-    is a :class:`TransactionCatalogueRepository` used to query ledger entries.
-
-    The gate is described fully in the package docstring
-    (:mod:`aeat.application.modelo`). This function is the implementation
-    entry point.
-
-    Pipeline:
-
-    1. **State machine** -- load the revision; it must be in ``BORRADOR``
-       (DRAFT) state. Any other state raises
-       :exc:`CalculationRevisionStateError`.
-    2. **Registry snapshot** -- resolve the snapshot for the parent work
-       unit's ``(modelo, filing_year, period)``. On failure, emit a
-       BLOCKING finding and refuse the transition immediately.
-    3. **Layer 1 — required-input gate** -- for each casilla declared
-       ``required = true`` and ``input_kind = "manual"`` in the registry,
-       check that the revision's ``casilla_values`` contains a value.
-       Missing entries produce
-       :attr:`~aeat.domain.modelos._verification_report.ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA`
-       findings and set ``completeness_status`` to ``INCOMPLETE``.
-    4. **Layer 2 — cross-casilla predicate gate** -- evaluate each
-       :class:`~aeat.domain.calculations.registry.VerificationPredicateDefinition`
-       from the snapshot against the stored ``casilla_values``.  A failing
-       predicate produces a
-       :attr:`~aeat.domain.modelos._verification_report.ModeloVerificationFindingKind.BLOCKING_RULE`
-       finding.
-    5. **Provenance re-validation** -- call
-       :func:`_assert_revision_content_integrity` to re-derive the SHA-256
-       content address and check that each ``CasillaObservation.value``
-       matches ``casilla_values`` for the same casilla.  Either mismatch
-       raises :exc:`StoredCalculationDriftError`.
-    6. **Workflow engine gate** -- when layers 1-3 produce zero blocking
-       findings, run the WorkflowEngine-owned preflight with
-       ``WorkflowPurpose.VERIFY`` before mutating state.  This gate
-       validates the draft against the registry but is independent of the
-       AEAT filing calendar.
-    7. **Persist** -- write the :class:`~aeat.domain.modelos._verification_report.ModeloVerificationReport`
-       to the verification-report catalogue.  Failed attempts are persisted
-       so the audit trail records why the transition was refused.
-
-    Args:
-        calculation_revision_id: The id of the draft revision to verify.
-        actor: Operator identifier stamped as ``verified_by``.
-        workflow_profile: The taxpayer profile used to evaluate workflow gate
-            conditions.
-        work_unit_repository: Optional work-unit catalogue repository override.
-        calculation_repository: Optional calculation-revision catalogue
-            repository override.
-        filing_repository: Optional filing-record catalogue repository override
-            used by the cross-period clean-state proof.
-        transaction_repository: Optional transaction catalogue repository
-            override consulted by the snapshot resolver and ledger-backed
-            binding checks.
-        verification_repository: Optional verification-report catalogue
-            repository override.
-        bucket_event_repository: Optional bucket-event history repository
-            override.
-        iva_compensation_decision_repository: Optional IVA wallet decision
-            repository override.
-        calculation_observation_repository: Optional calculation-observation
-            repository override used by the cross-period clean-state proof.
-        cross_period_expected_member_sets: Optional expected grupo member
-            rosters used by the cross-period clean-state proof.
-        workflow_engine: Optional workflow engine override for the preflight gate.
-        workflow_runs_dir: Optional workflow runs directory override.
-        settings: Optional settings override.
-        clock: Optional UTC timestamp override.
-
-    Returns:
-        The persisted :class:`VerificationReport` for the revision.
-
-    Raises:
-        CalculationRevisionNotFoundError: When the revision id is absent.
-        CalculationRevisionStateError: When the revision is not in BORRADOR
-            state.  Re-verifying a verified-complete or filed revision is
-            rejected; the operator must produce a fresh calculation revision
-            (which lands as a new draft).
-        WorkUnitNotFoundError: When the revision's parent work unit cannot
-            be loaded.
-    """
+    """Evaluate a draft revision against registry, clean-state, provenance, and workflow gates."""
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
@@ -894,49 +812,92 @@ def verify_modelo_revision(
     vr_repo.save(upsert_verification_report(vr_repo.load(), report))
 
     if granted:
-        # Back the verified revision with an immutable content-addressed ledger
-        # snapshot over its contributing rows (modelo-filing-ledger-snapshot ADR).
-        # Uniform for every modelo: a non-ledger revision has no
-        # source_transaction_ids and gets a valid empty snapshot.
-        tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
-        catalogue = tx_repo.load()
-        filing_snapshot = compute_ledger_filing_snapshot(
-            source_transaction_ids=target.source_transaction_ids,
-            catalogue=catalogue,
-            captured_at=now,
+        _persist_verified_revision_evidence(
+            target=target,
+            actor=actor,
+            now=now,
+            revisions=revisions,
+            work_unit=work_unit,
+            transaction_repository=transaction_repository,
+            calculation_repository=cr_repo,
         )
-        # Bundle the fact basis behind the revision (modelo-export-evidence-parity
-        # ADR): the typed contributing-row evidence + the operator manual inputs,
-        # pegged to the snapshot fingerprint. Reuses the single catalogue load.
-        filing_evidence = compute_ledger_filing_evidence(
-            source_transaction_ids=target.source_transaction_ids,
-            catalogue=catalogue,
-            snapshot_fingerprint=filing_snapshot.snapshot_fingerprint,
-            captured_at=now,
-            manual_entries=_manual_fact_basis_entries(target.inputs_snapshot),
-        )
-        # No-silent-omission guard: every fingerprinted contributor must appear in
-        # the bundled evidence.
-        _assert_evidence_covers_snapshot(filing_snapshot, filing_evidence)
-        verified = target.model_copy(
-            update={
-                "state": CalculationRevisionState.VERIFICADO_COMPLETO,
-                "verified_at": now,
-                "verified_by": actor.strip(),
-                "updated_at": now,
-                "ledger_filing_snapshot": filing_snapshot,
-                "ledger_filing_evidence": filing_evidence,
-            }
-        )
-        cr_repo.save(upsert_calculation_revision(revisions, verified))
 
-    _emit_bucket_event(
+    _emit_verification_bucket_event(
         repository=bv_repo,
+        work_unit=work_unit,
+        target=target,
+        report_id=report_id,
+        calculation_revision_id=calculation_revision_id,
+        completeness=completeness,
+        granted=granted,
+        finding_count=len(findings),
+        missing_required_count=len(missing_required),
+        actor=actor,
+        occurred_at=now,
+    )
+
+    return report
+
+
+def _persist_verified_revision_evidence(
+    *,
+    target: CalculationRevision,
+    actor: str,
+    now: datetime,
+    revisions,
+    work_unit: WorkUnit,
+    transaction_repository: TransactionCatalogueRepository | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+) -> None:
+    tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
+    catalogue = tx_repo.load()
+    filing_snapshot = compute_ledger_filing_snapshot(
+        source_transaction_ids=target.source_transaction_ids,
+        catalogue=catalogue,
+        captured_at=now,
+    )
+    filing_evidence = compute_ledger_filing_evidence(
+        source_transaction_ids=target.source_transaction_ids,
+        catalogue=catalogue,
+        snapshot_fingerprint=filing_snapshot.snapshot_fingerprint,
+        captured_at=now,
+        manual_entries=_manual_fact_basis_entries(target.inputs_snapshot),
+    )
+    _assert_evidence_covers_snapshot(filing_snapshot, filing_evidence)
+    verified = target.model_copy(
+        update={
+            "state": CalculationRevisionState.VERIFICADO_COMPLETO,
+            "verified_at": now,
+            "verified_by": actor.strip(),
+            "updated_at": now,
+            "ledger_filing_snapshot": filing_snapshot,
+            "ledger_filing_evidence": filing_evidence,
+        }
+    )
+    calculation_repository.save(upsert_calculation_revision(revisions, verified))
+
+
+def _emit_verification_bucket_event(
+    *,
+    repository: BucketEventHistoryRepositoryProtocol,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    report_id: str,
+    calculation_revision_id: str,
+    completeness: VerificationCompletenessStatus,
+    granted: bool,
+    finding_count: int,
+    missing_required_count: int,
+    actor: str,
+    occurred_at: datetime,
+) -> None:
+    _emit_bucket_event(
+        repository=repository,
         bucket_id=work_unit.bucket_id,
         event_type=(
             BucketEventType.MODELO_VERIFICATION_PASSED if granted else BucketEventType.MODELO_VERIFICATION_REFUSED
         ),
-        occurred_at=now,
+        occurred_at=occurred_at,
         actor=actor,
         object_type=BucketEventObjectType.VERIFICATION_REPORT,
         object_id=report_id,
@@ -947,12 +908,10 @@ def verify_modelo_revision(
             "filing_year": str(work_unit.filing_year),
             "period": work_unit.period,
             "completeness_status": completeness.value,
-            "finding_count": str(len(findings)),
-            "missing_required_count": str(len(missing_required)),
+            "finding_count": str(finding_count),
+            "missing_required_count": str(missing_required_count),
         },
     )
-
-    return report
 
 
 def _collect_revision_verification_findings(

@@ -40,6 +40,36 @@ from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown
 from ._revision_persistence import emit_bucket_event as _emit_bucket_event
 
 
+def _load_external_import_target(
+    *,
+    work_unit_id: str,
+    casilla_values: Mapping[str, Decimal],
+    evidence_reference_id: str,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+):
+    cleaned_reference = _validated_external_reference(casilla_values, evidence_reference_id)
+
+    work_units = work_unit_repository.load()
+    work_unit = work_units.get(work_unit_id)
+    if work_unit is None:
+        raise WorkUnitNotFoundError(
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={"work_unit_id": work_unit_id},
+        )
+    if work_unit.state is WorkUnitState.DESCARTADO:
+        raise WorkUnitMutationRefusedError(
+            translated_message="application.modelo.errors.work_unit_discarded_cannot_import",
+            context={"work_unit_id": work_unit_id},
+        )
+    snapshot = _reject_unknown_import_casillas(
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        casilla_values=casilla_values,
+    )
+    return work_units, work_unit, snapshot, cleaned_reference
+
+
 def import_external_filing_evidence(
     *,
     work_unit_id: str,
@@ -53,90 +83,17 @@ def import_external_filing_evidence(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
-    """Persist an externally-filed return as a baseline filing record.
-
-    This is the canonical entry point the import path (justificante
-    PDF reader, AEAT CSV register importer, AEAT live capture) uses
-    to land an externally-filed return as the bucket's baseline:
-
-    1. Verify the work unit exists and is not discarded.
-    2. Persist a fresh ``FILED`` calculation revision carrying the
-       imported casilla values (no inputs / overrides — the operator
-       did not compute this locally; AEAT's records are the source
-       of truth).
-    3. Build a ``CURRENT`` filing record with ``external_evidence``
-       populated and ``aeat_accepted=True``.
-    4. If a prior current filing exists for the (bucket, modelo,
-       year, period) tuple, supersede it (same supersession chain
-       the file path uses).
-    5. Advance the work-unit pointers to the imported baseline.
-    6. Emit a ``modelo.filing.imported`` bucket event linking the
-       new filing record id to the evidence reference.
-
-    The amend path consumes records produced here as its baseline.
-
-    Args:
-        work_unit_id: The stable id of the work unit to attach the imported
-            filing to.
-        casilla_values: The AEAT-attested casilla values from the imported
-            filing. Must be non-empty.
-        evidence_kind: The kind of external evidence being imported (e.g.
-            justificante, borrador).
-        evidence_reference_id: The AEAT-issued reference identifier for the
-            imported filing. Must be non-blank after stripping.
-        actor: Operator identifier recorded in the audit trail. Defaults to
-            ``"aeat-import"``.
-        work_unit_repository: Optional work-unit catalogue repository override.
-        calculation_repository: Optional calculation-revision catalogue
-            repository override.
-        filing_repository: Optional filing-record catalogue repository override.
-        bucket_event_repository: Optional bucket-event history repository
-            override.
-        clock: Optional UTC timestamp override.
-
-    Returns:
-        The newly created :class:`ModeloRecord` in ``CURRENT`` status.
-
-    Raises:
-        WorkUnitNotFoundError: when ``work_unit_id`` is absent.
-        WorkUnitMutationRefusedError: when the work unit is discarded.
-        ExternalModeloImportError: when ``casilla_values`` is empty,
-            ``evidence_reference_id`` is blank, or the derived revision id
-            already exists in the catalogue.
-    """
+    """Persist an externally-filed return as a baseline filing record."""
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
 
-    if not casilla_values:
-        raise ExternalModeloImportError(
-            translated_message="application.modelo.errors.external_filing_no_casilla_values",
-        )
-    cleaned_reference = evidence_reference_id.strip()
-    if not cleaned_reference:
-        raise ExternalModeloImportError(
-            translated_message="application.modelo.errors.external_filing_evidence_reference_blank",
-        )
-
-    work_units = wu_repo.load()
-    work_unit = work_units.get(work_unit_id)
-    if work_unit is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.work_unit_not_found",
-            context={"work_unit_id": work_unit_id},
-        )
-    if work_unit.state is WorkUnitState.DESCARTADO:
-        raise WorkUnitMutationRefusedError(
-            translated_message="application.modelo.errors.work_unit_discarded_cannot_import",
-            context={"work_unit_id": work_unit_id},
-        )
-
-    snapshot = _reject_unknown_import_casillas(
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
+    work_units, work_unit, snapshot, cleaned_reference = _load_external_import_target(
+        work_unit_id=work_unit_id,
         casilla_values=casilla_values,
+        evidence_reference_id=evidence_reference_id,
+        work_unit_repository=wu_repo,
     )
 
     inputs_snapshot: dict[str, str] = {}
@@ -275,3 +232,19 @@ def import_external_filing_evidence(
     )
 
     return new_filing
+
+
+def _validated_external_reference(
+    casilla_values: Mapping[str, Decimal],
+    evidence_reference_id: str,
+) -> str:
+    if not casilla_values:
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_filing_no_casilla_values",
+        )
+    cleaned_reference = evidence_reference_id.strip()
+    if not cleaned_reference:
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_filing_evidence_reference_blank",
+        )
+    return cleaned_reference

@@ -251,14 +251,12 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
     from ...domain.calculations.registry import RegistrySnapshotError
     from ...domain.modelos._repository import WorkUnitCatalogueRepository
     from ..aggregation import CalculationSourceContext, ProfileSourceResolver
-    from ._actions import (
-        WorkUnitNotFoundError,
-        _authority_via_resources,
-    )
+    from ._action_errors import WorkUnitNotFoundError
     from ._binding_resolution import (
         _resolve_declaration_period_inputs,
         resolve_bound_casilla_inputs_for_available_bindings,
     )
+    from ._registry_resources import authority_via_resources as _authority_via_resources
 
     wu_repo = WorkUnitCatalogueRepository()
     work_units = wu_repo.load()
