@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
@@ -12,6 +14,7 @@ from .. import (
     ProfileRemovePolicy,
     ProfileSchemaDefinition,
     ProfileSnapshotPolicy,
+    UserProfileSchemaLoadError,
     load_user_profile_schema,
 )
 
@@ -41,6 +44,37 @@ def test_committed_user_profile_schema_loads_with_canonical_sections() -> None:
         "usage_ratios",
         "provenance",
     } <= {section.key for section in schema.sections}
+
+
+def test_missing_user_profile_schema_path_raises_typed_localized_error(tmp_path: Path) -> None:
+    missing = tmp_path / "missing-schema.toml"
+
+    with pytest.raises(UserProfileSchemaLoadError) as exc_info:
+        load_user_profile_schema(missing)
+
+    assert isinstance(exc_info.value.__cause__, FileNotFoundError)
+    assert exc_info.value.translated_message == "errors.fail.fail_user_profile_schema_load"
+    assert exc_info.value.context == {
+        "operation": "stat",
+        "path": str(missing),
+        "schema": "user_profile",
+    }
+
+
+def test_user_profile_schema_missing_tables_raises_structured_domain_error(tmp_path: Path) -> None:
+    schema_path = tmp_path / "schema.toml"
+    schema_path.write_text("[not_schema]\nid = 'wrong'\n", encoding="utf-8")
+
+    with pytest.raises(UserProfileSchemaLoadError) as exc_info:
+        load_user_profile_schema(schema_path)
+
+    assert exc_info.value.__cause__ is None
+    assert exc_info.value.translated_message == "errors.fail.fail_user_profile_schema_load"
+    assert exc_info.value.context == {
+        "operation": "validate",
+        "path": str(schema_path),
+        "schema": "user_profile",
+    }
 
 
 def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None:

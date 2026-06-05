@@ -24,7 +24,10 @@ def load_user_profile_schema(path: Path | None = None) -> ProfileSchemaDefinitio
     """
     target = path if path is not None else bundled_path("registry", "aeat", "user_profile", "schema.toml")
     resolved = target.resolve()
-    stat = resolved.stat()
+    try:
+        stat = resolved.stat()
+    except OSError as exc:
+        raise _schema_load_error(resolved, "cannot stat user-profile schema", operation="stat") from exc
     return _load_user_profile_schema_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
 
 
@@ -32,14 +35,31 @@ def load_user_profile_schema(path: Path | None = None) -> ProfileSchemaDefinitio
 def _load_user_profile_schema_cached(path: str, byte_count: int, modified_ns: int) -> ProfileSchemaDefinition:
     del byte_count, modified_ns
     source_path = Path(path)
-    data = freeze_toml(read_toml(source_path, error_factory=UserProfileSchemaLoadError))
+    data = freeze_toml(
+        read_toml(
+            source_path,
+            error_factory=lambda message: _schema_load_error(source_path, message, operation="read"),
+        )
+    )
     raw_schema = data.get("schema")
     if not isinstance(raw_schema, dict):
-        raise UserProfileSchemaLoadError(f"{source_path}: missing [schema] table")
+        raise _schema_load_error(source_path, "missing [schema] table", operation="validate")
     raw_sections = data.get("sections")
     if not isinstance(raw_sections, tuple) or not raw_sections:
-        raise UserProfileSchemaLoadError(f"{source_path}: missing [[sections]] tables")
+        raise _schema_load_error(source_path, "missing [[sections]] tables", operation="validate")
     try:
         return ProfileSchemaDefinition.model_validate({**raw_schema, "sections": raw_sections})
     except ValidationError as exc:
-        raise UserProfileSchemaLoadError(f"{source_path}: invalid user-profile schema: {exc}") from exc
+        raise _schema_load_error(source_path, f"invalid user-profile schema: {exc}", operation="validate") from exc
+
+
+def _schema_load_error(path: Path, message: str, *, operation: str) -> UserProfileSchemaLoadError:
+    """Build a structured schema-load error without leaking raw OS exceptions."""
+    return UserProfileSchemaLoadError(
+        f"{path}: {message}",
+        context={
+            "operation": operation,
+            "path": str(path),
+            "schema": "user_profile",
+        },
+    )

@@ -257,3 +257,29 @@ production parent package, and the transaction roundtrip suite passes.
 `python -m aeat.locales audit` passes after verifying the intracom operation-type CLI
 refusal keys are recognized by the locale scanner. No manual locale YAML edits were
 needed.
+
+## S372-CR-001 | FIXED | User-profile schema stat leaked raw OSError
+
+Reviewed the S372 scope as `vaultspec-code-reviewer`. `_loader.py` called `stat()`
+before the TOML read helper could wrap filesystem failures. Missing or inaccessible
+schema paths now raise `UserProfileSchemaLoadError` with structured context and chained
+cause.
+
+## S372-CR-002 | PASS | User-profile schema load errors are localized AEAT errors
+
+`UserProfileSchemaLoadError` remains under the core `AeatError` hierarchy and now
+sets `translated_message="errors.fail.fail_user_profile_schema_load"`. No locale YAML
+edits were required because the key already exists and `python -m aeat.locales audit`
+passes.
+
+## S372-CR-003 | PASS | Loader remains schema-only, not profile storage
+
+`_loader.py` reads the bundled user-profile schema TOML or an explicit caller-supplied
+schema path. It does not resolve active profiles, inspect secure-storage runtime,
+construct repositories, inspect environment variables, or persist profile data.
+
+## S372-CR-004 | FIXED | Profile registry-contract test import regression
+
+The focused verification suite initially failed because `test_registry_contract.py`
+used over-deep relative imports. The imports now target the production modules and the
+schema/registry suite passes.
