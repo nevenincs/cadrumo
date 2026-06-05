@@ -50,6 +50,7 @@ from ...domain.modelos._calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
@@ -92,6 +93,7 @@ from ..workflow import (
     WorkflowInputMismatchError as WorkflowInputMismatchError,
 )
 from . import _iva_wallet_gate
+from . import _m210_rate as _m210_rate
 from ._action_errors import (
     AmendmentEvidenceMissingError,
     AmendmentOverrideCasillaError,
@@ -152,7 +154,6 @@ from ._calculation_helpers import (
 from ._calculation_helpers import (
     resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit,
 )
-from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
 from ._registry_helpers import (
     assert_revision_content_integrity as _assert_revision_content_integrity,
 )
@@ -264,6 +265,7 @@ _require_persisted_iva_compensation_decision_matches_revision = _require_iva_com
 _taxpayer_nif_for_bucket = _iva_wallet_gate.taxpayer_nif_for_bucket
 iva_wallet_blocked_message = _iva_wallet_gate.iva_wallet_blocked_message
 resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva_compensation_decision_for_calculation
+_resolve_m210_rate = _m210_rate.resolve_m210_rate
 
 
 
@@ -1027,6 +1029,7 @@ __all__ = [
     "ModeloAggregationBindingError",
     "ModeloApplicabilityFilterError",
     "ModeloCrossPeriodCleanStateError",
+    "ModeloError",
     "ModeloIvaWalletReconciliationBlocked",
     "ModeloIvaWalletReconciliationBlockedError",
     "ModeloRecordNotFoundError",
