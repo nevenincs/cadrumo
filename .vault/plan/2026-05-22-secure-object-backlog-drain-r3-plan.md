@@ -7,7 +7,9 @@ tier: L2
 related:
   - '[[2026-05-22-secure-object-backlog-drain-r2-plan]]'
   - '[[2026-05-22-secure-object-backlog-drain-r2-P03-summary]]'
-  - '[[2026-05-22-secure-object-backlog-drain-r2-P03-S06-review]]'
+  - '[[2026-05-22-secure-object-backlog-drain-r2-p03-s06-review-audit]]'
+  - '[[2026-06-04-secure-object-backlog-drain-adr]]'
+  - '[[2026-06-04-secure-object-backlog-drain-research]]'
 ---
 
 

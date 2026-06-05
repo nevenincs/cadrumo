@@ -6,13 +6,9 @@ date: '2026-06-03'
 related:
   - "[[2026-06-03-wizard-catalogue-startup-ordering-adr]]"
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
+  - '[[2026-06-04-bare-invocation-bucket-session-gate-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `bare-invocation-bucket-session-gate` adr: bare CLI invocation does not require an active bucket session | (**status:** `accepted`)
 

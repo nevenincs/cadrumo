@@ -39,6 +39,21 @@ _DOMAIN_MARKERS = frozenset(
 )
 _AUXILIARY_MARKERS = frozenset({"docs", "flaky", "fixture_tier_l3", "workbook_parity", "slow", "inventory"})
 _EXPECTED_CONFIGURED_MARKERS = _ACCESS_MARKERS | _DOMAIN_MARKERS | _AUXILIARY_MARKERS
+_LIVE_ENV_NAME = "AEAT_LIVE_TESTS_ENABLED"
+_LIVE_TEST_OPT_IN_TOKENS = ("AEAT_LIVE_TESTS_ENABLED", "aeat_live_tests_enabled")
+_LIVE_TEST_OPT_IN_AUTHORITY_FILES = frozenset(
+    {
+        Path("src/aeat/core/config.py"),
+        Path("src/aeat/core/access_gate/__init__.py"),
+        Path("src/aeat/core/access_gate/_errors.py"),
+    }
+)
+_LIVE_TEST_OPT_IN_SCAN_ROOTS = (
+    _SRC_AEAT / "adapters",
+    _SRC_AEAT / "application",
+    _SRC_AEAT / "core",
+    _SRC_AEAT / "entrypoints",
+)
 
 
 def _discover_test_modules() -> list[Path]:
@@ -202,11 +217,102 @@ def _function_level_marker_violations(path: Path) -> list[str]:
     return violations
 
 
+def _is_live_env_runtime_access(node: ast.AST) -> bool:
+    """Return True for executable reads/writes of the live-test opt-in env var."""
+    if isinstance(node, ast.Subscript):
+        if not _is_os_environ(node.value):
+            return False
+        return _literal_string(node.slice) == _LIVE_ENV_NAME
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+        if _is_os_environ(node.func.value) and node.func.attr in {"get", "pop", "setdefault"}:
+            return bool(node.args) and _literal_string(node.args[0]) == _LIVE_ENV_NAME
+        if node.func.attr in {"setenv", "delenv"}:
+            return bool(node.args) and _literal_string(node.args[0]) == _LIVE_ENV_NAME
+    return False
+
+
+def _is_os_environ(node: ast.AST) -> bool:
+    """Return True for the AST shape `os.environ`."""
+    return (
+        isinstance(node, ast.Attribute)
+        and node.attr == "environ"
+        and isinstance(node.value, ast.Name)
+        and node.value.id == "os"
+    )
+
+
+def _literal_string(node: ast.AST) -> str | None:
+    """Return the string literal value represented by `node`, when static."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    return None
+
+
+def _imports_access_gate(path: Path) -> bool:
+    """Return True when a unit test is directly testing the live access gate."""
+    if "access_gate" in path.parts:
+        return True
+    source = path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(path))
+    for node in tree.body:
+        if not isinstance(node, ast.ImportFrom) or node.module is None:
+            continue
+        if node.module.endswith("core.access_gate") or ".core.access_gate" in node.module:
+            return True
+    return False
+
+
+def _live_env_runtime_violations(path: Path) -> list[str]:
+    """Return live-test env runtime accesses outside live tests or gate tests."""
+    names, error = _extract_pytestmark_names(path)
+    if error is not None:
+        return []
+    access = names & _ACCESS_MARKERS
+    if access & {"live_read", "live_write"}:
+        return []
+    if _imports_access_gate(path):
+        return []
+
+    source = path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(path))
+    violations: list[str] = []
+    for node in ast.walk(tree):
+        if _is_live_env_runtime_access(node):
+            violations.append(f"{path.relative_to(_REPO_ROOT)}:{getattr(node, 'lineno', '?')}")
+    return violations
+
+
 def _configured_marker_names() -> list[str]:
     """Return marker names declared in ``pyproject.toml``."""
     data = tomllib.loads((_REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     marker_rows = data["tool"]["pytest"]["ini_options"]["markers"]
     return [row.split(":", 1)[0] for row in marker_rows]
+
+
+def _is_test_infrastructure_path(path: Path) -> bool:
+    """Return True for test modules and shared pytest infrastructure."""
+    parts = path.relative_to(_REPO_ROOT).parts
+    return (
+        "tests" in parts
+        or path.name == "conftest.py"
+        or path.name.startswith("test_")
+        or path.name.endswith("_test.py")
+    )
+
+
+def _production_live_test_opt_in_violations() -> list[str]:
+    """Return production modules that mention the pytest live-test opt-in token."""
+    violations: list[str] = []
+    for root in _LIVE_TEST_OPT_IN_SCAN_ROOTS:
+        for path in root.rglob("*.py"):
+            relative = path.relative_to(_REPO_ROOT)
+            if relative in _LIVE_TEST_OPT_IN_AUTHORITY_FILES or _is_test_infrastructure_path(path):
+                continue
+            source = path.read_text(encoding="utf-8")
+            hits = [token for token in _LIVE_TEST_OPT_IN_TOKENS if token in source]
+            if hits:
+                violations.append(f"{relative}: {', '.join(hits)}")
+    return violations
 
 
 _MODULES = _discover_test_modules()
@@ -250,12 +356,31 @@ def test_no_function_level_access_or_domain_markers() -> None:
     assert not violations, "function-level access/domain markers are forbidden:\n" + "\n".join(violations)
 
 
+def test_live_test_env_runtime_access_is_live_or_gate_scoped() -> None:
+    """Ordinary unit/domain tests must not depend on the live-test opt-in env var."""
+    violations: list[str] = []
+    for module_path in _MODULES:
+        violations.extend(_live_env_runtime_violations(module_path))
+    assert not violations, (
+        "runtime AEAT_LIVE_TESTS_ENABLED access is only allowed in live_read/live_write tests "
+        "or focused access-gate tests:\n" + "\n".join(violations)
+    )
+
+
 def test_pyproject_marker_registry_is_pruned_and_unique() -> None:
     """Configured markers must be unique and match the active taxonomy."""
     configured = _configured_marker_names()
     duplicates = sorted({name for name in configured if configured.count(name) > 1})
     assert not duplicates, f"duplicate pytest marker declarations: {duplicates}"
     assert set(configured) == _EXPECTED_CONFIGURED_MARKERS
+
+
+def test_live_test_opt_in_token_is_not_used_by_production_live_read_paths() -> None:
+    """The live-test opt-in env var must remain test/core-gate infrastructure only."""
+    violations = _production_live_test_opt_in_violations()
+    assert not violations, "production modules must not gate live reads on the pytest opt-in:\n" + "\n".join(
+        violations
+    )
 
 
 def test_discovery_found_modules() -> None:

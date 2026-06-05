@@ -7,7 +7,7 @@ step_id: 'S316'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-05-27-secure-storage-diagnostics-profile-closeout-audit]]'
-  - '[[2026-05-26-secure-storage-production-hardening-W12-P21-S84-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p21-s84-review-audit]]'
 ---
 
 # `secure-storage-production-hardening` `W12.P26.S316`

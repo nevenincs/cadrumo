@@ -18,7 +18,7 @@ from .session import BrowserError, BrowserFailureMode, BrowserSession
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 _FIXTURES_ROOT = FIXTURES_DIR / "site_health"
-_PROBE_URL = "https://sede.agenciatributaria.gob.es/"
+_PROBE_URL = f"{Settings.external_constants().aeat.domains.sede}/"
 
 
 class _RecordingEvasion(EvasionStrategy):

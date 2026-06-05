@@ -27,6 +27,9 @@ from ._nif_iva_check import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+_AEAT = Settings.external_constants().aeat
+_NIF_IVA_ENTRY_URL = f"{_AEAT.domains.sede}{_AEAT.help_pages.nif_iva_landing}"
+_AUTH_GATE_4033_URL = f"{_AEAT.domains.sede}{_AEAT.sede_paths.auth_gate_4033}"
 
 
 def test_driver_mode_is_live() -> None:
@@ -85,7 +88,7 @@ def test_observation_model_roundtrips_through_strict_frozen_pydantic() -> None:
     observation = NifIvaCheckObservation(
         nif="DE111222333",
         verdict="valid",
-        raw_evidence_locator="https://www1.agenciatributaria.gob.es/wlpl/IXVI-JDIT/ConsultaIntracomunitarios",
+        raw_evidence_locator=_AEAT.oracles.nif_iva_verification,
     )
     rebuilt = NifIvaCheckObservation.model_validate(observation.model_dump())
     assert rebuilt == observation
@@ -130,13 +133,13 @@ def test_auth_gate_detector_matches_aeat_4033_redirect() -> None:
     """The detector recognises AEAT's 4033 / 403 error landing URL exactly.
 
     Verified end-to-end via .tmp/probe_nif_iva_driver.py against live
-    AEAT: navigating to ConsultaIntracomunitarios without authentication
+    AEAT: navigating to the configured NIF-IVA verification servlet without authentication
     lands at this exact URL.
     """
 
-    assert is_aeat_auth_gate_redirect("https://sede.agenciatributaria.gob.es/Sede/errores/erro4033.html")
+    assert is_aeat_auth_gate_redirect(_AUTH_GATE_4033_URL)
     assert is_aeat_auth_gate_redirect(
-        "https://sede.agenciatributaria.gob.es/Sede/errores/erro4033.html?from=ConsultaIntracomunitarios"
+        f"{_AUTH_GATE_4033_URL}?from={_AEAT.oracles.nif_iva_auth_locked_descriptor.rsplit(maxsplit=1)[-1]}"
     )
 
 
@@ -144,10 +147,12 @@ def test_auth_gate_detector_rejects_non_4033_aeat_pages() -> None:
     """Other AEAT error pages and the form servlet itself are not auth-gates."""
 
     assert not is_aeat_auth_gate_redirect(
-        "https://www1.agenciatributaria.gob.es/wlpl/IXVI-JDIT/ConsultaIntracomunitarios"
+        _AEAT.oracles.nif_iva_verification
     )
-    assert not is_aeat_auth_gate_redirect("https://sede.agenciatributaria.gob.es/Sede/errores/erro4032.html")
-    assert not is_aeat_auth_gate_redirect("https://sede.agenciatributaria.gob.es/Sede/iva.html")
+    assert not is_aeat_auth_gate_redirect(
+        f"{_AEAT.domains.sede}{_AEAT.sede_paths.auth_gate_4033.replace('4033', '4032')}"
+    )
+    assert not is_aeat_auth_gate_redirect(_NIF_IVA_ENTRY_URL)
 
 
 def test_auth_gate_detector_rejects_non_aeat_hosts() -> None:

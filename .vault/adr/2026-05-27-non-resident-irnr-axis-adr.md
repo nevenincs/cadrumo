@@ -7,6 +7,7 @@ related:
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
   - "[[2026-05-21-taxpayer-type-applicability-adr]]"
   - "[[2026-04-28-ccaa-in-profile-adr]]"
+  - '[[2026-06-04-non-resident-irnr-axis-research]]'
 ---
 
 

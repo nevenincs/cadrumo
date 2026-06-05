@@ -6,7 +6,7 @@ tags:
 date: 2026-05-27
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
-  - "[[2026-05-27-S113-modelo-100-cuota-trace]]"
+  - "[[2026-05-27-s113-modelo-100-cuota-trace-exec]]"
 ---
 
 # cross-domain-continuity W07.P31.S115 — Cluster T regression test

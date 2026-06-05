@@ -1,8 +1,8 @@
 # How to prepare a Modelo 303 quarterly filing
 
 This guide shows you how to prepare, verify, and export Modelo 303, the
-quarterly value-added tax (VAT), or impuesto sobre el valor añadido (IVA),
-declaration.
+quarterly value-added tax declaration. In Spanish, value-added tax is impuesto
+sobre el valor añadido (IVA).
 
 Before you begin:
 

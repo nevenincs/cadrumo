@@ -21,6 +21,9 @@ def sheet_evidence_from_ledger_filing(
     generic attribution map from each contributor transaction id to the
     casilla ids it supports. Missing attribution is refused instead of being
     guessed from modelo-specific tax facts.
+
+    Returns:
+        :class:`SheetEvidenceFacet`: The projected evidence facet.
     """
     contributor_rows: list[SheetEvidenceContributorRow] = []
     for row in evidence.rows:

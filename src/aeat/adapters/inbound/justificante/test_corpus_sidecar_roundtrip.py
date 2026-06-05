@@ -36,16 +36,19 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlparse
 
 import pytest
 
 from ....domain.justificante import Justificante
 from ....tests import FIXTURES_DIR as _FIXTURES_ROOT
 from ....tests._justificante_parse_cache import parse_committed_justificante_fixture
+from ....tests.aeat_literal_fixtures import aeat_host
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _JUSTIFICANTES_DIR = _FIXTURES_ROOT / "justificantes"
+_SEDE_HOST = aeat_host("sede")
 
 # Sanitiser always injects "Y0000001S" as the synthetic NIE across the entire
 # corpus.  This constant makes the assertion self-documenting.
@@ -237,7 +240,7 @@ class TestCorpusSidecarRoundtrip:
         )
 
         # verification_url must point at the AEAT cotejo surface.
-        assert "agenciatributaria.gob.es" in str(record.verification_url), (
+        assert urlparse(str(record.verification_url)).hostname == _SEDE_HOST, (
             f"verification_url wrong for {pdf_path.parent.name}/{pdf_path.stem}: {record.verification_url}"
         )
 

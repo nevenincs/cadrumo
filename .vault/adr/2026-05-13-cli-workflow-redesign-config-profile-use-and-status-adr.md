@@ -9,10 +9,17 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-modelo-shape-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-research]]"
+  - '[[2026-06-03-profile-lifecycle-cli-cascade-supersession-adr]]'
 ---
 
 
 # `cli-workflow-redesign` adr: `Config profile use shortcut and cross-surface profile list with status` | (**status:** `superseded by [[2026-05-16-profile-lifecycle-cli-adr]]`)
+
+> Supersession reader note: the named 2026-05-16 ADR is archived.
+> Current active orientation is the `2026-05-16-profile-lifecycle-cli-plan`
+> plus `2026-06-03-profile-lifecycle-cli-cascade-supersession-adr`.
+> Treat the profile shortcut/list shape below as historical unless a later
+> accepted profile-lifecycle authority re-enrols it.
 
 ## Problem Statement
 

@@ -6,7 +6,7 @@ date: '2026-05-28'
 step_id: 'S42'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
-  - '[[2026-05-28-secure-storage-production-hardening-W05-P10-S42-review]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p10-s42-review-audit]]'
 ---
 
 

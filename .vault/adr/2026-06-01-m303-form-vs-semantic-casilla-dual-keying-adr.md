@@ -8,6 +8,7 @@ related:
   - "[[2026-05-22-schema-hardening-adr]]"
   - "[[2026-05-22-schema-hardening-plan]]"
   - "[[2026-04-17-modelo-303-formulas-adr]]"
+  - '[[2026-06-04-m303-form-vs-semantic-casilla-dual-keying-research]]'
 amendment: |
   Amended 2026-06-01: Added Finding E documenting XSD-dictionary keying axis (task #136).
   XSD-dictionary identifiers (kebab-case attribute tokens in M036; positional codes in M100)
@@ -17,11 +18,6 @@ amendment: |
   regression gate #134 (W12.P61 typed-boundary bulk).
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `m303-form-vs-semantic-casilla-dual-keying` adr: M303 form-numbered vs semantic casilla dual-keying convention | (**status:** `accepted`)
 

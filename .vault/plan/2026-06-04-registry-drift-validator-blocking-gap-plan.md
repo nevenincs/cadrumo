@@ -5,20 +5,12 @@ tags:
 date: '2026-06-04'
 tier: L1
 related:
+  - '[[2026-06-04-registry-drift-validator-blocking-gap-adr]]'
+  - '[[2026-06-04-registry-drift-validator-blocking-gap-research]]'
   - '[[2026-06-04-registry-remaining-hardening-wireframe-audit]]'
   - '[[2026-06-04-registry-generic-fragmentation-contract-audit]]'
   - '[[2026-06-04-registry-generic-fragmentation-contract-code-review-audit]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `registry-drift-validator-blocking-gap` `implementation` plan
 

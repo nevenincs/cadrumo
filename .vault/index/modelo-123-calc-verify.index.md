@@ -3,13 +3,14 @@ generated: true
 tags:
   - '#index'
   - '#modelo-123-calc-verify'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-27-modelo-123-calc-verify-adr]]'
   - '[[2026-04-27-modelo-123-calc-verify-plan]]'
   - '[[2026-04-27-modelo-123-calc-verify-research]]'
   - '[[2026-04-27-modelo-123-calc-verify-summary-exec]]'
   - '[[2026-04-27-modelo-123-rule-delta-reference]]'
+  - '[[2026-05-27-modelo-123-calc-verify-exec]]'
 ---
 
 # `modelo-123-calc-verify` feature index
@@ -25,6 +26,7 @@ Auto-generated index of all documents tagged with `#modelo-123-calc-verify`.
 ### exec
 
 - `2026-04-27-modelo-123-calc-verify-summary-exec` - `modelo-123-calc-verify` summary
+- `2026-05-27-modelo-123-calc-verify-exec` - `modelo-123-calc-verify` Aitor #211 — M123 casilla 06 arithmetic oracle
 
 ### plan
 

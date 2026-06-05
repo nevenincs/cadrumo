@@ -9,9 +9,8 @@ related:
   - '[[2026-05-31-core-authority-action-tracker-v2-reference]]'
   - '[[2026-05-30-identity-primitives-adr]]'
   - '[[2026-05-30-identity-primitives-plan]]'
+  - '[[2026-05-31-core-authority-research]]'
 ---
-
-
 # `core-authority` `core-authority campaign` plan
 
 ## Epic intent

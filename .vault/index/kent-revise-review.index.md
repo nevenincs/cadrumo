@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#kent-revise-review'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-17-operator-revise-review-audit]]'
 ---

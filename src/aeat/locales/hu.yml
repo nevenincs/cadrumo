@@ -1001,6 +1001,9 @@ application:
         állapotban van, nem ABORTED.'
       resume_refused_terminal_reason: A(z) {run_id} futás {reason} miatt megszakadt,
         ami tervezetten terminális és nem folytatható.
+      resume_run_ambiguous: Egynél több munkafolyamat-futás illeszkedik a(z)
+        {modelo} modell {period} időszakára. Válasszon pontos futásazonosítót.
+        {candidates}
       run_id_invalid_blank: A futásazonosító nem lehet üres.
       run_id_invalid_separators: A futásazonosító nem tartalmazhat elérési út elválasztókat.
       run_not_found: 'Munkafolyamat-futás nem található: {run_id}.'

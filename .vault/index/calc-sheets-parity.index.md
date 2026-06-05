@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#calc-sheets-parity'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-05-14-calc-sheets-parity-audit]]'
 ---

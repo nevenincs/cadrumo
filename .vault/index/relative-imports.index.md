@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#relative-imports'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-17-relative-imports-adr]]'
   - '[[2026-04-17-relative-imports-phase1-summary-exec]]'

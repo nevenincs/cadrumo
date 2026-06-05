@@ -107,7 +107,7 @@ Count: 71 — showing all
 | `SECURE_OBJECT_DEFAULT_KEY` | `aeat\adapters\persistence\storage\_namespace_registry.py:16` | adapters | SECURE_OBJECT_DEFAULT_KEY = "default" | 2 |
 | `SECURE_OBJECT_WORKFLOW_STATE_KEY` | `aeat\adapters\persistence\storage\_namespace_registry.py:17` | adapters | SECURE_OBJECT_WORKFLOW_STATE_KEY = "state" | 2 |
 | `SEDE_BODY_ENCODING` | `aeat\adapters\outbound\aeat\sede\_browser_constants.py:28` | adapters | SEDE_BODY_ENCODING: Final[str] = "latin-1" | 0 |
-| `SPANISH_AMOUNT_GROUP` | `aeat\adapters\inbound\pdf\_label_regex.py:35` | adapters | SPANISH_AMOUNT_GROUP = r"(-?[0-9]{1,3}(?:[.  ][0-9]{3}) | 4 |
+| `SPANISH_AMOUNT_GROUP` | `aeat\adapters\inbound\pdf\_label_regex.py:35` | adapters | SPANISH_AMOUNT_GROUP = r"(-?0-9]{1,3}(?:[.  ]0-9]{3}) | 4 |
 | `SYSTEM_BUCKET_ID` | `aeat\application\workflow\_events.py:27` | application | SYSTEM_BUCKET_ID: Final[str] = "system" | 0 |
 | `TEXT_VALUE_GROUP` | `aeat\adapters\inbound\pdf\_label_regex.py:52` | adapters | TEXT_VALUE_GROUP = r"(\S+?)\s*$" | 1 |
 | `TX_BUCKET_NAMESPACE` | `aeat\domain\transactions\_repository.py:28` | domain | TX_BUCKET_NAMESPACE = "aeat.domain.transactions.bucket" | 4 |
@@ -229,7 +229,7 @@ Count: 202
 | --- | --- | --- | --- | --- |
 | `_A1_COLUMN` | `aeat\application\storage\calc_sheets\_records.py:76` | application | _A1_COLUMN = re.compile(r"^[A-Z]{1,3}$") | 0 |
 | `_AEAT_KEY_PATTERN` | `aeat\core\test_settings_single_surface_invariant.py:52` | core | _AEAT_KEY_PATTERN: re.Pattern[str] = re.compile(r"^AEAT | 0 |
-| `_AMOUNT_RE` | `aeat\adapters\inbound\pdf\_scrub.py:52` | adapters | _AMOUNT_RE = re.compile(r"\b(?P<whole>[0-9]{1,3}(?:\.[0 | 0 |
+| `_AMOUNT_RE` | `aeat\adapters\inbound\pdf\_scrub.py:52` | adapters | _AMOUNT_RE = re.compile(r"\b(?P<whole>0-9]{1,3}(?:\.[0 | 0 |
 | `_ANNUAL_PERIOD_RE` | `aeat\domain\period.py:52` | domain | _ANNUAL_PERIOD_RE = re.compile(r"^(?P<year>\d{4})A$") | 0 |
 | `_ANNUAL_RE` | `aeat\application\filing\_import.py:39` | application | _ANNUAL_RE = re.compile(r"^0A$") | 0 |
 | `_ANNUAL_RE` | `aeat\application\filing\reconciliation\_reconcile.py:68` | application | _ANNUAL_RE: Final[re.Pattern[str]] = re.compile(r"^(?P< | 0 |
@@ -240,7 +240,7 @@ Count: 202
 | `_BEARER_TOKEN_RE` | `aeat\core\logging.py:71` | core | _BEARER_TOKEN_RE = re.compile(r"(?i)\bBearer\s+[A-Za-z0 | 0 |
 | `_BIC_RE` | `aeat\domain\calculations\registry\_schema.py:470` | domain | _BIC_RE = re.compile(r"^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3} | 0 |
 | `_BORRADOR_RE` | `aeat\adapters\inbound\borrador\_detect.py:18` | adapters | _BORRADOR_RE = re.compile(r"\bBORRADOR\b", re.IGNORECAS | 0 |
-| `_CADASTRAL_RE` | `aeat\adapters\outbound\aeat\sede\_censo.py:49` | adapters | _CADASTRAL_RE: Final = re.compile(r"^[0-9A-Z]{20}$") | 0 |
+| `_CADASTRAL_RE` | `aeat\adapters\outbound\aeat\sede\_censo.py:49` | adapters | _CADASTRAL_RE: Final = re.compile(r"^0-9A-Z]{20}$") | 0 |
 | `_CANONICAL_ANNUAL_RE` | `aeat\application\filing\_import.py:43` | application | _CANONICAL_ANNUAL_RE = re.compile(r"^\d{4}A$") | 0 |
 | `_CANONICAL_MONTH_RE` | `aeat\application\filing\_import.py:42` | application | _CANONICAL_MONTH_RE = re.compile(r"^\d{4}-(0[1-9]I1[0-2 | 0 |
 | `_CANONICAL_MONTH_RE` | `aeat\application\filing\reconciliation\_reconcile.py:67` | application | _CANONICAL_MONTH_RE: Final[re.Pattern[str]] = re.compil | 0 |
@@ -252,17 +252,17 @@ Count: 202
 | `_CELL_REF_VALUE_PATTERN` | `aeat\domain\calculations\registry\_workbook_parity.py:68` | domain | _CELL_REF_VALUE_PATTERN = re.compile(r"^(?:(?P<sheet>'[ | 0 |
 | `_CERT_RE` | `aeat\adapters\outbound\aeat\sede\_notifications.py:66` | adapters | _CERT_RE: Final[re.Pattern[str]] = re.compile(r"^\d{10, | 0 |
 | `_CIF_PATTERN` | `aeat\core\identity\_documents.py:59` | core | _CIF_PATTERN = re.compile(rf"^([{_CIF_KIND_LETTERS}])(\ | 0 |
-| `_CIF_RE` | `aeat\adapters\outbound\aeat\auth\certificate.py:568` | adapters | _CIF_RE = re.compile(r"^[ABCDEFGHJNPQRSUVW][0-9]{7}[0-9 | 0 |
-| `_CLI_KEY_PATTERN` | `aeat\application\wizard\_translations.py:101` | application | _CLI_KEY_PATTERN = re.compile(r"['\"](cli\.\w+(?:\.\w+) | 0 |
+| `_CIF_RE` | `aeat\adapters\outbound\aeat\auth\certificate.py:568` | adapters | _CIF_RE = re.compile(r"^[ABCDEFGHJNPQRSUVW]0-9]{7}0-9 | 0 |
+| `_CLI_KEY_PATTERN` | `aeat\application\wizard\_translations.py:101` | application | _CLI_KEY_PATTERN = re.compile(r"quote(cli\.\w+(?:\.\w+) | 0 |
 | `_CLI_OBJECT_KEY_ASSIGNMENT_PATTERN` | `aeat\core\redaction\__init__.py:95` | core | _CLI_OBJECT_KEY_ASSIGNMENT_PATTERN = re.compile(     r" | 0 |
 | `_CLI_OBJECT_KEY_TOKEN_PATTERN` | `aeat\core\redaction\__init__.py:100` | core | _CLI_OBJECT_KEY_TOKEN_PATTERN = re.compile(     r"(?i)\ | 0 |
-| `_CLI_UUID_PATTERN` | `aeat\core\redaction\__init__.py:91` | core | _CLI_UUID_PATTERN = re.compile(     r"\b[0-9a-fA-F]{8}- | 0 |
+| `_CLI_UUID_PATTERN` | `aeat\core\redaction\__init__.py:91` | core | _CLI_UUID_PATTERN = re.compile(     r"\b0-9a-fA-F]{8}- | 0 |
 | `_COMBINING_MARK_RE` | `aeat\domain\calculations\registry\_text.py:10` | domain | _COMBINING_MARK_RE = re.compile(r"[\u0300-\u036f]+") | 0 |
 | `_COMPACT_PDF_CRLF_ROW_RE` | `aeat\domain\calculations\registry\_record_design.py:512` | domain | _COMPACT_PDF_CRLF_ROW_RE = re.compile(     r"^\s*(?P<or | 0 |
 | `_COMPACT_PDF_ROW_RE` | `aeat\domain\calculations\registry\_record_design.py:508` | domain | _COMPACT_PDF_ROW_RE = re.compile(     r"^\s*(?P<ordinal | 0 |
 | `_COTEJO_CSV` | `aeat\adapters\outbound\aeat\sede\_parse.py:46` | adapters | _COTEJO_CSV: Final[re.Pattern[str]] = re.compile(     r | 0 |
 | `_COUNTRY_CODE_RE` | `aeat\domain\calculations\registry\_schema.py:261` | domain | _COUNTRY_CODE_RE = re.compile(r"^[A-Z]{2}$") | 0 |
-| `_CP_RE` | `aeat\adapters\inbound\pdf\_scrub.py:62` | adapters | _CP_RE = re.compile(r"\b(?:CP\s*IC\.P\.\s*)[0-9]{5}\b") | 0 |
+| `_CP_RE` | `aeat\adapters\inbound\pdf\_scrub.py:62` | adapters | _CP_RE = re.compile(r"\b(?:CP\s*IC\.P\.\s*)0-9]{5}\b") | 0 |
 | `_CSV_AUTHENTICITY_FOOTER_RE` | `aeat\adapters\inbound\justificante\_extract.py:54` | adapters | _CSV_AUTHENTICITY_FOOTER_RE = re.compile(     r"mediant | 0 |
 | `_CSV_FALLBACK_RE` | `aeat\adapters\inbound\justificante\_extract.py:69` | adapters | _CSV_FALLBACK_RE = re.compile(r"\bCSV\s*[=:]\s*([A-Z0-9 | 0 |
 | `_CSV_LABEL_EN_RE` | `aeat\adapters\inbound\justificante\_extract.py:62` | adapters | _CSV_LABEL_EN_RE = re.compile(     r"Secure\s+Verificat | 0 |
@@ -442,7 +442,7 @@ Count: 71 — showing all
 | `SECURE_OBJECT_DEFAULT_KEY` | `aeat\adapters\persistence\storage\_namespace_registry.py:16` | adapters | SECURE_OBJECT_DEFAULT_KEY = "default" | 2 |
 | `SECURE_OBJECT_WORKFLOW_STATE_KEY` | `aeat\adapters\persistence\storage\_namespace_registry.py:17` | adapters | SECURE_OBJECT_WORKFLOW_STATE_KEY = "state" | 2 |
 | `SEDE_BODY_ENCODING` | `aeat\adapters\outbound\aeat\sede\_browser_constants.py:28` | adapters | SEDE_BODY_ENCODING: Final[str] = "latin-1" | 0 |
-| `SPANISH_AMOUNT_GROUP` | `aeat\adapters\inbound\pdf\_label_regex.py:35` | adapters | SPANISH_AMOUNT_GROUP = r"(-?[0-9]{1,3}(?:[.  ][0-9]{3}) | 4 |
+| `SPANISH_AMOUNT_GROUP` | `aeat\adapters\inbound\pdf\_label_regex.py:35` | adapters | SPANISH_AMOUNT_GROUP = r"(-?0-9]{1,3}(?:[.  ]0-9]{3}) | 4 |
 | `SYSTEM_BUCKET_ID` | `aeat\application\workflow\_events.py:27` | application | SYSTEM_BUCKET_ID: Final[str] = "system" | 0 |
 | `TEXT_VALUE_GROUP` | `aeat\adapters\inbound\pdf\_label_regex.py:52` | adapters | TEXT_VALUE_GROUP = r"(\S+?)\s*$" | 1 |
 | `TX_BUCKET_NAMESPACE` | `aeat\domain\transactions\_repository.py:28` | domain | TX_BUCKET_NAMESPACE = "aeat.domain.transactions.bucket" | 4 |
@@ -564,7 +564,7 @@ Count: 202
 | --- | --- | --- | --- | --- |
 | `_A1_COLUMN` | `aeat\application\storage\calc_sheets\_records.py:76` | application | _A1_COLUMN = re.compile(r"^[A-Z]{1,3}$") | 0 |
 | `_AEAT_KEY_PATTERN` | `aeat\core\test_settings_single_surface_invariant.py:52` | core | _AEAT_KEY_PATTERN: re.Pattern[str] = re.compile(r"^AEAT | 0 |
-| `_AMOUNT_RE` | `aeat\adapters\inbound\pdf\_scrub.py:52` | adapters | _AMOUNT_RE = re.compile(r"\b(?P<whole>[0-9]{1,3}(?:\.[0 | 0 |
+| `_AMOUNT_RE` | `aeat\adapters\inbound\pdf\_scrub.py:52` | adapters | _AMOUNT_RE = re.compile(r"\b(?P<whole>0-9]{1,3}(?:\.[0 | 0 |
 | `_ANNUAL_PERIOD_RE` | `aeat\domain\period.py:52` | domain | _ANNUAL_PERIOD_RE = re.compile(r"^(?P<year>\d{4})A$") | 0 |
 | `_ANNUAL_RE` | `aeat\application\filing\_import.py:39` | application | _ANNUAL_RE = re.compile(r"^0A$") | 0 |
 | `_ANNUAL_RE` | `aeat\application\filing\reconciliation\_reconcile.py:68` | application | _ANNUAL_RE: Final[re.Pattern[str]] = re.compile(r"^(?P< | 0 |
@@ -575,7 +575,7 @@ Count: 202
 | `_BEARER_TOKEN_RE` | `aeat\core\logging.py:71` | core | _BEARER_TOKEN_RE = re.compile(r"(?i)\bBearer\s+[A-Za-z0 | 0 |
 | `_BIC_RE` | `aeat\domain\calculations\registry\_schema.py:470` | domain | _BIC_RE = re.compile(r"^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3} | 0 |
 | `_BORRADOR_RE` | `aeat\adapters\inbound\borrador\_detect.py:18` | adapters | _BORRADOR_RE = re.compile(r"\bBORRADOR\b", re.IGNORECAS | 0 |
-| `_CADASTRAL_RE` | `aeat\adapters\outbound\aeat\sede\_censo.py:49` | adapters | _CADASTRAL_RE: Final = re.compile(r"^[0-9A-Z]{20}$") | 0 |
+| `_CADASTRAL_RE` | `aeat\adapters\outbound\aeat\sede\_censo.py:49` | adapters | _CADASTRAL_RE: Final = re.compile(r"^0-9A-Z]{20}$") | 0 |
 | `_CANONICAL_ANNUAL_RE` | `aeat\application\filing\_import.py:43` | application | _CANONICAL_ANNUAL_RE = re.compile(r"^\d{4}A$") | 0 |
 | `_CANONICAL_MONTH_RE` | `aeat\application\filing\_import.py:42` | application | _CANONICAL_MONTH_RE = re.compile(r"^\d{4}-(0[1-9]I1[0-2 | 0 |
 | `_CANONICAL_MONTH_RE` | `aeat\application\filing\reconciliation\_reconcile.py:67` | application | _CANONICAL_MONTH_RE: Final[re.Pattern[str]] = re.compil | 0 |
@@ -587,17 +587,17 @@ Count: 202
 | `_CELL_REF_VALUE_PATTERN` | `aeat\domain\calculations\registry\_workbook_parity.py:68` | domain | _CELL_REF_VALUE_PATTERN = re.compile(r"^(?:(?P<sheet>'[ | 0 |
 | `_CERT_RE` | `aeat\adapters\outbound\aeat\sede\_notifications.py:66` | adapters | _CERT_RE: Final[re.Pattern[str]] = re.compile(r"^\d{10, | 0 |
 | `_CIF_PATTERN` | `aeat\core\identity\_documents.py:59` | core | _CIF_PATTERN = re.compile(rf"^([{_CIF_KIND_LETTERS}])(\ | 0 |
-| `_CIF_RE` | `aeat\adapters\outbound\aeat\auth\certificate.py:568` | adapters | _CIF_RE = re.compile(r"^[ABCDEFGHJNPQRSUVW][0-9]{7}[0-9 | 0 |
-| `_CLI_KEY_PATTERN` | `aeat\application\wizard\_translations.py:101` | application | _CLI_KEY_PATTERN = re.compile(r"['\"](cli\.\w+(?:\.\w+) | 0 |
+| `_CIF_RE` | `aeat\adapters\outbound\aeat\auth\certificate.py:568` | adapters | _CIF_RE = re.compile(r"^[ABCDEFGHJNPQRSUVW]0-9]{7}0-9 | 0 |
+| `_CLI_KEY_PATTERN` | `aeat\application\wizard\_translations.py:101` | application | _CLI_KEY_PATTERN = re.compile(r"quote(cli\.\w+(?:\.\w+) | 0 |
 | `_CLI_OBJECT_KEY_ASSIGNMENT_PATTERN` | `aeat\core\redaction\__init__.py:95` | core | _CLI_OBJECT_KEY_ASSIGNMENT_PATTERN = re.compile(     r" | 0 |
 | `_CLI_OBJECT_KEY_TOKEN_PATTERN` | `aeat\core\redaction\__init__.py:100` | core | _CLI_OBJECT_KEY_TOKEN_PATTERN = re.compile(     r"(?i)\ | 0 |
-| `_CLI_UUID_PATTERN` | `aeat\core\redaction\__init__.py:91` | core | _CLI_UUID_PATTERN = re.compile(     r"\b[0-9a-fA-F]{8}- | 0 |
+| `_CLI_UUID_PATTERN` | `aeat\core\redaction\__init__.py:91` | core | _CLI_UUID_PATTERN = re.compile(     r"\b0-9a-fA-F]{8}- | 0 |
 | `_COMBINING_MARK_RE` | `aeat\domain\calculations\registry\_text.py:10` | domain | _COMBINING_MARK_RE = re.compile(r"[\u0300-\u036f]+") | 0 |
 | `_COMPACT_PDF_CRLF_ROW_RE` | `aeat\domain\calculations\registry\_record_design.py:512` | domain | _COMPACT_PDF_CRLF_ROW_RE = re.compile(     r"^\s*(?P<or | 0 |
 | `_COMPACT_PDF_ROW_RE` | `aeat\domain\calculations\registry\_record_design.py:508` | domain | _COMPACT_PDF_ROW_RE = re.compile(     r"^\s*(?P<ordinal | 0 |
 | `_COTEJO_CSV` | `aeat\adapters\outbound\aeat\sede\_parse.py:46` | adapters | _COTEJO_CSV: Final[re.Pattern[str]] = re.compile(     r | 0 |
 | `_COUNTRY_CODE_RE` | `aeat\domain\calculations\registry\_schema.py:261` | domain | _COUNTRY_CODE_RE = re.compile(r"^[A-Z]{2}$") | 0 |
-| `_CP_RE` | `aeat\adapters\inbound\pdf\_scrub.py:62` | adapters | _CP_RE = re.compile(r"\b(?:CP\s*IC\.P\.\s*)[0-9]{5}\b") | 0 |
+| `_CP_RE` | `aeat\adapters\inbound\pdf\_scrub.py:62` | adapters | _CP_RE = re.compile(r"\b(?:CP\s*IC\.P\.\s*)0-9]{5}\b") | 0 |
 | `_CSV_AUTHENTICITY_FOOTER_RE` | `aeat\adapters\inbound\justificante\_extract.py:54` | adapters | _CSV_AUTHENTICITY_FOOTER_RE = re.compile(     r"mediant | 0 |
 | `_CSV_FALLBACK_RE` | `aeat\adapters\inbound\justificante\_extract.py:69` | adapters | _CSV_FALLBACK_RE = re.compile(r"\bCSV\s*[=:]\s*([A-Z0-9 | 0 |
 | `_CSV_LABEL_EN_RE` | `aeat\adapters\inbound\justificante\_extract.py:62` | adapters | _CSV_LABEL_EN_RE = re.compile(     r"Secure\s+Verificat | 0 |

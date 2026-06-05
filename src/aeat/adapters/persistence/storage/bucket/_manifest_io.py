@@ -34,7 +34,7 @@ def manifest_path(paths: BucketPaths) -> Path:
 
 
 def manifest_validation_error(message: str) -> StorageValidationError:
-    """Build the typed, localized validation error used by manifest I/O."""
+    """Build the typed, localized :class:`StorageValidationError` used by manifest I/O."""
     return StorageValidationError(message, translated_message=_BUCKET_VALIDATION_MESSAGE_KEY)
 
 

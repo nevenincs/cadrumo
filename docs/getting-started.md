@@ -1,8 +1,12 @@
 # Get started with aeat
 
-`aeat` prepares, verifies, exports, and reconciles local Spanish tax filing
-artifacts. It does not submit filings to AEAT. You upload any exported file
-yourself through the AEAT portal.
+`aeat` helps you prepare local files for Spanish tax forms. It checks your
+figures, exports a file, and lets you compare the final AEAT receipt with your
+local records.
+
+`aeat` does not submit filings to the Agencia Estatal de Administración
+Tributaria (AEAT). You upload any exported file yourself through the AEAT
+portal.
 
 This guide walks through installing the command, creating your first taxpayer
 profile, drafting a Modelo 130 filing, verifying it, and exporting the local
@@ -34,8 +38,16 @@ Spanish tax reporting uses a few recurring terms:
 - **Modelo**: An official tax form, identified by a number. Modelo 130 is the
   quarterly payment-on-account for personal income tax.
 - **Casilla**: A numbered box or field on the official form.
-- **Fichero-BOE**: A text file that follows the official BOE layout and can be
-  uploaded to the AEAT portal.
+- **Tax identifier**: The identifier `aeat` stores for the taxpayer. Spanish
+  citizens usually use their Documento Nacional de Identidad (DNI), foreign
+  individuals use their Número de Identidad de Extranjero (NIE), and companies
+  or other legal entities use their Número de Identificación Fiscal (NIF) or
+  Código de Identificación Fiscal (CIF).
+- **Fichero-BOE**: A text file that follows the official Boletín Oficial del
+  Estado (BOE) layout and can be uploaded to the AEAT portal.
+- **Filing target**: The modelo, year, and period you are preparing.
+- **Draft calculation**: The saved set of figures `aeat` calculates for that
+  filing target.
 
 ## 1. Create your profile
 
@@ -43,34 +55,34 @@ Spanish tax reporting uses a few recurring terms:
 profile. Create your first profile:
 
 ```bash
-aeat config profile create my-profile
+uv run aeat config profile create my-profile
 ```
 
-The application prompts for your tax identity, name, surnames, and tax region.
-When the command finishes, this profile becomes your active workspace.
+The application prompts for your tax identifier, name, surnames, and tax
+region. When the command finishes, this profile becomes active.
 
 ## 2. Create your first filing
 
 This example creates Modelo 130 for the first quarter of 2024:
 
 ```bash
-aeat app modelo work create --modelo 130 --year 2024 --period 1T
+uv run aeat app modelo work create --modelo 130 --year 2024 --period 1T
 ```
 
-The command creates or reuses the work unit for that visible filing target. You
-can ignore printed internal IDs while following this guide.
+The command creates or reuses the local workspace for that filing target. Ignore
+printed internal IDs while following this guide.
 
 ## 3. Calculate the figures
 
 Calculate by repeating the same modelo, year, and period:
 
 ```bash
-aeat app modelo work calculate --modelo 130 --year 2024 --period 1T
+uv run aeat app modelo work calculate --modelo 130 --year 2024 --period 1T
 ```
 
-The command prints the calculated casillas and saves a calculation revision under
-the same work unit. If you run calculation again, `aeat` keeps another revision
-under that same filing target.
+The command prints the calculated casillas and saves the draft for the same
+filing target. If you run calculation again, `aeat` keeps the earlier draft and
+saves the new one too.
 
 If the calculation reports missing figures, supply them with repeatable
 `--casilla NUMBER=VALUE` or `--binding KEY=VALUE` flags.
@@ -80,22 +92,23 @@ If the calculation reports missing figures, supply them with repeatable
 Verify the current calculation for the filing:
 
 ```bash
-aeat app modelo work verify --modelo 130 --year 2024 --period 1T
+uv run aeat app modelo work verify --modelo 130 --year 2024 --period 1T
 ```
 
-The tool runs the completeness checks and marks the selected calculation revision
-as verified when it passes.
+The tool runs the completeness checks and marks the selected draft as verified
+when it passes.
 
 ## 5. Export the filing
 
 Export the verified filing to a local file:
 
 ```bash
-aeat app modelo export --modelo 130 --year 2024 --period 1T --output ./modelo-130-2024-1T.boe
+uv run aeat app modelo export --modelo 130 --year 2024 --period 1T --output ./modelo-130-2024-1T.boe
 ```
 
 The command writes the fichero-BOE file and prints the file location, size, and
-SHA-256 checksum.
+a SHA-256 checksum. The checksum is a file fingerprint you can use to check the
+file later.
 
 ## 6. Upload to the AEAT portal
 
@@ -111,11 +124,10 @@ The final step is manual:
 - For day-to-day filing tasks, see the [how-to guides](how-to/index.md).
 - To practice with sample transaction data, follow the
   [tutorial](tutorials/index.md).
-- To understand work units, calculation revisions, and exact-addressing escape
-  hatches, read [How filings, work units, and calculation revisions fit
+- To understand the advanced filing workspace and revision model, read
+  [How filings, work units, and calculation revisions fit
   together](how-to/filing-spine.md).
 - For every flag, including exact work-unit and calculation-revision ID options,
-  see the [CLI reference](cli/index.rst).
-- For terms, read the [glossary](glossary.md).
-- Report bugs or ask questions on the
-  [issue tracker](https://github.com/wgergely/aeat/issues).
+  see the [command reference](cli/index.rst).
+- If a command stops or the local state looks wrong, use
+  [Diagnose and repair your local setup](how-to/troubleshooting.md).

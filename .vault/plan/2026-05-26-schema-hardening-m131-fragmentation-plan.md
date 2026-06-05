@@ -6,11 +6,11 @@ date: '2026-05-26'
 tier: L2
 related:
   - '[[2026-05-22-schema-hardening-plan]]'
-  - '[[2026-05-26-schema-hardening-open-edge-closeout]]'
-  - '[[2026-05-26-schema-hardening-code-review]]'
+  - '[[2026-05-26-schema-hardening-open-edge-closeout-audit]]'
+  - '[[2026-05-26-schema-hardening-code-review-audit]]'
+  - '[[2026-05-18-schema-hardening-adr]]'
+  - '[[2026-05-18-schema-hardening-research]]'
 ---
-
-
 # `schema-hardening` `m131-fragmentation` plan
 
 ### Phase `P01` - M131 generic revision fragmentation

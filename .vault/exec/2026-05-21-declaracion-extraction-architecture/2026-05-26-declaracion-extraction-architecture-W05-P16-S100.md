@@ -4,7 +4,7 @@ date: '2026-05-26'
 step_id: 'W05.P16.S100'
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-plan]]'
-  - '[[2026-05-26-declaracion-extraction-architecture-W05-P16-backlog-expansion]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-w05-p16-backlog-expansion-exec]]'
 ---
 
 # W05.P16.S100 - Modelo 303 printed boxes 46, 69, 87, and 110

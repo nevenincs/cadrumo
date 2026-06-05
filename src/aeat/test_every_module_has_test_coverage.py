@@ -63,11 +63,14 @@ _EXEMPTIONS: frozenset[str] = frozenset(
         "src/aeat/entrypoints/cli/_registry_corpus.py",
         "src/aeat/entrypoints/cli/_review.py",
         "src/aeat/entrypoints/cli/registry.py",
-        # `python -m` entry points; not pytest-importable surface.
-        # apidocs/__main__ dispatches into apidocs/cli.py (Typer app);
+        # Registry payload modules are imported by CLI/schema registration
+        # paths that are exercised by docs-tool conformance gates outside the
+        # production package. They must not be pulled into coverage only by a
+        # production-embedded documentation generator.
+        "src/aeat/entrypoints/cli/_registry_corpus_payloads.py",
+        "src/aeat/entrypoints/cli/_registry_payloads.py",
+        # `python -m` entry point; not pytest-importable surface.
         # locales/__main__ dispatches into locales/scaffold.py.
-        "src/aeat/apidocs/__main__.py",
-        "src/aeat/apidocs/cli.py",
         "src/aeat/locales/__main__.py",
     }
 )

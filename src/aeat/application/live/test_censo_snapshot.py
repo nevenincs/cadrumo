@@ -19,6 +19,7 @@ from typing import TypedDict
 import pytest
 
 from ...adapters.persistence.storage import LIVE_CENSO_SNAPSHOT_NAMESPACE
+from ...core.config import Settings
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ._censo import (
     CENSO_SNAPSHOT_NAMESPACE,
@@ -34,6 +35,10 @@ from ._errors import LiveApplicationInputError
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 _SESSION_BUCKET_ID = "ephemeral"
+_G313_URL = (
+    f"{Settings.external_constants().aeat.domains.sede}"
+    f"{Settings.external_constants().aeat.sede_paths.censo_g313_launcher}"
+)
 
 
 class _DeriveKwargs(TypedDict):
@@ -70,7 +75,7 @@ def test_derive_censo_snapshot_id_is_deterministic_over_canonical_inputs() -> No
     base_kwargs: _DeriveKwargs = {
         "profile_id": "operator",
         "captured_at": captured_at,
-        "source_url": "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml",
+        "source_url": _G313_URL,
         "censo_facts": _populated_facts(),
     }
     base_id = derive_censo_snapshot_id(**base_kwargs)
@@ -161,7 +166,7 @@ def test_censo_snapshot_survives_encrypted_storage_roundtrip(
     snapshot_id = derive_censo_snapshot_id(
         profile_id="operator",
         captured_at=captured_at,
-        source_url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml",
+        source_url=_G313_URL,
         censo_facts=facts,
     )
     original = CensoSnapshot(
@@ -169,7 +174,7 @@ def test_censo_snapshot_survives_encrypted_storage_roundtrip(
         bucket_id=bucket_id,
         profile_id="operator",
         captured_at=captured_at,
-        source_url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml",
+        source_url=_G313_URL,
         state=SnapshotLifecycleState.ACTIVE,
         censo_facts=facts,
     )

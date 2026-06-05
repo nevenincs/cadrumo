@@ -4,11 +4,11 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-05-28'
 related:
-  - '[[2026-05-28-secure-storage-production-hardening-W05-P09-S40-research]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s40-research]]'
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-05-22-secure-storage-production-hardening-architecture-adr]]'
   - '[[2026-05-06-secure-persistence-enforcement-adr]]'
-  - '[[2026-05-28-secure-storage-production-hardening-W05-P09-S36-side-store-inventory]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s36-side-store-inventory-audit]]'
 ---
 
 

@@ -7,6 +7,7 @@ related:
   - "[[2026-05-30-docs-architecture-research]]"
   - "[[2026-05-30-docs-architecture-adr]]"
   - "[[2026-04-17-relative-imports-adr]]"
+  - '[[2026-06-04-docs-sphinx-build-research]]'
 ---
 
 

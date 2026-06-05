@@ -8,6 +8,8 @@ related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-02-registry-fragment-headroom-post-splits-audit]]'
   - '[[2026-05-19-modelo-registry-fragment-architecture-adr]]'
+  - '[[2026-06-04-registry-construct-pressure-adr]]'
+  - '[[2026-06-04-registry-construct-pressure-research]]'
 ---
 
 # `registry-construct-pressure` `M200 construct fragment pressure follow-up` plan

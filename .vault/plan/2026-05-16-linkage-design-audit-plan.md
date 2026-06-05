@@ -9,9 +9,8 @@ related:
   - '[[2026-05-15-linkage-design-audit-reference]]'
   - '[[2026-05-15-linkage-design-audit-audit]]'
   - '[[2026-05-15-linkage-design-audit-plan]]'
+  - '[[2026-05-26-linkage-design-audit-adr]]'
 ---
-
-
 # `linkage-design-audit` `Wave 2: model consolidation (Phase 2 of linkage epic)` plan
 
 ### Phase `P01` - similarity-matrix triage and consolidation catalogue

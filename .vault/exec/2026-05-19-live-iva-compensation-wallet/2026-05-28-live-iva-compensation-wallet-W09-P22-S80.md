@@ -6,7 +6,7 @@ date: '2026-05-28'
 step_id: 'S80'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
-  - '[[2026-05-28-live-iva-read-only-auth-success-surface-failures]]'
+  - '[[2026-05-28-live-iva-read-only-auth-success-surface-failures-audit]]'
 ---
 
 # `live-iva-compensation-wallet` `W09.P22.S80`

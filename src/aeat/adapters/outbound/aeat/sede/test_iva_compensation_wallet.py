@@ -39,11 +39,11 @@ _SYNTHETIC_TAXPAYER_REF = "synthetic-taxpayer"
 
 
 def _cartera_results_html(*, total: str, rows: str) -> str:
-    """Build a cartera results page mirroring AEAT's real own-name CarteraCuotas shape.
+    """Build a cartera results page mirroring AEAT's real own-name wallet shape.
 
     The aggregate line and the ``Ejercicio``/``Período``/``Cuota Disponible``
     detail table reproduce the structure captured from the live AEAT surface
-    (``/wlpl/DAI3-RUTI/CarteraCuotas`` after own-name + ejercicio/período query).
+    (configured IVA compensation wallet path after own-name + ejercicio/período query).
     """
     return f"""
     <html><head><title>Cartera de cuotas de IVA a compensar</title></head><body>

@@ -6,6 +6,7 @@ date: '2026-06-02'
 related:
   - "[[2026-06-02-modelo-multiyear-renta-353-grupo-aggregation-research]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
+  - '[[2026-06-04-modelo-multiyear-renta-research]]'
 ---
 
 # `modelo-multiyear-renta-353-grupo-aggregation` adr: `353 grupo-entidades monthly aggregation mechanism` | (**status:** `accepted`)

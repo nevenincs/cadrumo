@@ -151,7 +151,6 @@ from ._snapshot_base import (
     SnapshotRepository,
 )
 
-
 class FiledDataCaptureReport(BaseModel):
     """Read-only filed-declaration capture report."""
 
@@ -166,6 +165,64 @@ class FiledDataCaptureReport(BaseModel):
     casilla_count: int
     calculation_observation_count: int
     calculation_observation_keys: tuple[str, ...]
+
+
+class FiledDataCaptureFailureRow(BaseModel):
+    """One failed filed-declaration capture attempt in a bulk run."""
+
+    model_config = ConfigDict(frozen=True)
+
+    modelo: str
+    year: int
+    period: str | None = None
+    expediente_id: str | None = None
+    error_type: str
+    message: str
+
+
+class BulkFiledDataCaptureReport(BaseModel):
+    """Read-only bulk filed-declaration capture report."""
+
+    model_config = ConfigDict(frozen=True)
+
+    output_root: str
+    modelos: tuple[str, ...]
+    year_from: int
+    year_to: int
+    captured_count: int
+    failed_count: int
+    observation_paths: tuple[str, ...]
+    artefact_refs: tuple[str, ...]
+    casilla_count: int
+    calculation_observation_count: int
+    calculation_observation_keys: tuple[str, ...]
+    failures: tuple[FiledDataCaptureFailureRow, ...] = ()
+
+
+class ExpedientesBulkCaptureFailureRow(BaseModel):
+    """One failed expedientes register walk in a bulk run."""
+
+    model_config = ConfigDict(frozen=True)
+
+    modelo: str
+    year: int
+    error_type: str
+    message: str
+
+
+class ExpedientesBulkCaptureReport(BaseModel):
+    """Read-only bulk expedientes snapshot capture report."""
+
+    model_config = ConfigDict(frozen=True)
+
+    bucket_id: str
+    modelos: tuple[str, ...]
+    year_from: int
+    year_to: int
+    captured_snapshot_count: int
+    declaration_count: int
+    snapshot_ids: tuple[str, ...]
+    failures: tuple[ExpedientesBulkCaptureFailureRow, ...] = ()
 
 
 class SourceFiledDataCaptureReport(BaseModel):
@@ -556,6 +613,62 @@ def filed_data_listing_row(declaration: _Declaracion) -> FiledDataListingRow:
     )
 
 
+def filed_data_capture_failure_row(
+    *,
+    modelo: str,
+    year: int,
+    error: BaseException,
+    declaration: _Declaracion | None = None,
+) -> FiledDataCaptureFailureRow:
+    """Map one failed declaration-register read or capture into a report row."""
+    return FiledDataCaptureFailureRow(
+        modelo=declaration.modelo if declaration is not None else modelo,
+        year=declaration.ejercicio if declaration is not None else year,
+        period=declaration.period if declaration is not None else None,
+        expediente_id=declaration.expediente_id if declaration is not None else None,
+        error_type=error.__class__.__name__,
+        message=_bounded_context_text(error),
+    )
+
+
+def _unsupported_filed_capture_failure_row(
+    *,
+    modelo: str,
+    year: int,
+    reason: str,
+) -> FiledDataCaptureFailureRow:
+    return FiledDataCaptureFailureRow(
+        modelo=modelo,
+        year=year,
+        error_type="LiveApplicationInputError",
+        message=reason,
+    )
+
+
+def _filed_capture_unsupported_reason(*, modelo: str, year: int) -> str | None:
+    registry_modelos = {str(definition.id): definition for definition in _resources().modelos.all()}
+    definition = registry_modelos.get(modelo)
+    if definition is None:
+        return f"registry has no modelo definition for {modelo!r}"
+    revisions = tuple(
+        revision for revision in definition.revisions.values() if revision.period_selector.includes_year(year)
+    )
+    if not revisions:
+        return f"registry has no revision for modelo {modelo!r} filing year {year}"
+    filed_read_refs = tuple(
+        ref
+        for revision in revisions
+        for ref in revision.live_cross_references
+        if ref.surface == "authenticated_read_surface" and ref.id.endswith("filed-declarations-read")
+    )
+    if filed_read_refs:
+        return None
+    return (
+        f"AEAT declarations register does not offer modelo {modelo!r}; "
+        "registry revision declares no filed-declarations live read surface"
+    )
+
+
 async def list_filed_data(
     *,
     modelo: str,
@@ -573,7 +686,7 @@ async def list_filed_data(
             translated_message="live.errors.year_range_invalid",
         )
 
-    session, settings = await _active_verified_session()
+    session, settings = await _active_verified_session(operation="live-expedientes-read")
     rows: list[FiledDataListingRow] = []
     async with (
         _shared_playwright(session) as playwright,
@@ -667,6 +780,120 @@ async def capture_filed_data(
     )
 
 
+async def capture_filed_data_bulk(
+    *,
+    year_from: int,
+    year_to: int,
+    output_root: Path,
+    modelos: tuple[str, ...] | None = None,
+) -> BulkFiledDataCaptureReport:
+    """Capture filed-declaration artefacts for registry modelos across a year range.
+
+    The live AEAT form is queried one ``(modelo, year)`` pair at a
+    time, but the browser/auth session is shared across the whole run.
+    Unsupported modelos, page drift, or per-declaration extraction
+    failures are reported in ``failures`` and do not silently disappear.
+    """
+    if year_from > year_to:
+        raise LiveApplicationInputError(
+            message="from-year must be less than or equal to to-year",
+            translated_message="live.errors.year_range_invalid",
+        )
+
+    resolved_modelos = modelos if modelos is not None else tuple(str(m.id) for m in _resources().modelos.all())
+    store = _FiledDeclaracionObservationStore(output_root)
+    observation_paths: list[str] = []
+    artefact_refs: list[str] = []
+    observations_for_calculation: list[_FiledDeclaracionObservation] = []
+    failures: list[FiledDataCaptureFailureRow] = []
+    casilla_count = 0
+    query_pairs: list[tuple[str, int]] = []
+    for code in resolved_modelos:
+        for year in range(year_to, year_from - 1, -1):
+            unsupported_reason = _filed_capture_unsupported_reason(modelo=code, year=year)
+            if unsupported_reason is not None:
+                failures.append(
+                    _unsupported_filed_capture_failure_row(modelo=code, year=year, reason=unsupported_reason)
+                )
+                continue
+            query_pairs.append((code, year))
+
+    if not query_pairs:
+        return BulkFiledDataCaptureReport(
+            output_root=str(output_root),
+            modelos=tuple(resolved_modelos),
+            year_from=year_from,
+            year_to=year_to,
+            captured_count=0,
+            failed_count=len(failures),
+            observation_paths=(),
+            artefact_refs=(),
+            casilla_count=0,
+            calculation_observation_count=0,
+            calculation_observation_keys=(),
+            failures=tuple(failures),
+        )
+
+    session, settings = await _active_verified_session()
+
+    async with (
+        _shared_playwright(session) as playwright,
+        _open_declarations_register(
+            session,
+            settings=settings,
+            playwright=playwright,
+        ) as register,
+    ):
+        for code, year in query_pairs:
+            try:
+                declarations = await register.walk(modelo=code, ejercicio=year)
+            except Exception as exc:
+                failures.append(filed_data_capture_failure_row(modelo=code, year=year, error=exc))
+                continue
+            for declaration in declarations:
+                try:
+                    observation = await register.capture_observation(
+                        declaration,
+                        artefact_sink=store.persist_artefact,
+                    )
+                except Exception as exc:
+                    failures.append(
+                        filed_data_capture_failure_row(
+                            modelo=code,
+                            year=year,
+                            declaration=declaration,
+                            error=exc,
+                        )
+                    )
+                    continue
+                manifest_path = store.persist_observation(observation)
+                observation_paths.append(_capture_report_path(manifest_path, output_root=output_root))
+                artefact_refs.extend(
+                    storage_ref
+                    for artefact in observation.artefacts
+                    for storage_ref in (artefact.storage_ref,)
+                    if storage_ref is not None
+                )
+                casilla_count += len(observation.casillas)
+                observations_for_calculation.append(observation)
+
+    calculation_observation_keys = _persist_latest_filed_calculation_observations(tuple(observations_for_calculation))
+    return BulkFiledDataCaptureReport(
+        output_root=str(output_root),
+        modelos=tuple(resolved_modelos),
+        year_from=year_from,
+        year_to=year_to,
+        captured_count=len(observation_paths),
+        failed_count=len(failures),
+        observation_paths=tuple(observation_paths),
+        artefact_refs=tuple(artefact_refs),
+        casilla_count=casilla_count,
+        calculation_observation_count=len(calculation_observation_keys),
+        calculation_observation_keys=tuple(calculation_observation_keys),
+        failures=tuple(failures),
+    )
+
+
 async def capture_source_filed_data(
     *,
     modelo: str,
@@ -676,7 +903,11 @@ async def capture_source_filed_data(
     registry_root: Path | None = None,
     source_root: Path | None = None,
 ) -> SourceFiledDataCaptureReport:
-    """Capture filed observations required by a target filing's registry dependencies."""
+    """Capture filed observations required by a target filing's registry dependencies.
+
+    Returns:
+        :class:`SourceFiledDataCaptureReport`: The capture report.
+    """
     from ...core.resources import resources as _resources
 
     session, settings = await _active_verified_session()
@@ -1367,13 +1598,84 @@ async def capture_expedientes(*, bucket_id: str, modelo: str, year: int):
     return persisted
 
 
+async def capture_expedientes_bulk(
+    *,
+    bucket_id: str,
+    year_from: int,
+    year_to: int,
+    modelos: tuple[str, ...] | None = None,
+) -> ExpedientesBulkCaptureReport:
+    """Live-walk AEAT declaration-register rows for many modelos and years."""
+    if year_from > year_to:
+        raise LiveApplicationInputError(
+            message="from-year must be less than or equal to to-year",
+            translated_message="live.errors.year_range_invalid",
+        )
+
+    from ._expedientes import ExpedientesCapture, ExpedientesService
+
+    resolved_modelos = modelos if modelos is not None else tuple(str(m.id) for m in _resources().modelos.all())
+    session, settings = await _active_verified_session(operation="live-expedientes-read")
+    service = ExpedientesService(settings=settings)
+    snapshot_ids: list[str] = []
+    failures: list[ExpedientesBulkCaptureFailureRow] = []
+    declarations_for_snapshot: list[_Declaracion] = []
+    successful_query_count = 0
+
+    async with (
+        _shared_playwright(session) as playwright,
+        _open_declarations_register(session, settings=settings, playwright=playwright) as register,
+    ):
+        for code in resolved_modelos:
+            for year in range(year_to, year_from - 1, -1):
+                try:
+                    declarations = await register.walk(modelo=code, ejercicio=year)
+                except Exception as exc:
+                    failures.append(
+                        ExpedientesBulkCaptureFailureRow(
+                            modelo=code,
+                            year=year,
+                            error_type=exc.__class__.__name__,
+                            message=_bounded_context_text(exc),
+                        )
+                    )
+                    continue
+                successful_query_count += 1
+                declarations_for_snapshot.extend(declarations)
+
+    if successful_query_count:
+        capture = ExpedientesCapture(
+            declarations=tuple(declarations_for_snapshot),
+            captured_at=now(),
+            source_url=(
+                "declarations:bulk:"
+                f"modelos={','.join(resolved_modelos)}:"
+                f"ejercicios={year_from}-{year_to}"
+            ),
+        )
+        persisted = service.capture(bucket_id=bucket_id, capture=capture)
+        snapshot_ids.append(persisted.snapshot_id)
+
+    return ExpedientesBulkCaptureReport(
+        bucket_id=bucket_id,
+        modelos=tuple(resolved_modelos),
+        year_from=year_from,
+        year_to=year_to,
+        captured_snapshot_count=len(snapshot_ids),
+        declaration_count=len(declarations_for_snapshot),
+        snapshot_ids=tuple(snapshot_ids),
+        failures=tuple(failures),
+    )
+
+
 async def capture_notifications(*, bucket_id: str):
     """Live-fetch DEHú notifications and persist a bucket-scoped snapshot.
 
     The flow is:
 
-    1. ``_AeatAccessGate.require_live_read()`` — refuses unless
-       ``AEAT_LIVE_TESTS_ENABLED=1`` is set in the operator's shell.
+    1. ``_AeatAccessGate.require_live_read()`` — keeps pytest live
+       reads behind the live-test opt-in while allowing operator reads
+       to continue to auth/profile/read-only guards.
     2. ``_ensure_authenticated_aeat_session(operation="live-notifications-read")``
        — acquires or refreshes the authenticated session
        (e.g. triggers a Cl@ve Móvil push).
@@ -1412,10 +1714,10 @@ async def capture_iva_compensation_wallet(
 ) -> IvaWalletCaptureReport:
     """Live-fetch AEAT's IVA compensation wallet and persist the observation.
 
-    This is the operator-approved live path. It requires
-    `AEAT_LIVE_TESTS_ENABLED=1` and will acquire or reuse the configured
-    AEAT session, including Cl@ve Móvil approval when the auth provider
-    requires it.
+    This is the operator-approved live path. It will acquire or reuse
+    the configured AEAT session, including Cl@ve Móvil approval when
+    the auth provider requires it. Under pytest, the shared live-read
+    gate still requires the live-test opt-in before remote contact.
 
     Returns an :class:`IvaWalletCaptureReport`.
     """
@@ -1550,7 +1852,7 @@ async def _capture_iva_remote_state_for_active_storage(
                 "year_to": year_to,
             }
             filed_history = await _await_live_iva_surface(
-                _capture_iva_compensation_history_with_session(
+                _capture_iva_compensation_history_by_year_with_session(
                     session,
                     settings=settings,
                     year_from=year_from,
@@ -1611,6 +1913,73 @@ async def _capture_iva_remote_state_for_active_storage(
 def _filed_history_surface_timeout_ms(settings: _Settings, *, year_from: int, year_to: int) -> int:
     year_count = max(1, year_to - year_from + 1)
     return settings.aeat_live_iva_surface_timeout_ms * year_count
+
+
+async def _capture_iva_compensation_history_by_year_with_session(
+    session: _AeatSession,
+    *,
+    settings: _Settings,
+    year_from: int,
+    year_to: int,
+    output_root: Path,
+    progress_context: dict[str, object] | None = None,
+) -> IvaCompensationHistoryCaptureReport:
+    """Capture filed Modelo 303 history in year chunks and return one aggregate report."""
+    yearly_reports: list[IvaCompensationHistoryCaptureReport] = []
+    for year in range(year_to, year_from - 1, -1):
+        if progress_context is not None:
+            progress_context.update(
+                {
+                    "phase": "capture_year",
+                    "modelo": "303",
+                    "ejercicio": year,
+                    "year_from": year_from,
+                    "year_to": year_to,
+                }
+            )
+        report = await _capture_iva_compensation_history_with_session(
+            session,
+            settings=settings,
+            year_from=year,
+            year_to=year,
+            output_root=output_root,
+            progress_context=progress_context,
+        )
+        yearly_reports.append(report)
+    return _aggregate_iva_compensation_history_reports(
+        yearly_reports,
+        output_root=output_root,
+        year_from=year_from,
+        year_to=year_to,
+    )
+
+
+def _aggregate_iva_compensation_history_reports(
+    reports: list[IvaCompensationHistoryCaptureReport],
+    *,
+    output_root: Path,
+    year_from: int,
+    year_to: int,
+) -> IvaCompensationHistoryCaptureReport:
+    """Combine per-year filed-history capture reports into one command report."""
+    reloaded = list_iva_compensation_history()
+    return IvaCompensationHistoryCaptureReport(
+        output_root=str(output_root),
+        year_from=year_from,
+        year_to=year_to,
+        captured_count=sum(report.captured_count for report in reports),
+        observation_paths=tuple(path for report in reports for path in report.observation_paths),
+        artefact_refs=tuple(ref for report in reports for ref in report.artefact_refs),
+        casilla_count=sum(report.casilla_count for report in reports),
+        calculation_observation_count=sum(report.calculation_observation_count for report in reports),
+        calculation_observation_keys=tuple(
+            key for report in reports for key in report.calculation_observation_keys
+        ),
+        reloaded_history_count=reloaded.row_count,
+        reloaded_rows=reloaded.rows,
+        failed_declaration_count=sum(report.failed_declaration_count for report in reports),
+        failed_declarations=tuple(ref for report in reports for ref in report.failed_declarations),
+    )
 
 
 async def _await_live_iva_surface[T](
@@ -1739,7 +2108,11 @@ def load_iva_remote_state_acquisition_manifest(
     *,
     repository: IvaRemoteStateAcquisitionManifestRepository | None = None,
 ) -> IvaRemoteStateAcquisitionManifest | None:
-    """Load one encrypted live IVA acquisition manifest by id."""
+    """Load one encrypted live IVA acquisition manifest by id.
+
+    Returns:
+        :class:`IvaRemoteStateAcquisitionManifest` | None: The loaded manifest, or None.
+    """
     repo = repository if repository is not None else IvaRemoteStateAcquisitionManifestRepository()
     return repo.load(acquisition_id)
 
@@ -2166,9 +2539,13 @@ __all__ = [
     "Borrador100SnapshotRepository",
     "Borrador100SnapshotService",
     "BorradorSnapshotNotFoundError",
+    "BulkFiledDataCaptureReport",
     "CensoSnapshotNotFoundError",
+    "ExpedientesBulkCaptureFailureRow",
+    "ExpedientesBulkCaptureReport",
     "ExpedientesCapture",
     "ExpedientesService",
+    "FiledDataCaptureFailureRow",
     "FiledDataCaptureReport",
     "FiledDataListingReport",
     "FiledDataListingRow",
@@ -2204,7 +2581,9 @@ __all__ = [
     "VerifyVerdict",
     "borrador_100_snapshot_object_key",
     "build_iva_remote_state_acquisition_report",
+    "capture_expedientes_bulk",
     "capture_filed_data",
+    "capture_filed_data_bulk",
     "capture_iva_compensation_history",
     "capture_iva_compensation_wallet",
     "capture_iva_remote_state",

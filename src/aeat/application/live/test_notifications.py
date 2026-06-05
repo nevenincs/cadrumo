@@ -14,6 +14,7 @@ from ...adapters.outbound.aeat.sede._notifications import (
     RemoteNotification,
 )
 from ...adapters.persistence.storage import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
+from ...core.config import Settings
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ._errors import LiveApplicationInputError
 from ._notifications import (
@@ -23,6 +24,9 @@ from ._notifications import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+_AEAT = Settings.external_constants().aeat
+_NOTIFICATIONS_SUMMARY_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.notifications_summary}"
+_NOTIFICATIONS_QUERY_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.notifications_query.removesuffix('?VEZ=BUSCAR1')}"
 
 
 @pytest.fixture
@@ -50,7 +54,7 @@ def _row(*, certificado_id: str = "2596230606502", concepto: str = "Sample") -> 
         fecha_notificacion=None,
         modo_notificacion=None,
         leida=None,
-        source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/SvInteresadosQuery"),
+        source_url=AnyHttpUrl(_NOTIFICATIONS_QUERY_URL),
     )
 
 
@@ -58,7 +62,7 @@ def _snapshot(
     *,
     rows: tuple[RemoteNotification, ...] = (),
     captured_at: datetime | None = None,
-    source_url: str = "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/ResumenInteresados",
+    source_url: str = _NOTIFICATIONS_SUMMARY_URL,
 ) -> NotificationsSnapshot:
     return NotificationsSnapshot(
         rows=rows,

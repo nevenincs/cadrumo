@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#code-duplication-sweep'
-date: '2026-05-19'
+date: '2026-06-05'
 related:
   - '[[2026-05-19-code-duplication-sweep-adr]]'
   - '[[2026-05-19-code-duplication-sweep-audit]]'

@@ -10,6 +10,7 @@ related:
   - '[[2026-05-13-testing-framework-tautology-audit]]'
   - '[[2026-05-12-schema-driven-wizard-research]]'
   - '[[2026-04-17-pytest-only-testing-research]]'
+  - '[[2026-06-04-audits-resolution-research]]'
 ---
 
 # `audits-resolution` adr

@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from .....core.config import Settings
+from .....tests.aeat_literal_fixtures import PDF_MODELO_130_2024_PATH_FIXTURE, aeat_url, sede_pdf_url
 from ..errors import RepositoryError
 from . import (
     CorpusArtifactRecord,
@@ -75,7 +76,7 @@ def test_portal_repository_preserves_enum(tmp_path: Path) -> None:
             created = portal_repo.upsert(
                 PortalRecord(
                     identifier="SEDE_ROOT",
-                    base_url="https://sede.agenciatributaria.gob.es",
+                    base_url=aeat_url("sede", "/").rstrip("/"),
                     auth_method=PortalAuthMethod.CERTIFICATE,
                     modelo_id=modelo.id,
                     label="Sede electrónica",
@@ -104,7 +105,7 @@ def test_corpus_artifact_repository_round_trip(tmp_path: Path) -> None:
                     modelo_id=modelo.id,
                     file_path="corpus/2024/modelos/130/modelo-130-2024.pdf",
                     sha256="a" * 64,
-                    source_url="https://sede.agenciatributaria.gob.es/modelo-130-2024.pdf",
+                    source_url=sede_pdf_url(PDF_MODELO_130_2024_PATH_FIXTURE),
                     fetched_at=datetime(2026, 4, 12, tzinfo=UTC),
                 )
             )

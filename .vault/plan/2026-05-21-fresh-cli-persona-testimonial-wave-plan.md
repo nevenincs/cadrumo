@@ -5,12 +5,13 @@ tags:
 date: '2026-05-21'
 tier: L2
 related:
-  - '[[2026-05-20-testimonial-driven-cli-verification-playbook]]'
-  - '[[2026-05-20-cli-persona-task-catalogue]]'
+  - '[[2026-05-20-testimonial-driven-cli-verification-playbook-reference]]'
+  - '[[2026-05-20-cli-persona-task-catalogue-reference]]'
   - '[[2026-05-21-cross-campaign-hardening-persona-testimonial-re-audit]]'
+  - '[[2026-05-20-cli-state-architecture-research]]'
+  - '[[2026-06-04-cli-testimonial-adr]]'
+  - '[[2026-05-21-fresh-cli-persona-capability-gap-design-research]]'
 ---
-
-
 # `fresh-cli-persona-testimonial-wave` plan
 
 ### Phase `P01` - scope and briefing

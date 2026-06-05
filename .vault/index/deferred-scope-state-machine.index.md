@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#deferred-scope-state-machine'
-date: '2026-05-19'
+date: '2026-06-05'
 related:
   - '[[2026-05-19-deferred-scope-state-machine-audit]]'
 ---

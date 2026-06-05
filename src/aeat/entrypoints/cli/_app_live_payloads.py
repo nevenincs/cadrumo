@@ -322,6 +322,17 @@ class NotificationsViewResult(OutputSchema):
     rows: list[NotificationRowPayload]
 
 
+@register_schema("app.live.notifications.latest")
+class NotificationsLatestResult(OutputSchema):
+    """Payload for ``aeat app live notifications latest``."""
+
+    bucket_id: str
+    snapshot_id: str | None
+    captured_at: str | None = None
+    source_url: str | None = None
+    row_count: int | None = None
+
+
 # ---------------------------------------------------------------------------
 # Portals leaves (local catalogue)
 # ---------------------------------------------------------------------------
@@ -398,6 +409,30 @@ class ExpedientesCaptureResult(OutputSchema):
     persisted_at: str
     declaration_count: int
     source_url: str
+
+
+class ExpedientesCaptureFailurePayload(OutputSchema):
+    """One failed expedientes capture-all row."""
+
+    modelo: str
+    year: int
+    error_type: str
+    message: str
+
+
+@register_schema("app.live.expedientes.capture_all")
+class ExpedientesCaptureAllResult(OutputSchema):
+    """Payload for ``aeat app live expedientes capture-all``."""
+
+    bucket_id: str
+    modelos: list[str]
+    year_from: int
+    year_to: int
+    captured_snapshot_count: int
+    declaration_count: int
+    snapshot_ids: list[str]
+    failed_count: int
+    failures: list[ExpedientesCaptureFailurePayload]
 
 
 @register_schema("app.live.expedientes.list")

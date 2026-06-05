@@ -209,7 +209,7 @@ class GroiSedeDriver:
         *,
         expected: Mapping[str, object],
     ) -> tuple[RemoteOperation, ...]:
-        """Return the ordered list of remote operations planned for this driver run.
+        """Return the ordered list of :class:`RemoteOperation` entries planned for this driver run.
 
         Builds the sequence: GET the GROI URL, open the form, then one
         ``check-nif-<NIF>`` browser action per declared NIF (sorted
@@ -260,7 +260,7 @@ class GroiSedeDriver:
         expected: Mapping[str, object],
         timeout_ms: int = DEFAULT_GROI_TIMEOUT_MS,
     ) -> GroiResult:
-        """Async entry point — delegates to :func:`collect_groi_observations`."""
+        """Async entry point returning :class:`GroiResult` — delegates to :func:`collect_groi_observations`."""
         return await collect_groi_observations(
             payload,
             expected=expected,

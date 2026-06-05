@@ -5,8 +5,7 @@ tags:
 step_id: "S01"
 date: "2026-05-27"
 commit: "9aeb99765"
-related:
-  - "[[2026-05-27-dt12-reduccion]]"
+related: []
 ---
 
 # sal-reserva-especial S01 — SAL/SLL LegalEntityForm + reserva especial régimen (Ley 44/2015)

@@ -105,6 +105,8 @@ related:
   - '[[2026-06-05-modelo-addressing-ux-W01-P02-S06]]'
   - '[[2026-06-05-modelo-addressing-ux-W01-P02-S07]]'
   - '[[2026-06-05-modelo-addressing-ux-W01-P02-S08]]'
+  - '[[2026-06-05-modelo-addressing-ux-W01-P12-S43]]'
+  - '[[2026-06-05-modelo-addressing-ux-W01-P12-S45]]'
   - '[[2026-06-05-modelo-addressing-ux-W02-P03-S09]]'
   - '[[2026-06-05-modelo-addressing-ux-W02-P03-S10]]'
   - '[[2026-06-05-modelo-addressing-ux-W02-P03-S11]]'
@@ -120,6 +122,14 @@ related:
   - '[[2026-06-05-modelo-addressing-ux-w01-p11-s41-exec]]'
   - '[[2026-06-05-modelo-addressing-ux-w01-p12-s42-exec]]'
   - '[[2026-06-05-modelo-addressing-ux-w01-p12-s44-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w03-p05-s17-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w03-p05-s18-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w03-p05-s19-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w03-p05-s20-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w03-p06-s21-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w03-p06-s22-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w03-p06-s23-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w03-p06-s24-exec]]'
 ---
 
 # `modelo-addressing-ux` feature index
@@ -236,6 +246,8 @@ Auto-generated index of all documents tagged with `#modelo-addressing-ux`.
 - `2026-06-05-modelo-addressing-ux-W01-P02-S06` - W01.P02.S06 - legacy root registry authority baseline
 - `2026-06-05-modelo-addressing-ux-W01-P02-S07` - W01.P02.S07 - legacy root size budget tightening
 - `2026-06-05-modelo-addressing-ux-W01-P02-S08` - W01.P02.S08 - decomposition guard verification
+- `2026-06-05-modelo-addressing-ux-W01-P12-S43` - W01.P12.S43 - centralized revision-pick resolution
+- `2026-06-05-modelo-addressing-ux-W01-P12-S45` - W01.P12.S45 - addressing round-trip coverage
 - `2026-06-05-modelo-addressing-ux-W02-P03-S09` - W02.P03.S09 - work lifecycle command registrar
 - `2026-06-05-modelo-addressing-ux-W02-P03-S10` - W02.P03.S10 - legacy lifecycle bodies replaced
 - `2026-06-05-modelo-addressing-ux-W02-P03-S11` - W02.P03.S11 - lifecycle rendering support
@@ -248,6 +260,14 @@ Auto-generated index of all documents tagged with `#modelo-addressing-ux`.
 - `2026-06-05-modelo-addressing-ux-w01-p11-s41-exec` - W01.P11.S41 typed modelo addressing contracts
 - `2026-06-05-modelo-addressing-ux-w01-p12-s42-exec` - W01.P12.S42 bidirectional work target facade
 - `2026-06-05-modelo-addressing-ux-w01-p12-s44-exec` - W01.P12.S44 public modelo addressing facade exports
+- `2026-06-05-modelo-addressing-ux-w03-p05-s17-exec` - W03.P05.S17 calculate command registrar extraction
+- `2026-06-05-modelo-addressing-ux-w03-p05-s18-exec` - W03.P05.S18 legacy calculate body registrar mount
+- `2026-06-05-modelo-addressing-ux-w03-p05-s19-exec` - W03.P05.S19 calculate transport parsing support module
+- `2026-06-05-modelo-addressing-ux-w03-p05-s20-exec` - W03.P05.S20 backend calculate input ownership
+- `2026-06-05-modelo-addressing-ux-w03-p06-s21-exec` - W03.P06.S21 calculate extraction real CLI regressions
+- `2026-06-05-modelo-addressing-ux-w03-p06-s22-exec` - W03.P06.S22 row flag parsing persistence and rendering
+- `2026-06-05-modelo-addressing-ux-w03-p06-s23-exec` - W03.P06.S23 lowered calculate command budget
+- `2026-06-05-modelo-addressing-ux-w03-p06-s24-exec` - W03.P06.S24 calculate boundary exact and semantic audits
 
 ### plan
 

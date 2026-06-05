@@ -8,9 +8,8 @@ related:
   - '[[2026-05-15-linkage-design-audit-research]]'
   - '[[2026-05-15-linkage-design-audit-reference]]'
   - '[[2026-05-17-linkage-design-audit-plan]]'
+  - '[[2026-05-26-linkage-design-audit-adr]]'
 ---
-
-
 # `linkage-design-audit` `Wave 4: operator surfaces, identity, registry data backfill (Phase 4 of linkage epic)` plan
 
 ### Phase `P01` - CLI relation / prior-filing values

@@ -22,10 +22,7 @@ _SRC_ROOT = pathlib.Path(__file__).parent
 # Each entry must carry the token on the named line or within 3 lines above.
 # ---------------------------------------------------------------------------
 
-_S659_SITES: list[tuple[str, str]] = [
-    # Cluster B — click stubs (8 sites, _doc_reference.py)
-    ("entrypoints/cli/_doc_reference.py", "TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING"),
-]
+_S659_SITES: list[tuple[str, str]] = []
 
 _S660_SITES: list[tuple[str, str]] = [
     # Cluster A continuation — pydantic model_config (17 sites)

@@ -60,6 +60,11 @@ C-or-worse threshold produced 284 C-or-worse blocks. The hottest surfaces includ
 sample with threshold 20 found high cognitive load in similar areas plus wizard
 command assembly and Google sync helpers.
 
+The `src/aeat/diagnostics/_identity_placement.py` references above are historical
+diagnostic-output evidence from the bootstrap run, not approval for a production
+`aeat.diagnostics` package. The later repo-health review rejected and removed
+that source package because diagnostics is not an approved hexagonal module.
+
 `radon mi` identifies several file-level maintainability hotspots with near-zero
 or low scores, including `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`,
 `src/aeat/adapters/outbound/aeat/sede/_declarations.py`,

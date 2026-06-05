@@ -46,6 +46,17 @@ persist the :class:`~aeat.domain.modelos._verification_report.ModeloVerification
 
 from __future__ import annotations
 
+from ...domain.modelos import (
+    Modelo184MemberRow,
+    Modelo232VinculadaRow,
+    Modelo347ContraparteRow,
+    Modelo349OperadorRow,
+    ModeloDetailRow,
+    validate_m349_nif_format,
+)
+from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
+from ...domain.modelos._filing_record import ExternalEvidenceKind
+from ...domain.modelos._work_unit import WorkUnit
 from ._actions import (
     AmendmentEvidenceMissingError,
     AmendmentOverrideCasillaError,
@@ -270,9 +281,12 @@ __all__ = [
     "AmendmentVerificationRefusedError",
     "CalculationRegistryUnavailableError",
     "CalculationResultSummary",
+    "CalculationRevision",
+    "CalculationRevisionAmendmentKind",
     "CalculationRevisionNotFoundError",
     "CalculationRevisionStateError",
     "CasillaProvenanceMissingError",
+    "ExternalEvidenceKind",
     "ExternalModeloImportError",
     "M036DeclarationCommand",
     "M036DeclarationResult",
@@ -280,7 +294,11 @@ __all__ = [
     "Modelo100BorradorBindingError",
     "Modelo100BorradorBindingResult",
     "Modelo100BorradorSourceResolver",
+    "Modelo184MemberRow",
     "Modelo202ModalitySummary",
+    "Modelo232VinculadaRow",
+    "Modelo347ContraparteRow",
+    "Modelo349OperadorRow",
     "ModeloAggregationBindingError",
     "ModeloAuthorizationAdvisorySummary",
     "ModeloCalculationRevisionCandidate",
@@ -298,6 +316,7 @@ __all__ = [
     "ModeloCompareNoWorkUnitsError",
     "ModeloCompareSection",
     "ModeloCompareServiceResult",
+    "ModeloDetailRow",
     "ModeloExactWorkUnitTarget",
     "ModeloExportCommand",
     "ModeloExportCrossBucketRefusedError",
@@ -359,6 +378,7 @@ __all__ = [
     "TaxationRecommendation",
     "VerificationReportNotFoundError",
     "WorkCalculateInputBundle",
+    "WorkUnit",
     "WorkUnitAlreadyDiscardedError",
     "WorkUnitHistory",
     "WorkUnitHistoryEvent",
@@ -436,6 +456,7 @@ __all__ = [
     "select_current_verified_revision",
     "select_exportable_revision",
     "select_modelo_calculation_revision",
+    "validate_m349_nif_format",
     "verify_modelo_revision",
     "visible_target_work_units",
     "work_address_for_modelo_target",

@@ -367,8 +367,8 @@ def test_calculation_completeness_manifests_match_their_calculation_surface() ->
             assert derived == manifest.identities(), (
                 f"modelo {modelo.id} revision {revision.id}: calculation-completeness "
                 "manifest has drifted from the registry calculation surface; "
-                f"manifest-only casillas: {sorted(manifest.identities() - derived)}; "
-                f"closure-only casillas: {sorted(derived - manifest.identities())}"
+                f"manifest-only casillas: {sorted(manifest.identities() - derived, key=lambda pair: (pair[0] or '', pair[1]))}; "
+                f"closure-only casillas: {sorted(derived - manifest.identities(), key=lambda pair: (pair[0] or '', pair[1]))}"
             )
             checked += 1
 

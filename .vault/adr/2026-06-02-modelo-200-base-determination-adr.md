@@ -3,25 +3,12 @@ tags:
   - '#adr'
   - '#modelo-200-base-determination'
 date: '2026-06-02'
+related: []
 related:
-  - "[[2026-06-02-cli-persona-testimonials-round-30-audit]]"
+  - '[[2026-06-04-modelo-200-base-determination-research]]'
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #adr) and one feature tag.
-     Replace modelo-200-base-determination with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar]]'.
-
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `modelo-200-base-determination` adr: `Modelo 200 IS base-determination soundness: prevent silent zero-base under-declaration` | (**status:** `accepted`)
 

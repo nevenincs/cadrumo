@@ -17,7 +17,14 @@ Close task #560: schedule-predicate field catalogue compile-time validation.
 The compile-time gate is substantially present in _registry_contract.py but three
 gaps remain. This plan closes all three gaps in two phases.
 
-## P01 -- eager load gate and alias documentation
+## Steps
+
+### Phase `P01` - eager load gate and alias documentation
+
+- [x] `P01.S01` - add validate_registry call in load authority; `src/aeat/domain/calculations/registry/_authority.py`.
+- [x] `P01.S02` - document alias shims in resolve profile fact; `src/aeat/domain/calculations/registry/_registry_contract.py`.
+
+#### Detail: S01 -- add validate_registry() call in _load_authority
 
 ### S01 -- add validate_registry() call in _load_authority
 
@@ -31,7 +38,7 @@ Verification gate: run
 and confirm it passes. Run 
 to confirm the CI gate still passes.
 
-### S02 -- document alias shims in _resolve_profile_fact
+#### Detail: S02 -- document alias shims in _resolve_profile_fact
 
 Add inline comments to the two hardcoded attribute aliases in 
 in  (lines 81-85) explaining
@@ -41,9 +48,12 @@ No behavioural change.
 Verification gate: 
 passes unchanged.
 
-## P02 -- proof tests for the two uncovered predicate surfaces
+### Phase `P02` - proof tests for the two uncovered predicate surfaces
 
-### S03 -- proof test for filing_schedule surface
+- [x] `P02.S03` - add proof test for filing schedule predicate surface; `src/aeat/domain/calculations/registry/test_filing_schedule_selection.py`.
+- [x] `P02.S04` - add proof test for deadline window predicate surface; `src/aeat/domain/calculations/registry/test_filing_schedule_selection.py`.
+
+#### Detail: S03 -- proof test for filing_schedule surface
 
 Add a test function in
  that:
@@ -58,7 +68,7 @@ Add a test function in
 
 Verification gate: the new test passes.
 
-### S04 -- proof test for deadline_window surface
+#### Detail: S04 -- proof test for deadline_window surface
 
 Add a test function in the same file or in
  that:
@@ -87,6 +97,7 @@ Plan complete. All four Steps have committed `Step Record` artefacts under
 P02-S03, P02-S04). The proof-test sweep landed
 `unknown_predicate_field` surface coverage in
 `src/aeat/domain/calculations/registry/test_filing_schedule_selection.py`
-per the verification gates of P02-S03 and P02-S04. Plan body retains its
-non-canonical row format authored at write time; closure is asserted via
-the four exec records, not via row-checkbox state.
+per the verification gates of P02-S03 and P02-S04. Plan body now retains
+the historical detail notes plus the canonical row ledger added during
+the Phase Two cleanup pass; closure is asserted via the four exec records
+and matching completed step rows.

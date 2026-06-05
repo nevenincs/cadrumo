@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#exception-restructure'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-05-09-exception-restructure-adr]]'
   - '[[2026-05-09-exception-restructure-phase-1-plan]]'
@@ -19,11 +19,11 @@ Auto-generated index of all documents tagged with `#exception-restructure`.
 
 ### adr
 
-- `2026-05-09-exception-restructure-adr` - `exception-restructure` adr: `{title}` | (**status:** `{accepted|rejected|deprecated}`)
+- `2026-05-09-exception-restructure-adr` - `exception-restructure` adr: every domain error roots at AeatError via `_errors.py` convention | (**status:** `accepted`)
 
 ### exec
 
-- `2026-05-09-exception-restructure-phase-1-step1` - `exception-restructure` `phase-1` `step-1`
+- `2026-05-09-exception-restructure-phase-1-step1-exec` - `exception-restructure` `phase-1` `step-1`
 
 ### plan
 

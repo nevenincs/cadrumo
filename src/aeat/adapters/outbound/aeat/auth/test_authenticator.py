@@ -14,7 +14,7 @@ import logging
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, NoReturn, cast
+from typing import NoReturn, cast
 
 import pytest
 from cryptography import x509
@@ -24,7 +24,7 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
 from .....application.auth import AuthProvider, AuthProviderDescription, AuthProviderKind
-from .....core.config import CertificateBackend
+from .....core.config import CertificateBackend, Settings
 from .....core.i18n import tr
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage import AEAT_BROWSER_SESSION_NAMESPACE
@@ -59,12 +59,11 @@ from .certificate import CertificateBundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
-if TYPE_CHECKING:
-    from .....core.config import Settings
 _BUCKET_ID = "auth-session"
 _SENSITIVE_STORAGE_BASENAME = "12345678Z-private-storage.json"
 _SENSITIVE_NAVIGATION_PAYLOAD = "12345678Z private browser payload"
 _SENSITIVE_HEALTH_PAYLOAD = "C:/Users/operator/private-cert-12345678Z.p12"
+_SEDE_ORIGIN = Settings.external_constants().aeat.domains.sede
 
 
 @pytest.fixture(autouse=True)
@@ -491,7 +490,7 @@ async def _seed_persisted_session(
         cert,
         storage_state={
             "cookies": [{"name": "AEATSESSID", "value": "resume-ok"}],
-            "origins": [{"origin": "https://sede.agenciatributaria.gob.es", "localStorage": []}],
+            "origins": [{"origin": _SEDE_ORIGIN, "localStorage": []}],
         },
     )
     seeded_at = datetime.now(UTC)
@@ -523,7 +522,7 @@ async def test_capture_storage_state_writes_storage_and_metadata(
         cert,
         storage_state={
             "cookies": [{"name": "AEATSESSID", "value": "ok"}],
-            "origins": [{"origin": "https://sede.agenciatributaria.gob.es", "localStorage": []}],
+            "origins": [{"origin": _SEDE_ORIGIN, "localStorage": []}],
         },
     )
     now = datetime.now(UTC)

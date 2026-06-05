@@ -8,6 +8,7 @@ related:
   - '[[2026-05-14-settings-di-adr]]'
   - '[[2026-05-14-settings-di-research]]'
   - '[[2026-06-03-plan-triage-approach-adr]]'
+  - '[[2026-06-04-settings-di-deferred-research]]'
 ---
 
 # `settings-di-deferred` deferred test-migration scope archive ADR

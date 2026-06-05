@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#live-cert-auth'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-16-live-cert-auth-adr]]'
   - '[[2026-04-16-live-cert-auth-research]]'

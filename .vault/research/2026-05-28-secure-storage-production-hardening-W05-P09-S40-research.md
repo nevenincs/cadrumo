@@ -7,12 +7,12 @@ related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-05-22-secure-storage-production-hardening-architecture-adr]]'
   - '[[2026-05-06-secure-persistence-enforcement-adr]]'
-  - '[[2026-05-28-secure-storage-production-hardening-W05-P09-S36-side-store-inventory]]'
-  - '[[2026-05-28-secure-storage-production-hardening-W05-P09-S36-review]]'
-  - '[[2026-05-27-secure-storage-hierarchy-namespace-inventory]]'
-  - '[[2026-05-28-secure-storage-production-hardening-W05-P09-S37-review]]'
-  - '[[2026-05-28-secure-storage-production-hardening-W05-P09-S38-review]]'
-  - '[[2026-05-28-secure-storage-production-hardening-W05-P09-S39-review]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s36-side-store-inventory-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s36-review-audit]]'
+  - '[[2026-05-27-secure-storage-hierarchy-namespace-inventory-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s37-review-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s38-review-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s39-review-audit]]'
 ---
 
 # `secure-storage-production-hardening` research: `W05.P09.S40 retained export and side-store exceptions`

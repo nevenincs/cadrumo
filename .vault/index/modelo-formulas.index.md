@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#modelo-formulas'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-17-modelo-formula-ruleset-research]]'
   - '[[2026-04-17-modelo-formulas-adr]]'

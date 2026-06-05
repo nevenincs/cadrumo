@@ -10,6 +10,7 @@ related:
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-research]]'
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-adr]]'
   - '[[2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-adr]]'
+  - '[[2026-06-04-aeat-sede-constants-centralization-research]]'
 ---
 
 

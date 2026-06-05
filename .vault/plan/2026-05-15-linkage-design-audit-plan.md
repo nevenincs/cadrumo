@@ -7,9 +7,8 @@ tier: L2
 related:
   - '[[2026-05-15-linkage-design-audit-research]]'
   - '[[2026-05-15-linkage-design-audit-reference]]'
+  - '[[2026-05-26-linkage-design-audit-adr]]'
 ---
-
-
 # `linkage-design-audit` `Wave 1: type-system uniformity (Phase 1 of linkage epic)` plan
 
 ### Phase `P01` - inventory and tooling

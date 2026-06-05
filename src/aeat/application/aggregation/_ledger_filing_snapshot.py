@@ -3,9 +3,10 @@
 The pure records and fingerprint diff live in the domain
 (:mod:`aeat.domain.modelos._ledger_filing_snapshot`). This application module
 holds the Transaction-aware halves: computing a contributor's content
-fingerprint from the live catalogue, building a :class:`LedgerFilingSnapshot`
-for a revision's ``source_transaction_ids``, and evaluating drift between a
-filed snapshot and the current ledger state.
+fingerprint from the live :class:`TransactionCatalogue`, building a
+:class:`LedgerFilingSnapshot` for a :class:`CalculationRevision`'s
+``source_transaction_ids``, and evaluating drift between a filed snapshot and
+the current ledger state.
 
 The fingerprint covers exactly the transaction facts that can move a casilla --
 dates, signed amount, currency, direction, business classification and
@@ -103,11 +104,16 @@ def compute_ledger_filing_snapshot(
     catalogue: TransactionCatalogue,
     captured_at: datetime,
 ) -> LedgerFilingSnapshot:
-    """Capture an immutable snapshot over a revision's contributing rows.
+    """Capture an immutable :class:`LedgerFilingSnapshot` over a revision's contributing rows.
 
     Contributor ids absent from the catalogue are skipped (a snapshot records
     the rows that exist at capture time); an empty contributor set yields a
     valid empty snapshot, which is the uniform shape for non-ledger modelos.
+
+    Args:
+        source_transaction_ids: Contributor identifiers.
+        catalogue: The live :class:`TransactionCatalogue`.
+        captured_at: Captured timestamp.
     """
     index = _index(catalogue)
     rows = tuple(
@@ -174,7 +180,7 @@ def compute_ledger_filing_evidence(
     captured_at: datetime,
     manual_entries: tuple[ManualFactBasisEntry, ...] = (),
 ) -> LedgerFilingEvidence:
-    """Capture the bundled fact basis behind one filing revision.
+    """Capture the bundled :class:`LedgerFilingEvidence` fact basis behind one filing revision.
 
     Projects every contributor in ``source_transaction_ids`` present in the
     catalogue into a typed :class:`LedgerEvidenceRow`, binding the bundle to the
@@ -184,6 +190,13 @@ def compute_ledger_filing_evidence(
     skipped (mirroring :func:`compute_ledger_filing_snapshot`); the caller's
     no-silent-omission guard cross-checks the evidence set against the fingerprint
     set.
+
+    Args:
+        source_transaction_ids: Contributor identifiers.
+        catalogue: The live :class:`TransactionCatalogue`.
+        snapshot_fingerprint: The fingerprinted snapshot identifier.
+        captured_at: Captured timestamp.
+        manual_entries: The manual entries basis.
     """
     index = _index(catalogue)
     rows = tuple(_evidence_row(index[tx_id]) for tx_id in sorted(set(source_transaction_ids)) if tx_id in index)
@@ -196,7 +209,7 @@ def compute_ledger_filing_evidence(
 
 
 def project_manual_fact_basis_entries(inputs_snapshot: Mapping[str, str]) -> tuple[ManualFactBasisEntry, ...]:
-    """Project operator-entered casilla inputs into manual fact-basis entries.
+    """Project operator-entered casilla inputs into :class:`ManualFactBasisEntry` entries.
 
     The calculation revision stores caller-supplied casilla inputs as rendered
     strings. Non-empty values are part of the evidence bundle because no ledger
@@ -226,7 +239,12 @@ def evaluate_ledger_filing_staleness(
     snapshot: LedgerFilingSnapshot,
     catalogue: TransactionCatalogue,
 ) -> LedgerFilingStalenessVerdict:
-    """Compare a filed snapshot against the current ledger state."""
+    """Compare a filed snapshot against the current ledger state, returning a :class:`LedgerFilingStalenessVerdict`.
+
+    Args:
+        snapshot: The filed ledger snapshot.
+        catalogue: The live :class:`TransactionCatalogue`.
+    """
     index = _index(catalogue)
     current = {
         row.transaction_id: row_fingerprint(index[row.transaction_id])
@@ -241,11 +259,15 @@ def stale_filed_revisions(
     revisions: Mapping[str, CalculationRevision],
     catalogue: TransactionCatalogue,
 ) -> tuple[tuple[CalculationRevision, LedgerFilingStalenessVerdict], ...]:
-    """Return every finalized snapshot-backed revision whose ledger drifted.
+    """Return every finalized snapshot-backed revision whose ledger drifted, with its :class:`LedgerFilingStalenessVerdict`.
 
     Scans verified/filed revisions carrying a ``ledger_filing_snapshot`` and
     re-evaluates each against the live catalogue. A revision with no snapshot
     (legacy) or a non-finalized state is skipped. Pure given its inputs.
+
+    Args:
+        revisions: A mapping of :class:`CalculationRevision` files.
+        catalogue: The live :class:`TransactionCatalogue`.
     """
     findings: list[tuple[CalculationRevision, LedgerFilingStalenessVerdict]] = []
     for revision in revisions.values():

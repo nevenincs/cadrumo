@@ -6,7 +6,7 @@ date: '2026-05-28'
 related:
   - '[[2026-04-25-json-output-contract-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr]]'
-  - '[[2026-05-27-secure-storage-repair-profile-privacy-review]]'
+  - '[[2026-05-27-secure-storage-repair-profile-privacy-review-audit]]'
 ---
 
 # `centralized-output-redaction` research: `CLI and diagnostic output redaction centralization`

@@ -1,77 +1,101 @@
-# aeat
+# aeat-cli
 
-`aeat` is a local-first command-line tool for preparing your Spanish tax forms.
-It takes the records you keep and works out the figures for each *modelo* (a
-Spanish tax form). It checks them against the form's rules and exports a file
-ready to submit to the Agencia Estatal de Administración Tributaria (AEAT). It's for
-*autónomos* (self-employed filers) and small businesses who file their own taxes,
-and for the people who help them. The [glossary](glossary.md) explains the
-Spanish terms used throughout these docs.
+`aeat-cli` is the documentation landing page for the `aeat` command-line
+application.
 
-> **Disclaimer.** `aeat` is a software utility, not a tax advisor. It gives no
-> tax, legal, accounting, or financial advice, creates no advisory
-> relationship, and is not affiliated with, endorsed by, or connected to the
-> AEAT.
->
-> Nothing `aeat` produces is advice or a guarantee. No calculation, draft,
-> verification, or export assures you that a figure, form, or filing is correct,
-> complete, or compliant with current law. You alone are responsible for the
-> accuracy, completeness, and legality of every figure you enter and every
-> declaration you file, and you should review every output before you rely on
-> it.
->
-> `aeat` never files. It does not submit to the AEAT and cannot file for you.
-> You file yourself, through official channels, and bear sole responsibility for
-> that filing. Because tax law changes and depends on your circumstances,
-> consult a qualified professional such as an asesor fiscal or gestor for advice
-> on your situation.
->
-> `aeat` is provided "as is", without warranty of any kind, under the Apache
-> License 2.0. The authors accept no liability for any loss, penalty, interest,
-> or other damage arising from its use. Read the [full disclaimer](disclaimer.md)
-> before you rely on `aeat`.
+`aeat` is a helper for preparing your Spanish tax forms. It takes the records
+you keep, works out the figures for each modelo, checks them against the form's
+rules, and exports a file ready to submit to the Agencia Estatal de
+Administración Tributaria (AEAT).
 
-## Choose your path
+`aeat` is for autónomos, small businesses, and the people who help them prepare
+Spanish filing records. You prepare one taxpayer's records at a time. The
+project is pre-alpha, so expect breaking changes between versions.
 
-Pick the route that matches what you want to do:
+The guides on this page are ordered by the usual filing path. Start at the
+first thing you have not done yet: install the CLI, set up the taxpayer, prepare
+records, decide what is due, produce an export, or follow the full filing loop.
 
-- **Install and produce your first export.** [Get started](getting-started.md)
-  takes you from install to a first exported modelo file in a few commands.
-- **Set up your taxpayer profile.** [Set up a profile](how-to/profile-setup.md)
-  creates your taxpayer identity and shows how to keep several. Do this first -
-  every `aeat app` command needs an active profile.
-- **Already set up - just produce a file.** The
-  [quickstart](how-to/quickstart.md) is the four-command path from a ready
-  profile and ledger to an exported modelo file.
-- **Learn the whole workflow.** The [tutorial](tutorials/index.md) is a guided,
-  end-to-end lesson. It loads a sample set of transactions, classifies them, and
-  builds, checks, and exports a modelo from start to finish.
-- **Do one specific task.** The [how-to guides](how-to/index.md) are short
-  recipes for single goals, such as importing your records, classifying
-  transactions, recalculating a modelo, checking a draft against a justificante,
-  and exporting a file.
-- **Look up a command or term.** The [command-line reference](cli/index.rst)
-  lists every command and option, and the [glossary](glossary.md) explains the
-  Spanish tax terms.
-- **Understand how it works.** The [explanation](explanation/index.md) covers
-  how each figure traces to the law behind it and why `aeat` never submits your
-  filing.
+```{important}
+`aeat` is not tax advice, is not affiliated with AEAT, and does not replace
+AEAT's official tools or professional advice. It builds, checks, and exports
+files locally. You file through official AEAT channels yourself and remain
+responsible for every declaration you submit. Read the [full disclaimer](disclaimer.md)
+before you rely on `aeat`.
+```
 
-## Project and reference material
+## First steps
 
-- The [architecture overview](architecture.md) describes how the code is
-  organized.
-- The [authoring guide](authoring-guide.md) is for contributors who change the
-  documentation.
-- The [API reference](api/aeat.rst) documents the application programming
-  interface (API), generated from the source.
+Choose the first guide that matches the missing piece in your workflow.
 
-## Getting help
+::::{grid} 1 2 2 4
+:gutter: 3
+:class-container: aeat-route-grid
 
-Report bugs and ask questions on the
-[issue tracker](https://github.com/wgergely/aeat/issues). Every command carries
-its own `--help`. The [full disclaimer](disclaimer.md) covers the limits of what
-`aeat` does.
+:::{grid-item-card} Get started with aeat
+:link: getting-started
+:link-type: doc
+:class-card: aeat-route-card
+
+Use this when you are new to `aeat` and want one guided path from setup to a
+local export.
+:::
+
+:::{grid-item-card} Set up your taxpayer profile
+:link: how-to/profile-setup
+:link-type: doc
+:class-card: aeat-route-card
+
+Use this when `aeat` does not yet know which taxpayer, activity, or local
+profile to use.
+:::
+
+:::{grid-item-card} Import and classify a bank statement
+:link: how-to/import-bank-statements
+:link-type: doc
+:class-card: aeat-route-card
+
+Use this when your bank records are not yet in the ledger or still need tax
+classification.
+:::
+
+:::{grid-item-card} Plan your filing calendar
+:link: how-to/filing-calendar
+:link-type: doc
+:class-card: aeat-route-card
+
+Use this when you need to see which modelos are due and which period to prepare.
+:::
+
+:::{grid-item-card} Quickstart: produce a modelo file
+:link: how-to/quickstart
+:link-type: doc
+:class-card: aeat-route-card
+
+Use this when the taxpayer profile and ledger are ready and you want the short
+path to an export.
+:::
+
+:::{grid-item-card} Standard filing workflow
+:link: how-to/filing-spine
+:link-type: doc
+:class-card: aeat-route-card
+
+Use this when you want the full repeatable loop: prepare, verify, export, file
+through AEAT, and keep local history.
+:::
+
+::::
+
+If you want a lesson instead of a task guide, use
+[Build your first Modelo 130 filing](tutorials/index.md).
+
+## CLI reference
+
+Use the [command-line reference](cli/index.rst) when you need exact commands and
+options. Use [how it works](explanation/index.md) when you want to understand
+how taxpayer details and records become modelo figures, what checks run, and
+how official rule sources are tracked.
 
 ```{toctree}
 :hidden:
@@ -88,13 +112,16 @@ tutorials/index
 
 how-to/index
 how-to/profile-setup
+how-to/censo-update
 how-to/import-bank-statements
 how-to/classify-with-llm
-how-to/reconcile
 how-to/filing-calendar
+how-to/filing-spine
+how-to/modelo-303
+how-to/modelo-390
+how-to/reconcile
 how-to/troubleshooting
 cli/index
-glossary
 ```
 
 ```{toctree}
@@ -108,6 +135,8 @@ explanation/index
 :hidden:
 :caption: Project
 
+updates
+glossary
 disclaimer
 architecture
 authoring-guide

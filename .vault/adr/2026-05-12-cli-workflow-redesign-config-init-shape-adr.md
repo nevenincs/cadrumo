@@ -10,10 +10,17 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]"
   - "[[2026-05-07-config-cli-profile-surface-adr]]"
   - "[[2026-04-12-setup-wizard-adr]]"
+  - '[[2026-06-03-profile-lifecycle-cli-cascade-supersession-adr]]'
 ---
 
 
 # `cli-workflow-redesign` adr: `Config init first-run shape` | (**status:** `superseded by [[2026-05-16-profile-lifecycle-cli-adr]]`)
+
+> Supersession reader note: the named 2026-05-16 ADR is archived.
+> Current active orientation is the `2026-05-16-profile-lifecycle-cli-plan`
+> plus `2026-06-03-profile-lifecycle-cli-cascade-supersession-adr`.
+> Treat the first-run shape below as historical unless a later accepted
+> profile-lifecycle authority re-enrols it.
 
 ## CLI Backend Boundary
 

@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#registry-casilla-identity'
-date: '2026-05-21'
+date: '2026-06-05'
 related:
   - '[[2026-05-20-registry-casilla-identity-P01-S01]]'
   - '[[2026-05-20-registry-casilla-identity-P01-S02]]'
@@ -33,20 +33,21 @@ related:
   - '[[2026-05-20-registry-casilla-identity-P05-S31]]'
   - '[[2026-05-20-registry-casilla-identity-P05-S32]]'
   - '[[2026-05-20-registry-casilla-identity-P05-S33]]'
-  - '[[2026-05-20-registry-casilla-identity-P05-review]]'
   - '[[2026-05-20-registry-casilla-identity-P06-S26]]'
   - '[[2026-05-20-registry-casilla-identity-P06-S27]]'
   - '[[2026-05-20-registry-casilla-identity-P06-S28]]'
   - '[[2026-05-20-registry-casilla-identity-P06-S29]]'
   - '[[2026-05-20-registry-casilla-identity-P06-S30]]'
-  - '[[2026-05-20-registry-casilla-identity-P06-review]]'
-  - '[[2026-05-20-registry-casilla-identity-S33-review]]'
   - '[[2026-05-20-registry-casilla-identity-adr]]'
   - '[[2026-05-20-registry-casilla-identity-audit]]'
+  - '[[2026-05-20-registry-casilla-identity-p05-review-exec]]'
+  - '[[2026-05-20-registry-casilla-identity-p06-review-exec]]'
   - '[[2026-05-20-registry-casilla-identity-plan]]'
   - '[[2026-05-20-registry-casilla-identity-research]]'
-  - '[[2026-05-20-registry-casilla-identity-review]]'
-  - '[[2026-05-20-registry-casilla-identity-summary]]'
+  - '[[2026-05-20-registry-casilla-identity-review-exec]]'
+  - '[[2026-05-20-registry-casilla-identity-s33-review-exec]]'
+  - '[[2026-05-20-registry-casilla-identity-summary-exec]]'
+  - '[[2026-05-21-registry-casilla-identity-exec]]'
 ---
 
 # `registry-casilla-identity` feature index
@@ -93,16 +94,17 @@ Auto-generated index of all documents tagged with `#registry-casilla-identity`.
 - `2026-05-20-registry-casilla-identity-P05-S31` - `registry-casilla-identity` `P05.S31`
 - `2026-05-20-registry-casilla-identity-P05-S32` - `registry-casilla-identity` `P05.S32`
 - `2026-05-20-registry-casilla-identity-P05-S33` - `registry-casilla-identity` `P05.S33`
-- `2026-05-20-registry-casilla-identity-P05-review` - `registry-casilla-identity` P05 Code Review
 - `2026-05-20-registry-casilla-identity-P06-S26` - `registry-casilla-identity` `P06.S26`
 - `2026-05-20-registry-casilla-identity-P06-S27` - `registry-casilla-identity` `P06.S27`
 - `2026-05-20-registry-casilla-identity-P06-S28` - `registry-casilla-identity` `P06.S28`
 - `2026-05-20-registry-casilla-identity-P06-S29` - `registry-casilla-identity` `P06.S29`
 - `2026-05-20-registry-casilla-identity-P06-S30` - `registry-casilla-identity` `P06.S30`
-- `2026-05-20-registry-casilla-identity-P06-review` - `registry-casilla-identity` P06 Code Review
-- `2026-05-20-registry-casilla-identity-S33-review` - `registry-casilla-identity` Code Review
-- `2026-05-20-registry-casilla-identity-review` - `registry-casilla-identity` Code Review
-- `2026-05-20-registry-casilla-identity-summary` - `registry-casilla-identity` execution summary
+- `2026-05-20-registry-casilla-identity-p05-review-exec` - `registry-casilla-identity` P05 Code Review
+- `2026-05-20-registry-casilla-identity-p06-review-exec` - `registry-casilla-identity` P06 Code Review
+- `2026-05-20-registry-casilla-identity-review-exec` - `registry-casilla-identity` Code Review
+- `2026-05-20-registry-casilla-identity-s33-review-exec` - `registry-casilla-identity` Code Review
+- `2026-05-20-registry-casilla-identity-summary-exec` - `registry-casilla-identity` execution summary
+- `2026-05-21-registry-casilla-identity-exec` - `registry-casilla-identity` follow-up: calculation-completeness gate generalisation
 
 ### plan
 

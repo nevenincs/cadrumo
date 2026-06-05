@@ -6,7 +6,7 @@ date: '2026-05-21'
 related:
   - '[[2026-05-18-schema-hardening-adr]]'
   - '[[2026-05-19-schema-hardening-role-taxonomy-reference]]'
-  - '[[2026-05-20-schema-hardening-verification-ledger]]'
+  - '[[2026-05-20-schema-hardening-verification-ledger-audit]]'
   - '[[2026-05-20-schema-hardening-plan]]'
 ---
 

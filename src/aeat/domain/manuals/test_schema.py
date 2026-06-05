@@ -7,6 +7,7 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
+from ...tests.aeat_literal_fixtures import manual_practicos_url
 from . import (
     Chapter,
     FetchedManualPart,
@@ -27,6 +28,8 @@ from ._errors import ManualValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
+_RENTA_2025_MANUAL_URL = manual_practicos_url("IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf")
+
 
 def _llm_provenance() -> LLMProvenance:
     return LLMProvenance(
@@ -40,10 +43,7 @@ def _llm_provenance() -> LLMProvenance:
 
 def _rule_source() -> RuleSource:
     return RuleSource(
-        manual_url=AnyHttpUrl(
-            "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/"
-            "IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
-        ),
+        manual_url=AnyHttpUrl(_RENTA_2025_MANUAL_URL),
         page=142,
         paragraph=3,
     )
@@ -51,10 +51,7 @@ def _rule_source() -> RuleSource:
 
 def _section_source() -> SectionSource:
     return SectionSource(
-        manual_url=AnyHttpUrl(
-            "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/"
-            "IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
-        ),
+        manual_url=AnyHttpUrl(_RENTA_2025_MANUAL_URL),
         page=140,
     )
 
@@ -112,10 +109,7 @@ def _manual() -> Manual:
         part=ManualPart.PARTE_1,
         title="Manual Title",
         summary="Manual Summary",
-        source_pdf_url=AnyHttpUrl(
-            "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/"
-            "IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
-        ),
+        source_pdf_url=AnyHttpUrl(_RENTA_2025_MANUAL_URL),
         source_html_url=None,
         fetched_at=datetime(2026, 4, 12, 0, 0, 0, tzinfo=UTC),
         definition_reviewed_by="gw",

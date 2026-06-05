@@ -18,7 +18,7 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 from pydantic import SecretStr
 
-from .....core.config import CertificateBackend
+from .....core.config import CertificateBackend, Settings
 from .....tests.env_scope import isolated_aeat_env
 from . import (
     CertificateBundle,
@@ -36,6 +36,7 @@ from ._fixtures import SECRET_PASSPHRASE
 from .certificate import _select_backend
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+_SEDE_ORIGIN = Settings.external_constants().aeat.domains.sede
 
 
 def _build_pkcs12_bundle(
@@ -347,10 +348,10 @@ def test_playwright_client_certificates_kwarg_materialises_secret(
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
     loaded = load_certificate(bundle)
-    kwarg = build_client_certificates_kwarg(loaded, "https://sede.agenciatributaria.gob.es")
+    kwarg = build_client_certificates_kwarg(loaded, _SEDE_ORIGIN)
     assert kwarg == [
         {
-            "origin": "https://sede.agenciatributaria.gob.es",
+            "origin": _SEDE_ORIGIN,
             "pfxPath": str(p12),
             "passphrase": SECRET_PASSPHRASE,
         }

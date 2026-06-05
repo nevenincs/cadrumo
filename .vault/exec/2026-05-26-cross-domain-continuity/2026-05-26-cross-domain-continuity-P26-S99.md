@@ -6,7 +6,6 @@ tags:
 date: 2026-05-27
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
-  - "[[2026-05-19-cross-domain-continuity-W05-arch-grounding-research]]"
 ---
 
 # cross-domain-continuity W05.P26.S99 — IvaWalletBalanceReport + iva-wallet balance verb

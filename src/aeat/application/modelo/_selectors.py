@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
@@ -235,6 +235,10 @@ class ModeloCalculationRevisionSelection(BaseModel):
     candidates: tuple[ModeloCalculationRevisionCandidate, ...] = ()
 
 
+type ModeloCalculationRevisionDefault = Literal["verify", "file", "export"]
+"""Command-specific default selector modes for calculation revisions."""
+
+
 class ModeloWorkResolution(BaseModel):
     """Resolved selector outcome for a visible modelo filing target."""
 
@@ -432,6 +436,44 @@ def select_modelo_calculation_revision(
     )
 
 
+def resolve_modelo_calculation_revision_pick(
+    work_unit: WorkUnit,
+    *,
+    selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
+    calculation_revision_id: str | None = None,
+    default_for: ModeloCalculationRevisionDefault | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+) -> ModeloCalculationRevisionSelection:
+    """Resolve a command-specific revision pick under one work unit.
+
+    This is the application selector policy surface for commands that
+    accept a natural work target plus a revision selector. It preserves
+    the exact calculation-revision id escape hatch, while keeping
+    command defaults explicit: verification consumes the current draft,
+    filing consumes the current verified-complete revision, and export
+    prefers filed/current verified revisions according to
+    ``select_exportable_revision``.
+    """
+    if calculation_revision_id is not None:
+        return select_modelo_calculation_revision(
+            work_unit,
+            selector=ModeloCalculationRevisionSelector.EXPLICIT,
+            calculation_revision_id=calculation_revision_id,
+            calculation_repository=calculation_repository,
+        )
+    if default_for == "verify" and selector is ModeloCalculationRevisionSelector.CURRENT:
+        return select_current_draft_revision(work_unit, calculation_repository=calculation_repository)
+    if default_for == "file" and selector is ModeloCalculationRevisionSelector.CURRENT:
+        return select_current_verified_revision(work_unit, calculation_repository=calculation_repository)
+    if default_for == "export" and selector is ModeloCalculationRevisionSelector.CURRENT:
+        return select_exportable_revision(work_unit, calculation_repository=calculation_repository)
+    return select_modelo_calculation_revision(
+        work_unit,
+        selector=selector,
+        calculation_repository=calculation_repository,
+    )
+
+
 def select_current_draft_revision(
     work_unit: WorkUnit,
     *,
@@ -607,6 +649,7 @@ def _latest_revision_with_state(
 
 __all__ = [
     "ModeloCalculationRevisionCandidate",
+    "ModeloCalculationRevisionDefault",
     "ModeloCalculationRevisionSelection",
     "ModeloCalculationRevisionSelector",
     "ModeloCalculationRevisionSelectorAmbiguousError",
@@ -623,6 +666,7 @@ __all__ = [
     "ModeloWorkUnitCandidate",
     "ModeloWorkUnitNotFoundError",
     "ModeloWorkVisibleTargetAmbiguousError",
+    "resolve_modelo_calculation_revision_pick",
     "resolve_modelo_work_bucket",
     "resolve_modelo_work_unit",
     "select_current_draft_revision",

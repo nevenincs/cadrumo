@@ -13,6 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.resources import bundled_path
+from ....tests.aeat_literal_fixtures import aeat_host
 from ._live_parity import (
     CrossReferenceApplicability,
     evaluate_cross_reference_applicability,
@@ -21,6 +22,7 @@ from ._remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS
 from ._schema import LiveCrossReferenceDecision, ProfilePredicateDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+_WWW2_HOST = aeat_host("www2")
 
 _ROI_PREDICATE = ProfilePredicateDefinition(
     field="iva.roi_enrolled",
@@ -50,7 +52,7 @@ def _decision(
         evidence_tier="executable_parity_evidence",
         surface="authenticated_simulator",
         guard_policy_id="probe-policy",
-        allowed_hosts=("www2.agenciatributaria.gob.es",),
+        allowed_hosts=(_WWW2_HOST,),
         allowed_methods=("GET", "POST"),
         forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
         synthetic_data_allowed=False,

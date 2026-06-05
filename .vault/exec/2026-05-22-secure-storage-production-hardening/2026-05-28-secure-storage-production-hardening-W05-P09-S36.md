@@ -6,8 +6,8 @@ date: '2026-05-28'
 step_id: 'S36'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
-  - '[[2026-05-28-secure-storage-production-hardening-W05-P09-S36-side-store-inventory]]'
-  - '[[2026-05-28-secure-storage-production-hardening-W05-P09-S36-review]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s36-side-store-inventory-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s36-review-audit]]'
 ---
 
 # `secure-storage-production-hardening` `W05.P09.S36`

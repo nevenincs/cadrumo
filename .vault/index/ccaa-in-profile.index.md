@@ -3,13 +3,14 @@ generated: true
 tags:
   - '#index'
   - '#ccaa-in-profile'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-28-ccaa-in-profile-adr]]'
   - '[[2026-04-28-ccaa-in-profile-code-review-audit]]'
   - '[[2026-04-28-ccaa-in-profile-plan]]'
   - '[[2026-04-28-ccaa-in-profile-research]]'
   - '[[2026-04-28-ccaa-in-profile-summary-exec]]'
+  - '[[2026-05-27-ccaa-in-profile-task-194-exec]]'
 ---
 
 # `ccaa-in-profile` feature index
@@ -29,6 +30,7 @@ Auto-generated index of all documents tagged with `#ccaa-in-profile`.
 ### exec
 
 - `2026-04-28-ccaa-in-profile-summary-exec` - `ccaa-in-profile` execution summary
+- `2026-05-27-ccaa-in-profile-task-194-exec` - 2026-05-27-ccaa-in-profile-task-194-exec
 
 ### plan
 

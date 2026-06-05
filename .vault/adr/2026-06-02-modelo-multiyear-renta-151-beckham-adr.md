@@ -6,6 +6,7 @@ date: '2026-06-02'
 related:
   - "[[2026-06-02-modelo-multiyear-renta-151-beckham-research]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
+  - '[[2026-06-04-modelo-multiyear-renta-research]]'
 ---
 
 # `modelo-multiyear-renta-151-beckham` adr: `151 Beckham flat-rate engine and six-year window gate` | (**status:** `accepted`)

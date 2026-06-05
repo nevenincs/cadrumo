@@ -95,7 +95,7 @@ async def _assert_form_shape() -> None:
 
         form = page.locator("form").first
         action = await form.get_attribute("action")
-        assert action == "ConsultaOperadorSedeGroiServlet", action
+        assert action == Settings.external_constants().aeat.oracles.groi_check.rsplit("/", maxsplit=1)[-1], action
     finally:
         if context is not None:
             await context.close()

@@ -9,6 +9,7 @@ related:
   - "[[2026-04-27-modelo-390-calc-verify-adr]]"
   - "[[2026-05-21-sii-digital-iva-ledger-adr]]"
   - "[[2026-05-21-corporate-entity-calculation-adr]]"
+  - '[[2026-06-04-iva-autoconsumo-promotor-research]]'
 ---
 
 

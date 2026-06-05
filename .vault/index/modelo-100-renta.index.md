@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#modelo-100-renta'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-21-modelo-100-renta-adr]]'
   - '[[2026-04-21-modelo-100-renta-plan]]'

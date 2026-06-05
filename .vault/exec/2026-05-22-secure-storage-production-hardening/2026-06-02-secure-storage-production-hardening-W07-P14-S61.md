@@ -7,7 +7,6 @@ step_id: 'S61'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-06-02-secure-storage-production-hardening-W07-P14-S60]]'
-  - '[[2026-06-02-secure-storage-production-hardening-W07-P14-S61-review]]'
 ---
 
 # `secure-storage-production-hardening` `W07.P14.S61`

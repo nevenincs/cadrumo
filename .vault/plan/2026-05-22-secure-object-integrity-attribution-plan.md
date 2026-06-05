@@ -9,6 +9,8 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-integrity-warning-stability-adr]]'
   - '[[2026-05-21-secure-object-database-drift-research]]'
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
+  - '[[2026-06-04-secure-object-integrity-adr]]'
+  - '[[2026-06-04-secure-object-integrity-research]]'
 ---
 
 

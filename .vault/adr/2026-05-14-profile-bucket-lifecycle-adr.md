@@ -7,6 +7,7 @@ related:
   - '[[2026-05-14-secure-backend-passkey-safety-research]]'
   - '[[2026-05-14-secure-backend-passkey-custody-adr]]'
   - '[[2026-04-12-data-storage-adr]]'
+  - '[[2026-06-04-profile-bucket-lifecycle-research]]'
 ---
 
 # `profile-bucket-lifecycle` adr: profile + bucket + vault lifecycle | (**status:** `accepted — execution-ready`)

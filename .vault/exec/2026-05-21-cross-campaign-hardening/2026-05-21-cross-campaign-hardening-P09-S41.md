@@ -5,7 +5,7 @@ step_id: 'P09.S41'
 related:
   - '[[2026-05-21-cross-campaign-hardening-plan]]'
   - '[[2026-05-21-cross-campaign-hardening-audit]]'
-  - '[[2026-05-21-persona-fleet-bug-inventory]]'
+  - '[[2026-05-21-persona-fleet-bug-inventory-audit]]'
 ---
 
 # `cross-campaign-hardening` `P09.S41`

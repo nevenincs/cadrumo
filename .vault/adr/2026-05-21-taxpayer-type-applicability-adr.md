@@ -5,7 +5,7 @@ tags:
 date: '2026-05-21'
 related:
   - "[[2026-05-21-taxpayer-type-applicability-research]]"
-  - "[[2026-05-21-persona-fleet-round3-findings]]"
+  - "[[2026-05-21-persona-fleet-round3-findings-audit]]"
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-21-work-verify-deadline-independence-adr]]"
 ---

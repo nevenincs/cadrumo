@@ -6,7 +6,7 @@ date: '2026-05-26'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-05-22-secure-storage-production-hardening-architecture-research]]'
-  - '[[2026-05-21-fresh-cli-persona-findings-inventory]]'
+  - '[[2026-05-21-fresh-cli-persona-findings-inventory-audit]]'
 ---
 
 

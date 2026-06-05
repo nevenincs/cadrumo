@@ -6,7 +6,6 @@ date: '2026-06-02'
 step_id: 'S55'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
-  - '[[2026-06-02-secure-storage-production-hardening-W07-P13-S55-review]]'
 ---
 
 # `secure-storage-production-hardening` `W07.P13.S55`

@@ -504,7 +504,7 @@ def _is_filed_history_source(source: IvaCompensationAuthoritySource | None) -> b
 def local_recurrence_authority_source(
     recurrence: LocalIvaCompensationRecurrenceProtocol | None,
 ) -> IvaCompensationAuthoritySource | None:
-    """Project a local Modelo 303 recurrence record into an authority source."""
+    """Project a local Modelo 303 recurrence record into an :class:`IvaCompensationAuthoritySource`."""
     if recurrence is None:
         return None
     amount = Decimal(recurrence.amount)

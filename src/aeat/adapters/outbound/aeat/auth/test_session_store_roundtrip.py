@@ -22,6 +22,7 @@ from typing import cast
 
 import pytest
 
+from .....tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED, aeat_url
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage import AEAT_BROWSER_SESSION_NAMESPACE
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -44,7 +45,7 @@ def _playwright_shaped_storage_state() -> dict[str, object]:
             {
                 "name": "PRESTACIONES_SESSION",
                 "value": "abc123",
-                "domain": ".agenciatributaria.gob.es",
+                "domain": f".{AEAT_HOST_SUFFIX_EXPECTED}",
                 "path": "/",
                 "expires": 1893456000,
                 "httpOnly": True,
@@ -54,7 +55,7 @@ def _playwright_shaped_storage_state() -> dict[str, object]:
         ],
         "origins": [
             {
-                "origin": "https://sede.agenciatributaria.gob.es",
+                "origin": aeat_url("sede", "/").rstrip("/"),
                 "localStorage": [
                     {"name": "consent.banner", "value": "dismissed"},
                 ],

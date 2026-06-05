@@ -11,6 +11,7 @@ related:
   - "[[2026-05-22-schema-hardening-adr]]"
   - "[[2026-05-22-secure-storage-production-hardening-architecture-adr]]"
   - "[[2026-05-20-registry-authority-flow-adr]]"
+  - '[[2026-06-04-identity-primitives-research]]'
 ---
 
 # `identity-primitives` adr: `typed-id alias placement rule for record-shape, security, and cross-domain identities` | (**status:** `accepted`)

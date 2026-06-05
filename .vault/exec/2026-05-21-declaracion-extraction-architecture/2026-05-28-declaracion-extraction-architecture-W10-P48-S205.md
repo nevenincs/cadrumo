@@ -7,7 +7,6 @@ tags:
   - "#declaracion-extraction-architecture"
 related:
   - "[[2026-05-21-declaracion-extraction-architecture-plan]]"
-  - "[[2026-05-27-declaracion-extraction-architecture-W10-P47-S204]]"
 ---
 
 # declaracion-extraction-architecture W10.P48.S205

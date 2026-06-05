@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#live-write-static-audit'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-16-live-write-static-audit-reference]]'
   - '[[2026-04-16-live-write-static-audit-review-audit]]'

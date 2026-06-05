@@ -5,6 +5,7 @@ tags:
 date: '2026-05-28'
 related:
   - "[[2026-05-27-centralized-module-drift-audit]]"
+  - '[[2026-06-04-codebase-solidification-research]]'
 ---
 
 # `codebase-solidification` adr: `Recurring hardening epic strategy` | (**status:** `accepted`)

@@ -16,6 +16,11 @@ from pathlib import Path
 
 import pytest
 
+from ...tests.aeat_literal_fixtures import (
+    AEAT_HOST_SUFFIX_EXPECTED,
+    REDACTION_INTERNAL_PATH_CANARY,
+    aeat_url,
+)
 from ..config import override_settings
 from . import (
     ArgumentRecord,
@@ -40,7 +45,7 @@ _BEARER_CANARY = (
     "eyJzdWIiOiIxMjM0NTY3ODkwIn0PADDING."
     "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJ"
 )
-_URL_CANARY = "https://www.agenciatributaria.gob.es/internal/path?token=12345"
+_URL_CANARY = aeat_url("aeat_gob", REDACTION_INTERNAL_PATH_CANARY)
 
 
 def test_save_trace_redacts_nif_canary_in_arguments(
@@ -108,7 +113,7 @@ def test_save_trace_redacts_url_path_to_host_only(
         assert "/internal/path" not in on_disk
         assert "token=12345" not in on_disk
         # Host stays.
-        assert "agenciatributaria.gob.es" in on_disk
+        assert AEAT_HOST_SUFFIX_EXPECTED in on_disk
 
 
 def test_save_events_append_redacts_url_path(
@@ -128,4 +133,4 @@ def test_save_events_append_redacts_url_path(
         on_disk = (runs_dir() / event.run_id / _EVENTS_FILENAME).read_text(encoding="utf-8")
         assert "/internal/path" not in on_disk
         assert "token=12345" not in on_disk
-        assert "agenciatributaria.gob.es" in on_disk
+        assert AEAT_HOST_SUFFIX_EXPECTED in on_disk

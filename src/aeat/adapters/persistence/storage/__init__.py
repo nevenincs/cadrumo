@@ -21,7 +21,7 @@ The public surface is intentionally narrow:
 - Engine and session helpers — :func:`get_engine`, :func:`dispose_engine`,
   :func:`session_scope`.
 - Typed repositories — :class:`ModeloRepository`, :class:`PortalRepository`,
-  :class:`CorpusArtifactRepository`.
+  :class:`CorpusArtifactRepository`, and the base :class:`SecureObjectRepository`.
 - Encryption substrate — :class:`Envelope`, :class:`EncryptedBlobStore`,
   :class:`MasterKeyProvider`, :class:`SecretStore`, plus the column-level
   helpers :class:`EncryptedString`, :class:`EncryptedBytes`,

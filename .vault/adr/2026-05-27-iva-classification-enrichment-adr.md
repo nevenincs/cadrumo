@@ -11,6 +11,7 @@ related:
   - "[[2026-04-14-transaction-catalogue-adr]]"
   - "[[2026-05-08-ledger-renta-pipeline-adr]]"
   - "[[2026-05-21-sii-digital-iva-ledger-adr]]"
+  - '[[2026-06-04-iva-classification-enrichment-research]]'
 ---
 
 

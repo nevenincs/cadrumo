@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#llm-ledger-classification'
-date: '2026-06-03'
+date: '2026-06-05'
 related:
   - '[[2026-06-03-llm-ledger-classification-adr]]'
   - '[[2026-06-03-llm-ledger-classification-plan]]'

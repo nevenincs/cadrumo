@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#identity'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-05-13-identity-adr]]'
   - '[[2026-05-13-identity-research]]'

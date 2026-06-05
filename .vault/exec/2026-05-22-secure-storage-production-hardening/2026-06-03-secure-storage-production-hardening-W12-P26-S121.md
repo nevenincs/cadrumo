@@ -6,7 +6,7 @@ date: '2026-06-03'
 step_id: 'S121'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
-  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S121-review]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s121-review-audit]]'
 ---
 
 # W12.P26.S121 - close AFR-019 for export record specs

@@ -71,6 +71,12 @@ from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, Obse
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 _BUCKET_ID = "sede-declarations"
+_AEAT = Settings.external_constants().aeat
+_DECLARATIONS_LISTING_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.declarations_listing}"
+_DECLARATIONS_LISTING_BASE_PATH = _AEAT.sede_paths.declarations_listing.removesuffix("/index.zul")
+_COTEJO_QUERY_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.cotejo_query}"
+_COTEJO_DOCUMENT_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.cotejo_document}"
+_REGISTER_DOWNLOAD_URL = f"{_AEAT.domains.www6}{_DECLARATIONS_LISTING_BASE_PATH}/zkau?dtid=z_test&cmd_0=download"
 
 if TYPE_CHECKING:
     from ..auth._authenticator import AeatSession
@@ -159,13 +165,13 @@ def test_declarations_page_shape_context_redacts_url_query_and_input_values() ->
 
     context = _declarations_page_shape_context(
         html,
-        landing_url="https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul?token=QUERY-CANARY",
+        landing_url=f"{_DECLARATIONS_LISTING_URL}?token=QUERY-CANARY",
         phase="post_buscar",
         modelo="303",
         ejercicio=2026,
     )
 
-    assert context["landing_url"] == "https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"
+    assert context["landing_url"] == _DECLARATIONS_LISTING_URL
     assert context["has_modelo_label"] is True
     assert context["has_ejercicio_label"] is True
     assert context["has_buscar_button"] is True
@@ -206,7 +212,7 @@ def test_modelo_303_submitted_file_fallback_extracts_result_casillas() -> None:
     snapshot = _modelo_snapshot("303", filing_year=2025, period="1T")
     artefact = FiledDeclaracionArtefact(
         kind="submitted_file",
-        source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+        source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
         content_type="application/octet-stream",
         byte_count=600,
         sha256="0" * 64,
@@ -243,7 +249,7 @@ def test_modelo_303_2022_submitted_file_fallback_uses_2022_result_position() -> 
     casilla_71_position = _modelo_303_design_position(_MODELO_303_2022_RECORD_DESIGN, casilla_id="71")
     artefact = FiledDeclaracionArtefact(
         kind="submitted_file",
-        source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+        source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
         content_type="application/octet-stream",
         byte_count=1017,
         sha256="0" * 64,
@@ -280,7 +286,7 @@ def test_modelo_303_submitted_file_fallback_refuses_invalid_page_record_footer()
     snapshot = _modelo_snapshot("303", filing_year=2025, period="1T")
     artefact = FiledDeclaracionArtefact(
         kind="submitted_file",
-        source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+        source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
         content_type="application/octet-stream",
         byte_count=1017,
         sha256="0" * 64,
@@ -482,7 +488,7 @@ def _filed_observation(
         artefacts=(
             FiledDeclaracionArtefact(
                 kind="submitted_file",
-                source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+                source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
                 content_type="application/octet-stream",
                 byte_count=1,
                 sha256="0" * 64,
@@ -689,7 +695,7 @@ class TestSearchOptionSelection:
 class TestExtractCsvFromUrl:
     """Verify cotejo-URL CSV extraction validates the AEAT shape strictly."""
 
-    _COTEJO = "https://www6.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV="
+    _COTEJO = f"{_COTEJO_QUERY_URL}?CSV="
 
     def test_canonical_csv(self) -> None:
         """Assert a canonical 16-character CSV extracts cleanly."""
@@ -698,7 +704,7 @@ class TestExtractCsvFromUrl:
     def test_missing_csv_param_raises(self) -> None:
         """Assert a URL without a CSV query parameter raises :exc:`SedeParseError`."""
         with pytest.raises(SedeParseError, match="missing CSV"):
-            _extract_csv_from_url("https://www6.agenciatributaria.gob.es/wlpl/foo")
+            _extract_csv_from_url(_DECLARATIONS_LISTING_URL)
 
     def test_lowercase_csv_rejected(self) -> None:
         """Assert a lowercase CSV value is rejected (AEAT only emits uppercase)."""
@@ -770,7 +776,7 @@ class TestSubmittedFileObservation:
         )
         artefact = FiledDeclaracionArtefact(
             kind="submitted_file",
-            source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+            source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
             content_type="application/octet-stream",
             byte_count=len(body),
             sha256=hashlib.sha256(body).hexdigest(),
@@ -821,7 +827,7 @@ class TestSubmittedFileObservation:
         )
         artefact = FiledDeclaracionArtefact(
             kind="submitted_file",
-            source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+            source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
             content_type="application/octet-stream",
             byte_count=len(body),
             sha256=hashlib.sha256(body).hexdigest(),
@@ -905,7 +911,7 @@ class TestSubmittedFileObservation:
         )
         artefact = FiledDeclaracionArtefact(
             kind="submitted_file",
-            source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+            source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
             content_type="application/octet-stream",
             byte_count=len(body),
             sha256=hashlib.sha256(body).hexdigest(),
@@ -999,7 +1005,7 @@ class TestSubmittedFileObservation:
         )
         artefact = FiledDeclaracionArtefact(
             kind="submitted_file",
-            source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+            source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
             content_type="application/octet-stream",
             byte_count=len(body),
             sha256=hashlib.sha256(body).hexdigest(),
@@ -1045,7 +1051,7 @@ class TestSubmittedFileObservation:
         )
         artefact = FiledDeclaracionArtefact(
             kind="submitted_file",
-            source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+            source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
             content_type="application/xml",
             byte_count=len(body),
             sha256=hashlib.sha256(body).hexdigest(),
@@ -1085,7 +1091,7 @@ class TestSubmittedFileObservation:
         )
         artefact = FiledDeclaracionArtefact(
             kind="submitted_file",
-            source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+            source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
             content_type="application/xml",
             byte_count=len(body),
             sha256=hashlib.sha256(body).hexdigest(),
@@ -1231,20 +1237,20 @@ class TestReadOperationGuard:
         assert policy.requires_aeat_authorization is True
         _assert_read_http(
             "GET",
-            "https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul",
+            _DECLARATIONS_LISTING_URL,
             policy=policy,
         )
         with pytest.raises(RegistryValidationError, match="remote write method"):
             _assert_read_http(
                 "POST",
-                "https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul",
+                _DECLARATIONS_LISTING_URL,
                 policy=policy,
             )
 
     def test_cotejo_pdf_get_allowed(self) -> None:
         _assert_read_http(
             "GET",
-            "https://www6.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=S3RASL6U73H49Y83",
+            f"{_COTEJO_DOCUMENT_URL}?CSV=S3RASL6U73H49Y83",
         )
 
     def test_declaration_pdf_action_allowed(self) -> None:
@@ -1260,21 +1266,21 @@ class TestReadOperationGuard:
     def test_register_download_get_allowed(self) -> None:
         _assert_read_http(
             "GET",
-            "https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/zkau?dtid=z_test&cmd_0=download",
+            _REGISTER_DOWNLOAD_URL,
         )
 
     def test_register_download_external_host_rejected(self) -> None:
         with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
             _assert_read_http(
                 "GET",
-                "https://example.test/wlpl/SCEJ-MANT/CONSUL/zkau?dtid=z_test&cmd_0=download",
+                f"https://example.test{_DECLARATIONS_LISTING_BASE_PATH}/zkau?dtid=z_test&cmd_0=download",
             )
 
     def test_non_read_method_rejected(self) -> None:
         with pytest.raises(RegistryValidationError, match="remote write method"):
             _assert_read_http(
                 "POST",
-                "https://www6.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=S3RASL6U73H49Y83",
+                f"{_COTEJO_DOCUMENT_URL}?CSV=S3RASL6U73H49Y83",
             )
 
     def test_mutating_action_rejected(self) -> None:

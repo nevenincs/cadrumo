@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#pytest-markers'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-17-pytest-markers-adr]]'
   - '[[2026-04-17-pytest-markers-phase1-step1-exec]]'

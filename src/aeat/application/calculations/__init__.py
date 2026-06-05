@@ -19,12 +19,15 @@ from ._binding_prefill import (
     resolve_bindings_from_local_store,
 )
 from ._iva_compensation_history import (
+    IvaCompensationAnnualCrossCheck,
+    IvaCompensationAnnualSummary,
     IvaCompensationHistoryRepository,
+    cross_check_iva_compensation_annual_summary,
+    iva_compensation_annual_summary_from_filed_observation,
     iva_compensation_period_key,
     iva_compensation_state_from_filed_observation,
     seed_iva_compensation_period,
 )
-from ._maritime_exemption_service import resolve_maritime_exemption
 from ._iva_wallet_balance import query_iva_wallet_balance
 from ._iva_wallet_reconciliation import (
     IvaCompensationReconciliationReport,
@@ -32,6 +35,7 @@ from ._iva_wallet_reconciliation import (
     reconcile_iva_compensation_wallet,
     reconcile_modelo_303_iva_compensation,
 )
+from ._maritime_exemption_service import resolve_maritime_exemption
 from ._multi_year import (
     EnrollmentEvidence,
     EnrollmentEvidenceError,
@@ -72,6 +76,8 @@ __all__ = [
     "EnrollmentEvidenceError",
     "EnrollmentRecorder",
     "EnrollmentYearObservation",
+    "IvaCompensationAnnualCrossCheck",
+    "IvaCompensationAnnualSummary",
     "IvaCompensationHistoryRepository",
     "IvaCompensationReconciliationReport",
     "IvaWalletDecisionRepository",
@@ -88,7 +94,9 @@ __all__ = [
     "assemble_related_party_observations",
     "assemble_withholding_observations",
     "assert_enrollment_matches_manifest",
+    "cross_check_iva_compensation_annual_summary",
     "extract_modelo_303_local_iva_compensation_recurrence",
+    "iva_compensation_annual_summary_from_filed_observation",
     "iva_compensation_period_key",
     "iva_compensation_state_from_filed_observation",
     "iva_wallet_decision_event_key",

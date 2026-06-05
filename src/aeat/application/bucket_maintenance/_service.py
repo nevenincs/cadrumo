@@ -76,6 +76,9 @@ class BucketMaintenanceService:
         from the lifecycle service; the two events are co-emitted by
         design — the lifecycle event records the data change, the
         maintenance event records the operator-surface invocation.
+
+        Returns:
+            :class:`RenameBucketResult`: The result of the rename operation.
         """
         pointer = read_profile_bucket_by_id(command.bucket_id)
         if pointer is None:
@@ -135,6 +138,9 @@ class BucketMaintenanceService:
         bucket ADR). Both refusals are service-boundary contracts,
         not CLI ergonomics — a programmatic caller observes the same
         guarantees.
+
+        Returns:
+            :class:`DeleteBucketResult`: The result of the delete operation.
         """
         from ...core import resolve_active_bucket_id
         from ...domain.buckets import BucketDeleteRefusedError
@@ -189,7 +195,7 @@ class BucketMaintenanceService:
         )
 
     def browse(self, command: BrowseBucketCommand) -> BrowseBucketResult:
-        """Enumerate the bucket's namespace inventory without decrypting payloads.
+        """Enumerate the bucket's namespace inventory without decrypting payloads, returning a :class:`BrowseBucketResult`.
 
         Composes :meth:`SecureObjectRepository.list_namespaces` with a
         per-namespace row count via :meth:`list_keys` (whose return is

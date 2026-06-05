@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import pytest
 
+from .....core.config import Settings
 from .....tests import FIXTURES_DIR
 from ._notifications import (
     parse_notifications_query,
@@ -19,8 +20,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 _FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"
-_SUMMARY_URL = "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/ResumenInteresados"
-_QUERY_URL = "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/SvInteresadosQuery?VEZ=BUSCAR1"
+_AEAT = Settings.external_constants().aeat
+_SUMMARY_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.notifications_summary}"
+_QUERY_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.notifications_query}"
 
 
 class TestParseNotificationsSummary:

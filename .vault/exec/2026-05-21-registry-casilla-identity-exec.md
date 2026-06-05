@@ -5,7 +5,7 @@ tags:
 date: '2026-05-21'
 step_id: 'S23'
 related:
-  - "[[2026-05-20-registry-casilla-identity-summary]]"
+  - "[[2026-05-20-registry-casilla-identity-summary-exec]]"
   - "[[2026-05-20-registry-casilla-identity-adr]]"
 ---
 

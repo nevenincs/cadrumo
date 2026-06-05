@@ -8,6 +8,7 @@ related:
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-modelo-work-units-adr]]"
   - "[[2026-04-13-modelo-inventory-adr]]"
+  - '[[2026-06-04-sal-sll-legal-entity-form-research]]'
 ---
 
 

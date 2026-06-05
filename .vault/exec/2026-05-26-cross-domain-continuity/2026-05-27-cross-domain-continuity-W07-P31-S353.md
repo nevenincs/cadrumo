@@ -6,8 +6,6 @@ tags:
 date: 2026-05-27
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
-  - "[[94b424c6b]]"
-  - "[[eb8793d07]]"
 ---
 
 # S353: M100 casilla 0505 formula derivation

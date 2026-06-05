@@ -7,6 +7,7 @@ related:
   - '[[2025-02-13-profile-keys-i18n-migration-exec]]'
   - '[[2026-04-12-trilingual-i18n-research]]'
   - '[[2026-05-12-schema-driven-wizard-research]]'
+  - '[[2026-06-04-profile-keys-i18n-migration-research]]'
 ---
 
 # `profile-keys-i18n-migration` adr

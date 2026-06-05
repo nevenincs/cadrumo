@@ -12,6 +12,7 @@ related:
   - "[[2026-05-31-core-authority-semantic-v2-reference]]"
   - "[[2026-05-31-core-authority-indirections-v2-reference]]"
   - "[[2026-05-30-identity-primitives-adr]]"
+  - '[[2026-05-31-core-authority-research]]'
 ---
 # `core-authority` adr: `core-as-single-authority-for-all-cross-module-definitions` | (**status:** `accepted`)
 
@@ -439,11 +440,11 @@ is a Rule 11 violation.
 
 ## References
 
-- [[2026-05-31-core-authority-action-tracker-v2-reference]] -- 91 action rows, 10 open questions, 2 latent bugs
-- [[2026-05-31-core-authority-types-v2-reference]] -- 226 enums, 84 Protocols, 268 collective type-alias inventory
-- [[2026-05-31-core-authority-constants-v2-reference]] -- 2,435 constants, 193 same-name multi-declarations, 267 cross-module gap
-- [[2026-05-31-core-authority-imports-v2-reference]] -- 5x5 layer matrix, 471 illegal edges across 9 direction pairs
-- [[2026-05-31-core-authority-duplicates-v2-reference]] -- 449 duplicate names, 152 cross-layer duplicates
-- [[2026-05-31-core-authority-semantic-v2-reference]] -- GPU-accelerated semantic pairs, FIX-001 and FIX-002 surface
-- [[2026-05-31-core-authority-indirections-v2-reference]] -- 19 rename-on-import aliases, 28 conditional imports, protect-list classification
-- [[2026-05-30-identity-primitives-adr]] -- identity-primitive placement precedent this ADR extends
+- `2026-05-31-core-authority-action-tracker-v2-reference` -- 91 action rows, 10 open questions, 2 latent bugs
+- `2026-05-31-core-authority-types-v2-reference` -- 226 enums, 84 Protocols, 268 collective type-alias inventory
+- `2026-05-31-core-authority-constants-v2-reference` -- 2,435 constants, 193 same-name multi-declarations, 267 cross-module gap
+- `2026-05-31-core-authority-imports-v2-reference` -- 5x5 layer matrix, 471 illegal edges across 9 direction pairs
+- `2026-05-31-core-authority-duplicates-v2-reference` -- 449 duplicate names, 152 cross-layer duplicates
+- `2026-05-31-core-authority-semantic-v2-reference` -- GPU-accelerated semantic pairs, FIX-001 and FIX-002 surface
+- `2026-05-31-core-authority-indirections-v2-reference` -- 19 rename-on-import aliases, 28 conditional imports, protect-list classification
+- `2026-05-30-identity-primitives-adr` -- identity-primitive placement precedent this ADR extends

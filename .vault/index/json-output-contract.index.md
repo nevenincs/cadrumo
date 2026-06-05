@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#json-output-contract'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-25-json-output-contract-adr]]'
   - '[[2026-04-25-json-output-contract-audit]]'

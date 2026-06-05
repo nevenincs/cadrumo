@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#t6-aggregation'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-30-t6-aggregation-adr]]'
   - '[[2026-04-30-t6-aggregation-backend-exec]]'

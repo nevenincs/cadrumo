@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#aeat-cli-gap-discovery'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-05-08-aeat-cli-gap-discovery-audit]]'
 ---

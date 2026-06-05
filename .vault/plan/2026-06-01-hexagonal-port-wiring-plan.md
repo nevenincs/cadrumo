@@ -5,8 +5,11 @@ tags:
 date: '2026-06-01'
 tier: L2
 related:
-  - "[[2026-05-31-hexagonal-port-necessity-audit]]"
-  - "[[2026-06-01-adr-state-snapshot-2026-06-01-research]]"
+  - '[[2026-05-31-hexagonal-port-necessity-audit]]'
+  - '[[2026-06-01-adr-state-snapshot-2026-06-01-research]]'
+  - '[[2026-06-01-domain-boundary-audit-adr]]'
+  - '[[2026-06-04-hexagonal-port-wiring-adr]]'
+  - '[[2026-06-04-hexagonal-port-wiring-research]]'
 ---
 
 # `hexagonal-port-wiring` plan
@@ -37,16 +40,16 @@ Sites for `TransactionCatalogueRepository` → `TransactionCatalogueRepositoryPr
 in the application layer. Identified via
 `rg "TransactionCatalogueRepository" src/aeat/application/ -l`:
 
-- [x] `S01` - `application/aggregation/_iva_ledger.py` — landed in commit `08ee2dac5`.
-- [x] `S02` - `application/aggregation/_modelo_bindings.py` — rewire callers.
-- [x] `S03` - `application/aggregation/_renta_income_ledger.py` — rewire callers.
-- [x] `S04` - `application/aggregation/_renta_ledger.py` — rewire callers.
-- [x] `S05` - `application/filing/_review.py` — rewire callers.
-- [x] `S06` - `application/invoices/_linking.py` — rewire callers.
-- [x] `S07` - `application/invoices/_queries.py` — rewire callers.
-- [x] `S08` - `application/invoices/_reconciliation.py` — rewire callers.
-- [x] `S09` - `application/ledger/_actions.py` — rewire callers (largest file in the cluster).
-- [x] `S10` - verify every test passes for the touched modules.
+- [x] `S01` - land proof-of-pattern wiring; `application/aggregation/_iva_ledger.py` (commit `08ee2dac5`).
+- [x] `S02` - rewire callers; `application/aggregation/_modelo_bindings.py`.
+- [x] `S03` - rewire callers; `application/aggregation/_renta_income_ledger.py`.
+- [x] `S04` - rewire callers; `application/aggregation/_renta_ledger.py`.
+- [x] `S05` - rewire callers; `application/filing/_review.py`.
+- [x] `S06` - rewire callers; `application/invoices/_linking.py`.
+- [x] `S07` - rewire callers; `application/invoices/_queries.py`.
+- [x] `S08` - rewire callers; `application/invoices/_reconciliation.py`.
+- [x] `S09` - rewire callers; `application/ledger/_actions.py` (largest file in the cluster).
+- [x] `S10` - verify every test passes for the touched modules; `src/aeat/application/`.
 
 ### Phase `P02` - buckets port
 
@@ -54,15 +57,15 @@ Sites for `BucketEventHistoryRepository` and sibling concrete bucket
 repositories → `BucketRepositoryProtocol` / sibling Protocols. Discover
 via `rg "BucketEventHistoryRepository|BucketCatalogueRepository" src/aeat/application/ -l`.
 
-- [x] `S11` - enumerate the call sites; produce a per-site checklist.
-- [x] `S12` - rewire each site one at a time, commit per logical sub-cluster.
+- [x] `S11` - enumerate the call sites; bucket repository application callers.
+- [x] `S12` - rewire each site one at a time; bucket repository application callers.
 
 ### Phase `P03` - invoices port
 
 Sites for `InvoiceCatalogueRepository` → `InvoiceRepositoryProtocol`.
 
-- [x] `S21` - enumerate the call sites.
-- [x] `S22` - rewire each site one at a time.
+- [x] `S21` - enumerate the call sites; invoice repository application callers.
+- [x] `S22` - rewire each site one at a time; invoice repository application callers.
 
 ### Phase `P04` - modelos port
 
@@ -72,14 +75,14 @@ Sites for `WorkUnitCatalogueRepository`, `CalculationRevisionCatalogueRepository
 largest port surface — `application/modelo/_actions.py` is 4000+ lines
 and a concurrent-campaign hotspot. Explicit-path staging is mandatory.
 
-- [x] `S31` - enumerate the call sites; produce a per-site checklist.
-- [x] `S32` - rewire each site, one logical sub-cluster per commit.
+- [x] `S31` - enumerate the call sites; modelo repository application callers.
+- [x] `S32` - rewire each site; modelo repository application callers.
 
 ## Wave `W02` - verification
 
-- [x] `S41` - `pytest src/aeat/application/ -q` — all green after each rewiring commit.
-- [x] `S42` - vaultspec-rag query "application layer concrete repository type hint" should return zero hits after the wave.
-- [x] `S43` - update `.vault/audit/2026-05-31-hexagonal-port-necessity-audit.md` with a closing note confirming the drift is resolved.
+- [x] `S41` - run application-layer tests; `pytest src/aeat/application/ -q`.
+- [x] `S42` - query semantic drift; vaultspec-rag query "application layer concrete repository type hint" returns zero hits after the wave.
+- [x] `S43` - record closure note; `.vault/audit/2026-05-31-hexagonal-port-necessity-audit.md`.
 
 ## Closure note -- 2026-06-01
 

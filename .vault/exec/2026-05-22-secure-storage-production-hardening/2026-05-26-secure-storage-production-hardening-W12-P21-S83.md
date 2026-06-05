@@ -8,7 +8,7 @@ related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-05-26-secure-storage-production-hardening-W12-P20-summary]]'
   - '[[2026-05-26-active-profile-storage-runtime-classification-closeout-audit]]'
-  - '[[2026-05-26-secure-storage-production-hardening-W12-P21-S83-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p21-s83-review-audit]]'
 ---
 
 

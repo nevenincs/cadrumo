@@ -115,6 +115,14 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....domain.usage_ratios import UsageRatioProfile, load_usage_ratios, save_usage_ratios
+from ....tests.aeat_literal_fixtures import (
+    AEAT_HOST_SUFFIX_EXPECTED,
+    AUTH_DIAGNOSTIC_PATH_FIXTURE,
+    BORRADOR_STORAGE_PATH_FIXTURE,
+    FILED_ARTEFACT_PATH_FIXTURE,
+    JUSTIFICANTE_VERIFY_PATH_FIXTURE,
+    aeat_url,
+)
 from ...outbound.aeat.auth import _session_store
 from ...outbound.aeat.sede import ExpedienteNotFoundError
 from ...outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
@@ -233,7 +241,7 @@ def _storage_state(label: str) -> dict[str, object]:
             {
                 "name": "AEAT_SESSION",
                 "value": label,
-                "domain": ".agenciatributaria.gob.es",
+                "domain": f".{AEAT_HOST_SUFFIX_EXPECTED}",
                 "path": "/",
             }
         ],
@@ -410,7 +418,9 @@ def _justificante(tmp_path: Path, label: str) -> Justificante:
         tax_id="00000000T",
         total_a_ingresar=Decimal("10.00"),
         total_a_devolver=None,
-        verification_url=TypeAdapter(AnyHttpUrl).validate_python("https://sede.agenciatributaria.gob.es/verify"),
+        verification_url=TypeAdapter(AnyHttpUrl).validate_python(
+            aeat_url("sede", JUSTIFICANTE_VERIFY_PATH_FIXTURE)
+        ),
         source_pdf_path=pdf,
         source_pdf_sha256=hashlib.sha256(pdf.read_bytes()).hexdigest(),
         parsed_at=datetime(2026, 4, 12, tzinfo=UTC),
@@ -628,7 +638,7 @@ def _sede_artefact(label: str) -> tuple[FiledDeclaracionArtefact, bytes]:
     return (
         FiledDeclaracionArtefact(
             kind="submitted_file",
-            source_url=TypeAdapter(AnyHttpUrl).validate_python("https://sede.agenciatributaria.gob.es/file"),
+            source_url=TypeAdapter(AnyHttpUrl).validate_python(aeat_url("sede", FILED_ARTEFACT_PATH_FIXTURE)),
             content_type="application/pdf",
             byte_count=len(body),
             sha256=hashlib.sha256(body).hexdigest(),
@@ -646,7 +656,7 @@ def _borrador_snapshot(bucket_id: str, label: str) -> Borrador100Snapshot:
         filing_year=2026,
         period="0A",
         captured_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
-        source_url="https://sede.agenciatributaria.gob.es/borrador/100",
+        source_url=aeat_url("sede", BORRADOR_STORAGE_PATH_FIXTURE),
         state=SnapshotLifecycleState.ACTIVE,
         binding_values={"casilla-001": Decimal("1.00")},
     )
@@ -705,7 +715,7 @@ def _save_auth_diagnostic(label: str) -> None:
     payload = {
         "diagnostic_id": f"diagnostic-{label}",
         "reason": "runtime migrated auth diagnostic",
-        "url": "https://sede.agenciatributaria.gob.es/auth",
+        "url": aeat_url("sede", AUTH_DIAGNOSTIC_PATH_FIXTURE),
         "captured_at": datetime(2026, 5, 26, 9, 0, tzinfo=UTC).isoformat(),
         "auth_attempt": {"auth_mode": "clave", "headless": True},
     }

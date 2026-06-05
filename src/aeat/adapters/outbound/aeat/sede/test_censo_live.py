@@ -12,6 +12,7 @@ from . import G313_LAUNCHER_URL, censo_fact_set_to_mapping, fetch_g313_censo
 from ._censo_live import _fetch_g313_censo_with_storage_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+_AEAT = Settings.external_constants().aeat
 
 
 _G313_HTML = dedent(
@@ -77,7 +78,7 @@ class _RecordingBrowserSession:
 def test_g313_live_driver_is_exported_from_public_sede_surface() -> None:
     assert callable(fetch_g313_censo)
     assert callable(censo_fact_set_to_mapping)
-    assert G313_LAUNCHER_URL.endswith("/Sede/procedimientoini/G313.shtml")
+    assert f"{_AEAT.domains.sede}{_AEAT.sede_paths.censo_g313_launcher}" == G313_LAUNCHER_URL
 
 
 @pytest.mark.asyncio
@@ -87,7 +88,7 @@ async def test_g313_fetch_uses_authenticated_storage_and_parses_page_content() -
             {
                 "name": "AEAT_SESSION",
                 "value": "recorded-session",
-                "domain": "sede.agenciatributaria.gob.es",
+                "domain": _AEAT.domains.sede.removeprefix("https://"),
                 "path": "/",
             },
         ),

@@ -6,7 +6,7 @@ date: '2026-05-26'
 step_id: 'S103'
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-plan]]'
-  - '[[2026-05-26-declaracion-extraction-auth-gated-acquisition-status]]'
+  - '[[2026-05-26-declaracion-extraction-auth-gated-acquisition-status-audit]]'
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-plan]]'
 ---
 

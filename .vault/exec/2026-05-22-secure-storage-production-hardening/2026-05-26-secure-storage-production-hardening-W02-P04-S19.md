@@ -6,7 +6,7 @@ date: '2026-05-26'
 step_id: 'S19'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
-  - '[[2026-05-26-secure-storage-production-hardening-W02-P04-S19-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w02-p04-s19-review-audit]]'
 ---
 
 # `secure-storage-production-hardening` `W02.P04.S19`

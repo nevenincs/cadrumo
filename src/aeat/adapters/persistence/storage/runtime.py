@@ -169,7 +169,7 @@ class StorageRuntime(BaseModel):
 
 
 def runtime_not_ready_error(message: str, *, message_key: str) -> StorageValidationError:
-    """Build a localized storage-runtime readiness failure."""
+    """Build a localized storage-runtime readiness failure returning a :class:`StorageValidationError`."""
     from ....core.i18n import tr
 
     return StorageValidationError(

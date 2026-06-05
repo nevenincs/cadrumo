@@ -11,6 +11,7 @@ import pytest
 from ...adapters.persistence.storage import SensitivityClass
 from ...core.errors import ERROR_REGISTRY, build_error_envelope
 from ...core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE, UTF_8_ENCODING, load_external_constants
+from ...tests.aeat_literal_fixtures import aeat_url, configured_path
 from ...tests.secure_sql import isolated_runtime_profile
 from ._diagnostics import (
     _DiagnosticPayload,
@@ -140,6 +141,12 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         assert detail.clave_identity_fingerprint == "sha256:clavetax"
         assert detail.nie_soporte_fingerprint == "sha256:support"
         assert detail.certificate_path_fingerprint == "sha256:certpath"
+        assert detail.operator_report_commands == (
+            "aeat config auth diagnostics report diag-new --phone-state app_prompted_and_accepted",
+            "aeat config auth diagnostics report diag-new --phone-state app_prompted_not_accepted",
+            "aeat config auth diagnostics report diag-new --phone-state app_did_not_prompt",
+            "aeat config auth diagnostics report diag-new --phone-state operator_did_not_check",
+        )
         assert detail.html_excerpt == "[redacted html captured: 72 chars]"
         assert "sensitive form fields" not in detail.html_excerpt
         report = record_auth_diagnostic_phone_state("diag-new", "app_did_not_prompt")
@@ -175,7 +182,7 @@ def test_diagnostic_payload_round_trips_through_json() -> None:
     raw = {
         "diagnostic_id": "diag-rt-001",
         "reason": "push-wait-state-not-reached",
-        "url": "https://www2.agenciatributaria.gob.es/wlpl/CLMV-CLAV/Movil?op=Login",
+        "url": aeat_url("www2", configured_path("sede_paths", "clave_movil_login")),
         "captured_at": "2026-05-28T10:00:00+00:00",
         "html": "<html><body>page</body></html>",
         "screenshot_png_base64": "aW1hZ2U=",

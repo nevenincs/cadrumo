@@ -411,7 +411,7 @@ class RegistryQueryService:
                 given filing year. ``None`` returns all registered modelos.
 
         Returns:
-            A ``ModeloListReport`` containing the matching rows.
+            A :class:`ModeloListReport` containing the matching rows.
         """
         rows = [
             ModeloListRow(
@@ -452,7 +452,7 @@ class RegistryQueryService:
                 today when ``None``.
 
         Returns:
-            A ``ModeloDescribeReport`` for the resolved revision.
+            A :class:`ModeloDescribeReport` for the resolved revision.
 
         Raises:
             ``RegistryValidationError``: When ``modelo`` is not registered,
@@ -520,7 +520,7 @@ class RegistryQueryService:
                 given physical form page or sub-form.
 
         Returns:
-            A ``ModeloCasillasReport`` for the resolved revision, containing
+            A :class:`ModeloCasillasReport` for the resolved revision, containing
             the filtered casilla rows.
 
         Raises:
@@ -650,7 +650,7 @@ class RegistryQueryService:
             as_of: Optional calendar date for validity gating.
 
         Returns:
-            A ``ModeloBindingsReport`` for the resolved revision.
+            A :class:`ModeloBindingsReport` for the resolved revision.
 
         Raises:
             ``RegistryValidationError``: When the modelo or period is not
@@ -686,7 +686,7 @@ class RegistryQueryService:
             as_of: Optional calendar date for validity gating.
 
         Returns:
-            A ``ModeloFormulasReport`` for the resolved revision.
+            A :class:`ModeloFormulasReport` for the resolved revision.
 
         Raises:
             ``RegistryValidationError``: When the modelo or period is not

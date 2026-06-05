@@ -6,7 +6,7 @@ tags:
 date: 2026-05-27
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
-  - "[[2026-05-27-cross-domain-continuity-W09-P41-S322-S334]]"
+  - "[[2026-05-27-cross-domain-continuity-w09-p41-s322-s334-exec]]"
 ---
 
 # cross-domain-continuity W09.P41.S342 — M130 income aggregation actividad-económica fix

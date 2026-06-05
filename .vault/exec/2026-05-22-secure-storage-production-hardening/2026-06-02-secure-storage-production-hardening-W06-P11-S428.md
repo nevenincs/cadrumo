@@ -6,7 +6,7 @@ date: '2026-06-02'
 step_id: 'S428'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
-  - '[[2026-06-02-secure-storage-production-hardening-W05-P10-S43-review]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w05-p10-s43-review-audit]]'
 ---
 
 # `secure-storage-production-hardening` `W06.P11.S428`
@@ -30,6 +30,7 @@ related:
 - `aeat config google sync calc pull --modelo 130 --period 1T --year 2025 --spreadsheet-id <exported-workbook-id> --compute` reported `metadata_match=matches`, registry SHA `da9952e1610f7db6`, zero operator edits, and computed 11 outputs including casillas 03, 04, 07, 09, 11, 12, 13, 14, 17, 19, and `saldo-negativo-fin-periodo`.
 - Bounded Sheets metadata/range reads against the exported workbook confirmed title `AEAT 130 1T 2025`, tabs `Entradas`, `Cálculos`, `Procedencia`, `Tarifas`, `Detalle`, and `Guía`, `Guía!A1:B20` registry SHA `da9952e1610f7db6`, `Cálculos!A1:H40` formula rows including casilla 03 `=ROUND((Entradas!D2-Entradas!D3),2)` and the downstream formula chain, and `Cálculos!A1:D12` formatted values 0, 0, 0, 0, 0, 0, 100, -100, -100, -100, and 100 for the calculated rows.
 - Post-push live provider gate passed: `AEAT_LIVE_TESTS_ENABLED=1 AEAT_LIVE_TESTS_GOOGLE=1 AEAT_STORAGE_PROVIDER_KIND=google_drive AEAT_GOOGLE_DRIVE_ROOT_FOLDER_ID=<app-owned-root-folder-id> pytest -m live_read src/aeat/adapters/outbound/storage/test_google_drive_live.py -q` collected and passed 4 tests.
+- 2026-06-03 continuation evidence under `W06.P11.S441` independently rechecked the active profile, read-only probe, Drive hierarchy, empty `_probe` cleanup state, workbook metadata, XLSX export, live Sheets formula read, live Sheets 429 quota response, successful value read after quota reset, and the enabled 4-test live Drive provider gate.
 
 ## Status
 

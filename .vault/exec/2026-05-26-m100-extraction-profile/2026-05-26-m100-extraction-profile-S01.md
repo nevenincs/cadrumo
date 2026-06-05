@@ -5,7 +5,7 @@ tags:
   - "#m100-extraction-profile"
 date: 2026-05-26
 related:
-  - "[[2026-05-22-restructure-execution-phase1-step1]]"
+  - '[[2026-05-22-restructure-execution-P01-S01]]'
 ---
 
 # M100 IRPF declaracion_pdf extraction profile — chunk 1

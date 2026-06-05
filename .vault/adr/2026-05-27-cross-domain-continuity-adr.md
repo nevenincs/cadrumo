@@ -6,6 +6,7 @@ date: '2026-05-27'
 related:
   - "[[2026-04-20-classification-harmonization-adr]]"
   - "[[2026-05-26-cross-domain-continuity-plan]]"
+  - '[[2026-06-04-cross-domain-continuity-research]]'
 ---
 
 

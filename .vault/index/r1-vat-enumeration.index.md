@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#r1-vat-enumeration'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-13-r1-vat-enumeration-adr]]'
   - '[[2026-04-13-r1-vat-enumeration-phase1-catalogue-exec]]'

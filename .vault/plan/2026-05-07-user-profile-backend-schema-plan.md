@@ -12,6 +12,7 @@ related:
   - "[[2026-05-07-user-profile-deadline-dependencies-reference]]"
   - "[[2026-05-07-user-profile-renta-dependencies-reference]]"
   - "[[2026-05-07-user-profile-census-business-dependencies-reference]]"
+  - "[[2026-05-16-profile-lifecycle-cli-plan]]"
 ---
 
 

@@ -6,7 +6,7 @@ date: '2026-05-21'
 related:
   - "[[2026-05-21-state-architecture-plan]]"
   - "[[2026-05-21-profile-uuid-identity-adr]]"
-  - "[[2026-05-20-testimonial-driven-cli-verification-playbook]]"
+  - "[[2026-05-20-testimonial-driven-cli-verification-playbook-reference]]"
 ---
 
 # `cli-workflow-redesign` audit: state-architecture testimonial regression

@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#modelo-180-calc-verify'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-28-modelo-180-calc-verify-adr]]'
   - '[[2026-04-28-modelo-180-calc-verify-plan]]'

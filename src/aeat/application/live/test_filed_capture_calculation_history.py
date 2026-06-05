@@ -17,6 +17,7 @@ from ...adapters.outbound.aeat.sede import (
     FiledDeclaracionObservation,
     ObservedCasillaValue,
 )
+from ...adapters.outbound.aeat.sede._declarations import _observed_casillas_from_submitted_file
 from ...core.external_constants import load_external_constants
 from ...core.resources import resources
 from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation, RegistryValidationError
@@ -33,6 +34,7 @@ from . import (
     _persist_iva_compensation_history_observations_strict,
     _persist_latest_filed_calculation_observations,
     list_iva_compensation_history,
+    load_iva_remote_state,
     persist_filed_calculation_observation,
 )
 
@@ -290,6 +292,66 @@ def test_filed_303_capture_accepts_semantic_compensation_casilla_ids(tmp_path: P
         assert stored.observation.casilla_values["iva.compensacion-disponible-fin-periodo"] == expected_available_end
 
 
+def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_path: Path) -> None:
+    with _secure_backend(tmp_path):
+        observations = (
+            _parsed_303_submitted_file_observation(
+                year=2025,
+                period="4T",
+                expediente_id="200030300000009Z",
+                presented_at=datetime(2026, 1, 20, 10, 0, 0, tzinfo=UTC),
+                casilla_110="00000000000000000",
+                casilla_78="00000000000000000",
+                casilla_87="00000000000000000",
+                casilla_69="N0000000000010000",
+                casilla_71="N0000000000010000",
+            ),
+            _parsed_303_submitted_file_observation(
+                year=2026,
+                period="1T",
+                expediente_id="200030300000010Z",
+                presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+                casilla_110="00000000000010000",
+                casilla_78="00000000000003000",
+                casilla_87="00000000000012000",
+                casilla_69="N0000000000005000",
+                casilla_71="N0000000000005000",
+            ),
+            _parsed_303_submitted_file_observation(
+                year=2026,
+                period="2T",
+                expediente_id="200030300000011Z",
+                presented_at=datetime(2026, 7, 20, 10, 0, 0, tzinfo=UTC),
+                casilla_110="00000000000017000",
+                casilla_78="00000000000002000",
+                casilla_87="00000000000010000",
+                casilla_69="00000000000002500",
+                casilla_71="00000000000002500",
+            ),
+        )
+
+        keys = _persist_iva_compensation_history_observations_strict(observations)
+        history = list_iva_compensation_history(as_of_year=2026)
+        remote_state = load_iva_remote_state(as_of_year=2026)
+
+        rows_by_period = {(row.year, row.period): row for row in history.rows}
+        lots_by_period = {(lot.source_filing_year, lot.source_period): lot for lot in history.carry_forward_lots}
+
+        assert keys == ("303:2025:4T", "303:2026:1T", "303:2026:2T")
+        assert history.row_count == 3
+        assert set(rows_by_period) == {(2025, "4T"), (2026, "1T"), (2026, "2T")}
+        assert Decimal(rows_by_period[(2025, "4T")].generated_amount) == Decimal("100.00")
+        assert Decimal(rows_by_period[(2026, "1T")].generated_amount) == Decimal("50.00")
+        assert Decimal(rows_by_period[(2026, "2T")].generated_amount) == Decimal("0")
+        assert Decimal(rows_by_period[(2026, "2T")].available_end_amount) == Decimal("100.00")
+        assert history.carry_forward_lot_count == 2
+        assert Decimal(lots_by_period[(2025, "4T")].remaining_amount) == Decimal("50.00")
+        assert Decimal(lots_by_period[(2026, "1T")].remaining_amount) == Decimal("50.00")
+        assert Decimal(history.unallocated_applied_amount) == Decimal("0")
+        assert remote_state.history.row_count == history.row_count
+        assert remote_state.history.carry_forward_lot_count == history.carry_forward_lot_count
+
+
 def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
         repository = CalculationObservationRepository()
@@ -308,6 +370,89 @@ def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: P
 
         with pytest.raises(RegistryValidationError, match=r"iva\.compensacion-disponible-fin-periodo"):
             resolve_bindings_from_local_store(target_snapshot, repository=repository, captured_at=_CAPTURED_AT)
+
+
+def _parsed_303_submitted_file_observation(
+    *,
+    year: int,
+    period: str,
+    expediente_id: str,
+    presented_at: datetime,
+    casilla_110: str,
+    casilla_78: str,
+    casilla_87: str,
+    casilla_69: str,
+    casilla_71: str,
+) -> FiledDeclaracionObservation:
+    body = _modelo_303_page_03_payload(
+        casilla_110=casilla_110,
+        casilla_78=casilla_78,
+        casilla_87=casilla_87,
+        casilla_69=casilla_69,
+        casilla_71=casilla_71,
+    )
+    external = load_external_constants().aeat
+    declarations_url = f"{external.domains.www6}{external.sede_paths.declarations_listing}"
+    artefact = FiledDeclaracionArtefact(
+        kind="submitted_file",
+        source_url=AnyHttpUrl(declarations_url),
+        content_type="application/octet-stream",
+        byte_count=len(body),
+        sha256=hashlib.sha256(body).hexdigest(),
+        captured_at=presented_at,
+    )
+    declaration = Declaracion(
+        modelo="303",
+        ejercicio=year,
+        period=period,
+        expediente_id=expediente_id,
+        estado="ALTA",
+        tipo_solicitud=None,
+        observaciones=None,
+        presented_at=presented_at,
+        justificante_link_text="Ver",
+        archive_link_text="Ver",
+        declaration_copy_link_text=None,
+    )
+    observed = _observed_casillas_from_submitted_file(
+        snapshot=resources().modelos.authority.snapshot("303", filing_year=year, period=period),
+        declaration=declaration,
+        body=body,
+        artefact=artefact,
+    )
+    return FiledDeclaracionObservation(
+        modelo="303",
+        ejercicio=year,
+        period=period,
+        expediente_id=expediente_id,
+        status="ALTA",
+        presented_at=presented_at,
+        authenticated_identity=_SYNTHETIC_PROFILE_ID,
+        artefacts=(artefact,),
+        casillas=observed,
+        extraction_coverage={"submitted_file": 1.0},
+    )
+
+
+def _modelo_303_page_03_payload(
+    *,
+    casilla_110: str,
+    casilla_78: str,
+    casilla_87: str,
+    casilla_69: str,
+    casilla_71: str,
+) -> bytes:
+    page = list("<T30303000>" + (" " * (1017 - len("<T30303000>"))))
+    for position, raw in (
+        (255, casilla_110),
+        (272, casilla_78),
+        (289, casilla_87),
+        (323, casilla_69),
+        (374, casilla_71),
+    ):
+        page[position - 1 : position - 1 + len(raw)] = raw
+    page[1005:1017] = list("</T30303000>")
+    return "".join(page).encode("latin-1")
 
 
 def _prior_303_observation(

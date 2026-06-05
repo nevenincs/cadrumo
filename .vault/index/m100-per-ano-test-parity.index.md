@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#m100-per-ano-test-parity'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-29-m100-per-ano-test-parity-adr]]'
   - '[[2026-04-29-m100-per-ano-test-parity-audit]]'

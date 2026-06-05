@@ -3,9 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#semantic-cluster-hardening'
-date: '2026-06-01'
+date: '2026-06-05'
 related:
   - '[[2026-06-01-semantic-cluster-hardening-adr]]'
+  - '[[2026-06-01-semantic-cluster-hardening-audit]]'
   - '[[2026-06-01-semantic-cluster-hardening-plan]]'
   - '[[2026-06-01-semantic-cluster-hardening-research]]'
 ---
@@ -19,6 +20,10 @@ Auto-generated index of all documents tagged with `#semantic-cluster-hardening`.
 ### adr
 
 - `2026-06-01-semantic-cluster-hardening-adr` - `semantic-cluster-hardening` adr: `RAG-driven re-audit: Axis 7 + canonical enrollment waves` | (**status:** `accepted`)
+
+### audit
+
+- `2026-06-01-semantic-cluster-hardening-audit` - `semantic-cluster-hardening` audit: `Axis-7 semantic functionality-cluster swarm audit (delta)`
 
 ### plan
 

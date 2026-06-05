@@ -6,7 +6,7 @@ date: '2026-05-26'
 step_id: 'S121'
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-plan]]'
-  - '[[2026-05-26-declaracion-extraction-auth-gated-acquisition-status]]'
+  - '[[2026-05-26-declaracion-extraction-auth-gated-acquisition-status-audit]]'
 ---
 
 # W05.P18.S121 - Modelo 190 2024 registry and parser verification

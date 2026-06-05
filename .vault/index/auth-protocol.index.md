@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#auth-protocol'
-date: '2026-05-15'
+date: '2026-06-05'
 related:
   - '[[2026-04-18-auth-protocol-adr]]'
   - '[[2026-04-18-auth-protocol-phase-1-step-1-exec]]'
