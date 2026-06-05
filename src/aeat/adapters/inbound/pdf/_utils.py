@@ -16,6 +16,7 @@ from ....domain.justificante import PdfModeloImportError
 _logger = logging.getLogger(__name__)
 _HASH_CHUNK_SIZE = 65536
 _INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
+_SOURCE_REFERENCE_ROOT = Path(".secure-source")
 
 
 def sha256_file(path: Path) -> str:
@@ -44,4 +45,14 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-__all__ = ["sha256_file"]
+def source_pdf_reference_path(source_pdf_sha256: str) -> Path:
+    """Return the persisted source reference path for a parsed PDF digest.
+
+    The returned value is intentionally not the operator's local filesystem
+    path. Parser records can persist it as provenance without disclosing the
+    source directory or filename.
+    """
+    return _SOURCE_REFERENCE_ROOT / f"{source_pdf_sha256}.pdf"
+
+
+__all__ = ["sha256_file", "source_pdf_reference_path"]

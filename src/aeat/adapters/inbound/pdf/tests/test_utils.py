@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from .. import PdfModeloImportError, _utils
-from .._utils import sha256_file
+from .._utils import sha256_file, source_pdf_reference_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -50,3 +50,15 @@ class TestSha256File:
         assert str(missing_pdf) not in log_text
         assert "source=<input-pdf>" in log_text
         assert "failure=FileNotFoundError" in log_text
+
+
+class TestSourcePdfReferencePath:
+    """Persisted PDF provenance uses digest references, not local paths."""
+
+    def test_reference_path_is_digest_derived(self) -> None:
+        digest = "a" * 64
+
+        reference = source_pdf_reference_path(digest)
+
+        assert reference == Path(".secure-source") / f"{digest}.pdf"
+        assert _SENSITIVE_BASENAME not in str(reference)

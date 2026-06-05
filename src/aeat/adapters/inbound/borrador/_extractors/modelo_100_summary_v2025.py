@@ -8,7 +8,6 @@ that profile and fails hard if the observed coverage is insufficient.
 
 from __future__ import annotations
 
-import hashlib
 import re
 from decimal import Decimal
 from pathlib import Path
@@ -17,6 +16,7 @@ from typing import ClassVar
 from .....core.time import now
 from ...pdf._label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
 from ...pdf._shared import ExtractedCasilla
+from ...pdf._utils import sha256_file, source_pdf_reference_path
 from .._errors import BorradorParseError
 from .._parsers import extract_pages_text
 from .._schema import ArtefactKind, BorradorExtractionProfile, BorradorObservation
@@ -113,6 +113,7 @@ class Modelo100ObservedV2025Extractor:
                     coverage=coverage,
                 )
 
+        source_pdf_sha256 = sha256_file(pdf_path)
         return BorradorObservation(
             modelo="100",
             ejercicio=ejercicio,
@@ -121,8 +122,8 @@ class Modelo100ObservedV2025Extractor:
             values=tuple(values),
             registry_extraction_profile_id=extraction_profile.id if extraction_profile else None,
             extraction_coverage=coverage,
-            source_pdf_path=pdf_path.resolve(),
-            source_pdf_sha256=_sha256_file(pdf_path),
+            source_pdf_path=source_pdf_reference_path(source_pdf_sha256),
+            source_pdf_sha256=source_pdf_sha256,
             parsed_at=now(),
             csv=csv_value,
             warnings=tuple(warnings),
@@ -152,15 +153,6 @@ def _require_match(pattern: re.Pattern[str], text: str, field: str) -> str:
     if match is None:
         raise BorradorParseError(f"could not locate required field: {field}")
     return match.group(1).strip()
-
-
-def _sha256_file(path: Path) -> str:
-    """Return the lowercase hex SHA-256 of the file at ``path``."""
-    h = hashlib.sha256()
-    with path.open("rb") as fh:
-        for chunk in iter(lambda: fh.read(65536), b""):
-            h.update(chunk)
-    return h.hexdigest()
 
 
 __all__ = ["Modelo100ObservedV2025Extractor"]

@@ -53,7 +53,8 @@ class Justificante(BaseModel):
         total_a_devolver: Amount to be refunded, if the receipt includes one.
         verification_url: AEAT URL printed on the receipt where the CSV can
             be re-verified against the Sede electrónica.
-        source_pdf_path: Absolute path of the PDF the record was parsed from.
+        source_pdf_path: Privacy-preserving source reference derived from
+            the source PDF digest.
         source_pdf_sha256: Lowercase hex sha-256 of the source PDF bytes.
         parsed_at: UTC wall-clock time the parse finished.
     """

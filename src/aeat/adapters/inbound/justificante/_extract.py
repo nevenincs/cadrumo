@@ -28,7 +28,7 @@ from ....core.time import now
 from ....domain.justificante._errors import JustificanteCsvNotFoundError, JustificanteParseError
 from ....domain.justificante._schema import Justificante
 from ..pdf import parse_spanish_decimal
-from ..pdf._utils import sha256_file
+from ..pdf._utils import sha256_file, source_pdf_reference_path
 
 _logger = get_logger(__name__)
 
@@ -289,8 +289,9 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
 
     Args:
         text: Full concatenated text returned by a parser backend.
-        pdf_path: Path of the source PDF (used for ``source_pdf_path`` and
-            the sha-256 digest).
+        pdf_path: Path of the source PDF (used to compute the
+            privacy-preserving ``source_pdf_path`` reference and sha-256
+            digest).
 
     Returns:
         A fully populated :class:`Justificante` record.
@@ -312,6 +313,7 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
     total_ingresar, total_devolver = _extract_totals(normalised)
     verification_url = _extract_verification_url(text, pdf_path)
     sha256 = sha256_file(pdf_path)
+    source_pdf_path = source_pdf_reference_path(sha256)
     parsed_at = now()
     try:
         record = Justificante(
@@ -325,7 +327,7 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
             total_a_ingresar=total_ingresar,
             total_a_devolver=total_devolver,
             verification_url=verification_url,
-            source_pdf_path=pdf_path,
+            source_pdf_path=source_pdf_path,
             source_pdf_sha256=sha256,
             parsed_at=parsed_at,
         )
