@@ -67,7 +67,7 @@ _NOTIFICATIONS_QUERY_URL = aeat_url("www6", configured_path("sede_paths", "notif
 
 
 def test_workflow_engine_avoids_outbound_adapter_imports() -> None:
-    tree = ast.parse(Path(__file__).with_name("_engine.py").read_text(encoding="utf-8"))
+    tree = ast.parse((Path(__file__).parents[1] / "_engine.py").read_text(encoding="utf-8"))
     forbidden: list[str] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom) and node.module:
