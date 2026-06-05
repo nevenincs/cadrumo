@@ -51,6 +51,7 @@ related:
   - '[[2026-06-05-test-topology-refactor-W05-P13-S43]]'
   - '[[2026-06-05-test-topology-refactor-W05-P13-S44]]'
   - '[[2026-06-05-test-topology-refactor-W05-P13-S45]]'
+  - '[[2026-06-05-test-topology-refactor-W05-P13-summary]]'
   - '[[2026-06-05-test-topology-refactor-adr]]'
   - '[[2026-06-05-test-topology-refactor-code-review-audit]]'
   - '[[2026-06-05-test-topology-refactor-plan]]'
@@ -118,6 +119,7 @@ Auto-generated index of all documents tagged with `#test-topology-refactor`.
 - `2026-06-05-test-topology-refactor-W05-P13-S43` - `test-topology-refactor` `W05.P13.S43`
 - `2026-06-05-test-topology-refactor-W05-P13-S44` - `test-topology-refactor` `W05.P13.S44`
 - `2026-06-05-test-topology-refactor-W05-P13-S45` - `test-topology-refactor` `W05.P13.S45`
+- `2026-06-05-test-topology-refactor-W05-P13-summary` - `test-topology-refactor` `W05.P13` summary
 
 ### plan
 
