@@ -575,3 +575,27 @@ localized help strings through `python -m aeat.locales`.
 Focused `ruff check`, CLI schema conformance integration tests, error-registry
 enforcement tests, and `python -m aeat.locales audit` passed in the current shared
 worktree.
+
+## S391-CR-001 | PASS | TTY helpers have no storage authority
+
+Reviewed the S391 scope as `vaultspec-code-reviewer`. `_tty.py` checks terminal state
+through `sys.stdin`, `sys.stdout`, and `sys.stderr`, and returns rendering/refusal
+decisions. It does not resolve active profiles, inspect manifests, open repositories,
+persist data, read raw environment variables, or call remote providers.
+
+## S391-CR-002 | PASS | Environment flags are centralized through settings
+
+Colour resolution uses the active CLI flag context plus `Settings.no_color` and
+`Settings.aeat_force_color`. The module does not duplicate `NO_COLOR` or
+`AEAT_FORCE_COLOR` parsing.
+
+## S391-CR-003 | PASS | Non-TTY refusal is registry-backed
+
+`NonTtyRefusedError` derives from `AeatError`, keeps positional args empty so locale
+resolution uses the registry message key, and is declared in the centralized application
+error registry.
+
+## S391-CR-004 | PASS | Validation passed
+
+Focused `ruff check`, TTY locale integration tests, error-registry tests, and `python -m
+aeat.locales audit` passed.
