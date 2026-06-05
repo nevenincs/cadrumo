@@ -523,7 +523,7 @@ Current register count: `301` production candidate files.
 | `AFR-242` | `src/aeat/domain/iva/_catalogue.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-243` | `src/aeat/domain/iva/_rates.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-244` | `src/aeat/domain/iva/_recargo_equivalencia.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
-| `AFR-245` | `src/aeat/domain/iva/_schema.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-245` | `src/aeat/domain/iva/_schema.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-246` | `src/aeat/domain/justificante/_repository.py` | `secure-bound` | `runtime-default` | `W12.P21.S84` | closed |
 | `AFR-247` | `src/aeat/domain/manuals/_fetch.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-248` | `src/aeat/domain/manuals/_loader.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
@@ -884,7 +884,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S344` - Close `AFR-242` for `src/aeat/domain/iva/_catalogue.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/domain/iva/_catalogue.py`.
 - [x] `W12.P26.S345` - Close `AFR-243` for `src/aeat/domain/iva/_rates.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/domain/iva/_rates.py`.
 - [x] `W12.P26.S346` - Close `AFR-244` for `src/aeat/domain/iva/_recargo_equivalencia.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/domain/iva/_recargo_equivalencia.py`.
-- [ ] `W12.P26.S347` - Close `AFR-245` for `src/aeat/domain/iva/_schema.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/domain/iva/_schema.py`.
+- [x] `W12.P26.S347` - Close `AFR-245` for `src/aeat/domain/iva/_schema.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/domain/iva/_schema.py`.
 - [x] `W12.P26.S348` - Close `AFR-246` for `src/aeat/domain/justificante/_repository.py` with signals `secure-bound`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/justificante/_repository.py`.
 - [x] `W12.P26.S349` - Close `AFR-247` for `src/aeat/domain/manuals/_fetch.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/domain/manuals/_fetch.py`.
 - [x] `W12.P26.S350` - Close `AFR-248` for `src/aeat/domain/manuals/_loader.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/domain/manuals/_loader.py`.
