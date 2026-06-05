@@ -411,3 +411,34 @@ own raw SQL routes or duplicate censo modelo foundation routing.
 
 No locale leaves were added. Focused `ruff check`, profile-censo integration tests, and
 `python -m aeat.locales audit` passed.
+
+## S382-CR-001 | PASS | Ledger remains an intended active-profile CLI surface
+
+Reviewed the S382 scope as `vaultspec-code-reviewer`. `_ledger.py` remains the
+operator-facing active-bucket command surface for transaction management. It obtains
+bucket-scoped transaction repositories through shared CLI helpers and passes repository
+bucket ids into application services instead of opening raw storage routes.
+
+## S382-CR-002 | FIXED | Ratios extraction carried ambient event repository construction
+
+The shared dirty worktree had extracted ledger ratios into `_ledger_ratios_cli.py`.
+That module emitted ratio mutation and censo override-warning bucket events through
+default `BucketEventHistoryRepository()` construction. The event paths now pass
+`secure_object_repository_for_bucket(bucket_id)` into the event repository.
+
+## S382-CR-003 | FIXED | Ratios extraction regressed localized decimal refusal
+
+The extracted ratios parser had an English-only decimal parsing refusal. It now reuses
+`cli.ledger.errors.invalid_decimal`, and the CLI regression asserts the rendered
+message through `tr()`.
+
+## S382-CR-004 | FIXED | Censo mismatch warning catch now logs at debug level
+
+`ratios list` intentionally catches `CensoRatioMismatchError` to show persisted rows
+with a warning instead of hiding the ratios surface. The catch now logs at debug level
+with `exc_info=True`, so the warning path is not silent.
+
+## S382-CR-005 | PASS | Locale and focused validation passed
+
+No locale leaves were added. Focused `ruff check`, ratios integration tests, and
+`python -m aeat.locales audit` passed.
