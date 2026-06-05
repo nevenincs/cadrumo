@@ -29,6 +29,7 @@ related:
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
 ---
 
+
 <!-- RETIRED: S422, S423 -->
 
 # `secure-storage-production-hardening` `refactor` plan
@@ -573,13 +574,13 @@ Current register count: `301` production candidate files.
 | `AFR-292` | `src/aeat/locales/cli.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-293` | `src/aeat/locales/manager.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-294` | `src/aeat/application/modelo/_projection.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W18.P38.S442` | closed |
-| `AFR-295` | `src/aeat/application/modelo/_selectors.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P26.S383` | pending |
-| `AFR-296` | `src/aeat/application/modelo/_work_addressing.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P26.S383` | pending |
-| `AFR-297` | `src/aeat/application/modelo/_work_create_policy.py` | `active-profile, plain-file` | `manifest-discovery` | `W12.P26.S383` | pending |
-| `AFR-298` | `src/aeat/application/modelo/_work_plazo.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W12.P26.S383` | pending |
-| `AFR-299` | `src/aeat/application/modelo/_iva_wallet_seed.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W12.P26.S383` | pending |
-| `AFR-300` | `src/aeat/entrypoints/cli/_modelo_projection_cli.py` | `active-profile, plain-file` | `manifest-discovery` | `W12.P26.S383` | pending |
-| `AFR-301` | `src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W12.P26.S383` | pending |
+| `AFR-295` | `src/aeat/application/modelo/_selectors.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W18.P38.S443` | closed |
+| `AFR-296` | `src/aeat/application/modelo/_work_addressing.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W18.P38.S444` | closed |
+| `AFR-297` | `src/aeat/application/modelo/_work_create_policy.py` | `active-profile, plain-file` | `manifest-discovery` | `W18.P38.S445` | closed |
+| `AFR-298` | `src/aeat/application/modelo/_work_plazo.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W18.P38.S446` | closed |
+| `AFR-299` | `src/aeat/application/modelo/_iva_wallet_seed.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W18.P38.S447` | closed |
+| `AFR-300` | `src/aeat/entrypoints/cli/_modelo_projection_cli.py` | `active-profile, plain-file` | `manifest-discovery` | `W18.P38.S448` | closed |
+| `AFR-301` | `src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W18.P38.S449` | closed |
 
 ### Phase `W12.P20` - adoption register and classification
 
@@ -1023,7 +1024,7 @@ Extract all open audit observations and assign each to an existing step, a new s
 Persist remaining owners, add missing executable rows, and enforce review-time owner linkage for future secure-storage findings.
 
 - [ ] `W16.P36.S419` - Persist observation-pool closeout with remaining owners, deferrals, and review signoff; `.vault/audit`.
-- [ ] `W16.P36.S420` - Add missing plan rows or wave assignments for secure-storage observations that lack an existing executable owner; `.vault/plan`.
+- [x] `W16.P36.S420` - Add missing plan rows or wave assignments for secure-storage observations that lack an existing executable owner; `.vault/plan`.
 - [ ] `W16.P36.S421` - Add a recurring guard that future secure-storage audit findings cite an owning plan row before execution continues; `.vault/audit`.
 
 ## Wave `W17` - ledger side-store migration follow-up
@@ -1046,10 +1047,10 @@ Close pending affected-file rows introduced by modelo split-module work so the r
 Assign one executable closeout row to each pending modelo projection, selector, work-addressing, work-policy, plazo, IVA wallet, and CLI split module.
 
 - [x] `W18.P38.S442` - Close AFR-294 for src/aeat/application/modelo/_projection.py with signals active-profile, manifest-bucket, plain-file, target manifest-discovery, and owner W18.P38.S442; `src/aeat/application/modelo/_projection.py`.
-- [ ] `W18.P38.S443` - Close AFR-295 for src/aeat/application/modelo/_selectors.py with signals active-profile, manifest-bucket, target manifest-discovery, and owner W18.P38.S443; `src/aeat/application/modelo/_selectors.py`.
-- [ ] `W18.P38.S444` - Close AFR-296 for src/aeat/application/modelo/_work_addressing.py with signals active-profile, manifest-bucket, target manifest-discovery, and owner W18.P38.S444; `src/aeat/application/modelo/_work_addressing.py`.
-- [ ] `W18.P38.S445` - Close AFR-297 for src/aeat/application/modelo/_work_create_policy.py with signals active-profile, plain-file, target manifest-discovery, and owner W18.P38.S445; `src/aeat/application/modelo/_work_create_policy.py`.
-- [ ] `W18.P38.S446` - Close AFR-298 for src/aeat/application/modelo/_work_plazo.py with signals active-profile, manifest-bucket, plain-file, target manifest-discovery, and owner W18.P38.S446; `src/aeat/application/modelo/_work_plazo.py`.
-- [ ] `W18.P38.S447` - Close AFR-299 for src/aeat/application/modelo/_iva_wallet_seed.py with signals active-profile, manifest-bucket, plain-file, target manifest-discovery, and owner W18.P38.S447; `src/aeat/application/modelo/_iva_wallet_seed.py`.
-- [ ] `W18.P38.S448` - Close AFR-300 for src/aeat/entrypoints/cli/_modelo_projection_cli.py with signals active-profile, plain-file, target manifest-discovery, and owner W18.P38.S448; `src/aeat/entrypoints/cli/_modelo_projection_cli.py`.
-- [ ] `W18.P38.S449` - Close AFR-301 for src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py with signals active-profile, manifest-bucket, plain-file, target manifest-discovery, and owner W18.P38.S449; `src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py`.
+- [x] `W18.P38.S443` - Close AFR-295 for src/aeat/application/modelo/_selectors.py with signals active-profile, manifest-bucket, target manifest-discovery, and owner W18.P38.S443; `src/aeat/application/modelo/_selectors.py`.
+- [x] `W18.P38.S444` - Close AFR-296 for src/aeat/application/modelo/_work_addressing.py with signals active-profile, manifest-bucket, target manifest-discovery, and owner W18.P38.S444; `src/aeat/application/modelo/_work_addressing.py`.
+- [x] `W18.P38.S445` - Close AFR-297 for src/aeat/application/modelo/_work_create_policy.py with signals active-profile, plain-file, target manifest-discovery, and owner W18.P38.S445; `src/aeat/application/modelo/_work_create_policy.py`.
+- [x] `W18.P38.S446` - Close AFR-298 for src/aeat/application/modelo/_work_plazo.py with signals active-profile, manifest-bucket, plain-file, target manifest-discovery, and owner W18.P38.S446; `src/aeat/application/modelo/_work_plazo.py`.
+- [x] `W18.P38.S447` - Close AFR-299 for src/aeat/application/modelo/_iva_wallet_seed.py with signals active-profile, manifest-bucket, plain-file, target manifest-discovery, and owner W18.P38.S447; `src/aeat/application/modelo/_iva_wallet_seed.py`.
+- [x] `W18.P38.S448` - Close AFR-300 for src/aeat/entrypoints/cli/_modelo_projection_cli.py with signals active-profile, plain-file, target manifest-discovery, and owner W18.P38.S448; `src/aeat/entrypoints/cli/_modelo_projection_cli.py`.
+- [x] `W18.P38.S449` - Close AFR-301 for src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py with signals active-profile, manifest-bucket, plain-file, target manifest-discovery, and owner W18.P38.S449; `src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py`.
