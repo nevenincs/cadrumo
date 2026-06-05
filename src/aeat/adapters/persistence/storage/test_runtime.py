@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from ....core._bucket_pointer import BucketPointer
+from ....core._bucket_pointer_io import write_pointer
 from ....core.config import Settings, StorageRouteKind, override_settings
 from ....core.errors import resolve_error_message
 from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
@@ -571,6 +573,20 @@ def test_default_route_repository_refuses_settings_scoped_active_profile_without
 
     with pytest.raises(StorageValidationError, match="no active bucket session"):
         secure_object_repository_for_active_bucket_or_default_route(settings)
+
+
+def test_default_route_repository_refuses_pointer_scoped_active_profile_without_session(
+    tmp_path: Path,
+) -> None:
+    """A plaintext pointer selects a runtime bucket; it must not fall back to root DB."""
+
+    write_pointer(tmp_path, BucketPointer(bucket_id="bucket-a", schema_version=1))
+
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=None),
+        pytest.raises(StorageValidationError, match="no active bucket session"),
+    ):
+        secure_object_repository_for_active_bucket_or_default_route()
 
 
 def test_runtime_repository_factory_rechecks_live_session(tmp_path: Path) -> None:

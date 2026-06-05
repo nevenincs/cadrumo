@@ -244,7 +244,7 @@ def test_invoice_iva_category_is_typed_as_iva_category_substrate_enum() -> None:
 def test_invoice_iva_category_rejects_unknown_string() -> None:
     """An unknown iva_category string must fail validation now that the
     field is typed against the closed IvaCategory enum."""
-    with pytest.raises(ValidationError, match=r"IvaCategory"):
+    with pytest.raises(ValidationError, match=r"iva_category must be an IvaCategory"):
         Invoice.model_validate(
             {
                 "kind": InvoiceKind.ISSUED,
@@ -260,6 +260,48 @@ def test_invoice_iva_category_rejects_unknown_string() -> None:
                 "lines": (_valid_line(),),
                 "payment_status": PaymentStatus.PAID,
                 "iva_category": "bogus-category",
+            }
+        )
+
+
+def test_invoice_rejects_invalid_issued_at_without_typeerror_escape() -> None:
+    """Invalid date input must stay inside the pydantic validation boundary."""
+    with pytest.raises(ValidationError, match=r"not-a-date.*not a valid ISO-8601 date"):
+        Invoice.model_validate(
+            {
+                "kind": InvoiceKind.ISSUED,
+                "invoice_number": "INV-001",
+                "issued_at": "not-a-date",
+                "counterparty_name": "Cliente SL",
+                "counterparty_tax_id": "B12345674",
+                "counterparty_country": "ES",
+                "base_total": Decimal("100"),
+                "iva_total": Decimal("21"),
+                "grand_total": Decimal("121"),
+                "currency": "EUR",
+                "lines": (_valid_line(),),
+                "payment_status": PaymentStatus.PAID,
+            }
+        )
+
+
+def test_invoice_rejects_unknown_kind_with_domain_validation_message() -> None:
+    """Unknown invoice kind strings must fail as invoice-domain validation."""
+    with pytest.raises(ValidationError, match=r"kind must be an InvoiceKind"):
+        Invoice.model_validate(
+            {
+                "kind": "bogus-kind",
+                "invoice_number": "INV-001",
+                "issued_at": date(2026, 4, 1),
+                "counterparty_name": "Cliente SL",
+                "counterparty_tax_id": "B12345674",
+                "counterparty_country": "ES",
+                "base_total": Decimal("100"),
+                "iva_total": Decimal("21"),
+                "grand_total": Decimal("121"),
+                "currency": "EUR",
+                "lines": (_valid_line(),),
+                "payment_status": PaymentStatus.PAID,
             }
         )
 

@@ -12,9 +12,9 @@ rules:
       - python
     paths:
       include:
-        - "src/aeat/"
+        - "/src/aeat/"
       exclude:
-        - "src/aeat/domain/profile/_ccaa.py"
+        - "/src/aeat/domain/profile/_ccaa.py"
     pattern-either:
       - pattern: |
           class $ENUM(StrEnum):

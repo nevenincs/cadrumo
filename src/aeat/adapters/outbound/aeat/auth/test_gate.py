@@ -6,6 +6,7 @@ import pytest
 
 from .....core.access_gate import AeatLiveReadNotEnabledError, LiveSubmitForbiddenError
 from .....core.config import Settings, override_settings
+from .....core.errors import render_error_text
 from . import (
     AeatAccessGate,
     AeatGateEnvSnapshot,
@@ -54,6 +55,20 @@ def test_require_live_read_passes_when_enabled() -> None:
         assert result is None
 
 
+def test_require_live_read_allows_operator_context_without_test_opt_in() -> None:
+    with override_settings(aeat_live_tests_enabled=""):
+        settings = Settings(aeat_live_tests_enabled="")
+        result = AeatAccessGate(settings).require_live_read(pytest_current_test="")
+        assert result is None
+
+
+def test_require_live_read_still_blocks_pytest_context_without_test_opt_in() -> None:
+    with override_settings(aeat_live_tests_enabled=""):
+        settings = Settings(aeat_live_tests_enabled="")
+        with pytest.raises(AeatLiveReadNotEnabledError, match=r"AEAT_LIVE_TESTS_ENABLED|pytest live"):
+            AeatAccessGate(settings).require_live_read(pytest_current_test="test_gate.py::case (call)")
+
+
 def test_require_live_read_raises_when_unset() -> None:
     with override_settings(aeat_live_tests_enabled=""):
         settings = Settings(aeat_live_tests_enabled="")
@@ -96,6 +111,17 @@ def test_require_live_write_always_raises_permanent_refusal() -> None:
     settings = Settings()
     with pytest.raises(LiveSubmitForbiddenError, match="permanently forbidden"):
         AeatAccessGate(settings).require_live_write()
+
+
+def test_live_write_refusal_uses_central_error_registry_translation() -> None:
+    """The refusal renders through the registered error-code message key."""
+    error = LiveSubmitForbiddenError()
+
+    with override_settings(aeat_output_language="en"):
+        rendered = render_error_text(error)
+
+    assert error.translated_message == "errors.locked.locked_access_gate_live_submit_forbidden"
+    assert "Live submission to the AEAT is permanently forbidden" in rendered
 
 
 def test_access_gate_is_frozen() -> None:

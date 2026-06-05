@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
+from ...tests.aeat_literal_fixtures import justificante_wlpl_cotejo_url
 from ...tests.secure_sql import isolated_runtime_profile
 from ._repository import JustificanteRepository
 from ._schema import Justificante
@@ -42,9 +43,7 @@ def _populated_justificante() -> Justificante:
         tax_id="12345678Z",
         total_a_ingresar=Decimal("12345.67"),
         total_a_devolver=None,
-        verification_url=AnyHttpUrl(
-            "https://sede.agenciatributaria.gob.es/wlpl/SCEJ-MANT/cotejo/CSV/ABCD12345678EFGH",
-        ),
+        verification_url=AnyHttpUrl(justificante_wlpl_cotejo_url("ABCD12345678EFGH")),
         source_pdf_path=Path("justificantes/303-2025-1T-ABCD.pdf"),
         source_pdf_sha256="a" * 64,
         parsed_at=now,

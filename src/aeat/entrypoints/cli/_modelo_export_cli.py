@@ -1,0 +1,209 @@
+"""Typer registration for the root-level modelo export command."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from pathlib import Path
+from typing import Annotated, Protocol
+
+import typer
+
+from ...application.modelo import (
+    CalculationRevisionNotFoundError,
+    CalculationRevisionStateError,
+    ModeloCalculationRevisionSelector,
+    ModeloExportCommand,
+    ModeloExportCrossBucketRefusedError,
+    ModeloExportNoActiveBucketError,
+    ModeloIvaWalletReconciliationBlocked,
+    WorkUnitNotFoundError,
+    export_modelo_revision,
+)
+from ...application.workflow import workflow_state_repository
+from ...core.i18n import tr
+from ._common import _emit_envelope, _profile_to_taxpayer
+from ._modelo_payloads import ModeloExportPayload
+
+
+class _RevisionSelection(Protocol):
+    calculation_revision_id: str
+
+
+class ResolveRevisionForCli(Protocol):
+    def __call__(
+        self,
+        *,
+        calculation_revision_id: str | None,
+        work_unit_id: str | None,
+        modelo: str | None,
+        year: int | None,
+        period: str | None,
+        registry_revision: str | None,
+        bucket_id: str | None,
+        selector: str,
+        default_for: str,
+    ) -> _RevisionSelection: ...
+
+
+BadParameterRenderer = Callable[[BaseException], typer.BadParameter]
+
+
+def register_export_commands(
+    app: typer.Typer,
+    *,
+    resolve_revision_for_cli: ResolveRevisionForCli,
+    bad_parameter_from_error: BadParameterRenderer,
+    selector_bad_parameter: BadParameterRenderer,
+    resolve_default_actor: Callable[[], str],
+) -> None:
+    """Register root-level modelo export commands against the modelo Typer app."""
+
+    @app.command(
+        "export",
+        help=tr(
+            "cli.app.modelo.export.help",
+            default=(
+                "Export a verified-complete or filed modelo revision to a local "
+                "AEAT-compatible fichero-BOE file. Local-only; never contacts AEAT."
+            ),
+        ),
+    )
+    def modelo_export_verb(
+        ctx: typer.Context,
+        work_unit_id: Annotated[
+            str | None,
+            typer.Argument(
+                help=tr(
+                    "cli.app.modelo.export.work_unit_id_help",
+                    default="Work unit id (SHA-256 or unambiguous prefix).",
+                ),
+            ),
+        ] = None,
+        modelo: Annotated[
+            str | None,
+            typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
+        ] = None,
+        year: Annotated[
+            int | None,
+            typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
+        ] = None,
+        period: Annotated[
+            str | None,
+            typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
+        ] = None,
+        registry_revision: Annotated[
+            str | None,
+            typer.Option("--registry-revision", help=tr("cli.app.modelo.work.revision_help")),
+        ] = None,
+        bucket_id: Annotated[
+            str | None,
+            typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
+        ] = None,
+        select: Annotated[
+            str,
+            typer.Option(
+                "--select",
+                help=tr("cli.app.modelo.work.revision_selector_help", default="Revision selector."),
+            ),
+        ] = ModeloCalculationRevisionSelector.CURRENT.value,
+        output: Annotated[
+            Path | None,
+            typer.Option(
+                "--output",
+                help=tr(
+                    "cli.app.modelo.export.output_help",
+                    default="Path to write the fichero-BOE artefact to.",
+                ),
+            ),
+        ] = None,
+        revision: Annotated[
+            str | None,
+            typer.Option(
+                "--revision",
+                help=tr(
+                    "cli.app.modelo.export.revision_help",
+                    default=(
+                        "Calculation revision id to export; defaults to the work unit's "
+                        "most recent verified-complete or filed revision."
+                    ),
+                ),
+            ),
+        ] = None,
+        actor: Annotated[
+            str | None,
+            typer.Option(
+                "--by",
+                help=tr(
+                    "cli.app.modelo.export.actor_help",
+                    default="Operator label recorded into the MODELO_EXPORTED event.",
+                ),
+            ),
+        ] = None,
+    ) -> None:
+        """Export a verified-complete or filed modelo revision to disk."""
+        workflow_state = workflow_state_repository().load()
+        workflow_profile = _profile_to_taxpayer(workflow_state)
+        if output is None:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.export.errors.output_required",
+                    default="Supply --output PATH for the fichero-BOE artefact.",
+                )
+            )
+
+        try:
+            selected_revision = resolve_revision_for_cli(
+                calculation_revision_id=revision,
+                work_unit_id=work_unit_id,
+                modelo=modelo,
+                year=year,
+                period=period,
+                registry_revision=registry_revision,
+                bucket_id=bucket_id,
+                selector=select,
+                default_for="export",
+            )
+        except CalculationRevisionNotFoundError as exc:
+            if revision is not None:
+                raise bad_parameter_from_error(exc) from exc
+            raise selector_bad_parameter(exc) from exc
+        target_revision_id = selected_revision.calculation_revision_id
+
+        try:
+            result = export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=target_revision_id,
+                    output_path=output,
+                    actor=actor or resolve_default_actor(),
+                ),
+                workflow_profile=workflow_profile,
+            )
+        except (
+            CalculationRevisionNotFoundError,
+            CalculationRevisionStateError,
+            WorkUnitNotFoundError,
+            ModeloExportCrossBucketRefusedError,
+            ModeloExportNoActiveBucketError,
+            ModeloIvaWalletReconciliationBlocked,
+        ) as exc:
+            raise bad_parameter_from_error(exc) from exc
+
+        export_result = ModeloExportPayload.from_result(result)
+        lines = [
+            "operation\tmodelo.export",
+            f"work_unit_id\t{result.work_unit_id}",
+            f"calculation_revision_id\t{result.calculation_revision_id}",
+            f"bucket\t{result.bucket_id}",
+            f"modelo\t{result.modelo}",
+            f"filing_year\t{result.filing_year}",
+            f"period\t{result.period}",
+            f"output_path\t{result.output_path}",
+            f"byte_size\t{result.byte_size}",
+            f"file_sha256\t{result.file_sha256}",
+            f"format\t{result.format}",
+            f"bucket_event_id\t{result.bucket_event_id}",
+        ]
+        _emit_envelope(ctx, command="modelo.export", result=export_result, lines=lines)
+
+
+__all__ = ["register_export_commands"]

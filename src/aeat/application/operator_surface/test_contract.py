@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 import inspect
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -13,8 +14,8 @@ from ...core.aggregation import AggregationSourceKind
 from ...core.config import override_settings
 from ...core.errors import get_registered_error_code
 from .. import operator_surface
-from ..overview import FilingStatus
 from . import (
+    FilingStatus,
     ModeloLifecycleStep,
     MountedCommandDomain,
     OperatorMutability,
@@ -322,6 +323,10 @@ def test_filing_status_filed_is_sole_source_for_filed_token() -> None:
         f"Found {bare_literal_count} bare '\"filed\"' literal(s) in _contract.py; "
         "all occurrences must be replaced with FilingStatus.FILED"
     )
+
+
+def test_filing_status_has_no_token_shim_module() -> None:
+    assert not (Path(operator_surface.__path__[0]) / "_filing_status_token.py").exists()
 
 
 def test_source_kind_is_a_constrained_slice_of_aggregation_source_kind() -> None:

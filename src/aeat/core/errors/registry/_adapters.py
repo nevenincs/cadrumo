@@ -391,9 +391,9 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.adapters.persistence.storage.errors.MasterKeyKeychainLockedError",
         ErrorCode(
-            code="AUTH_STORAGE_MASTER_KEY_KEYCHAIN_LOCKED",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_storage_master_key_keychain_locked",
+            code="LOCKED_STORAGE_MASTER_KEY_KEYCHAIN",
+            category=ErrorCategory.LOCKED,
+            message_key="errors.locked.locked_storage_master_key_keychain",
             # No CLI command can unlock the OS keychain on the operator's
             # behalf; the runbook hint lives in the message itself.
             default_suggestion=None,

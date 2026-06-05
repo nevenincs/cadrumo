@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from fnmatch import fnmatchcase
 from typing import Literal
 from urllib.parse import urlparse
@@ -83,6 +84,8 @@ AEAT_WRITE_FORBIDDEN_VERB_TOKENS: frozenset[str] = frozenset(
         "subsanar",
         "transmision",
         "transmitir",
+        "confirmar",
+        "confirmacion",
         # AEAT-specific write surfaces
         "tgvi",
         # English equivalents matched against URL action labels and English text
@@ -278,6 +281,28 @@ def assert_remote_operation_allowed(
     if result.decision == "blocked":
         raise RegistryValidationError(result.reason)
     return result
+
+
+def assert_remote_operations_allowed(
+    policy: RemoteStateGuardPolicy,
+    operations: Iterable[RemoteOperation],
+    *,
+    context: str = "remote operation",
+) -> tuple[RemoteOperation, ...]:
+    """Pre-flight an operation plan through the remote-state guard.
+
+    Returns:
+        The validated operations as an immutable tuple.
+    """
+    operation_tuple = tuple(operations)
+    for index, operation in enumerate(operation_tuple):
+        try:
+            assert_remote_operation_allowed(policy, operation)
+        except RegistryValidationError as exc:
+            raise RegistryValidationError(
+                f"{context} {index} blocked by policy {policy.id!r}: {exc}"
+            ) from exc
+    return operation_tuple
 
 
 def evaluate_remote_operation(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -> RemoteStateGuardResult:

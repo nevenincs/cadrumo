@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from pydantic import ValidationError
 
 from ...core.errors import AeatError
@@ -42,13 +44,33 @@ class StoredTransactionDriftError(TransactionPersistenceError):
             bucket_id: Identifier of the bucket whose catalogue failed validation.
             error: The underlying :exc:`pydantic.ValidationError` from deserialization.
         """
-        super().__init__(f"transaction catalogue for bucket {bucket_id!r} failed schema validation on load: {error}")
+        super().__init__(
+            translated_message="errors.storage.stored_data_validation_boundary",
+            context={"bucket_id": bucket_id, "recovery": "aeat config repair"},
+            suggestion="aeat config repair",
+        )
         self.bucket_id = bucket_id
         self.original_exception = error
 
 
 class LedgerStorageError(TransactionPersistenceError):
     """Raised when bucket-scoped ledger storage cannot be resolved or used."""
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        suggestion: str | None = None,
+        translated_message: str = "errors.fail.fail_financial_ledger_storage",
+    ) -> None:
+        """Initialise a financial-ledger storage failure with structured metadata."""
+        super().__init__(
+            message,
+            context=context,
+            suggestion=suggestion,
+            translated_message=translated_message,
+        )
 
 
 class LedgerNoActiveBucketError(LedgerStorageError):

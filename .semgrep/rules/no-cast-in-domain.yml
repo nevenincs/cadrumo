@@ -13,6 +13,6 @@ rules:
       - python
     paths:
       include:
-        - "src/aeat/domain/"
-        - "src/aeat/application/"
+        - "/src/aeat/domain/"
+        - "/src/aeat/application/"
     pattern: cast(...)

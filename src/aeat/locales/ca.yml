@@ -1,6 +1,3 @@
-access_gate:
-  errors:
-    default_translatable: Error de porta d'acces.
 adapters:
   aeat:
     clave_movil:
@@ -3297,9 +3294,6 @@ errors:
     auth_storage_master_key_kdf_version: El fitxer de clau mestra fa servir una versió
       de derivació de clau que aquesta versió de l'aplicació no admet. Actualitza
       l'aplicació.
-    auth_storage_master_key_keychain_locked: L'anell de claus del sistema operatiu
-      està bloquejat. Desbloqueja'l (Touch ID, Windows Hello o el desbloqueig del
-      gestor de credencials) i torna-ho a provar.
     auth_storage_master_key_material_missing: No existeix material de clau mestra.
       L'emmagatzematge segur encara no està aprovisionat.
     auth_storage_master_key_passphrase_mismatch: La frase de contrasenya no obre la
@@ -3814,6 +3808,7 @@ errors:
       dades de referència o el motor de càlcul poden estar malmesos.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
+    integrity_active_profile_pointer: 'El punter de perfil actiu no es valid; repara el perfil seleccionat abans de continuar.'
   internal:
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
@@ -3857,6 +3852,7 @@ errors:
     locked_storage_lock_acquisition: No s'ha pogut obtenir el bloqueig exclusiu de
       fitxer dins del temps d'espera. Un altre procés el reté; espera i torna-ho a
       provar.
+    locked_storage_master_key_keychain: 'L''anell de claus del sistema operatiu està bloquejat. Desbloqueja''l (Touch ID, Windows Hello o el desbloqueig del gestor de credencials) i torna-ho a provar.'
   refused:
     auth_configure_no_active_bucket: No es pot configurar l'autenticació sense un
       perfil actiu. Crea un perfil amb `aeat config profile create NOM` i torna-ho

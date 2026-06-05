@@ -11,11 +11,11 @@ rules:
       - python
     paths:
       include:
-        - "src/aeat/"
+        - "/src/aeat/"
       exclude:
-        - "src/aeat/**/test_*.py"
-        - "src/aeat/**/_test_*.py"
-        - "src/aeat/tests/**/*.py"
+        - "/src/aeat/**/test_*.py"
+        - "/src/aeat/**/_test_*.py"
+        - "/src/aeat/tests/**/*.py"
     pattern-either:
       - patterns:
           - pattern: |

@@ -34,6 +34,12 @@ class ModeloLifecycleStep(StrEnum):
     FILE = "file"
 
 
+class FilingStatus(StrEnum):
+    """Canonical filing-status token taxonomy for operator-facing live reads."""
+
+    FILED = "filed"
+
+
 class SourceKind(StrEnum):
     """Canonical source-kind taxonomy from the CLI workflow redesign ADRs."""
 

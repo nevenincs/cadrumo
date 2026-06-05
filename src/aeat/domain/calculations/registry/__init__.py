@@ -240,6 +240,7 @@ from ._remote_state_guard import (
     RemoteStateGuardPolicy,
     RemoteStateGuardResult,
     assert_remote_operation_allowed,
+    assert_remote_operations_allowed,
     evaluate_remote_operation,
     remote_state_policy_from_cross_reference,
 )
@@ -540,6 +541,7 @@ __all__ = [
     "applicable_filing_schedules",
     "assert_formula_workbook_runner_ready",
     "assert_remote_operation_allowed",
+    "assert_remote_operations_allowed",
     "assert_workbook_scan_clean",
     "audit_registry_model_law_coverage",
     "audit_registry_oracle_bindings",

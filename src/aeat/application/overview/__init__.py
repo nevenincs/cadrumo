@@ -42,6 +42,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.i18n import tr as _tr
 from ...core.logging import get_logger as _get_logger
 from ...core.time import now
@@ -100,13 +101,10 @@ from ._errors import (
     OverviewError,
     OverviewExplainError,
 )
-from ._status import FilingStatus
-
 if TYPE_CHECKING:
     from ..state_projection import OperatorStateProjection
     from ..workflow import WorkflowState
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _log = _get_logger(__name__)
 
@@ -880,7 +878,6 @@ def build_overview_status_report(
 __all__ = [
     "CalendarCompleteness",
     "CalendarWarning",
-    "FilingStatus",
     "OverviewAgendaError",
     "OverviewBacklogError",
     "OverviewCalendar",

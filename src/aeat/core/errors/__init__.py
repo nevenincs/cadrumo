@@ -238,6 +238,28 @@ class McpLaunchError(AeatError):
     """Raised when a repo-managed MCP process cannot be launched safely."""
 
 
+class ActiveProfilePointerError(CoreError):
+    """Raised when the active-profile pointer is present but invalid.
+
+    A missing pointer is a clean cold-start state. A present pointer that
+    cannot be parsed, decoded, read, or validated is storage metadata
+    corruption and must not degrade to a root fallback database route.
+    """
+
+    def __init__(self, *, path: object) -> None:
+        """Construct the active-profile pointer integrity error.
+
+        Args:
+            path: Pointer file path that failed to load.
+        """
+        super().__init__(
+            f"invalid active-profile pointer at {path}; refusing root storage fallback",
+            translated_message="errors.integrity.integrity_active_profile_pointer",
+            context={"path": str(path)},
+            suggestion="aeat config repair profile",
+        )
+
+
 class NoActiveProfileError(AeatError):
     """Raised when an operation requires an active profile bucket and none is selected.
 
@@ -272,6 +294,7 @@ from ._severity import BaseSeverity
 
 __all__ = [
     "ERROR_REGISTRY",
+    "ActiveProfilePointerError",
     "AeatError",
     "AeatObservabilityError",
     "BaseSeverity",

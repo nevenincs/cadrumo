@@ -145,10 +145,7 @@ class TransactionCatalogueRepository:
             )
             return TransactionCatalogue()
         try:
-            envelope = Envelope[TransactionCatalogue].model_validate_json(record.payload.decode("utf-8"))
-        except (ClassificationError, EnvelopeVersionError):
-            _log.error("transaction catalogue integrity error", exc_info=True)
-            raise
+            envelope = Envelope[TransactionCatalogue].model_validate_json(record.payload)
         except ValidationError as exc:
             # pydantic ValidationError previously propagated raw and lost the
             # typed drift signal at the CLI boundary. Mirror the
@@ -163,14 +160,38 @@ class TransactionCatalogueRepository:
             )
             raise StoredTransactionDriftError(self._bucket_id, exc) from exc
         if envelope.classification is not SensitivityClass.FINANCIAL:
+            _log.error(
+                "transaction catalogue classification mismatch bucket_id=%s object_key=%s classification=%s",
+                self._bucket_id,
+                self._object_key,
+                envelope.classification.value,
+            )
             raise ClassificationError(
-                f"transaction catalogue has classification {envelope.classification}; "
-                f"consumer expected {SensitivityClass.FINANCIAL}",
+                context={
+                    "namespace": TX_BUCKET_NAMESPACE,
+                    "object_key": self._object_key,
+                    "bucket_id": self._bucket_id,
+                    "classification": envelope.classification.value,
+                    "expected": SensitivityClass.FINANCIAL.value,
+                },
+                translated_message="errors.integrity.integrity_storage_classification",
             )
         if envelope.schema_version > _TX_CATALOGUE_VERSION:
+            _log.error(
+                "transaction catalogue envelope version mismatch bucket_id=%s object_key=%s schema_version=%d",
+                self._bucket_id,
+                self._object_key,
+                envelope.schema_version,
+            )
             raise EnvelopeVersionError(
-                f"transaction catalogue is at version {envelope.schema_version}; "
-                f"consumer supports up to {_TX_CATALOGUE_VERSION}",
+                context={
+                    "namespace": TX_BUCKET_NAMESPACE,
+                    "object_key": self._object_key,
+                    "bucket_id": self._bucket_id,
+                    "schema_version": envelope.schema_version,
+                    "expected": _TX_CATALOGUE_VERSION,
+                },
+                translated_message="errors.integrity.integrity_storage_envelope_version",
             )
         catalogue = envelope.payload
         _log.debug(

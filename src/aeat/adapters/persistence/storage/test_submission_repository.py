@@ -165,8 +165,14 @@ class TestClassificationGate:
             written_at=bad.written_at,
             payload=bad.model_dump_json().encode("utf-8"),
         )
-        with pytest.raises(ClassificationError, match=r"classification"):
+        with pytest.raises(ClassificationError) as exc_info:
             repo.load(filing.submission_id)
+        assert exc_info.value.translated_message == "errors.storage.namespace.classification_mismatch"
+        assert exc_info.value.context == {
+            "namespace": "aeat.domain.submission.records",
+            "classification": SensitivityClass.OPERATIONAL.value,
+            "expected": SensitivityClass.AUDIT.value,
+        }
 
 
 class TestUnsafeSubmissionIds:

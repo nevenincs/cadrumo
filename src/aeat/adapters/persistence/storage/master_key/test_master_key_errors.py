@@ -12,7 +12,8 @@ import secrets
 
 import pytest
 
-from .....core.errors import ERROR_REGISTRY, build_error_envelope
+from .....core.errors import ERROR_REGISTRY, build_error_envelope, render_error_text
+from ..errors import MasterKeyKeychainLockedError
 from . import EphemeralMasterKeyProvider
 from ._errors import MasterKeyReentrantError
 
@@ -61,3 +62,15 @@ def test_master_key_reentrant_error_carries_provider_name_in_context() -> None:
 
     assert err.context is not None
     assert err.context["provider_name"] == "FileFallbackMasterKeyProvider"
+
+
+def test_master_key_keychain_locked_error_renders_locked_operator_category() -> None:
+    """A locked OS keychain is a locked runtime state, not an auth rejection."""
+
+    err = MasterKeyKeychainLockedError("keychain locked")
+    envelope = build_error_envelope(err)
+
+    assert envelope.code == "LOCKED_STORAGE_MASTER_KEY_KEYCHAIN"
+    assert envelope.category == "LOCKED"
+    assert envelope.retryable is True
+    assert render_error_text(err).startswith("Locked. ")

@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import date
 from typing import Annotated
 
 import typer
 
 from ...application.modelo import M036DeclarationCommand, record_m036_declaration
 from ...core.i18n import tr
+from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import CensoModeloEventKind
 from ._common import _emit_envelope
 from ._modelo_payloads import M036DeclarationRecordResult
@@ -47,7 +47,9 @@ def register_m036_commands(
         """Shared body for the three m036 declarative verbs."""
         require_active_profile()
         try:
-            parsed_declared_on = date.fromisoformat(declared_on)
+            parsed_declared_on = parse_iso8601_date(declared_on)
+            if parsed_declared_on is None:
+                raise ValueError
         except ValueError as exc:
             raise typer.BadParameter(
                 tr(

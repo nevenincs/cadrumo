@@ -21,7 +21,6 @@ See :func:`restrict_file_permissions` for the public entry point.
 
 from __future__ import annotations
 
-import contextlib
 import getpass
 import os
 import subprocess
@@ -37,6 +36,7 @@ _log = get_logger(__name__)
 # every usage site rather than having bare strings spread across the code.
 _SYSTEMROOT_ENV_VAR: Final[str] = "SYSTEMROOT"
 _USERDOMAIN_ENV_VAR: Final[str] = "USERDOMAIN"
+_ICACLS_TIMEOUT_SECONDS: Final[float] = 10.0
 
 
 def restrict_file_permissions(path: Path) -> None:
@@ -48,9 +48,10 @@ def restrict_file_permissions(path: Path) -> None:
     grant ``F`` (Full control) to the operator's account only. Tries
     both ``DOMAIN\\user`` and bare ``user`` candidates because standalone
     machines have no ``USERDOMAIN`` and domain-joined machines may need
-    the qualified form. Logs at ``WARNING`` when every candidate fails
-    — the file stays on disk with whatever ACL it inherited from its
-    parent directory.
+    the qualified form. The subprocess is time-bounded so a wedged
+    ``icacls.exe`` cannot block the auth-state writer indefinitely. Logs
+    at ``WARNING`` when every candidate fails — the file stays on disk
+    with whatever ACL it inherited from its parent directory.
 
     Best-effort: every error is swallowed so the auth flow never aborts
     on a hardening side-effect. Worst case is a slightly more permissive
@@ -90,6 +91,7 @@ def restrict_file_permissions(path: Path) -> None:
                     capture_output=True,
                     text=True,
                     check=False,
+                    timeout=_ICACLS_TIMEOUT_SECONDS,
                 )
                 if result.returncode == 0:
                     return
@@ -118,8 +120,10 @@ def restrict_file_permissions(path: Path) -> None:
         return
     if os.name != "posix":
         return
-    with contextlib.suppress(OSError):
+    try:
         os.chmod(path, 0o600)
+    except OSError:
+        _log.debug("restrict_file_permissions: chmod failed on %s", path, exc_info=True)
 
 
 __all__ = ["restrict_file_permissions"]

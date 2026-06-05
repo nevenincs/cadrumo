@@ -6,20 +6,47 @@ import pytest
 from pydantic import AnyUrl, ValidationError
 
 from ....core.resources import bundled_path
+from ....tests.aeat_literal_fixtures import (
+    AEAT_LEGACY_APEX_CANARY,
+    AEAT_LEGACY_SEDE_CANARY,
+    PUBLIC_OPEN_SIMULATOR_PATH_FIXTURE,
+    STATIC_DESIGN_REGISTER_PATH_FIXTURE,
+    UNCLASSIFIED_MUTATING_READ_POST_PATH_CANARY,
+    UNCLASSIFIED_WWW2_READ_PATH_CANARY,
+    UNKNOWN_AEAT_STATE_SURFACE_URL_CANARY,
+    aeat_host,
+    aeat_url,
+    configured_path,
+)
 from . import build_snapshot, load_registry_tree
+from ._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from ._errors import RegistrySnapshotError, RegistryValidationError
+from ._groi_oracle import GROI_ORACLE_ID, GroiOracle
+from ._live_parity import LiveParityCatalogue
 from ._remote_state_guard import (
     _FORBIDDEN_TOKENS,
     AEAT_WRITE_FORBIDDEN_VERB_TOKENS,
     RemoteOperation,
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
+    assert_remote_operations_allowed,
     evaluate_remote_operation,
     remote_state_policy_from_cross_reference,
 )
+from ._renta_web_open_oracle import RentaWebOpenOracle
 from ._schema import LiveCrossReferenceDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+_SEDE_HOST = aeat_host("sede")
+_WWW2_HOST = aeat_host("www2")
+_WWW6_HOST = aeat_host("www6")
+_AEAT_APEX_HOST = aeat_host("aeat_gob")
+_PLANNED_OPERATION_EXPECTED_FIXTURES = {
+    GROI_ORACLE_ID: {"A28015865": "valid"},
+    ORACLE_ID: {"DE111222333": "valid"},
+    "modelo-100-renta-web-open": {"0180": object()},
+}
 
 
 def test_url_method_guard_includes_canonical_write_verb_tokens() -> None:
@@ -44,7 +71,7 @@ def _open_policy() -> RemoteStateGuardPolicy:
         id="m303-open",
         evidence_tier="executable_parity_evidence",
         classification="open_simulator",
-        allowed_hosts=("sede.agenciatributaria.gob.es",),
+        allowed_hosts=(_SEDE_HOST,),
         synthetic_data_allowed=False,
         requires_authentication=False,
         requires_aeat_authorization=False,
@@ -57,7 +84,7 @@ def test_remote_state_guard_allows_read_only_open_simulator_get() -> None:
         RemoteOperation(
             kind="http",
             method="GET",
-            url=AnyUrl("https://sede.agenciatributaria.gob.es/Sede/procedimientoini/ZZ08.shtml"),
+            url=AnyUrl(aeat_url("sede", PUBLIC_OPEN_SIMULATOR_PATH_FIXTURE)),
         ),
     )
 
@@ -71,7 +98,7 @@ def test_remote_state_guard_blocks_post_even_on_allowed_host() -> None:
             RemoteOperation(
                 kind="http",
                 method="POST",
-                url=AnyUrl("https://sede.agenciatributaria.gob.es/Sede/procedimientoini/ZZ08.shtml"),
+                url=AnyUrl(aeat_url("sede", PUBLIC_OPEN_SIMULATOR_PATH_FIXTURE)),
             ),
         )
 
@@ -84,6 +111,25 @@ def test_remote_state_guard_blocks_stateful_tokens_in_browser_actions() -> None:
 
     assert result.decision == "blocked"
     assert "presentar" in result.reason
+
+
+@pytest.mark.parametrize(
+    ("action", "token"),
+    (
+        ("representation-gate-represented-taxpayer-continue", "explicit read-only allow-list"),
+        ("Presentar declaracion", "presentar"),
+        ("Firmar declaracion", "firmar"),
+        ("Pagar liquidacion", "pagar"),
+        ("Confirmar", "confirmar"),
+    ),
+)
+def test_remote_state_guard_blocks_non_read_only_browser_action_matrix(action: str, token: str) -> None:
+    policy = _open_policy().model_copy(
+        update={"allowed_browser_action_patterns": ("representation-gate-own-name-continue",)}
+    )
+
+    with pytest.raises(RegistryValidationError, match=token):
+        assert_remote_operation_allowed(policy, RemoteOperation(kind="browser_action", action=action))
 
 
 def test_remote_state_guard_blocks_unclassified_browser_action_when_allow_list_declared() -> None:
@@ -119,7 +165,7 @@ def test_oracle_bound_cross_reference_policy_gets_consult_action_allow_list() ->
         evidence_tier="executable_parity_evidence",
         surface="authenticated_simulator",
         guard_policy_id="modelo-349-groi-spanish-roi-check",
-        allowed_hosts=("www2.agenciatributaria.gob.es",),
+        allowed_hosts=(_WWW2_HOST,),
         allowed_methods=("GET", "POST"),
         forbidden_actions=(
             "server-side-save",
@@ -157,7 +203,7 @@ def test_schema_rejects_aeat_hosted_live_cross_reference_with_synthetic_data_all
             evidence_tier="executable_parity_evidence",
             surface="open_simulator",
             guard_policy_id="test-aeat-hosted-synthetic-reject-policy",
-            allowed_hosts=("sede.agenciatributaria.gob.es",),
+            allowed_hosts=(_SEDE_HOST,),
             allowed_methods=("GET",),
             forbidden_actions=(
                 "server-side-save",
@@ -212,7 +258,7 @@ def test_schema_accepts_aeat_host_with_synthetic_data_not_allowed() -> None:
         evidence_tier="executable_parity_evidence",
         surface="open_simulator",
         guard_policy_id="test-aeat-hosted-no-synthetic-policy",
-        allowed_hosts=("sede.agenciatributaria.gob.es",),
+        allowed_hosts=(_SEDE_HOST,),
         allowed_methods=("GET",),
         forbidden_actions=(
             "server-side-save",
@@ -240,7 +286,7 @@ def test_guard_rejects_aeat_hosted_policy_with_synthetic_data_allowed() -> None:
             id="test-aeat-guard-synthetic-reject",
             evidence_tier="executable_parity_evidence",
             classification="open_simulator",
-            allowed_hosts=("sede.agenciatributaria.gob.es",),
+            allowed_hosts=(_SEDE_HOST,),
             synthetic_data_allowed=True,
             requires_authentication=False,
             requires_aeat_authorization=False,
@@ -250,11 +296,11 @@ def test_guard_rejects_aeat_hosted_policy_with_synthetic_data_allowed() -> None:
 @pytest.mark.parametrize(
     "aeat_host",
     [
-        "agenciatributaria.gob.es",
-        "sede.agenciatributaria.gob.es",
-        "www2.agenciatributaria.gob.es",
-        "aeat.es",
-        "sede.aeat.es",
+        _AEAT_APEX_HOST,
+        _SEDE_HOST,
+        _WWW2_HOST,
+        AEAT_LEGACY_APEX_CANARY,
+        AEAT_LEGACY_SEDE_CANARY,
     ],
 )
 def test_schema_rejects_each_aeat_suffix_form_with_synthetic_data(aeat_host: str) -> None:
@@ -288,9 +334,9 @@ def test_schema_rejects_each_aeat_suffix_form_with_synthetic_data(aeat_host: str
 @pytest.mark.parametrize(
     "aeat_host",
     [
-        "agenciatributaria.gob.es",
-        "aeat.es",
-        "sede.aeat.es",
+        _AEAT_APEX_HOST,
+        AEAT_LEGACY_APEX_CANARY,
+        AEAT_LEGACY_SEDE_CANARY,
     ],
 )
 def test_guard_rejects_each_aeat_suffix_form_with_synthetic_data(aeat_host: str) -> None:
@@ -314,7 +360,7 @@ def test_remote_state_guard_blocks_unknown_aeat_host() -> None:
             RemoteOperation(
                 kind="http",
                 method="GET",
-                url=AnyUrl("https://www2.agenciatributaria.gob.es/wlpl/some/path"),
+                url=AnyUrl(aeat_url("www2", UNCLASSIFIED_WWW2_READ_PATH_CANARY)),
             ),
         )
 
@@ -351,7 +397,7 @@ def test_remote_state_guard_rejects_static_policy_live_http() -> None:
         RemoteOperation(
             kind="http",
             method="GET",
-            url=AnyUrl("https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro.html"),
+            url=AnyUrl(aeat_url("sede", STATIC_DESIGN_REGISTER_PATH_FIXTURE)),
         ),
     )
 
@@ -365,7 +411,7 @@ def test_remote_state_guard_rejects_live_policy_without_executable_parity_tier()
             id="open-without-parity",
             evidence_tier="official_source_guidance",
             classification="open_simulator",
-            allowed_hosts=("sede.agenciatributaria.gob.es",),
+            allowed_hosts=(_SEDE_HOST,),
             synthetic_data_allowed=True,
             requires_authentication=False,
             requires_aeat_authorization=False,
@@ -390,7 +436,7 @@ def test_remote_state_guard_allows_authenticated_read_surface_get() -> None:
         id="filed-data-read",
         evidence_tier="official_source_guidance",
         classification="authenticated_read_surface",
-        allowed_hosts=("www6.agenciatributaria.gob.es",),
+        allowed_hosts=(_WWW6_HOST,),
         synthetic_data_allowed=False,
         requires_authentication=True,
         requires_aeat_authorization=True,
@@ -401,7 +447,7 @@ def test_remote_state_guard_allows_authenticated_read_surface_get() -> None:
         RemoteOperation(
             kind="http",
             method="GET",
-            url=AnyUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+            url=AnyUrl(aeat_url("www6", configured_path("sede_paths", "declarations_listing"))),
         ),
     )
 
@@ -413,8 +459,8 @@ def test_remote_state_guard_allows_declared_authenticated_read_post_path_only() 
         id="wallet-read",
         evidence_tier="official_source_guidance",
         classification="authenticated_read_surface",
-        allowed_hosts=("www6.agenciatributaria.gob.es",),
-        allowed_read_post_paths=("/wlpl/DAI3-RUTI/CarteraCuotas",),
+        allowed_hosts=(_WWW6_HOST,),
+        allowed_read_post_paths=(configured_path("sede_paths", "iva_compensation_wallet"),),
         synthetic_data_allowed=False,
         requires_authentication=True,
         requires_aeat_authorization=True,
@@ -425,7 +471,7 @@ def test_remote_state_guard_allows_declared_authenticated_read_post_path_only() 
         RemoteOperation(
             kind="http",
             method="POST",
-            url=AnyUrl("https://www6.agenciatributaria.gob.es/wlpl/DAI3-RUTI/CarteraCuotas"),
+            url=AnyUrl(aeat_url("www6", configured_path("sede_paths", "iva_compensation_wallet"))),
         ),
     )
 
@@ -436,7 +482,7 @@ def test_remote_state_guard_allows_declared_authenticated_read_post_path_only() 
             RemoteOperation(
                 kind="http",
                 method="POST",
-                url=AnyUrl("https://www6.agenciatributaria.gob.es/wlpl/OTHER/MutatingPath"),
+                url=AnyUrl(aeat_url("www6", UNCLASSIFIED_MUTATING_READ_POST_PATH_CANARY)),
             ),
         )
 
@@ -447,7 +493,7 @@ def test_remote_state_guard_rejects_authenticated_read_as_parity() -> None:
             id="filed-data-read",
             evidence_tier="executable_parity_evidence",
             classification="authenticated_read_surface",
-            allowed_hosts=("www6.agenciatributaria.gob.es",),
+            allowed_hosts=(_WWW6_HOST,),
             synthetic_data_allowed=False,
             requires_authentication=True,
             requires_aeat_authorization=True,
@@ -459,7 +505,7 @@ def test_remote_state_guard_allows_public_read_surface_get() -> None:
         id="public-read",
         evidence_tier="official_source_guidance",
         classification="public_read_surface",
-        allowed_hosts=("sede.agenciatributaria.gob.es",),
+        allowed_hosts=(_SEDE_HOST,),
         synthetic_data_allowed=False,
         requires_authentication=False,
         requires_aeat_authorization=False,
@@ -470,10 +516,7 @@ def test_remote_state_guard_allows_public_read_surface_get() -> None:
         RemoteOperation(
             kind="http",
             method="GET",
-            url=AnyUrl(
-                "https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-practicas-manuales/"
-                "verificacion-integridad-documentos.html"
-            ),
+            url=AnyUrl(aeat_url("sede", configured_path("help_pages", "csv_verification"))),
         ),
     )
 
@@ -498,7 +541,7 @@ def test_committed_static_cross_references_reject_remote_state_operations() -> N
                 RemoteOperation(
                     kind="http",
                     method="GET",
-                    url=AnyUrl("https://www9.agenciatributaria.gob.es/wlpl/unsafe-state-surface"),
+                    url=AnyUrl(UNKNOWN_AEAT_STATE_SURFACE_URL_CANARY),
                 ),
             ).decision
             == "blocked"
@@ -510,6 +553,46 @@ def test_committed_static_cross_references_reject_remote_state_operations() -> N
             ).decision
             == "blocked"
         )
+
+
+def test_committed_oracle_planned_operations_conform_to_bound_guard_policies() -> None:
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    oracle_catalogue = _production_oracle_catalogue()
+    covered_oracle_ids: set[str] = set()
+
+    for modelo in modelos:
+        snapshot = _first_snapshot(modelo, catalogues)
+        for cross_reference in snapshot.live_cross_references.values():
+            oracle_id = cross_reference.oracle_id
+            if oracle_id is None:
+                continue
+            oracle = oracle_catalogue.lookup(oracle_id, environment="production")
+            expected = _PLANNED_OPERATION_EXPECTED_FIXTURES.get(oracle.oracle_id)
+            if expected is None:
+                raise AssertionError(f"oracle {oracle.oracle_id!r} needs a planned-operation fixture")
+            policy = remote_state_policy_from_cross_reference(cross_reference)
+            operations = oracle.planned_operations(b"", expected=expected)
+
+            assert operations, f"oracle {oracle.oracle_id!r} must declare at least one planned operation"
+            assert_remote_operations_allowed(
+                policy,
+                operations,
+                context=(
+                    f"modelo {modelo.id} revision {snapshot.revision.id} "
+                    f"cross-reference {cross_reference.id} oracle {oracle.oracle_id!r} planned operation"
+                ),
+            )
+            covered_oracle_ids.add(oracle.oracle_id)
+
+    assert {GROI_ORACLE_ID, ORACLE_ID}.issubset(covered_oracle_ids)
+
+
+def _production_oracle_catalogue() -> LiveParityCatalogue:
+    catalogue = LiveParityCatalogue()
+    catalogue.register(GroiOracle(), environment="production")
+    catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
+    catalogue.register(RentaWebOpenOracle(), environment="production")
+    return catalogue
 
 
 def _first_snapshot(modelo, catalogues):

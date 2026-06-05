@@ -12,9 +12,9 @@ rules:
       - generic
     paths:
       include:
-        - "src/aeat/"
+        - "/src/aeat/"
       exclude:
-        - "src/aeat/**/test_*.py"
-        - "src/aeat/**/_test_*.py"
-        - "src/aeat/tests/**/*.py"
+        - "/src/aeat/**/test_*.py"
+        - "/src/aeat/**/_test_*.py"
+        - "/src/aeat/tests/**/*.py"
     pattern-regex: '#\s*(?:ty|type|pyright|mypy):\s*ignore(?:\[[^\]]+\])?\s*$'

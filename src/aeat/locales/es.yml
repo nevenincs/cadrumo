@@ -1,8 +1,3 @@
-access_gate:
-  errors:
-    default_translatable: el envío en vivo a la AEAT está permanentemente prohibido;
-      usa produce -> verify -> export y sube el fichero manualmente en el portal de
-      la AEAT
 adapters:
   aeat:
     clave_movil:
@@ -3345,9 +3340,6 @@ errors:
     auth_storage_master_key_kdf_version: El archivo de clave maestra usa una versión
       de derivación de clave que esta versión de la aplicación no admite. Actualiza
       la aplicación.
-    auth_storage_master_key_keychain_locked: El llavero del sistema operativo está
-      bloqueado. Desbloquéalo (Touch ID, Windows Hello o el desbloqueo del gestor
-      de credenciales) y vuelve a intentarlo.
     auth_storage_master_key_material_missing: No existe material de clave maestra.
       El almacenamiento seguro aún no está aprovisionado.
     auth_storage_master_key_passphrase_mismatch: La frase de contraseña no abre la
@@ -3859,6 +3851,7 @@ errors:
       de referencia o el motor de cálculo pueden estar dañados.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
+    integrity_active_profile_pointer: 'El puntero de perfil activo no es válido; repara el perfil seleccionado antes de continuar.'
   internal:
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
@@ -3901,6 +3894,7 @@ errors:
       desbloqueado. Ejecuta `aeat config unlock` y vuelve a intentarlo.
     locked_storage_lock_acquisition: No se pudo obtener el bloqueo exclusivo de archivo
       dentro del tiempo de espera. Otro proceso lo retiene; espera y vuelve a intentarlo.
+    locked_storage_master_key_keychain: 'El llavero del sistema operativo está bloqueado. Desbloquéalo (Touch ID, Windows Hello o el desbloqueo del gestor de credenciales) y vuelve a intentarlo.'
   refused:
     auth_configure_no_active_bucket: No se puede configurar la autenticación sin un
       perfil activo. Crea un perfil con `aeat config profile create NOMBRE` y vuelve

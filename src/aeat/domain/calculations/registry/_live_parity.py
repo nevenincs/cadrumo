@@ -39,7 +39,7 @@ from ._ids import CrossReferenceId, OracleId, RevisionId
 from ._remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
-    assert_remote_operation_allowed,
+    assert_remote_operations_allowed,
     evaluate_remote_operation,
 )
 from ._schedules import profile_condition_matches
@@ -228,7 +228,7 @@ class LiveParityOracle(Protocol):
             expected: Expected response values the oracle will compare against.
 
         Returns:
-            The planned steps as a tuple of ``RemoteOperation``.
+            The planned steps as a tuple of :class:`RemoteOperation`.
         """
         ...
 
@@ -255,7 +255,7 @@ class LiveParityOracle(Protocol):
             expected: Expected response values to compare against.
 
         Returns:
-            A ``ParityResult`` carrying the verdict and per-field comparisons.
+            A :class:`ParityResult` carrying the verdict and per-field comparisons.
         """
         ...
 
@@ -404,14 +404,11 @@ def pre_flight_oracle_operations(
     contains a step the policy forbids.
     """
     operations = build_planned_operations(oracle, payload, expected=expected)
-    for index, operation in enumerate(operations):
-        try:
-            assert_remote_operation_allowed(policy, operation)
-        except RegistryValidationError as exc:
-            raise RegistryValidationError(
-                f"oracle {oracle.oracle_id!r} planned operation {index} blocked by policy {policy.id!r}: {exc}"
-            ) from exc
-    return operations
+    return assert_remote_operations_allowed(
+        policy,
+        operations,
+        context=f"oracle {oracle.oracle_id!r} planned operation",
+    )
 
 
 def evaluate_planned_operations(
@@ -455,13 +452,7 @@ def assert_oracle_operations_allowed(
     that the guard is the *only* gate before any side-effecting code, even
     when the oracle reuses an externally constructed operation list.
     """
-    for index, operation in enumerate(operations):
-        try:
-            assert_remote_operation_allowed(policy, operation)
-        except RegistryValidationError as exc:
-            raise RegistryValidationError(
-                f"oracle {oracle.oracle_id!r} operation {index} blocked by policy {policy.id!r}: {exc}"
-            ) from exc
+    assert_remote_operations_allowed(policy, operations, context=f"oracle {oracle.oracle_id!r} operation")
 
 
 class CrossReferenceApplicability(_ParityModel):
@@ -845,7 +836,7 @@ class BaseCheckerOracle[CheckerObservation]:
             expected: Expected response values the oracle will compare against.
 
         Returns:
-            The planned steps as a tuple of ``RemoteOperation``.
+            The planned steps as a tuple of :class:`RemoteOperation`.
         """
         ...
 
@@ -889,7 +880,7 @@ class BaseCheckerOracle[CheckerObservation]:
             expected: Expected per-key values to compare against.
 
         Returns:
-            A ``ParityResult`` carrying the verdict and per-field comparisons.
+            A :class:`ParityResult` carrying the verdict and per-field comparisons.
         """
         operations = self.planned_operations(payload, expected=expected)
         try:

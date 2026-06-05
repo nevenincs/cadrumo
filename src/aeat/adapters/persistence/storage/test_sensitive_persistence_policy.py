@@ -274,12 +274,12 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
     (
         "src/aeat/apidocs/manager.py",
         "scaffold",
-        "write_text",
+        "path.write_text",
     ): "API documentation stub generation",
     (
         "src/aeat/entrypoints/cli/_doc_reference.py",
-        "generate_cli_reference",
-        "write_text",
+        "_write_text_if_changed",
+        "path.write_text",
     ): "CLI reference documentation page generation",
     (
         "src/aeat/domain/calculations/registry/_workbook_parity.py",

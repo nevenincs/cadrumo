@@ -1,7 +1,3 @@
-access_gate:
-  errors:
-    default_translatable: live AEAT submission is permanently forbidden; use produce
-      -> verify -> export and upload the file yourself in the AEAT portal
 adapters:
   aeat:
     clave_movil:
@@ -3147,9 +3143,6 @@ errors:
       Check that a credential store is installed and active.
     auth_storage_master_key_kdf_version: The master-key file uses a key-derivation
       version this build does not support. Update the application.
-    auth_storage_master_key_keychain_locked: The operating-system keychain is locked.
-      Unlock it (Touch ID, Windows Hello or your credential-manager unlock) and try
-      again.
     auth_storage_master_key_material_missing: No master-key material exists. The secure
       store has not been provisioned yet.
     auth_storage_master_key_passphrase_mismatch: The passphrase does not unwrap the
@@ -3612,6 +3605,7 @@ errors:
       or the calculation engine may be corrupted.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
+    integrity_active_profile_pointer: 'The active-profile pointer is invalid; repair the selected profile before continuing.'
   internal:
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
       error.
@@ -3654,6 +3648,7 @@ errors:
       Run `aeat config unlock` and try again.
     locked_storage_lock_acquisition: The exclusive file lock could not be acquired
       within the timeout. Another process holds it; wait and try again.
+    locked_storage_master_key_keychain: 'The operating-system keychain is locked. Unlock it (Touch ID, Windows Hello or your credential-manager unlock) and try again.'
   refused:
     auth_configure_no_active_bucket: Authentication cannot be configured without an
       active profile. Create a profile with `aeat config profile create NAME` and

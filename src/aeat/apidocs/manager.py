@@ -18,14 +18,16 @@ class ScaffoldResult:
     """Summary of a scaffold operation.
 
     Attributes:
-        written: Number of stub files written or updated.
+        written: Number of stub files written or updated because their content changed.
         removed: Number of stale stub files removed.
         removed_names: Names of the removed stub files.
+        unchanged: Number of already-current stub files left untouched.
     """
 
     written: int
     removed: int
     removed_names: list[str] = field(default_factory=list)
+    unchanged: int = 0
 
 
 @dataclass(frozen=True)
@@ -35,15 +37,17 @@ class DriftResult:
     Attributes:
         missing_stubs: Module names that have no corresponding stub file.
         orphan_stubs: Stub filenames that have no corresponding source module.
+        stale_stubs: Module names whose existing stub content is not canonical.
     """
 
     missing_stubs: list[str] = field(default_factory=list)
     orphan_stubs: list[str] = field(default_factory=list)
+    stale_stubs: list[str] = field(default_factory=list)
 
     @property
     def is_conformant(self) -> bool:
         """Return True when there is no drift between source modules and stubs."""
-        return not self.missing_stubs and not self.orphan_stubs
+        return not self.missing_stubs and not self.orphan_stubs and not self.stale_stubs
 
 
 # Module segments that exclude an entire subtree.
@@ -283,6 +287,26 @@ class ApiStubManager:
         ]
         return "\n".join(lines)
 
+    def _expected_stub_contents(self, all_modules: list[tuple[str, bool]] | None = None) -> dict[str, str]:
+        """Return canonical stub content keyed by stub filename.
+
+        Args:
+            all_modules: Optional discovery result to reuse.
+
+        Returns:
+            Mapping of ``aeat.some.module.rst`` filenames to their generated RST.
+        """
+        modules = self.discover_modules() if all_modules is None else all_modules
+        expected: dict[str, str] = {}
+        for name, is_pkg in modules:
+            if is_pkg:
+                sub_pkgs, sub_mods = self._package_children(name, modules)
+                content = self._package_stub(name, sub_pkgs, sub_mods)
+            else:
+                content = self._module_stub(name)
+            expected[f"{name}.rst"] = content
+        return expected
+
     # ── Public API ───────────────────────────────────────────────────────────
 
     def scaffold(self) -> ScaffoldResult:
@@ -303,20 +327,17 @@ class ApiStubManager:
         except OSError as exc:
             raise ApiDocsError(f"Cannot create docs/api directory: {exc}") from exc
 
-        all_modules = self.discover_modules()
-        expected: set[str] = set()
+        expected_contents = self._expected_stub_contents()
+        expected = set(expected_contents)
         written = 0
+        unchanged = 0
 
-        for name, is_pkg in all_modules:
-            if is_pkg:
-                sub_pkgs, sub_mods = self._package_children(name, all_modules)
-                content = self._package_stub(name, sub_pkgs, sub_mods)
-            else:
-                content = self._module_stub(name)
-
-            filename = f"{name}.rst"
-            expected.add(filename)
-            (self.docs_api / filename).write_text(content, encoding=_UTF_8)
+        for filename, content in expected_contents.items():
+            path = self.docs_api / filename
+            if path.is_file() and path.read_text(encoding=_UTF_8) == content:
+                unchanged += 1
+                continue
+            path.write_text(content, encoding=_UTF_8)
             written += 1
 
         removed_names: list[str] = []
@@ -325,7 +346,12 @@ class ApiStubManager:
                 existing.unlink()
                 removed_names.append(existing.name)
 
-        return ScaffoldResult(written=written, removed=len(removed_names), removed_names=removed_names)
+        return ScaffoldResult(
+            written=written,
+            removed=len(removed_names),
+            removed_names=removed_names,
+            unchanged=unchanged,
+        )
 
     def check(self) -> DriftResult:
         """Compute drift between source modules and stub files without writing.
@@ -334,8 +360,8 @@ class ApiStubManager:
             A :class:`DriftResult` listing missing and orphan stubs.
             :attr:`DriftResult.is_conformant` is ``True`` when there is no drift.
         """
-        all_modules = self.discover_modules()
-        expected_stems: set[str] = {name for name, _ in all_modules}
+        expected_contents = self._expected_stub_contents()
+        expected_stems: set[str] = {Path(filename).stem for filename in expected_contents}
 
         actual_stubs: set[str] = set()
         for rst_file in self.docs_api.glob("*.rst"):
@@ -346,7 +372,13 @@ class ApiStubManager:
 
         missing = sorted(expected_stems - actual_stubs)
         orphans = sorted(actual_stubs - expected_stems)
-        return DriftResult(missing_stubs=missing, orphan_stubs=orphans)
+        stale = sorted(
+            Path(filename).stem
+            for filename, expected in expected_contents.items()
+            if (self.docs_api / filename).is_file()
+            and (self.docs_api / filename).read_text(encoding=_UTF_8) != expected
+        )
+        return DriftResult(missing_stubs=missing, orphan_stubs=orphans, stale_stubs=stale)
 
     def audit(self) -> str:
         """Return a human-readable health report for the stub tree.
@@ -368,6 +400,7 @@ class ApiStubManager:
             f"  Stub files     : {total_stubs}",
             f"  Missing stubs  : {len(drift.missing_stubs)}",
             f"  Orphan stubs   : {len(drift.orphan_stubs)}",
+            f"  Stale stubs    : {len(drift.stale_stubs)}",
         ]
         if drift.missing_stubs:
             lines.append("")
@@ -378,6 +411,11 @@ class ApiStubManager:
             lines.append("")
             lines.append("Orphan stubs (no matching source module):")
             for name in drift.orphan_stubs:
+                lines.append(f"  {name}")
+        if drift.stale_stubs:
+            lines.append("")
+            lines.append("Stale stubs (content differs from generator output):")
+            for name in drift.stale_stubs:
                 lines.append(f"  {name}")
         if drift.is_conformant:
             lines.append("")

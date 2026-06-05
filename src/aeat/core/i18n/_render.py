@@ -165,7 +165,12 @@ def _output_language_cache_key() -> tuple[object, ...]:
 def _cached_output_language(_cache_key: tuple[object, ...]) -> str:
     try:
         settings = load_settings()
-    except (KeyError, ValueError, AttributeError):
+    except (KeyError, ValueError, AttributeError) as exc:
+        _log.debug(
+            "i18n: unable to load settings for output language; falling back to default (%s)",
+            type(exc).__name__,
+            exc_info=True,
+        )
         return DEFAULT_OUTPUT_LANGUAGE
     if "aeat_output_language" in settings.model_fields_set:
         explicit = _normalise_supported_language(settings.aeat_output_language)
@@ -193,7 +198,7 @@ def _active_profile_output_language() -> str | None:
     except Exception as exc:
         _log.debug(
             "i18n: unable to resolve active-profile output language; falling back to settings (%s)",
-            exc,
+            type(exc).__name__,
             exc_info=True,
         )
         return None
@@ -224,7 +229,7 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
     rendered = _lookup_translation(locale, translation_key, default=default)
     interpolation = {key: value for key, value in kwargs.items() if key not in {"locale", "default"}}
     if interpolation:
-        rendered = _interpolate(rendered, interpolation)
+        rendered = _interpolate(translation_key, rendered, interpolation)
     if _I18N_STRICT_PLACEHOLDERS.get() and (match := _SURVIVING_PLACEHOLDER_RE.search(rendered)):
         raise UnmatchedPlaceholderError(
             key=translation_key,
@@ -257,7 +262,12 @@ def _lookup_translation(locale: str, translation_key: str, *, default: object | 
     try:
         rendered = _locale_map(locale).get(translation_key, fallback)
     except (OSError, yaml.YAMLError, IndexError) as exc:
-        _log.debug("i18n: unable to load locale %s; falling back to python-i18n (%s)", locale, exc)
+        _log.debug(
+            "i18n: unable to load locale %s; falling back to python-i18n (%s)",
+            locale,
+            type(exc).__name__,
+            exc_info=True,
+        )
         _ensure_initialised()
         rendered = i18n.t(translation_key, locale=locale)
     if rendered == translation_key:
@@ -283,7 +293,7 @@ def _humanise_key(translation_key: str) -> str:
     return stripped.replace("_", " ").capitalize()
 
 
-def _interpolate(rendered: str, values: Mapping[str, object]) -> str:
+def _interpolate(translation_key: str, rendered: str, values: Mapping[str, object]) -> str:
     def _replace(match: re.Match[str]) -> str:
         name = match.group("name")
         if name not in values:
@@ -293,7 +303,13 @@ def _interpolate(rendered: str, values: Mapping[str, object]) -> str:
     rendered = _PLACEHOLDER_RE.sub(_replace, rendered)
     try:
         return rendered.format(**values)
-    except (KeyError, IndexError, ValueError):
+    except (KeyError, IndexError, ValueError) as exc:
+        _log.debug(
+            "i18n: unable to interpolate locale key %s; returning partially rendered value (%s)",
+            translation_key,
+            type(exc).__name__,
+            exc_info=True,
+        )
         return rendered
 
 
