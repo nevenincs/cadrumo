@@ -844,3 +844,22 @@ claim.
 
 Focused convention-guard, remote-mirror, ruff, and plan-validation checks passed. The
 only plan check output remains the existing `PLAN022` monotonic identifier warning.
+
+## S453-CR-001 | PASS | Stale direct-environment allowance removed
+
+Reviewed the S453 guard diff. The only code change removes the stale
+`PASSPHRASE_ENV_VAR` allowance and adds the custody lifecycle integration test to the
+guarded hardening-test surface. This narrows rather than broadens the exception
+inventory.
+
+## S453-CR-002 | PASS | Remaining custody env use is justified and guarded
+
+The remaining `os.environ.items()` site in the S453 surface is the subprocess
+environment sanitizer documented by S452. It strips inherited test/runtime variables
+and does not transport passphrase material. With the custody lifecycle test enrolled in
+the guard, shortcut markers and env mutations remain covered.
+
+## S453-CR-003 | PASS | Focused validation passed
+
+Focused convention-guard, ruff, residual-search, and plan-validation checks passed. No
+critical, high, or medium S453 findings remain open.
