@@ -475,7 +475,7 @@ Current register count: `301` production candidate files.
 | `AFR-184` | `src/aeat/core/_bucket_pointer.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-185` | `src/aeat/core/_bucket_pointer_io.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-186` | `src/aeat/core/_toml.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
-| `AFR-187` | `src/aeat/core/access_gate/__init__.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-187` | `src/aeat/core/access_gate/__init__.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-188` | `src/aeat/core/config.py` | `active-profile, manifest-bucket, master-key, sql-route, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-189` | `src/aeat/core/corpus_manifest/__init__.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-190` | `src/aeat/core/env_io.py` | `master-key, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
@@ -836,7 +836,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S286` - Close `AFR-184` for `src/aeat/core/_bucket_pointer.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/core/_bucket_pointer.py`.
 - [x] `W12.P26.S287` - Close `AFR-185` for `src/aeat/core/_bucket_pointer_io.py` with signals `active-profile, manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/core/_bucket_pointer_io.py`.
 - [x] `W12.P26.S288` - Close `AFR-186` for `src/aeat/core/_toml.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/_toml.py`.
-- [ ] `W12.P26.S289` - Close `AFR-187` for `src/aeat/core/access_gate/__init__.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/access_gate/__init__.py`.
+- [x] `W12.P26.S289` - Close `AFR-187` for `src/aeat/core/access_gate/__init__.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/access_gate/__init__.py`.
 - [ ] `W12.P26.S290` - Close `AFR-188` for `src/aeat/core/config.py` with signals `active-profile, manifest-bucket, master-key, sql-route, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/core/config.py`.
 - [ ] `W12.P26.S291` - Close `AFR-189` for `src/aeat/core/corpus_manifest/__init__.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/corpus_manifest/__init__.py`.
 - [ ] `W12.P26.S292` - Close `AFR-190` for `src/aeat/core/env_io.py` with signals `master-key, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/core/env_io.py`.
