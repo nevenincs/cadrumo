@@ -169,7 +169,7 @@ Close remaining oversized CLI roots through explicit residual extraction tranche
 - [x] `W02.P05.S44` - select the next google config closure command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/_google.py src/aeat/entrypoints/cli/_config/tests`.
 - [x] `W02.P05.S45` - extract the selected google config closure command group into a focused registrar module; `src/aeat/entrypoints/cli/_config/_google.py src/aeat/entrypoints/cli/_config/*.py`.
 - [x] `W02.P05.S46` - verify google config closure behavior and ratchet google size budget; `src/aeat/entrypoints/cli/_config/tests src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
-- [ ] `W02.P05.S47` - select the next residual ledger root command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P05.S47` - select the next residual ledger root command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/tests`.
 - [ ] `W02.P05.S48` - extract the selected residual ledger root command group into a focused registrar module; `src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_*.py`.
 - [ ] `W02.P05.S49` - verify residual ledger root behavior and ratchet ledger size budget; `src/aeat/entrypoints/cli/tests/test_ledger* src/aeat/entrypoints/cli/tests/test_cli_module_size.py`.
 - [ ] `W02.P05.S50` - select the next residual config root command group using exact and semantic discovery; `src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/_config/tests`.
@@ -184,7 +184,7 @@ Decompose application/domain/backend monoliths only after ADR-backed boundary de
 
 Queue and execute ADR-backed decomposition for application, domain, adapter, persistence, and core modules over 1250 lines where safe boundaries require design decisions.
 
-- [ ] `W03.P04.S07` - queue ADRs for application/domain/adapter/core monoliths whose decomposition requires boundary decisions; `.vault/adr src/aeat/application src/aeat/domain src/aeat/adapters src/aeat/core`.
+- [x] `W03.P04.S07` - queue ADRs for application/domain/adapter/core monoliths whose decomposition requires boundary decisions; `.vault/adr src/aeat/application src/aeat/domain src/aeat/adapters src/aeat/core`.
 - [ ] `W03.P04.S08` - add or extend static guards proving no Python module exceeds 1250 lines and no tracked callable exceeds the complexity budget; `src/aeat/tests src/aeat/entrypoints/cli/tests`.
 
 ### Phase `W03.P06` - application service facade decomposition
@@ -206,11 +206,31 @@ Decompose oversized application service modules by use-case boundary while prese
 
 Decompose oversized calculation registry modules by schema, binding, applicability, parity, and record-design ownership without importing application or adapter layers.
 
+- [ ] `W03.P07.S63` - decompose registry bindings module by binding group and relation ownership behind the registry facade; `src/aeat/domain/calculations/registry/_bindings.py src/aeat/domain/calculations/registry/*.py`.
+- [ ] `W03.P07.S64` - verify registry binding behavior and facade imports after decomposition; `src/aeat/domain/calculations/registry/tests/test_*binding* src/aeat/domain/calculations/registry/tests`.
+- [ ] `W03.P07.S65` - decompose registry schema module by schema family and validation ownership behind the registry facade; `src/aeat/domain/calculations/registry/_schema.py src/aeat/domain/calculations/registry/*.py`.
+- [ ] `W03.P07.S66` - verify registry schema behavior and facade imports after decomposition; `src/aeat/domain/calculations/registry/tests/test_registry_schema.py src/aeat/domain/calculations/registry/tests`.
+- [ ] `W03.P07.S67` - decompose registry record design module by record authority surface behind the registry facade; `src/aeat/domain/calculations/registry/_record_design.py src/aeat/domain/calculations/registry/*.py`.
+- [ ] `W03.P07.S68` - verify registry record design behavior and facade imports after decomposition; `src/aeat/domain/calculations/registry/tests src/aeat/tests`.
+- [ ] `W03.P07.S69` - decompose registry applicability module by applicability rule family behind the registry facade; `src/aeat/domain/calculations/registry/_applicability.py src/aeat/domain/calculations/registry/*.py`.
+- [ ] `W03.P07.S70` - verify registry applicability behavior and facade imports after decomposition; `src/aeat/domain/calculations/registry/tests/test_applicability* src/aeat/domain/calculations/registry/tests`.
+- [ ] `W03.P07.S71` - decompose registry workbook parity module by parity concern behind the registry facade; `src/aeat/domain/calculations/registry/_workbook_parity.py src/aeat/domain/calculations/registry/*.py`.
+- [ ] `W03.P07.S72` - verify registry workbook parity behavior and facade imports after decomposition; `src/aeat/domain/calculations/registry/tests src/aeat/adapters/outbound/google/tests`.
 
 ### Phase `W03.P08` - adapter and persistence decomposition
 
 Decompose oversized outbound adapter and persistence modules along external contract and storage boundary lines while preserving typed boundary errors.
 
+- [ ] `W03.P08.S73` - decompose AEAT sede declarations adapter by declaration workflow behind the outbound AEAT facade; `src/aeat/adapters/outbound/aeat/sede/_declarations.py src/aeat/adapters/outbound/aeat/sede/*.py`.
+- [ ] `W03.P08.S74` - verify AEAT sede declarations adapter behavior and facade imports after decomposition; `src/aeat/adapters/outbound/aeat/sede/tests src/aeat/entrypoints/cli/tests/test_live*`.
+- [ ] `W03.P08.S75` - decompose AEAT auth adapters by clave movil and authenticator workflow behind the outbound AEAT auth facade; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py src/aeat/adapters/outbound/aeat/auth/_authenticator.py src/aeat/adapters/outbound/aeat/auth/*.py`.
+- [ ] `W03.P08.S76` - verify AEAT auth adapter behavior and facade imports after decomposition; `src/aeat/adapters/outbound/aeat/auth/tests src/aeat/entrypoints/cli/_config/tests`.
+- [ ] `W03.P08.S77` - decompose Google calc sheets apply adapter by Sheets API write concern behind the outbound Google facade; `src/aeat/adapters/outbound/google/_calc_sheets_apply.py src/aeat/adapters/outbound/google/*.py`.
+- [ ] `W03.P08.S78` - verify Google calc sheets apply behavior and facade imports after decomposition; `src/aeat/adapters/outbound/google/tests src/aeat/entrypoints/cli/_config/tests/test_google*`.
+- [ ] `W03.P08.S79` - decompose SQL secure objects persistence by row, crypto, and repository concerns behind the storage facade; `src/aeat/adapters/persistence/storage/sql/secure_objects.py src/aeat/adapters/persistence/storage/sql/*.py`.
+- [ ] `W03.P08.S80` - verify SQL secure objects persistence behavior and facade imports after decomposition; `src/aeat/adapters/persistence/storage/sql/tests src/aeat/tests/test_storage_decimal_redaction_error_typing.py`.
+- [ ] `W03.P08.S81` - decompose master key storage adapter by derivation, rotation, and persistence concerns behind the storage facade; `src/aeat/adapters/persistence/storage/master_key/_master_key.py src/aeat/adapters/persistence/storage/master_key/*.py`.
+- [ ] `W03.P08.S82` - verify master key storage behavior and facade imports after decomposition; `src/aeat/adapters/persistence/storage/master_key/tests src/aeat/adapters/persistence/storage/tests`.
 
 ## Wave `W04` - core and final static guard closure
 
@@ -220,6 +240,16 @@ Close core over-limit modules and replace shrinking legacy budgets with hard cod
 
 Decompose oversized core modules, then enforce hard codebase-wide module and callable budgets with no silent legacy growth.
 
+- [ ] `W04.P09.S83` - decompose core config module by settings source and validation concern behind the core config facade; `src/aeat/core/config.py src/aeat/core/*.py`.
+- [ ] `W04.P09.S84` - verify core config behavior and facade imports after decomposition; `src/aeat/core/tests src/aeat/tests`.
+- [ ] `W04.P09.S85` - decompose core error registry domain module behind the core errors facade; `src/aeat/core/errors/registry/_domain.py src/aeat/core/errors/registry/*.py`.
+- [ ] `W04.P09.S86` - verify core domain error registry behavior and facade imports after decomposition; `src/aeat/core/errors/tests src/aeat/core/tests`.
+- [ ] `W04.P09.S87` - decompose core error registry application module behind the core errors facade; `src/aeat/core/errors/registry/_application.py src/aeat/core/errors/registry/*.py`.
+- [ ] `W04.P09.S88` - verify core application error registry behavior and facade imports after decomposition; `src/aeat/core/errors/tests src/aeat/core/tests`.
+- [ ] `W04.P09.S89` - decompose core error registry adapters module behind the core errors facade; `src/aeat/core/errors/registry/_adapters.py src/aeat/core/errors/registry/*.py`.
+- [ ] `W04.P09.S90` - verify core adapter error registry behavior and facade imports after decomposition; `src/aeat/core/errors/tests src/aeat/core/tests`.
+- [ ] `W04.P09.S91` - replace shrinking legacy size budgets with hard codebase-wide 1250-line and callable-complexity guards; `src/aeat/tests src/aeat/entrypoints/cli/tests`.
+- [ ] `W04.P09.S92` - run final codebase monolith decomposition feature gate and refresh RAG index; `.vault/plan/2026-06-05-codebase-monolith-decomposition-plan.md src/aeat`.
 
 ## Description
 
