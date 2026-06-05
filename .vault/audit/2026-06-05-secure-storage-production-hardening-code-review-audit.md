@@ -384,3 +384,30 @@ projected refusal detail through `tr()`.
 
 Focused `ruff check`, Google sync-push integration tests, Google error-localisation
 tests, and `python -m aeat.locales audit` passed after the localized refusal change.
+
+## S380-CR-001 | FIXED | Plan row referenced retired profile census path
+
+Reviewed the S380 scope as `vaultspec-code-reviewer`. `AFR-278` and `W12.P26.S380`
+still referenced `_profile_census.py`, which no longer exists after the censo rename.
+The plan now tracks `src/aeat/entrypoints/cli/_config/_profile_censo.py` and closes the
+register entry against the live implementation.
+
+## S380-CR-002 | FIXED | Censo event history used ambient active-bucket repository construction
+
+`_emit_censo_event()` already received the resolved bucket id but constructed
+`BucketEventHistoryRepository()` through the default active-bucket factory. The censo
+event path now passes `secure_object_repository_for_bucket(bucket_id)` into the event
+repository, keeping the event catalogue bound to the same profile bucket resolved by
+the command.
+
+## S380-CR-003 | PASS | Censo profile CLI stays application-owned
+
+The profile censo CLI resolves active profile state through the centralized pointer and
+manifest scanner, delegates censo snapshot/profile operations to `CensoSyncService`,
+uses localized `CliRefusedBoundaryError` surfaces for expected refusals, and does not
+own raw SQL routes or duplicate censo modelo foundation routing.
+
+## S380-CR-004 | PASS | Locale and focused validation passed
+
+No locale leaves were added. Focused `ruff check`, profile-censo integration tests, and
+`python -m aeat.locales audit` passed.
