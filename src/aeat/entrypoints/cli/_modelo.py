@@ -34,7 +34,6 @@ from ...application.modelo import (
     CalculationRevisionAmendmentKind,
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
-    ExternalEvidenceKind,
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
     ModeloCalculationRevisionSelectorNotFoundError,
@@ -46,18 +45,12 @@ from ...application.modelo import (
     ModeloWorkSelectorContradictionError,
     ModeloWorkUnitNotFoundError,
     ModeloWorkVisibleTargetAmbiguousError,
-    VerificationReportNotFoundError,
     WorkUnit,
-    WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     amend_modelo_revision,
     declared_modelo_period_tokens,
-    get_filing_record,
-    get_verification_report,
     get_work_unit,
     guard_active_profile_foral_ccaa,
-    list_filing_records,
-    list_verification_reports,
     modelo_work_address_from_operator_target,
     normalize_modelo_work_period,
     resolve_modelo_revision_for_operator_target,
@@ -115,6 +108,15 @@ from ._modelo_m036_cli import register_m036_commands
 from ._modelo_maritime_cli import register_maritime_commands
 from ._modelo_projection_cli import register_projection_commands
 from ._modelo_readiness_cli import register_readiness_commands
+from ._modelo_records_cli import (
+    filing_record_app as filing_record_app,
+)
+from ._modelo_records_cli import (
+    register_record_commands,
+)
+from ._modelo_records_cli import (
+    verification_report_app as verification_report_app,
+)
 from ._modelo_rendering import (
     filing_record_lines as _filing_record_lines,
 )
@@ -581,15 +583,6 @@ register_work_lifecycle_commands(
 )
 
 
-filing_record_app = typer.Typer(
-    name="filing-record",
-    help=tr("cli.app.modelo.filing_record.app_help"),
-    no_args_is_help=True,
-    add_completion=False,
-)
-app.add_typer(filing_record_app, name="filing-record")
-
-
 register_work_calculate_commands(
     work_app,
     activate_output_language=activate_subcommand_output_language,
@@ -1026,245 +1019,13 @@ def work_amend(
     _emit_envelope(ctx, command="modelo.work.amend", result=result, lines=lines)
 
 
-@filing_record_app.command("list", help=tr("cli.app.modelo.filing_record.list_help"))
-def filing_record_list(
-    ctx: typer.Context,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.filing_record.bucket_id_help")),
-    ] = None,
-    include_superseded: Annotated[
-        bool,
-        typer.Option(
-            "--include-superseded",
-            help=tr("cli.app.modelo.filing_record.include_superseded_help"),
-        ),
-    ] = False,
-) -> None:
-    """List filing records. Superseded records are excluded unless asked."""
-    records = list_filing_records(bucket_id=bucket_id, include_superseded=include_superseded)
-    from ._common import _emit_envelope
-    from ._modelo_payloads import ModeloRecordListResult
-
-    result = ModeloRecordListResult(
-        bucket_id_filter=bucket_id,
-        include_superseded=include_superseded,
-        record_count=len(records),
-        records=[_filing_record_payload(record) for record in records],
-    )
-    lines = [
-        "operation\tmodelo.filing_record.list",
-        f"bucket_id_filter\t{bucket_id or ''}",
-        f"include_superseded\t{include_superseded}",
-        f"record_count\t{len(records)}",
-        "filing_record_id\tbucket_id\tmodelo\tyear\tperiod\tstatus\tfiled_at\tfiled_by",
-    ]
-    lines.extend(
-        "\t".join(
-            (
-                record.filing_record_id,
-                record.bucket_id,
-                str(record.modelo),
-                str(record.filing_year),
-                record.period,
-                record.status.value,
-                record.filed_at.isoformat(),
-                record.filed_by,
-            )
-        )
-        for record in records
-    )
-    _emit_envelope(ctx, command="modelo.filing_record.list", result=result, lines=lines)
-
-
-verification_report_app = typer.Typer(
-    name="verification-report",
-    help=tr("cli.app.modelo.verification_report.app_help"),
-    no_args_is_help=True,
-    add_completion=False,
+register_record_commands(
+    app,
+    validate_work_unit_id=_validate_work_unit_id,
+    parse_amendment_casilla=_parse_amendment_casilla,
+    resolve_default_actor=_resolve_default_actor,
+    bad_parameter_from_error=_bad_parameter_from_error,
 )
-app.add_typer(verification_report_app, name="verification-report")
-
-
-@verification_report_app.command("list", help=tr("cli.app.modelo.verification_report.list_help"))
-def verification_report_list(
-    ctx: typer.Context,
-    calculation_revision_id: Annotated[
-        str | None,
-        typer.Option(
-            "--calculation-revision-id",
-            help=tr("cli.app.modelo.work.calculation_revision_id_help"),
-        ),
-    ] = None,
-) -> None:
-    """List verification reports, optionally filtered to one revision."""
-    reports = list_verification_reports(calculation_revision_id=calculation_revision_id)
-    from ._common import _emit_envelope
-    from ._modelo_payloads import VerificationReportListResult
-
-    result = VerificationReportListResult(
-        calculation_revision_id_filter=calculation_revision_id,
-        report_count=len(reports),
-        reports=[_verification_report_payload(r) for r in reports],
-    )
-    lines = [
-        "operation\tmodelo.verification_report.list",
-        f"calculation_revision_id_filter\t{calculation_revision_id or ''}",
-        f"report_count\t{len(reports)}",
-        "verification_report_id\tcalculation_revision_id\tcompleteness_status\tgranted\trun_at\tverified_by",
-    ]
-    lines.extend(
-        "\t".join(
-            (
-                r.verification_report_id,
-                r.calculation_revision_id,
-                r.completeness_status.value,
-                str(r.granted_verificado_completo).lower(),
-                r.run_at.isoformat(),
-                r.verified_by,
-            )
-        )
-        for r in reports
-    )
-    _emit_envelope(ctx, command="modelo.verification_report.list", result=result, lines=lines)
-
-
-@verification_report_app.command("view", help=tr("cli.app.modelo.verification_report.view_help"))
-def verification_report_show(
-    ctx: typer.Context,
-    verification_report_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.app.modelo.verification_report.verification_report_id_help")),
-    ],
-) -> None:
-    """View one verification report by id."""
-    try:
-        report = get_verification_report(verification_report_id)
-    except VerificationReportNotFoundError as exc:
-        raise _bad_parameter_from_error(exc) from exc
-
-    from ._common import _emit_envelope
-    from ._modelo_payloads import VerificationReportShowResult
-
-    result = VerificationReportShowResult.model_validate(_verification_report_payload(report).model_dump(mode="python"))
-    lines = ["operation\tmodelo.verification_report.show", *_verification_report_lines(report)]
-    _emit_envelope(ctx, command="modelo.verification_report.view", result=result, lines=lines)
-
-
-@filing_record_app.command("view", help=tr("cli.app.modelo.filing_record.view_help"))
-def filing_record_show(
-    ctx: typer.Context,
-    filing_record_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.app.modelo.filing_record.filing_record_id_help")),
-    ],
-) -> None:
-    """View one filing record by id."""
-    try:
-        record = get_filing_record(filing_record_id)
-    except ModeloRecordNotFoundError as exc:
-        raise _bad_parameter_from_error(exc) from exc
-
-    from ._common import _emit_envelope
-    from ._modelo_payloads import ModeloRecordShowResult
-
-    result = ModeloRecordShowResult.model_validate(_filing_record_payload(record).model_dump(mode="python"))
-    lines = ["operation\tmodelo.filing_record.show", *_filing_record_lines(record)]
-    _emit_envelope(ctx, command="modelo.filing_record.view", result=result, lines=lines)
-
-
-@filing_record_app.command("import", help=tr("cli.app.modelo.filing_record.import_help"))
-def filing_record_import(
-    ctx: typer.Context,
-    work_unit_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
-    ],
-    evidence_kind: Annotated[
-        str,
-        typer.Option(
-            "--evidence-kind",
-            help=tr("cli.app.modelo.filing_record.evidence_kind_help"),
-        ),
-    ],
-    evidence_reference_id: Annotated[
-        str,
-        typer.Option(
-            "--evidence-id",
-            help=tr("cli.app.modelo.filing_record.evidence_reference_id_help"),
-        ),
-    ],
-    actor: Annotated[
-        str,
-        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ] = "aeat-import",
-    set_overrides: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--set",
-            help=tr("cli.app.modelo.filing_record.import_casilla_help"),
-        ),
-    ] = None,
-) -> None:
-    """Persist an externally-filed return as a baseline filing record."""
-    work_unit_id = _validate_work_unit_id(work_unit_id)
-    from ...application.modelo import (
-        ExternalModeloImportError,
-        import_external_filing_evidence,
-    )
-
-    try:
-        kind = ExternalEvidenceKind(evidence_kind)
-    except ValueError as exc:
-        canonical = ", ".join(repr(k.value) for k in ExternalEvidenceKind)
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.filing_record.invalid_evidence_kind",
-                canonical=canonical,
-                kind=evidence_kind,
-            )
-        ) from exc
-
-    casilla_values: dict[str, Decimal] = {}
-    for spec in set_overrides or ():
-        key, value = _parse_amendment_casilla(spec)
-        casilla_values[key] = value
-    if not casilla_values:
-        raise typer.BadParameter(tr("cli.app.modelo.filing_record.import_set_required"))
-
-    try:
-        record = import_external_filing_evidence(
-            work_unit_id=work_unit_id,
-            casilla_values=casilla_values,
-            evidence_kind=kind,
-            evidence_reference_id=evidence_reference_id,
-            actor=actor or _resolve_default_actor(),
-        )
-    except (
-        WorkUnitNotFoundError,
-        WorkUnitMutationRefusedError,
-        ExternalModeloImportError,
-    ) as exc:
-        raise _bad_parameter_from_error(exc) from exc
-
-    from ._common import _emit_envelope
-    from ._modelo_payloads import FilingRecordImportResult
-
-    result = FilingRecordImportResult.model_validate(
-        {
-            "evidence_kind": kind.value,
-            "evidence_reference_id": evidence_reference_id,
-            **_filing_record_payload(record).model_dump(mode="python"),
-        }
-    )
-    lines = [
-        "operation\tmodelo.filing_record.import",
-        f"evidence_kind\t{kind.value}",
-        f"evidence_reference_id\t{evidence_reference_id}",
-        *_filing_record_lines(record),
-    ]
-    lines.append("filing_disambiguation\t(imported AEAT-attested baseline)")
-    _emit_envelope(ctx, command="modelo.filing_record.import", result=result, lines=lines)
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -1878,4 +1639,10 @@ register_m036_commands(
 )
 
 
-__all__ = ["app"]
+__all__ = [
+    "_verification_report_lines",
+    "_verification_report_payload",
+    "app",
+    "filing_record_app",
+    "verification_report_app",
+]

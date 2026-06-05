@@ -1,12 +1,11 @@
 # aeat-cli
 
-`aeat-cli` is the documentation landing page for the `aeat` command-line
-application.
+`aeat` is a helper for preparing your Spanish tax forms.
 
-`aeat` is a helper for preparing your Spanish tax forms. It takes the records
-you keep, works out the figures for each modelo, checks them against the form's
-rules, and exports a file ready to submit to the Agencia Estatal de
-Administración Tributaria (AEAT).
+This documentation is the landing page for the `aeat` command-line application:
+it shows how to turn local records into checked modelo figures and export files
+ready to submit to the Agencia Estatal de Administración Tributaria (AEAT). The
+project source is on [GitHub](https://github.com/wgergely/aeat).
 
 `aeat` is for autónomos, small businesses, and the people who help them prepare
 Spanish filing records. You prepare one taxpayer's records at a time. The
@@ -24,24 +23,22 @@ responsible for every declaration you submit. Read the [full disclaimer](disclai
 before you rely on `aeat`.
 ```
 
-## First steps
-
-Choose the first guide that matches the missing piece in your workflow.
+## Where to Start
 
 ::::{grid} 1 2 2 4
 :gutter: 3
 :class-container: aeat-route-grid
 
-:::{grid-item-card} Get started with aeat
-:link: getting-started
+:::{grid-item-card} Start From Scratch
+:link: how-to/quickstart
 :link-type: doc
 :class-card: aeat-route-card
 
-Use this when you are new to `aeat` and want one guided path from setup to a
-local export.
+Use this when you are new to `aeat` and want the shortest path through profile,
+transactions, calculation, verification, and local export.
 :::
 
-:::{grid-item-card} Set up your taxpayer profile
+:::{grid-item-card} Set Up Your Taxpayer Profile
 :link: how-to/profile-setup
 :link-type: doc
 :class-card: aeat-route-card
@@ -50,16 +47,24 @@ Use this when `aeat` does not yet know which taxpayer, activity, or local
 profile to use.
 :::
 
-:::{grid-item-card} Import and classify a bank statement
+:::{grid-item-card} Import Bank Records
 :link: how-to/import-bank-statements
 :link-type: doc
 :class-card: aeat-route-card
 
-Use this when your bank records are not yet in the ledger or still need tax
-classification.
+Use this when records are not yet in the ledger or still need review.
 :::
 
-:::{grid-item-card} Plan your filing calendar
+:::{grid-item-card} Classify Transactions
+:link: how-to/classify-transactions
+:link-type: doc
+:class-card: aeat-route-card
+
+Use this when imported rows need business, personal, mixed-use, category, or
+tax-field decisions.
+:::
+
+:::{grid-item-card} Plan Your Filing Calendar
 :link: how-to/filing-calendar
 :link-type: doc
 :class-card: aeat-route-card
@@ -67,16 +72,7 @@ classification.
 Use this when you need to see which modelos are due and which period to prepare.
 :::
 
-:::{grid-item-card} Quickstart: produce a modelo file
-:link: how-to/quickstart
-:link-type: doc
-:class-card: aeat-route-card
-
-Use this when the taxpayer profile and ledger are ready and you want the short
-path to an export.
-:::
-
-:::{grid-item-card} Standard filing workflow
+:::{grid-item-card} Follow the Filing Workflow
 :link: how-to/filing-spine
 :link-type: doc
 :class-card: aeat-route-card
@@ -85,15 +81,21 @@ Use this when you want the full repeatable loop: prepare, verify, export, file
 through AEAT, and keep local history.
 :::
 
+:::{grid-item-card} Example Filing Walkthrough
+:link: tutorials/index
+:link-type: doc
+:class-card: aeat-route-card
+
+Build your first Modelo 130 filing from setup through the final local export.
+:::
+
 ::::
 
-If you want a lesson instead of a task guide, use
-[Build your first Modelo 130 filing](tutorials/index.md).
+## Go Straight to Usage and Reference
 
-## CLI reference
-
-Use the [command-line reference](cli/index.rst) when you need exact commands and
-options. Use [how it works](explanation/index.md) when you want to understand
+Already know the workflow? Use the [how-to guide index](how-to/index.md) for
+task paths, find the comprehensive [command-line reference](cli/index.rst) for
+exact commands and options, or read [how it works](explanation/index.md) to see
 how taxpayer details and records become modelo figures, what checks run, and
 how official rule sources are tracked.
 
@@ -101,8 +103,7 @@ how official rule sources are tracked.
 :hidden:
 :caption: Where to start
 
-getting-started
-how-to/quickstart
+how-to/index
 tutorials/index
 ```
 
@@ -110,17 +111,6 @@ tutorials/index
 :hidden:
 :caption: Everyday use
 
-how-to/index
-how-to/profile-setup
-how-to/censo-update
-how-to/import-bank-statements
-how-to/classify-with-llm
-how-to/filing-calendar
-how-to/filing-spine
-how-to/modelo-303
-how-to/modelo-390
-how-to/reconcile
-how-to/troubleshooting
 cli/index
 ```
 

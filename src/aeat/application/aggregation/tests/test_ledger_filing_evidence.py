@@ -1,4 +1,4 @@
-"""Ledger filing evidence: capture, fingerprint binding, encrypted roundtrip (legacy-plan).
+"""Ledger filing evidence: capture, fingerprint binding, encrypted roundtrip (accepted contract).
 
 Asserts the bundled fact basis (modelo-export-evidence-parity ADR):
 - ``compute_ledger_filing_evidence`` projects the typed tax facts and binds each
@@ -180,7 +180,7 @@ def test_evidence_roundtrips_through_encrypted_revision(_objects: SecureObjectRe
 
 
 def test_no_silent_omission_guard_refuses_uncovered_evidence() -> None:
-    from ..modelo._actions import ModeloError
+    from ...modelo._actions import ModeloError
 
     txn = _txn()
     catalogue = TransactionCatalogue.from_transactions((txn,))

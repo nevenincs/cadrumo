@@ -1,11 +1,11 @@
-"""Regression tests for M100 casilla 1812 auto-propagation from 1811 (legacy-step).
+"""Regression tests for M100 casilla 1812 auto-propagation from 1811 (contract).
 
 Casilla 1812 (Ganancia no exenta imputable al ejercicio) previously had
 ``input_kind = "manual"``.  Without an explicit ``--casilla "1812=<value>"``
 the aggregators 1813/1814 received zero and the entire crypto gain disappeared
 from base imponible del ahorro.
 
-After legacy-step, 1812 is ``input_kind = "computed"`` with formula
+After contract, 1812 is ``input_kind = "computed"`` with formula
 ``renta-2024-ganancia-cripto-imputable`` (identity copy from 1811).  The AEAT
 form default is: 1812 equals 1811 unless the taxpayer defers under Art. 14.2.d
 LIRPF (multi-year deferral); that override path is out of scope here.

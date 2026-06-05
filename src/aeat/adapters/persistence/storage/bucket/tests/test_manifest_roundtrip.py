@@ -117,7 +117,7 @@ def test_bucket_manifest_round_trips_with_last_unlocked_at_unset(
     # should be absent. This guards against a future write
     # implementation that emits ``last_unlocked_at = ""`` or a
     # quoted "None" string.
-    from ._manifest_io import manifest_path
+    from .._manifest_io import manifest_path
 
     on_disk = manifest_path(paths).read_text(encoding=UTF_8_ENCODING)
     assert "last_unlocked_at" not in on_disk

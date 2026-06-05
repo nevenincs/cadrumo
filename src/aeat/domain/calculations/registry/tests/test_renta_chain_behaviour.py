@@ -133,7 +133,7 @@ def test_minimo_personal_y_familiar_aggregates_all_four_components_estatal() -> 
     covered by the live Renta WEB Open replay parity tests.
     """
 
-    from ._loader import load_registry_tree
+    from .._loader import load_registry_tree
 
     modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
     modelo = next(m for m in modelos if m.id == "100")

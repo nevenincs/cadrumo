@@ -463,7 +463,7 @@ def test_censo_snapshot_not_found_error_accepts_structured_kwargs() -> None:
     assert error.suggestion == "aeat config profile censo refresh"
 
 
-# ---- SnapshotRepository structural-conformance gate (legacy-step) -----------------
+# ---- SnapshotRepository structural-conformance gate (contract) -----------------
 # Rule 9-A: conformance is STRUCTURAL (isinstance against the @runtime_checkable
 # Protocol), NOT explicit inheritance. Concrete repos must NOT inherit from
 # SnapshotRepository — the isinstance check verifies structural conformance.
@@ -494,8 +494,8 @@ def test_secure_snapshot_repository_conforms_to_protocol(
 
     Uses the expedientes namespace+model to exercise the generic class.
     """
-    from ...adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
-    from ._expedientes import (
+    from ....adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
+    from .._expedientes import (
         PersistedExpedientesSnapshot,
         expedientes_snapshot_object_key,
     )

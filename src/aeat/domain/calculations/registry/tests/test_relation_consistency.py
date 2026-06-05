@@ -111,7 +111,7 @@ def _offset_derived_period_errors(
     """For offset-driven relations, verify every derived source period is in revision_periods."""
     if relation.source_period_offset_from_target is None:
         return []
-    from ._relations import _derive_offset_source_period
+    from .._relations import _derive_offset_source_period
 
     derived: set[str] = set()
     for target_period in relation.target_periods:

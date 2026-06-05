@@ -32,7 +32,7 @@ from pathlib import Path
 import pytest
 
 from ......tests import FIXTURES_DIR
-from ... import PdfN26Provider
+from .. import PdfN26Provider
 from .._detection import detect_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -164,7 +164,7 @@ def test_pdf_n26_provider_verification_source_is_declared() -> None:
 
 
 # ---------------------------------------------------------------------------
-# DEFAULT_CURRENCY enrollment (legacy-step)
+# DEFAULT_CURRENCY enrollment (contract)
 # ---------------------------------------------------------------------------
 
 
@@ -175,8 +175,8 @@ def test_extract_statement_currency_uses_default_currency() -> None:
     Enrollment means both the pattern check and the return value must reference
     DEFAULT_CURRENCY so that the authoritative constant governs all currency logic.
     """
-    from .....core.external_constants import DEFAULT_CURRENCY
-    from ._pdf_n26 import _extract_statement_currency
+    from ......core.external_constants import DEFAULT_CURRENCY
+    from .._pdf_n26 import _extract_statement_currency
 
     # A page with a EUR marker must yield DEFAULT_CURRENCY.
     pages = (("Umsatz 100,00 EUR Kontostand",),)
@@ -186,8 +186,8 @@ def test_extract_statement_currency_uses_default_currency() -> None:
 
 def test_extract_statement_currency_raises_on_missing_currency() -> None:
     """Pages with no currency marker must raise InvalidFinancialSourceError."""
-    from ._base import InvalidFinancialSourceError
-    from ._pdf_n26 import _extract_statement_currency
+    from .._base import InvalidFinancialSourceError
+    from .._pdf_n26 import _extract_statement_currency
 
     pages = (("no currency info here",),)
     with pytest.raises(InvalidFinancialSourceError):

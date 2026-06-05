@@ -153,7 +153,7 @@ def test_login_refuses_with_user_prose_citing_live_tests_gate(
     # empty by construction. Render the i18n key (with its ``provider``
     # interpolation context) through ``tr`` to get the user-prose
     # surface this round-5 B2 finding promises.
-    from ....core.i18n import tr
+    from .....core.i18n import tr
 
     message = tr(exc_info.value.translated_message, **(exc_info.value.context or {}))
     assert "AEAT_LIVE_TESTS_ENABLED" not in message, f"refusal must not echo the env-var name — got {message!r}"
@@ -184,7 +184,7 @@ def test_login_refuses_when_certificate_path_unset(
     # the raise site passes no positional ``message``, so ``str(exc)`` is
     # empty by construction. Render the i18n key through ``tr`` to get
     # the user-prose surface this round-5 finding promises.
-    from ....core.i18n import tr
+    from .....core.i18n import tr
 
     message = tr(exc_info.value.translated_message)
     assert "AEAT_CERTIFICATE_PATH" not in message
@@ -330,7 +330,7 @@ def test_clave_movil_mismatch_next_action_is_localised_in_catalan(
         aeat_clave_movil_dni_nie="00000001R",
         aeat_output_language="ca",
     ):
-        from ....core.i18n._render import clear_output_language_cache
+        from .....core.i18n._render import clear_output_language_cache
 
         clear_output_language_cache()
         result = configure_operator_auth("clave_movil")

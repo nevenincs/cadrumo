@@ -1,6 +1,6 @@
 # Understanding the AEAT pipeline
 
-This page explains the conceptual design of the `aeat` application and the mental model behind its operation. Read it to understand how the system manages tax data and why it is structured this way. For guided step-by-step instructions, see the [getting-started guide](../getting-started.md) or the [Tutorial](../tutorials/index.md). For task-focused recipes, refer to the [how-to guides](../how-to/index.md).
+This page explains the conceptual design of the `aeat` application and the mental model behind its operation. Read it to understand how the system manages tax data and why it is structured this way. For a short guided path, see the [Quickstart](../how-to/quickstart.md) or the [Tutorial](../tutorials/index.md). For task-focused recipes, refer to the [how-to guides](../how-to/index.md).
 
 `aeat` is a local-first helper for self-employed individuals (*autónomos*) who file their own taxes in Spain. It runs entirely on your local machine to help you prepare your declarations before you submit them to Spain's tax agency, the *Agencia Estatal de Administración Tributaria* (AEAT). The application does not connect to the AEAT to file on your behalf; live submission is permanently excluded from the system by design. You prepare and verify your files locally, and then you upload the completed file yourself.
 

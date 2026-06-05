@@ -25,20 +25,6 @@ Major declarations:
 from __future__ import annotations
 
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
-from ._business_operation_invoice import (
-    BusinessOperationInvoice,
-    BusinessOperationInvoiceDocument,
-    BusinessOperationInvoiceInputError,
-    BusinessOperationInvoiceNotFoundError,
-    BusinessOperationInvoicePatch,
-    BusinessOperationInvoiceRepository,
-    BusinessOperationInvoiceResult,
-    BusinessOperationInvoiceSourceKind,
-    CollectibleInvoiceService,
-    IntracomOperationType,
-    PayableInvoiceService,
-    validate_eu_iva_id,
-)
 from ._actions import (
     LedgerProviderID,
     add_classification_rule,
@@ -67,6 +53,20 @@ from ._actions import (
     update_manual_transaction,
     update_manual_transaction_fields,
 )
+from ._business_operation_invoice import (
+    BusinessOperationInvoice,
+    BusinessOperationInvoiceDocument,
+    BusinessOperationInvoiceInputError,
+    BusinessOperationInvoiceNotFoundError,
+    BusinessOperationInvoicePatch,
+    BusinessOperationInvoiceRepository,
+    BusinessOperationInvoiceResult,
+    BusinessOperationInvoiceSourceKind,
+    CollectibleInvoiceService,
+    IntracomOperationType,
+    PayableInvoiceService,
+    validate_eu_iva_id,
+)
 from ._evidence import (
     PurchaseInvoiceEvidence,
     PurchaseInvoiceEvidenceInputError,
@@ -74,7 +74,11 @@ from ._evidence import (
     PurchaseInvoiceEvidencePatch,
     PurchaseInvoiceEvidenceService,
 )
-from ._rule_repository import LedgerClassificationRuleRepository
+from ._id_resolution import (
+    MINIMUM_DISPLAY_ID_WIDTH,
+    compute_display_id_width,
+    resolve_transaction_id,
+)
 from ._llm_classification import (
     LLMClassificationSuggestion,
     LLMProvider,
@@ -83,11 +87,6 @@ from ._llm_classification import (
     available_llm_providers,
     is_llm_provider_available,
     suggest_llm_classification,
-)
-from ._id_resolution import (
-    MINIMUM_DISPLAY_ID_WIDTH,
-    compute_display_id_width,
-    resolve_transaction_id,
 )
 from ._models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,
@@ -144,6 +143,7 @@ from ._ratios import (
     validate_ratios_for_bucket,
     validate_ratios_profile,
 )
+from ._rule_repository import LedgerClassificationRuleRepository
 
 __all__ = [
     "BULK_CLASSIFY_ALLOWED_COLUMNS",
@@ -170,7 +170,6 @@ __all__ = [
     "LLMProviderAvailability",
     "LedgerCatalogueResetReport",
     "LedgerClassificationRuleRepository",
-    "LedgerProviderID",
     "LedgerExportCommand",
     "LedgerExportResult",
     "LedgerExportRow",
@@ -179,6 +178,7 @@ __all__ = [
     "LedgerPreflightIssue",
     "LedgerPreflightIssueReason",
     "LedgerPreflightReport",
+    "LedgerProviderID",
     "LedgerRemovalBlocker",
     "LedgerReviewQuery",
     "LedgerReviewQueryResult",
@@ -239,11 +239,11 @@ __all__ = [
     "remove_manual_transaction",
     "reset_ledger_catalogue",
     "resolve_transaction_id",
+    "set_usage_ratio",
     "split_transaction",
     "stash_manual_transaction",
     "suggest_llm_classification",
     "summarize_manual_transactions",
-    "set_usage_ratio",
     "unset_usage_ratio",
     "update_manual_transaction",
     "update_manual_transaction_fields",

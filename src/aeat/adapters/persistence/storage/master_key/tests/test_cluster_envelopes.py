@@ -1,4 +1,4 @@
-"""Aggregate real-behavior test: every master_key cluster error envelope-round-trips (legacy-step).
+"""Aggregate real-behavior test: every master_key cluster error envelope-round-trips (contract).
 
 Each error class in the master_key cluster must:
 1. Be a registered AeatError subclass with a bound ErrorCode in ERROR_REGISTRY.
@@ -75,7 +75,7 @@ def test_master_key_reentrant_error_is_secret_store_error_subtype() -> None:
 def test_master_key_type_error_is_storage_error_and_type_error() -> None:
     """MasterKeyTypeError must be catchable as both StorageError and TypeError."""
 
-    from ..errors import StorageError
+    from ...errors import StorageError
 
     assert issubclass(MasterKeyTypeError, StorageError)
     assert issubclass(MasterKeyTypeError, TypeError)

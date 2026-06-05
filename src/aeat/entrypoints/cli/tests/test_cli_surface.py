@@ -38,7 +38,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 def _json(result) -> dict:
     """Parse a CLI JSON result, unwrapping the emit-envelope when present.
 
-    ``_emit_envelope`` (legacy-plan and the parallel ledger.import migration)
+    ``_emit_envelope`` (accepted contract and the parallel ledger.import migration)
     wraps typed CLI payloads in ``{"schema_version", "command", "result",
     "warnings"}``. Tests that assert against the typed payload should
     read the inner ``result`` directly; legacy ``_emit`` callers emit a

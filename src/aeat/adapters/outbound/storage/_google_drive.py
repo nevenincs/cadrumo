@@ -434,7 +434,7 @@ class GoogleDriveProvider:
         content_hash: str,
         label: str,
     ) -> ProviderObjectMetadata:
-        r"""Upload ``payload`` to Drive, creating or updating the object file, returning a :class:`ProviderObjectMetadata`.
+        r"""Upload ``payload`` to Drive and return object metadata.
 
         If a file for ``object_key_hmac`` already exists the existing Drive
         file is updated in-place (``files().update``); otherwise a new file
@@ -532,7 +532,7 @@ class GoogleDriveProvider:
         return _metadata_from_drive_entry(response, namespace=namespace_clean, object_key_hmac=hmac_clean)
 
     def get(self, namespace: str, object_key_hmac: str) -> tuple[bytes, ProviderObjectMetadata]:
-        """Download the object and verify its integrity against the stored hash, returning the payload and :class:`ProviderObjectMetadata`.
+        """Download the object, verify the stored hash, and return payload metadata.
 
         Uses ``files().get_media`` to stream bytes.  If the stored
         ``content_hash`` is a ``sha256-<hex>`` string, the payload digest is
@@ -687,7 +687,7 @@ class GoogleDriveProvider:
                 return
 
     def iter_objects(self, namespace: str) -> Iterator[ProviderObjectMetadata]:
-        """Yield ``ProviderObjectMetadata`` for every object in ``namespace``, returning an :class:`Iterator` of :class:`ProviderObjectMetadata`.
+        """Yield metadata for every object in ``namespace``.
 
         Only files whose names end with ``.bin`` and contain ``--`` are
         yielded; Drive folders and unrelated files inside the namespace

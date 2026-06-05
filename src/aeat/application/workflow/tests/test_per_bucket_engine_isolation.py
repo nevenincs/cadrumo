@@ -13,7 +13,7 @@ to deliver:
 - Two buckets exercised within one process produce two distinct
   WorkflowState histories that never bleed across the boundary.
 - Mutating one bucket's database after a switch leaves the other
-  bucket's reads unaffected (anti-tautology gate per legacy-step).
+  bucket's reads unaffected (anti-tautology gate per contract).
 """
 
 from __future__ import annotations

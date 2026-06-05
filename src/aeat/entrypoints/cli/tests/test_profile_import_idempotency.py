@@ -1,4 +1,4 @@
-"""Idempotency regression tests for `aeat config profile import` (legacy-step).
+"""Idempotency regression tests for `aeat config profile import` (contract).
 
 ADR D5 idempotency contract:
   - Re-importing the same bundle twice produces exactly ONE profile; the
@@ -77,7 +77,7 @@ def _create_minimal_profile_and_export(tmp_path: Path, bundle_path: Path) -> str
 
 
 # ---------------------------------------------------------------------------
-# legacy-step — import-twice produces one profile, not two
+# contract — import-twice produces one profile, not two
 # ---------------------------------------------------------------------------
 
 
@@ -125,8 +125,8 @@ def test_reimport_same_bundle_is_refused(tmp_path: Path) -> None:
         # Profile IDs are redacted at the CLI boundary; verify UUID
         # round-trip by reading the encrypted manifest directly through
         # the persistence layer.
-        from ...application.user_profile._orchestration import profile_storage_session
-        from ...application.user_profile._profile_repository import ProfileRepository
+        from ....application.user_profile._orchestration import profile_storage_session
+        from ....application.user_profile._profile_repository import ProfileRepository
 
         with profile_storage_session(exported_id):
             aggregate = ProfileRepository().load(exported_id)
@@ -134,7 +134,7 @@ def test_reimport_same_bundle_is_refused(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step — label collision with different UUID is refused
+# contract — label collision with different UUID is refused
 # ---------------------------------------------------------------------------
 
 
@@ -200,7 +200,7 @@ def test_label_collision_different_uuid_refused_even_with_explicit_label(tmp_pat
 
 
 # ---------------------------------------------------------------------------
-# legacy-step — anti-tautology proof: mutated profile_id creates a second profile
+# contract — anti-tautology proof: mutated profile_id creates a second profile
 # ---------------------------------------------------------------------------
 
 
@@ -254,7 +254,7 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
         assert r_mut.exit_code == 0, r_mut.output
         mut_payload = assert_public_profile_payload_redacted(r_mut.output, mutated_id)
         assert mut_payload["display_name"] == "idempotency-test-mutated"
-        from ...core import resolve_active_bucket_id
+        from ....core import resolve_active_bucket_id
 
         minted_label_import_id = resolve_active_bucket_id()
         assert minted_label_import_id is not None
@@ -274,8 +274,8 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
         # ``config_profile_import``'s D5 two-tier collision guard), so
         # the imported bucket's id does not equal ``mutated_id``; that
         # path is asserted via the display-name + list-output surfaces.
-        from ...application.user_profile._orchestration import profile_storage_session
-        from ...application.user_profile._profile_repository import ProfileRepository
+        from ....application.user_profile._orchestration import profile_storage_session
+        from ....application.user_profile._profile_repository import ProfileRepository
 
         with profile_storage_session(exported_id):
             original_aggregate = ProfileRepository().load(exported_id)

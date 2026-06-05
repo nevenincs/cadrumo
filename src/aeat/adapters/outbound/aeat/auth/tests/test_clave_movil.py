@@ -54,7 +54,7 @@ from .._providers import AuthProviderKind, ClaveMovilSessionDetail
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 if TYPE_CHECKING:
-    from ._authenticator import BrowserResponseLike
+    from .._authenticator import BrowserResponseLike
 
 _EXTERNAL = Settings.external_constants()
 _DOMAINS = _EXTERNAL.aeat.domains
@@ -724,7 +724,7 @@ class TestPostAuthLanding:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        from ._authenticator import AeatSession
+        from .._authenticator import AeatSession
 
         settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
@@ -1051,7 +1051,7 @@ class TestProbePersistedSession:
         browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
 
         async def run() -> None:
-            from ._authenticator import AeatLoginAssertionError
+            from .._authenticator import AeatLoginAssertionError
 
             with pytest.raises(AeatLoginAssertionError, match="no persisted"):
                 await provider.probe_persisted_session(browser_session=browser_session)
@@ -1075,8 +1075,8 @@ class TestProbePersistedSession:
 
         asyncio.run(seed())
 
-        from .....core import require_active_bucket_id
-        from .....core.auth_session_keys import aeat_auth_session_storage_state_path
+        from ......core import require_active_bucket_id
+        from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 
         storage_path = aeat_auth_session_storage_state_path(
             require_active_bucket_id(),
@@ -1174,7 +1174,7 @@ class TestResume:
         asyncio.run(run_resume())
 
 
-# ── legacy-step: auth waiting banner routes through structured logger ─────────────────
+# ── contract: auth waiting banner routes through structured logger ─────────────────
 
 
 def test_render_progress_banner_emits_via_logger_not_stdout(

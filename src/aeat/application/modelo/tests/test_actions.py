@@ -1,10 +1,10 @@
 """Real-behavior tests for _actions module-level surfaces.
 
-legacy-step: ``_IVA_LEDGER_EXEMPT_REGIMES`` uses ``IVARegime`` enum members rather
+contract: ``_IVA_LEDGER_EXEMPT_REGIMES`` uses ``IVARegime`` enum members rather
 than raw strings, so the frozenset membership check is typed at the schema
 boundary and cannot silently drift from the canonical enum.
 
-legacy-step: verification finding messages and next_action strings are routed
+contract: verification finding messages and next_action strings are routed
 through ``tr()`` so the operator-facing surface is localised.
 """
 
@@ -144,8 +144,8 @@ def test_workflow_period_resolves_modelo_303_quarter_from_registry_deadline_shap
 
 
 # ---------------------------------------------------------------------------
-# legacy-step/legacy-step — cross-casilla invariant violated: message is localised
-# legacy-step/legacy-step — cross-casilla invariant violated: next_action is localised
+# contract/contract — cross-casilla invariant violated: message is localised
+# contract/contract — cross-casilla invariant violated: next_action is localised
 # ---------------------------------------------------------------------------
 
 
@@ -199,7 +199,7 @@ def test_cross_casilla_invariant_next_action_is_localised() -> None:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step/legacy-step — registry-snapshot-unresolved finding is localised
+# contract/contract — registry-snapshot-unresolved finding is localised
 # ---------------------------------------------------------------------------
 
 
@@ -229,7 +229,7 @@ def test_registry_snapshot_unresolved_finding_is_localised() -> None:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step/legacy-step — DT12 reducción advisory message is localised
+# contract/contract — DT12 reducción advisory message is localised
 # ---------------------------------------------------------------------------
 
 
@@ -257,7 +257,7 @@ def test_dt12_reduccion_advisory_message_is_localised() -> None:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step/legacy-step — IVA wallet next_action is localised
+# contract/contract — IVA wallet next_action is localised
 # ---------------------------------------------------------------------------
 
 
@@ -268,7 +268,7 @@ def test_iva_wallet_blocking_finding_next_action_is_localised() -> None:
     'application.modelo.findings.iva_wallet_next_action' and must not be
     the old hardcoded English string.
     """
-    from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
+    from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 
     decision = IvaCompensationReconciliationDecision(
         target_year=2026,
@@ -294,7 +294,7 @@ def test_iva_wallet_blocking_finding_next_action_is_localised() -> None:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step/legacy-step — _iva_wallet_blocked_message uses tr(); exception carries translated_message
+# contract/contract — _iva_wallet_blocked_message uses tr(); exception carries translated_message
 # ---------------------------------------------------------------------------
 
 
@@ -323,9 +323,9 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key() -> None:
 
     This test exercises the raise site through _iva_wallet_blocked_message
     indirectly by constructing the exception the same way the raise site does
-    after legacy-step — with both the rendered message and the translated_message key.
+    after contract — with both the rendered message and the translated_message key.
     """
-    from ._actions import ModeloIvaWalletReconciliationBlocked
+    from .._actions import ModeloIvaWalletReconciliationBlocked
 
     decision = SimpleNamespace(divergence="filed_history_only", reason="Only filed history present.")
     rendered = _iva_wallet_blocked_message(decision)
@@ -378,12 +378,12 @@ def test_source_bound_casilla_override_error_is_localised() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Original legacy-step tests — IVA-regime enum surface
+# Original contract tests — IVA-regime enum surface
 # ---------------------------------------------------------------------------
 
 
 # ---------------------------------------------------------------------------
-# legacy-step -- WorkflowInputMismatchError raised and registered
+# contract -- WorkflowInputMismatchError raised and registered
 # ---------------------------------------------------------------------------
 
 
@@ -409,7 +409,7 @@ class TestWorkflowInputMismatchError:
 
     def test_matching_request_does_not_raise(self) -> None:
         """load_inputs with the correct modelo and workflow period returns inputs."""
-        from ._actions import workflow_period_for_work_unit
+        from .._actions import workflow_period_for_work_unit
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)
@@ -424,7 +424,7 @@ class TestWorkflowInputMismatchError:
 
     def test_mismatched_modelo_raises_workflow_input_mismatch_error(self) -> None:
         """load_inputs with a wrong modelo raises WorkflowInputMismatchError."""
-        from ._actions import workflow_period_for_work_unit
+        from .._actions import workflow_period_for_work_unit
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)
@@ -464,14 +464,14 @@ class TestWorkflowInputMismatchError:
 
     def test_error_is_core_validation_error_and_value_error(self) -> None:
         """WorkflowInputMismatchError is a CoreValidationError and ValueError subclass."""
-        from ...core.errors import CoreValidationError
+        from ....core.errors import CoreValidationError
 
         assert issubclass(WorkflowInputMismatchError, CoreValidationError)
         assert issubclass(WorkflowInputMismatchError, ValueError)
 
     def test_error_code_is_registered(self) -> None:
         """WorkflowInputMismatchError maps to a stable error code in the registry."""
-        from ...core.errors import get_registered_error_code
+        from ....core.errors import get_registered_error_code
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)
@@ -493,10 +493,10 @@ class TestWorkflowInputMismatchError:
 def test_iva_regime_enum_covers_all_wizard_choice_values() -> None:
     """All IVARegime members must appear in the wizard's IVA-regime choice list.
 
-    This cross-cuts the wizard ``_IVA_REGIME_CHOICE_VALUES`` derivation (legacy-step)
+    This cross-cuts the wizard ``_IVA_REGIME_CHOICE_VALUES`` derivation (contract)
     against the canonical enum so neither can drift independently.
     """
-    from ..wizard._commands import _IVA_REGIME_CHOICE_VALUES
+    from ...wizard._commands import _IVA_REGIME_CHOICE_VALUES
 
     enum_values = {m.value for m in IVARegime}
     choice_set = set(_IVA_REGIME_CHOICE_VALUES)
@@ -507,7 +507,7 @@ def test_iva_regime_enum_covers_all_wizard_choice_values() -> None:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step/legacy-step — missing_required_casilla finding message is localised
+# contract/contract — missing_required_casilla finding message is localised
 # ---------------------------------------------------------------------------
 
 
@@ -542,7 +542,7 @@ def test_missing_required_casilla_finding_message_changes_with_casilla_id() -> N
 
 
 # ---------------------------------------------------------------------------
-# legacy-step/legacy-step — DT12 advisory next_action is localised
+# contract/contract — DT12 advisory next_action is localised
 # ---------------------------------------------------------------------------
 
 
@@ -573,7 +573,7 @@ def test_dt12_reduccion_advisory_next_action_is_localised() -> None:
 def test_dt12_reduccion_advisory_next_action_differs_from_hardcoded_string() -> None:
     """next_action is no longer the old hardcoded English string.
 
-    After legacy-step the next_action is locale-catalogue-driven. The pre-legacy-step
+    After contract the next_action is locale-catalogue-driven. The pre-contract
     value was a specific English sentence; asserting it is gone proves
     the catalogue path is active.
     """
@@ -585,5 +585,5 @@ def test_dt12_reduccion_advisory_next_action_differs_from_hardcoded_string() -> 
     finding = _dt12_reduccion_advisory_finding(revision, casilla_values)
 
     assert finding is not None
-    # The pre-legacy-step hardcoded substring that should no longer appear.
+    # The pre-contract hardcoded substring that should no longer appear.
     assert "to aeat app modelo work calculate to auto-inject" not in finding.next_action

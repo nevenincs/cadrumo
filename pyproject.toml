@@ -270,7 +270,7 @@ convention = "google"
 # Bundled test modules colocated under src/aeat/. Docstring (D) rules are
 # audience-scoped out of the test surface (tests are excluded from autodoc
 # and interrogate too).
-"src/aeat/**/tests/test_*.py" = ["S101", "T20", "D"]
+"src/aeat/**/tests/**/*.py" = ["S101", "T20", "D"]
 "src/aeat/tests/**/*.py" = ["S101", "T20", "D"]
 "src/aeat/**/conftest.py" = ["D"]
 # Sphinx build configuration is tooling, not the documented package API.
@@ -362,7 +362,7 @@ convention = "google"
 "src/aeat/core/tests/test_setup_answers.py" = ["S603"]
 # `aeat_secret_store_backend="file"` names the backend enum value, not a
 # password literal.
-"src/aeat/tests/test_secure_sql.py" = ["S106"]
+"src/aeat/tests/secure_sql.py" = ["S106"]
 # ── Group G structural / domain-justified per-file-ignores ────────────────
 
 # Package __init__ files defer submodule imports below module-level helpers
@@ -468,8 +468,11 @@ convention = "google"
 "src/aeat/entrypoints/cli/tests/test_cold_start_wizard_registration.py" = ["S603"]
 "src/aeat/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py" = ["S603"]
 "src/aeat/entrypoints/cli/tests/test_lazy_command_tree.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py" = ["S603"]
 "src/aeat/entrypoints/cli/tests/test_root_fallback_write_guard.py" = ["S603"]
 "src/aeat/entrypoints/cli/tests/test_work_calculate_row_flag.py" = ["S603"]
+"src/aeat/application/user_profile/tests/test_lazy_boundary.py" = ["S603"]
+"src/aeat/domain/user_profile/tests/test_lazy_boundary.py" = ["S603"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 # Lock the project into pytest-only testing.

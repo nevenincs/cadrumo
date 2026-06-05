@@ -1,4 +1,4 @@
-"""Cross-modelo CLI calculation tests grounded in external oracle values (legacy-step/legacy-step).
+"""Cross-modelo CLI calculation tests grounded in external oracle values (contract/contract).
 
 Each test drives the real ``aeat`` CLI against an isolated real-session backend
 (``isolated_runtime_profile``) — no mocks, no unsecured-monkeypatch backend.

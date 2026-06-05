@@ -46,6 +46,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import tr
 from ....core.logging import default_log_file_path as _default_log_file_path
+from ....core.logging import get_logger as _get_logger
 from ....core.redaction import (
     CLI_BUCKET_ID_PLACEHOLDER,
     CLI_PROFILE_ID_PLACEHOLDER,
@@ -58,10 +59,13 @@ from .._command_suggestions import AeatTyperGroup as _AeatTyperGroup
 from .._common import _emit, _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from ._auth_diagnostics import auth_diagnostics_app
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
 
 if typing.TYPE_CHECKING:
     from ....domain.buckets import BucketEvent, BucketEventType
+
+_log = _get_logger(__name__)
 
 _wizard_create_command = _build_wizard_command(_get_setup_flow(), mode="create")
 _wizard_edit_command = _build_wizard_command(_get_setup_flow(), mode="edit")
@@ -80,11 +84,6 @@ profile_app = typer.Typer(
     cls=_AeatTyperGroup,
 )
 auth_app = typer.Typer(name="auth", help=tr("cli.config.auth.help"), no_args_is_help=True)
-auth_diagnostics_app = typer.Typer(
-    name="diagnostics",
-    help=tr("cli.config.auth.diagnostics.help", default="Inspect encrypted auth diagnostics."),
-    no_args_is_help=True,
-)
 apoderado_app = typer.Typer(
     name="apoderado",
     help=tr("cli.config.auth.apoderado.help", default="Manage apoderado configuration"),
@@ -269,6 +268,7 @@ def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
                 newlines_seen += block.count(b"\n")
             tail_bytes = b"".join(reversed(blocks))
     except OSError:
+        _log.debug("config repair logs could not read configured log file", exc_info=True)
         return ()
     text = tail_bytes.decode("utf-8", errors="replace")
     return tuple(redact_for_cli_output(line) for line in text.splitlines()[-count:])
@@ -523,6 +523,7 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
         )
         raise typer.Exit(code=2) from exc
     except Exception as exc:
+        _log.debug("config repair profile wrapped unexpected profile-record exception", exc_info=True)
         boundary = _ConfigBoundaryError(exc)
         payload = {
             "profile_id": profile_id,
@@ -963,6 +964,7 @@ def _assert_profile_record_present(ctx: typer.Context, *, profile_id: str, bucke
         _emit_profile_record_unreadable(ctx, profile_id=profile_id, bucket_id=bucket_id, label=label, error=exc)
         raise typer.Exit(code=2) from exc
     except Exception as exc:
+        _log.debug("config profile readiness wrapped unexpected profile-record exception", exc_info=True)
         boundary = _ConfigBoundaryError(exc)
         _emit_profile_record_unreadable(ctx, profile_id=profile_id, bucket_id=bucket_id, label=label, error=boundary)
         raise typer.Exit(code=2) from boundary
@@ -1107,6 +1109,7 @@ def config_profile_show(
         )
         raise typer.Exit(code=2) from exc
     except Exception as exc:
+        _log.debug("config profile show wrapped unexpected profile-record exception", exc_info=True)
         boundary = _ConfigBoundaryError(exc)
         _emit_profile_record_unreadable(
             ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label, error=boundary
@@ -1728,6 +1731,7 @@ def config_profile_import(
     except _AeatError:
         raise
     except Exception as exc:
+        _log.debug("config profile import rejected invalid portable bundle", exc_info=True)
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.import_invalid_bundle",
             context={"error": str(exc)},
@@ -1963,6 +1967,7 @@ def config_status(
     try:
         projection = project_answers(_get_setup_flow(), values)
     except ValidationError:
+        _log.debug("config profile status projection validation failed; reporting profile incomplete")
         result = ConfigStatusResult(
             active_profile=active_profile,
             profile_id=active_uuid,
@@ -2307,187 +2312,6 @@ def auth_clear(
             f"removed_sessions\t{result.removed_sessions}",
             f"cleared_workflow_state\t{result.cleared_workflow_state}",
             f"cleared_locks\t{result.cleared_locks}",
-        ),
-    )
-
-
-@auth_diagnostics_app.command(
-    "list",
-    help=tr("cli.config.auth.diagnostics.list_help", default="List encrypted Cl@ve auth diagnostics."),
-)
-def auth_diagnostics_list(
-    ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    """List encrypted auth diagnostics without revealing captured HTML/screenshots."""
-    _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import list_auth_diagnostics
-    from .._config_payloads import AuthDiagnosticsListResult
-
-    report = list_auth_diagnostics()
-    lines = [f"row_count\t{report.row_count}"]
-    for row in report.rows:
-        lines.append(
-            "\t".join(
-                (
-                    row.diagnostic_id or "-",
-                    row.captured_at.isoformat(),
-                    row.reason,
-                    f"mode={row.auth_mode or '-'}",
-                    f"identity_kind={row.identity_kind or '-'}",
-                    f"profile={row.active_profile_label or row.active_profile_id or '-'}",
-                    f"alignment={row.identity_alignment or '-'}",
-                    f"headless={row.headless if row.headless is not None else '-'}",
-                    f"phone_state={row.phone_state or '-'}",
-                    f"html={row.html_captured}",
-                    f"screenshot={row.screenshot_captured}",
-                )
-            )
-        )
-    list_result = AuthDiagnosticsListResult.model_validate(report.model_dump(mode="json"))
-    _emit_envelope(ctx, command="config.auth.diagnostics.list", result=list_result, lines=lines)
-
-
-@auth_diagnostics_app.command(
-    "show",
-    help=tr("cli.config.auth.diagnostics.show_help", default="Show one redacted encrypted auth diagnostic."),
-)
-def auth_diagnostics_show(
-    ctx: typer.Context,
-    diagnostic_id: str = typer.Argument(..., help=tr("cli.config.auth.diagnostics.id_help", default="Diagnostic id")),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    """Show one encrypted auth diagnostic by id with sensitive bodies redacted."""
-    _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import load_auth_diagnostic
-
-    detail = load_auth_diagnostic(diagnostic_id)
-    if detail is None:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.diagnostics.not_found",
-            context={"diagnostic_id": diagnostic_id},
-        )
-    from .._config_payloads import AuthDiagnosticsShowResult
-
-    reported_at = detail.phone_state_reported_at.isoformat() if detail.phone_state_reported_at is not None else ""
-    bool_value = _optional_bool_text
-    show_result = AuthDiagnosticsShowResult.model_validate(detail.model_dump(mode="json"))
-    _emit_envelope(
-        ctx,
-        command="config.auth.diagnostics.show",
-        result=show_result,
-        lines=(
-            f"diagnostic_id\t{detail.diagnostic_id or diagnostic_id}",
-            f"captured_at\t{detail.captured_at.isoformat()}",
-            f"reason\t{detail.reason}",
-            f"url\t{detail.url}",
-            f"auth_mode\t{detail.auth_mode}",
-            f"identity_kind\t{detail.identity_kind}",
-            f"headless\t{detail.headless if detail.headless is not None else ''}",
-            f"active_profile_id\t{detail.active_profile_id}",
-            f"active_profile_label\t{detail.active_profile_label}",
-            f"active_profile_registered\t{bool_value(detail.active_profile_registered)}",
-            f"profile_record_present\t{bool_value(detail.profile_record_present)}",
-            f"profile_tax_id_present\t{bool_value(detail.profile_tax_id_present)}",
-            f"profile_tax_id_fingerprint\t{detail.profile_tax_id_fingerprint}",
-            f"clave_identity_configured\t{bool_value(detail.clave_identity_configured)}",
-            f"clave_identity_fingerprint\t{detail.clave_identity_fingerprint}",
-            f"identity_alignment\t{detail.identity_alignment}",
-            f"dni_fecha_configured\t{bool_value(detail.dni_fecha_configured)}",
-            f"dni_fecha_fingerprint\t{detail.dni_fecha_fingerprint}",
-            f"nie_soporte_configured\t{bool_value(detail.nie_soporte_configured)}",
-            f"nie_soporte_fingerprint\t{detail.nie_soporte_fingerprint}",
-            f"certificate_path_configured\t{bool_value(detail.certificate_path_configured)}",
-            f"certificate_password_configured\t{bool_value(detail.certificate_password_configured)}",
-            f"certificate_file_present\t{bool_value(detail.certificate_file_present)}",
-            f"certificate_backend\t{detail.certificate_backend}",
-            f"certificate_path_fingerprint\t{detail.certificate_path_fingerprint}",
-            f"phone_state\t{detail.phone_state}",
-            f"phone_state_reported_at\t{reported_at}",
-            f"operator_report_commands\t{'; '.join(detail.operator_report_commands)}",
-            f"html_captured\t{detail.html_captured}",
-            f"screenshot_captured\t{detail.screenshot_captured}",
-            f"html_excerpt\t{detail.html_excerpt or ''}",
-        ),
-    )
-
-
-def _optional_bool_text(value: bool | None) -> str:
-    return "" if value is None else str(value)
-
-
-@auth_diagnostics_app.command(
-    "report",
-    help=tr(
-        "cli.config.auth.diagnostics.report_help",
-        default="Record the operator-observed Cl@ve app state for one auth diagnostic.",
-    ),
-)
-def auth_diagnostics_report(
-    ctx: typer.Context,
-    diagnostic_id: str = typer.Argument(..., help=tr("cli.config.auth.diagnostics.id_help", default="Diagnostic id")),
-    phone_state: str = typer.Option(
-        ...,
-        "--phone-state",
-        help=tr(
-            "cli.config.auth.diagnostics.phone_state_help",
-            default=(
-                "One of: app_prompted_and_accepted, app_prompted_not_accepted, "
-                "app_did_not_prompt, operator_did_not_check."
-            ),
-        ),
-    ),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    """Record the human-observed Cl@ve app state for a captured diagnostic."""
-    _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import AUTH_DIAGNOSTIC_PHONE_STATES, record_auth_diagnostic_phone_state
-
-    try:
-        result = record_auth_diagnostic_phone_state(diagnostic_id, phone_state)
-    except ValueError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.diagnostics.invalid_phone_state",
-            context={
-                "phone_state": phone_state,
-                "choices": ", ".join(AUTH_DIAGNOSTIC_PHONE_STATES),
-            },
-        ) from exc
-    if result is None:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.diagnostics.not_found",
-            context={"diagnostic_id": diagnostic_id},
-        )
-    from .._config_payloads import AuthDiagnosticsReportResult
-
-    report_result = AuthDiagnosticsReportResult(
-        diagnostic_id=result.diagnostic_id,
-        phone_state=result.phone_state,
-        reported_at=result.reported_at.isoformat(),
-    )
-    _emit_envelope(
-        ctx,
-        command="config.auth.diagnostics.report",
-        result=report_result,
-        lines=(
-            f"diagnostic_id\t{result.diagnostic_id}",
-            f"phone_state\t{result.phone_state}",
-            f"reported_at\t{result.reported_at.isoformat()}",
         ),
     )
 

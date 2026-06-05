@@ -61,7 +61,7 @@ def _skip_unless_drive_configured() -> None:
         pytest.skip("AEAT_LIVE_TESTS_ENABLED is not 1")
     if os.environ.get("AEAT_LIVE_TESTS_GOOGLE") != "1":
         pytest.skip("AEAT_LIVE_TESTS_GOOGLE is not 1")
-    from ....core.config import load_settings
+    from .....core.config import load_settings
 
     settings = load_settings()
     if settings.aeat_storage_provider_kind != "google_drive":
@@ -75,8 +75,8 @@ def _skip_unless_drive_configured() -> None:
 
 @contextmanager
 def _active_profile_storage_session() -> Iterator[None]:
-    from ....application.user_profile._orchestration import profile_storage_session
-    from ....core import resolve_active_bucket_id
+    from .....application.user_profile._orchestration import profile_storage_session
+    from .....core import resolve_active_bucket_id
 
     active = resolve_active_bucket_id()
     if active is None:

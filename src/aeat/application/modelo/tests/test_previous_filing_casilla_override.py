@@ -3,7 +3,7 @@
 M130 casilla 15 (Resultados negativos de trimestres anteriores) is bound via
 ``source = "previous_filing"``.  Before this fix the operator-supplied
 ``--casilla "15=2694"`` was silently zeroed (or raised a cryptic
-RegistryValidationError after legacy-plan-step hardening) because no upstream resolver
+RegistryValidationError after accepted contract hardening) because no upstream resolver
 populated the matching ``binding_values["modelo-130-resultados-negativos-anteriores"]``
 entry when working from a fresh bucket without local prior-quarter filings.
 
@@ -192,7 +192,7 @@ def test_casilla_15_binding_already_supplied_is_not_overwritten(repos) -> None:
     committed to a specific binding value and passing a conflicting casilla override
     is a mistake that should surface as an error, not be silently reconciled.
     """
-    from ...domain.calculations.registry import RegistryValidationError
+    from ....domain.calculations.registry import RegistryValidationError
 
     work_unit, wu_repo, cr_repo, bv_repo = _work_unit_3t(repos)
 

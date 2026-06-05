@@ -33,7 +33,7 @@ def test_revision_id_pinned_against_fully_populated_fixture() -> None:
     """Anti-tautology proof: pin the exact SHA-256 for a fully-populated
     derivation against a known-good hex string.
 
-    Staged for linkage legacy-plan-step (the planned collapse of
+    Staged for linkage accepted contract (the planned collapse of
     ``CalculationRevision.casilla_values`` into a derived ``@property``
     over the typed ``observations`` envelope). The collapse must
     preserve the hash domain — every already-persisted revision id
@@ -137,8 +137,8 @@ def test_observations_consistency_validator_accepts_matching_projection() -> Non
     must equal the projection of observations. Matching pair validates clean."""
     from datetime import UTC, datetime
 
-    from ..calculations.registry import CasillaObservation
-    from ._calculation_revision import CalculationRevision, CalculationRevisionState
+    from ...calculations.registry import CasillaObservation
+    from .._calculation_revision import CalculationRevision, CalculationRevisionState
 
     work_unit_id = "d" * 64
     casilla_values = {"100": Decimal("250.00"), "200": Decimal("-75.50")}
@@ -174,8 +174,8 @@ def test_observations_consistency_validator_rejects_drift() -> None:
 
     import pydantic
 
-    from ..calculations.registry import CasillaObservation
-    from ._calculation_revision import CalculationRevision, CalculationRevisionState
+    from ...calculations.registry import CasillaObservation
+    from .._calculation_revision import CalculationRevision, CalculationRevisionState
 
     work_unit_id = "e" * 64
     casilla_values = {"100": Decimal("250.00")}
@@ -207,7 +207,7 @@ def test_observations_consistency_validator_tolerates_empty_observations() -> No
     construct (no projection to compare against)."""
     from datetime import UTC, datetime
 
-    from ._calculation_revision import CalculationRevision, CalculationRevisionState
+    from .._calculation_revision import CalculationRevision, CalculationRevisionState
 
     work_unit_id = "f" * 64
     casilla_values = {"100": Decimal("250.00")}
@@ -272,7 +272,7 @@ def test_detail_rows_sort_key_handles_all_four_row_types() -> None:
     """Regression: sort key must work for all four row types (M184/M232 use nif,
     M349 uses nif_comunitario, M347 uses nif). This test verifies the sort key
     accessor correctly extracts the identifier field for each row type."""
-    from ._row_models import (
+    from .._row_models import (
         Modelo184MemberRow,
         Modelo232VinculadaRow,
         Modelo347ContraparteRow,

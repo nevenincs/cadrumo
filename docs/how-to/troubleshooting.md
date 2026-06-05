@@ -4,8 +4,7 @@ When a command refuses, the active profile won't load, or your stored data or
 registry looks wrong, the `aeat config repair` commands diagnose and fix your
 local state. Every check here runs locally and never contacts the Agencia
 Estatal de Administración Tributaria (AEAT), except the optional connectivity
-probe, which only checks reachability and reads nothing. You need `aeat`
-installed; if you don't have it yet, see [Get started](../getting-started.md).
+probe, which only checks reachability and reads nothing.
 
 ## Start with status
 
@@ -89,8 +88,8 @@ aeat config repair connectivity --target browser
 
 ## Where next
 
-- [Get started](../getting-started.md) - install the tool and run your first
-  filing.
+- [Quickstart: produce a modelo file](quickstart.md) - follow the first local
+  filing path.
 - [Set up your taxpayer profile](profile-setup.md) - create and switch profiles.
 - [Pipeline explanation](../explanation/index.md) - what the registry, secure
   storage, and workflow state are.

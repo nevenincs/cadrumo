@@ -169,11 +169,11 @@ def test_calculation_revision_observations_survive_encrypted_storage(
     drop them silently.
     """
 
-    from ..calculations.registry._bindings import CasillaObservation
-    from ..modelos._calculation_repository import (
+    from ...calculations.registry._bindings import CasillaObservation
+    from ...modelos._calculation_repository import (
         CalculationRevisionCatalogueRepository,
     )
-    from ..modelos._calculation_revision import (
+    from ...modelos._calculation_revision import (
         CalculationRevision,
         CalculationRevisionCatalogue,
         CalculationRevisionState,

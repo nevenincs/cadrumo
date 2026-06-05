@@ -33,7 +33,7 @@ def _scrubbing_filter_is_attached(log: logging.Logger) -> bool:
 def test_overview_logger_has_secret_scrubbing_filter() -> None:
     """The module-level logger in _overview carries SecretScrubbingFilter."""
 
-    from . import _overview
+    from .. import _overview
 
     assert _scrubbing_filter_is_attached(_overview.logger), (
         "SecretScrubbingFilter was not found on the overview logger or its root"
@@ -49,7 +49,7 @@ def test_overview_logger_scrubs_nif_in_log_record(caplog: pytest.LogCaptureFixtu
     already-scrubbed message text.
     """
 
-    from . import _overview
+    from .. import _overview
 
     nif = "12345678Z"
     redacted_marker = "<redacted>"
@@ -71,7 +71,7 @@ def test_overview_logger_scrubs_nif_in_log_record(caplog: pytest.LogCaptureFixtu
 def test_overview_logger_scrubs_nif_in_message_body(caplog: pytest.LogCaptureFixture) -> None:
     """NIF embedded directly in the message format string is also scrubbed."""
 
-    from . import _overview
+    from .. import _overview
 
     nif = "87654321X"
 

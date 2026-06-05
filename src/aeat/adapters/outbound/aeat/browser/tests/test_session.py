@@ -275,8 +275,8 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     from cryptography.x509.oid import NameOID
     from pydantic import SecretStr
 
-    from .....core.config import CertificateBackend
-    from ..auth import (
+    from ......core.config import CertificateBackend
+    from ...auth import (
         CERTIFICATE_CONTEXT_MARKER,
         CertificateBundle,
         CertificateContextProvisioner,

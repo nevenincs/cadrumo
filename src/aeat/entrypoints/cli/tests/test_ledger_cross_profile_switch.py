@@ -3,7 +3,7 @@
 Seeds two profiles (the Marta autonoma + the recargo retailer), imports a
 distinct statement into each while that profile's session is active, then
 re-activates each in turn and asserts its ledger surfaces only its own rows --
-the operator-facing cross-profile runtime-pegged ledger guarantee (legacy-plan).
+the operator-facing cross-profile runtime-pegged ledger guarantee (accepted contract).
 
 The active session is opened with ``profile_create_storage_span`` -- the same
 session primitive the ``aeat config profile switch`` verb drives; re-entering a

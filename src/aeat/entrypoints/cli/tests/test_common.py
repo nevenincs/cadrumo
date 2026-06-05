@@ -1,9 +1,9 @@
 """Tests for localized error surfaces in _common.py helpers.
 
-legacy-step / legacy-step: ``_draft_by_id`` raises a localized ``typer.BadParameter`` whose
+contract / contract: ``_draft_by_id`` raises a localized ``typer.BadParameter`` whose
 message is drawn from the locale catalogue — never a hard-coded f-string.
 
-legacy-step / legacy-step: ``_active_profile_or_exit`` emits localized error and next-step
+contract / contract: ``_active_profile_or_exit`` emits localized error and next-step
 values in both text and JSON channels through the real CLI runner when no
 active profile is present.
 """
@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 # ---------------------------------------------------------------------------
-# legacy-step / legacy-step — draft_id_not_found localized error
+# contract / contract — draft_id_not_found localized error
 # ---------------------------------------------------------------------------
 
 
@@ -72,7 +72,7 @@ def test_draft_by_id_error_message_contains_draft_id_interpolation(
 
 
 # ---------------------------------------------------------------------------
-# legacy-step / legacy-step — no_active_profile_error_value localized in text + JSON channels
+# contract / contract — no_active_profile_error_value localized in text + JSON channels
 # ---------------------------------------------------------------------------
 
 
@@ -84,7 +84,7 @@ def _sessionless_env(tmp_path: Path) -> Iterator[Path]:
 
 
 def test_active_profile_or_exit_locale_keys_resolve_to_real_strings() -> None:
-    """The locale catalogue provides non-placeholder values for both legacy-step keys."""
+    """The locale catalogue provides non-placeholder values for both contract keys."""
     error_value = tr("cli.common.errors.no_active_profile_error_value")
     next_value = tr("cli.common.next.create_profile_command")
 

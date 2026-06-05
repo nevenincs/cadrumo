@@ -219,33 +219,33 @@ class TestCLIHelpers:
 
     def test_compute_two_hijos_12_12_gives_2400(self) -> None:
         """Oracle: 2 × 12 meses → 2400."""
-        from ._deduccion_maternidad import compute_deduccion_maternidad_0611
+        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
 
         result = compute_deduccion_maternidad_0611([("0", 12), ("1", 12)])
         assert result == 2400
 
     def test_compute_6_and_12_gives_1800(self) -> None:
         """Oracle: 6 + 12 meses → 1800."""
-        from ._deduccion_maternidad import compute_deduccion_maternidad_0611
+        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
 
         result = compute_deduccion_maternidad_0611([("0", 6), ("1", 12)])
         assert result == 1800
 
     def test_compute_cap_at_1200(self) -> None:
         """Single hijo 12 meses → capped at 1200."""
-        from ._deduccion_maternidad import compute_deduccion_maternidad_0611
+        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
 
         assert compute_deduccion_maternidad_0611([("laia", 12)]) == 1200
 
     def test_compute_zero_meses_gives_zero(self) -> None:
         """Passing 0 meses must return 0, not a non-zero constant."""
-        from ._deduccion_maternidad import compute_deduccion_maternidad_0611
+        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
 
         assert compute_deduccion_maternidad_0611([("0", 0)]) == 0
 
     def test_compute_anti_tautology_delta(self) -> None:
         """Incrementing meses from 6 to 12 must change result by exactly 600."""
-        from ._deduccion_maternidad import compute_deduccion_maternidad_0611
+        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
 
         r6 = compute_deduccion_maternidad_0611([("0", 6)])
         r12 = compute_deduccion_maternidad_0611([("0", 12)])

@@ -75,7 +75,7 @@ def _stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
     # Clear the active-profile pointer after provisioning so the staged
     # profile is not reported as the active one; the torn-state tests
     # specifically test non-active torn profiles.
-    from ...application.user_profile._orchestration import logout_active_profile
+    from ....application.user_profile._orchestration import logout_active_profile
 
     with profile_create_storage_span(bucket_id):
         pass
@@ -187,8 +187,8 @@ def test_config_profile_create_refuses_manifest_only_profile(cli_runner: CliRunn
 
 
 def test_repair_profile_named_active_clear_active_clears_pointer(cli_runner: CliRunner, tmp_path: Path) -> None:
-    from ...application.user_profile._orchestration import _write_active_profile_pointer
-    from ...core._bucket_pointer_io import read_pointer
+    from ....application.user_profile._orchestration import _write_active_profile_pointer
+    from ....core._bucket_pointer_io import read_pointer
 
     _stage_bucket_manifest("operator", label="operator")
     _write_active_profile_pointer("operator")
@@ -201,7 +201,7 @@ def test_repair_profile_named_active_clear_active_clears_pointer(cli_runner: Cli
 
 
 def test_repair_profile_manifest_status_backfills_legacy_active_manifest(cli_runner: CliRunner) -> None:
-    from ...application.user_profile._orchestration import profile_storage_session
+    from ....application.user_profile._orchestration import profile_storage_session
 
     _seed("operator")
     root = load_settings().aeat_local_storage_root
@@ -308,7 +308,7 @@ def test_config_profile_create_quiet_without_flags_names_the_missing_flags(
 
 
 def test_config_profile_edit_refuses_missing_profile_without_creating_bucket(cli_runner: CliRunner) -> None:
-    from ...application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
 
     result = cli_runner.invoke(
         profile_app,
@@ -340,8 +340,8 @@ def test_config_profile_switch_emits_profile_activated_event(cli_runner: CliRunn
     captures workflow-state-level selection).
     """
 
-    from ...application.user_profile._orchestration import profile_storage_session
-    from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ....application.user_profile._orchestration import profile_storage_session
+    from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 
     _seed("operator")
     result = cli_runner.invoke(profile_app, ["switch", "operator"])
@@ -402,7 +402,7 @@ def test_config_profile_delete_tombstones_with_yes(cli_runner: CliRunner) -> Non
     result = cli_runner.invoke(profile_app, ["delete", "operator", "--yes"])
     assert result.exit_code == 0, result.output
     assert "status\ttombstoned" in result.output
-    from ...core import resolve_active_bucket_id
+    from ....core import resolve_active_bucket_id
 
     assert resolve_active_bucket_id() is None
 
@@ -429,7 +429,7 @@ def test_config_profile_switch_refuses_a_tombstoned_profile(cli_runner: CliRunne
     one with exit code 0.
     """
 
-    from ...core import resolve_active_bucket_id
+    from ....core import resolve_active_bucket_id
 
     _seed("operator")
     assert cli_runner.invoke(profile_app, ["delete", "operator", "--yes"]).exit_code == 0
@@ -518,7 +518,7 @@ def test_config_profile_duplicate_copies_to_new_id(cli_runner: CliRunner) -> Non
     assert f"source_profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert f"target_profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert "display_name\tSpouse" in result.output
-    from ...application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
 
     assert read_profile_bucket("Spouse") is not None
 
@@ -586,8 +586,8 @@ def test_show_and_status_do_not_contradict_on_a_freshly_created_profile(
 def test_config_profile_show_refuses_when_no_active_profile(cli_runner: CliRunner) -> None:
     # Clear the active-profile precedence chain (env + pointer) so the
     # resolver returns None and the show verb refuses.
-    from ...application.user_profile._orchestration import _clear_active_profile_pointer
-    from ...core.config import override_settings
+    from ....application.user_profile._orchestration import _clear_active_profile_pointer
+    from ....core.config import override_settings
 
     _clear_active_profile_pointer()
     with override_settings(aeat_active_profile=None):
@@ -688,7 +688,7 @@ def test_config_profile_status_exits_nonzero_for_dangling_pointer(cli_runner: Cl
     """``config profile status`` exits non-zero when the active profile
     has a dangling pointer (registered but no manifest bucket)."""
 
-    from ...application.user_profile._orchestration import _write_active_profile_pointer
+    from ....application.user_profile._orchestration import _write_active_profile_pointer
 
     # Write a pointer to a non-existent bucket so status sees dangling_pointer.
     _write_active_profile_pointer("phantom")
@@ -795,8 +795,8 @@ def test_profile_rename_is_label_only_and_keeps_uuid_directory_and_key(
     unchanged; only ``display_name`` on the record and ``label`` on
     the manifest move from A to B.
     """
-    from ...adapters.persistence.storage.sql.engine import dispose_engine
-    from ...application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
 
     runner = CliRunner()
     _create_via_cli(runner, "alpha")
@@ -834,9 +834,9 @@ def test_profile_rename_keeps_record_readable_under_unchanged_key(
     no re-key happens; ``profile show`` and the lifecycle service both
     still find the record, now carrying the new display label.
     """
-    from ...adapters.persistence.storage.sql.engine import dispose_engine
-    from ...application.user_profile._orchestration import build_lifecycle_service, profile_storage_session
-    from ...application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
+    from ....application.user_profile._orchestration import build_lifecycle_service, profile_storage_session
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
 
     runner = CliRunner()
     _create_via_cli(runner, "alice")
@@ -878,7 +878,7 @@ def test_profile_rename_refuses_a_label_taken_by_another_live_profile(
     _per_bucket_backend: Path,
 ) -> None:
     """``profile rename A B`` is refused when label B already belongs to a profile."""
-    from ...adapters.persistence.storage.sql.engine import dispose_engine
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     runner = CliRunner()
     # Both profiles are setup-only for the rename refusal test; use _seed so the
@@ -896,7 +896,7 @@ def test_profile_create_refuses_case_insensitive_duplicate_label(
     _per_bucket_backend: Path,
 ) -> None:
     """Display-name uniqueness is enforced case-insensitively across live profiles."""
-    from ...adapters.persistence.storage.sql.engine import dispose_engine
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     runner = CliRunner()
     _create_via_cli(runner, "operator")
@@ -936,8 +936,8 @@ def test_profile_import_label_lands_second_copy_under_new_name(
     lands the second copy under a new operator-facing name while still
     minting its own immutable UUID identity.
     """
-    from ...adapters.persistence.storage.sql.engine import dispose_engine
-    from ...application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
 
     runner = CliRunner()
     # Seed the source profile via the canonical path (no tax-id cross-scan issue).
@@ -995,9 +995,9 @@ def test_switch_to_surviving_profile_after_deleting_the_active_one(
     regression active. Before the fix it refused with ``no active bucket
     session`` — the very recovery command the refusal recommended.
     """
-    from ...adapters.persistence.storage.sql.engine import dispose_engine
-    from ...application.workflow._profile_bucket_scan import read_profile_bucket
-    from ...core import resolve_active_bucket_id
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....core import resolve_active_bucket_id
 
     runner = CliRunner()
     # Both profiles are setup for the switch/delete test; seed both so the
@@ -1036,8 +1036,8 @@ def test_first_switch_from_a_no_active_profile_state_succeeds(
     the pointer so no session resolves at root-callback time. ``switch``
     must still open its own session and activate the named profile.
     """
-    from ...adapters.persistence.storage.sql.engine import dispose_engine
-    from ...core import resolve_active_bucket_id
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
+    from ....core import resolve_active_bucket_id
 
     runner = CliRunner()
     _create_via_cli(runner, "solo")
@@ -1063,7 +1063,7 @@ def test_list_and_status_work_from_a_no_active_session_state(
     enumerates registered profiles and ``status`` reports the empty
     no-active-profile state instead of refusing.
     """
-    from ...adapters.persistence.storage.sql.engine import dispose_engine
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     runner = CliRunner()
     _create_via_cli(runner, "alpha")
@@ -1091,7 +1091,7 @@ def test_delete_active_profile_states_the_pointer_was_cleared(
     pointer. The result output must state the active profile was cleared
     and steer the operator at ``switch`` / ``create``.
     """
-    from ...adapters.persistence.storage.sql.engine import dispose_engine
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     runner = CliRunner()
     _create_via_cli(runner, "alpha")
@@ -1119,7 +1119,7 @@ def test_delete_non_active_profile_omits_the_cleared_pointer_notice(
     deleting an inactive profile leaves the active pointer untouched and
     must not emit the notice.
     """
-    from ...adapters.persistence.storage.sql.engine import dispose_engine
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     runner = CliRunner()
     # Both profiles are setup for the delete test; seed both so the wizard
@@ -1149,7 +1149,7 @@ def test_delete_unknown_profile_refuses_with_an_unknown_profile_message(
     able to tell the name does not exist — distinct from any
     session-state diagnostic.
     """
-    from ...adapters.persistence.storage.sql.engine import dispose_engine
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     runner = CliRunner()
     _create_via_cli(runner, "alpha")
@@ -1177,8 +1177,8 @@ def test_delete_valid_profile_with_no_active_session_succeeds(
     state must succeed — ``delete`` opens its own bucket session scoped
     to the target, it does not require one to already be open.
     """
-    from ...adapters.persistence.storage.sql.engine import dispose_engine
-    from ...application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
 
     runner = CliRunner()
     _create_via_cli(runner, "alpha")
@@ -1206,7 +1206,7 @@ def test_show_tombstoned_profile_is_session_context_independent(
     tombstoned`` — never an ``unknown profile`` refusal in one context
     and a full record in the other.
     """
-    from ...adapters.persistence.storage.sql.engine import dispose_engine
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     runner = CliRunner()
     # Both profiles are setup for the show/tombstone test; seed both so the

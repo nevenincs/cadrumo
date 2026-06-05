@@ -21,9 +21,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def _seed_active_profile(tax_id: str = "00000000T", activity: str = "design") -> None:
     """Seed an active profile through the profile application service."""
 
-    from ..domain.user_profile import UserProfileFact
-    from .user_profile._orchestration import register_active_profile
-    from .workflow._persistence import workflow_state_repository
+    from ...domain.user_profile import UserProfileFact
+    from ..user_profile._orchestration import register_active_profile
+    from ..workflow._persistence import workflow_state_repository
 
     repo = workflow_state_repository()
     facts = (
@@ -77,9 +77,9 @@ def test_config_create_then_config_show_round_trips_iva_regime(
         facts = {row["path"]: row["value"] for row in _facts_payload["facts"]}
         assert facts["iva.regime"] == "GENERAL"
 
-        from .user_profile import UserProfileLifecycleRepository
-        from .user_profile._orchestration import fact_value, profile_storage_session
-        from .workflow._profile_bucket_scan import read_profile_bucket
+        from ..user_profile import UserProfileLifecycleRepository
+        from ..user_profile._orchestration import fact_value, profile_storage_session
+        from ..workflow._profile_bucket_scan import read_profile_bucket
 
         # The bucket directory is named by the minted UUID; resolve it
         # from the operator label "default" carried in the manifest.

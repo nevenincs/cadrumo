@@ -616,7 +616,7 @@ def test_no_parallel_work_unit_model_outside_canonical_module() -> None:
     other module that declares a Pydantic class named
     ``WorkUnit`` competes with the canonical surface."""
 
-    from ...core.paths import PROJECT_ROOT
+    from ....core.paths import PROJECT_ROOT
 
     source_root = PROJECT_ROOT / "src" / "aeat"
     canonical = source_root / "domain" / "modelos" / "_work_unit.py"
@@ -638,7 +638,7 @@ def test_no_parallel_work_unit_storage_namespace() -> None:
     module referencing a competing namespace string is a shadow
     storage location."""
 
-    from ...core.paths import PROJECT_ROOT
+    from ....core.paths import PROJECT_ROOT
 
     source_root = PROJECT_ROOT / "src" / "aeat"
     canonical = source_root / "domain" / "modelos" / "_repository.py"
@@ -670,7 +670,7 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
     new display names so the audit trail captures the full transition.
     """
 
-    from ..buckets import (
+    from ...buckets import (
         BucketEventHistoryRepository,
         BucketEventType,
     )
@@ -718,7 +718,7 @@ def test_causante_ccaa_roundtrips_through_repository(repo: WorkUnitCatalogueRepo
     is not silently dropped at the persistence boundary.
     """
 
-    from ..contribuyente._ccaa import CCAA
+    from ...contribuyente._ccaa import CCAA
 
     unit = create_work_unit(
         bucket_id="default",
@@ -746,7 +746,7 @@ def test_causante_ccaa_does_not_affect_work_unit_identity(repo: WorkUnitCatalogu
     call is not overwritten.
     """
 
-    from ..contribuyente._ccaa import CCAA
+    from ...contribuyente._ccaa import CCAA
 
     first = create_work_unit(
         bucket_id="default",

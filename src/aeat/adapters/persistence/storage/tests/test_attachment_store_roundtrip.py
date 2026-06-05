@@ -147,8 +147,8 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) ->
 
     from sqlalchemy import select
 
-    from .sql._orm import SecureObjectRow
-    from .sql.session import session_scope
+    from ..sql._orm import SecureObjectRow
+    from ..sql.session import session_scope
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         engine = get_engine(profile.settings)
@@ -201,8 +201,8 @@ def test_attachment_manifest_envelope_metadata_drift_fails_closed(
 
     from sqlalchemy import select
 
-    from .sql._orm import SecureObjectRow
-    from .sql.session import session_scope
+    from ..sql._orm import SecureObjectRow
+    from ..sql.session import session_scope
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         engine = get_engine(profile.settings)
@@ -248,8 +248,8 @@ def test_malformed_attachment_manifest_payload_is_localized_for_all_read_paths(
 
     from sqlalchemy import select
 
-    from .sql._orm import SecureObjectRow
-    from .sql.session import session_scope
+    from ..sql._orm import SecureObjectRow
+    from ..sql.session import session_scope
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         engine = get_engine(profile.settings)

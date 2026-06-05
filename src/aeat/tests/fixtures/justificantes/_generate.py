@@ -32,7 +32,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
-from aeat.core.external_constants import load_external_constants
+from ....core.external_constants import UTF_8_ENCODING, load_external_constants
 
 
 @dataclass(frozen=True)
@@ -2824,7 +2824,7 @@ def _write_sidecar(pdf_path: Path, modelo: str, ejercicio: str, tax_id: str) -> 
         "warnings": [],
     }
     sidecar_path = pdf_path.with_suffix(".json")
-    sidecar_path.write_text(json.dumps(sidecar_data, indent=2), encoding="utf-8")
+    sidecar_path.write_text(json.dumps(sidecar_data, indent=2), encoding=UTF_8_ENCODING)
     print(f"wrote sidecar {sidecar_path}")
 
 

@@ -44,7 +44,11 @@ from ..auth._operator import test_operator_auth as probe_operator_auth
 from ..ledger import ManualLedgerTransactionCommand, create_manual_transaction
 from ..modelo._actions import create_work_unit, discard_work_unit
 from ..overview import build_overview_status_report
-from ..state_projection import ModeloReadinessRequest, _modelo_requires_ledger_preflight, build_operator_state_projection
+from ..state_projection import (
+    ModeloReadinessRequest,
+    _modelo_requires_ledger_preflight,
+    build_operator_state_projection,
+)
 from ..user_profile._testing import register_minimal_profile
 from ..workflow._models import WorkflowState
 from ..workflow._persistence import workflow_state_repository
@@ -88,7 +92,7 @@ def _ensure_operator_storage_span() -> None:
         return
     if _ACTIVE_STORAGE_STACK is None:
         raise RuntimeError("state projection test storage span is not active")
-    from .user_profile._orchestration import profile_create_storage_span
+    from ..user_profile._orchestration import profile_create_storage_span
 
     _ACTIVE_STORAGE_STACK.enter_context(profile_create_storage_span("operator"))
     _PROFILE_SPAN_OPEN = True
@@ -435,7 +439,7 @@ def test_auth_readiness_configured_is_coherent_with_health_summary() -> None:
     raw engineering English ``certificate path not configured``.
     """
 
-    from .auth._operator import configure_operator_auth
+    from ..auth._operator import configure_operator_auth
 
     _register_active_profile()
     configure_operator_auth("certificate")
@@ -470,7 +474,7 @@ def test_auth_readiness_drops_certificate_path_after_switching_provider(tmp_path
     active provider (persona-fleet finding G1).
     """
 
-    from .auth._operator import configure_operator_auth
+    from ..auth._operator import configure_operator_auth
 
     _register_active_profile()
     cert_file = tmp_path / "operator-cert.pfx"
@@ -498,7 +502,7 @@ def test_auth_readiness_health_severity_is_populated_for_a_configured_provider()
     finding G4).
     """
 
-    from .auth._operator import configure_operator_auth
+    from ..auth._operator import configure_operator_auth
 
     _register_active_profile()
     configure_operator_auth("clave_movil")

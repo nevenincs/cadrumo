@@ -24,8 +24,8 @@ from pathlib import Path
 
 import pytest
 
-from .... import __path__ as aeat_path
 from .. import ERROR_REGISTRY, AeatError, ErrorCategory, get_registered_error_code
+from . import __path__ as aeat_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

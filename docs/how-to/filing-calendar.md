@@ -22,7 +22,7 @@ Profile and census facts decide which modelos appear. If your taxpayer type,
 activity, Impuesto sobre el Valor Añadido (IVA) regime, or Censo registration
 details are wrong, the calendar can be wrong too. Fix those facts first with
 [Set up your taxpayer profile](profile-setup.md) or
-[Sync your taxpayer census (Censo)](censo-update.md).
+[Link Modelo 036 census information](censo-update.md).
 
 ## Before you start
 
@@ -158,7 +158,7 @@ For command flags and output fields, use [CLI reference](../cli/index.rst).
 
 ## Next steps
 
-- [Import and classify a bank statement](import-bank-statements.md)
+- [Work with transaction data](import-bank-statements.md)
 - [Quickstart: produce a modelo file](quickstart.md)
 - [How filings, work units, and calculation revisions fit together](filing-spine.md)
 - [CLI reference](../cli/index.rst)

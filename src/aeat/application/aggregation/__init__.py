@@ -67,6 +67,7 @@ from ._iva_ledger import (
     validate_iva_ledger_observation,
     validate_iva_ledger_observations,
 )
+from ._ledger_filing_snapshot import stale_filed_revisions
 from ._modelo_bindings import (
     LedgerIvaAggregationSourceResolver,
     LedgerRentaExpenseAggregationSourceResolver,
@@ -94,7 +95,6 @@ from ._registry_provider import (
     PerModeloRegistryBindingResolution,
     resolve_per_modelo_registry_binding_values,
 )
-from ._ledger_filing_snapshot import stale_filed_revisions
 from ._renta_ledger import (
     RentaLedgerAggregationIssue,
     RentaLedgerAggregationIssueReason,

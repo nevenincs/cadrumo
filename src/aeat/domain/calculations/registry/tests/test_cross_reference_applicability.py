@@ -140,7 +140,7 @@ def test_groi_349_binding_is_not_applicable_when_profile_is_not_intracomunitario
     arithmetic.
     """
 
-    from . import load_registry_tree
+    from .. import load_registry_tree
 
     modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(modelo for modelo in modelos if modelo.id == "349")
@@ -169,7 +169,7 @@ def test_groi_349_binding_is_not_applicable_when_profile_is_not_intracomunitario
 
 def _load_binding(modelo_id: str, revision_id: str, cross_reference_id: str) -> LiveCrossReferenceDecision:
 
-    from . import load_registry_tree
+    from .. import load_registry_tree
 
     modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(modelo for modelo in modelos if modelo.id == modelo_id)
@@ -215,7 +215,7 @@ def test_oss_369_filing_schedules_select_only_when_oss_enrolled() -> None:
     gate is then defense-in-depth at the binding layer.
     """
 
-    from . import applicable_filing_schedules, load_registry_tree
+    from .. import applicable_filing_schedules, load_registry_tree
 
     modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     modelo_369 = next(modelo for modelo in modelos if modelo.id == "369")
@@ -292,12 +292,12 @@ def test_user_profile_contract_rejects_typoed_predicate_field() -> None:
     deadline-window predicate validation.
     """
 
-    from ...user_profile._loader import load_user_profile_schema
-    from ...user_profile._registry_contract import (
+    from ....user_profile._loader import load_user_profile_schema
+    from ....user_profile._registry_contract import (
         UserProfileRegistryContractSeverity,
         validate_user_profile_registry_contract,
     )
-    from . import ModeloDefinition, ModeloRevision, load_registry_tree
+    from .. import ModeloDefinition, ModeloRevision, load_registry_tree
 
     modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     modelo_349 = next(modelo for modelo in modelos if modelo.id == "349")
@@ -349,7 +349,7 @@ def test_groi_349_cross_reference_declares_does_intracomunitario_predicate() -> 
     fails alongside any TOML edit.
     """
 
-    from . import load_registry_tree
+    from .. import load_registry_tree
 
     modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(modelo for modelo in modelos if modelo.id == "349")

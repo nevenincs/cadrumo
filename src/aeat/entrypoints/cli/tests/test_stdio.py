@@ -226,7 +226,7 @@ def test_non_help_invocation_without_columns_set() -> None:
         assert "COLUMNS" not in os.environ
 
 
-# --- _COLUMNS_ENV_VAR constant (legacy-step) ----------------------------------------
+# --- _COLUMNS_ENV_VAR constant (contract) ----------------------------------------
 
 
 def test_columns_env_var_constant_value() -> None:
@@ -263,7 +263,7 @@ def test_columns_env_var_used_for_env_read() -> None:
         assert os.environ[_COLUMNS_ENV_VAR] == wide
 
 
-# --- COLUMNS env-write scoping (legacy-step) ----------------------------------------
+# --- COLUMNS env-write scoping (contract) ----------------------------------------
 
 
 def test_columns_write_is_scoped_help_invocation() -> None:
@@ -313,7 +313,7 @@ def test_columns_write_not_scoped_on_non_help() -> None:
         assert os.environ[_COLUMNS_ENV_VAR] == before
 
 
-# --- SecretScrubbingFilter propagation via stdio logger (legacy-step) ----------------
+# --- SecretScrubbingFilter propagation via stdio logger (contract) ----------------
 
 
 class _CapturingHandler(logging.Handler):
@@ -339,7 +339,7 @@ def test_stdio_logger_records_are_scrubbed_after_configure_logging() -> None:
     logger, and ``configure_logging()`` installs ``SecretScrubbingFilter`` on
     root.  This test verifies that propagation contract end-to-end.
     """
-    from ...core.logging import configure_logging
+    from ....core.logging import configure_logging
 
     configure_logging()
 
@@ -373,7 +373,7 @@ def test_stdio_logger_scrubbing_filter_present_on_root_after_configure() -> None
     Verifies the structural precondition that makes NIF scrubbing effective for
     stdlib loggers (including the _stdio module's logger) that propagate to root.
     """
-    from ...core.logging import SecretScrubbingFilter, configure_logging
+    from ....core.logging import SecretScrubbingFilter, configure_logging
 
     configure_logging()
     root_logger = logging.getLogger()

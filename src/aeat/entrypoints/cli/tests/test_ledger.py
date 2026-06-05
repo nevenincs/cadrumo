@@ -1,6 +1,6 @@
 """CLI surface tests for the ``aeat app ledger`` command tree.
 
-legacy-step: Pin the id-prefix fallthrough locale path.
+contract: Pin the id-prefix fallthrough locale path.
 
 The catch-all branch in ``_resolve_id`` routes unknown
 ``TransactionIdPrefixError`` messages through the locale catalogue

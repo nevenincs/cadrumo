@@ -62,7 +62,7 @@ def _invoice() -> Invoice:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step — invoice_review_status returns are InvoiceReviewStatus enum members
+# contract — invoice_review_status returns are InvoiceReviewStatus enum members
 # ---------------------------------------------------------------------------
 
 
@@ -76,7 +76,7 @@ def test_invoice_review_status_pending_is_enum_member() -> None:
 
 def test_invoice_review_status_reviewed_is_enum_member() -> None:
     """invoice_review_status with non-empty review fields returns InvoiceReviewStatus.REVIEWED."""
-    from ..review import InvoiceReviewRecord
+    from ...review import InvoiceReviewRecord
 
     invoice = _invoice()
     review = InvoiceReviewRecord(invoice_id=invoice.invoice_id, fields={"base": "200"})
@@ -87,7 +87,7 @@ def test_invoice_review_status_reviewed_is_enum_member() -> None:
 
 def test_invoice_review_status_paid_is_enum_member() -> None:
     """invoice_review_status with payment.id set returns InvoiceReviewStatus.PAID."""
-    from ..review import InvoiceReviewRecord
+    from ...review import InvoiceReviewRecord
 
     invoice = _invoice()
     review = InvoiceReviewRecord(invoice_id=invoice.invoice_id, fields={"payment.id": "tx-001"})

@@ -5,7 +5,7 @@ Runs :func:`assert_secure_repository_contract` against a throwaway
 suite is honest before any of the 8 consumer test files migrate onto
 it. The dummy payload mirrors the shape used by the
 :mod:`test_secure_bound_repository` roundtrip test introduced in
-legacy-step: a frozen, strict, ``extra='forbid'`` Pydantic model with a
+contract: a frozen, strict, ``extra='forbid'`` Pydantic model with a
 required ``id`` field plus two further required fields whose
 deletion from the on-disk envelope must surface as either a
 :class:`pydantic.ValidationError` or strict inequality.

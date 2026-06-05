@@ -167,13 +167,6 @@ def describe_provider_operator_impact(description: AuthProviderDescription) -> s
     return tr("application.auth.provider_impact.generic_ready", label=description.label)
 
 
-from ._apoderado import (
-    ApoderadoConfiguration,
-    ApoderadoConfigurationNotSetError,
-    ApoderadoLiveCheckUnavailableError,
-    ApoderadoService,
-    ApoderadoStatus,
-)
 from ._acquisition_lock import (
     AuthAcquisitionLockedError,
     AuthAcquisitionLockRecord,
@@ -186,6 +179,13 @@ from ._acquisition_lock import (
     inspect_auth_acquisition_lock,
 )
 from ._actions import update_auth
+from ._apoderado import (
+    ApoderadoConfiguration,
+    ApoderadoConfigurationNotSetError,
+    ApoderadoLiveCheckUnavailableError,
+    ApoderadoService,
+    ApoderadoStatus,
+)
 from ._diagnostics import (
     AUTH_DIAGNOSTIC_PHONE_STATES,
     AuthDiagnosticDetail,

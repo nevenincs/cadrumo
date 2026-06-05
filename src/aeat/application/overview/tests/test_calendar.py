@@ -714,10 +714,10 @@ def test_calendar_excludes_non_applicable_modelos() -> None:
     autónomo. For an estimación-objetiva autónomo the regime axis makes
     Modelo 130 ``NOT_APPLICABLE`` and Modelo 131 ``APPLICABLE``. The
     calendar must surface only the ``APPLICABLE`` verdicts — a
-    ``NOT_APPLICABLE`` row shown as confidently due is the legacy-plan defect.
+    ``NOT_APPLICABLE`` row shown as confidently due is the accepted contract defect.
     """
 
-    from ...domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
+    from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 
     profile = _objetiva_autonomo()
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
@@ -742,8 +742,8 @@ def test_agenda_and_backlog_inherit_the_applicability_exclusion() -> None:
     exclusion must reach them too — neither may leak the NOT_APPLICABLE
     Modelo 130 as a confident due / late row for an objetiva autónomo."""
 
-    from ._agenda import build_overview_agenda
-    from ._backlog import build_overview_backlog
+    from .._agenda import build_overview_agenda
+    from .._backlog import build_overview_backlog
 
     profile = _objetiva_autonomo()
 
@@ -852,7 +852,7 @@ def test_agenda_across_year_boundary_without_windows_does_not_raise() -> None:
     valid tuple.
     """
 
-    from ._agenda import build_overview_agenda
+    from .._agenda import build_overview_agenda
 
     profile = _fully_enrolled_autonomo()
 
@@ -877,7 +877,7 @@ def test_backlog_across_year_boundary_without_windows_does_not_raise() -> None:
     uncovered 2027 year.
     """
 
-    from ._backlog import build_overview_backlog
+    from .._backlog import build_overview_backlog
 
     profile = _fully_enrolled_autonomo()
 
@@ -907,7 +907,7 @@ def test_undeclared_profile_message_resolves_to_real_localised_text() -> None:
     supported language (es / en / ca / hu).
     """
 
-    from ...core.i18n import tr
+    from ....core.i18n import tr
 
     key = "cli.overview.taxpayer_model_undeclared"
     for locale in ("es", "en", "ca", "hu"):
@@ -936,7 +936,7 @@ def test_undeclared_profile_message_resolves_to_real_localised_text() -> None:
 def _legal_entity() -> TaxpayerProfile:
     """A sociedad limitada — an Impuesto sobre Sociedades contribuyente."""
 
-    from ...domain.deadlines._models import LegalEntityForm
+    from ....domain.deadlines._models import LegalEntityForm
 
     return TaxpayerProfile(
         tax_id="B12345674",
@@ -961,7 +961,7 @@ def test_calendar_legal_entity_is_never_shown_an_irpf_cuota() -> None:
 
     Modelo 100 / 130 / 303 deadline windows are registered and the
     deadline engine still surfaces them (the registry applicability
-    conditions are not yet entity-type-aware — a legacy-plan registry gap).
+    conditions are not yet entity-type-aware — a accepted contract registry gap).
     The applicability filter in ``build_overview_calendar`` is what
     keeps the calendar correct: a sociedad limitada is an Impuesto
     sobre Sociedades contribuyente, so every IRPF modelo resolves
@@ -1036,7 +1036,7 @@ class _NoWindowsEngine:
         *,
         today: date | None = None,
     ) -> Schedule:
-        from ...domain.deadlines._errors import NoDeadlineWindowsError
+        from ....domain.deadlines._errors import NoDeadlineWindowsError
 
         raise NoDeadlineWindowsError(f"No registry deadline windows registered for year {year}")
 
@@ -1058,7 +1058,7 @@ class _CorruptRegistryEngine:
         *,
         today: date | None = None,
     ) -> Schedule:
-        from ...domain.deadlines._errors import ScheduleComputationError
+        from ....domain.deadlines._errors import ScheduleComputationError
 
         raise ScheduleComputationError(f"deadline registry validation failed for year {year}")
 
@@ -1098,7 +1098,7 @@ def test_calendar_propagates_genuine_registry_fault() -> None:
     lets the genuine fault surface so a corrupt registry is never
     hidden from the operator (round-4 #40)."""
 
-    from ...domain.deadlines._errors import (
+    from ....domain.deadlines._errors import (
         NoDeadlineWindowsError,
         ScheduleComputationError,
     )
@@ -1113,12 +1113,12 @@ def test_calendar_propagates_genuine_registry_fault() -> None:
 
 
 # ---------------------------------------------------------------------
-# legacy-step regressions — LEGAL_ENTITY calendar completeness
+# contract regressions — LEGAL_ENTITY calendar completeness
 # ---------------------------------------------------------------------
 
 
 def test_calendar_legal_entity_shows_modelo_202_pagos_fraccionados() -> None:
-    """legacy-step regression: M202 must appear in the calendar for a LEGAL_ENTITY profile.
+    """contract regression: M202 must appear in the calendar for a LEGAL_ENTITY profile.
 
     The M202 filing schedule uses ``field = "taxpayer.entity_type"`` as a profile
     condition, but TaxpayerProfile has ``entity_type`` directly — no ``.taxpayer``
@@ -1142,7 +1142,7 @@ def test_calendar_legal_entity_shows_modelo_202_pagos_fraccionados() -> None:
 
 
 def test_calendar_legal_entity_shows_modelo_200_impuesto_sociedades() -> None:
-    """legacy-step regression: M200 must appear for a LEGAL_ENTITY profile.
+    """contract regression: M200 must appear for a LEGAL_ENTITY profile.
 
     The M200 Impuesto sobre Sociedades annual declaration has ``filing_year = 2024``
     but its deadline window opens on 2025-07-01 and closes on 2025-07-25. A calendar

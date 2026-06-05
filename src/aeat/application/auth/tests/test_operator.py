@@ -157,7 +157,7 @@ def test_configure_operator_auth_refuses_when_no_active_profile_bucket(tmp_path:
     at the application service keeps the bootstrap order explicit and
     leaves no audit hole."""
 
-    from ._operator import AuthConfigureNoActiveBucketError
+    from .._operator import AuthConfigureNoActiveBucketError
 
     with (
         override_settings(aeat_local_storage_root=tmp_path / "no-active", aeat_active_profile=None),
@@ -180,7 +180,7 @@ def test_configure_operator_auth_reserved_provider_emits_no_event() -> None:
     ADR. Surfacing the refusal must precede every persisted side
     effect."""
 
-    from ._operator import AuthProviderReservedError
+    from .._operator import AuthProviderReservedError
 
     workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
     state_before = workflow_state_repository().load()

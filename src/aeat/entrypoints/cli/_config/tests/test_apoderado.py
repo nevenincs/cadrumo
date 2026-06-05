@@ -5,8 +5,8 @@ import pytest
 from typer.testing import CliRunner
 
 from .....tests.secure_sql import isolated_profile_storage_root
-from ... import app as root_app
 from ..._errors import CliRefusedBoundaryError
+from .. import app as root_app
 from ..__init__ import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -60,7 +60,7 @@ def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) 
     label-based ``read_profile_bucket`` resolver. This exercises the
     normal active-profile path the no-active-profile test cannot reach.
     """
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
+    from .....adapters.persistence.storage.sql.engine import dispose_engine
 
     runner = CliRunner()
     create = runner.invoke(

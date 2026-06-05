@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_apoderamientos_singleton_loads_real_catalogue() -> None:
-    from ....domain.auth.apoderamientos._catalogue import ApoderamientosCatalogue
+    from .....domain.auth.apoderamientos._catalogue import ApoderamientosCatalogue
 
     repo = ApoderamientosRepository()
 
@@ -34,7 +34,7 @@ def test_apoderamientos_singleton_loads_real_catalogue() -> None:
 
 
 def test_user_profile_singleton_loads_real_schema() -> None:
-    from ....domain.user_profile._schema import ProfileSchemaDefinition
+    from .....domain.user_profile._schema import ProfileSchemaDefinition
 
     repo = UserProfileSchemaRepository()
 
@@ -50,7 +50,7 @@ def test_user_profile_singleton_loads_real_schema() -> None:
 
 
 def test_topics_singleton_loads_real_catalogue() -> None:
-    from ...topics import TopicCatalogue
+    from ....topics import TopicCatalogue
 
     repo = TopicCatalogueRepository()
 
@@ -82,7 +82,7 @@ def test_iva_rate_table_singleton_loads_real_mapping() -> None:
 
 
 def test_legal_parameters_singleton_loads_real_mapping() -> None:
-    from ....domain.calculations.registry._schema import LegalParameter
+    from .....domain.calculations.registry._schema import LegalParameter
 
     repo = LegalParameterRepository()
 

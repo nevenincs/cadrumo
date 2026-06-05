@@ -27,13 +27,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _persist_original_draft(draft: ModeloDraft) -> None:
-    from ...domain.filing import ModeloDraftRepository
+    from ....domain.filing import ModeloDraftRepository
 
     ModeloDraftRepository().save(draft)
 
 
 def _persisted_amendment_ids() -> tuple[str, ...]:
-    from ...domain.filing import ModeloAmendmentRepository
+    from ....domain.filing import ModeloAmendmentRepository
 
     return ModeloAmendmentRepository().list_amendment_ids()
 

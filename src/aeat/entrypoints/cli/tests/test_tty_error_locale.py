@@ -1,4 +1,4 @@
-"""Real-behaviour tests for NonTtyRefusedError locale resolution (legacy-step).
+"""Real-behaviour tests for NonTtyRefusedError locale resolution (contract).
 
 Verifies that :class:`NonTtyRefusedError` does NOT set ``error.args[0]``
 (which would short-circuit the CLI renderer before reaching the registry
@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 # ---------------------------------------------------------------------------
-# legacy-step-A: args is empty — locale resolver is not short-circuited
+# contract-A: args is empty — locale resolver is not short-circuited
 # ---------------------------------------------------------------------------
 
 
@@ -53,7 +53,7 @@ def test_non_tty_refused_error_blank_suggestion_stripped() -> None:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step-B: locale key resolves to real operator-facing copy
+# contract-B: locale key resolves to real operator-facing copy
 # ---------------------------------------------------------------------------
 
 

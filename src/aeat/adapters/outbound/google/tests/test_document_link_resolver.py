@@ -1,4 +1,4 @@
-"""Document-link resolution under the minimal-scope posture (follow-up legacy-step).
+"""Document-link resolution under the minimal-scope posture (follow-up contract).
 
 The integration deliberately requests only the non-sensitive ``drive.file``
 scope. This gate locks the resolver's contract offline, with no network:

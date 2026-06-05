@@ -76,7 +76,7 @@ def _snapshot_for_revision(
     revision: ModeloRevision,
 ) -> RegistrySnapshot:
     """Build a minimal snapshot for a given revision without running integrity checks."""
-    from ._snapshot import _build_validated_snapshot
+    from .._snapshot import _build_validated_snapshot
 
     filing_year = revision.period_selector.year_from or 2024
     period = next(iter(revision.period_selector.periods))
@@ -177,7 +177,7 @@ def _minimal_casilla(casilla_id: str = "01") -> CasillaDefinition:
 
 
 def _minimal_workbook_ref(source_ref: str = _DUMMY_SOURCE_ID) -> WorkbookParityReference:
-    from ._schema import WorkbookParityReference
+    from .._schema import WorkbookParityReference
 
     return WorkbookParityReference(
         id="wp.test",
@@ -236,7 +236,7 @@ def _minimal_revision(
     export_layouts: tuple[ExportLayoutDefinition, ...] = (),
     deadline_windows: tuple[DeadlineWindowDefinition, ...] = (),
 ) -> ModeloRevision:
-    from ._schema import PeriodSelector
+    from .._schema import PeriodSelector
 
     workbook_ref = extra_workbook_ref or _minimal_workbook_ref()
     casillas = casillas or (_minimal_casilla(),)
@@ -790,8 +790,8 @@ def test_config_repair_report_includes_registry_integrity_check(tmp_path) -> Non
     so the test runs inside a real active-profile storage runtime to
     satisfy the encrypted-column decrypt path.
     """
-    from ....application.diagnostics import build_config_repair_report
-    from ....tests.secure_sql import isolated_runtime_profile
+    from .....application.diagnostics import build_config_repair_report
+    from .....tests.secure_sql import isolated_runtime_profile
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         report = build_config_repair_report()
@@ -814,8 +814,8 @@ def test_informative_modelo_with_formula_fails_validation() -> None:
     revision of an informative modelo and rejects formulas, relations, and
     non-manual/non-informational casillas.
     """
-    from . import RegistryValidator
-    from ._schema import FormulaDefinition, FormulaExpression
+    from .. import RegistryValidator
+    from .._schema import FormulaDefinition, FormulaExpression
 
     formula = FormulaDefinition(
         id="test.formula",
@@ -838,7 +838,7 @@ def test_informative_modelo_with_formula_fails_validation() -> None:
 
 def test_informative_modelo_with_relation_fails_validation() -> None:
     """An informative modelo that declares a cross-model relation raises RegistryValidationError."""
-    from . import RegistryValidator
+    from .. import RegistryValidator
 
     relation = RelationDefinition(
         id="test.relation",
@@ -894,7 +894,7 @@ def test_same_number_distinct_segmento_casillas_validate() -> None:
     (segmento, number) identity pairs (DP200014, 00562) and
     (DP200032, 00562) are unique and the validator must accept them.
     """
-    from . import RegistryValidator
+    from .. import RegistryValidator
 
     liquidacion = _segmented_casilla("DP200014:00562", "00562", "DP200014")
     ecpn = _segmented_casilla("DP200032:00562", "00562", "DP200032")
@@ -914,7 +914,7 @@ def test_single_segment_duplicate_number_collision_fails() -> None:
     pair degrades to (None, '00562') and the duplicate is reported with
     the bare-number message, exactly as the prior duplicate-id check did.
     """
-    from . import RegistryValidator
+    from .. import RegistryValidator
 
     first = _segmented_casilla("00562", "00562", None)
     second = _segmented_casilla("00562-alt", "00562", None)
@@ -931,7 +931,7 @@ def test_same_segmento_duplicate_number_collision_fails() -> None:
     unique; the (segmento, number) pair (DP200014, 00562) declared twice
     is a duplicate and the validator reports it segment-qualified.
     """
-    from . import RegistryValidator
+    from .. import RegistryValidator
 
     first = _segmented_casilla("DP200014:00562", "00562", "DP200014")
     second = _segmented_casilla("DP200014:00562-alt", "00562", "DP200014")
@@ -952,8 +952,8 @@ def test_single_segment_bare_number_reference_resolves() -> None:
     expression reads that casilla and whose target is a computed casilla
     must validate with no unknown-casilla failure.
     """
-    from ._schema import FormulaDefinition, FormulaExpression
-    from ._validate import RegistryValidator
+    from .._schema import FormulaDefinition, FormulaExpression
+    from .._validate import RegistryValidator
 
     input_casilla = _segmented_casilla("01", "01", None)
     computed_casilla = _segmented_casilla("02", "02", None).model_copy(
@@ -986,8 +986,8 @@ def test_ambiguous_cross_segment_bare_number_reference_does_not_resolve() -> Non
     forcing the formula to name the intended occurrence by its
     segment-qualified id.
     """
-    from ._schema import FormulaDefinition, FormulaExpression
-    from ._validate import RegistryValidator
+    from .._schema import FormulaDefinition, FormulaExpression
+    from .._validate import RegistryValidator
 
     liquidacion = _segmented_casilla("DP200014:00562", "00562", "DP200014")
     ecpn = _segmented_casilla("DP200032:00562", "00562", "DP200032")
@@ -1026,8 +1026,8 @@ def test_bare_number_reference_resolves_when_id_is_segment_qualified() -> None:
     unambiguous within the revision, so it resolves within its segment
     context without the formula having to repeat the segment qualifier.
     """
-    from ._schema import FormulaDefinition, FormulaExpression
-    from ._validate import RegistryValidator
+    from .._schema import FormulaDefinition, FormulaExpression
+    from .._validate import RegistryValidator
 
     sole_occurrence = _segmented_casilla("DP200014:00562", "00562", "DP200014")
     target_casilla = _segmented_casilla("DP200014:00999", "00999", "DP200014").model_copy(
@@ -1063,8 +1063,8 @@ def test_segment_qualified_reference_resolves_across_segments() -> None:
     the intended Liquidacion occurrence and produces no unknown-casilla
     failure.
     """
-    from ._schema import FormulaDefinition, FormulaExpression
-    from ._validate import RegistryValidator
+    from .._schema import FormulaDefinition, FormulaExpression
+    from .._validate import RegistryValidator
 
     liquidacion = _segmented_casilla("DP200014:00562", "00562", "DP200014")
     ecpn = _segmented_casilla("DP200032:00562", "00562", "DP200032")
@@ -1220,7 +1220,7 @@ def test_revision_without_manifest_passes_completeness_gate() -> None:
     revision that declares one casilla and no manifest must produce zero
     completeness-gate failures.
     """
-    from ._validate import RegistryValidator
+    from .._validate import RegistryValidator
 
     revision = _minimal_revision(casillas=(_minimal_casilla("01"),))
     modelo = _minimal_modelo(revision)
@@ -1235,7 +1235,7 @@ def test_completeness_gate_passes_when_manifest_required_subset_of_declared() ->
     revision declares exactly that casilla, so the required set is a
     subset of the declared set and the gate raises nothing.
     """
-    from ._validate import RegistryValidator
+    from .._validate import RegistryValidator
 
     casilla = _minimal_casilla("01")
     manifest = _completeness_manifest((CalculationCompletenessCasilla(number="01"),))
@@ -1254,7 +1254,7 @@ def test_completeness_gate_passes_when_revision_declares_extra_accounting_casill
     The extra casilla must NOT red the gate — a modelo can clear the gate
     without an exhaustive full-Diseño backfill.
     """
-    from ._validate import RegistryValidator
+    from .._validate import RegistryValidator
 
     manifest = _completeness_manifest((CalculationCompletenessCasilla(number="01"),))
     revision = _minimal_revision(casillas=(_minimal_casilla("01"), _minimal_casilla("02"))).model_copy(
@@ -1272,7 +1272,7 @@ def test_completeness_gate_fails_on_missing_required_casilla() -> None:
     '02' but the revision declares only '01'. The completeness gate must
     report the missing required '02' as a hard RegistryValidationError.
     """
-    from ._validate import RegistryValidator
+    from .._validate import RegistryValidator
 
     manifest = _completeness_manifest(
         (CalculationCompletenessCasilla(number="01"), CalculationCompletenessCasilla(number="02"))
@@ -1304,7 +1304,7 @@ def test_completeness_gate_fails_on_mis_segmented_required_casilla() -> None:
     the manifest, is NOT separately reported — the refocused gate's
     subset semantics never red an unrequested declared casilla.
     """
-    from ._validate import RegistryValidator
+    from .._validate import RegistryValidator
 
     declared = _segmented_casilla("DP200014:00562", "00562", "DP200014")
     manifest = _completeness_manifest((CalculationCompletenessCasilla(number="00562", segmento="DP200032"),))
@@ -1334,7 +1334,7 @@ def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
     `legal_refs` / `source_refs` provenance, and the gate enforces that
     independently of the schema-level field constraint.
     """
-    from ._validate import RegistryValidator
+    from .._validate import RegistryValidator
 
     ungrounded = CasillaDefinition.model_construct(
         id="01",
@@ -1366,8 +1366,8 @@ def test_filing_modelo_with_formula_passes_invariant() -> None:
     FormulaDefinition does not satisfy.  The invariant under test is solely concerned
     with calculation_class discrimination.
     """
-    from ._schema import FormulaDefinition, FormulaExpression
-    from ._validate_revision_rules import validate_informative_class_invariant
+    from .._schema import FormulaDefinition, FormulaExpression
+    from .._validate_revision_rules import validate_informative_class_invariant
 
     formula = FormulaDefinition(
         id="test.formula",

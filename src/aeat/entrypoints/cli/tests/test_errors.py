@@ -1,4 +1,4 @@
-"""Real-behaviour tests for cast-replacement helpers in :mod:`_errors` (legacy-step, legacy-step).
+"""Real-behaviour tests for cast-replacement helpers in :mod:`_errors` (contract, contract).
 
 Verifies:
 
@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 # ---------------------------------------------------------------------------
-# legacy-step: TypeGuard narrowing for valid / invalid callables
+# contract: TypeGuard narrowing for valid / invalid callables
 # ---------------------------------------------------------------------------
 
 

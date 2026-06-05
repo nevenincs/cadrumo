@@ -79,7 +79,7 @@ _COTEJO_DOCUMENT_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.cotejo_document}"
 _REGISTER_DOWNLOAD_URL = f"{_AEAT.domains.www6}{_DECLARATIONS_LISTING_BASE_PATH}/zkau?dtid=z_test&cmd_0=download"
 
 if TYPE_CHECKING:
-    from ..auth._authenticator import AeatSession
+    from ...auth._authenticator import AeatSession
 
 
 @pytest.fixture(autouse=True)
@@ -1764,7 +1764,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
 
 
 # ---------------------------------------------------------------------------
-# legacy-step: empty-NIF raise carries translated_message (offline)
+# contract: empty-NIF raise carries translated_message (offline)
 # ---------------------------------------------------------------------------
 
 
@@ -1777,12 +1777,12 @@ def _whitespace_nif_session() -> AeatSession:
     """
     from datetime import timedelta
 
-    from ..auth._authenticator import (
+    from ...auth._authenticator import (
         AeatSession,
         CertificateSessionDetail,
         HandshakeResult,
     )
-    from ..auth._providers import AuthProviderKind
+    from ...auth._providers import AuthProviderKind
 
     now = datetime(2026, 5, 28, 12, 0, 0, tzinfo=UTC)
     return AeatSession(
@@ -1807,15 +1807,15 @@ def _whitespace_nif_session() -> AeatSession:
 
 
 def test_capture_filed_declaration_empty_nif_carries_translated_message() -> None:
-    """legacy-step-A: capture_filed_declaration_observation raises SedeNavigationError with
+    """contract-A: capture_filed_declaration_observation raises SedeNavigationError with
     translated_message when AeatSession.identity_nif is whitespace-only."""
     import asyncio
 
-    from ._declarations import (
+    from .._declarations import (
         Declaracion,
         capture_filed_declaration_observation,
     )
-    from ._errors import SedeNavigationError
+    from .._errors import SedeNavigationError
 
     session = _whitespace_nif_session()
     declaration = Declaracion(
@@ -1840,8 +1840,8 @@ def test_capture_filed_declaration_empty_nif_carries_translated_message() -> Non
 
 
 def test_capture_filed_declaration_empty_nif_locale_key_resolves_to_real_copy() -> None:
-    """legacy-step-B: the empty-identity-nif locale key resolves to non-placeholder copy."""
-    from .....core.i18n import tr
+    """contract-B: the empty-identity-nif locale key resolves to non-placeholder copy."""
+    from ......core.i18n import tr
 
     resolved = tr("adapters.sede.errors.empty_identity_nif")
     assert "adapters.sede.errors.empty_identity_nif" not in resolved

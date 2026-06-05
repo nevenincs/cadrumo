@@ -200,7 +200,7 @@ def test_cli_balance_verb_text_output_lines(
 
 
 # ---------------------------------------------------------------------------
-# legacy-step: iva-wallet seed verb
+# contract: iva-wallet seed verb
 # ---------------------------------------------------------------------------
 
 
@@ -213,8 +213,8 @@ def _store_profile_with_nif(nif: str) -> None:
     """
     from datetime import UTC, datetime
 
-    from ...application.user_profile import UserProfileLifecycleRepository
-    from ...domain.user_profile import UserProfileFact, UserProfileRecord
+    from ....application.user_profile import UserProfileLifecycleRepository
+    from ....domain.user_profile import UserProfileFact, UserProfileRecord
 
     _created_at = datetime(2025, 1, 1, 12, 0, tzinfo=UTC)
     UserProfileLifecycleRepository(bucket_id="seed-test").save(
@@ -483,8 +483,8 @@ def _seed_full_autónomo_profile_for_guidance(bucket_id: str) -> None:
     """Persist a minimal autónomo profile sufficient for M303 work-unit applicability."""
     from datetime import UTC, datetime
 
-    from ...application.user_profile import UserProfileLifecycleRepository
-    from ...domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+    from ....application.user_profile import UserProfileLifecycleRepository
+    from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 
     _created_at = datetime(2024, 1, 1, 12, 0, tzinfo=UTC)
     UserProfileLifecycleRepository(bucket_id=bucket_id).save(

@@ -250,7 +250,7 @@ def test_real_local_filesystem_provider_satisfies_protocol(tmp_path: object) -> 
 
     from pathlib import Path
 
-    from ._local import LocalFileSystemProvider
+    from .._local import LocalFileSystemProvider
 
     provider = LocalFileSystemProvider(Path(str(tmp_path)) / "vault")
     assert isinstance(provider, StorageProvider)

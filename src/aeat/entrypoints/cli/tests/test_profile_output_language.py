@@ -46,10 +46,10 @@ def _isolate(tmp_path: Path) -> None:
 def test_config_profile_create_writes_profile_output_language(
     tmp_path: Path,
 ) -> None:
-    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ...application.workflow._persistence import workflow_state_repository
-    from ...core import resolve_active_bucket_id
-    from ...core.config import override_settings
+    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ....application.workflow._persistence import workflow_state_repository
+    from ....core import resolve_active_bucket_id
+    from ....core.config import override_settings
 
     _isolate(tmp_path)
 
@@ -83,7 +83,7 @@ def test_config_profile_create_writes_profile_output_language(
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None
-        from ...application.user_profile._orchestration import fact_value
+        from ....application.user_profile._orchestration import fact_value
 
         assert fact_value(record, "preferences.output_language") == "en"
         profile_id = record.profile_id
@@ -102,8 +102,8 @@ def test_config_profile_create_writes_profile_output_language(
 def test_config_profile_create_validates_profile_output_language(
     tmp_path: Path,
 ) -> None:
-    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ...application.workflow._persistence import workflow_state_repository
+    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ....application.workflow._persistence import workflow_state_repository
 
     _isolate(tmp_path)
     valid_result = _invoke(
@@ -146,7 +146,7 @@ def test_config_profile_create_validates_profile_output_language(
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None
-        from ...application.user_profile._orchestration import fact_value
+        from ....application.user_profile._orchestration import fact_value
 
         assert fact_value(record, "preferences.output_language") == "ca"
         assert invalid_result.exit_code != 0
@@ -170,9 +170,9 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite(
     left exactly as stored.
     """
 
-    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ...application.user_profile._orchestration import fact_value
-    from ...application.workflow._persistence import workflow_state_repository
+    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ....application.user_profile._orchestration import fact_value
+    from ....application.workflow._persistence import workflow_state_repository
 
     _isolate(tmp_path)
 
@@ -328,9 +328,9 @@ def test_env_output_language_honored_when_creating_profile_with_accept_defaults(
     dict before the catalogue-default seeding runs, so the env var wins.
     """
 
-    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ...application.user_profile._orchestration import fact_value
-    from ...application.workflow._persistence import workflow_state_repository
+    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ....application.user_profile._orchestration import fact_value
+    from ....application.workflow._persistence import workflow_state_repository
 
     _isolate(tmp_path)
 
@@ -367,8 +367,8 @@ def test_env_output_language_honored_when_creating_profile_with_accept_defaults(
     )
 
     # Verify via the repository as well (not just the CLI show surface).
-    from ...core import resolve_active_bucket_id
-    from ...core.config import override_settings
+    from ....core import resolve_active_bucket_id
+    from ....core.config import override_settings
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None

@@ -204,7 +204,7 @@ class TestActionableMessages:
     """
 
     def test_nif_checksum_message_names_correct_letter(self) -> None:
-        from ..errors import resolve_error_message
+        from ...errors import resolve_error_message
 
         with pytest.raises(IdentityError) as excinfo:
             validate_identity("12345678A")
@@ -213,7 +213,7 @@ class TestActionableMessages:
         assert "Z" in message
 
     def test_nie_checksum_message_names_correct_letter(self) -> None:
-        from ..errors import resolve_error_message
+        from ...errors import resolve_error_message
 
         with pytest.raises(IdentityError) as excinfo:
             validate_identity("X1234567Z")
@@ -222,7 +222,7 @@ class TestActionableMessages:
         assert "L" in message
 
     def test_malformed_nif_message_states_expected_shape(self) -> None:
-        from ..errors import resolve_error_message
+        from ...errors import resolve_error_message
 
         with pytest.raises(IdentityError) as excinfo:
             validate_identity("1234567Z")
@@ -231,7 +231,7 @@ class TestActionableMessages:
         assert "8" in message
 
     def test_malformed_nie_message_states_expected_shape(self) -> None:
-        from ..errors import resolve_error_message
+        from ...errors import resolve_error_message
 
         # Leading X routes to NIE; six digits is the wrong NIE shape.
         with pytest.raises(IdentityError) as excinfo:
@@ -253,7 +253,7 @@ class TestCifKindLetterSplit:
     """
 
     def test_k_l_m_absent_from_cif_kind_letters(self) -> None:
-        from ._documents import _CIF_KIND_LETTERS
+        from .._documents import _CIF_KIND_LETTERS
 
         assert "K" not in _CIF_KIND_LETTERS
         assert "L" not in _CIF_KIND_LETTERS
@@ -264,7 +264,7 @@ class TestCifKindLetterSplit:
         # K is in _CIF_LETTER_CONTROL_LEADERS so the check must be a letter.
         # Computed: even_sum=12, odd_sum_doubled=14, total=26,
         # digit_control=4, letter_control=_CIF_CONTROL_LETTERS[4]='D'.
-        from ._tax_id import validate_spanish_tax_id
+        from .._tax_id import validate_spanish_tax_id
 
         result = validate_spanish_tax_id("K1234567D")
         assert result == "K1234567D"
@@ -272,7 +272,7 @@ class TestCifKindLetterSplit:
 
 class TestErrorCodeBinding:
     def test_class_binds_to_registered_code(self) -> None:
-        from ...core.errors._registry import bind_error_code
+        from ....core.errors._registry import bind_error_code
 
         bound = bind_error_code(IdentityError)
         assert bound.code == "INTEGRITY_IDENTITY_DOCUMENT"

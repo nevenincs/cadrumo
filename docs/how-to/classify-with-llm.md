@@ -6,7 +6,7 @@ or reject. Nothing is saved until you explicitly apply a suggestion, and a
 manual decision always wins.
 
 You need an active profile, an imported ledger (see
-[Import and classify a bank statement](import-bank-statements.md)), and a local
+[Work with transaction data](import-bank-statements.md)), and a local
 LLM command-line tool on your `PATH` — one of `claude`, `gemini`, or `codex`.
 Everything here is local; the LLM runs on your machine and the tool never
 contacts the Agencia Estatal de Administración Tributaria (AEAT).
@@ -72,8 +72,10 @@ aeat app ledger classify --id <transaction-id> --llm claude --apply
 
 ## Where next
 
-- [Import and classify a bank statement](import-bank-statements.md) - load the
-  ledger and classify by hand or in bulk.
+- [Classify transactions](classify-transactions.md) - classify by hand, in
+  bulk, or with mixed-use allocation.
+- [Work with transaction data](import-bank-statements.md) - load, add, edit,
+  and review ledger rows.
 - [Common filing recipes](index.md) - the modelo lifecycle these classifications
   feed.
 - [CLI reference](../cli/index.rst) - every classify option and exit code.

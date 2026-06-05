@@ -193,8 +193,8 @@ def test_parser_extracts_modelo_111_tax_id_from_corpus(pdf_stem: str, year: int,
     'Y0000001S' in the page-0 header block.  The _extract_tax_id helper is
     exercised directly, isolating the NIF regex from profile extraction.
     """
-    from ._parser import _extract_tax_id
-    from ._parsers import extract_pages_text
+    from .._parser import _extract_tax_id
+    from .._parsers import extract_pages_text
 
     pdf_path = FIXTURES_DIR / "justificantes" / "111" / f"{pdf_stem}.pdf"
     pages = extract_pages_text(pdf_path)
@@ -305,8 +305,8 @@ def test_parser_extracts_modelo_130_tax_id_from_corpus(pdf_stem: str, year: int,
     in the page-0 header block.  The _extract_tax_id helper is exercised directly,
     isolating NIF-pattern matching from profile extraction.
     """
-    from ._parser import _extract_tax_id
-    from ._parsers import extract_pages_text
+    from .._parser import _extract_tax_id
+    from .._parsers import extract_pages_text
 
     pdf_path = FIXTURES_DIR / "justificantes" / "130" / f"{pdf_stem}.pdf"
     pages = extract_pages_text(pdf_path)
@@ -687,8 +687,8 @@ def test_parser_extracts_tax_id_from_all_m303_corpus_pdfs(pdf_stem: str) -> None
     "NIF Presentador:" label). 2023+ specimens carry label and ID on a single
     line. Both layouts must yield Y0000001S.
     """
-    from ._parser import _extract_tax_id
-    from ._parsers import extract_pages_text
+    from .._parser import _extract_tax_id
+    from .._parsers import extract_pages_text
 
     pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
     pages = extract_pages_text(pdf_path)
@@ -1210,7 +1210,7 @@ def test_parser_requires_a_known_registry_model_after_template_resolution(tmp_pa
 def test_real_redacted_declaration_copy_extracts_partial_casillas() -> None:
     """The synthetic M130 2024-1T corpus PDF extracts casillas via bbox_anchored.
 
-    Ground truth from the legacy-step fixture regeneration: 2024-1T carries only casillas
+    Ground truth from the contract fixture regeneration: 2024-1T carries only casillas
     03 (rendimiento neto) and 19 (closure result) with values; all other casillas are
     blank (zero or not-applicable) in this synthetic filing.  With min_coverage=0 the
     parser accepts the partial extraction without error.

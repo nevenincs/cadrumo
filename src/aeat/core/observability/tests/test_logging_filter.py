@@ -83,7 +83,7 @@ class TestStderrRunEventFilter:
     """
 
     def test_filter_drops_run_event_records(self) -> None:
-        from ..logging import _DropRunEventFilter
+        from ...logging import _DropRunEventFilter
 
         filt = _DropRunEventFilter()
         plain = logging.LogRecord(
@@ -114,7 +114,7 @@ class TestStderrRunEventFilter:
         tmp_path: Path,
     ) -> None:
         """The filter must NOT accidentally drop events from the sink."""
-        from . import GenericPayload, RunEventKind, RunEventPayload, load_events, record_event
+        from .. import GenericPayload, RunEventKind, RunEventPayload, load_events, record_event
 
         with override_settings(aeat_runs_dir=str(tmp_path)):
             with run_context(entrypoint="aeat test stderr-filter", arguments=()) as info:

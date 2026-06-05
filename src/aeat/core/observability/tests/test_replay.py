@@ -116,15 +116,15 @@ class TestReplayRun:
 
     def test_replay_of_propagated_via_env_var(self, tmp_path: Path) -> None:
         """The re-entered run context must label its trace with ``replay_of``."""
-        from ..config import PROJECT_ROOT as _PROJECT_ROOT
-        from ..config import Settings as _Settings
-        from . import (
+        from ...config import PROJECT_ROOT as _PROJECT_ROOT
+        from ...config import Settings as _Settings
+        from .. import (
             compute_corpus_sha256 as _compute_corpus_sha256,
         )
-        from . import (
+        from .. import (
             run_context,
         )
-        from ._store import load_trace
+        from .._store import load_trace
 
         with override_settings(aeat_runs_dir=tmp_path):
             current_corpus = _compute_corpus_sha256(_PROJECT_ROOT / ".vault", _Settings())
@@ -155,8 +155,8 @@ class TestReplayRun:
 
     def test_replay_of_ignored_when_env_is_non_canonical(self, tmp_path: Path) -> None:
         """Legacy sentinel ``"1"`` must not pollute the trace."""
-        from . import run_context
-        from ._store import load_trace
+        from .. import run_context
+        from .._store import load_trace
 
         with override_settings(aeat_runs_dir=tmp_path, aeat_replay_active="1"):
             with run_context(entrypoint="aeat test", arguments=()) as info:
@@ -172,7 +172,7 @@ class TestReplayRun:
         full replay pipeline; replay-path coverage for the denylist-hit
         case is provided by :meth:`test_refuses_replay_of_removed_write_flag_recording`.
         """
-        from ._replay import _argument_uses_removed_write_flag
+        from .._replay import _argument_uses_removed_write_flag
 
         safe = ArgumentRecord(name="no-dry-run", value="False", source=ArgumentSource.FLAG)
         assert _argument_uses_removed_write_flag(safe) is False
@@ -235,7 +235,7 @@ class TestEnvFileFingerprint:
     def test_env_file_change_changes_corpus_hash(self, tmp_path: Path) -> None:
         import hashlib
 
-        from ._fingerprint import compute_corpus_sha256 as _compute_corpus_sha256
+        from .._fingerprint import compute_corpus_sha256 as _compute_corpus_sha256
 
         vault_dir = tmp_path / ".vault"
         vault_dir.mkdir()

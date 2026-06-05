@@ -99,12 +99,12 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
 def test_calculation_observation_absent_by_design_flag_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
 ) -> None:
-    """legacy-plan-step (M2 from code review): CasillaObservation.absent_by_design survives the full encrypted-storage roundtrip.
+    """CasillaObservation.absent_by_design survives encrypted storage.
 
-    The legacy-plan-step pydantic-roundtrip test pinned the model_dump_json
-    round trip. The production persistence path goes through
-    SecureObjectRepository + encrypted SQLite + envelope, which
-    adds serialization layers the pydantic gate doesn't exercise.
+    The pydantic-roundtrip test pinned the model_dump_json round trip.
+    The production persistence path goes through SecureObjectRepository
+    + encrypted SQLite + envelope, which adds serialization layers the
+    pydantic gate doesn't exercise.
     This test exercises the full path: construct an observation
     with absent_by_design=True (e.g., M130 C15 at 1T), persist via
     CalculationObservationRepository, reload, assert the flag
@@ -206,9 +206,9 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from ...adapters.persistence.storage.sql._orm import SecureObjectRow
-    from ...adapters.persistence.storage.sql.session import session_scope
-    from ._observations_repository import observation_key
+    from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ....adapters.persistence.storage.sql.session import session_scope
+    from .._observations_repository import observation_key
 
     observation_namespace = CalculationObservationRepository.namespace
 

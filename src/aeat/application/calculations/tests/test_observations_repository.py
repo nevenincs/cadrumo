@@ -153,7 +153,7 @@ def test_iva_wallet_decision_event_key_succeeds_for_valid_decision() -> None:
 
 def test_legacy_decision_key_year_guard() -> None:
     """The private legacy key helper must raise ObservationKeyError for out-of-range years."""
-    from ._observations_repository import _legacy_iva_wallet_decision_key
+    from .._observations_repository import _legacy_iva_wallet_decision_key
 
     with pytest.raises(ObservationKeyError, match="out of supported range"):
         _legacy_iva_wallet_decision_key("12345678A", 1999, "1T")
@@ -174,7 +174,7 @@ def test_observation_key_error_is_value_error() -> None:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step: legacy decision-key bridge behaviour
+# contract: legacy decision-key bridge behaviour
 # ---------------------------------------------------------------------------
 
 
@@ -186,8 +186,8 @@ def test_load_decision_returns_hashed_key_record(tmp_path) -> None:
     and must be returned directly without triggering the legacy fallback.
     """
 
-    from ...tests.secure_sql import isolated_runtime_profile
-    from ._observations_repository import IvaWalletDecisionRepository
+    from ....tests.secure_sql import isolated_runtime_profile
+    from .._observations_repository import IvaWalletDecisionRepository
 
     decided_at = datetime(2025, 6, 1, 12, 0, 0, tzinfo=UTC)
     decision = IvaCompensationReconciliationDecision(
@@ -229,9 +229,9 @@ def test_load_decision_falls_back_to_legacy_cleartext_key(tmp_path) -> None:
     """
     from datetime import UTC, datetime
 
-    from ...adapters.persistence.storage.envelope._envelope import Envelope
-    from ...tests.secure_sql import isolated_runtime_profile
-    from ._observations_repository import (
+    from ....adapters.persistence.storage.envelope._envelope import Envelope
+    from ....tests.secure_sql import isolated_runtime_profile
+    from .._observations_repository import (
         IvaWalletDecisionRepository,
         _IvaWalletDecisionEnvelopePayload,
         _legacy_iva_wallet_decision_key,

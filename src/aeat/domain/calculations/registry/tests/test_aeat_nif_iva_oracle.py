@@ -194,7 +194,7 @@ def test_register_default_test_environment_classification_supported() -> None:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step — ReplayPayload roundtrip: validate strictly + round-trip through driver
+# contract — ReplayPayload roundtrip: validate strictly + round-trip through driver
 # ---------------------------------------------------------------------------
 
 
@@ -202,7 +202,7 @@ def test_replay_payload_roundtrip_via_nif_iva_driver() -> None:
     """ReplayPayload.model_validate accepts the canonical JSON shape and the
     NIF-IVA replay driver round-trips the same envelope faithfully."""
 
-    from ._live_parity import ReplayPayload
+    from .._live_parity import ReplayPayload
 
     raw = json.dumps(
         {
@@ -229,7 +229,7 @@ def test_replay_payload_roundtrip_via_nif_iva_driver() -> None:
 def test_replay_payload_strict_rejects_extra_fields_nif_iva() -> None:
     """extra=forbid on ReplayPayload raises ValidationError for unknown keys."""
 
-    from ._live_parity import ReplayPayload
+    from .._live_parity import ReplayPayload
 
     with pytest.raises(ValidationError, match="Extra"):
         ReplayPayload.model_validate({"observed": {}, "unexpected_key": True})
@@ -238,7 +238,7 @@ def test_replay_payload_strict_rejects_extra_fields_nif_iva() -> None:
 def test_replay_payload_strict_rejects_non_string_value_in_observed_nif_iva() -> None:
     """Mapping[str, str] under strict mode rejects non-string values."""
 
-    from ._live_parity import ReplayPayload
+    from .._live_parity import ReplayPayload
 
     with pytest.raises(ValidationError):
         ReplayPayload.model_validate({"observed": {"DE111222333": 42}})

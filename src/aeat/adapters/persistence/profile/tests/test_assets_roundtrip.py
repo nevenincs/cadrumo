@@ -132,9 +132,9 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from ...persistence.storage.sql._orm import SecureObjectRow
-    from ...persistence.storage.sql.session import session_scope
-    from .assets import _ASSETS_NAMESPACE, _ASSETS_OBJECT_KEY
+    from ....persistence.storage.sql._orm import SecureObjectRow
+    from ....persistence.storage.sql.session import session_scope
+    from ..assets import _ASSETS_NAMESPACE, _ASSETS_OBJECT_KEY
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-rt-dropped") as profile:
         engine = get_engine(profile.settings)
@@ -184,9 +184,9 @@ def test_assets_ledger_missing_cost_basis_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from ...persistence.storage.sql._orm import SecureObjectRow
-    from ...persistence.storage.sql.session import session_scope
-    from .assets import _ASSETS_NAMESPACE, _ASSETS_OBJECT_KEY
+    from ....persistence.storage.sql._orm import SecureObjectRow
+    from ....persistence.storage.sql.session import session_scope
+    from ..assets import _ASSETS_NAMESPACE, _ASSETS_OBJECT_KEY
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-rt-missing") as profile:
         engine = get_engine(profile.settings)

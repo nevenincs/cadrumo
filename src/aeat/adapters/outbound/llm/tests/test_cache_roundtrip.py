@@ -112,10 +112,10 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
 
     from sqlalchemy import select
 
-    from ...persistence.storage.sql._orm import SecureObjectRow
-    from ...persistence.storage.sql.session import session_scope
-    from ._cache import _CACHE_NAMESPACE
-    from ._errors import LLMCacheError
+    from ....persistence.storage.sql._orm import SecureObjectRow
+    from ....persistence.storage.sql.session import session_scope
+    from .._cache import _CACHE_NAMESPACE
+    from .._errors import LLMCacheError
 
     created_at = datetime.now(UTC).replace(microsecond=0)
     request = _populated_request()

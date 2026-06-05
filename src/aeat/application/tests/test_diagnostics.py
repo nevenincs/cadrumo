@@ -175,7 +175,7 @@ def test_render_config_repair_text_is_operator_readable(
     with isolated_runtime_profile(tmp_path=tmp_path):
         rendered = render_config_repair_text(build_config_repair_report())
 
-    from ..core.i18n import tr
+    from ...core.i18n import tr
 
     assert f"{tr('cli.diagnostics.repair.overall_label')}\t" in rendered
     assert "registry.load" in rendered
@@ -192,12 +192,12 @@ def test_render_browser_connectivity_text_resolves_row_label_keys() -> None:
     After fix: each key resolves to a real translated label.
     """
 
-    from ..adapters.outbound.aeat.browser._site_health import (
+    from ...adapters.outbound.aeat.browser._site_health import (
         SiteHealthEvidence,
         SiteHealthState,
         SiteHealthStatus,
     )
-    from .diagnostics import render_browser_connectivity_text
+    from ..diagnostics import render_browser_connectivity_text
 
     status = SiteHealthStatus(
         state=SiteHealthState.OK,
@@ -366,10 +366,10 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path) -> No
     three workflow states (no provider, provider only, fully
     authenticated) and asserting the report shape across each.
     """
-    from .auth import update_auth
-    from .user_profile._orchestration import profile_create_storage_span
-    from .user_profile._testing import register_minimal_profile
-    from .workflow import WorkflowState
+    from ..auth import update_auth
+    from ..user_profile._orchestration import profile_create_storage_span
+    from ..user_profile._testing import register_minimal_profile
+    from ..workflow import WorkflowState
 
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
@@ -389,7 +389,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path) -> No
         provider_only = update_auth(no_provider, provider="clave_movil")
         fully_authenticated = update_auth(provider_only, authenticated=True, subject="00000000T")
 
-        from .wizard._status import build_wizard_status
+        from ..wizard._status import build_wizard_status
 
         for state in (no_provider, provider_only, fully_authenticated):
             setup_report = build_wizard_status(state)
@@ -589,7 +589,7 @@ def test_build_cli_version_report_fast_path_needs_no_model_rebuild() -> None:
     have to pay the heavy ``_ensure_models_rebuilt`` import cost.
     """
 
-    from .diagnostics import build_cli_version_report, render_cli_version_text
+    from ..diagnostics import build_cli_version_report, render_cli_version_text
 
     report = build_cli_version_report(with_registry=False)
     assert report.package_name == "aeat"
@@ -606,7 +606,7 @@ def _internal_registry_repair_report() -> ConfigRepairReport:
     backend or registry corruption.
     """
 
-    from .diagnostics import _ensure_models_rebuilt
+    from ..diagnostics import _ensure_models_rebuilt
 
     _ensure_models_rebuilt()
     registry = RegistryVersionSummary(available=True, registry_root="/x", modelo_count=1, casilla_count=2)
@@ -672,8 +672,8 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
     with the exact ``aeat config profile edit NAME`` command.
     """
 
-    from .diagnostics import _profile_check
-    from .wizard._status import WizardStatusReport
+    from ..diagnostics import _profile_check
+    from ..wizard._status import WizardStatusReport
 
     report = WizardStatusReport(
         active_profile="demo",
@@ -705,8 +705,8 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
 def test_render_config_repair_text_lists_specific_findings() -> None:
     """The renderer prints each finding line, not just the check summary."""
 
-    from .diagnostics import _profile_check
-    from .wizard._status import WizardStatusReport
+    from ..diagnostics import _profile_check
+    from ..wizard._status import WizardStatusReport
 
     report = WizardStatusReport(
         active_profile="demo",
@@ -752,7 +752,7 @@ def test_render_config_repair_text_marks_internal_problems_distinctly() -> None:
     thinking they forgot a field; operator-fixable rows carry no tag.
     """
 
-    from ..core.i18n import tr
+    from ...core.i18n import tr
 
     rendered = render_config_repair_text(_internal_registry_repair_report())
     internal_label = tr("cli.diagnostics.repair.audience_internal")
@@ -773,8 +773,8 @@ def test_config_repair_report_marks_registry_integrity_internal() -> None:
     problem rather than a profile gap.
     """
 
-    from ..core.resources import bundled_path
-    from .diagnostics import _registry_cross_domain_integrity_check
+    from ...core.resources import bundled_path
+    from ..diagnostics import _registry_cross_domain_integrity_check
 
     check = _registry_cross_domain_integrity_check(bundled_path("registry", "aeat"))
     # Healthy registry → ok + operator audience. A failing registry would
@@ -785,15 +785,15 @@ def test_config_repair_report_marks_registry_integrity_internal() -> None:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step: DiagnosticModelError registration and invariant-replacement tests
+# contract: DiagnosticModelError registration and invariant-replacement tests
 # ---------------------------------------------------------------------------
 
 
 def test_diagnostic_model_error_is_registered_in_error_registry() -> None:
     """DiagnosticModelError must be reachable via the ERROR_REGISTRY by its code string."""
 
-    from ..core.errors import ERROR_REGISTRY, get_registered_error_code
-    from ._errors import DiagnosticModelError
+    from ...core.errors import ERROR_REGISTRY, get_registered_error_code
+    from .._errors import DiagnosticModelError
 
     code = get_registered_error_code(DiagnosticModelError)
     assert code.code in ERROR_REGISTRY
@@ -803,8 +803,8 @@ def test_diagnostic_model_error_is_registered_in_error_registry() -> None:
 def test_diagnostic_model_error_round_trips_through_build_error_envelope() -> None:
     """build_error_envelope must produce a well-formed envelope for DiagnosticModelError."""
 
-    from ..core.errors import build_error_envelope
-    from ._errors import DiagnosticModelError
+    from ...core.errors import build_error_envelope
+    from .._errors import DiagnosticModelError
 
     err = DiagnosticModelError("invariant violated")
     envelope = build_error_envelope(err)
@@ -815,7 +815,7 @@ def test_diagnostic_model_error_round_trips_through_build_error_envelope() -> No
 def _assert_validation_error_caused_by_diagnostic_model_error(exc_info: pytest.ExceptionInfo, match: str) -> None:
     """Assert a pydantic ValidationError wraps a DiagnosticModelError with the given message."""
 
-    from ._errors import DiagnosticModelError
+    from .._errors import DiagnosticModelError
 
     val_err = exc_info.value
     causes = [e["ctx"]["error"] for e in val_err.errors() if "error" in e.get("ctx", {})]
@@ -872,6 +872,6 @@ def test_diagnostic_check_ok_with_dead_end_raises_diagnostic_model_error() -> No
 def test_diagnostic_model_error_is_subclass_of_value_error() -> None:
     """DiagnosticModelError is a ValueError subclass for legacy catch compatibility."""
 
-    from ._errors import DiagnosticModelError
+    from .._errors import DiagnosticModelError
 
     assert issubclass(DiagnosticModelError, ValueError)

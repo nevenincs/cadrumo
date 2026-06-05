@@ -48,7 +48,7 @@ def test_disjoint_from_situacion_familiar_art82() -> None:
     (declaracion). The grounding rule in the docstring depends on these
     enums being structurally distinct.
     """
-    from ._renta_codes import SituacionFamiliar
+    from .._renta_codes import SituacionFamiliar
 
     m145_values = {member.value for member in SituacionFamiliarM145}
     art82_values = {member.value for member in SituacionFamiliar}
@@ -57,7 +57,7 @@ def test_disjoint_from_situacion_familiar_art82() -> None:
 
 def test_reachable_via_contribuyente_package_boundary() -> None:
     """The enum re-exports through ``aeat.domain.contribuyente``."""
-    from .. import contribuyente
+    from ... import contribuyente
 
     assert contribuyente.SituacionFamiliarM145 is SituacionFamiliarM145
     assert "SituacionFamiliarM145" in contribuyente.__all__

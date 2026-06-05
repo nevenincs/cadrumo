@@ -139,9 +139,9 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from ...persistence.storage.sql._orm import SecureObjectRow
-    from ...persistence.storage.sql.session import session_scope
-    from .inventory import _INVENTORY_NAMESPACE, _INVENTORY_OBJECT_KEY
+    from ....persistence.storage.sql._orm import SecureObjectRow
+    from ....persistence.storage.sql.session import session_scope
+    from ..inventory import _INVENTORY_NAMESPACE, _INVENTORY_OBJECT_KEY
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         engine = get_engine(profile.settings)

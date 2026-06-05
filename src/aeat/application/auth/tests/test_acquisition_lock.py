@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 @pytest.fixture(autouse=True)
 def _active_profile() -> Iterator[None]:
-    from ...core.config import override_settings
+    from ....core.config import override_settings
 
     with override_settings(aeat_active_profile="operator"):
         yield

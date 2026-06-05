@@ -34,7 +34,7 @@ def _output_language(language: str):
     locale resolver reads through ``load_settings`` so the ContextVar
     layer is reached.
     """
-    from ...core.config import override_settings
+    from ....core.config import override_settings
 
     return override_settings(aeat_output_language=language)
 

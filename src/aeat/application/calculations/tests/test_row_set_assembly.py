@@ -213,7 +213,7 @@ def test_assemble_returns_empty_for_empty_cells() -> None:
 
 
 def test_assemble_observations_for_grouping_dispatches_per_perceptor_clave() -> None:
-    from ...domain.calculations.registry._bindings import WithholdingObservation
+    from ....domain.calculations.registry._bindings import WithholdingObservation
 
     revision = _modelo("190", "2024-y-siguientes")
     cells = (

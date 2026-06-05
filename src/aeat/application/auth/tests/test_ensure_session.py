@@ -23,7 +23,7 @@ from .._sessions import AuthSessionUnavailableError, ensure_authenticated_aeat_s
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.auth import BrowserSessionFactory
+    from ....adapters.outbound.aeat.auth import BrowserSessionFactory
 
 
 class _Provider:
@@ -229,7 +229,7 @@ async def test_ensure_raises_when_assertion_is_invalid(tmp_path: Path) -> None:
     without it, a provider that silently returns a failed assertion would pass
     through undetected.
     """
-    from ...adapters.outbound.aeat.auth import AeatLoginAssertionError
+    from ....adapters.outbound.aeat.auth import AeatLoginAssertionError
 
     settings = _settings(tmp_path)
     session = SimpleNamespace(identity_nif="12345678Z")

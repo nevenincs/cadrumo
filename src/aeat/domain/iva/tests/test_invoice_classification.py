@@ -136,7 +136,7 @@ def test_invoice_line_to_iva_observation_builds_repercutido_record_for_issued() 
     from datetime import date
     from decimal import Decimal
 
-    from ..invoices import invoice_line_to_iva_observation
+    from ...invoices import invoice_line_to_iva_observation
 
     obs = invoice_line_to_iva_observation(
         invoice_id="inv-001",
@@ -160,7 +160,7 @@ def test_invoice_line_to_iva_observation_builds_soportado_record_for_received() 
     from datetime import date
     from decimal import Decimal
 
-    from ..invoices import invoice_line_to_iva_observation
+    from ...invoices import invoice_line_to_iva_observation
 
     obs = invoice_line_to_iva_observation(
         invoice_id="bill-77",
@@ -178,7 +178,7 @@ def test_invoice_line_to_iva_observation_builds_soportado_record_for_received() 
 def test_invoice_line_to_iva_observation_rejects_non_decimal_amounts() -> None:
     from datetime import date
 
-    from ..invoices import invoice_line_to_iva_observation
+    from ...invoices import invoice_line_to_iva_observation
 
     with pytest.raises(ValidationError, match=r"base_amount|iva_amount|Decimal|decimal"):
         invoice_line_to_iva_observation(
@@ -199,11 +199,11 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
     from datetime import date
     from decimal import Decimal
 
-    from ..calculations.registry import (
+    from ...calculations.registry import (
         load_registry_tree,
         resolve_ledger_iva_aggregation_binding_values,
     )
-    from ..invoices import invoice_line_to_iva_observation
+    from ...invoices import invoice_line_to_iva_observation
 
     modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     m303 = next(m for m in modelos if m.id == "303")

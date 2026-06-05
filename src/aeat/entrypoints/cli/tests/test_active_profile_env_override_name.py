@@ -75,7 +75,7 @@ def _create_profile_and_resolve_uuid() -> str:
         ],
     )
     assert created.exit_code == 0, created.output
-    from ...application.workflow import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
 
     pointer = read_profile_bucket(_LABEL)
     assert pointer is not None, "the created profile must resolve by its label"
@@ -132,15 +132,15 @@ def _write_second_live_bucket_sharing_label(label: str) -> None:
     """
     from datetime import UTC, datetime
 
-    from ...adapters.persistence.storage.bucket import (
+    from ....adapters.persistence.storage.bucket import (
         BucketLifecycleStatus,
         BucketManifest,
         bucket_paths,
         provision_bucket_directory,
         write_manifest,
     )
-    from ...adapters.persistence.storage.master_key import KdfParams
-    from ...core.config import load_settings
+    from ....adapters.persistence.storage.master_key import KdfParams
+    from ....core.config import load_settings
 
     root = load_settings().aeat_local_storage_root
     duplicate_uuid = "62d2ab08-39f2-4811-bd2a-fe48fd105e4a"

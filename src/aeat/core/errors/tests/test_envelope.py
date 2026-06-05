@@ -104,7 +104,7 @@ def test_scrub_error_context_strips_internal_keys_from_rendered_output() -> None
     inspect them.
     """
 
-    from ._registry import _INTERNAL_CONTEXT_KEYS
+    from .._registry import _INTERNAL_CONTEXT_KEYS
 
     error = LockAcquisitionError(
         context={

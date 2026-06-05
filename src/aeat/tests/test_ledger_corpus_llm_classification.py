@@ -1,18 +1,18 @@
-"""Live LLM classification accuracy harness over the ledger corpus (legacy-plan).
+"""Live LLM classification accuracy harness over the ledger corpus (ratchet history).
 
 Drives the REAL Claude classifier (``build_claude_classifier`` → the ``claude``
 CLI) over a representative sample of the hand-authored corpus and scores its
-predictions against the ground-truth oracle. Marked ``live_read`` and excluded
+predictions against the ground-truth oracle. Marked ``aeat_live`` and excluded
 from the default unit selection; self-skips when the classifier is unavailable
 (no CLI / not logged in), mirroring ``test_live_anthropic``.
 
 When live classification IS available the harness:
-- legacy-step: scores per-classification accuracy against the oracle;
-- legacy-step: records ``classified_by="llm:<name>"`` + confidence and flags
+- behavior contract: scores per-classification accuracy against the oracle;
+- behavior contract: records ``classified_by="llm:<name>"`` + confidence and flags
   low-confidence predictions for manual review;
-- legacy-step: includes the edge cases (recargo anomaly, internal transfer, foreign
+- behavior contract: includes the edge cases (recargo anomaly, internal transfer, foreign
   reverse-charge, régimen simplificado) in the sample;
-- legacy-step: gates overall accuracy against a lenient floor and reports the
+- behavior contract: gates overall accuracy against a lenient floor and reports the
   per-classification miss rate.
 """
 
@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]
 
 _CORPUS = Path(__file__).parent / "fixtures" / "financial" / "ledger-corpus"
 _ACCOUNTS = ("bbva-business-eur.csv", "caixabank-personal.csv", "revolut-multi.csv")
-# Representative descriptions spanning the gamut + the edge cases (legacy-step).
+# Representative descriptions spanning the gamut + the edge cases (behavior contract).
 _SAMPLE_NEEDLES = (
     "Cobro factura F-2025-001 ACME",          # business income
     "Cuota autonomos RETA",                    # business expense
@@ -104,7 +104,7 @@ def test_llm_classification_scores_against_oracle_and_gates_accuracy() -> None:
     misses_by_expected: dict[str, int] = {}
     for txn, rule in sample:
         response = classifier.classify(txn)
-        # legacy-step: every prediction carries a confidence and an attributable source.
+        # behavior contract: every prediction carries a confidence and an attributable source.
         classified_by = f"llm:{classifier.name}"
         assert classified_by.startswith("llm:")
         assert Decimal("0") <= response.confidence <= Decimal("1")
@@ -123,7 +123,7 @@ def test_llm_classification_scores_against_oracle_and_gates_accuracy() -> None:
             misses_by_expected[expected] = misses_by_expected.get(expected, 0) + 1
 
     accuracy = Decimal(correct) / Decimal(total)
-    # legacy-step: lenient accuracy gate + per-class miss report (surfaced on failure).
+    # behavior contract: lenient accuracy gate + per-class miss report (surfaced on failure).
     assert accuracy >= _ACCURACY_FLOOR, (accuracy, misses_by_expected, low_confidence)
 
 

@@ -38,6 +38,7 @@ from ...core.i18n import tr
 from ...core.time import now
 from ...domain.portals import PortalCategory
 from ._app_live_borrador_cli import borrador_100_app, borrador_app, register_borrador_commands
+from ._app_live_notifications_cli import notifications_app, register_notifications_commands
 from ._common import _emit_envelope
 
 if TYPE_CHECKING:
@@ -1132,22 +1133,6 @@ def filed_capture_sources_cmd(
     _emit_envelope(ctx, command="app.live.filed.capture_sources", result=result, lines=lines)
 
 
-# ─────────────────────────────────────────────────────────────────────────
-# Notifications subgroup
-# ─────────────────────────────────────────────────────────────────────────
-# list and show read persisted DEHú notification snapshots from the
-# active bucket. They are local-only reads (no AEAT contact); the
-# capture verb (not shipped here) would invoke require_live_read.
-
-notifications_app = typer.Typer(
-    name="notifications",
-    help=tr("cli.app.live.notifications.app_help", default="DEHú notification snapshots (read-only)."),
-    no_args_is_help=True,
-    add_completion=False,
-)
-app.add_typer(notifications_app, name="notifications")
-
-
 def _active_bucket_id() -> str:
     from ...core import require_active_bucket_id
 
@@ -1157,172 +1142,7 @@ def _active_bucket_id() -> str:
         raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
 
 
-@notifications_app.command(
-    "capture",
-    help=tr(
-        "cli.app.live.notifications.capture_help",
-        default="Live-fetch DEHú notifications and persist a bucket-scoped snapshot.",
-    ),
-)
-def notifications_capture(ctx: typer.Context) -> None:
-    """Drive the live DEHú fetch + persist flow.
-
-    Will trigger the configured auth provider (e.g. Cl@ve Móvil push or
-    certificate handshake) when no live session is present. Under pytest,
-    the shared live-read gate still requires the live-test opt-in.
-    """
-    from ...application.live import capture_notifications
-
-    bucket_id = _active_bucket_id()
-    _emit_live_auth_preflight()
-    persisted = asyncio.run(capture_notifications(bucket_id=bucket_id))
-    from ._app_live_payloads import NotificationsCaptureResult
-
-    result = NotificationsCaptureResult(
-        bucket_id=bucket_id,
-        snapshot_id=persisted.snapshot_id,
-        captured_at=persisted.captured_at.isoformat(),
-        persisted_at=persisted.persisted_at.isoformat(),
-        row_count=len(persisted.rows),
-        source_url=persisted.source_url,
-    )
-    lines = [
-        f"bucket\t{bucket_id}",
-        f"snapshot_id\t{persisted.snapshot_id}",
-        f"captured_at\t{persisted.captured_at.isoformat()}",
-        f"row_count\t{len(persisted.rows)}",
-        f"source_url\t{persisted.source_url}",
-    ]
-    _emit_envelope(ctx, command="app.live.notifications.capture", result=result, lines=lines)
-
-
-@notifications_app.command(
-    "list",
-    help=tr(
-        "cli.app.live.notifications.list_help",
-        default="List persisted DEHú notification snapshots in the active bucket.",
-    ),
-)
-def notifications_list(ctx: typer.Context) -> None:
-    """List persisted DEHú notification snapshots for the active bucket without contacting AEAT."""
-    from ...application.live import NotificationsService
-
-    bucket_id = _active_bucket_id()
-    rows = NotificationsService().list_snapshots(bucket_id=bucket_id)
-    from ._app_live_payloads import NotificationsListResult, NotificationSnapshotListingPayload
-
-    result = NotificationsListResult(
-        bucket_id=bucket_id,
-        count=len(rows),
-        rows=[
-            NotificationSnapshotListingPayload(
-                snapshot_id=r.snapshot_id,
-                captured_at=r.captured_at.isoformat(),
-                row_count=len(r.rows),
-            )
-            for r in rows
-        ],
-    )
-    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
-    for r in rows:
-        lines.append(f"{r.snapshot_id}\t{r.captured_at.isoformat()}\trows={len(r.rows)}")
-    _emit_envelope(ctx, command="app.live.notifications.list", result=result, lines=lines)
-
-
-@notifications_app.command(
-    "view", help=tr("cli.app.live.notifications.view_help", default="View one DEHú notification snapshot.")
-)
-def notifications_show(
-    ctx: typer.Context,
-    snapshot_id: Annotated[
-        str,
-        typer.Argument(
-            help=tr("cli.app.live.notifications.snapshot_id_help", default="Snapshot id (or unambiguous prefix).")
-        ),
-    ],
-) -> None:
-    """Show one persisted DEHú notification snapshot by id prefix, including all notification rows."""
-    from ...application.live import NotificationsService
-
-    bucket_id = _active_bucket_id()
-    record = NotificationsService().show(bucket_id=bucket_id, snapshot_id=snapshot_id)
-    from ._app_live_payloads import NotificationRowPayload, NotificationsViewResult
-
-    result = NotificationsViewResult(
-        bucket_id=bucket_id,
-        snapshot_id=record.snapshot_id,
-        captured_at=record.captured_at.isoformat(),
-        source_url=record.source_url,
-        row_count=len(record.rows),
-        rows=[
-            NotificationRowPayload(
-                certificado_id=r.certificado_id,
-                tipo=r.tipo,
-                concepto=r.concepto,
-                titular_nif=r.titular_nif,
-                titular_nombre=r.titular_nombre,
-                destinatario_nif=r.destinatario_nif,
-                destinatario_nombre=r.destinatario_nombre,
-                fecha_emision=r.fecha_emision.isoformat(),
-                fecha_notificacion=r.fecha_notificacion.isoformat() if r.fecha_notificacion else None,
-                modo_notificacion=r.modo_notificacion,
-                leida=r.leida,
-                source_url=str(r.source_url),
-                mode=r.mode,
-            )
-            for r in record.rows
-        ],
-    )
-    lines = [
-        f"bucket\t{bucket_id}",
-        f"snapshot_id\t{record.snapshot_id}",
-        f"captured_at\t{record.captured_at.isoformat()}",
-        f"source_url\t{record.source_url}",
-        f"row_count\t{len(record.rows)}",
-    ]
-    for r in record.rows:
-        lines.append("\t".join(f"{k}={v}" for k, v in r.model_dump(mode="json").items()))
-    _emit_envelope(ctx, command="app.live.notifications.view", result=result, lines=lines)
-
-
-@notifications_app.command(
-    "latest",
-    help=tr(
-        "cli.app.live.notifications.latest_help",
-        default="Show the most recent DEHú notification snapshot in the active bucket.",
-    ),
-)
-def notifications_latest(ctx: typer.Context) -> None:
-    """Show the most recent DEHú notification snapshot for the active bucket, or report none."""
-    from ...application.live import NotificationsService
-
-    bucket_id = _active_bucket_id()
-    record = NotificationsService().latest(bucket_id=bucket_id)
-    from ._app_live_payloads import NotificationsLatestResult
-
-    if record is None:
-        empty = NotificationsLatestResult(bucket_id=bucket_id, snapshot_id=None)
-        _emit_envelope(
-            ctx,
-            command="app.live.notifications.latest",
-            result=empty,
-            lines=[f"bucket\t{bucket_id}", "snapshot_id\t-"],
-        )
-        return
-    result = NotificationsLatestResult(
-        bucket_id=bucket_id,
-        snapshot_id=record.snapshot_id,
-        captured_at=record.captured_at.isoformat(),
-        source_url=record.source_url,
-        row_count=len(record.rows),
-    )
-    lines = [
-        f"bucket\t{bucket_id}",
-        f"snapshot_id\t{record.snapshot_id}",
-        f"captured_at\t{record.captured_at.isoformat()}",
-        f"row_count\t{len(record.rows)}",
-    ]
-    _emit_envelope(ctx, command="app.live.notifications.latest", result=result, lines=lines)
+register_notifications_commands(app, active_bucket_id=_active_bucket_id, auth_preflight=_emit_live_auth_preflight)
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -2054,6 +1874,7 @@ __all__ = [
     "iva_wallet_capture_remote_state_cmd",
     "iva_wallet_history_cmd",
     "iva_wallet_pull_cmd",
+    "notifications_app",
     "portals_app",
     "portals_list",
     "portals_show",

@@ -154,7 +154,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
             updated_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
             schema_version=_schema_version(),
         )
-        from ...domain.filing import ModeloDraftRepository
+        from ....domain.filing import ModeloDraftRepository
 
         ModeloDraftRepository().save(draft)
 

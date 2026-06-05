@@ -427,8 +427,16 @@ def test_enrollment_recorder_evidences_two_distinct_annual_cycles_and_matches_ma
 
     # --- Enrollment recording (outside the profile context) ------------------
     recorder = EnrollmentRecorder(_MODELO)
-    recorder.record_context_year(filing_year=_YEAR_N, context_label=_CONTEXT_LABEL, persisted_observation_count=(_count_n))
-    recorder.record_context_year(filing_year=_YEAR_N_PLUS_1, context_label=_CONTEXT_LABEL, persisted_observation_count=(_count_n1))
+    recorder.record_context_year(
+        filing_year=_YEAR_N,
+        context_label=_CONTEXT_LABEL,
+        persisted_observation_count=_count_n,
+    )
+    recorder.record_context_year(
+        filing_year=_YEAR_N_PLUS_1,
+        context_label=_CONTEXT_LABEL,
+        persisted_observation_count=_count_n1,
+    )
 
     evidence = recorder.evidence()
     assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1), (

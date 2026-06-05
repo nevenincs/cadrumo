@@ -282,8 +282,8 @@ class TestErrorCodeRegistration:
         error_class: str,
         expected_code: str,
     ) -> None:
-        from .....core.errors._registry import bind_error_code
-        from .. import errors as storage_errors
+        from ......core.errors._registry import bind_error_code
+        from ... import errors as storage_errors
 
         cls = getattr(storage_errors, error_class)
         bound = bind_error_code(cls)

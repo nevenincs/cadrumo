@@ -1,163 +1,191 @@
-# Import and classify a bank statement
+# Work with transaction data
 
-Use this guide to turn bank-statement rows into ledger records that a modelo can
-calculate from. A ledger is the local record store under your active taxpayer
-profile. A modelo is a Spanish tax form.
+Use this guide when your ledger is not ready yet. It covers importing bank
+statements, adding transactions by hand, reviewing rows, editing or removing
+rows, and handing the ledger to classification and calculation.
 
-Everything in this guide is local. `aeat` imports, checks, and updates your local
-records. It never contacts the Agencia Estatal de Administración Tributaria
-(AEAT) from this workflow.
+The ledger is local to the active taxpayer profile. `aeat` does not
+automatically sync your bank. It imports only when you run an import command,
+and calculation consumes the saved ledger rows that belong to the active
+profile.
 
 ## Before you start
 
 You need:
 
-- `aeat` installed. If it is not installed, start with
-  [Get started with aeat](../getting-started.md).
-- An active taxpayer profile. This is the profile that `aeat app` commands read
-  and update. If you do not have one, create it with
-  [Set up your taxpayer profile](profile-setup.md).
-- A bank statement file, or a directory of statement files.
+- a working `aeat` command
+- an active taxpayer profile; see [Set up your taxpayer profile](profile-setup.md)
+- a bank statement file or directory, unless you are adding transactions by hand
 
-## Preview the import
+Confirm the active profile before you write transaction data:
 
-Run a dry run first. A dry run shows what `aeat` would import and saves no rows:
-
+```bash
+aeat config profile status
 ```
+
+## Preview an import
+
+Run a dry run first. A dry run shows what `aeat` would import and saves no
+rows:
+
+```bash
 aeat app ledger import ./statement.csv --provider auto --dry-run
 ```
 
-`--provider auto` asks `aeat` to detect the statement format. If detection picks
-the wrong format, replace `auto` with the exact provider. The supported provider
-values are listed in the [CLI reference](../cli/index.rst).
+`--provider auto` asks `aeat` to detect the statement format. Current provider
+values shown by command help include `auto`, `csv`, `ofx`, `qfx`, `xlsx`,
+`excel`, `n26`, `pdf`, and `pdf-n26`.
 
-## Save the imported rows
+If detection picks the wrong format, replace `auto` with the exact provider.
+
+## Save imported rows
 
 When the dry run looks right, repeat the command without `--dry-run`:
 
-```
+```bash
 aeat app ledger import ./statement.csv --provider auto
 ```
 
-Add `--verify` when you want `aeat` to run import diagnostics for the
-statement:
+Add `--verify` when you want import diagnostics:
 
-```
+```bash
 aeat app ledger import ./statement.csv --provider auto --verify
 ```
 
-If those diagnostics should refer to a different original file, pass it with
-`--source`:
+If the diagnostic source should point at a different original file, pass it
+with `--source`:
 
-```
+```bash
 aeat app ledger import ./processed.csv --provider csv --verify --source ./statement.csv
 ```
 
-## Review imported rows
+Use `--period` only when you intentionally want to tag the import with a fiscal
+period.
 
-List the imported rows:
+## Add a transaction manually
 
+Use `ledger add` when a transaction is missing from imported statements:
+
+```bash
+aeat app ledger add --date 2026-03-15 --amount -49.99 --direction OUTGOING --description "Software subscription"
 ```
+
+Required fields are date, signed amount, direction, and description. Optional
+fields include value date, currency, counterparty, classification, business
+percentage, category id, taxable base, IVA rate, IVA amount, IRPF category,
+notes, and source jurisdiction.
+
+## Review rows
+
+List rows:
+
+```bash
 aeat app ledger list
 ```
 
-Use `--filter` to narrow the list by period, classification, issue, import,
-direction, or text. For a period, pass `period=<period>`:
+Narrow the list with filters:
 
-```
+```bash
 aeat app ledger list --filter period=2026-03
+aeat app ledger list --filter classification=NOT_YET_PROCESSED
+aeat app ledger list --limit 20 --offset 20
 ```
 
-Copy the transaction id from the list, then inspect one row before changing it:
+Inspect one row before changing it:
 
-```
+```bash
 aeat app ledger view <transaction-id>
 ```
 
-A transaction id is the row identifier printed by `aeat app ledger list`. The
-`view` command shows the stored fields for that row, including amount,
-counterparty, classification, IVA fields, and notes when they exist.
+See the event history for one row:
+
+```bash
+aeat app ledger history <transaction-id>
+aeat app ledger track <transaction-id>
+```
+
+## Update a row
+
+Use `ledger update` for editable transaction fields:
+
+```bash
+aeat app ledger update --id <transaction-id> --description "Corrected description"
+aeat app ledger update --id <transaction-id> --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00
+```
+
+Use this for corrections such as date, value date, amount, direction, currency,
+counterparty, description, taxable base, IVA rate, IVA amount, IRPF category,
+notes, or group label.
+
+## Remove, archive, or stash a row
+
+Use the least destructive action that matches the problem:
+
+- `archive` when a row should stay in local history but no longer be part of
+  ordinary work.
+- `stash` when a row should be set aside for later review.
+- `remove` when the row should be deleted from the active ledger.
+
+Examples:
+
+```bash
+aeat app ledger archive --id <transaction-id> --reason "duplicate imported row" --yes
+aeat app ledger stash --id <transaction-id> --reason "waiting for invoice" --yes
+aeat app ledger remove --id <transaction-id> --reason "wrong file imported" --dry-run
+aeat app ledger remove --id <transaction-id> --reason "wrong file imported" --yes
+```
+
+`remove --dry-run` reports effects without deleting the row. `archive`,
+`stash`, and confirmed `remove` are local ledger changes; they do not contact
+AEAT.
 
 ## Classify rows
 
-List the accepted category ids before classifying expenses:
+Classify rows before calculation. At a minimum, imported business rows usually
+need a business/personal/mixed classification, and expense rows normally need a
+category.
 
-```
+Start with:
+
+```bash
 aeat app ledger categories
-```
-
-A category id is the ledger's name for a tax category. Expense rows normally
-need one before a modelo can calculate from them. For income rows, `aeat` uses
-the transaction direction, so you do not need `--category-id`.
-
-Mark a fully business-related transaction:
-
-```
 aeat app ledger classify --id <transaction-id> --classification BUSINESS --category-id <category-id>
 ```
 
-Mark a personal transaction:
+Use [Classify transactions](classify-transactions.md) for the full
+classification workflow, including bulk CSV classification, mixed-use
+allocation, tax fields, and LLM-assisted suggestions.
 
-```
-aeat app ledger classify --id <transaction-id> --classification PERSONAL
-```
+## Check readiness for a filing period
 
-If the row needs tax fields, add only the fields that apply to that transaction:
+Run preflight before calculating a modelo:
 
-```
-aeat app ledger classify --id <transaction-id> --classification BUSINESS --category-id <category-id> --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00
-```
-
-For the complete set of classification, IVA, IRPF, and counterparty fields, use
-the [CLI reference](../cli/index.rst).
-
-## Record mixed business and personal use
-
-Use allocation when one transaction is partly business-related and partly
-personal. The business percentage is a value from `0` to `1`:
-
-```
-aeat app ledger allocate --id <transaction-id> --business-pct 0.5 --category-id <category-id>
-```
-
-`0` means personal, `1` means fully business, and a value between them means
-mixed use. If you already created a usage ratio for this taxpayer profile, add
-`--usage-ratio-id`. Use `--prorrata-reference` only for IVA workflows that need
-a prorrata reference.
-
-## Check readiness for the period
-
-Run preflight for the filing period before calculating a modelo. Preflight is
-the local readiness check for ledger facts:
-
-```
+```bash
 aeat app ledger preflight --period 2026Q1
 ```
-
-Use the period token that matches the return you plan to calculate, such as
-`2026Q1`, `2026-03`, or `2026`.
 
 Preflight reports missing facts such as category, taxable base, IVA amount, IVA
 rate, currency, or proportionality reference. Fix the rows it names, then run
 preflight again.
 
-Check the overall ledger state for the same period:
+Check the overall ledger state:
 
-```
+```bash
 aeat app ledger status --period 2026Q1
 ```
 
-Continue only when the period is ready.
+Continue to calculation only when the active profile and target period are
+ready enough for the modelo you are preparing.
 
 ## If a command stops with an error
 
 If a command reports that no profile is active, the period is invalid, or the
 ledger is not ready, use
-[Diagnose and repair your local setup](troubleshooting.md). Use that page to fix
-setup and readiness problems.
+[Diagnose and repair your local setup](troubleshooting.md).
 
 ## Next steps
 
+- [Classify transactions](classify-transactions.md)
 - [Quickstart: produce a modelo file](quickstart.md)
-- [Standard filing workflow](filing-spine.md)
+- [Review and supply calculation inputs](review-calculation-values.md)
 - [CLI reference](../cli/index.rst)

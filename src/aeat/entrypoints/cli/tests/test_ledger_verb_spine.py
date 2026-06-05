@@ -77,8 +77,8 @@ def test_ledger_link_check_preflight_sit_at_noun_group_root() -> None:
     )
 
 
-# legacy-plan-step: count-side companion to the set-equality roster gate above.
-# The legacy-plan canonical spine for `aeat app ledger` is the CRUD spine (add / view /
+# accepted contract: count-side companion to the set-equality roster gate above.
+# The accepted contract canonical spine for `aeat app ledger` is the CRUD spine (add / view /
 # list / update / remove / archive / reset) plus the ratified orthogonal axes
 # (link / check / preflight) plus the ratified workflow axes (allocate / attach
 # / categories / classify / export / history / import / merge / review / split /
@@ -97,7 +97,7 @@ _EXPECTED_LEDGER_VERB_COUNT: int = (
 
 
 def test_ledger_verb_count_matches_w71_canonical_spine() -> None:
-    """The mounted `aeat app ledger` verb count matches the legacy-plan canonical
+    """The mounted `aeat app ledger` verb count matches the accepted contract canonical
     spine (CRUD + ratified orthogonal axes + ratified workflow axes).
 
     Count-side companion to :func:`test_ledger_verb_roster_matches_canonical_spine`.
@@ -134,7 +134,7 @@ def test_ledger_orthogonal_verb_help_states_local_only(
     )
 
 
-# legacy-plan-step: help-text enumeration gate. The `aeat app ledger --help`
+# accepted contract: help-text enumeration gate. The `aeat app ledger --help`
 # and `aeat app modelo --help` surfaces are the operator's first encounter
 # with the noun-group's verb tree; if a canonical verb is mounted but
 # omitted from help (e.g. by a missing tr() entry), the operator cannot
@@ -159,7 +159,7 @@ def test_modelo_help_enumerates_every_registered_verb(cli_runner: CliRunner) -> 
     """`aeat app modelo --help` lists every mounted verb so the operator
     can discover the noun-group's full surface from the help output alone."""
 
-    from ._modelo import app as modelo_app
+    from .._modelo import app as modelo_app
 
     result = cli_runner.invoke(app, ["app", "modelo", "--help"])
     assert result.exit_code == 0, result.output
@@ -205,7 +205,7 @@ def test_modelo_top_level_verb_roster_matches_canonical_spine() -> None:
     Subgroup verbs (`work verify`, `audit export`, etc.) are governed by
     their own per-subgroup gates, not by this roster."""
 
-    from ._modelo import app as modelo_app
+    from .._modelo import app as modelo_app
 
     registered = frozenset(cmd.name for cmd in modelo_app.registered_commands)
     missing = EXPECTED_MODELO_TOP_LEVEL_VERBS - registered
@@ -214,11 +214,11 @@ def test_modelo_top_level_verb_roster_matches_canonical_spine() -> None:
     assert not extras, f"modelo verbs added without test update: {sorted(extras)}"
 
 
-# legacy-plan-step — bucket_app maintenance-verb pre-landing state pinned.
-# Per legacy-plan-step + legacy-plan-step the bucket noun-group will gain
+# accepted contract — bucket_app maintenance-verb pre-landing state pinned.
+# Per accepted contract + accepted contract the bucket noun-group will gain
 # six maintenance verbs (browse, search, export, import, rename, delete)
 # once BucketMaintenanceService lands. Until then, only `history` is
-# mounted. This test pins the current state so when legacy-step lands the
+# mounted. This test pins the current state so when contract lands the
 # implementer is forced to update EXPECTED_BUCKET_APP_VERBS, preventing
 # a silent partial-landing where some verbs ship without the others.
 EXPECTED_BUCKET_APP_VERBS: frozenset[str] = frozenset({"history"})
@@ -226,20 +226,21 @@ EXPECTED_BUCKET_APP_VERBS: frozenset[str] = frozenset({"history"})
 
 def test_bucket_app_verb_roster_pins_pre_s2150_state() -> None:
     """Bucket noun-group today carries only `history`; the six maintenance
-    verbs (per legacy-plan-step + legacy-plan-step) are not yet mounted.
+    verbs (per accepted contract + accepted contract) are not yet mounted.
 
-    When legacy-step lands this assertion fires, which is the intended flag:
+    When contract lands this assertion fires, which is the intended flag:
     the implementer must update :data:`EXPECTED_BUCKET_APP_VERBS` to
     include the new maintenance verbs (browse / search / export /
     import / rename / delete) so the test continues to pass and the
     service + verb landing stays coordinated."""
 
-    from ._config import bucket_app
+    from .._config import bucket_app
 
     registered = frozenset(cmd.name for cmd in bucket_app.registered_commands)
+    expected = sorted(EXPECTED_BUCKET_APP_VERBS)
+    actual = sorted(registered)
     assert registered == EXPECTED_BUCKET_APP_VERBS, (
-        f"bucket_app verbs drifted from the S2150 pre-landing state: "
-        f"expected {sorted(EXPECTED_BUCKET_APP_VERBS)!r}, got {sorted(registered)!r}. "
-        f"If S2150 has landed, update EXPECTED_BUCKET_APP_VERBS to reflect the new "
-        f"maintenance-verb set (browse / search / export / import / rename / delete)."
+        f"bucket_app verbs drifted from the pre-landing state: expected {expected!r}, got {actual!r}. "
+        "When the bucket maintenance verbs land, update EXPECTED_BUCKET_APP_VERBS to include "
+        "browse / search / export / import / rename / delete."
     )

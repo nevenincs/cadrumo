@@ -115,9 +115,9 @@ def _seed_profile(
     matches the operator's state after a quiet profile-create run.
     """
 
-    from ...application.user_profile._orchestration import profile_create_storage_span
-    from ...application.user_profile._testing import register_minimal_profile
-    from ...application.workflow._persistence import workflow_state_repository
+    from ....application.user_profile._orchestration import profile_create_storage_span
+    from ....application.user_profile._testing import register_minimal_profile
+    from ....application.workflow._persistence import workflow_state_repository
 
     repo = workflow_state_repository()
     values = {
@@ -144,10 +144,10 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
 ) -> None:
     """Profile setup, config reads, deadlines, and filing runtime use one profile bucket."""
 
-    from ...application.filing import load_default_filing_profile
-    from ...application.user_profile import UserProfileLifecycleRepository
-    from ...application.user_profile._orchestration import fact_value
-    from ...application.workflow import workflow_state_repository
+    from ....application.filing import load_default_filing_profile
+    from ....application.user_profile import UserProfileLifecycleRepository
+    from ....application.user_profile._orchestration import fact_value
+    from ....application.workflow import workflow_state_repository
 
     create_result = _invoke(
         [
@@ -187,10 +187,10 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     )
     assert declare_result.exit_code == 0, declare_result.output
 
-    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ...application.user_profile._orchestration import set_active_field
-    from ...application.workflow._profile_bucket_scan import read_profile_bucket
-    from ...domain.user_profile import UserProfileFact
+    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ....application.user_profile._orchestration import set_active_field
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....domain.user_profile import UserProfileFact
 
     # Profile identity is an immutable UUIDv4 minted at creation; the
     # ``operator`` string is only the operator-facing display label.
@@ -549,7 +549,7 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
     # re-open the session per invoke as a fresh CLI process does (#52 /
     # master_key _active_session), so hold the master-key provider active across
     # these invokes.
-    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
 
     with activate_master_key_provider(get_master_key_provider()):
         configure = _invoke(["config", "auth", "configure", "--provider", "clave_movil"])
@@ -626,7 +626,7 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
     # per invoke the way a fresh CLI process does (see #52 / master_key
     # _active_session), so hold the master-key provider active across the invoke —
     # the same idiom this test already uses for its read-back below.
-    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
 
     with activate_master_key_provider(get_master_key_provider()):
         imported = _invoke(["--format", "json", "app", "ledger", "import", str(statement), "--provider", "n26"])
@@ -640,7 +640,7 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
     assert import_payload["imported_transaction_refs"][0]["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
     assert not (tmp_path / "txs" / "transactions.envelope.json").exists()
     _assert_secure_database_payload(tmp_path, canary, transaction_ref)
-    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
 
     with activate_master_key_provider(get_master_key_provider()):
         catalogue = TransactionCatalogueRepository(bucket_id="default").load()
@@ -754,7 +754,7 @@ def test_read_only_status_commands_use_isolated_local_state(encrypted_user_cli: 
     # Both status commands read the profile-bound secure store, needing an active
     # bucket session that in-process CliRunner does not re-open per invoke (#52 /
     # master_key _active_session); hold the provider active across them.
-    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
 
     with activate_master_key_provider(get_master_key_provider()):
         config_status = _invoke(["--format", "json", "config", "profile", "status"])
@@ -798,9 +798,9 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
     encrypted_user_cli: Path,
 ) -> None:
     """Profile creation must persist ``iva.regime`` for the deadline engine."""
-    from ...application.user_profile._projections import projection_for_taxpayer
-    from ...application.workflow import workflow_state_repository
-    from ...domain.deadlines import IVARegime
+    from ....application.user_profile._projections import projection_for_taxpayer
+    from ....application.workflow import workflow_state_repository
+    from ....domain.deadlines import IVARegime
 
     created = _invoke(
         [
@@ -819,7 +819,7 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
     )
     assert created.exit_code == 0, created.output
 
-    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
 
     with activate_master_key_provider(get_master_key_provider()):
         state = workflow_state_repository().load()
@@ -833,8 +833,8 @@ def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_eng
     encrypted_user_cli: Path,
 ) -> None:
     """Boolean profile flags must survive creation and reach the engine."""
-    from ...application.user_profile._projections import projection_for_taxpayer
-    from ...application.workflow import workflow_state_repository
+    from ....application.user_profile._projections import projection_for_taxpayer
+    from ....application.workflow import workflow_state_repository
 
     created = _invoke(
         [
@@ -860,7 +860,7 @@ def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_eng
     facts = {row["path"]: row["value"] for row in show_payload["facts"]}
     assert facts["iva.does_intracomunitario"] == "true"
 
-    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
 
     with activate_master_key_provider(get_master_key_provider()):
         state = workflow_state_repository().load()

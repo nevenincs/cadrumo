@@ -273,7 +273,7 @@ class TestEnvelopeVersionGate:
         tmp_path: Path,
         provider: EphemeralMasterKeyProvider,
     ) -> None:
-        from ..errors import EnvelopeVersionError
+        from ...errors import EnvelopeVersionError
 
         envelope = Envelope[_SamplePayload](
             schema_version=99,

@@ -173,8 +173,8 @@ class TestStoreRunIdValidation:
         self,
         tmp_path: Path,
     ) -> None:
-        from . import load_events, load_trace
-        from ._store import _validate_run_id
+        from .. import load_events, load_trace
+        from .._store import _validate_run_id
 
         with override_settings(aeat_runs_dir=str(tmp_path)):
             for bad in (
@@ -198,7 +198,7 @@ class TestStoreRunIdValidation:
         self,
         tmp_path: Path,
     ) -> None:
-        from . import load_trace
+        from .. import load_trace
 
         with override_settings(aeat_runs_dir=str(tmp_path)):
             with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
@@ -210,7 +210,7 @@ class TestStoreRunIdValidation:
         self,
         tmp_path: Path,
     ) -> None:
-        from . import load_trace
+        from .. import load_trace
 
         with override_settings(aeat_runs_dir=str(tmp_path)):
             # 16 hex chars — passes validation, but nothing on disk.
@@ -298,7 +298,7 @@ class TestIterEvents:
         tmp_path: Path,
     ) -> None:
         """Validation must be eager — not deferred until iteration."""
-        from . import iter_events
+        from .. import iter_events
 
         with (
             override_settings(aeat_runs_dir=str(tmp_path)),
@@ -312,7 +312,7 @@ class TestIterEvents:
         tmp_path: Path,
     ) -> None:
         """Consuming n events pulls exactly n lines off disk."""
-        from . import iter_events
+        from .. import iter_events
 
         with override_settings(aeat_runs_dir=str(tmp_path)):
             run_id = "0123456789abcdef"
@@ -333,7 +333,7 @@ class TestIterEvents:
         tmp_path: Path,
     ) -> None:
         """A validation error fires during iteration, not at call time."""
-        from . import iter_events
+        from .. import iter_events
 
         with override_settings(aeat_runs_dir=str(tmp_path)):
             run_id = "abcdef0123456789"
@@ -354,7 +354,7 @@ class TestIterEvents:
 class TestSinkEmitFailureWarningIsScrubbed:
     """Verify sink-emit failures route through SecretScrubbingFilter.
 
-    legacy-step: when ``JsonlRunSink.emit`` fails (e.g. write to a non-writable
+    contract: when ``JsonlRunSink.emit`` fails (e.g. write to a non-writable
     path) the WARNING record it emits must pass through
     ``SecretScrubbingFilter`` so any sensitive tokens embedded in the
     exception text are redacted before reaching any handler.
@@ -429,7 +429,7 @@ class TestSinkEmitFailureWarningIsScrubbed:
         # the meaningful assertion is that the logger used is the module-level
         # get_logger() one (has SecretScrubbingFilter attached) rather than
         # a bare logging.getLogger() call (which would not).
-        from ..logging import SecretScrubbingFilter
+        from ...logging import SecretScrubbingFilter
 
         sink_logger = logging.getLogger(warn.name)
         assert any(isinstance(f, SecretScrubbingFilter) for f in sink_logger.filters), (

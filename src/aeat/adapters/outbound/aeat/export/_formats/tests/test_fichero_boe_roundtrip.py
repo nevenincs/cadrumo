@@ -222,8 +222,8 @@ def test_currency_blank_input_rejected_at_decode() -> None:
     from a legitimate zero.
     """
 
-    from .._errors import AeatExportFormatError
-    from ._deserialise import deserialise
+    from ..._errors import AeatExportFormatError
+    from .._deserialise import deserialise
 
     specs = (
         record_field(
@@ -250,8 +250,8 @@ def test_currency_inline_sign_blank_magnitude_rejected_at_decode() -> None:
     decode to a negative-zero.
     """
 
-    from .._errors import AeatExportFormatError
-    from ._deserialise import deserialise
+    from ..._errors import AeatExportFormatError
+    from .._deserialise import deserialise
 
     specs = (
         record_field(
@@ -455,7 +455,7 @@ def test_modelo_130_golden_sha_fichero_boe(tmp_path: Path) -> None:
     SHA — making the SHA a *consequence* of structural correctness, not
     the sole check.
     """
-    from ......application.filing import (
+    from .......application.filing import (
         ModeloDraftStatus,
         ModeloOperatorProfile,
         build_draft,
@@ -637,7 +637,7 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
     (offset, length, sign flag, record type, DID00 literal) breaks the
     per-offset assertion that names its DR row, before the SHA changes.
     """
-    from ......application.filing import (
+    from .......application.filing import (
         ModeloDraftStatus,
         ModeloOperatorProfile,
         build_draft,

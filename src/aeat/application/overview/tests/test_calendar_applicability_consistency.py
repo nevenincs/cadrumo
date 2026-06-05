@@ -137,7 +137,7 @@ def test_calendar_and_explain_agree_on_applicability_verdict(
     any verdict state), the applicability verdict returned by the calendar
     path must be identical to the verdict returned by the explain path.
 
-    This pins the agreement state as of the legacy-step landing commit. A
+    This pins the agreement state as of the contract landing commit. A
     regression in either surface will be caught by this test.
     """
     profile = profile_factory()
@@ -175,8 +175,8 @@ def test_derive_modelo_applicability_is_the_shared_implementation() -> None:
     ensures both surfaces use the same rule table and there is no
     divergence path through a separate implementation.
     """
-    from . import derive_modelo_applicability as calendar_fn
-    from ._explain import derive_modelo_applicability as explain_fn  # type: ignore[attr-defined]
+    from .. import derive_modelo_applicability as calendar_fn
+    from .._explain import derive_modelo_applicability as explain_fn  # type: ignore[attr-defined]
 
     assert calendar_fn is explain_fn, (
         "calendar and explain modules import different derive_modelo_applicability "

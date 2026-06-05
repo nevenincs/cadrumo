@@ -206,12 +206,12 @@ async def _try_open_and_snapshot_dialog(
 
 
 async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
-    from ._renta_web_open import (
+    from .._renta_web_open import (
         _click_expected,
         _expect_visible,
         _fill_identification_profile,
     )
-    from ._renta_web_open_safety import (
+    from .._renta_web_open_safety import (
         assert_click_target_safe,
         install_page_safety_net,
     )

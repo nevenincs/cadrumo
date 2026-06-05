@@ -218,7 +218,7 @@ def test_profile_switch_remains_recovery_path_on_root_fallback_database(tmp_path
 
 @pytest.mark.parametrize("verb_path", _GUARDED_PREDICATE_PATHS)
 def test_root_fallback_guard_predicate_covers_profile_bound_mutations(verb_path: str) -> None:
-    """The central guard covers known mutation surfaces discovered during legacy-step review."""
+    """The central guard covers known mutation surfaces discovered during contract review."""
 
     assert is_profile_bound_write_verb_path(verb_path)
 

@@ -1,165 +1,406 @@
 # Set up your taxpayer profile
 
-Use this guide to create the local taxpayer profile that `aeat app` commands
-use. The active profile is the one `aeat` reads and updates when you import
-ledger records, calculate a modelo, or export a local file. A modelo is a
-Spanish tax form.
+Use this guide to create and maintain the taxpayer profile that `aeat app`
+commands use. A profile is local. Creating, editing, showing, exporting, or
+importing a profile does not submit anything to the Agencia Estatal de
+Administracion Tributaria (AEAT).
 
-Profiles are local. Creating or editing a profile does not contact the Agencia
-Estatal de Administración Tributaria (AEAT).
+## What the active profile means
 
-## Before you start
+The active profile is the taxpayer context for `aeat app` commands. When a
+profile is active, commands such as ledger import, transaction classification,
+modelo calculation, export, and local filing history read and update that
+profile's local data.
 
-You need `aeat` installed. If it is not installed, start with
-[Get started with aeat](../getting-started.md).
+Use one profile per taxpayer or distinct taxpayer context. You might keep
+several profiles when you prepare filings for more than one taxpayer, separate a
+test profile from a real profile, or import a restored copy under a different
+name.
 
-Have these facts ready:
+List profiles and see which one is active:
 
-- Your Spanish identity or tax identifier:
-  - Spanish citizens usually use Documento Nacional de Identidad (DNI).
-  - Foreign individuals usually use Número de Identidad de Extranjero (NIE).
-  - Companies and other legal entities use Número de Identificación Fiscal
-    (NIF). If your records say Código de Identificación Fiscal (CIF), enter
-    that identifier as requested by the command.
-- Name and surnames, or company name
-- Tax address postcode
-- Taxpayer type, such as natural person or legal entity
-- Business activity, as plain text or an Impuesto sobre Actividades Económicas
-  (IAE) heading if you know it
-- Impuesto sobre la Renta de las Personas Físicas (IRPF) income category, the
-  personal income tax category for the income you report
-- Impuesto sobre el Valor Añadido (IVA) regime, the value-added tax regime for
-  the activity
-- Output language for command responses
-
-## Create the profile with the wizard
-
-Run `create` with a profile name you recognize, such as `my-profile`:
-
-```
-aeat config profile create my-profile
-```
-
-Answer the prompts. The wizard asks only the questions that apply to the choices
-you make. When it finishes, the new profile becomes active.
-
-## Confirm the active profile
-
-Check which profile is active:
-
-```
+```bash
+aeat config profile list
 aeat config profile status
 ```
 
-Inspect the saved facts:
+Switch before working on another taxpayer:
 
-```
-aeat config profile show
-```
-
-Fix any wrong facts before you import ledger records or calculate a modelo.
-
-## Create a profile without prompts
-
-Use non-interactive creation only when the wizard cannot ask questions, such as
-inside a script. Pass `--quiet`, and add `--accept-defaults` when you want `aeat`
-to fill any omitted facts from its defaults.
-
-This example creates a natural-person profile for an economic activity. First
-create the profile with the facts required for profile status checks:
-
-```
-aeat config profile create my-profile --quiet --accept-defaults --tax-id 12345678Z --activity "graphic design"
-```
-
-Then add the name and filing facts:
-
-```
-aeat config profile edit my-profile --quiet --name "Ana" --surnames "Garcia Lopez"
-aeat config profile edit my-profile --quiet --address-postcode 28013 --entity-type natural_person
-aeat config profile edit my-profile --quiet --irpf-income-categories actividad_economica --iva-regime GENERAL --output-language en
-```
-
-Use the [CLI reference](../cli/index.rst) for the full flag list and accepted
-values.
-
-## Update profile facts
-
-Use `edit` to change an existing profile:
-
-```
-aeat config profile edit my-profile
-```
-
-For a single scripted change, pass `--quiet` and the field you want to change:
-
-```
-aeat config profile edit my-profile --quiet --address-postcode 28014
-```
-
-Run `status` or `show` again after editing.
-
-## Switch between profiles
-
-List your profiles:
-
-```
-aeat config profile list
-```
-
-Switch before you work on another taxpayer:
-
-```
+```bash
 aeat config profile switch my-other-profile
 ```
 
-Run `aeat config profile status` after switching if you are not sure which
-profile is active.
+Switching changes which local ledger, modelo drafts, and filing markers `aeat
+app` commands will use.
 
-## Check the profile
+## Choose the setup mode
 
-Validate the active profile against the profile schema:
+Use non-interactive flags when you want a repeatable setup:
 
+```bash
+aeat config profile create my-profile --quiet --tax-id 12345678Z
 ```
+
+`--quiet` runs without prompts and uses only the flags you provide. Add
+`--accept-defaults` only when you intentionally want `aeat` to fill omitted
+questions from descriptor defaults.
+
+You can also run:
+
+```bash
+aeat config profile create my-profile
+```
+
+That interactive path asks the same profile questions described below. Use the
+sections below to decide each answer before you rely on the profile.
+
+For the exact current flag names, enum values, and command-generated help text,
+run:
+
+```bash
+aeat config profile create --help
+aeat config profile edit --help
+```
+
+## Profile setup questions
+
+The profile command groups questions by topic. Some questions are conditional:
+for example, spouse questions apply to natural-person joint declarations, and
+legal-entity form applies to legal entities.
+
+### Taxpayer Type
+
+`--entity-type`
+: Choose `natural_person`, `legal_entity`, or `attribution_entity`. Natural
+  persons are individuals. Legal entities cover companies such as SL or SA.
+  Attribution entities cover contexts such as communities of goods.
+
+`--legal-entity-form`
+: Use this only for a legal entity. It records the legal form such as `sl`,
+  `sa`, `cooperativa`, or another supported form.
+
+`--irpf-income-categories`
+: Use this for a natural person. Repeat it for each IRPF income category that
+  applies, such as `actividad_economica`, `trabajo`,
+  `capital_inmobiliario`, `capital_mobiliario`, `ganancias_patrimoniales`, or
+  `pension`. Do not select `actividad_economica` for a pure landlord,
+  salaried-only taxpayer, or pensioner who has no economic activity.
+
+`--incn-prior-12-months`
+: Optional net turnover for the previous 12 months. It matters for corporate
+  tax contexts such as Modelo 202 modality checks.
+
+`--new-entity-first-two-profit-periods` / `--no-new-entity-first-two-profit-periods`
+: Legal-entity fact for the first two profit-making periods. Use the positive
+  flag only when the reduced-rate condition applies; use the negative flag when
+  you want to explicitly record that it does not.
+
+### Identity and Display
+
+`--tax-id`
+: The taxpayer identifier. Spanish citizens usually use DNI/NIF, foreign
+  individuals use NIE, and companies or other entities use NIF/CIF. This is the
+  only unconditionally required creation flag in non-interactive mode.
+
+`--name` and `--surnames`
+: The person's name and surnames, or the entity's display name where the
+  command asks for it. These values can appear in local output and export
+  headers.
+
+`--activity`
+: Free-text economic activity or IAE heading. The setup flow asks for this only
+  when the taxpayer actually has an economic activity, such as a legal entity or
+  a natural person with `actividad_economica`.
+
+`--address-postcode`
+: Fiscal-address postcode. Use a Spanish postcode for the taxpayer's fiscal
+  address when applicable.
+
+`--activity-start-date`
+: Optional census/activity start date in `YYYY-MM-DD` format. When set, the
+  filing calendar can avoid showing obligations for periods before activity
+  registration.
+
+`--taxation-type`
+: Renta declaration type for a natural person: `1` for individual, `2` for
+  joint family-unit filing.
+
+`--output-language`
+: CLI output language for the profile. Current supported values are `es`, `en`,
+  `ca`, and `hu`.
+
+### First Declarant
+
+These questions apply to natural-person profiles.
+
+`--taxpayer-sex`
+: Modelo/Renta sex code, `H` or `M`, when the target modelo needs it.
+
+`--taxpayer-marital-status`
+: Renta marital-status code: `1` single, `2` married, `3` widowed, `4`
+  separated or divorced.
+
+`--situacion-familiar`
+: Family situation for IRPF rules, such as married, registered partnership,
+  unregistered partnership, single, or separated/divorced. This is not the same
+  as the form marital-status code; it helps determine family-unit eligibility.
+
+`--taxpayer-marriage-date`
+: Current marriage start date in `YYYY-MM-DD` format. The setup flow asks for
+  it only when marital status is married.
+
+`--taxpayer-birth-date`
+: Birth date of the first declarant.
+
+`--taxpayer-disability-grade`
+: Disability-grade code when applicable.
+
+`--taxpayer-death-date`
+: Death date when filing for a deceased taxpayer context.
+
+### Spouse
+
+Spouse questions apply when the natural-person profile is set up for a joint
+declaration path.
+
+`--spouse-tax-id`
+: Spouse NIF/NIE. Required for joint declaration contexts.
+
+`--spouse-name`, `--spouse-surnames`, `--spouse-birth-date`, `--spouse-sex`,
+`--spouse-disability-grade`
+: Spouse personal facts used by Renta-related calculations and exports where
+  applicable.
+
+`--spouse-non-resident-irpf`
+: Mark this when the spouse is non-resident for IRPF.
+
+`--spouse-eu-eea-resident`
+: Mark this when the non-resident spouse is resident in the EU/EEA.
+
+`--spouse-eu-eea-country`
+: EU/EEA country code for that spouse context.
+
+### Family Unit
+
+`--family-descendants-eu-eea-deduction`
+: Mark when descendants in the EU/EEA affect the family-unit deduction.
+
+`--family-minor-children-in-unit`
+: Mark when minor children are part of the family unit.
+
+### IVA
+
+`--iva-regime`
+: IVA regime for the taxpayer activity. Common values include `GENERAL`,
+  `SIMPLIFICADO`, `RECARGO_EQUIVALENCIA`, `REAGP`, and `EXENTO`.
+
+`--iva-roi-enrolled`
+: Mark if the taxpayer is registered in ROI.
+
+`--iva-oss-enrolled`
+: Mark if the taxpayer is registered in OSS.
+
+`--iva-sii-enrolled`
+: Mark if the taxpayer is registered in SII.
+
+`--iva-redeme-enrolled`
+: Mark if the taxpayer is registered in REDEME.
+
+`--iva-intracommunity-operations-exceed-50000-eur`
+: Mark when intracommunity operations exceed the documented threshold.
+
+### Enrollment
+
+`--enrollment-large-company`
+: Mark when the taxpayer is a large company for filing-obligation purposes.
+
+`--enrollment-public-administration-budget-gt-6000000`
+: Mark when the public-administration budget threshold applies.
+
+### Obligations
+
+Use these flags to record which recurring obligations apply to the taxpayer.
+They influence calendars, applicability checks, and modelo readiness.
+
+`--has-employees`
+: The taxpayer has employees and pays salaries with withholding.
+
+`--pays-professionals-with-retencion`
+: The taxpayer pays professionals with withholding.
+
+`--professional-income-withholding-ge-70pct`
+: At least 70 percent of professional income has prior withholding.
+
+`--pays-rent-with-retencion`
+: The taxpayer pays premises rent with withholding.
+
+`--pays-capital-income-with-retencion`
+: The taxpayer pays capital income with withholding.
+
+`--uses-objective-estimation-irpf`
+: The taxpayer uses IRPF objective estimation.
+
+`--irpf-estimation-regime`
+: IRPF estimation regime for economic activity, such as direct normal, direct
+  simplified, or objective estimation.
+
+`--irpf-special-regime`
+: IRPF special regime, normally `general`; use `impatriado` only for the
+  documented displaced-worker regime context.
+
+`--irpf-special-regime-start-date`
+: Start date for the special regime, when `impatriado` applies.
+
+`--does-intracomunitario`
+: The taxpayer performs intracommunity operations.
+
+`--third-party-transactions-above-347-threshold`
+: Transactions with third parties exceed the Modelo 347 threshold.
+
+`--bienes-extranjero-above-threshold`
+: Foreign assets exceed the legal threshold.
+
+### Fiscal Residence
+
+`--fiscal-residency`
+: Choose `resident_irpf` for ordinary Spanish IRPF residence, or
+  `non_resident_irnr` for non-resident IRNR taxation.
+
+`--country-of-fiscal-residence`
+: ISO country code for non-resident contexts.
+
+`--representante-fiscal-nif` and `--representante-fiscal-nombre`
+: Fiscal representative details when required for a non-resident context.
+
+`--tax-residence-ccaa`
+: Autonomous community for Spanish IRPF residents. The setup flow does not use
+  this for non-resident IRNR profiles.
+
+### Notes
+
+`--notes`
+: Optional local notes for your own memory. Treat this as sensitive text; do
+  not store secrets, certificate material, bank credentials, or full personal
+  documents here.
+
+## Create a practical autonomo profile
+
+This example creates a minimal natural-person profile with economic activity:
+
+```bash
+aeat config profile create ana-2026 --quiet --accept-defaults --entity-type natural_person --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --irpf-income-categories actividad_economica --activity "diseno grafico" --iva-regime GENERAL --tax-residence-ccaa madrid --output-language en
+```
+
+Then inspect and validate it:
+
+```bash
+aeat config profile show ana-2026
+aeat config profile validate ana-2026
+```
+
+Fix any wrong facts before you import transactions or calculate a modelo.
+
+## Edit an existing profile
+
+Use `edit` with the profile name and the flags to change:
+
+```bash
+aeat config profile edit ana-2026 --quiet --address-postcode 28013
+aeat config profile edit ana-2026 --quiet --iva-regime GENERAL
+```
+
+Run `show`, `status`, or `validate` again after editing.
+
+## Check modelo-specific readiness
+
+General validation checks the profile schema:
+
+```bash
 aeat config profile validate
 ```
 
-To validate another profile without switching:
+Modelo-specific readiness needs a modelo, registry revision, filing year, and
+period:
 
-```
-aeat config profile validate my-other-profile
-```
-
-Modelo-specific checks need a modelo, registry revision, filing year, and
-period. For those checks, see
-`aeat config profile preflight --modelo ... --revision-id ... --filing-year ... --period ...`
-in the [CLI reference](../cli/index.rst).
-
-## Manage profile records
-
-Copy a profile when you need a second profile that starts from the same facts:
-
-```
-aeat config profile duplicate my-profile my-copy
+```bash
+aeat config profile preflight --modelo 303 --revision-id <revision-id> --filing-year 2026 --period 1T
 ```
 
-Rename a profile:
+Use `aeat app modelo describe MODELO` to inspect available registry revisions,
+and the [command-line reference](../cli/index.rst) for exact options.
 
+## Rename, duplicate, delete, and remove profiles
+
+Rename a profile when only the visible label should change:
+
+```bash
+aeat config profile rename ana-2026 ana-real
 ```
-aeat config profile rename my-profile new-profile-name
+
+Duplicate a profile when you want a second local profile that starts from the
+same facts:
+
+```bash
+aeat config profile duplicate ana-real ana-copy --display-name "Ana copy"
 ```
 
 Delete a profile only when you mean to remove it from normal use:
 
-```
-aeat config profile delete old-profile --yes
+```bash
+aeat config profile delete ana-copy --yes
 ```
 
-`--yes` is required. Deletion is a local operation, but it is destructive.
-The profile stops being available for ordinary `list`, `switch`, and `app`
-workflows. If it was active, `aeat` clears the active-profile pointer.
+Deletion is local and destructive. The profile is removed from ordinary list,
+switch, and app workflows. If it was active, `aeat` clears the active-profile
+pointer.
 
-## If a command stops with an error
+## Export and import a profile
+
+Export writes a portable JSON package:
+
+```bash
+aeat config profile export ana-real --to ./ana-real-profile.json
+```
+
+Import a package into another session or another storage root:
+
+```bash
+aeat config profile import ./ana-real-profile.json
+```
+
+If a profile with the same label already exists, import under a new visible
+name:
+
+```bash
+aeat config profile import ./ana-real-profile.json --label ana-restored
+```
+
+Portable profile JSON can contain taxpayer facts and local filing data. Store it
+as sensitive tax data and do not send it in support requests unless you have
+redacted it.
+
+## Show profile contents and privacy notes
+
+Display the active profile:
+
+```bash
+aeat config profile show
+```
+
+Display a named profile:
+
+```bash
+aeat config profile show ana-real
+```
+
+`profile show` is meant for local review. The normal CLI rendering redacts some
+identity values, such as tax identifiers, but the profile still represents
+personal tax data. There is no `profile show --reveal` flag in the current help
+surface. If you need to share profile information for support, prefer a small
+redacted excerpt that keeps only the relevant field names and non-sensitive
+values.
+
+## If setup looks wrong
 
 If a command reports that no profile is active, a field value is invalid, or you
 are working under the wrong profile, use
@@ -167,6 +408,7 @@ are working under the wrong profile, use
 
 ## Next steps
 
-- [Import and classify a bank statement](import-bank-statements.md)
+- [Work with transaction data](import-bank-statements.md)
 - [Plan your filing calendar](filing-calendar.md)
+- [Review and supply calculation inputs](review-calculation-values.md)
 - [CLI reference](../cli/index.rst)

@@ -79,7 +79,7 @@ def test_wizard_status_locale_key_exists_in_all_locales() -> None:
 
 def test_wizard_root_in_dynamic_translation_roots() -> None:
     """'wizard' must appear in _ast_scanner._DYNAMIC_TRANSLATION_ROOTS."""
-    from .locales._ast_scanner import _DYNAMIC_TRANSLATION_ROOTS
+    from ..locales._ast_scanner import _DYNAMIC_TRANSLATION_ROOTS
 
     assert "wizard" in _DYNAMIC_TRANSLATION_ROOTS, (
         "'wizard' is not in _DYNAMIC_TRANSLATION_ROOTS — catalogue f-string dynamic-dispatch survivors are undocumented"
@@ -93,7 +93,7 @@ def test_catalogue_fstring_prefixes_detected_by_scanner() -> None:
     tree = ast.parse(source, filename=str(catalogue_path))
 
     # Import the internal function directly to scan just the catalogue module
-    from .locales._ast_scanner import _extract_fstring_prefixes
+    from ..locales._ast_scanner import _extract_fstring_prefixes
 
     markers = _extract_fstring_prefixes(tree)
     wizard_markers = {m for m in markers if m.startswith("wizard.")}

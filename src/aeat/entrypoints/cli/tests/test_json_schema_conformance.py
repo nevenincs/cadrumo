@@ -96,7 +96,7 @@ def _force_load_lazy_subcommands(app: typer.Typer) -> None:
     time, so we walk every materialised group and force-load every lazy
     entry registered under its name.
     """
-    from ._command_suggestions import _LAZY_REGISTRY
+    from .._command_suggestions import _LAZY_REGISTRY
 
     seen: set[int] = set()
     pending: list[typer.Typer] = [app]
@@ -184,7 +184,7 @@ def _walk_cli_command_paths(app: typer.Typer) -> set[str]:
 
 
 def _live_app() -> typer.Typer:
-    from . import app as live_app
+    from .. import app as live_app
 
     return live_app
 
@@ -240,7 +240,7 @@ def test_registered_schema_envelope_round_trips(command_path: str) -> None:
 
 
 # ---------------------------------------------------------------------
-# Zero-bare-emit gate (emit-envelope-schema-burndown legacy-plan-step)
+# Zero-bare-emit gate (emit-envelope-schema-burndown accepted contract)
 # ---------------------------------------------------------------------
 
 # Production CLI sites that legitimately emit through the bare ``_emit``

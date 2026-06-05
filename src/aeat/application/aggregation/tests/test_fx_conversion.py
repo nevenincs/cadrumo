@@ -166,7 +166,7 @@ def test_usd_transaction_with_value_in_eur_passes_non_eur_predicate() -> None:
     populated, meaning the aggregation gate will not emit UNSUPPORTED_CURRENCY.
     """
     raw = _usd_raw("usd-gate-001")
-    from ...domain.transactions import Transaction
+    from ....domain.transactions import Transaction
 
     tx = Transaction.model_validate(
         {
@@ -184,7 +184,7 @@ def test_usd_transaction_with_value_in_eur_passes_non_eur_predicate() -> None:
 def test_usd_transaction_without_conversion_is_flagged() -> None:
     """A USD transaction with no value_in_eur is flagged by the gate predicate."""
     raw = _usd_raw("usd-gate-002")
-    from ...domain.transactions import Transaction
+    from ....domain.transactions import Transaction
 
     tx = Transaction.model_validate(
         {

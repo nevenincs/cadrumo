@@ -345,8 +345,8 @@ class TestBucketIsolation:
 
 class TestDeriveBundleId:
     def test_derive_changes_when_record_digest_changes(self) -> None:
-        from ...domain.buckets._event import BucketEventObjectType
-        from ._models import EvidenceRecordRef
+        from ....domain.buckets._event import BucketEventObjectType
+        from .._models import EvidenceRecordRef
 
         rec_a = EvidenceRecordRef(
             object_type=BucketEventObjectType.CALCULATION_REVISION,

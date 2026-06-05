@@ -3,7 +3,7 @@
 Asserts that ``declaration_key`` and ``update_declaration_pointer`` each have
 exactly one *production* definition across the :mod:`aeat.application.workflow`
 package. The duplicate ``update_declaration_pointer`` that lived in ``_engine.py``
-was collapsed onto the canonical ``_models.py`` definition (legacy-plan-step); this gate
+was collapsed onto the canonical ``_models.py`` definition (accepted contract); this gate
 keeps the duplication from silently returning. It also pins the case-folding
 contract: ``declaration_key`` upper-cases the period segment so a lowercase token
 (``2025q1``) and its uppercase form (``2025Q1``) resolve to one canonical key.
@@ -53,7 +53,7 @@ def test_declaration_key_has_exactly_one_definition() -> None:
 
 
 def test_update_declaration_pointer_has_exactly_one_definition() -> None:
-    """DB-05: the _engine duplicate was collapsed onto the _models canonical (legacy-step)."""
+    """DB-05: the _engine duplicate was collapsed onto the _models canonical (contract)."""
     hits = _production_def_count("update_declaration_pointer")
     total = sum(hits.values())
     assert total == 1, (

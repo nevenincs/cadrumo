@@ -181,8 +181,16 @@ def test_modelo_360_adhoc_fidelity_enrolls_two_renta_years(tmp_path: Path) -> No
         _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)
 
     recorder = EnrollmentRecorder(_MODELO)
-    recorder.record_context_year(filing_year=_YEAR_N, context_label=_CONTEXT_LABEL, persisted_observation_count=(_count_n))
-    recorder.record_context_year(filing_year=_YEAR_N_PLUS_1, context_label=_CONTEXT_LABEL, persisted_observation_count=(_count_n1))
+    recorder.record_context_year(
+        filing_year=_YEAR_N,
+        context_label=_CONTEXT_LABEL,
+        persisted_observation_count=_count_n,
+    )
+    recorder.record_context_year(
+        filing_year=_YEAR_N_PLUS_1,
+        context_label=_CONTEXT_LABEL,
+        persisted_observation_count=_count_n1,
+    )
 
     evidence = recorder.evidence()
     assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)

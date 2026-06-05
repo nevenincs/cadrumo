@@ -88,13 +88,13 @@ def test_serialize_tabular_rows_rejects_unknown_fields() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Registry membership — legacy-step
+# Registry membership — contract
 # ---------------------------------------------------------------------------
 
 
 def test_export_format_error_is_in_error_registry() -> None:
     """ExportFormatError must be registered so the CLI can handle it."""
-    from ...core.errors import ERROR_REGISTRY
+    from ....core.errors import ERROR_REGISTRY
 
     assert "REFUSED_EXPORT_FORMAT" in ERROR_REGISTRY
 
@@ -106,7 +106,7 @@ def test_export_format_error_registry_has_no_name_collision() -> None:
     (code REFUSED_EXPORT_FORMAT) should appear under that simple name.  The
     adapter class is now AeatExportFormatError (code FAIL_EXPORT_FORMAT).
     """
-    from ...core.errors.registry import _ALL_DECLARED_ERROR_CODES
+    from ....core.errors.registry import _ALL_DECLARED_ERROR_CODES
 
     qualnames_named_export_format_error = [
         qualname for qualname, _ in _ALL_DECLARED_ERROR_CODES if qualname.split(".")[-1] == "ExportFormatError"
@@ -119,14 +119,14 @@ def test_export_format_error_registry_has_no_name_collision() -> None:
 
 def test_export_field_error_is_in_error_registry() -> None:
     """ExportFieldError must be registered so the CLI can handle it."""
-    from ...core.errors import ERROR_REGISTRY
+    from ....core.errors import ERROR_REGISTRY
 
     assert "REFUSED_EXPORT_FIELD" in ERROR_REGISTRY
 
 
 def test_export_format_error_code_attributes() -> None:
     """ERROR_REGISTRY entry for ExportFormatError carries expected attributes."""
-    from ...core.errors import ERROR_REGISTRY
+    from ....core.errors import ERROR_REGISTRY
 
     code = ERROR_REGISTRY["REFUSED_EXPORT_FORMAT"]
     assert code.code == "REFUSED_EXPORT_FORMAT"
@@ -136,7 +136,7 @@ def test_export_format_error_code_attributes() -> None:
 
 def test_export_field_error_code_attributes() -> None:
     """ERROR_REGISTRY entry for ExportFieldError carries expected attributes."""
-    from ...core.errors import ERROR_REGISTRY
+    from ....core.errors import ERROR_REGISTRY
 
     code = ERROR_REGISTRY["REFUSED_EXPORT_FIELD"]
     assert code.code == "REFUSED_EXPORT_FIELD"
@@ -145,7 +145,7 @@ def test_export_field_error_code_attributes() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Envelope round-trip — legacy-step
+# Envelope round-trip — contract
 # ---------------------------------------------------------------------------
 
 
@@ -178,7 +178,7 @@ def test_export_field_error_build_error_envelope() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Locale translated_message key — legacy-step
+# Locale translated_message key — contract
 # ---------------------------------------------------------------------------
 
 
@@ -223,7 +223,7 @@ def test_export_field_error_locale_key_present_in_catalogue() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Real raise sites — legacy-step: seven replaced ValueError sites
+# Real raise sites — contract: seven replaced ValueError sites
 # ---------------------------------------------------------------------------
 
 
@@ -293,7 +293,7 @@ def test_model_validator_raises_export_field_error_on_blank_fieldname() -> None:
     """Site: TabularExportResult._validate_fieldnames — blank field in model."""
     from pydantic import ValidationError
 
-    from ._tabular import TabularExportResult
+    from .._tabular import TabularExportResult
 
     payload = b"transaction_id,amount\r\n"
     with pytest.raises((ExportFieldError, ValidationError)) as exc_info:
@@ -316,7 +316,7 @@ def test_model_validator_raises_export_field_error_on_duplicate_fieldname() -> N
     """Site: TabularExportResult._validate_fieldnames — duplicate field in model."""
     from pydantic import ValidationError
 
-    from ._tabular import TabularExportResult
+    from .._tabular import TabularExportResult
 
     payload = b"amount,amount\r\n"
     with pytest.raises((ExportFieldError, ValidationError)) as exc_info:
@@ -340,7 +340,7 @@ def test_model_validator_raises_export_field_error_on_invalid_sha256() -> None:
 
     from pydantic import ValidationError
 
-    from ._tabular import TabularExportResult
+    from .._tabular import TabularExportResult
 
     payload = b"transaction_id,amount\n"
     with pytest.raises(ValidationError) as exc_info:

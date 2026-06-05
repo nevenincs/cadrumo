@@ -1,9 +1,9 @@
-"""Offline XLSX / Sheets-shaped workbook export of the bucket ledger (legacy-plan).
+"""Offline XLSX / Sheets-shaped workbook export of the bucket ledger (accepted contract).
 
 Exports the bucket ledger to a local ``.xlsx`` workbook (no network), confirms
 the workbook faithfully carries every exported row, and re-imports it through
 the real XLSX provider to prove the offline backup/hand-off roundtrip. This is
-the no-network counterpart of the live Google export tracked in Wave legacy-plan.
+the no-network counterpart of the live Google export tracked in Wave accepted contract.
 """
 
 from __future__ import annotations

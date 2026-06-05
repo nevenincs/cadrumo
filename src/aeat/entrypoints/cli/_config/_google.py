@@ -45,6 +45,7 @@ if TYPE_CHECKING:
 # of a Modelo 100 revision fails loudly if that check is unregistered, so
 # the M100 routing referential-integrity gate runs on this CLI path.
 from ....adapters.outbound.google import (
+    REQUIRED_SCOPES,
     GoogleAuthClientNotRegisteredError,
     GoogleAuthError,
     GoogleAuthExpiredError,
@@ -57,7 +58,6 @@ from ....adapters.outbound.google._calc_sheets_apply import (
 )
 from ....adapters.outbound.google._oauth_flow import run_login_flow
 from ....adapters.outbound.google._profile_binding import resolve_active_profile
-from ....adapters.outbound.google import REQUIRED_SCOPES
 from ....adapters.outbound.google._records import DriveConfig
 from ....adapters.outbound.google._session_store import (
     delete_session,

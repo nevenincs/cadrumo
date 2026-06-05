@@ -10,7 +10,7 @@ file at its root. The gate asserts:
 3. It declares the canonical Source, AEAT-page-last-updated, and
    corpus-capture-date sections.
 
-Authored under legacy-plan-step to protect the legacy-plan-step provenance
+Authored under accepted contract to protect the accepted contract provenance
 documentation against silent drift (a corpus refresh that drops
 the metadata file goes undetected without this gate).
 """
@@ -42,12 +42,12 @@ def _corpus_subdirectories_with_files() -> list[Path]:
 
 
 def test_modelo_131_corpus_carries_provenance_document() -> None:
-    """legacy-plan-step: M131 instructions corpus MUST carry PROVENANCE.md.
+    """accepted contract: M131 instructions corpus MUST carry PROVENANCE.md.
 
-    The PROVENANCE.md file authored at legacy-plan-step documents the
+    The PROVENANCE.md file authored at accepted contract documents the
     source URL, AEAT page-last-updated date, and corpus capture
     date. A future corpus refresh that drops or moves the file
-    fails this gate; downstream consumers (the legacy-plan-step / legacy-plan-step
+    fails this gate; downstream consumers (the accepted contract / accepted contract
     grounding claim) lose their provenance lineage without
     detection otherwise.
     """
@@ -70,7 +70,7 @@ def test_modelo_131_corpus_carries_provenance_document() -> None:
 
 
 def test_modelo_131_corpus_provenance_lists_every_committed_file() -> None:
-    """legacy-plan-step: every file under modelo_131/files/ MUST appear in PROVENANCE.md.
+    """accepted contract: every file under modelo_131/files/ MUST appear in PROVENANCE.md.
 
     Files added to the corpus without a PROVENANCE.md entry are
     structural drift. A future agent who adds a new AEAT-fetched

@@ -365,7 +365,7 @@ def test_registry_validator_corpus_strict_false_does_not_abort(tmp_path: Path) -
         }
     )
     # Wrap in minimal catalogues (no sources needed for this check).
-    from ._schema import RegistryCatalogues
+    from .._schema import RegistryCatalogues
 
     minimal_catalogues = RegistryCatalogues(
         legal={reference.id: reference},

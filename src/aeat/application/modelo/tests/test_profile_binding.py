@@ -284,7 +284,7 @@ def test_calculate_modelo_revision_resolves_ccaa_from_profile_without_caller_inp
 
 
 # ---------------------------------------------------------------------------
-# legacy-step regression: bool-typed profile facts preserved and routed correctly
+# contract regression: bool-typed profile facts preserved and routed correctly
 # ---------------------------------------------------------------------------
 
 _SYNTHETIC_BOOL_PROFILE_BINDING = "test-profile-new-entity-bool-binding"
@@ -336,7 +336,7 @@ def _profile_with_bool_fact(value: bool) -> UserProfileRecord:
 class TestBoolTypedProfileBinding:
     """Pin the typed-bool path through _profile_fact_index → _decimal_value.
 
-    legacy-step regression: a bool-typed profile fact must arrive at the Decimal
+    contract regression: a bool-typed profile fact must arrive at the Decimal
     channel as Decimal("1")/Decimal("0") via the isinstance(value, bool)
     branch in _decimal_value, never as a string "True"/"False" that would
     require re-parsing, and never silently as Decimal("1") via the int

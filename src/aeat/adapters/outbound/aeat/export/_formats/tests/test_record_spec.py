@@ -274,7 +274,7 @@ class TestReservedInvariant:
 
     def test_inline_sign_on_non_currency_raises(self) -> None:
         """signed_mode=INLINE_SIGN only valid on CURRENCY."""
-        from ._record_spec import SignedMode
+        from .._record_spec import SignedMode
 
         with pytest.raises(ValidationError, match="INLINE_SIGN is only valid"):
             record_field(

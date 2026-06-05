@@ -1,6 +1,6 @@
 """Tests for the core aggregation taxonomy (AggregationSourceKind).
 
-legacy-step — real-behaviour test suite verifying:
+contract — real-behaviour test suite verifying:
 - AggregationSourceKind canonical home is aeat.core.aggregation.
 - All members round-trip through pydantic field validation.
 - No production module under src/aeat/ imports AggregationSourceKind
@@ -21,7 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 # ---------------------------------------------------------------------------
-# legacy-step — canonical home
+# contract — canonical home
 # ---------------------------------------------------------------------------
 
 
@@ -65,7 +65,7 @@ def test_aggregation_source_kind_values() -> None:
 
 
 # ---------------------------------------------------------------------------
-# legacy-step — pydantic roundtrip
+# contract — pydantic roundtrip
 # ---------------------------------------------------------------------------
 
 

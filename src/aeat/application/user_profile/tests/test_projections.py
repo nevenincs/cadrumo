@@ -96,7 +96,7 @@ def test_projection_for_taxpayer_carries_section_prefixed_withholding_facts() ->
 
 
 def test_record_to_values_emits_bare_key_for_third_party_threshold() -> None:
-    """legacy-step regression: obligations.third_party_transactions_above_347_threshold
+    """contract regression: obligations.third_party_transactions_above_347_threshold
     must appear under the bare key (without 'obligations.' prefix) in the
     record_to_values output so the calendar's _GATING_FIELDS lookup finds it.
 

@@ -112,7 +112,7 @@ def test_cache_path_rejects_unsafe_model_identifiers(tmp_path: Path, model: str)
     # regression: ``key.model`` flows from the operator-
     # configured registry / env-driven ``model_override``. A path-
     # shaped value must not let the cache write outside ``root_dir``.
-    from . import LLMCacheError
+    from .. import LLMCacheError
 
     cache = LLMCache(root_dir=tmp_path)
     request = LLMRequest(prompt="Hello", temperature=0.0, language="es")
@@ -166,7 +166,7 @@ def test_entry_from_payload_rejects_malformed_bytes(tmp_path: Path, corrupted_pa
     # ``_entry_from_payload`` calls ``CachedEntry.model_validate_json``
     # before consuming any field; malformed or structurally invalid
     # payloads must raise rather than silently producing a corrupt entry.
-    from . import LLMCacheError
+    from .. import LLMCacheError
 
     cache = LLMCache(root_dir=tmp_path)
     with pytest.raises((LLMCacheError, ValueError, KeyError)):
@@ -179,7 +179,7 @@ def test_entry_from_payload_rejects_wrong_logical_root(tmp_path: Path) -> None:
     # ``logical_root`` equality before re-validating the entry.
     import json as _json
 
-    from . import LLMCacheError
+    from .. import LLMCacheError
 
     request = LLMRequest(prompt="Hello", temperature=0.0, language="es")
     cache = LLMCache(root_dir=tmp_path)

@@ -53,9 +53,9 @@ from ....domain.calculations.registry import (
 from ....domain.modelos._verification_report import ModeloVerificationFindingKind
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo._actions import _evaluate_verification_predicates
+from .._binding_prefill import resolve_bindings_from_local_store
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
-from .._binding_prefill import resolve_bindings_from_local_store
 from .._relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

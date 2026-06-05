@@ -101,7 +101,7 @@ def test_previous_filing_selector_accepts_singular_source_output_shape() -> None
     a ``source_casillas`` tuple. The typed selector must accept this
     second shape, validated as the exclusive alternative to the
     plural form. (The selector.relation shorthand was retired under
-    legacy-plan-step; relation->binding linkage is via
+    accepted contract; relation->binding linkage is via
     RelationDefinition.target_binding.)
     """
 
@@ -481,7 +481,7 @@ def test_previous_filing_selector_rejects_removed_relation_field() -> None:
     Historically the field was a runtime-ignored shorthand for documenting
     the cross-reference relation by id; the runtime resolves relation->
     binding linkage via ``RelationDefinition.target_binding`` and never
-    consulted the selector value. legacy-plan-step retired the field as dead schema
+    consulted the selector value. accepted contract retired the field as dead schema
     surface — accepting arbitrary unverified strings was a silent-
     corruption hazard. The pydantic model now rejects unknown keys under
     ``extra='forbid'``; passing ``relation`` must surface as a typed

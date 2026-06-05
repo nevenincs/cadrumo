@@ -13,7 +13,7 @@ the fix is always to replace it with a specific exception assertion.
 
 The enumeration also covers
 :mod:`aeat.entrypoints.cli.test_stdio` to confirm no workaround
-for the legacy-step stream-reconfigure tests landed there.
+for the behavior contract stream-reconfigure tests landed there.
 """
 
 from __future__ import annotations
