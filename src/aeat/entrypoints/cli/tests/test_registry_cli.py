@@ -43,6 +43,7 @@ from ....domain.calculations.registry import calculate_registry_snapshot
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.cli_runner import aeat_click_command, invoke_cached_cli
 from .._app_live import _iva_wallet_history_lines, _iva_wallet_pull_lines
+from ..registry import _resolve_parity_store_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -419,6 +420,15 @@ def test_registry_workbook_verify_cli_resumes_from_json_report_from_official_cor
     assert payload["failed_count"] == 0
 
 
+def test_registry_parity_default_store_root_comes_from_settings(tmp_path: Path) -> None:
+    configured_root = tmp_path / "configured-parity"
+    explicit_root = tmp_path / "explicit-parity"
+
+    with override_settings(aeat_registry_parity_store_dir=configured_root):
+        assert _resolve_parity_store_root(None) == configured_root
+        assert _resolve_parity_store_root(explicit_root) == explicit_root
+
+
 def test_registry_retained_commands_reject_command_local_json_flag() -> None:
     result = invoke_cached_cli(
         [
@@ -507,6 +517,42 @@ def test_verify_filed_state_compares_local_calculation_to_encrypted_observation(
     assert report.comparison.modelo == "130"
     assert "19" in report.comparison.compared_casillas
     assert report.comparison.drifts == ()
+
+
+def test_verify_filed_state_cli_loads_secure_observation_refs(tmp_path: Path) -> None:
+    store = FiledDeclaracionObservationStore(tmp_path / "observations")
+    primary, source = _modelo_130_filed_state_observations()
+    primary_path = store.persist_observation(primary)
+    source_path = store.persist_observation(source)
+
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "registry",
+            "verify-filed-state",
+            "--observation",
+            str(primary_path),
+            "--source-observation",
+            str(source_path),
+            "--registry-root",
+            str(_REGISTRY_ROOT),
+            "--source-root",
+            str(bundled_path()),
+            "--casilla",
+            "19",
+        ]
+    )
+
+    assert result.exit_code == 0, result.output
+    envelope = json.loads(result.output)
+    assert envelope["command"] == "registry.verify_filed_state"
+    comparison = envelope["result"]["comparison"]
+    assert comparison["status"] == "satisfied"
+    assert comparison["modelo"] == "130"
+    assert comparison["compared_casillas"] == ["19"]
+    assert comparison["drifts"] == []
 
 
 def test_verify_filed_state_reports_drift_from_encrypted_observation(tmp_path: Path) -> None:
