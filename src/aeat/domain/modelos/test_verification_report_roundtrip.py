@@ -29,8 +29,10 @@ from ._verification_report import (
 )
 from ._verification_repository import (
     _VERIFICATION_CATALOGUE_VERSION,
+    _VERIFICATION_NAMESPACE,
     _VERIFICATION_OBJECT_KEY,
     VerificationReportCatalogueRepository,
+    VerificationReportPersistenceError,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -143,8 +145,6 @@ def test_verification_report_flipped_grant_invariant_surfaces_at_load(
 
     import json as _json
 
-    from ._verification_repository import _VERIFICATION_NAMESPACE
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         report = _populated_report()
         catalogue = VerificationReportCatalogue(
@@ -181,3 +181,72 @@ def test_verification_report_flipped_grant_invariant_surfaces_at_load(
 
         with pytest.raises(ValidationError):
             VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+
+def test_verification_report_catalogue_wrong_inner_classification_is_localized(
+    tmp_path: Path,
+) -> None:
+    """A corrupted envelope classification raises a translated persistence error."""
+
+    from ...adapters.persistence.storage import Envelope
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        envelope = Envelope[VerificationReportCatalogue](
+            schema_version=_VERIFICATION_CATALOGUE_VERSION,
+            written_at=datetime.now(UTC).replace(microsecond=0),
+            classification=SensitivityClass.AUDIT,
+            payload=VerificationReportCatalogue(),
+        )
+        profile.repository.save(
+            namespace=_VERIFICATION_NAMESPACE,
+            object_key=_VERIFICATION_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_VERIFICATION_CATALOGUE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+        with pytest.raises(VerificationReportPersistenceError) as raised:
+            VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    assert raised.value.translated_message == "errors.fail.fail_modelo_verification_report_persistence"
+    assert raised.value.context == {
+        "reason": "classification_mismatch",
+        "expected_classification": "financial",
+        "actual_classification": "audit",
+    }
+
+
+def test_verification_report_catalogue_unsupported_storage_version_is_localized(
+    tmp_path: Path,
+) -> None:
+    """A future inner envelope schema version raises a translated persistence error."""
+
+    from ...adapters.persistence.storage import Envelope
+
+    stored_schema_version = _VERIFICATION_CATALOGUE_VERSION + 1
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        envelope = Envelope[VerificationReportCatalogue](
+            schema_version=stored_schema_version,
+            written_at=datetime.now(UTC).replace(microsecond=0),
+            classification=SensitivityClass.FINANCIAL,
+            payload=VerificationReportCatalogue(),
+        )
+        profile.repository.save(
+            namespace=_VERIFICATION_NAMESPACE,
+            object_key=_VERIFICATION_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_VERIFICATION_CATALOGUE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+        with pytest.raises(VerificationReportPersistenceError) as raised:
+            VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    assert raised.value.translated_message == "errors.fail.fail_modelo_verification_report_persistence"
+    assert raised.value.context == {
+        "reason": "unsupported_envelope_version",
+        "stored_schema_version": stored_schema_version,
+        "max_supported_version": _VERIFICATION_CATALOGUE_VERSION,
+    }

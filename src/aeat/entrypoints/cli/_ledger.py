@@ -9,7 +9,6 @@ profile audit trail via :class:`BucketEventHistoryRepository`.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Protocol
@@ -20,12 +19,16 @@ from pydantic_core import ErrorDetails
 
 from ...application.export import ExportSerializationFormat
 from ...application.ledger import (
+    ApplyRulesResult,
     LedgerExportCommand,
     LedgerReviewQuery,
+    LedgerReviewQueryResult,
+    LedgerReviewRow,
     LedgerSourceImportCommand,
     LedgerSourceImportResult,
     LedgerSourceValidationReport,
     LedgerSourceVerificationReport,
+    LedgerTransactionResultPayload,
     LLMProvider,
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
@@ -84,11 +87,13 @@ from ...domain.deadlines._models import IrpfSpecialRegime
 from ...domain.iva._schema import EUMemberState, IvaCategory
 from ...domain.transactions import (
     BusinessClassification,
+    LedgerClassificationRule,
     LLMClassifierError,
     Transaction,
     TransactionCatalogueRepository,
     TransactionDirection,
     TransactionIdPrefixError,
+    TransactionLifecycleState,
 )
 from ._common import (
     _bad,
@@ -104,6 +109,7 @@ from ._common import (
     activate_subcommand_output_language as _activate_subcommand_output_language,
 )
 from ._ledger_list import parse_ledger_list_filter_spec, project_ledger_list
+from ._schemas import OutputSchema
 
 _log = get_logger(__name__)
 
@@ -303,7 +309,7 @@ def _emit_update_result(
     events: tuple[str, ...],
     *,
     command: str,
-    result_cls: type,
+    result_cls: type[OutputSchema],
 ) -> None:
     transaction_payload = ledger_transaction_payload(result_transaction)
     review_status = ledger_transaction_review_status(result_transaction)
@@ -1507,7 +1513,7 @@ def ledger_link(
         except InvoiceLinkError as exc:
             raise _invoice_link_error_bad_parameter() from exc
 
-    evidence_result_payload: dict[str, object] = {}
+    evidence_result_payload: LedgerTransactionResultPayload | None = None
     if evidence_id is not None:
         evidence_patch = ManualLedgerTransactionPatch(purchase_invoice_evidence_id=evidence_id)
         evidence_result = update_manual_transaction_fields(
@@ -1527,7 +1533,7 @@ def ledger_link(
         "evidence_id": evidence_id,
         "actor": actor_label,
     }
-    if evidence_result_payload:
+    if evidence_result_payload is not None:
         payload["evidence_update"] = evidence_result_payload.model_dump(mode="python")
     lines = [
         "operation\tledger.link",
@@ -2030,7 +2036,7 @@ def ledger_status(
     from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
     from ...domain.modelos._repository import WorkUnitCatalogueRepository
 
-    revisions = CalculationRevisionCatalogueRepository().load()
+    revisions = CalculationRevisionCatalogueRepository().load().revisions
     work_units = WorkUnitCatalogueRepository().load()
     for revision, verdict in stale_filed_revisions(revisions=revisions, catalogue=transactions):
         work_unit = work_units.get(revision.work_unit_id)
@@ -2336,75 +2342,66 @@ def _validation_lines(
     return lines
 
 
-@app.command("review", help=tr("cli.ledger.review.help"))
-def ledger_review(
-    ctx: typer.Context,
-    filters: list[str] = typer.Option([], "--filter", help=tr("cli.ledger.review.filter_help")),
-    record_id: str | None = typer.Option(None, "--id", help=tr("cli.ledger.review.id_help")),
-    verbose: bool = typer.Option(False, "--verbose", help=tr("cli.ledger.review.verbose_help")),
-) -> None:
-    """Render rows or a single row using the typed filter spec."""
+def _ledger_review_filter_spec(filters: list[str]) -> LedgerReviewFilterSpec:
     try:
-        spec = LedgerReviewFilterSpec.from_strings(filters)
+        return LedgerReviewFilterSpec.from_strings(filters)
     except FilterParseError as exc:
         raise _bad(tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.safe_token)) from exc
-    transaction_repository = _tx_repo(_state())
-    # `LedgerReviewQuery.transaction_id` requires the full 64-char
-    # SHA-256 id. An operator naturally passes the short display id
-    # surfaced by `ledger list` / `ledger review`, so the raw `--id`
-    # value must be resolved through the same prefix-resolution path
-    # every other ledger `--id` verb uses; otherwise the query model
-    # rejects the short prefix and the generic boundary masks it as
-    # "command input failed validation. Run aeat config repair".
-    resolved_record_id = _resolve_id(transaction_repository, record_id) if record_id is not None else None
-    result = query_ledger_review_rows(
-        LedgerReviewQuery(
-            bucket_id=transaction_repository.bucket_id,
-            transaction_id=resolved_record_id,
-            period=_canonical_period(spec.period) if spec.period else None,
-            status=spec.status.value if spec.status is not None else None,
-            issue=spec.issue.value if spec.issue is not None else None,
-            import_id=spec.import_id,
-            classification=spec.classification.value if spec.classification is not None else None,
-            text=spec.text,
-            direction=spec.direction.value if spec.direction is not None else None,
-        ),
-        transaction_repository=transaction_repository,
-    )
-    from ._ledger_payloads import LedgerReviewResult
 
-    if record_id is not None:
-        if not result.rows:
-            _emit_envelope(
-                ctx,
-                command="ledger.review",
-                result=LedgerReviewResult.model_validate({"rows": [], "filters": list(result.filters)}),
-                lines=[tr("cli.ledger.review.header"), tr("cli.ledger.review.no_rows")],
-            )
-            return
-        row = result.rows[0]
-        _emit_envelope(
-            ctx,
-            command="ledger.review",
-            result=LedgerReviewResult.model_validate(
-                {
-                    "id": row.id,
-                    "date": row.date,
-                    "amount": row.amount,
-                    "description": row.description,
-                    "review_status": row.status,
-                    "transaction": row.transaction.model_dump(mode="json") if row.transaction is not None else None,
-                    "verbose": verbose,
-                }
-            ),
-            lines=[
-                f"{tr('cli.ledger.labels.id')}\t{row.id}",
-                f"{tr('cli.ledger.labels.date')}\t{row.date}",
-                f"{tr('cli.ledger.labels.amount')}\t{row.amount}",
-                f"{tr('cli.ledger.labels.description')}\t{row.description}",
-            ],
-        )
-        return
+
+def _ledger_review_query(
+    transaction_repository: _TransactionRepo,
+    *,
+    spec: LedgerReviewFilterSpec,
+    record_id: str | None,
+) -> LedgerReviewQuery:
+    resolved_record_id = _resolve_id(transaction_repository, record_id) if record_id is not None else None
+    return LedgerReviewQuery(
+        bucket_id=transaction_repository.bucket_id,
+        transaction_id=resolved_record_id,
+        period=_canonical_period(spec.period) if spec.period else None,
+        status=spec.status.value if spec.status is not None else None,
+        issue=spec.issue.value if spec.issue is not None else None,
+        import_id=spec.import_id,
+        classification=spec.classification.value if spec.classification is not None else None,
+        text=spec.text,
+        direction=spec.direction.value if spec.direction is not None else None,
+    )
+
+
+def _ledger_review_empty_payload(result: LedgerReviewQueryResult) -> dict[str, object]:
+    return {"rows": [], "filters": list(result.filters)}
+
+
+def _ledger_review_detail_payload(row: LedgerReviewRow, *, verbose: bool) -> dict[str, object]:
+    return {
+        "id": row.id,
+        "date": row.date,
+        "amount": row.amount,
+        "description": row.description,
+        "review_status": row.status,
+        "transaction": row.transaction.model_dump(mode="json") if row.transaction is not None else None,
+        "verbose": verbose,
+    }
+
+
+def _ledger_review_detail_lines(row: LedgerReviewRow) -> list[str]:
+    return [
+        f"{tr('cli.ledger.labels.id')}\t{row.id}",
+        f"{tr('cli.ledger.labels.date')}\t{row.date}",
+        f"{tr('cli.ledger.labels.amount')}\t{row.amount}",
+        f"{tr('cli.ledger.labels.description')}\t{row.description}",
+    ]
+
+
+def _ledger_review_list_payload(result: LedgerReviewQueryResult) -> dict[str, object]:
+    return {
+        "rows": [row.model_dump(mode="json", exclude_none=True) for row in result.rows],
+        "filters": list(result.filters),
+    }
+
+
+def _ledger_review_list_lines(result: LedgerReviewQueryResult) -> list[str]:
     lines: list[str] = [tr("cli.ledger.review.header")]
     review_ids = tuple(row.id for row in result.rows)
     review_width = compute_display_id_width(review_ids)
@@ -2414,17 +2411,65 @@ def ledger_review(
     )
     if not result.rows:
         lines.append(tr("cli.ledger.review.no_rows"))
+    return lines
+
+
+def _emit_ledger_review_result(
+    ctx: typer.Context,
+    *,
+    record_id: str | None,
+    verbose: bool,
+    result: LedgerReviewQueryResult,
+) -> None:
+    from ._ledger_payloads import LedgerReviewResult
+
+    if record_id is not None:
+        if not result.rows:
+            _emit_envelope(
+                ctx,
+                command="ledger.review",
+                result=LedgerReviewResult.model_validate(_ledger_review_empty_payload(result)),
+                lines=[tr("cli.ledger.review.header"), tr("cli.ledger.review.no_rows")],
+            )
+            return
+        row = result.rows[0]
+        _emit_envelope(
+            ctx,
+            command="ledger.review",
+            result=LedgerReviewResult.model_validate(_ledger_review_detail_payload(row, verbose=verbose)),
+            lines=_ledger_review_detail_lines(row),
+        )
+        return
     _emit_envelope(
         ctx,
         command="ledger.review",
-        result=LedgerReviewResult.model_validate(
-            {
-                "rows": [row.model_dump(mode="json", exclude_none=True) for row in result.rows],
-                "filters": list(result.filters),
-            }
-        ),
-        lines=lines,
+        result=LedgerReviewResult.model_validate(_ledger_review_list_payload(result)),
+        lines=_ledger_review_list_lines(result),
     )
+
+
+@app.command("review", help=tr("cli.ledger.review.help"))
+def ledger_review(
+    ctx: typer.Context,
+    filters: list[str] = typer.Option([], "--filter", help=tr("cli.ledger.review.filter_help")),
+    record_id: str | None = typer.Option(None, "--id", help=tr("cli.ledger.review.id_help")),
+    verbose: bool = typer.Option(False, "--verbose", help=tr("cli.ledger.review.verbose_help")),
+) -> None:
+    """Render rows or a single row using the typed filter spec."""
+    spec = _ledger_review_filter_spec(filters)
+    transaction_repository = _tx_repo(_state())
+    # `LedgerReviewQuery.transaction_id` requires the full 64-char
+    # SHA-256 id. An operator naturally passes the short display id
+    # surfaced by `ledger list` / `ledger review`, so the raw `--id`
+    # value must be resolved through the same prefix-resolution path
+    # every other ledger `--id` verb uses; otherwise the query model
+    # rejects the short prefix and the generic boundary masks it as
+    # "command input failed validation. Run aeat config repair".
+    result = query_ledger_review_rows(
+        _ledger_review_query(transaction_repository, spec=spec, record_id=record_id),
+        transaction_repository=transaction_repository,
+    )
+    _emit_ledger_review_result(ctx, record_id=record_id, verbose=verbose, result=result)
 
 
 ratios_app = typer.Typer(
@@ -3734,7 +3779,7 @@ def _evidence_service() -> PurchaseInvoiceEvidenceService:
     return PurchaseInvoiceEvidenceService()
 
 
-def _evidence_payload(record: PurchaseInvoiceEvidence) -> Mapping[str, object]:
+def _evidence_payload(record: PurchaseInvoiceEvidence) -> dict[str, object]:
     return record.model_dump(mode="json")
 
 
@@ -4085,6 +4130,123 @@ def rule_add(
     )
 
 
+def _rule_apply_transaction_is_candidate(transaction: Transaction, *, reaffirm: bool) -> bool:
+    if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        return False
+    if transaction.business_classification is BusinessClassification.NOT_YET_PROCESSED:
+        return True
+    return reaffirm and transaction.classified_by == CLASSIFIED_BY_MANUAL
+
+
+def _first_matching_rule(
+    transaction: Transaction,
+    rules: tuple[LedgerClassificationRule, ...],
+) -> LedgerClassificationRule | None:
+    for rule in rules:
+        if rule.matches(transaction.raw.description):
+            return rule
+    return None
+
+
+def _rule_apply_dry_run_matches(
+    *,
+    bucket_id: str,
+    reaffirm: bool,
+) -> list[dict[str, object]]:
+    from ...application.ledger import LedgerClassificationRuleRepository
+
+    rule_repo = LedgerClassificationRuleRepository()
+    rules = rule_repo.list_rules()
+    tx_repo = TransactionCatalogueRepository(bucket_id=bucket_id)
+    catalogue = tx_repo.load()
+    would_match: list[dict[str, object]] = []
+    for transaction in catalogue.transactions.values():
+        if not _rule_apply_transaction_is_candidate(transaction, reaffirm=reaffirm):
+            continue
+        rule = _first_matching_rule(transaction, rules)
+        if rule is None:
+            continue
+        would_match.append(
+            {
+                "transaction_id": transaction.transaction_id,
+                "description": transaction.raw.description,
+                "matched_rule_id": rule.rule_id,
+                "classification": rule.classification.value,
+            }
+        )
+    return would_match
+
+
+def _rule_apply_dry_run_payload(would_match: list[dict[str, object]]) -> dict[str, object]:
+    return {"dry_run": True, "would_match": would_match, "count": len(would_match)}
+
+
+def _rule_apply_dry_run_lines(would_match: list[dict[str, object]]) -> list[str]:
+    lines = [
+        tr(
+            "cli.app.ledger.rule.apply_dry_run_summary",
+            count=len(would_match),
+            default=f"dry-run: {len(would_match)} transaction(s) would be classified",
+        )
+    ]
+    lines.extend(f"  match\t{str(row['transaction_id'])[:16]}...\t{row['classification']}" for row in would_match)
+    return lines
+
+
+def _emit_rule_apply_dry_run(ctx: typer.Context, *, bucket_id: str, reaffirm: bool) -> None:
+    from ._ledger_payloads import RuleApplyResult
+
+    would_match = _rule_apply_dry_run_matches(bucket_id=bucket_id, reaffirm=reaffirm)
+    _emit_envelope(
+        ctx,
+        command="ledger.rule.apply",
+        result=RuleApplyResult.model_validate(_rule_apply_dry_run_payload(would_match)),
+        lines=_rule_apply_dry_run_lines(would_match),
+    )
+
+
+def _rule_apply_payload(result: ApplyRulesResult) -> dict[str, object]:
+    return {
+        "rules_evaluated": result.rules_evaluated,
+        "transactions_scanned": result.transactions_scanned,
+        "matched": result.matched,
+        "skipped_already_classified": result.skipped_already_classified,
+        "no_match": result.no_match,
+        "applied": [row.model_dump(mode="json") for row in result.applied],
+    }
+
+
+def _rule_apply_lines(result: ApplyRulesResult) -> list[str]:
+    lines = [
+        tr(
+            "cli.app.ledger.rule.apply_summary",
+            rules=result.rules_evaluated,
+            scanned=result.transactions_scanned,
+            matched=result.matched,
+            skipped=result.skipped_already_classified,
+            no_match=result.no_match,
+            default=(
+                f"rules: {result.rules_evaluated}, scanned: {result.transactions_scanned}, "
+                f"matched: {result.matched}, skipped: {result.skipped_already_classified}, "
+                f"no_match: {result.no_match}"
+            ),
+        )
+    ]
+    lines.extend(f"  applied\t{row.transaction_id[:16]}...\t{row.classification.value}" for row in result.applied)
+    return lines
+
+
+def _emit_rule_apply_result(ctx: typer.Context, result: ApplyRulesResult) -> None:
+    from ._ledger_payloads import RuleApplyResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.rule.apply",
+        result=RuleApplyResult.model_validate(_rule_apply_payload(result)),
+        lines=_rule_apply_lines(result),
+    )
+
+
 @rule_app.command(
     "apply",
     help=tr(
@@ -4117,57 +4279,13 @@ def rule_apply(
     ),
 ) -> None:
     """Apply stored rules to ACTIVE NOT_YET_PROCESSED transactions."""
-    from ...application.ledger import LedgerClassificationRuleRepository
     from ...core import resolve_active_bucket_id
-    from ...domain.transactions import BusinessClassification, TransactionLifecycleState
 
     bucket_id = _rule_bucket_id()
     resolved_actor = actor or resolve_active_bucket_id() or "operator"
 
     if dry_run:
-        from ...domain.transactions import TransactionCatalogueRepository
-
-        rule_repo = LedgerClassificationRuleRepository()
-        rules = rule_repo.list_rules()
-        tx_repo = TransactionCatalogueRepository(bucket_id=bucket_id)
-        catalogue = tx_repo.load()
-        would_match: list[dict] = []
-        for tx in catalogue.transactions.values():
-            if tx.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-                continue
-            if tx.business_classification is not BusinessClassification.NOT_YET_PROCESSED and not (
-                reaffirm and tx.classified_by == CLASSIFIED_BY_MANUAL
-            ):
-                continue
-            for rule in rules:
-                if rule.matches(tx.raw.description):
-                    would_match.append(
-                        {
-                            "transaction_id": tx.transaction_id,
-                            "description": tx.raw.description,
-                            "matched_rule_id": rule.rule_id,
-                            "classification": rule.classification.value,
-                        }
-                    )
-                    break
-        payload = {"dry_run": True, "would_match": would_match, "count": len(would_match)}
-        lines = [
-            tr(
-                "cli.app.ledger.rule.apply_dry_run_summary",
-                count=len(would_match),
-                default=f"dry-run: {len(would_match)} transaction(s) would be classified",
-            )
-        ]
-        for row in would_match:
-            lines.append(f"  match\t{row['transaction_id'][:16]}...\t{row['classification']}")
-        from ._ledger_payloads import RuleApplyResult
-
-        _emit_envelope(
-            ctx,
-            command="ledger.rule.apply",
-            result=RuleApplyResult.model_validate(payload),
-            lines=lines,
-        )
+        _emit_rule_apply_dry_run(ctx, bucket_id=bucket_id, reaffirm=reaffirm)
         return
 
     from ...application.ledger import apply_classification_rules
@@ -4178,39 +4296,7 @@ def rule_apply(
         actor=resolved_actor,
         source_command="aeat app ledger rule apply",
     )
-    payload = {
-        "rules_evaluated": result.rules_evaluated,
-        "transactions_scanned": result.transactions_scanned,
-        "matched": result.matched,
-        "skipped_already_classified": result.skipped_already_classified,
-        "no_match": result.no_match,
-        "applied": [r.model_dump(mode="json") for r in result.applied],
-    }
-    lines = [
-        tr(
-            "cli.app.ledger.rule.apply_summary",
-            rules=result.rules_evaluated,
-            scanned=result.transactions_scanned,
-            matched=result.matched,
-            skipped=result.skipped_already_classified,
-            no_match=result.no_match,
-            default=(
-                f"rules: {result.rules_evaluated}, scanned: {result.transactions_scanned}, "
-                f"matched: {result.matched}, skipped: {result.skipped_already_classified}, "
-                f"no_match: {result.no_match}"
-            ),
-        )
-    ]
-    for row in result.applied:
-        lines.append(f"  applied\t{row.transaction_id[:16]}...\t{row.classification.value}")
-    from ._ledger_payloads import RuleApplyResult
-
-    _emit_envelope(
-        ctx,
-        command="ledger.rule.apply",
-        result=RuleApplyResult.model_validate(payload),
-        lines=lines,
-    )
+    _emit_rule_apply_result(ctx, result)
 
 
 @rule_app.command(

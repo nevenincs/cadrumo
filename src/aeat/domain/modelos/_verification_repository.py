@@ -23,6 +23,7 @@ _LOGGER = get_logger(__name__)
 _VERIFICATION_NAMESPACE = "aeat.domain.modelos.verification_reports"
 _VERIFICATION_OBJECT_KEY = "catalogue"
 _VERIFICATION_CATALOGUE_VERSION = 1
+_VERIFICATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_verification_report_persistence"
 
 
 class VerificationReportPersistenceError(ModeloError):
@@ -106,19 +107,49 @@ class VerificationReportCatalogueRepository:
         except (ClassificationError, EnvelopeVersionError) as exc:
             _LOGGER.error("verification-report catalogue integrity error", exc_info=True)
             raise VerificationReportPersistenceError(
-                f"verification-report catalogue integrity error: {type(exc).__name__}: {exc}"
+                "verification-report catalogue integrity error",
+                translated_message=_VERIFICATION_PERSISTENCE_MESSAGE,
+                context={
+                    "reason": "secure_object_integrity",
+                    "cause_type": type(exc).__name__,
+                },
             ) from exc
         if record is None:
             return VerificationReportCatalogue()
         envelope = Envelope[VerificationReportCatalogue].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not SensitivityClass.FINANCIAL:
+            _LOGGER.error(
+                "verification-report catalogue classification mismatch",
+                extra={
+                    "expected_classification": SensitivityClass.FINANCIAL.value,
+                    "actual_classification": envelope.classification.value,
+                },
+            )
             raise VerificationReportPersistenceError(
-                f"verification-report catalogue has classification {envelope.classification}; FINANCIAL expected"
+                "verification-report catalogue classification mismatch",
+                translated_message=_VERIFICATION_PERSISTENCE_MESSAGE,
+                context={
+                    "reason": "classification_mismatch",
+                    "expected_classification": SensitivityClass.FINANCIAL.value,
+                    "actual_classification": envelope.classification.value,
+                },
             )
         if envelope.schema_version > _VERIFICATION_CATALOGUE_VERSION:
+            _LOGGER.error(
+                "verification-report catalogue envelope version unsupported",
+                extra={
+                    "stored_schema_version": envelope.schema_version,
+                    "max_supported_version": _VERIFICATION_CATALOGUE_VERSION,
+                },
+            )
             raise VerificationReportPersistenceError(
-                f"verification-report catalogue is at version {envelope.schema_version}; "
-                f"consumer supports up to {_VERIFICATION_CATALOGUE_VERSION}"
+                "verification-report catalogue envelope version unsupported",
+                translated_message=_VERIFICATION_PERSISTENCE_MESSAGE,
+                context={
+                    "reason": "unsupported_envelope_version",
+                    "stored_schema_version": envelope.schema_version,
+                    "max_supported_version": _VERIFICATION_CATALOGUE_VERSION,
+                },
             )
         return envelope.payload
 
