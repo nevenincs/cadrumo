@@ -161,9 +161,9 @@ Verification covers Ruff, compileall, compatibility export smoke, 23 focused fix
 
 ## REVIEW-023 | LOW | No blocking findings in ledger action test split
 
-Reviewed W05.P12 `S126`. The ledger action tests now split create, update, lifecycle, import/export, and review workflows into focused modules, with shared setup in `_action_test_support.py`. The shared helper still provisions real secure-object repositories and imports production application services directly.
+Reviewed W05.P12 `S126`. The ledger action tests now split create, update, lifecycle, import/export, and review workflows into focused modules, with shared setup in `_action_test_support.py`. The modelo file-flow tests now split calculation, event, filing, and verification workflows into focused modules, with registry-backed setup in `_file_flow_support.py`. The shared helpers still provision real secure-object repositories and import production application services directly.
 
-Verification covers Ruff, compileall, 75 focused ledger action tests, and the 2-test hard size-budget guard. The split introduces no fakes, stubs, monkeypatches, skips, xfails, or duplicated ledger business logic.
+Verification covers Ruff, compileall, 75 focused ledger action tests, 30 focused modelo file-flow tests, and the 2-test hard size-budget guard. The split introduces no fakes, stubs, monkeypatches, skips, xfails, or duplicated application business logic.
 
 ## REVIEW-023 | LOW | No blocking findings in application and adapter error registry shard closure
 
