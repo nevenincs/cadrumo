@@ -165,14 +165,8 @@ Reviewed W05.P12 `S126`. The ledger action tests now split create, update, lifec
 
 Verification covers Ruff, compileall, 75 focused ledger action tests, 30 focused modelo file-flow tests, and the 2-test hard size-budget guard. The split introduces no fakes, stubs, monkeypatches, skips, xfails, or duplicated application business logic.
 
-## REVIEW-023 | LOW | No blocking findings in application and adapter error registry shard closure
+## REVIEW-024 | LOW | No blocking findings in application and adapter error registry shard closure
 
 Reviewed W04.P09 `S87` through `S90`. The application and adapter error registry modules now remain as aggregate facades over private ordered shards. The shard files keep declaration order and `ErrorCode` payloads intact, and each aggregate continues to expose `_DECLARED_ERROR_CODES` for the core registry package.
 
 Verification covers Ruff, compileall for `src/aeat/core/errors/registry`, 34 core error tests, registry aggregate smoke checks for application and adapter entries, selected core boundary/output checks, and the hard codebase size-budget guard. Broad core meta-test failures remain tracked separately as W04.P09 `S152`.
-
-## REVIEW-024 | LOW | No blocking findings in ledger action test split
-
-Reviewed W05.P12 `S126`. The oversized ledger action test module now delegates real behavior coverage to focused create, import/export, lifecycle, review, and update modules. Shared setup lives in `_action_test_support.py` and is consumed through pytest plugin wiring; the split modules continue to import production ledger application services directly.
-
-Verification covers Ruff, compileall, 75 focused ledger behavior tests, and the 2-test hard codebase size-budget guard. The split preserves real repository-backed behavior and does not introduce fake, stub, monkeypatch, skip, xfail, or copied business logic.
