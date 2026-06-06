@@ -194,3 +194,9 @@ The core external-constants and file-permissions tests now derive the repository
 Reviewed W05.P12 `S127`. The inbound declaracion parser-boundary and verification-chain monoliths now point to focused sibling modules with shared parser/verification support. The SQL secure-object and runtime migrated repository monoliths now point to focused storage test modules with shared real repository setup. Earlier S127 auth and declarations splits remain covered by their focused committed lanes.
 
 The split keeps tests importing production code and real fixtures; no mocks, skips, xfails, or copied business logic were introduced. Verification covers Ruff, compileall, 95 parser-boundary tests, 94 verification-chain tests, 61 outbound declarations tests, 80 focused auth tests, 137 storage repository tests, and the 2-test hard codebase size-budget guard.
+
+## REVIEW-029 | LOW | No blocking findings in registry schema and referential-integrity test split
+
+Reviewed W05.P12 `S128`. The registry schema and referential-integrity monoliths now point to focused sibling modules with shared support modules, while the split modules preserve the existing domain marker and real registry-authority fixtures.
+
+The split keeps validation behavior grounded in production schema and registry authority code. Verification covers Ruff, compileall, 136 focused registry schema/referential-integrity tests, and the 2-test hard codebase size-budget guard.
