@@ -165,6 +165,12 @@ Reviewed W05.P12 `S126`. The ledger action tests now split create, update, lifec
 
 Verification covers Ruff, compileall, 75 focused ledger action tests, 30 focused modelo file-flow tests, and the 2-test hard size-budget guard. The split introduces no fakes, stubs, monkeypatches, skips, xfails, or duplicated application business logic.
 
+## REVIEW-024 | LOW | No blocking findings in auth production and test split
+
+Reviewed W04.P09 `S156` auth sub-surface plus the W05.P12 `S127` auth test split. Authenticator DTOs/protocols now live in `_authenticator_types.py`, Cl@ve Movil pure helpers and failure types live in `_clave_movil_support.py`, and Cl@ve page-driving methods live in `_clave_movil_page_flow.py`. Existing public auth imports and legacy private helper imports remain available through the original modules.
+
+Verification covers Ruff, compileall, 80 focused auth tests, and the 2-test hard size-budget guard. The registry qualname for `_PersistedSessionInvalidError` now points at the moved class, preventing the core error registry from failing closed during import. Broader W04.P09 `S156` and W05.P12 `S127` remain open for the other production and adapter-test surfaces.
+
 ## REVIEW-024 | LOW | No blocking findings in application and adapter error registry shard closure
 
 Reviewed W04.P09 `S87` through `S90`. The application and adapter error registry modules now remain as aggregate facades over private ordered shards. The shard files keep declaration order and `ErrorCode` payloads intact, and each aggregate continues to expose `_DECLARED_ERROR_CODES` for the core registry package.
