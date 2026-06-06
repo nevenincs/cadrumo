@@ -237,6 +237,7 @@ Decompose oversized core modules, then enforce hard codebase-wide module and cal
 - [ ] `W04.P09.S155` - verify no-legacy hard module and callable budgets after production residual decomposition; `src/aeat/tests/test_codebase_size_budgets.py src/aeat`.
 - [ ] `W04.P09.S91` - replace shrinking legacy size budgets with hard codebase-wide 1250-line and callable-complexity guards; `src/aeat/tests src/aeat/entrypoints/cli/tests`.
 - [ ] `W04.P09.S92` - run final codebase monolith decomposition feature gate and refresh RAG index; `.vault/plan/2026-06-05-codebase-monolith-decomposition-plan.md src/aeat`.
+- [x] `W04.P09.S157` - extract declarations-register production helpers and split the corresponding outbound adapter tests; `src/aeat/adapters/outbound/aeat/sede/_declarations.py src/aeat/adapters/outbound/aeat/sede/_declarations_diagnostics.py src/aeat/adapters/outbound/aeat/sede/_declarations_remote.py src/aeat/adapters/outbound/aeat/sede/tests/test_declarations.py src/aeat/adapters/outbound/aeat/sede/tests/test_declarations_part1.py src/aeat/adapters/outbound/aeat/sede/tests/test_declarations_part2.py src/aeat/adapters/outbound/aeat/sede/tests/test_declarations_part3.py src/aeat/adapters/outbound/aeat/sede/tests/_declarations_support.py src/aeat/adapters/outbound/aeat/sede/tests/conftest.py`.
 
 ## Wave `W05` - residual test and fixture monolith closure
 

@@ -171,8 +171,14 @@ Reviewed W04.P09 `S156` auth sub-surface plus the W05.P12 `S127` auth test split
 
 Verification covers Ruff, compileall, 80 focused auth tests, and the 2-test hard size-budget guard. The registry qualname for `_PersistedSessionInvalidError` now points at the moved class, preventing the core error registry from failing closed during import. Broader W04.P09 `S156` and W05.P12 `S127` remain open for the other production and adapter-test surfaces.
 
-## REVIEW-024 | LOW | No blocking findings in application and adapter error registry shard closure
+## REVIEW-025 | LOW | No blocking findings in application and adapter error registry shard closure
 
 Reviewed W04.P09 `S87` through `S90`. The application and adapter error registry modules now remain as aggregate facades over private ordered shards. The shard files keep declaration order and `ErrorCode` payloads intact, and each aggregate continues to expose `_DECLARED_ERROR_CODES` for the core registry package.
 
 Verification covers Ruff, compileall for `src/aeat/core/errors/registry`, 34 core error tests, registry aggregate smoke checks for application and adapter entries, selected core boundary/output checks, and the hard codebase size-budget guard. Broad core meta-test failures remain tracked separately as W04.P09 `S152`.
+
+## REVIEW-026 | LOW | No blocking findings in declarations-register split
+
+Reviewed W04.P09 `S157`. Declarations-register page-shape diagnostics now live in `_declarations_diagnostics.py`, remote-read guard helpers and cotejo CSV extraction now live in `_declarations_remote.py`, and `_declarations.py` remains the compatibility facade for the existing private test imports and public declarations workflow.
+
+The declarations adapter tests now split into shared support plus focused part modules while preserving real registry-backed fixtures and secure-object isolation. Verification covers Ruff, compileall for the sede adapter package, a declarations facade `__all__` smoke import, 61 focused declarations tests, and the 2-test hard codebase size-budget guard. Broader W04.P09 `S156` remains open for core config and record-design production surfaces, and W05.P12 `S127` remains open for the other adapter test monoliths.
