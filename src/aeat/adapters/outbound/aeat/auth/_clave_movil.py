@@ -27,6 +27,7 @@ import asyncio
 import json
 import time
 from collections.abc import Mapping
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 from urllib.parse import quote, urlsplit
@@ -739,6 +740,30 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
     def _invalidate_persisted(self, storage_state_path: Path) -> None:
         _session_store.delete(storage_state_path)
 
+    def _fresh_login_session(
+        self,
+        *,
+        dni_nie: str,
+        authenticated_at: datetime,
+        idle_deadline: datetime,
+        storage_state_path: Path,
+        verification_code: str | None,
+        landing_url: str | None,
+    ) -> AeatSession:
+        return AeatSession(
+            provider_kind=self.kind,
+            authenticated_at=authenticated_at,
+            idle_deadline=idle_deadline,
+            storage_state_path=storage_state_path,
+            identity_nif=dni_nie,
+            provider_detail=ClaveMovilSessionDetail(
+                dni_nie=dni_nie,
+                used_non_qr_fallback=self._settings.aeat_clave_prefer_non_qr,
+                verification_code=verification_code,
+                landing_url=landing_url,
+            ),
+        )
+
     # ── Flow ────────────────────────────────────────────────────────────────
 
     async def _fresh_login_locked(
@@ -903,18 +928,13 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                 )
             raise
 
-        session = AeatSession(
-            provider_kind=self.kind,
+        session = self._fresh_login_session(
+            dni_nie=dni_nie,
             authenticated_at=authenticated_at,
             idle_deadline=idle_deadline,
             storage_state_path=storage_state_path,
-            identity_nif=dni_nie,
-            provider_detail=ClaveMovilSessionDetail(
-                dni_nie=dni_nie,
-                used_non_qr_fallback=self._settings.aeat_clave_prefer_non_qr,
-                verification_code=verification_code,
-                landing_url=landing_url,
-            ),
+            verification_code=verification_code,
+            landing_url=landing_url,
         )
         self._browser_session = session_like
         self._context = context

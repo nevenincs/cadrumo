@@ -29,7 +29,22 @@ def register_profile_bundle_commands(
     atomic_create_profile: Callable[..., str],
 ) -> None:
     """Register profile bundle import/export commands."""
+    _register_profile_export_command(
+        profile_app,
+        profile_state=profile_state,
+        resolve_profile_by_label=resolve_profile_by_label,
+        resolve_active_profile_pointer=resolve_active_profile_pointer,
+    )
+    _register_profile_import_command(profile_app, atomic_create_profile=atomic_create_profile)
 
+
+def _register_profile_export_command(
+    profile_app: typer.Typer,
+    *,
+    profile_state: Callable[[], object],
+    resolve_profile_by_label: Callable[[str], object],
+    resolve_active_profile_pointer: Callable[[], object | None],
+) -> None:
     @profile_app.command(
         "export",
         help=tr(
@@ -122,6 +137,12 @@ def register_profile_bundle_commands(
             ),
         )
 
+
+def _register_profile_import_command(
+    profile_app: typer.Typer,
+    *,
+    atomic_create_profile: Callable[..., str],
+) -> None:
     @profile_app.command(
         "import",
         help=tr(
@@ -241,7 +262,6 @@ def register_profile_bundle_commands(
                 f"schema_version\t{bundle.bundle_schema_version}",
             ),
         )
-
 
 def _validate_bundle_schema_version(bundle: object) -> None:
     """Raise UnsupportedBundleSchemaVersionError if bundle version is not supported."""

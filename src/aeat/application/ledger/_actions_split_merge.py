@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     pass
 
 from ...domain.buckets import (
+    BucketEvent,
     BucketEventType,
 )
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
@@ -451,7 +452,82 @@ def merge_transactions(
         child_transaction_ids=child_transaction_ids,
     )
 
-    # Finalized-modelo blocker â€” parent + every child.
+    _reject_merge_with_finalized_modelo_blockers(
+        bucket_id=bucket_id,
+        catalogue=catalogue,
+        parent=parent,
+        child_transaction_ids=child_transaction_ids,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
+
+    sorted_child_ids = tuple(sorted(child_transaction_ids))
+    merged_transaction = _build_merged_transaction(
+        parent=parent,
+        split_group_id=split_group_id,
+        sorted_child_ids=sorted_child_ids,
+        occurred_at=now,
+        actor=trimmed_actor,
+        source_command=trimmed_source_command,
+    )
+    if merged_transaction.transaction_id in catalogue.transactions:
+        raise TransactionValidationError(
+            "ledger merge produced an id that already exists in the catalogue",
+            context={"merged_transaction_id": merged_transaction.transaction_id},
+        )
+
+    parent_after, archived_children = _archive_merge_members(
+        parent=parent,
+        children=children,
+        actor=trimmed_actor,
+        source_command=trimmed_source_command,
+        changed_at=now,
+        reason=reason,
+    )
+
+    event = _build_merge_event(
+        bucket_id=bucket_id,
+        actor=trimmed_actor,
+        source_command=trimmed_source_command,
+        occurred_at=now,
+        reason=reason,
+        split_group_id=split_group_id,
+        parent=parent,
+        merged_transaction=merged_transaction,
+        sorted_child_ids=sorted_child_ids,
+    )
+
+    _persist_merged_transactions(
+        catalogue=catalogue,
+        transaction_repository=transaction_repository,
+        event_repository=event_repository,
+        parent_after=parent_after,
+        archived_children=tuple(archived_children),
+        merged_transaction=merged_transaction,
+        event=event,
+    )
+
+    return MergeTransactionsResult(
+        bucket_id=bucket_id,
+        split_group_id=split_group_id,
+        parent_transaction_id=parent.transaction_id,
+        merged_transaction_id=merged_transaction.transaction_id,
+        source_child_ids=sorted_child_ids,
+        merged_transaction=merged_transaction,
+        parent_transaction=parent_after,
+        bucket_event_id=event.event_id,
+    )
+
+
+def _reject_merge_with_finalized_modelo_blockers(
+    *,
+    bucket_id: str,
+    catalogue: TransactionCatalogue,
+    parent: Transaction,
+    child_transaction_ids: tuple[str, ...],
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+) -> None:
     transaction_ids_under_check = (parent.transaction_id, *child_transaction_ids)
     blocking_pool: list[str] = []
     for member_id in transaction_ids_under_check:
@@ -470,9 +546,18 @@ def merge_transactions(
             blockers=blockers,
         )
 
-    # Build the merged transaction. Its content-addressed id varies from
-    # the parent's because the synthesized provider_id is unique.
-    sorted_child_ids = tuple(sorted(child_transaction_ids))
+
+def _build_merged_transaction(
+    *,
+    parent: Transaction,
+    split_group_id: str,
+    sorted_child_ids: tuple[str, ...],
+    occurred_at: datetime,
+    actor: str,
+    source_command: str,
+) -> Transaction:
+    # Its content-addressed id varies from the parent's because the
+    # synthesized provider_id is unique.
     parent_raw = parent.raw
     merged_provider_id = f"merged:{split_group_id}"
     merged_raw = RawTransaction(
@@ -488,7 +573,7 @@ def merge_transactions(
             source_sha256=hashlib.sha256(merged_provider_id.encode("utf-8")).hexdigest(),
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=now,
+            ingested_at=occurred_at,
             provider_name="ledger-merge",
         ),
         raw_fields={
@@ -497,13 +582,13 @@ def merge_transactions(
             "merged_child_count": str(len(sorted_child_ids)),
         },
     )
-    merged_transaction = Transaction.model_validate(
+    return Transaction.model_validate(
         {
             "raw": merged_raw,
             "direction": parent.direction,
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
-            "created_by": trimmed_actor,
-            "source_command": trimmed_source_command,
+            "created_by": actor,
+            "source_command": source_command,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "split_lineage": SplitLineage(
                 split_group_id=split_group_id,
@@ -513,22 +598,27 @@ def merge_transactions(
             "notes": "",
         }
     )
-    if merged_transaction.transaction_id in catalogue.transactions:
-        raise TransactionValidationError(
-            "ledger merge produced an id that already exists in the catalogue",
-            context={"merged_transaction_id": merged_transaction.transaction_id},
-        )
 
-    # Archive every child.
+
+def _archive_merge_members(
+    *,
+    parent: Transaction,
+    children: tuple[Transaction, ...],
+    actor: str,
+    source_command: str,
+    changed_at: datetime,
+    reason: str,
+) -> tuple[Transaction, tuple[Transaction, ...]]:
+    transition_reason = reason.strip() or "merge"
     archived_children: list[Transaction] = []
     for child in children:
         transition = TransactionLifecycleLineageEntry(
             previous_state=child.lifecycle_state,
             state=TransactionLifecycleState.ARCHIVED,
-            actor=trimmed_actor,
-            source_command=trimmed_source_command,
-            changed_at=now,
-            reason=(reason.strip() or "merge"),
+            actor=actor,
+            source_command=source_command,
+            changed_at=changed_at,
+            reason=transition_reason,
         )
         archived_children.append(
             child.model_copy(
@@ -539,14 +629,13 @@ def merge_transactions(
             )
         )
 
-    # Archive the parent (preserves SplitLineage role=PARENT for audit).
     parent_transition = TransactionLifecycleLineageEntry(
         previous_state=parent.lifecycle_state,
         state=TransactionLifecycleState.ARCHIVED,
-        actor=trimmed_actor,
-        source_command=trimmed_source_command,
-        changed_at=now,
-        reason=(reason.strip() or "merge"),
+        actor=actor,
+        source_command=source_command,
+        changed_at=changed_at,
+        reason=transition_reason,
     )
     parent_after = parent.model_copy(
         update={
@@ -554,15 +643,29 @@ def merge_transactions(
             "lifecycle_lineage": (*parent.lifecycle_lineage, parent_transition),
         }
     )
+    return parent_after, tuple(archived_children)
 
-    event = _build_bucket_event(
+
+def _build_merge_event(
+    *,
+    bucket_id: str,
+    actor: str,
+    source_command: str,
+    occurred_at: datetime,
+    reason: str,
+    split_group_id: str,
+    parent: Transaction,
+    merged_transaction: Transaction,
+    sorted_child_ids: tuple[str, ...],
+) -> BucketEvent:
+    return _build_bucket_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_TRANSACTION_MERGED,
-        occurred_at=now,
-        actor=trimmed_actor,
+        occurred_at=occurred_at,
+        actor=actor,
         object_id=parent.transaction_id,
         payload={
-            "source_command": trimmed_source_command,
+            "source_command": source_command,
             "reason": reason.strip(),
             "split_group_id": split_group_id,
             "parent_transaction_id": parent.transaction_id,
@@ -572,6 +675,17 @@ def merge_transactions(
         },
     )
 
+
+def _persist_merged_transactions(
+    *,
+    catalogue: TransactionCatalogue,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    event_repository: BucketEventHistoryRepositoryProtocol,
+    parent_after: Transaction,
+    archived_children: tuple[Transaction, ...],
+    merged_transaction: Transaction,
+    event: BucketEvent,
+) -> None:
     updated_transactions = dict(catalogue.transactions)
     updated_transactions[parent_after.transaction_id] = parent_after
     for archived_child in archived_children:
@@ -580,21 +694,10 @@ def merge_transactions(
     new_catalogue = TransactionCatalogue.model_validate({"transactions": updated_transactions})
 
     _save_transaction_catalogue_and_events(
-        transaction_repository=repository,
+        transaction_repository=transaction_repository,
         event_repository=event_repository,
         catalogue=new_catalogue,
         events=(event,),
-    )
-
-    return MergeTransactionsResult(
-        bucket_id=bucket_id,
-        split_group_id=split_group_id,
-        parent_transaction_id=parent.transaction_id,
-        merged_transaction_id=merged_transaction.transaction_id,
-        source_child_ids=sorted_child_ids,
-        merged_transaction=merged_transaction,
-        parent_transaction=parent_after,
-        bucket_event_id=event.event_id,
     )
 
 

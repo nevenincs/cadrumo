@@ -36,7 +36,7 @@ from ._validate_record_sections import (
     validate_formula_section,
     validate_parameter_section,
 )
-from ._validate_revision_context import build_revision_validation_context
+from ._validate_revision_context import RevisionValidationContext, build_revision_validation_context
 from ._validate_revision_identity import (
     _emit_casilla_identity_failures,
     _emit_combined_primary_id_failures,
@@ -56,29 +56,18 @@ from ._validate_surfaces import (
 )
 
 
-def validate_revision_definition(
-    modelo: ModeloDefinition,
-    revision: ModeloRevision,
+def _validate_revision_surface_sections(
+    failures: list[str],
     *,
+    prefix: str,
+    modelo_id: str,
+    revision: ModeloRevision,
+    context: RevisionValidationContext,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
     justificante_corpus_root: Path | None,
-) -> list[str]:
-    failures: list[str] = []
-    prefix = f"modelo {modelo.id} revision {revision.id}"
-    failures.extend(_missing_refs(prefix, "revision", revision.legal_refs, legal_refs, "legal"))
-    failures.extend(_missing_refs(prefix, "revision", revision.source_refs, source_refs, "source"))
-
-    context = build_revision_validation_context(revision)
-    if not context.ids_by_kind["workbook parity reference"]:
-        failures.append(f"{prefix}: revision must declare official workbook parity coverage")
-    _emit_per_kind_duplicate_failures(failures, prefix, context.ids_by_kind)
-    _emit_combined_primary_id_failures(failures, prefix, context.ids_by_kind)
-    _emit_revision_payload_failures(failures, prefix, revision)
-    _emit_casilla_identity_failures(failures, prefix, revision)
-    _emit_completeness_gate_failures(failures, prefix, revision)
-
+) -> None:
     validate_casilla_section(
         failures,
         prefix=prefix,
@@ -176,7 +165,7 @@ def validate_revision_definition(
     validate_extraction_profile_section(
         failures,
         prefix=prefix,
-        modelo_id=modelo.id,
+        modelo_id=modelo_id,
         revision=revision,
         casillas=context.casillas,
         exported_casillas=context.exported_casillas,
@@ -222,6 +211,17 @@ def validate_revision_definition(
         source_refs=source_refs,
     )
 
+
+def _validate_revision_closure_sections(
+    failures: list[str],
+    *,
+    prefix: str,
+    modelo_id: str,
+    revision: ModeloRevision,
+    context: RevisionValidationContext,
+    legal_refs: Mapping[str, LegalReference],
+    source_refs: Mapping[str, SourceReference],
+) -> None:
     failures.extend(
         validate_support_removal_decisions(
             prefix,
@@ -238,7 +238,7 @@ def validate_revision_definition(
             source_refs=source_refs,
         )
     )
-    failures.extend(validate_application_link_closure(prefix, revision, modelo_id=modelo.id))
+    failures.extend(validate_application_link_closure(prefix, revision, modelo_id=modelo_id))
     failures.extend(validate_reconciliation_total_closure(prefix, revision))
     failures.extend(validate_bracket_table_temporal_coverage(prefix, revision))
     failures.extend(
@@ -251,4 +251,49 @@ def validate_revision_definition(
         )
     )
     failures.extend(validate_formula_dag(prefix, revision))
+
+
+def validate_revision_definition(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    *,
+    legal_refs: Mapping[str, LegalReference],
+    source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
+    justificante_corpus_root: Path | None,
+) -> list[str]:
+    failures: list[str] = []
+    prefix = f"modelo {modelo.id} revision {revision.id}"
+    failures.extend(_missing_refs(prefix, "revision", revision.legal_refs, legal_refs, "legal"))
+    failures.extend(_missing_refs(prefix, "revision", revision.source_refs, source_refs, "source"))
+
+    context = build_revision_validation_context(revision)
+    if not context.ids_by_kind["workbook parity reference"]:
+        failures.append(f"{prefix}: revision must declare official workbook parity coverage")
+    _emit_per_kind_duplicate_failures(failures, prefix, context.ids_by_kind)
+    _emit_combined_primary_id_failures(failures, prefix, context.ids_by_kind)
+    _emit_revision_payload_failures(failures, prefix, revision)
+    _emit_casilla_identity_failures(failures, prefix, revision)
+    _emit_completeness_gate_failures(failures, prefix, revision)
+
+    _validate_revision_surface_sections(
+        failures,
+        prefix=prefix,
+        modelo_id=modelo.id,
+        revision=revision,
+        context=context,
+        legal_refs=legal_refs,
+        source_refs=source_refs,
+        evidence=evidence,
+        justificante_corpus_root=justificante_corpus_root,
+    )
+    _validate_revision_closure_sections(
+        failures,
+        prefix=prefix,
+        modelo_id=modelo.id,
+        revision=revision,
+        context=context,
+        legal_refs=legal_refs,
+        source_refs=source_refs,
+    )
     return failures
