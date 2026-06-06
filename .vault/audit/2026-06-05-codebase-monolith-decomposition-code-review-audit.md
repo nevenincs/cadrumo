@@ -225,8 +225,8 @@ Reviewed W04.P09 `S92`, W05.P12 `S129`, and W05.P13 `S130` through `S132`. The f
 
 Verification covers full Ruff over `src/aeat`, compileall over `src/aeat`, the 4-test hard budget lane, focused S154 behavior lanes, feature plan validation with only the known PLAN022 ordering warning, and vault frontmatter/link/body-link checks. The remaining vault structure warning is out-of-scope secure-storage research filename drift recorded in the final step notes.
 
-## REVIEW-032 | LOW | No blocking findings in final monolith validation closure
+## REVIEW-034 | LOW | Split persistence regression repaired before final handoff
 
-Reviewed W04.P09 `S92`, W05.P12 `S129`, and W05.P13 `S130` through `S132`. The final inventory records zero `src/aeat` modules over 1250 lines and zero production callables over 180 lines, and the generated codebase-monolith index now references the completed step records.
+Reviewed the final hard-budget closure after staged and unstaged worktree changes shifted during execution. The only blocking issue found in the reviewed slice was a transient `split_transaction` persistence call that passed the optional input repository parameter instead of the resolved repository. That was repaired before handoff.
 
-Verification covers Ruff for the final replay/context/budget test lane, 32 focused replay/context/hard-budget tests, compileall for `src/aeat`, plan validation with only the known PLAN022 monotonic-order warning, and the final hard size gates. The remaining vault structure warning is unrelated secure-storage research filename hygiene outside this feature.
+Post-fix verification covers Ruff for `src/aeat/application/ledger/_actions_split_merge.py`, 18 focused ledger split/merge tests, and the 4-test hard module/callable budget lane. A later attempted dynamic scoped test command accidentally ran broad collection because the changed Python list was empty after concurrent index changes; those collection errors are unrelated full-tree fixture/conftest issues and are not used as closure evidence.
