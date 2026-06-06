@@ -36,7 +36,15 @@ from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 def register_repair_maintenance_commands(repair_app: typer.Typer) -> None:
     """Register config repair maintenance commands."""
+    _register_repair_root_callback(repair_app)
+    _register_repair_logs_command(repair_app)
+    _register_repair_quarantine_command(repair_app)
+    _register_repair_reset_state_command(repair_app)
+    _register_repair_integrity_commands(repair_app)
+    _register_repair_connectivity_command(repair_app)
 
+
+def _register_repair_root_callback(repair_app: typer.Typer) -> None:
     @repair_app.callback()
     def repair(ctx: typer.Context) -> None:
         """Diagnose and repair local configuration, registry, profile, auth, and log state."""
@@ -45,6 +53,8 @@ def register_repair_maintenance_commands(repair_app: typer.Typer) -> None:
         report = _build_config_repair_report()
         _emit(ctx, report.model_dump(mode="json"), _render_config_repair_text(report).splitlines())
 
+
+def _register_repair_logs_command(repair_app: typer.Typer) -> None:
     @repair_app.command("logs", help=tr("cli.config.repair.logs_help"))
     def repair_logs(
         ctx: typer.Context,
@@ -63,6 +73,8 @@ def register_repair_maintenance_commands(repair_app: typer.Typer) -> None:
             lines=(f"path\t{path}", *tail),
         )
 
+
+def _register_repair_quarantine_command(repair_app: typer.Typer) -> None:
     @repair_app.command("quarantine", help=tr("cli.config.repair.quarantine_help"))
     def repair_quarantine(
         ctx: typer.Context,
@@ -147,6 +159,8 @@ def register_repair_maintenance_commands(repair_app: typer.Typer) -> None:
             ),
         )
 
+
+def _register_repair_reset_state_command(repair_app: typer.Typer) -> None:
     @repair_app.command("reset-state", help=tr("cli.config.repair.reset_state_help"))
     def repair_reset_state(
         ctx: typer.Context,
@@ -212,6 +226,8 @@ def register_repair_maintenance_commands(repair_app: typer.Typer) -> None:
         )
         _emit_envelope(ctx, command="config.repair.reset_state", result=result, lines=lines)
 
+
+def _register_repair_integrity_commands(repair_app: typer.Typer) -> None:
     integrity_app = typer.Typer(
         name="integrity",
         help=tr(
@@ -299,6 +315,8 @@ def register_repair_maintenance_commands(repair_app: typer.Typer) -> None:
 
     repair_app.add_typer(integrity_app, name="integrity")
 
+
+def _register_repair_connectivity_command(repair_app: typer.Typer) -> None:
     @repair_app.command("connectivity", help=tr("cli.config.repair.connectivity_help"))
     def repair_connectivity(ctx: typer.Context, headless: bool = typer.Option(True, "--headless/--headed")) -> None:
         """Probe browser connectivity to the AEAT Sede landing page."""
@@ -313,7 +331,6 @@ def register_repair_maintenance_commands(repair_app: typer.Typer) -> None:
             result=result,
             lines=_render_browser_connectivity_text(report).splitlines(),
         )
-
 
 def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
     """Return the last ``count`` lines from ``path`` without trailing newlines."""

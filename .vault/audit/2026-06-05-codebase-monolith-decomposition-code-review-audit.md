@@ -200,3 +200,9 @@ The split keeps tests importing production code and real fixtures; no mocks, ski
 Reviewed W05.P12 `S128`. The registry schema and referential-integrity monoliths now point to focused sibling modules with shared support modules, while the split modules preserve the existing domain marker and real registry-authority fixtures.
 
 The split keeps validation behavior grounded in production schema and registry authority code. Verification covers Ruff, compileall, 136 focused registry schema/referential-integrity tests, and the 2-test hard codebase size-budget guard.
+
+## REVIEW-030 | LOW | No blocking findings in CLI transport registrar split
+
+Reviewed W04.P09 `S153`. Profile bundle, config repair, ledger read/evidence/classification/review, modelo projection, and IVA wallet registration are decomposed into focused registration helpers or transport modules while business behavior remains in application services. The repair-policy coverage test was updated for the custody secret command module introduced by the earlier custody split.
+
+Verification covers Ruff, compileall, the CLI module-size and hard size-budget guards, 54 ledger classification/validation tests, 18 IVA wallet tests, 21 CLI surface tests, and 33 focused ledger-list/modelo/profile/repair tests. No command verbs or ADR-governed CLI names were changed in this split.

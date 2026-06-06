@@ -10,7 +10,6 @@ profile audit trail via :class:`BucketEventHistoryRepository`.
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
-from pathlib import Path
 from typing import Protocol
 
 import typer
@@ -64,6 +63,7 @@ from ._ledger_business_invoice_cli import (
     payable_invoice_app,
     register_business_invoice_commands,
 )
+from ._ledger_classify_cli import ledger_classify_bulk_csv
 from ._ledger_evidence_cli import register_evidence_commands
 from ._ledger_import_cli import register_import_commands
 from ._ledger_inventory_cli import inventory_app, register_inventory_commands
@@ -542,61 +542,18 @@ def ledger_classify(
             actor=actor,
         )
         return
-    from ...application.ledger import bulk_classify_from_csv as _bulk_classify
-
     state = _state()
     transaction_repository = _tx_repo(state)
 
     if from_csv is not None:
-        # Bulk-classify mode: --id and --classification must not be combined
-        if transaction_id is not None or classification is not None:
-            raise _bad(
-                tr(
-                    "cli.ledger.classify.from_csv_exclusive",
-                    default="--from-csv cannot be combined with --id or --classification.",
-                )
-            )
-        csv_path = Path(from_csv)
-        if not csv_path.exists():
-            raise _bad(
-                tr("cli.ledger.classify.from_csv_not_found", path=from_csv, default=f"CSV file not found: {from_csv}")
-            )
-        csv_text = csv_path.read_text(encoding="utf-8")
-        result = _bulk_classify(
-            bucket_id=transaction_repository.bucket_id,
-            csv_text=csv_text,
-            actor=actor or resolve_active_bucket_id() or "operator",
-            source_command="aeat app ledger classify",
+        ledger_classify_bulk_csv(
+            ctx,
             transaction_repository=transaction_repository,
+            transaction_id=transaction_id,
+            classification=classification,
+            from_csv=from_csv,
+            actor=actor,
         )
-        lines = [
-            tr(
-                "cli.ledger.classify.bulk_summary",
-                total=result.total,
-                applied=result.applied,
-                skipped=result.skipped,
-                fail=len(result.failures),
-                default=(
-                    f"bulk classify: {result.total} rows, {result.applied} applied, "
-                    f"{result.skipped} skipped, {len(result.failures)} failed"
-                ),
-            )
-        ]
-        from ._ledger_payloads import LedgerClassifyResult
-
-        for failure in result.failures:
-            # MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE:
-            # tab-separated machine record (id, reason), not user-facing prose.
-            lines.append(f"  failed\t{failure.transaction_id}\t{failure.reason}")
-        classify_result = LedgerClassifyResult.model_validate(
-            {
-                "total": result.total,
-                "applied": result.applied,
-                "skipped": result.skipped,
-                "failures": [f.model_dump(mode="json") for f in result.failures],
-            }
-        )
-        _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
         return
 
     # Single-transaction mode: --id and --classification are required
