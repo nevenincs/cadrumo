@@ -9,7 +9,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_MODULE_PATH = Path(__file__).with_name("file_permissions.py")
+_MODULE_PATH = Path(__file__).parents[1] / "file_permissions.py"
 
 
 def _module_tree() -> ast.Module:

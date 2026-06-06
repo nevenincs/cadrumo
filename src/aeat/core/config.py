@@ -1,12 +1,4 @@
-"""Central settings module for AEAT automation.
-
-Single source of truth for all environment variables. Every field in
-:class:`Settings` maps 1:1 to an uppercase environment variable
-(e.g. ``aeat_base_url`` → ``AEAT_BASE_URL``).
-
-The companion test ``src/aeat/tests/test_config.py`` enforces that ``.env.example``
-and this module stay fully aligned.
-"""
+"""Central settings facade for AEAT automation."""
 
 from __future__ import annotations
 
@@ -15,14 +7,30 @@ import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import date
-from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, SecretStr, field_validator, model_validator
+from pydantic import BeforeValidator, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ._config_storage_route import classify_storage_route_for_settings, settings_for_bucket_route
+from ._config_support import (
+    AuthProviderKindSetting,
+    CertificateBackend,
+    JustificanteParserBackendSetting,
+    LLMProviderSetting,
+    SecretStoreBackend,
+    StorageRouteClassification,
+    StorageRouteKind,  # noqa: F401 - public re-export from aeat.core.config
+    unwrap_optional_secret,  # noqa: F401 - public re-export from aeat.core.config
+)
+from ._config_support import coerce_output_language_setting as _coerce_output_language_setting
+from ._config_support import default_aeat_sede_origin as _default_aeat_sede_origin
+from ._config_support import default_aeat_sede_origin_with_slash as _default_aeat_sede_origin_with_slash
+from ._config_support import default_clave_sede_access_url_template as _default_clave_sede_access_url_template
+from ._config_support import default_sede_expedientes_path as _default_sede_expedientes_path
+from ._config_support import default_status_detail_url_template as _default_status_detail_url_template
+from ._config_support import default_status_notificaciones_path as _default_status_notificaciones_path
 from .errors import ActiveProfilePointerError, CoreValidationError
 from .external_constants import DEFAULT_CURRENCY, DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path
@@ -33,30 +41,6 @@ if TYPE_CHECKING:
 
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class SecretStoreBackend(StrEnum):
-    """Supported backends for the master-key secret store.
-
-    Members:
-        AUTO: Try the OS keychain first; fall back to the encrypted
-            file when the keychain is unavailable. Default.
-        KEYRING: OS keychain only (Windows Credential Manager, macOS
-            Keychain, Linux Secret Service). Refuses to fall back.
-        FILE: Encrypted file only — passphrase-derived KEK wraps the
-            master key. Required for headless / CI execution where no
-            usable keychain backend is available.
-        UNSECURED: **Testing / throwaway only.** Master key is a
-            published deterministic constant — provides ZERO
-            confidentiality. Refused unless ``AEAT_ALLOW_UNENCRYPTED=1``
-            is set, AND refused at profile-load time when the active
-            operator profile carries a real NIF/NIE/CIF (NIF-canary).
-    """
-
-    AUTO = "auto"
-    KEYRING = "keyring"
-    FILE = "file"
-    UNSECURED = "unsecured"
 
 
 # Project root: four levels up from src/aeat/core/config.py
@@ -70,127 +54,6 @@ LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD = "aeat_live_tests_enabled"
 """Settings field backing the pytest-only live-read opt-in."""
 LIVE_READ_TEST_OPT_IN_ENV_VAR = "AEAT_LIVE_TESTS_ENABLED"
 """Environment variable backing :attr:`Settings.aeat_live_tests_enabled`."""
-
-
-def unwrap_optional_secret(value: SecretStr | None) -> str:
-    """Return the cleartext of an optional :class:`SecretStr`, or ``""`` if unset.
-
-    Bridge helper for the AEAT-regulated identity fields on
-    :class:`Settings` that are typed as ``SecretStr | None`` for leak
-    safety but consumed downstream as plain text (for forms, fingerprints,
-    profile binding, etc.). Centralising the unwrap pattern keeps the
-    ``.get_secret_value() if X is not None else ""`` boilerplate out of
-    every call site and ensures any future None / SecretStr edge case is
-    handled identically across consumers.
-    """
-    return value.get_secret_value() if value is not None else ""
-
-
-class LLMProviderSetting(StrEnum):
-    """Closed set of provider names accepted by Settings."""
-
-    ANTHROPIC = "ANTHROPIC"
-    OPENAI = "OPENAI"
-    GEMINI = "GEMINI"
-    LOCAL = "LOCAL"
-
-
-class CertificateBackend(StrEnum):
-    """Closed catalogue of supported AEAT certificate-handshake backends.
-
-    Attributes:
-        PLAYWRIGHT_CONTEXT: Primary. Supply the PKCS#12 to
-            ``browser.new_context(client_certificates=[...])``.
-        HTTPX_FALLBACK: Verify-only. Perform a direct mTLS handshake
-            via ``httpx`` for CI smoke tests.
-    """
-
-    PLAYWRIGHT_CONTEXT = "playwright_context"
-    HTTPX_FALLBACK = "httpx_fallback"
-
-
-class AuthProviderKindSetting(StrEnum):
-    """Settings-shape selector for the active AEAT authentication provider."""
-
-    CERTIFICATE = "certificate"
-    CLAVE_MOVIL = "clave_movil"
-
-
-class StorageRouteKind(StrEnum):
-    """Resolved primary database route classification."""
-
-    EXPLICIT_DATABASE_URL = "explicit_database_url"
-    ACTIVE_BUCKET_DATABASE = "active_bucket_database"
-    ROOT_FALLBACK_DATABASE = "root_fallback_database"
-
-
-class StorageRouteClassification(BaseModel):
-    """Strict classification of the effective primary database route."""
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-    kind: StorageRouteKind
-    database_url: str = Field(min_length=1)
-    database_path: Path | None = None
-    bucket_id: str = ""
-
-
-def _default_clave_sede_access_url_template() -> str:
-    from .external_constants import load_external_constants
-
-    return load_external_constants().aeat.clave_movil.selector_access_url_template
-
-
-def _default_sede_expedientes_path() -> str:
-    from .external_constants import load_external_constants
-
-    return load_external_constants().aeat.sede_paths.expedientes_resumen
-
-
-def _default_status_detail_url_template() -> str:
-    from .external_constants import load_external_constants
-
-    return load_external_constants().aeat.sede_paths.expediente_detail_template
-
-
-def _default_status_notificaciones_path() -> str:
-    from .external_constants import load_external_constants
-
-    return load_external_constants().aeat.sede_paths.notificaciones
-
-
-def _default_aeat_sede_origin() -> str:
-    from .external_constants import load_external_constants
-
-    return load_external_constants().aeat.domains.sede
-
-
-def _default_aeat_sede_origin_with_slash() -> str:
-    return f"{_default_aeat_sede_origin()}/"
-
-
-class JustificanteParserBackendSetting(StrEnum):
-    """Settings-shape selector for the justificante PDF parsing backend."""
-
-    PDFPLUMBER = "pdfplumber"
-
-
-def _coerce_output_language_setting(value: str) -> OutputLanguage | None:
-    """Coerce env-var output-language to OutputLanguage enum or None.
-
-    Accepts any string input. Returns the matching OutputLanguage member
-    OR None for invalid input, preserving the forgiving-fallback semantic
-    at the validator layer: operators with mistyped AEAT_OUTPUT_LANGUAGE
-    env vars normalise to None and fall through to the default at
-    resolution time, rather than raising ValidationError at settings load.
-    """
-    if not value:
-        return None
-    normalized = value.lower().strip()
-    try:
-        return OutputLanguage(normalized)
-    except ValueError:
-        return None
 
 
 class Settings(BaseSettings):
@@ -1325,39 +1188,17 @@ _settings_override: contextvars.ContextVar[Settings | None] = contextvars.Contex
 
 
 def classify_storage_route(settings: Settings | None = None) -> StorageRouteClassification:
-    """Classify the effective primary SQL route for write guards.
-
-    Returns:
-        A :class:`StorageRouteClassification` identifying whether the
-        resolved database URL was explicitly supplied, derived from the
-        active bucket, or inferred as the root fallback.
-    """
+    """Classify the effective primary SQL route for write guards."""
     return classify_storage_route_for_settings(settings or load_settings())
 
 
 def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None = None) -> Settings:
-    """Return settings routed to ``bucket_id``'s active-profile database.
-
-    The helper is the central route-derivation boundary for callers
-    that need a named bucket route. Explicit primary database URLs stay
-    fail-closed: a caller cannot convert an operator-supplied SQL URL
-    into a bucket route by passing a bucket id.
-
-    Returns:
-        A :class:`Settings` instance with ``aeat_database_url`` resolved
-        to the per-bucket SQLite path for ``bucket_id``.
-    """
+    """Return settings routed to ``bucket_id``'s active-profile database."""
     return settings_for_bucket_route(bucket_id, source or load_settings())
 
 
 def load_settings() -> Settings:
-    """Return the effective :class:`Settings` instance.
-
-    Honours an active :func:`override_settings` block first; otherwise
-    constructs a fresh instance from environment variables and
-    ``.env``. The fresh construction preserves the historical contract
-    that callers see every monkeypatched env var in test contexts.
-    """
+    """Return the effective :class:`Settings` instance."""
     override = _settings_override.get()
     if override is not None:
         return override
@@ -1366,24 +1207,7 @@ def load_settings() -> Settings:
 
 @contextmanager
 def override_settings(**overrides: object) -> Iterator[Settings]:
-    """Override one or more :class:`Settings` fields for the with-block.
-
-    Resolves the current effective Settings, calls
-    ``Settings.model_copy`` with ``update=overrides`` so Pydantic
-    validates the merged dict, and sets a process-local
-    :class:`contextvars.ContextVar` so :func:`load_settings` returns
-    the overridden instance for the duration of the block. The prior
-    ContextVar value is restored on exit, including on exception.
-
-    A malformed override (wrong type, value outside the field's
-    validator) raises :class:`pydantic.ValidationError` at entry,
-    before the ContextVar is set.
-
-    Process-local by design: subprocesses spawned inside the block do
-    not inherit the override, so cross-process channels (replay,
-    OpenSSL passphrase, browser driver) continue to use the real
-    environment.
-    """
+    """Override one or more :class:`Settings` fields for the with-block."""
     current = load_settings()
     # ``model_copy(update=)`` skips validators in Pydantic v2; route the
     # merged dict through ``model_validate`` so a malformed override

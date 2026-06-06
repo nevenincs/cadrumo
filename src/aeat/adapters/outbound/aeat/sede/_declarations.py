@@ -15,10 +15,6 @@ and visible row structure. The submit action is a real ``Buscar``
 button issuing a ZK AJAX RPC; URL parameters alone do not drive
 results.
 
-The walker drives the form for one ``(modelo, ejercicio)`` query at
-a time. Multi-modelo or multi-year callers invoke the helper once per
-query.
-
 Parsed filings are grounded against the registry: each declaration is
 resolved to its :class:`ModeloRevision` and a :class:`RegistrySnapshot`
 (loaded through :class:`ValidatedRegistryAuthority`), and reported casilla
@@ -29,18 +25,17 @@ legal and source references.
 from __future__ import annotations
 
 import hashlib
-import re
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import urlsplit
 
-from bs4 import BeautifulSoup
-from pydantic import AnyHttpUrl, AnyUrl
+from pydantic import AnyHttpUrl
 
 from .....core.config import Settings, load_settings
 from .....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
+from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.external_constants import PDF_MIME_TYPE as _PDF_MIME_TYPE
 from .....core.i18n import tr
 from .....core.logging import get_logger
@@ -54,9 +49,7 @@ from .....core.time import now
 from .....domain.calculations.registry import (
     RegistrySnapshot,
     RegistryValidationError,
-    RemoteOperation,
     RemoteStateGuardPolicy,
-    assert_remote_operation_allowed,
     parse_export_payload,
     previous_filing_observation_requirements,
     relation_source_requirements,
@@ -64,7 +57,6 @@ from .....domain.calculations.registry import (
 )
 from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
 from ..browser import Profile, opened_browser_page, shared_playwright_runtime
-from ._adapter_utils import normalize_response_text
 from ._auth_state import storage_state_for_session
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
@@ -72,7 +64,13 @@ from ._browser_constants import (
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
 )
-from ._declarations_listbox import _NO_RESULTS_TEXT, _has_class, _parse_listbox, _parse_presented_at
+from ._declarations_diagnostics import (
+    declarations_page_shape_context as _declarations_page_shape_context,
+)
+from ._declarations_diagnostics import (
+    declarations_page_shape_context_from_page as _declarations_page_shape_context_from_page,
+)
+from ._declarations_listbox import _parse_listbox, _parse_presented_at
 from ._declarations_observations import (
     FiledDeclaracionArtefactSink,
     _is_modelo_303_page_03_fallback,
@@ -90,6 +88,9 @@ from ._declarations_observations import (
     resolve_previous_filing_bindings_from_filed_declarations,
     resolve_relation_values_from_filed_declarations,
 )
+from ._declarations_remote import assert_read_browser_action as _remote_assert_read_browser_action
+from ._declarations_remote import assert_read_http as _remote_assert_read_http
+from ._declarations_remote import extract_csv_from_url as _extract_csv_from_url
 from ._declarations_schema import Declaracion
 from ._errors import (
     JustificanteFetchError,
@@ -154,13 +155,6 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     requires_authentication=True,
     requires_aeat_authorization=True,
 )
-
-# AEAT CSV shape: 8-24 uppercase alphanumeric characters. Mirror
-# of ``_CSV_LABEL_RE`` in :mod:`aeat.adapters.inbound.justificante._extract`. Used
-# to shape-validate the CSV extracted from a cotejo URL so a
-# malformed AEAT response cannot land arbitrary text in the
-# downstream :class:`JustificanteRef.pdf_url`.
-_CSV_SHAPE_RE = re.compile(r"^[A-Z0-9]{8,24}$")
 
 @asynccontextmanager
 async def shared_playwright(
@@ -542,84 +536,6 @@ async def _drive_search(
         ),
     )
     return True
-
-
-async def _declarations_page_shape_context_from_page(
-    page: Page,
-    *,
-    stage: str,
-    modelo: str,
-    ejercicio: int,
-) -> dict[str, object]:
-    try:
-        html = await page.content()
-    except PlaywrightError:
-        html = ""
-    return _declarations_page_shape_context(
-        html,
-        landing_url=getattr(page, "url", "") or "",
-        stage=stage,
-        modelo=modelo,
-        ejercicio=ejercicio,
-    )
-
-
-def _declarations_page_shape_context(
-    html: str,
-    *,
-    landing_url: str,
-    stage: str,
-    modelo: str,
-    ejercicio: int,
-) -> dict[str, object]:
-    soup = BeautifulSoup(html, "html.parser")
-    normalized_text = normalize_response_text(soup.get_text(" ", strip=True))
-    buttons = tuple(_bounded_text(button.get_text(" ", strip=True)) for button in soup.find_all("button")[:12])
-    headers = tuple(
-        _bounded_text(header.get_text(" ", strip=True))
-        for header in soup.find_all(class_=_has_class("z-listheader"))[:12]
-    )
-    return {
-        "stage": stage,
-        "modelo": modelo,
-        "ejercicio": ejercicio,
-        "landing_url": _redacted_url(landing_url),
-        "title": _bounded_text(soup.find("title").get_text(" ", strip=True)) if soup.find("title") else "",
-        "has_modelo_label": "modelo (*)" in normalized_text,
-        "has_ejercicio_label": "ejercicio (*)" in normalized_text,
-        "has_buscar_button": any(button.casefold() == "buscar" for button in buttons),
-        "has_no_results_text": normalize_response_text(_NO_RESULTS_TEXT) in normalized_text,
-        "listbox_count": len(soup.find_all(class_=_has_class("z-listbox"))),
-        "listitem_count": len(soup.find_all(class_=_has_class("z-listitem"))),
-        "comboitem_count": len(soup.find_all(class_=_has_class("z-comboitem"))),
-        "table_count": len(soup.find_all("table")),
-        "form_count": len(soup.find_all("form")),
-        "buttons": buttons,
-        "list_headers": headers,
-        "raw_sha256": hashlib.sha256(html.encode("utf-8")).hexdigest(),
-    }
-
-
-def _redacted_url(value: object) -> str | None:
-    if value is None:
-        return None
-    text = str(value)
-    if not text:
-        return ""
-    try:
-        parsed = urlsplit(text)
-    except ValueError:
-        return ""
-    if not parsed.scheme and not parsed.netloc:
-        return parsed.path
-    return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
-
-
-def _bounded_text(value: object, *, max_length: int = 120) -> str:
-    text = " ".join(str(value).replace("\xa0", " ").split())
-    if len(text) <= max_length:
-        return text
-    return f"{text[: max_length - 1]}…"
 
 
 async def _select_combobox_value(
@@ -1289,29 +1205,6 @@ async def _capture_submitted_file_artefact(
     )
 
 
-def _assert_read_http(
-    method: str,
-    url: str,
-    *,
-    policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
-) -> None:
-    assert_remote_operation_allowed(
-        policy,
-        RemoteOperation(kind="http", method=method, url=AnyUrl(url)),
-    )
-
-
-def _assert_read_browser_action(
-    action: str,
-    *,
-    policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
-) -> None:
-    assert_remote_operation_allowed(
-        policy,
-        RemoteOperation(kind="browser_action", action=action),
-    )
-
-
 def _row_locator_for_expediente(page: Page, *, expediente_id: str):
     """Return a Playwright locator pointing at the listitem whose ``Expediente`` cell text equals ``expediente_id``."""
     return page.locator(".z-listitem").filter(
@@ -1319,44 +1212,25 @@ def _row_locator_for_expediente(page: Page, *, expediente_id: str):
     )
 
 
-def _extract_csv_from_url(url: str) -> str:
-    """Extract the ``CSV`` query parameter from a cotejo URL.
+def _assert_read_http(
+    method: str,
+    url: str,
+    *,
+    policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
+) -> None:
+    _remote_assert_read_http(method, url, policy=policy)
 
-    Args:
-        url: Final URL after the Ver-button click landed on
-            ``/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV=<csv>``.
 
-    Returns:
-        The CSV identifier, validated against the canonical AEAT
-        8-24 uppercase-alphanumeric shape.
-
-    Raises:
-        SedeParseError: When the URL does not carry a ``CSV``
-            query parameter, or when the value does not match
-            the canonical AEAT CSV shape.
-    """
-    parsed = urlsplit(url)
-    qs = parse_qs(parsed.query)
-    csv_values = qs.get("CSV", [])
-    if not csv_values:
-        raise SedeParseError(f"cotejo URL missing CSV query: {url!r}")
-    if len(csv_values) > 1:
-        # AEAT never repeats the CSV parameter; multiple values
-        # indicate a malformed response or an attacker-crafted URL
-        # smuggling extra state past the parser. Refuse rather
-        # than silently picking the first value.
-        raise SedeParseError(
-            f"cotejo URL has {len(csv_values)} CSV values; AEAT only emits one: {url!r}",
-        )
-    csv = csv_values[0]
-    if not _CSV_SHAPE_RE.match(csv):
-        raise SedeParseError(
-            f"cotejo URL CSV {csv!r} does not match AEAT shape (expected 8-24 uppercase alphanumeric chars)",
-        )
-    return csv
+def _assert_read_browser_action(
+    action: str,
+    *,
+    policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
+) -> None:
+    _remote_assert_read_browser_action(action, policy=policy)
 
 
 __all__ = [
+    "_JSON_MIME_TYPE",
     "Declaracion",
     "DeclaracionesRegisterSession",
     "_parse_presented_at",

@@ -15,7 +15,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.auth._authenticator._PersistedSessionInvalidError",
+        "aeat.adapters.outbound.aeat.auth._authenticator_types._PersistedSessionInvalidError",
         ErrorCode(
             code="AUTH_AUTH_AUTHENTICATOR_PERSISTED_SESSION_INVALID",
             category=ErrorCategory.AUTH,
@@ -26,7 +26,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.auth._clave_movil.ClaveMovilApprovalTimeoutError",
+        "aeat.adapters.outbound.aeat.auth._clave_movil_support.ClaveMovilApprovalTimeoutError",
         ErrorCode(
             code="AUTH_AUTH_CLAVE_MOVIL_CLAVE_MOVIL_APPROVAL_TIMEOUT",
             category=ErrorCategory.AUTH,
@@ -37,7 +37,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.auth._clave_movil.ClaveMovilConfigurationError",
+        "aeat.adapters.outbound.aeat.auth._clave_movil_support.ClaveMovilConfigurationError",
         ErrorCode(
             code="AUTH_AUTH_CLAVE_MOVIL_CLAVE_MOVIL_CONFIGURATION",
             category=ErrorCategory.AUTH,

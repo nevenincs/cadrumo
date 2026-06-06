@@ -1,0 +1,471 @@
+"""Modelo file-flow application tests split by workflow."""
+
+from __future__ import annotations
+
+import pytest
+
+from ._file_flow_support import (
+    _DEFAULT_130_BASELINE_INPUTS,
+    _DEFAULT_130_BINDING_VALUES,
+    _T1,
+    _T2,
+    _T3,
+    _T4,
+    _T5,
+    BucketEventType,
+    CalculationRevisionState,
+    CalculationRevisionStateError,
+    Decimal,
+    ModeloRecordNotFoundError,
+    ModeloRecordStatus,
+    ModeloWorkflowGateError,
+    WorkflowAbortReason,
+    WorkflowStage,
+    _AuthProvider,
+    _file_revision,
+    _seed_work_unit,
+    _target_filing_records,
+    _verify_revision,
+    _workflow_profile,
+    calculate_modelo_revision,
+    file_modelo_revision,
+    get_calculation_revision,
+    get_filing_record,
+    get_work_unit,
+    list_filing_records,
+    mark_revision_verificado_completo,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+def test_file_requires_verificado_completo_state(repos) -> None:
+    """A borrador revision cannot be filed; only verificado-completo
+    revisions are eligible."""
+
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs={"01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+    with pytest.raises(CalculationRevisionStateError, match=r"state|verified|VERIFIED"):
+        file_modelo_revision(
+            revision.calculation_revision_id,
+            actor="operator-A",
+            workflow_profile=_workflow_profile(),
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T2,
+        )
+
+def test_file_creates_filing_record_and_advances_pointers(repos) -> None:
+    """The happy-path file flow: calculate → mark verified-complete
+    → file. After file: a ModeloRecord exists, the revision is in
+    FILED state, the work unit's filed_calculation_revision_id and
+    current_filing_record_id pointers point at the new IDs, and
+    filing-record current_for(...) resolves to the new record."""
+
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+    mark_revision_verificado_completo(
+        revision.calculation_revision_id,
+        actor="operator-A",
+        calculation_repository=cr_repo,
+        clock=_T2,
+    )
+    filing = _file_revision(
+        revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
+        actor="operator-A",
+        notes="Q1 IVA",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T3,
+    )
+
+    assert filing.status is ModeloRecordStatus.VIGENTE
+    assert filing.aeat_accepted is False
+    assert filing.notes == "Q1 IVA"
+    assert filing.filed_by == "operator-A"
+    assert filing.calculation_revision_id == revision.calculation_revision_id
+
+    refreshed_revision = get_calculation_revision(
+        revision.calculation_revision_id,
+        calculation_repository=cr_repo,
+    )
+    assert refreshed_revision.state is CalculationRevisionState.PRESENTADO
+    assert refreshed_revision.filed_at == _T3
+    assert refreshed_revision.filed_by == "operator-A"
+
+    refreshed_wu = get_work_unit(
+        work_unit.work_unit_id,
+        repository=wu_repo,
+    )
+    assert refreshed_wu.current_calculation_revision_id == revision.calculation_revision_id
+    assert refreshed_wu.filed_calculation_revision_id == revision.calculation_revision_id
+    assert refreshed_wu.current_filing_record_id == filing.filing_record_id
+
+    # The filing-record catalogue's current_for query resolves to
+    # the new record — this is the canonical "which revision is THE
+    # Q1 filed answer?" lookup that downstream consumers
+    # (aggregation, amendments) use.
+    catalogue = fr_repo.load()
+    current = catalogue.current_for(
+        bucket_id=work_unit.bucket_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    )
+    assert current is not None
+    assert current.filing_record_id == filing.filing_record_id
+
+def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_blocks(repos) -> None:
+    """The file transition is gated by WorkflowEngine.run_for_period.
+
+    When submission preflight refuses, the calculation revision remains
+    verified-complete and no filing record or filed bucket event is
+    persisted.
+    """
+
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+    mark_revision_verificado_completo(
+        revision.calculation_revision_id,
+        actor="operator-A",
+        calculation_repository=cr_repo,
+        clock=_T2,
+    )
+
+    unavailable_provider = _AuthProvider(available=False)
+    with pytest.raises(ModeloWorkflowGateError) as gate_error:
+        _file_revision(
+            revision.calculation_revision_id,
+            revision=revision,
+            work_unit=work_unit,
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T3,
+            auth_provider=unavailable_provider,
+        )
+    assert gate_error.value.result.final_stage is WorkflowStage.ABORTED
+    assert gate_error.value.context is not None
+    assert gate_error.value.context["stage"] == WorkflowStage.ABORTED.value
+
+    assert unavailable_provider.describe_calls == 1
+    refreshed_revision = get_calculation_revision(
+        revision.calculation_revision_id,
+        calculation_repository=cr_repo,
+    )
+    assert refreshed_revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
+    assert _target_filing_records(list_filing_records(filing_repository=fr_repo), work_unit) == ()
+    filed_events = bv_repo.load().for_bucket(
+        work_unit.bucket_id,
+        event_types=(BucketEventType.MODELO_FILED,),
+    )
+    assert filed_events == ()
+
+def test_file_still_refuses_a_closed_past_period_no_pending_obligation(repos) -> None:
+    """The ``NO_PENDING_OBLIGATION`` guard stays on the filing path.
+
+    Deadline-independence applies to ``verify`` only. Filing a modelo
+    130 revision for 2024 Q1 at a 2026 clock — when no obligation
+    exists for that period — must still abort: filing without a
+    pending obligation stays refused.
+    """
+
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo, filing_year=2024)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
+        binding_values=_DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+    _verify_revision(
+        revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T2,
+    )
+
+    with pytest.raises(ModeloWorkflowGateError) as gate_error:
+        _file_revision(
+            revision.calculation_revision_id,
+            revision=revision,
+            work_unit=work_unit,
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T3,
+        )
+
+    assert gate_error.value.result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
+    refreshed = get_calculation_revision(
+        revision.calculation_revision_id,
+        calculation_repository=cr_repo,
+    )
+    assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
+
+    # Discoverability: the refusal is not a dead end. The operator-facing
+    # render signposts the local finish line (`aeat app modelo export`) —
+    # exporting a verified-complete revision to a fichero-BOE artefact needs
+    # neither an open filing-obligation window nor this `file` step — and the
+    # refusal summary states why the gate refused (the obligation window is not
+    # open).
+    from ....core.errors import render_error_text
+
+    rendered = render_error_text(gate_error.value)
+    # The signpost must name the REAL verb: `aeat app modelo export` is a sibling
+    # of `work` (registered as @app.command("export")), NOT a `work` subcommand —
+    # a `work export` form errors on copy-paste ("No such command 'export'").
+    assert "aeat app modelo export" in rendered
+    assert "aeat app modelo work export" not in rendered
+    assert gate_error.value.suggestion == "aeat app modelo export <work-unit-id> --output <path>"
+    assert "filing-obligation window is not open" in gate_error.value.result.summary
+
+def test_filing_record_supersession_preserves_audit_history(repos) -> None:
+    """Re-filing a later verified revision supersedes the prior
+    filing. The prior filing record moves to SUPERSEDED with the
+    supersession metadata captured; the prior calculation revision
+    moves from FILED to FILED_SUPERSEDED. The new filing becomes
+    CURRENT. ``history_for(...)`` returns both records in
+    filed_at order."""
+
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+
+    # First filing: revision-1, filed at T3.
+    revision_one = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+    mark_revision_verificado_completo(
+        revision_one.calculation_revision_id,
+        actor="operator-A",
+        calculation_repository=cr_repo,
+        clock=_T2,
+    )
+    filing_one = _file_revision(
+        revision_one.calculation_revision_id,
+        revision=revision_one,
+        work_unit=work_unit,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T3,
+    )
+
+    # Second filing: revision-2 with corrected inputs, filed at T5.
+    revision_two = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1200"), "02": Decimal("100")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T4,
+    )
+    mark_revision_verificado_completo(
+        revision_two.calculation_revision_id,
+        actor="operator-A",
+        calculation_repository=cr_repo,
+        clock=_T4,
+    )
+    filing_two = _file_revision(
+        revision_two.calculation_revision_id,
+        revision=revision_two,
+        work_unit=work_unit,
+        actor="operator-A",
+        notes="corrected after audit",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T5,
+    )
+
+    # New filing is current.
+    assert filing_two.status is ModeloRecordStatus.VIGENTE
+    refreshed_revision_two = get_calculation_revision(
+        revision_two.calculation_revision_id,
+        calculation_repository=cr_repo,
+    )
+    assert refreshed_revision_two.state is CalculationRevisionState.PRESENTADO
+
+    # Prior filing is superseded; prior revision moved to FILED_SUPERSEDED.
+    refreshed_filing_one = get_filing_record(
+        filing_one.filing_record_id,
+        filing_repository=fr_repo,
+    )
+    assert refreshed_filing_one.status is ModeloRecordStatus.SUPERSEDIDO
+    assert refreshed_filing_one.superseded_at == _T5
+    assert refreshed_filing_one.superseded_by_filing_record_id == filing_two.filing_record_id
+
+    refreshed_revision_one = get_calculation_revision(
+        revision_one.calculation_revision_id,
+        calculation_repository=cr_repo,
+    )
+    assert refreshed_revision_one.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO
+    assert refreshed_revision_one.superseded_at == _T5
+
+    # current_for resolves to the new filing only.
+    catalogue = fr_repo.load()
+    current = catalogue.current_for(
+        bucket_id=work_unit.bucket_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    )
+    assert current is not None
+    assert current.filing_record_id == filing_two.filing_record_id
+
+    # history_for returns both records in filed_at order.
+    history = catalogue.history_for(
+        bucket_id=work_unit.bucket_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    )
+    assert tuple(r.filing_record_id for r in history) == (
+        filing_one.filing_record_id,
+        filing_two.filing_record_id,
+    )
+
+    # Work-unit pointers point at the new filing.
+    refreshed_wu = get_work_unit(
+        work_unit.work_unit_id,
+        repository=wu_repo,
+    )
+    assert refreshed_wu.filed_calculation_revision_id == revision_two.calculation_revision_id
+    assert refreshed_wu.current_filing_record_id == filing_two.filing_record_id
+
+def test_list_filing_records_excludes_superseded_by_default(repos) -> None:
+    """The default listing surfaces operator-visible state (current
+    filings). Pass include_superseded=True to walk audit history."""
+
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+
+    revision_one = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+    mark_revision_verificado_completo(
+        revision_one.calculation_revision_id,
+        actor="operator-A",
+        calculation_repository=cr_repo,
+        clock=_T2,
+    )
+    _file_revision(
+        revision_one.calculation_revision_id,
+        revision=revision_one,
+        work_unit=work_unit,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T3,
+    )
+
+    revision_two = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1200")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T4,
+    )
+    mark_revision_verificado_completo(
+        revision_two.calculation_revision_id,
+        actor="operator-A",
+        calculation_repository=cr_repo,
+        clock=_T4,
+    )
+    _file_revision(
+        revision_two.calculation_revision_id,
+        revision=revision_two,
+        work_unit=work_unit,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T5,
+    )
+
+    default_listing = list_filing_records(
+        filing_repository=fr_repo,
+    )
+    target_default_listing = _target_filing_records(default_listing, work_unit)
+    assert len(target_default_listing) == 1
+    assert target_default_listing[0].status is ModeloRecordStatus.VIGENTE
+
+    with_history = list_filing_records(
+        include_superseded=True,
+        filing_repository=fr_repo,
+    )
+    assert len(_target_filing_records(with_history, work_unit)) == 2
+
+def test_get_filing_record_raises_on_missing_id(repos) -> None:
+    _, _, fr_repo, _, _ = repos
+    with pytest.raises(ModeloRecordNotFoundError) as excinfo:
+        get_filing_record(
+            "0" * 64,
+            filing_repository=fr_repo,
+        )
+    assert excinfo.value.translated_message == "application.modelo.errors.filing_record_not_found"

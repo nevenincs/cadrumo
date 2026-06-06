@@ -35,16 +35,15 @@ import asyncio
 import json
 import time
 from collections.abc import Callable, Mapping
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, NoReturn, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Final, NoReturn
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
+from pydantic import ValidationError
 
 from .....core.config import Settings as _Settings
 from .....core.logging import get_logger
 from .....core.time import now
-from .....core.time._utc import coerce_utc_aware
 from .._playwright import PlaywrightError
 from . import _session_store
 from ._authenticator_persistence import (
@@ -53,19 +52,27 @@ from ._authenticator_persistence import (
     persisted_session_reason_code,
     persisted_session_reason_from_error,
 )
+from ._authenticator_types import (
+    AeatLoginAssertion,
+    AeatSession,
+    BrowserContextLike,
+    BrowserPageLike,
+    BrowserResponseLike,
+    BrowserSessionFactory,
+    BrowserSessionLike,
+    CertificateHealthCheck,
+    _PersistedSessionInvalidError,
+)
 from ._errors import AeatLoginAssertionError, AeatSessionExpiredError, AuthValidationError
 from ._providers import (
     CERTIFICATE_CONTEXT_MARKER,
-    AuthLoginAssertionDetail,
     AuthProviderDescription,
     AuthProviderKind,
-    AuthSessionDetail,
     CertificateContextProvisioner,
     CertificateLoginAssertionDetail,
     CertificateSessionDetail,
 )
 from .certificate import (
-    CertificateBackend,
     CertificateBundle,
     CertificateError,
     CertificateHealth,
@@ -105,234 +112,6 @@ env-var change — the operator surface stays narrow.
 
 AEAT_LOGIN_NAVIGATION_TIMEOUT_MS: Final[int] = _Settings().aeat_browser_navigation_timeout_ms
 """Playwright navigation timeout for post-auth verification probes."""
-
-
-# ── Boundary records ────────────────────────────────────────────────────────
-
-
-class AeatLoginAssertion(BaseModel):
-    """Structured outcome of a single live AEAT verification attempt.
-
-    The record captures the three independent signals the
-    authenticator collects during ``verify_login()`` — the TLS
-    handshake, the post-auth portal reachability, and the
-    cert-derived identity — plus a composite ``is_valid`` predicate
-    downstream code should read.
-
-    Attributes:
-        target_url: Navigation target used for the verification.
-        is_valid: Composite predicate:
-            ``handshake_success AND certificate_recognised AND
-            parsed_nif is not None``.
-        handshake_success: TLS handshake leg.
-        certificate_recognised: Playwright navigation returned a
-            non-challenge response (HTTP 2xx / 3xx) with the cert
-            supplied.
-        parsed_nif: NIF / NIE extracted from the certificate subject
-            (authoritative — never scraped from AEAT HTML).
-        parsed_subject: RFC-4514 subject DN of the cert.
-        status_code: HTTP status of the navigation probe.
-        elapsed_ms: Wall-clock elapsed time for the full
-            verification (handshake + navigation).
-        attempted_at: Timezone-aware UTC timestamp of the attempt.
-        error_message: Human-readable failure reason when the
-            assertion is not valid.
-    """
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-    target_url: str
-    is_valid: bool
-    provider_kind: AuthProviderKind
-    identity_nif: str | None
-    status_code: int
-    elapsed_ms: int
-    attempted_at: datetime
-    error_message: str | None = None
-    assertion_detail: AuthLoginAssertionDetail = Field(discriminator="kind")
-
-    @property
-    def handshake_success(self) -> bool | None:
-        """Whether the TLS handshake leg succeeded; ``None`` for non-certificate providers."""
-        if isinstance(self.assertion_detail, CertificateLoginAssertionDetail):
-            return self.assertion_detail.handshake_success
-        return None
-
-    @property
-    def certificate_recognised(self) -> bool | None:
-        """Whether AEAT recognised the presented certificate; ``None`` for non-certificate providers."""
-        if isinstance(self.assertion_detail, CertificateLoginAssertionDetail):
-            return self.assertion_detail.certificate_recognised
-        return None
-
-    @property
-    def parsed_nif(self) -> str | None:
-        """Convenience alias for :attr:`identity_nif`."""
-        return self.identity_nif
-
-    @property
-    def parsed_subject(self) -> str | None:
-        """RFC-4514 subject DN of the certificate; ``None`` for non-certificate providers."""
-        if isinstance(self.assertion_detail, CertificateLoginAssertionDetail):
-            return self.assertion_detail.parsed_subject
-        return None
-
-
-class AeatSession(BaseModel):
-    """Record describing an authenticated live AEAT session.
-
-    The session carries **no secret material** — every field is
-    safe to log, serialise into audit trails, and surface via CLI
-    diagnostics. Secrets (passphrase, raw PKCS#12 bytes, private-key
-    handle) live on :class:`LoadedCertificate` via
-    :class:`pydantic.PrivateAttr` and never bleed into this record.
-
-    Attributes:
-        certificate_thumbprint: SHA-256 hex of the cert's DER
-            encoding. Ties the session to a specific PKCS#12
-            bundle; the browser context's
-            ``_aeat_certificate_thumbprint`` marker attribute is
-            set to the same value.
-        certificate_subject: RFC-4514 subject DN of the cert.
-        identity_nif: DNI / NIE identifying the authenticated taxpayer.
-        authenticated_at: Timezone-aware UTC timestamp of the
-            successful ``authenticate()`` call that produced this
-            record.
-        idle_deadline: Timezone-aware UTC timestamp beyond which the
-            session MUST be reauthenticated. Derived as
-            ``authenticated_at + AEAT_SESSION_IDLE_TTL``.
-        storage_state_path: Playwright ``storage_state`` JSON
-            location (cookies + localStorage), or ``None`` if the
-            caller chose not to persist.
-        handshake: Embedded :class:`HandshakeResult` from the TLS
-            leg of the authentication. Kept so callers can inspect
-            ``elapsed_ms`` etc. without re-running the probe.
-    """
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-    provider_kind: AuthProviderKind
-    authenticated_at: datetime
-    idle_deadline: datetime
-    storage_state_path: Path | None
-    identity_nif: str = Field(min_length=1)
-    provider_detail: AuthSessionDetail = Field(discriminator="kind")
-
-    @property
-    def certificate_thumbprint(self) -> str | None:
-        """SHA-256 thumbprint of the cert; ``None`` for non-certificate providers."""
-        if isinstance(self.provider_detail, CertificateSessionDetail):
-            return self.provider_detail.certificate_thumbprint
-        return None
-
-    @property
-    def certificate_subject(self) -> str | None:
-        """RFC-4514 subject DN of the cert; ``None`` for non-certificate providers."""
-        if isinstance(self.provider_detail, CertificateSessionDetail):
-            return self.provider_detail.certificate_subject
-        return None
-
-    @property
-    def handshake(self) -> HandshakeResult | None:
-        """Embedded TLS-leg :class:`HandshakeResult`; ``None`` for non-certificate providers."""
-        if isinstance(self.provider_detail, CertificateSessionDetail):
-            return self.provider_detail.handshake
-        return None
-
-    def is_stale(self, now: datetime | None = None) -> bool:
-        """Return True when the session's idle deadline has elapsed."""
-        reference = coerce_utc_aware(now) if now is not None else datetime.now(UTC)
-        return reference > self.idle_deadline
-
-
-# ── Browser session Protocol ────────────────────────────────────────────────
-
-
-class _PersistedSessionInvalidError(AeatLoginAssertionError):
-    """Raised when a persisted AEAT browser session cannot be trusted."""
-
-
-@runtime_checkable
-class BrowserPageLike(Protocol):
-    """Minimum structural shape of a Playwright ``Page``.
-
-    Declared so :meth:`AeatAuthenticator.verify_login` can walk the
-    navigation/close path without importing ``playwright`` at
-    module load. Tests supply stand-in objects that conform
-    structurally.
-    """
-
-    async def goto(
-        self,
-        url: str,
-        *,
-        timeout: float | None = None,
-    ) -> BrowserResponseLike | None: ...
-    async def close(self) -> None: ...
-
-
-@runtime_checkable
-class BrowserResponseLike(Protocol):
-    """Minimum shape of a Playwright ``Response`` we read."""
-
-    @property
-    def status(self) -> int: ...
-
-
-@runtime_checkable
-class BrowserContextLike(Protocol):
-    """Minimum structural shape of a Playwright ``BrowserContext``.
-
-    Declared so the authenticator can be type-checked without
-    importing ``playwright`` at module load. The thumbprint marker
-    attribute is the only field we read explicitly.
-    """
-
-    async def new_page(self) -> BrowserPageLike: ...
-    async def storage_state(self) -> Mapping[str, object]: ...
-    async def close(self) -> None: ...
-
-
-@runtime_checkable
-class BrowserSessionLike(Protocol):
-    """Structural shape of :class:`aeat.adapters.outbound.aeat.browser.BrowserSession`.
-
-    We depend on a single coroutine — ``create_context(provisioner=...)``
-    — and a ``close()``. The authenticator does not reach into the
-    session's evasion or profile machinery.
-    """
-
-    async def create_context(
-        self,
-        *,
-        provisioner: object | None = None,
-        storage_state_path: Path | None = None,
-        storage_state: Mapping[str, object] | None = None,
-    ) -> BrowserContextLike: ...
-
-
-@runtime_checkable
-class CertificateHealthCheck(Protocol):
-    """Injection seam for the certificate-health probe.
-
-    The production default is the module-level ``certificate_health``
-    function. Tests inject a real callable wrapping a captured-args
-    sink so the authenticator's ``describe()`` contract is verified
-    against a real implementation rather than a patched module
-    attribute.
-    """
-
-    def __call__(
-        self,
-        path: Path,
-        *,
-        password: SecretStr,
-        warn_days: int,
-        critical_days: int,
-        backend: CertificateBackend = ...,
-        friendly_name: str | None = ...,
-        now: datetime | None = ...,
-    ) -> CertificateHealth: ...
 
 
 # ── Authenticator ───────────────────────────────────────────────────────────
@@ -1358,25 +1137,13 @@ class AeatAuthenticator:
             log.warning("AeatAuthenticator: browser session close failed", exc_info=True)
 
 
-class BrowserSessionFactory(Protocol):
-    """Async callable returning a :class:`BrowserSessionLike`.
-
-    The factory receives the active :class:`Settings` and is
-    responsible for constructing / configuring the Playwright
-    session. Unit tests supply an in-process factory; the production
-    factory lives with the caller (typically the CLI layer) so
-    ``aeat.adapters.outbound.aeat.auth`` does not import ``aeat.adapters.outbound.aeat.browser`` at module load.
-    """
-
-    async def __call__(self, settings: Settings) -> BrowserSessionLike: ...
-
-
 __all__ = [
     "AEAT_SESSION_IDLE_TTL",
     "AeatAuthenticator",
     "AeatLoginAssertion",
     "AeatSession",
     "BrowserContextLike",
+    "BrowserResponseLike",
     "BrowserSessionFactory",
     "BrowserSessionLike",
 ]
