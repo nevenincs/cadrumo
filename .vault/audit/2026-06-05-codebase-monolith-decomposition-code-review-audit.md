@@ -188,3 +188,9 @@ The declarations adapter tests now split into shared support plus focused part m
 Reviewed W04.P09 `S152` and the remaining W04.P09 `S156` production surfaces. `aeat.core.config` now keeps settings construction and override behavior in the facade while support enums, storage-route records, default URL/path loaders, and output-language coercion live in `_config_support.py`. The registry record-design facade now keeps extraction/parsing behavior while off-load-path coverage and calculation-completeness derivation helpers live in `_record_design_coverage.py`.
 
 The core external-constants and file-permissions tests now derive the repository root and source paths from the current test topology, so the meta-tests assert the real source files again. Verification covers Ruff, compileall, 95 focused core/meta tests, 41 focused record-design tests, and the 2-test hard codebase size-budget guard. Remaining open work is outside this slice: CLI transport decomposition, non-CLI callable decomposition, and residual adapter/storage test splits.
+
+## REVIEW-028 | LOW | No blocking findings in adapter and storage test split
+
+Reviewed W05.P12 `S127`. The inbound declaracion parser-boundary and verification-chain monoliths now point to focused sibling modules with shared parser/verification support. The SQL secure-object and runtime migrated repository monoliths now point to focused storage test modules with shared real repository setup. Earlier S127 auth and declarations splits remain covered by their focused committed lanes.
+
+The split keeps tests importing production code and real fixtures; no mocks, skips, xfails, or copied business logic were introduced. Verification covers Ruff, compileall, 95 parser-boundary tests, 94 verification-chain tests, 61 outbound declarations tests, 80 focused auth tests, 137 storage repository tests, and the 2-test hard codebase size-budget guard.
