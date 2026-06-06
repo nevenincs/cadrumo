@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def _registry_toml_payload() -> dict[str, object]:
     """Return the bundled ``external_constants.toml`` parsed to a mapping."""
 
-    toml_path = Path(__file__).with_name("external_constants.toml")
+    toml_path = Path(__file__).parents[1] / "external_constants.toml"
     return tomllib.loads(toml_path.read_text(encoding="utf-8"))
 
 
@@ -306,7 +306,7 @@ def test_sede_parser_route_shapes_are_centralized() -> None:
 def test_live_sede_executable_route_literals_stay_centralized() -> None:
     """Live AEAT executable code must read volatile routes from the registry."""
 
-    repo_root = Path(__file__).parents[3]
+    repo_root = Path(__file__).parents[4]
     checked_paths = (
         repo_root / "src/aeat/core/config.py",
         repo_root / "src/aeat/adapters/outbound/aeat/auth/_clave_movil.py",
@@ -388,7 +388,7 @@ def test_portal_paths_registry_covers_literal_free_portal_entries() -> None:
 def test_portal_registry_modules_do_not_reintroduce_route_or_host_literals() -> None:
     """Portal catalogue modules must resolve AEAT hosts and paths through central constants."""
 
-    repo_root = Path(__file__).parents[3]
+    repo_root = Path(__file__).parents[4]
     portal_root = repo_root / "src/aeat/domain/portals"
     volatile_tokens = PORTAL_LITERAL_SCAN_TOKENS
     allowed_files = {
@@ -422,12 +422,12 @@ def test_portal_registry_modules_do_not_reintroduce_route_or_host_literals() -> 
 def test_remote_guard_parity_and_oracle_tests_use_declared_aeat_literal_fixtures() -> None:
     """Remote guard/parity/oracle tests must import configured URLs or declared canaries."""
 
-    repo_root = Path(__file__).parents[3]
+    repo_root = Path(__file__).parents[4]
     checked_paths = (
-        repo_root / "src/aeat/domain/calculations/registry/test_remote_state_guard.py",
-        repo_root / "src/aeat/domain/calculations/registry/test_live_parity.py",
-        repo_root / "src/aeat/domain/calculations/registry/test_groi_oracle.py",
-        repo_root / "src/aeat/domain/calculations/registry/test_aeat_nif_iva_oracle.py",
+        repo_root / "src/aeat/domain/calculations/registry/tests/test_remote_state_guard.py",
+        repo_root / "src/aeat/domain/calculations/registry/tests/test_live_parity.py",
+        repo_root / "src/aeat/domain/calculations/registry/tests/test_groi_oracle.py",
+        repo_root / "src/aeat/domain/calculations/registry/tests/test_aeat_nif_iva_oracle.py",
     )
     volatile_tokens = REMOTE_GUARD_LITERAL_SCAN_TOKENS
     offenders: list[str] = []
@@ -453,7 +453,7 @@ def test_remote_guard_parity_and_oracle_tests_use_declared_aeat_literal_fixtures
 def test_test_suite_aeat_route_literals_are_centralized_or_declared() -> None:
     """Test modules must not own executable AEAT/Sede host or route literals."""
 
-    repo_root = Path(__file__).parents[3]
+    repo_root = Path(__file__).parents[4]
     aeat_root = repo_root / "src/aeat"
     allowed_files = {
         Path(__file__),
@@ -852,7 +852,7 @@ def test_no_local_classified_by_manual_shadow_in_application_or_domain() -> None
     locally instead of imported from ``aeat.core.external_constants``.
     """
 
-    repo_root = Path(__file__).parents[3]
+    repo_root = Path(__file__).parents[4]
     search_roots = (
         repo_root / "src/aeat/application",
         repo_root / "src/aeat/domain",
@@ -1026,7 +1026,7 @@ def test_no_bare_json_mime_literal_in_declarations() -> None:
     the literal triggers immediate failure.
     """
 
-    repo_root = Path(__file__).parents[3]
+    repo_root = Path(__file__).parents[4]
     source = (repo_root / "src/aeat/adapters/outbound/aeat/sede/_declarations.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
 
@@ -1088,7 +1088,7 @@ def test_no_bare_threshold_347_literal_in_counterpart() -> None:
     local constant triggers immediate failure.
     """
 
-    repo_root = Path(__file__).parents[3]
+    repo_root = Path(__file__).parents[4]
     source = (repo_root / "src/aeat/application/aggregation/_counterpart.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
 
@@ -1156,7 +1156,7 @@ def test_no_bare_threshold_720_literal_in_foreign_assets() -> None:
     local constant triggers immediate failure.
     """
 
-    repo_root = Path(__file__).parents[3]
+    repo_root = Path(__file__).parents[4]
     source = (repo_root / "src/aeat/application/aggregation/_foreign_assets.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
 
@@ -1186,7 +1186,7 @@ def test_no_bare_csv_mime_literal_in_tabular() -> None:
     the literal triggers immediate failure.
     """
 
-    repo_root = Path(__file__).parents[3]
+    repo_root = Path(__file__).parents[4]
     source = (repo_root / "src/aeat/application/export/_tabular.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
 
@@ -1202,7 +1202,7 @@ def test_no_bare_csv_mime_literal_in_tabular() -> None:
 def test_no_bare_jsonl_or_xlsx_mime_literal_in_tabular() -> None:
     """No bare JSONL/XLSX MIME literals in ``_tabular.py`` argument positions."""
 
-    repo_root = Path(__file__).parents[3]
+    repo_root = Path(__file__).parents[4]
     source = (repo_root / "src/aeat/application/export/_tabular.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
 
