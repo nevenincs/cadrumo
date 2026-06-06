@@ -35,7 +35,14 @@ evidence_app = typer.Typer(
 def register_evidence_commands(app: typer.Typer) -> None:
     """Mount and register ledger evidence commands."""
     app.add_typer(evidence_app, name="evidence")
+    _register_evidence_add_command()
+    _register_evidence_view_command()
+    _register_evidence_list_command()
+    _register_evidence_update_command()
+    _register_evidence_remove_command()
 
+
+def _register_evidence_add_command() -> None:
     @evidence_app.command(
         "add",
         help=tr(
@@ -105,6 +112,8 @@ def register_evidence_commands(app: typer.Typer) -> None:
             lines=lines,
         )
 
+
+def _register_evidence_view_command() -> None:
     @evidence_app.command(
         "view",
         help=tr("cli.app.ledger.evidence.view_help", default="View one purchase invoice evidence record."),
@@ -125,6 +134,8 @@ def register_evidence_commands(app: typer.Typer) -> None:
             lines=_evidence_text_lines(record),
         )
 
+
+def _register_evidence_list_command() -> None:
     @evidence_app.command(
         "list",
         help=tr(
@@ -156,6 +167,8 @@ def register_evidence_commands(app: typer.Typer) -> None:
             lines=lines,
         )
 
+
+def _register_evidence_update_command() -> None:
     @evidence_app.command(
         "update",
         help=tr(
@@ -203,6 +216,8 @@ def register_evidence_commands(app: typer.Typer) -> None:
             lines=lines,
         )
 
+
+def _register_evidence_remove_command() -> None:
     @evidence_app.command(
         "remove",
         help=tr("cli.app.ledger.evidence.remove_help", default="Delete a purchase invoice evidence record."),
@@ -238,7 +253,6 @@ def register_evidence_commands(app: typer.Typer) -> None:
             result=EvidenceRemoveResult.model_validate(payload),
             lines=lines,
         )
-
 
 def _parse_decimal(raw: str | None, *, label: str) -> Decimal | None:
     if raw is None:

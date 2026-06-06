@@ -47,7 +47,31 @@ def register_projection_commands(
     bad_parameter_from_localized_context: BadParameterRenderer,
 ) -> None:
     """Register projection commands against the root modelo Typer app."""
+    _register_modelo_project_command(
+        app,
+        require_active_profile=require_active_profile,
+        parse_casilla_override=parse_casilla_override,
+        parse_binding_override=parse_binding_override,
+        bad_parameter_from_error=bad_parameter_from_error,
+        bad_parameter_from_localized_context=bad_parameter_from_localized_context,
+    )
+    _register_modelo_compare_command(
+        app,
+        require_active_profile=require_active_profile,
+        bad_parameter_from_error=bad_parameter_from_error,
+        bad_parameter_from_localized_context=bad_parameter_from_localized_context,
+    )
 
+
+def _register_modelo_project_command(
+    app: typer.Typer,
+    *,
+    require_active_profile: Callable[[], None],
+    parse_casilla_override: ParseOverride,
+    parse_binding_override: ParseOverride,
+    bad_parameter_from_error: BadParameterRenderer,
+    bad_parameter_from_localized_context: BadParameterRenderer,
+) -> None:
     @app.command(
         "project",
         help=tr(
@@ -191,6 +215,14 @@ def register_projection_commands(
         ]
         _emit_envelope(ctx, command="modelo.project", result=project_result, lines=lines)
 
+
+def _register_modelo_compare_command(
+    app: typer.Typer,
+    *,
+    require_active_profile: Callable[[], None],
+    bad_parameter_from_error: BadParameterRenderer,
+    bad_parameter_from_localized_context: BadParameterRenderer,
+) -> None:
     @app.command(
         "compare",
         help=tr(
@@ -280,7 +312,6 @@ def register_projection_commands(
                 f"\t{row.year_a_value}\t{row.year_b_value}\t{row.delta}\t{pct}"
             )
         _emit_envelope(ctx, command="modelo.compare", result=compare_result, lines=lines)
-
 
 def _delta_row_payload(row: ModeloCompareDeltaRow) -> DeltaRowPayload:
     return DeltaRowPayload(

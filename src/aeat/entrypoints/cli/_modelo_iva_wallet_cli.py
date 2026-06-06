@@ -36,7 +36,11 @@ def register_iva_wallet_commands(
         add_completion=False,
     )
     app.add_typer(iva_wallet_app, name="iva-wallet")
+    _register_iva_wallet_balance_command(iva_wallet_app)
+    _register_iva_wallet_seed_command(iva_wallet_app, active_bucket_id=active_bucket_id)
 
+
+def _register_iva_wallet_balance_command(iva_wallet_app: typer.Typer) -> None:
     @iva_wallet_app.command(
         "balance",
         help=tr(
@@ -82,6 +86,8 @@ def register_iva_wallet_commands(
         ]
         _emit_envelope(ctx, command="modelo.iva_wallet.balance", result=balance_result, lines=lines)
 
+
+def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_bucket_id: Callable[[], str]) -> None:
     @iva_wallet_app.command(
         "seed",
         help=tr(
@@ -219,6 +225,5 @@ def register_iva_wallet_commands(
             f"status\t{state.status}",
         ]
         _emit_envelope(ctx, command="modelo.iva_wallet.seed", result=seed_result, lines=lines)
-
 
 __all__ = ["register_iva_wallet_commands"]

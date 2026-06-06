@@ -11,21 +11,16 @@ import typer
 from ...application.export import ExportSerializationFormat
 from ...application.ledger import (
     LedgerExportCommand,
-    LedgerReviewQuery,
-    LedgerReviewQueryResult,
-    LedgerReviewRow,
     available_llm_providers,
-    compute_display_id_width,
     export_ledger_transactions,
     get_manual_transaction,
     ledger_transaction_payload,
     ledger_transaction_result_payload,
     ledger_transaction_review_status,
     ledger_transaction_tracking_payload,
-    query_ledger_review_rows,
     summarize_manual_transactions,
 )
-from ...application.review import FilterParseError, LedgerReviewFilterSpec
+from ...application.review import FilterParseError
 from ...core import resolve_active_bucket_id
 from ...core.i18n import tr
 from ...domain.buckets import (
@@ -41,6 +36,7 @@ from ...domain.categories import (
 from ...domain.transactions import Transaction, TransactionCatalogueRepository
 from ._common import _bad, _canonical_period, _emit_envelope, _state, _tx_repo
 from ._ledger_list import parse_ledger_list_filter_spec, project_ledger_list
+from ._ledger_review_cli import register_ledger_review_command
 
 ResolveTransactionId = Callable[[Any, str], str]
 
@@ -61,7 +57,20 @@ _LEDGER_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
 
 def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
     """Register ledger read/discovery/reporting commands."""
+    _register_ledger_providers_command(app)
+    _register_ledger_categories_command(app)
+    _register_ledger_check_command(app)
+    _register_ledger_preflight_command(app)
+    _register_ledger_history_command(app, resolve_transaction_id=resolve_transaction_id)
+    _register_ledger_export_command(app)
+    _register_ledger_list_command(app)
+    _register_ledger_view_command(app, resolve_transaction_id=resolve_transaction_id)
+    _register_ledger_status_command(app)
+    _register_ledger_track_command(app, resolve_transaction_id=resolve_transaction_id)
+    register_ledger_review_command(app, resolve_transaction_id=resolve_transaction_id)
 
+
+def _register_ledger_providers_command(app: typer.Typer) -> None:
     @app.command("providers", help=tr("cli.ledger.providers.help"))
     def ledger_providers(ctx: typer.Context) -> None:
         """List which subprocess LLM providers have a usable CLI on PATH."""
@@ -88,6 +97,8 @@ def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveT
             lines.append(f"{item.provider.value}\t{status}\t{location}")
         _emit_envelope(ctx, command="ledger.providers", result=result, lines=lines)
 
+
+def _register_ledger_categories_command(app: typer.Typer) -> None:
     @app.command("categories", help=tr("cli.ledger.categories.help"))
     def ledger_categories(ctx: typer.Context) -> None:
         """List the recognised `--category-id` spending-category catalogue."""
@@ -125,6 +136,8 @@ def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveT
             lines=lines,
         )
 
+
+def _register_ledger_check_command(app: typer.Typer) -> None:
     @app.command(
         "check",
         help=tr(
@@ -225,6 +238,8 @@ def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveT
             lines=lines,
         )
 
+
+def _register_ledger_preflight_command(app: typer.Typer) -> None:
     @app.command(
         "preflight",
         help=tr(
@@ -276,6 +291,8 @@ def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveT
             lines=lines,
         )
 
+
+def _register_ledger_history_command(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
     @app.command("history", help=tr("cli.ledger.history.help"))
     def ledger_history(
         ctx: typer.Context,
@@ -319,6 +336,8 @@ def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveT
             lines=lines,
         )
 
+
+def _register_ledger_export_command(app: typer.Typer) -> None:
     @app.command("export", help=tr("cli.ledger.export.help"))
     def ledger_export(
         ctx: typer.Context,
@@ -372,6 +391,8 @@ def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveT
             ],
         )
 
+
+def _register_ledger_list_command(app: typer.Typer) -> None:
     @app.command("list", help=tr("cli.ledger.list.help"))
     def ledger_list(
         ctx: typer.Context,
@@ -414,6 +435,8 @@ def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveT
             lines=projection.lines,
         )
 
+
+def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
     @app.command("view", help=tr("cli.ledger.view.help"))
     def ledger_view(
         ctx: typer.Context,
@@ -467,6 +490,8 @@ def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveT
             lines=lines,
         )
 
+
+def _register_ledger_status_command(app: typer.Typer) -> None:
     @app.command("status", help=tr("cli.ledger.status.help"))
     def ledger_status(
         ctx: typer.Context,
@@ -549,6 +574,8 @@ def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveT
             lines=lines,
         )
 
+
+def _register_ledger_track_command(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
     @app.command("track", help=tr("cli.ledger.track.help"))
     def ledger_track(
         ctx: typer.Context,
@@ -576,27 +603,6 @@ def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveT
             ),
             lines=_ledger_track_lines(result.ref.transaction_id, result.transaction),
         )
-
-    @app.command("review", help=tr("cli.ledger.review.help"))
-    def ledger_review(
-        ctx: typer.Context,
-        filters: list[str] = typer.Option([], "--filter", help=tr("cli.ledger.review.filter_help")),
-        record_id: str | None = typer.Option(None, "--id", help=tr("cli.ledger.review.id_help")),
-        verbose: bool = typer.Option(False, "--verbose", help=tr("cli.ledger.review.verbose_help")),
-    ) -> None:
-        """Render rows or a single row using the typed filter spec."""
-        spec = _ledger_review_filter_spec(filters)
-        transaction_repository = _tx_repo(_state())
-        result = query_ledger_review_rows(
-            _ledger_review_query(
-                transaction_repository,
-                spec=spec,
-                record_id=record_id,
-                resolve_transaction_id=resolve_transaction_id,
-            ),
-            transaction_repository=transaction_repository,
-        )
-        _emit_ledger_review_result(ctx, record_id=record_id, verbose=verbose, result=result)
 
 
 def _history_object_ids(
@@ -670,111 +676,6 @@ def _ledger_track_lines(transaction_id: str, transaction: Transaction) -> list[s
     return lines
 
 
-def _ledger_review_filter_spec(filters: list[str]) -> LedgerReviewFilterSpec:
-    try:
-        return LedgerReviewFilterSpec.from_strings(filters)
-    except FilterParseError as exc:
-        raise _bad(tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.safe_token)) from exc
-
-
-def _ledger_review_query(
-    transaction_repository: Any,
-    *,
-    spec: LedgerReviewFilterSpec,
-    record_id: str | None,
-    resolve_transaction_id: ResolveTransactionId,
-) -> LedgerReviewQuery:
-    resolved_record_id = resolve_transaction_id(transaction_repository, record_id) if record_id is not None else None
-    return LedgerReviewQuery(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_record_id,
-        period=_canonical_period(spec.period) if spec.period else None,
-        status=spec.status.value if spec.status is not None else None,
-        issue=spec.issue.value if spec.issue is not None else None,
-        import_id=spec.import_id,
-        classification=spec.classification.value if spec.classification is not None else None,
-        text=spec.text,
-        direction=spec.direction.value if spec.direction is not None else None,
-    )
-
-
-def _ledger_review_empty_payload(result: LedgerReviewQueryResult) -> dict[str, object]:
-    return {"rows": [], "filters": list(result.filters)}
-
-
-def _ledger_review_detail_payload(row: LedgerReviewRow, *, verbose: bool) -> dict[str, object]:
-    return {
-        "id": row.id,
-        "date": row.date,
-        "amount": row.amount,
-        "description": row.description,
-        "review_status": row.status,
-        "transaction": row.transaction.model_dump(mode="json") if row.transaction is not None else None,
-        "verbose": verbose,
-    }
-
-
-def _ledger_review_detail_lines(row: LedgerReviewRow) -> list[str]:
-    return [
-        f"{tr('cli.ledger.labels.id')}\t{row.id}",
-        f"{tr('cli.ledger.labels.date')}\t{row.date}",
-        f"{tr('cli.ledger.labels.amount')}\t{row.amount}",
-        f"{tr('cli.ledger.labels.description')}\t{row.description}",
-    ]
-
-
-def _ledger_review_list_payload(result: LedgerReviewQueryResult) -> dict[str, object]:
-    return {
-        "rows": [row.model_dump(mode="json", exclude_none=True) for row in result.rows],
-        "filters": list(result.filters),
-    }
-
-
-def _ledger_review_list_lines(result: LedgerReviewQueryResult) -> list[str]:
-    lines: list[str] = [tr("cli.ledger.review.header")]
-    review_ids = tuple(row.id for row in result.rows)
-    review_width = compute_display_id_width(review_ids)
-    lines.extend(
-        f"{row.id[:review_width]}\t{row.id}\t{row.date}\t{row.amount}\t{row.description}\t{row.status}"
-        for row in result.rows
-    )
-    if not result.rows:
-        lines.append(tr("cli.ledger.review.no_rows"))
-    return lines
-
-
-def _emit_ledger_review_result(
-    ctx: typer.Context,
-    *,
-    record_id: str | None,
-    verbose: bool,
-    result: LedgerReviewQueryResult,
-) -> None:
-    from ._ledger_payloads import LedgerReviewResult
-
-    if record_id is not None:
-        if not result.rows:
-            _emit_envelope(
-                ctx,
-                command="ledger.review",
-                result=LedgerReviewResult.model_validate(_ledger_review_empty_payload(result)),
-                lines=[tr("cli.ledger.review.header"), tr("cli.ledger.review.no_rows")],
-            )
-            return
-        row = result.rows[0]
-        _emit_envelope(
-            ctx,
-            command="ledger.review",
-            result=LedgerReviewResult.model_validate(_ledger_review_detail_payload(row, verbose=verbose)),
-            lines=_ledger_review_detail_lines(row),
-        )
-        return
-    _emit_envelope(
-        ctx,
-        command="ledger.review",
-        result=LedgerReviewResult.model_validate(_ledger_review_list_payload(result)),
-        lines=_ledger_review_list_lines(result),
-    )
 
 
 __all__ = ["register_read_commands"]
