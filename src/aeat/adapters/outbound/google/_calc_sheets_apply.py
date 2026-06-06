@@ -970,49 +970,20 @@ def _subfolder_name(plan: SheetExportPlan) -> str:
     return f"{metadata.modelo_id}-{metadata.period}-{metadata.filing_year}"
 
 
-def apply_export_plan(
-    plan: SheetExportPlan,
+def _open_or_create_plan_spreadsheet(
     *,
-    credentials: object,
+    drive: Any,
+    sheets: Any,
+    plan: SheetExportPlan,
     root_folder_id: str,
-) -> CalcSheetsApplyResult:
-    """Materialise a `SheetExportPlan` as a real Google Sheets workbook.
-
-    The adapter is idempotent at the spreadsheet level: applying the
-    same plan twice updates the same spreadsheet rather than creating
-    a duplicate, provided the per-period subfolder + spreadsheet
-    title remain stable.
-
-    Args:
-        plan: The pure `SheetExportPlan` produced by the engine.
-        credentials: A `google.oauth2.credentials.Credentials`-shaped
-            object carrying refresh + access tokens with at least the
-            `drive.file` + `spreadsheets` scopes.
-        root_folder_id: The operator's Drive root folder id (the same
-            folder `GoogleDriveProvider` uses for the ciphertext mirror).
-
-    Returns:
-        A :class:`CalcSheetsApplyResult` with the spreadsheet's id and URL.
-
-    Raises:
-        OutboundStorageValidationError: When the supplied ``root_folder_id`` is blank.
-    """
-    if not root_folder_id.strip():
-        raise OutboundStorageValidationError(
-            "root_folder_id must not be blank",
-            context={"root_folder_id": root_folder_id},
-        )
-
-    drive = _drive_service(credentials)
-    sheets = _sheets_service(credentials)
-
+    tab_titles: tuple[str, ...],
+) -> tuple[dict[str, Any], str]:
     vault_folder_id = _ensure_folder(drive, parent_id=root_folder_id, name=_VAULT_FOLDER_NAME)
     calc_folder_id = _ensure_folder(drive, parent_id=vault_folder_id, name=_CALC_SHEETS_FOLDER_NAME)
     period_folder_id = _ensure_folder(drive, parent_id=calc_folder_id, name=_subfolder_name(plan))
 
     title = _spreadsheet_title(plan)
     existing = _find_spreadsheet(drive, parent_id=period_folder_id, name=title)
-    tab_titles = tuple(tab.value for tab in TabName)
     if existing is None:
         spreadsheet = _create_spreadsheet(
             drive,
@@ -1034,10 +1005,10 @@ def apply_export_plan(
             ),
             action="sheets.spreadsheets.get",
         )
+    return spreadsheet, period_folder_id
 
-    spreadsheet_id = spreadsheet["spreadsheetId"]
-    spreadsheet_url = spreadsheet["spreadsheetUrl"]
 
+def _force_spreadsheet_locale(*, sheets: Any, spreadsheet_id: str) -> None:
     # Force the workbook locale to `en_US` so the formula argument
     # separator stays a comma. Applies on every run so a workbook
     # created under a previous engine version (which may have used
@@ -1059,6 +1030,15 @@ def apply_export_plan(
         action="sheets.spreadsheets.batchUpdate.locale",
     )
 
+
+def _ensure_plan_tabs_and_grid(
+    *,
+    sheets: Any,
+    spreadsheet: Mapping[str, Any],
+    spreadsheet_id: str,
+    plan: SheetExportPlan,
+    tab_titles: tuple[str, ...],
+) -> dict[str, int]:
     sheet_id_by_tab: dict[str, int] = {}
     for sheet in spreadsheet.get("sheets", []):
         props = sheet.get("properties") or {}
@@ -1095,7 +1075,16 @@ def apply_export_plan(
             ),
             action="sheets.spreadsheets.batchUpdate.resize_grid",
         )
+    return sheet_id_by_tab
 
+
+def _clear_and_write_plan_values(
+    *,
+    sheets: Any,
+    spreadsheet_id: str,
+    plan: SheetExportPlan,
+    tab_titles: tuple[str, ...],
+) -> None:
     # Clear every tab the engine will (re)populate so a re-apply is
     # not contaminated by leftover values from the previous run.
     clear_ranges = [f"'{tab}'" for tab in tab_titles]
@@ -1118,60 +1107,48 @@ def apply_export_plan(
         + _build_evidence_value_data(plan)
     )
     formula_data = _build_formula_data(plan.formula_cells)
-    update_body = {
-        "valueInputOption": "USER_ENTERED",
-        "data": value_data + formula_data,
-    }
     execute_request(
         sheets.spreadsheets()
         .values()
         .batchUpdate(
             spreadsheetId=spreadsheet_id,
-            body=update_body,
+            body={
+                "valueInputOption": "USER_ENTERED",
+                "data": value_data + formula_data,
+            },
         ),
         action="sheets.spreadsheets.values.batchUpdate",
     )
 
+
+def _apply_plan_structural_requests(
+    *,
+    sheets: Any,
+    spreadsheet_id: str,
+    spreadsheet: Mapping[str, Any],
+    plan: SheetExportPlan,
+    sheet_id_by_tab: Mapping[str, int],
+) -> None:
     # Apply structural metadata: protected ranges + developer
     # metadata for engine + registry identity + cell-level
     # constraint validation rules + cell notes carrying the
     # constraint and its legal grounding.
-    metadata_requests = _build_developer_metadata_requests(plan)
     cleanup_requests = _build_structural_cleanup_requests(spreadsheet, plan)
-    protected_requests = _build_protected_range_requests(
-        plan.protected_ranges,
-        sheet_id_by_tab=sheet_id_by_tab,
-    )
-    constraint_requests = _build_cell_constraint_requests(
-        plan.cell_constraints,
-        sheet_id_by_tab=sheet_id_by_tab,
-    )
-    note_requests = _build_cell_note_requests(
-        plan.value_cells,
-        sheet_id_by_tab=sheet_id_by_tab,
-    )
-    emphasis_requests = _build_emphasis_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
-    number_format_requests = _build_number_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
-    base_font_requests = _build_base_font_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
-    styled_range_requests = _build_styled_range_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
-    column_width_requests = _build_column_width_requests(plan.column_widths, sheet_id_by_tab=sheet_id_by_tab)
-    frozen_view_requests = _build_frozen_view_requests(plan.frozen_views, sheet_id_by_tab=sheet_id_by_tab)
-    auto_filter_requests = _build_auto_filter_requests(plan.auto_filters, sheet_id_by_tab=sheet_id_by_tab)
     structural_requests = (
         cleanup_requests
-        + metadata_requests
-        + protected_requests
-        + constraint_requests
-        + note_requests
+        + _build_developer_metadata_requests(plan)
+        + _build_protected_range_requests(plan.protected_ranges, sheet_id_by_tab=sheet_id_by_tab)
+        + _build_cell_constraint_requests(plan.cell_constraints, sheet_id_by_tab=sheet_id_by_tab)
+        + _build_cell_note_requests(plan.value_cells, sheet_id_by_tab=sheet_id_by_tab)
         # Base font first, then role styling (fills/bold/colour) wins on overlap,
         # then number formats, emphasis, widths, freezes, filters.
-        + base_font_requests
-        + styled_range_requests
-        + number_format_requests
-        + emphasis_requests
-        + column_width_requests
-        + frozen_view_requests
-        + auto_filter_requests
+        + _build_base_font_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+        + _build_styled_range_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+        + _build_number_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+        + _build_emphasis_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+        + _build_column_width_requests(plan.column_widths, sheet_id_by_tab=sheet_id_by_tab)
+        + _build_frozen_view_requests(plan.frozen_views, sheet_id_by_tab=sheet_id_by_tab)
+        + _build_auto_filter_requests(plan.auto_filters, sheet_id_by_tab=sheet_id_by_tab)
     )
     if structural_requests:
         execute_request(
@@ -1181,6 +1158,70 @@ def apply_export_plan(
             ),
             action="sheets.spreadsheets.batchUpdate.structural",
         )
+
+
+def apply_export_plan(
+    plan: SheetExportPlan,
+    *,
+    credentials: object,
+    root_folder_id: str,
+) -> CalcSheetsApplyResult:
+    """Materialise a `SheetExportPlan` as a real Google Sheets workbook.
+
+    The adapter is idempotent at the spreadsheet level: applying the
+    same plan twice updates the same spreadsheet rather than creating
+    a duplicate, provided the per-period subfolder + spreadsheet
+    title remain stable.
+
+    Args:
+        plan: The pure `SheetExportPlan` produced by the engine.
+        credentials: A `google.oauth2.credentials.Credentials`-shaped
+            object carrying refresh + access tokens with at least the
+            `drive.file` + `spreadsheets` scopes.
+        root_folder_id: The operator's Drive root folder id (the same
+            folder `GoogleDriveProvider` uses for the ciphertext mirror).
+
+    Returns:
+        A :class:`CalcSheetsApplyResult` with the spreadsheet's id and URL.
+
+    Raises:
+        OutboundStorageValidationError: When the supplied ``root_folder_id`` is blank.
+    """
+    if not root_folder_id.strip():
+        raise OutboundStorageValidationError(
+            "root_folder_id must not be blank",
+            context={"root_folder_id": root_folder_id},
+        )
+
+    drive = _drive_service(credentials)
+    sheets = _sheets_service(credentials)
+    tab_titles = tuple(tab.value for tab in TabName)
+    spreadsheet, period_folder_id = _open_or_create_plan_spreadsheet(
+        drive=drive,
+        sheets=sheets,
+        plan=plan,
+        root_folder_id=root_folder_id,
+        tab_titles=tab_titles,
+    )
+
+    spreadsheet_id = spreadsheet["spreadsheetId"]
+    spreadsheet_url = spreadsheet["spreadsheetUrl"]
+    _force_spreadsheet_locale(sheets=sheets, spreadsheet_id=spreadsheet_id)
+    sheet_id_by_tab = _ensure_plan_tabs_and_grid(
+        sheets=sheets,
+        spreadsheet=spreadsheet,
+        spreadsheet_id=spreadsheet_id,
+        plan=plan,
+        tab_titles=tab_titles,
+    )
+    _clear_and_write_plan_values(sheets=sheets, spreadsheet_id=spreadsheet_id, plan=plan, tab_titles=tab_titles)
+    _apply_plan_structural_requests(
+        sheets=sheets,
+        spreadsheet_id=spreadsheet_id,
+        spreadsheet=spreadsheet,
+        plan=plan,
+        sheet_id_by_tab=sheet_id_by_tab,
+    )
 
     return CalcSheetsApplyResult(
         spreadsheet_id=spreadsheet_id,

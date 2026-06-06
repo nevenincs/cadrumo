@@ -170,13 +170,14 @@ class TestRunContextRunIdValidation:
 
         with override_settings(aeat_runs_dir=str(tmp_path)):
             for bad in ("../escape", "not-hex", "0" * 17, "ABCDEF0123456789"):
+                before = set(tmp_path.iterdir())
                 with (
                     pytest.raises(RunTraceValidationError, match=r"invalid run_id"),
                     run_context(entrypoint="aeat test", arguments=(), run_id=bad),
                 ):
                     pass
                 # No directory must have been created by the rejected enter.
-                assert not any(tmp_path.iterdir()), f"rejected run_id {bad!r} left debris under {tmp_path}"
+                assert set(tmp_path.iterdir()) == before, f"rejected run_id {bad!r} left debris under {tmp_path}"
 
     def test_caller_supplied_valid_run_id_accepted(
         self,

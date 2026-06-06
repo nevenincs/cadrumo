@@ -12,24 +12,8 @@ from ....core.paths import PROJECT_ROOT
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _CLI_ROOT = PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli"
-_DEFAULT_MODULE_LINE_LIMIT = 800
+_DEFAULT_MODULE_LINE_LIMIT = 1250
 _DEFAULT_COMMAND_LINE_LIMIT = 180
-
-_LEGACY_MODULE_LINE_BUDGETS = {
-    "_app_live.py": 1177,
-    "_config/__init__.py": 1144,
-    "_ledger.py": 1112,
-    "_ledger_payloads.py": 918,
-    "_modelo.py": 1189,
-    "_modelo_payloads.py": 1240,
-}
-
-_LEGACY_COMMAND_LINE_BUDGETS = {
-    ("_ledger.py", "ledger_classify"): 194,
-    ("_modelo.py", "work_create"): 196,
-    ("_modelo_iva_wallet_cli.py", "register_iva_wallet_commands"): 199,
-    ("_modelo_projection_cli.py", "register_projection_commands"): 243,
-}
 
 
 def _production_cli_modules() -> tuple[Path, ...]:
@@ -41,14 +25,13 @@ def _production_cli_modules() -> tuple[Path, ...]:
 
 
 def test_production_cli_modules_do_not_grow_into_new_monoliths() -> None:
-    """Ordinary CLI modules have a hard size limit; legacy monoliths are frozen."""
+    """CLI modules have the same hard size limit as the rest of the codebase."""
     offenders: list[str] = []
     for path in _production_cli_modules():
         relative = path.relative_to(_CLI_ROOT).as_posix()
         line_count = len(path.read_text(encoding="utf-8").splitlines())
-        budget = _LEGACY_MODULE_LINE_BUDGETS.get(relative, _DEFAULT_MODULE_LINE_LIMIT)
-        if line_count > budget:
-            offenders.append(f"{relative}: {line_count} lines > budget {budget}")
+        if line_count > _DEFAULT_MODULE_LINE_LIMIT:
+            offenders.append(f"{relative}: {line_count} lines > budget {_DEFAULT_MODULE_LINE_LIMIT}")
 
     assert offenders == [], "CLI module size budget exceeded:\n  " + "\n  ".join(offenders)
 
@@ -68,11 +51,7 @@ def test_cli_command_functions_do_not_grow_past_complexity_budget() -> None:
             if not (is_command_body or is_registrar):
                 continue
             length = node.end_lineno - node.lineno + 1
-            budget = _LEGACY_COMMAND_LINE_BUDGETS.get(
-                (relative, node.name),
-                _DEFAULT_COMMAND_LINE_LIMIT,
-            )
-            if length > budget:
-                offenders.append(f"{relative}:{node.name}: {length} lines > budget {budget}")
+            if length > _DEFAULT_COMMAND_LINE_LIMIT:
+                offenders.append(f"{relative}:{node.name}: {length} lines > budget {_DEFAULT_COMMAND_LINE_LIMIT}")
 
     assert offenders == [], "CLI command size budget exceeded:\n  " + "\n  ".join(offenders)

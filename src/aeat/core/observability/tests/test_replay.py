@@ -376,7 +376,7 @@ class TestReplayActiveEnvVarCanonicity:
     def test_literal_defined_exactly_once_in_replay_module(self) -> None:
         from pathlib import Path
 
-        pkg_root = Path(__file__).parent
+        pkg_root = Path(__file__).parents[1]
         # Split the search token so this test file does not self-match.
         literal = "AEAT_REPLAY" + "_ACTIVE"
 

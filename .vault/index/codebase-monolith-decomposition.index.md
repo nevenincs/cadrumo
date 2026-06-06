@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#codebase-monolith-decomposition'
-date: '2026-06-05'
+date: '2026-06-06'
 related:
   - '[[2026-06-05-codebase-monolith-decomposition-W01-P01-S01]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W01-P01-S02]]'
@@ -78,6 +78,12 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P10-S116]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P10-S117]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W02-P10-S118]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P10-S143]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P10-S144]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P10-S145]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P10-S146]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P10-S150]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W02-P10-S151]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P04-S07]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P04-S08]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P06-S113]]'
@@ -113,6 +119,49 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P08-S80]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P08-S81]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W03-P08-S82]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P11-S119]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P11-S120]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P11-S121]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P11-S122]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P11-S123]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P11-S124]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P11-S133]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P11-S134]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P11-S135]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P11-S136]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P11-S137]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P11-S138]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P11-S139]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P11-S140]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P11-S141]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W03-P11-S142]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W04-P09-S152]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W04-P09-S153]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W04-P09-S154]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W04-P09-S155]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W04-P09-S156]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W04-P09-S157]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W04-P09-S83]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W04-P09-S84]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W04-P09-S85]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W04-P09-S86]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W04-P09-S87]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W04-P09-S88]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W04-P09-S89]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W04-P09-S90]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W04-P09-S91]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W04-P09-S92]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W05-P12-S125]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W05-P12-S126]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W05-P12-S127]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W05-P12-S128]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W05-P12-S129]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W05-P12-S147]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W05-P12-S148]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W05-P12-S149]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W05-P13-S130]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W05-P13-S131]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W05-P13-S132]]'
   - '[[2026-06-05-codebase-monolith-decomposition-adr]]'
   - '[[2026-06-05-codebase-monolith-decomposition-code-review-audit]]'
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
@@ -208,6 +257,11 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W02-P10-S116` - W02.P10.S116 Config Custody Slice Discovery
 - `2026-06-05-codebase-monolith-decomposition-W02-P10-S117` - W02.P10.S117 Config Custody Registrar Extraction
 - `2026-06-05-codebase-monolith-decomposition-W02-P10-S118` - W02.P10.S118 Config Custody Verification
+- `2026-06-05-codebase-monolith-decomposition-W02-P10-S143` - W02.P10.S143 Config Custody Split
+- `2026-06-05-codebase-monolith-decomposition-W02-P10-S144` - W02.P10.S144 Profile Censo Split
+- `2026-06-05-codebase-monolith-decomposition-W02-P10-S145` - W02.P10.S145 Size-Budget Inventory Repair
+- `2026-06-05-codebase-monolith-decomposition-W02-P10-S146` - W02.P10.S146 Config and Size-Budget Verification
+- `2026-06-05-codebase-monolith-decomposition-W02-P10-S150` - W02.P10.S150 Censo Event Enrollment Boundary
 - `2026-06-05-codebase-monolith-decomposition-W03-P04-S07` - W03.P04.S07 Backend ADR Queue
 - `2026-06-05-codebase-monolith-decomposition-W03-P04-S08` - W03.P04.S08 Codebase Size Guard Expansion
 - `2026-06-05-codebase-monolith-decomposition-W03-P06-S113` - W03.P06.S113 Live IVA Remote-State Outcome Extraction
@@ -243,6 +297,50 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W03-P08-S80` - W03.P08.S80 SQL Secure Objects Verification
 - `2026-06-05-codebase-monolith-decomposition-W03-P08-S81` - W03.P08.S81 Master Key Storage Decomposition
 - `2026-06-05-codebase-monolith-decomposition-W03-P08-S82` - W03.P08.S82 Master Key Storage Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P11-S119` - W03.P11.S119 Modelo Action Decomposition
+- `2026-06-05-codebase-monolith-decomposition-W03-P11-S120` - W03.P11.S120 Modelo Facade And CLI Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P11-S121` - W03.P11.S121 Live IVA Remote-State Extraction
+- `2026-06-05-codebase-monolith-decomposition-W03-P11-S122` - W03.P11.S122 Live IVA Remote-State Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P11-S123` - W03.P11.S123 Overview Calendar Extraction
+- `2026-06-05-codebase-monolith-decomposition-W03-P11-S124` - W03.P11.S124 Overview Calendar Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P11-S133` - W03.P11.S133 Modelo Calculation Extraction
+- `2026-06-05-codebase-monolith-decomposition-W03-P11-S134` - W03.P11.S134 Modelo Calculation Extraction Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P11-S135` - W03.P11.S135 Modelo Verification Extraction
+- `2026-06-05-codebase-monolith-decomposition-W03-P11-S136` - W03.P11.S136 Modelo Verification Extraction Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P11-S137` - W03.P11.S137 Modelo Filing Extraction
+- `2026-06-05-codebase-monolith-decomposition-W03-P11-S138` - W03.P11.S138 Modelo Filing Extraction Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P11-S139` - W03.P11.S139 Modelo Amendment and Import Extraction
+- `2026-06-05-codebase-monolith-decomposition-W03-P11-S140` - W03.P11.S140 Modelo Amendment and Import Verification
+- `2026-06-05-codebase-monolith-decomposition-W03-P11-S141` - W03.P11.S141 Modelo Internal Import Cleanup
+- `2026-06-05-codebase-monolith-decomposition-W03-P11-S142` - W03.P11.S142 Modelo Internal Facade Verification
+- `2026-06-05-codebase-monolith-decomposition-W04-P09-S152` - W04.P09.S152 Core Meta-Test Repair
+- `2026-06-05-codebase-monolith-decomposition-W04-P09-S153` - W04.P09.S153 CLI Transport Registrar Split
+- `2026-06-05-codebase-monolith-decomposition-W04-P09-S154` - W04.P09.S154 Non-CLI Callable Split
+- `2026-06-05-codebase-monolith-decomposition-W04-P09-S155` - W04.P09.S155 No-Legacy Production Budget Verification
+- `2026-06-05-codebase-monolith-decomposition-W04-P09-S156` - W04.P09.S156 Production Residual Module Split
+- `2026-06-05-codebase-monolith-decomposition-W04-P09-S157` - W04.P09.S157 Declarations Register Split
+- `2026-06-05-codebase-monolith-decomposition-W04-P09-S83` - W04.P09.S83 Core Config Route Extraction
+- `2026-06-05-codebase-monolith-decomposition-W04-P09-S84` - W04.P09.S84 Core Config Verification
+- `2026-06-05-codebase-monolith-decomposition-W04-P09-S85` - W04.P09.S85 Core Domain Error Registry Shards
+- `2026-06-05-codebase-monolith-decomposition-W04-P09-S86` - W04.P09.S86 Core Domain Error Registry Verification
+- `2026-06-05-codebase-monolith-decomposition-W04-P09-S87` - W04.P09.S87 Core Application Error Registry Shards
+- `2026-06-05-codebase-monolith-decomposition-W04-P09-S88` - W04.P09.S88 Core Application Error Registry Verification
+- `2026-06-05-codebase-monolith-decomposition-W04-P09-S89` - W04.P09.S89 Core Adapter Error Registry Shards
+- `2026-06-05-codebase-monolith-decomposition-W04-P09-S90` - W04.P09.S90 Core Adapter Error Registry Verification
+- `2026-06-05-codebase-monolith-decomposition-W04-P09-S91` - W04.P09.S91 Hard Size Guards
+- `2026-06-05-codebase-monolith-decomposition-W04-P09-S92` - W04.P09.S92 Feature Gate And RAG Refresh
+- `2026-06-05-codebase-monolith-decomposition-W05-P12-S125` - W05.P12.S125 Justificante Fixture Generator Split
+- `2026-06-05-codebase-monolith-decomposition-W05-P12-S126` - W05.P12.S126 Application Test Split
+- `2026-06-05-codebase-monolith-decomposition-W05-P12-S127` - W05.P12.S127 Adapter Test Split
+- `2026-06-05-codebase-monolith-decomposition-W05-P12-S128` - W05.P12.S128 Registry Test Split
+- `2026-06-05-codebase-monolith-decomposition-W05-P12-S129` - W05.P12.S129 Split Surface Verification
+- `2026-06-05-codebase-monolith-decomposition-W05-P12-S147` - W05.P12.S147 Overview Calendar Test Split
+- `2026-06-05-codebase-monolith-decomposition-W05-P12-S148` - W05.P12.S148 Declaracion Parser Test Split
+- `2026-06-05-codebase-monolith-decomposition-W05-P12-S149` - W05.P12.S149 Split Test Verification
+- `2026-06-05-codebase-monolith-decomposition-W05-P13-S130` - W05.P13.S130 Final Monolith Inventory
+- `2026-06-05-codebase-monolith-decomposition-W05-P13-S131` - W05.P13.S131 Final Hard Size Gate
+- `2026-06-05-codebase-monolith-decomposition-W05-P13-S132` - W05.P13.S132 Final Validation
+- `2026-06-05-codebase-monolith-decomposition-W02-P10-S151` - W02.P10.S151 Secret Custody Transport Split
 
 ### plan
 
