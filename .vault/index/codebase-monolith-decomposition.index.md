@@ -162,6 +162,7 @@ related:
   - '[[2026-06-05-codebase-monolith-decomposition-W05-P13-S130]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W05-P13-S131]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W05-P13-S132]]'
+  - '[[2026-06-05-codebase-monolith-decomposition-W05-P13-summary]]'
   - '[[2026-06-05-codebase-monolith-decomposition-adr]]'
   - '[[2026-06-05-codebase-monolith-decomposition-code-review-audit]]'
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
@@ -340,6 +341,7 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 - `2026-06-05-codebase-monolith-decomposition-W05-P13-S130` - W05.P13.S130 Final Monolith Inventory
 - `2026-06-05-codebase-monolith-decomposition-W05-P13-S131` - W05.P13.S131 Final Hard Size Gate
 - `2026-06-05-codebase-monolith-decomposition-W05-P13-S132` - W05.P13.S132 Final Plan Validation And RAG Refresh
+- `2026-06-05-codebase-monolith-decomposition-W05-P13-summary` - `codebase-monolith-decomposition` `W05.P13` summary
 - `2026-06-05-codebase-monolith-decomposition-W02-P10-S151` - W02.P10.S151 Secret Custody Transport Split
 
 ### plan
