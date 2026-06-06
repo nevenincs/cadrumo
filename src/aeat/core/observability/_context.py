@@ -121,12 +121,12 @@ def _build_initial_context(
     buggy caller from escaping the configured runs directory through
     inputs like ``"../etc"``.
     """
+    effective_run_id = _validate_run_id(run_id) if run_id is not None else _mint_run_id()
     # `load_settings()` honours `override_settings`; bare `Settings()`
     # bypasses the context-var so test-side corpus-sha overrides never
     # propagate to the run-context fingerprint.
     settings = load_settings()
     started_at = now()
-    effective_run_id = _validate_run_id(run_id) if run_id is not None else _mint_run_id()
     return RunContextInfo(
         run_id=effective_run_id,
         entrypoint=entrypoint,
@@ -142,6 +142,27 @@ def _build_initial_context(
 def _step_payload(step_id: str, label: str) -> RunEventPayload:
     """Build a :class:`RunEventPayload` carrying a :class:`StepBoundaryPayload`."""
     return RunEventPayload(step=StepBoundaryPayload(step_id=step_id, label=label))
+
+
+def _resolve_replay_of() -> str | None:
+    """Return the active replay source run id when it is a valid 16-hex token."""
+    from ..config import load_settings
+
+    try:
+        replay_of_env = load_settings().aeat_replay_active or None
+    except (KeyError, ValueError, AttributeError):
+        _log.debug(
+            "run_context: replay marker resolution failed; replay_of omitted",
+            exc_info=True,
+        )
+        return None
+    if not replay_of_env or len(replay_of_env) != 16:
+        return None
+    try:
+        int(replay_of_env, 16)
+    except ValueError:
+        return None
+    return replay_of_env.lower()
 
 
 @contextmanager
@@ -272,27 +293,7 @@ def run_context(
         # trace with the original run id so ``aeat run show`` can tell a
         # replay trace apart from a fresh one. Only a legitimately-shaped
         # 16-hex run id is propagated; any other value is ignored.
-        # Read via Settings (the canonical AEAT-config surface);
-        # load_settings() re-instantiates Settings on each call so the
-        # subprocess-IPC write performed by replay_run is observed here.
-        from ..config import load_settings
-
-        try:
-            replay_of_env = load_settings().aeat_replay_active or None
-        except (KeyError, ValueError, AttributeError):
-            _log.debug(
-                "run_context: replay marker resolution failed; replay_of omitted",
-                exc_info=True,
-            )
-            replay_of_env = None
-        replay_of: str | None = None
-        if replay_of_env and len(replay_of_env) == 16:
-            try:
-                int(replay_of_env, 16)
-            except ValueError:
-                replay_of = None
-            else:
-                replay_of = replay_of_env.lower()
+        replay_of = _resolve_replay_of()
         persistence_error: Exception | None = None
         try:
             trace = RunTrace(

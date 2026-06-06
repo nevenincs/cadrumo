@@ -206,3 +206,27 @@ The split keeps validation behavior grounded in production schema and registry a
 Reviewed W04.P09 `S153`. Profile bundle, config repair, ledger read/evidence/classification/review, modelo projection, and IVA wallet registration are decomposed into focused registration helpers or transport modules while business behavior remains in application services. The repair-policy coverage test was updated for the custody secret command module introduced by the earlier custody split.
 
 Verification covers Ruff, compileall, the CLI module-size and hard size-budget guards, 54 ledger classification/validation tests, 18 IVA wallet tests, 21 CLI surface tests, and 33 focused ledger-list/modelo/profile/repair tests. No command verbs or ADR-governed CLI names were changed in this split.
+
+## REVIEW-031 | LOW | No blocking findings in non-CLI callable split
+
+Reviewed W04.P09 `S154`. Google Sheets apply, ledger split/merge, run-context persistence, registry revision-section validation, IVA compensation reconciliation, and Cl@ve fresh-login construction are decomposed into focused helpers while preserving existing public entry points and backend facades. The observability repair keeps caller-supplied run-id validation ahead of any settings/filesystem work, and the replay canonicity test now scans the observability package root after the tests package move.
+
+Verification covers Ruff, compileall, 30 Google Sheets apply tests, 18 ledger split/merge tests, 31 observability context/replay/logging tests, 19 IVA wallet reconciliation tests, 136 registry schema/referential-integrity tests, 51 Cl@ve/auth smoke tests, and the 2-test hard codebase size-budget guard. The review found no blocking issues.
+
+## REVIEW-032 | LOW | No blocking findings in non-CLI callable and hard-budget closure
+
+Reviewed W04.P09 `S154`, `S155`, and `S91`. Google Sheets apply, ledger split/merge, observability context, registry revision-section validation, IVA compensation reconciliation, and Cl@ve login construction now keep public facades short while pushing branch-heavy logic into focused helpers. The hard size guards now use filesystem inventory under `src/aeat` and carry no legacy module or callable allowance maps.
+
+Verification covers Ruff, compileall, 69 IVA wallet/reconciliation tests, 136 registry schema/referential-integrity tests, 7 Google Sheets apply/export tests, 69 ledger/observability/Cl@ve tests, and the 4 hard module/callable budget tests. The observability run-id test still asserts no rejected run id creates a new artefact, while tolerating unrelated fixture setup in mixed pytest processes.
+
+## REVIEW-033 | LOW | No blocking findings in final monolith decomposition gates
+
+Reviewed W04.P09 `S92`, W05.P12 `S129`, and W05.P13 `S130` through `S132`. The final hard guards now inventory filesystem Python files under `src/aeat`, the split adapter/application/registry/fixture surfaces have focused execution records, and plan state is closed through the residual decomposition waves.
+
+Verification covers full Ruff over `src/aeat`, compileall over `src/aeat`, the 4-test hard budget lane, focused S154 behavior lanes, feature plan validation with only the known PLAN022 ordering warning, and vault frontmatter/link/body-link checks. The remaining vault structure warning is out-of-scope secure-storage research filename drift recorded in the final step notes.
+
+## REVIEW-032 | LOW | No blocking findings in final monolith validation closure
+
+Reviewed W04.P09 `S92`, W05.P12 `S129`, and W05.P13 `S130` through `S132`. The final inventory records zero `src/aeat` modules over 1250 lines and zero production callables over 180 lines, and the generated codebase-monolith index now references the completed step records.
+
+Verification covers Ruff for the final replay/context/budget test lane, 32 focused replay/context/hard-budget tests, compileall for `src/aeat`, plan validation with only the known PLAN022 monotonic-order warning, and the final hard size gates. The remaining vault structure warning is unrelated secure-storage research filename hygiene outside this feature.
