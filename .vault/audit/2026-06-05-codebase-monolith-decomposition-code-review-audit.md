@@ -223,7 +223,7 @@ Verification covers Ruff, compileall, 69 IVA wallet/reconciliation tests, 136 re
 
 Reviewed W04.P09 `S92`, W05.P12 `S129`, and W05.P13 `S130` through `S132`. The final hard guards now inventory filesystem Python files under `src/aeat`, the split adapter/application/registry/fixture surfaces have focused execution records, and plan state is closed through the residual decomposition waves.
 
-Verification covers full Ruff over `src/aeat`, compileall over `src/aeat`, the 4-test hard budget lane, focused S154 behavior lanes, feature plan validation with only the known PLAN022 ordering warning, and vault frontmatter/link/body-link checks. The remaining vault structure warning is out-of-scope secure-storage research filename drift recorded in the final step notes.
+Verification covers full Ruff over `src/aeat`, compileall over `src/aeat`, the 4-test hard budget lane, focused S154 behavior lanes, feature plan validation with only the known PLAN022 ordering warning, and clean feature-scoped vault validation. An earlier out-of-scope secure-storage filename drift was corrected before final handoff.
 
 ## REVIEW-034 | LOW | Split persistence regression repaired before final handoff
 
