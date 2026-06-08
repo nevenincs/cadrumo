@@ -68,12 +68,10 @@ _CATEGORY_TO_RATE_KIND: dict[IvaCategory, IvaRateKind] = {
 # operator must supply.
 _NON_DERIVABLE_REASONS: dict[IvaCategory, str] = {
     IvaCategory.DOMESTIC_NOT_SUBJECT: (
-        "not subject to Spanish IVA (no devengo); the operator confirms the "
-        "non-subjection — no rate is derivable here"
+        "not subject to Spanish IVA (no devengo); the operator confirms the non-subjection — no rate is derivable here"
     ),
     IvaCategory.OPERACION_NO_SUJETA: (
-        "not subject to Spanish IVA (no devengo); the operator confirms the "
-        "non-subjection — no rate is derivable here"
+        "not subject to Spanish IVA (no devengo); the operator confirms the non-subjection — no rate is derivable here"
     ),
     IvaCategory.DOMESTIC_REVERSE_CHARGE: (
         "domestic reverse charge (inversión del sujeto pasivo): the recipient "
@@ -90,8 +88,7 @@ _NON_DERIVABLE_REASONS: dict[IvaCategory, str] = {
         "the operator"
     ),
     IvaCategory.INTRA_COMMUNITY_TRIANGULATION: (
-        "intra-community triangulation: the intermediary does not charge "
-        "Spanish IVA — no rate is derivable here"
+        "intra-community triangulation: the intermediary does not charge Spanish IVA — no rate is derivable here"
     ),
     IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED: (
         "export to a third country: zero-rated with right to deduct; the "
@@ -110,8 +107,7 @@ _NON_DERIVABLE_REASONS: dict[IvaCategory, str] = {
         "an inverse split of the gross — derivation is left to the operator"
     ),
     IvaCategory.ERRONEOUS_INVOICE: (
-        "erroneous invoice: the line is flagged for correction; no rate is "
-        "derivable until the operator resolves it"
+        "erroneous invoice: the line is flagged for correction; no rate is derivable until the operator resolves it"
     ),
     IvaCategory.UNKNOWN: (
         "unknown IVA situation: the category has not been determined — no rate "

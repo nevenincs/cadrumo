@@ -22,6 +22,8 @@ from ._referential_integrity_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
 def test_segment_qualified_reference_resolves_across_segments() -> None:
     """A formula naming a casilla by its segment-qualified id resolves cleanly.
 
@@ -58,17 +60,20 @@ def test_segment_qualified_reference_resolves_across_segments() -> None:
         f"a segment-qualified casilla reference must resolve; got: {unknown_casilla_failures}"
     )
 
+
 def test_casilla_segmento_defaults_unset() -> None:
     """A single-segment casilla leaves segmento unset; the field defaults to None."""
     casilla = _single_segment_casilla()
 
     assert casilla.segmento is None
 
+
 def test_casilla_segmento_accepts_aeat_record_segment_code() -> None:
     """A multi-segment casilla carries the AEAT record-segment code in segmento."""
     casilla = _single_segment_casilla().model_copy(update={"segmento": "DP200014"})
 
     assert casilla.segmento == "DP200014"
+
 
 def test_single_segment_casilla_validates_unchanged_with_segmento_unset() -> None:
     """A single-segment casilla (segmento unset) survives a strict pydantic round-trip.
@@ -85,10 +90,12 @@ def test_single_segment_casilla_validates_unchanged_with_segmento_unset() -> Non
     assert round_tripped.segmento is None
     assert "segmento" not in casilla.model_dump(exclude_defaults=True)
 
+
 def test_casilla_segmento_rejects_empty_string() -> None:
     """An empty segmento is rejected so 'unset' stays distinct from 'empty'."""
     with pytest.raises(ValidationError, match="segmento"):
         CasillaDefinition.model_validate({**_single_segment_casilla().model_dump(), "segmento": ""})
+
 
 def test_segmented_casilla_survives_strict_load_cycle_roundtrip() -> None:
     """A casilla carrying a non-default segmento survives the real load cycle.
@@ -137,6 +144,7 @@ def test_segmented_casilla_survives_strict_load_cycle_roundtrip() -> None:
     assert round_tripped.segmento == "DP200014"
     assert round_tripped.semantic_role == "is_liquidacion_iii_cuota_integra"
 
+
 def test_revision_without_manifest_passes_completeness_gate() -> None:
     """A revision with no completeness_manifest is not failed by the gate.
 
@@ -152,6 +160,7 @@ def test_revision_without_manifest_passes_completeness_gate() -> None:
     # A clean return proves the manifest-less revision clears the gate.
     RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
 
+
 def test_completeness_gate_passes_when_manifest_required_subset_of_declared() -> None:
     """A revision whose declared casillas cover the manifest's required set validates.
 
@@ -166,6 +175,7 @@ def test_completeness_gate_passes_when_manifest_required_subset_of_declared() ->
     revision = _minimal_revision(casillas=(casilla,)).model_copy(update={"completeness_manifest": manifest})
     modelo = _minimal_modelo(revision)
     RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+
 
 def test_completeness_gate_passes_when_revision_declares_extra_accounting_casilla() -> None:
     """A declared casilla absent from the calculation manifest is not a failure.
@@ -186,6 +196,7 @@ def test_completeness_gate_passes_when_revision_declares_extra_accounting_casill
     modelo = _minimal_modelo(revision)
     # A clean return proves the extra accounting casilla does not fail.
     RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+
 
 def test_completeness_gate_fails_on_missing_required_casilla() -> None:
     """A manifest requiring a casilla the revision omits hard-fails the gate.
@@ -211,6 +222,7 @@ def test_completeness_gate_fails_on_missing_required_casilla() -> None:
         ),
     ):
         RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+
 
 def test_completeness_gate_fails_on_mis_segmented_required_casilla() -> None:
     """A required casilla declared under the wrong segmento hard-fails the gate.
@@ -239,6 +251,7 @@ def test_completeness_gate_fails_on_mis_segmented_required_casilla() -> None:
         "the wrongly-segmented declared casilla, being absent from the manifest, "
         f"must NOT be reported under subset semantics; got: {failures}"
     )
+
 
 def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
     """A required casilla declared without legal/source grounding hard-fails the gate.
@@ -276,6 +289,7 @@ def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
     source = [f for f in failures if "casilla number '01'" in f and "without source_refs" in f]
     assert legal, f"ungrounded required casilla must be reported without legal_refs; got: {failures}"
     assert source, f"ungrounded required casilla must be reported without source_refs; got: {failures}"
+
 
 def test_filing_modelo_with_formula_passes_invariant() -> None:
     """A filing modelo that declares a formula is not rejected by the informative invariant.

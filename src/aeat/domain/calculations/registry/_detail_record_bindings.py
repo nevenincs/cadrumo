@@ -528,5 +528,3 @@ def resolve_refund_binding_row_values(
                 )
             resolved[(binding.id, row_index)] = value
     return resolved
-
-

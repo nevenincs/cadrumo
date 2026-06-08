@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # ---------------------------------------------------------------------------
 # Paths of the files that carried bare-string kind usages (contract).
 # ---------------------------------------------------------------------------
-_REPO_ROOT = Path(__file__).resolve().parents[5]
+_REPO_ROOT = Path(__file__).resolve().parents[6]
 
 _AFFECTED_FILES: list[Path] = [
     _REPO_ROOT / "src/aeat/adapters/outbound/aeat/sede/_declarations.py",

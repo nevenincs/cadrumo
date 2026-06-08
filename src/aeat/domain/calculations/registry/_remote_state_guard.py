@@ -299,9 +299,7 @@ def assert_remote_operations_allowed(
         try:
             assert_remote_operation_allowed(policy, operation)
         except RegistryValidationError as exc:
-            raise RegistryValidationError(
-                f"{context} {index} blocked by policy {policy.id!r}: {exc}"
-            ) from exc
+            raise RegistryValidationError(f"{context} {index} blocked by policy {policy.id!r}: {exc}") from exc
     return operation_tuple
 
 

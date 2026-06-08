@@ -449,7 +449,7 @@ _EXPECTED_CUOTA_ESTATAL_14896_NO_ANUALIDADES = Decimal("949.02")
 _EXPECTED_CUOTA_ESTATAL_14896_WITH_ANUALIDADES = Decimal("602.87")
 
 
-def test_s353_0505_computed_from_0500_no_anualidades(m100_2024_snapshot) -> None:
+def test_0505_computed_from_0500_no_anualidades(m100_2024_snapshot) -> None:
     """Casilla 0505 is computed as max(0, 0500) when no anualidades are present.
 
     contract regression guard: before the fix, 0505 was manual and silently stayed
@@ -469,7 +469,7 @@ def test_s353_0505_computed_from_0500_no_anualidades(m100_2024_snapshot) -> None
     assert result.values["0505"] == _EXPECTED_0505_NO_ANUALIDADES, (
         f"casilla 0505 = {result.values['0505']!r}; "
         f"expected {_EXPECTED_0505_NO_ANUALIDADES!r}. "
-        f"If 0505 = 0 the S353 regression has re-appeared: "
+        f"If 0505 = 0 the formula regression has re-appeared: "
         f"check 2024/formulas/0168-renta-2024-base-liquidable-general-sometida-a-gravamen.toml."
     )
     cuota = result.values["0545"]
@@ -480,7 +480,7 @@ def test_s353_0505_computed_from_0500_no_anualidades(m100_2024_snapshot) -> None
     )
 
 
-def test_s353_anualidades_alimentos_reduces_0505(m100_2024_snapshot) -> None:
+def test_anualidades_alimentos_reduces_0505(m100_2024_snapshot) -> None:
     """Anualidades por alimentos hijos judicial reduce 0505 per LIRPF Art. 75.3.
 
     With base liquidable 14,896 EUR and judicial anualidades 3,000 EUR:
@@ -516,7 +516,7 @@ def test_s353_anualidades_alimentos_reduces_0505(m100_2024_snapshot) -> None:
     )
 
 
-def test_s353_anti_tautology_anualidades_changes_cuota(m100_2024_snapshot) -> None:
+def test_anti_tautology_anualidades_changes_cuota(m100_2024_snapshot) -> None:
     """Anti-tautology: anualidades judicial must change cuota relative to no-anualidades.
 
     If the 0527 -> 0505 subtraction is not wired, both scenarios yield the same
@@ -584,7 +584,7 @@ _RETENCION_1824 = Decimal("1824")
 _RETENCION_3648 = Decimal("3648")  # doubled retención for anti-tautology
 
 
-def test_s361_0587_equals_sum_of_liquida_incrementada(m100_2024_snapshot) -> None:
+def test_0587_equals_sum_of_liquida_incrementada(m100_2024_snapshot) -> None:
     """Casilla 0587 must equal 0585 + 0586 per renta-2024-cuota-liquida-incrementada-total.
 
     contract regression guard: before the fix, 0587 had no formula and stayed 0
@@ -607,7 +607,7 @@ def test_s361_0587_equals_sum_of_liquida_incrementada(m100_2024_snapshot) -> Non
     c0587 = result.values["0587"]
 
     assert c0587 > Decimal("0"), (
-        f"casilla 0587 = {c0587!r}; must be positive (S361 regression: was silently 0 before fix). "
+        f"casilla 0587 = {c0587!r}; must be positive (formula regression: was silently 0 before fix). "
         f"Check 2024/formulas/0169-renta-2024-cuota-liquida-incrementada-total.toml."
     )
     assert abs(c0587 - (c0585 + c0586)) <= _TOLERANCE, (
@@ -616,7 +616,7 @@ def test_s361_0587_equals_sum_of_liquida_incrementada(m100_2024_snapshot) -> Non
     )
 
 
-def test_s361_0609_equals_retencion_trabajo_operand(m100_2024_snapshot) -> None:
+def test_0609_equals_retencion_trabajo_operand(m100_2024_snapshot) -> None:
     """Casilla 0609 must equal the supplied retenciones trabajo (0592) per RD 439/2007 Art. 110.
 
     With only casilla 0592 (retenciones trabajo) supplied and all other 0609
@@ -638,12 +638,12 @@ def test_s361_0609_equals_retencion_trabajo_operand(m100_2024_snapshot) -> None:
     assert c0609 == _RETENCION_1824, (
         f"casilla 0609 (total pagos a cuenta) = {c0609!r}; "
         f"expected {_RETENCION_1824!r} (sole 0592 operand). "
-        f"S361 regression: before fix, 0609 had no formula and stayed 0. "
+        f"formula regression: before fix, 0609 had no formula and stayed 0. "
         f"Check 2024/formulas/0172-renta-2024-total-pagos-a-cuenta.toml."
     )
 
 
-def test_s361_0610_equals_0595_minus_0609(m100_2024_snapshot) -> None:
+def test_0610_equals_0595_minus_0609(m100_2024_snapshot) -> None:
     """Casilla 0610 must equal 0595 - 0609 per renta-2024-cuota-diferencial.
 
     Structural identity: cuota diferencial = cuota resultante - total pagos a cuenta.
@@ -671,7 +671,7 @@ def test_s361_0610_equals_0595_minus_0609(m100_2024_snapshot) -> None:
     assert c0610 < c0595, f"0610 ({c0610!r}) must be less than 0595 ({c0595!r}) when retenciones > 0."
 
 
-def test_s361_anti_tautology_higher_retencion_reduces_cuota_diferencial(
+def test_anti_tautology_higher_retencion_reduces_cuota_diferencial(
     m100_2024_snapshot,
 ) -> None:
     """Anti-tautology: doubling retenciones must halve the remaining cuota diferencial gap.

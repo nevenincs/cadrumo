@@ -73,10 +73,7 @@ def test_importing_domain_user_profile_does_not_load_registry() -> None:
 
     assert completed.returncode == 0, completed.stderr
     leaked = [line for line in completed.stdout.splitlines() if line.strip()]
-    assert leaked == [], (
-        "import aeat.domain.user_profile leaked registry submodules into "
-        f"sys.modules: {leaked}"
-    )
+    assert leaked == [], f"import aeat.domain.user_profile leaked registry submodules into sys.modules: {leaked}"
 
 
 def test_portable_export_resolves_on_demand_via_getattr() -> None:

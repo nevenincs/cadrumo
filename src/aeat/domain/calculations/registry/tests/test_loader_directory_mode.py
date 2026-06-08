@@ -1118,13 +1118,19 @@ def test_committed_directory_source_inventory_lists_every_revision_fragment_toml
         if source.layout != "directory":
             continue
         revisions_dir = source.path / "revisions"
-        expected_paths = set(revisions_dir.rglob("*.toml"))
+        expected_paths = {p for p in revisions_dir.rglob("*.toml") if not any(part == "locales" for part in p.parts)}
         discovered_paths: set[Path] = set()
         for revision_source in source.revision_sources:
             if revision_source.layout == "revision_file":
                 assert revision_source.fragment_paths == (revision_source.path,)
             else:
-                expected_revision_paths = tuple(sorted(path.resolve() for path in revision_source.path.rglob("*.toml")))
+                expected_revision_paths = tuple(
+                    sorted(
+                        path.resolve()
+                        for path in revision_source.path.rglob("*.toml")
+                        if not any(part == "locales" for part in path.parts)
+                    )
+                )
                 assert tuple(sorted(revision_source.fragment_paths)) == expected_revision_paths
             discovered_paths.update(path.resolve() for path in revision_source.fragment_paths)
             checked.append(f"{source.modelo_id}/{revision_source.revision_id}")

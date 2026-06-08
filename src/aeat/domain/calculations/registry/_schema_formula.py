@@ -24,6 +24,7 @@ __all__ = [
     "ParameterDefinition",
 ]
 
+
 def _normalise_dispatch_table_entries(value: object) -> object:
     if not isinstance(value, Mapping) or "dispatch_table_entries" not in value:
         return value
@@ -47,8 +48,8 @@ def _normalise_dispatch_table_entries(value: object) -> object:
         if not isinstance(raw_entry, Mapping):
             raise RegistryValidationError("dispatch_table_entries entries must be tables")
         # TYPE-IGNORE-RATIONALE-TOML-STR-KEY-ERASURE:
-    # TOML deserialization erases str-key type after isinstance narrowing;
-    # annotation re-attaches the known str key at the boundary.
+        # TOML deserialization erases str-key type after isinstance narrowing;
+        # annotation re-attaches the known str key at the boundary.
         entry: Mapping[str, object] = raw_entry  # type: ignore[assignment]
         if set(entry) != {"key", "parameter"}:
             raise RegistryValidationError("dispatch_table_entries entries must declare key and parameter")

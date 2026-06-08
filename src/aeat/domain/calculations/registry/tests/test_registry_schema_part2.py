@@ -27,6 +27,8 @@ from ._registry_schema_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
 def test_modelo_revision_accepts_strict_continuidad_validation_with_evolution() -> None:
     revision = ModeloRevision.model_validate(
         {
@@ -52,6 +54,7 @@ def test_modelo_revision_accepts_strict_continuidad_validation_with_evolution() 
 
     assert revision.continuidad_validation == "strict"
     assert revision.casilla_continuidad_evolutions[0].continuidad_id == "renta.base-liquidacion.general"
+
 
 def test_extraction_profile_target_casillas_uniqueness_rejects_duplicate_casilla_id() -> None:
     """target_casillas with duplicate casilla_id values raises ValidationError."""
@@ -83,6 +86,7 @@ def test_extraction_profile_target_casillas_uniqueness_rejects_duplicate_casilla
             source_refs=("aeat-dr-130-2019-v12",),
         )
 
+
 def test_validator_rejects_extraction_profile_parser_that_does_not_resolve() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
@@ -91,6 +95,7 @@ def test_validator_rejects_extraction_profile_parser_that_does_not_resolve() -> 
 
     with pytest.raises(RegistryValidationError, match=r"must resolve under one of .*aeat.adapters.inbound.declaracion"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
 
 def test_validator_requires_application_link_for_extraction_profile() -> None:
     modelo, catalogues = _committed_registry()
@@ -101,6 +106,7 @@ def test_validator_requires_application_link_for_extraction_profile() -> None:
     with pytest.raises(RegistryValidationError, match="extraction profiles require an extractor application link"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
+
 def test_validator_requires_application_link_for_formulas() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
@@ -109,6 +115,7 @@ def test_validator_requires_application_link_for_formulas() -> None:
 
     with pytest.raises(RegistryValidationError, match="formulas require a calculation application link"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
 
 def test_validator_allows_modelo_145_communication_link_for_non_filing_casillas() -> None:
     modelo, catalogues = _committed_modelo("036")
@@ -139,6 +146,7 @@ def test_validator_allows_modelo_145_communication_link_for_non_filing_casillas(
     modelo_145 = modelo.model_copy(update={"id": "145"})
 
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo_145, mutated))
+
 
 def test_validator_rejects_verification_predicate_with_unknown_operator() -> None:
     """Predicate with an unknown DSL operator must fail at registry-load.
@@ -172,6 +180,7 @@ def test_validator_rejects_verification_predicate_with_unknown_operator() -> Non
     with pytest.raises(RegistryValidationError, match="unknown operator 'cap_lt_when_positive'"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
+
 def test_validator_rejects_verification_predicate_with_malformed_expression() -> None:
     """Predicate whose expression is not a parseable DSL call fails."""
 
@@ -190,6 +199,7 @@ def test_validator_rejects_verification_predicate_with_malformed_expression() ->
     with pytest.raises(RegistryValidationError, match="not a recognised DSL call"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
+
 def test_validator_accepts_known_verification_predicate_operators() -> None:
     """The cap_le_when_positive predicate declared by the registry must pass.
 
@@ -204,12 +214,14 @@ def test_validator_accepts_known_verification_predicate_operators() -> None:
     # No mutation — committed M130 carries the predicate.
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
+
 def test_validator_rejects_non_145_communication_link_for_casillas() -> None:
     modelo, catalogues = _committed_modelo("036")
     revision = _as_communication_revision(next(iter(modelo.revisions.values())))
 
     with pytest.raises(RegistryValidationError, match="communication application links are only valid for Modelo 145"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, revision))
+
 
 def test_validator_rejects_communication_link_combined_with_filing() -> None:
     modelo, catalogues = _committed_modelo("036")
@@ -226,6 +238,7 @@ def test_validator_rejects_communication_link_combined_with_filing() -> None:
     ):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
+
 def test_validator_rejects_modelo_145_without_communication_link() -> None:
     modelo, catalogues = _committed_modelo("036")
     revision = next(iter(modelo.revisions.values()))
@@ -233,6 +246,7 @@ def test_validator_rejects_modelo_145_without_communication_link() -> None:
 
     with pytest.raises(RegistryValidationError, match="Modelo 145 requires a communication application link"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo_145, revision))
+
 
 def test_validator_rejects_communication_link_with_deadline_surface() -> None:
     modelo, catalogues = _committed_modelo("036")
@@ -243,6 +257,7 @@ def test_validator_rejects_communication_link_with_deadline_surface() -> None:
 
     with pytest.raises(RegistryValidationError, match="communication application links must not declare deadline"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
 
 def test_validator_rejects_communication_link_with_portal_surface() -> None:
     modelo, catalogues = _committed_modelo("036")
@@ -256,6 +271,7 @@ def test_validator_rejects_communication_link_with_portal_surface() -> None:
         match="communication application links must not declare live or portal",
     ):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
 
 def test_validator_rejects_communication_link_with_filing_schedule() -> None:
     modelo, catalogues = _committed_modelo("036")
@@ -292,6 +308,7 @@ def test_validator_rejects_communication_link_with_filing_schedule() -> None:
     ):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
+
 def test_validator_rejects_casilla_export_ref_without_export_field() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
@@ -306,6 +323,7 @@ def test_validator_rejects_casilla_export_ref_without_export_field() -> None:
 
     with pytest.raises(RegistryValidationError, match="references unknown export field"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
 
 def test_validator_rejects_export_field_not_declared_by_casilla() -> None:
     modelo, catalogues = _committed_registry()
@@ -327,6 +345,7 @@ def test_validator_rejects_export_field_not_declared_by_casilla() -> None:
 
     with pytest.raises(RegistryValidationError, match="is not declared by casilla"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
 
 def test_validator_rejects_submitted_file_profile_without_exported_casilla() -> None:
     modelo, catalogues = _committed_modelo("131")
@@ -366,6 +385,7 @@ def test_validator_rejects_submitted_file_profile_without_exported_casilla() -> 
     with pytest.raises(RegistryValidationError, match="targets casillas without export fields"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
+
 def test_validator_rejects_reconciliation_total_unknown_casilla() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
@@ -376,6 +396,7 @@ def test_validator_rejects_reconciliation_total_unknown_casilla() -> None:
 
     with pytest.raises(RegistryValidationError, match="reconciliation total 'ingresar' references unknown casilla"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
 
 def test_validator_requires_reconciliation_total_to_be_computed() -> None:
     modelo, catalogues = _committed_registry()
@@ -388,6 +409,7 @@ def test_validator_requires_reconciliation_total_to_be_computed() -> None:
         match="reconciliation total 'ingresar' must be one of computed_casillas",
     ):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
 
 def test_validator_rejects_dispatch_table_referencing_unknown_parameter() -> None:
     """The lookup_bracket_by_ccaa dispatch_table leaf must resolve every value
@@ -415,6 +437,7 @@ def test_validator_rejects_dispatch_table_referencing_unknown_parameter() -> Non
             _with_revision(modelo, mutated_revision)
         )
 
+
 def test_deadline_window_any_mode_requires_conditions() -> None:
     modelo, _catalogues = _committed_registry()
     revision = _revision(modelo)
@@ -429,6 +452,7 @@ def test_deadline_window_any_mode_requires_conditions() -> None:
 
     with pytest.raises(ValueError, match="any-mode requires applicability conditions"):
         type(window).model_validate(payload)
+
 
 def test_keyed_bracket_table_parses_with_distinct_keys() -> None:
     """A keyed_bracket_table with two distinct keys parses cleanly."""
@@ -450,6 +474,7 @@ def test_keyed_bracket_table_parses_with_distinct_keys() -> None:
     assert parameter.keyed_brackets[0].value == Decimal("0.24")
     assert parameter.keyed_brackets[1].key == "ue_residente"
     assert parameter.keyed_brackets[1].value == Decimal("0.19")
+
 
 def test_keyed_bracket_table_rejects_duplicate_key_within_same_window() -> None:
     """A keyed_bracket_table with two rows sharing (key, valid_from) is rejected.
@@ -479,6 +504,7 @@ def test_keyed_bracket_table_rejects_duplicate_key_within_same_window() -> None:
             legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
             source_refs=("aeat-modelo-210-procedure",),
         )
+
 
 def test_keyed_bracket_table_rejects_mixed_brackets_and_keyed_brackets() -> None:
     """A keyed_bracket_table parameter cannot also carry numeric brackets.
@@ -510,6 +536,7 @@ def test_keyed_bracket_table_rejects_mixed_brackets_and_keyed_brackets() -> None
             source_refs=("aeat-modelo-210-procedure",),
         )
 
+
 def test_convenio_rate_table_parses_with_mixed_decimal_and_not_yet_authored() -> None:
     """A convenio_rate_table accepts both parseable Decimal rates and NOT_YET_AUTHORED.
 
@@ -540,6 +567,7 @@ def test_convenio_rate_table_parses_with_mixed_decimal_and_not_yet_authored() ->
     assert parameter.convenio_rates[1].tipo_renta == "pension"
     assert parameter.convenio_rates[1].rate == "NOT_YET_AUTHORED"
 
+
 def test_convenio_rate_table_rejects_duplicate_triple() -> None:
     """A convenio_rate_table with two rows sharing (country, tipo_renta, valid_from) is rejected.
 
@@ -563,6 +591,7 @@ def test_convenio_rate_table_rejects_duplicate_triple() -> None:
             legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
             source_refs=("aeat-modelo-210-procedure",),
         )
+
 
 def test_convenio_rate_table_rejects_malformed_rate_string() -> None:
     """A ConvenioRateRow with a rate field that is neither a Decimal nor the sentinel is rejected.

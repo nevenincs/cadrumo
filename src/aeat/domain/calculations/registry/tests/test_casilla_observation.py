@@ -78,7 +78,7 @@ def test_casilla_observation_absent_by_design_defaults_to_false() -> None:
 
     The flag distinguishes structural zeros
     (binding had no anchor for the target period) from value-bearing
-    observations. Default False so pre-P03-persisted observations
+    observations. Default False so legacy persisted observations
     deserialise as "value-bearing" — the historical contract — until
     the campaign-level migration is run.
     """
@@ -114,7 +114,7 @@ def test_casilla_observation_absent_by_design_roundtrips_through_json() -> None:
 def test_casilla_observation_absent_by_design_default_roundtrips_through_json() -> None:
     """The False default also survives the JSON roundtrip.
 
-    Migration concern: pre-P03 persisted observations deserialise
+    Migration concern: legacy persisted observations deserialise
     with the default False. This test pins that the default ALSO
     roundtrips cleanly — so an observation persisted today with
     the field implicit will load back identically.

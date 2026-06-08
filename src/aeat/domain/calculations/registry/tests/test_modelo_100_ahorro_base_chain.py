@@ -244,6 +244,7 @@ def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot) -> None:
         "renta-2025-profile-marriage-full-year": Decimal("0"),
         "renta-2025-profile-marriage-month-start": Decimal("0"),
         "renta-2025-profile-marriage-month-end": Decimal("0"),
+        "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
     }
     # 2025 revision requires all cross-model relation values; supply zeros for
     # all relations so the ahorro chain can be exercised in isolation.
