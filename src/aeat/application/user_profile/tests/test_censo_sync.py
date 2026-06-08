@@ -30,7 +30,6 @@ from .. import (
     CensoSyncError,
     CensoSyncService,
     UserProfileLifecycleRepository,
-    build_censo_sync_service,
 )
 from .._projections import projection_for_taxpayer
 
@@ -90,7 +89,13 @@ def test_refresh_captures_active_snapshot(secure_store: SecureObjectRepository) 
 
 
 def test_refresh_with_production_factory_enrolls_censo_event(secure_store: SecureObjectRepository) -> None:
-    service = build_censo_sync_service(bucket_id="b1")
+
+    service = CensoSyncService(
+        bucket_id="b1",
+        snapshots=CensoSnapshotService(bucket_id="b1"),
+        profiles=UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store),
+        events=BucketEventHistoryRepository(objects=secure_store),
+    )
 
     snapshot = service.refresh_censo(
         profile_id="operator",

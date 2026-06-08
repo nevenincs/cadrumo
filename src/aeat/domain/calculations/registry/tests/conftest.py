@@ -1,6 +1,2 @@
-"""Pytest fixtures for split calculation-registry tests."""
-
-pytest_plugins = (
-    'aeat.domain.calculations.registry.tests._referential_integrity_support',
-    'aeat.domain.calculations.registry.tests._registry_schema_support',
-)
+from ._referential_integrity_support import *  # noqa: F403
+from ._registry_schema_support import *  # noqa: F403

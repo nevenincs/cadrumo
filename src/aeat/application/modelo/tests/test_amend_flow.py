@@ -60,7 +60,7 @@ from .. import (
     get_work_unit,
     mark_revision_verificado_completo,
 )
-from .test_file_flow import _file_revision
+from ._file_flow_support import _file_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

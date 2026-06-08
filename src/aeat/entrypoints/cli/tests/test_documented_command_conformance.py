@@ -128,7 +128,7 @@ def _root_option_names() -> frozenset[str]:
     """Long/short option strings declared on the root callback."""
     names: set[str] = set()
     for param in _root_command().params:
-        if isinstance(param, click.Option):
+        if getattr(param, "param_type_name", None) == "option":
             names.update(param.opts)
             names.update(param.secondary_opts)
     return frozenset(names)
@@ -155,7 +155,7 @@ def _resolve_path(tokens: tuple[str, ...]) -> _Resolved:
     ctx = click.Context(cmd, info_name="aeat")
     resolved: list[str] = []
     for tok in tokens:
-        if not isinstance(cmd, click.Group):
+        if not hasattr(cmd, "list_commands"):
             break
         sub = cmd.get_command(ctx, tok)
         if sub is None:
@@ -169,7 +169,7 @@ def _resolve_path(tokens: tuple[str, ...]) -> _Resolved:
 def _command_option_names(cmd: click.Command) -> frozenset[str]:
     names: set[str] = set()
     for param in cmd.params:
-        if isinstance(param, click.Option):
+        if getattr(param, "param_type_name", None) == "option":
             names.update(param.opts)
             names.update(param.secondary_opts)
     return frozenset(names)
@@ -179,7 +179,7 @@ def _required_positional_count(cmd: click.Command) -> int:
     """Number of required, non-variadic positional arguments on ``cmd``."""
     count = 0
     for param in cmd.params:
-        if isinstance(param, click.Argument) and param.required and param.nargs != -1:
+        if getattr(param, "param_type_name", None) == "argument" and param.required and param.nargs != -1:
             count += 1
     return count
 
@@ -405,7 +405,7 @@ def test_doc_surface_present() -> None:
     assert docs, "no user-facing docs found under docs/ or README.md"
     names = {d.name for d in docs}
     assert "README.md" in names, "root README.md must be in the gate's scope"
-    assert "getting-started.md" in names, "docs/getting-started.md must be in the gate's scope"
+    assert "index.md" in names, "docs/index.md must be in the gate's scope"
 
 
 def test_live_introspection_matches_reality() -> None:
@@ -419,7 +419,7 @@ def test_live_introspection_matches_reality() -> None:
     assert resolved.resolved_path == ("app", "modelo", "describe")
     describe = resolved.command
     assert describe is not None
-    assert not isinstance(describe, click.Group)
+    assert not hasattr(describe, "list_commands")
     assert _required_positional_count(describe) == 1
     assert "--modelo" not in _command_option_names(describe)
     assert "--period" in _command_option_names(describe)
