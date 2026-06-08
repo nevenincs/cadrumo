@@ -40,6 +40,10 @@ _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES = {
     "src/aeat/adapters/persistence/storage/sql/tests/test_engine.py",
     "src/aeat/adapters/persistence/storage/sql/tests/test_repository.py",
     "src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects.py",
+    "src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects_part1.py",
+    "src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects_part2.py",
+    "src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects_part3.py",
+    "src/aeat/adapters/persistence/storage/sql/tests/_secure_objects_support.py",
     "src/aeat/adapters/persistence/storage/sql/tests/test_session.py",
     "src/aeat/adapters/persistence/storage/tests/test_ephemeral_key_hygiene.py",
     "src/aeat/adapters/persistence/storage/tests/test_hardening_convention_guards.py",
@@ -74,14 +78,14 @@ def test_bucket_session_cleanup_observability_does_not_use_suppression_markers()
 
 def test_named_bucket_settings_derivation_stays_in_core_settings_boundary() -> None:
     runtime_path = PROJECT_ROOT / "src/aeat/adapters/persistence/storage/runtime.py"
-    config_path = PROJECT_ROOT / "src/aeat/core/config.py"
+    route_path = PROJECT_ROOT / "src/aeat/core/_config_storage_route.py"
 
     runtime_text = runtime_path.read_text(encoding="utf-8")
     assert "__pydantic_fields_set__" not in runtime_text
     assert "settings_for_active_profile_bucket" in runtime_text
 
-    config_function = _function_named(config_path, "settings_for_active_profile_bucket")
-    config_segment = _source_segment(config_path, config_function)
+    config_function = _function_named(route_path, "settings_for_bucket_route")
+    config_segment = _source_segment(route_path, config_function)
     assert "__pydantic_fields_set__" in config_segment
     assert "aeat_database_url" in config_segment
 
@@ -183,6 +187,7 @@ def _is_test_surface(relative: str) -> bool:
         or path.name.endswith("_test_suite.py")
         or path.name == "conftest.py"
         or "/test_" in relative
+        or "tests" in path.parts
     )
 
 

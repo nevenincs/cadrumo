@@ -23,8 +23,9 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC = Path(__file__).parent
-_REPO_ROOT = _SRC.parent.parent
+_TESTS_DIR = Path(__file__).parent
+_AEAT_DIR = _TESTS_DIR.parent
+_REPO_ROOT = _AEAT_DIR.parent.parent
 
 
 # ---------------------------------------------------------------------------
@@ -41,7 +42,7 @@ def _source(path: Path) -> str:
 # (a) scripts/ ratchet landed and check_relative_imports.py clean
 # ---------------------------------------------------------------------------
 
-_UTF8_INVENTORY_TEST = _SRC / "test_utf8_enrollment_inventory.py"
+_UTF8_INVENTORY_TEST = _TESTS_DIR / "test_utf8_enrollment_inventory.py"
 _CHECK_REL_IMPORTS = _REPO_ROOT / "scripts" / "check_relative_imports.py"
 
 
@@ -74,7 +75,7 @@ def test_check_relative_imports_uses_local_utf8_constant() -> None:
 # (b) _google_drive.py Any-return markers (4 sites)
 # ---------------------------------------------------------------------------
 
-_GOOGLE_DRIVE = _SRC / "adapters/outbound/storage/_google_drive.py"
+_GOOGLE_DRIVE = _AEAT_DIR / "adapters/outbound/storage/_google_drive.py"
 _GOOGLE_DRIVE_TOKEN = "ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY"
 _GOOGLE_DRIVE_FUNCS = (
     "_service_factory",
@@ -120,7 +121,7 @@ def test_sha256_allowlist_sites_documented_in_utf8_inventory() -> None:
 # (d) _stdio.py rationale enrolled in test_any_return_rationale_markers.py
 # ---------------------------------------------------------------------------
 
-_RATIONALE_INVENTORY = _SRC / "test_any_return_rationale_markers.py"
+_RATIONALE_INVENTORY = _TESTS_DIR / "test_any_return_rationale_markers.py"
 
 
 def test_stdio_logger_rationale_enrolled_in_inventory() -> None:

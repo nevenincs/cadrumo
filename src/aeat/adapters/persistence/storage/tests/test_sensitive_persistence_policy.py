@@ -286,16 +286,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "export_ledger_transactions",
         "command.output_path.write_bytes",
     ): "explicit operator-directed ledger transaction export to a caller-chosen path",
-    (
-        "src/aeat/tests/fixtures/borrador/_generate.py",
-        "generate_corpus",
-        "out_path.write_bytes",
-    ): "synthetic fixture generator writes generated PDF corpus artefacts",
-    (
-        "src/aeat/tests/fixtures/justificantes/_generate.py",
-        "_write_sidecar",
-        "sidecar_path.write_text",
-    ): "synthetic fixture generator writes sanitiser-manifest sidecars",
 }
 
 
@@ -305,7 +295,11 @@ def _iter_python_files(path: Path) -> list[Path]:
     return sorted(
         candidate
         for candidate in path.rglob("*.py")
-        if not (candidate.name.startswith("test_") or candidate.name.startswith("_test_"))
+        if not (
+            candidate.name.startswith("test_")
+            or candidate.name.startswith("_test_")
+            or "tests" in candidate.parts
+        )
     )
 
 
@@ -313,7 +307,11 @@ def _iter_production_python_files() -> list[Path]:
     return sorted(
         candidate
         for candidate in _PRODUCTION_ROOT.rglob("*.py")
-        if not (candidate.name.startswith("test_") or candidate.name.startswith("_test_"))
+        if not (
+            candidate.name.startswith("test_")
+            or candidate.name.startswith("_test_")
+            or "tests" in candidate.parts
+        )
     )
 
 
