@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 # The canonical spine. Each entry maps a core struct to the dotted module that
 # defines it. ``test_core_struct_anchors_are_unambiguous`` pins every entry to

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from functools import lru_cache
 from pathlib import Path
 
 from ._citation_blocklist import CitationSource, find_known_bad
@@ -66,7 +65,7 @@ def verify_legal_reference(
                 except Exception as exc:
                     raise RegistryValidationError(
                         f"legal reference {reference.id!r} manual section JSON validation failed: {exc}"
-                    )
+                    ) from exc
 
     if reference.article is None:
         return
@@ -111,6 +110,9 @@ def verify_legal_catalogue(
         raise RegistryValidationError("legal catalogue validation failed:\n" + "\n".join(f" - {f}" for f in failures))
 
 
+_LEGAL_CORPUS_CACHE: dict[tuple[str, int], str] = {}
+
+
 def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
     path_text = reference.corpus_ref.split("#", 1)[0]
     path = (source_root / path_text).resolve()
@@ -120,10 +122,11 @@ def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
     if not path.is_file():
         raise RegistryValidationError(f"legal reference {reference.id!r} missing corpus file {path_text!r}")
     stat = path.stat()
-    return _read_normalised_legal_corpus(str(path), stat.st_size, stat.st_mtime_ns)
+    cache_key = (path.name, stat.st_size)
+    if cache_key in _LEGAL_CORPUS_CACHE:
+        return _LEGAL_CORPUS_CACHE[cache_key]
 
+    text = normalise_corpus_text(path.read_text(encoding="utf-8", errors="replace"))
+    _LEGAL_CORPUS_CACHE[cache_key] = text
+    return text
 
-@lru_cache(maxsize=512)
-def _read_normalised_legal_corpus(path: str, byte_count: int, modified_ns: int) -> str:
-    del byte_count, modified_ns
-    return normalise_corpus_text(Path(path).read_text(encoding="utf-8", errors="replace"))

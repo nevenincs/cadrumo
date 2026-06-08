@@ -415,7 +415,7 @@ docs-changed-rag BASE="HEAD":
 # reference drift/conformance), doc8 reStructuredText formatting, and
 # interrogate docstring coverage.
 docs-check:
-    uv run --no-sync pytest -m docs
+    uv run --no-sync pytest docs/tools/tests src/aeat/tests/test_docstring_core_struct_links.py -m docs
     uv run --no-sync doc8 docs
     uv run --no-sync interrogate -c pyproject.toml src/aeat
 

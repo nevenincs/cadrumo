@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 from docs.tools.cli_reference import generate_cli_reference_in_subprocess
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.docs]
 
 _DOCS_ROOT = Path("docs")
 

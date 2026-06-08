@@ -19,7 +19,7 @@ def verify_source_file(root: Path, source: SourceReference) -> None:
         raise RegistryValidationError(f"source {source.id!r} escapes repository root")
     if not path.is_file():
         raise RegistryValidationError(f"source {source.id!r} missing corpus file {source.corpus_path!r}")
-    
+
     if source.kind == "manual_pdf" and "corpus/manuals" in source.corpus_path:
         parts = source.corpus_path.split("/")
         try:
@@ -28,21 +28,18 @@ def verify_source_file(root: Path, source: SourceReference) -> None:
                 manual_id_str = parts[idx + 1]
                 year_str = parts[idx + 2]
                 part_str = parts[idx + 3]
-                
+
                 from ....core.config import Settings
                 from ...manuals import ManualId, ManualPart, load_manual
-                
+
                 manual_id = ManualId(manual_id_str)
                 year = int(year_str)
-                if part_str == "source.pdf":
-                    part = ManualPart.SINGLE
-                else:
-                    part = ManualPart(part_str)
-                
+                part = ManualPart.SINGLE if part_str == "source.pdf" else ManualPart(part_str)
+
                 manuals_dir = repo_root / "corpus" / "manuals"
                 if not manuals_dir.is_dir():
                     manuals_dir = repo_root / "src" / "aeat" / "_data" / "corpus" / "manuals"
-                
+
                 settings = Settings(aeat_manuals_root=manuals_dir)
                 load_manual(manual_id=manual_id, year=year, part=part, settings=settings)
         except Exception as exc:
