@@ -31,9 +31,9 @@ Research the existing schema structures and draft a binding ADR defining the loc
 
 Backfill missing Renta and IVA manual handbooks under `src/aeat/_data/corpus/manuals/` and extract their structure to complete the legal referencing pipeline.
 
-- [ ] `P02.S03` - Backfill missing years/parts for Renta manual PDFs and metadata; `src/aeat/_data/corpus/manuals/renta/`.
-- [ ] `P02.S04` - Backfill missing years/parts for IVA manual PDFs and metadata; `src/aeat/_data/corpus/manuals/iva/`.
-- [ ] `P02.S04b` - Generate structured `chapters.json` and `sections/` for backfilled manuals to transition out of degraded mode.
+- [x] `P02.S03` - Backfill missing years/parts for Renta manual PDFs and metadata; `src/aeat/_data/corpus/manuals/renta/`.
+- [x] `P02.S04` - Backfill missing years/parts for IVA manual PDFs and metadata; `src/aeat/_data/corpus/manuals/iva/`.
+- [x] `P02.S11` - Generate structured `chapters.json` and `sections/` for backfilled manuals to transition out of degraded mode.
 
 ### Phase `P03` - schema localization backend implementation
 
