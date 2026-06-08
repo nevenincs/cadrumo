@@ -565,6 +565,7 @@ markers = [
   "hex_persistence_adapter: exercises adapters.persistence.* boundaries",
   "hex_entrypoint: exercises entrypoints.* command and presentation surfaces",
   "hex_core: exercises core.* foundational cross-cutting utilities",
+  "docs: documentation build, stubs, and docstring structure verification",
 ]
 
 # ── Coverage (pytest-cov) ────────────────────────────────────────────────────

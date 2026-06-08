@@ -6,6 +6,7 @@ import warnings
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from difflib import SequenceMatcher
+from functools import lru_cache
 from typing import NamedTuple, Protocol
 
 from ._validate_semantic_role_axes import (
@@ -59,6 +60,7 @@ class _SemanticRoleTypoIndex(NamedTuple):
     normalised: Mapping[str, tuple[str, ...]]
     by_length: Mapping[int, tuple[str, ...]]
     lengths: tuple[int, ...]
+    sets: Mapping[str, set[str]]
 
 
 _SEMANTIC_ROLE_TYPO_RATIO = 0.92
@@ -67,14 +69,27 @@ _SEMANTIC_ROLE_TYPO_RATIO = 0.92
 def _build_semantic_role_typo_index(known_roles: Iterable[str]) -> _SemanticRoleTypoIndex:
     normalised: dict[str, list[str]] = defaultdict(list)
     by_length: dict[int, list[str]] = defaultdict(list)
+    sets: dict[str, set[str]] = {}
     for known in known_roles:
         normalised[known.replace("-", "_")].append(known)
         by_length[len(known)].append(known)
+        sets[known] = set(known)
     return _SemanticRoleTypoIndex(
         normalised={key: tuple(values) for key, values in normalised.items()},
         by_length={key: tuple(values) for key, values in by_length.items()},
         lengths=tuple(sorted(by_length)),
+        sets=sets,
     )
+
+
+@lru_cache(maxsize=8192)
+def _get_ratio(role1: str, role2: str) -> float:
+    matcher = SequenceMatcher(None, role1, role2)
+    if matcher.real_quick_ratio() < _SEMANTIC_ROLE_TYPO_RATIO:
+        return 0.0
+    if matcher.quick_ratio() < _SEMANTIC_ROLE_TYPO_RATIO:
+        return 0.0
+    return matcher.ratio()
 
 
 def _semantic_role_looks_like_typo(role: str, index: _SemanticRoleTypoIndex) -> bool:
@@ -86,9 +101,8 @@ def _semantic_role_looks_like_typo(role: str, index: _SemanticRoleTypoIndex) -> 
             continue
         return True
 
-    matcher = SequenceMatcher()
-    matcher.set_seq1(role)
     role_length = len(role)
+    role_set = set(role)
     for known_length in index.lengths:
         if _max_sequence_match_ratio(role_length, known_length) < _SEMANTIC_ROLE_TYPO_RATIO:
             continue
@@ -99,12 +113,15 @@ def _semantic_role_looks_like_typo(role: str, index: _SemanticRoleTypoIndex) -> 
                 continue
             if semantic_roles_are_axis_siblings(role, known):
                 continue
-            matcher.set_seq2(known)
-            if matcher.real_quick_ratio() < _SEMANTIC_ROLE_TYPO_RATIO:
+
+            known_set = index.sets[known]
+            # Fast set-intersection check to skip sequence matcher on disparate strings:
+            # If intersection size is less than max(len(role_set), len(known_set)) - max_edits, ratio cannot be >= 0.92
+            max_edits = 0.08 * (role_length + known_length)
+            if len(role_set & known_set) < max(len(role_set), len(known_set)) - max_edits:
                 continue
-            if matcher.quick_ratio() < _SEMANTIC_ROLE_TYPO_RATIO:
-                continue
-            if matcher.ratio() >= _SEMANTIC_ROLE_TYPO_RATIO:
+
+            if _get_ratio(role, known) >= _SEMANTIC_ROLE_TYPO_RATIO:
                 return True
     return False
 
@@ -113,3 +130,4 @@ def _max_sequence_match_ratio(left_length: int, right_length: int) -> float:
     if left_length == 0 and right_length == 0:
         return 1.0
     return (2 * min(left_length, right_length)) / (left_length + right_length)
+

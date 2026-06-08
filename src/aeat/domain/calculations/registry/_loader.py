@@ -562,7 +562,7 @@ def _merge_singleton_table_fragment(
     if incoming_table is None:
         raise RegistryLoadError(f"{path}: revision fragment field {field_name!r} must be a table")
     if existing is None:
-        existing_table: dict[str, object] = {}
+        existing_table: dict[str, object] | None = {}
     else:
         existing_table = _as_toml_table(existing)
         if existing_table is None:
@@ -728,8 +728,8 @@ def _reject_duplicate_appended_table_ids(
     item_id: str,
     field: str,
 ) -> None:
-    existing_ids = {item_id for item in existing if (item_id := _toml_table_id(item)) is not None}
-    incoming_ids = {item_id for item in incoming if (item_id := _toml_table_id(item)) is not None}
+    existing_ids = {iid for item in existing if (iid := _toml_table_id(item)) is not None}
+    incoming_ids = {iid for item in incoming if (iid := _toml_table_id(item)) is not None}
     duplicate_ids = sorted(existing_ids.intersection(incoming_ids))
     if duplicate_ids:
         raise RegistryLoadError(
@@ -927,19 +927,19 @@ def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSourc
                 ModeloRevisionSource(
                     revision_id=revision_id,
                     layout="revision_file",
-                    path=path.resolve(),
-                    fragment_paths=(path.resolve(),),
+                    path=path,
+                    fragment_paths=(path,),
                 )
             )
     for path in sorted(revisions_dir.iterdir()):
         if not path.is_dir():
             continue
         revision_manifest = path / "revision.toml"
-        fragment_paths = (revision_manifest.resolve(),) if revision_manifest.is_file() else ()
+        fragment_paths = (revision_manifest,) if revision_manifest.is_file() else ()
         fragment_paths = (
             *fragment_paths,
             *tuple(
-                p.resolve()
+                p
                 for p in sorted(path.rglob("*.toml"))
                 if p != revision_manifest and not any(part == "locales" for part in p.parts)
             ),
@@ -948,7 +948,7 @@ def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSourc
             ModeloRevisionSource(
                 revision_id=path.name,
                 layout="fragment_directory",
-                path=path.resolve(),
+                path=path,
                 fragment_paths=fragment_paths,
             )
         )
@@ -1048,6 +1048,5 @@ def _load_all_modelo_definitions(modelos_dir: Path) -> tuple[ModeloDefinition, .
 
 
 def _toml_fingerprint(path: Path) -> tuple[str, int, int]:
-    resolved = path.resolve()
-    stat = resolved.stat()
-    return str(resolved), stat.st_size, stat.st_mtime_ns
+    stat = path.stat()
+    return str(path), stat.st_size, stat.st_mtime_ns

@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 from docs.tools.apidocs import ApiStubManager
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _SRC_AEAT = _REPO_ROOT / "src" / "aeat"

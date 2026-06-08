@@ -9,9 +9,8 @@ from pathlib import Path
 from ._schema import LegalReference, SourceCitation, SourceReference
 from ._text import normalise_corpus_text
 
-_SourceTextCacheKey = tuple[str, str, int, int]
-_SourceTextCacheValue = tuple[Path, str]
-_NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, _SourceTextCacheValue] = {}
+_SourceTextCacheKey = tuple[str, str, int]
+_NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, str] = {}
 
 
 @lru_cache(maxsize=4096)
@@ -19,14 +18,22 @@ def _normalise_required_text(text: str) -> str:
     return normalise_corpus_text(text)
 
 
+_PDF_TEXT_CACHE: dict[tuple[str, int], str] = {}
+
+
 def _extract_pdf_text(path: Path) -> str:
     stat = path.stat()
-    return _extract_pdf_text_cached(str(path.expanduser().resolve()), stat.st_size, stat.st_mtime_ns)
+    cache_key = (path.name, stat.st_size)
+    if cache_key in _PDF_TEXT_CACHE:
+        return _PDF_TEXT_CACHE[cache_key]
+
+    resolved_path = str(path.expanduser().resolve())
+    text = _extract_pdf_text_impl(resolved_path)
+    _PDF_TEXT_CACHE[cache_key] = text
+    return text
 
 
-@lru_cache(maxsize=256)
-def _extract_pdf_text_cached(path: str, byte_count: int, modified_ns: int) -> str:
-    del byte_count, modified_ns
+def _extract_pdf_text_impl(path: str) -> str:
     try:
         import pypdfium2 as pdfium
     except ImportError as exc:  # pragma: no cover - dependency is required by pyproject.
@@ -50,6 +57,7 @@ def _extract_pdf_text_cached(path: str, byte_count: int, modified_ns: int) -> st
         return "\n".join(pages)
     except Exception as exc:
         raise OSError(f"could not extract text from manual PDF {path}") from exc
+
 
 
 class EvidenceValidator:
@@ -137,16 +145,16 @@ class EvidenceValidator:
             return ""
         source_path = self._source_root / source.corpus_path
         stat = source_path.stat()
-        source_key = (source.kind, str(source_path.expanduser().resolve()), stat.st_size, stat.st_mtime_ns)
+        source_key = (source.kind, source_path.name, stat.st_size)
         global_cached = _NORMALISED_SOURCE_TEXT_CACHE.get(source_key)
-        if global_cached is not None and global_cached[0] == source_path:
-            self._source_text_cache[source.id] = global_cached[1]
-            return global_cached[1]
+        if global_cached is not None:
+            self._source_text_cache[source.id] = global_cached
+            return global_cached
         if source.kind == "manual_pdf":
             text = _extract_pdf_text(source_path)
         else:
             text = source_path.read_text(encoding="utf-8", errors="replace")
         normalised = normalise_corpus_text(text)
-        _NORMALISED_SOURCE_TEXT_CACHE[source_key] = (source_path, normalised)
+        _NORMALISED_SOURCE_TEXT_CACHE[source_key] = normalised
         self._source_text_cache[source.id] = normalised
         return normalised

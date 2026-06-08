@@ -389,9 +389,9 @@ def test_verify_source_file_checks_manual_structure(tmp_path: Path) -> None:
     pdf_path = tmp_path / "corpus" / "manuals" / "renta" / "2020" / "part1" / "source.pdf"
     pdf_path.parent.mkdir(parents=True)
     pdf_path.write_bytes(b"dummy pdf bytes that satisfy file presence")
-    
+
     sha = hashlib.sha256(b"dummy pdf bytes that satisfy file presence").hexdigest()
-    
+
     source = SourceReference(
         id="aeat-renta-2020-manual-parte1",
         evidence_tier="official_source_guidance",
@@ -404,15 +404,15 @@ def test_verify_source_file_checks_manual_structure(tmp_path: Path) -> None:
         source_url="https://sede.agenciatributaria.gob.es/Manual.pdf",
         review_status="reviewed",
     )
-    
+
     # Check 1: Should fail because structure/manual.json is missing
     with pytest.raises(RegistryValidationError, match="manual structure check failed"):
         verify_source_file(tmp_path, source)
-        
+
     # Check 2: Write valid manual structure and it should pass
     structure_dir = tmp_path / "corpus" / "manuals" / "renta" / "2020" / "part1" / "structure"
     structure_dir.mkdir(parents=True)
-    
+
     (structure_dir / "manual.json").write_text(
         json.dumps({
             "manual_id": "renta",
@@ -428,7 +428,7 @@ def test_verify_source_file_checks_manual_structure(tmp_path: Path) -> None:
         }),
         encoding="utf-8"
     )
-    
+
     (structure_dir / "chapters.json").write_text(
         json.dumps([
             {
@@ -440,17 +440,29 @@ def test_verify_source_file_checks_manual_structure(tmp_path: Path) -> None:
         ]),
         encoding="utf-8"
     )
-    
+
     verify_source_file(tmp_path, source)
 
 
 def test_verify_legal_reference_checks_manual_section_json(tmp_path: Path) -> None:
     """verify_legal_reference must fail if a manual legal reference points to an invalid section JSON file."""
     from datetime import date
-    section_path = tmp_path / "corpus" / "manuals" / "renta" / "2020" / "part1" / "structure" / "sections" / "cap1" / "sec1.json"
+
+    section_path = (
+        tmp_path
+        / "corpus"
+        / "manuals"
+        / "renta"
+        / "2020"
+        / "part1"
+        / "structure"
+        / "sections"
+        / "cap1"
+        / "sec1.json"
+    )
     section_path.parent.mkdir(parents=True)
     section_path.write_text("{corrupt json", encoding="utf-8")
-    
+
     from .._schema import LegalReference
     reference = LegalReference(
         id="renta-2020-manual:sec1",
@@ -467,10 +479,10 @@ def test_verify_legal_reference_checks_manual_section_json(tmp_path: Path) -> No
         reviewed_by="operator",
         notes="Notes",
     )
-    
+
     with pytest.raises(RegistryValidationError, match="manual section JSON validation failed"):
         verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
-        
+
     section_path.write_text(
         json.dumps({
             "section_id": "sec1",
@@ -490,5 +502,5 @@ def test_verify_legal_reference_checks_manual_section_json(tmp_path: Path) -> No
         }),
         encoding="utf-8"
     )
-    
+
     verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
