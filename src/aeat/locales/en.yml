@@ -413,7 +413,10 @@ application:
         certificate_file_unresolved: The certificate path '%{certificate_path}' does
           not resolve to an existing file. Run `aeat config auth configure --provider
           certificate --file PATH` with a path to your PKCS#12 (.p12/.pfx) bundle.
-        dangling_active_profile: 'Active profile pointer ''%{active_profile}'' does not resolve to a registered profile bucket. Run aeat config profile list to inspect registered profiles, then aeat config unlock NAME or aeat config profile create NAME.'
+        dangling_active_profile: Active profile pointer '%{active_profile}' does not
+          resolve to a registered profile bucket. Run aeat config profile list to
+          inspect registered profiles, then aeat config unlock NAME or aeat config
+          profile create NAME.
         no_active_bucket: No active profile bucket; run `aeat config profile create
           NAME` before configuring auth.
         unreadable_active_profile: Active profile '%{active_profile}' has a bucket
@@ -904,7 +907,8 @@ application:
       lifecycle_schema_validation_failed: The profile data does not match the user-profile
         schema.
       no_active_profile_selected: No active profile selected.
-      profile_already_exists: 'Profile ''%{profile}'' already exists; run aeat config unlock NAME to activate it or aeat config profile delete NAME first.'
+      profile_already_exists: Profile '%{profile}' already exists; run aeat config
+        unlock NAME to activate it or aeat config profile delete NAME first.
       profile_bucket_directory_removal_failed: Profile bucket directory could not
         be removed.
       profile_create_route_mismatch: Profile create route '%{route}' does not match
@@ -1290,6 +1294,7 @@ cli:
       casillas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         form_number_help: Filter casillas by BOE-printed form number (e.g. 46)
+        help: 'List all casillas (fields/boxes) defined for a specific modelo revision.'
         input_kind_help: Filter casillas by input kind (manual, bound, computed, informational)
         modelo_help: Tax form code (e.g. 303, 130, 100)
         period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
@@ -1311,6 +1316,7 @@ cli:
         Emits per-casilla delta rows (year_b - year_a) grouped by section.
       describe:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
+        help: 'Show detailed structure, metadata, and active periods for a specific modelo.'
         label_bindings: Bindings
         label_cadence: Cadence
         label_casillas: Casillas
@@ -1360,6 +1366,7 @@ cli:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         explain_help: Include the legal_refs and source_refs that ground each formula
           in the text output. The JSON payload always carries them.
+        help: 'List all computed casillas and their formulas for a specific modelo revision.'
         modelo_help: Tax form code (e.g. 303, 130, 100)
         period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
           periodic examples include 2026Q1 and 2026-01
@@ -1396,6 +1403,7 @@ cli:
         seed_invalid_amount: The seed amount must be a valid, non-negative decimal.
         seed_period_help: Period of the seed amount (e.g. 2024N4).
       list:
+        help: 'List all official tax forms (modelos) registered in the system.'
         year_help: Filter the modelo catalogue to a single fiscal year
       m036:
         alta_help: Record an M036 alta declaration (initial census registration) filed
@@ -1536,10 +1544,21 @@ cli:
           Tax) is not supported for work-unit creation in this CLI. Legal basis: RD
           Legislativo 5/2004 TRLIRNR and Art. 28 TRLIRNR. File the return through
           AEAT Sede procedure G320 at sede.agenciatributaria.gob.es.'
-        create_stub_modelo_600_refused: 'Modelo %{modelo} (ITP-AJD, Transfer Tax and Stamp Duty) is not supported for work-unit creation in this CLI. Legal basis: Ley 28/1990 and regional ITPyAJD competence; file with the relevant regional Hacienda / CCAA tax authority.'
-        create_stub_modelo_620_refused: 'Modelo %{modelo} (ITP-AJD, used vehicle transfers) is not supported for work-unit creation in this CLI. Legal basis: Ley 28/1990 and regional ITPyAJD competence; file the self-assessment with the relevant regional Hacienda / CCAA tax authority.'
-        create_stub_modelo_650_refused: 'Modelo %{modelo} (ISD inheritances) is not supported for work-unit creation in this CLI. Legal basis: Ley 29/1987 LISyD and Art. 67 RISD; ordinary deadline is six months from death. File with the competent regional Hacienda tax authority.'
-        create_stub_modelo_660_refused: 'Modelo %{modelo} (ISD estate inventory, accompanying Modelo 650) is not supported for work-unit creation in this CLI. Legal basis: Ley 29/1987 LISyD; file with the competent regional Hacienda tax authority.'
+        create_stub_modelo_600_refused: 'Modelo %{modelo} (ITP-AJD, Transfer Tax and
+          Stamp Duty) is not supported for work-unit creation in this CLI. Legal basis:
+          Ley 28/1990 and regional ITPyAJD competence; file with the relevant regional
+          Hacienda / CCAA tax authority.'
+        create_stub_modelo_620_refused: 'Modelo %{modelo} (ITP-AJD, used vehicle transfers)
+          is not supported for work-unit creation in this CLI. Legal basis: Ley 28/1990
+          and regional ITPyAJD competence; file the self-assessment with the relevant
+          regional Hacienda / CCAA tax authority.'
+        create_stub_modelo_650_refused: 'Modelo %{modelo} (ISD inheritances) is not
+          supported for work-unit creation in this CLI. Legal basis: Ley 29/1987 LISyD
+          and Art. 67 RISD; ordinary deadline is six months from death. File with
+          the competent regional Hacienda tax authority.'
+        create_stub_modelo_660_refused: 'Modelo %{modelo} (ISD estate inventory, accompanying
+          Modelo 650) is not supported for work-unit creation in this CLI. Legal basis:
+          Ley 29/1987 LISyD; file with the competent regional Hacienda tax authority.'
         create_stub_modelo_714_refused: 'Modelo %{modelo} (Wealth Tax) is not supported
           for work-unit creation in this CLI. Legal basis: Ley 19/1991 Art. 28 and
           Orden HAC/1023/2021. File the return at AEAT Sede.'
@@ -1813,13 +1832,14 @@ cli:
       until_help: Filter the history to events at or before this ISO-8601 timestamp
         (e.g. 2026-04-30T23:59:59+00:00)
     custody:
-      confirm_new_passphrase_help: 'Repeat the new secret-store passphrase.'
+      confirm_new_passphrase_help: Repeat the new secret-store passphrase.
       confirm_new_passphrase_prompt: 'Confirm new AEAT secret-store passphrase: '
-      data_loss_warning: 'Record this recovery key now. AEAT does not store the plaintext recovery key and cannot show it again.'
+      data_loss_warning: Record this recovery key now. AEAT does not store the plaintext
+        recovery key and cannot show it again.
       errors:
-        missing_new_passphrase_confirmation: 'Repeat the new passphrase with --confirm-new-passphrase.'
-        new_passphrase_mismatch: 'The new passphrase and confirmation do not match.'
-      new_passphrase_help: 'New secret-store passphrase. Omit to enter it interactively.'
+        missing_new_passphrase_confirmation: Repeat the new passphrase with --confirm-new-passphrase.
+        new_passphrase_mismatch: The new passphrase and confirmation do not match.
+      new_passphrase_help: New secret-store passphrase. Omit to enter it interactively.
       new_passphrase_prompt: 'New AEAT secret-store passphrase: '
     errors:
       invalid_value: 'Invalid value for %{name}: %{value}'
@@ -1858,7 +1878,7 @@ cli:
           locked or unavailable.
         loopback_bind: 'Could not open a local port to complete Google sign-in: {detail}'
         network: 'Could not reach Google: {detail}'
-        profile_unbound: 'No active profile. Run aeat config unlock NAME or pass --profile.'
+        profile_unbound: No active profile. Run aeat config unlock NAME or pass --profile.
         scope_insufficient: The access granted for Google is missing required permissions.
           Run `aeat config google login` and accept every permission.
         storage: 'Could not reach Google Drive storage: {detail}'
@@ -1953,7 +1973,7 @@ cli:
     list:
       help: List every registered profile and mark the active one
     lock:
-      help: 'Lock the current profile by clearing the active profile pointer.'
+      help: Lock the current profile by clearing the active profile pointer.
     profile:
       already_exists: Profile %{name} already exists. Pick a different target id.
       censo:
@@ -1966,7 +1986,9 @@ cli:
       create_epilog: 'Minimal freelancer profile: --entity-type natural_person --tax-id
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Initialize a new active profile and config bucket.
-      delete_active_cleared: 'The deleted profile was the active one; the active-profile pointer has been cleared. Run aeat config unlock NAME or aeat config profile create NAME to resume work.'
+      delete_active_cleared: The deleted profile was the active one; the active-profile
+        pointer has been cleared. Run aeat config unlock NAME or aeat config profile
+        create NAME to resume work.
       delete_help: Delete a profile and its on-disk state (--yes confirms)
       delete_name_help: Profile name to delete
       delete_requires_yes: Deletion is destructive. Re-run 'aeat config profile delete
@@ -1996,7 +2018,9 @@ cli:
       import_path_help: Path to the profile bundle JSON file
       import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
       logout_help: Sign out of the active profile by clearing the local pointer
-      logout_session_warning: 'Logout cleared the active-profile pointer. Subsequent verbs in this terminal will refuse with NoActiveBucketSessionError until you run aeat config unlock NAME or open a new terminal and re-select.'
+      logout_session_warning: Logout cleared the active-profile pointer. Subsequent
+        verbs in this terminal will refuse with NoActiveBucketSessionError until you
+        run aeat config unlock NAME or open a new terminal and re-select.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <DNI/NIE/NIF/CIF>` first.
       preflight_filing_year_help: Four-digit filing year.
@@ -2029,10 +2053,11 @@ cli:
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
     recover:
-      help: 'Recover the file secret store with a recovery key and bind it to a new passphrase.'
-      recovery_key_help: 'Twenty-four word recovery key.'
+      help: Recover the file secret store with a recovery key and bind it to a new
+        passphrase.
+      recovery_key_help: Twenty-four word recovery key.
     rekey:
-      help: 'Rewrap the file secret store under a new passphrase.'
+      help: Rewrap the file secret store under a new passphrase.
     repair:
       connectivity_help: Check browser and AEAT Sede connectivity
       connectivity_target_help: Connectivity target to probe
@@ -2111,22 +2136,23 @@ cli:
         next_step: 'Next step: run `aeat app overview status` to review your workspace.'
         saved: Profile '%{profile_name}' saved.
     show_recovery:
-      existing_notice: 'Recovery key plaintext is not stored and cannot be re-displayed. Use --rotate to mint a new recovery key.'
-      help: 'Show recovery status or mint a one-time recovery key.'
-      rotate_help: 'Rotate the recovery wrapper and print a new one-time recovery key.'
+      existing_notice: Recovery key plaintext is not stored and cannot be re-displayed.
+        Use --rotate to mint a new recovery key.
+      help: Show recovery status or mint a one-time recovery key.
+      rotate_help: Rotate the recovery wrapper and print a new one-time recovery key.
     status:
       empty_profile: No profile configured. Run `aeat config profile create NAME`
         to get started.
       help: Show the readiness of the current configuration profile
       next_step: 'Next step: `aeat app overview status`'
     unlock:
-      help: 'Unlock a profile by selecting it and opening its storage session.'
-      name_help: 'Profile name to unlock. Defaults to the active profile pointer.'
+      help: Unlock a profile by selecting it and opening its storage session.
+      name_help: Profile name to unlock. Defaults to the active profile pointer.
     unset:
       help: Clear the value of one configuration key
       key_help: Key to clear
     verify_recovery:
-      help: 'Verify that a recovery key opens the persisted recovery wrapper.'
+      help: Verify that a recovery key opens the persisted recovery wrapper.
     workflow_help: Show config workflow help
   diagnostics:
     browser:
@@ -2628,7 +2654,7 @@ cli:
         profile_rename: Rename a profile and move its bucket.
         profile_show: Show one profile's facts.
         profile_status: Show active profile readiness.
-        profile_switch: 'Unlock and activate a profile.'
+        profile_switch: Unlock and activate a profile.
         section_authentication: Authentication
         section_bucket_inspection: Bucket inspection
         section_diagnostics: Diagnostics
@@ -3173,7 +3199,9 @@ errors:
       version this build does not support. Update the application.
     auth_storage_master_key_material_missing: No master-key material exists. The secure
       store has not been provisioned yet.
-    auth_storage_master_key_passphrase_mismatch: 'The passphrase does not unwrap the master key. Re-enter it; if you have forgotten it, run aeat config recover --recovery-key <WORDS>.'
+    auth_storage_master_key_passphrase_mismatch: The passphrase does not unwrap the
+      master key. Re-enter it; if you have forgotten it, run aeat config recover --recovery-key
+      <WORDS>.
     auth_storage_master_key_unavailable: The master key could not be acquired from
       any provider. Check the keychain or the file-fallback passphrase.
   calc:
@@ -3220,11 +3248,11 @@ errors:
     no_snapshot_captured: No censo snapshot has been captured for profile {profile_id}.
     profile_not_found: Profile {profile_id} does not exist; create it before applying
       censo.
-    snapshot_profile_mismatch: Censo snapshot {snapshot_id} belongs to profile {snapshot_profile_id},
-      not profile {profile_id}.
     sede_g313_no_censo: AEAT sede G313 returned no readable censo for profile {profile_id};
       confirm your certificate or Cl@ve is registered against this NIF.
     sede_no_censo: AEAT's sede returned no readable censo for profile {profile_id}.
+    snapshot_profile_mismatch: Censo snapshot {snapshot_id} belongs to profile {snapshot_profile_id},
+      not profile {profile_id}.
   error:
     error_access_gate_submission: The access-gate policy rejected a submission operation.
     error_access_gate_submission_preflight: Access-gate preflight rejected a write
@@ -3684,7 +3712,9 @@ errors:
       try again.
     auth_profile_identity_mismatch: The active profile identity cannot own the requested
       authentication session.
-    bootstrap_already_complete: 'Secure storage bootstrap is already complete. Use aeat config unlock NAME to activate an existing profile or aeat config profile create NAME to add another profile.'
+    bootstrap_already_complete: Secure storage bootstrap is already complete. Use
+      aeat config unlock NAME to activate an existing profile or aeat config profile
+      create NAME to add another profile.
     censo_apply_conflict: The censo cannot be applied because there is in-flight work
       on a dependent unit. Resolve the pending state first.
     censo_field_validation: The AEAT censo returned a value the schema cannot accept.
@@ -3725,7 +3755,8 @@ errors:
       a modelo work unit.
     modelo_work_selector_revision_conflict: The selected modelo work unit belongs
       to a different revision.
-    profile_already_registered: 'A profile with that name already exists. Use aeat config unlock NAME to switch to it.'
+    profile_already_registered: A profile with that name already exists. Use aeat
+      config unlock NAME to switch to it.
     profile_import_collision: The imported profile identifier collides with an existing
       one.
     profile_locked: This operation requires an unlocked profile. Run `aeat config
@@ -3910,7 +3941,8 @@ errors:
       at least 8 characters long.
     refused_storage_secret_already_exists: A secret with that key already exists.
       Use the overwrite option to replace it.
-    refused_storage_session_expired: 'The active session expired due to inactivity. Re-activate it with aeat config unlock NAME.'
+    refused_storage_session_expired: The active session expired due to inactivity.
+      Re-activate it with aeat config unlock NAME.
     refused_storage_unsecured_mode: The unsecured storage backend was requested without
       the required opt-in. It is not safe for real data.
     refused_taxation_comparison: The conjunta-vs-individual taxation comparison cannot
@@ -3967,7 +3999,8 @@ errors:
         before an active profile bucket is selected.
       cold_bootstrap_explicit_database_refused: Cold-bootstrap storage cannot bypass
         an explicit database route.
-      no_active_session: 'No active bucket session is open. Run aeat config unlock NAME to unlock a profile.'
+      no_active_session: No active bucket session is open. Run aeat config unlock
+        NAME to unlock a profile.
       no_detail: No detailed readiness issue was reported.
       not_ready: 'Storage runtime is not ready for profile-bound storage: %{details}'
       route_bucket_mismatch: The database route does not match the active bucket session.
@@ -3975,8 +4008,10 @@ errors:
         bucket.
       session_changed: The active bucket session changed. Unlock the target profile
         again.
-      session_expired: 'The active bucket session has expired. Run aeat config unlock NAME to re-activate the profile.'
-      session_sealed: 'The active bucket session is sealed. Run aeat config unlock NAME to re-activate the profile.'
+      session_expired: The active bucket session has expired. Run aeat config unlock
+        NAME to re-activate the profile.
+      session_sealed: The active bucket session is sealed. Run aeat config unlock
+        NAME to re-activate the profile.
       unsecured_backend: The active bucket session uses the unsecured backend. Production
         profile-bound storage requires file or keyring custody.
     stored_data_validation_boundary: A stored profile or workflow record no longer
