@@ -12,6 +12,7 @@ violations or missing-row lookups.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import override
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -105,11 +106,13 @@ class SqlRecordRepository[RecordT](ABC):
 class ModeloRepository(SqlRecordRepository[ModeloCatalogueRecord]):
     """Repository for :class:`ModeloCatalogueRecord`."""
 
+    @override
     def list_all(self) -> list[ModeloCatalogueRecord]:
         """Return every :class:`ModeloCatalogueRecord` in the table, ordered by surrogate id."""
         rows = self._session.execute(select(_orm.ModeloRow).order_by(_orm.ModeloRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
+    @override
     def get(self, record_id: int) -> ModeloCatalogueRecord:
         """Return the record with surrogate id ``record_id``.
 
@@ -127,6 +130,7 @@ class ModeloRepository(SqlRecordRepository[ModeloCatalogueRecord]):
             raise RepositoryError(f"modelo id={record_id} not found")
         return self._to_record(row)
 
+    @override
     def upsert(self, record: ModeloCatalogueRecord) -> ModeloCatalogueRecord:
         """Insert or update ``record`` and return the persisted :class:`ModeloCatalogueRecord`."""
         row: _orm.ModeloRow | None = None
@@ -147,6 +151,7 @@ class ModeloRepository(SqlRecordRepository[ModeloCatalogueRecord]):
         _flush_or_wrap(self._session, "modelo")
         return self._to_record(row)
 
+    @override
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
         row = self._session.get(_orm.ModeloRow, record_id)
@@ -163,11 +168,13 @@ class ModeloRepository(SqlRecordRepository[ModeloCatalogueRecord]):
 class PortalRepository(SqlRecordRepository[PortalRecord]):
     """Repository for :class:`PortalRecord`."""
 
+    @override
     def list_all(self) -> list[PortalRecord]:
         """Return every :class:`PortalRecord` in the table, ordered by surrogate id."""
         rows = self._session.execute(select(_orm.PortalOrmRow).order_by(_orm.PortalOrmRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
+    @override
     def get(self, record_id: int) -> PortalRecord:
         """Return the record with surrogate id ``record_id``.
 
@@ -185,6 +192,7 @@ class PortalRepository(SqlRecordRepository[PortalRecord]):
             raise RepositoryError(f"portal id={record_id} not found")
         return self._to_record(row)
 
+    @override
     def upsert(self, record: PortalRecord) -> PortalRecord:
         """Insert or update ``record`` and return the persisted :class:`PortalRecord`."""
         row: _orm.PortalOrmRow | None = None
@@ -214,6 +222,7 @@ class PortalRepository(SqlRecordRepository[PortalRecord]):
         _flush_or_wrap(self._session, "portal")
         return self._to_record(row)
 
+    @override
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
         row = self._session.get(_orm.PortalOrmRow, record_id)
@@ -243,11 +252,13 @@ class PortalRepository(SqlRecordRepository[PortalRecord]):
 class CorpusArtifactRepository(SqlRecordRepository[CorpusArtifactRecord]):
     """Repository for :class:`CorpusArtifactRecord`."""
 
+    @override
     def list_all(self) -> list[CorpusArtifactRecord]:
         """Return every :class:`CorpusArtifactRecord` in the table, ordered by surrogate id."""
         rows = self._session.execute(select(_orm.CorpusArtifactRow).order_by(_orm.CorpusArtifactRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
+    @override
     def get(self, record_id: int) -> CorpusArtifactRecord:
         """Return the record with surrogate id ``record_id``.
 
@@ -265,6 +276,7 @@ class CorpusArtifactRepository(SqlRecordRepository[CorpusArtifactRecord]):
             raise RepositoryError(f"corpus_artifact id={record_id} not found")
         return self._to_record(row)
 
+    @override
     def upsert(self, record: CorpusArtifactRecord) -> CorpusArtifactRecord:
         """Insert or update ``record`` and return the persisted :class:`CorpusArtifactRecord`."""
         row: _orm.CorpusArtifactRow | None = None
@@ -300,6 +312,7 @@ class CorpusArtifactRepository(SqlRecordRepository[CorpusArtifactRecord]):
         _flush_or_wrap(self._session, "corpus_artifact")
         return self._to_record(row)
 
+    @override
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
         row = self._session.get(_orm.CorpusArtifactRow, record_id)

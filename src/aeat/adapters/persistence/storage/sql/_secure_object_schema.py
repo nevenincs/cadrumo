@@ -196,7 +196,7 @@ def database_bytes(value: object) -> bytes:
         return bytes(value)
     if isinstance(value, str):
         return value.encode(UTF_8_ENCODING)
-    return bytes(value)
+    raise TypeError(f"database_bytes: expected bytes-like or str, found {type(value).__name__}")
 
 
 def database_datetime(value: object) -> datetime:
