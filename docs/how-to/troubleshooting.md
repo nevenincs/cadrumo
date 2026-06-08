@@ -83,7 +83,8 @@ aeat config auth test
 Probe browser and Sede reachability with a read-only check:
 
 ```
-aeat config repair connectivity --target browser
+aeat config repair connectivity
+
 ```
 
 ## Where next
