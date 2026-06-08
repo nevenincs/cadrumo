@@ -183,8 +183,10 @@ period.
 For task-focused procedures, read the [how-to guides](../how-to/index.md). To
 understand the advanced filing workspace and revision model, read
 [How filings, work units, and calculation revisions fit together](../how-to/filing-spine.md).
+For the underlying concepts, read [How calculations work](../explanation/ledger-to-calculation.md).
 For manual casilla values, offsets, and binding mechanics, read
 [Review and supply calculation inputs](../how-to/review-calculation-values.md).
 
 If a command stops or the local state looks wrong, use
 [Diagnose and repair your local setup](../how-to/troubleshooting.md).
+
