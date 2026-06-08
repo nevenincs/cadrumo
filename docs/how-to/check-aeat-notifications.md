@@ -1,8 +1,9 @@
 # Check AEAT notifications and live observations
 
-Use this guide to review and capture read-only live AEAT observations, DEHu notifications, filed declaration history, NIF verifications, and other live tax-authority states. 
-
-All live commands in `aeat` are strictly read-only and local-first: they download and persist snapshots for local review and calculations. None of these commands submit filings, modify AEAT records, or register changes.
+Use this guide to download and review read-only information from AEAT: official
+notifications, declaration history, filed returns, and your IVA compensation
+balance. All commands in this section download data and save it locally. None
+of them file anything or change your AEAT records.
 
 ## Before you start
 
@@ -13,24 +14,19 @@ You need:
 
 ---
 
-## 1. DEHu Notifications (`aeat app live notifications`)
+## 1. Official AEAT notifications (DEHu)
 
-Capture and inspect DEHu notifications.
-
-### Capture a fresh snapshot
-To live-fetch notifications and save them under the active profile's bucket:
+DEHu is the official AEAT electronic inbox for notifications (comunicaciones
+and notificaciones). Download your notifications and save them locally:
 ```bash
 aeat app live notifications capture
 ```
-This runs the AEAT authentication preflight and downloads a snapshot containing certificate IDs, concepts, taxpayer names/identifiers, emission dates, read states, and source URLs.
-
-### List and view snapshots
-List saved snapshots:
+Download your current DEHu notifications:
 ```bash
 aeat app live notifications list
 ```
 
-View a specific snapshot by its ID or unambiguous prefix:
+View a specific saved download by its reference number:
 ```bash
 aeat app live notifications view <snapshot-id>
 ```
@@ -42,29 +38,30 @@ aeat app live notifications latest
 
 ---
 
-## 2. AEAT Expedientes (`aeat app live expedientes`)
+## 2. Declaration history (expedientes)
 
-Walk the AEAT declaration register to query the status and presentation history of tax returns.
+Expedientes are the official AEAT record of your past declarations — each
+filed return for each modelo and year, with its status and filing date.
 
-### Capture expedientes
-To capture the expedientes for a specific modelo and year:
+Download the declaration history for a specific form and year:
 ```bash
 aeat app live expedientes capture --modelo 100 --year 2026
 ```
 
-To capture expedientes for a range of years:
+Download history for a range of years:
+
 ```bash
 aeat app live expedientes capture-all --from-year 2020 --to-year 2026 --modelo 303
 ```
-*(Omit `--modelo` to capture expedientes for all registered modelos).*
 
-### List and view expedientes
-List saved expedientes snapshots:
+Leave out `--modelo` to download history for all your registered forms.
+
+List saved downloads:
 ```bash
 aeat app live expedientes list
 ```
 
-View a specific snapshot's details (individual declarations, status, dates, and justificante links):
+View a specific download's details (individual declarations, status, dates, and links to justificantes):
 ```bash
 aeat app live expedientes view <snapshot-id>
 ```
@@ -76,57 +73,55 @@ aeat app live expedientes latest
 
 ---
 
-## 3. Filed Declarations (`aeat app live filed`)
+## 3. Filed declaration detail
 
-Inspect the detailed contents of previously filed declarations from the AEAT.
+Download the box-by-box values from a return you have already filed with AEAT.
 
-### List filed returns
-List filed declarations without downloading full payloads:
+List filed returns without downloading their full contents:
 ```bash
 aeat app live filed list --modelo 303 --from-year 2020 --to-year 2026
 ```
 
-### Capture filed declaration data
-Download and persist detailed observations from a filed return:
+Download and save the full box values from a specific filed return:
 ```bash
 aeat app live filed capture --modelo 303 --year 2026 --period 1T
 ```
 
-Capture all filed returns across a year range:
+Download all filed returns across a year range:
 ```bash
 aeat app live filed capture-all --from-year 2020 --to-year 2026
 ```
 
-Capture the required source declarations needed by a target filing's dependencies:
+Download the source declarations that a target filing depends on (for example,
+download the Modelo 303 returns that a Modelo 390 annual summary needs):
 ```bash
 aeat app live filed capture-sources --modelo 303 --year 2026 --period 1T
 ```
 
 ---
 
-## 4. NIF and Intra-community VAT Verification (`aeat app live verify`)
+## 4. NIF and EU VAT verification
 
-Query intra-community NIF-IVA registries and Spanish ROI/VIES (GROI) registrations.
+Verify whether a NIF is registered for intra-EU VAT purposes (the VIES
+register), or check a Spanish NIF in the Spanish ROI register.
 
-### Live verification checks
-Verify an intra-community VAT NIF via AEAT IXVI:
+Check whether a foreign EU VAT number is valid:
 ```bash
 aeat app live verify nif-iva ESB12345678
 ```
 
-Verify a Spanish NIF/NIE registration via ROI/VIES (GROI):
+Check whether a Spanish NIF or NIE appears in the Spanish ROI register:
 ```bash
 aeat app live verify tgvi 12345678A
 ```
-*(Optional: Use `--expected valid|invalid|unknown` to verify against an expected verdict).*
+Use `--expected valid|invalid|unknown` to compare against an expected result.
 
-### Audit log verification
-List local verification logs:
+List past verifications you have run:
 ```bash
 aeat app live verify list --surface tgvi
 ```
 
-View a specific verification audit entry:
+View details of a specific verification:
 ```bash
 aeat app live verify view <observation-id>
 ```
@@ -138,11 +133,10 @@ aeat app live verify latest --surface nif_iva --nif ESB12345678
 
 ---
 
-## 5. AEAT Portals Catalogue (`aeat app live portals`)
+## 5. Official AEAT portal catalogue
 
-Inspect the local database of official AEAT portal URLs and their required auth methods.
-
-### List portals
+View the list of official AEAT online portals the tool knows about and their
+authentication requirements:
 ```bash
 aeat app live portals list --category sede_modelo --modelo 303
 ```
@@ -154,17 +148,16 @@ aeat app live portals view <portal-id>
 
 ---
 
-## 6. Borrador Snapshots (`aeat app live borrador`)
+## 6. Borrador (draft Modelo 100)
 
-Manage local snapshots of Modelo 100 draft (borrador) filings.
+The borrador is the pre-calculated Modelo 100 IRPF draft that AEAT makes
+available to wage earners. Download and view borrador snapshots:
 
-### List and view drafts
-List saved drafts:
 ```bash
 aeat app live borrador 100 list --state active
 ```
 
-View a specific draft's details and casilla binding values:
+View a specific borrador's box values:
 ```bash
 aeat app live borrador 100 view <snapshot-id>
 ```
@@ -176,18 +169,18 @@ aeat app live borrador 100 latest --filing-year 2026
 
 ---
 
-## 7. IVA Compensation Wallet (`aeat app live iva-wallet`)
+## 7. IVA compensation balance
 
-Manage the history and remote state of your IVA compensation wallet (saldos a compensar).
+Your IVA compensation balance (saldo a compensar) is the amount of overpaid
+IVA from prior quarters that can be deducted from future Modelo 303 filings.
+Download and track your current balance:
 
-### Pull active wallet state
-Download and persist the current IVA wallet state:
 ```bash
 aeat app live iva-wallet pull --year 2026 --period 4T
 ```
 
-### Remote history capture
-Capture past Modelo 303 filings to reconstruct the local wallet history:
+Reconstruct the history of past IVA compensation decisions from prior Modelo
+303 filings:
 ```bash
 aeat app live iva-wallet capture-history --from-year 2020 --to-year 2026
 ```
