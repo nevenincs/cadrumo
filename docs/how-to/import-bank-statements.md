@@ -1,14 +1,13 @@
 # Work with Transactions
 
-Use this guide when your ledger is not ready yet. It is the transaction
-quickstart: import rows, add a missing row by hand, review and export the
-ledger, correct rows, attach references, split or merge rows, then hand the
-ledger to classification and calculation.
+Use this guide to bring your bank movements into aeat so they can feed your
+tax calculations. Import your bank statement, add any missing transactions by
+hand, review and correct them, then hand them to classification before running
+a calculation.
 
-The ledger is local to the active taxpayer profile. `aeat` does not
-automatically sync your bank. It imports only when you run an import command,
-and calculation consumes the saved ledger rows that belong to the active
-profile.
+Your bank records are not added automatically. aeat imports only when you run
+an import command. Tax calculations use the transactions you have saved under
+the active profile.
 
 ## Before you start
 
@@ -62,8 +61,9 @@ with `--source`:
 aeat app ledger import ./processed.csv --provider csv --verify --source ./statement.csv
 ```
 
-Use `--period` only when you intentionally want to tag the import with a fiscal
-period.
+Use `--period` only when you intentionally want to label the import with a
+fiscal period. Leave it out — aeat assigns the period from each transaction's
+date automatically.
 
 ## Add one transaction manually
 
@@ -73,10 +73,9 @@ Use `ledger add` when a transaction is missing from imported statements:
 aeat app ledger add --date 2026-03-15 --amount=-49.99 --direction OUTGOING --description "Software subscription"
 ```
 
-Required fields are date, signed amount, direction, and description. Optional
-fields include value date, currency, counterparty, classification, business
-percentage, category id, taxable base, IVA rate, IVA amount, IRPF category,
-notes, and source jurisdiction.
+Required fields are date, amount (`-` prefix for expenses, no prefix for
+income), direction, and description. `OUTGOING` is for expenses — money
+you paid out. `INCOMING` is for income — money you received.
 
 For a received payment or issued invoice, use `INCOMING`:
 
@@ -84,7 +83,7 @@ For a received payment or issued invoice, use `INCOMING`:
 aeat app ledger add --date 2026-03-20 --amount 121.00 --direction INCOMING --description "Client payment"
 ```
 
-For an expense or incoming supplier invoice, use `OUTGOING`:
+For an expense or supplier invoice, use `OUTGOING`:
 
 ```bash
 aeat app ledger add --date 2026-03-21 --amount=-60.50 --direction OUTGOING --description "Office supplies"
@@ -103,23 +102,10 @@ customer invoices owed to you.
 
 ## Understand transaction fields
 
-`ledger view` and `ledger export` use the same core ledger fields:
-
-- identity and status: `transaction_id`, `bucket_id`, `lifecycle_state`
-- dates: `booked_date`, `value_date`, `effective_date`
-- money: `amount`, `currency`, `value_in_eur`, `fx_rate`
-- movement: `direction`, `counterparty`, `description`, `source_jurisdiction`
-- classification: `business_classification`, `business_pct`, `category_id`
-- IVA and IRPF: `taxable_base`, `iva_rate`, `iva_amount`, `irpf_category`
-- proportionality: `usage_ratio_id`, `prorrata_reference`
-- evidence and notes: `purchase_invoice_evidence_id`, `attachment_ids`,
-  `notes`, `created_by`, `created_source_command`
-
 Use [Classify transactions](classify-transactions.md) for category, IVA, IRPF,
 and shared-expense decisions. Use
 [Review and supply calculation inputs](review-calculation-values.md) when a
-modelo calculation says a casilla, binding, offset, or manual value is still
-missing.
+calculation tells you a field is missing.
 
 ## Review rows
 
@@ -200,23 +186,25 @@ Add or modify notes when you need a short operator explanation:
 aeat app ledger update --id <transaction-id> --notes "Receipt checked against supplier PDF"
 ```
 
-Attach secure purchase evidence or a stored attachment id when you already have
-one:
+Attach secure purchase evidence, link an invoice, or bind a stored attachment id:
 
 ```bash
+# Attach purchase evidence or other attachment files to a transaction
 aeat app ledger attach --id <transaction-id> --purchase-invoice-evidence-id <evidence-id>
 aeat app ledger attach --id <transaction-id> --attachment-id <attachment-id>
+
+# Link a transaction bidirectionally with an invoice and/or purchase evidence in one command
+aeat app ledger link --id <transaction-id> --invoice-id <invoice-id> --evidence-id <evidence-id>
 ```
 
-Record a Gmail, Google Drive, or URL reference without downloading the remote
-document:
+Record a link to a Gmail, Google Drive, or URL without copying the file:
 
 ```bash
 aeat app ledger doclink --id <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
 ```
 
-`doclink` stores the link reference locally and binds it to the row. It never
-fetches the remote document.
+The link is saved with the transaction. aeat does not access or download the
+file.
 
 ## Split and re-join a transaction
 
@@ -228,8 +216,8 @@ into software and personal parts:
 aeat app ledger split --id <transaction-id> --child-amount=-100.00 --child-description "Software business part" --child-amount=-21.00 --child-description "Personal part" --reason "mixed receipt" --yes
 ```
 
-The command creates child transactions and records split lineage. Then classify
-each child:
+aeat replaces the original transaction with two separate entries — one for
+each part. Classify each one separately:
 
 ```bash
 aeat app ledger classify --id <business-child-id> --classification BUSINESS --category-id <category-id>
@@ -242,29 +230,32 @@ If the split was wrong, merge the complete child cohort:
 aeat app ledger merge --child-id <business-child-id> --child-id <personal-child-id> --reason "undo split" --yes
 ```
 
-Partial merges are refused; provide every child from the split group.
+You must include all the parts you split — aeat will not let you re-merge only
+some of them.
 
-## Remove, archive, or stash a row
+## Remove, archive, stash, or reset ledger rows
 
 Use the least destructive action that matches the problem:
 
-- `archive` when a row should stay in local history but no longer be part of
-  ordinary work.
-- `stash` when a row should be set aside for later review.
-- `remove` when the row should be deleted from the active ledger.
+- `archive` — keep the transaction in your history but exclude it from ordinary
+  work. Use this when a movement was imported by mistake but you want to keep a
+  record of it.
+- `stash` — temporarily hide a transaction you are not sure about. You can
+  restore it later.
+- `remove` — delete the transaction from your active records.
+- `reset` — clear the entire transaction list for the active profile and start
+  over. **Use with care — this removes all imported data.**
 
 Examples:
 
 ```bash
 aeat app ledger archive --id <transaction-id> --reason "duplicate imported row" --yes
 aeat app ledger stash --id <transaction-id> --reason "waiting for invoice" --yes
-aeat app ledger remove --id <transaction-id> --reason "wrong file imported" --dry-run
 aeat app ledger remove --id <transaction-id> --reason "wrong file imported" --yes
+aeat app ledger reset --reason "re-importing all statements" --yes
 ```
 
-`remove --dry-run` reports effects without deleting the row. `archive`,
-`stash`, and confirmed `remove` are local ledger changes; they do not contact
-AEAT.
+`remove --dry-run` and `reset --dry-run` report the effects without modifying the storage. These commands are entirely local ledger changes and never contact the AEAT.
 
 ## Classify rows
 

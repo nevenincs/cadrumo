@@ -1,7 +1,7 @@
 # How filings, work units, and calculation revisions fit together
 
-Use this guide when you already know the basic modelo flow and want to
-understand what `aeat` saves between commands.
+Use this guide after completing the quickstart if you want to understand how
+the tool organises and stores your filing work between steps.
 
 The common command-line interface is the same one used in the quickstart:
 
@@ -47,23 +47,15 @@ the existing saved work for that filing.
 
 ## How the visible target becomes an ID
 
-`aeat` stores each saved filing workspace under a `work_unit_id`. This ID is not
-a UUID and not a workflow run ID. It is a 64-character SHA-256 identifier.
+The tool assigns a unique reference number to each filing workspace. For most
+use you do not need to know or remember it — the tool finds your work
+automatically from the modelo, year, and period you type.
 
-The ID is derived from:
+The tool knows which version of the official tax rules applies to each form and
+period. You do not need to choose this manually. Use `--revision` only when
+support or an error message asks you to target a specific ruleset version.
 
-- the active profile's storage bucket
-- the modelo
-- the filing year
-- the period
-- the registry revision for that modelo and period
-
-The registry revision is the ruleset `aeat` uses for that modelo period. For
-most commands you do not need to choose it. `aeat` resolves it from the modelo,
-year, and period. Use `--revision` only when you need to target a specific
-registry revision.
-
-To see the saved work ID, list or inspect work:
+To see the reference number for a saved filing:
 
 ```bash
 aeat app modelo work list
@@ -78,9 +70,8 @@ aeat app modelo work calculate <work-unit-id>
 aeat app modelo work revisions <work-unit-id>
 ```
 
-Prefer the visible target for hand-run commands. Use the ID when an automation
-has already stored it, or when `aeat` reports that more than one saved work item
-matches the same modelo, year, and period.
+Prefer the visible target for hand-run commands. Use the reference number when
+aeat reports that more than one filing matches the same modelo, year, and period.
 
 ## What a work unit is
 
@@ -94,12 +85,11 @@ For example, this command creates or reuses the work unit for Modelo 303 Q1
 aeat app modelo work create --modelo 303 --year 2026 --period 1T
 ```
 
-The work unit stores filing-level metadata. It also points to important saved
-records, such as:
+The tool keeps a record of your filing work. That record links to:
 
-- the current calculation revision
-- the filed calculation revision, if you marked one as filed locally
-- the current local filing record, if one exists
+- the latest calculated draft
+- the verified draft, if you have verified one
+- the filed record, if you have marked one as filed locally
 
 No separate command "switches" the current work unit. The active profile is
 global, but the filing work is selected on each command. To work on a different
@@ -120,10 +110,10 @@ When you run calculate, `aeat` saves a draft calculation revision:
 aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
 ```
 
-Re-running calculation does not edit the old result. It saves another revision,
-or reuses the same one if the inputs and outputs are identical. The work unit's
-current calculation pointer moves to the draft that the command saved or
-reused.
+Running calculation again does not overwrite the old result. If your
+transactions or manual values changed, the tool creates a new saved calculation.
+If nothing changed, it reuses the same result. The tool updates your filing
+record to reflect the latest calculated draft.
 
 List the saved calculation revisions for a filing:
 
@@ -137,21 +127,19 @@ Show the current revision's persisted values:
 aeat app modelo work revision --modelo 303 --year 2026 --period 1T
 ```
 
-If you need to inspect one exact calculation, pass its
-`calculation_revision_id`:
+If you need to view one specific saved calculation, type its reference number
+after the command:
 
 ```bash
 aeat app modelo work revision <calculation-revision-id>
 ```
 
-Do not confuse the IDs:
+Reference numbers to know:
 
-- `work_unit_id` identifies the saved filing workspace
-- `calculation_revision_id` identifies one saved calculation result
-- registry revision ID identifies the modelo ruleset, such as
-  `2019-y-siguientes`
-- workflow run ID identifies an interrupted workflow run, not a filing or a
-  calculation
+- the filing workspace reference — from `aeat app modelo work list`
+- the saved calculation reference — from `aeat app modelo work revisions`
+- the rules version reference — shown in status output; you rarely need this
+- a run reference — only appears when a command was interrupted mid-way
 
 ## How verify, file, and export choose a revision
 
@@ -179,8 +167,12 @@ current verified revision:
 aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
 ```
 
-These defaults are command-specific. They are not a general "latest revision"
-rule.
+Each command automatically picks the most appropriate saved calculation:
+
+- `verify` uses the latest draft
+- `file` uses the latest verified draft
+- `export` uses whichever was marked as filed; if none was filed, it uses the
+  verified draft
 
 If you need a different saved calculation, use `--select` with the visible
 target:
@@ -201,20 +193,62 @@ aeat app modelo export <work-unit-id> --revision <calculation-revision-id> --out
 
 For the complete option list, see the [CLI reference](../cli/index.rst).
 
+## Rename, discard, or inspect lifecycle history
+
+Manage or review the lifecycle of a work unit as it progresses:
+
+- `rename`: Add or update a friendly display name for the work unit:
+  
+  ```bash
+  aeat app modelo work rename --modelo 303 --year 2026 --period 1T --name "Q1 VAT draft"
+  ```
+
+- `history`: Review all actions the tool has taken on this filing, in order:
+  
+  ```bash
+  aeat app modelo work history --modelo 303 --year 2026 --period 1T
+  ```
+
+- `discard`: Mark the filing workspace as discarded. The tool records this
+  action in the history log. Use this if you created the workspace by mistake
+  or want to replace it with a fresh one:
+  
+  ```bash
+  aeat app modelo work discard --modelo 303 --year 2026 --period 1T --reason "re-creating with correct revision" --yes
+  ```
+  
+  The `--reason` text is for your own records only. It is not sent to AEAT.
+
+## List and resume interrupted execution flows
+
+If a command was interrupted halfway through (for example, because your
+connection dropped while the tool was reading live AEAT data), you can check
+and restart it:
+
+- `runs`: List recent flow runs, from most recent to oldest:
+  
+  ```bash
+  aeat app modelo work runs
+  ```
+
+- `resume`: Restart an interrupted command using the filing details or the
+  reference number shown in the error message:
+  
+  ```bash
+  aeat app modelo work resume --modelo 303 --year 2026 --period 1T
+  aeat app modelo work resume <run-id-or-work-unit-id>
+  ```
+
 ## When to use exact IDs
 
-Use modelo, year, and period unless you have a reason to be more exact.
+Use modelo, year, and period for all normal work.
 
-Exact IDs are useful when:
+Use the exact reference number when:
 
-- an automation already stored a `work_unit_id` or `calculation_revision_id`
-- you need to replay or inspect one saved calculation
-- the same visible target is ambiguous because multiple active work units match
-- support or audit work needs the exact saved record shown in command output
-
-If a visible target is ambiguous, `aeat` refuses to guess and prints candidate
-work units. Choose one candidate by passing its `work_unit_id`, or narrow the
-target with the registry `--revision` when that is the intended distinction.
+- aeat tells you that more than one filing matches the same modelo, year,
+  and period (aeat refuses to guess; it prints candidates for you to choose)
+- you are replaying or inspecting one specific saved calculation
+- support asks you to share the exact reference number from the command output
 
 ## Next steps
 
