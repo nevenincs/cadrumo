@@ -1,0 +1,12 @@
+[labels]
+"01" = "Bevételek"
+"02" = "Kiadások"
+"03" = "Nettó jövedelem"
+"04" = "Részletfizetés összege"
+"05" = "Korábbi részletfizetések"
+"06" = "Levonások és számlás befizetések"
+"07" = "I. rész részeredménye"
+
+[help]
+"01" = "Az adóévben elért összesített vállalkozási bevétel."
+"02" = "Az adóévben elért összesített vállalkozási kiadás."

@@ -24,15 +24,16 @@ from pathlib import Path
 
 import pytest
 
-import aeat
-
 from .. import ERROR_REGISTRY, AeatError, ErrorCategory, get_registered_error_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _import_all_aeat_modules() -> None:
-    for info in pkgutil.walk_packages(aeat.__path__, prefix="aeat."):
+    from .. import __path__ as errors_path
+
+    aeat_path = [str(Path(errors_path[0]).parent.parent)]
+    for info in pkgutil.walk_packages(aeat_path, prefix="aeat."):
         name = info.name
         if ".tests." in name or ".test_" in name or "._test_" in name:
             continue
