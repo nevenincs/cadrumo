@@ -147,6 +147,8 @@ def test_schema_registry_entries_map_to_live_commands_or_group_callbacks() -> No
     explicitly exempted because they register under a group callback rather than
     a leaf command.
     """
+    from docs.tools.cli_reference import collect_live_leaf_paths_in_subprocess
+
     from aeat.core.json_contract import SCHEMA_REGISTRY
     from aeat.entrypoints.cli import (
         _app_live_payloads,
@@ -163,7 +165,6 @@ def test_schema_registry_entries_map_to_live_commands_or_group_callbacks() -> No
         _google_payloads,
         _profile_censo_payloads,
     )
-    from docs.tools.cli_reference import collect_live_leaf_paths_in_subprocess
 
     live_keys = set(collect_live_leaf_paths_in_subprocess())
     registry_keys = set(SCHEMA_REGISTRY.keys())
@@ -189,6 +190,8 @@ def test_every_live_leaf_has_a_registered_schema() -> None:
     generated reference docs are not consulted here so the gate is independent
     of the drift check.
     """
+    from docs.tools.cli_reference import collect_live_leaf_paths_in_subprocess
+
     from aeat.core.json_contract import SCHEMA_REGISTRY
     from aeat.entrypoints.cli import (
         _app_live_payloads,
@@ -205,7 +208,6 @@ def test_every_live_leaf_has_a_registered_schema() -> None:
         _google_payloads,
         _profile_censo_payloads,
     )
-    from docs.tools.cli_reference import collect_live_leaf_paths_in_subprocess
 
     live_keys = set(collect_live_leaf_paths_in_subprocess())
     registry_keys = set(SCHEMA_REGISTRY.keys())

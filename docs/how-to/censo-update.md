@@ -17,7 +17,7 @@ AEAT, and do not modify AEAT records.
 You need:
 
 - an active taxpayer profile; see [Set up your taxpayer profile](profile-setup.md)
-- the taxpayer's DNI, NIE, NIF, or CIF saved in that profile
+- the taxpayer's fiscal ID (NIF, CIF, DNI, NIE, or NII) saved in that profile
 - AEAT authentication configured for read-only live access; see
   [Authenticate with AEAT](authenticate-with-aeat.md)
 

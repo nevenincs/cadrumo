@@ -20,6 +20,11 @@ Submodules
    aeat.adapters.outbound.aeat.sede._censo
    aeat.adapters.outbound.aeat.sede._censo_live
    aeat.adapters.outbound.aeat.sede._declarations
+   aeat.adapters.outbound.aeat.sede._declarations_diagnostics
+   aeat.adapters.outbound.aeat.sede._declarations_listbox
+   aeat.adapters.outbound.aeat.sede._declarations_observations
+   aeat.adapters.outbound.aeat.sede._declarations_remote
+   aeat.adapters.outbound.aeat.sede._declarations_schema
    aeat.adapters.outbound.aeat.sede._errors
    aeat.adapters.outbound.aeat.sede._groi_check
    aeat.adapters.outbound.aeat.sede._iva_compensation_wallet

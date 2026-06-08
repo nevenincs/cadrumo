@@ -187,7 +187,7 @@ def _collect_commands(
 
     def _walk(cmd: click.Command, path: tuple[str, ...]) -> None:
         result[path] = cmd
-        if isinstance(cmd, click.Group):
+        if isinstance(cmd, click.Group) or hasattr(cmd, "list_commands"):
             with click.Context(cmd, info_name=cmd.name or None) as ctx:
                 for child_name in cmd.list_commands(ctx):
                     child = cmd.get_command(ctx, child_name)
@@ -215,7 +215,9 @@ def _collect_leaf_paths(
     import click
 
     all_nodes = _collect_commands(root)
-    leaves = [path for path, cmd in all_nodes.items() if not isinstance(cmd, click.Group)]
+    leaves = [
+        path for path, cmd in all_nodes.items() if not (isinstance(cmd, click.Group) or hasattr(cmd, "list_commands"))
+    ]
     return sorted(leaves)
 
 
@@ -485,10 +487,7 @@ def _render_index_page(
 
     parts.append(_rst_heading("Use this page when you need", "-"))
     parts.append("\n")
-    parts.append(
-        "* :ref:`Global flags <cli-reference-global-flags>` accepted by every"
-        " ``aeat`` invocation.\n"
-    )
+    parts.append("* :ref:`Global flags <cli-reference-global-flags>` accepted by every ``aeat`` invocation.\n")
     parts.append("* :ref:`Exit codes <cli-reference-exit-codes>` for automation and shell scripts.\n")
     parts.append(
         "* :ref:`TTY and JSON behavior <cli-reference-output-contract>` when switching"
@@ -719,7 +718,7 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
     # Identify leaf paths per family.
     leaf_paths_by_family: dict[str, list[tuple[str, ...]]] = {}
     for path, cmd in sorted(all_nodes.items()):
-        if isinstance(cmd, click.Group):
+        if isinstance(cmd, click.Group) or hasattr(cmd, "list_commands"):
             continue
         # path = ("aeat", family, ...)
         if len(path) < 2:

@@ -88,6 +88,7 @@ dependencies = [
   # localise AEAT timestamps to Europe/Madrid).
   "tzdata>=2026.2 ; sys_platform == 'win32'",
   "xlrd>=2.0.1,<3",
+  "torch>=2.4",
 ]
 
 [project.scripts]
@@ -127,6 +128,18 @@ override-dependencies = [
   "tree-sitter-language-pack<1.6.2",
 ]
 
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+    {index = "pytorch-cu130", marker = "sys_platform == 'linux' or sys_platform == 'win32'"},
+]
+
+[tool.vaultspec-rag]
+managed-torch-direct-dependency = true
 [dependency-groups]
 dev = [
   # Dependency declaration drift: missing, unused, transitive, and misplaced deps.
@@ -275,6 +288,8 @@ convention = "google"
 "src/aeat/**/conftest.py" = ["D"]
 # Sphinx build configuration is tooling, not the documented package API.
 "docs/conf.py" = ["D"]
+# docs/tools/ holds contributor-only documentation tools and tests.
+"docs/tools/**/*.py" = ["T20", "D", "E402"]
 # `tools/` and `scripts/` hold contributor-only one-shot scripts and
 # generators; print() is the canonical CLI output surface for these.
 "tools/**/*.py" = ["T20"]

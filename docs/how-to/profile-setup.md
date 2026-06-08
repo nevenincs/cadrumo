@@ -90,7 +90,7 @@ legal-entity form applies to legal entities.
 
 `--irpf-income-categories`
 : Use this for a natural person (individual taxpayer). Repeat it for each IRPF income category that applies:
-  * `actividad_economica` — Business or professional activity (self-employed/autónomo income)
+  * `actividad_economica` — Business or professional activity (such as individual freelancer, company economic activity, or sole proprietor income)
   * `trabajo` — Salaried employment (ordinary payroll income)
   * `capital_inmobiliario` — Real estate rental income (renting out houses, flats, or premises)
   * `capital_mobiliario` — Investment income (dividends, bank interest, etc.)
@@ -109,9 +109,10 @@ legal-entity form applies to legal entities.
 ### Identity and Display
 
 `--tax-id`
-: The taxpayer identifier. Spanish citizens usually use DNI/NIF, foreign
-  individuals use NIE, and companies or other entities use NIF/CIF. This is the
-  only unconditionally required creation flag in non-interactive mode.
+: The taxpayer identifier (NIF, CIF, DNI, NIE, or NII). Spanish citizens use
+  DNI or NIF, foreign individuals use NIE, companies or legal entities use
+  NIF or CIF, and certain foreign entities or EU operators use NII or NIF-IVA.
+  This is the only unconditionally required creation flag in non-interactive mode.
 
 `--name` and `--surnames`
 : The person's name and surnames, or the entity's display name where the
@@ -244,7 +245,7 @@ They influence calendars, applicability checks, and modelo readiness.
 : The taxpayer pays professionals (e.g. business consultants, lawyers, independent freelancers) with withholding. Checking this triggers the obligation to file **Modelo 111**.
 
 `--professional-income-withholding-ge-70pct`
-: At least 70 percent of your professional income has prior tax withholding. **Checking this is very important for autónomos: if at least 70% of your business invoices are issued with IRPF withholding, you are legally exempt from filing and paying the quarterly Modelo 130 payments-on-account.**
+: At least 70 percent of your professional income has prior tax withholding. **Checking this is very important for individual freelancers and sole proprietors: if at least 70% of professional invoices are issued with IRPF withholding, the taxpayer is legally exempt from filing and paying the quarterly Modelo 130 payments-on-account.**
 
 `--pays-rent-with-retencion`
 : The taxpayer pays rent for a business premises or office with tax withholding. Checking this triggers the obligation to file **Modelo 115** (quarterly premise rent withholding).
@@ -301,9 +302,9 @@ They influence calendars, applicability checks, and modelo readiness.
   not store secrets, certificate material, bank credentials, or full personal
   documents here.
 
-## Create a practical autonomo profile
+## Create a practical freelancer profile (Persona Tutorial)
 
-This example creates a minimal natural-person profile with economic activity:
+To make the setup concrete, this tutorial assumes a specific filing persona: Ana Garcia Lopez, an individual freelancer. This example creates a minimal natural-person profile with economic activity:
 
 ```bash
 aeat config profile create ana-2026 --quiet --accept-defaults --entity-type natural_person --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --irpf-income-categories actividad_economica --activity "diseno grafico" --iva-regime GENERAL --tax-residence-ccaa madrid --output-language en

@@ -14,6 +14,7 @@ Submodules
    :maxdepth: 4
 
    aeat.application.calculations._binding_prefill
+   aeat.application.calculations._cross_period_clean_state
    aeat.application.calculations._errors
    aeat.application.calculations._iva_compensation_history
    aeat.application.calculations._iva_wallet_balance

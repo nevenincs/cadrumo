@@ -14,6 +14,13 @@ Submodules
    :maxdepth: 4
 
    aeat.application.ledger._actions
+   aeat.application.ledger._actions_classification
+   aeat.application.ledger._actions_common
+   aeat.application.ledger._actions_export
+   aeat.application.ledger._actions_import
+   aeat.application.ledger._actions_lifecycle
+   aeat.application.ledger._actions_manual
+   aeat.application.ledger._actions_split_merge
    aeat.application.ledger._business_operation_invoice
    aeat.application.ledger._evidence
    aeat.application.ledger._id_resolution
