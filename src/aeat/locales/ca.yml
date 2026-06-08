@@ -1381,8 +1381,9 @@ cli:
         year_help: Exercici fiscal del model (p. ex. 2026)
       casillas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
+        explain_help: 'Incloure el text d''ajuda localitzat a la sortida de text.'
         form_number_help: Filtrar caselles pel número imprès al BOE (p. ex. 46)
-        help: 'Llistar totes les caselles definides per a la revisio d''un model especific.'
+        help: Llistar totes les caselles definides per a la revisio d'un model especific.
         input_kind_help: Filtrar les caselles per tipus d'entrada (manual, bound,
           computed, informational)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
@@ -1406,7 +1407,8 @@ cli:
         model. Emet diferències per casella (any_b - any_a) agrupades per secció.
       describe:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
-        help: 'Mostrar l''estructura detallada, metadades i periodes actius per a un model especific.'
+        help: Mostrar l'estructura detallada, metadades i periodes actius per a un
+          model especific.
         label_bindings: Vinculacions
         label_cadence: Periodicitat
         label_casillas: Caselles
@@ -1459,7 +1461,8 @@ cli:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         explain_help: Inclou legal_refs i source_refs que fonamenten cada fórmula
           a la sortida de text. El payload JSON els porta sempre.
-        help: 'Llistar totes les caselles calculades i les seves formules per a la revisio d''un model especific.'
+        help: Llistar totes les caselles calculades i les seves formules per a la
+          revisio d'un model especific.
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         period_help: Token de periode; per a Modelo 036 usa alta, modificacion o baja;
           exemples periodics inclouen 2026Q1 i 2026-01
@@ -1486,7 +1489,7 @@ cli:
         seed_invalid_amount: L'import inicial ha de ser un decimal vàlid i no negatiu.
         seed_period_help: Període de l'import inicial (p. ex. 2024N4).
       list:
-        help: 'Llistar tots els models tributaris oficials registrats en el sistema.'
+        help: Llistar tots els models tributaris oficials registrats en el sistema.
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
       m036:
         alta_help: Registra una declaració M036 d'alta (inscripció censal inicial)

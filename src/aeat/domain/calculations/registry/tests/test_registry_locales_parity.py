@@ -37,3 +37,31 @@ def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:
     assert casilla_01.get_help("en") == "Total cumulative business income for the tax year."
     assert casilla_01.get_help("ca") == "Ingressos acumulats de l'activitat econòmica."
     assert casilla_01.get_help("hu") == "Az adóévben elért összesített vállalkozási bevétel."
+
+    # Verify Modelo 100 (revision 2024)
+    m100 = next(m for m in modelos if str(m.id) == "100")
+    rev100 = m100.revisions["2024"]
+    casilla_100_01 = next(c for c in rev100.casillas if c.id == "0001")
+    assert casilla_100_01.get_label("en") == "Taxpayer obtaining yield"
+    assert casilla_100_01.get_label("ca") == "Contribuent que obté els rendiments"
+    assert casilla_100_01.get_label("hu") == "Jövedelmet megszerző adózó"
+    assert casilla_100_01.get_help("en") == "Selector for the taxpayer obtaining the business yield."
+
+    # Verify Modelo 200 (revision 2024-y-siguientes)
+    m200 = next(m for m in modelos if str(m.id) == "200")
+    rev200 = m200.revisions["2024-y-siguientes"]
+    casilla_200_01 = next(c for c in rev200.casillas if c.id == "00001")
+    assert casilla_200_01.get_label("en") == "Non-profit entity under special tax regime Title II Law 49/2002"
+    assert casilla_200_01.get_label("ca") == "Entitat sense ànim de lucre acollida al règim fiscal Títol II Llei 49/2002"
+    assert casilla_200_01.get_label("hu") == "Nonprofit szervezet a 49/2002. törvény II. címe szerinti különleges adórendszerben"
+    assert casilla_200_01.get_help("en") == "Flag indicating if the entity is non-profit and subject to the Title II regime of Law 49/2002."
+
+    # Verify Modelo 303 (revision 2023-y-siguientes)
+    m303 = next(m for m in modelos if str(m.id) == "303")
+    rev303 = m303.revisions["2023-y-siguientes"]
+    casilla_303_gen = next(c for c in rev303.casillas if c.id == "iva.repercutido.general")
+    assert casilla_303_gen.get_label("en") == "Output IVA quota at general rate (21%)"
+    assert casilla_303_gen.get_label("ca") == "Quota IVA repercutit al tipus general (21%)"
+    assert casilla_303_gen.get_label("hu") == "Felszámított ÁFA összeg általános kulccsal (21%)"
+    assert casilla_303_gen.get_help("en") == "Total output VAT calculated at the standard rate of 21%."
+

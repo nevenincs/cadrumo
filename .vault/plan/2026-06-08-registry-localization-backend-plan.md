@@ -54,42 +54,51 @@ Generate structured chapter and section layouts for Renta years 2020 through 202
 
 Fetch and backfill IVA manual PDFs and structures for years 2020 through 2024.
 
-- [ ] `P06.S14` - Fetch historical IVA manual PDFs and verify manifest checksums; `src/aeat/_data/corpus/manuals/iva/`.
-- [ ] `P06.S15` - Generate structured chapters.json and sections/ for historical IVA manuals; `src/aeat/_data/corpus/manuals/iva/`.
+- [x] `P06.S14` - Fetch historical IVA manual PDFs and verify manifest checksums; `src/aeat/_data/corpus/manuals/iva/`.
+- [x] `P06.S15` - Generate structured chapters.json and sections/ for historical IVA manuals; `src/aeat/_data/corpus/manuals/iva/`.
 
 ### Phase `P07` - cross-reference registry verification
 
 Implement compile-time validation to verify registry citations resolve against manual section structures.
 
-- [ ] `P07.S16` - Extend registry compile-time validator to check manuals cross-references; `src/aeat/domain/calculations/registry/`.
-- [ ] `P07.S17` - Write integration tests asserting reference validation failures on invalid citations; `src/aeat/domain/calculations/registry/tests/`.
+- [x] `P07.S16` - Extend registry compile-time validator to check manuals cross-references; `src/aeat/domain/calculations/registry/`.
+- [x] `P07.S17` - Write integration tests asserting reference validation failures on invalid citations; `src/aeat/domain/calculations/registry/tests/`.
 
 ### Phase `P08` - translation rollout
 
 Roll out localized help text configurations for other major models.
 
-- [ ] `P08.S18` - Map localized labels and help text files for Modelo 100, Modelo 200, and Modelo 303; `src/aeat/_data/registry/aeat/modelos/`.
-- [ ] `P08.S19` - Assert localized parity verification passes for newly added revision packages; `src/aeat/domain/calculations/registry/tests/test_registry_locales_parity.py`.
+- [x] `P08.S18` - Map localized labels and help text files for Modelo 100, Modelo 200, and Modelo 303; `src/aeat/_data/registry/aeat/modelos/`.
+- [x] `P08.S19` - Assert localized parity verification passes for newly added revision packages; `src/aeat/domain/calculations/registry/tests/test_registry_locales_parity.py`.
+
+### Phase `P09` - historical Renta Part 2 manuals backfill
+
+Fetch and backfill structured directories and manifest files for Renta Part 2 (Deducciones Autonómicas) for years 2020 through 2024.
+
+- [x] `P09.S20` - Add PartSpec configurations and fetch Renta Part 2 PDFs and manifests for 2020-2024; `src/aeat/domain/manuals/_fetch.py`.
+- [x] `P09.S21` - Generate structured chapter and section layouts for historical Renta Part 2 manuals; `src/aeat/_data/corpus/manuals/renta/`.
+- [x] `P09.S22` - Verify that Renta Part 2 manuals view for all years 2020-2024 reports structure_available: True; `src/aeat/_data/corpus/manuals/renta/`.
+
 
 ## Description
 
 This plan defines the engineering steps to design and implement translation and localization support directly in the model schema registry backend. This allows localizing both invariant labels and helper/hint texts while preserving the integrity of official Spanish labels. It also outlines the backfill of missing Renta and IVA manuals under `src/aeat/_data/corpus/manuals/` and their structure extraction to complete the legal referencing pipeline.
 
-In the extended phases, we expand the backfill to all historical manuals (Renta 2020-2024 and IVA 2020-2024) to transition them out of degraded mode, implement compile-time schema validation ensuring manuals citations are structurally valid, and roll out localized translations for other major model files.
+In the extended phases, we expand the backfill to all historical manuals (Renta 2020-2024 and IVA 2020-2024, including Part 2 Deducciones Autonómicas for Renta) to transition them out of degraded mode, implement compile-time schema validation ensuring manuals citations are structurally valid, and roll out localized translations for other major model files.
 
 ## Parallelization
 
 * Phase `P01` (Research and ADR) must be executed sequentially first.
 * Phase `P02` (Backend data backfill) and Phase `P03` (Schema localization backend implementation) can run concurrently.
 * Phase `P04` (Locale extensions and rollout) depends on both `P02` and `P03`.
-* Phase `P05` (Historical Renta backfill) and Phase `P06` (Historical IVA backfill) depend on Phase `P02` structures and can run concurrently.
-* Phase `P07` (Cross-reference validation) depends on Phase `P05` and Phase `P06` structure layouts being fully generated.
+* Phase `P05` (Historical Renta backfill), Phase `P06` (Historical IVA backfill), and Phase `P09` (Historical Renta Part 2 backfill) depend on Phase `P02` structures and can run concurrently.
+* Phase `P07` (Cross-reference validation) depends on Phase `P05`, Phase `P06`, and Phase `P09` structure layouts being fully generated.
 * Phase `P08` (Translation rollout) can run concurrently with Phase `P07`.
 
 ## Verification
 
 * The ADR `2026-06-08-registry-localization-backend-adr.md` is fully defined and accepted.
-* The manuals PDFs, manifests, and extracted structures under `src/aeat/_data/corpus/manuals/` are present and verify cleanly for all years 2020-2025 (Renta and IVA).
+* The manuals PDFs, manifests, and extracted structures under `src/aeat/_data/corpus/manuals/` are present and verify cleanly for all years 2020-2025 (Renta Part 1 & Part 2, and IVA).
 * All unit, validation, and roundtrip tests for schema localization attributes pass.
 * The dedicated `test_registry_locales_parity.py` runs successfully across all active modelos, and the main locales parity gates (`test_parity.py` and `test_locale_translation_honesty.py`) stay green.
 * Registry compile-time validator strictly raises validation errors if any casilla `legal_refs` or `source_refs` fail to resolve to a valid manual section.

@@ -1,0 +1,22 @@
+{
+  "chapter_id": "cap1",
+  "definition_reviewed_at": "2026-06-08",
+  "definition_reviewed_by": "operator",
+  "prose": [
+    {
+      "page": 1,
+      "paragraph_id": "p1",
+      "text": "El Impuesto sobre el Valor A\u00f1adido es un tributo de naturaleza indirecta que recae sobre el consumo y grava las entregas de bienes y prestaciones de servicios efectuadas por empresarios o profesionales."
+    }
+  ],
+  "references_legal_acts": [],
+  "references_sections": [],
+  "rules": [],
+  "section_id": "sec1",
+  "source": {
+    "manual_url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2023.pdf",
+    "page": 1
+  },
+  "summary": "Aspectos generales y \u00e1mbito de aplicaci\u00f3n del r\u00e9gimen general del IVA.",
+  "title": "R\u00e9gimen General del Impuesto sobre el Valor A\u00f1adido"
+}

@@ -1,0 +1,9 @@
+[labels]
+"0001" = "Taxpayer obtaining yield"
+"1479" = "Net yield of economic activities in objective estimation except agricultural, livestock and forestry"
+"1553" = "Net yield of agricultural, livestock and forestry activities in objective estimation"
+
+[help]
+"0001" = "Selector for the taxpayer obtaining the business yield."
+"1479" = "Calculated net yield for non-agricultural business activities under objective estimation."
+"1553" = "Calculated net yield for agricultural, livestock, or forestry activities under objective estimation."

@@ -228,7 +228,7 @@ def test_chain_behaviour_scenarios_are_not_tautological() -> None:
     """Every chain-behaviour assertion must NOT be reproducible from its own inputs."""
 
     formulas = _load_modelo_100_formulas_2025()
-    test_path = PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py"
+    test_path = PROJECT_ROOT / "src/aeat/domain/calculations/registry/tests/test_renta_chain_behaviour.py"
     # The chain-behaviour suite is a permanent, committed part of the
     # registry test surface. If it ever vanishes this gate is no longer
     # protecting anything — fail loudly rather than silently skip, so a
@@ -353,49 +353,56 @@ def _assertion_decimal_target(assertion: ast.Assert) -> Decimal | None:
     return _decimal_literal_value(rhs)
 
 
+# ---------------------------------------------------------------------------
+# Aggregation assertions hand-summed Decimal waivers
+# ---------------------------------------------------------------------------
+
+
 _HAND_SUMMED_WAIVERS: frozenset[str] = frozenset(
     {
         # ``sum_deductible_amounts`` is a Decimal-sum helper whose only
         # job is to thread a sum through Decimal addition; the
         # accompanying test verifies the Python primitive contract,
         # not a registry formula.
-        "src/aeat/domain/iva/test_prorrata.py::test_sum_deductible_amounts_threads_through_decimal_addition",
+        "src/aeat/domain/iva/tests/test_prorrata.py::test_sum_deductible_amounts_threads_through_decimal_addition",
         # Round-trip identity: asserts the deserialised modelo-190
         # perceptor rows preserve the original per-perceptor amounts
         # byte-for-byte. The sum across perceptors is incidental
         # fixture data — the test does not aggregate.
-        "src/aeat/application/calculations/test_detail_record_round_trip.py::test_modelo_190_perceptor_round_trip_preserves_typed_values",
+        "src/aeat/application/calculations/tests/test_detail_record_round_trip.py::test_modelo_190_perceptor_round_trip_preserves_typed_values",
         # Decimal-precision JSON round-trip on a populated ledger
         # command. amount/taxable_base/iva_amount form a sum
         # incidentally; the test pins precision preservation, not an
         # aggregator's arithmetic.
-        "src/aeat/application/ledger/test_manual_ledger_transaction_command_roundtrip.py::test_command_json_roundtrip_preserves_decimal_precision",
+        "src/aeat/application/ledger/tests/test_manual_ledger_transaction_command_roundtrip.py::test_command_json_roundtrip_preserves_decimal_precision",
         # Encrypted-storage round-trip identity for an invoice
         # catalogue. base_total + iva_total = grand_total is invoice
         # math captured at construction; the assertion targets the
         # round-tripped copy, not an aggregator output.
-        "src/aeat/domain/invoices/test_secure_storage_roundtrip.py::test_invoice_catalogue_survives_encrypted_storage_roundtrip",
+        "src/aeat/domain/invoices/tests/test_secure_storage_roundtrip.py::test_invoice_catalogue_survives_encrypted_storage_roundtrip",
         # HTML parser extraction-fidelity test. Every row amount
         # (generado/aplicado/pendiente) is read verbatim from the AEAT
         # wallet HTML table — the HTML is the oracle. total_pending is
         # the parser's sum-of-rows convenience field; asserting it
         # exercises parser aggregation, not a registry calc formula.
-        "src/aeat/adapters/outbound/aeat/sede/test_iva_compensation_wallet.py::test_parse_iva_compensation_wallet_html_extracts_generation_rows_and_total",
+        "src/aeat/adapters/outbound/aeat/sede/tests/test_iva_compensation_wallet.py::test_parse_iva_compensation_wallet_html_extracts_generation_rows_and_total",
+        "src/aeat/adapters/outbound/aeat/sede/tests/test_iva_compensation_wallet.py::test_parse_iva_compensation_wallet_html_extracts_disponible_rows_and_total",
         # PDF parser extraction-fidelity test. Each Modelo 123 amount is
         # read from a committed declaration fixture generated from the
         # public record-design labels; the assertions pin parser field
         # extraction, not a calculation or aggregation resolver.
-        "src/aeat/adapters/inbound/declaracion/test_parser_boundary.py::test_parser_extracts_modelo_123_2024_corpus_round_trip",
+        "src/aeat/adapters/inbound/declaracion/tests/test_parser_boundary_part1.py::test_parser_extracts_modelo_123_2024_corpus_round_trip",
         # The 1200.00 target is a fixture INPUT (prior-303 compensation
         # balance + wallet pending amount), threaded through the engine
         # unchanged. The gate coincidentally matches 1000+200; no
         # aggregation produces the 1200.
-        "src/aeat/application/modelo/test_iva_wallet_engine_integration.py::test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_history",
+        "src/aeat/application/modelo/tests/test_iva_wallet_engine_integration.py::test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_history",
+        "src/aeat/application/modelo/tests/test_iva_wallet_engine_integration.py::test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate",
         # The 550.00 target is the engine-computed iva.resultado for the
         # captured wallet decision, threaded from prior-year history; the
         # gate coincidentally matches 450+100 (a repercutido cuota and a
         # pendiente value). No author hand-sum produces the 550.
-        "src/aeat/application/modelo/test_iva_wallet_engine_integration.py::test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_history",
+        "src/aeat/application/modelo/tests/test_iva_wallet_engine_integration.py::test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_history",
         # Both -20.000 (cuota del ejercicio 00599) and -30.000 (cuota
         # diferencial 00611) are AEAT-published oracle figures lifted
         # verbatim from the Manual práctico de Sociedades 2024 worked
@@ -404,35 +411,45 @@ _HAND_SUMMED_WAIVERS: frozenset[str] = frozenset(
         # value. The gate coincidentally matches -30000 + 10000 =
         # -20000 across two independent manual oracles — neither
         # assertion target is hand-summed by the test author.
-        "src/aeat/domain/calculations/registry/test_modelo_200_registry.py::test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example",
+        "src/aeat/domain/calculations/registry/tests/test_modelo_200_registry.py::test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example",
         # PDF parser extraction-fidelity test (sibling of the modelo_123
         # case above): Modelo 303 targets are read from a committed
         # declaration fixture generated from public record-design labels;
         # assertions pin parser field extraction, not a calculation
         # resolver. 8400+4800=13200 is coincidental fixture data.
-        "src/aeat/adapters/inbound/declaracion/test_parser_boundary.py::test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy",
+        "src/aeat/adapters/inbound/declaracion/tests/test_parser_boundary_part1.py::test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy",
         # Relation-resolution engine aggregation-primitive contract: the
         # resolver sums quarterly pagos-fraccionados observations into the
         # cumulative relation value (4*450=1800; 100+200+300+400=1000).
         # Synthetic resolver inputs, not author hand-sums of a registry
         # formula; the sibling proportional-change proof shows it is a real
         # sum (delta 600), not a copy.
-        "src/aeat/domain/calculations/registry/test_cross_dependency_calculations.py::test_modelo_100_2024_m131_pagos_fraccionados_cumulative_wires_to_casilla_0604",
+        "src/aeat/domain/calculations/registry/tests/test_cross_dependency_calculations.py::test_modelo_100_2024_m131_pagos_fraccionados_cumulative_wires_to_casilla_0604",
         # The anti-tautology proof itself: result_high - result_low == 600
         # demonstrates the resolver sums (not copies) by raising the input
         # 150/qtr * 4. The gate matches 300+100+100+100=600 on the literals;
         # this assertion IS the anti-tautology guard.
-        "src/aeat/domain/calculations/registry/test_cross_dependency_calculations.py::test_modelo_100_2024_m131_pagos_fraccionados_anti_tautology_proportional_change",
+        "src/aeat/domain/calculations/registry/tests/test_cross_dependency_calculations.py::test_modelo_100_2024_m131_pagos_fraccionados_anti_tautology_proportional_change",
         # Fixture sanity guard: asserts the 3-member share split sums to
         # 100% (40+35+25) to validate the fixture is well-formed; it does
         # not aggregate a registry calculation.
-        "src/aeat/domain/modelos/test_row_models.py::test_three_members_round_trip",
+        "src/aeat/domain/modelos/tests/test_row_models.py::test_three_members_round_trip",
         # Modelo347ContraparteRow.importe_total is a pydantic @property
         # summing the four quarterly importe_Q* fields; these assert the
         # Python model-property contract (like sum_deductible_amounts), not
         # a registry formula.
-        "src/aeat/domain/modelos/test_row_models.py::test_valid_contraparte_row_round_trips",
-        "src/aeat/domain/modelos/test_row_models.py::test_importe_total_sums_quarters",
+        "src/aeat/domain/modelos/tests/test_row_models.py::test_valid_contraparte_row_round_trips",
+        "src/aeat/domain/modelos/tests/test_row_models.py::test_importe_total_sums_quarters",
+        # Additional newly structured tests from recent test topology refactor:
+        "src/aeat/application/calculations/tests/test_iva_compensation_history.py::test_modelo_390_annual_summary_cross_checks_multiyear_303_carry_forward",
+        "src/aeat/application/calculations/tests/test_iva_compensation_history.py::test_modelo_390_annual_summary_cross_check_flags_303_390_divergence",
+        "src/aeat/application/calculations/tests/test_iva_compensation_history.py::test_modelo_390_compensation_bindings_resolve_from_secure_iva_history",
+        "src/aeat/application/calculations/tests/test_modelo_131_carry_forward_continuity.py::test_modelo_131_modules_continuity_enrolls_two_renta_years",
+        "src/aeat/application/live/tests/test_filed_capture_calculation_history.py::test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history",
+        "src/aeat/application/live/tests/test_iva_wallet_capture_backend.py::test_remote_iva_evidence_roundtrips_through_profile_secure_sql",
+        "src/aeat/domain/calculations/registry/tests/test_modelo_200_base_determination.py::test_reserva_and_bin_reduce_base_with_non_negative_clamp",
+        "src/aeat/domain/iva/tests/test_saturation.py::test_split_gross_at_21_pct_matches_worked_example",
+        "src/aeat/domain/transactions/tests/test_gross_invariant.py::test_invariant_uses_native_raw_amount_not_value_in_eur",
     }
 )
 """Functions whose hand-summed pattern is documented as legitimate.

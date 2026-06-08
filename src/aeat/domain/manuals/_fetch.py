@@ -59,6 +59,72 @@ _EXTERNAL = Settings.external_constants().aeat
 _MANUAL_BIBLIOTECA_ROOT = f"{_EXTERNAL.domains.sede}{_EXTERNAL.help_pages.manual_practicos_root}"
 
 PART_SPECS: tuple[PartSpec, ...] = (
+    # 2020
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2020,
+        part=ManualPart.PARTE_1,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2020/ManualRenta2020_es_es.pdf",
+    ),
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2020,
+        part=ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2020/ManualRenta2020_Deducciones_Autonomicas_es_es.pdf",
+    ),
+    # 2021
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2021,
+        part=ManualPart.PARTE_1,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2021/ManualRenta2021_es_es.pdf",
+    ),
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2021,
+        part=ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2021/ManualRenta2021_Deducciones_Autonomicas_es_es.pdf",
+    ),
+    # 2022
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2022,
+        part=ManualPart.PARTE_1,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2022/ManualRenta2022_es_es.pdf",
+    ),
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2022,
+        part=ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2022/ManualRenta2022_Deducciones_Autonomicas_es_es.pdf",
+    ),
+    # 2023
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2023,
+        part=ManualPart.PARTE_1,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2023/ManualRenta2023_es_es.pdf",
+    ),
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2023,
+        part=ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2023/ManualRenta2023_Deducciones_Autonomicas_es_es.pdf",
+    ),
+    # 2024
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2024,
+        part=ManualPart.PARTE_1,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2024/ManualRenta2024Tomo1_es_es.pdf",
+    ),
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2024,
+        part=ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2024/ManualRenta2024Tomo2_es_es.pdf",
+    ),
+    # 2025
     PartSpec(
         manual_id=ManualId.RENTA,
         year=2025,
@@ -72,6 +138,36 @@ PART_SPECS: tuple[PartSpec, ...] = (
         source_pdf_url=(
             f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2025-Deducciones-autonomicas/ManualRenta2025Parte2_es_es.pdf"
         ),
+    ),
+    PartSpec(
+        manual_id=ManualId.IVA,
+        year=2020,
+        part=ManualPart.SINGLE,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IVA/Manual_IVA_2020.pdf",
+    ),
+    PartSpec(
+        manual_id=ManualId.IVA,
+        year=2021,
+        part=ManualPart.SINGLE,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IVA/Manual_IVA_2021.pdf",
+    ),
+    PartSpec(
+        manual_id=ManualId.IVA,
+        year=2022,
+        part=ManualPart.SINGLE,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IVA/Manual_IVA_2022.pdf",
+    ),
+    PartSpec(
+        manual_id=ManualId.IVA,
+        year=2023,
+        part=ManualPart.SINGLE,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IVA/Manual_IVA_2023.pdf",
+    ),
+    PartSpec(
+        manual_id=ManualId.IVA,
+        year=2024,
+        part=ManualPart.SINGLE,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IVA/Manual_IVA_2024.pdf",
     ),
     PartSpec(
         manual_id=ManualId.IVA,

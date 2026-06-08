@@ -23,6 +23,19 @@ related:
   - '[[2026-06-08-registry-localization-backend-P05-S12]]'
   - '[[2026-06-08-registry-localization-backend-P05-S13]]'
   - '[[2026-06-08-registry-localization-backend-P05-summary]]'
+  - '[[2026-06-08-registry-localization-backend-P06-S14]]'
+  - '[[2026-06-08-registry-localization-backend-P06-S15]]'
+  - '[[2026-06-08-registry-localization-backend-P06-summary]]'
+  - '[[2026-06-08-registry-localization-backend-P07-S16]]'
+  - '[[2026-06-08-registry-localization-backend-P07-S17]]'
+  - '[[2026-06-08-registry-localization-backend-P07-summary]]'
+  - '[[2026-06-08-registry-localization-backend-P08-S18]]'
+  - '[[2026-06-08-registry-localization-backend-P08-S19]]'
+  - '[[2026-06-08-registry-localization-backend-P08-summary]]'
+  - '[[2026-06-08-registry-localization-backend-P09-S20]]'
+  - '[[2026-06-08-registry-localization-backend-P09-S21]]'
+  - '[[2026-06-08-registry-localization-backend-P09-S22]]'
+  - '[[2026-06-08-registry-localization-backend-P09-summary]]'
   - '[[2026-06-08-registry-localization-backend-adr]]'
   - '[[2026-06-08-registry-localization-backend-plan]]'
   - '[[2026-06-08-registry-localization-backend-research]]'
@@ -58,6 +71,19 @@ Auto-generated index of all documents tagged with `#registry-localization-backen
 - `2026-06-08-registry-localization-backend-P05-S12` - `registry-localization-backend` `P05.S12` execution record
 - `2026-06-08-registry-localization-backend-P05-S13` - `registry-localization-backend` `P05.S13` execution record
 - `2026-06-08-registry-localization-backend-P05-summary` - `registry-localization-backend` `P05` phase summary
+- `2026-06-08-registry-localization-backend-P06-S14` - `registry-localization-backend` `P06.S14` execution record
+- `2026-06-08-registry-localization-backend-P06-S15` - `registry-localization-backend` `P06.S15` execution record
+- `2026-06-08-registry-localization-backend-P06-summary` - `registry-localization-backend` `P06` phase summary
+- `2026-06-08-registry-localization-backend-P07-S16` - `registry-localization-backend` `P07.S16` execution record
+- `2026-06-08-registry-localization-backend-P07-S17` - `registry-localization-backend` `P07.S17` execution record
+- `2026-06-08-registry-localization-backend-P07-summary` - `registry-localization-backend` `P07` phase summary
+- `2026-06-08-registry-localization-backend-P08-S18` - `registry-localization-backend` `P08.S18` execution record
+- `2026-06-08-registry-localization-backend-P08-S19` - `registry-localization-backend` `P08.S19` execution record
+- `2026-06-08-registry-localization-backend-P08-summary` - `registry-localization-backend` `P08` phase summary
+- `2026-06-08-registry-localization-backend-P09-S20` - `registry-localization-backend` `P09.S20` execution record
+- `2026-06-08-registry-localization-backend-P09-S21` - `registry-localization-backend` `P09.S21` execution record
+- `2026-06-08-registry-localization-backend-P09-S22` - `registry-localization-backend` `P09.S22` execution record
+- `2026-06-08-registry-localization-backend-P09-summary` - `registry-localization-backend` `P09` phase summary
 
 ### plan
 
