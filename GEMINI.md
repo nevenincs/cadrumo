@@ -23,6 +23,7 @@ You MUST respect these rules at all times:
 @.agents/rules/aeat-spanish-stem-naming.md
 @.agents/rules/aeat-swarm-audit-cadence.md
 @.agents/rules/aeat-swarm-orchestration.md
+@.agents/rules/aeat-user-docs-hardening.md
 @.agents/rules/aeat-vaultspec-centralisation.md
 @.agents/rules/composition-service-no-parallel-write-path.md
 @.agents/rules/core-struct-docstring-links.md

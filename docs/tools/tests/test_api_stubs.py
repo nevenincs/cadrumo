@@ -15,7 +15,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
 from docs.tools.apidocs import ApiStubManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

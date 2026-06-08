@@ -110,7 +110,7 @@ class ApiStubManager:
             if parts[: len(prefix)] == prefix:
                 return True
 
-        return bool(parts and parts[0] in _EXCLUDED_PACKAGES)
+        return any(part in _EXCLUDED_PACKAGES for part in parts)
 
     def discover_modules(self) -> list[tuple[str, bool]]:
         """Walk ``src_aeat`` and collect ``(dotted_module_name, is_package)`` pairs.
