@@ -154,6 +154,7 @@ def export_ledger_transactions(
         bucket_event_ids=(event.event_id,),
     )
 
+
 def _ledger_export_rows(
     catalogue: TransactionCatalogue,
     *,
@@ -236,4 +237,3 @@ def _ledger_export_id(
 def _transaction_ids_digest(transaction_ids: tuple[str, ...]) -> str:
     encoded = json.dumps(transaction_ids, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
-

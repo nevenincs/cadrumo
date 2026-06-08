@@ -90,8 +90,8 @@ def test_reconcile_invoice_repositories_binds_both_catalogues_to_requested_bucke
         result = reconcile_invoice_repositories(bucket_id=profile.bucket_id, apply=True)
 
         reloaded_invoice = InvoiceCatalogueRepository(bucket_id=profile.bucket_id).load().get(invoice.invoice_id)
-        reloaded_transaction = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load().get(
-            transaction.transaction_id
+        reloaded_transaction = (
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).load().get(transaction.transaction_id)
         )
         assert result.applied == 1
         assert reloaded_invoice is not None

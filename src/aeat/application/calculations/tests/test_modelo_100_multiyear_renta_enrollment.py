@@ -109,9 +109,7 @@ def _snapshot(filing_year: int) -> RegistrySnapshot:
     return resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
 
 
-def _seed_prior_year_saldo(
-    *, source_year: int, saldo: Decimal, obs_repo: CalculationObservationRepository
-) -> None:
+def _seed_prior_year_saldo(*, source_year: int, saldo: Decimal, obs_repo: CalculationObservationRepository) -> None:
     """Record a prior-year M100 end-of-year generated saldo (casilla 1391)."""
     obs_repo.save_observation(
         RegistryModeloObservation(
@@ -184,9 +182,7 @@ def _calculate_100(*, filing_year: int, obs_repo: CalculationObservationReposito
     # the previous_filing carry overlays its real resolved value. profile
     # bindings are deliberately omitted so the profile resolver fills them.
     binding_values: dict[str, Decimal] = {
-        str(binding.id): Decimal("0")
-        for binding in snapshot.revision.bindings
-        if binding.source != "profile"
+        str(binding.id): Decimal("0") for binding in snapshot.revision.bindings if binding.source != "profile"
     }
     binding_values.update(carry)
     relation_values = {str(relation.id): Decimal("0") for relation in snapshot.revision.relations}
@@ -259,9 +255,7 @@ def test_modelo_100_base_liquidable_negativa_enrolls_two_renta_years(tmp_path: P
         _seed_prior_year_saldo(source_year=2024, saldo=_SALDO_BY_SOURCE_YEAR[2024], obs_repo=obs_repo)
 
         revision_n = _calculate_100(filing_year=_YEAR_N, obs_repo=obs_repo)
-        recorder.record_calculation_year(
-            filing_year=_YEAR_N, produced_value_count=len(revision_n.casilla_values)
-        )
+        recorder.record_calculation_year(filing_year=_YEAR_N, produced_value_count=len(revision_n.casilla_values))
 
         revision_n1 = _calculate_100(filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo)
         recorder.record_calculation_year(

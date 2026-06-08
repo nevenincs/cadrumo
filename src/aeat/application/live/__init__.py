@@ -181,11 +181,7 @@ async def capture_expedientes_bulk(
         capture = ExpedientesCapture(
             declarations=tuple(declarations_for_snapshot),
             captured_at=now(),
-            source_url=(
-                "declarations:bulk:"
-                f"modelos={','.join(resolved_modelos)}:"
-                f"ejercicios={year_from}-{year_to}"
-            ),
+            source_url=(f"declarations:bulk:modelos={','.join(resolved_modelos)}:ejercicios={year_from}-{year_to}"),
         )
         persisted = service.capture(bucket_id=bucket_id, capture=capture)
         snapshot_ids.append(persisted.snapshot_id)

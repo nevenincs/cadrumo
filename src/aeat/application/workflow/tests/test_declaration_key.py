@@ -56,9 +56,7 @@ def test_update_declaration_pointer_has_exactly_one_definition() -> None:
     """DB-05: the _engine duplicate was collapsed onto the _models canonical (contract)."""
     hits = _production_def_count("update_declaration_pointer")
     total = sum(hits.values())
-    assert total == 1, (
-        f"expected exactly one update_declaration_pointer definition, found {total}: {hits}"
-    )
+    assert total == 1, f"expected exactly one update_declaration_pointer definition, found {total}: {hits}"
 
 
 def test_declaration_key_period_is_case_insensitive() -> None:

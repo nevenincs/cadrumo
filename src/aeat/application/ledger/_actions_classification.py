@@ -179,9 +179,7 @@ def bulk_classify_from_csv(
                 skipped += 1
                 continue
             replacement, events = prepared
-            working = _replace_transaction(
-                working, old_transaction_id=row.transaction_id, replacement=replacement
-            )
+            working = _replace_transaction(working, old_transaction_id=row.transaction_id, replacement=replacement)
             all_events.extend(events)
             all_event_ids.extend(event.event_id for event in events)
             applied += 1
@@ -361,4 +359,3 @@ def apply_classification_rules(
         applied=tuple(applied_rows),
         bucket_event_ids=tuple(all_event_ids),
     )
-

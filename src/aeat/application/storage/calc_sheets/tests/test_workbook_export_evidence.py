@@ -92,6 +92,7 @@ def _evidence_plan() -> SheetExportPlan:
         ),
     )
 
+
 def test_offline_workbook_renders_evidencia_tab_from_plan_evidence() -> None:
     plan = _evidence_plan()
 

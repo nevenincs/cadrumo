@@ -152,9 +152,7 @@ def test_manual_fact_basis_projection_skips_blank_inputs() -> None:
         }
     )
 
-    assert entries == (
-        ManualFactBasisEntry(casilla="00501", value="140000.00"),
-    )
+    assert entries == (ManualFactBasisEntry(casilla="00501", value="140000.00"),)
 
 
 def test_evidence_coverage_guard_refuses_missing_contributor() -> None:
@@ -184,9 +182,7 @@ def test_evidence_coverage_guard_refuses_missing_contributor() -> None:
 
 def test_empty_contributor_set_is_valid_and_uniform() -> None:
     """A non-ledger modelo carries a valid empty snapshot (uniform shape)."""
-    snap = compute_ledger_filing_snapshot(
-        source_transaction_ids=[], catalogue=_catalogue(), captured_at=_CAPTURED
-    )
+    snap = compute_ledger_filing_snapshot(source_transaction_ids=[], catalogue=_catalogue(), captured_at=_CAPTURED)
     assert snap.rows == ()
     assert len(snap.snapshot_fingerprint) == 64
     verdict = evaluate_ledger_filing_staleness(snap, _catalogue())
@@ -237,9 +233,7 @@ def test_anti_tautology_tampered_fingerprint_surfaces_mismatch() -> None:
     snap = compute_ledger_filing_snapshot(
         source_transaction_ids=[a.transaction_id], catalogue=cat, captured_at=_CAPTURED
     )
-    tampered = snap.model_copy(
-        update={"rows": (snap.rows[0].model_copy(update={"fingerprint": "0" * 64}),)}
-    )
+    tampered = snap.model_copy(update={"rows": (snap.rows[0].model_copy(update={"fingerprint": "0" * 64}),)})
     verdict = evaluate_ledger_filing_staleness(tampered, cat)
     assert verdict.is_stale is True
     assert verdict.changed == (a.transaction_id,)

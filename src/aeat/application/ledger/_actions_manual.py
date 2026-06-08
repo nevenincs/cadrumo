@@ -209,6 +209,7 @@ def attach_manual_transaction_evidence(
         occurred_at=occurred_at,
     )
 
+
 def get_manual_transaction(
     *,
     bucket_id: str,
@@ -640,13 +641,6 @@ def update_manual_transaction_fields(
     )
 
 
-
-
-
-
-
-
-
 def _command_from_patch(
     *,
     bucket_id: str,
@@ -726,6 +720,7 @@ def _command_from_patch(
         source_command=source_command,
         classified_by_override=classified_by_override,
     )
+
 
 def _event_payload(command: ManualLedgerTransactionCommand) -> dict[str, str]:
     payload = {

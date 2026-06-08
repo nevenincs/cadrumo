@@ -82,10 +82,7 @@ def _snapshot_390():
 
 def _source_values(period: str, source_casillas: tuple[str, ...]) -> dict[str, Decimal]:
     period_ordinal = {"1T": 1, "2T": 2, "3T": 3, "4T": 4}[period]
-    return {
-        casilla_id: Decimal(period_ordinal * (index + 1))
-        for index, casilla_id in enumerate(source_casillas)
-    }
+    return {casilla_id: Decimal(period_ordinal * (index + 1)) for index, casilla_id in enumerate(source_casillas)}
 
 
 def _save_source_observation(
@@ -100,8 +97,7 @@ def _save_source_observation(
             filing_year=_M390_YEAR,
             period=period,
             observations=tuple(
-                CasillaObservation(casilla_id=casilla_id, value=value)
-                for casilla_id, value in source_values.items()
+                CasillaObservation(casilla_id=casilla_id, value=value) for casilla_id, value in source_values.items()
             ),
         ),
         source_kind="aeat_sede_justificante",
@@ -127,10 +123,7 @@ def _member_source_values(member_nif: str, source_casillas: tuple[str, ...]) -> 
         _GROUP_MEMBER_B: Decimal("10"),
         _GROUP_MEMBER_C: Decimal("100"),
     }[member_nif]
-    return {
-        casilla_id: member_ordinal * Decimal(index + 1)
-        for index, casilla_id in enumerate(source_casillas)
-    }
+    return {casilla_id: member_ordinal * Decimal(index + 1) for index, casilla_id in enumerate(source_casillas)}
 
 
 def _save_member_322_observation(
@@ -175,8 +168,7 @@ def _seed_member_322_filing(
         state=CalculationRevisionState.PRESENTADO,
         casilla_values=values,
         observations=tuple(
-            CasillaObservation(casilla_id=casilla_id, value=value)
-            for casilla_id, value in values.items()
+            CasillaObservation(casilla_id=casilla_id, value=value) for casilla_id, value in values.items()
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
@@ -188,9 +180,7 @@ def _seed_member_322_filing(
     calculation_repository = CalculationRevisionCatalogueRepository()
     calculation_catalogue = calculation_repository.load()
     calculation_repository.save(
-        CalculationRevisionCatalogue(
-            revisions={**dict(calculation_catalogue.revisions), revision_id: revision}
-        )
+        CalculationRevisionCatalogue(revisions={**dict(calculation_catalogue.revisions), revision_id: revision})
     )
 
     evidence_reference_id = f"JUST-322-{member_nif}"
@@ -360,15 +350,11 @@ def test_cross_period_dependency_inventory_covers_declared_2026_target_modelos(
     )
     assert all(item.dependencies for item in inventory.items)
     assert any(
-        item.target_modelo == "390"
-        and item.target_period == "0A"
-        and item.source_modelos == ("303",)
+        item.target_modelo == "390" and item.target_period == "0A" and item.source_modelos == ("303",)
         for item in inventory.items
     )
     assert any(
-        item.target_modelo == "353"
-        and item.target_period == "12"
-        and item.source_modelos == ("322",)
+        item.target_modelo == "353" and item.target_period == "12" and item.source_modelos == ("322",)
         for item in inventory.items
     )
 
@@ -757,6 +743,5 @@ def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(tm
     assert reloaded is not None
     assert reloaded.state is CalculationRevisionState.BORRADOR
     assert any(
-        finding.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN
-        for finding in report.findings
+        finding.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN for finding in report.findings
     )

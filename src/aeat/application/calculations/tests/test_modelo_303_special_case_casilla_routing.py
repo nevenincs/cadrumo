@@ -193,10 +193,10 @@ def test_recargo_equivalencia_is_surfaced_not_silently_deducted(tmp_path: Path) 
         )
 
     # No declarable deducible observation was produced for the recargo purchase...
-    assert all(
-        obs.category is not IvaCategory.RECARGO_EQUIVALENCIA for obs in report.observations
-    ), "recargo-equivalencia must not yield a declarable IVA observation (non-deductible cost)"
+    assert all(obs.category is not IvaCategory.RECARGO_EQUIVALENCIA for obs in report.observations), (
+        "recargo-equivalencia must not yield a declarable IVA observation (non-deductible cost)"
+    )
     # ...and the exclusion is SURFACED (non-silent) with the unsupported-category reason.
-    assert any(
-        issue.reason is IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_CATEGORY for issue in report.issues
-    ), "recargo-equivalencia exclusion must be surfaced as an UNSUPPORTED_IVA_CATEGORY issue, not silent"
+    assert any(issue.reason is IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_CATEGORY for issue in report.issues), (
+        "recargo-equivalencia exclusion must be surfaced as an UNSUPPORTED_IVA_CATEGORY issue, not silent"
+    )

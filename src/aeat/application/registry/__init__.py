@@ -370,9 +370,7 @@ def verify_filed_state(
     """
     filed_observation = _load_filed_observation(observation_path)
     registry_observation = _registry_observation_from_filed_declaration(filed_observation)
-    source_observations = tuple(
-        _load_filed_observation(path) for path in source_observation_paths
-    )
+    source_observations = tuple(_load_filed_observation(path) for path in source_observation_paths)
     registry_source_observations = tuple(
         _registry_observation_from_filed_declaration(observation) for observation in source_observations
     )

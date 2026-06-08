@@ -455,9 +455,7 @@ def _layout_bindings(
         date_binding_cells[binding_id] = SheetCellAddress.at(TabName.ENTRADAS, entradas_row, value_column)
         binding_rows.append(_BindingRow(binding=binding_id, tab=TabName.ENTRADAS, row=entradas_row, label=binding_id))
         entradas_row += 1
-    return _BindingPlan(
-        binding_cells=binding_cells, binding_rows=binding_rows, date_binding_cells=date_binding_cells
-    )
+    return _BindingPlan(binding_cells=binding_cells, binding_rows=binding_rows, date_binding_cells=date_binding_cells)
 
 
 @dataclass(frozen=True, slots=True)

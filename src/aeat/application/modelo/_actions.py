@@ -206,8 +206,6 @@ resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva
 _resolve_m210_rate = _m210_rate.resolve_m210_rate
 
 
-
-
 __all__ = [
     "AmendmentEvidenceMissingError",
     "AmendmentOverrideCasillaError",
