@@ -139,9 +139,7 @@ def register_export_commands(
 
         try:
             selected_revision = resolve_modelo_revision_for_operator_target(
-                calculation_revision_id=(
-                    validate_calculation_revision_id(revision) if revision is not None else None
-                ),
+                calculation_revision_id=(validate_calculation_revision_id(revision) if revision is not None else None),
                 work_unit_id=validate_work_unit_id(work_unit_id) if work_unit_id is not None else None,
                 modelo=modelo,
                 year=year,

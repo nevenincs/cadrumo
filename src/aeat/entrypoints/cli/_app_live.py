@@ -717,11 +717,7 @@ def _process_command_inventory() -> tuple[_ProcessCommand, ...]:
             powershell = shutil.which("powershell") or shutil.which("pwsh")
             if powershell is None:
                 return ()
-            script = (
-                "Get-CimInstance Win32_Process | "
-                "Select-Object ProcessId,CommandLine | "
-                "ConvertTo-Json -Compress"
-            )
+            script = "Get-CimInstance Win32_Process | Select-Object ProcessId,CommandLine | ConvertTo-Json -Compress"
             completed = subprocess.run(  # noqa: S603 - fixed process-inventory command
                 [powershell, "-NoProfile", "-Command", script],
                 check=True,

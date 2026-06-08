@@ -20,6 +20,7 @@ from ._common import _bad, _canonical_period, _emit_envelope, _state, _tx_repo
 
 ResolveTransactionId = Callable[[Any, str], str]
 
+
 def register_ledger_review_command(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
     @app.command("review", help=tr("cli.ledger.review.help"))
     def ledger_review(

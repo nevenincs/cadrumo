@@ -149,8 +149,7 @@ _RescatePre2007Opt = Annotated[
         help=tr(
             "cli.app.modelo.work.rescate_plan_pensiones_aportaciones_pre_2007_help",
             default=(
-                "Aportaciones realizadas al plan de pensiones hasta el 31-dic-2006 "
-                "(base prorrateo DT 12a LIRPF)."
+                "Aportaciones realizadas al plan de pensiones hasta el 31-dic-2006 (base prorrateo DT 12a LIRPF)."
             ),
         ),
     ),
@@ -171,10 +170,7 @@ _SalBeneficioOpt = Annotated[
         "--sal-beneficio-neto",
         help=tr(
             "cli.app.modelo.work.sal_beneficio_neto_help",
-            default=(
-                "Beneficio neto del ejercicio de la Sociedad Laboral (SAL/SLL) "
-                "(Ley 44/2015 Art. 14)."
-            ),
+            default=("Beneficio neto del ejercicio de la Sociedad Laboral (SAL/SLL) (Ley 44/2015 Art. 14)."),
         ),
     ),
 ]

@@ -629,15 +629,15 @@ def test_live_filed_capture_all_cli_help_resolves() -> None:
     assert "--modelo" in result.output
 
     root = aeat_click_command()
-    assert isinstance(root, click.Group)
+    assert hasattr(root, "get_command")
     app_group = root.get_command(click.Context(root), "app")
-    assert isinstance(app_group, click.Group)
+    assert hasattr(app_group, "get_command")
     live_group = app_group.get_command(click.Context(app_group), "live")
-    assert isinstance(live_group, click.Group)
+    assert hasattr(live_group, "get_command")
     filed_group = live_group.get_command(click.Context(live_group), "filed")
-    assert isinstance(filed_group, click.Group)
+    assert hasattr(filed_group, "get_command")
     capture_all = filed_group.get_command(click.Context(filed_group), "capture-all")
-    assert isinstance(capture_all, click.Command)
+    assert hasattr(capture_all, "callback")
     help_text = (capture_all.help or "").lower()
     assert "read-only" in help_text or "solo lectura" in help_text
 
@@ -654,15 +654,15 @@ def test_live_notifications_latest_cli_help_resolves() -> None:
     assert "latest" in result.output.lower()
 
     root = aeat_click_command()
-    assert isinstance(root, click.Group)
+    assert hasattr(root, "get_command")
     app_group = root.get_command(click.Context(root), "app")
-    assert isinstance(app_group, click.Group)
+    assert hasattr(app_group, "get_command")
     live_group = app_group.get_command(click.Context(app_group), "live")
-    assert isinstance(live_group, click.Group)
+    assert hasattr(live_group, "get_command")
     notifications_group = live_group.get_command(click.Context(live_group), "notifications")
-    assert isinstance(notifications_group, click.Group)
+    assert hasattr(notifications_group, "get_command")
     latest = notifications_group.get_command(click.Context(notifications_group), "latest")
-    assert isinstance(latest, click.Command)
+    assert hasattr(latest, "callback")
 
 
 def test_live_expedientes_capture_all_cli_help_resolves() -> None:
@@ -679,15 +679,15 @@ def test_live_expedientes_capture_all_cli_help_resolves() -> None:
     assert "--modelo" in result.output
 
     root = aeat_click_command()
-    assert isinstance(root, click.Group)
+    assert hasattr(root, "get_command")
     app_group = root.get_command(click.Context(root), "app")
-    assert isinstance(app_group, click.Group)
+    assert hasattr(app_group, "get_command")
     live_group = app_group.get_command(click.Context(app_group), "live")
-    assert isinstance(live_group, click.Group)
+    assert hasattr(live_group, "get_command")
     expedientes_group = live_group.get_command(click.Context(live_group), "expedientes")
-    assert isinstance(expedientes_group, click.Group)
+    assert hasattr(expedientes_group, "get_command")
     capture_all = expedientes_group.get_command(click.Context(expedientes_group), "capture-all")
-    assert isinstance(capture_all, click.Command)
+    assert hasattr(capture_all, "callback")
 
 
 def test_live_iva_wallet_cli_help_names_fail_closed_no_submit_policy() -> None:

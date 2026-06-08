@@ -37,6 +37,7 @@ def _register_unlock_command(
     assert_profile_record_present: Callable[..., None],
 ) -> None:
     """Register the profile unlock transport command."""
+
     @app.command("unlock", help=tr("cli.config.unlock.help"))
     def config_unlock(
         ctx: typer.Context,

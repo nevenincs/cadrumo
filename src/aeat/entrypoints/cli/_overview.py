@@ -6,6 +6,7 @@ and apply no mutations to stored state. Help strings are localized via
 :func:`~aeat.core.i18n.tr`; the docstrings here document internal
 logic and are not surfaced as operator-facing CLI help.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -82,9 +83,7 @@ def _local_calendar_filing_evidence(bucket_id: str, events: tuple):
 
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
         filed_observation_store = FiledDeclaracionObservationStore(Path("var/aeat/filed-declarations"))
-        filed_declaration_observations = _calendar_verified_filed_declaration_observations(
-            filed_observation_store
-        )
+        filed_declaration_observations = _calendar_verified_filed_declaration_observations(filed_observation_store)
         calculation_observations = tuple(CalculationObservationRepository().iter_records())
     except Exception:
         logger.warning(

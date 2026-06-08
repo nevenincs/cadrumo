@@ -1131,6 +1131,7 @@ def modelo_history(
         lines.append(f"{e.occurred_at.isoformat()}\t{e.event_type.value}\t{e.object_id}\t{e.actor}")
     _emit_envelope(ctx, command="modelo.history", result=history_result, lines=lines)
 
+
 register_reconcile_commands(
     app,
     require_active_profile=_require_active_profile,
@@ -1186,4 +1187,3 @@ __all__ = [
     "filing_record_app",
     "verification_report_app",
 ]
-

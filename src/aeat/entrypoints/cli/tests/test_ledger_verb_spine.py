@@ -93,9 +93,7 @@ _CRUD_SPINE_COUNT: int = 7  # add, view, list, update, remove, archive, reset
 _RATIFIED_ORTHOGONAL_AXIS_COUNT: int = 3  # link, check, preflight
 _RATIFIED_WORKFLOW_AXIS_COUNT: int = 15  # allocate attach categories classify
 # doclink export history import merge providers review split stash status track
-_EXPECTED_LEDGER_VERB_COUNT: int = (
-    _CRUD_SPINE_COUNT + _RATIFIED_ORTHOGONAL_AXIS_COUNT + _RATIFIED_WORKFLOW_AXIS_COUNT
-)
+_EXPECTED_LEDGER_VERB_COUNT: int = _CRUD_SPINE_COUNT + _RATIFIED_ORTHOGONAL_AXIS_COUNT + _RATIFIED_WORKFLOW_AXIS_COUNT
 
 
 def test_ledger_verb_count_matches_canonical_spine() -> None:
@@ -148,13 +146,8 @@ def test_ledger_help_enumerates_every_registered_verb(cli_runner: CliRunner) -> 
 
     result = cli_runner.invoke(app, ["app", "ledger", "--help"])
     assert result.exit_code == 0, result.output
-    missing = sorted(
-        cmd.name for cmd in ledger_app.registered_commands if cmd.name not in result.output
-    )
-    assert not missing, (
-        f"`aeat app ledger --help` omits registered verbs {missing!r}; "
-        f"help output: {result.output!r}"
-    )
+    missing = sorted(cmd.name for cmd in ledger_app.registered_commands if cmd.name not in result.output)
+    assert not missing, f"`aeat app ledger --help` omits registered verbs {missing!r}; help output: {result.output!r}"
 
 
 def test_modelo_help_enumerates_every_registered_verb(cli_runner: CliRunner) -> None:
@@ -165,13 +158,8 @@ def test_modelo_help_enumerates_every_registered_verb(cli_runner: CliRunner) -> 
 
     result = cli_runner.invoke(app, ["app", "modelo", "--help"])
     assert result.exit_code == 0, result.output
-    missing = sorted(
-        cmd.name for cmd in modelo_app.registered_commands if cmd.name not in result.output
-    )
-    assert not missing, (
-        f"`aeat app modelo --help` omits registered verbs {missing!r}; "
-        f"help output: {result.output!r}"
-    )
+    missing = sorted(cmd.name for cmd in modelo_app.registered_commands if cmd.name not in result.output)
+    assert not missing, f"`aeat app modelo --help` omits registered verbs {missing!r}; help output: {result.output!r}"
 
 
 # Canonical modelo top-level verb roster. The verbs are the registry/work
@@ -226,7 +214,7 @@ def test_modelo_top_level_verb_roster_matches_canonical_spine() -> None:
 EXPECTED_BUCKET_APP_VERBS: frozenset[str] = frozenset({"history"})
 
 
-def test_bucket_app_verb_roster_pins_pre_s2150_state() -> None:
+def test_bucket_app_verb_roster_pins_pre_maintenance_state() -> None:
     """Bucket noun-group today carries only `history`; the six maintenance
     verbs are not yet mounted.
 

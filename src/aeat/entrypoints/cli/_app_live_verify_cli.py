@@ -143,7 +143,7 @@ def verify_show(
     record = VerifyService().show(bucket_id=bucket_id, observation_id=observation_id)
     result = VerifyViewResult(
         bucket_id=bucket_id,
-        **_verify_row(record)
+        **_verify_row(record),
         # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-VIEW:
         # _verify_row returns Mapping[str, object]; splat matches VerifyViewResult fields here.
     )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-VIEW-MAPPING-SPLAT
@@ -212,7 +212,7 @@ def verify_latest(
         return
     result = VerifyLatestResult(
         bucket_id=bucket_id,
-        **_verify_row(record)
+        **_verify_row(record),
         # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-LATEST:
         # _verify_row returns Mapping[str, object]; splat matches VerifyLatestResult fields here.
     )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-LATEST-MAPPING-SPLAT
@@ -269,7 +269,7 @@ def verify_nif_iva(
     )
     result = VerifyNifIvaResult(
         bucket_id=bucket_id,
-        **_verify_row(record)
+        **_verify_row(record),
         # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-NIF-IVA:
         # _verify_row returns Mapping[str, object]; splat matches VerifyNifIvaResult fields here.
     )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-NIF-IVA-MAPPING-SPLAT
@@ -325,7 +325,7 @@ def verify_tgvi(
     )
     result = VerifyTgviResult(
         bucket_id=bucket_id,
-        **_verify_row(record)
+        **_verify_row(record),
         # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-TGVI:
         # _verify_row returns Mapping[str, object]; splat matches VerifyTgviResult fields here.
     )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-TGVI-MAPPING-SPLAT

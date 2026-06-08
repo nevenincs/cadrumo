@@ -105,9 +105,7 @@ def register_maritime_commands(
         )
         gross_navigation_decimal = _optional_decimal(
             gross_navigation_income,
-            translation_key=(
-                "cli.app.modelo.work.preview_maritime_exemption_gross_navigation_income_not_decimal"
-            ),
+            translation_key=("cli.app.modelo.work.preview_maritime_exemption_gross_navigation_income_not_decimal"),
             default="--gross-navigation-income must be a decimal amount; received: {value}",
         )
 
@@ -123,9 +121,7 @@ def register_maritime_commands(
         facts = preview.facts
         result = preview.result
         retmar_warning = (
-            resolve_error_message(preview.retmar_warning_error)
-            if preview.retmar_warning_error is not None
-            else None
+            resolve_error_message(preview.retmar_warning_error) if preview.retmar_warning_error is not None else None
         )
         observation_payloads = [
             CasillaObservationPayload(

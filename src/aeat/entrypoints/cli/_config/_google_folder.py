@@ -81,4 +81,3 @@ def register_google_folder_commands(google_app: typer.Typer, *, google_refusal: 
         )
 
     google_app.add_typer(folder_app, name="folder")
-
