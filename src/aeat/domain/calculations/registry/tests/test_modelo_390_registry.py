@@ -225,9 +225,7 @@ def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations()
     # final period's generated amount to compensate. The 4T observation carries
     # that value as Decimal("400") — assert against the observation directly.
     q4_obs = next(obs for obs in observations if obs.period == "4T")
-    q4_generated = next(
-        c.value for c in q4_obs.observations if c.casilla_id == "iva.compensacion-generada-periodo"
-    )
+    q4_generated = next(c.value for c in q4_obs.observations if c.casilla_id == "iva.compensacion-generada-periodo")
     assert resolved["modelo-390-prev-303-compensacion-ultimo-periodo"] == q4_generated
 
     # The generada-ejercicio-no-97 binding sources iva.compensacion-generada-periodo

@@ -45,6 +45,7 @@ __all__ = [
     "RelationDefinition",
 ]
 
+
 class CasillaContinuidadEvolutionDefinition(RegistryModel):
     """Declared cross-revision evolution for one casilla continuity chain."""
 
@@ -209,6 +210,19 @@ class CasillaDefinition(RegistryModel):
         ),
     )
     label: str
+    localized_labels: dict[str, str] = Field(
+        default_factory=dict,
+        description=(
+            "Optional localized label overrides mapped by locale code (e.g., 'en', 'ca', 'hu'). "
+            "The primary 'label' field remains the official Spanish invariant."
+        ),
+    )
+    localized_help: dict[str, str] = Field(
+        default_factory=dict,
+        description=(
+            "Optional localized help/hint texts mapped by locale code (e.g., 'en', 'ca', 'hu')."
+        ),
+    )
     section: tuple[str, ...]
     data_type: Literal[
         "decimal",
@@ -265,6 +279,14 @@ class CasillaDefinition(RegistryModel):
     )
     legal_refs: LegalRefs
     source_refs: SourceRefs
+
+    def get_label(self, locale: str) -> str:
+        """Return the localized label for `locale`, falling back to the Spanish invariant `label`."""
+        return self.localized_labels.get(locale, self.label)
+
+    def get_help(self, locale: str) -> str | None:
+        """Return the localized help/hint text for `locale`, or None if not defined."""
+        return self.localized_help.get(locale)
 
     @model_validator(mode="after")
     def _validate_input_kind(self) -> CasillaDefinition:

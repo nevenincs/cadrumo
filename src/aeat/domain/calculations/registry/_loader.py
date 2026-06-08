@@ -14,10 +14,10 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from ....core._toml import freeze_toml, read_toml
-from ._errors import RegistryLoadError
+from ._errors import RegistryLoadError, RegistryValidationError
 from ._schema import (
     LegalParameter,
     LegalReference,
@@ -208,6 +208,10 @@ def load_modelo_directory(directory: Path) -> ModeloDefinition:
         raise RegistryLoadError(f"{resolved}: missing manifest.toml")
 
     fingerprints: list[tuple[str, int, int]] = [_toml_fingerprint(manifest_path)]
+    locales_dir = resolved / "locales"
+    if locales_dir.is_dir():
+        for path in sorted(locales_dir.glob("*.toml")):
+            fingerprints.append(_toml_fingerprint(path))
     revisions_dir = resolved / "revisions"
     if revisions_dir.is_dir():
         for path in sorted(revisions_dir.rglob("*.toml")):
@@ -236,6 +240,147 @@ def load_modelo_source(source: ModeloSource) -> ModeloDefinition:
     return load_modelo_directory(source.path)
 
 
+class RegistryLocaleTranslation(BaseModel):
+    labels: dict[str, str] = Field(default_factory=dict)
+    help: dict[str, str] = Field(default_factory=dict)
+
+
+def _apply_locales(modelo_dir: Path, merged_revisions: dict[str, object]) -> None:
+    # 1. Load modelo-wide translations
+    modelo_translations: dict[str, RegistryLocaleTranslation] = {}
+    locales_dir = modelo_dir / "locales"
+    if locales_dir.is_dir():
+        for path in sorted(locales_dir.glob("*.toml")):
+            locale = path.stem
+            try:
+                raw_data = freeze_toml(read_toml(path, error_factory=RegistryLoadError))
+                modelo_translations[locale] = RegistryLocaleTranslation.model_validate(raw_data)
+            except Exception as exc:
+                raise RegistryValidationError(f"Invalid locales file {path}: {exc}") from exc
+
+    # 2. Load revision-local translations
+    revision_translations: dict[str, dict[str, RegistryLocaleTranslation]] = {}
+    revisions_dir = modelo_dir / "revisions"
+    if revisions_dir.is_dir():
+        for path in sorted(revisions_dir.iterdir()):
+            if path.is_dir():
+                revision_id = path.name
+                rev_locales_dir = path / "locales"
+                if rev_locales_dir.is_dir():
+                    for locale_path in sorted(rev_locales_dir.glob("*.toml")):
+                        locale = locale_path.stem
+                        try:
+                            raw_data = freeze_toml(read_toml(locale_path, error_factory=RegistryLoadError))
+                            trans = RegistryLocaleTranslation.model_validate(raw_data)
+                            revision_translations.setdefault(revision_id, {})[locale] = trans
+                        except Exception as exc:
+                            raise RegistryValidationError(f"Invalid locales file {locale_path}: {exc}") from exc
+
+    # 3. Collect valid casilla_ids and continuity_ids
+    valid_casilla_ids: dict[str, set[str]] = {}
+    valid_continuidad_ids: set[str] = set()
+
+    for revision_id, raw_rev in merged_revisions.items():
+        raw_rev_table = _as_toml_table(raw_rev)
+        if raw_rev_table is None:
+            continue
+        casillas_list = raw_rev_table.get("casillas", ())
+        if not isinstance(casillas_list, (list, tuple)):
+            continue
+        
+        rev_casilla_ids = set()
+        for casilla in casillas_list:
+            casilla_table = _as_toml_table(casilla)
+            if casilla_table is None:
+                continue
+            c_id = casilla_table.get("id")
+            if isinstance(c_id, str):
+                rev_casilla_ids.add(c_id)
+            cont_id = casilla_table.get("continuidad_id")
+            if isinstance(cont_id, str):
+                valid_continuidad_ids.add(cont_id)
+        valid_casilla_ids[revision_id] = rev_casilla_ids
+
+    # 4. Check referential integrity
+    # Modelo-wide locales check
+    for locale, trans in modelo_translations.items():
+        for key in trans.labels:
+            if key not in valid_continuidad_ids:
+                raise RegistryValidationError(
+                    f"Invalid translation key {key!r} in labels for locale {locale!r}: "
+                    "no continuity chain found with this continuity id"
+                )
+        for key in trans.help:
+            if key not in valid_continuidad_ids:
+                raise RegistryValidationError(
+                    f"Invalid translation key {key!r} in help for locale {locale!r}: "
+                    "no continuity chain found with this continuity id"
+                )
+
+    # Revision-local locales check
+    for revision_id, locale_map in revision_translations.items():
+        rev_ids = valid_casilla_ids.get(revision_id, set())
+        for locale, trans in locale_map.items():
+            for key in trans.labels:
+                if key not in rev_ids:
+                    raise RegistryValidationError(
+                        f"Invalid translation key {key!r} in labels for locale {locale!r} under revision {revision_id!r}: "
+                        "no casilla found with this id"
+                    )
+            for key in trans.help:
+                if key not in rev_ids:
+                    raise RegistryValidationError(
+                        f"Invalid translation key {key!r} in help for locale {locale!r} under revision {revision_id!r}: "
+                        "no casilla found with this id"
+                    )
+
+    # 5. Inject localized_labels and localized_help into the raw casilla dictionaries
+    for revision_id, raw_rev in merged_revisions.items():
+        raw_rev_table = _as_toml_table(raw_rev)
+        if raw_rev_table is None:
+            continue
+        casillas_list = raw_rev_table.get("casillas", ())
+        if not isinstance(casillas_list, (list, tuple)):
+            continue
+
+        new_casillas = []
+        for casilla in casillas_list:
+            casilla_table = _as_toml_table(casilla)
+            if casilla_table is None:
+                new_casillas.append(casilla)
+                continue
+            
+            casilla_id = casilla_table.get("id")
+            continuidad_id = casilla_table.get("continuidad_id")
+            
+            localized_labels = {}
+            localized_help = {}
+
+            # Concept continuity (modelo-wide) translations
+            if isinstance(continuidad_id, str):
+                for locale, trans in modelo_translations.items():
+                    if continuidad_id in trans.labels:
+                        localized_labels[locale] = trans.labels[continuidad_id]
+                    if continuidad_id in trans.help:
+                        localized_help[locale] = trans.help[continuidad_id]
+
+            # Revision-local override translations
+            if isinstance(casilla_id, str):
+                for locale, trans in revision_translations.get(revision_id, {}).items():
+                    if casilla_id in trans.labels:
+                        localized_labels[locale] = trans.labels[casilla_id]
+                    if casilla_id in trans.help:
+                        localized_help[locale] = trans.help[casilla_id]
+
+            # Reconstruct the casilla dictionary with the injected maps
+            new_casilla = dict(casilla_table)
+            new_casilla["localized_labels"] = localized_labels
+            new_casilla["localized_help"] = localized_help
+            new_casillas.append(new_casilla)
+
+        raw_rev_table["casillas"] = tuple(new_casillas)
+
+
 @lru_cache(maxsize=64)
 def _load_modelo_directory_cached(
     directory: str,
@@ -247,6 +392,7 @@ def _load_modelo_directory_cached(
     merged_revisions = _load_modelo_revisions(resolved)
     if not merged_revisions:
         raise RegistryLoadError(f"{resolved}: no revisions found in revisions/")
+    _apply_locales(resolved, merged_revisions)
     merged: dict[str, object] = {**manifest_data, "revisions": merged_revisions}
     return _build_modelo_definition_from_data(resolved, merged)
 
@@ -312,7 +458,13 @@ def _merge_revision_directory(path: Path, merged_revisions: dict[str, object]) -
     if not revision_manifest.is_file():
         raise RegistryLoadError(f"{path}: revision fragment directory must contain revision.toml")
     fragment_paths = [revision_manifest]
-    fragment_paths.extend(sorted(p for p in path.rglob("*.toml") if p != revision_manifest))
+    fragment_paths.extend(
+        sorted(
+            p
+            for p in path.rglob("*.toml")
+            if p != revision_manifest and not any(part == "locales" for part in p.parts)
+        )
+    )
     merged_revision: dict[str, object] = {}
     for fragment_path in fragment_paths:
         _merge_revision_fragment(fragment_path, revision_id, merged_revision)
@@ -786,7 +938,11 @@ def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSourc
         fragment_paths = (revision_manifest.resolve(),) if revision_manifest.is_file() else ()
         fragment_paths = (
             *fragment_paths,
-            *tuple(p.resolve() for p in sorted(path.rglob("*.toml")) if p != revision_manifest),
+            *tuple(
+                p.resolve()
+                for p in sorted(path.rglob("*.toml"))
+                if p != revision_manifest and not any(part == "locales" for part in p.parts)
+            ),
         )
         sources.append(
             ModeloRevisionSource(
@@ -836,6 +992,10 @@ def _modelo_directory_fingerprints(entry: Path) -> tuple[tuple[str, int, int], .
     if not (entry.is_dir() and (entry / "manifest.toml").is_file()):
         return ()
     fingerprints: list[tuple[str, int, int]] = [_toml_fingerprint(entry / "manifest.toml")]
+    locales_dir = entry / "locales"
+    if locales_dir.is_dir():
+        for path in sorted(locales_dir.glob("*.toml")):
+            fingerprints.append(_toml_fingerprint(path))
     revisions_dir = entry / "revisions"
     if revisions_dir.is_dir():
         for rev_path in sorted(revisions_dir.rglob("*.toml")):

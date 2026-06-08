@@ -47,6 +47,8 @@ from ._referential_integrity_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
 def test_committed_registry_passes_referential_integrity(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
@@ -72,6 +74,7 @@ def test_committed_registry_passes_referential_integrity(
             passed += 1
     assert passed > 0, "no snapshots were successfully built for the committed registry"
 
+
 def test_dangling_casilla_formula_reference() -> None:
     """casilla.formula pointing at nonexistent FormulaId raises."""
     casilla = _minimal_casilla("01").model_copy(update={"input_kind": "computed", "formula": "nonexistent.formula"})
@@ -79,12 +82,14 @@ def test_dangling_casilla_formula_reference() -> None:
     with pytest.raises(RegistryValidationError, match=r"casilla 01.formula"):
         _build_minimal_snapshot(revision)
 
+
 def test_dangling_casilla_binding_reference() -> None:
     """casilla.binding pointing at nonexistent BindingId raises."""
     casilla = _minimal_casilla("01").model_copy(update={"input_kind": "bound", "binding": "nonexistent.binding"})
     revision = _minimal_revision(casillas=(casilla,))
     with pytest.raises(RegistryValidationError, match=r"casilla 01.binding"):
         _build_minimal_snapshot(revision)
+
 
 def test_bound_casilla_without_binding_definition_fails_snapshot_integrity() -> None:
     """A bound casilla cannot defer missing binding coverage to formula runtime."""
@@ -96,12 +101,14 @@ def test_bound_casilla_without_binding_definition_fails_snapshot_integrity() -> 
     ):
         _build_minimal_snapshot(revision)
 
+
 def test_dangling_casilla_export_refs() -> None:
     """casilla.export_refs pointing at nonexistent ExportFieldId raises."""
     casilla = _minimal_casilla("01").model_copy(update={"export_refs": ("nonexistent.export.field",)})
     revision = _minimal_revision(casillas=(casilla,))
     with pytest.raises(RegistryValidationError, match=r"casilla 01.export_refs"):
         _build_minimal_snapshot(revision)
+
 
 def test_dangling_casilla_legal_refs() -> None:
     """casilla.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
@@ -112,6 +119,7 @@ def test_dangling_casilla_legal_refs() -> None:
     with pytest.raises(RegistryValidationError, match=r"casilla 01.legal_refs"):
         _check_all_id_references(snapshot)
 
+
 def test_dangling_casilla_source_refs() -> None:
     """casilla.source_refs referencing a SourceRefId absent from snapshot.sources raises."""
     _extra = "aeat-dr-extra-v1"
@@ -120,6 +128,7 @@ def test_dangling_casilla_source_refs() -> None:
     snapshot = _build_snapshot_with_missing_source(revision, _extra)
     with pytest.raises(RegistryValidationError, match=r"casilla 01.source_refs"):
         _check_all_id_references(snapshot)
+
 
 def test_dangling_formula_target() -> None:
     """formula.target pointing at nonexistent CasillaId raises."""
@@ -133,6 +142,7 @@ def test_dangling_formula_target() -> None:
     revision = _minimal_revision(formulas=(formula,))
     with pytest.raises(RegistryValidationError, match=r"formula test.formula.target"):
         _build_minimal_snapshot(revision)
+
 
 def test_dangling_formula_legal_refs() -> None:
     """formula.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
@@ -151,6 +161,7 @@ def test_dangling_formula_legal_refs() -> None:
     with pytest.raises(RegistryValidationError, match=r"formula test.formula.legal_refs"):
         _check_all_id_references(snapshot)
 
+
 def test_dangling_parameter_source_refs() -> None:
     """parameter.source_refs referencing a SourceRefId absent from snapshot.sources raises."""
     _extra = "aeat-dr-param-v1"
@@ -165,6 +176,7 @@ def test_dangling_parameter_source_refs() -> None:
     snapshot = _build_snapshot_with_missing_source(revision, _extra)
     with pytest.raises(RegistryValidationError, match=r"parameter test.param.source_refs"):
         _check_all_id_references(snapshot)
+
 
 def test_dangling_binding_source_refs() -> None:
     """binding.source_refs referencing a SourceRefId absent from snapshot.sources raises."""
@@ -187,6 +199,7 @@ def test_dangling_binding_source_refs() -> None:
     with pytest.raises(RegistryValidationError, match=r"binding test.binding.source_refs"):
         _check_all_id_references(snapshot)
 
+
 def test_dangling_relation_target_binding() -> None:
     """relation.target_binding pointing at nonexistent BindingId raises."""
     relation = RelationDefinition(
@@ -206,6 +219,7 @@ def test_dangling_relation_target_binding() -> None:
     revision = _minimal_revision(relations=(relation,))
     with pytest.raises(RegistryValidationError, match=r"relation test.relation.target_binding"):
         _build_minimal_snapshot(revision)
+
 
 def test_dangling_extraction_profile_target_casilla() -> None:
     """extraction_profile.target_casillas pointing at nonexistent CasillaId raises."""
@@ -231,6 +245,7 @@ def test_dangling_extraction_profile_target_casilla() -> None:
     revision = _minimal_revision(extraction_profiles=(profile,))
     with pytest.raises(RegistryValidationError, match=r"extraction_profile test.profile.target_casillas"):
         _build_minimal_snapshot(revision)
+
 
 def test_text_casilla_without_named_label_strategy_fails_gate() -> None:
     """A declaracion_pdf profile targeting a text-typed casilla without named_label raises.
@@ -266,6 +281,7 @@ def test_text_casilla_without_named_label_strategy_fails_gate() -> None:
     ):
         _build_minimal_snapshot(revision)
 
+
 def test_text_casilla_with_named_label_strategy_passes_gate() -> None:
     """A declaracion_pdf profile targeting a text-typed casilla with named_label passes."""
     text_casilla = _minimal_casilla("text-casilla").model_copy(update={"data_type": "text"})
@@ -293,6 +309,7 @@ def test_text_casilla_with_named_label_strategy_passes_gate() -> None:
     snapshot = _build_minimal_snapshot(revision)
     assert snapshot is not None
 
+
 def test_dangling_cross_reference_legal_refs() -> None:
     """cross_reference.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
     _extra = "lirpf:art-99"
@@ -315,6 +332,7 @@ def test_dangling_cross_reference_legal_refs() -> None:
     with pytest.raises(RegistryValidationError, match=r"cross_reference test.cross-ref.legal_refs"):
         _check_all_id_references(snapshot)
 
+
 def test_dangling_workbook_parity_workbook_source() -> None:
     """workbook_parity_ref.workbook_source referencing a SourceRefId absent from snapshot.sources raises.
 
@@ -328,6 +346,7 @@ def test_dangling_workbook_parity_workbook_source() -> None:
     snapshot = _build_snapshot_with_missing_source(revision, _extra_source)
     with pytest.raises(RegistryValidationError, match=r"workbook_parity_ref wp.test.workbook_source"):
         _check_all_id_references(snapshot)
+
 
 def test_dangling_verification_expectation_computed_casillas() -> None:
     """verification_expectation.computed_casillas pointing at nonexistent CasillaId raises."""
@@ -344,6 +363,7 @@ def test_dangling_verification_expectation_computed_casillas() -> None:
     revision = _minimal_revision(verification_expectations=(expectation,))
     with pytest.raises(RegistryValidationError, match=r"verification_expectation test.expectation.computed_casillas"):
         _build_minimal_snapshot(revision)
+
 
 def test_dangling_application_link_legal_refs() -> None:
     """application_link.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
@@ -362,6 +382,7 @@ def test_dangling_application_link_legal_refs() -> None:
     snapshot = _build_snapshot_with_missing_legal(revision, _extra)
     with pytest.raises(RegistryValidationError, match=r"application_link al.test2.legal_refs"):
         _check_all_id_references(snapshot)
+
 
 def test_dangling_deadline_window_legal_refs() -> None:
     """deadline_window.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
@@ -383,6 +404,7 @@ def test_dangling_deadline_window_legal_refs() -> None:
     with pytest.raises(RegistryValidationError, match=r"deadline_window dw.test.legal_refs"):
         _check_all_id_references(snapshot)
 
+
 def test_dangling_support_removal_decision_legal_refs() -> None:
     """support_removal_decision.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
     _extra = "lirpf:art-99"
@@ -401,6 +423,7 @@ def test_dangling_support_removal_decision_legal_refs() -> None:
     with pytest.raises(RegistryValidationError, match=r"support_removal_decision srd.test.legal_refs"):
         _check_all_id_references(snapshot)
 
+
 def test_dangling_construct_casilla_ref() -> None:
     """construct.casillas pointing at nonexistent CasillaId raises."""
     construct = ConstructDefinition(
@@ -413,6 +436,7 @@ def test_dangling_construct_casilla_ref() -> None:
     revision = _minimal_revision(constructs=(construct,))
     with pytest.raises(RegistryValidationError, match=r"construct ct.test.casillas"):
         _build_minimal_snapshot(revision)
+
 
 def test_dangling_dependency_classification_target_construct() -> None:
     """dependency_classification.target_constructs pointing at nonexistent ConstructId raises."""
@@ -428,6 +452,7 @@ def test_dangling_dependency_classification_target_construct() -> None:
     with pytest.raises(RegistryValidationError, match=r"dependency_classification dc.test.target_constructs"):
         _build_minimal_snapshot(revision)
 
+
 def test_dangling_export_layout_legal_refs() -> None:
     """export_layout.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
     _extra = "lirpf:art-99"
@@ -440,6 +465,7 @@ def test_dangling_export_layout_legal_refs() -> None:
     snapshot = _build_snapshot_with_missing_legal(revision, _extra)
     with pytest.raises(RegistryValidationError, match=r"export_layout el.test.legal_refs"):
         _check_all_id_references(snapshot)
+
 
 def test_dangling_export_field_casilla_ref() -> None:
     """export_field.casilla pointing at nonexistent CasillaId raises."""
@@ -474,6 +500,7 @@ def test_dangling_export_field_casilla_ref() -> None:
     with pytest.raises(RegistryValidationError, match=r"field el.test.field-01.casilla"):
         _build_minimal_snapshot(revision)
 
+
 def test_dangling_revision_legal_refs() -> None:
     """revision.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
     _extra = "lirpf:art-99"
@@ -482,6 +509,7 @@ def test_dangling_revision_legal_refs() -> None:
     snapshot = _build_snapshot_with_missing_legal(revision, _extra)
     with pytest.raises(RegistryValidationError, match=r"revision.legal_refs"):
         _check_all_id_references(snapshot)
+
 
 def test_dangling_modelo_source_refs() -> None:
     """modelo.source_refs referencing a SourceRefId absent from snapshot.sources raises."""
@@ -500,6 +528,7 @@ def test_dangling_modelo_source_refs() -> None:
     with pytest.raises(RegistryValidationError, match=r"modelo.source_refs"):
         _check_all_id_references(snapshot)
 
+
 def test_config_repair_report_includes_registry_integrity_check(tmp_path) -> None:
     """build_config_repair_report produces a registry.integrity DiagnosticCheck.
 
@@ -517,6 +546,7 @@ def test_config_repair_report_includes_registry_integrity_check(tmp_path) -> Non
 
     integrity_check = next(c for c in report.checks if c.name == "registry.integrity")
     assert integrity_check.status in {"ok", "fail", "warn"}
+
 
 def test_informative_modelo_with_formula_fails_validation() -> None:
     """An informative modelo that declares a formula raises RegistryValidationError.
@@ -546,6 +576,7 @@ def test_informative_modelo_with_formula_fails_validation() -> None:
     with pytest.raises(RegistryValidationError, match="informative modelo must not declare calculation formulas"):
         validator.validate_modelo(informative_modelo)
 
+
 def test_informative_modelo_with_relation_fails_validation() -> None:
     """An informative modelo that declares a cross-model relation raises RegistryValidationError."""
     from .. import RegistryValidator
@@ -571,6 +602,7 @@ def test_informative_modelo_with_relation_fails_validation() -> None:
     with pytest.raises(RegistryValidationError, match="informative modelo must not declare cross-model relations"):
         validator.validate_modelo(informative_modelo)
 
+
 def test_same_number_distinct_segmento_casillas_validate() -> None:
     """Two casillas sharing a number under distinct segmento values both validate.
 
@@ -590,6 +622,7 @@ def test_same_number_distinct_segmento_casillas_validate() -> None:
     # proves the (segmento, number) pairs are accepted as distinct.
     RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
 
+
 def test_single_segment_duplicate_number_collision_fails() -> None:
     """Two segmento-unset casillas sharing a number hard-fail on (None, number).
 
@@ -607,6 +640,7 @@ def test_single_segment_duplicate_number_collision_fails() -> None:
     modelo = _minimal_modelo(revision)
     with pytest.raises(RegistryValidationError, match=r"duplicate casilla number '00562'"):
         RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+
 
 def test_same_segmento_duplicate_number_collision_fails() -> None:
     """Two casillas sharing a number within one segmento hard-fail.
@@ -626,6 +660,7 @@ def test_same_segmento_duplicate_number_collision_fails() -> None:
         match=r"duplicate casilla number '00562' within segmento 'DP200014'",
     ):
         RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+
 
 def test_single_segment_bare_number_reference_resolves() -> None:
     """A formula referencing a casilla by its bare number resolves single-segment.
@@ -658,6 +693,7 @@ def test_single_segment_bare_number_reference_resolves() -> None:
     assert casilla_resolution_failures == [], (
         f"single-segment bare-number reference must resolve; got: {casilla_resolution_failures}"
     )
+
 
 def test_ambiguous_cross_segment_bare_number_reference_does_not_resolve() -> None:
     """A bare-number reference to a number reused across segments fails to resolve.
@@ -695,6 +731,7 @@ def test_ambiguous_cross_segment_bare_number_reference_does_not_resolve() -> Non
     assert unknown_casilla_failures, (
         f"an ambiguous cross-segment bare-number reference must fail to resolve; got failures: {failures}"
     )
+
 
 def test_bare_number_reference_resolves_when_id_is_segment_qualified() -> None:
     """A bare-number reference resolves to a casilla whose id is segment-qualified.

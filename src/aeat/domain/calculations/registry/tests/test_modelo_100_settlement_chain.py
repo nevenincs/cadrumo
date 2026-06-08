@@ -147,7 +147,7 @@ def m100_2024_snapshot(registry_authority: ValidatedRegistryAuthority):
     return registry_authority.snapshot("100", filing_year=2024, period="0A")
 
 
-def test_s361_0587_cuota_liquida_total_is_computed(m100_2024_snapshot) -> None:
+def test_0587_cuota_liquida_total_is_computed(m100_2024_snapshot) -> None:
     """After contract, casilla 0587 must equal 0585 + 0586 (not stay at zero).
 
     contract regression guard: before the fix, 0587 had no formula in the 2024
@@ -171,7 +171,7 @@ def test_s361_0587_cuota_liquida_total_is_computed(m100_2024_snapshot) -> None:
 
     assert result.values["0587"] != Decimal("0"), (
         "casilla 0587 (cuota líquida total) is 0.00; "
-        "the S361 regression has re-appeared: check "
+        "the formula regression has re-appeared: check "
         "2024/formulas/0169-renta-2024-cuota-liquida-incrementada-total.toml "
         "and 2024/casillas/0569-0587.toml (input_kind must be 'computed')."
     )
@@ -183,7 +183,7 @@ def test_s361_0587_cuota_liquida_total_is_computed(m100_2024_snapshot) -> None:
     )
 
 
-def test_s361_0609_total_pagos_a_cuenta_computed_from_0598(m100_2024_snapshot) -> None:
+def test_0609_total_pagos_a_cuenta_computed_from_0598(m100_2024_snapshot) -> None:
     """After contract, casilla 0609 must aggregate retenciones including 0598.
 
     The formula ``renta-2024-total-pagos-a-cuenta`` sums 0592-0606.  With only
@@ -215,7 +215,7 @@ def test_s361_0609_total_pagos_a_cuenta_computed_from_0598(m100_2024_snapshot) -
     )
 
 
-def test_s361_0610_cuota_diferencial_computed(m100_2024_snapshot) -> None:
+def test_0610_cuota_diferencial_computed(m100_2024_snapshot) -> None:
     """After contract, casilla 0610 must equal 0595 - 0609.
 
     Oracle (see module docstring):
@@ -240,7 +240,7 @@ def test_s361_0610_cuota_diferencial_computed(m100_2024_snapshot) -> None:
     )
 
 
-def test_s361_0670_resultado_declaracion_computed(m100_2024_snapshot) -> None:
+def test_0670_resultado_declaracion_computed(m100_2024_snapshot) -> None:
     """After contract, casilla 0670 must equal 0610 for a taxpayer with no adjustments.
 
     For a simple landlord with no instalment payments (0611-0669 all zero),
@@ -266,7 +266,7 @@ def test_s361_0670_resultado_declaracion_computed(m100_2024_snapshot) -> None:
     )
 
 
-def test_s361_settlement_chain_not_zero_for_non_zero_base(m100_2024_snapshot) -> None:
+def test_settlement_chain_not_zero_for_non_zero_base(m100_2024_snapshot) -> None:
     """Any non-zero base liquidable general must produce non-zero settlement chain.
 
     This is the weakest regression guard: before contract, every one of
@@ -286,7 +286,7 @@ def test_s361_settlement_chain_not_zero_for_non_zero_base(m100_2024_snapshot) ->
 
     assert result.values["0587"] > Decimal("0"), (
         "casilla 0587 must be positive for base liquidable 55,500 > mínimo personal 5,550. "
-        "If 0587 = 0 the S361 regression has re-appeared."
+        "If 0587 = 0 the formula regression has re-appeared."
     )
     assert result.values["0609"] > Decimal("0"), "casilla 0609 must be positive when retenciones 0153 = 1,824 > 0."
     assert result.values["0610"] > Decimal("0"), (
@@ -297,7 +297,7 @@ def test_s361_settlement_chain_not_zero_for_non_zero_base(m100_2024_snapshot) ->
     )
 
 
-def test_s361_anti_tautology_retenciones_change_affects_chain(m100_2024_snapshot) -> None:
+def test_anti_tautology_retenciones_change_affects_chain(m100_2024_snapshot) -> None:
     """Anti-tautology: different retenciones must produce different 0609/0610/0670.
 
     If the 0153 → 0598 → 0609 → 0610 chain is not wired, both scenarios

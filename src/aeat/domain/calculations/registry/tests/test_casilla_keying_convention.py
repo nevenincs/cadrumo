@@ -43,7 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # Module paths whose canonical casilla lookup must key on ``id``, never on
 # ``number``. Each is the production module owning a layer of the
 # calculate / verify / parse pipeline the design's D1/D2 names.
-_AEAT_ROOT = Path(__file__).resolve().parents[3]
+_AEAT_ROOT = Path(__file__).resolve().parents[4]
 _ENGINE_MODULE = _AEAT_ROOT / "domain" / "calculations" / "registry" / "_formula_runtime.py"
 _VERIFIER_MODULE = _AEAT_ROOT / "application" / "verification" / "_verify.py"
 _PARSER_MODULE = _AEAT_ROOT / "adapters" / "inbound" / "declaracion" / "_parser.py"

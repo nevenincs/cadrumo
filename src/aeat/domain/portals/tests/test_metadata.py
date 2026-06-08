@@ -66,17 +66,13 @@ def test_url_scheme_must_be_https() -> None:
 def test_url_host_must_match_subdomain() -> None:
     """A mismatch between URL host and declared subdomain fails."""
     with pytest.raises(ValidationError, match=r"does not match subdomain"):
-        PortalMetadata.model_validate(
-            _base_kwargs(url=_www1_url(portal_path("portal_m303_iva_autoliquidacion")))
-        )
+        PortalMetadata.model_validate(_base_kwargs(url=_www1_url(portal_path("portal_m303_iva_autoliquidacion"))))
 
 
 def test_filing_url_must_match_gcode_pattern() -> None:
     """Active FILING URL path must match the G-code regex."""
     with pytest.raises(ValidationError, match=r"url path must match"):
-        PortalMetadata.model_validate(
-            _base_kwargs(url=_sede_url(PORTAL_NON_GCODE_PATH_CANARY))
-        )
+        PortalMetadata.model_validate(_base_kwargs(url=_sede_url(PORTAL_NON_GCODE_PATH_CANARY)))
 
 
 def test_censo_url_must_match_gcode_pattern() -> None:

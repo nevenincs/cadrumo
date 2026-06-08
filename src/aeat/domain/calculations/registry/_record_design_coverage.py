@@ -18,6 +18,7 @@ def _extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:
 
     return extract_record_design(path)
 
+
 # ---------------------------------------------------------------------------
 # Calculation-completeness manifest derivation and Diseño extraction
 # (off-load-path)
