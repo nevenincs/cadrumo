@@ -270,7 +270,7 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
     :class:`IvaCompensationReconciliationDecision`. In the seed-only local
     authority case, the local Modelo 303 recurrence is the authority, so derive
     and persist the decision here instead of refusing calculation.
-    
+
 
     Use of :class:`RegistrySnapshot` for compliance.
     """

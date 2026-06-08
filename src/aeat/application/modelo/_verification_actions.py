@@ -1,6 +1,7 @@
 """Verification actions and predicates for modelo filings.
 
-Use of :class:`BucketEventHistoryRepository`, :class:`CalculationRevision`, :class:`CasillaObservation`, :class:`RegistrySnapshot`, :class:`TaxpayerProfile`, :class:`TransactionCatalogueRepository` for compliance.
+Use of :class:`BucketEventHistoryRepository`, :class:`CalculationRevision`, :class:`CasillaObservation`,
+:class:`RegistrySnapshot`, :class:`TaxpayerProfile`, and :class:`TransactionCatalogueRepository` for compliance.
 """
 
 from __future__ import annotations
