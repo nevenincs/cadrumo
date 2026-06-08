@@ -290,7 +290,7 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
             # Decide: is this still a verb token or a positional? Lowercase
             # hyphenated words *may* be subcommands; resolution settles it. We
             # over-collect into verb_tokens and let resolution split the path.
-            if re.fullmatch(r"[a-z][a-z0-9-]*", tok):
+            if re.fullmatch(r"[a-z0-9][a-z0-9-]*", tok):
                 verb_tokens.append(tok)
             else:
                 has_positional = True
