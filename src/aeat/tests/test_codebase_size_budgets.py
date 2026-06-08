@@ -17,11 +17,7 @@ _DEFAULT_CALLABLE_LINE_LIMIT = 180
 
 def _aeat_python_files() -> tuple[Path, ...]:
     root = PROJECT_ROOT / "src" / "aeat"
-    return tuple(
-        path
-        for path in sorted(root.rglob("*.py"))
-        if "__pycache__" not in path.parts
-    )
+    return tuple(path for path in sorted(root.rglob("*.py")) if "__pycache__" not in path.parts)
 
 
 def _relative(path: Path) -> str:

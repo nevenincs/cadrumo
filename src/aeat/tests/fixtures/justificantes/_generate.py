@@ -7,13 +7,13 @@ from pathlib import Path
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from aeat.tests.fixtures.justificantes._generate_base import (
+from ._generate_base import (
     _FIXTURES,
     _draw,
     _Fixture,
     _write_sidecar,
 )
-from aeat.tests.fixtures.justificantes._generate_iva_corpus import (
+from ._generate_iva_corpus import (
     _MODELO_130_CORPUS_FIXTURES,
     _MODELO_303_CORPUS_FIXTURES,
     _MODELO_390_CORPUS_FIXTURES,
@@ -24,7 +24,7 @@ from aeat.tests.fixtures.justificantes._generate_iva_corpus import (
     _Modelo303CorpusFixture,
     _Modelo390CorpusFixture,
 )
-from aeat.tests.fixtures.justificantes._generate_misc_a import (
+from ._generate_misc_a import (
     _MODELO_036_FIXTURES,
     _MODELO_115_FIXTURES,
     _MODELO_180_FIXTURES,
@@ -47,7 +47,7 @@ from aeat.tests.fixtures.justificantes._generate_misc_a import (
     _Modelo369Fixture,
     _Modelo720Fixture,
 )
-from aeat.tests.fixtures.justificantes._generate_misc_b import (
+from ._generate_misc_b import (
     _MODELO_123_FIXTURES,
     _MODELO_131_FIXTURES,
     _MODELO_184_FIXTURES,
@@ -89,6 +89,7 @@ __all__ = [
     "_Modelo840Fixture",
     "main",
 ]
+
 
 def main() -> None:
     """Regenerate every fixture PDF in-place."""
@@ -347,6 +348,7 @@ def main() -> None:
         c.save()
         print(f"wrote {target}")
         _write_sidecar(target, "390", fixture.ejercicio, fixture.tax_id)
+
 
 if __name__ == "__main__":
     main()

@@ -57,107 +57,107 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _BOUNDARY_ROUNDTRIP_INVENTORY: tuple[tuple[str, str], ...] = (
     (
         "SecureObjectRepository SQL encrypted storage",
-        "src/aeat/adapters/persistence/storage/sql/test_archive_bundle_roundtrip.py",
+        "src/aeat/adapters/persistence/storage/sql/tests/test_archive_bundle_roundtrip.py",
     ),
     (
         "SecureObjectRepository envelope contract",
-        "src/aeat/adapters/persistence/storage/envelope/test_secure_bound_repository.py",
+        "src/aeat/adapters/persistence/storage/envelope/tests/test_secure_bound_repository.py",
     ),
     (
         "SecureObjectRepository envelope boundary contract",
-        "src/aeat/adapters/persistence/storage/envelope/test_secure_bound_repository_contract.py",
+        "src/aeat/adapters/persistence/storage/envelope/tests/test_secure_bound_repository_contract.py",
     ),
     (
         "JsonlRunSink redaction",
-        "src/aeat/core/observability/test_sink_redaction.py",
+        "src/aeat/core/observability/tests/test_sink_redaction.py",
     ),
     (
         "JsonlRunSink emit",
-        "src/aeat/core/observability/test_sink.py",
+        "src/aeat/core/observability/tests/test_sink.py",
     ),
     (
         "AEAT fichero-BOE export bytes",
-        "src/aeat/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py",
+        "src/aeat/adapters/outbound/aeat/export/_formats/tests/test_fichero_boe_roundtrip.py",
     ),
     (
         "AEAT auth session store",
-        "src/aeat/adapters/outbound/aeat/auth/test_session_store_roundtrip.py",
+        "src/aeat/adapters/outbound/aeat/auth/tests/test_session_store_roundtrip.py",
     ),
     (
         "Google session store",
-        "src/aeat/adapters/outbound/google/test_session_store_roundtrip.py",
+        "src/aeat/adapters/outbound/google/tests/test_session_store_roundtrip.py",
     ),
     (
         "Google worksheet export/pull",
-        "src/aeat/adapters/outbound/google/test_worksheet_export_pull_roundtrip.py",
+        "src/aeat/adapters/outbound/google/tests/test_worksheet_export_pull_roundtrip.py",
     ),
     (
         "AEAT sede observation store",
-        "src/aeat/adapters/outbound/aeat/sede/test_observation_store_roundtrip.py",
+        "src/aeat/adapters/outbound/aeat/sede/tests/test_observation_store_roundtrip.py",
     ),
     (
         "Corpus sidecar justificante inbound",
-        "src/aeat/adapters/inbound/justificante/test_corpus_sidecar_roundtrip.py",
+        "src/aeat/adapters/inbound/justificante/tests/test_corpus_sidecar_roundtrip.py",
     ),
     (
         "Sanitizer pipeline inbound",
-        "src/aeat/adapters/inbound/sanitizer/test_round_trip.py",
+        "src/aeat/adapters/inbound/sanitizer/tests/test_round_trip.py",
     ),
     (
         "RunTrace persistence",
-        "src/aeat/application/workflow/test_run_persistence_roundtrip.py",
+        "src/aeat/application/workflow/tests/test_run_persistence_roundtrip.py",
     ),
     (
         "Filing history repository",
-        "src/aeat/application/filing/test_history_repository_roundtrip.py",
+        "src/aeat/application/filing/tests/test_history_repository_roundtrip.py",
     ),
     (
         "Domain filing secure storage",
-        "src/aeat/domain/filing/test_secure_storage_roundtrip.py",
+        "src/aeat/domain/filing/tests/test_secure_storage_roundtrip.py",
     ),
     (
         "Domain modelos secure storage",
-        "src/aeat/domain/modelos/test_secure_storage_roundtrip.py",
+        "src/aeat/domain/modelos/tests/test_secure_storage_roundtrip.py",
     ),
     (
         "Registry corpus round-trip gate",
-        "src/aeat/domain/calculations/registry/test_corpus_round_trip_gate.py",
+        "src/aeat/domain/calculations/registry/tests/test_corpus_round_trip_gate.py",
     ),
     (
         "Attachment store",
-        "src/aeat/adapters/persistence/storage/test_attachment_store_roundtrip.py",
+        "src/aeat/adapters/persistence/storage/tests/test_attachment_store_roundtrip.py",
     ),
     (
         "Domain invoices secure storage",
-        "src/aeat/domain/invoices/test_secure_storage_roundtrip.py",
+        "src/aeat/domain/invoices/tests/test_secure_storage_roundtrip.py",
     ),
     (
         "Domain submission secure storage",
-        "src/aeat/domain/submission/test_secure_storage_roundtrip.py",
+        "src/aeat/domain/submission/tests/test_secure_storage_roundtrip.py",
     ),
     (
         "Registry cross-boundary roundtrip",
-        "src/aeat/domain/calculations/registry/test_cross_boundary_roundtrip.py",
+        "src/aeat/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py",
     ),
     (
         "Observations repository",
-        "src/aeat/application/calculations/test_observations_repository_roundtrip.py",
+        "src/aeat/application/calculations/tests/test_observations_repository_roundtrip.py",
     ),
     (
         "LLM cache roundtrip",
-        "src/aeat/adapters/outbound/llm/test_cache_roundtrip.py",
+        "src/aeat/adapters/outbound/llm/tests/test_cache_roundtrip.py",
     ),
     (
         "Profile assets roundtrip",
-        "src/aeat/adapters/persistence/profile/test_assets_roundtrip.py",
+        "src/aeat/adapters/persistence/profile/tests/test_assets_roundtrip.py",
     ),
     (
         "Profile inventory roundtrip",
-        "src/aeat/adapters/persistence/profile/test_inventory_roundtrip.py",
+        "src/aeat/adapters/persistence/profile/tests/test_inventory_roundtrip.py",
     ),
     (
         "Bucket manifest roundtrip",
-        "src/aeat/adapters/persistence/storage/bucket/test_manifest_roundtrip.py",
+        "src/aeat/adapters/persistence/storage/bucket/tests/test_manifest_roundtrip.py",
     ),
 )
 
@@ -166,7 +166,7 @@ def test_persistence_boundary_roundtrip_tests_exist() -> None:
     """Every declared persistence boundary must have a roundtrip test on disk.
 
     Verifies behavior contract: the inventory above is the canonical record of
-    boundaries touched by ratchet history-P08.  Each entry must have an existing
+    boundaries touched by ratchet history.  Each entry must have an existing
     test file.  Missing files indicate a boundary was declared without a
     roundtrip test — a roundtrip-discipline violation.
     """

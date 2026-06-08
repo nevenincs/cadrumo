@@ -135,9 +135,7 @@ def _deductible_total(*, classification: BusinessClassification, business_pct: D
     if business_pct is not None:
         payload["business_pct"] = business_pct
     catalogue = TransactionCatalogue.from_transactions((Transaction.model_validate(payload),))
-    result = aggregate_renta_ledger_expenses(
-        catalogue, InvoiceCatalogue(), bucket_id="corpus", period="2025"
-    )
+    result = aggregate_renta_ledger_expenses(catalogue, InvoiceCatalogue(), bucket_id="corpus", period="2025")
     return sum((o.deductible_amount for o in result.observations), start=Decimal("0"))
 
 
