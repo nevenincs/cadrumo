@@ -44,16 +44,16 @@ encrypted records; `integrity registry` runs full registry validation. If either
 fails, the report names the affected namespace or registry fragment. Take that to
 the issue tracker rather than editing stored data by hand.
 
-## Repair the active-profile pointer
+## Repair the active profile setting
 
 If `aeat app` commands refuse with a no-active-profile message but a profile does
-exist, repair the pointer:
+exist, repair the active profile configuration setting:
 
 ```
 aeat config repair profile
 ```
 
-It inspects and repairs the active-profile pointer. If the pointer targets
+It inspects and repairs the active profile configuration. If the active profile setting targets
 unreadable profile state, clear it with `aeat config repair profile
 --clear-active`, then switch to a good profile.
 
