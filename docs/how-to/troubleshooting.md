@@ -39,10 +39,10 @@ aeat config repair integrity objects
 aeat config repair integrity registry
 ```
 
-`integrity objects` verifies the AES-256-GCM authentication tags on your
-encrypted records; `integrity registry` runs full registry validation. If either
-fails, the report names the affected namespace or registry fragment. Take that to
-the issue tracker rather than editing stored data by hand.
+`integrity objects` checks the security seals on your encrypted records;
+`integrity registry` checks the tax rule definitions. If either fails, the
+report names the affected item. Take that report to the issue tracker rather
+than editing stored data by hand.
 
 ## Repair the active profile setting
 
@@ -66,21 +66,24 @@ unreadable wrapper:
 aeat config repair reset-state --yes
 ```
 
-This is destructive and requires `--yes`. Use it only when the state is
-unreadable and nothing else recovers it.
+This removes the saved progress state for interrupted commands. It is
+destructive and requires `--yes`. Use it only when nothing else recovers the
+problem.
 
 ## Authentication and connectivity
 
-These matter only if you use read-only live data from the AEAT. Live reads
-require configured AEAT authentication, such as a registered certificate or
-Cl@ve session. Check your AEAT authentication:
+These steps apply only if you use live data reads from the AEAT portal. Live
+reads require AEAT authentication — a registered digital certificate or Cl@ve
+PIN (the digital identity system Spain uses for citizens to log in to government
+services online). Check your authentication:
 
 ```
 aeat config auth status
 aeat config auth test
 ```
 
-Probe browser and Sede reachability with a read-only check:
+Check that the tool can reach the AEAT website (Sede Electrónica, the official
+online portal):
 
 ```
 aeat config repair connectivity
