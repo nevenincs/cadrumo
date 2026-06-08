@@ -63,8 +63,7 @@ def apply(config: pytest.Config, items: list[pytest.Item]) -> None:
         hex_markers = {name for name in owned if name.startswith("hex_")}
         if len(hex_markers) != 1 or not hex_markers <= _HEX_MARKERS:
             raise pytest.UsageError(
-                f"{item.nodeid}: must carry exactly one accepted hex_* marker, "
-                f"found {sorted(hex_markers) or 'none'}"
+                f"{item.nodeid}: must carry exactly one accepted hex_* marker, found {sorted(hex_markers) or 'none'}"
             )
         remaining.append(item)
     items[:] = remaining

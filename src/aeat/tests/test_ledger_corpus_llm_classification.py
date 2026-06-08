@@ -35,14 +35,14 @@ _CORPUS = Path(__file__).parent / "fixtures" / "financial" / "ledger-corpus"
 _ACCOUNTS = ("bbva-business-eur.csv", "caixabank-personal.csv", "revolut-multi.csv")
 # Representative descriptions spanning the gamut + the edge cases (behavior contract).
 _SAMPLE_NEEDLES = (
-    "Cobro factura F-2025-001 ACME",          # business income
-    "Cuota autonomos RETA",                    # business expense
-    "Compra supermercado",                     # personal
-    "Transferencia a cuenta personal",         # internal transfer
-    "Nomina",                                  # trabajo income
-    "cliente DE GmbH intracom",               # foreign reverse-charge
-    "Alquiler local",                          # business premises
-    "Restaurante",                             # mixed / hospitality
+    "Cobro factura F-2025-001 ACME",  # business income
+    "Cuota autonomos RETA",  # business expense
+    "Compra supermercado",  # personal
+    "Transferencia a cuenta personal",  # internal transfer
+    "Nomina",  # trabajo income
+    "cliente DE GmbH intracom",  # foreign reverse-charge
+    "Alquiler local",  # business premises
+    "Restaurante",  # mixed / hospitality
 )
 # Lenient accuracy floor: a live LLM is not deterministic and the sample is
 # small; the gate guards against gross regression, not perfect agreement.
@@ -72,9 +72,7 @@ def _sample_transactions() -> list[tuple[Transaction, dict]]:
                     rule = _match(raw.description, rules)
                     if rule is None:
                         continue
-                    direction = (
-                        TransactionDirection.INCOMING if raw.amount > 0 else TransactionDirection.OUTGOING
-                    )
+                    direction = TransactionDirection.INCOMING if raw.amount > 0 else TransactionDirection.OUTGOING
                     txn = Transaction.model_validate({"raw": raw, "direction": direction})
                     out.append((txn, rule))
                     seen.add(needle)

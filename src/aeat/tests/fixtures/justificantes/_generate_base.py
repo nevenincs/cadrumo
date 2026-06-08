@@ -48,6 +48,7 @@ class _Fixture:
     total_ingresar: str | None
     total_devolver: str | None
 
+
 _FIXTURES: tuple[_Fixture, ...] = (
     _Fixture(
         filename="modelo_130_2026Q1.pdf",
@@ -96,6 +97,7 @@ _SEDE_ORIGIN = _AEAT_CONSTANTS.domains.sede
 
 _VERIFY_URL = f"{_SEDE_ORIGIN}{_AEAT_CONSTANTS.help_pages.csv_verification}"
 
+
 def _draw(c: canvas.Canvas, fixture: _Fixture) -> None:
     """Render a single synthetic justificante page onto ``c``."""
     _, height = A4
@@ -135,6 +137,7 @@ def _draw(c: canvas.Canvas, fixture: _Fixture) -> None:
     c.drawString(20 * mm, y, "Puede verificar la autenticidad de este documento en:")
     y -= 6 * mm
     c.drawString(20 * mm, y, _VERIFY_URL)
+
 
 def _write_sidecar(pdf_path: Path, modelo: str, ejercicio: str, tax_id: str) -> None:
     """Write a sanitiser-manifest sidecar JSON for a synthetic fixture PDF.

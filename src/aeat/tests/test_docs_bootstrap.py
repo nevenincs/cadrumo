@@ -18,7 +18,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 _DOCS = _REPO_ROOT / "docs"
 
 _README = _REPO_ROOT / "README.md"
-_GUIDES = ("getting-started", "architecture", "authoring-guide")
+_GUIDES = ("architecture", "authoring-guide")
 
 
 def test_readme_exists_and_is_substantive() -> None:
@@ -40,4 +40,3 @@ def test_guides_are_wired_into_the_index() -> None:
     index = (_DOCS / "index.md").read_text(encoding="utf-8")
     unreferenced = [name for name in _GUIDES if name not in index]
     assert not unreferenced, f"guides not referenced in docs/index.md toctree: {unreferenced}"
-

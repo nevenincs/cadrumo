@@ -472,11 +472,7 @@ def _configured_marker_names() -> list[str]:
 def _is_test_infrastructure_path(path: Path) -> bool:
     """Return True for test modules and shared pytest infrastructure."""
     parts = path.relative_to(_REPO_ROOT).parts
-    return (
-        "tests" in parts
-        or path.name == "conftest.py"
-        or path.name.startswith("test_")
-    )
+    return "tests" in parts or path.name == "conftest.py" or path.name.startswith("test_")
 
 
 def _production_live_test_opt_in_violations() -> list[str]:
@@ -595,9 +591,7 @@ def test_pyproject_marker_registry_is_pruned_and_unique() -> None:
 def test_live_test_opt_in_token_is_not_used_by_production_aeat_live_paths() -> None:
     """The live-test opt-in env var must remain test/core-gate infrastructure only."""
     violations = _production_live_test_opt_in_violations()
-    assert not violations, "production modules must not gate live reads on the pytest opt-in:\n" + "\n".join(
-        violations
-    )
+    assert not violations, "production modules must not gate live reads on the pytest opt-in:\n" + "\n".join(violations)
 
 
 def test_test_modules_live_under_tests_directories_and_use_test_prefix() -> None:
@@ -615,9 +609,7 @@ def test_test_modules_live_under_tests_directories_and_use_test_prefix() -> None
         str(path.relative_to(_REPO_ROOT)) for root in _TEST_MODULE_ROOTS for path in root.rglob("*_test.py")
     ]
     assert not misplaced, "test-prefixed files outside tests directories:\n" + "\n".join(misplaced)
-    assert not underscore_prefixed, "underscore-prefixed test files are forbidden:\n" + "\n".join(
-        underscore_prefixed
-    )
+    assert not underscore_prefixed, "underscore-prefixed test files are forbidden:\n" + "\n".join(underscore_prefixed)
     assert not suffix_style, "suffix-style test files are forbidden:\n" + "\n".join(suffix_style)
 
 
