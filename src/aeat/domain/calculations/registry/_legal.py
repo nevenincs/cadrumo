@@ -55,6 +55,19 @@ def verify_legal_reference(
     explicit registry audit calls (``verify_registry_tree``,
     ``test_catalogue_verification``).
     """
+    if reference.kind == "manual":
+        path_text = reference.corpus_ref.split("#", 1)[0]
+        if source_root is not None:
+            path = (source_root / path_text).resolve()
+            if path.is_file():
+                try:
+                    from ...manuals import Section
+                    Section.model_validate_json(path.read_text(encoding="utf-8"))
+                except Exception as exc:
+                    raise RegistryValidationError(
+                        f"legal reference {reference.id!r} manual section JSON validation failed: {exc}"
+                    )
+
     if reference.article is None:
         return
     source = _SOURCE_BY_KIND.get(reference.kind)
