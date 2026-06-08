@@ -57,9 +57,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         profile_create_storage_span("default"),
     ):
         try:
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id="default")
-            )
+            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
             yield
         finally:
             dispose_engine()
@@ -79,9 +77,7 @@ def _match(description: str, rules: list[dict]) -> dict | None:
 
 def _import_corpus() -> None:
     for name in _FILES:
-        result = _RUNNER.invoke(
-            app, ["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"]
-        )
+        result = _RUNNER.invoke(app, ["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"])
         assert result.exit_code == 0, f"{name}: {result.output}"
 
 
@@ -141,17 +137,13 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
         classify_lines.append(f"{row['transaction_id']},{rule['classification']},{category}")
         expected[row["transaction_id"]] = rule["classification"]
 
-    assert len(expected) >= 10, (
-        f"Marta's quarter should carry a meaningful classify workload, got {len(expected)}"
-    )
+    assert len(expected) >= 10, f"Marta's quarter should carry a meaningful classify workload, got {len(expected)}"
 
     with tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False, encoding="utf-8") as fh:
         fh.write("\n".join(classify_lines) + "\n")
         classify_csv = fh.name
 
-    bulk = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "classify", "--from-csv", classify_csv]
-    )
+    bulk = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "classify", "--from-csv", classify_csv])
     assert bulk.exit_code == 0, bulk.output
     bulk_result = json.loads(bulk.output)["result"]
     # TESTIMONIAL: bulk classify reports total/applied/skipped/failures — a
@@ -176,18 +168,24 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
         mixed = _RUNNER.invoke(
             app,
             [
-                "app", "ledger", "classify", "--id", internet["transaction_id"],
-                "--classification", "MIXED", "--business-pct", "0.30",
-                "--category-id", "suministros_home_office_internet",
+                "app",
+                "ledger",
+                "classify",
+                "--id",
+                internet["transaction_id"],
+                "--classification",
+                "MIXED",
+                "--business-pct",
+                "0.30",
+                "--category-id",
+                "suministros_home_office_internet",
             ],
         )
         assert mixed.exit_code == 0, mixed.output
 
     # --- Readiness gates --------------------------------------------------
     # Marta runs preflight for the quarter to see what's still missing.
-    preflight = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"]
-    )
+    preflight = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"])
     assert preflight.exit_code == 0, preflight.output
     pf = json.loads(preflight.output)["result"]
     # The report carries a checked count, an issue list, and a ready flag.
@@ -214,8 +212,7 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
         out_csv = Path(tmp) / "marta-1t-2025.csv"
         exported = _RUNNER.invoke(
             app,
-            ["--format", "json", "app", "ledger", "export",
-             "--output", str(out_csv), "--export-format", "csv"],
+            ["--format", "json", "app", "ledger", "export", "--output", str(out_csv), "--export-format", "csv"],
         )
         assert exported.exit_code == 0, exported.output
         assert out_csv.exists() and out_csv.stat().st_size > 0

@@ -33,7 +33,6 @@ from .envelope_helpers import unwrap_schema_envelope as _payload
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     dispose_engine()
@@ -166,12 +165,10 @@ def _seed_modelo_111_revisions(
                 created_at=now,
                 updated_at=now,
                 verified_at=now
-                if state_value
-                in {CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.PRESENTADO}
+                if state_value in {CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.PRESENTADO}
                 else None,
                 verified_by="operator"
-                if state_value
-                in {CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.PRESENTADO}
+                if state_value in {CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.PRESENTADO}
                 else None,
                 filed_at=now if state_value is CalculationRevisionState.PRESENTADO else None,
                 filed_by="operator" if state_value is CalculationRevisionState.PRESENTADO else None,
@@ -202,7 +199,10 @@ def _seed_modelo_111_revisions(
 
 
 def _seed_exportable_modelo_111_revision(
-    *, modelo: str = "111", filing_year: int = 2026, period: str = "2026Q1",
+    *,
+    modelo: str = "111",
+    filing_year: int = 2026,
+    period: str = "2026Q1",
 ) -> tuple[str, str]:
     """Persist a verified-complete modelo-111 revision ready for export.
 
@@ -259,7 +259,8 @@ def _seed_exportable_modelo_111_revision(
 
 
 def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
-    cli_runner: CliRunner, tmp_path: Path,
+    cli_runner: CliRunner,
+    tmp_path: Path,
 ) -> None:
     """Exporting a verified-complete modelo-111 revision end-to-end
     writes a fichero-BOE file without a header-validation error.
@@ -287,7 +288,8 @@ def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
 
 
 def test_export_resolves_visible_target_to_current_verified_revision(
-    cli_runner: CliRunner, tmp_path: Path,
+    cli_runner: CliRunner,
+    tmp_path: Path,
 ) -> None:
     """Natural-key export defaults to the current verified-complete revision."""
 
@@ -301,10 +303,19 @@ def test_export_resolves_visible_target_to_current_verified_revision(
     result = cli_runner.invoke(
         app,
         [
-            "--format", "json",
-            "app", "modelo", "export",
-            "--modelo", "111", "--year", "2026", "--period", "1T",
-            "--output", str(out),
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "export",
+            "--modelo",
+            "111",
+            "--year",
+            "2026",
+            "--period",
+            "1T",
+            "--output",
+            str(out),
         ],
     )
 
@@ -315,7 +326,8 @@ def test_export_resolves_visible_target_to_current_verified_revision(
 
 
 def test_export_prefers_filed_pointer_over_current_verified_revision(
-    cli_runner: CliRunner, tmp_path: Path,
+    cli_runner: CliRunner,
+    tmp_path: Path,
 ) -> None:
     """Natural-key export prefers filed pointer before current verified pointer."""
 
@@ -330,10 +342,19 @@ def test_export_prefers_filed_pointer_over_current_verified_revision(
     result = cli_runner.invoke(
         app,
         [
-            "--format", "json",
-            "app", "modelo", "export",
-            "--modelo", "111", "--year", "2026", "--period", "1T",
-            "--output", str(out),
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "export",
+            "--modelo",
+            "111",
+            "--year",
+            "2026",
+            "--period",
+            "1T",
+            "--output",
+            str(out),
         ],
     )
 
@@ -344,7 +365,8 @@ def test_export_prefers_filed_pointer_over_current_verified_revision(
 
 
 def test_export_refuses_ambiguous_verified_revisions_without_pointer(
-    cli_runner: CliRunner, tmp_path: Path,
+    cli_runner: CliRunner,
+    tmp_path: Path,
 ) -> None:
     """Natural-key export refuses multiple verified candidates without a pointer."""
 
@@ -356,9 +378,17 @@ def test_export_refuses_ambiguous_verified_revisions_without_pointer(
     result = cli_runner.invoke(
         app,
         [
-            "app", "modelo", "export",
-            "--modelo", "111", "--year", "2026", "--period", "1T",
-            "--output", str(out),
+            "app",
+            "modelo",
+            "export",
+            "--modelo",
+            "111",
+            "--year",
+            "2026",
+            "--period",
+            "1T",
+            "--output",
+            str(out),
         ],
     )
 
@@ -368,7 +398,8 @@ def test_export_refuses_ambiguous_verified_revisions_without_pointer(
 
 
 def test_export_modelo_111_refuses_when_profile_name_missing(
-    cli_runner: CliRunner, tmp_path: Path,
+    cli_runner: CliRunner,
+    tmp_path: Path,
 ) -> None:
     """When the active profile lacks ``identity.surnames`` the export
     must refuse with a clear error naming the missing profile fact
@@ -410,7 +441,8 @@ def test_export_refuses_unknown_work_unit(cli_runner: CliRunner, tmp_path: Path)
 
 
 def test_export_refuses_work_unit_with_no_exportable_revision(
-    cli_runner: CliRunner, tmp_path: Path,
+    cli_runner: CliRunner,
+    tmp_path: Path,
 ) -> None:
     """A work unit whose only revision is in DRAFT state must refuse;
     only verified-complete or filed revisions are exportable."""
@@ -433,14 +465,12 @@ def test_export_help_advertises_local_only(cli_runner: CliRunner) -> None:
     result = cli_runner.invoke(app, ["app", "modelo", "export", "--help"])
     assert result.exit_code == 0, result.output
     assert "modelo" in result.output.lower()
-    assert any(
-        token in result.output.lower()
-        for token in ("local-only", "local;", "local.", "nunca")
-    ), result.output
+    assert any(token in result.output.lower() for token in ("local-only", "local;", "local.", "nunca")), result.output
 
 
 def test_export_refuses_explicit_revision_in_draft_state(
-    cli_runner: CliRunner, tmp_path: Path,
+    cli_runner: CliRunner,
+    tmp_path: Path,
 ) -> None:
     """When --revision targets a DRAFT revision explicitly, the service
     raises CalculationRevisionStateError; the CLI surfaces it as a
@@ -452,9 +482,14 @@ def test_export_refuses_explicit_revision_in_draft_state(
     result = cli_runner.invoke(
         app,
         [
-            "app", "modelo", "export", work_unit_id,
-            "--output", str(out),
-            "--revision", calc_rev_id,
+            "app",
+            "modelo",
+            "export",
+            work_unit_id,
+            "--output",
+            str(out),
+            "--revision",
+            calc_rev_id,
         ],
     )
     assert result.exit_code != 0, result.output

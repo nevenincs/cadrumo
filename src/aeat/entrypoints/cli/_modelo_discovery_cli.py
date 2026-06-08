@@ -20,7 +20,7 @@ from ...application.modelo import (
     registry_list_modelos,
     registry_modelo_codes,
 )
-from ...core.i18n import tr
+from ...core.i18n import output_language, tr
 from ...domain.calculations.registry import (
     InputKind,
     RegistrySnapshotError,
@@ -94,7 +94,7 @@ def _run_query(call, *, bad_parameter_from_error: Callable[[BaseException], type
 
 
 def _register_list_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
-    @app.command("list")
+    @app.command("list", help=tr("cli.app.modelo.list.help"))
     def list_modelos(
         ctx: typer.Context,
         year: Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.list.year_help"))] = None,
@@ -128,7 +128,7 @@ def _register_list_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
 
 
 def _register_describe_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
-    @app.command("describe")
+    @app.command("describe", help=tr("cli.app.modelo.describe.help"))
     def describe_modelo(
         ctx: typer.Context,
         modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.describe.modelo_help"))],
@@ -175,7 +175,7 @@ def _register_describe_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
 
 
 def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
-    @app.command("casillas")
+    @app.command("casillas", help=tr("cli.app.modelo.casillas.help"))
     def casillas(
         ctx: typer.Context,
         modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.casillas.modelo_help"))],
@@ -193,6 +193,16 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             str | None,
             typer.Option("--form-number", help=tr("cli.app.modelo.casillas.form_number_help")),
         ] = None,
+        explain: Annotated[
+            bool,
+            typer.Option(
+                "--explain",
+                help=tr(
+                    "cli.app.modelo.casillas.explain_help",
+                    default="Include localized help text in the text output."
+                )
+            )
+        ] = False,
     ) -> None:
         report = _run_query(
             lambda: registry_casillas(
@@ -205,6 +215,7 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             ),
             bad_parameter_from_error=deps.bad_parameter_from_error,
         )
+        lang = output_language()
         result = ModeloCasillasResult(
             modelo=report.code,
             revision=report.revision,
@@ -215,18 +226,29 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
                     number=row.number,
                     input_kind=row.input_kind,
                     required=bool(row.required),
-                    label=row.label,
+                    label=row.localized_labels.get(lang, row.label),
+                    localized_labels=dict(row.localized_labels),
+                    localized_help=dict(row.localized_help),
                 )
                 for row in report.rows
             ],
         )
-        lines = [
-            "casilla_id\tnumber\tinput\trequired\tlabel",
-            *[
-                f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t{str(row.required).lower()}\t{row.label}"
-                for row in report.rows
-            ],
-        ]
+        if explain:
+            lines = [
+                "casilla_id\tnumber\tinput\trequired\tlabel\thelp",
+                *[
+                    f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t{str(row.required).lower()}\t{row.localized_labels.get(lang, row.label)}\t{row.localized_help.get(lang) or '-'}"
+                    for row in report.rows
+                ],
+            ]
+        else:
+            lines = [
+                "casilla_id\tnumber\tinput\trequired\tlabel",
+                *[
+                    f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t{str(row.required).lower()}\t{row.localized_labels.get(lang, row.label)}"
+                    for row in report.rows
+                ],
+            ]
         _emit_envelope(ctx, command="modelo.casillas", result=result, lines=lines)
 
 
@@ -517,7 +539,7 @@ def _register_bindings_preview_command(bindings_app: typer.Typer, deps: _Discove
 
 
 def _register_formulas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
-    @app.command("formulas")
+    @app.command("formulas", help=tr("cli.app.modelo.formulas.help"))
     def formulas(
         ctx: typer.Context,
         modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.formulas.modelo_help"))],

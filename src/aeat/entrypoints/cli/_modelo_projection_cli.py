@@ -245,8 +245,7 @@ def _register_modelo_compare_command(
                 help=tr(
                     "cli.app.modelo.compare.year_help",
                     default=(
-                        "Filing year to include in the comparison. Specify exactly twice: "
-                        "--year 2024 --year 2025."
+                        "Filing year to include in the comparison. Specify exactly twice: --year 2024 --year 2025."
                     ),
                 ),
             ),
@@ -312,6 +311,7 @@ def _register_modelo_compare_command(
                 f"\t{row.year_a_value}\t{row.year_b_value}\t{row.delta}\t{pct}"
             )
         _emit_envelope(ctx, command="modelo.compare", result=compare_result, lines=lines)
+
 
 def _delta_row_payload(row: ModeloCompareDeltaRow) -> DeltaRowPayload:
     return DeltaRowPayload(

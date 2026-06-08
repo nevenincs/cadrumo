@@ -243,12 +243,14 @@ class TestIvaRemoteStateCliSurface:
             assert progress["stage"] == "cli_watchdog"
             assert progress["surface"] == LiveIvaReadSurface.FILED_HISTORY.value
             assert "watchdog_reaped_process_count" in progress
-            assert "auth_watchdog_before_persisted_session" in progress or progress.get(
-                "auth_watchdog_before_probe"
-            ) == "unavailable"
-            assert "auth_watchdog_after_persisted_session" in progress or progress.get(
-                "auth_watchdog_after_probe"
-            ) == "unavailable"
+            assert (
+                "auth_watchdog_before_persisted_session" in progress
+                or progress.get("auth_watchdog_before_probe") == "unavailable"
+            )
+            assert (
+                "auth_watchdog_after_persisted_session" in progress
+                or progress.get("auth_watchdog_after_probe") == "unavailable"
+            )
 
         asyncio.run(run())
 
@@ -390,11 +392,7 @@ def _live_process_command_lines() -> str:
         powershell = shutil.which("powershell") or shutil.which("pwsh")
         if powershell is None:
             pytest.skip("PowerShell is required for Windows process inventory")
-        script = (
-            "Get-CimInstance Win32_Process | "
-            "Select-Object -ExpandProperty CommandLine | "
-            "ConvertTo-Json -Compress"
-        )
+        script = "Get-CimInstance Win32_Process | Select-Object -ExpandProperty CommandLine | ConvertTo-Json -Compress"
         completed = subprocess.run(
             [powershell, "-NoProfile", "-Command", script],
             check=True,

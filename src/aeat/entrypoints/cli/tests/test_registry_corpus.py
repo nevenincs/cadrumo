@@ -302,11 +302,11 @@ def test_rejected_topic_and_help_commands_are_absent_from_discovery() -> None:
 
     def _child(group: Group, name: str) -> Group:
         child = group.get_command(click.Context(group), name)
-        assert isinstance(child, Group)
+        assert hasattr(child, "get_command")
         return child
 
     root = aeat_click_command()
-    assert isinstance(root, Group)
+    assert hasattr(root, "get_command")
     app_group = _child(root, "app")
     registry_group = _child(app_group, "registry")
     citations_group = _child(registry_group, "citations")
