@@ -105,17 +105,41 @@ Perform final verification gates, conformance checking, and reviews.
 - [x] `W03.P10.S22` - Perform newcomer clarity and editorial reviews on live and reconciliation documentation; `review reports`.
 - [x] `W03.P10.S23` - Verify complete corpus links and Sphinx build gates; `src/aeat/tests/test_docs_build.py`.
 
+## Wave `W04` - High-Level Overviews and User Education
+
+Create and refine narrative, simple-language overview documentation that connects the filing lifecycle and introduces the user to more advanced topics gradually.
+
+### Phase `W04.P11` - Overview Discovery & Framing
+
+Discover and audit narrative gaps and transitions between different stages of the filing lifecycle.
+
+- [ ] `W04.P11.S24` - Discover/audit current narrative links and structure in `docs/index.md` and `docs/how-to/index.md`.
+- [ ] `W04.P11.S25` - Identify areas where conceptual transitions (e.g. from ledger/classification to draft/verification) are abrupt or underdescribed.
+
+### Phase `W04.P12` - Overview and Narrative Content Production
+
+Author and refine story-driven narrative pages that guide the user step-by-step.
+
+- [ ] `W04.P12.S26` - Create or refine narrative overview guides explaining the ledger-to-registry model and files.
+- [ ] `W04.P12.S27` - Add step-by-step cross-referencing and contextual links between how-to guides and tutorials to improve newcomer progression.
+
+### Phase `W04.P13` - Review and Verification
+
+Perform newcomer clarity reviews, link verification, and Sphinx build gates on narrative pages.
+
+- [ ] `W04.P13.S28` - Perform clarity and language-simplicity reviews on narrative pages; `review reports`.
+- [ ] `W04.P13.S29` - Verify all links and commands using the conformance and build gates; `src/aeat/tests/test_docs_build.py`.
+
 ## Description
 
 This plan outlines the systematic discovery and documentation audit of the Spanish AEAT text filing architecture. The goal is to ensure full, generic documentation coverage of the tax preparation, verification, and local filing lifecycle surfaces. All identity and taxpayer terminology is generalized (using CIF, NIF, DNI, NIE, or NII instead of specific single-group tokens) to fit all Spanish filing entities, while maintaining simple persona-based tutorials for clarity.
 
 ## Parallelization
 
-Waves W01, W02, and W03 are strictly sequential to allow codebase discovery to naturally feed the drafting and review cycles. Within each Wave, Phase P01/P02/P03 can run in parallel where discovery does not block initial outlines, but Phase P04 (Review) must run sequentially after documentation drafting is complete.
+Waves W01, W02, W03, and W04 are strictly sequential to allow codebase discovery and structural updates to naturally feed the narrative overview drafting and review cycles. Within each Wave, discovery and authoring phases can run in parallel where possible, but review and verification phases must run sequentially.
 
 ## Verification
 
 - Conformance test suite `src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py` passes.
 - Documentation Sphinx build gate `src/aeat/tests/test_docs_build.py` runs and passes successfully.
 - Every modified or created document passes the zero-context newcomer and editorial reviews.
-
