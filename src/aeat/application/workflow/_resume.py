@@ -11,6 +11,9 @@ mutation of the prior run record. Resuming a workflow is the operator
 asking the local orchestrator to retry; whether that retry then
 contacts AEAT depends on the engine, not on this action.
 
+This module uses :class:`WorkflowResult`, :class:`WorkflowEngine`,
+and :class:`ModeloDeadline` for workflow resumption logic.
+
 Resumability rules:
 
   * the prior result MUST carry ``final_stage = ABORTED`` — DONE

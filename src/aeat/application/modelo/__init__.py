@@ -12,6 +12,9 @@ active profile when the caller did not pass one explicitly; this
 keeps the application service unit-testable without a workflow-
 state fixture.
 
+This module re-exports :class:`CalculationRevision`, :class:`ModeloRecord`,
+and other core types for convenient access by callers.
+
 Verification boundary
 ---------------------
 ``verify_modelo_revision`` enforces a four-layer gate before the

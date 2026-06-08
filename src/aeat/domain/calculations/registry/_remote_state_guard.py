@@ -1,4 +1,8 @@
-"""Fail-closed guard for live AEAT cross-reference surfaces."""
+"""Fail-closed guard for live AEAT cross-reference surfaces.
+
+This module uses :class:`LiveCrossReferenceDecision` and :class:`RemoteOperation`
+to enforce fail-closed access control.
+"""
 
 from __future__ import annotations
 
