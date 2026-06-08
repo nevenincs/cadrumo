@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from .._loader import load_registry_tree
 from .....core.resources import bundled_path
+from .._loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -18,16 +18,16 @@ def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:
     and raise a RegistryValidationError.
     """
     root = bundled_path("registry", "aeat")
-    
+
     # This loads all models and legal parameters, parsing and verifying every locales/*.toml file
-    modelos, catalogues = load_registry_tree(root)
+    modelos, _catalogues = load_registry_tree(root)
     assert len(modelos) > 0, "No modelos loaded from registry"
 
     # Verify that M130 has our translations loaded
     m130 = next(m for m in modelos if str(m.id) == "130")
     revision = m130.revisions["2019-y-siguientes"]
     casilla_01 = next(c for c in revision.casillas if c.id == "01")
-    
+
     # Assert labels loaded correctly for all three locales
     assert casilla_01.get_label("en") == "Income"
     assert casilla_01.get_label("ca") == "Ingressos"

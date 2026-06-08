@@ -287,7 +287,7 @@ def _apply_locales(modelo_dir: Path, merged_revisions: dict[str, object]) -> Non
         casillas_list = raw_rev_table.get("casillas", ())
         if not isinstance(casillas_list, (list, tuple)):
             continue
-        
+
         rev_casilla_ids = set()
         for casilla in casillas_list:
             casilla_table = _as_toml_table(casilla)
@@ -324,13 +324,15 @@ def _apply_locales(modelo_dir: Path, merged_revisions: dict[str, object]) -> Non
             for key in trans.labels:
                 if key not in rev_ids:
                     raise RegistryValidationError(
-                        f"Invalid translation key {key!r} in labels for locale {locale!r} under revision {revision_id!r}: "
+                        f"Invalid translation key {key!r} in labels for locale {locale!r} "
+                        f"under revision {revision_id!r}: "
                         "no casilla found with this id"
                     )
             for key in trans.help:
                 if key not in rev_ids:
                     raise RegistryValidationError(
-                        f"Invalid translation key {key!r} in help for locale {locale!r} under revision {revision_id!r}: "
+                        f"Invalid translation key {key!r} in help for locale {locale!r} "
+                        f"under revision {revision_id!r}: "
                         "no casilla found with this id"
                     )
 
@@ -349,10 +351,10 @@ def _apply_locales(modelo_dir: Path, merged_revisions: dict[str, object]) -> Non
             if casilla_table is None:
                 new_casillas.append(casilla)
                 continue
-            
+
             casilla_id = casilla_table.get("id")
             continuidad_id = casilla_table.get("continuidad_id")
-            
+
             localized_labels = {}
             localized_help = {}
 
@@ -460,9 +462,7 @@ def _merge_revision_directory(path: Path, merged_revisions: dict[str, object]) -
     fragment_paths = [revision_manifest]
     fragment_paths.extend(
         sorted(
-            p
-            for p in path.rglob("*.toml")
-            if p != revision_manifest and not any(part == "locales" for part in p.parts)
+            p for p in path.rglob("*.toml") if p != revision_manifest and not any(part == "locales" for part in p.parts)
         )
     )
     merged_revision: dict[str, object] = {}

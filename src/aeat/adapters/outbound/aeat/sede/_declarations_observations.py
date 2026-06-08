@@ -1,6 +1,7 @@
 """Filed-declaration observation and registry interpretation helpers.
 
-Use of :class:`CasillaObservation`, :class:`ModeloRevision`, :class:`RegistrySnapshot`, :class:`ValidatedRegistryAuthority` for compliance.
+Use of :class:`CasillaObservation`, :class:`ModeloRevision`, :class:`RegistrySnapshot`,
+and :class:`ValidatedRegistryAuthority` for compliance.
 """
 
 from __future__ import annotations

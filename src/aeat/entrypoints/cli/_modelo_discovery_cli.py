@@ -198,10 +198,9 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             typer.Option(
                 "--explain",
                 help=tr(
-                    "cli.app.modelo.casillas.explain_help",
-                    default="Include localized help text in the text output."
-                )
-            )
+                    "cli.app.modelo.casillas.explain_help", default="Include localized help text in the text output."
+                ),
+            ),
         ] = False,
     ) -> None:
         report = _run_query(
@@ -237,7 +236,11 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             lines = [
                 "casilla_id\tnumber\tinput\trequired\tlabel\thelp",
                 *[
-                    f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t{str(row.required).lower()}\t{row.localized_labels.get(lang, row.label)}\t{row.localized_help.get(lang) or '-'}"
+                    (
+                        f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t"
+                        f"{str(row.required).lower()}\t{row.localized_labels.get(lang, row.label)}\t"
+                        f"{row.localized_help.get(lang) or '-'}"
+                    )
                     for row in report.rows
                 ],
             ]
@@ -245,7 +248,10 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             lines = [
                 "casilla_id\tnumber\tinput\trequired\tlabel",
                 *[
-                    f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t{str(row.required).lower()}\t{row.localized_labels.get(lang, row.label)}"
+                    (
+                        f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t"
+                        f"{str(row.required).lower()}\t{row.localized_labels.get(lang, row.label)}"
+                    )
                     for row in report.rows
                 ],
             ]
