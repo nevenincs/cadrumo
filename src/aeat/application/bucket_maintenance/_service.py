@@ -7,6 +7,8 @@ bucket-maintenance audit-event emission that the inner primitives do
 not own; the inner primitives keep emitting their lifecycle events
 (``PROFILE_RENAMED`` etc.) so each operator action surfaces both
 perspectives in the bucket-event history.
+
+This module uses :class:`BucketEventHistoryRepository` for event emission.
 """
 
 from __future__ import annotations
