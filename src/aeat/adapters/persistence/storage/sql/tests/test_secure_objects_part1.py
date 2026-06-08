@@ -269,6 +269,7 @@ def test_secure_object_repository_bootstraps_old_table_revision_columns(tmp_path
         db_path = tmp_path / "legacy-revision-bootstrap.db"
         engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
         payload = b"legacy-secure-object-payload"
+        from typing import Any, cast
         try:
             with engine.begin() as connection:
                 connection.exec_driver_sql(
@@ -284,7 +285,7 @@ def test_secure_object_repository_bootstraps_old_table_revision_columns(tmp_path
                     ")"
                 )
                 connection.execute(
-                    SecureObjectRow.__table__.insert().values(
+                    cast(Any, SecureObjectRow.__table__).insert().values(
                         namespace="aeat.legacy.revision",
                         object_key="legacy-key",
                         classification=SensitivityClass.FINANCIAL.value,

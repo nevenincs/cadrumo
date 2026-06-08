@@ -113,12 +113,14 @@ def test_iter_records_with_failures_applies_bounded_batch_execution(tmp_path: Pa
         namespace = "aeat.test.bounded.batches"
         captured_options: list[dict[str, object]] = []
 
+        from typing import Any
+
         def capture_listing_execution(
             _conn: object,
             _cursor: object,
             statement: str,
             _parameters: object,
-            context: object,
+            context: Any,
             _executemany: bool,
         ) -> None:
             if "FROM secure_objects WHERE namespace" in statement:
@@ -503,8 +505,10 @@ def test_secure_object_overwrite_of_legacy_row_derives_previous_payload_hash(tmp
                     "CONSTRAINT uq_secure_objects_identity UNIQUE (namespace, object_key)"
                     ")"
                 )
+                from typing import Any, cast
+
                 connection.execute(
-                    SecureObjectRow.__table__.insert().values(
+                    cast(Any, SecureObjectRow.__table__).insert().values(
                         namespace=namespace,
                         object_key="legacy-overwrite-key",
                         classification=SensitivityClass.FINANCIAL.value,
@@ -622,15 +626,22 @@ def test_secure_object_save_with_raw_key_writes_revision_metadata(tmp_path: Path
 def test_secure_object_write_rejects_conflict_policy_until_cas_contract_exists() -> None:
     """contract records the actual LWW policy; contract owns public CAS policy selection."""
 
+    from typing import Any, cast
+
     with pytest.raises(ValidationError):
         SecureObjectWrite(
-            namespace="aeat.revision.policy",
-            object_key="policy-key",
-            classification=SensitivityClass.FINANCIAL,
-            schema_version=1,
-            written_at=datetime(2026, 5, 22, 18, 0, 0, tzinfo=UTC),
-            payload=b"policy-payload",
-            conflict_policy="compare-and-swap",
+            **cast(
+                dict[str, Any],
+                {
+                    "namespace": "aeat.revision.policy",
+                    "object_key": "policy-key",
+                    "classification": SensitivityClass.FINANCIAL,
+                    "schema_version": 1,
+                    "written_at": datetime(2026, 5, 22, 18, 0, 0, tzinfo=UTC),
+                    "payload": b"policy-payload",
+                    "conflict_policy": "compare-and-swap",
+                },
+            )
         )
 
 def test_secure_object_save_with_expected_revision_updates_only_current_row(tmp_path: Path) -> None:
