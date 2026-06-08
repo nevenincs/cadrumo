@@ -47,8 +47,8 @@ Author localized help files and roll out translations mapping translatable strin
 
 Generate structured chapter and section layouts for Renta years 2020 through 2024 to transition them out of degraded mode.
 
-- [ ] `P05.S12` - Generate structured chapters.json and sections/ for Renta 2020 through 2024; `src/aeat/_data/corpus/manuals/renta/`.
-- [ ] `P05.S13` - Verify that all years 2020-2024 report structure_available: True; `src/aeat/_data/corpus/manuals/renta/`.
+- [x] `P05.S12` - Generate structured chapters.json and sections/ for Renta 2020 through 2024; `src/aeat/_data/corpus/manuals/renta/`.
+- [x] `P05.S13` - Verify that all years 2020-2024 report structure_available: True; `src/aeat/_data/corpus/manuals/renta/`.
 
 ### Phase `P06` - historical IVA manuals backfill
 
