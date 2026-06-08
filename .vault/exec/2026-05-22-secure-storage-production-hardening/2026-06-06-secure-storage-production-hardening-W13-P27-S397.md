@@ -6,7 +6,7 @@ date: '2026-06-06'
 step_id: 'S397'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
-  - '[[2026-06-06-secure-storage-production-hardening-w13-p27-s397-persona-research-requirements]]'
+  - '[[2026-06-06-secure-storage-production-hardening-w13-p27-s397-persona-finding-requirements-research]]'
 ---
 
 # W13.P27.S397 persona research requirements

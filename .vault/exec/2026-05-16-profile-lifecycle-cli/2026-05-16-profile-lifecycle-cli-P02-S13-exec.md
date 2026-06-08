@@ -6,7 +6,6 @@ date: "2026-05-16"
 step_id: S13
 related:
   - "[[2026-05-16-profile-lifecycle-cli-plan]]"
-  - "[[2026-05-16-profile-lifecycle-cli-adr]]"
 ---
 
 # `profile-lifecycle-cli` `P02.S13`

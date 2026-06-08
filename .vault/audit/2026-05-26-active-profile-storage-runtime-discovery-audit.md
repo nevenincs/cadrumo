@@ -9,8 +9,6 @@ related:
   - '[[2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-adr]]'
   - '[[2026-05-21-profile-state-aggregate-adr]]'
   - '[[2026-05-21-profile-uuid-identity-adr]]'
-  - '[[2026-05-18-profile-lifecycle-cli-adr]]'
-  - '[[2026-05-16-profile-lifecycle-cli-adr]]'
   - '[[2026-05-07-user-profile-backend-schema-adr]]'
 ---
 

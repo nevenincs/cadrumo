@@ -9,13 +9,11 @@ related:
   - "[[2026-05-19-profile-lifecycle-disaster-axis-c-cli-bootstrap-research]]"
   - "[[2026-05-19-profile-lifecycle-disaster-axis-d-state-model-research]]"
   - "[[2026-05-19-profile-lifecycle-disaster-axis-e-failure-mode-research]]"
-  - "[[2026-05-19-profile-lifecycle-cli-audit]]"
   - "[[2026-05-19-operator-blind-newcomer-testimony-audit]]"
   - "[[2026-05-19-operator-blind-returning-testimony-audit]]"
   - "[[2026-05-19-operator-blind-dual-testimony-audit]]"
   - "[[2026-05-19-operator-blind-fumbler-testimony-audit]]"
   - "[[2026-05-19-operator-testimonial-audit]]"
-  - "[[2026-05-18-profile-lifecycle-cli-adr]]"
 ---
 
 # `profile-lifecycle-disaster` adr: session-activation wiring, state-model collapse, atomic create | (**status:** `accepted`)

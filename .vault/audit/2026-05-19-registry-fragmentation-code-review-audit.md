@@ -3,8 +3,7 @@ tags:
   - '#audit'
   - '#registry-fragmentation'
 date: '2026-05-19'
-related:
-  - '[[2026-05-19-*]]'
+related: []
 ---
 
 # `registry-fragmentation` Code Review

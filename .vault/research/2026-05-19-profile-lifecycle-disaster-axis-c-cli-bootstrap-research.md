@@ -3,8 +3,7 @@ tags:
   - '#research'
   - '#profile-lifecycle-disaster'
 date: '2026-05-19'
-related:
-  - "[[2026-05-19-profile-lifecycle-cli-audit]]"
+related: []
 ---
 
 # profile-lifecycle-disaster research: axis C -- CLI bootstrap orchestration

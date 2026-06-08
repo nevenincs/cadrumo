@@ -7,7 +7,7 @@ step_id: 'S398'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-06-06-secure-storage-production-hardening-w13-p27-s396-persona-readiness-reconciliation-audit]]'
-  - '[[2026-06-06-secure-storage-production-hardening-w13-p27-s397-persona-research-requirements]]'
+  - '[[2026-06-06-secure-storage-production-hardening-w13-p27-s397-persona-finding-requirements-research]]'
 ---
 
 # W13.P27.S398 persona finding classification

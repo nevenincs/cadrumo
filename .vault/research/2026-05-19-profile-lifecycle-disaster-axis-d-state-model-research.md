@@ -4,11 +4,8 @@ tags:
   - '#profile-lifecycle-disaster'
 date: '2026-05-19'
 related:
-  - "[[2026-05-19-profile-lifecycle-cli-audit]]"
   - "[[2026-05-19-profile-lifecycle-disaster-axis-a-session-activation-research]]"
   - "[[2026-05-19-profile-lifecycle-disaster-axis-e-failure-mode-research]]"
-  - "[[2026-05-16-profile-lifecycle-cli-research]]"
-  - "[[2026-05-17-profile-lifecycle-cli-cascade-closure-research]]"
 ---
 
 # profile-lifecycle-disaster research: axis D - state-model coherence

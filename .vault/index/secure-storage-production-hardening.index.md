@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#secure-storage-production-hardening'
-date: '2026-06-05'
+date: '2026-06-06'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-W01-P01-S01]]'
   - '[[2026-05-22-secure-storage-production-hardening-W01-P01-S02]]'
@@ -861,7 +861,7 @@ related:
   - '[[2026-06-06-secure-storage-production-hardening-W20-P42-S456]]'
   - '[[2026-06-06-secure-storage-production-hardening-code-review-audit]]'
   - '[[2026-06-06-secure-storage-production-hardening-w13-p27-s396-persona-readiness-reconciliation-audit]]'
-  - '[[2026-06-06-secure-storage-production-hardening-w13-p27-s397-persona-research-requirements]]'
+  - '[[2026-06-06-secure-storage-production-hardening-w13-p27-s397-persona-finding-requirements-research]]'
   - '[[2026-06-06-secure-storage-production-hardening-w20-p41-s455-provenance-path-audit]]'
   - '[[2026-06-06-secure-storage-production-hardening-w20-p42-s456-redaction-enrollment-audit]]'
 ---
@@ -1747,4 +1747,4 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 
 - `2026-05-22-secure-storage-production-hardening-architecture-research` - `secure-storage-production-hardening` research: `architecture mandate for adverse production operation`
 - `2026-05-28-secure-storage-production-hardening-w05-p09-s40-research` - `secure-storage-production-hardening` research: `W05.P09.S40 retained export and side-store exceptions`
-- `2026-06-06-secure-storage-production-hardening-w13-p27-s397-persona-research-requirements` - `secure-storage-production-hardening` research: `S397 persona finding research requirements`
+- `2026-06-06-secure-storage-production-hardening-w13-p27-s397-persona-finding-requirements-research` - `secure-storage-production-hardening` research: `S397 persona finding research requirements`

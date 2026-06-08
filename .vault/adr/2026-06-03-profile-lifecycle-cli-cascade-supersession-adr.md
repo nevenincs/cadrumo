@@ -4,12 +4,8 @@ tags:
   - '#profile-lifecycle-cli-cascade-supersession'
 date: '2026-06-03'
 related:
-  - '[[2026-05-18-profile-lifecycle-cli-plan]]'
-  - '[[2026-05-18-profile-lifecycle-cli-adr]]'
   - '[[2026-05-16-profile-lifecycle-cli-plan]]'
-  - '[[2026-05-16-profile-lifecycle-cli-adr]]'
   - '[[2026-05-19-profile-lifecycle-disaster-adr]]'
-  - '[[2026-05-17-profile-lifecycle-cli-cascade-closure-research]]'
   - '[[2026-06-03-plan-triage-approach-adr]]'
   - '[[2026-06-04-profile-lifecycle-cli-cascade-supersession-research]]'
 ---

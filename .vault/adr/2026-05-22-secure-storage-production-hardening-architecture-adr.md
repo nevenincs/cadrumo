@@ -13,10 +13,8 @@ related:
   - '[[2026-05-21-profile-state-aggregate-adr]]'
   - '[[2026-05-21-state-read-projection-adr]]'
   - '[[2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-adr]]'
+  - '[[2026-06-06-secure-storage-production-hardening-w13-p27-s397-persona-finding-requirements-research]]'
 ---
-
-
-
 # `secure-storage-production-hardening` adr: `canonical SecureStorage architecture for adverse production operation` | (**status:** `accepted`)
 
 ## Problem Statement
