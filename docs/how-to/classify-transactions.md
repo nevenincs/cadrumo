@@ -4,8 +4,7 @@ Use this guide after transactions are in the active profile's ledger. Imported
 rows have dates and amounts, but they do not yet say how the tax calculation
 should treat them.
 
-Classification is local. It changes the saved ledger row for the active profile
-and does not contact AEAT.
+Classifying a transaction only changes the record on your computer — nothing is sent to AEAT.
 
 ## Review the row first
 
@@ -32,8 +31,7 @@ Use one of the ledger classification states that command help accepts:
 - `PERSONAL` for a personal transaction that should not feed tax calculations
 - `MIXED` for a transaction that is partly business and partly personal
 
-Other internal states exist for processing and validation, but these three are
-the normal operator choices.
+Use only these three values — others are set automatically by aeat.
 
 ## Pick a category for expenses
 
@@ -50,8 +48,7 @@ them:
 aeat app ledger classify --id <transaction-id> --classification BUSINESS --category-id <category-id>
 ```
 
-Income rows usually do not need `--category-id`; `aeat` can use transaction
-direction and ledger income aggregation.
+For money you received (income), aeat does not usually need a category — it calculates income totals automatically.
 
 Use `OUTGOING` plus an expense category for supplier purchases and other
 deductible expenses. Use `INCOMING` for issued invoices, client payments, or
@@ -73,12 +70,12 @@ category, and counterparty EU member state for intracommunity IVA cases. Use
 
 For ordinary domestic IVA, use the taxable base, rate, and amount shown by the
 invoice. For example, a EUR 121.00 purchase with 21 percent IVA usually has
-`--taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00`. Use
-`--iva-category` when the transaction needs an explicit IVA treatment, such as
-domestic reduced rates, exempt/not-subject operations, intracommunity
-operations, exports, imports, reverse charge, recargo de equivalencia, or
-simplified-regime treatment. The command help lists the accepted IVA category
-tokens.
+`--taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00`.
+
+Most purchases at the standard 21% rate need no `--iva-category`. Add it only
+for special cases: reduced rate (food, books), exempt supplies, purchases from
+EU suppliers, or recargo de equivalencia. Run
+`aeat app ledger classify --help` to see the accepted values.
 
 ## Classify mixed-use transactions
 
@@ -94,10 +91,10 @@ You can also record allocation through the allocation command:
 aeat app ledger allocate --id <transaction-id> --business-pct 0.5 --category-id <category-id>
 ```
 
-`0` means personal, `1` means fully business, and a value between them means
-mixed use. Use `--usage-ratio-id` only when you have already created a reusable
-usage ratio for the profile. Use `--prorrata-reference` only for IVA workflows
-that need a prorrata reference.
+Leave `--usage-ratio-id` out unless you have already set up a saved proportion
+for this type of expense — most users do not need it. Use
+`--prorrata-reference` only if your IVA return uses the prorrata rule (regla de
+prorrata) — for example, if you also make VAT-exempt sales.
 
 For shared expenses, first check which category ratios are supported:
 
@@ -165,15 +162,15 @@ Recommended workflow:
    aeat app ledger preflight --period 2026Q1
    ```
 
-Keep bulk files as review artifacts. They are useful when you later need to
-explain how a period was classified. This path does not batch-update amounts,
+Keep a copy of the file — it gives you a record of how you classified that
+period if you are later asked to justify your return. This path does not batch-update amounts,
 descriptions, IVA values, notes, attachments, or split/merge state; use the
 transaction workflow for those row-level edits.
 
 ## Apply stored rules automatically
 
-Rules classify active unclassified transactions whose descriptions match a
-case-insensitive regular expression:
+Rules automatically classify transactions whose description contains a word or
+phrase you specify. Matching ignores uppercase and lowercase differences:
 
 ```bash
 aeat app ledger rule add --description-pattern "software" --classification BUSINESS --category-id <category-id>
@@ -182,14 +179,14 @@ aeat app ledger rule apply --dry-run
 aeat app ledger rule apply
 ```
 
-Run `--dry-run` first. Use `--reaffirm` only when you intentionally want rules
-to reclassify rows that already have a manual or previous classification.
+Run `--dry-run` first. Add `--reaffirm` only if you want the rule to overwrite
+classifications you already set by hand.
 
 ## Use an LLM suggestion
 
-An LLM can suggest business/personal/mixed classification and, when possible,
-an expense category. It does not set regulated tax figures such as taxable base,
-IVA rate, IVA amount, IVA category, or IRPF category.
+aeat can use an AI assistant to suggest how to classify each transaction. The
+suggestion is a starting point — you must confirm or correct it. It does not
+fill in tax amounts such as taxable base, IVA rate, or IRPF category.
 
 Use [Classify transactions with an LLM](classify-with-llm.md) for the full
 provider, preview, apply, and override flow.

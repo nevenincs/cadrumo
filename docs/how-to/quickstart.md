@@ -13,9 +13,9 @@ has tax-specific setup or review choices.
 
 ## 1. Create your taxpayer profile
 
-A profile is the taxpayer context that `aeat app` commands read and update. It
-stores the taxpayer identity, activity, tax-regime facts, local ledger records,
-and filing state for one taxpayer.
+A profile is your personal taxpayer record inside the tool. It stores your NIF,
+your activity type, your tax regime, your income and expense records, and which
+forms you have already prepared.
 
 Create or check your profile before you import records or calculate a modelo:
 
@@ -31,11 +31,11 @@ switch profiles, and export or import an existing profile.
 
 ## 2. Prepare transaction data
 
-Transaction import is not automatic background sync. `aeat` imports only when
-you run an import command or add a transaction yourself. Calculation later
-consumes the saved, reviewed ledger for the active profile.
+Your bank records are not added automatically. Add them each time by running
+an import command. The tax calculation later uses the income and expense records
+you have imported and reviewed.
 
-Start transaction work here:
+Start here:
 
 ```bash
 aeat app ledger import ./statement.csv --provider auto --dry-run
@@ -49,9 +49,9 @@ and run readiness checks.
 
 ## 3. Classify your transactions
 
-Imported rows have no tax meaning until you classify them. Classification tells
-`aeat` whether a row is business, personal, or mixed, and which category or tax
-fields apply.
+Each imported transaction has no tax category until you classify it.
+Classification tells `aeat` whether it is a business expense, personal
+spending, or a mix of both.
 
 ```bash
 aeat app ledger categories
@@ -87,41 +87,40 @@ are preparing.
 aeat app modelo work create --modelo 130 --year 2024 --period 1T
 ```
 
-The command creates or reuses the local workspace for that filing. The deeper
-workspace and revision model is explained in
-[How filings, work units, and calculation revisions fit together](filing-spine.md).
+The command creates your filing workspace for that form if one does not exist
+yet. Running it again returns the existing workspace.
+
+`--period 1T` means the first quarter (primer trimestre). Other period codes
+are `2T`, `3T`, `4T` for subsequent quarters and `0A` for an annual filing.
+
+For more on how the tool organises your filing work behind the scenes, see
+[How the tool organises your filing work](filing-spine.md).
 
 ## 6. Calculate and review values
 
-Calculation combines four sources:
-
-- the active taxpayer profile
-- imported and classified transactions in that profile's ledger
-- modelo registry rules, including formulas and casilla definitions
-- explicit manual inputs or offsets where that modelo needs them
-
-Run calculation for the same modelo, year, and period:
+Run calculation for the same form, year, and period:
 
 ```bash
 aeat app modelo work calculate --modelo 130 --year 2024 --period 1T
 ```
 
-The command saves a new draft calculation revision. Review what was filled with:
+The tool saves the calculated values as a draft you can review before
+exporting. See what was filled with:
 
 ```bash
 aeat app modelo work revision --modelo 130 --year 2024 --period 1T
 ```
 
-If a value is missing, if you need to provide a manual casilla value, or if an
-offset/carry-forward value is involved, use
+If a value is missing or a modelo needs a value you must enter by hand, see
 [Review and supply calculation inputs](review-calculation-values.md). That page
-also explains how to inspect modelo casillas, descriptions, bindings,
-calculation revisions, verification findings, and IVA compensation offsets.
+covers entering missing box values and handling IVA credits carried forward from
+earlier quarters.
 
 ## 7. Verify the draft
 
-Verification checks that the current draft is complete enough for export. It is
-a local check; it does not ask AEAT whether the filing will be accepted.
+Verification checks that your draft is complete enough to export. It is a
+local check — it does not send anything to AEAT or ask whether the filing will
+be accepted.
 
 ```bash
 aeat app modelo work verify --modelo 130 --year 2024 --period 1T
@@ -132,15 +131,15 @@ does not pass, fix the reported issue and calculate again before exporting.
 
 ## 8. Export the file
 
-Export writes a fichero-BOE file, the fixed-width text file format AEAT accepts
-for upload.
+Export creates the `.boe` file — the format AEAT's upload portal accepts.
 
 ```bash
 aeat app modelo export --modelo 130 --year 2024 --period 1T --output ./modelo-130-2024-1T.boe
 ```
 
-The command prints the file path, size, and checksum. The checksum is a file
-fingerprint you can use later when checking that the file has not changed.
+The tool shows where the file was saved, how large it is, and a verification
+code. Keep this code so you can later confirm you uploaded the exact file that
+was generated.
 
 ## 9. File manually through AEAT
 
@@ -157,9 +156,9 @@ After a real filing, you can record the local filing marker:
 aeat app modelo work file --modelo 130 --year 2024 --period 1T
 ```
 
-This is local bookkeeping only. It records that you consider the verified draft
-final, but it does not contact AEAT. To compare your local record with the AEAT
-receipt, see [How to reconcile a filed modelo against its justificante](reconcile.md).
+This only records the action on your own computer. It does not contact AEAT.
+To compare your local record with the AEAT receipt, see
+[How to reconcile a filed modelo against its justificante](reconcile.md).
 
 ## Next steps
 
