@@ -113,22 +113,22 @@ Create and refine narrative, simple-language overview documentation that connect
 
 Discover and audit narrative gaps and transitions between different stages of the filing lifecycle.
 
-- [ ] `W04.P11.S24` - Discover/audit current narrative links and structure in `docs/index.md` and `docs/how-to/index.md`.
-- [ ] `W04.P11.S25` - Identify areas where conceptual transitions (e.g. from ledger/classification to draft/verification) are abrupt or underdescribed.
+- [x] `W04.P11.S24` - Discover/audit current narrative links and structure; `docs/index.md` and `docs/how-to/index.md`.
+- [x] `W04.P11.S25` - Identify areas where conceptual transitions (e.g. from ledger/classification to draft/verification) are abrupt or underdescribed; `audit reports`.
 
 ### Phase `W04.P12` - Overview and Narrative Content Production
 
 Author and refine story-driven narrative pages that guide the user step-by-step.
 
-- [ ] `W04.P12.S26` - Create or refine narrative overview guides explaining the ledger-to-registry model and files.
-- [ ] `W04.P12.S27` - Add step-by-step cross-referencing and contextual links between how-to guides and tutorials to improve newcomer progression.
+- [x] `W04.P12.S26` - Create or refine narrative overview guides explaining the ledger-to-registry model and files; `docs/explanation/ledger-to-calculation.md`.
+- [x] `W04.P12.S27` - Add step-by-step cross-referencing and contextual links between how-to guides and tutorials to improve newcomer progression; `docs/`.
 
 ### Phase `W04.P13` - Review and Verification
 
 Perform newcomer clarity reviews, link verification, and Sphinx build gates on narrative pages.
 
-- [ ] `W04.P13.S28` - Perform clarity and language-simplicity reviews on narrative pages; `review reports`.
-- [ ] `W04.P13.S29` - Verify all links and commands using the conformance and build gates; `src/aeat/tests/test_docs_build.py`.
+- [x] `W04.P13.S28` - Perform clarity and language-simplicity reviews on narrative pages; `review reports`.
+- [x] `W04.P13.S29` - Verify all links and commands using the conformance and build gates; `src/aeat/tests/test_docs_build.py`.
 
 ## Description
 
