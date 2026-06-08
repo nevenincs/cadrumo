@@ -20,6 +20,9 @@ related:
   - '[[2026-06-08-registry-localization-backend-P04-S09]]'
   - '[[2026-06-08-registry-localization-backend-P04-S10]]'
   - '[[2026-06-08-registry-localization-backend-P04-summary]]'
+  - '[[2026-06-08-registry-localization-backend-P05-S12]]'
+  - '[[2026-06-08-registry-localization-backend-P05-S13]]'
+  - '[[2026-06-08-registry-localization-backend-P05-summary]]'
   - '[[2026-06-08-registry-localization-backend-adr]]'
   - '[[2026-06-08-registry-localization-backend-plan]]'
   - '[[2026-06-08-registry-localization-backend-research]]'
@@ -52,6 +55,9 @@ Auto-generated index of all documents tagged with `#registry-localization-backen
 - `2026-06-08-registry-localization-backend-P04-S09` - `registry-localization-backend` `P04.S09` execution record
 - `2026-06-08-registry-localization-backend-P04-S10` - `registry-localization-backend` `P04.S10` execution record
 - `2026-06-08-registry-localization-backend-P04-summary` - `registry-localization-backend` `P04` phase summary
+- `2026-06-08-registry-localization-backend-P05-S12` - `registry-localization-backend` `P05.S12` execution record
+- `2026-06-08-registry-localization-backend-P05-S13` - `registry-localization-backend` `P05.S13` execution record
+- `2026-06-08-registry-localization-backend-P05-summary` - `registry-localization-backend` `P05` phase summary
 
 ### plan
 
