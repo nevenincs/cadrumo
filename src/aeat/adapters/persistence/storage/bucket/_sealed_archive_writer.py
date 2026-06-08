@@ -90,13 +90,11 @@ def write_sealed_archive(
     """
     if recovery_wrap_bytes is not None and not header.recovery_wrap_present:
         raise SealedArchiveWriteError(
-            "sealed-archive write refused: recovery_wrap_bytes supplied but "
-            "header.recovery_wrap_present is False",
+            "sealed-archive write refused: recovery_wrap_bytes supplied but header.recovery_wrap_present is False",
         )
     if recovery_wrap_bytes is None and header.recovery_wrap_present:
         raise SealedArchiveWriteError(
-            "sealed-archive write refused: header.recovery_wrap_present is True "
-            "but no recovery_wrap_bytes supplied",
+            "sealed-archive write refused: header.recovery_wrap_present is True but no recovery_wrap_bytes supplied",
         )
     if target_path.exists():
         raise SealedArchiveWriteError(
@@ -110,14 +108,10 @@ def write_sealed_archive(
         with tarfile.open(target_path, mode="w:gz") as archive:
             header_info = _normalised_tarinfo(HEADER_MEMBER_NAME, len(header_bytes), instant)
             archive.addfile(header_info, io.BytesIO(header_bytes))
-            payload_info = _normalised_tarinfo(
-                PAYLOAD_MEMBER_NAME, len(payload_envelope_bytes), instant
-            )
+            payload_info = _normalised_tarinfo(PAYLOAD_MEMBER_NAME, len(payload_envelope_bytes), instant)
             archive.addfile(payload_info, io.BytesIO(payload_envelope_bytes))
             if recovery_wrap_bytes is not None:
-                recovery_info = _normalised_tarinfo(
-                    RECOVERY_WRAP_MEMBER_NAME, len(recovery_wrap_bytes), instant
-                )
+                recovery_info = _normalised_tarinfo(RECOVERY_WRAP_MEMBER_NAME, len(recovery_wrap_bytes), instant)
                 archive.addfile(recovery_info, io.BytesIO(recovery_wrap_bytes))
     except OSError as exc:
         raise SealedArchiveWriteError(

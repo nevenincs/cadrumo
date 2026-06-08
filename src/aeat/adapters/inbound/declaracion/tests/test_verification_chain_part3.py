@@ -16,6 +16,8 @@ from ._verification_chain_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+
 def test_verification_chain_m100_parser_extracts_declaracion_pdf_casillas() -> None:
     """Parser extracts M100 cuota-chain, actividades-económicas, and 0171 leaf casillas.
 
@@ -82,6 +84,7 @@ def test_verification_chain_m100_parser_extracts_declaracion_pdf_casillas() -> N
                 f"PARSER-GAP [M100/{year}-0A]: casilla {casilla_id!r} is not Decimal: "
                 f"{type(value).__name__!r} = {value!r}"
             )
+
 
 def test_verification_chain_m100_engine_corpus_limited() -> None:
     """Engine runs against M100 extracted inputs; verifies CORPUS-LIMITED verdict.
@@ -228,6 +231,7 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
         f"PARSER-GAP [M100/2021-0A corpus-limited]: casilla '0171' is not Decimal: {type(extracted['0171']).__name__!r}"
     )
 
+
 def test_verification_chain_m349_parser_extracts_declaracion_pdf_casillas() -> None:
     """Parser extracts M349 summary casillas from the synthetic corpus fixture.
 
@@ -281,6 +285,7 @@ def test_verification_chain_m349_parser_extracts_declaracion_pdf_casillas() -> N
             f"PARSER-GAP [M349/2024-1T]: casilla {casilla_id!r} not Decimal: {type(value).__name__!r} = {value!r}"
         )
 
+
 def test_verification_chain_m184_parser_extracts_declaracion_pdf_casillas() -> None:
     """Parser extracts the M184 ejercicio casilla from the synthetic corpus fixture.
 
@@ -312,6 +317,7 @@ def test_verification_chain_m184_parser_extracts_declaracion_pdf_casillas() -> N
     assert isinstance(extracted["decl.ejercicio"], Decimal), (
         f"PARSER-GAP [M184/2024-0A]: 'decl.ejercicio' not Decimal: {type(extracted['decl.ejercicio']).__name__!r}"
     )
+
 
 def test_verification_chain_m347_parser_extracts_declaracion_pdf_casillas() -> None:
     """Parser extracts the M347 ejercicio casilla from the synthetic corpus fixture.
@@ -345,6 +351,7 @@ def test_verification_chain_m347_parser_extracts_declaracion_pdf_casillas() -> N
         f"PARSER-GAP [M347/2024-0A]: 'decl.ejercicio' not Decimal: {type(extracted['decl.ejercicio']).__name__!r}"
     )
 
+
 def test_verification_chain_m720_parser_extracts_declaracion_pdf_casillas() -> None:
     """Parser extracts the M720 ejercicio casilla from the synthetic corpus fixture.
 
@@ -376,6 +383,7 @@ def test_verification_chain_m720_parser_extracts_declaracion_pdf_casillas() -> N
     assert isinstance(extracted["decl.ejercicio"], Decimal), (
         f"PARSER-GAP [M720/2024-0A]: 'decl.ejercicio' not Decimal: {type(extracted['decl.ejercicio']).__name__!r}"
     )
+
 
 def test_verification_chain_m840_parser_extracts_declaracion_pdf_casillas() -> None:
     """Parser extracts M840 casillas from the synthetic corpus fixture.
@@ -409,6 +417,7 @@ def test_verification_chain_m840_parser_extracts_declaracion_pdf_casillas() -> N
     assert isinstance(extracted["decl.ejercicio"], Decimal), (
         f"PARSER-GAP [M840/2024-0A]: 'decl.ejercicio' not Decimal: {type(extracted['decl.ejercicio']).__name__!r}"
     )
+
 
 def test_verification_chain_m369_parser_extracts_declaracion_pdf_casillas() -> None:
     """Parser extracts M369 casillas from the synthetic corpus fixture.
@@ -444,6 +453,7 @@ def test_verification_chain_m369_parser_extracts_declaracion_pdf_casillas() -> N
     assert "decl.periodo" in extracted, (
         f"PARSER-GAP [M369/2024-1T]: 'decl.periodo' not extracted.\n  got: {sorted(extracted)}"
     )
+
 
 def test_verification_chain_m036_parser_extracts_event_kind_casilla() -> None:
     """Parser extracts decl.event-kind from the M036 2025-alta synthetic fixture.

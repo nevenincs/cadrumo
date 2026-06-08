@@ -34,9 +34,7 @@ def ensure_table_revision_metadata_columns(engine: Engine, table_name: str) -> t
     """Add nullable revision metadata columns to a pre-existing table."""
     existing = {column["name"] for column in inspect(engine).get_columns(table_name)}
     missing = tuple(
-        (name, column_type)
-        for name, column_type in SECURE_OBJECT_REVISION_METADATA_COLUMNS
-        if name not in existing
+        (name, column_type) for name, column_type in SECURE_OBJECT_REVISION_METADATA_COLUMNS if name not in existing
     )
     for name, column_type in missing:
         try:

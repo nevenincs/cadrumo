@@ -25,6 +25,8 @@ from ._verification_chain_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+
 @pytest.mark.parametrize(
     "pdf_stem,year",
     [
@@ -180,6 +182,7 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
         f"  engine devengada={engine_devengada!r} engine deducible={engine_deducible!r}"
     )
 
+
 def test_verification_chain_m180_parser_extracts_declaracion_pdf_casillas() -> None:
     """Parser extracts the 3 M180 summary casillas from the synthetic corpus fixture.
 
@@ -213,6 +216,7 @@ def test_verification_chain_m180_parser_extracts_declaracion_pdf_casillas() -> N
         assert isinstance(value, Decimal), (
             f"PARSER-GAP [M180/2024-0A]: casilla {casilla_id!r} not Decimal: {type(value).__name__!r}"
         )
+
 
 def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_relation_values() -> None:
     """Engine recomputes M180 annual closure casillas from M115 quarterly relation values.
@@ -333,6 +337,7 @@ def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_re
             f"  relation_values supplied: {relation_values}"
         )
 
+
 def test_verification_chain_m190_parser_extracts_declaracion_pdf_casillas() -> None:
     """Parser extracts the 3 M190 summary casillas from the real corpus PDF.
 
@@ -363,6 +368,7 @@ def test_verification_chain_m190_parser_extracts_declaracion_pdf_casillas() -> N
     assert isinstance(extracted["decl.retenciones-total"], Decimal), (
         "PARSER-GAP [M190/2024-0A]: 'decl.retenciones-total' not Decimal"
     )
+
 
 def test_verification_chain_m115_engine_recomputes_retenciones_and_resultado() -> None:
     """Engine recomputes casilla 03 (retenciones) and 05 (resultado) from leaf inputs.
@@ -437,6 +443,7 @@ def test_verification_chain_m115_engine_recomputes_retenciones_and_resultado() -
             f"AEAT-printed = {extracted_val!r}.\n"
             f"  inputs: {inputs}"
         )
+
 
 @pytest.mark.parametrize(
     "pdf_stem,year,period,computed_set,closure_ids",
@@ -527,6 +534,7 @@ def test_verification_chain_m123_engine_recomputes_closure_casillas(
             f"AEAT-printed = {extracted_val!r}.\n  inputs: {inputs}"
         )
 
+
 def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
     """Engine recomputes M131 closure casillas from leaf inputs.
 
@@ -615,6 +623,7 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
             f"AEAT-printed = {extracted_val!r}.\n  inputs: {inputs}"
         )
 
+
 def test_verification_chain_m193_parser_extracts_declaracion_pdf_casillas() -> None:
     """Parser extracts the 3 M193 summary casillas from the synthetic corpus fixture.
 
@@ -647,6 +656,7 @@ def test_verification_chain_m193_parser_extracts_declaracion_pdf_casillas() -> N
         assert isinstance(value, Decimal), (
             f"PARSER-GAP [M193/2024-0A]: casilla {casilla_id!r} not Decimal: {type(value).__name__!r}"
         )
+
 
 def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_relation_values() -> None:
     """Engine recomputes M193 annual closure casillas from M123 quarterly relation values.

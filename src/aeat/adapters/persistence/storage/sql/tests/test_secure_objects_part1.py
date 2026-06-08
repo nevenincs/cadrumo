@@ -29,6 +29,8 @@ from ._secure_objects_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
 def test_secure_object_payload_is_encrypted_in_database(tmp_path: Path) -> None:
     """Sensitive payload bytes round-trip without plaintext landing in SQLite."""
 
@@ -70,6 +72,7 @@ def test_secure_object_payload_is_encrypted_in_database(tmp_path: Path) -> None:
             assert payload not in stored
         finally:
             engine.dispose()
+
 
 def test_repository_migrates_legacy_encrypted_string_object_key(tmp_path: Path) -> None:
     """A row written with the old randomized key column loads through the natural key."""
@@ -117,6 +120,7 @@ def test_repository_migrates_legacy_encrypted_string_object_key(tmp_path: Path) 
             assert natural_key.encode("utf-8") not in db_path.read_bytes()
         finally:
             engine.dispose()
+
 
 def test_repository_migrates_duplicate_legacy_keys_to_latest_and_quarantines_loser(
     tmp_path: Path,
@@ -178,6 +182,7 @@ def test_repository_migrates_duplicate_legacy_keys_to_latest_and_quarantines_los
         finally:
             engine.dispose()
 
+
 def test_secure_object_record_roundtrip_preserves_full_record_fields(tmp_path: Path) -> None:
     """A decrypted record roundtrip must preserve every boundary field."""
 
@@ -224,6 +229,7 @@ def test_secure_object_record_roundtrip_preserves_full_record_fields(tmp_path: P
         finally:
             engine.dispose()
 
+
 def test_secure_object_table_materializes_revision_integrity_columns(tmp_path: Path) -> None:
     """Fresh SQL bootstrap creates nullable lineage and integrity columns.
 
@@ -256,6 +262,7 @@ def test_secure_object_table_materializes_revision_integrity_columns(tmp_path: P
     finally:
         engine.dispose()
 
+
 def test_secure_object_repository_bootstraps_old_table_revision_columns(tmp_path: Path) -> None:
     """Repository construction upgrades an old-shape table before ORM reads.
 
@@ -270,6 +277,7 @@ def test_secure_object_repository_bootstraps_old_table_revision_columns(tmp_path
         engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
         payload = b"legacy-secure-object-payload"
         from typing import Any, cast
+
         try:
             with engine.begin() as connection:
                 connection.exec_driver_sql(
@@ -285,7 +293,9 @@ def test_secure_object_repository_bootstraps_old_table_revision_columns(tmp_path
                     ")"
                 )
                 connection.execute(
-                    cast(Any, SecureObjectRow.__table__).insert().values(
+                    cast(Any, SecureObjectRow.__table__)
+                    .insert()
+                    .values(
                         namespace="aeat.legacy.revision",
                         object_key="legacy-key",
                         classification=SensitivityClass.FINANCIAL.value,
@@ -314,6 +324,7 @@ def test_secure_object_repository_bootstraps_old_table_revision_columns(tmp_path
             assert revision_values == (None, None, None)
         finally:
             engine.dispose()
+
 
 def test_secure_object_record_schema_version_mutation_breaks_roundtrip(tmp_path: Path) -> None:
     """A database-side metadata mutation must not still load as the original record."""
@@ -374,6 +385,7 @@ def test_secure_object_record_schema_version_mutation_breaks_roundtrip(tmp_path:
         finally:
             engine.dispose()
 
+
 def test_secure_object_load_classification_error_is_localized_and_redacted(tmp_path: Path) -> None:
     """Load-time classification failures do not expose natural or lookup keys."""
 
@@ -423,6 +435,7 @@ def test_secure_object_load_classification_error_is_localized_and_redacted(tmp_p
         finally:
             engine.dispose()
 
+
 def test_secure_object_raw_key_validation_errors_are_localized(tmp_path: Path) -> None:
     """Raw-key public helpers reject malformed digests with translated errors."""
 
@@ -457,6 +470,7 @@ def test_secure_object_raw_key_validation_errors_are_localized(tmp_path: Path) -
         finally:
             engine.dispose()
 
+
 def test_secure_object_batch_size_validation_error_is_localized(tmp_path: Path) -> None:
     """Batch-size validation uses the translated storage-validation key."""
 
@@ -475,13 +489,11 @@ def test_secure_object_batch_size_validation_error_is_localized(tmp_path: Path) 
                         batch_size=0,
                     )
                 )
-            assert (
-                raised.value.translated_message
-                == "errors.integrity.integrity_storage_secure_object_batch_size"
-            )
+            assert raised.value.translated_message == "errors.integrity.integrity_storage_secure_object_batch_size"
             assert raised.value.context == {"batch_size": 0}
         finally:
             engine.dispose()
+
 
 def test_list_records_fails_closed_when_any_row_is_unreadable(
     tmp_path: Path,
@@ -552,6 +564,7 @@ def test_list_records_fails_closed_when_any_row_is_unreadable(
         finally:
             engine.dispose()
 
+
 def test_list_records_does_not_yield_partial_subset_before_failure(tmp_path: Path) -> None:
     """The fail-closed list path buffers all readable rows before yielding."""
 
@@ -586,6 +599,7 @@ def test_list_records_does_not_yield_partial_subset_before_failure(tmp_path: Pat
         finally:
             engine.dispose()
 
+
 def test_list_records_yields_records_when_every_row_is_readable(tmp_path: Path) -> None:
     """Readable namespaces still yield records through the default list path."""
 
@@ -615,6 +629,7 @@ def test_list_records_yields_records_when_every_row_is_readable(tmp_path: Path) 
             assert [record.payload for record in yielded] == [b"readable-list-payload"]
         finally:
             engine.dispose()
+
 
 def test_list_records_rejects_unreadable_row_before_readable_subset(
     tmp_path: Path,
@@ -659,6 +674,7 @@ def test_list_records_rejects_unreadable_row_before_readable_subset(
 
         finally:
             engine.dispose()
+
 
 def test_iter_records_with_failures_yields_typed_outcomes_for_each_row(
     tmp_path: Path,
@@ -720,6 +736,7 @@ def test_iter_records_with_failures_yields_typed_outcomes_for_each_row(
                 assert "tag verification failed" in ghost.reason.lower() or "decrypt" in ghost.reason.lower()
         finally:
             engine.dispose()
+
 
 def test_iter_records_with_failures_yields_metadata_contract_failures(tmp_path: Path) -> None:
     """Row-level metadata failures surface as typed unreadable outcomes."""

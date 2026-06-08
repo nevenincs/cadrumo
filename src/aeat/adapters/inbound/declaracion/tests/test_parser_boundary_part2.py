@@ -20,6 +20,8 @@ from ._parser_boundary_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+
 @pytest.mark.parametrize(
     "pdf_stem,year,period",
     [
@@ -174,6 +176,7 @@ def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, y
         f"{pdf_stem}: comp-post got {values['iva.compensacion-pendiente-periodos-posteriores']!r}"
     )
 
+
 @pytest.mark.parametrize(
     "pdf_stem,year,period",
     [
@@ -285,6 +288,7 @@ def test_parser_extracts_modelo_303_old_template_profile_targets_from_corpus(
         f"{pdf_stem}: iva.resultado-regimen-general got {values['iva.resultado-regimen-general']!r}"
     )
 
+
 def test_parser_extracts_modelo_190_targets_from_real_redacted_declaration_copy() -> None:
     filing = parse_declaracion(
         _REAL_MODELO_190_DECLARATION_COPY,
@@ -306,6 +310,7 @@ def test_parser_extracts_modelo_190_targets_from_real_redacted_declaration_copy(
     assert filing.registry_snapshot_ref.revision_id == "2024-y-siguientes"
     assert filing.registry_snapshot_ref.modelo_year == 2024
     assert filing.registry_snapshot_ref.period == "0A"
+
 
 @pytest.mark.parametrize(
     "pdf_stem,year",
@@ -380,6 +385,7 @@ def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, y
         assert values[casilla_id] == expected_value, (
             f"{pdf_stem}: casilla {casilla_id!r} expected {expected_value!r}, got {values[casilla_id]!r}"
         )
+
 
 @pytest.mark.parametrize(
     "pdf_stem,year",
@@ -471,6 +477,7 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
             f"{pdf_stem}: casilla {casilla_id!r} expected a Decimal instance, got {values[casilla_id]!r}"
         )
 
+
 def test_parser_fails_when_registry_profile_targets_are_missing() -> None:
     """Verify the parser raises DeclaracionParseError when coverage falls below min_coverage.
 
@@ -500,6 +507,7 @@ def test_parser_fails_when_registry_profile_targets_are_missing() -> None:
     details = excinfo.value.context.get("details", "")
     assert isinstance(details, str) and "coverage" in details
 
+
 def test_parser_requires_a_known_registry_model_after_template_resolution(tmp_path: Path) -> None:
     pdf_path = tmp_path / "modelo-999.pdf"
     _write_declaration_pdf(pdf_path, modelo="999", ejercicio="2025", values={"01": Decimal("1.00")})
@@ -517,6 +525,7 @@ def test_parser_requires_a_known_registry_model_after_template_resolution(tmp_pa
     error = excinfo.value.context.get("error", "")
     assert isinstance(error, str)
     assert "is not present in the calculation registry" in error
+
 
 def test_real_redacted_declaration_copy_extracts_partial_casillas() -> None:
     """The synthetic M130 2024-1T corpus PDF extracts casillas via bbox_anchored.
@@ -541,6 +550,7 @@ def test_real_redacted_declaration_copy_extracts_partial_casillas() -> None:
     )
     assert isinstance(extracted["19"], Decimal)
     assert isinstance(extracted["03"], Decimal)
+
 
 def test_parser_extracts_modelo_349_synthetic_fixture_targets() -> None:
     """Round-trip: parse the sanitized M349 synthetic fixture and verify all four casillas.
@@ -616,6 +626,7 @@ def test_parser_extracts_modelo_349_synthetic_fixture_targets() -> None:
         f"decl.importe-rectificaciones: expected Decimal('0.00'), got {values['decl.importe-rectificaciones']!r}"
     )
 
+
 def test_parser_extracts_modelo_840_synthetic_fixture_targets() -> None:
     """Round-trip: parse the sanitized M840 synthetic fixture and verify both casillas.
 
@@ -676,6 +687,7 @@ def test_parser_extracts_modelo_840_synthetic_fixture_targets() -> None:
     # The parser wraps enum extraction in the Decimal path — if "Alta" is not a valid
     # Decimal the value is stored as the raw token.  Either way the casilla is present.
     assert values["decl.tipo-declaracion"] is not None, "decl.tipo-declaracion: expected a non-None extracted value"
+
 
 def test_parser_extracts_modelo_036_synthetic_fixture_targets() -> None:
     """Round-trip: parse the sanitized M036 synthetic fixture and verify decl.event-kind.
