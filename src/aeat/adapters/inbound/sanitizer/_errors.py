@@ -97,8 +97,7 @@ class AlreadySanitizedError(SanitizationError):
                 matched a known committed fixture.
         """
         super().__init__(
-            "source PDF is already a committed sanitised fixture; "
-            "pass refuse_if_already_sanitized=False to override",
+            "source PDF is already a committed sanitised fixture; pass refuse_if_already_sanitized=False to override",
             context={"source_sha256_prefix": source_sha256[:16]},
             translated_message="errors.refused.refused_sanitization_already_sanitized",
         )

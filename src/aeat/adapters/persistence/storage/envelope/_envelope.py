@@ -292,8 +292,7 @@ def load_envelope[PayloadT: BaseModel](
         )
     if envelope.schema_version > max_supported_version:
         raise EnvelopeVersionError(
-            f"envelope is at version {envelope.schema_version}; "
-            f"consumer supports up to {max_supported_version}",
+            f"envelope is at version {envelope.schema_version}; consumer supports up to {max_supported_version}",
         )
     if envelope.schema_version < max_supported_version:
         envelope = _apply_migrators(envelope, max_supported_version, migrators)
@@ -560,8 +559,7 @@ def load_encrypted_envelope[PayloadT: BaseModel](
         )
     if inner.schema_version > max_supported_version:
         raise EnvelopeVersionError(
-            f"inner envelope is at version {inner.schema_version}; "
-            f"consumer supports up to {max_supported_version}",
+            f"inner envelope is at version {inner.schema_version}; consumer supports up to {max_supported_version}",
         )
     if inner.schema_version < max_supported_version:
         inner = _apply_migrators(inner, max_supported_version, migrators)

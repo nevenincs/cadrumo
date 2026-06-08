@@ -33,6 +33,8 @@ from ._secure_objects_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
 def test_iter_records_with_failures_yields_registry_schema_drift(tmp_path: Path) -> None:
     """Registry-bound row schema drift surfaces as a typed unreadable outcome."""
 
@@ -81,6 +83,7 @@ def test_iter_records_with_failures_yields_registry_schema_drift(tmp_path: Path)
         finally:
             engine.dispose()
 
+
 def test_iter_records_with_failures_returns_empty_on_empty_namespace(
     tmp_path: Path,
 ) -> None:
@@ -101,6 +104,7 @@ def test_iter_records_with_failures_returns_empty_on_empty_namespace(
             assert items == []
         finally:
             engine.dispose()
+
 
 def test_iter_records_with_failures_applies_bounded_batch_execution(tmp_path: Path) -> None:
     """The explicit diagnostic iterator executes its row scan with a bounded batch size."""
@@ -157,6 +161,7 @@ def test_iter_records_with_failures_applies_bounded_batch_execution(tmp_path: Pa
             event.remove(engine, "before_cursor_execute", capture_listing_execution)
             engine.dispose()
 
+
 def test_iter_records_with_failures_rejects_invalid_batch_size(tmp_path: Path) -> None:
     """Batch size must be positive before the diagnostic row scan starts."""
 
@@ -177,13 +182,11 @@ def test_iter_records_with_failures_rejects_invalid_batch_size(tmp_path: Path) -
                         batch_size=0,
                     )
                 )
-            assert (
-                raised.value.translated_message
-                == "errors.integrity.integrity_storage_secure_object_batch_size"
-            )
+            assert raised.value.translated_message == "errors.integrity.integrity_storage_secure_object_batch_size"
             assert raised.value.context == {"batch_size": 0}
         finally:
             engine.dispose()
+
 
 def test_list_records_only_emits_warning_when_unreadable_rows_exist(
     tmp_path: Path,
@@ -220,6 +223,7 @@ def test_list_records_only_emits_warning_when_unreadable_rows_exist(
             assert all("unreadable" not in rec.message for rec in caplog.records)
         finally:
             engine.dispose()
+
 
 def test_iter_all_records_raw_yields_every_row_without_decryption(tmp_path: Path) -> None:
     """The raw iterator returns on-wire ciphertext + metadata across namespaces."""
@@ -280,6 +284,7 @@ def test_iter_all_records_raw_yields_every_row_without_decryption(tmp_path: Path
         finally:
             engine.dispose()
 
+
 def test_iter_all_records_raw_returns_empty_iterator_for_empty_table(tmp_path: Path) -> None:
     """No rows persisted → iterator yields nothing without raising."""
 
@@ -294,6 +299,7 @@ def test_iter_all_records_raw_returns_empty_iterator_for_empty_table(tmp_path: P
             assert rows == []
         finally:
             engine.dispose()
+
 
 def test_iter_all_records_raw_does_not_attempt_decryption_under_rotated_master_key(tmp_path: Path) -> None:
     """Rows sealed under a different master key still yield via raw iterator.
@@ -323,6 +329,7 @@ def test_iter_all_records_raw_does_not_attempt_decryption_under_rotated_master_k
             assert rows[0].namespace == "aeat.rotated"
         finally:
             engine.dispose()
+
 
 def test_quarantine_unreadable_rows_preserves_revision_metadata(tmp_path: Path) -> None:
     """Quarantine copies lineage and integrity fields with unreadable ciphertext.
@@ -394,6 +401,7 @@ def test_quarantine_unreadable_rows_preserves_revision_metadata(tmp_path: Path) 
         finally:
             engine.dispose()
 
+
 def test_secure_object_save_writes_revision_integrity_metadata(tmp_path: Path) -> None:
     """A save writes storage-level revision and integrity metadata to disk."""
 
@@ -433,6 +441,7 @@ def test_secure_object_save_writes_revision_integrity_metadata(tmp_path: Path) -
             assert row[8] == "last-write-wins"
         finally:
             engine.dispose()
+
 
 def test_secure_object_overwrite_links_previous_revision_metadata(tmp_path: Path) -> None:
     """Overwrites preserve the previous storage revision reference and payload hash."""
@@ -483,6 +492,7 @@ def test_secure_object_overwrite_links_previous_revision_metadata(tmp_path: Path
         finally:
             engine.dispose()
 
+
 def test_secure_object_overwrite_of_legacy_row_derives_previous_payload_hash(tmp_path: Path) -> None:
     """A first overwrite after schema bootstrap links to the legacy plaintext hash."""
 
@@ -508,7 +518,9 @@ def test_secure_object_overwrite_of_legacy_row_derives_previous_payload_hash(tmp
                 from typing import Any, cast
 
                 connection.execute(
-                    cast(Any, SecureObjectRow.__table__).insert().values(
+                    cast(Any, SecureObjectRow.__table__)
+                    .insert()
+                    .values(
                         namespace=namespace,
                         object_key="legacy-overwrite-key",
                         classification=SensitivityClass.FINANCIAL.value,
@@ -536,6 +548,7 @@ def test_secure_object_overwrite_of_legacy_row_derives_previous_payload_hash(tmp
             assert previous_payload_hash == hashlib.sha256(legacy_payload).hexdigest()
         finally:
             engine.dispose()
+
 
 def test_secure_object_save_many_writes_revision_metadata(tmp_path: Path) -> None:
     """Batched writes carry revision metadata for each persisted row."""
@@ -588,6 +601,7 @@ def test_secure_object_save_many_writes_revision_metadata(tmp_path: Path) -> Non
         finally:
             engine.dispose()
 
+
 def test_secure_object_save_with_raw_key_writes_revision_metadata(tmp_path: Path) -> None:
     """Raw-key archive restore writes the same metadata as natural-key saves."""
 
@@ -623,6 +637,7 @@ def test_secure_object_save_with_raw_key_writes_revision_metadata(tmp_path: Path
         finally:
             engine.dispose()
 
+
 def test_secure_object_write_rejects_conflict_policy_until_cas_contract_exists() -> None:
     """contract records the actual LWW policy; contract owns public CAS policy selection."""
 
@@ -643,6 +658,7 @@ def test_secure_object_write_rejects_conflict_policy_until_cas_contract_exists()
                 },
             )
         )
+
 
 def test_secure_object_save_with_expected_revision_updates_only_current_row(tmp_path: Path) -> None:
     """Expected-revision writes update when the stored revision still matches."""
@@ -690,6 +706,7 @@ def test_secure_object_save_with_expected_revision_updates_only_current_row(tmp_
             assert conflict_policy == "compare-and-swap"
         finally:
             engine.dispose()
+
 
 def test_secure_object_save_with_stale_expected_revision_refuses_without_overwrite(tmp_path: Path) -> None:
     """A stale expected revision must not overwrite the current secure object."""
@@ -740,6 +757,7 @@ def test_secure_object_save_with_stale_expected_revision_refuses_without_overwri
             assert after == before
         finally:
             engine.dispose()
+
 
 def test_secure_object_save_with_expected_revision_refuses_missing_row(tmp_path: Path) -> None:
     """A CAS write must not create a missing object for a stale expected revision."""

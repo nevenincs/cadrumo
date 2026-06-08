@@ -66,10 +66,12 @@ _SENSITIVE_HEALTH_PAYLOAD = "C:/Users/operator/private-cert-12345678Z.p12"
 
 _SEDE_ORIGIN = Settings.external_constants().aeat.domains.sede
 
+
 @pytest.fixture(autouse=True)
 def _isolated_secure_session_backend(tmp_path: Path):
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         yield
+
 
 def _serialise_pkcs12(
     *,
@@ -103,6 +105,7 @@ def _serialise_pkcs12(
         encryption_algorithm=serialization.BestAvailableEncryption(SECRET_PASSPHRASE.encode()),
     )
 
+
 @functools.cache
 def _default_pkcs12_bytes() -> bytes:
     """Cache the default-subject PKCS#12 bytes for the lifetime of the process.
@@ -115,6 +118,7 @@ def _default_pkcs12_bytes() -> bytes:
     the per-test fixed cost down to a single ``write_bytes`` call.
     """
     return _serialise_pkcs12(subject_attrs=None, not_valid_after=None)
+
 
 def _build_bundle(
     tmp_path: Path,
@@ -134,6 +138,7 @@ def _build_bundle(
         return out
     out.write_bytes(_serialise_pkcs12(subject_attrs=subject_attrs, not_valid_after=not_valid_after))
     return out
+
 
 def _load_cert(
     tmp_path: Path,
@@ -156,6 +161,7 @@ def _load_cert(
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
     return load_certificate(bundle)
+
 
 class _RecordingBrowserContext:
     """Stand-in Playwright context that honours the marker contract."""
@@ -187,6 +193,7 @@ class _RecordingBrowserContext:
     async def storage_state(self) -> dict[str, object]:
         return self._storage_state
 
+
 class _RecordingPage:
     def __init__(self, recognised: bool) -> None:
         self._recognised = recognised
@@ -197,9 +204,11 @@ class _RecordingPage:
     async def close(self) -> None:
         return None
 
+
 class _RecordingResponse:
     def __init__(self, status: int) -> None:
         self.status = status
+
 
 class _RaisingPage:
     async def goto(self, url: str, *, timeout: float | None = None) -> _RecordingResponse:
@@ -207,6 +216,7 @@ class _RaisingPage:
 
     async def close(self) -> None:
         return None
+
 
 class _RaisingBrowserContext:
     async def new_page(self) -> _RaisingPage:
@@ -217,6 +227,7 @@ class _RaisingBrowserContext:
 
     async def storage_state(self) -> dict[str, object]:
         return {"cookies": [], "origins": []}
+
 
 class _RecordingBrowserSession:
     def __init__(
@@ -259,6 +270,7 @@ class _RecordingBrowserSession:
         assert isinstance(cert, LoadedCertificate)
         return cert
 
+
 def _successful_handshake() -> HandshakeResult:
     return HandshakeResult(
         success=True,
@@ -269,6 +281,7 @@ def _successful_handshake() -> HandshakeResult:
         error_message=None,
     )
 
+
 class _HandshakeVerifier:
     def __init__(self, result: HandshakeResult | None = None) -> None:
         self.calls = 0
@@ -277,6 +290,7 @@ class _HandshakeVerifier:
     def __call__(self, _cert: LoadedCertificate, _target: str) -> HandshakeResult:
         self.calls += 1
         return self.result
+
 
 def _certificate_session(
     *,
@@ -300,6 +314,7 @@ def _certificate_session(
         ),
     )
 
+
 def _certificate_assertion() -> AeatLoginAssertion:
     return AeatLoginAssertion(
         target_url="https://sede/",
@@ -316,6 +331,7 @@ def _certificate_assertion() -> AeatLoginAssertion:
             parsed_subject="CN=NOMBRE",
         ),
     )
+
 
 @pytest.fixture
 def _settings_factory():
@@ -350,6 +366,7 @@ def _settings_factory():
 
         yield factory
 
+
 async def _seed_persisted_session(
     tmp_path: Path,
     settings_factory,
@@ -383,6 +400,7 @@ async def _seed_persisted_session(
     seed_auth._active_session = seeded_session
     await seed_auth.capture_storage_state(seeded_session)
     return settings, persisted_path, cert
+
 
 @pytest.mark.asyncio
 async def test_capture_storage_state_writes_storage_and_metadata(
@@ -431,6 +449,7 @@ async def test_capture_storage_state_writes_storage_and_metadata(
     assert metadata["certificate_thumbprint"] == cert.sha256_thumbprint
     assert metadata["storage_state_sha256"] == persisted.storage_state_sha256
 
+
 @pytest.mark.asyncio
 async def test_resume_from_storage_state_reuses_persisted_session_without_handshake(
     tmp_path: Path,
@@ -452,11 +471,14 @@ async def test_resume_from_storage_state_reuses_persisted_session_without_handsh
     assert verifier.calls == 0
     assert browser_session.storage_state_paths == [None]
 
+
 def _invalidate_by_missing_storage(path: Path, _cert: LoadedCertificate) -> None:
     _session_store.delete(path)
 
+
 def _invalidate_by_invalid_storage_json(path: Path, _cert: LoadedCertificate) -> None:
     _store_raw_session_payload(path, b"{not-json")
+
 
 def _invalidate_by_storage_root_list(path: Path, _cert: LoadedCertificate) -> None:
     persisted = _load_test_session(path)
@@ -468,14 +490,18 @@ def _invalidate_by_storage_root_list(path: Path, _cert: LoadedCertificate) -> No
     }
     _store_raw_session_payload(path, json.dumps(payload).encode("utf-8"))
 
+
 def _invalidate_by_missing_cookies(path: Path, _cert: LoadedCertificate) -> None:
     _store_test_session(path, storage_state={"origins": []})
+
 
 def _invalidate_by_missing_origins(path: Path, _cert: LoadedCertificate) -> None:
     _store_test_session(path, storage_state={"cookies": []})
 
+
 def _invalidate_by_missing_metadata(path: Path, _cert: LoadedCertificate) -> None:
     _store_test_session(path, metadata={})
+
 
 def _invalidate_by_malformed_metadata(path: Path, _cert: LoadedCertificate) -> None:
     persisted = _load_test_session(path)
@@ -487,35 +513,42 @@ def _invalidate_by_malformed_metadata(path: Path, _cert: LoadedCertificate) -> N
     }
     _store_raw_session_payload(path, json.dumps(payload).encode("utf-8"))
 
+
 def _invalidate_by_schema_mismatch(path: Path, _cert: LoadedCertificate) -> None:
     metadata = dict(_load_test_session(path).metadata)
     metadata["schema_version"] = 999
     _store_test_session(path, metadata=metadata)
+
 
 def _invalidate_by_hash_mismatch(path: Path, _cert: LoadedCertificate) -> None:
     metadata = dict(_load_test_session(path).metadata)
     metadata["storage_state_sha256"] = "0" * 64
     _store_test_session(path, metadata=metadata)
 
+
 def _invalidate_by_expired_idle_deadline(path: Path, _cert: LoadedCertificate) -> None:
     metadata = dict(_load_test_session(path).metadata)
     metadata["idle_deadline"] = (datetime.now(UTC) - timedelta(minutes=1)).isoformat()
     _store_test_session(path, metadata=metadata)
+
 
 def _invalidate_by_thumbprint_mismatch(path: Path, _cert: LoadedCertificate) -> None:
     metadata = dict(_load_test_session(path).metadata)
     metadata["certificate_thumbprint"] = "f" * 64
     _store_test_session(path, metadata=metadata)
 
+
 def _invalidate_by_subject_mismatch(path: Path, _cert: LoadedCertificate) -> None:
     metadata = dict(_load_test_session(path).metadata)
     metadata["certificate_subject"] = "CN=DIFFERENT"
     _store_test_session(path, metadata=metadata)
 
+
 def _load_test_session(path: Path) -> _session_store.PersistedBrowserSession:
     persisted = _session_store.load(path)
     assert persisted is not None
     return persisted
+
 
 def _store_test_session(
     path: Path,
@@ -530,6 +563,7 @@ def _store_test_session(
         metadata=metadata if metadata is not None else persisted.metadata,
     )
 
+
 def _store_raw_session_payload(path: Path, payload: bytes) -> None:
     secure_object_repository_for_active_bucket().save(
         namespace=AEAT_BROWSER_SESSION_NAMESPACE.namespace,
@@ -539,6 +573,7 @@ def _store_raw_session_payload(path: Path, payload: bytes) -> None:
         written_at=datetime.now(UTC),
         payload=payload,
     )
+
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
@@ -594,6 +629,7 @@ async def test_resume_from_storage_state_invalidates_corrupt_persisted_artifacts
     assert not storage_state_path.exists(), case_id
     assert not storage_state_path.with_suffix(".meta.json").exists(), case_id
 
+
 @pytest.mark.asyncio
 async def test_resume_from_storage_state_invalidates_failed_live_probe(
     tmp_path: Path,
@@ -613,6 +649,7 @@ async def test_resume_from_storage_state_invalidates_failed_live_probe(
     assert not _session_store.exists(storage_state_path)
     assert not storage_state_path.exists()
     assert not storage_state_path.with_suffix(".meta.json").exists()
+
 
 @pytest.mark.asyncio
 async def test_run_login_probe_redacts_navigation_exception_text(
@@ -648,6 +685,7 @@ async def test_run_login_probe_redacts_navigation_exception_text(
     assert _SENSITIVE_NAVIGATION_PAYLOAD not in log_text
     assert "target=<aeat-login-probe>" in log_text
     assert "failure=RuntimeError" in log_text
+
 
 @pytest.mark.asyncio
 async def test_authenticate_falls_back_after_stale_persisted_session(
@@ -692,6 +730,7 @@ async def test_authenticate_falls_back_after_stale_persisted_session(
     metadata = persisted.metadata
     assert metadata["certificate_thumbprint"] == auth.load_certificate().sha256_thumbprint
 
+
 @pytest.mark.asyncio
 async def test_authenticator_synchronous_surface(tmp_path: Path, _settings_factory) -> None:
     """Synchronous helpers work under the async context manager.
@@ -710,6 +749,7 @@ async def test_authenticator_synchronous_surface(tmp_path: Path, _settings_facto
         nif = auth.extract_nif_from_subject(cert)
         assert nif == "12345678Z"
 
+
 @pytest.mark.asyncio
 async def test_verify_login_raises_on_stale_session(tmp_path: Path, _settings_factory) -> None:
     bundle_path = _build_bundle(tmp_path)
@@ -725,6 +765,7 @@ async def test_verify_login_raises_on_stale_session(tmp_path: Path, _settings_fa
         with pytest.raises(AeatSessionExpiredError, match=r"aeat|session|expired"):
             await auth.verify_login(stale)
 
+
 @pytest.mark.asyncio
 async def test_verify_login_raises_without_context(tmp_path: Path, _settings_factory) -> None:
     bundle_path = _build_bundle(tmp_path)
@@ -739,6 +780,7 @@ async def test_verify_login_raises_without_context(tmp_path: Path, _settings_fac
         )
         with pytest.raises(AeatLoginAssertionError, match=r"browser context|authenticate"):
             await auth.verify_login(session)
+
 
 @pytest.mark.asyncio
 async def test_reauthenticate_does_not_deadlock(tmp_path: Path, _settings_factory) -> None:
@@ -773,6 +815,7 @@ async def test_reauthenticate_does_not_deadlock(tmp_path: Path, _settings_factor
         with pytest.raises(AeatLoginAssertionError, match=r"login|browser|session|factory|reauthenticate"):
             await asyncio.wait_for(auth.reauthenticate(session), timeout=5.0)
     assert verifier.calls == 1
+
 
 @pytest.mark.asyncio
 async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path, _settings_factory) -> None:
@@ -820,6 +863,7 @@ async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path, _setti
     authenticator._closing = False
     await authenticator.close()
     assert authenticator._closing is False
+
 
 @pytest.mark.asyncio
 async def test_concurrent_close_and_verify_login_race(tmp_path: Path, _settings_factory) -> None:
@@ -893,6 +937,7 @@ async def test_concurrent_close_and_verify_login_race(tmp_path: Path, _settings_
     # close() cleanly reset state.
     assert authenticator._closing is False
     assert authenticator._context is None
+
 
 @pytest.mark.asyncio
 async def test_close_is_idempotent(tmp_path: Path, _settings_factory) -> None:

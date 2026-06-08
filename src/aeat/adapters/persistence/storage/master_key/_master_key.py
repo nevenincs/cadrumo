@@ -116,9 +116,7 @@ KEYRING_USERNAME: Final[str] = "master"
 """Account identifier for the master-key entry in the OS keychain."""
 
 _MASTER_KEY_UNAVAILABLE_MESSAGE_KEY: Final[str] = "errors.auth.auth_storage_master_key_unavailable"
-_MASTER_KEY_PASSPHRASE_MISMATCH_MESSAGE_KEY: Final[str] = (
-    "errors.auth.auth_storage_master_key_passphrase_mismatch"
-)
+_MASTER_KEY_PASSPHRASE_MISMATCH_MESSAGE_KEY: Final[str] = "errors.auth.auth_storage_master_key_passphrase_mismatch"
 
 
 def _master_key_unavailable_error(message: str) -> MasterKeyUnavailableError:
