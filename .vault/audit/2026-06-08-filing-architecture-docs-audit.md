@@ -61,3 +61,26 @@ The landing page `docs/index.md` fails to link to several important how-to guide
 ## Codification candidates
 
 State: None. No findings meet the three durability criteria for new project rules. The gaps identified are documentation coverage and transition clarity, which are resolved by drafting the recommended pages rather than enforcing new codebase constraints.
+
+## Campaign Close Honesty Review
+
+Reviewing the campaign as a new developer inheriting the codebase:
+
+### 1. Assessment of Completed Work
+- **Overview data pipeline and ledger-to-calculation logic**: Fully detailed in `docs/explanation/ledger-to-calculation.md` and `docs/explanation/index.md`. The explanation uses simple, non-demanding, non-technical language as required by the taxpayer-centric guidelines.
+- **Cross-referencing**: Structured links have been added across the main index, quickstart, and core how-to guides.
+- **CLI conformance**: Automated verification via `test_documented_command_conformance.py` is fully clean.
+
+### 2. Missing, Vague, or Assumed-but-Unverified Items
+- **F01 (Missing Modelo 130 How-to Guide)**: Although the quickstart and registry bindings cover the underlying mechanics, a dedicated how-to guide for Modelo 130 is missing.
+- **F02 (Absence of live-read Command Documentation)**: Commands under `aeat app live` (expedientes, borrador, verify, portals, notifications) remain completely undocumented.
+- **F03 (IVA Wallet and Compare Verbs)**: The compensation wallet and draft comparison utilities are undocumented.
+
+### 3. Resolution and Deferrals
+To declare the `filing-architecture-docs` campaign structurally complete, these outstanding findings are formally deferred to follow-up campaigns:
+- **Deferred to `#aeat-cli-userdocs-hardening`**: 
+  - **F01 (Modelo 130 How-to Guide)**: To be authored under the user docs hardening campaign.
+  - **F03 (IVA Wallet and Compare Verbs)**: Dedicated documentation to be added.
+- **Deferred to `#live-censo-calendar-reconciliation`**:
+  - **F02 (live-read Command Documentation)**: Since the censo/calendar reconciliation campaign directly integrates live AEAT portal data, the live-read command family guides belong to its scope.
+
