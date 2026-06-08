@@ -37,19 +37,12 @@ real taxpayer data.
 The LLM path is single-transaction only. It cannot be combined with
 `--from-csv` or manual `--classification` flags.
 
-An applied LLM suggestion saves only:
-
-- `business_classification`
-- optional expense `category_id`
-- `classified_by=llm:<provider>`
-- confidence and reason
-- a local bucket event
-
-It does not set regulated tax fields such as `taxable_base`, `iva_rate`,
-`iva_amount`, `iva_category`, or `irpf_category`. Add those manually in
-[Classify transactions](classify-transactions.md). Use
+An applied LLM suggestion saves the classification (business, personal, or
+mixed) and the suggested expense category. It does not fill in regulated tax
+fields such as taxable base, IVA rate, IVA amount, or IRPF category. Add those
+manually in [Classify transactions](classify-transactions.md). Use
 [Review and supply calculation inputs](review-calculation-values.md) when a
-modelo later reports missing casillas, bindings, offsets, or manual values.
+modelo later reports missing values.
 
 Future versions may use attached invoices, PDFs, or other evidence to suggest
 rates and richer classifications. That is not implemented in the current LLM
@@ -106,9 +99,9 @@ Apply a suggestion only after review:
 aeat app ledger classify --id <transaction-id> --llm claude --apply
 ```
 
-The applied suggestion is saved to the
-[active profile](profile-setup.md#what-the-active-profile-means) ledger with
-`llm:` provenance and a local history event. Review it afterwards:
+The applied suggestion is saved to the active profile's ledger. It records
+that an LLM was used, along with the confidence and reason. Review it
+afterwards:
 
 ```bash
 aeat app ledger view <transaction-id>

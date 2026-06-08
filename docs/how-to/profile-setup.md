@@ -81,7 +81,8 @@ legal-entity form applies to legal entities.
 `--entity-type`
 : Choose `natural_person`, `legal_entity`, or `attribution_entity`. Natural
   persons are individuals. Legal entities cover companies such as SL or SA.
-  Attribution entities cover contexts such as communities of goods.
+  Attribution entities cover property co-owners and communities of goods
+  (Comunidades de Bienes) where income is attributed across members.
 
 `--legal-entity-form`
 : Use this only for a legal entity. It records the legal form such as `sl`,
@@ -338,15 +339,15 @@ General validation checks the correctness of your profile fields:
 aeat config profile validate
 ```
 
-Modelo-specific readiness needs a modelo, registry revision, filing year, and
-period:
+Modelo-specific readiness checks whether the profile contains the facts a
+particular modelo needs. Run it before calculating:
 
 ```bash
-aeat config profile preflight --modelo 303 --revision-id <revision-id> --filing-year 2026 --period 1T
+aeat config profile preflight --modelo 303 --filing-year 2026 --period 1T
 ```
 
-Use `aeat app modelo describe MODELO` to inspect available registry revisions,
-and the [command-line reference](../cli/index.rst) for exact options.
+Use `aeat app modelo describe MODELO` to see available period codes for that
+modelo.
 
 ## Rename, duplicate, delete, and remove profiles
 
@@ -400,10 +401,9 @@ name:
 aeat config profile import ./ana-real-profile.json --label ana-restored
 ```
 
-Portable profile JSON contains raw profile data, including raw taxpayer
-identity such as `identity.tax_id`. It can also contain local filing data.
-Store it as sensitive tax data and do not send it in support requests unless
-you have redacted it.
+Portable profile files contain taxpayer data including your tax identifier,
+activity, and local filing history. Store them as sensitive tax data and do
+not send them in support requests unless you have removed personal details.
 
 ## Show profile contents and privacy notes
 
@@ -419,12 +419,10 @@ Display a named profile:
 aeat config profile show ana-real
 ```
 
-`profile show` is meant for local review. The normal CLI rendering redacts tax
-ids as a short hash such as `sha256:<8hex>`, but it can still show names,
-activity, residence, regime, and other personal facts. There is no `profile
-show --reveal` flag in the current help surface. If you need to share profile
-information for support, prefer a small redacted excerpt that keeps only the
-relevant field names and non-sensitive values.
+`profile show` is meant for local review. The normal CLI rendering hides tax
+IDs but can still show names, activity, residence, regime, and other personal
+facts. If you need to share profile information for support, share only the
+specific field names and non-sensitive values.
 
 ## If setup looks wrong
 
