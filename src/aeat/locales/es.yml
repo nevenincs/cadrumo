@@ -457,7 +457,10 @@ application:
         certificate_file_unresolved: La ruta del certificado '%{certificate_path}'
           no resuelve a un archivo existente. Ejecuta `aeat config auth configure
           --provider certificate --file RUTA` con una ruta a tu paquete PKCS#12 (.p12/.pfx).
-        dangling_active_profile: 'El puntero de perfil activo ''%{active_profile}'' no resuelve a un bucket de perfil registrado. Ejecuta aeat config profile list para inspeccionar los perfiles registrados y despues aeat config unlock NAME o aeat config profile create NAME.'
+        dangling_active_profile: El puntero de perfil activo '%{active_profile}' no
+          resuelve a un bucket de perfil registrado. Ejecuta aeat config profile list
+          para inspeccionar los perfiles registrados y despues aeat config unlock
+          NAME o aeat config profile create NAME.
         no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile create
           NAME` antes de configurar la autenticación.
         unreadable_active_profile: 'El perfil activo ''%{active_profile}'' tiene un
@@ -982,7 +985,8 @@ application:
       lifecycle_schema_validation_failed: Los datos del perfil no coinciden con el
         esquema de perfil de usuario.
       no_active_profile_selected: No hay un perfil activo seleccionado.
-      profile_already_exists: 'El perfil ''%{profile}'' ya existe; ejecuta aeat config unlock NAME para activarlo o aeat config profile delete NAME primero.'
+      profile_already_exists: El perfil '%{profile}' ya existe; ejecuta aeat config
+        unlock NAME para activarlo o aeat config profile delete NAME primero.
       profile_bucket_directory_removal_failed: No se pudo eliminar el directorio del
         perfil.
       profile_create_route_mismatch: La ruta de creación de perfil '%{route}' no coincide
@@ -1395,6 +1399,7 @@ cli:
           (AAAA-MM-DD)
         form_number_help: Filtrar casillas por número de casilla impreso en el BOE
           (p. ej. 46)
+        help: 'Listar todas las casillas definidas para la revision de un modelo especifico.'
         input_kind_help: Filtrar las casillas por tipo de entrada (manual, bound,
           computed, informational)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
@@ -1419,6 +1424,7 @@ cli:
       describe:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
+        help: 'Mostrar la estructura detallada, metadatos y periodos activos para un modelo especifico.'
         label_bindings: Vinculaciones
         label_cadence: Periodicidad
         label_casillas: Casillas
@@ -1472,6 +1478,7 @@ cli:
           (AAAA-MM-DD)
         explain_help: Incluir legal_refs y source_refs que sustentan cada fórmula
           en la salida de texto. El payload JSON los lleva siempre.
+        help: 'Listar todas las casillas calculadas y sus formulas para la revision de un modelo especifico.'
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         period_help: Token de periodo; para Modelo 036 usa alta, modificacion o baja;
           ejemplos periodicos incluyen 2026Q1 y 2026-01
@@ -1506,6 +1513,7 @@ cli:
         seed_invalid_amount: 'El importe de semilla IVA no es válido: %{amount}.'
         seed_period_help: Período del importe inicial (p. ej. 2024N4).
       list:
+        help: 'Listar todos los modelos tributarios oficiales registrados en el sistema.'
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
       m036:
         alta_help: Registra una declaración M036 de alta (inscripción censal inicial)
@@ -1655,10 +1663,22 @@ cli:
           en este CLI. Base legal: RD Legislativo 5/2004 TRLIRNR y Art. 28 TRLIRNR.
           Presenta la declaración mediante el trámite G320 de la Sede de la AEAT en
           sede.agenciatributaria.gob.es.'
-        create_stub_modelo_600_refused: 'Modelo %{modelo} (ITP-AJD, transmisiones patrimoniales y actos juridicos documentados) no esta soportado para crear unidades de trabajo en este CLI. Fundamento legal: Ley 28/1990 y competencia autonomica ITPyAJD; presente ante la Hacienda / CCAA competente.'
-        create_stub_modelo_620_refused: 'Modelo %{modelo} (ITP-AJD, transmisiones de vehiculos usados) no esta soportado para crear unidades de trabajo en este CLI. Fundamento legal: Ley 28/1990 y competencia autonomica ITPyAJD; presente la autoliquidacion ante la Hacienda / CCAA competente.'
-        create_stub_modelo_650_refused: 'Modelo %{modelo} (ISD sucesiones) no esta soportado para crear unidades de trabajo en este CLI. Fundamento legal: Ley 29/1987 LISyD y Art. 67 RISD; plazo ordinario de 6 meses desde el fallecimiento. Presente ante la Hacienda autonomica competente.'
-        create_stub_modelo_660_refused: 'Modelo %{modelo} (ISD caudal relicto, acompanante del Modelo 650) no esta soportado para crear unidades de trabajo en este CLI. Fundamento legal: Ley 29/1987 LISyD; presente ante la Hacienda autonomica competente.'
+        create_stub_modelo_600_refused: 'Modelo %{modelo} (ITP-AJD, transmisiones
+          patrimoniales y actos juridicos documentados) no esta soportado para crear
+          unidades de trabajo en este CLI. Fundamento legal: Ley 28/1990 y competencia
+          autonomica ITPyAJD; presente ante la Hacienda / CCAA competente.'
+        create_stub_modelo_620_refused: 'Modelo %{modelo} (ITP-AJD, transmisiones
+          de vehiculos usados) no esta soportado para crear unidades de trabajo en
+          este CLI. Fundamento legal: Ley 28/1990 y competencia autonomica ITPyAJD;
+          presente la autoliquidacion ante la Hacienda / CCAA competente.'
+        create_stub_modelo_650_refused: 'Modelo %{modelo} (ISD sucesiones) no esta
+          soportado para crear unidades de trabajo en este CLI. Fundamento legal:
+          Ley 29/1987 LISyD y Art. 67 RISD; plazo ordinario de 6 meses desde el fallecimiento.
+          Presente ante la Hacienda autonomica competente.'
+        create_stub_modelo_660_refused: 'Modelo %{modelo} (ISD caudal relicto, acompanante
+          del Modelo 650) no esta soportado para crear unidades de trabajo en este
+          CLI. Fundamento legal: Ley 29/1987 LISyD; presente ante la Hacienda autonomica
+          competente.'
         create_stub_modelo_714_refused: 'Modelo %{modelo} (Impuesto sobre el Patrimonio)
           no esta soportado para crear unidades de trabajo en este CLI. Base legal:
           Ley 19/1991 Art. 28 y Orden HAC/1023/2021. Presenta la declaracion en la
@@ -1946,13 +1966,16 @@ cli:
       until_help: Filtrar el historial a eventos en o antes de esta marca ISO-8601
         (p. ej. 2026-04-30T23:59:59+00:00)
     custody:
-      confirm_new_passphrase_help: 'Repite la nueva contrasena del almacen secreto.'
-      confirm_new_passphrase_prompt: 'Confirma la nueva contrasena del almacen secreto AEAT: '
-      data_loss_warning: 'Anota ahora esta clave de recuperacion. AEAT no almacena la clave de recuperacion en claro y no puede mostrarla otra vez.'
+      confirm_new_passphrase_help: Repite la nueva contrasena del almacen secreto.
+      confirm_new_passphrase_prompt: 'Confirma la nueva contrasena del almacen secreto
+        AEAT: '
+      data_loss_warning: Anota ahora esta clave de recuperacion. AEAT no almacena
+        la clave de recuperacion en claro y no puede mostrarla otra vez.
       errors:
-        missing_new_passphrase_confirmation: 'Repite la nueva contrasena con --confirm-new-passphrase.'
-        new_passphrase_mismatch: 'La nueva contrasena y su confirmacion no coinciden.'
-      new_passphrase_help: 'Nueva contrasena del almacen secreto. Omitela para introducirla de forma interactiva.'
+        missing_new_passphrase_confirmation: Repite la nueva contrasena con --confirm-new-passphrase.
+        new_passphrase_mismatch: La nueva contrasena y su confirmacion no coinciden.
+      new_passphrase_help: Nueva contrasena del almacen secreto. Omitela para introducirla
+        de forma interactiva.
       new_passphrase_prompt: 'Nueva contrasena del almacen secreto AEAT: '
     errors:
       invalid_value: 'Valor inválido para %{name}: %{value}'
@@ -1995,7 +2018,8 @@ cli:
         loopback_bind: 'No se pudo abrir un puerto local para completar el inicio
           de sesión en Google: {detail}'
         network: 'No se pudo contactar con Google: {detail}'
-        profile_unbound: 'No hay ningun perfil activo. Ejecuta aeat config unlock NAME o indica --profile.'
+        profile_unbound: No hay ningun perfil activo. Ejecuta aeat config unlock NAME
+          o indica --profile.
         scope_insufficient: El acceso concedido a Google no incluye los permisos necesarios.
           Ejecuta `aeat config google login` y acepta todos los permisos.
         storage: 'No se pudo acceder al almacenamiento de Google Drive: {detail}'
@@ -2096,7 +2120,7 @@ cli:
     list:
       help: Listar todos los perfiles registrados y marcar el activo
     lock:
-      help: 'Bloquear el perfil activo eliminando el puntero de perfil activo.'
+      help: Bloquear el perfil activo eliminando el puntero de perfil activo.
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
       censo:
@@ -2110,7 +2134,9 @@ cli:
       create_epilog: 'Perfil mínimo para autónomo: --entity-type natural_person --tax-id
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Inicializa un nuevo perfil activo y su bucket de configuración.
-      delete_active_cleared: 'El perfil eliminado era el activo; el puntero de perfil activo se ha borrado. Ejecuta aeat config unlock NAME o aeat config profile create NAME para volver a trabajar.'
+      delete_active_cleared: El perfil eliminado era el activo; el puntero de perfil
+        activo se ha borrado. Ejecuta aeat config unlock NAME o aeat config profile
+        create NAME para volver a trabajar.
       delete_help: Elimina un perfil y su estado local; --yes confirma
       delete_name_help: Nombre del perfil que quieres eliminar
       delete_requires_yes: La eliminación es destructiva. Vuelve a ejecutar 'aeat
@@ -2141,7 +2167,10 @@ cli:
       import_uuid_collision: El UUID del paquete entra en conflicto con un perfil
         existente.
       logout_help: Cierra la sesión del perfil activo limpiando el puntero local
-      logout_session_warning: 'El cierre de sesion limpio el puntero del perfil activo. Los verbos posteriores en este terminal seran rechazados con NoActiveBucketSessionError hasta que ejecutes aeat config unlock NAME o abras un nuevo terminal y vuelvas a seleccionar.'
+      logout_session_warning: El cierre de sesion limpio el puntero del perfil activo.
+        Los verbos posteriores en este terminal seran rechazados con NoActiveBucketSessionError
+        hasta que ejecutes aeat config unlock NAME o abras un nuevo terminal y vuelvas
+        a seleccionar.
       no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
         NAME --tax-id <DNI/NIE/NIF/CIF>` primero.
       preflight_filing_year_help: Ejercicio de presentación (cuatro dígitos).
@@ -2174,10 +2203,11 @@ cli:
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
     recover:
-      help: 'Recuperar el almacen secreto de archivo con una clave de recuperacion y vincularlo a una nueva contrasena.'
-      recovery_key_help: 'Clave de recuperacion de veinticuatro palabras.'
+      help: Recuperar el almacen secreto de archivo con una clave de recuperacion
+        y vincularlo a una nueva contrasena.
+      recovery_key_help: Clave de recuperacion de veinticuatro palabras.
     rekey:
-      help: 'Reenvolver el almacen secreto de archivo con una nueva contrasena.'
+      help: Reenvolver el almacen secreto de archivo con una nueva contrasena.
     repair:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
       connectivity_target_help: Objetivo de conectividad que se debe comprobar
@@ -2263,22 +2293,27 @@ cli:
           tu espacio de trabajo.'
         saved: Perfil '%{profile_name}' guardado.
     show_recovery:
-      existing_notice: 'La clave de recuperacion en claro no se almacena y no puede volver a mostrarse. Usa --rotate para generar una nueva clave de recuperacion.'
-      help: 'Mostrar el estado de recuperacion o generar una clave de recuperacion de un solo uso.'
-      rotate_help: 'Rotar el envoltorio de recuperacion e imprimir una nueva clave de recuperacion de un solo uso.'
+      existing_notice: La clave de recuperacion en claro no se almacena y no puede
+        volver a mostrarse. Usa --rotate para generar una nueva clave de recuperacion.
+      help: Mostrar el estado de recuperacion o generar una clave de recuperacion
+        de un solo uso.
+      rotate_help: Rotar el envoltorio de recuperacion e imprimir una nueva clave
+        de recuperacion de un solo uso.
     status:
       empty_profile: Sin perfil configurado. Ejecuta `aeat config profile create NAME`
         para empezar.
       help: Mostrar el estado del perfil de configuración activo
       next_step: 'Próximo paso: `aeat app overview status`'
     unlock:
-      help: 'Desbloquear un perfil seleccionandolo y abriendo su sesion de almacenamiento.'
-      name_help: 'Nombre del perfil que se va a desbloquear. Si se omite, se usa el puntero del perfil activo.'
+      help: Desbloquear un perfil seleccionandolo y abriendo su sesion de almacenamiento.
+      name_help: Nombre del perfil que se va a desbloquear. Si se omite, se usa el
+        puntero del perfil activo.
     unset:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
     verify_recovery:
-      help: 'Verificar que una clave de recuperacion abre el envoltorio de recuperacion persistido.'
+      help: Verificar que una clave de recuperacion abre el envoltorio de recuperacion
+        persistido.
     workflow_help: Mostrar ayuda del flujo de configuración
   diagnostics:
     browser:
@@ -2795,7 +2830,7 @@ cli:
         profile_rename: Renombrar un perfil de contribuyente.
         profile_show: Mostrar los datos del perfil activo.
         profile_status: Mostrar el estado del perfil activo.
-        profile_switch: 'Desbloquear y activar un perfil.'
+        profile_switch: Desbloquear y activar un perfil.
         section_authentication: Autenticacion AEAT
         section_bucket_inspection: Inspeccion de bucket
         section_diagnostics: Diagnostico
@@ -3371,7 +3406,9 @@ errors:
       la aplicación.
     auth_storage_master_key_material_missing: No existe material de clave maestra.
       El almacenamiento seguro aún no está aprovisionado.
-    auth_storage_master_key_passphrase_mismatch: 'La frase de contrasena no abre la clave maestra. Vuelve a introducirla; si la has olvidado, ejecuta aeat config recover --recovery-key <WORDS>.'
+    auth_storage_master_key_passphrase_mismatch: La frase de contrasena no abre la
+      clave maestra. Vuelve a introducirla; si la has olvidado, ejecuta aeat config
+      recover --recovery-key <WORDS>.
     auth_storage_master_key_unavailable: No se pudo obtener la clave maestra de ningún
       proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
   calc:
@@ -3424,13 +3461,13 @@ errors:
       perfil {profile_id}.
     profile_not_found: El perfil {profile_id} no existe; créalo antes de aplicar el
       censo.
-    snapshot_profile_mismatch: La instantánea censal {snapshot_id} pertenece al perfil
-      {snapshot_profile_id}, no al perfil {profile_id}.
     sede_g313_no_censo: La sede de la AEAT (G313) no devolvió ningún censo legible
       para el perfil {profile_id}; confirma que tu certificado o Cl@ve está registrado
       para este NIF.
     sede_no_censo: La sede de la AEAT no devolvió ningún censo legible para el perfil
       {profile_id}.
+    snapshot_profile_mismatch: La instantánea censal {snapshot_id} pertenece al perfil
+      {snapshot_profile_id}, no al perfil {profile_id}.
   error:
     error_access_gate_submission: La política de control de acceso rechazó una operación
       de envío.
@@ -3932,7 +3969,9 @@ errors:
       a intentarlo.
     auth_profile_identity_mismatch: La identidad del perfil activo no puede ser titular
       de la sesión de autenticación solicitada.
-    bootstrap_already_complete: 'El arranque del almacenamiento seguro ya esta completo. Usa aeat config unlock NAME para activar un perfil existente o aeat config profile create NAME para anadir otro perfil.'
+    bootstrap_already_complete: El arranque del almacenamiento seguro ya esta completo.
+      Usa aeat config unlock NAME para activar un perfil existente o aeat config profile
+      create NAME para anadir otro perfil.
     censo_apply_conflict: No se puede aplicar el censo porque hay trabajo en curso
       sobre una unidad dependiente. Resuelve primero el estado pendiente.
     censo_field_validation: El censo de la AEAT devolvió un valor que el esquema no
@@ -3976,7 +4015,8 @@ errors:
       una unidad de trabajo de modelo.
     modelo_work_selector_revision_conflict: La unidad de trabajo de modelo seleccionada
       pertenece a otra revision.
-    profile_already_registered: 'Ya existe un perfil con ese nombre. Usa aeat config unlock NAME para cambiar a el.'
+    profile_already_registered: Ya existe un perfil con ese nombre. Usa aeat config
+      unlock NAME para cambiar a el.
     profile_import_collision: El identificador del perfil importado coincide con uno
       que ya existe.
     profile_locked: Esta operación requiere un perfil desbloqueado. Ejecuta `aeat
@@ -4181,7 +4221,8 @@ errors:
       Debe tener al menos 8 caracteres.
     refused_storage_secret_already_exists: Ya existe un secreto con esa clave. Usa
       la opción de sobrescritura si quieres reemplazarlo.
-    refused_storage_session_expired: 'La sesion activa ha caducado por inactividad. Vuelve a activarla con aeat config unlock NAME.'
+    refused_storage_session_expired: La sesion activa ha caducado por inactividad.
+      Vuelve a activarla con aeat config unlock NAME.
     refused_storage_unsecured_mode: El almacenamiento sin cifrar se solicitó sin la
       habilitación necesaria. No es seguro para datos reales.
     refused_taxation_comparison: La comparación tributaria conjunta/individual no
@@ -4239,7 +4280,8 @@ errors:
         solo está disponible antes de seleccionar un bucket de perfil activo.
       cold_bootstrap_explicit_database_refused: El almacenamiento de arranque en frío
         no puede omitir una ruta de base de datos explícita.
-      no_active_session: 'No hay una sesion de bucket activa. Ejecuta aeat config unlock NAME para desbloquear un perfil.'
+      no_active_session: No hay una sesion de bucket activa. Ejecuta aeat config unlock
+        NAME para desbloquear un perfil.
       no_detail: No se informó ningún detalle de preparación.
       not_ready: 'El runtime de almacenamiento no está listo para almacenamiento vinculado
         a perfil: %{details}'
@@ -4249,8 +4291,10 @@ errors:
         de perfil activo.
       session_changed: La sesión de bucket activa cambió. Desbloquea de nuevo el perfil
         de destino.
-      session_expired: 'La sesion de bucket activa ha caducado. Ejecuta aeat config unlock NAME para reactivar el perfil.'
-      session_sealed: 'La sesion de bucket activa esta sellada. Ejecuta aeat config unlock NAME para reactivar el perfil.'
+      session_expired: La sesion de bucket activa ha caducado. Ejecuta aeat config
+        unlock NAME para reactivar el perfil.
+      session_sealed: La sesion de bucket activa esta sellada. Ejecuta aeat config
+        unlock NAME para reactivar el perfil.
       unsecured_backend: La sesión de bucket activa usa el backend no seguro. El almacenamiento
         de producción vinculado a perfil requiere custodia de archivo o llavero.
     stored_data_validation_boundary: Un registro de perfil o flujo de trabajo almacenado

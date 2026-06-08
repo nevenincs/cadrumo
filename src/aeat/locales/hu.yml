@@ -921,7 +921,8 @@ application:
       lifecycle_profile_tombstoned_rename: Törölt profil nem nevezhető át.
       lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználóiprofil-sémának.
       no_active_profile_selected: Nincs kiválasztva aktív profil.
-      profile_already_exists: 'A(z) %{profile} profil mar letezik; futtasd aeat config unlock NAME az aktivalashoz, vagy aeat config profile delete NAME a torleshez.'
+      profile_already_exists: A(z) %{profile} profil mar letezik; futtasd aeat config
+        unlock NAME az aktivalashoz, vagy aeat config profile delete NAME a torleshez.
       profile_bucket_directory_removal_failed: A profil konyvtara nem tavolithato
         el.
       profile_create_route_mismatch: A profil létrehozási útvonala ("%{route}") nem
@@ -1333,6 +1334,7 @@ cli:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
         form_number_help: Mezők szűrése BOE-n nyomtatott nyomtatványszám szerint (pl.
           46).
+        help: 'A kivalasztott modelo verziohoz tartozo osszes casilla (mezo/doboz) listazasa.'
         input_kind_help: Mezők szűrése beviteli típus szerint (manual, bound, computed,
           informational).
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
@@ -1357,6 +1359,7 @@ cli:
         csoportosítva.
       describe:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
+        help: 'Reszletes struktura, metaadatok es aktiv idoszakok megjelenitese egy adott modelo-hoz.'
         label_bindings: Kötések
         label_cadence: Gyakoriság
         label_casillas: Mezők
@@ -1409,6 +1412,7 @@ cli:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
         explain_help: Az egyes képleteket megalapozó legal_refs és source_refs bevonása
           a szöveges kimenetbe. A JSON-adatcsomag mindig tartalmazza azokat.
+        help: 'A kivalasztott modelo verziohoz tartozo osszes szamitott casilla es keplet listazasa.'
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
         period_help: 'Időszaktokent; Modelo 036-hoz: alta, modificacion vagy baja;
           időszaki példák: 2026N1, 2026-01.'
@@ -1434,6 +1438,7 @@ cli:
           lennie.
         seed_period_help: A vetőösszeg időszaka (pl. 2024N4).
       list:
+        help: 'A rendszerben regisztralt osszes hivatalos adobevallas (modelo) listazasa.'
         year_help: A nyomtatványkatalógus szűrése egyetlen adóévre.
       m036:
         alta_help: Rögzítse az M036 alta nyilatkozatot (kezdeti adónyilvántartási
@@ -1578,10 +1583,22 @@ cli:
           jövedelemadója) munkafeladat-létrehozása ebben a CLI-ben nem támogatott.
           Jogi alap: RD Legislativo 5/2004 TRLIRNR és Art. 28 TRLIRNR. A bevallást
           az AEAT Sede G320 eljárásán keresztül kell benyújtani: sede.agenciatributaria.gob.es.'
-        create_stub_modelo_600_refused: 'A(z) %{modelo} nyomtatvany (ITP-AJD, vagyonatruhazasi ado es okirati illetek) munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott. Jogalap: Ley 28/1990 es regionalis ITPyAJD hataskor; a megfelelo regionalis Hacienda / CCAA adohatosagnal kell benyujtani.'
-        create_stub_modelo_620_refused: 'A(z) %{modelo} nyomtatvany (ITP-AJD, hasznalt jarmuvek atruhazasa) munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott. Jogalap: Ley 28/1990 es regionalis ITPyAJD hataskor; az onadozast a megfelelo regionalis Hacienda / CCAA adohatosagnal kell benyujtani.'
-        create_stub_modelo_650_refused: 'A(z) %{modelo} nyomtatvany (ISD oroklesek) munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott. Jogalap: Ley 29/1987 LISyD es Art. 67 RISD; a rendes hatarido a halaltol szamitott 6 honap. A megfelelo regionalis Hacienda adohatosagnal kell benyujtani.'
-        create_stub_modelo_660_refused: 'A(z) %{modelo} nyomtatvany (ISD hagyateki leltar, a Modelo 650 melleklete) munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott. Jogalap: Ley 29/1987 LISyD; a megfelelo regionalis Hacienda adohatosagnal kell benyujtani.'
+        create_stub_modelo_600_refused: 'A(z) %{modelo} nyomtatvany (ITP-AJD, vagyonatruhazasi
+          ado es okirati illetek) munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott.
+          Jogalap: Ley 28/1990 es regionalis ITPyAJD hataskor; a megfelelo regionalis
+          Hacienda / CCAA adohatosagnal kell benyujtani.'
+        create_stub_modelo_620_refused: 'A(z) %{modelo} nyomtatvany (ITP-AJD, hasznalt
+          jarmuvek atruhazasa) munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott.
+          Jogalap: Ley 28/1990 es regionalis ITPyAJD hataskor; az onadozast a megfelelo
+          regionalis Hacienda / CCAA adohatosagnal kell benyujtani.'
+        create_stub_modelo_650_refused: 'A(z) %{modelo} nyomtatvany (ISD oroklesek)
+          munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott. Jogalap: Ley 29/1987
+          LISyD es Art. 67 RISD; a rendes hatarido a halaltol szamitott 6 honap. A
+          megfelelo regionalis Hacienda adohatosagnal kell benyujtani.'
+        create_stub_modelo_660_refused: 'A(z) %{modelo} nyomtatvany (ISD hagyateki
+          leltar, a Modelo 650 melleklete) munkafeladat-letrehozasa ebben a CLI-ben
+          nem tamogatott. Jogalap: Ley 29/1987 LISyD; a megfelelo regionalis Hacienda
+          adohatosagnal kell benyujtani.'
         create_stub_modelo_714_refused: 'A(z) %{modelo} nyomtatvany (vagyonado) munkafeladat-letrehozasa
           ebben a CLI-ben nem tamogatott. Jogi alap: Ley 19/1991 28. cikk es Orden
           HAC/1023/2021. A bevallast az AEAT Sede feluleten kell benyujtani.'
@@ -1874,13 +1891,15 @@ cli:
       until_help: Az előzmények szűrése ennél az ISO-8601 időbélyegnél nem újabb eseményekre
         (pl. 2026-04-30T23:59:59+00:00).
     custody:
-      confirm_new_passphrase_help: 'Ismetelje meg az uj titkos tar passphrase erteket.'
+      confirm_new_passphrase_help: Ismetelje meg az uj titkos tar passphrase erteket.
       confirm_new_passphrase_prompt: 'Uj AEAT titkos tar passphrase megerositese: '
-      data_loss_warning: 'Jegyezze fel most ezt a helyreallitasi kulcsot. Az AEAT nem tarolja a nyilt helyreallitasi kulcsot, es nem tudja ujra megjeleniteni.'
+      data_loss_warning: Jegyezze fel most ezt a helyreallitasi kulcsot. Az AEAT nem
+        tarolja a nyilt helyreallitasi kulcsot, es nem tudja ujra megjeleniteni.
       errors:
-        missing_new_passphrase_confirmation: 'Ismetelje meg az uj passphrase erteket a --confirm-new-passphrase kapcsoloval.'
-        new_passphrase_mismatch: 'Az uj passphrase es a megerosites nem egyezik.'
-      new_passphrase_help: 'Uj titkos tar passphrase. Hagyja el az interaktiv megadashoz.'
+        missing_new_passphrase_confirmation: Ismetelje meg az uj passphrase erteket
+          a --confirm-new-passphrase kapcsoloval.
+        new_passphrase_mismatch: Az uj passphrase es a megerosites nem egyezik.
+      new_passphrase_help: Uj titkos tar passphrase. Hagyja el az interaktiv megadashoz.
       new_passphrase_prompt: 'Uj AEAT titkos tar passphrase: '
     errors:
       invalid_value: 'Érvénytelen érték a(z) %{name} mezőhöz: %{value}'
@@ -1924,7 +1943,8 @@ cli:
         loopback_bind: 'Nem sikerült helyi portot megnyitni a Google-bejelentkezés
           befejezéséhez: {detail}'
         network: 'Nem sikerült elérni a Google-t: {detail}'
-        profile_unbound: 'Nincs aktiv profil. Futtasd aeat config unlock NAME, vagy add meg a --profile kapcsolot.'
+        profile_unbound: Nincs aktiv profil. Futtasd aeat config unlock NAME, vagy
+          add meg a --profile kapcsolot.
         scope_insufficient: 'A Google-hozzáféréshez megadott engedélyek nem elegendők.
           Futtassa: `aeat config google login` és fogadjon el minden engedélyt.'
         storage: 'Nem sikerült elérni a Google Drive tárolót: {detail}'
@@ -2028,7 +2048,7 @@ cli:
     list:
       help: Minden regisztrált profil listázása és az aktív megjelölése.
     lock:
-      help: 'Az aktiv profil zarolasa az aktivprofil-mutato torlesevel.'
+      help: Az aktiv profil zarolasa az aktivprofil-mutato torlesevel.
     profile:
       already_exists: A(z) %{name} profil már létezik. Válasszon másik célazonosítót.
       censo:
@@ -2045,7 +2065,9 @@ cli:
         --tax-id <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet
         --accept-defaults'
       create_help: Új aktív profil és konfigurációs bucket inicializálása.
-      delete_active_cleared: 'A torolt profil volt az aktiv; az aktiv profil mutato torolve lett. Futtasd aeat config unlock NAME vagy aeat config profile create NAME a folytatashoz.'
+      delete_active_cleared: A torolt profil volt az aktiv; az aktiv profil mutato
+        torolve lett. Futtasd aeat config unlock NAME vagy aeat config profile create
+        NAME a folytatashoz.
       delete_help: Profil és lemezen lévő állapot törlése (--yes megerősíti).
       delete_name_help: A törölni kívánt profil neve.
       delete_requires_yes: 'A törlés visszafordíthatatlan. Futtassa újra: `aeat config
@@ -2075,7 +2097,10 @@ cli:
       import_path_help: A profilcsomag JSON-fájljának elérési útja.
       import_uuid_collision: A csomagban lévő UUID ütközik egy meglévő profillal.
       logout_help: Kijelentkezés az aktív profilból a helyi mutató törlésével.
-      logout_session_warning: 'A kijelentkezes torolte az aktiv profil mutatot. Ebben a terminalban a kovetkezo parancsok NoActiveBucketSessionError hibaval elutasitanak, amig nem futtatod az aeat config unlock NAME parancsot, vagy nem nyitsz uj terminalt es valasztasz ujra.'
+      logout_session_warning: A kijelentkezes torolte az aktiv profil mutatot. Ebben
+        a terminalban a kovetkezo parancsok NoActiveBucketSessionError hibaval elutasitanak,
+        amig nem futtatod az aeat config unlock NAME parancsot, vagy nem nyitsz uj
+        terminalt es valasztasz ujra.
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <DNI/NIE/NIF/CIF>`.'
       preflight_filing_year_help: Bevallási év (négy számjegy).
@@ -2112,10 +2137,11 @@ cli:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
     recover:
-      help: 'A fajlalapu titkos tar helyreallitasa helyreallitasi kulccsal es uj passphrase ertekhez kotese.'
-      recovery_key_help: 'Huszonnegy szavas helyreallitasi kulcs.'
+      help: A fajlalapu titkos tar helyreallitasa helyreallitasi kulccsal es uj passphrase
+        ertekhez kotese.
+      recovery_key_help: Huszonnegy szavas helyreallitasi kulcs.
     rekey:
-      help: 'A fajlalapu titkos tar uj passphrase alatti ujracsomagolasa.'
+      help: A fajlalapu titkos tar uj passphrase alatti ujracsomagolasa.
     repair:
       connectivity_help: Böngésző és AEAT Sede kapcsolhatóság ellenőrzése.
       connectivity_target_help: A vizsgálandó kapcsolódási cél.
@@ -2200,22 +2226,27 @@ cli:
           áttekintéséhez.'
         saved: A(z) '%{profile_name}' profil mentve.
     show_recovery:
-      existing_notice: 'A nyilt helyreallitasi kulcs nincs tarolva es nem jelenitheto meg ujra. Hasznalja a --rotate kapcsolot uj helyreallitasi kulcs keszitesehez.'
-      help: 'Helyreallitasi allapot megjelenitese vagy egyszer hasznalhato helyreallitasi kulcs letrehozasa.'
-      rotate_help: 'A helyreallitasi csomag forgatasa es uj egyszer hasznalhato helyreallitasi kulcs kiirasa.'
+      existing_notice: A nyilt helyreallitasi kulcs nincs tarolva es nem jelenitheto
+        meg ujra. Hasznalja a --rotate kapcsolot uj helyreallitasi kulcs keszitesehez.
+      help: Helyreallitasi allapot megjelenitese vagy egyszer hasznalhato helyreallitasi
+        kulcs letrehozasa.
+      rotate_help: A helyreallitasi csomag forgatasa es uj egyszer hasznalhato helyreallitasi
+        kulcs kiirasa.
     status:
       empty_profile: 'Nincs beállított profil. Futtassa: `aeat config profile create
         NÉV` a kezdéshez.'
       help: Az aktuális konfigurációs profil készenléti állapotának megjelenítése.
       next_step: 'Következő lépés: `aeat app overview status`'
     unlock:
-      help: 'Profil feloldasa a profil kivalasztasaval es a tarolasi munkamenet megnyitasaval.'
-      name_help: 'A feloldando profil neve. Ha nincs megadva, az aktivprofil-mutato az alapertelmezett.'
+      help: Profil feloldasa a profil kivalasztasaval es a tarolasi munkamenet megnyitasaval.
+      name_help: A feloldando profil neve. Ha nincs megadva, az aktivprofil-mutato
+        az alapertelmezett.
     unset:
       help: Egy konfigurációs kulcs értékének törlése.
       key_help: A törlendő kulcs.
     verify_recovery:
-      help: 'Ellenorzi, hogy a helyreallitasi kulcs megnyitja-e a tarolt helyreallitasi csomagot.'
+      help: Ellenorzi, hogy a helyreallitasi kulcs megnyitja-e a tarolt helyreallitasi
+        csomagot.
     workflow_help: Konfiguráció-munkafolyamat súgó megjelenítése.
   diagnostics:
     browser:
@@ -2740,7 +2771,7 @@ cli:
         profile_rename: Profil átnevezése és mappájának áthelyezése.
         profile_show: Egy profil adatainak megjelenítése.
         profile_status: Az aktív profil készültségének megjelenítése.
-        profile_switch: 'Profil feloldasa es aktivalasa.'
+        profile_switch: Profil feloldasa es aktivalasa.
         section_authentication: Hitelesítés
         section_bucket_inspection: Bucket ellenorzes
         section_diagnostics: Diagnosztika
@@ -3291,7 +3322,8 @@ errors:
       használ, amelyet ez a verzió nem támogat. Frissítse az alkalmazást.
     auth_storage_master_key_material_missing: Nincs főkulcs-anyag. A biztonságos tároló
       még nincs kiosztva.
-    auth_storage_master_key_passphrase_mismatch: 'A jelmondat nem oldja fel a fokulcsot. Add meg ujra; ha elfelejtetted, futtasd aeat config recover --recovery-key <WORDS>.'
+    auth_storage_master_key_passphrase_mismatch: A jelmondat nem oldja fel a fokulcsot.
+      Add meg ujra; ha elfelejtetted, futtasd aeat config recover --recovery-key <WORDS>.
     auth_storage_master_key_unavailable: A főkulcsot egyetlen szolgáltatótól sem sikerült
       beszerezni. Ellenőrizze a kulcstárat vagy a fájl-tartalék jelmondat.
   calc:
@@ -3342,13 +3374,13 @@ errors:
       profilhoz.
     profile_not_found: A(z) {profile_id} profil nem létezik; censo alkalmazása előtt
       hozza létre.
-    snapshot_profile_mismatch: A(z) {snapshot_id} censo-pillanatkép a(z)
-      {snapshot_profile_id} profilhoz tartozik, nem a(z) {profile_id} profilhoz.
     sede_g313_no_censo: Az AEAT G313 szekcióból nem sikerült olvasható censot lekérni
       a(z) {profile_id} profilhoz; ellenőrizze, hogy a tanúsítványa vagy Cl@ve-je
       regisztrálva van-e.
     sede_no_censo: Az AEAT szekcióból nem sikerült olvasható censot lekérni a(z) {profile_id}
       profilhoz.
+    snapshot_profile_mismatch: A(z) {snapshot_id} censo-pillanatkép a(z) {snapshot_profile_id}
+      profilhoz tartozik, nem a(z) {profile_id} profilhoz.
   error:
     error_access_gate_submission: A hozzáférési kapu szabályzata elutasított egy benyújtási
       műveletet.
@@ -4019,12 +4051,14 @@ errors:
       bucket-tel.
     refused_storage_bucket_no_active: Nem oldható fel aktív bucket. Válasszon ki egy
       profilt, és próbálja újra.
-    refused_storage_master_key_no_active_session: 'A titkosításhoz aktív munkamenet szükséges. Futtassa: `aeat config unlock NAME`, majd próbálja újra.'
+    refused_storage_master_key_no_active_session: 'A titkosításhoz aktív munkamenet
+      szükséges. Futtassa: `aeat config unlock NAME`, majd próbálja újra.'
     refused_storage_passphrase_too_short: A jelmondat túl rövid. Legalább 8 karakterből
       kell állnia.
     refused_storage_secret_already_exists: Ilyen kulcsú titkos adat már létezik. Használja
       a felülírás lehetőséget a csere érdekében.
-    refused_storage_session_expired: 'Az aktiv munkamenet inaktivitas miatt lejart. Aktivald ujra az aeat config unlock NAME paranccsal.'
+    refused_storage_session_expired: Az aktiv munkamenet inaktivitas miatt lejart.
+      Aktivald ujra az aeat config unlock NAME paranccsal.
     refused_storage_unsecured_mode: A nem biztonságos tároló háttérrendszert az szükséges
       engedélyezés nélkül kérték. Valós adatokhoz nem biztonságos.
     refused_taxation_comparison: A közös-vs-egyéni adózás összehasonlítása nem végezhető
@@ -4082,7 +4116,8 @@ errors:
         bucket kiválasztása előtt érhető el.
       cold_bootstrap_explicit_database_refused: A hidegindítási tároló nem kerülheti
         meg a megadott adatbázis-útvonalat.
-      no_active_session: 'Nincs aktiv bucket-munkamenet. Futtasd aeat config unlock NAME a profil feloldasahoz.'
+      no_active_session: Nincs aktiv bucket-munkamenet. Futtasd aeat config unlock
+        NAME a profil feloldasahoz.
       no_detail: Nem jelentetett részletes készültségi problémát.
       not_ready: 'A tárolási futtatókörnyezet nem áll készen profil-kötött tároláshoz:
         %{details}'
@@ -4090,12 +4125,16 @@ errors:
       route_not_active_bucket: Az adatbázis-útvonal nincs aktív profil bucket-hez
         csatolva.
       session_changed: Az aktív bucket-munkamenet megváltozott. Oldja fel újra a célprofilt.
-      session_expired: 'Az aktiv bucket-munkamenet lejart. Futtasd aeat config unlock NAME a profil ujraaktivalasahoz.'
-      session_sealed: 'Az aktiv bucket-munkamenet le van zarva. Futtasd aeat config unlock NAME a profil ujraaktivalasahoz.'
+      session_expired: Az aktiv bucket-munkamenet lejart. Futtasd aeat config unlock
+        NAME a profil ujraaktivalasahoz.
+      session_sealed: Az aktiv bucket-munkamenet le van zarva. Futtasd aeat config
+        unlock NAME a profil ujraaktivalasahoz.
       unsecured_backend: Az aktív bucket-munkamenet a nem biztonságos háttérrendszert
         használja. A gyártási profil-kötött tároláshoz fájl- vagy kulcstár-felügyelet
         szükséges.
-    stored_data_validation_boundary: 'Egy tarolt profil vagy munkafolyamat-rekord mar nem egyezik a vart semaval; a lemezen levo adatok eltertek a jelenlegi formatumtol. Diagnosztikahoz es helyreallitashoz futtasd aeat config doctor.'
+    stored_data_validation_boundary: Egy tarolt profil vagy munkafolyamat-rekord mar
+      nem egyezik a vart semaval; a lemezen levo adatok eltertek a jelenlegi formatumtol.
+      Diagnosztikahoz es helyreallitashoz futtasd aeat config doctor.
   transaction:
     import_source_invalid: A forrás nem érvényes főkönyvi dokumentum
     ledger_import_failed: 'A főkönyvi fájl nem importálható: {reason}'
@@ -4726,7 +4765,8 @@ wizard:
             label: Spanyolországban szokásos lakóhellyel rendelkező – IRPF
         prompt: Adóügyi illetőségi kategória
       representante-fiscal-nif:
-        prompt: 'A spanyolorszagi adougyi kepviselo NIF/NIE szama (EU-n/EGT-n kivuli eseten kotelezo)'
+        prompt: A spanyolorszagi adougyi kepviselo NIF/NIE szama (EU-n/EGT-n kivuli
+          eseten kotelezo)
       representante-fiscal-nombre:
         prompt: A spanyolországi adóügyi képviselő neve
       tax-residence-ccaa:
