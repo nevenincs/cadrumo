@@ -84,9 +84,7 @@ def test_unknown_and_erroneous_categories_surface_anomaly() -> None:
 
 def test_converted_foreign_row_is_not_flagged_unsupported_currency() -> None:
     # GBP row with a value_in_eur conversion applied at import aggregates fine.
-    issues = _issues_for_transaction(
-        _tx(currency="GBP", value_in_eur=Decimal("142.35"), fx_rate=Decimal("1.176"))
-    )
+    issues = _issues_for_transaction(_tx(currency="GBP", value_in_eur=Decimal("142.35"), fx_rate=Decimal("1.176")))
     assert all(i.reason is not R.UNSUPPORTED_CURRENCY for i in issues)
 
 

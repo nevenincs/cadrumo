@@ -75,20 +75,14 @@ def _tx(provider_id: str, *, iva_category: IvaCategory) -> Transaction:
 )
 def test_non_declarable_category_is_gated_not_emitted(category: IvaCategory) -> None:
     tx = _tx("re-1", iva_category=category)
-    result = aggregate_iva_ledger_observations(
-        TransactionCatalogue.from_transactions((tx,)), period="2026Q2"
-    )
+    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((tx,)), period="2026Q2")
     # No declarable observation, and the gate reason names the unsupported category.
     assert result.observations == ()
-    assert [i.reason for i in result.issues] == [
-        IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_CATEGORY
-    ]
+    assert [i.reason for i in result.issues] == [IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_CATEGORY]
 
 
 def test_normal_domestic_category_still_emits() -> None:
     tx = _tx("ok-1", iva_category=IvaCategory.DOMESTIC_GENERAL_21)
-    result = aggregate_iva_ledger_observations(
-        TransactionCatalogue.from_transactions((tx,)), period="2026Q2"
-    )
+    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((tx,)), period="2026Q2")
     assert len(result.observations) == 1
     assert result.observations[0].category is IvaCategory.DOMESTIC_GENERAL_21

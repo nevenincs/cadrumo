@@ -21,6 +21,8 @@ from ._file_flow_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
 def test_two_calculates_under_one_work_unit_produce_two_revisions(repos) -> None:
     """The toilet-break scenario. Operator calculates, walks away,
     comes back, calculates again with different inputs. Two
@@ -72,6 +74,7 @@ def test_two_calculates_under_one_work_unit_produce_two_revisions(repos) -> None
     assert refreshed_work_unit.filed_calculation_revision_id is None
     assert refreshed_work_unit.current_filing_record_id is None
 
+
 def test_calculate_is_idempotent_on_identical_inputs(repos) -> None:
     """Re-running calculate with identical inputs / outputs returns
     the existing revision (content-addressed id collides) without
@@ -104,6 +107,7 @@ def test_calculate_is_idempotent_on_identical_inputs(repos) -> None:
         calculation_repository=cr_repo,
     )
     assert len(revisions) == 1
+
 
 def test_duplicate_draft_calculation_reuse_advances_current_pointer(repos) -> None:
     """Reusing an existing draft revision still restores it as current."""
@@ -141,6 +145,7 @@ def test_duplicate_draft_calculation_reuse_advances_current_pointer(repos) -> No
     assert refreshed.filed_calculation_revision_id is None
     assert refreshed.current_filing_record_id is None
 
+
 def test_calculate_refused_on_discarded_work_unit(repos) -> None:
     """A discarded work unit refuses further calculation. The
     operator must create a fresh work unit to continue."""
@@ -170,6 +175,7 @@ def test_calculate_refused_on_discarded_work_unit(repos) -> None:
             clock=_T2,
         )
 
+
 def test_discard_emits_modelo_work_unit_discarded_event(repos) -> None:
     """``discard_work_unit`` emits a ``modelo.work_unit.discarded``
     bucket event with actor + reason payload."""
@@ -195,6 +201,7 @@ def test_discard_emits_modelo_work_unit_discarded_event(repos) -> None:
     assert event.object_id == discarded.work_unit_id
     assert event.actor == "operator-A"
     assert event.payload["reason"] == "superseded by new work unit"
+
 
 def test_calculate_runs_registry_formula_engine(repos) -> None:
     """``calculate_modelo_revision`` runs the registry's formula engine
@@ -249,6 +256,7 @@ def test_calculate_runs_registry_formula_engine(repos) -> None:
     assert int(created_events[0].payload["formula_count"]) >= 1
     assert int(created_events[0].payload["casilla_count"]) >= 19
 
+
 def test_calculate_works_when_cwd_is_not_the_repo_root(
     repos,
     tmp_path,
@@ -287,6 +295,7 @@ def test_calculate_works_when_cwd_is_not_the_repo_root(
 
     # Sanity: engine ran (formula casilla 03 computed = 01 - 02).
     assert revision.casilla_values["03"] == Decimal("7000.00")
+
 
 def test_calculate_refuses_when_registry_snapshot_unresolvable(repos) -> None:
     """``calculate_modelo_revision`` runs the formula engine, so it

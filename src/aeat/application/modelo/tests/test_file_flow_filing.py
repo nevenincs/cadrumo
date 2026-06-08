@@ -37,6 +37,8 @@ from ._file_flow_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
 def test_file_requires_verificado_completo_state(repos) -> None:
     """A borrador revision cannot be filed; only verificado-completo
     revisions are eligible."""
@@ -63,6 +65,7 @@ def test_file_requires_verificado_completo_state(repos) -> None:
             bucket_event_repository=bv_repo,
             clock=_T2,
         )
+
 
 def test_file_creates_filing_record_and_advances_pointers(repos) -> None:
     """The happy-path file flow: calculate → mark verified-complete
@@ -138,6 +141,7 @@ def test_file_creates_filing_record_and_advances_pointers(repos) -> None:
     assert current is not None
     assert current.filing_record_id == filing.filing_record_id
 
+
 def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_blocks(repos) -> None:
     """The file transition is gated by WorkflowEngine.run_for_period.
 
@@ -194,6 +198,7 @@ def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_
         event_types=(BucketEventType.MODELO_FILED,),
     )
     assert filed_events == ()
+
 
 def test_file_still_refuses_a_closed_past_period_no_pending_obligation(repos) -> None:
     """The ``NO_PENDING_OBLIGATION`` guard stays on the filing path.
@@ -263,6 +268,7 @@ def test_file_still_refuses_a_closed_past_period_no_pending_obligation(repos) ->
     assert "aeat app modelo work export" not in rendered
     assert gate_error.value.suggestion == "aeat app modelo export <work-unit-id> --output <path>"
     assert "filing-obligation window is not open" in gate_error.value.result.summary
+
 
 def test_filing_record_supersession_preserves_audit_history(repos) -> None:
     """Re-filing a later verified revision supersedes the prior
@@ -387,6 +393,7 @@ def test_filing_record_supersession_preserves_audit_history(repos) -> None:
     assert refreshed_wu.filed_calculation_revision_id == revision_two.calculation_revision_id
     assert refreshed_wu.current_filing_record_id == filing_two.filing_record_id
 
+
 def test_list_filing_records_excludes_superseded_by_default(repos) -> None:
     """The default listing surfaces operator-visible state (current
     filings). Pass include_superseded=True to walk audit history."""
@@ -460,6 +467,7 @@ def test_list_filing_records_excludes_superseded_by_default(repos) -> None:
         filing_repository=fr_repo,
     )
     assert len(_target_filing_records(with_history, work_unit)) == 2
+
 
 def test_get_filing_record_raises_on_missing_id(repos) -> None:
     _, _, fr_repo, _, _ = repos

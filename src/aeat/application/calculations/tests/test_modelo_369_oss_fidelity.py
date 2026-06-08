@@ -158,14 +158,10 @@ def test_year_n_engine_computes_cuota_total_as_cross_destination_sum(tmp_path: P
     destination cuotas, never hand-computed against the formula under test.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
-        result, produced = _calculate_369(
-            filing_year=_YEAR_N, period=_PERIOD, destination_cuotas=_YEAR_N_CUOTAS
-        )
+        result, produced = _calculate_369(filing_year=_YEAR_N, period=_PERIOD, destination_cuotas=_YEAR_N_CUOTAS)
     assert produced > 0
     expected_sum = (
-        _YEAR_N_CUOTAS[_BINDING_DE_SERVICES]
-        + _YEAR_N_CUOTAS[_BINDING_FR_SERVICES]
-        + _YEAR_N_CUOTAS[_BINDING_DE_GOODS]
+        _YEAR_N_CUOTAS[_BINDING_DE_SERVICES] + _YEAR_N_CUOTAS[_BINDING_FR_SERVICES] + _YEAR_N_CUOTAS[_BINDING_DE_GOODS]
     )
     assert result.values[_CASILLA_TOTAL] == expected_sum
     assert result.values[_CASILLA_DE_SERVICES] == _YEAR_N_CUOTAS[_BINDING_DE_SERVICES]
@@ -175,9 +171,7 @@ def test_computed_total_persists_and_reloads_strictly(tmp_path: Path) -> None:
     """The engine-produced 369 casilla values survive the encrypted-SQL roundtrip."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        result, _ = _calculate_369(
-            filing_year=_YEAR_N, period=_PERIOD, destination_cuotas=_YEAR_N_CUOTAS
-        )
+        result, _ = _calculate_369(filing_year=_YEAR_N, period=_PERIOD, destination_cuotas=_YEAR_N_CUOTAS)
         obs = _registry_observation(filing_year=_YEAR_N, period=_PERIOD, result=result)
         repo.save_observation(obs, source_kind="app_filing", captured_at=_CLOCK_N)
         loaded = _find_observation(repo, filing_year=_YEAR_N, period=_PERIOD)
@@ -191,9 +185,7 @@ def test_both_years_independently_retrievable_no_bleed(tmp_path: Path) -> None:
     """Both ejercicios are independently addressable; cuota-total values do not bleed."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        result_n, _ = _calculate_369(
-            filing_year=_YEAR_N, period=_PERIOD, destination_cuotas=_YEAR_N_CUOTAS
-        )
+        result_n, _ = _calculate_369(filing_year=_YEAR_N, period=_PERIOD, destination_cuotas=_YEAR_N_CUOTAS)
         result_n1, _ = _calculate_369(
             filing_year=_YEAR_N_PLUS_1, period=_PERIOD, destination_cuotas=_YEAR_N_PLUS_1_CUOTAS
         )
@@ -217,9 +209,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
     """Anti-tautology: a missing casilla in the reloaded observation is detectable."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        result, _ = _calculate_369(
-            filing_year=_YEAR_N, period=_PERIOD, destination_cuotas=_YEAR_N_CUOTAS
-        )
+        result, _ = _calculate_369(filing_year=_YEAR_N, period=_PERIOD, destination_cuotas=_YEAR_N_CUOTAS)
         obs = _registry_observation(filing_year=_YEAR_N, period=_PERIOD, result=result)
         obs_missing = RegistryModeloObservation(
             modelo=_MODELO,
@@ -249,9 +239,7 @@ def test_modelo_369_oss_calculation_enrolls_two_renta_years(tmp_path: Path) -> N
     """
     recorder = EnrollmentRecorder(_MODELO)
     with isolated_runtime_profile(tmp_path=tmp_path):
-        result_n, produced_n = _calculate_369(
-            filing_year=_YEAR_N, period=_PERIOD, destination_cuotas=_YEAR_N_CUOTAS
-        )
+        result_n, produced_n = _calculate_369(filing_year=_YEAR_N, period=_PERIOD, destination_cuotas=_YEAR_N_CUOTAS)
         recorder.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
 
         result_n1, produced_n1 = _calculate_369(

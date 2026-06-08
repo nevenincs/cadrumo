@@ -84,6 +84,7 @@ class LedgerProviderID(StrEnum):
     PDF = "pdf"
     PDF_N26 = "pdf-n26"
 
+
 DirectionResolver = Callable[[RawTransaction], TransactionDirection]
 
 
@@ -392,6 +393,7 @@ def import_ledger_source(
         diagnostics=diagnostics,
     )
 
+
 def _resolve_financial_provider(provider: str, path: Path) -> FinancialProviderProtocol:
     from ...adapters.inbound.financial.providers import (
         CsvProvider,
@@ -516,6 +518,7 @@ def _diagnostic_events(
             )
     return tuple(events)
 
+
 def _import_batch_id(
     *,
     bucket_id: str,
@@ -532,4 +535,3 @@ def _import_batch_id(
         separators=(",", ":"),
     ).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
-

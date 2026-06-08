@@ -376,6 +376,7 @@ def reset_ledger_catalogue(
         bucket_event_ids=tuple(event.event_id for event in (*removal_events, reset_event)),
     )
 
+
 def _transition_manual_transaction_lifecycle(
     *,
     bucket_id: str,
@@ -466,6 +467,7 @@ def _transition_manual_transaction_lifecycle(
         events=(event,),
     )
     return _result(bucket_id, replacement, (event.event_id,))
+
 
 def _detach_transaction_from_purchase_evidence(
     catalogue: InvoiceCatalogue,
@@ -562,4 +564,3 @@ def _removal_events(
         )
     )
     return tuple(events)
-

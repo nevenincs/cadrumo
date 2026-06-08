@@ -94,9 +94,7 @@ _PROFILE_ENUM_BINDINGS: dict[str, str] = {
 _CLOCK = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
 
 
-def _seed_m200_bin_stock(
-    *, source_year: int, stock: Decimal, obs_repo: CalculationObservationRepository
-) -> None:
+def _seed_m200_bin_stock(*, source_year: int, stock: Decimal, obs_repo: CalculationObservationRepository) -> None:
     """Record a prior-year M200 end-of-year BIN stock (casilla 00671)."""
     obs_repo.save_observation(
         RegistryModeloObservation(
@@ -110,9 +108,7 @@ def _seed_m200_bin_stock(
     )
 
 
-def _calculate_200(
-    *, filing_year: int, relation_values: dict[str, Decimal]
-) -> tuple[RegistryCalculationResult, int]:
+def _calculate_200(*, filing_year: int, relation_values: dict[str, Decimal]) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL M200 annual calculation from resolved relations + the SL profile."""
     snapshot = resources().modelos.authority.snapshot(_MODELO_200, filing_year=filing_year, period="0A")
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
@@ -123,9 +119,7 @@ def _calculate_200(
     # scenario seeds.
     prefilled = resolve_bindings_from_local_store(snapshot).binding_values
     carry_defaults = {
-        c.binding: Decimal("0")
-        for c in snapshot.revision.casillas
-        if c.input_kind.value == "bound" and c.binding
+        c.binding: Decimal("0") for c in snapshot.revision.casillas if c.input_kind.value == "bound" and c.binding
     }
     binding_values = {**carry_defaults, **prefilled, **relation_binding_values, **_PROFILE_DECIMAL_BINDINGS}
     inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
@@ -221,9 +215,7 @@ _BIN_CAP_PREDICATE_ID = "modelo-200-compensacion-bin-no-excede-limite-art-26"
 def _bin_cap_predicate():
     """Return the art.26.1 cap BLOCKING predicate from the live M200 snapshot."""
     revision = resources().modelos.authority.validate_modelo(_MODELO_200).revisions["2024-y-siguientes"]
-    predicate = next(
-        p for p in revision.verification_predicates if p.predicate_id == _BIN_CAP_PREDICATE_ID
-    )
+    predicate = next(p for p in revision.verification_predicates if p.predicate_id == _BIN_CAP_PREDICATE_ID)
     assert predicate.finding_kind == "BLOCKING_RULE"
     assert "cap_le_when_positive" in predicate.expression
     return predicate

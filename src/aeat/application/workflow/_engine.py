@@ -719,11 +719,7 @@ class WorkflowEngine:
                     steps=steps,
                 )
             target_year = _registry_filing_year(obligation.period)
-            already = tuple(
-                e
-                for e in expedientes
-                if e.modelo == obligation.modelo and e.ejercicio == target_year
-            )
+            already = tuple(e for e in expedientes if e.modelo == obligation.modelo and e.ejercicio == target_year)
             if already:
                 _logger.debug(
                     "already-filed gate triggered modelo=%s period=%s expediente_count=%d",

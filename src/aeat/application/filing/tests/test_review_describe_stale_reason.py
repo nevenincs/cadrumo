@@ -36,9 +36,8 @@ _EXPECTED_REASON_KEYS = {
 
 
 def test_describe_stale_reason_renders_approval_basis_version_changed() -> None:
-    assert (
-        describe_stale_reason(ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED)
-        == tr(_EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED])
+    assert describe_stale_reason(ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED) == tr(
+        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED]
     )
 
 
@@ -58,9 +57,8 @@ def test_describe_stale_reason_renders_draft_review_changed() -> None:
 
 
 def test_describe_stale_reason_renders_transaction_catalogue_changed() -> None:
-    assert (
-        describe_stale_reason(ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED)
-        == tr(_EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED])
+    assert describe_stale_reason(ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED) == tr(
+        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED]
     )
 
 
@@ -74,9 +72,8 @@ def test_describe_stale_reason_renders_schema_formula_changed() -> None:
     """SCHEMA_FORMULA_CHANGED is re-described as 'schema or formula
     provenance changed' to communicate the broader concept (provenance
     invalidation, not just the schema or formula bytes themselves)."""
-    assert (
-        describe_stale_reason(ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED)
-        == tr(_EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED])
+    assert describe_stale_reason(ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED) == tr(
+        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED]
     )
 
 

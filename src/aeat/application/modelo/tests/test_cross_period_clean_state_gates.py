@@ -103,10 +103,7 @@ def _persist_390_draft(
 
 def _source_values(period: str, source_casillas: tuple[str, ...]) -> dict[str, Decimal]:
     period_ordinal = {"1T": 1, "2T": 2, "3T": 3, "4T": 4}[period]
-    return {
-        casilla_id: Decimal(period_ordinal * (index + 1))
-        for index, casilla_id in enumerate(source_casillas)
-    }
+    return {casilla_id: Decimal(period_ordinal * (index + 1)) for index, casilla_id in enumerate(source_casillas)}
 
 
 def _persist_justificante_metadata(csv: str, *, modelo: str, period: str, filing_year: int) -> None:
@@ -181,8 +178,7 @@ def _seed_303_cross_period_sources(
                 filing_year=2025,
                 period=period,
                 observations=tuple(
-                    CasillaObservation(casilla_id=casilla_id, value=value)
-                    for casilla_id, value in values.items()
+                    CasillaObservation(casilla_id=casilla_id, value=value) for casilla_id, value in values.items()
                 ),
             ),
             source_kind="aeat_sede_justificante",
@@ -389,7 +385,6 @@ def test_verify_modelo_390_refuses_csv_register_prior_filing_without_justificant
     )
     assert report.granted_verificado_completo is False
     assert any(
-        "period=1T" in finding.message
-        and "blockers=missing_justificante_verification" in finding.message
+        "period=1T" in finding.message and "blockers=missing_justificante_verification" in finding.message
         for finding in cross_period_findings
     )

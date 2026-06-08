@@ -88,9 +88,7 @@ def _resolve(transaction: Transaction, path: str) -> object:
 
 def row_fingerprint(transaction: Transaction) -> str:
     """Return the SHA-256 content fingerprint of one transaction's tax facts."""
-    canonical = "|".join(
-        f"{label}={_normalise(_resolve(transaction, path))}" for label, path in _FINGERPRINT_FIELDS
-    )
+    canonical = "|".join(f"{label}={_normalise(_resolve(transaction, path))}" for label, path in _FINGERPRINT_FIELDS)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
@@ -230,8 +228,7 @@ def assert_evidence_covers_snapshot(snapshot: LedgerFilingSnapshot, evidence: Le
         missing = sorted(snapshot_ids - evidence_ids)
         extra = sorted(evidence_ids - snapshot_ids)
         raise ModeloValidationError(
-            "ledger filing evidence does not cover the fingerprint snapshot: "
-            f"missing={missing} extra={extra}",
+            f"ledger filing evidence does not cover the fingerprint snapshot: missing={missing} extra={extra}",
         )
 
 

@@ -32,6 +32,8 @@ from ._action_test_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
 def test_import_ledger_transactions_persists_rows_and_emits_import_events(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -87,6 +89,7 @@ def test_import_ledger_transactions_persists_rows_and_emits_import_events(
     assert {event.payload["source_row_index"] for event in events} == {"1"}
     assert {event.payload["provider_name"] for event in events} == {"CSV provider"}
 
+
 def test_import_ledger_source_owns_provider_validation_ingest_and_persistence(
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
@@ -125,6 +128,7 @@ def test_import_ledger_source_owns_provider_validation_ingest_and_persistence(
     assert len(persisted.bucket_event_ids) == 2
     assert len(transaction_repository.load().transactions) == 2
 
+
 def test_import_ledger_source_missing_file_raises_localised_error(tmp_path: Path) -> None:
     """A missing source file raises a tr()-localised error, not naked English.
 
@@ -147,6 +151,7 @@ def test_import_ledger_source_missing_file_raises_localised_error(tmp_path: Path
     rendered = resolve_error_message(error)
     assert "El archivo de origen no existe" in rendered
     assert str(missing) in rendered
+
 
 def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_event(
     secure_objects: SecureObjectRepository,
@@ -215,6 +220,7 @@ def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_even
     assert events[-1].payload["last_transaction_id"] == first.ref.transaction_id
     assert len(events[-1].payload["transaction_ids_sha256"]) == 64
 
+
 def test_export_ledger_transactions_excludes_inactive_rows_by_default(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     active = create_manual_transaction(
@@ -272,6 +278,7 @@ def test_export_ledger_transactions_excludes_inactive_rows_by_default(secure_obj
     )
     assert with_inactive.rows[1].lifecycle_state == "STASHED"
 
+
 def test_export_ledger_transactions_event_payload_stays_bounded_for_large_exports(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -305,6 +312,7 @@ def test_export_ledger_transactions_event_payload_stays_bounded_for_large_export
     assert event.payload["row_count"] == "12"
     assert len(event.payload["transaction_ids_sha256"]) == 64
     assert all(len(value) <= 500 for value in event.payload.values())
+
 
 def test_export_ledger_transactions_reads_requested_bucket_only(secure_objects: SecureObjectRepository) -> None:
     repo_a, event_repo_a = _repositories(secure_objects, bucket_id="bucket-a")
@@ -350,6 +358,7 @@ def test_export_ledger_transactions_reads_requested_bucket_only(secure_objects: 
     assert [event.event_type for event in event_repo_b.load().for_bucket("bucket-b")] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED
     ]
+
 
 def test_export_ledger_transactions_writes_output_before_export_event(
     secure_objects: SecureObjectRepository,

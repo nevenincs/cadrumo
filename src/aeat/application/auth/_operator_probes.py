@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
 _log = get_logger(__name__)
 
+
 def _live_auth_identity_state(
     provider_kind: AuthProviderKind | None,
     *,

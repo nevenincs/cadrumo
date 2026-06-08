@@ -795,4 +795,3 @@ def _resolve_merge_parent(
             },
         )
     return parent
-

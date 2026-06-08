@@ -31,8 +31,7 @@ def sheet_evidence_from_ledger_filing(
         casillas = tuple(casilla for casilla in casillas if casilla)
         if not casillas:
             raise CalcSheetsEngineError(
-                "ledger filing evidence contributor "
-                f"{row.transaction_id!r} has no workbook casilla attribution"
+                f"ledger filing evidence contributor {row.transaction_id!r} has no workbook casilla attribution"
             )
         for casilla_id in casillas:
             contributor_rows.append(

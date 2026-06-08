@@ -91,6 +91,7 @@ def _modalidad_rate_from_snapshot(filing_year: int) -> Decimal:
     pct_value = Decimal(param.values[0].value)
     return pct_value / Decimal("100")
 
+
 #: Two distinct renta (target) years the M202 2P enrollment spans. The
 #: prior-year delta (-1) makes them source M200 of 2025 and 2026 respectively.
 _TARGET_YEAR_N = 2026

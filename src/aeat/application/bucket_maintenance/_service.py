@@ -222,7 +222,6 @@ class BucketMaintenanceService:
         else:
             namespaces = all_namespaces
         rows = tuple(
-            BucketNamespaceInventoryRow(namespace=ns, row_count=len(repository.list_keys(ns)))
-            for ns in namespaces
+            BucketNamespaceInventoryRow(namespace=ns, row_count=len(repository.list_keys(ns))) for ns in namespaces
         )
         return BrowseBucketResult(bucket_id=command.bucket_id, rows=rows)

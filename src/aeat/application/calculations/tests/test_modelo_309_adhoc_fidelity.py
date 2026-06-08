@@ -146,9 +146,7 @@ def test_year_n_engine_computes_total_as_two_leaf_sum(tmp_path: Path) -> None:
     leaf cuotas, never hand-computed against the formula under test.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
-        result, produced = _calculate_309(
-            filing_year=_YEAR_N, period=_PERIOD, leaf_cuotas=_YEAR_N_CUOTAS
-        )
+        result, produced = _calculate_309(filing_year=_YEAR_N, period=_PERIOD, leaf_cuotas=_YEAR_N_CUOTAS)
     assert produced > 0
     expected_sum = _YEAR_N_CUOTAS[_BINDING_AUTOREPERCUTIDO] + _YEAR_N_CUOTAS[_BINDING_RECARGO]
     assert result.values[_CASILLA_TOTAL] == expected_sum
@@ -174,9 +172,7 @@ def test_both_years_independently_retrievable_no_bleed(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         result_n, _ = _calculate_309(filing_year=_YEAR_N, period=_PERIOD, leaf_cuotas=_YEAR_N_CUOTAS)
-        result_n1, _ = _calculate_309(
-            filing_year=_YEAR_N_PLUS_1, period=_PERIOD, leaf_cuotas=_YEAR_N_PLUS_1_CUOTAS
-        )
+        result_n1, _ = _calculate_309(filing_year=_YEAR_N_PLUS_1, period=_PERIOD, leaf_cuotas=_YEAR_N_PLUS_1_CUOTAS)
         obs_n = _registry_observation(filing_year=_YEAR_N, period=_PERIOD, result=result_n)
         obs_n1 = _registry_observation(filing_year=_YEAR_N_PLUS_1, period=_PERIOD, result=result_n1)
         repo.save_observation(obs_n, source_kind="app_filing", captured_at=_CLOCK_N)
@@ -227,9 +223,7 @@ def test_modelo_309_adhoc_calculation_enrolls_two_renta_years(tmp_path: Path) ->
     """
     recorder = EnrollmentRecorder(_MODELO)
     with isolated_runtime_profile(tmp_path=tmp_path):
-        result_n, produced_n = _calculate_309(
-            filing_year=_YEAR_N, period=_PERIOD, leaf_cuotas=_YEAR_N_CUOTAS
-        )
+        result_n, produced_n = _calculate_309(filing_year=_YEAR_N, period=_PERIOD, leaf_cuotas=_YEAR_N_CUOTAS)
         recorder.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
 
         result_n1, produced_n1 = _calculate_309(

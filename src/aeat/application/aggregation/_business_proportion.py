@@ -1,6 +1,6 @@
 """Shared BUSINESS / MIXED business-proportion dispatch.
 
-Closes the W09.P40.S159 duplication finding: three aggregation sites
+Centralises business proportion dispatch: three aggregation sites
 (`_iva_ledger`, `_renta_ledger`, `_renta_income_ledger`) each carry the
 same dispatch shape::
 
