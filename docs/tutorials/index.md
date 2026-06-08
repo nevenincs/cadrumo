@@ -45,10 +45,18 @@ next	aeat app modelo work create
 
 ## Step 2: Import your transactions
 
-Load the sample transactions into the local ledger:
+First, create a text file named `transactions.csv` in your working directory and paste the following content into it:
+
+```csv
+Fecha operación;Fecha valor;Concepto;Importe;Saldo;Moneda
+10/04/2026;10/04/2026;Cobro factura F-2026-020;1234,56;5234,56;EUR
+11/04/2026;11/04/2026;Pago software trimestral;-49,99;5184,57;EUR
+```
+
+Then load these sample transactions into the local ledger:
 
 ```bash
-aeat app ledger import src/aeat/tests/fixtures/financial/synthetic-transactions.csv --provider csv
+aeat app ledger import transactions.csv --provider csv
 ```
 
 To verify the import, run:
@@ -67,7 +75,9 @@ ACCOUNTING LEDGER TRANSACTIONS
 
 ## Step 3: Classify your transactions
 
-Classify the imported transactions as business activity:
+Find the transaction IDs in the first column of the output from `aeat app ledger list`. In this example, they are `5caeee4b` and `4b101fb8`. Note that if you run this with different data, your IDs will be different.
+
+Classify these transactions as business activity (replace `5caeee4b` and `4b101fb8` with the actual IDs from your list output):
 
 ```bash
 aeat app ledger classify --id 5caeee4b --classification BUSINESS
@@ -143,10 +153,16 @@ aeat app modelo export --modelo 130 --year 2026 --period 1T --output borrador.bo
 Observe the output path and checksum. The checksum is a file fingerprint you can
 use to check the file later.
 
-## Step 8: Record the filing locally
+## Step 8: Upload to the AEAT portal and record the filing locally
 
-After you upload a real filing through the AEAT portal, record a local filing
-marker for the verified draft:
+Once you have your `borrador.boe` file, you need to file it with the tax agency:
+1. Log in to the official [Agencia Tributaria Sede Electrónica](https://sede.agenciatributaria.gob.es/).
+2. Navigate to the Modelo 130 presentation page.
+3. Select the option to submit or present by file upload (*fichero*).
+4. Click **Importar** (Import) and upload your `borrador.boe` file. The form boxes (*casillas*) will be automatically filled with your calculated figures.
+5. Review and sign the presentation, and download the receipt PDF (*justificante*).
+
+After completing the upload in the AEAT portal, record a local filing marker in `aeat` to mark this verified draft as filed:
 
 ```bash
 aeat app modelo work file --modelo 130 --year 2026 --period 1T
