@@ -127,3 +127,10 @@ To achieve this, the calculation engine attaches a three-part provenance record 
 - **Formula ID (`formula_id`)**: The identifier of the specific registry formula that calculated the value.
 
 When you run a calculation, the application returns these details alongside the values. This provenance is preserved through every step of the pipeline. It is saved in the draft revision, written to the verification report, and included in the machine-readable output. This ensures that the legal and logical explanation for every figure stays bound to the data from the registry to the exported file.
+
+```{toctree}
+:hidden:
+
+ledger-to-calculation
+```
+
