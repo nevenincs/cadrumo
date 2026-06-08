@@ -4,14 +4,11 @@ tags:
   - "#profile-lifecycle-disaster"
 date: "2026-05-19"
 related:
-  - "[[2026-05-19-profile-lifecycle-cli-audit]]"
   - "[[2026-05-19-operator-blind-newcomer-testimony-audit]]"
   - "[[2026-05-19-operator-blind-returning-testimony-audit]]"
   - "[[2026-05-19-operator-blind-dual-testimony-audit]]"
   - "[[2026-05-19-operator-blind-fumbler-testimony-audit]]"
   - "[[2026-05-19-operator-testimonial-audit]]"
-  - "[[2026-05-18-profile-lifecycle-cli-adr]]"
-  - "[[2026-05-18-profile-lifecycle-cli-plan]]"
 ---
 
 # profile-lifecycle-disaster research: axis A

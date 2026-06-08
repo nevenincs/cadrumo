@@ -14,7 +14,6 @@ related:
   - '[[2026-05-26-modelo-130-relation-regression-adr]]'
   - '[[2026-05-21-secure-object-database-drift-research]]'
   - '[[2026-05-14-profile-bucket-lifecycle-adr]]'
-  - '[[2026-05-16-profile-lifecycle-cli-adr]]'
   - '[[2026-05-21-profile-uuid-identity-adr]]'
   - '[[2026-05-21-profile-state-aggregate-adr]]'
   - '[[2026-05-21-state-read-projection-adr]]'

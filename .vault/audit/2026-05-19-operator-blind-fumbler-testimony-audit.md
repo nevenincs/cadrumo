@@ -3,8 +3,7 @@ tags:
   - "#audit"
   - "#operator-testimonial"
 date: '2026-05-19'
-related:
-  - "[[2026-05-18-profile-lifecycle-cli-adr]]"
+related: []
 ---
 
 # Operator persona

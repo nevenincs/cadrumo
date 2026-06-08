@@ -28,20 +28,23 @@ Casilla labels are currently hardcoded in Spanish within the registry TOML files
 
 ## Implementation
 
-1. **Schema Extension**: Modify `CasillaDefinition` to carry optional `localized_label` and `localized_help` fields, or support translatable key string notations (e.g. `tr()`) that are resolved at load time.
-2. **Model-Local Locales**: Place localized string catalogues in subdirectory namespaces under each modelo revision folder, for example `src/aeat/_data/registry/aeat/modelos/<modelo>/locales/<locale>.toml` (or `.json`).
-3. **Lazy Registry Compilation**: The `ValidatedRegistryAuthority` compiler will load these registry-specific locales dynamically when the corresponding `ModeloRevision` snapshot is compiled, avoiding eager core locales bloat.
-4. **CLI Handler Resolution**: Update the discover/describe CLI command outputs to format and print localized labels and hints based on the active session's language.
+1. **Schema Extension**: Modify `CasillaDefinition` in `src/aeat/domain/calculations/registry/_schema_surfaces.py` to carry `localized_labels: dict[str, str] = Field(default_factory=dict)` and `localized_help: dict[str, str] = Field(default_factory=dict)` fields. Keep `label` as the official Spanish invariant, accessible to export engines and validation rules.
+2. **Model-Local Locales**: Place localized catalogues as `.toml` files under `revisions/<revision>/locales/<locale>.toml` (for revision-specific overrides matching `casilla_id`) and `modelos/<modelo>/locales/<locale>.toml` (for stable concept-level mappings matching `continuidad_id`).
+3. **Lazy Registry Compilation**: The compiler in `src/aeat/domain/calculations/registry/_loader.py` must filter out any files under `locales/` subdirectories during recursive TOML fragment discovery (`_merge_revision_directory`) to prevent parsing them as schema/calculation fragments. However, these files must remain in `_modelo_directory_fingerprints` to trigger cache invalidation.
+4. **Hardened Validation**: Introduce strict pydantic schemas for localization TOML files. Validate them at snapshot compile time to ensure referential integrity (every translated key corresponds to a valid `casilla_id` or `continuidad_id`), raising a `RegistryValidationError` on mismatch to prevent database pollution.
+5. **UI Rendering**: During `registry_casillas` query or CLI rendering, resolve the active translation key using `casilla.localized_labels.get(locale, casilla.label)`.
 
 ## Rationale
 
-This decision is backed by the `2026-06-08-registry-localization-backend-research` findings. Eagerly loading 61k+ string combinations in the main application locale files would bloat startup times, whereas lazy-loading model-local files preserves both the regulatory Spanish invariants and UI flexibility with zero CLI bootstrap overhead.
+This decision is backed by the `2026-06-08-registry-localization-backend-research` findings and operator directive. Eagerly loading 61k+ string combinations in the main application locale files would bloat startup times, whereas lazy-loading model-local files preserves both the regulatory Spanish invariants and UI flexibility with zero CLI bootstrap overhead. Skipping locales in recursive fragment compilation prevents parsing crashes while keeping their filesystem changes tracked for cache invalidation.
 
 ## Consequences
 
-* **Gains**: Allows translation-ready help text and labels for 15,291 casillas without affecting startup latency; keeps core YAML catalogues thin.
+* **Gains**: Allows translation-ready help text and labels for 15,291 casillas without affecting startup latency; keeps core YAML catalogues thin; resolves changing descriptions cleanly across revisions.
 * **Difficulties**: Requires maintaining parity between registry casilla IDs and their corresponding model-local translation files.
+* **Mitigations**: Hardened schema-level validation at compile time blocks non-conformant or broken files from polluting the loading schema.
 
 ## Codification candidates
 
 None.
+

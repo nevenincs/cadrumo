@@ -4,11 +4,7 @@ tags:
   - '#profile-lifecycle-cli-supersession'
 date: '2026-06-03'
 related:
-  - '[[2026-05-16-profile-lifecycle-cli-research]]'
-  - '[[2026-05-16-profile-lifecycle-cli-adr]]'
   - '[[2026-05-16-profile-lifecycle-cli-plan]]'
-  - '[[2026-05-18-profile-lifecycle-cli-adr]]'
-  - '[[2026-05-18-profile-lifecycle-cli-plan]]'
   - '[[2026-06-03-profile-lifecycle-cli-cascade-supersession-adr]]'
   - '[[2026-06-04-profile-lifecycle-cli-supersession-research]]'
 ---

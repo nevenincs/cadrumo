@@ -9,7 +9,6 @@ related:
   - "[[2026-05-21-state-read-projection-adr]]"
   - "[[2026-05-20-cli-state-architecture-research]]"
   - "[[2026-05-21-cli-testimonial-reference]]"
-  - "[[2026-05-16-profile-lifecycle-cli-adr]]"
 ---
 
 # `cli-workflow-redesign` adr: `Profile identity is a generated UUID; the display name is a decoupled mutable label` | (**status:** `accepted`)

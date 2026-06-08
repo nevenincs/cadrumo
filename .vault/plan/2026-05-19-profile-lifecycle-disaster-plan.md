@@ -11,7 +11,6 @@ related:
   - '[[2026-05-19-profile-lifecycle-disaster-axis-c-cli-bootstrap-research]]'
   - '[[2026-05-19-profile-lifecycle-disaster-axis-d-state-model-research]]'
   - '[[2026-05-19-profile-lifecycle-disaster-axis-e-failure-mode-research]]'
-  - '[[2026-05-19-profile-lifecycle-cli-audit]]'
 ---
 
 
