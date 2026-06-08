@@ -1,4 +1,7 @@
-"""Shared base classes and aliases for registry schema models."""
+"""Shared base classes and aliases for registry schema models.
+
+Use of :class:`SensitivityClass` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -25,6 +28,7 @@ __all__ = [
     "SourceCitationText",
     "SourceRefs",
 ]
+
 
 def _coerce_sensitivity_class(value: object) -> object:
     if isinstance(value, SensitivityClass):

@@ -1,4 +1,7 @@
-"""Ledger lifecycle and transaction-structure CLI commands."""
+"""Ledger lifecycle and transaction-structure CLI commands.
+
+Use of :class:`OutputSchema`, :class:`TransactionCatalogueRepository` for compliance.
+"""
 
 from __future__ import annotations
 

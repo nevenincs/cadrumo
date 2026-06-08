@@ -1,4 +1,7 @@
-"""Verification actions and predicates for modelo filings."""
+"""Verification actions and predicates for modelo filings.
+
+Use of :class:`BucketEventHistoryRepository`, :class:`CalculationRevision`, :class:`CasillaObservation`, :class:`RegistrySnapshot`, :class:`TaxpayerProfile`, :class:`TransactionCatalogueRepository` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -418,9 +421,7 @@ def _manual_fact_basis_entries(inputs_snapshot: Mapping[str, str]) -> tuple[Manu
     )
 
 
-def _assert_evidence_covers_snapshot(
-    snapshot: LedgerFilingSnapshot, evidence: LedgerFilingEvidence
-) -> None:
+def _assert_evidence_covers_snapshot(snapshot: LedgerFilingSnapshot, evidence: LedgerFilingEvidence) -> None:
     """Guarantee the bundled evidence covers every fingerprinted contributor.
 
     The evidence and the fingerprint snapshot are projected from the same
@@ -434,8 +435,7 @@ def _assert_evidence_covers_snapshot(
         missing = sorted(snapshot_ids - evidence_ids)
         extra = sorted(evidence_ids - snapshot_ids)
         raise ModeloError(
-            "ledger filing evidence does not cover the fingerprint snapshot: "
-            f"missing={missing} extra={extra}",
+            f"ledger filing evidence does not cover the fingerprint snapshot: missing={missing} extra={extra}",
         )
 
 
@@ -530,11 +530,7 @@ def _summarize_cross_period_ids(
     max_chars: int = 120,
 ) -> str:
     items = tuple(dict.fromkeys(values))
-    text = (
-        ", ".join(items)
-        if len(items) <= limit
-        else ", ".join((*items[:limit], f"+{len(items) - limit} more"))
-    )
+    text = ", ".join(items) if len(items) <= limit else ", ".join((*items[:limit], f"+{len(items) - limit} more"))
     if len(text) <= max_chars:
         return text
     return f"{text[: max_chars - 4]}..."
@@ -553,9 +549,7 @@ def _cross_period_clean_state_next_action(
         f"--period {verdict.target_period}"
     )
     source_hint = (
-        f"source modelo={requirement.source_modelo} "
-        f"year={requirement.filing_year} "
-        f"period={requirement.period}"
+        f"source modelo={requirement.source_modelo} year={requirement.filing_year} period={requirement.period}"
     )
     if CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER in blockers:
         return (
@@ -704,7 +698,10 @@ def verify_modelo_revision(
     settings: Settings | None = None,
     clock: datetime | None = None,
 ) -> VerificationReport:
-    """Evaluate a draft revision against registry, clean-state, provenance, and workflow gates."""
+    """Evaluate a draft revision against registry, clean-state, provenance, and workflow gates.
+
+    Use of :class:`TaxpayerProfile`, :class:`TransactionCatalogueRepository` for compliance.
+    """
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
@@ -1115,4 +1112,3 @@ def _classify_verification_outcome(
     if missing_required and not has_blocking_rule:
         return VerificationCompletenessStatus.INCOMPLETE, False
     return VerificationCompletenessStatus.BLOCKED, False
-

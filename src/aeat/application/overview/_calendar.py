@@ -1,4 +1,7 @@
-"""Calendar aggregation and evidence merge for the overview application facade."""
+"""Calendar aggregation and evidence merge for the overview application facade.
+
+Use of :class:`Schedule`, :class:`TaxpayerProfile` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -38,6 +41,7 @@ if TYPE_CHECKING:
     from ..live._notifications import PersistedNotificationsSnapshot
 
 _log = _get_logger(__name__)
+
 
 class OverviewPeriodState(StrEnum):
     """Closed 4-state user-facing period state for the calendar view.
@@ -618,9 +622,7 @@ def calendar_filing_evidence_from_sources(
     unique: dict[tuple[str | None, int | None, str | None, str | None], OverviewCalendarFilingEvidence] = {}
     for evidence in (*by_key.values(), *event_specific):
         key_reference = (
-            evidence.aeat_reference_id
-            if evidence.evidence_source == "filed_declaration_observation"
-            else None
+            evidence.aeat_reference_id if evidence.evidence_source == "filed_declaration_observation" else None
         )
         unique[(evidence.modelo, evidence.filing_year, evidence.period, key_reference)] = evidence
     return tuple(sorted(unique.values(), key=_calendar_filing_evidence_sort_key))

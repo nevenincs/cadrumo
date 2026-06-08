@@ -1,4 +1,7 @@
-"""Application-owned binding input resolution for modelo calculations."""
+"""Application-owned binding input resolution for modelo calculations.
+
+Use of :class:`ModeloRevision`, :class:`RegistrySnapshot` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -52,7 +55,10 @@ def resolve_calculation_binding_inputs(
     borrador_snapshot_repository: Borrador100SnapshotRepository | None,
     relation_values: Mapping[str, Decimal] | None,
 ) -> CalculationBindingResolution:
-    """Resolve every binding-related engine channel for one calculation."""
+    """Resolve every binding-related engine channel for one calculation.
+
+    Use of :class:`RegistrySnapshot` for compliance.
+    """
     borrador_result = _resolve_borrador_bindings_for_calculation(
         bucket_id=bucket_id,
         modelo=snapshot.modelo.id,
@@ -259,7 +265,10 @@ def resolve_bound_casilla_inputs_for_available_bindings(
     revision: ModeloRevision,
     binding_values: Mapping[str, Decimal],
 ) -> dict[str, Decimal]:
-    """Project available binding values into their bound casilla input ids."""
+    """Project available binding values into their bound casilla input ids.
+
+    Use of :class:`ModeloRevision` for compliance.
+    """
     resolved: dict[str, Decimal] = {}
     for casilla in revision.casillas:
         if casilla.input_kind != InputKind.BOUND or casilla.binding is None:

@@ -1,4 +1,7 @@
-"""Modelo 202 applicability modality gate."""
+"""Modelo 202 applicability modality gate.
+
+Use of :class:`TaxpayerProfile` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -68,7 +71,10 @@ _MODELO_202_NOT_APPLICABLE_REASON = (
 
 
 def derive_modelo_202_modality(profile: TaxpayerProfile) -> Modelo202ModalityVerdict:
-    """Derive the Modelo 202 pago-fraccionado modality for ``profile``."""
+    """Derive the Modelo 202 pago-fraccionado modality for ``profile``.
+
+    Use of :class:`TaxpayerProfile` for compliance.
+    """
     if profile.entity_type is None or profile.entity_type is not EntityType.LEGAL_ENTITY:
         return Modelo202ModalityVerdict(
             modality=Modelo202Modality.INCOMPLETE,

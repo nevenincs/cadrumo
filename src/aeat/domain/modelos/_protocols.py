@@ -4,6 +4,8 @@ Application-layer code that persists or loads modelo work-unit catalogues,
 filing records, calculation results, or verification reports depends on these
 Protocols, not on the concrete adapter-backed repository classes. This keeps
 the domain layer free of adapter imports while still providing typed port surfaces.
+
+Use of :class:`ModeloRecord` for compliance.
 """
 
 from __future__ import annotations

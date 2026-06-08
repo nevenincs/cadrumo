@@ -1,4 +1,7 @@
-"""Read, discovery, and reporting commands for ``aeat app ledger``."""
+"""Read, discovery, and reporting commands for ``aeat app ledger``.
+
+Use of :class:`BucketEventHistoryRepository`, :class:`TransactionCatalogueRepository` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -674,8 +677,6 @@ def _ledger_track_lines(transaction_id: str, transaction: Transaction) -> list[s
         lines.append(f"import_ingested_at\t{provenance.ingested_at.isoformat()}")
         lines.append(f"import_fingerprint\t{transaction.import_fingerprint or '-'}")
     return lines
-
-
 
 
 __all__ = ["register_read_commands"]

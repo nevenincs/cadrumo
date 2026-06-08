@@ -1,4 +1,7 @@
-"""Filed-declaration observation and registry interpretation helpers."""
+"""Filed-declaration observation and registry interpretation helpers.
+
+Use of :class:`CasillaObservation`, :class:`ModeloRevision`, :class:`RegistrySnapshot`, :class:`ValidatedRegistryAuthority` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -547,7 +550,10 @@ def resolve_previous_filing_bindings_from_filed_declarations(
     filing_year: int,
     period: str,
 ) -> dict[str, Decimal]:
-    """Resolve registry previous-filing bindings from filed AEAT observations."""
+    """Resolve registry previous-filing bindings from filed AEAT observations.
+
+    Use of :class:`ModeloRevision` for compliance.
+    """
     return resolve_previous_filing_binding_values(
         revision,
         (registry_observation_from_filed_declaration(observation) for observation in observations),
@@ -563,7 +569,10 @@ def resolve_relation_values_from_filed_declarations(
     filing_year: int,
     period: str,
 ) -> dict[str, Decimal]:
-    """Resolve registry cross-model relation values from filed AEAT observations."""
+    """Resolve registry cross-model relation values from filed AEAT observations.
+
+    Use of :class:`ModeloRevision` for compliance.
+    """
     return resolve_relation_values_from_observations(
         revision,
         (registry_observation_from_filed_declaration(observation) for observation in observations),

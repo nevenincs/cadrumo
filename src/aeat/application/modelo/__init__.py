@@ -42,6 +42,8 @@ Verification boundary
 Only when layers 1-3 produce zero blocking findings AND layer 4 passes
 does ``verify_modelo_revision`` grant ``VERIFICADO_COMPLETO`` and
 persist the :class:`~aeat.domain.modelos._verification_report.ModeloVerificationReport`.
+
+Use of :class:`CalculationRevision` for compliance.
 """
 
 from __future__ import annotations

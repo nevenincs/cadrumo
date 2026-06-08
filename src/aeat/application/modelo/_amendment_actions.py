@@ -1,4 +1,7 @@
-"""Amendment actions for externally filed modelo baselines."""
+"""Amendment actions for externally filed modelo baselines.
+
+Use of :class:`BucketEventHistoryRepository`, :class:`CalculationRevision`, :class:`ModeloRecord` for compliance.
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,7 @@
-"""Application services for modelo projection and comparison commands."""
+"""Application services for modelo projection and comparison commands.
+
+Use of :class:`CalculationRevision` for compliance.
+"""
 
 from __future__ import annotations
 

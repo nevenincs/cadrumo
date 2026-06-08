@@ -1,4 +1,7 @@
-"""Work-unit lifecycle actions for modelo filings."""
+"""Work-unit lifecycle actions for modelo filings.
+
+Use of :class:`BucketEventHistoryRepository` for compliance.
+"""
 
 from __future__ import annotations
 

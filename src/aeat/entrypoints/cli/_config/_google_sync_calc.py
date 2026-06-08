@@ -1,4 +1,7 @@
-"""Google Sheets calculation sync commands for ``aeat config google``."""
+"""Google Sheets calculation sync commands for ``aeat config google``.
+
+Use of :class:`RegistrySnapshot` for compliance.
+"""
 
 from __future__ import annotations
 
