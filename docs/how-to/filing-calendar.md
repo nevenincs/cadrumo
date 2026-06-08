@@ -23,8 +23,8 @@ compare or apply AEAT Modelo 036 censo facts with
 not universally required.
 
 If a profile is incomplete, calendar commands may stop and name the missing
-facts. Fix the profile first unless you are deliberately checking partial
-results with `--allow-incomplete`.
+facts. Fix the profile first. If you want to see partial results before the
+profile is complete, add `--allow-incomplete` to skip that check.
 
 ## What are my filing obligations?
 
@@ -34,12 +34,11 @@ Start with the agenda:
 aeat app overview agenda
 ```
 
-The agenda ranks obligations around a reference date. It shows:
+The agenda ranks obligations around a reference date. The agenda shows:
 
-- `next_due`: the next obligation to handle
-- `due_today`: obligations due on the reference date
-- `due_soon`: obligations due inside the horizon window
-- `overdue`: obligations already past their deadline
+- obligations due today
+- obligations coming up in the next two weeks
+- obligations that are already overdue
 
 Use another reference date when planning ahead or reviewing a past point in
 time:
@@ -122,9 +121,8 @@ When you want to inspect obligations that `aeat` normally filters out, add
 aeat app overview calendar --from 2026-01-01 --to 2026-12-31 --show-suppressed
 ```
 
-Suppressed entries include obligations that do not apply, belong to another
-taxpayer attribution path, or are incomplete. Each entry shows the verdict and
-reason.
+Suppressed entries include obligations that do not apply given your profile
+facts, or that are incomplete. Each entry shows why it was suppressed.
 
 ## When is year-end, and how long are periods?
 
