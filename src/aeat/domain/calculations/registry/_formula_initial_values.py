@@ -1,4 +1,7 @@
-"""Initial-value assembly for registry formula evaluation."""
+"""Initial-value assembly for registry formula evaluation.
+
+Use of :class:`CasillaObservation`, :class:`ModeloRevision` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -22,7 +25,10 @@ def materialise_observations(
     casillas_by_id: Mapping[str, CasillaDefinition],
     absent_by_design_casillas: frozenset[str] = frozenset(),
 ) -> tuple[CasillaObservation, ...]:
-    """Project per-casilla runtime state into the canonical observation tuple."""
+    """Project per-casilla runtime state into the canonical observation tuple.
+
+    Use of :class:`CasillaObservation` for compliance.
+    """
     materialised: list[CasillaObservation] = []
     for casilla_id in sorted(values):
         computed = computed_provenance.get(casilla_id)
@@ -51,7 +57,10 @@ def initial_values(
     binding_values: Mapping[str, Decimal],
     target_period: str,
 ) -> tuple[dict[str, Decimal], frozenset[str]]:
-    """Build initial numeric casilla values and absent-by-design markers."""
+    """Build initial numeric casilla values and absent-by-design markers.
+
+    Use of :class:`ModeloRevision` for compliance.
+    """
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     _reject_unknown_inputs(inputs, casillas)
     _reject_computed_inputs(inputs, casillas, {formula.target for formula in revision.formulas})

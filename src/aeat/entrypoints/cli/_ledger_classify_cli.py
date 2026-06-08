@@ -1,4 +1,7 @@
-"""Bulk CSV transport helper for ``aeat app ledger classify``."""
+"""Bulk CSV transport helper for ``aeat app ledger classify``.
+
+Use of :class:`TransactionCatalogueRepository` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -78,5 +81,6 @@ def ledger_classify_bulk_csv(
         }
     )
     _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
+
 
 __all__ = ["ledger_classify_bulk_csv"]

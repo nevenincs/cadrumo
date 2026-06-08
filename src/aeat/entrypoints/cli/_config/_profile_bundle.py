@@ -1,4 +1,7 @@
-"""Profile bundle import/export command registration for ``aeat config profile``."""
+"""Profile bundle import/export command registration for ``aeat config profile``.
+
+Use of :class:`BucketEventHistoryRepository` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -262,6 +265,7 @@ def _register_profile_import_command(
                 f"schema_version\t{bundle.bundle_schema_version}",
             ),
         )
+
 
 def _validate_bundle_schema_version(bundle: object) -> None:
     """Raise UnsupportedBundleSchemaVersionError if bundle version is not supported."""

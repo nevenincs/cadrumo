@@ -1,4 +1,7 @@
-"""Previous-filing binding selectors, requirements, and resolvers."""
+"""Previous-filing binding selectors, requirements, and resolvers.
+
+Use of :class:`ModeloRevision` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -46,7 +49,10 @@ def previous_filing_observation_requirements(
     filing_year: int,
     period: str,
 ) -> tuple[RegistryModeloObservationRequirement, ...]:
-    """Return observation requirements needed by direct previous-filing bindings."""
+    """Return observation requirements needed by direct previous-filing bindings.
+
+    Use of :class:`ModeloRevision` for compliance.
+    """
     grouped: dict[tuple[str, int, str], dict[str, set[str]]] = {}
     for binding in revision.bindings:
         if binding.source != "previous_filing":
@@ -79,7 +85,10 @@ def resolve_previous_filing_binding_values(
     filing_year: int,
     period: str,
 ) -> dict[str, Decimal]:
-    """Resolve direct previous-filing bindings from observed filed declarations."""
+    """Resolve direct previous-filing bindings from observed filed declarations.
+
+    Use of :class:`ModeloRevision` for compliance.
+    """
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
     for binding in revision.bindings:

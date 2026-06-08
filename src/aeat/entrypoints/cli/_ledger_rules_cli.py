@@ -1,4 +1,7 @@
-"""Ledger classification rule CLI command surface."""
+"""Ledger classification rule CLI command surface.
+
+Use of :class:`TransactionCatalogueRepository` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -344,7 +347,9 @@ def rule_list(ctx: typer.Context) -> None:
     if not rules:
         lines.append(tr("cli.app.ledger.rule.list_empty", default="(no rules stored)"))
     for rule in rules:
-        lines.append(f"{rule.priority}\t{rule.classification.value}\t{rule.description_pattern}\t{rule.rule_id[:16]}...")
+        lines.append(
+            f"{rule.priority}\t{rule.classification.value}\t{rule.description_pattern}\t{rule.rule_id[:16]}..."
+        )
     from ._ledger_payloads import RuleListResult
 
     _emit_envelope(

@@ -1,4 +1,7 @@
-"""Review-row projection and filtering for bucket ledger transactions."""
+"""Review-row projection and filtering for bucket ledger transactions.
+
+Use of :class:`BucketEventHistoryRepository`, :class:`TransactionCatalogue` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -26,7 +29,10 @@ def project_ledger_review_query(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
     transaction_payload_builder: Callable[[Transaction], LedgerTransactionPayload],
 ) -> LedgerReviewQueryResult:
-    """Return the filtered review projection for an already loaded transaction catalogue."""
+    """Return the filtered review projection for an already loaded transaction catalogue.
+
+    Use of :class:`TransactionCatalogue` for compliance.
+    """
     rows = _filter_ledger_review_rows(
         rows=tuple(catalogue.values()),
         query=query,

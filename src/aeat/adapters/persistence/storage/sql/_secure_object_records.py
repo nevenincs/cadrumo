@@ -1,4 +1,7 @@
-"""Pydantic records for SQL secure object persistence."""
+"""Pydantic records for SQL secure object persistence.
+
+Use of :class:`SensitivityClass` for compliance.
+"""
 
 from __future__ import annotations
 

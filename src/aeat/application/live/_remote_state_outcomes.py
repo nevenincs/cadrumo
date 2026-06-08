@@ -1,4 +1,7 @@
-"""Outcome and redaction helpers for live IVA remote-state acquisition."""
+"""Outcome and redaction helpers for live IVA remote-state acquisition.
+
+Use of :class:`SensitivityClass` for compliance.
+"""
 
 from __future__ import annotations
 

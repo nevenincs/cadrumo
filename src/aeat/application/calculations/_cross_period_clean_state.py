@@ -1,4 +1,7 @@
-"""Clean-state proof for filing-grade cross-period modelo dependencies."""
+"""Clean-state proof for filing-grade cross-period modelo dependencies.
+
+Use of :class:`RegistrySnapshot`, :class:`ValidatedRegistryAuthority` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -139,9 +142,7 @@ class CrossPeriodDependencyInventory(BaseModel):
     @property
     def source_modelos(self) -> tuple[str, ...]:
         """Return upstream modelos required by the inventory."""
-        return tuple(
-            sorted({source_modelo for item in self.items for source_modelo in item.source_modelos})
-        )
+        return tuple(sorted({source_modelo for item in self.items for source_modelo in item.source_modelos}))
 
 
 class CrossPeriodDependencyEvidence(BaseModel):
@@ -191,13 +192,14 @@ class CrossPeriodCleanStateVerdict(BaseModel):
 
     @property
     def blockers(self) -> tuple[CrossPeriodCleanStateBlocker, ...]:
-        return tuple(
-            dict.fromkeys(blocker for item in self.dependencies for blocker in item.blockers)
-        )
+        return tuple(dict.fromkeys(blocker for item in self.dependencies for blocker in item.blockers))
 
 
 def cross_period_dependency_requirements(snapshot: RegistrySnapshot) -> tuple[CrossPeriodDependencyRequirement, ...]:
-    """Return the registry-derived filed-history requirements for ``snapshot``."""
+    """Return the registry-derived filed-history requirements for ``snapshot``.
+
+    Use of :class:`RegistrySnapshot` for compliance.
+    """
     requirements: dict[
         tuple[str, int, str, CrossPeriodDependencyOrigin, tuple[str, ...]],
         CrossPeriodDependencyRequirement,
@@ -230,6 +232,9 @@ def cross_period_dependency_inventory(
     The inventory is a backend coverage surface. It lets callers prove which
     modelos and periods are in scope for the clean-state guard before they wire
     model-specific workflow tests or operator diagnostics.
+    
+
+    Use of :class:`ValidatedRegistryAuthority` for compliance.
     """
     selected_modelos = authority.modelos if modelos is None else tuple(authority.modelo(modelo) for modelo in modelos)
     items: list[CrossPeriodDependencyInventoryItem] = []
@@ -282,7 +287,10 @@ def evaluate_cross_period_clean_state(
     justificante_repository: JustificanteRepository | None = None,
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
 ) -> CrossPeriodCleanStateVerdict:
-    """Evaluate whether every cross-period dependency is filing-grade clean."""
+    """Evaluate whether every cross-period dependency is filing-grade clean.
+
+    Use of :class:`RegistrySnapshot` for compliance.
+    """
     filing_catalogue = filing_repository.load()
     calculation_catalogue = calculation_repository.load()
     verification_catalogue = verification_repository.load()
@@ -451,11 +459,7 @@ def _evaluate_requirement(
         external_evidence_kind: str | None = None
         for member_nif in members_to_check:
             member_payload = member_payload_by_nif.get(member_nif)
-            member_values = (
-                dict(member_payload.observation.casilla_values)
-                if member_payload is not None
-                else {}
-            )
+            member_values = dict(member_payload.observation.casilla_values) if member_payload is not None else {}
             member_result = _evaluate_filing_history(
                 requirement,
                 bucket_id=bucket_id,
@@ -475,9 +479,7 @@ def _evaluate_requirement(
             revision_state = member_result["calculation_revision_state"] or revision_state
             verification_status = member_result["verification_status"] or verification_status
             aeat_accepted = (
-                member_result["aeat_accepted"]
-                if member_result["aeat_accepted"] is not None
-                else aeat_accepted
+                member_result["aeat_accepted"] if member_result["aeat_accepted"] is not None else aeat_accepted
             )
             external_evidence_kind = member_result["external_evidence_kind"] or external_evidence_kind
         return CrossPeriodDependencyEvidence(

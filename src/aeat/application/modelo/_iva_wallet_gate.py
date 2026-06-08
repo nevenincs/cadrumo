@@ -1,4 +1,7 @@
-"""Modelo IVA wallet gate for calculation and filing lifecycle checks."""
+"""Modelo IVA wallet gate for calculation and filing lifecycle checks.
+
+Use of :class:`CalculationRevision`, :class:`ModeloRevision`, :class:`RegistrySnapshot` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -38,7 +41,10 @@ def resolve_iva_compensation_decision_for_calculation(
     casilla_inputs: Mapping[str, Decimal] | None,
     backend_casilla_inputs: Mapping[str, Decimal] | None,
 ) -> object | None:
-    """Resolve the Modelo 303 IVA wallet decision that may feed calculation bindings."""
+    """Resolve the Modelo 303 IVA wallet decision that may feed calculation bindings.
+
+    Use of :class:`RegistrySnapshot` for compliance.
+    """
     if supplied_decision is None:
         persisted = load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
         if persisted is not None:
@@ -76,7 +82,10 @@ def apply_iva_compensation_decision_binding(
     backend_binding_values: dict[str, Decimal],
     decision: object | None,
 ) -> None:
-    """Apply a non-blocking IVA wallet decision to Modelo 303 binding values."""
+    """Apply a non-blocking IVA wallet decision to Modelo 303 binding values.
+
+    Use of :class:`ModeloRevision` for compliance.
+    """
     if modelo != "303":
         return
     binding_id = _M303_PRIOR_COMPENSATION_BINDING_ID
@@ -261,6 +270,9 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
     :class:`IvaCompensationReconciliationDecision`. In the seed-only local
     authority case, the local Modelo 303 recurrence is the authority, so derive
     and persist the decision here instead of refusing calculation.
+    
+
+    Use of :class:`RegistrySnapshot` for compliance.
     """
     if work_unit.modelo != "303":
         return None
@@ -289,7 +301,10 @@ def require_persisted_iva_compensation_decision_matches_revision(
     *,
     repository: IvaWalletDecisionRepository | None = None,
 ) -> IvaCompensationReconciliationDecision | None:
-    """Require the persisted Modelo 303 wallet decision to match a calculation revision."""
+    """Require the persisted Modelo 303 wallet decision to match a calculation revision.
+
+    Use of :class:`CalculationRevision` for compliance.
+    """
     if work_unit.modelo != "303":
         return None
     decision = load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
@@ -344,7 +359,10 @@ def require_persisted_iva_compensation_decision_matches_revision(
 
 
 def revision_iva_compensation_amount(revision: CalculationRevision) -> Decimal | None:
-    """Return the Modelo 303 prior-compensation amount carried by a revision."""
+    """Return the Modelo 303 prior-compensation amount carried by a revision.
+
+    Use of :class:`CalculationRevision` for compliance.
+    """
     casilla_value = dict(revision.casilla_values).get(_M303_PRIOR_COMPENSATION_CASILLA_ID)
     if casilla_value is not None:
         return Decimal(casilla_value)

@@ -5,6 +5,8 @@ exporting financial transaction data. Transaction records are accessed
 through :class:`TransactionCatalogueRepository` and invoice records through
 :class:`InvoiceCatalogueRepository`. Lifecycle events are appended to the
 profile audit trail via :class:`BucketEventHistoryRepository`.
+
+Use of :class:`OutputSchema` for compliance.
 """
 
 from __future__ import annotations
@@ -1066,4 +1068,3 @@ register_rule_commands(app)
 
 
 register_import_commands(app)
-

@@ -12,6 +12,8 @@ The package also hosts, as submodules imported by their consumers directly, the
 domain-layer modelo persistence and identity core: the calculation, filing, and
 verification repositories, calculation revisions, filing records, verification
 reports, and work units.
+
+Use of :class:`CalculationRevision`, :class:`ModeloRecord` for compliance.
 """
 
 from __future__ import annotations

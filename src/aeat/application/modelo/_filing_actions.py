@@ -1,4 +1,7 @@
-"""Filing-record actions for modelo calculation revisions."""
+"""Filing-record actions for modelo calculation revisions.
+
+Use of :class:`BucketEventHistoryRepository` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -44,6 +47,7 @@ from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow
 
 if TYPE_CHECKING:
     from ..calculations._observations_repository import IvaWalletDecisionRepository
+
 
 def file_modelo_revision(
     calculation_revision_id: str,

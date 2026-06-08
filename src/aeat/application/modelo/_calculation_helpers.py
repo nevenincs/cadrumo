@@ -1,4 +1,7 @@
-"""Shared calculation helpers for modelo application actions."""
+"""Shared calculation helpers for modelo application actions.
+
+Use of :class:`CalculationRevision`, :class:`CasillaObservation`, :class:`RegistrySnapshot` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -82,7 +85,10 @@ def resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnap
 def build_typed_observations(
     *, engine_result: RegistryCalculationResult, snapshot: RegistrySnapshot
 ) -> tuple[CasillaObservation, ...]:
-    """Build a typed ``CasillaObservation`` tuple for every engine-result casilla."""
+    """Build a typed ``CasillaObservation`` tuple for every engine-result casilla.
+
+    Use of :class:`RegistrySnapshot` for compliance.
+    """
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     entries_by_target = {entry.target: entry for entry in engine_result.entries}
     return tuple(
@@ -101,7 +107,10 @@ def external_filing_observations(
     casilla_values: Mapping[str, Decimal],
     snapshot: RegistrySnapshot,
 ) -> tuple[CasillaObservation, ...]:
-    """Build registry-grounded observations for externally imported casilla values."""
+    """Build registry-grounded observations for externally imported casilla values.
+
+    Use of :class:`RegistrySnapshot` for compliance.
+    """
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     return tuple(
         casilla_observation_for(
@@ -157,7 +166,10 @@ def amendment_observations(
     baseline_revision: CalculationRevision,
     snapshot: RegistrySnapshot,
 ) -> tuple[CasillaObservation, ...]:
-    """Build typed observations for an amendment revision."""
+    """Build typed observations for an amendment revision.
+
+    Use of :class:`CalculationRevision`, :class:`RegistrySnapshot` for compliance.
+    """
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     baseline_by_id = {obs.casilla_id: obs for obs in baseline_revision.observations}
     observations: list[CasillaObservation] = []

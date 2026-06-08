@@ -1,4 +1,7 @@
-"""Bucket history command registration for ``aeat config bucket``."""
+"""Bucket history command registration for ``aeat config bucket``.
+
+Use of :class:`BucketEventHistoryRepository` for compliance.
+"""
 
 from __future__ import annotations
 

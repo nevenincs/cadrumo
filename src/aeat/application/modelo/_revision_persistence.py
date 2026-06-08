@@ -1,4 +1,7 @@
-"""Persistence helpers for modelo calculation revisions and filing transitions."""
+"""Persistence helpers for modelo calculation revisions and filing transitions.
+
+Use of :class:`CalculationRevision`, :class:`CasillaObservation`, :class:`ModeloRecord` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -94,7 +97,10 @@ def persist_calculation_revision(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
 ) -> CalculationRevision:
-    """Persist a freshly calculated draft revision, or return the existing duplicate."""
+    """Persist a freshly calculated draft revision, or return the existing duplicate.
+
+    Use of :class:`CasillaObservation` for compliance.
+    """
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         inputs_snapshot=inputs_snapshot,
@@ -195,7 +201,10 @@ def persist_filed_revision(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
 ) -> ModeloRecord:
-    """Persist the filing transition for a verified-complete calculation revision."""
+    """Persist the filing transition for a verified-complete calculation revision.
+
+    Use of :class:`CalculationRevision` for compliance.
+    """
     calculation_revision_id = target.calculation_revision_id
     new_filing_id = derive_filing_record_id(
         work_unit_id=target.work_unit_id,
