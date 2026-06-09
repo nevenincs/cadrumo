@@ -132,7 +132,7 @@ def _guard_stub_modelo(modelo: str) -> None:
     if locale_key is None:
         return
 
-    raise CliRefusedBoundaryError(tr(locale_key, modelo=modelo_code))
+    raise CliRefusedBoundaryError(translated_message=locale_key, context={"modelo": modelo_code})
 
 
 def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:

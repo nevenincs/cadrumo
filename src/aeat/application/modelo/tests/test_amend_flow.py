@@ -426,7 +426,7 @@ def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(repos) -> None
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     _, _, baseline = _seed_external_baseline(repos, casilla_values={"01": Decimal("1000")})
 
-    with pytest.raises(AmendmentOverrideCasillaError, match=r"9999|not declared"):
+    with pytest.raises(AmendmentOverrideCasillaError) as exc_info:
         amend_modelo_revision(
             from_filing_record_id=baseline.filing_record_id,
             overrides={"9999": Decimal("100")},
@@ -439,6 +439,8 @@ def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(repos) -> None
             bucket_event_repository=bv_repo,
             clock=_T4,
         )
+    assert exc_info.value.translated_message == "application.modelo.errors.amendment_unknown_casillas"
+    assert exc_info.value.context is not None and "9999" in exc_info.value.context["casillas"]
 
 
 def test_amend_revision_carries_casilla_observations(repos) -> None:

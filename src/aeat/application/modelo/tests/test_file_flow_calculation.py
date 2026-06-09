@@ -319,10 +319,7 @@ def test_calculate_refuses_when_registry_snapshot_unresolvable(repos) -> None:
         clock=_T0,
     )
 
-    with pytest.raises(
-        CalculationRegistryUnavailableError,
-        match=r"registry snapshot|could not be resolved",
-    ):
+    with pytest.raises(CalculationRegistryUnavailableError) as exc_info:
         calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator-A",
@@ -333,3 +330,4 @@ def test_calculate_refuses_when_registry_snapshot_unresolvable(repos) -> None:
             bucket_event_repository=bv_repo,
             clock=_T1,
         )
+    assert exc_info.value.translated_message == "application.modelo.errors.calculation_registry_snapshot_unresolved"
