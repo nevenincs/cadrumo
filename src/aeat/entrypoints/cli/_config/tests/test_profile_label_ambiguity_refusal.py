@@ -1,4 +1,4 @@
-"""Real-behavior CLI tests for ambiguous-profile-label refusal (#67 / P02.S05).
+"""Real-behavior CLI tests for ambiguous-profile-label refusal.
 
 ``read_profile_bucket`` raises :class:`ProfileLabelAmbiguousError` (a
 ``WorkflowError``, NOT a ``ValueError``) when two or more LIVE profiles share a
