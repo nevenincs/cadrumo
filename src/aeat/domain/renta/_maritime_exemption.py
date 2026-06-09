@@ -47,14 +47,9 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal
 
+from ...core.external_constants import ART_7P_EXEMPTION_CAP_EUR
 from ..calculations.registry import CasillaId, CasillaObservation
 from ._errors import RentaError, RentaValidationError
-
-# ---------------------------------------------------------------------------
-# Domain errors
-# ---------------------------------------------------------------------------
-
-ART_7P_EXEMPTION_CAP_EUR: Decimal = Decimal("60100")
 
 # Casilla in Modelo 100 that receives exempt income (renta exenta section).
 # Art. 7.p) and REBECA both flow through the existing renta exenta casilla

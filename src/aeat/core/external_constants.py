@@ -411,6 +411,12 @@ M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
 #: An asset class is declarable iff its total valuation strictly exceeds this amount.
 MODELO_720_REPORTING_THRESHOLD_EUR: Final[Decimal] = Decimal("50000.00")
 
+#: Art. 7.p) LIRPF (Ley 35/2006, BOE-A-2006-20764) annual exemption cap for
+#: foreign-work income of maritime and other qualifying workers.
+#: The exempt amount is the lesser of the proportional daily salary for
+#: qualifying days and this ceiling.  Binding provision: Art. 7.p) LIRPF.
+ART_7P_EXEMPTION_CAP_EUR: Final[Decimal] = Decimal("60100")
+
 #: Art. 96.3 LIRPF (Ley 35/2006) secondary-pagador filing floor.
 #: A natural person whose rendimientos del trabajo originate from more than one
 #: pagador must file Modelo 100 when aggregate income from the 2nd and subsequent
