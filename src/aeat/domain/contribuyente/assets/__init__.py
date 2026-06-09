@@ -15,11 +15,11 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ....core.errors import AeatError
+from ....core.errors import AeatError as _AeatError
 from ....core.money import round_to_cents as _quantize
 
 
-class AssetRecordError(AeatError):
+class AssetRecordError(_AeatError):
     """Raised when an asset record is structurally invalid."""
 
 

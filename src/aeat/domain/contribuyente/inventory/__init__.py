@@ -25,19 +25,20 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ....core.errors import AeatError, CoreValidationError
+from ....core.errors import AeatError as _AeatError
+from ....core.errors import CoreValidationError as _CoreValidationError
 from ....core.money import round_to_cents as _quantize
 
 
-class AmortizacionLedgerError(AeatError):
+class AmortizacionLedgerError(_AeatError):
     """Raised when an amortizacion ledger operation is invalid."""
 
 
-class InventoryLedgerError(AeatError):
+class InventoryLedgerError(_AeatError):
     """Raised when an inventory ledger operation is invalid."""
 
 
-class InventoryValidationError(InventoryLedgerError, CoreValidationError):
+class InventoryValidationError(InventoryLedgerError, _CoreValidationError):
     """Raised when an inventory ledger fails Pydantic validation.
 
     Inherits from CoreValidationError (which itself inherits from CoreError
