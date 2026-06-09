@@ -122,6 +122,33 @@ def _decode_manifest_envelope(payload: bytes, *, attachment_id: str | None = Non
     return envelope
 
 
+# Content-addressed blob payloads are the operator's raw bytes (a PDF, a bank
+# statement). The secure-object integrity column ``payload_hash`` is
+# ``sha256(plaintext payload)`` (high-entropy and unguessable for the JSON
+# envelopes every other namespace stores), but for a bare-content blob the
+# plaintext IS the content, so ``payload_hash`` would equal the content digest
+# (== the attachment id) and a DB-read attacker holding a copy of a document
+# could confirm its presence by computing its sha256. Framing the stored blob
+# behind a fixed envelope prefix makes ``payload_hash`` hash the prefixed bytes
+# instead, so the bare content digest never lands in a plaintext column. The
+# object key stays HMAC-digested and the payload stays encrypted; this only
+# removes the residual content-digest oracle. Reads tolerate legacy
+# pre-envelope blobs (no prefix) so existing on-disk data stays readable.
+_ATTACHMENT_BLOB_ENVELOPE_PREFIX = b"\x00aeat-attachment-blob-envelope-v1\x00"
+
+
+def _wrap_blob_payload(data: bytes) -> bytes:
+    """Frame raw blob bytes so the stored ``payload_hash`` is not the content digest."""
+    return _ATTACHMENT_BLOB_ENVELOPE_PREFIX + data
+
+
+def _unwrap_blob_payload(stored: bytes) -> bytes:
+    """Return the raw content for a stored blob, tolerating legacy un-enveloped rows."""
+    if stored.startswith(_ATTACHMENT_BLOB_ENVELOPE_PREFIX):
+        return stored[len(_ATTACHMENT_BLOB_ENVELOPE_PREFIX) :]
+    return stored
+
+
 def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
     """Reject any digest input that is not a 64-char lowercase hex string."""
     if not isinstance(value, str):
@@ -186,7 +213,7 @@ class AttachmentStore(BaseModel):
             classification=_ATTACHMENT_BLOB_SENSITIVITY,
             schema_version=_ATTACHMENT_BLOB_VERSION,
             written_at=now(),
-            payload=data,
+            payload=_wrap_blob_payload(data),
         )
         _LOGGER.debug("stored attachment object %s (%d bytes)", digest, len(data))
         return digest
@@ -216,7 +243,7 @@ class AttachmentStore(BaseModel):
             classification=_ATTACHMENT_BLOB_SENSITIVITY,
             schema_version=_ATTACHMENT_BLOB_VERSION,
             written_at=now(),
-            payload=b"".join(chunks),
+            payload=_wrap_blob_payload(b"".join(chunks)),
         )
         _LOGGER.debug("stored attachment object %s (%d bytes)", digest, bytes_size)
         return digest, bytes_size
@@ -233,7 +260,7 @@ class AttachmentStore(BaseModel):
         )
         if record is None:
             raise _attachment_not_found_error("attachment blob not found", object_kind="blob")
-        return record.payload
+        return _unwrap_blob_payload(record.payload)
 
     def open_bytes(self, sha256: str) -> BinaryIO:
         """Open the blob for ``sha256`` as a streaming binary handle."""
