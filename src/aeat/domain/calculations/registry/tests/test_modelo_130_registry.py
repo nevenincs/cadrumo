@@ -10,6 +10,8 @@ import pytest
 from .....core.resources import bundled_path
 from .. import (
     CasillaObservation,
+    ModeloDefinition,
+    RegistryCatalogues,
     RegistryModeloObservation,
     RegistryValidationError,
     build_snapshot,
@@ -17,6 +19,8 @@ from .. import (
     load_registry_tree,
     resolve_previous_filing_binding_values,
 )
+
+_ModeloFixture = tuple[ModeloDefinition, RegistryCatalogues]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -47,7 +51,7 @@ def modelo_130_registry():
     return _load_modelo("130")
 
 
-def _snapshot_130(modelo_130_registry, *, period: str = "1T", filing_year: int = 2026):
+def _snapshot_130(modelo_130_registry: _ModeloFixture, *, period: str = "1T", filing_year: int = 2026):
     modelo, catalogues = modelo_130_registry
     return build_snapshot(
         modelo,
@@ -58,7 +62,7 @@ def _snapshot_130(modelo_130_registry, *, period: str = "1T", filing_year: int =
     )
 
 
-def test_modelo_130_validated_snapshot_owns_workflow_surfaces(modelo_130_registry) -> None:
+def test_modelo_130_validated_snapshot_owns_workflow_surfaces(modelo_130_registry: _ModeloFixture) -> None:
     modelo, catalogues = modelo_130_registry
     snapshot = build_snapshot(
         modelo,
@@ -76,7 +80,9 @@ def test_modelo_130_validated_snapshot_owns_workflow_surfaces(modelo_130_registr
     assert all(link.requires_snapshot for link in linked_by_surface.values())
 
 
-def test_modelo_130_requires_external_previous_year_income_binding_for_minoracion(modelo_130_registry) -> None:
+def test_modelo_130_requires_external_previous_year_income_binding_for_minoracion(
+    modelo_130_registry: _ModeloFixture,
+) -> None:
     with pytest.raises(RegistryValidationError, match="previous_year_economic_activity_net_income"):
         calculate_registry_snapshot(
             _snapshot_130(modelo_130_registry),
@@ -86,7 +92,7 @@ def test_modelo_130_requires_external_previous_year_income_binding_for_minoracio
         )
 
 
-def test_modelo_130_first_period_carry_forward_is_absent_by_design(modelo_130_registry) -> None:
+def test_modelo_130_first_period_carry_forward_is_absent_by_design(modelo_130_registry: _ModeloFixture) -> None:
     """At 1T the prior-quarter carry-forward selector has no anchor.
 
     The Modelo 130 `modelo-130-resultados-negativos-anteriores`
@@ -129,7 +135,9 @@ def test_modelo_130_first_period_carry_forward_is_absent_by_design(modelo_130_re
     assert casilla_15.absent_by_design is True
 
 
-def test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is_rejected(modelo_130_registry) -> None:
+def test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is_rejected(
+    modelo_130_registry: _ModeloFixture,
+) -> None:
     """Strict-rejection recovered via consistency hardening.
 
     The original design mandated `RegistryValidationError` when any
@@ -177,7 +185,7 @@ def test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is
     [("3T", "2T", 10), ("4T", "3T", 1)],
 )
 def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarter_saldo(
-    modelo_130_registry, target_period: str, prior_period: str, filing_date_month: int
+    modelo_130_registry: _ModeloFixture, target_period: str, prior_period: str, filing_date_month: int
 ) -> None:
     """Extend regression coverage to 3T and 4T quarters.
 
@@ -249,7 +257,7 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
     assert casilla_15.absent_by_design is False
 
 
-def test_modelo_130_previous_filing_bound_inputs_must_match_binding_values(modelo_130_registry) -> None:
+def test_modelo_130_previous_filing_bound_inputs_must_match_binding_values(modelo_130_registry: _ModeloFixture) -> None:
     """Inputs and binding_values must agree on bound carry-forward values.
 
     The consistency hardening introduced the smuggle-rejection (input present, binding
@@ -285,7 +293,9 @@ def test_modelo_130_previous_filing_bound_inputs_must_match_binding_values(model
         )
 
 
-def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(modelo_130_registry) -> None:
+def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
+    modelo_130_registry: _ModeloFixture,
+) -> None:
     """2T pulls the prior quarter's saldo-negativo-fin-periodo seed into C15.
 
     End-to-end real-behaviour test: build a 1T observation
@@ -380,7 +390,7 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(mode
 
 
 def test_modelo_130_art110_3b_casilla_17_is_zero_when_retention_ratio_meets_threshold(
-    modelo_130_registry,
+    modelo_130_registry: _ModeloFixture,
 ) -> None:
     """Art. 110.3.b RIRPF: casilla 17 = 0 when retenciones/rendimientos >= 70%.
 
@@ -419,7 +429,7 @@ def test_modelo_130_art110_3b_casilla_17_is_zero_when_retention_ratio_meets_thre
 
 
 def test_modelo_130_art110_3b_casilla_17_computes_normally_when_retention_ratio_below_threshold(
-    modelo_130_registry,
+    modelo_130_registry: _ModeloFixture,
 ) -> None:
     """Anti-tautology: casilla 17 equals the standard subtraction when retenciones/rendimientos < 70%.
 
