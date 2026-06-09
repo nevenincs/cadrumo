@@ -11,47 +11,36 @@ from graphlib import TopologicalSorter
 
 from ._schema import FormulaExpression, ModeloRevision
 
-_CASILLA_REFS_CACHE: dict[int, tuple[str, ...]] = {}
-_RELATION_REFS_CACHE: dict[int, tuple[str, ...]] = {}
-_BINDING_REFS_CACHE: dict[int, tuple[str, ...]] = {}
-_DATE_BINDING_REFS_CACHE: dict[int, tuple[str, ...]] = {}
-_PARAMETER_REFS_CACHE: dict[int, tuple[str, ...]] = {}
+# These walkers are pure O(expression-node) traversals and intentionally
+# carry NO memoization. A prior implementation keyed a module-global cache
+# on ``id(expression)``; because CPython reuses an object's address after it
+# is garbage-collected, a fresh short-lived expression could collide with a
+# stale entry left by a now-collected expression and receive the wrong refs.
+# ``FormulaExpression`` is frozen but not reliably hashable (its
+# ``dispatch_table`` is a ``Mapping``), so value-keyed memoization is not
+# available either. Recomputation is cheap — formula expression trees are
+# small — so the walkers simply re-walk on every call.
 
 
 def expression_casilla_refs(expression: FormulaExpression) -> tuple[str, ...]:
     """Return all casilla ids referenced by a formula expression."""
-    k = id(expression)
-    if k in _CASILLA_REFS_CACHE:
-        return _CASILLA_REFS_CACHE[k]
     refs: list[str] = []
     _collect_casilla_refs(expression, refs)
-    val = tuple(refs)
-    _CASILLA_REFS_CACHE[k] = val
-    return val
+    return tuple(refs)
 
 
 def expression_relation_refs(expression: FormulaExpression) -> tuple[str, ...]:
     """Return all relation ids referenced by a formula expression."""
-    k = id(expression)
-    if k in _RELATION_REFS_CACHE:
-        return _RELATION_REFS_CACHE[k]
     refs: list[str] = []
     _collect_relation_refs(expression, refs)
-    val = tuple(refs)
-    _RELATION_REFS_CACHE[k] = val
-    return val
+    return tuple(refs)
 
 
 def expression_binding_refs(expression: FormulaExpression) -> tuple[str, ...]:
     """Return all binding ids referenced by a formula expression."""
-    k = id(expression)
-    if k in _BINDING_REFS_CACHE:
-        return _BINDING_REFS_CACHE[k]
     refs: list[str] = []
     _collect_binding_refs(expression, refs)
-    val = tuple(refs)
-    _BINDING_REFS_CACHE[k] = val
-    return val
+    return tuple(refs)
 
 
 def expression_date_binding_refs(expression: FormulaExpression) -> tuple[str, ...]:
@@ -63,14 +52,9 @@ def expression_date_binding_refs(expression: FormulaExpression) -> tuple[str, ..
     own collector so callers can populate the ``date_binding_values``
     channel selectively.
     """
-    k = id(expression)
-    if k in _DATE_BINDING_REFS_CACHE:
-        return _DATE_BINDING_REFS_CACHE[k]
     refs: list[str] = []
     _collect_date_binding_refs(expression, refs)
-    val = tuple(refs)
-    _DATE_BINDING_REFS_CACHE[k] = val
-    return val
+    return tuple(refs)
 
 
 def expression_parameter_refs(expression: FormulaExpression) -> tuple[str, ...]:
@@ -81,14 +65,9 @@ def expression_parameter_refs(expression: FormulaExpression) -> tuple[str, ...]:
     ``lookup_bracket_by_ccaa`` op; dispatch_table values reference
     parameters just like the direct leaf.
     """
-    k = id(expression)
-    if k in _PARAMETER_REFS_CACHE:
-        return _PARAMETER_REFS_CACHE[k]
     refs: list[str] = []
     _collect_parameter_refs(expression, refs)
-    val = tuple(refs)
-    _PARAMETER_REFS_CACHE[k] = val
-    return val
+    return tuple(refs)
 
 
 def _collect_casilla_refs(expression: FormulaExpression, refs: list[str]) -> None:
