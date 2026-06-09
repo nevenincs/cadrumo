@@ -18,6 +18,7 @@ from typing import Self
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.external_constants import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
 from ..contribuyente._renta_codes import UE_EEA_COUNTRY_CODES, FiscalResidency
 from ._errors import DeadlineValidationError
 
@@ -667,7 +668,7 @@ class TaxpayerProfile(BaseModel):
         return any(150 <= days <= 215 for days in self.days_in_spain.values())
 
 
-_MULTIPLE_PAGADORES_SECONDARY_THRESHOLD: Decimal = Decimal("1500")
+_MULTIPLE_PAGADORES_SECONDARY_THRESHOLD = MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
 
 
 def evaluate_multiple_pagadores_obligation(

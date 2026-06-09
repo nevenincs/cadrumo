@@ -1200,6 +1200,76 @@ def test_no_bare_csv_mime_literal_in_tabular() -> None:
 
 
 # ---------------------------------------------------------------------------
+# contract — MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR centralisation tests
+# ---------------------------------------------------------------------------
+
+
+def test_multiple_pagadores_secondary_threshold_eur_value() -> None:
+    """``MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR`` equals €1,500 per Art. 96.3 LIRPF."""
+
+    from decimal import Decimal
+
+    from ..external_constants import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
+
+    assert Decimal("1500") == MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
+
+
+def test_multiple_pagadores_secondary_threshold_eur_is_final_decimal() -> None:
+    """``MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR`` is a ``Decimal`` instance."""
+
+    from decimal import Decimal
+
+    from ..external_constants import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
+
+    assert isinstance(MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR, Decimal)
+
+
+def test_deadlines_models_imports_multiple_pagadores_threshold_from_core() -> None:
+    """``domain/deadlines/_models.py`` imports ``MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR`` from core."""
+
+    import importlib
+
+    from ..external_constants import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
+
+    mod = importlib.import_module("aeat.domain.deadlines._models")
+
+    assert hasattr(mod, "MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR"), (
+        "_models must import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR from aeat.core.external_constants"
+    )
+    assert mod.MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR is MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
+
+
+def test_no_bare_multiple_pagadores_threshold_literal_in_deadlines_models() -> None:
+    """No bare ``Decimal("1500")`` literal in ``domain/deadlines/_models.py``.
+
+    Anti-tautology: parses the real AST so any future re-introduction triggers failure.
+    """
+
+    repo_root = Path(__file__).parents[4]
+    source = (repo_root / "src/aeat/domain/deadlines/_models.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
+        if func_name != "Decimal":
+            continue
+        if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "1500":
+            offenders.append(
+                f"_models.py:{node.lineno}: bare Decimal('1500'); "
+                f"use MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR"
+            )
+
+    assert offenders == [], (
+        "Local pagadores threshold literals found; import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR from core:\n"
+        + "\n".join(offenders)
+    )
+
+
+# ---------------------------------------------------------------------------
 # contract — DEFAULT_IVA_GENERAL_RATE_PCT centralisation tests
 # ---------------------------------------------------------------------------
 
