@@ -58,8 +58,8 @@ _WHITELIST: frozenset[str] = frozenset(
 def _project_root() -> Path:
     """Returns the repository root from this test file's location."""
     here = Path(__file__).resolve()
-    # src/aeat/adapters/inbound/sanitizer/test_no_write_surface.py → up 6 levels
-    return here.parents[5]
+    # src/aeat/adapters/inbound/sanitizer/tests/test_no_write_surface.py → up 7 levels
+    return here.parents[6]
 
 
 def _public_python_files() -> list[Path]:
