@@ -312,6 +312,42 @@ flagging genuine issues that must be fixed in product code, not silenced:
 **check-types** remains the dominant hard gate at ~1850 (952 ty + ~900 pyright)
 after the keystone + @override eliminations — a per-site typed-boundary grind.
 
+## QHC-011 | session result (final) | 36 of 49 unit failures cleared; 13 genuine-hard remain
+
+Correction to QHC-010's categorisation: three clusters I first read as "real
+feature/domain gaps" were ALSO topology/refactor regressions and are now fixed —
+`event_emission_contract` (4: `_AEAT_ROOT = parents[2]` resolved to `application`,
+producing `application/application/...`; → `parents[3]`), `oss_ioss` parallel-
+aggregator guard (the `resolve_ledger_oss_aggregation_binding_values` resolver
+moved from `_bindings.py` to `_ledger_bindings.py`; skip both), and
+`modelo_authorization` (30 `authorization.d/*.toml` manifests named `enrolling_test`
+at `application/calculations/test_*.py` — all relocated into `tests/`; swept). The
+emission sites, resolver, and enrolling tests existed all along.
+
+Net: **36 of the 49-node set now pass**. The topology-regression pattern accounts
+for the overwhelming majority of the cleared failures — the codification candidate
+below is strongly warranted.
+
+The 13 that remain are genuinely deep and require domain decisions or behaviour-
+changing work; they are NOT mechanical and several are guards over real product
+behaviour:
+- manuals/corpus cluster (4): the bundled corpus's extraction state changed
+  (`iva/2025/single` is now extracted, so the "unextracted manual raises
+  ManualNotFoundError" contract needs a genuinely-unextracted fixture or a
+  corpus-state decision) plus the 3 `test_corpus` manuals-report assertions.
+- M200 `01494` previous-filing binding (2 `decimal_inputs_routing`).
+- attachments blob/manifest plaintext roundtrip; `ledger_modelo_staleness`
+  ValidationError; `sensitive_persistence` production-write inventory.
+- `test_no_aeat_error_raise_with_positional_tr` (26 sites; `message`→`translated_message=`
+  changes error rendering — per-site verification).
+- surface/inventory judgment: `cross_module_imports` `__all__`
+  (`core/access_gate`, `domain/contribuyente/assets`); `external_constants` test
+  URL; `decimal_enrollment` `Decimal(str())` at `overview/__init__.py:113`.
+
+**check-types** remains ~1850 (the per-site typed-boundary grind). These 13 + the
+type lane are the genuine multi-session / domain-expert remainder; everything
+mechanically or structurally tractable in one pass has been cleared.
+
 ## Codification candidates
 
 - **Source:** QHC-010 topology-regression cluster (≈20 relocated-test failures from
