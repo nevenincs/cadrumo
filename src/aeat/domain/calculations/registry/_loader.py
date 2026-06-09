@@ -872,9 +872,16 @@ def discover_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
     sources: list[ModeloSource] = []
     seen_modelo_ids: dict[str, ModeloSource] = {}
     for path in sorted(resolved.glob("*.toml")):
-        modelo = load_modelo_file(path)
+        try:
+            raw_data = read_toml(path, error_factory=RegistryLoadError)
+            modelo_table = raw_data.get("modelo")
+            if not isinstance(modelo_table, dict) or "id" not in modelo_table:
+                raise RegistryLoadError(f"{path}: missing [modelo].id")
+            modelo_id = str(modelo_table["id"])
+        except Exception as exc:
+            raise RegistryLoadError(f"{path}: invalid modelo file: {exc}") from exc
         source = ModeloSource(
-            modelo_id=modelo.id,
+            modelo_id=modelo_id,
             layout="single_file",
             path=path.resolve(),
             manifest_path=path.resolve(),
@@ -884,12 +891,20 @@ def discover_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
         for entry in sorted(resolved.iterdir()):
             if not (entry.is_dir() and (entry / "manifest.toml").is_file()):
                 continue
-            modelo = load_modelo_directory(entry)
+            manifest_path = entry / "manifest.toml"
+            try:
+                manifest_data = read_toml(manifest_path, error_factory=RegistryLoadError)
+                modelo_table = manifest_data.get("modelo")
+                if not isinstance(modelo_table, dict) or "id" not in modelo_table:
+                    raise RegistryLoadError(f"{manifest_path}: missing [modelo].id")
+                modelo_id = str(modelo_table["id"])
+            except Exception as exc:
+                raise RegistryLoadError(f"{manifest_path}: invalid manifest: {exc}") from exc
             source = ModeloSource(
-                modelo_id=modelo.id,
+                modelo_id=modelo_id,
                 layout="directory",
                 path=entry.resolve(),
-                manifest_path=(entry / "manifest.toml").resolve(),
+                manifest_path=manifest_path.resolve(),
                 revision_sources=_discover_revision_sources(entry / "revisions"),
             )
             _append_modelo_source(source, sources, seen_modelo_ids)
@@ -1008,11 +1023,45 @@ def _load_registry_tree_cached(
     root: str,
     fingerprints: tuple[tuple[str, int, int], ...],
 ) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    del fingerprints
+    import hashlib
+    import pickle
+    import tempfile
+    import os
+
+    hasher = hashlib.sha256()
+    hasher.update(root.encode("utf-8"))
+    for item in fingerprints:
+        hasher.update(item[0].encode("utf-8"))
+        hasher.update(str(item[1]).encode("utf-8"))
+        hasher.update(str(item[2]).encode("utf-8"))
+    key_hash = hasher.hexdigest()
+
+    cache_path = Path(tempfile.gettempdir()) / f"aeat_registry_{key_hash}.pkl"
+    if cache_path.is_file():
+        try:
+            with open(cache_path, "rb") as f:
+                return pickle.load(f)
+        except Exception:
+            pass
+
     resolved = Path(root)
     catalogues = _load_shared_catalogue_files(resolved / "legal")
     modelos = _load_all_modelo_definitions(resolved / "modelos")
-    return modelos, catalogues
+    result = (modelos, catalogues)
+
+    temp_name = None
+    try:
+        with tempfile.NamedTemporaryFile("wb", dir=cache_path.parent, delete=False) as tf:
+            pickle.dump(result, tf, protocol=pickle.HIGHEST_PROTOCOL)
+            temp_name = tf.name
+        os.replace(temp_name, cache_path)
+    except Exception:
+        if temp_name is not None:
+            try:
+                os.unlink(temp_name)
+            except Exception:
+                pass
+    return result
 
 
 def _load_shared_catalogue_files(legal_dir: Path) -> RegistryCatalogues:

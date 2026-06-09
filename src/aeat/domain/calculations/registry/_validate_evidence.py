@@ -18,19 +18,53 @@ def _normalise_required_text(text: str) -> str:
     return normalise_corpus_text(text)
 
 
-_PDF_TEXT_CACHE: dict[tuple[str, int], str] = {}
+import json
+import os
+import tempfile
+
+_STAT_CACHE: dict[Path, os.stat_result] = {}
+_DISK_CACHE: dict[str, str] | None = None
 
 
-def _extract_pdf_text(path: Path) -> str:
-    stat = path.stat()
-    cache_key = (path.name, stat.st_size)
-    if cache_key in _PDF_TEXT_CACHE:
-        return _PDF_TEXT_CACHE[cache_key]
+def _cached_stat(path: Path) -> os.stat_result:
+    stat = _STAT_CACHE.get(path)
+    if stat is None:
+        stat = path.stat()
+        _STAT_CACHE[path] = stat
+    return stat
 
-    resolved_path = str(path.expanduser().resolve())
-    text = _extract_pdf_text_impl(resolved_path)
-    _PDF_TEXT_CACHE[cache_key] = text
-    return text
+
+def _load_disk_cache() -> dict[str, str]:
+    global _DISK_CACHE
+    if _DISK_CACHE is not None:
+        return _DISK_CACHE
+    cache_path = Path(tempfile.gettempdir()) / "aeat_corpus_text_cache.json"
+    if not cache_path.is_file():
+        _DISK_CACHE = {}
+        return _DISK_CACHE
+    try:
+        with open(cache_path, encoding="utf-8") as f:
+            _DISK_CACHE = json.load(f)
+            return _DISK_CACHE
+    except Exception:
+        _DISK_CACHE = {}
+        return _DISK_CACHE
+
+
+def _write_disk_cache(data: dict[str, str]) -> None:
+    cache_path = Path(tempfile.gettempdir()) / "aeat_corpus_text_cache.json"
+    temp_name = None
+    try:
+        with tempfile.NamedTemporaryFile("w", dir=cache_path.parent, delete=False, encoding="utf-8") as tf:
+            json.dump(data, tf, ensure_ascii=False, indent=2)
+            temp_name = tf.name
+        os.replace(temp_name, cache_path)
+    except Exception:
+        if temp_name is not None:
+            try:
+                os.unlink(temp_name)
+            except Exception:
+                pass
 
 
 def _extract_pdf_text_impl(path: str) -> str:
@@ -144,17 +178,30 @@ class EvidenceValidator:
         if self._source_root is None:
             return ""
         source_path = self._source_root / source.corpus_path
-        stat = source_path.stat()
+        stat = _cached_stat(source_path)
         source_key = (source.kind, source_path.name, stat.st_size)
         global_cached = _NORMALISED_SOURCE_TEXT_CACHE.get(source_key)
         if global_cached is not None:
             self._source_text_cache[source.id] = global_cached
             return global_cached
+
+        # Check disk cache
+        cache_key_str = f"{source_path.name}:{stat.st_size}:{int(stat.st_mtime)}"
+        disk_cache = _load_disk_cache()
+        if cache_key_str in disk_cache:
+            normalised = disk_cache[cache_key_str]
+            _NORMALISED_SOURCE_TEXT_CACHE[source_key] = normalised
+            self._source_text_cache[source.id] = normalised
+            return normalised
+
         if source.kind == "manual_pdf":
-            text = _extract_pdf_text(source_path)
+            text = _extract_pdf_text_impl(str(source_path.expanduser().resolve()))
         else:
             text = source_path.read_text(encoding="utf-8", errors="replace")
         normalised = normalise_corpus_text(text)
+
         _NORMALISED_SOURCE_TEXT_CACHE[source_key] = normalised
         self._source_text_cache[source.id] = normalised
+        disk_cache[cache_key_str] = normalised
+        _write_disk_cache(disk_cache)
         return normalised
