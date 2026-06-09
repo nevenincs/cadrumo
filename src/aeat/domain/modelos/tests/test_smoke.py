@@ -5,7 +5,7 @@ import pytest
 from ....core import errors, logging
 from .. import ModeloCode
 from .. import __all__ as modelos_all
-from . import __doc__ as modelos_doc
+from .. import __doc__ as modelos_doc
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
