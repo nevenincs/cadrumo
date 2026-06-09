@@ -217,6 +217,56 @@ leaf, 1 CLI leaf with no schema) — not caused by the keystone (runtime-identic
 A full `-m unit` run is in progress to enumerate the rest; treat each failure as
 an in-scope all-green item.
 
+## QHC-008 | OPEN | test-unit failure triage and burn-down (for all-tests-green)
+
+The full `-m unit` run surfaced 46 failures + 3 errors, all pre-existing on the
+branch except the 3 regressions this campaign's `@override` sweep introduced
+(line-shifted rationale markers — fixed, QHC-006 family). Triage of the remainder:
+
+Fixed this session (test-only, no production risk):
+- `test_type_ignore_rationale_inventory`, `test_any_param_rationale_inventory`
+  (the @override line-shift regressions).
+- `test_calculation_grounding` (3 subtests): the grounding gate hardcoded
+  pre-relocation paths for `test_tautology_gate.py` / `test_renta_chain_behaviour.py`;
+  repointed to `registry/tests/`.
+- `test_smoke.py` modelos + portals (3 subtests) and the sanitizer
+  `TestPublicReexports`: the test-topology refactor relocated these into `tests/`,
+  so `from . import __doc__/__name__/__all__` and `import_module(__package__)`
+  began resolving to the `tests` package instead of the subpackage under test.
+  Repointed to the parent (`from ..` / explicit package). **This is a recurring
+  topology-regression pattern; future relocations must re-point `from .` self-
+  imports and `__package__` derivations to the parent.**
+- `test_no_bare_utf8_literals` (registry `_authority.py` validated-cache write →
+  `UTF_8_ENCODING`), `test_no_bare_ledger_transaction_literals` (ledger test
+  support → `AggregationSourceKind.LEDGER_TRANSACTION`).
+
+Delegated (background subagent, in flight):
+- `test_public_functions_link_their_aeat_return_type`: 145 public functions need a
+  truthful `:class:`ReturnType`` docstring cross-reference (uniform, legitimate —
+  same shape as the @override sweep).
+
+Remaining ~34 + 3 errors (not yet actioned), categorised:
+- **Production rationale-marker gates** (legitimate marker additions, must NOT be
+  used to silence a real issue): `test_boundary_rationale` (3), browser-session
+  boundary, sede `test_playwright_wait_constants` (2), secure-repo
+  `cast_rationale`, `test_narrowed_except_*` (2), `sensitive_persistence_policy`,
+  `no_write_surface`.
+- **Real domain gaps / behaviour** (need careful per-case work, NOT marker
+  shortcuts): manuals/corpus (4), attachments plaintext roundtrip, `oss_ioss`
+  parallel-aggregator surface, `decimal_inputs_routing` (2), `ledger_modelo_staleness`,
+  registry `runtime_graph` walkers, registry `no_print`, `event_emission_contract`
+  (4 required events without an emission site).
+- **Large ratchet backlog**: `test_no_aeat_error_raise_with_positional_tr` (26
+  `raise AeatError(tr(...))` positional sites to convert to keyword).
+- **Surface/inventory**: `external_constants` route literals,
+  `cross_module_imports` `__all__` baseline, `decimal_enrollment` (1),
+  `docstring_core_struct_links` (1: `_binding_prefill` → `:class:`CasillaObservation``),
+  `output_language_typed`, `translatable_contract`, `modelo_authorization_gate`,
+  i18n `placeholder_parity` (3 errors).
+
+The integration `test_json_schema_conformance` harness bug is fixed (QHC-009);
+`test-live` skips cleanly without AEAT credentials.
+
 ## Codification candidates
 
 None yet. The campaign's mechanics (fix-or-justify-at-line for semgrep,
