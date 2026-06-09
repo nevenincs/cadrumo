@@ -8,6 +8,7 @@ import typer
 
 from ...application.inventory import InventoryMovementCommand, InventoryService
 from ...core import require_active_bucket_id
+from ...core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 from ...core.errors import NoActiveProfileError
 from ...core.i18n import tr
 from ...domain.contribuyente.inventory import MovementKind
@@ -206,7 +207,9 @@ def inventory_movement_add(
         None, "--taxable-base", help=tr("cli.app.ledger.inventory.taxable_base_help", default="Taxable base (for IVA).")
     ),
     iva_rate: str = typer.Option(
-        "21.00", "--iva-rate", help=tr("cli.app.ledger.inventory.iva_rate_help", default="IVA rate in percent.")
+        str(DEFAULT_IVA_GENERAL_RATE_PCT),
+        "--iva-rate",
+        help=tr("cli.app.ledger.inventory.iva_rate_help", default="IVA rate in percent."),
     ),
 ) -> None:
     """Append one inventory movement to an actividad ledger."""

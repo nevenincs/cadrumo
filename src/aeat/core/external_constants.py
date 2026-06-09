@@ -411,6 +411,13 @@ M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
 #: An asset class is declarable iff its total valuation strictly exceeds this amount.
 MODELO_720_REPORTING_THRESHOLD_EUR: Final[Decimal] = Decimal("50000.00")
 
+#: Default IVA general-rate percentage for input/pre-fill purposes.
+#: This is the LIVA art. 90 Uno general rate currently in force for Spain (ES).
+#: The DATED authoritative percentage lives in ``registry/aeat/iva/rates.toml``
+#: and is resolved via :func:`aeat.domain.iva.lookup_rate`; this constant is
+#: bound to that registry authority by a gate test so it cannot silently drift.
+DEFAULT_IVA_GENERAL_RATE_PCT: Final[Decimal] = Decimal("21.00")
+
 #: Secure-object namespace slug for Cl@ve Móvil auth diagnostics.
 #: Used by the auth diagnostics service and the persistence namespace registry.
 CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE: Final[str] = "aeat.outbound.aeat.auth.clave_movil.diagnostics"

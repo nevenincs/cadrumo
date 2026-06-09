@@ -1199,6 +1199,215 @@ def test_no_bare_csv_mime_literal_in_tabular() -> None:
     assert offenders == [], "Bare 'text/csv' literals found; use _CSV_MIME_TYPE instead:\n" + "\n".join(offenders)
 
 
+# ---------------------------------------------------------------------------
+# contract — DEFAULT_IVA_GENERAL_RATE_PCT centralisation tests
+# ---------------------------------------------------------------------------
+
+
+def test_default_iva_general_rate_pct_value() -> None:
+    """``DEFAULT_IVA_GENERAL_RATE_PCT`` equals 21.00 per LIVA art. 90 Uno."""
+
+    from decimal import Decimal
+
+    from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
+
+    assert Decimal("21.00") == DEFAULT_IVA_GENERAL_RATE_PCT
+
+
+def test_default_iva_general_rate_pct_is_final_decimal() -> None:
+    """``DEFAULT_IVA_GENERAL_RATE_PCT`` is a ``Decimal`` instance (typed ``Final[Decimal]``)."""
+
+    from decimal import Decimal
+
+    from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
+
+    assert isinstance(DEFAULT_IVA_GENERAL_RATE_PCT, Decimal)
+
+
+def test_default_iva_general_rate_pct_matches_registry() -> None:
+    """``DEFAULT_IVA_GENERAL_RATE_PCT`` equals the IVA-registry general rate for Spain on 2026-01-01.
+
+    Binds the default to the dated :func:`aeat.domain.iva.lookup_rate` registry so
+    it cannot silently drift when AEAT publishes a rate change.
+    """
+
+    from datetime import date
+    from decimal import Decimal
+
+    from ...domain.iva import EUMemberState, IvaRateKind, lookup_rate
+
+    from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
+
+    registry_rate = lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2026, 1, 1))
+    assert DEFAULT_IVA_GENERAL_RATE_PCT == registry_rate.pct
+
+
+def test_inventory_service_imports_default_iva_general_rate_pct_from_core() -> None:
+    """``application/inventory/_service.py`` imports ``DEFAULT_IVA_GENERAL_RATE_PCT`` from core."""
+
+    import importlib
+
+    from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
+
+    mod = importlib.import_module("aeat.application.inventory._service")
+
+    assert hasattr(mod, "DEFAULT_IVA_GENERAL_RATE_PCT"), (
+        "_service must import DEFAULT_IVA_GENERAL_RATE_PCT from aeat.core.external_constants"
+    )
+    assert mod.DEFAULT_IVA_GENERAL_RATE_PCT is DEFAULT_IVA_GENERAL_RATE_PCT
+
+
+def test_ledger_inventory_cli_imports_default_iva_general_rate_pct_from_core() -> None:
+    """``entrypoints/cli/_ledger_inventory_cli.py`` imports ``DEFAULT_IVA_GENERAL_RATE_PCT`` from core."""
+
+    import importlib
+
+    from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
+
+    mod = importlib.import_module("aeat.entrypoints.cli._ledger_inventory_cli")
+
+    assert hasattr(mod, "DEFAULT_IVA_GENERAL_RATE_PCT"), (
+        "_ledger_inventory_cli must import DEFAULT_IVA_GENERAL_RATE_PCT from aeat.core.external_constants"
+    )
+    assert mod.DEFAULT_IVA_GENERAL_RATE_PCT is DEFAULT_IVA_GENERAL_RATE_PCT
+
+
+def test_contribuyente_assets_imports_default_iva_general_rate_pct_from_core() -> None:
+    """``domain/contribuyente/assets/__init__.py`` imports ``DEFAULT_IVA_GENERAL_RATE_PCT`` from core."""
+
+    import importlib
+
+    from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
+
+    mod = importlib.import_module("aeat.domain.contribuyente.assets")
+
+    assert hasattr(mod, "DEFAULT_IVA_GENERAL_RATE_PCT"), (
+        "aeat.domain.contribuyente.assets must import DEFAULT_IVA_GENERAL_RATE_PCT from aeat.core.external_constants"
+    )
+    assert mod.DEFAULT_IVA_GENERAL_RATE_PCT is DEFAULT_IVA_GENERAL_RATE_PCT
+
+
+def test_contribuyente_inventory_imports_default_iva_general_rate_pct_from_core() -> None:
+    """``domain/contribuyente/inventory/__init__.py`` imports ``DEFAULT_IVA_GENERAL_RATE_PCT`` from core."""
+
+    import importlib
+
+    from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
+
+    mod = importlib.import_module("aeat.domain.contribuyente.inventory")
+
+    assert hasattr(mod, "DEFAULT_IVA_GENERAL_RATE_PCT"), (
+        "aeat.domain.contribuyente.inventory must import DEFAULT_IVA_GENERAL_RATE_PCT from aeat.core.external_constants"
+    )
+    assert mod.DEFAULT_IVA_GENERAL_RATE_PCT is DEFAULT_IVA_GENERAL_RATE_PCT
+
+
+def test_no_bare_iva_rate_decimal_literal_in_inventory_service() -> None:
+    """No bare ``Decimal("21.00")`` literal in ``application/inventory/_service.py``.
+
+    Anti-tautology: parses the real AST so any future re-introduction triggers failure.
+    """
+
+    repo_root = Path(__file__).parents[4]
+    source = (repo_root / "src/aeat/application/inventory/_service.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
+        if func_name != "Decimal":
+            continue
+        if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "21.00":
+            offenders.append(f"_service.py:{node.lineno}: bare Decimal('21.00'); use DEFAULT_IVA_GENERAL_RATE_PCT")
+
+    assert offenders == [], (
+        "Local IVA 21.00 literals found; import DEFAULT_IVA_GENERAL_RATE_PCT from core instead:\n"
+        + "\n".join(offenders)
+    )
+
+
+def test_no_bare_iva_rate_decimal_literal_in_contribuyente_assets() -> None:
+    """No bare ``Decimal("21.00")`` literal in ``domain/contribuyente/assets/__init__.py``."""
+
+    repo_root = Path(__file__).parents[4]
+    source = (repo_root / "src/aeat/domain/contribuyente/assets/__init__.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
+        if func_name != "Decimal":
+            continue
+        if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "21.00":
+            offenders.append(
+                f"assets/__init__.py:{node.lineno}: bare Decimal('21.00'); use DEFAULT_IVA_GENERAL_RATE_PCT"
+            )
+
+    assert offenders == [], (
+        "Local IVA 21.00 literals found in assets; import DEFAULT_IVA_GENERAL_RATE_PCT from core instead:\n"
+        + "\n".join(offenders)
+    )
+
+
+def test_no_bare_iva_rate_decimal_literal_in_contribuyente_inventory() -> None:
+    """No bare ``Decimal("21.00")`` literal in ``domain/contribuyente/inventory/__init__.py``."""
+
+    repo_root = Path(__file__).parents[4]
+    source = (repo_root / "src/aeat/domain/contribuyente/inventory/__init__.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
+        if func_name != "Decimal":
+            continue
+        if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "21.00":
+            offenders.append(
+                f"inventory/__init__.py:{node.lineno}: bare Decimal('21.00'); use DEFAULT_IVA_GENERAL_RATE_PCT"
+            )
+
+    assert offenders == [], (
+        "Local IVA 21.00 literals found in inventory; import DEFAULT_IVA_GENERAL_RATE_PCT from core instead:\n"
+        + "\n".join(offenders)
+    )
+
+
+def test_no_bare_iva_rate_string_literal_in_ledger_inventory_cli() -> None:
+    """No bare ``"21.00"`` string literal as a typer Option default in ``_ledger_inventory_cli.py``.
+
+    Anti-tautology: parses the AST and fails if the literal is re-introduced as a
+    bare Option default instead of ``str(DEFAULT_IVA_GENERAL_RATE_PCT)``.
+    """
+
+    repo_root = Path(__file__).parents[4]
+    source = (repo_root / "src/aeat/entrypoints/cli/_ledger_inventory_cli.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        # Look for string constants with value "21.00" that are NOT inside str(...) calls.
+        if not isinstance(node, ast.Constant) or node.value != "21.00":
+            continue
+        offenders.append(
+            f"_ledger_inventory_cli.py:{node.lineno}: bare '21.00' string literal; "
+            f"use str(DEFAULT_IVA_GENERAL_RATE_PCT)"
+        )
+
+    assert offenders == [], (
+        "Bare '21.00' string literals found; use str(DEFAULT_IVA_GENERAL_RATE_PCT) instead:\n"
+        + "\n".join(offenders)
+    )
+
+
 def test_no_bare_jsonl_or_xlsx_mime_literal_in_tabular() -> None:
     """No bare JSONL/XLSX MIME literals in ``_tabular.py`` argument positions."""
 
