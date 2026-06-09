@@ -194,10 +194,7 @@ def project_modelo_100_from_m130(
     casilla_overrides: Mapping[str, str] | None = None,
     binding_overrides: Mapping[str, str] | None = None,
 ) -> ModeloProjectServiceResult:
-    """Project annual Modelo 100 values from quarterly Modelo 130 revisions.
-
-    Returns a :class:`ModeloProjectServiceResult`.
-    """
+    """Project annual Modelo 100 values from quarterly M130 revisions into a :class:`ModeloProjectServiceResult`."""
     all_units = list_work_units()
     m130_units = [
         unit
