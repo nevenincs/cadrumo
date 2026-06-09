@@ -2659,7 +2659,7 @@ cli:
       reason_help: Motiu registrat a l'historial de reinici
       yes_help: Confirmar el buidatge del catàleg actiu del llibre
     review:
-      filter_help: Filtrar files per status, period, issue o import
+      filter_help: 'Filtrar files per status, period, issue, import, classification, text o direction'
       header: SESSIÓ DE REVISIÓ DEL LLIBRE COMPTABLE
       help: Revisió interactiva i validació d'entrades del llibre
       id_help: Identificador de l'entrada específica a revisar

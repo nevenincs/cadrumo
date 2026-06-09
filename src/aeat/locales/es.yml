@@ -2694,7 +2694,7 @@ cli:
       reason_help: Motivo registrado en el historial de reinicio
       yes_help: Confirmar el vaciado del catálogo activo del libro
     review:
-      filter_help: Filtrar filas por status, period, issue o import
+      filter_help: 'Filtrar filas por status, period, issue, import, classification, text o direction'
       header: SESIÓN DE REVISIÓN DEL LIBRO CONTABLE
       help: Revisión interactiva y validación de entradas del libro
       id_help: Identificador de la entrada específica a revisar
