@@ -903,7 +903,10 @@ class WorkflowEngine:
                     summary=errors_summary,
                     details={
                         "error_count": str(len(error_findings)),
-                        "next_action": ("Run: aeat app modelo work verification-report list <calculation_revision_id>"),
+                        "next_action": (
+                            "Run: aeat app modelo verification-report list"
+                            " --calculation-revision-id <calculation_revision_id>"
+                        ),
                     },
                 )
             )
