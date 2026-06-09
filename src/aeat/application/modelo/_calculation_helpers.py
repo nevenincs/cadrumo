@@ -8,7 +8,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core.i18n import tr
 from ...domain.calculations.registry import (
     CasillaDefinition,
     CasillaObservation,
@@ -56,10 +55,6 @@ def resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnap
         authority = _authority_via_resources()
     except FileNotFoundError as exc:
         raise CalculationRegistryUnavailableError(
-            tr(
-                "application.modelo.errors.calculation_registry_root_missing",
-                registry_root=_registry_root(),
-            ),
             translated_message="application.modelo.errors.calculation_registry_root_missing",
             context={"registry_root": _registry_root()},
         ) from exc
@@ -71,12 +66,6 @@ def resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnap
         )
     except RegistrySnapshotError as exc:
         raise CalculationRegistryUnavailableError(
-            tr(
-                "application.modelo.errors.calculation_registry_snapshot_unresolved",
-                modelo=work_unit.modelo,
-                filing_year=work_unit.filing_year,
-                period=work_unit.period,
-            ),
             translated_message="application.modelo.errors.calculation_registry_snapshot_unresolved",
             context={"modelo": work_unit.modelo, "filing_year": work_unit.filing_year, "period": work_unit.period},
         ) from exc

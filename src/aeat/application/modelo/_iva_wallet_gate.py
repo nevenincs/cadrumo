@@ -111,22 +111,11 @@ def apply_iva_compensation_decision_binding(
 
     if not isinstance(decision, IvaCompensationReconciliationDecision):
         raise ModeloIvaWalletReconciliationBlocked(
-            tr(
-                "application.modelo.errors.iva_wallet_unsupported_decision_type",
-                decision_type=type(decision).__name__,
-            ),
             translated_message="application.modelo.errors.iva_wallet_unsupported_decision_type",
             context={"decision_type": type(decision).__name__},
         )
     if decision.target_year != filing_year or decision.target_period != period:
         raise ModeloIvaWalletReconciliationBlocked(
-            tr(
-                "application.modelo.errors.iva_wallet_target_mismatch",
-                target_year=decision.target_year,
-                target_period=decision.target_period,
-                filing_year=filing_year,
-                period=period,
-            ),
             translated_message="application.modelo.errors.iva_wallet_target_mismatch",
             context={
                 "target_year": decision.target_year,
@@ -137,12 +126,10 @@ def apply_iva_compensation_decision_binding(
         )
     if taxpayer_nif is None:
         raise ModeloIvaWalletReconciliationBlocked(
-            tr("application.modelo.errors.iva_wallet_taxpayer_identity_missing"),
             translated_message="application.modelo.errors.iva_wallet_taxpayer_identity_missing",
         )
     if decision.taxpayer_nif.strip().upper() != taxpayer_nif.strip().upper():
         raise ModeloIvaWalletReconciliationBlocked(
-            tr("application.modelo.errors.iva_wallet_taxpayer_mismatch"),
             translated_message="application.modelo.errors.iva_wallet_taxpayer_mismatch",
         )
     if decision.blocked:
@@ -153,14 +140,12 @@ def apply_iva_compensation_decision_binding(
         )
     if decision.selected_amount is None:
         raise ModeloIvaWalletReconciliationBlocked(
-            tr("application.modelo.errors.iva_wallet_selected_amount_missing"),
             translated_message="application.modelo.errors.iva_wallet_selected_amount_missing",
         )
     selected = Decimal(decision.selected_amount)
     caller_value = caller_binding_values.get(binding_id)
     if caller_value is not None and Decimal(caller_value) != selected:
         raise ModeloIvaWalletReconciliationBlocked(
-            tr("application.modelo.errors.iva_wallet_caller_binding_conflict"),
             translated_message="application.modelo.errors.iva_wallet_caller_binding_conflict",
         )
     if caller_casilla_value is not None and Decimal(caller_casilla_value) != selected:
@@ -170,7 +155,6 @@ def apply_iva_compensation_decision_binding(
         )
     if backend_casilla_value is not None and Decimal(backend_casilla_value) != selected:
         raise ModeloIvaWalletReconciliationBlocked(
-            tr("application.modelo.errors.iva_wallet_backend_casilla_conflict"),
             translated_message="application.modelo.errors.iva_wallet_backend_casilla_conflict",
         )
     from ..aggregation import CalculationSourceContext
@@ -205,7 +189,6 @@ def require_persisted_iva_compensation_decision_for_work_unit(
         )
     if persisted != supplied_decision:
         raise ModeloIvaWalletReconciliationBlocked(
-            tr("application.modelo.errors.iva_wallet_supplied_decision_mismatch"),
             translated_message="application.modelo.errors.iva_wallet_supplied_decision_mismatch",
         )
     return persisted
@@ -320,40 +303,36 @@ def require_persisted_iva_compensation_decision_matches_revision(
         )
     if decision.target_year != work_unit.filing_year or decision.target_period != work_unit.period:
         raise ModeloIvaWalletReconciliationBlocked(
-            tr(
-                "application.modelo.errors.iva_wallet_blocked",
-                divergence="authority_target_mismatch",
-                reason="persisted IVA wallet decision target does not match the Modelo 303 work unit",
-            ),
             translated_message="application.modelo.errors.iva_wallet_blocked",
+            context={
+                "divergence": "authority_target_mismatch",
+                "reason": "persisted IVA wallet decision target does not match the Modelo 303 work unit",
+            },
         )
     if decision.selected_amount is None:
         raise ModeloIvaWalletReconciliationBlocked(
-            tr(
-                "application.modelo.errors.iva_wallet_blocked",
-                divergence="authority_missing_amount",
-                reason="persisted IVA wallet decision has no selected amount",
-            ),
             translated_message="application.modelo.errors.iva_wallet_blocked",
+            context={
+                "divergence": "authority_missing_amount",
+                "reason": "persisted IVA wallet decision has no selected amount",
+            },
         )
     revision_amount = revision_iva_compensation_amount(revision)
     if revision_amount is None:
         raise ModeloIvaWalletReconciliationBlocked(
-            tr(
-                "application.modelo.errors.iva_wallet_blocked",
-                divergence="authority_revision_missing_amount",
-                reason="calculation revision does not carry the Modelo 303 prior-compensation amount",
-            ),
             translated_message="application.modelo.errors.iva_wallet_blocked",
+            context={
+                "divergence": "authority_revision_missing_amount",
+                "reason": "calculation revision does not carry the Modelo 303 prior-compensation amount",
+            },
         )
     if Decimal(decision.selected_amount) != revision_amount:
         raise ModeloIvaWalletReconciliationBlocked(
-            tr(
-                "application.modelo.errors.iva_wallet_blocked",
-                divergence="authority_amount_mismatch",
-                reason="persisted IVA wallet decision does not match the calculation revision",
-            ),
             translated_message="application.modelo.errors.iva_wallet_blocked",
+            context={
+                "divergence": "authority_amount_mismatch",
+                "reason": "persisted IVA wallet decision does not match the calculation revision",
+            },
         )
     return decision
 

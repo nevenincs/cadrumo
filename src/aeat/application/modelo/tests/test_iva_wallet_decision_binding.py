@@ -104,7 +104,7 @@ def test_blocked_iva_wallet_decision_refuses_modelo_303_automatic_calculation() 
 
 
 def test_caller_binding_conflict_with_wallet_decision_is_refused() -> None:
-    with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="conflicts"):
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
         _apply_iva_compensation_decision_binding(
             "303",
             2026,
@@ -118,6 +118,7 @@ def test_caller_binding_conflict_with_wallet_decision_is_refused() -> None:
             backend_binding_values={},
             decision=_decision(),
         )
+    assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_caller_binding_conflict"
 
 
 def test_modelo_303_prior_compensation_binding_without_wallet_decision_is_refused() -> None:
@@ -184,7 +185,7 @@ def test_modelo_303_backend_prior_compensation_casilla_without_wallet_decision_i
 
 
 def test_modelo_303_wallet_decision_for_other_taxpayer_is_refused() -> None:
-    with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="taxpayer"):
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
         _apply_iva_compensation_decision_binding(
             "303",
             2026,
@@ -198,6 +199,7 @@ def test_modelo_303_wallet_decision_for_other_taxpayer_is_refused() -> None:
             backend_binding_values={},
             decision=_decision(),
         )
+    assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_taxpayer_mismatch"
 
 
 def test_modelo_303_prior_compensation_casilla_conflict_with_wallet_decision_is_refused() -> None:

@@ -8,7 +8,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core.i18n import tr
 from ...domain.calculations.registry import (
     InputKind,
     ModeloRevision,
@@ -87,10 +86,6 @@ def reject_unknown_override_casillas(
         authority = authority_via_resources()
     except FileNotFoundError as exc:
         raise AmendmentOverrideCasillaError(
-            tr(
-                "application.modelo.errors.amendment_registry_root_missing",
-                registry_root=registry_root(),
-            ),
             translated_message="application.modelo.errors.amendment_registry_root_missing",
             context={"registry_root": registry_root()},
         ) from exc
@@ -99,12 +94,6 @@ def reject_unknown_override_casillas(
         snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
     except RegistrySnapshotError as exc:
         raise AmendmentOverrideCasillaError(
-            tr(
-                "application.modelo.errors.amendment_registry_snapshot_unresolved",
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-            ),
             translated_message="application.modelo.errors.amendment_registry_snapshot_unresolved",
             context={"modelo": modelo, "filing_year": filing_year, "period": period},
         ) from exc
@@ -113,13 +102,6 @@ def reject_unknown_override_casillas(
     unknown = sorted(casilla_id for casilla_id in overrides if casilla_id not in known)
     if unknown:
         raise AmendmentOverrideCasillaError(
-            tr(
-                "application.modelo.errors.amendment_unknown_casillas",
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-                casillas=unknown,
-            ),
             translated_message="application.modelo.errors.amendment_unknown_casillas",
             context={"modelo": modelo, "filing_year": filing_year, "period": period, "casillas": unknown},
         )
@@ -139,10 +121,6 @@ def reject_unknown_import_casillas(
         authority = authority_via_resources()
     except FileNotFoundError as exc:
         raise ExternalModeloImportError(
-            tr(
-                "application.modelo.errors.external_import_registry_root_missing",
-                registry_root=registry_root(),
-            ),
             translated_message="application.modelo.errors.external_import_registry_root_missing",
             context={"registry_root": registry_root()},
         ) from exc
@@ -151,12 +129,6 @@ def reject_unknown_import_casillas(
         snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
     except RegistrySnapshotError as exc:
         raise ExternalModeloImportError(
-            tr(
-                "application.modelo.errors.external_import_registry_snapshot_unresolved",
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-            ),
             translated_message="application.modelo.errors.external_import_registry_snapshot_unresolved",
             context={"modelo": modelo, "filing_year": filing_year, "period": period},
         ) from exc
@@ -165,13 +137,6 @@ def reject_unknown_import_casillas(
     unknown = sorted(casilla_id for casilla_id in casilla_values if casilla_id not in known)
     if unknown:
         raise ExternalModeloImportError(
-            tr(
-                "application.modelo.errors.external_import_unknown_casillas",
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-                casillas=unknown,
-            ),
             translated_message="application.modelo.errors.external_import_unknown_casillas",
             context={"modelo": modelo, "filing_year": filing_year, "period": period, "casillas": unknown},
         )
