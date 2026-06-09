@@ -74,14 +74,19 @@ def _txn(*, taxable_base: Decimal) -> Transaction:
         ),
         raw_fields={"Concepto": "Compra material oficina"},
     )
+    # The bank gross (the raw amount, 121.00) is fixed so the content-addressed
+    # transaction id stays stable across the drift; re-split that gross so any
+    # taxable_base yields a valid row (taxable_base + iva_amount == gross).
+    iva_amount = Decimal("121.00") - taxable_base
+    iva_rate = (iva_amount / taxable_base).quantize(Decimal("0.0001"))
     return Transaction.model_validate(
         {
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
             "business_classification": BusinessClassification.BUSINESS,
             "taxable_base": taxable_base,
-            "iva_rate": Decimal("0.21"),
-            "iva_amount": Decimal("21.00"),
+            "iva_rate": iva_rate,
+            "iva_amount": iva_amount,
             "iva_category": "domestic_general_21",
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
