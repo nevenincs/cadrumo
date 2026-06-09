@@ -12,7 +12,7 @@ and delegating ``get`` / ``all`` through it. Both return
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from .._errors import ResourceNotFoundError
 from .._repository import ResourceCacheRepository
@@ -53,6 +53,7 @@ class StaticModeloRepository(ResourceCacheRepository["ModeloDefinition", str]):
         """Return the backing :class:`ValidatedRegistryAuthority` instance."""
         return self._resolve_authority()
 
+    @override
     def _load(self, key: str) -> ModeloDefinition:
         from ....domain.calculations.registry import RegistrySnapshotError
 
@@ -62,6 +63,7 @@ class StaticModeloRepository(ResourceCacheRepository["ModeloDefinition", str]):
         except RegistrySnapshotError as exc:
             raise ResourceNotFoundError(f"no modelo definition registered for {key!r}") from exc
 
+    @override
     def all(self) -> tuple[ModeloDefinition, ...]:
         """Return every modelo definition in the bundled registry.
 
@@ -72,6 +74,7 @@ class StaticModeloRepository(ResourceCacheRepository["ModeloDefinition", str]):
         authority = self._resolve_authority()
         return tuple(authority.modelos)
 
+    @override
     def clear_cache(self) -> None:
         """Clear the Identity Map AND the backing authority reference."""
         super().clear_cache()

@@ -31,7 +31,7 @@ the operator, fall back to AEAT live state, or zero-fill.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, override
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -153,6 +153,7 @@ class EnrollmentEvidence(BaseModel):
         """Return the distinct renta years exercised, sorted ascending."""
         return tuple(sorted({obs.filing_year for obs in self.observations}))
 
+    @override
     def model_post_init(self, _context: object) -> None:
         """Enforce the >=2-distinct-years and per-observation-evidence contract."""
         from ...core.access_gate import MIN_DISTINCT_RENTA_YEARS

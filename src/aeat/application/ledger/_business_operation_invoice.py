@@ -28,6 +28,7 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
+from typing import override
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
@@ -245,6 +246,7 @@ class BusinessOperationInvoiceRepository(SecureBoundRepository[BusinessOperation
     schema_version = LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE.schema_version
     payload_type = BusinessOperationInvoiceDocument
 
+    @override
     def extract_identifier(self, payload: BusinessOperationInvoiceDocument) -> str:
         return _document_key(payload.bucket_id, payload.source_kind)
 

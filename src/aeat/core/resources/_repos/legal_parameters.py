@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from .._repository import ResourceCacheRepository
 
@@ -18,6 +18,7 @@ class LegalParameterRepository(ResourceCacheRepository[Mapping[str, "LegalParame
     rooted at the bundled registry tree.
     """
 
+    @override
     def _load(self, key: None) -> Mapping[str, LegalParameter]:
         from ....domain.calculations.registry import load_legal_parameters_only
         from .._boundary import bundled_path

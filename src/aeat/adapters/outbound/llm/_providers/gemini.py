@@ -8,6 +8,8 @@ Internal pydantic models mirror the upstream JSON schema and are kept private.
 
 from __future__ import annotations
 
+from typing import override
+
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -97,6 +99,7 @@ class GeminiAdapter(_ProviderAdapter):
         self._api_key = api_key
         self._timeout_s = timeout_s
 
+    @override
     async def complete(self, request: ProviderRequest) -> ProviderCompletion:
         """Execute a Gemini completion request.
 

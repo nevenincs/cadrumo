@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import Literal
+from typing import Literal, override
 
 from pydantic import BaseModel, Field
 
@@ -201,6 +201,7 @@ class CsvProvider(FinancialProvider):
     verification_source = "synthetic_from_bank_published_text"
     provisional_pending_specimen = False
 
+    @override
     def validate_source(self, path: Path) -> ProviderValidation:
         """Validate CSV structure, encoding, and layout support.
 
@@ -248,6 +249,7 @@ class CsvProvider(FinancialProvider):
             detected_dialect=describe_dialect(dialect),
         )
 
+    @override
     def ingest(self, path: Path) -> Iterator[RawTransaction]:
         """Yield strict :class:`RawTransaction` records from the CSV source."""
         _logger.debug("csv_provider ingest: loading %s", path.name)

@@ -9,7 +9,7 @@ no plaintext draft JSON or envelope file lands on disk.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, override
 
 from ...adapters.persistence.storage import SecureBoundRepository, SensitivityClass
 from ._runtime_repository import resolve_filing_repository_bucket_id, secure_objects_for_filing_bucket
@@ -33,6 +33,7 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
             objects = secure_objects_for_filing_bucket(self._bucket_id)
         super().__init__(objects=objects)
 
+    @override
     @classmethod
     def payload_model(cls) -> type[ModeloDraft]:
         """Return the encrypted payload model for filing drafts."""
@@ -43,6 +44,7 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
         """Return the profile bucket id when this repository resolved one."""
         return self._bucket_id
 
+    @override
     def extract_identifier(self, payload: ModeloDraft) -> str:
         return payload.draft_id
 

@@ -21,7 +21,7 @@ import json
 from collections.abc import Iterator, Mapping
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, override
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
@@ -227,6 +227,7 @@ class VerificationReportCatalogue(BaseModel):
         """Return a view of all :class:`VerificationReport` values in the catalogue."""
         return self.reports.values()
 
+    @override
     def __iter__(self) -> Iterator[VerificationReport]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         """Iterate over :class:`VerificationReport` values (not ``(key, value)`` pairs)."""
         return iter(self.reports.values())

@@ -23,7 +23,7 @@ import hashlib
 from collections.abc import Iterator, Mapping, ValuesView
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, override
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
@@ -311,6 +311,7 @@ class WorkUnitCatalogue(BaseModel):
             return cls(work_units=mapping)
         return cls(work_units={str(k): v for k, v in units.items()})
 
+    @override
     def __iter__(self) -> Iterator[WorkUnit]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         """Iterate the loaded work units (not the keys)."""
         return iter(self.work_units.values())

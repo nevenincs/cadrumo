@@ -17,7 +17,7 @@ mutating the context.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from ......core.logging import get_logger
 from ......core.time import now
@@ -71,6 +71,7 @@ class PlaywrightContextBackend(_CertBackend):
     can perform mTLS verification without materialising plaintext key files.
     """
 
+    @override
     def preload(
         self,
         cert: LoadedCertificate,
@@ -113,6 +114,7 @@ class PlaywrightContextBackend(_CertBackend):
             cert.sha256_thumbprint,
         )
 
+    @override
     def verify(self, cert: LoadedCertificate, url: str) -> HandshakeResult:
         """Delegate to the fail-closed httpx fallback for handshake verification.
 

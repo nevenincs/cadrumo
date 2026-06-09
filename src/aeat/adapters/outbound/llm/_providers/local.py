@@ -10,6 +10,7 @@ deployments are out of scope.
 from __future__ import annotations
 
 import logging
+from typing import override
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
@@ -63,6 +64,7 @@ class LocalAdapter(_ProviderAdapter):
         """
         self._timeout_s = timeout_s
 
+    @override
     async def complete(self, request: ProviderRequest) -> ProviderCompletion:
         """Execute a chat completion request against the local endpoint.
 

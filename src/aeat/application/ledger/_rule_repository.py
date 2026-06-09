@@ -6,7 +6,7 @@ Records are stored at the :class:`SensitivityClass` declared by the
 
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import ClassVar, override
 
 from ...adapters.persistence.storage import LEDGER_CLASSIFICATION_RULES_NAMESPACE, SensitivityClass
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
@@ -28,6 +28,7 @@ class LedgerClassificationRuleRepository(SecureBoundRepository[LedgerClassificat
     schema_version: ClassVar[int] = LEDGER_CLASSIFICATION_RULES_NAMESPACE.schema_version
     payload_type: ClassVar[type[LedgerClassificationRule]] = LedgerClassificationRule
 
+    @override
     def extract_identifier(self, payload: LedgerClassificationRule) -> str:
         return payload.rule_id
 

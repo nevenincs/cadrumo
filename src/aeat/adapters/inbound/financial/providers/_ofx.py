@@ -15,7 +15,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import Protocol, override, runtime_checkable
 
 from ofxparse import OfxParser
 
@@ -83,6 +83,7 @@ class OfxProvider(FinancialProvider):
     verification_source = "synthetic_from_bank_published_text"
     provisional_pending_specimen = False
 
+    @override
     def validate_source(self, path: Path) -> ProviderValidation:
         """Validate that the OFX file can be parsed and carries at least one transaction.
 
@@ -107,6 +108,7 @@ class OfxProvider(FinancialProvider):
             detected_dialect=f"account_count={len(statements)}",
         )
 
+    @override
     def ingest(self, path: Path) -> Iterator[RawTransaction]:
         """Yield strict :class:`RawTransaction` records from every OFX account statement."""
         _logger.debug("ofx_provider ingest: loading source=<input-ofx>")

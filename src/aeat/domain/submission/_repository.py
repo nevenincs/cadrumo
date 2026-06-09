@@ -9,7 +9,7 @@ no plaintext submission JSON or envelope file lands on disk.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, ClassVar, cast
+from typing import TYPE_CHECKING, ClassVar, cast, override
 
 from pydantic import ValidationError
 
@@ -30,10 +30,12 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
     schema_version: ClassVar[int] = 1
 
+    @override
     @classmethod
     def payload_model(cls) -> type[ModeloPresentado]:
         return ModeloPresentado
 
+    @override
     def extract_identifier(self, payload: ModeloPresentado) -> str:
         return payload.submission_id
 

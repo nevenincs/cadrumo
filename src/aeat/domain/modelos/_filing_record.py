@@ -29,7 +29,7 @@ import json
 from collections.abc import Iterator, Mapping
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, override
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
@@ -322,6 +322,7 @@ class ModeloRecordCatalogue(BaseModel):
         """Return a view of all :class:`ModeloRecord` values in the catalogue."""
         return self.records.values()
 
+    @override
     def __iter__(self) -> Iterator[ModeloRecord]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         """Iterate over :class:`ModeloRecord` values (not ``(key, value)`` pairs)."""
         return iter(self.records.values())

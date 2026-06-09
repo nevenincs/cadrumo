@@ -11,7 +11,7 @@ backend. Browser sessions should use
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from ......core.logging import get_logger
 from ......core.time import now
@@ -32,6 +32,7 @@ class HttpxFallbackBackend(_CertBackend):
     for the interactive counterpart.
     """
 
+    @override
     def preload(
         self,
         cert: LoadedCertificate,
@@ -51,6 +52,7 @@ class HttpxFallbackBackend(_CertBackend):
             "for interactive sessions. HTTPX_FALLBACK is verify-only."
         )
 
+    @override
     def verify(self, cert: LoadedCertificate, url: str) -> HandshakeResult:
         """Return a closed failure without materialising PEM/key files.
 

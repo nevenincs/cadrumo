@@ -41,7 +41,7 @@ prove the read-only invariant by construction.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Literal, Protocol
+from typing import Literal, Protocol, override
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator
 
@@ -255,6 +255,7 @@ class GroiOracle(BaseCheckerOracle[GroiObservation]):
     def __init__(self, *, driver: GroiDriver | None = None) -> None:
         super().__init__(driver=driver)
 
+    @override
     @property
     def oracle_id(self) -> str:
         """Return the stable catalogue identifier for this oracle.
@@ -268,6 +269,7 @@ class GroiOracle(BaseCheckerOracle[GroiObservation]):
         """
         return GROI_ORACLE_ID
 
+    @override
     @property
     def surface_kind(self) -> OracleSurfaceKind:
         """Return the surface-kind tag that gates cross-reference pairing.
@@ -284,6 +286,7 @@ class GroiOracle(BaseCheckerOracle[GroiObservation]):
         """
         return "iva_id_check"
 
+    @override
     def planned_operations(
         self,
         payload: bytes,
@@ -330,18 +333,22 @@ class GroiOracle(BaseCheckerOracle[GroiObservation]):
         operations.append(RemoteOperation(kind="browser_action", action="discard-session"))
         return tuple(operations)
 
+    @override
     def _expected_values(self, expected: Mapping[str, object]) -> dict[str, str]:
         return normalize_expected_verdicts(
             expected,
             blank_message="GROI expected values must not contain blanks",
         )
 
+    @override
     def _observed_for(self, observation: GroiObservation, key: str) -> str | None:
         return observed_verdict(observation.values, key)
 
+    @override
     def _compare_field(self, key: str, expected: str, *, observed: str | None) -> ParityFieldComparison:
         return compare_verdict_field(key, expected, observed=observed)
 
+    @override
     def _observation_locator(self, observation: GroiObservation) -> str | None:
         return observation.raw_evidence_locator
 

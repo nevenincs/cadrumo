@@ -25,7 +25,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Iterator
 from datetime import datetime
-from typing import ClassVar
+from typing import ClassVar, override
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -184,6 +184,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
     schema_version: ClassVar[int] = CALCULATION_OBSERVATIONS_NAMESPACE.schema_version
     payload_type: ClassVar[type[_ObservationEnvelopePayload]] = _ObservationEnvelopePayload
 
+    @override
     def extract_identifier(self, payload: _ObservationEnvelopePayload) -> str:
         observation = payload.observation
         return member_observation_key(
@@ -262,6 +263,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
     schema_version: ClassVar[int] = IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.schema_version
     payload_type: ClassVar[type[_IvaWalletDecisionEnvelopePayload]] = _IvaWalletDecisionEnvelopePayload
 
+    @override
     def extract_identifier(self, payload: _IvaWalletDecisionEnvelopePayload) -> str:
         decision = payload.decision
         return iva_wallet_decision_key(decision.taxpayer_nif, decision.target_year, decision.target_period)

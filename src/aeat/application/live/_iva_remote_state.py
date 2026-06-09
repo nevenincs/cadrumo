@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, override
 
 from ...adapters.outbound.aeat.auth import AeatSession as _AeatSession
 from ...adapters.outbound.aeat.sede import PRE303_PRESENTATION_SERVICE_URL as _PRE303_PRESENTATION_SERVICE_URL
@@ -94,6 +94,7 @@ class IvaRemoteStateAcquisitionManifestRepository(_SecureBoundRepository[IvaRemo
         """Initialise the repository, resolving the active bucket's secure-object store when no override is given."""
         super().__init__(objects=objects or _secure_object_repository_for_active_bucket())
 
+    @override
     def extract_identifier(self, payload: IvaRemoteStateAcquisitionManifest) -> str:
         """Return the acquisition's stable string identifier."""
         return payload.acquisition_id
