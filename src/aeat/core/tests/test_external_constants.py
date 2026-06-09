@@ -1583,3 +1583,209 @@ def test_no_bare_jsonl_or_xlsx_mime_literal_in_tabular() -> None:
         offenders.append(f"_tabular.py:{node.lineno}: bare {node.value!r} literal; use {expected}")
 
     assert offenders == [], "Bare JSONL/XLSX MIME literals found:\n" + "\n".join(offenders)
+
+
+# ---------------------------------------------------------------------------
+# contract — modelo-ID group tuples centralisation tests
+# ---------------------------------------------------------------------------
+
+
+def test_retenciones_modelos_value() -> None:
+    """``RETENCIONES_MODELOS`` equals the withholding/retention filing modelo set."""
+
+    from ..external_constants import RETENCIONES_MODELOS
+
+    assert RETENCIONES_MODELOS == ("111", "115", "123", "180", "190", "193")
+
+
+def test_retenciones_modelos_is_tuple_of_str() -> None:
+    """``RETENCIONES_MODELOS`` is a ``tuple`` whose elements are ``str`` instances."""
+
+    from ..external_constants import RETENCIONES_MODELOS
+
+    assert isinstance(RETENCIONES_MODELOS, tuple)
+    assert all(isinstance(code, str) for code in RETENCIONES_MODELOS)
+
+
+def test_counterpart_modelos_value() -> None:
+    """``COUNTERPART_MODELOS`` equals the third-party declaration filing modelo set."""
+
+    from ..external_constants import COUNTERPART_MODELOS
+
+    assert COUNTERPART_MODELOS == ("347", "349")
+
+
+def test_counterpart_modelos_is_tuple_of_str() -> None:
+    """``COUNTERPART_MODELOS`` is a ``tuple`` whose elements are ``str`` instances."""
+
+    from ..external_constants import COUNTERPART_MODELOS
+
+    assert isinstance(COUNTERPART_MODELOS, tuple)
+    assert all(isinstance(code, str) for code in COUNTERPART_MODELOS)
+
+
+def test_foreign_asset_modelos_value() -> None:
+    """``FOREIGN_ASSET_MODELOS`` equals the overseas-asset declaration modelo set."""
+
+    from ..external_constants import FOREIGN_ASSET_MODELOS
+
+    assert FOREIGN_ASSET_MODELOS == ("720",)
+
+
+def test_foreign_asset_modelos_is_tuple_of_str() -> None:
+    """``FOREIGN_ASSET_MODELOS`` is a ``tuple`` whose elements are ``str`` instances."""
+
+    from ..external_constants import FOREIGN_ASSET_MODELOS
+
+    assert isinstance(FOREIGN_ASSET_MODELOS, tuple)
+    assert all(isinstance(code, str) for code in FOREIGN_ASSET_MODELOS)
+
+
+def test_iva_regime_modelos_value() -> None:
+    """``IVA_REGIME_MODELOS`` equals the IVA-regime gating grupo modelo set."""
+
+    from ..external_constants import IVA_REGIME_MODELOS
+
+    assert IVA_REGIME_MODELOS == ("303", "390")
+
+
+def test_iva_regime_modelos_is_tuple_of_str() -> None:
+    """``IVA_REGIME_MODELOS`` is a ``tuple`` whose elements are ``str`` instances."""
+
+    from ..external_constants import IVA_REGIME_MODELOS
+
+    assert isinstance(IVA_REGIME_MODELOS, tuple)
+    assert all(isinstance(code, str) for code in IVA_REGIME_MODELOS)
+
+
+def test_aggregation_service_retenciones_modelos_is_central_constant() -> None:
+    """``_service._RETENCIONES_MODELOS`` is the central ``RETENCIONES_MODELOS`` constant."""
+
+    import importlib
+
+    from ..external_constants import RETENCIONES_MODELOS
+
+    mod = importlib.import_module("aeat.application.aggregation._service")
+
+    assert hasattr(mod, "_RETENCIONES_MODELOS"), (
+        "_service must alias RETENCIONES_MODELOS from aeat.core.external_constants"
+    )
+    assert mod._RETENCIONES_MODELOS is RETENCIONES_MODELOS
+
+
+def test_aggregation_service_counterpart_modelos_is_central_constant() -> None:
+    """``_service._COUNTERPART_MODELOS`` is the central ``COUNTERPART_MODELOS`` constant."""
+
+    import importlib
+
+    from ..external_constants import COUNTERPART_MODELOS
+
+    mod = importlib.import_module("aeat.application.aggregation._service")
+
+    assert hasattr(mod, "_COUNTERPART_MODELOS"), (
+        "_service must alias COUNTERPART_MODELOS from aeat.core.external_constants"
+    )
+    assert mod._COUNTERPART_MODELOS is COUNTERPART_MODELOS
+
+
+def test_aggregation_service_foreign_asset_modelos_is_central_constant() -> None:
+    """``_service._FOREIGN_ASSET_MODELOS`` is the central ``FOREIGN_ASSET_MODELOS`` constant."""
+
+    import importlib
+
+    from ..external_constants import FOREIGN_ASSET_MODELOS
+
+    mod = importlib.import_module("aeat.application.aggregation._service")
+
+    assert hasattr(mod, "_FOREIGN_ASSET_MODELOS"), (
+        "_service must alias FOREIGN_ASSET_MODELOS from aeat.core.external_constants"
+    )
+    assert mod._FOREIGN_ASSET_MODELOS is FOREIGN_ASSET_MODELOS
+
+
+def test_calendar_iva_regime_modelos_is_central_constant() -> None:
+    """``_calendar._IVA_REGIME_MODELOS`` is the central ``IVA_REGIME_MODELOS`` constant."""
+
+    import importlib
+
+    from ..external_constants import IVA_REGIME_MODELOS
+
+    mod = importlib.import_module("aeat.application.overview._calendar")
+
+    assert hasattr(mod, "_IVA_REGIME_MODELOS"), (
+        "_calendar must alias IVA_REGIME_MODELOS from aeat.core.external_constants"
+    )
+    assert mod._IVA_REGIME_MODELOS is IVA_REGIME_MODELOS
+
+
+def _ast_contains_modelo_group_tuple(source: str, expected_elts: tuple[str, ...]) -> bool:
+    """Return True if the AST contains a bare tuple literal whose string elements equal ``expected_elts``."""
+    tree = ast.parse(source)
+    target_set = set(expected_elts)
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Tuple):
+            continue
+        if len(node.elts) != len(expected_elts):
+            continue
+        if not all(isinstance(e, ast.Constant) and isinstance(e.value, str) for e in node.elts):
+            continue
+        if {e.value for e in node.elts} == target_set:  # type: ignore[union-attr]
+            return True
+    return False
+
+
+def test_no_bare_retenciones_modelos_tuple_literal_in_service() -> None:
+    """No bare retenciones-grupo tuple literal in ``application/aggregation/_service.py``.
+
+    Anti-tautology: parses the real AST so any future re-introduction of the
+    local constant triggers immediate failure.
+    """
+
+    repo_root = Path(__file__).parents[4]
+    source = (repo_root / "src/aeat/application/aggregation/_service.py").read_text(encoding="utf-8")
+
+    assert not _ast_contains_modelo_group_tuple(source, ("111", "115", "123", "180", "190", "193")), (
+        "Bare retenciones-modelos tuple literal found in _service.py; use RETENCIONES_MODELOS from core"
+    )
+
+
+def test_no_bare_counterpart_modelos_tuple_literal_in_service() -> None:
+    """No bare counterpart-grupo tuple literal in ``application/aggregation/_service.py``.
+
+    Anti-tautology: parses the real AST so any future re-introduction triggers failure.
+    """
+
+    repo_root = Path(__file__).parents[4]
+    source = (repo_root / "src/aeat/application/aggregation/_service.py").read_text(encoding="utf-8")
+
+    assert not _ast_contains_modelo_group_tuple(source, ("347", "349")), (
+        "Bare counterpart-modelos tuple literal found in _service.py; use COUNTERPART_MODELOS from core"
+    )
+
+
+def test_no_bare_foreign_asset_modelos_tuple_literal_in_service() -> None:
+    """No bare foreign-assets-grupo tuple literal in ``application/aggregation/_service.py``.
+
+    Anti-tautology: parses the real AST so any future re-introduction triggers failure.
+    """
+
+    repo_root = Path(__file__).parents[4]
+    source = (repo_root / "src/aeat/application/aggregation/_service.py").read_text(encoding="utf-8")
+
+    assert not _ast_contains_modelo_group_tuple(source, ("720",)), (
+        "Bare foreign-asset-modelos tuple literal found in _service.py; use FOREIGN_ASSET_MODELOS from core"
+    )
+
+
+def test_no_bare_iva_regime_modelos_tuple_literal_in_calendar() -> None:
+    """No bare IVA-regime-grupo tuple literal in ``application/overview/_calendar.py``.
+
+    Anti-tautology: parses the real AST so any future re-introduction triggers failure.
+    """
+
+    repo_root = Path(__file__).parents[4]
+    source = (repo_root / "src/aeat/application/overview/_calendar.py").read_text(encoding="utf-8")
+
+    assert not _ast_contains_modelo_group_tuple(source, ("303", "390")), (
+        "Bare IVA-regime-modelos tuple literal found in _calendar.py; use IVA_REGIME_MODELOS from core"
+    )

@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field, computed_field, field_validator, model_va
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.aggregation import AggregationSourceKind
+from ...core.external_constants import COUNTERPART_MODELOS, FOREIGN_ASSET_MODELOS, RETENCIONES_MODELOS
 from ...core.logging import get_logger
 from ._counterpart import (
     CounterpartAggregation,
@@ -63,9 +64,9 @@ AggregationErrorCodes: tuple[str, ...] = (
     "ERROR_FINANCIAL_AGGREGATION_VALIDATION",
 )
 
-_RETENCIONES_MODELOS: tuple[str, ...] = ("111", "115", "123", "180", "190", "193")
-_COUNTERPART_MODELOS: tuple[str, ...] = ("347", "349")
-_FOREIGN_ASSET_MODELOS: tuple[str, ...] = ("720",)
+_RETENCIONES_MODELOS = RETENCIONES_MODELOS
+_COUNTERPART_MODELOS = COUNTERPART_MODELOS
+_FOREIGN_ASSET_MODELOS = FOREIGN_ASSET_MODELOS
 
 
 class PerModeloAggregationProviderContract(BaseModel):
