@@ -1060,8 +1060,12 @@ def _load_registry_tree_cached(
 
     cache_path = Path(tempfile.gettempdir()) / f"aeat_registry_{key_hash}.pkl"
     if cache_path.is_file():
+        # Internal same-user performance cache of first-party registry data only.
+        # The payload is produced exclusively by the dump below in this process and
+        # keyed by a sha256 of the registry tree fingerprints; no untrusted input is
+        # ever deserialized here. A corrupt/foreign file is swallowed and recomputed.
         with contextlib.suppress(Exception), open(cache_path, "rb") as f:
-            return pickle.load(f)  # noqa: S301
+            return pickle.load(f)  # noqa: S301  # nosemgrep: python.lang.security.deserialization.pickle.avoid-pickle
 
     resolved = Path(root)
     catalogues = _load_shared_catalogue_files(resolved / "legal")
@@ -1071,7 +1075,9 @@ def _load_registry_tree_cached(
     temp_name = None
     try:
         with tempfile.NamedTemporaryFile("wb", dir=cache_path.parent, delete=False) as tf:
-            pickle.dump(result, tf, protocol=pickle.HIGHEST_PROTOCOL)
+            # Serialises first-party registry objects to the same-user temp cache read
+            # back above; the data never crosses a trust boundary. See the load note.
+            pickle.dump(result, tf, protocol=pickle.HIGHEST_PROTOCOL)  # nosemgrep
             temp_name = tf.name
         os.replace(temp_name, cache_path)
     except Exception:
