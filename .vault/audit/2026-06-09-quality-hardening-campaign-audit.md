@@ -500,3 +500,45 @@ covered.
   Literal single-session ALL-GREEN is therefore unreachable honestly: this gate plus
   the documented multi-session `check-types` ratchet are the two standing blockers,
   both correctly deferred rather than papered over with a skip/xfail/stub.
+
+## QHC-015 | full-suite triage + attachments leak closed (current HEAD)
+
+A full unit-suite run (`-n auto`, not integration/live) surfaced 7 failures; all
+7 were triaged to root cause and the real ones fixed (commits this turn):
+
+- **QHC-013-A REVERSED & FIXED** — the attachments `payload_hash` content-digest
+  leak was closed adapter-locally by enveloping the blob payload (see the QHC-013-A
+  resolution block above). No integrity-chain redesign or migration needed; the
+  shared crypto and its ~20 tests are untouched.
+- **`runtime_graph` walker (REAL latent bug, FIXED)** —
+  `test_walkers_return_empty_for_unrelated_leaf_kinds` failed deterministically
+  whenever it ran after its in-file siblings. Root cause: the
+  `expression_{casilla,relation,binding,date_binding,parameter}_refs` walkers
+  memoized on `id(expression)`; CPython reuses an address after GC, so a fresh
+  literal leaf collided with a stale entry from a prior relation expression and
+  returned its refs. Latent correctness bug in the registry graph analysis
+  (validator orphan-detection, query service, drift detection). `FormulaExpression`
+  is frozen but not hashable (`dispatch_table` is a `Mapping`), so the caches were
+  dropped (pure O(small-tree) walks); whole-file `test_runtime_graph` + the
+  2215-test registry suite stay green.
+- **Two contribuyente import tests (self-inflicted, FIXED)** — an interim
+  private-alias of `DEFAULT_IVA_GENERAL_RATE_PCT` (to satisfy the half-export
+  baseline gate) broke `test_external_constants`, which asserts the modules expose
+  it as a public attribute. Resolved by keeping the public import and adding the
+  name to each `__all__` (both gates green).
+- **Oversized test file (FIXED)** — `test_external_constants.py` (2168 > 1250) split
+  along section boundaries into three files (628 / 757 / 843).
+- **Campaign-metadata docstring (FIXED)** — peer commit `c3509a5ee` left
+  `#67 / P02.S05` in a test docstring; removed per `aeat-source-hygiene`.
+
+**Terminal blocker to a clean full-suite run is peer uncommitted WIP, not committed
+code.** The working tree carries ~22 modified-but-uncommitted files from concurrent
+agents; one (`core/errors/registry/_domain_part2.py`) currently holds an
+`IndentationError` (line 812) that aborts collection of the whole suite (everything
+imports `core.errors`). Its HEAD version compiles cleanly; the breakage is a peer's
+in-flight edit and MUST NOT be touched per `aeat-git-worktree-safety`. Likewise
+`entrypoints/cli/_modelo_payloads.py` shows a budget red only because peer WIP adds
+27 lines over its committed 1242 (< 1250). Every file this campaign committed this
+turn compiles and passes its own gate in isolation. The standing non-peer blockers
+remain `check-types` (multi-session ratchet) and `test-live` (credential- and
+safety-gated).
