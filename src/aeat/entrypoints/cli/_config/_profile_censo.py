@@ -7,6 +7,8 @@ thin Typer layer that resolves the active profile/bucket, calls the
 application service, emits payload + text, and surfaces typed refusals.
 Censo lifecycle event enrollment is owned by the application service.
 
+This module uses :class:`BucketEventHistoryRepository` for event recording.
+
 ``refresh`` is mounted but refuses with a typed CLI boundary error
 until the sede G313 driver lands - the verb is visible in ``--help``
 so operators see the canonical name now and get an explicit message

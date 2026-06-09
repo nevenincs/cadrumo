@@ -4,6 +4,9 @@ Records are stored at :class:`SensitivityClass` ``AUDIT`` under the IVA
 compensation history namespace. The repository exposes typed
 :class:`IvaCompensationPeriodState` objects; carry-forward projection is
 produced by :func:`build_iva_compensation_carry_forward_report`.
+
+This module uses :class:`IvaCompensationAnnualSummary` and :class:`IvaCompensationAnnualCrossCheck`
+for annual cross-checking.
 """
 
 from __future__ import annotations

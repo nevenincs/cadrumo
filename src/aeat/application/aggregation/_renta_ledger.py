@@ -1,9 +1,13 @@
 """Repository-backed Renta expense aggregation from ledger catalogues.
 
+Used by: :mod:`~._service` (per-modelo aggregation service) for Modelo 100 expense aggregation.
+
 The main entry point :func:`aggregate_renta_ledger_expenses_from_repositories`
-loads both a :class:`TransactionCatalogue` via :class:`TransactionCatalogueRepository`
-and an :class:`InvoiceCatalogue` via :class:`InvoiceCatalogueRepository` from the
+loads both a :class:`~aeat.domain.transactions.TransactionCatalogue` via :class:`~aeat.domain.transactions.TransactionCatalogueRepository`
+and an :class:`~aeat.domain.invoices.InvoiceCatalogue` via :class:`~aeat.domain.invoices.InvoiceCatalogueRepository` from the
 active bucket and feeds them to :func:`aggregate_renta_ledger_expenses`.
+
+Related: :mod:`~._iva_ledger`, :mod:`~._renta_income_ledger` for similar pipelines.
 """
 
 from __future__ import annotations

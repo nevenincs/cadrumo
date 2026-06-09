@@ -1,4 +1,8 @@
-"""Application service for the modelo maritime exemption preview."""
+"""Application service for the modelo maritime exemption preview.
+
+This module uses :class:`MaritimeWorkerFacts`, :class:`ModeloMaritimeExemptionPreview`,
+and :class:`ProfileCompletenessError` for the maritime exemption preview.
+"""
 
 from __future__ import annotations
 

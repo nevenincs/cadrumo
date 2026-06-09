@@ -11,6 +11,8 @@ with ``binding ... has no supplied value``.
 This module loads the bucket's :class:`UserProfileRecord`, walks every
 ``source = "profile"`` binding the :class:`RegistrySnapshot` revision declares,
 and projects the matching profile fact into the correct engine channel.
+The resolved bindings use :class:`ProfileSchemaDefinition` and
+:class:`UserProfileFactValue` to translate raw facts.
 
 Channel selection is the load-bearing decision. The registry runtime
 resolves a binding leaf from one of two channels depending on *how a
