@@ -14,6 +14,10 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.external_constants import (
+    DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR,
+    DEDUCCION_MATERNIDAD_MENSUAL_EUR,
+)
 from ...core.parsing._dates import _parse_iso8601_date
 from ._errors import ProfileValidationError
 
@@ -368,7 +372,7 @@ class RentaFamilyProfile(BaseModel):
         total = 0
         for d in self.descendientes:
             if d.is_eligible_menor_tres(filing_year) and d.meses_madre_trabajo_2024 > 0:
-                total += min(d.meses_madre_trabajo_2024 * 100, 1200)
+                total += min(d.meses_madre_trabajo_2024 * DEDUCCION_MATERNIDAD_MENSUAL_EUR, DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR)
         return total
 
     # ------------------------------------------------------------------
