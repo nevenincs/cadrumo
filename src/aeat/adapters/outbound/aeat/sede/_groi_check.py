@@ -41,9 +41,9 @@ from typing import TYPE_CHECKING, Literal
 from urllib.parse import urlsplit
 
 if TYPE_CHECKING:
-    from playwright.async_api import Locator, Page
+    from playwright.async_api import Page
 
-from pydantic import AnyUrl, BaseModel, ConfigDict, Field
+from pydantic import AnyUrl, Field
 
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
@@ -54,11 +54,12 @@ from .....domain.calculations.registry import (
     RegistryValidationError,
     RemoteOperation,
     RemoteStateGuardPolicy,
-    assert_remote_operation_allowed,
 )
 from ..browser import BrowserError, default_browser_session_factory
 from ._adapter_utils import (
-    first_visible_locator,
+    _SedeCheckerModel,
+    assert_query_browser_action_for,
+    make_locate_helper,
     normalize_response_text,
     registry_failure_message,
 )
@@ -67,7 +68,6 @@ from ._browser_constants import (
 )
 from ._browser_constants import (
     default_viewport,
-    selector_probe_timeout_ms,
 )
 from ._browser_stage import build_playwright_stage_runner
 from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError, SedeParseError
@@ -107,14 +107,10 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
 def _assert_query_browser_action(action: str) -> None:
     """Assert that ``action`` is permitted under the GROI read-only guard policy.
 
-    Raises :class:`RegistryValidationError` via
-    :func:`assert_remote_operation_allowed` if the action pattern is
-    not allowed by ``_READ_GUARD_POLICY``.
+    Thin delegator to :func:`~._adapter_utils.assert_query_browser_action_for`
+    with the GROI module-level ``_READ_GUARD_POLICY`` pre-bound.
     """
-    assert_remote_operation_allowed(
-        _READ_GUARD_POLICY,
-        RemoteOperation(kind="browser_action", action=action),
-    )
+    assert_query_browser_action_for(_READ_GUARD_POLICY, action)
 
 
 def _groi_shape_suggestion() -> str:
@@ -129,33 +125,10 @@ _playwright_stage = build_playwright_stage_runner(
     logger=logger,
 )
 
-
-async def _locate(
-    page: Page,
-    selectors: tuple[str, ...],
-    *,
-    stage: str,
-    description: str,
-    timeout_ms: int,
-) -> Locator:
-    """Locate the first visible element from ``selectors`` on the GROI page.
-
-    Thin wrapper around :func:`first_visible_locator` that injects the
-    GROI ``surface_label`` and shape-change suggestion string.
-    """
-    return await first_visible_locator(
-        page,
-        selectors,
-        stage=stage,
-        description=description,
-        timeout_ms=timeout_ms,
-        probe_timeout_ms=selector_probe_timeout_ms(),
-        surface_label="GROI",
-        shape_suggestion=_groi_shape_suggestion(),
-    )
+_locate = make_locate_helper("GROI", _groi_shape_suggestion())
 
 
-class GroiNifVerdict(BaseModel):
+class GroiNifVerdict(_SedeCheckerModel):
     """One observation per declared Spanish NIF after live navigation.
 
     ``verdict`` is the AEAT-rendered ROI-registration status: ``valid``
@@ -165,17 +138,13 @@ class GroiNifVerdict(BaseModel):
     is structurally unanswerable.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
-
     nif: str = Field(min_length=1, max_length=32)
     verdict: Literal["valid", "invalid", "unknown"]
     raw_evidence_locator: str | None = Field(default=None, max_length=512)
 
 
-class GroiResult(BaseModel):
+class GroiResult(_SedeCheckerModel):
     """Aggregate live-driver result across every declared Spanish NIF."""
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     observations: tuple[GroiNifVerdict, ...] = ()
 

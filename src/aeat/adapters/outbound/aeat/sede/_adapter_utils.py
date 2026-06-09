@@ -5,24 +5,107 @@ helpers consumed by every sede driver. Drivers (``_groi_check``,
 ``_nif_iva_check``, future siblings) inject their own surface label and
 shape-change suggestion so the helper output remains diagnostic without
 re-implementing the same logic per driver.
+
+:func:`make_locate_helper` and :func:`assert_query_browser_action_for` factor
+out the two private helper shapes that each checker driver used to duplicate.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Coroutine, Mapping
 from re import compile
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from unicodedata import category, normalize
 
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page
 
+from pydantic import BaseModel, ConfigDict
+
 from .....core.logging import get_logger
+from .....domain.calculations.registry import RemoteOperation, RemoteStateGuardPolicy, assert_remote_operation_allowed
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ._errors import SedeFailureMode, SedeParseError
 
 _log = get_logger(__name__)
 _WHITESPACE_RE = compile(r"\s+")
+
+
+class _SedeCheckerModel(BaseModel):
+    """Strict frozen base for sede checker observation and result models.
+
+    Every per-NIF observation type and aggregate result type in the sede
+    browser drivers (``_groi_check``, ``_nif_iva_check``, future siblings)
+    inherits this base to guarantee a consistent strict-frozen-forbid Pydantic
+    config across all checker surfaces without repeating the ``model_config``
+    declaration in each module.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
+def assert_query_browser_action_for(policy: RemoteStateGuardPolicy, action: str) -> None:
+    """Assert that ``action`` is permitted under ``policy``.
+
+    Raises :class:`~aeat.domain.calculations.registry.RegistryValidationError`
+    via :func:`~aeat.domain.calculations.registry.assert_remote_operation_allowed`
+    if the action pattern is not allowed. Both the GROI and NIF-IVA drivers close
+    over their own :class:`~aeat.domain.calculations.registry.RemoteStateGuardPolicy`
+    objects; this shared helper removes the duplicate ``_assert_query_browser_action``
+    bodies they used to carry.
+
+    Args:
+        policy: The guard policy the driver was initialised with.
+        action: Browser action label to validate (e.g. ``"open-groi-form"``).
+    """
+    assert_remote_operation_allowed(policy, RemoteOperation(kind="browser_action", action=action))
+
+
+def make_locate_helper(
+    surface_label: str,
+    shape_suggestion: str,
+) -> Callable[[Page, tuple[str, ...], str, str, int], Coroutine[Any, Any, Locator]]:
+    """Return a ``_locate`` coroutine pre-bound to ``surface_label`` and ``shape_suggestion``.
+
+    Both the GROI and NIF-IVA drivers wrap :func:`first_visible_locator` with the
+    same body, differing only in the ``surface_label`` and ``shape_suggestion``
+    strings they inject. This factory eliminates that duplicate; each driver calls::
+
+        _locate = make_locate_helper("GROI", _groi_shape_suggestion())
+
+    and then uses ``_locate(page, selectors, stage=..., description=..., timeout_ms=...)``
+    directly.
+
+    Args:
+        surface_label: Sede surface name for log and error messages.
+        shape_suggestion: Localised guidance string appended to
+            :class:`~._errors.SedeParseError` when all selectors fail.
+
+    Returns:
+        An async callable with the same signature as the internal ``_locate``
+        helpers the drivers previously defined individually.
+    """
+    from ._browser_constants import selector_probe_timeout_ms  # local import to avoid circular
+
+    async def _locate(
+        page: Page,
+        selectors: tuple[str, ...],
+        stage: str,
+        description: str,
+        timeout_ms: int,
+    ) -> Locator:
+        return await first_visible_locator(
+            page,
+            selectors,
+            stage=stage,
+            description=description,
+            timeout_ms=timeout_ms,
+            probe_timeout_ms=selector_probe_timeout_ms(),
+            surface_label=surface_label,
+            shape_suggestion=shape_suggestion,
+        )
+
+    return _locate
 
 
 def normalize_response_text(text: str) -> str:
@@ -121,7 +204,10 @@ async def first_visible_locator(
 
 
 __all__ = [
+    "_SedeCheckerModel",
+    "assert_query_browser_action_for",
     "first_visible_locator",
+    "make_locate_helper",
     "normalize_response_text",
     "registry_failure_message",
 ]
