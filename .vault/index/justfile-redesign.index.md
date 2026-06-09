@@ -26,6 +26,7 @@ related:
   - '[[2026-06-09-justfile-redesign-S19]]'
   - '[[2026-06-09-justfile-redesign-S20]]'
   - '[[2026-06-09-justfile-redesign-adr]]'
+  - '[[2026-06-09-justfile-redesign-exec]]'
   - '[[2026-06-09-justfile-redesign-plan]]'
   - '[[2026-06-09-justfile-redesign-research]]'
 ---
@@ -62,6 +63,7 @@ Auto-generated index of all documents tagged with `#justfile-redesign`.
 - `2026-06-09-justfile-redesign-S18` - update CI workflow step names and just commands
 - `2026-06-09-justfile-redesign-S19` - run local pre-commit and check-all validations to verify harness health
 - `2026-06-09-justfile-redesign-S20` - delete temporary backup file once verification passes
+- `2026-06-09-justfile-redesign-exec` - command output hardening (S21-S45)
 
 ### plan
 

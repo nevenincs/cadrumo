@@ -160,7 +160,7 @@ dev = [
   "pytest-playwright>=0.6.0",
   # Per-test retries for genuinely flaky live endpoints; live only, opt-in per test.
   "pytest-rerunfailures>=15.0",
-  # Parallel unit suite via opt-in `just test-parallel`.
+  # Parallel unit suite via opt-in `uv run pytest -n auto -m unit`.
   "pytest-xdist>=3.6.0",
   # pytest-xdist's `-n auto` calls psutil.cpu_count; pin so `uv sync` restores
   # a clean install if the cached one is corrupted (observed on this worktree:
