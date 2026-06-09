@@ -1,19 +1,14 @@
 """Application-layer wrapper for Modelo 369 OSS / IOSS aggregation.
 
+Used by: :mod:`~._modelo_bindings` (Modelo 369 binding resolver) to validate and aggregate ledger candidates.
+
 This module sits between the bucket's persisted ledger lines and the
 Modelo 369 registry binding resolver. It accepts a sequence of
 substrate-classified ledger candidates, validates each line's persisted
 IVA amount against the destination Member State's published rate
 through :func:`aeat.domain.iva.lookup_rate`, and produces validated
-:class:`OssIossLedgerObservation` records the registry can aggregate.
-
-The wrapper is a pure function: it does not touch the registry,
-persistence, or the CLI. The caller — the ``aeat app modelo
-calculate`` path for Modelo 369 — supplies a sequence of
-:class:`OssIossLedgerCandidate` records sourced from the active
-bucket's ledger transactions, already tagged with the substrate
-classification axes (regime / destination MS / rate tier / direction /
-transaction kind).
+:class:`~aeat.domain.calculations.registry.OssIossLedgerObservation` records the registry can aggregate.
+"""
 
 Per the OSS / IOSS regulation suite, the IVA amount on each line MUST
 match the destination Member State's published rate for the chosen

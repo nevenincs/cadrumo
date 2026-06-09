@@ -1,5 +1,7 @@
 """347/349 counterpart aggregator (informational declarations).
 
+Used by: :mod:`~._service` (per-modelo aggregation service) for Modelo 347/349.
+
 Modelo 347: Operaciones con terceros — annual declaration of operations
 with the same counterparty whose total in the year exceeds €3,005.06.
 Modelo 349: Operaciones intracomunitarias — quarterly + annual EU
@@ -9,9 +11,6 @@ Both modelos aggregate per (source_kind, counterparty_nif, operation_kind)
 and apply a declaration threshold downstream. The aggregator here produces
 the raw per-counterparty rollups; the threshold gate (€3005.06 for 347)
 lives in the modelo binding consumer.
-
-Bare ``invoice`` source-kind is rejected at observation construction;
-the four canonical source kinds are accepted.
 """
 
 from __future__ import annotations
