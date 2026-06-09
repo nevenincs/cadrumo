@@ -9,6 +9,9 @@ Sister module to `_relation_prefill`. The runtime distinguishes
 Modelo 390 uses bindings — modelo 200 uses relations — both express
 "sum a prior modelo's casilla across periods" but route through
 different schema entities.
+
+Prior-filing values are gathered as :class:`CasillaObservation` records and
+merged with casilla-level provenance before the binding is resolved.
 """
 
 from __future__ import annotations
