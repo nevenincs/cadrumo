@@ -334,7 +334,7 @@ def test_cast_rationale_markers_present_in_secure_repository_source() -> None:
     """
     import pathlib
 
-    source = pathlib.Path(__file__).parent / "_secure_repository.py"
+    source = pathlib.Path(__file__).parent.parent / "_secure_repository.py"
     text = source.read_text(encoding="utf-8")
 
     required_markers = [
