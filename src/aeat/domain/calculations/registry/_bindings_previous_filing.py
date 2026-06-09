@@ -49,7 +49,7 @@ def previous_filing_observation_requirements(
     filing_year: int,
     period: str,
 ) -> tuple[RegistryModeloObservationRequirement, ...]:
-    """Return observation requirements needed by direct previous-filing bindings.
+    """Return :class:`RegistryModeloObservationRequirement` records needed by direct previous-filing bindings.
 
     Use of :class:`ModeloRevision` for compliance.
     """

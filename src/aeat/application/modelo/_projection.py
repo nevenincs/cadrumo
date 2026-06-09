@@ -194,7 +194,10 @@ def project_modelo_100_from_m130(
     casilla_overrides: Mapping[str, str] | None = None,
     binding_overrides: Mapping[str, str] | None = None,
 ) -> ModeloProjectServiceResult:
-    """Project annual Modelo 100 values from quarterly Modelo 130 revisions."""
+    """Project annual Modelo 100 values from quarterly Modelo 130 revisions.
+
+    Returns a :class:`ModeloProjectServiceResult`.
+    """
     all_units = list_work_units()
     m130_units = [
         unit
@@ -416,7 +419,7 @@ def compare_modelo_years(
     modelo: str,
     years: Iterable[int],
 ) -> ModeloCompareServiceResult:
-    """Compare the best calculation revision for two filing years of a modelo."""
+    """Compare the best calculation revision for two filing years and return a :class:`ModeloCompareServiceResult`."""
     requested_years = list(years)
     if len(requested_years) != 2:
         raise ModeloCompareNeedTwoYearsError(translated_message="cli.app.modelo.compare.need_two_years")

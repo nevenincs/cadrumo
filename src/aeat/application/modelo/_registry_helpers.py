@@ -132,7 +132,7 @@ def reject_unknown_import_casillas(
     period: str,
     casilla_values: Mapping[str, Decimal],
 ) -> RegistrySnapshot:
-    """Refuse imported casilla ids the registry does not declare and return the resolved snapshot."""
+    """Refuse imported casilla ids the registry does not declare and return the resolved :class:`RegistrySnapshot`."""
     from ...domain.calculations.registry import RegistrySnapshotError
 
     try:
@@ -214,7 +214,7 @@ def verification_predicates_for_revision(
     filing_year: int,
     period: str,
 ) -> tuple[VerificationPredicateDefinition, ...]:
-    """Return Layer 2 predicates for the registry revision, or empty tuple."""
+    """Return a tuple of :class:`VerificationPredicateDefinition` records for the registry revision, or empty tuple."""
     from ...domain.calculations.registry import RegistrySnapshotError
 
     try:

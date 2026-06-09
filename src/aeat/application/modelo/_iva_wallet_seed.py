@@ -39,7 +39,7 @@ def seed_iva_compensation_period_for_bucket(
     period: str,
     amount: Decimal,
 ) -> IvaCompensationPeriodState:
-    """Seed IVA compensation history for the taxpayer attached to *bucket_id*."""
+    """Seed IVA compensation history and return an :class:`IvaCompensationPeriodState`."""
     if amount < Decimal("0"):
         raise ModeloIvaWalletSeedNegativeAmountError(
             translated_message="application.modelo.iva_wallet.seed_negative_amount",

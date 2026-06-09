@@ -36,7 +36,7 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
     @override
     @classmethod
     def payload_model(cls) -> type[ModeloDraft]:
-        """Return the encrypted payload model for filing drafts."""
+        """Return the :class:`ModeloDraft` encrypted payload model for filing drafts."""
         return ModeloDraft
 
     @property

@@ -194,7 +194,7 @@ def resolve_modelo_workflow_resume_target(
     bucket_id: str | None = None,
     selector: object | None = None,
 ) -> WorkflowResumeTargetResolution:
-    """Resolve the operator's resume address to one workflow run id.
+    """Resolve the operator's resume address and return a :class:`WorkflowResumeTargetResolution`.
 
     Exact run ids remain the legacy direct path. Work-unit ids,
     calculation-revision ids, and visible modelo/year/period selectors
@@ -384,7 +384,7 @@ def find_unique_run_for_period(
     work_unit_id: str | None = None,
     short_work_unit_id: str | None = None,
 ) -> WorkflowResult:
-    """Return one persisted run for ``(modelo, period)`` or refuse ambiguity.
+    """Return a :class:`WorkflowResult` for ``(modelo, period)`` or refuse ambiguity.
 
     Natural-key resume is an operator-facing lookup. If more than one
     persisted run exists for the same workflow period, the caller must
@@ -417,7 +417,7 @@ def resolve_modelo_workflow_run_for_resume(
     *,
     source: str = "modelo_work_target",
 ) -> WorkflowResumeTargetResolution:
-    """Resolve a modelo work target to the workflow run that resume should use.
+    """Resolve a modelo work target to a :class:`WorkflowResumeTargetResolution` for resume.
 
     The modelo application facade remains the owner of visible filing
     target lookup and registry-period to workflow-period conversion.
@@ -448,7 +448,7 @@ def resolve_modelo_visible_workflow_run_for_resume(
     registry_revision_id: str | None = None,
     bucket_id: str | None = None,
 ) -> WorkflowResumeTargetResolution:
-    """Resolve natural modelo filing selectors to a resumable workflow run target."""
+    """Resolve natural modelo filing selectors to a :class:`WorkflowResumeTargetResolution` for resume."""
     from ..modelo import ModeloVisibleFilingTarget
 
     return resolve_modelo_workflow_run_for_resume(
@@ -467,7 +467,7 @@ def resolve_modelo_exact_workflow_run_for_resume(
     work_unit_id: str,
     bucket_id: str | None = None,
 ) -> WorkflowResumeTargetResolution:
-    """Resolve a legacy exact work-unit id to the newest workflow run for resume."""
+    """Resolve a legacy exact work-unit id to a :class:`WorkflowResumeTargetResolution` for resume."""
     from ..modelo import ModeloExactWorkUnitTarget
 
     return resolve_modelo_workflow_run_for_resume(

@@ -259,7 +259,7 @@ class LocalFileSystemProvider:
             object_key_hmac: Full HMAC string identifying the object.
 
         Returns:
-            A two-tuple of ``(payload_bytes, ProviderObjectMetadata)``.
+            A two-tuple of ``(payload_bytes, :class:`ProviderObjectMetadata`)``.
 
         Raises:
             OutboundStorageNotFoundError: When the object file is absent.
@@ -407,7 +407,7 @@ class LocalFileSystemProvider:
             namespace: Logical bucket name.
 
         Yields:
-            ``ProviderObjectMetadata`` records in sorted filename order.
+            :class:`ProviderObjectMetadata` records in sorted filename order.
 
         Raises:
             OutboundStorageNotFoundError: When the namespace directory is

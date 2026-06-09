@@ -71,9 +71,9 @@ _MODELO_202_NOT_APPLICABLE_REASON = (
 
 
 def derive_modelo_202_modality(profile: TaxpayerProfile) -> Modelo202ModalityVerdict:
-    """Derive the Modelo 202 pago-fraccionado modality for ``profile``.
+    """Derive the Modelo 202 pago-fraccionado modality and return a :class:`Modelo202ModalityVerdict`.
 
-    Use of :class:`TaxpayerProfile` for compliance.
+    Uses :class:`TaxpayerProfile` for entity-type classification.
     """
     if profile.entity_type is None or profile.entity_type is not EntityType.LEGAL_ENTITY:
         return Modelo202ModalityVerdict(

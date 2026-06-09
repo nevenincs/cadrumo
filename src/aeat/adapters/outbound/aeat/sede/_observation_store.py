@@ -145,7 +145,7 @@ class FiledDeclaracionObservationStore:
         return envelope.payload
 
     def list_observations(self) -> tuple[FiledDeclaracionObservation, ...]:
-        """Return filed-declaration observations from the active encrypted backend."""
+        """Return :class:`FiledDeclaracionObservation` records from the active encrypted backend."""
         observations: list[FiledDeclaracionObservation] = []
         with self._crypto_scope():
             records = self._repository.list_records(

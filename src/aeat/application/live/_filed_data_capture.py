@@ -43,7 +43,7 @@ def filed_data_capture_failure_row(
     error: BaseException,
     declaration: Declaracion | None = None,
 ) -> FiledDataCaptureFailureRow:
-    """Map one failed declaration-register read or capture into a report row."""
+    """Map one failed capture into a :class:`FiledDataCaptureFailureRow`."""
     return FiledDataCaptureFailureRow(
         modelo=declaration.modelo if declaration is not None else modelo,
         year=declaration.ejercicio if declaration is not None else year,
@@ -98,7 +98,7 @@ async def list_filed_data(
     year_from: int,
     year_to: int,
 ) -> FiledDataListingReport:
-    """List filed declaration rows through the active AEAT session without downloading artefacts."""
+    """List declarations via AEAT and return a :class:`FiledDataListingReport`."""
     if year_from > year_to:
         raise LiveApplicationInputError(
             message="from-year must be less than or equal to to-year",
@@ -139,7 +139,7 @@ async def capture_filed_data(
     expediente_id: str | None = None,
     limit: int | None = None,
 ) -> FiledDataCaptureReport:
-    """Capture filed-declaration artefacts through the active AEAT session."""
+    """Capture filed-declaration artefacts and return a :class:`FiledDataCaptureReport`."""
     session, _settings = await active_verified_session()
     store = FiledDeclaracionObservationStore(output_root)
     observation_paths: list[str] = []
@@ -202,7 +202,7 @@ async def capture_filed_data_bulk(
     output_root: Path,
     modelos: tuple[str, ...] | None = None,
 ) -> BulkFiledDataCaptureReport:
-    """Capture filed-declaration artefacts for registry modelos across a year range."""
+    """Capture filed declarations across a year range and return a :class:`BulkFiledDataCaptureReport`."""
     if year_from > year_to:
         raise LiveApplicationInputError(
             message="from-year must be less than or equal to to-year",
@@ -312,7 +312,7 @@ async def capture_source_filed_data(
     registry_root: Path | None = None,
     source_root: Path | None = None,
 ) -> SourceFiledDataCaptureReport:
-    """Capture filed observations required by a target filing's registry dependencies."""
+    """Capture source observations and return a :class:`SourceFiledDataCaptureReport`."""
     session, settings = await active_verified_session()
     if registry_root is None and source_root is None:
         authority = resources().modelos.authority

@@ -26,7 +26,7 @@ class ModeloMaritimeExemptionPreview:
 
 
 def maritime_facts_from_active_profile() -> MaritimeWorkerFacts:
-    """Read maritime worker facts off the active profile record."""
+    """Read maritime worker facts off the active profile record and return a :class:`MaritimeWorkerFacts`."""
     state = workflow_state_repository().load()
     record = state.active_profile_record()
 
@@ -64,7 +64,7 @@ def preview_maritime_exemption_for_active_profile(
     qualifying_days: int | None,
     gross_navigation_income: Decimal | None,
 ) -> ModeloMaritimeExemptionPreview:
-    """Resolve the active profile maritime exemption preview.
+    """Resolve the active profile maritime exemption preview and return a :class:`ModeloMaritimeExemptionPreview`.
 
     The RETMAR completeness gate is intentionally handled here rather than in
     the CLI transport. RETMAR registration is a non-blocking warning for this

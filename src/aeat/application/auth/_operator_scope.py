@@ -34,7 +34,11 @@ _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS = (
 
 @contextmanager
 def auth_operator_settings_scope(settings: Settings | None) -> Iterator[Settings]:
-    """Run auth-operator probes against an explicit Settings object when supplied."""
+    """Yield a :class:`Settings` for auth-operator probes.
+
+    Uses the supplied settings when provided, otherwise loads from the
+    default path.
+    """
     from ...core.config import override_settings
 
     if settings is None:

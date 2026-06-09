@@ -48,7 +48,7 @@ def select_declarations_for_capture(
     expediente_id: str | None = None,
     limit: int | None = None,
 ) -> tuple[Declaracion, ...]:
-    """Select filed-declaration rows for capture from one register query."""
+    """Select :class:`Declaracion` rows for capture from one register query."""
     selected = declarations
     if period is not None:
         selected = tuple(row for row in selected if row.period.upper() == period.upper())
@@ -66,7 +66,7 @@ def select_declarations_for_capture(
 
 
 def filed_data_listing_row(declaration: Declaracion) -> FiledDataListingRow:
-    """Return the CLI-safe listing row for one AEAT declaration register item."""
+    """Return a :class:`FiledDataListingRow` for one AEAT declaration register item."""
     return FiledDataListingRow(
         modelo=declaration.modelo,
         year=declaration.ejercicio,

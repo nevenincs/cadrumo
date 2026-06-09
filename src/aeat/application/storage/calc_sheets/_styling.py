@@ -183,12 +183,12 @@ def compute_styling(
 ]:
     """Derive ``(styled_ranges, column_widths, frozen_views, auto_filters)``.
 
+    Returns a four-tuple of (:class:`SheetStyledRange`, :class:`SheetColumnWidth`,
+    :class:`SheetFrozenView`, :class:`SheetAutoFilter`) tuples.
+
     A pure function of the resolved layout and the structural facets: two runs
     over the same inputs produce the same facets, so the design is deterministic
     and the two transports stay in lock-step.
-
-    Returns:
-        A four-tuple of (styled_ranges, column_widths, frozen_views, auto_filters).
     """
     entradas_last = max(
         (row.row for row in layout.entradas_rows),
