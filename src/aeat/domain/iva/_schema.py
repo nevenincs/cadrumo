@@ -62,6 +62,45 @@ class IvaCategory(StrEnum):
     UNKNOWN = "unknown"
 
 
+# IVA categories that legitimately bear no Modelo 303 cuota by law, so a
+# ledger observation in one of these categories correctly matches no
+# ``ledger_iva_aggregation`` cuota binding and MUST NOT be treated as a
+# modelling gap. They are exempt, zero-rated, not-subject, exempt
+# intra-community supplies/exports, or filed under a separate regime:
+#
+# - DOMESTIC_ZERO / DOMESTIC_EXEMPT / DOMESTIC_NOT_SUBJECT: no cuota
+#   devengada arises (Ley 37/1992 arts. 7, 20, 26 exemptions / tipo cero).
+# - OPERACION_NO_SUJETA: operación no sujeta — outside the IVA hecho
+#   imponible (Ley 37/1992 art. 7).
+# - INTRA_COMMUNITY_SUPPLY: entrega intracomunitaria exenta — zero cuota,
+#   declared as base only (Ley 37/1992 art. 25, casilla 59).
+# - EXPORT_THIRD_COUNTRY_ZERO_RATED: exportación exenta — zero cuota,
+#   base only (Ley 37/1992 art. 21, casilla 60).
+# - INTRA_COMMUNITY_TRIANGULATION: operación triangular informativa — no
+#   cuota for the Spanish intermediary.
+# - REGIMEN_SIMPLIFICADO: settled under the régimen simplificado modulo
+#   path (Modelo 131), not the general 303 cuota bindings.
+#
+# This set is the cuota-less companion to the non-declarable sentinel set
+# (recargo de equivalencia / unknown / erroneous) consumed at the
+# application boundary. It exists so the #64 unconsumed-declarable advisory
+# fires only on categories that genuinely SHOULD produce a 303 cuota but
+# currently have no binding (reverse-charge / acquisitions / imports),
+# never on these by-law cuota-less categories.
+CUOTA_LESS_M303_IVA_CATEGORIES: frozenset[IvaCategory] = frozenset(
+    {
+        IvaCategory.DOMESTIC_ZERO,
+        IvaCategory.DOMESTIC_EXEMPT,
+        IvaCategory.DOMESTIC_NOT_SUBJECT,
+        IvaCategory.OPERACION_NO_SUJETA,
+        IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
+        IvaCategory.REGIMEN_SIMPLIFICADO,
+    }
+)
+
+
 class IvaExemptionArticle(StrEnum):
     """Closed catalogue of Ley 37/1992 Art. 20 sub-articles.
 

@@ -10,6 +10,7 @@ from typing import Literal, Protocol
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...iva import (
+    CUOTA_LESS_M303_IVA_CATEGORIES,
     EUMemberState,
     InvoiceKind,
     IvaCategory,
@@ -396,12 +397,23 @@ def unsupported_ledger_iva_observations(
     observation whose category/rate/flow triple is not selected by any
     ``ledger_iva_aggregation`` binding is a modelling gap and must not
     be silently inferred into an annual or periodic form.
+
+    Categories that bear no Modelo 303 cuota *by law*
+    (:data:`~aeat.domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` — exempt,
+    zero-rated, not-subject, exempt intra-community supplies/exports,
+    triangulation, and régimen simplificado) are excluded: they
+    correctly match no cuota binding, so flagging them would be a false
+    positive. Only categories that genuinely *should* produce a cuota
+    but currently have no binding (domestic / intra-community
+    reverse-charge, imports) remain in the unsupported set.
     """
     selectors = tuple(
         _iva_ledger_selector(binding) for binding in revision.bindings if binding.source == "ledger_iva_aggregation"
     )
     unsupported: list[IvaLedgerObservation] = []
     for observation in observations:
+        if observation.category in CUOTA_LESS_M303_IVA_CATEGORIES:
+            continue
         if not any(
             observation.category in selector.categories
             and observation.rate_kind in selector.rate_kinds
