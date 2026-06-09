@@ -235,13 +235,20 @@ some of them.
 
 ## Remove, archive, stash, or reset ledger rows
 
+For the full correction workflow — updating fields, removing, splitting,
+merging, and reviewing history — see
+[Correct mistakes in your ledger](correct-ledger-entries.md). For attaching
+invoices and receipts, see
+[Attach invoices and receipts](ledger-evidence.md).
+
 Use the least destructive action that matches the problem:
 
 - `archive` — keep the transaction in your history but exclude it from ordinary
   work. Use this when a movement was imported by mistake but you want to keep a
   record of it.
-- `stash` — temporarily hide a transaction you are not sure about. You can
-  restore it later.
+- `stash` — set aside a transaction you are not sure about. A stashed
+  transaction leaves the everyday lists. Note that neither stashed nor
+  archived transactions can be returned to active from the command line.
 - `remove` — delete the transaction from your active records.
 - `reset` — clear the entire transaction list for the active profile and start
   over. **Use with care — this removes all imported data.**

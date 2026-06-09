@@ -85,6 +85,27 @@ Import, add, edit, remove, and review ledger rows.
 Classify rows manually, in bulk, with allocation, or with LLM assistance.
 :::
 
+:::{grid-item-card} Attach Evidence
+:link: ledger-evidence
+:link-type: doc
+
+Store invoices and receipts and link them to the transactions they support.
+:::
+
+:::{grid-item-card} Correct Ledger Mistakes
+:link: correct-ledger-entries
+:link-type: doc
+
+Update, remove, split, merge, stash, or archive transactions safely.
+:::
+
+:::{grid-item-card} Record Modelo 036
+:link: modelo-036
+:link-type: doc
+
+Record an alta, modificacion, or baja you filed at AEAT's sede.
+:::
+
 :::{grid-item-card} Calculation Inputs
 :link: review-calculation-values
 :link-type: doc
@@ -187,6 +208,9 @@ filing-periods
 check-aeat-notifications
 import-bank-statements
 classify-transactions
+ledger-evidence
+correct-ledger-entries
+modelo-036
 classify-with-llm
 setup-llm-classification
 review-calculation-values
