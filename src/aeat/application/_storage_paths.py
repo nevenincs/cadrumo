@@ -6,6 +6,10 @@ is combined with a ``bucket_id`` and a file extension to produce the on-disk
 path.  This module centralises that one-liner so callers stay at the
 domain level and the filesystem layout is defined in a single place.
 
+Used by:
+  * :mod:`aeat.application.aggregation` - ledger record stores
+  * :mod:`aeat.application.evidence` - audit evidence bundles
+
 Usage::
 
     from aeat.application._storage_paths import storage_path

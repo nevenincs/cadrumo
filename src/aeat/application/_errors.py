@@ -1,4 +1,8 @@
-"""Application-level domain errors for the diagnostics surface."""
+"""Application-level domain errors for the diagnostics surface.
+
+Used by :mod:`aeat.application.diagnostics` to signal contract violations
+in :class:`~aeat.application.diagnostics.DiagnosticCheck`.
+"""
 
 from __future__ import annotations
 
