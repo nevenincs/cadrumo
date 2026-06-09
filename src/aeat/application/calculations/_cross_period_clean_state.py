@@ -723,9 +723,7 @@ def _evaluate_filing_history(
         blockers.append(CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD)
         return _FilingHistory(None, None, None, None, None, None, blockers)
 
-    blockers.extend(
-        _filing_external_evidence_blockers(filing, observation_source_kind, justificante_repository)
-    )
+    blockers.extend(_filing_external_evidence_blockers(filing, observation_source_kind, justificante_repository))
     revision_state, revision_blockers = _filing_revision_blockers(
         filing, requirement, calculation_catalogue, observation_values
     )
