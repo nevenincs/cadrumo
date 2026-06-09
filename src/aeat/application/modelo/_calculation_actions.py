@@ -447,6 +447,11 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     resolving the bucket ledger (the unconsumed-declarable-IVA advisories the
     operator-facing CLI surfaces so an unrouted observation is never silently
     under-declared).
+
+    The ledger evidence is read from the injected
+    :class:`TransactionCatalogueRepository` and
+    :class:`InvoiceCatalogueRepository`; the source mesh projects their
+    contributing rows into the bucket aggregation that feeds the revision.
     """
     from ...domain.calculations.registry import RegistrySnapshotError
     from ..aggregation import (

@@ -79,10 +79,13 @@ _KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset(
         ("entrypoints/cli/_config/_custody.py", 32),
         ("entrypoints/cli/_config/_custody.py", 80),
         ("entrypoints/cli/_ledger_review_cli.py", 54),
-        ("entrypoints/cli/_modelo_work_calculate_cli.py", 216),
-        ("entrypoints/cli/_modelo_work_calculate_cli.py", 394),
-        ("entrypoints/cli/_modelo_work_calculate_cli.py", 412),
-        ("entrypoints/cli/_modelo_work_calculate_cli.py", 425),
+        # register_work_calculate_commands DI hooks (Callable[..., Any] resolver
+        # injection, mirrors the _CalculateDeps dataclass fields). The four
+        # `_work_calculate_*` projection helpers that previously sat in this
+        # ratchet now carry concrete result/record types
+        # (ModeloWorkCalculationServiceResult / CalculationRevision / WorkUnit)
+        # via a TYPE_CHECKING import, so only the DI-hook site remains.
+        ("entrypoints/cli/_modelo_work_calculate_cli.py", 224),
         ("entrypoints/cli/_modelo_work_lifecycle_cli.py", 58),
         ("entrypoints/cli/_modelo_work_revision_cli.py", 28),
         ("entrypoints/cli/_modelo_work_verification_cli.py", 31),
