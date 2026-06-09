@@ -451,6 +451,11 @@ FOREIGN_ASSET_MODELOS: Final[tuple[str, ...]] = ("720",)
 #: Covers: M303 (quarterly/monthly IVA self-assessment), M390 (IVA annual summary).
 IVA_REGIME_MODELOS: Final[tuple[str, ...]] = ("303", "390")
 
+#: REBECA 50% exemption of qualifying maritime navigation income.
+#: Applies to crew of REBECA-registered vessels and scheduled Canary Islands routes.
+#: Binding provisions: Ley 19/1994 arts. 73.2, 73.3, 75.1, 75.3 (BOE-A-1994-16100).
+REBECA_MARITIME_EXEMPTION_FRACTION: Final[Decimal] = Decimal("0.50")
+
 #: 3% amortización de inmuebles arrendados; rate fixed by RD 439/2007 (RIRPF) art. 14.2.a
 #: ("3 por 100 sobre el mayor de coste de adquisición o valor catastral, excluido el suelo").
 #: Deductibility base: Ley 35/2006 art. 23 (capital inmobiliario gastos deducibles).

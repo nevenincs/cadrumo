@@ -47,7 +47,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal
 
-from ...core.external_constants import ART_7P_EXEMPTION_CAP_EUR
+from ...core.external_constants import ART_7P_EXEMPTION_CAP_EUR, REBECA_MARITIME_EXEMPTION_FRACTION
 from ..calculations.registry import CasillaId, CasillaObservation
 from ._errors import RentaError, RentaValidationError
 
@@ -303,7 +303,7 @@ def calculate_rebeca_exemption(
     if not gross_navigation_income.is_finite() or gross_navigation_income <= Decimal("0"):
         raise RentaValidationError("gross_navigation_income must be a positive finite Decimal")
 
-    exempt_amount = gross_navigation_income * Decimal("0.50")
+    exempt_amount = gross_navigation_income * REBECA_MARITIME_EXEMPTION_FRACTION
 
     return CasillaObservation(
         casilla_id=RENTA_EXENTA_CASILLA,
