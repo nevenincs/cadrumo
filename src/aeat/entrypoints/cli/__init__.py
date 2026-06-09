@@ -247,9 +247,12 @@ def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
     try:
         pointer = resolve_profile_bucket(requested)
     except ProfileLabelAmbiguousError as exc:
+        # The label is AMBIGUOUS, not unknown: more than one live profile
+        # carries it. Render the dedicated ambiguity refusal (which carries no
+        # placeholder) rather than the generic unknown-profile message, matching
+        # the _config-site precedent in commit c3509a5ee.
         raise CliRefusedBoundaryError(
-            translated_message="cli.config.profile.unknown_profile",
-            context={"name": requested},
+            translated_message="errors.refused.refused_profile_label_ambiguous",
         ) from exc
     if pointer is None:
         raise CliRefusedBoundaryError(
@@ -306,10 +309,12 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
         # Two live profiles share the label (ProfileLabelAmbiguousError is a
         # WorkflowError, NOT a ValueError); refuse clearly rather than picking
         # an arbitrary bucket — a wrong silent pick on a tax profile is a
-        # data-integrity hazard.
+        # data-integrity hazard. The label is AMBIGUOUS, not unknown: render the
+        # dedicated ambiguity refusal (no placeholder) rather than the generic
+        # unknown-profile message, matching the _config-site precedent in
+        # commit c3509a5ee.
         raise CliRefusedBoundaryError(
-            translated_message="cli.config.profile.unknown_profile",
-            context={"name": active},
+            translated_message="errors.refused.refused_profile_label_ambiguous",
         ) from exc
     except AeatError:
         return
