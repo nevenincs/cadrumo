@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from enum import StrEnum
-from typing import Final
+from typing import Final, NamedTuple
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -380,25 +380,38 @@ def _selector_grouping(selector: object) -> object:
     return getattr(selector, "grouping", None)
 
 
-def _evaluate_requirement(
+class _CrossPeriodSource(NamedTuple):
+    value_member_payloads: tuple[object, ...]
+    observed_member_nifs: tuple[str, ...]
+    expected_member_nifs: tuple[str, ...]
+    missing_member_nifs: tuple[str, ...]
+    unexpected_member_nifs: tuple[str, ...]
+    payload: object | None
+    blockers: tuple[CrossPeriodCleanStateBlocker, ...]
+
+
+class _MemberHistory(NamedTuple):
+    member_filing_record_ids: tuple[str, ...]
+    member_calculation_revision_ids: tuple[str, ...]
+    calculation_revision_state: CalculationRevisionState | None
+    verification_status: VerificationCompletenessStatus | None
+    aeat_accepted: bool | None
+    external_evidence_kind: str | None
+    blockers: list[CrossPeriodCleanStateBlocker]
+
+
+def _resolve_cross_period_source(
     requirement: CrossPeriodDependencyRequirement,
-    *,
-    bucket_id: str,
     observation_repository: CalculationObservationRepository,
-    filing_catalogue,
-    calculation_catalogue,
-    verification_catalogue,
-    justificante_repository: JustificanteRepository,
     expected_member_set: CrossPeriodExpectedMemberSet | None,
-) -> CrossPeriodDependencyEvidence:
+) -> _CrossPeriodSource:
     blockers: list[CrossPeriodCleanStateBlocker] = []
-    member_payloads: tuple[object, ...] = ()
     value_member_payloads: tuple[object, ...] = ()
     observed_member_nifs: tuple[str, ...] = ()
     expected_member_nifs: tuple[str, ...] = ()
     missing_member_nifs: tuple[str, ...] = ()
     unexpected_member_nifs: tuple[str, ...] = ()
-    payload = None
+    payload: object | None = None
     if requirement.requires_member_fan_in:
         member_payloads = tuple(
             item
@@ -431,6 +444,23 @@ def _evaluate_requirement(
             requirement.filing_year,
             requirement.period,
         )
+    return _CrossPeriodSource(
+        value_member_payloads,
+        observed_member_nifs,
+        expected_member_nifs,
+        missing_member_nifs,
+        unexpected_member_nifs,
+        payload,
+        tuple(blockers),
+    )
+
+
+def _resolve_observation_values(
+    requirement: CrossPeriodDependencyRequirement,
+    value_member_payloads: tuple[object, ...],
+    payload: object | None,
+) -> tuple[str | None, dict[str, object], list[CrossPeriodCleanStateBlocker]]:
+    blockers: list[CrossPeriodCleanStateBlocker] = []
     observation_source_kind: str | None = None
     observation_values: dict[str, object] = {}
     if requirement.requires_member_fan_in and value_member_payloads:
@@ -451,54 +481,109 @@ def _evaluate_requirement(
         for casilla_id in requirement.source_casillas:
             if casilla_id not in observation_values:
                 blockers.append(CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA)
+    return observation_source_kind, observation_values, blockers
+
+
+def _aggregate_member_history(
+    requirement: CrossPeriodDependencyRequirement,
+    *,
+    bucket_id: str,
+    filing_catalogue,
+    calculation_catalogue,
+    verification_catalogue,
+    justificante_repository: JustificanteRepository,
+    observation_source_kind: str | None,
+    value_member_payloads: tuple[object, ...],
+    expected_member_nifs: tuple[str, ...],
+    observed_member_nifs: tuple[str, ...],
+) -> _MemberHistory:
+    member_payload_by_nif = {str(item.member_nif): item for item in value_member_payloads}
+    members_to_check = expected_member_nifs or observed_member_nifs
+    blockers: list[CrossPeriodCleanStateBlocker] = []
+    member_filing_record_ids: list[str] = []
+    member_calculation_revision_ids: list[str] = []
+    revision_state: CalculationRevisionState | None = None
+    verification_status: VerificationCompletenessStatus | None = None
+    aeat_accepted: bool | None = None
+    external_evidence_kind: str | None = None
+    for member_nif in members_to_check:
+        member_payload = member_payload_by_nif.get(member_nif)
+        member_values = dict(member_payload.observation.casilla_values) if member_payload is not None else {}
+        member_result = _evaluate_filing_history(
+            requirement,
+            bucket_id=bucket_id,
+            filing_catalogue=filing_catalogue,
+            calculation_catalogue=calculation_catalogue,
+            verification_catalogue=verification_catalogue,
+            justificante_repository=justificante_repository,
+            observation_source_kind=observation_source_kind,
+            observation_values=member_values,
+            member_nif=member_nif,
+        )
+        blockers.extend(member_result.blockers)
+        if member_result.filing_record_id is not None:
+            member_filing_record_ids.append(member_result.filing_record_id)
+        if member_result.calculation_revision_id is not None:
+            member_calculation_revision_ids.append(member_result.calculation_revision_id)
+        revision_state = member_result.calculation_revision_state or revision_state
+        verification_status = member_result.verification_status or verification_status
+        aeat_accepted = member_result.aeat_accepted if member_result.aeat_accepted is not None else aeat_accepted
+        external_evidence_kind = member_result.external_evidence_kind or external_evidence_kind
+    return _MemberHistory(
+        tuple(member_filing_record_ids),
+        tuple(member_calculation_revision_ids),
+        revision_state,
+        verification_status,
+        aeat_accepted,
+        external_evidence_kind,
+        blockers,
+    )
+
+
+def _evaluate_requirement(
+    requirement: CrossPeriodDependencyRequirement,
+    *,
+    bucket_id: str,
+    observation_repository: CalculationObservationRepository,
+    filing_catalogue,
+    calculation_catalogue,
+    verification_catalogue,
+    justificante_repository: JustificanteRepository,
+    expected_member_set: CrossPeriodExpectedMemberSet | None,
+) -> CrossPeriodDependencyEvidence:
+    source = _resolve_cross_period_source(requirement, observation_repository, expected_member_set)
+    observation_source_kind, observation_values, value_blockers = _resolve_observation_values(
+        requirement, source.value_member_payloads, source.payload
+    )
+    blockers: list[CrossPeriodCleanStateBlocker] = [*source.blockers, *value_blockers]
 
     if requirement.requires_member_fan_in:
-        member_payload_by_nif = {str(item.member_nif): item for item in value_member_payloads}
-        members_to_check = expected_member_nifs or observed_member_nifs
-        member_filing_record_ids: list[str] = []
-        member_calculation_revision_ids: list[str] = []
-        revision_state: CalculationRevisionState | None = None
-        verification_status: VerificationCompletenessStatus | None = None
-        aeat_accepted: bool | None = None
-        external_evidence_kind: str | None = None
-        for member_nif in members_to_check:
-            member_payload = member_payload_by_nif.get(member_nif)
-            member_values = dict(member_payload.observation.casilla_values) if member_payload is not None else {}
-            member_result = _evaluate_filing_history(
-                requirement,
-                bucket_id=bucket_id,
-                filing_catalogue=filing_catalogue,
-                calculation_catalogue=calculation_catalogue,
-                verification_catalogue=verification_catalogue,
-                justificante_repository=justificante_repository,
-                observation_source_kind=observation_source_kind,
-                observation_values=member_values,
-                member_nif=member_nif,
-            )
-            blockers.extend(member_result["blockers"])
-            if member_result["filing_record_id"] is not None:
-                member_filing_record_ids.append(member_result["filing_record_id"])
-            if member_result["calculation_revision_id"] is not None:
-                member_calculation_revision_ids.append(member_result["calculation_revision_id"])
-            revision_state = member_result["calculation_revision_state"] or revision_state
-            verification_status = member_result["verification_status"] or verification_status
-            aeat_accepted = (
-                member_result["aeat_accepted"] if member_result["aeat_accepted"] is not None else aeat_accepted
-            )
-            external_evidence_kind = member_result["external_evidence_kind"] or external_evidence_kind
+        history = _aggregate_member_history(
+            requirement,
+            bucket_id=bucket_id,
+            filing_catalogue=filing_catalogue,
+            calculation_catalogue=calculation_catalogue,
+            verification_catalogue=verification_catalogue,
+            justificante_repository=justificante_repository,
+            observation_source_kind=observation_source_kind,
+            value_member_payloads=source.value_member_payloads,
+            expected_member_nifs=source.expected_member_nifs,
+            observed_member_nifs=source.observed_member_nifs,
+        )
+        blockers.extend(history.blockers)
         return CrossPeriodDependencyEvidence(
             requirement=requirement,
             observation_source_kind=observation_source_kind,
-            observed_member_nifs=observed_member_nifs,
-            expected_member_nifs=expected_member_nifs,
-            missing_member_nifs=missing_member_nifs,
-            unexpected_member_nifs=unexpected_member_nifs,
-            member_filing_record_ids=tuple(member_filing_record_ids),
-            member_calculation_revision_ids=tuple(member_calculation_revision_ids),
-            calculation_revision_state=revision_state,
-            verification_status=verification_status,
-            aeat_accepted=aeat_accepted,
-            external_evidence_kind=external_evidence_kind,
+            observed_member_nifs=source.observed_member_nifs,
+            expected_member_nifs=source.expected_member_nifs,
+            missing_member_nifs=source.missing_member_nifs,
+            unexpected_member_nifs=source.unexpected_member_nifs,
+            member_filing_record_ids=history.member_filing_record_ids,
+            member_calculation_revision_ids=history.member_calculation_revision_ids,
+            calculation_revision_state=history.calculation_revision_state,
+            verification_status=history.verification_status,
+            aeat_accepted=history.aeat_accepted,
+            external_evidence_kind=history.external_evidence_kind,
             blockers=_unique_blockers(blockers),
         )
 
@@ -513,23 +598,98 @@ def _evaluate_requirement(
         observation_values=observation_values,
         member_nif=None,
     )
-    blockers.extend(filing_result["blockers"])
+    blockers.extend(filing_result.blockers)
 
     return CrossPeriodDependencyEvidence(
         requirement=requirement,
         observation_source_kind=observation_source_kind,
-        filing_record_id=filing_result["filing_record_id"],
-        calculation_revision_id=filing_result["calculation_revision_id"],
-        calculation_revision_state=filing_result["calculation_revision_state"],
-        verification_status=filing_result["verification_status"],
-        aeat_accepted=filing_result["aeat_accepted"],
-        external_evidence_kind=filing_result["external_evidence_kind"],
-        observed_member_nifs=observed_member_nifs,
-        expected_member_nifs=expected_member_nifs,
-        missing_member_nifs=missing_member_nifs,
-        unexpected_member_nifs=unexpected_member_nifs,
+        filing_record_id=filing_result.filing_record_id,
+        calculation_revision_id=filing_result.calculation_revision_id,
+        calculation_revision_state=filing_result.calculation_revision_state,
+        verification_status=filing_result.verification_status,
+        aeat_accepted=filing_result.aeat_accepted,
+        external_evidence_kind=filing_result.external_evidence_kind,
+        observed_member_nifs=source.observed_member_nifs,
+        expected_member_nifs=source.expected_member_nifs,
+        missing_member_nifs=source.missing_member_nifs,
+        unexpected_member_nifs=source.unexpected_member_nifs,
         blockers=_unique_blockers(blockers),
     )
+
+
+def _filing_external_evidence_blockers(
+    filing,
+    observation_source_kind: str | None,
+    justificante_repository: JustificanteRepository,
+) -> list[CrossPeriodCleanStateBlocker]:
+    blockers: list[CrossPeriodCleanStateBlocker] = []
+    if filing.status is not ModeloRecordStatus.VIGENTE:
+        blockers.append(CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD)
+    if not filing.aeat_accepted:
+        blockers.append(CrossPeriodCleanStateBlocker.MISSING_AEAT_ACCEPTANCE)
+    if filing.external_evidence is None:
+        blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE)
+        if observation_source_kind not in _OFFICIAL_SOURCE_KINDS:
+            blockers.append(CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE)
+    elif filing.external_evidence.kind.value not in _JUSTIFICANTE_VERIFIED_EXTERNAL_EVIDENCE_KINDS:
+        blockers.append(CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION)
+    elif justificante_repository.load(filing.external_evidence.reference_id) is None:
+        blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD)
+    return blockers
+
+
+def _filing_revision_blockers(
+    filing,
+    requirement: CrossPeriodDependencyRequirement,
+    calculation_catalogue,
+    observation_values: Mapping[str, object],
+) -> tuple[CalculationRevisionState | None, list[CrossPeriodCleanStateBlocker]]:
+    blockers: list[CrossPeriodCleanStateBlocker] = []
+    revision = calculation_catalogue.get(filing.calculation_revision_id)
+    revision_state: CalculationRevisionState | None = None
+    if revision is None:
+        blockers.append(CrossPeriodCleanStateBlocker.MISSING_CALCULATION_REVISION)
+    else:
+        revision_state = revision.state
+        if revision.state is not CalculationRevisionState.PRESENTADO:
+            blockers.append(CrossPeriodCleanStateBlocker.UNFILED_CALCULATION_REVISION)
+        for casilla_id in requirement.source_casillas:
+            observed = observation_values.get(casilla_id)
+            if observed is None:
+                continue
+            if revision.casilla_values.get(casilla_id) != observed:
+                blockers.append(CrossPeriodCleanStateBlocker.OBSERVATION_REVISION_VALUE_DIVERGENCE)
+    return revision_state, blockers
+
+
+def _filing_verification_blockers(
+    filing,
+    verification_catalogue,
+) -> tuple[VerificationCompletenessStatus | None, list[CrossPeriodCleanStateBlocker]]:
+    blockers: list[CrossPeriodCleanStateBlocker] = []
+    verification_status: VerificationCompletenessStatus | None = None
+    if filing.external_evidence is None:
+        complete_reports = tuple(
+            report
+            for report in verification_catalogue.for_calculation_revision(filing.calculation_revision_id)
+            if report.granted_verificado_completo
+            and report.completeness_status is VerificationCompletenessStatus.COMPLETE
+        )
+        if complete_reports:
+            verification_status = complete_reports[-1].completeness_status
+        else:
+            blockers.append(CrossPeriodCleanStateBlocker.MISSING_COMPLETE_VERIFICATION_REPORT)
+    return verification_status, blockers
+
+
+class _FilingHistory(NamedTuple):
+    filing_record_id: str | None
+    calculation_revision_id: str | None
+    calculation_revision_state: CalculationRevisionState | None
+    verification_status: VerificationCompletenessStatus | None
+    aeat_accepted: bool | None
+    external_evidence_kind: str | None
+    blockers: list[CrossPeriodCleanStateBlocker]
 
 
 def _evaluate_filing_history(
@@ -543,7 +703,7 @@ def _evaluate_filing_history(
     observation_source_kind: str | None,
     observation_values: Mapping[str, object],
     member_nif: str | None,
-) -> dict[str, object]:
+) -> _FilingHistory:
     blockers: list[CrossPeriodCleanStateBlocker] = []
     filing_history = filing_catalogue.history_for(
         bucket_id=bucket_id,
@@ -561,66 +721,27 @@ def _evaluate_filing_history(
         if superseded_filings:
             blockers.append(CrossPeriodCleanStateBlocker.SUPERSEDED_DEPENDENCY)
         blockers.append(CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD)
-        return {
-            "filing_record_id": None,
-            "calculation_revision_id": None,
-            "calculation_revision_state": None,
-            "verification_status": None,
-            "aeat_accepted": None,
-            "external_evidence_kind": None,
-            "blockers": blockers,
-        }
+        return _FilingHistory(None, None, None, None, None, None, blockers)
 
-    if filing.status is not ModeloRecordStatus.VIGENTE:
-        blockers.append(CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD)
-    if not filing.aeat_accepted:
-        blockers.append(CrossPeriodCleanStateBlocker.MISSING_AEAT_ACCEPTANCE)
-    if filing.external_evidence is None:
-        blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE)
-        if observation_source_kind not in _OFFICIAL_SOURCE_KINDS:
-            blockers.append(CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE)
-    elif filing.external_evidence.kind.value not in _JUSTIFICANTE_VERIFIED_EXTERNAL_EVIDENCE_KINDS:
-        blockers.append(CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION)
-    elif justificante_repository.load(filing.external_evidence.reference_id) is None:
-        blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD)
+    blockers.extend(
+        _filing_external_evidence_blockers(filing, observation_source_kind, justificante_repository)
+    )
+    revision_state, revision_blockers = _filing_revision_blockers(
+        filing, requirement, calculation_catalogue, observation_values
+    )
+    blockers.extend(revision_blockers)
+    verification_status, verification_blockers = _filing_verification_blockers(filing, verification_catalogue)
+    blockers.extend(verification_blockers)
 
-    revision = calculation_catalogue.get(filing.calculation_revision_id)
-    revision_state: CalculationRevisionState | None = None
-    if revision is None:
-        blockers.append(CrossPeriodCleanStateBlocker.MISSING_CALCULATION_REVISION)
-    else:
-        revision_state = revision.state
-        if revision.state is not CalculationRevisionState.PRESENTADO:
-            blockers.append(CrossPeriodCleanStateBlocker.UNFILED_CALCULATION_REVISION)
-        for casilla_id in requirement.source_casillas:
-            observed = observation_values.get(casilla_id)
-            if observed is None:
-                continue
-            if revision.casilla_values.get(casilla_id) != observed:
-                blockers.append(CrossPeriodCleanStateBlocker.OBSERVATION_REVISION_VALUE_DIVERGENCE)
-
-    verification_status: VerificationCompletenessStatus | None = None
-    if filing.external_evidence is None:
-        complete_reports = tuple(
-            report
-            for report in verification_catalogue.for_calculation_revision(filing.calculation_revision_id)
-            if report.granted_verificado_completo
-            and report.completeness_status is VerificationCompletenessStatus.COMPLETE
-        )
-        if complete_reports:
-            verification_status = complete_reports[-1].completeness_status
-        else:
-            blockers.append(CrossPeriodCleanStateBlocker.MISSING_COMPLETE_VERIFICATION_REPORT)
-
-    return {
-        "filing_record_id": filing.filing_record_id,
-        "calculation_revision_id": filing.calculation_revision_id,
-        "calculation_revision_state": revision_state,
-        "verification_status": verification_status,
-        "aeat_accepted": filing.aeat_accepted,
-        "external_evidence_kind": filing.external_evidence.kind.value if filing.external_evidence is not None else None,
-        "blockers": blockers,
-    }
+    return _FilingHistory(
+        filing.filing_record_id,
+        filing.calculation_revision_id,
+        revision_state,
+        verification_status,
+        filing.aeat_accepted,
+        filing.external_evidence.kind.value if filing.external_evidence is not None else None,
+        blockers,
+    )
 
 
 def _expected_member_sets_by_key(
