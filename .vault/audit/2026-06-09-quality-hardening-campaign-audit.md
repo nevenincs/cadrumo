@@ -389,6 +389,53 @@ mechanical fixes (the `decimal_enrollment` attempt proved a naive swap breaks
 the genuine deliberate remainder; everything topology/inventory/fixture/refactor
 tractable in this campaign has been cleared and committed.
 
+## QHC-013 | session result (final, corrected) | 47 of 49 unit failures cleared
+
+Continued investigation corrected several QHC-012 "genuine-decision" items to
+tractable, honest fixes (the lesson: investigate to the actual root cause, do not
+pre-judge as "needs owner review"):
+- M200 `decimal_inputs_routing` (2): the snapshot required the prior-year
+  credit-impairment bindings (01494/01495 dotaciones-deterioro-creditos saldo
+  cumplido / no-cumplido anteriores); the enum-routing tests omitted them. Supplied
+  both at 0 (fresh filer) — the cuota assertions (23000/20700) are unchanged, so it
+  was missing test setup, not a registry gap.
+- manuals/corpus (4): the bundled corpus is now fully extracted, so the
+  "unextracted manual" contracts are exercised against SYNTHETIC fixtures
+  (`ManualRepository(root=tmp)` and a `_write_unextracted_renta_part1` helper under
+  `override_settings(aeat_manuals_root=…)`) — robust to corpus state. (Used a
+  non-AEAT `example.invalid` URL in the synthetic manifest to avoid the
+  aeat-route-literal gate.)
+- `decimal_enrollment` (1): the right fix was a canonical API addition —
+  `coerce_decimal_strict` in `aeat.core.decimal` (same coercion, but RAISES the
+  original `InvalidOperation`/`ValueError`). overview's `_to_decimal` now delegates
+  to it and keeps its redaction-safe `error_type` diagnostic; the gate AND the
+  `test_calendar` redaction test both pass. (Confirmed earlier that a naive swap to
+  `coerce_decimal` broke `test_calendar`.)
+
+In flight: `tr_positional` (26 sites) is being converted by a background subagent
+to `translated_message="key", context={…}` with the cascading `match=`→
+`translated_message` test-assertion updates.
+
+### QHC-013-A | OPEN | attachments plaintext: payload_hash leaks the content digest
+
+`test_blob_and_manifest_round_trip_without_plaintext_files` fails because the
+attachment content digest (`sha256(content)`, which is the attachment id) appears
+in the SQLite plaintext. Root cause (confirmed): the secure-object schema stores
+`payload_hash VARCHAR_64 = sha256_hex(payload)` in plaintext
+(`secure_objects.py:1011`), and for the attachment blob the payload IS the content,
+so `payload_hash == digest`. `object_key` is correctly HMAC-digested and the payload
+is encrypted; only the plaintext `payload_hash` integrity column leaks the digest.
+This is a **security-storage design decision**, NOT a test tweak: `payload_hash`
+backs the revision-integrity chain (`previous_payload_hash`, conflict detection)
+across EVERY secure object and any change needs a migration. Options for the owner:
+HMAC the stored `payload_hash`, drop it in favour of `ciphertext_hash` for integrity,
+or store it only for non-sensitive classifications. Deliberately left for security
+review rather than rushed.
+
+**check-types ~1850** remains the dominant hard gate (the documented multi-session
+type ratchet) — it alone makes literal single-session ALL-GREEN unreachable,
+independent of the last two tests.
+
 ## Codification candidates
 
 - **Source:** QHC-010 topology-regression cluster (≈20 relocated-test failures from
