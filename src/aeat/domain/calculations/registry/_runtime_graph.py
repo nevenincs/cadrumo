@@ -11,26 +11,47 @@ from graphlib import TopologicalSorter
 
 from ._schema import FormulaExpression, ModeloRevision
 
+_CASILLA_REFS_CACHE: dict[int, tuple[str, ...]] = {}
+_RELATION_REFS_CACHE: dict[int, tuple[str, ...]] = {}
+_BINDING_REFS_CACHE: dict[int, tuple[str, ...]] = {}
+_DATE_BINDING_REFS_CACHE: dict[int, tuple[str, ...]] = {}
+_PARAMETER_REFS_CACHE: dict[int, tuple[str, ...]] = {}
+
 
 def expression_casilla_refs(expression: FormulaExpression) -> tuple[str, ...]:
     """Return all casilla ids referenced by a formula expression."""
+    k = id(expression)
+    if k in _CASILLA_REFS_CACHE:
+        return _CASILLA_REFS_CACHE[k]
     refs: list[str] = []
     _collect_casilla_refs(expression, refs)
-    return tuple(refs)
+    val = tuple(refs)
+    _CASILLA_REFS_CACHE[k] = val
+    return val
 
 
 def expression_relation_refs(expression: FormulaExpression) -> tuple[str, ...]:
     """Return all relation ids referenced by a formula expression."""
+    k = id(expression)
+    if k in _RELATION_REFS_CACHE:
+        return _RELATION_REFS_CACHE[k]
     refs: list[str] = []
     _collect_relation_refs(expression, refs)
-    return tuple(refs)
+    val = tuple(refs)
+    _RELATION_REFS_CACHE[k] = val
+    return val
 
 
 def expression_binding_refs(expression: FormulaExpression) -> tuple[str, ...]:
     """Return all binding ids referenced by a formula expression."""
+    k = id(expression)
+    if k in _BINDING_REFS_CACHE:
+        return _BINDING_REFS_CACHE[k]
     refs: list[str] = []
     _collect_binding_refs(expression, refs)
-    return tuple(refs)
+    val = tuple(refs)
+    _BINDING_REFS_CACHE[k] = val
+    return val
 
 
 def expression_date_binding_refs(expression: FormulaExpression) -> tuple[str, ...]:
@@ -42,9 +63,14 @@ def expression_date_binding_refs(expression: FormulaExpression) -> tuple[str, ..
     own collector so callers can populate the ``date_binding_values``
     channel selectively.
     """
+    k = id(expression)
+    if k in _DATE_BINDING_REFS_CACHE:
+        return _DATE_BINDING_REFS_CACHE[k]
     refs: list[str] = []
     _collect_date_binding_refs(expression, refs)
-    return tuple(refs)
+    val = tuple(refs)
+    _DATE_BINDING_REFS_CACHE[k] = val
+    return val
 
 
 def expression_parameter_refs(expression: FormulaExpression) -> tuple[str, ...]:
@@ -55,9 +81,14 @@ def expression_parameter_refs(expression: FormulaExpression) -> tuple[str, ...]:
     ``lookup_bracket_by_ccaa`` op; dispatch_table values reference
     parameters just like the direct leaf.
     """
+    k = id(expression)
+    if k in _PARAMETER_REFS_CACHE:
+        return _PARAMETER_REFS_CACHE[k]
     refs: list[str] = []
     _collect_parameter_refs(expression, refs)
-    return tuple(refs)
+    val = tuple(refs)
+    _PARAMETER_REFS_CACHE[k] = val
+    return val
 
 
 def _collect_casilla_refs(expression: FormulaExpression, refs: list[str]) -> None:
@@ -161,6 +192,11 @@ def _collect_parameter_refs(expression: FormulaExpression, refs: list[str]) -> N
         _collect_parameter_refs(arg, refs)
 
 
+_RESOLVER_CACHE: dict[int, dict[str, str]] = {}
+_ALIAS_MAP_CACHE: dict[int, dict[str, str]] = {}
+_EVALUATION_ORDER_CACHE: dict[int, tuple[str, ...]] = {}
+
+
 def _casilla_reference_resolver(revision: ModeloRevision) -> dict[str, str]:
     """Return a token-to-canonical-id map for segment-aware casilla lookup.
 
@@ -181,6 +217,9 @@ def _casilla_reference_resolver(revision: ModeloRevision) -> dict[str, str]:
     no-op: multi-segment numbers resolve correctly while single-segment
     dependency ordering is unchanged.
     """
+    k = id(revision)
+    if k in _RESOLVER_CACHE:
+        return _RESOLVER_CACHE[k]
     resolver: dict[str, str] = {casilla.id: casilla.id for casilla in revision.casillas}
     number_counts: dict[str, int] = {}
     for casilla in revision.casillas:
@@ -188,6 +227,7 @@ def _casilla_reference_resolver(revision: ModeloRevision) -> dict[str, str]:
     for casilla in revision.casillas:
         if number_counts[casilla.number] == 1:
             resolver.setdefault(casilla.number, casilla.id)
+    _RESOLVER_CACHE[k] = resolver
     return resolver
 
 
@@ -212,6 +252,9 @@ def input_casilla_alias_map(revision: ModeloRevision) -> dict[str, str]:
         revision: The :class:`ModeloRevision` whose casilla identifiers
             are indexed into the returned alias map.
     """
+    k = id(revision)
+    if k in _ALIAS_MAP_CACHE:
+        return _ALIAS_MAP_CACHE[k]
     canonical_ids = {casilla.id for casilla in revision.casillas}
     number_counts: dict[str, int] = {}
     form_number_counts: dict[str, int] = {}
@@ -229,6 +272,7 @@ def input_casilla_alias_map(revision: ModeloRevision) -> dict[str, str]:
             and form_number_counts[casilla.form_number] == 1
         ):
             resolver.setdefault(casilla.form_number, casilla.id)
+    _ALIAS_MAP_CACHE[k] = resolver
     return resolver
 
 
@@ -245,6 +289,9 @@ def formula_evaluation_order(revision: ModeloRevision) -> tuple[str, ...]:
     Args:
         revision: The :class:`ModeloRevision` whose formulas to topologically sort.
     """
+    k = id(revision)
+    if k in _EVALUATION_ORDER_CACHE:
+        return _EVALUATION_ORDER_CACHE[k]
     resolver = _casilla_reference_resolver(revision)
     computed_targets = {resolver.get(formula.target, formula.target) for formula in revision.formulas}
     sorter: TopologicalSorter[str] = TopologicalSorter()
@@ -256,4 +303,6 @@ def formula_evaluation_order(revision: ModeloRevision) -> tuple[str, ...]:
             if (resolved := resolver.get(casilla, casilla)) in computed_targets
         ]
         sorter.add(target, *dependencies)
-    return tuple(sorter.static_order())
+    val = tuple(sorter.static_order())
+    _EVALUATION_ORDER_CACHE[k] = val
+    return val

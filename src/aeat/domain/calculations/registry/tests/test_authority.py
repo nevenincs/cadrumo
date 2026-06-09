@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import tempfile
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -10,6 +12,7 @@ import pytest
 
 from .....core.resources import bundled_path, resources
 from .. import RegistrySnapshotError, ValidatedRegistryAuthority, calculate_registry_snapshot
+from .._loader import _collect_registry_tree_fingerprints, clear_fingerprint_cache
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -192,3 +195,76 @@ def test_authority_cache_invalidates_when_fragmented_revision_changes(tmp_path: 
     assert first is not second
     assert first.modelo("999").revisions["2025"].label == "before"
     assert second.modelo("999").revisions["2025"].label == "after cache invalidation"
+
+
+def test_authority_uses_validation_cache_and_invalidates(tmp_path: Path) -> None:
+    """Authority loading must check the validated cache and invalidate when files change."""
+    registry_root = tmp_path / "registry" / "aeat"
+    legal_dir = registry_root / "legal"
+    revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
+    revision_dir.mkdir(parents=True)
+    legal_dir.mkdir(parents=True)
+    corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
+    corpus_file.parent.mkdir(parents=True)
+    corpus_file.write_bytes(b"x" * 1000)
+
+    (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
+    (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
+
+    revision_path = revision_dir / "revision.toml"
+    revision_path.write_text(_MINIMAL_REVISION_TOML_TEMPLATE.format(label="before"), encoding="utf-8")
+
+    clear_fingerprint_cache()
+
+    # Calculate expected cache path
+    fingerprints = _collect_registry_tree_fingerprints(registry_root)
+    hasher = hashlib.sha256()
+    hasher.update(str(registry_root.resolve()).encode("utf-8"))
+    hasher.update(str(tmp_path.resolve()).encode("utf-8"))
+    for item in fingerprints:
+        hasher.update(item[0].encode("utf-8"))
+        hasher.update(str(item[1]).encode("utf-8"))
+        hasher.update(str(item[2]).encode("utf-8"))
+    val_key_hash = hasher.hexdigest()
+    validated_cache_path = Path(tempfile.gettempdir()) / f"aeat_registry_{val_key_hash}_validated.tmp"
+
+    if validated_cache_path.is_file():
+        validated_cache_path.unlink()
+
+    # Load 1: should run validation and write cache file
+    auth1 = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+    assert auth1._registry_validated is True
+    assert validated_cache_path.is_file()
+
+    # Load 2: should read cache file and load
+    auth2 = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+    assert auth2._registry_validated is True
+
+    # Modify file to invalidate cache
+    revision_path.write_text(_MINIMAL_REVISION_TOML_TEMPLATE.format(label="after"), encoding="utf-8")
+    clear_fingerprint_cache()
+
+    # New expected cache path
+    fingerprints2 = _collect_registry_tree_fingerprints(registry_root)
+    hasher2 = hashlib.sha256()
+    hasher2.update(str(registry_root.resolve()).encode("utf-8"))
+    hasher2.update(str(tmp_path.resolve()).encode("utf-8"))
+    for item in fingerprints2:
+        hasher2.update(item[0].encode("utf-8"))
+        hasher2.update(str(item[1]).encode("utf-8"))
+        hasher2.update(str(item[2]).encode("utf-8"))
+    val_key_hash2 = hasher2.hexdigest()
+    validated_cache_path2 = Path(tempfile.gettempdir()) / f"aeat_registry_{val_key_hash2}_validated.tmp"
+
+    assert val_key_hash != val_key_hash2
+    assert not validated_cache_path2.is_file()
+
+    # Load 3: should run validation and write new cache file
+    auth3 = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+    assert auth3._registry_validated is True
+    assert validated_cache_path2.is_file()
+    assert auth3.modelo("999").revisions["2025"].label == "after"
+
+    # Cleanup
+    validated_cache_path.unlink(missing_ok=True)
+    validated_cache_path2.unlink(missing_ok=True)
