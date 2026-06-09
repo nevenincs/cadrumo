@@ -58,7 +58,7 @@ Discoverability and consistency papercuts surfaced by the testimonials.
 
 Re-run skeptic, foreign, and crossyear personas to close the still-open safety, casilla-routing, and prior-year-carry items.
 
-- [ ] `P05.S13` - Re-run skeptic/foreign/crossyear personas post-fix to close still-open: silent-under-declaration on calculated return, M303 special-IVA casilla routing, prior-year previous_filing carry across a filed period; `.vault-scratch/personas`.
+- [x] `P05.S13` - Re-run skeptic/foreign/crossyear personas post-fix to close still-open: silent-under-declaration on calculated return, M303 special-IVA casilla routing, prior-year previous_filing carry across a filed period; `.vault-scratch/personas`.
 
 ## Description
 
