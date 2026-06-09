@@ -16,7 +16,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = pathlib.Path(__file__).parent
+_SRC_ROOT = pathlib.Path(__file__).parent.parent
 _EXPORT_TEST_PACKAGE = _SRC_ROOT / "adapters" / "outbound" / "aeat" / "export"
 
 _BARE_LATIN1_LITERAL = '"iso-8859-1"'

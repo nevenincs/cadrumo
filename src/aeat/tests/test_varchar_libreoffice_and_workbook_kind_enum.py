@@ -31,6 +31,7 @@ _SRC_AEAT = PROJECT_ROOT / "src" / "aeat"
 
 _SECURE_OBJECTS_PATH = _SRC_AEAT / "adapters" / "persistence" / "storage" / "sql" / "secure_objects.py"
 _WORKBOOK_PARITY_PATH = _SRC_AEAT / "domain" / "calculations" / "registry" / "_workbook_parity.py"
+_WORKBOOK_PARITY_TYPES_PATH = _SRC_AEAT / "domain" / "calculations" / "registry" / "_workbook_parity_types.py"
 
 _WORKBOOK_KIND_MEMBERS: frozenset[str] = frozenset(
     {
@@ -146,8 +147,9 @@ def test_workbook_kind_is_strenum_with_all_members() -> None:
 
 def test_workbook_kind_enum_members_in_ast() -> None:
     """All six WorkbookKind values must appear as class-body assignments in source."""
-    enrolled = _workbook_kind_enum_members(_WORKBOOK_PARITY_PATH)
+    enrolled = _workbook_kind_enum_members(_WORKBOOK_PARITY_TYPES_PATH)
     missing = _WORKBOOK_KIND_MEMBERS - enrolled
     assert not missing, (
-        f"WorkbookKind class body in {_WORKBOOK_PARITY_PATH.name} is missing member assignments for: {sorted(missing)}."
+        f"WorkbookKind class body in {_WORKBOOK_PARITY_TYPES_PATH.name} "
+        f"is missing member assignments for: {sorted(missing)}."
     )

@@ -26,7 +26,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = pathlib.Path(__file__).parent
+_SRC_ROOT = pathlib.Path(__file__).parent.parent
 
 # Canonical modules exempt from their own rules.
 _ROUNDING_MODULE = _SRC_ROOT / "core" / "money" / "__init__.py"

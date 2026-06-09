@@ -55,7 +55,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = pathlib.Path(__file__).parent
+_SRC_ROOT = pathlib.Path(__file__).parent.parent
 
 # Recognised rationale marker token prefixes (any one satisfies the rule).
 _MARKER_TOKENS: tuple[str, ...] = (
@@ -70,7 +70,7 @@ _MARKER_TOKENS: tuple[str, ...] = (
     "ALT-FINGERPRINT-RATIONALE-",
 )
 
-# How many lines before the ``# type: ignore`` line are inspected for markers.
+# How many lines before the type-ignore line are inspected for markers.
 _CONTEXT_LINES = 3
 
 _TYPE_IGNORE_RE = re.compile(r"#\s*type:\s*ignore")
@@ -101,7 +101,7 @@ def _collect_violations() -> list[tuple[str, int]]:
     violations: list[tuple[str, int]] = []
     for path in sorted(_SRC_ROOT.rglob("*.py")):
         name = path.name
-        if name.startswith("test_") or name.endswith("_test.py"):
+        if name.startswith("test_") or name.endswith("_test.py") or "tests" in path.parts:
             continue
         try:
             source = path.read_text(encoding="utf-8", errors="replace")

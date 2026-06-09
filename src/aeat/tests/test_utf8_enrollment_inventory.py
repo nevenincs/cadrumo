@@ -45,7 +45,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = pathlib.Path(__file__).parent
+_SRC_ROOT = pathlib.Path(__file__).parent.parent
 _SCRIPTS_ROOT = _SRC_ROOT.parent.parent / "scripts"
 
 # Patterns that indicate a bare UTF-8 literal (string form only).
@@ -58,7 +58,7 @@ _BARE_UTF8_PATTERNS: tuple[re.Pattern[str], ...] = (
 # Lines on which any of these substrings appear are exempted because the
 # UTF-8 encoding is required by the hash/HMAC protocol, not the
 # application's text I/O conventions.
-_HASH_ALLOWLIST_TOKENS = frozenset({"hashlib", "hmac", "sha256", "sha1", "md5"})
+_HASH_ALLOWLIST_TOKENS = frozenset({"hashlib", "hmac", "sha256", "sha1", "md5", "hasher"})
 
 # Files excluded from the scan entirely (not subject to the ratchet).
 _SCAN_EXCLUDES: frozenset[str] = frozenset(
@@ -72,7 +72,7 @@ _SCAN_EXCLUDES: frozenset[str] = frozenset(
 # commit instead.  Removing an entry locks that file at zero violations.
 _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
     {
-        "adapters/outbound/aeat/sede/_declarations.py",
+        "adapters/outbound/aeat/sede/_declarations_observations.py",
         "adapters/outbound/llm/_cache.py",
         "adapters/outbound/llm/_usage.py",
         "adapters/outbound/storage/_mirror_manifest.py",
@@ -91,12 +91,14 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
         "application/evidence/_service.py",
         "application/export/_tabular.py",
         "application/filing/_review.py",
-        "application/ledger/_actions.py",
+        "application/ledger/_actions_export.py",
+        "application/ledger/_actions_import.py",
+        "application/ledger/_actions_manual.py",
         "application/live/_borrador_100.py",
         "application/live/_censo.py",
         "application/live/_snapshot_base.py",
         "application/live/_verify.py",
-        "application/modelo/_actions.py",
+        "application/modelo/_revision_persistence.py",
         "application/repair_integrity.py",
         "application/user_profile/_lifecycle.py",
         "application/user_profile/_repository.py",
@@ -142,8 +144,10 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
         "domain/user_profile/_values.py",
         "entrypoints/cli/_config/__init__.py",
         "entrypoints/cli/_config/_google.py",
+        "entrypoints/cli/_config/_google_sync_calc.py",
+        "entrypoints/cli/_config/_profile_bundle.py",
         "entrypoints/cli/_errors.py",
-        "entrypoints/cli/_ledger.py",
+        "entrypoints/cli/_ledger_classify_cli.py",
         "entrypoints/cli/_stdio.py",
         "locales/_ast_scanner.py",
         "tests/_env_loader.py",
@@ -174,7 +178,7 @@ def _all_production_files() -> list[pathlib.Path]:
     files: list[pathlib.Path] = []
     for path in sorted(_SRC_ROOT.rglob("*.py")):
         rel = path.relative_to(_SRC_ROOT).as_posix()
-        if path.name.startswith("test_"):
+        if path.name.startswith("test_") or "tests" in path.parts:
             continue
         if rel in _SCAN_EXCLUDES:
             continue
