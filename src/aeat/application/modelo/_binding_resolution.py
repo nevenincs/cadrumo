@@ -57,6 +57,9 @@ def resolve_calculation_binding_inputs(
 ) -> CalculationBindingResolution:
     """Resolve every binding-related engine channel for one calculation.
 
+    Returns:
+        :class:`CalculationBindingResolution`: The resolved binding state.
+
     Use of :class:`RegistrySnapshot` for compliance.
     """
     borrador_result = _resolve_borrador_bindings_for_calculation(
