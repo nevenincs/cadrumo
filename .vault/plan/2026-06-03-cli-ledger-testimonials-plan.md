@@ -9,13 +9,22 @@ related:
   - '[[2026-06-03-cli-ledger-testimonials-adr]]'
   - '[[2026-06-04-cli-ledger-testimonials-research]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `cli-ledger-testimonials` `CLI ledger-operator hardening: testimonial findings to fixes` plan
 
 ### Phase `P01` - BLOCKER fixes
 
 Resolve the round-trip, atomicity, and IVA-wallet-seed blockers that sever the operator filing path.
-
-
 
 - [x] `P01.S01` - Fix Transaction CLI read-model to accept persisted value_in_eur/fx_rate (B1 #49); `src/aeat/entrypoints/cli/_ledger_payloads.py`.
 - [x] `P01.S02` - Verify ledger mutation atomicity: no refused-command partial writes (B2); `src/aeat/application/ledger/_actions.py`.
@@ -27,7 +36,7 @@ Bucket-session fixture regression plus the UUID-vs-display-name in-process profi
 
 - [x] `P02.S04` - Migrate ledger/modelo CLI test fixtures to bucket-session span pattern (#52); `src/aeat/entrypoints/cli/test_ledger_validation_paths.py`.
 - [ ] `P02.S05` - Resolve UUID-vs-display-name in-process profile identity for regime-variant tests (#53); `src/aeat/application/workflow/_errors.py`.
-- [ ] `P02.S06` - Journey-suite lifecycle post-state asserts + devengo-vs-caja basis test + README count (#48); `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
+- [x] `P02.S06` - Journey-suite lifecycle post-state asserts + devengo-vs-caja basis test + README count (#48); `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
 
 ### Phase `P03` - MAJOR UX fixes
 
@@ -86,4 +95,3 @@ B2 atomicity proof, and the #52 bucket-session migration).
 
 
 ## Verification
-
