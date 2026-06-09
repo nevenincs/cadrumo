@@ -131,3 +131,25 @@ def test_reset_state_on_fresh_root_reports_nothing_to_reset(_fresh_storage_root:
     assert result.exit_code == 0, result.output
     assert "reset\tfalse" in result.output
     assert "nothing to reset" in result.output
+
+
+def test_repair_profile_refuses_both_repair_actions_at_once(_fresh_storage_root: Path) -> None:
+    """``--clear-active`` and ``--repair-manifest-status`` together are refused.
+
+    Exercises the mutually-exclusive-action precondition guard; a refusal is a
+    non-zero exit, never a crash.
+    """
+
+    result = invoke_cached_cli(["config", "repair", "profile", "--clear-active", "--repair-manifest-status", "--yes"])
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+
+
+def test_repair_profile_clear_active_requires_confirmation(_fresh_storage_root: Path) -> None:
+    """``--clear-active`` without ``--yes`` is refused by the requires-yes guard."""
+
+    result = invoke_cached_cli(["config", "repair", "profile", "--clear-active"])
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
