@@ -115,7 +115,7 @@ Separate the repeated lifecycle from per-modelo recipes.
 
 - [ ] `W05.P09.S27` - Create a stable lifecycle how-to for `work create`, `calculate`, `verify`, optional internal `file`, and `export`, with the work-unit id vs calculation-revision id distinction; `modelo lifecycle docs`.
 - [ ] `W05.P09.S28` - Fix output-file naming consistency across getting-started, quickstart, tutorial, and recipes so the final artifact is not described as `.xml` in one place and fichero-BOE text elsewhere; `narrative docs`.
-- [ ] `W05.P09.S29` - Add a "which modelo should I file?" guide using `overview explain`, `overview calendar`, `overview agenda`, `modelo list`, and `modelo describe`; `modelo selection docs`.
+- [x] `W05.P09.S29` - Add a "which modelo should I file?" guide using `overview explain`, `overview calendar`, `overview agenda`, `modelo list`, and `modelo describe`; `modelo selection docs`.
 - [ ] `W05.P09.S52` - Backlog a plain tax-year filing-history surface that can answer what has been filed, what was missed, and what remains due without implying overview calendar has official AEAT state; `product backlog`.
 - [ ] `W05.P09.S56` - Rewrite modelo lifecycle prose so general readers first see the filing task in plain language, with work units, calculation revisions, registry revisions, selectors, checksums, and exact IDs introduced only as advanced details after the export and manual AEAT handoff are clear; `docs/getting-started.md, docs/how-to/quickstart.md, docs/how-to/filing-spine.md, docs/how-to/modelo-303.md, docs/how-to/modelo-390.md, docs/tutorials/index.md`.
 
@@ -136,16 +136,16 @@ Make the final boundary impossible to misread: the app verifies locally, exports
 
 Make verification failures actionable.
 
-- [ ] `W06.P11.S34` - Create a verification-report guide for `modelo work verify`, `verification-report list`, and `verification-report view`; `verification docs`.
-- [ ] `W06.P11.S35` - Add symptom-first advice for incomplete, blocked, no exportable revision, deadline passed, and id mix-up failures; `verification docs`.
-- [ ] `W06.P11.S36` - Fix or backlog the invalid verification-report next-action path if it is user-visible: `aeat app modelo work verification-report list` should route to the live `aeat app modelo verification-report list/view` surface; `CLI next-action backlog`.
+- [x] `W06.P11.S34` - Create a verification-report guide for `modelo work verify`, `verification-report list`, and `verification-report view`; `verification docs`.
+- [x] `W06.P11.S35` - Add symptom-first advice for incomplete, blocked, no exportable revision, deadline passed, and id mix-up failures; `verification docs`.
+- [x] `W06.P11.S36` - Fix or backlog the invalid verification-report next-action path if it is user-visible: `aeat app modelo work verification-report list` should route to the live `aeat app modelo verification-report list/view` surface; `CLI next-action backlog`.
 - [ ] `W06.P11.S37` - Backlog any missing "plain next action" product surface for verification findings that only expose internal ids or registry terms; `product backlog`.
 
 ### Phase `W06.P12` - Export and manual filing
 
 Write the final handoff checklist.
 
-- [ ] `W06.P12.S38` - Create a verify-export-upload-record-reconcile checklist: verify result, export path, checksum or file identity, upload manually in the AEAT portal, save justificante, record the local filed marker only after real upload, then reconcile; `filing handoff docs`.
+- [x] `W06.P12.S38` - Create a verify-export-upload-record-reconcile checklist: verify result, export path, checksum or file identity, upload manually in the AEAT portal, save justificante, record the local filed marker only after real upload, then reconcile; `filing handoff docs`.
 - [ ] `W06.P12.S39` - Rewrite `work file` language in userdocs so "filed" always reads as an internal state, never remote submission; `filing handoff docs`.
 - [ ] `W06.P12.S40` - Expand the reconciliation guide with what to do when casillas diverge and what evidence to keep; `reconciliation docs`.
 
