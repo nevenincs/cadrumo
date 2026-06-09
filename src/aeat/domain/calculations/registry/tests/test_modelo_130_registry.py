@@ -20,9 +20,9 @@ from .. import (
     resolve_previous_filing_binding_values,
 )
 
-_ModeloFixture = tuple[ModeloDefinition, RegistryCatalogues]
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_ModeloFixture = tuple[ModeloDefinition, RegistryCatalogues]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _REQUIRED_SURFACES = {

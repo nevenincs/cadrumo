@@ -48,14 +48,14 @@ from ...modelo import calculate_modelo_revision, create_work_unit
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._observations_repository import CalculationObservationRepository
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 _Repos = tuple[
     WorkUnitCatalogueRepository,
     CalculationRevisionCatalogueRepository,
     BucketEventHistoryRepository,
     CalculationObservationRepository,
 ]
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CLOCK = datetime(2026, 7, 15, 9, 0, 0, tzinfo=UTC)
 

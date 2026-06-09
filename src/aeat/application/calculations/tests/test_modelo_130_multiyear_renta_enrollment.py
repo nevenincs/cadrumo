@@ -59,14 +59,14 @@ from .._binding_prefill import resolve_bindings_from_local_store
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 _Repos = tuple[
     WorkUnitCatalogueRepository,
     CalculationRevisionCatalogueRepository,
     BucketEventHistoryRepository,
     CalculationObservationRepository,
 ]
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 #: Modelo id this module enrolls into the multi-year-renta authorization gate.
 _MODELO = "130"
