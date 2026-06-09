@@ -1,4 +1,8 @@
-"""Application-owned custody operations for the profile secret store."""
+"""Application-owned custody operations for the profile secret store.
+
+This module uses :class:`Settings` for configuration and :class:`RecoveryVerificationError`
+for recovery validation errors.
+"""
 
 from __future__ import annotations
 

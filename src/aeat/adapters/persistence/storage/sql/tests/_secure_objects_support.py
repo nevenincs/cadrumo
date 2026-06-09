@@ -44,6 +44,7 @@ from ..secure_objects import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+
 def _create_legacy_secure_objects_table(engine) -> None:
     """Create the pre-HashedLookup secure_objects table shape."""
     with engine.begin() as connection:
@@ -59,6 +60,7 @@ def _create_legacy_secure_objects_table(engine) -> None:
             "CONSTRAINT uq_secure_objects_identity UNIQUE (namespace, object_key)"
             ")"
         )
+
 
 def _seed_legacy_encrypted_string_key_row(
     engine,
@@ -89,6 +91,7 @@ def _seed_legacy_encrypted_string_key_row(
                 payload_wire,
             ),
         )
+
 
 def _seed_under_key(
     *,

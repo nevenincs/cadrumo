@@ -172,11 +172,7 @@ def test_committed_modelo_349_base_intracomunitaria_role_coverage() -> None:
         "rect.base-anterior",
     }
 
-    found_ids = {
-        casilla.id
-        for casilla in revision.casillas
-        if casilla.semantic_role == "base_intracomunitaria"
-    }
+    found_ids = {casilla.id for casilla in revision.casillas if casilla.semantic_role == "base_intracomunitaria"}
     assert found_ids == expected_ids
 
     for casilla_id in expected_ids:

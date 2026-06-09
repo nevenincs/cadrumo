@@ -1,8 +1,7 @@
 """Errors raised while handling financial transaction aggregation boundaries.
 
-Used by :mod:`aeat.application.aggregation` to signal contract
-violations before transaction streams reach the central calculation
-registry.
+Raised by: :mod:`~._iva_ledger`, :mod:`~._renta_ledger`, :mod:`~._retenciones`,
+:mod:`~._counterpart`, :mod:`~._foreign_assets` when aggregation constraints are violated.
 """
 
 from __future__ import annotations

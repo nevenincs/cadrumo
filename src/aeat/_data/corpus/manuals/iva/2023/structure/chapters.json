@@ -1,0 +1,13 @@
+[
+  {
+    "chapter_id": "cap1",
+    "sections": [
+      {
+        "relative_path": "structure/sections/cap1/sec1.json",
+        "section_id": "sec1"
+      }
+    ],
+    "summary": "Introducci\u00f3n a los conceptos generales del IVA y el r\u00e9gimen de tributaci\u00f3n general.",
+    "title": "Introducci\u00f3n y R\u00e9gimen General"
+  }
+]

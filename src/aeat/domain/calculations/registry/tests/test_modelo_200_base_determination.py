@@ -70,6 +70,8 @@ def _calculate(inputs: dict[str, Decimal]):
             "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
             "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
             "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
         date_context={"filing_period": date(2024, 12, 31)},
@@ -136,15 +138,11 @@ def test_reserva_and_bin_reduce_base_with_non_negative_clamp() -> None:
     00552 to 0. A reserva/BIN within the base reduces it normally
     (50.000 − 20.000 − 10.000 = 20.000).
     """
-    clamped = _calculate(
-        {"00501": Decimal("50000"), "01032": Decimal("20000"), "DP200014:00547": Decimal("99999")}
-    )
+    clamped = _calculate({"00501": Decimal("50000"), "01032": Decimal("20000"), "DP200014:00547": Decimal("99999")})
     assert clamped.values["DP200014:00550"] == Decimal("50000.00")
     assert clamped.values["DP200014:00552"] == Decimal("0.00")
 
-    within = _calculate(
-        {"00501": Decimal("50000"), "01032": Decimal("20000"), "DP200014:00547": Decimal("10000")}
-    )
+    within = _calculate({"00501": Decimal("50000"), "01032": Decimal("20000"), "DP200014:00547": Decimal("10000")})
     assert within.values["DP200014:00552"] == Decimal("20000.00")
 
 

@@ -62,9 +62,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         profile_create_storage_span("default"),
     ):
         try:
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id="default")
-            )
+            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
             yield
         finally:
             dispose_engine()
@@ -83,9 +81,7 @@ def _match(description: str, rules: list[dict]) -> dict | None:
 
 
 def _import_revolut() -> None:
-    result = _RUNNER.invoke(
-        app, ["app", "ledger", "import", str(_REVOLUT), "--provider", "csv"]
-    )
+    result = _RUNNER.invoke(app, ["app", "ledger", "import", str(_REVOLUT), "--provider", "csv"])
     assert result.exit_code == 0, result.output
 
 
@@ -165,9 +161,15 @@ def test_classify_uk_us_receipts_as_export_business_income() -> None:
         result = _RUNNER.invoke(
             app,
             [
-                "app", "ledger", "classify", "--id", row["transaction_id"],
-                "--classification", "BUSINESS",
-                "--iva-category", "export_third_country_zero_rated",
+                "app",
+                "ledger",
+                "classify",
+                "--id",
+                row["transaction_id"],
+                "--classification",
+                "BUSINESS",
+                "--iva-category",
+                "export_third_country_zero_rated",
             ],
         )
         assert result.exit_code == 0, result.output
@@ -206,9 +208,7 @@ def test_export_json_surfaces_eur_equivalent_and_fx_rate(tmp_path: Path) -> None
     """
     _import_revolut()
     out = tmp_path / "revolut-export.jsonl"
-    exported = _RUNNER.invoke(
-        app, ["app", "ledger", "export", "--output", str(out), "--export-format", "jsonl"]
-    )
+    exported = _RUNNER.invoke(app, ["app", "ledger", "export", "--output", str(out), "--export-format", "jsonl"])
     assert exported.exit_code == 0, exported.output
     text = out.read_text(encoding="utf-8")
     assert "GBP" in text, "export must carry the native currency"

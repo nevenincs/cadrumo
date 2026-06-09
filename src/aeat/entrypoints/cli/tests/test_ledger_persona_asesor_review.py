@@ -66,9 +66,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         profile_create_storage_span("default"),
     ):
         try:
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id="default")
-            )
+            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
             yield
         finally:
             dispose_engine()
@@ -76,9 +74,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 def _import_corpus() -> None:
     for name in _FILES:
-        result = _RUNNER.invoke(
-            app, ["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"]
-        )
+        result = _RUNNER.invoke(app, ["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"])
         assert result.exit_code == 0, f"{name}: {result.output}"
 
 
@@ -125,9 +121,7 @@ def test_asesor_triage_pending_backlog_via_review_filter() -> None:
     anomaly + a personal row must both be in it before any disposition.
     """
     _import_corpus()
-    pending = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "review", "--filter", "status=pending"]
-    )
+    pending = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "review", "--filter", "status=pending"])
     assert pending.exit_code == 0, pending.output
     rows = _json(pending.output).get("rows", [])
     descriptions = {r.get("description", "") for r in rows}
@@ -162,9 +156,7 @@ def test_preflight_period_scopes_the_readiness_gaps() -> None:
     checked set below the all-period total while still reporting gaps.
     """
     _import_corpus()
-    pre = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"]
-    )
+    pre = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"])
     assert pre.exit_code == 0, pre.output
     result = _json(pre.output)
     assert result["ready"] is False, result
@@ -180,9 +172,7 @@ def test_preflight_period_scopes_the_readiness_gaps() -> None:
 def test_preflight_issue_detail_is_actionable_text() -> None:
     """Each preflight issue must name the missing fact in plain language."""
     _import_corpus()
-    pre = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"]
-    )
+    pre = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"])
     assert pre.exit_code == 0, pre.output
     details = " ".join(issue["detail"] for issue in _json(pre.output)["issues"])
     assert "classification" in details.lower(), details[:200]
@@ -222,16 +212,10 @@ def test_history_after_disposition_records_the_decision() -> None:
     _import_corpus()
     row = _find(_list_rows(), _PERSONAL_DESC)
     tx = row["transaction_id"]
-    before = _json(
-        _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", tx]).output
-    )["event_count"]
-    archived = _RUNNER.invoke(
-        app, ["app", "ledger", "archive", "--id", tx, "--reason", "personal expense", "--yes"]
-    )
+    before = _json(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", tx]).output)["event_count"]
+    archived = _RUNNER.invoke(app, ["app", "ledger", "archive", "--id", tx, "--reason", "personal expense", "--yes"])
     assert archived.exit_code == 0, archived.output
-    after = _json(
-        _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", tx]).output
-    )["event_count"]
+    after = _json(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", tx]).output)["event_count"]
     assert after > before, (before, after)
 
 
@@ -255,9 +239,7 @@ def test_asesor_can_classify_then_preflight_surfaces_recargo_gaps() -> None:
     refreshed = _find(_list_rows(), _RECARGO_DESC)
     assert refreshed["business_classification"] == "BUSINESS", refreshed
 
-    pre = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"]
-    )
+    pre = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"])
     assert pre.exit_code == 0, pre.output
     recargo_issues = [i for i in _json(pre.output)["issues"] if i["transaction_id"] == tx]
     # Classifying alone does not satisfy the modelo fact requirements (category,
@@ -281,9 +263,7 @@ def test_personal_row_drops_out_of_readiness_when_classified() -> None:
     )
     assert classify.exit_code == 0, classify.output
 
-    pre = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"]
-    )
+    pre = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"])
     assert pre.exit_code == 0, pre.output
     personal_issues = [i for i in _json(pre.output)["issues"] if i["transaction_id"] == tx]
     assert personal_issues == [], personal_issues

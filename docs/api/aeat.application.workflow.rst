@@ -15,6 +15,8 @@ Submodules
 
    aeat.application.workflow._adapters
    aeat.application.workflow._engine
+   aeat.application.workflow._engine_helpers
+   aeat.application.workflow._engine_recording
    aeat.application.workflow._errors
    aeat.application.workflow._events
    aeat.application.workflow._models

@@ -64,8 +64,8 @@ _CONTEXT_LABEL = "714-patrimonio-prior-year-wealth-baseline-two-ejercicios"
 _FILING_OBLIGATION_EUR = Decimal("2000000.00")
 
 # Year-N wealth figures (above the €2.000.000 filing obligation).
-_BASE_IMPONIBLE_N = Decimal("2100000.00")     # patrimonio neto
-_BASE_LIQUIDABLE_N = Decimal("1400000.00")    # tras €700.000 mínimo exento (art. 28)
+_BASE_IMPONIBLE_N = Decimal("2100000.00")  # patrimonio neto
+_BASE_LIQUIDABLE_N = Decimal("1400000.00")  # tras €700.000 mínimo exento (art. 28)
 _CUOTA_INTEGRA_N = Decimal("8523.36")  # arbitrary manual baseline figure (no calc; NOT escala-derived)
 
 # Year-N+1 wealth figures (distinct ejercicio; grown base).
@@ -73,7 +73,7 @@ _BASE_IMPONIBLE_N1 = Decimal("2300000.00")
 _BASE_LIQUIDABLE_N1 = Decimal("1600000.00")
 _CUOTA_INTEGRA_N1 = Decimal("10523.36")
 
-_CLOCK_N = datetime(2024, 5, 15, 10, 0, 0, tzinfo=UTC)   # M714 deadline window ~ Apr-Jun
+_CLOCK_N = datetime(2024, 5, 15, 10, 0, 0, tzinfo=UTC)  # M714 deadline window ~ Apr-Jun
 _CLOCK_N_PLUS_1 = datetime(2025, 5, 15, 10, 0, 0, tzinfo=UTC)
 
 
@@ -197,9 +197,7 @@ def test_anti_tautology_proof_missing_cuota_surfaces_as_inequality(tmp_path: Pat
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="0A",
-        observations=tuple(
-            o for o in obs_n.observations if o.casilla_id != "patrimonio.cuota-integra"
-        ),
+        observations=tuple(o for o in obs_n.observations if o.casilla_id != "patrimonio.cuota-integra"),
     )
     assert obs_n != obs_n_no_cuota
 

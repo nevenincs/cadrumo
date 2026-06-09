@@ -30,7 +30,7 @@ pytestmark = [
 # Helpers
 # ---------------------------------------------------------------------------
 
-_SRC = Path(__file__).parent
+_SRC = Path(__file__).parent.parent
 
 
 def _source(rel: str) -> str:

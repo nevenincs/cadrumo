@@ -42,6 +42,8 @@ from ._action_test_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
 @dataclass(frozen=True, slots=True)
 class _UpdateManualOutcome:
     """Bundle returned by _drive_update_manual_transaction.
@@ -55,6 +57,7 @@ class _UpdateManualOutcome:
     updated: ManualLedgerTransactionResult
     reloaded: TransactionCatalogue
     events: tuple[BucketEvent, ...]
+
 
 def _drive_update_manual_transaction(secure_objects: SecureObjectRepository) -> _UpdateManualOutcome:
     """Run the canonical create -> update scenario and bundle the observable state."""
@@ -94,15 +97,18 @@ def _drive_update_manual_transaction(secure_objects: SecureObjectRepository) -> 
     events = tuple(event_repository.load().for_bucket("bucket-a"))
     return _UpdateManualOutcome(created=created, updated=updated, reloaded=reloaded, events=events)
 
+
 def test_update_manual_transaction_retires_previous_transaction_id_from_catalogue(
     secure_objects: SecureObjectRepository,
 ) -> None:
     outcome = _drive_update_manual_transaction(secure_objects)
     assert outcome.created.ref.transaction_id not in outcome.reloaded.transactions
 
+
 def test_update_manual_transaction_persists_replacement_transaction_id(secure_objects: SecureObjectRepository) -> None:
     outcome = _drive_update_manual_transaction(secure_objects)
     assert outcome.updated.ref.transaction_id in outcome.reloaded.transactions
+
 
 @pytest.mark.parametrize(("attr_path", "expected"), _UPDATED_FIELD_EXPECTATIONS)
 def test_update_manual_transaction_replaces_field(
@@ -114,12 +120,14 @@ def test_update_manual_transaction_replaces_field(
         actual = getattr(actual, segment)
     assert actual == expected
 
+
 @pytest.mark.parametrize("attr", _PRESERVED_CREATE_AUDIT_FIELDS)
 def test_update_manual_transaction_preserves_original_audit_field(
     secure_objects: SecureObjectRepository, attr: str
 ) -> None:
     outcome = _drive_update_manual_transaction(secure_objects)
     assert getattr(outcome.updated.transaction, attr) == getattr(outcome.created.transaction, attr)
+
 
 def test_update_manual_transaction_records_edit_lineage_entry(secure_objects: SecureObjectRepository) -> None:
     outcome = _drive_update_manual_transaction(secure_objects)
@@ -128,6 +136,7 @@ def test_update_manual_transaction_records_edit_lineage_entry(secure_objects: Se
     assert entry.actor == "operator-B"
     assert entry.source_command == "aeat app ledger update"
     assert entry.bucket_event_id == outcome.updated.bucket_event_ids[0]
+
 
 def test_update_manual_transaction_emits_expected_event_chain(secure_objects: SecureObjectRepository) -> None:
     outcome = _drive_update_manual_transaction(secure_objects)
@@ -138,9 +147,11 @@ def test_update_manual_transaction_emits_expected_event_chain(secure_objects: Se
         BucketEventType.LEDGER_TRANSACTION_ALLOCATED,
     ]
 
+
 def test_update_manual_transaction_links_update_events_to_result(secure_objects: SecureObjectRepository) -> None:
     outcome = _drive_update_manual_transaction(secure_objects)
     assert [event.event_id for event in outcome.events[1:]] == list(outcome.updated.bucket_event_ids)
+
 
 @pytest.mark.parametrize(("event_index", "payload_key", "expected"), _POST_UPDATE_EVENT_PAYLOADS)
 def test_update_manual_transaction_event_payload_marks_mutation_kind(
@@ -149,17 +160,20 @@ def test_update_manual_transaction_event_payload_marks_mutation_kind(
     outcome = _drive_update_manual_transaction(secure_objects)
     assert outcome.events[event_index].payload[payload_key] == expected
 
+
 def test_update_manual_transaction_edit_event_references_previous_transaction(
     secure_objects: SecureObjectRepository,
 ) -> None:
     outcome = _drive_update_manual_transaction(secure_objects)
     assert outcome.events[1].payload["previous_transaction_id"] == outcome.created.ref.transaction_id
 
+
 def test_update_manual_transaction_post_update_events_target_new_transaction_id(
     secure_objects: SecureObjectRepository,
 ) -> None:
     outcome = _drive_update_manual_transaction(secure_objects)
     assert {event.object_id for event in outcome.events[1:]} == {outcome.updated.ref.transaction_id}
+
 
 def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
     secure_objects: SecureObjectRepository,
@@ -210,6 +224,7 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
         BucketEventType.LEDGER_TRANSACTION_UPDATED,
         BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,
     ]
+
 
 def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassification(
     secure_objects: SecureObjectRepository,
@@ -262,6 +277,7 @@ def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassi
         BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,
         BucketEventType.LEDGER_TRANSACTION_ALLOCATED,
     ]
+
 
 def test_update_manual_transaction_emits_purchase_evidence_attachment_event(
     secure_objects: SecureObjectRepository,
@@ -316,6 +332,7 @@ def test_update_manual_transaction_emits_purchase_evidence_attachment_event(
     assert events[-1].payload["transaction_id"] == updated.ref.transaction_id
     assert events[-1].payload["mutation_kind"] == "purchase_invoice_evidence_attached"
 
+
 def test_attach_manual_transaction_evidence_delegates_to_validated_backend_patch(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -355,6 +372,7 @@ def test_attach_manual_transaction_evidence_delegates_to_validated_backend_patch
         BucketEventType.LEDGER_TRANSACTION_CREATED,
         BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED,
     ]
+
 
 def test_update_manual_transaction_mixed_edit_and_evidence_lineage_uses_evidence_event(
     secure_objects: SecureObjectRepository,
@@ -405,6 +423,7 @@ def test_update_manual_transaction_mixed_edit_and_evidence_lineage_uses_evidence
     assert updated.transaction.edit_lineage[-1].bucket_event_id != attach_event.event_id
     assert updated.transaction.evidence_provenance[-1].bucket_event_id == attach_event.event_id
 
+
 def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
@@ -444,6 +463,7 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_obj
     assert [event.event_type for event in event_repository.load().for_bucket("bucket-a")] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED
     ]
+
 
 def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_save(
     secure_objects: SecureObjectRepository,
@@ -490,6 +510,7 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
     events = event_repository.load().for_bucket("bucket-a")
     assert [event.event_type for event in events] == [BucketEventType.LEDGER_TRANSACTION_CREATED]
 
+
 def test_update_manual_transaction_rejects_provenance_only_correction(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
@@ -522,6 +543,7 @@ def test_update_manual_transaction_rejects_provenance_only_correction(secure_obj
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
+
 def _create_classified_transaction(
     transaction_repository: TransactionCatalogueRepository,
     event_repository: BucketEventHistoryRepository,
@@ -544,6 +566,7 @@ def _create_classified_transaction(
         bucket_event_repository=event_repository,
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
+
 
 def test_update_manual_transaction_fields_reaffirmation_noop_returns_stored_transaction(
     secure_objects: SecureObjectRepository,
@@ -585,6 +608,7 @@ def test_update_manual_transaction_fields_reaffirmation_noop_returns_stored_tran
     event_count_after = len(list(event_repository.load().for_bucket("bucket-a")))
     assert event_count_after == event_count_before
 
+
 def test_update_manual_transaction_fields_reaffirm_true_bypasses_outer_guard_but_inner_guard_still_applies(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -623,6 +647,7 @@ def test_update_manual_transaction_fields_reaffirm_true_bypasses_outer_guard_but
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
+
 def test_update_manual_transaction_fields_reaffirm_true_with_net_change_emits_event(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -655,6 +680,7 @@ def test_update_manual_transaction_fields_reaffirm_true_with_net_change_emits_ev
     events = list(event_repository.load().for_bucket("bucket-a"))
     new_event_types = [e.event_type for e in events[1:]]
     assert BucketEventType.LEDGER_TRANSACTION_CLASSIFIED in new_event_types
+
 
 def test_update_manual_transaction_fields_different_classification_bypasses_noop_guard(
     secure_objects: SecureObjectRepository,

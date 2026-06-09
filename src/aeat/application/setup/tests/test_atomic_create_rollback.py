@@ -95,11 +95,11 @@ def _register(profile_id: str, *, facts: Mapping[str, str]) -> None:
 def test_failed_atomic_create_raises_and_leaves_no_profile(_backend: Path) -> None:
     """An encrypted-record-write failure rolls back the manifest and pointer.
 
-    The incomplete fact set makes the schema validator reject the
-    record inside ``ProfileLifecycleService.register`` — the
-disaster contract step-4 failure. The rollback must clear the manifest
-    and the active-profile pointer so neither the manifest scan nor
-    the pointer chain reports a phantom ``victim`` profile.
+        The incomplete fact set makes the schema validator reject the
+        record inside ``ProfileLifecycleService.register`` — the
+    disaster contract step-4 failure. The rollback must clear the manifest
+        and the active-profile pointer so neither the manifest scan nor
+        the pointer chain reports a phantom ``victim`` profile.
     """
 
     with pytest.raises(ProfileSchemaValidationError):

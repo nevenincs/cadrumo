@@ -4,6 +4,8 @@ Modelo 720: Declaración informativa sobre bienes y derechos situados en el
 extranjero. Per-asset records grouped by asset class. Each class carries
 a €50,000 valuation threshold; declarability is per-class, not per-asset.
 
+Used by: :mod:`aeat.application.aggregation._service` (central per-modelo aggregator).
+
 Bare ``invoice`` source-kind is rejected at observation construction;
 the four canonical source kinds are accepted: ``ledger_transaction``,
 ``purchase_invoice_evidence``, ``payable_invoice``, and

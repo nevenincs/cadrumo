@@ -230,6 +230,8 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
             "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
             "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
             "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("10000")},
         date_context={"filing_period": date(2024, 12, 31)},
@@ -279,7 +281,7 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
     # chain, so it is no longer supplied directly. Feeding the resultado
     # contable 00501 = 1.000.000 with zero correcciones, zero reserva de
     # capitalización and zero compensación BIN makes the chain compute
-    #00550 = 1.000.000 and 00552 = 1.000.000, reproducing the manual
+    # 00550 = 1.000.000 and 00552 = 1.000.000, reproducing the manual
     # worked-example base that the post-nivelación and cuota chain consume.
     result = calculate_registry_snapshot(
         snapshot,
@@ -297,6 +299,8 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
             "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
             "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
             "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
         date_context={"filing_period": date(2024, 12, 31)},

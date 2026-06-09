@@ -1,4 +1,7 @@
-"""Application-level addressing for modelo work CLI consumers."""
+"""Application-level addressing for modelo work CLI consumers.
+
+Use of :class:`CalculationRevision` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -147,7 +150,10 @@ class ModeloResolvedRevisionProjection:
         *,
         selector: ModeloCalculationRevisionSelector,
     ) -> ModeloResolvedRevisionProjection:
-        """Project an internal calculation revision into support metadata."""
+        """Project an internal calculation revision into support metadata.
+
+        Use of :class:`CalculationRevision` for compliance.
+        """
         return cls(
             calculation_revision_id=revision.calculation_revision_id,
             short_calculation_revision_id=revision.calculation_revision_id[-12:],

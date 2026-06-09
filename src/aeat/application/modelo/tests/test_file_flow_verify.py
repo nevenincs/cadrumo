@@ -49,6 +49,8 @@ from ._file_flow_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
 def test_mark_verificado_completo_requires_borrador_state(repos) -> None:
     """A revision in any state other than BORRADOR cannot be marked
     verificado-completo."""
@@ -80,6 +82,7 @@ def test_mark_verificado_completo_requires_borrador_state(repos) -> None:
             calculation_repository=cr_repo,
             clock=_T3,
         )
+
 
 def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos) -> None:
     """A granted verification must still pass the WorkflowEngine gate.
@@ -140,6 +143,7 @@ def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos
     )
     assert verification_events == ()
 
+
 def test_verify_grants_for_a_closed_past_period_real_registry(repos) -> None:
     """``work verify`` is independent of the AEAT filing calendar.
 
@@ -186,6 +190,7 @@ def test_verify_grants_for_a_closed_past_period_real_registry(repos) -> None:
     )
     assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
 
+
 def test_verify_records_deadline_state_as_informational_not_abort(repos) -> None:
     """The verify run's ``COMPUTING_DEADLINES`` step never aborts.
 
@@ -226,6 +231,7 @@ def test_verify_records_deadline_state_as_informational_not_abort(repos) -> None
     assert deadline_step.details is not None
     assert deadline_step.details["deadline_role"] == "informational"
 
+
 def test_get_calculation_revision_raises_on_missing_id(repos) -> None:
     _, cr_repo, _, _, _ = repos
     with pytest.raises(CalculationRevisionNotFoundError):
@@ -233,6 +239,7 @@ def test_get_calculation_revision_raises_on_missing_id(repos) -> None:
             "0" * 64,
             calculation_repository=cr_repo,
         )
+
 
 def test_verify_grants_when_all_required_casillas_present_real_registry(
     repos,
@@ -294,6 +301,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
     )
     assert persisted.granted_verificado_completo is True
     assert persisted.completeness_status is VerificationCompletenessStatus.COMPLETE
+
 
 def test_verify_refuses_when_required_casilla_missing_real_registry(
     repos,
@@ -361,6 +369,7 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
         verification_repository=vr_repo,
     )
     assert persisted.granted_verificado_completo is False
+
 
 def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     repos,
@@ -437,6 +446,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     )
     assert refreshed.state is CalculationRevisionState.BORRADOR
 
+
 def test_verify_rejects_non_borrador_revision_real_registry(repos) -> None:
     """Real e2e: a verificado-completo revision cannot be re-verified.
     The operator must produce a fresh draft (which lands as BORRADOR)
@@ -476,6 +486,7 @@ def test_verify_rejects_non_borrador_revision_real_registry(repos) -> None:
             bucket_event_repository=bv_repo,
             clock=_T3,
         )
+
 
 def test_list_and_get_verification_reports_real_registry(repos) -> None:
     """Real e2e: reports persist through the encrypted catalogue and

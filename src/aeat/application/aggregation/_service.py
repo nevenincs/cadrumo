@@ -1,8 +1,12 @@
 """Central per-modelo aggregation service contracts.
 
+Used by: :mod:`aeat.application.aggregation` package to route aggregation commands to appropriate providers.
+
 This module owns the non-CLI aggregation boundary required by the CLI
 workflow redesign. It routes strict Pydantic command payloads to the
 implemented family aggregators without adding CLI-local conversion logic.
+
+Providers: ``retenciones`` (111/115/123/180/190/193), ``counterpart`` (347/349), ``foreign_assets`` (720).
 """
 
 from __future__ import annotations

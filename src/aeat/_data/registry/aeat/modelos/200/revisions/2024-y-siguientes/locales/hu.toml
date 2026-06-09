@@ -1,0 +1,7 @@
+[labels]
+"00001" = "Nonprofit szervezet a 49/2002. törvény II. címe szerinti különleges adórendszerben"
+"00027" = "Negatív vagy nulla adóalap"
+
+[help]
+"00001" = "Jelző, amely azt mutatja, hogy a szervezet nonprofit-e és a 49/2002. törvény II. címe szerinti adórendszer alá tartozik-e."
+"00027" = "Negatív vagy nulla adóalap a kiigazítások vagy kompenzációk előtt."

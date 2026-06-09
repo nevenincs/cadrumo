@@ -1,10 +1,14 @@
 """Modelo binding values derived from bucket-local ledger catalogues.
 
-Accepts a :class:`ModeloRevision` to drive ledger aggregation binding
+Used by: :mod:`~._service` (per-modelo aggregation provider) to resolve registry bindings.
+
+Accepts a :class:`~aeat.domain.calculations.registry.ModeloRevision` to drive ledger aggregation binding
 resolution across IVA, renta income, and renta expense source kinds.
-Expense aggregation reads from both a :class:`TransactionCatalogueRepository`
-and an :class:`InvoiceCatalogueRepository`; the invoice repository supplies
+Expense aggregation reads from both a :class:`~aeat.domain.transactions.TransactionCatalogueRepository`
+and an :class:`~aeat.domain.invoices.InvoiceCatalogueRepository`; the invoice repository supplies
 purchase-invoice evidence that the renta expense pipeline requires.
+
+Related: :mod:`~._iva_ledger`, :mod:`~._renta_ledger`, :mod:`~._renta_income_ledger` for ledger aggregation.
 """
 
 from __future__ import annotations

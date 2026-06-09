@@ -16,15 +16,20 @@ Submodules
    aeat.domain.calculations.registry._aeat_hosts
    aeat.domain.calculations.registry._aeat_nif_iva_oracle
    aeat.domain.calculations.registry._applicability
+   aeat.domain.calculations.registry._applicability_modelo202
+   aeat.domain.calculations.registry._applicability_payer_facts
    aeat.domain.calculations.registry._authority
+   aeat.domain.calculations.registry._binding_selector_utils
    aeat.domain.calculations.registry._bindings
    aeat.domain.calculations.registry._bindings_previous_filing
    aeat.domain.calculations.registry._censo_modelos
    aeat.domain.calculations.registry._checker_oracle_flow
    aeat.domain.calculations.registry._citation_blocklist
    aeat.domain.calculations.registry._constructs
+   aeat.domain.calculations.registry._counterpart_bindings
    aeat.domain.calculations.registry._coverage
    aeat.domain.calculations.registry._cross_revision_divergence
+   aeat.domain.calculations.registry._detail_record_bindings
    aeat.domain.calculations.registry._errors
    aeat.domain.calculations.registry._export
    aeat.domain.calculations.registry._export_parse
@@ -33,6 +38,8 @@ Submodules
    aeat.domain.calculations.registry._formula_runtime
    aeat.domain.calculations.registry._groi_oracle
    aeat.domain.calculations.registry._ids
+   aeat.domain.calculations.registry._invoice_bindings
+   aeat.domain.calculations.registry._ledger_bindings
    aeat.domain.calculations.registry._legal
    aeat.domain.calculations.registry._live_parity
    aeat.domain.calculations.registry._loader
@@ -40,6 +47,8 @@ Submodules
    aeat.domain.calculations.registry._parity_tapes
    aeat.domain.calculations.registry._queries
    aeat.domain.calculations.registry._record_design
+   aeat.domain.calculations.registry._record_design_coverage
+   aeat.domain.calculations.registry._record_design_schema
    aeat.domain.calculations.registry._record_spec
    aeat.domain.calculations.registry._relations
    aeat.domain.calculations.registry._remote_state_guard
@@ -48,6 +57,12 @@ Submodules
    aeat.domain.calculations.registry._scenarios
    aeat.domain.calculations.registry._schedules
    aeat.domain.calculations.registry._schema
+   aeat.domain.calculations.registry._schema_base
+   aeat.domain.calculations.registry._schema_formula
+   aeat.domain.calculations.registry._schema_input_kind
+   aeat.domain.calculations.registry._schema_rounding
+   aeat.domain.calculations.registry._schema_scalars
+   aeat.domain.calculations.registry._schema_surfaces
    aeat.domain.calculations.registry._snapshot
    aeat.domain.calculations.registry._sources
    aeat.domain.calculations.registry._temporal
@@ -85,5 +100,8 @@ Submodules
    aeat.domain.calculations.registry._validate_semantic_roles
    aeat.domain.calculations.registry._validate_source_outputs
    aeat.domain.calculations.registry._validate_surfaces
+   aeat.domain.calculations.registry._withholding_bindings
    aeat.domain.calculations.registry._workbook_parity
+   aeat.domain.calculations.registry._workbook_parity_models
+   aeat.domain.calculations.registry._workbook_parity_types
    aeat.domain.calculations.registry.applicability

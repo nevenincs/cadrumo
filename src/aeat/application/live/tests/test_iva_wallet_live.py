@@ -70,11 +70,15 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
             pytest.fail("live IVA wallet report did not match the persisted observation")
 
         backend_bindings: dict[str, Decimal] = {}
-        revision = resources().modelos.authority.snapshot(
-            "303",
-            filing_year=target_year,
-            period=target_period,
-        ).revision
+        revision = (
+            resources()
+            .modelos.authority.snapshot(
+                "303",
+                filing_year=target_year,
+                period=target_period,
+            )
+            .revision
+        )
         if decision.blocked:
             with pytest.raises(ModeloIvaWalletReconciliationBlocked):
                 _apply_iva_compensation_decision_binding(

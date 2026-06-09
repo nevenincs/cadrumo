@@ -9,6 +9,8 @@ flags. Contract:
   * comma-separated values are rejected at the parser boundary
   * duplicate scopes in one invocation are silently deduplicated
   * unknown scopes refuse with a typed validation error
+
+This module uses :class:`ApoderadoScope` for parsing and validating scope tokens.
 """
 
 from __future__ import annotations

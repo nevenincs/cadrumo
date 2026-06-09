@@ -102,6 +102,7 @@ google_app = typer.Typer(
     no_args_is_help=True,
 )
 
+
 class OAuthClientPayload(TypedDict):
     """Typed shape for a Cloud Console Desktop OAuth client JSON file.
 
@@ -364,6 +365,7 @@ def google_logout(
             "client_preserved\tTrue",
         ),
     )
+
 
 register_google_folder_commands(google_app, google_refusal=_google_refusal)
 
@@ -731,4 +733,3 @@ _ = (load_token, REQUIRED_SCOPES)
 
 
 __all__ = ["google_app", "google_sync_calc_export", "google_sync_calc_pull", "google_sync_calc_verify"]
-

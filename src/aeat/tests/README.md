@@ -133,16 +133,16 @@ documented rationale.
 
 ## Recipes
 
-- `just test` - unit suite (`-m 'unit'` via pyproject `addopts`).
+- `just test-unit` - unit suite (`-m 'unit'` via pyproject `addopts`).
 - `uv run pytest -m integration` - deterministic cross-layer tests.
 - `uv run pytest -m aeat_live` - live read-only tests; requires
   `AEAT_LIVE_TESTS_ENABLED=1`.
 - `uv run pytest -m "unit and hex_domain"` - unit tests for the domain layer.
 - `uv run pytest -m "integration and hex_entrypoint"` - CLI integration tests.
-- `just test-cov` - unit suite with coverage.
-- `just test-parallel` - unit suite under xdist. Never use for live tests.
-- `just lint` - ruff, including the banned-import rule.
-- `just hooks` - full pre-commit sweep.
+- `just test-coverage` - unit suite with coverage.
+- `uv run pytest -n auto -m unit` - unit suite under xdist. Never use for live tests.
+- `just check-style` - ruff, including the banned-import rule.
+- `just check-pre-commit` - full pre-commit sweep.
 
 ## Writing A New Test
 

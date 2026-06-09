@@ -39,6 +39,7 @@ __all__ = [
     "_validate_period_code",
 ]
 
+
 def _coerce_decimal(value: object) -> object:
     if isinstance(value, bool | float):
         raise RegistryValidationError("decimal values must not be booleans or floats")

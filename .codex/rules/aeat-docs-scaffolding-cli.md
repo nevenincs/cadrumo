@@ -7,13 +7,13 @@ trigger: always_on
 
 ## Rule
 
-Maintain the generated API reference with the `aeat.apidocs` CLI; never
+Maintain the generated API reference with the `dev.docs.apidocs` CLI; never
 hand-author or hand-edit the `docs/api/*.rst` stubs. Run
-`python -m aeat.apidocs scaffold` after any change to the `src/aeat/` module
+`python -m dev.docs.apidocs scaffold` after any change to the `src/aeat/` module
 tree — especially a symbol relocation, rename, or deletion — and land the
 regenerated stubs in the same commit as the source change. Use
-`python -m aeat.apidocs scaffold --check` as the drift gate and
-`python -m aeat.apidocs audit` for a health report.
+`python -m dev.docs.apidocs scaffold --check` as the drift gate and
+`python -m dev.docs.apidocs audit` for a health report.
 
 ## Why
 
@@ -35,11 +35,11 @@ governs the docstring cross-references the stubs expose).
 ## How
 
 - **Good:** a relocation commit that moves a symbol runs
-  `python -m aeat.apidocs scaffold` and stages the regenerated `docs/api/*.rst`
+  `python -m dev.docs.apidocs scaffold` and stages the regenerated `docs/api/*.rst`
   deltas (new stubs, removed orphans, updated parent toctrees) in the same
   explicit-path commit as the source move, so the docs tree never lags the code.
 - **Good:** before declaring a structural refactor done,
-  `python -m aeat.apidocs scaffold --check` exits clean (no drift) and
+  `python -m dev.docs.apidocs scaffold --check` exits clean (no drift) and
   `just docs-check` passes.
 - **Good:** a newly-stubbed module that cross-references a stdlib name
   module-qualifies it (`:exc:`~decimal.InvalidOperation``, not bare

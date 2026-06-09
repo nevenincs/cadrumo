@@ -146,9 +146,7 @@ def _run_carry_chain(
             captured_at=_CLOCK,
         )
 
-        snapshot_n1 = resources().modelos.authority.snapshot(
-            _MODELO, filing_year=_YEAR_N_PLUS_1, period="1T"
-        )
+        snapshot_n1 = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
         relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo)
         resolved = {item.relation: item.value for item in relation_values.values if item.value is not None}
         result_n1 = _calculate_303(

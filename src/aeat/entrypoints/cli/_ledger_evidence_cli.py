@@ -254,6 +254,7 @@ def _register_evidence_remove_command() -> None:
             lines=lines,
         )
 
+
 def _parse_decimal(raw: str | None, *, label: str) -> Decimal | None:
     if raw is None:
         return None

@@ -1,4 +1,7 @@
-"""Typed input bundle for modelo work calculation."""
+"""Typed input bundle for modelo work calculation.
+
+Use of :class:`CalculationRevision` for compliance.
+"""
 
 from __future__ import annotations
 

@@ -154,9 +154,7 @@ class FiledDeclaracionObservationStore:
                 max_supported_version=_OBSERVATION_ENVELOPE_VERSION,
             )
         for record in records:
-            envelope = Envelope[FiledDeclaracionObservation].model_validate_json(
-                record.payload.decode(_UTF_8_ENCODING)
-            )
+            envelope = Envelope[FiledDeclaracionObservation].model_validate_json(record.payload.decode(_UTF_8_ENCODING))
             if envelope.classification is not _OBSERVATION_CLASSIFICATION:
                 raise ClassificationError(
                     f"filed-declaration observation {record.object_key!r} has classification "

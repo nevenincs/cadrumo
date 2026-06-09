@@ -61,7 +61,7 @@ Understand quarters, annual period codes, dates, and year-end.
 :link: check-aeat-notifications
 :link-type: doc
 
-Capture, list, and view read-only DEHu notification snapshots.
+Capture, list, and view official AEAT notifications from your electronic inbox.
 :::
 
 :::{grid-item-card} Work with Transactions
@@ -82,14 +82,14 @@ Classify rows manually, in bulk, with allocation, or with LLM assistance.
 :link: review-calculation-values
 :link-type: doc
 
-Review casillas, missing values, offsets, bindings, and revisions.
+Review which form boxes were filled, supply missing values, and handle offsets.
 :::
 
 :::{grid-item-card} Google Sheets Review
 :link: review-with-google-sheets
 :link-type: doc
 
-Export, pull, and verify calculation workbooks in Google Sheets.
+Export, edit, and pull back model calculations using a Google Sheets spreadsheet.
 :::
 
 :::{grid-item-card} Reconcile a Filing
@@ -138,7 +138,7 @@ Preview, apply, reject, or override local LLM suggestions.
 :link: setup-llm-classification
 :link-type: doc
 
-Check provider CLIs, PATH visibility, authentication, and smoke tests.
+Install and authenticate a provider CLI so LLM suggestions work.
 :::
 
 :::{grid-item-card} Troubleshooting

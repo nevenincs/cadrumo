@@ -1,0 +1,12 @@
+[labels]
+"01" = "Ingressos"
+"02" = "Despeses"
+"03" = "Rendiment net"
+"04" = "Import del pagament fraccionat"
+"05" = "Pagaments fraccionats anteriors"
+"06" = "Retencions i ingressos a compte"
+"07" = "Resultat parcial de l'apartat I"
+
+[help]
+"01" = "Ingressos acumulats de l'activitat econòmica."
+"02" = "Despeses acumulades de l'activitat econòmica."

@@ -86,4 +86,3 @@ def test_ledger_ratios_unset_refuses_when_no_override_exists(cli_runner: CliRunn
 
     result = cli_runner.invoke(app, ["app", "ledger", "ratios", "unset", "material_oficina"])
     assert result.exit_code != 0, result.output
-

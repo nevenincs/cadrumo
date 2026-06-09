@@ -221,23 +221,14 @@ def test_ast_call_detection_rejects_substring_and_accepts_real_call() -> None:
 
     # 4. Direct call: func_name(evidence)
     direct_call = f"{func}(evidence)\n"
-    assert _ast_has_call_to(direct_call, func), (
-        f"direct call source must satisfy the AST call check for {func!r}"
-    )
+    assert _ast_has_call_to(direct_call, func), f"direct call source must satisfy the AST call check for {func!r}"
 
     # 5. Attribute call: module.func_name(evidence) — how some callers import it.
     attr_call = f"calculations.{func}(evidence)\n"
-    assert _ast_has_call_to(attr_call, func), (
-        f"attribute call source must satisfy the AST call check for {func!r}"
-    )
+    assert _ast_has_call_to(attr_call, func), f"attribute call source must satisfy the AST call check for {func!r}"
 
     # 6. Real call buried among substring-only noise — the call wins.
-    mixed_source = (
-        f"# {func} is the contract\n"
-        f'"""{func} must be called."""\n'
-        f"_name = '{func}'\n"
-        f"{func}(evidence)\n"
-    )
+    mixed_source = f'# {func} is the contract\n"""{func} must be called."""\n_name = \'{func}\'\n{func}(evidence)\n'
     assert _ast_has_call_to(mixed_source, func), (
         f"mixed source with a real call must satisfy the AST call check for {func!r}"
     )

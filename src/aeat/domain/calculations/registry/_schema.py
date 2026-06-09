@@ -177,7 +177,6 @@ _validate_nif_string = _scalars._validate_nif_string
 _validate_period_code = _scalars._validate_period_code
 
 
-
 class RegistrySnapshotRef(RegistryModel):
     """Typed coordinates that identify a registry snapshot.
 
@@ -956,7 +955,6 @@ class ModeloScheduleDefinition(RegistryModel):
         return self
 
 
-
 class DataBindingDefinition(RegistryModel):
     id: BindingId
     source: Literal[
@@ -995,7 +993,6 @@ class FormulaDefinition(RegistryModel):
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
-
 
 
 KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(

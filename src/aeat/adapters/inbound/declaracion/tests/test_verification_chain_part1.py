@@ -22,6 +22,8 @@ from ._verification_chain_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+
 @pytest.mark.parametrize(
     "pdf_stem,year,period",
     [
@@ -197,6 +199,7 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
             f"19={engine_19!r}"
         )
 
+
 @pytest.mark.parametrize(
     "pdf_stem,year,period",
     [
@@ -314,6 +317,7 @@ def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
             f"  inputs: {inputs}"
         )
 
+
 @pytest.mark.parametrize(
     "pdf_stem,year,period",
     [
@@ -393,6 +397,7 @@ def test_verification_chain_m303_parser_extracts_all_profile_casillas(pdf_stem: 
             f"PARSER-GAP [{pdf_stem}]: casilla {casilla_id!r} should be Decimal, "
             f"got {type(value).__name__!r} = {value!r}"
         )
+
 
 @pytest.mark.parametrize(
     "pdf_stem,year,period",
@@ -523,6 +528,7 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
         f"  (internal formula consistency broken — registry formula defect)"
     )
 
+
 @pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_engine_recomputes_box_64_suma_resultados(
     pdf_stem: str, year: int, period: str
@@ -553,6 +559,7 @@ def test_verification_chain_m303_engine_recomputes_box_64_suma_resultados(
         f"VERIFIED-FAIL [{pdf_stem}]: engine box 64 {engine_64!r} != engine box 46 {box_46!r}\n"
         f"  (c58=0, c76=0 in corpus PDFs — expected 64 == 46)"
     )
+
 
 @pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_engine_recomputes_box_66_atribuible_estado(
@@ -586,6 +593,7 @@ def test_verification_chain_m303_engine_recomputes_box_66_atribuible_estado(
         f"  (box 65 = 100 in territorio común — expected 66 == 64)"
     )
 
+
 @pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_engine_recomputes_box_69_resultado_autoliquidacion(
     pdf_stem: str, year: int, period: str
@@ -618,6 +626,7 @@ def test_verification_chain_m303_engine_recomputes_box_69_resultado_autoliquidac
         f"  (c77=0, c68=0, c78=0 in corpus PDFs — expected 69 == 66)"
     )
 
+
 @pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_engine_recomputes_box_71_resultado_final(
     pdf_stem: str, year: int, period: str
@@ -649,6 +658,7 @@ def test_verification_chain_m303_engine_recomputes_box_71_resultado_final(
         f"VERIFIED-FAIL [{pdf_stem}]: engine box 71 {engine_71!r} != engine box 69 {box_69!r}\n"
         f"  (c70=0, c109=0 in corpus PDFs — expected 71 == 69)"
     )
+
 
 @pytest.mark.parametrize(
     "pdf_stem,year,period",

@@ -171,8 +171,7 @@ def _seed_clean_cross_period_sources_for_m130(
                 filing_year=requirement.filing_year,
                 period=requirement.period,
                 observations=tuple(
-                    CasillaObservation(casilla_id=casilla_id, value=value)
-                    for casilla_id, value in values.items()
+                    CasillaObservation(casilla_id=casilla_id, value=value) for casilla_id, value in values.items()
                 ),
             ),
             source_kind="aeat_sede_justificante",

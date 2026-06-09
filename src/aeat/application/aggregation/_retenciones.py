@@ -1,17 +1,14 @@
 """Retenciones aggregator for Modelo 111 (withholding on labor + economic activities).
 
+Used by: :mod:`~._service` (per-modelo aggregation service) for retenciones modelos.
+
 Implements the slim aggregation contract for the retenciones family.
 The aggregator consumes typed observations carrying the canonical
 source kind (``ledger_transaction``) and produces per-perceptor
 rollups plus a totals payload suitable for Modelo 111 binding
 consumption.
 
-This module is the contract layer; the bridge from
-:class:`Transaction` records to :class:`RetencionObservation`
-instances lives in an upstream binding provider that the modelo
-calculation entry point invokes. Keeping the aggregator pure-function
-makes it trivially testable and forward-compatible with the
-remaining retenciones modelos (115, 123, 180, 190, 193).
+Modelos: 111, 115, 123, 180, 190, 193.
 """
 
 from __future__ import annotations

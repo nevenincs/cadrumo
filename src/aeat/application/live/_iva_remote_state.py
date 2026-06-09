@@ -1,4 +1,7 @@
-"""IVA remote-state, compensation-history, and wallet live actions."""
+"""IVA remote-state, compensation-history, and wallet live actions.
+
+Use of :class:`SecureObjectRepository` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -522,7 +525,6 @@ def persist_and_reconcile_iva_compensation_wallet(
     )
 
 
-
 async def capture_iva_compensation_wallet(
     *,
     target_year: int,
@@ -790,9 +792,7 @@ def _aggregate_iva_compensation_history_reports(
         artefact_refs=tuple(ref for report in reports for ref in report.artefact_refs),
         casilla_count=sum(report.casilla_count for report in reports),
         calculation_observation_count=sum(report.calculation_observation_count for report in reports),
-        calculation_observation_keys=tuple(
-            key for report in reports for key in report.calculation_observation_keys
-        ),
+        calculation_observation_keys=tuple(key for report in reports for key in report.calculation_observation_keys),
         reloaded_history_count=reloaded.row_count,
         reloaded_rows=reloaded.rows,
         failed_declaration_count=sum(report.failed_declaration_count for report in reports),

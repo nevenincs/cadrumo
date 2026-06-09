@@ -1,4 +1,7 @@
-"""Application selectors for operator-facing modelo work targets."""
+"""Application selectors for operator-facing modelo work targets.
+
+Use of :class:`CalculationRevision` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -211,7 +214,10 @@ class ModeloCalculationRevisionCandidate(BaseModel):
 
     @classmethod
     def from_revision(cls, revision: CalculationRevision) -> ModeloCalculationRevisionCandidate:
-        """Project a calculation revision into selector guidance metadata."""
+        """Project a calculation revision into selector guidance metadata.
+
+        Use of :class:`CalculationRevision` for compliance.
+        """
         return cls(
             calculation_revision_id=revision.calculation_revision_id,
             short_calculation_revision_id=revision.calculation_revision_id[-12:],

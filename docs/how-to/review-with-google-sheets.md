@@ -1,12 +1,8 @@
 # Review calculations with Google Sheets
 
-Use this guide when you want to review a modelo calculation surface in Google
-Sheets. This workflow is for calculation review and verification after your
-profile and transactions are ready. It is not a ledger import or ledger batch
-edit workflow.
-
-The Google commands use the active profile. They manage Google OAuth, a Drive
-folder binding, and calc-sheets workbooks for a modelo, year, and period.
+Use this guide when you want to review a modelo calculation in a Google Sheets
+spreadsheet. This workflow is for reviewing calculated values after your profile
+and transactions are ready. It is not a bank statement import or bulk edit tool.
 
 ## Before you start
 
@@ -15,8 +11,10 @@ You need:
 - an active profile; see [Set up your taxpayer profile](profile-setup.md)
 - classified transaction data; see [Work with Transactions](import-bank-statements.md)
 - a modelo and period ready enough to calculate
-- a Google Desktop OAuth client JSON file
-- a Google Drive folder id that you want `aeat` to use
+- a Google API credentials file (a Desktop OAuth client JSON from the
+  [Google Cloud Console](https://console.cloud.google.com/))
+- the ID of a Google Drive folder where `aeat` should create spreadsheets
+  (copy the ID from the folder's URL in Google Drive)
 
 ## Configure Google access
 
@@ -33,7 +31,7 @@ aeat config google login
 aeat config google status
 ```
 
-Bind a Drive folder:
+Set the Drive folder where `aeat` will create spreadsheets:
 
 ```bash
 aeat config google folder set <drive-folder-id>
@@ -57,9 +55,9 @@ area in Drive. It is a calculation review surface, not a bank statement export.
 Use `aeat app ledger export` when you need a CSV, JSONL, or XLSX snapshot of
 ledger rows.
 
-Use `--prefill-relations` only when you intentionally want the export to
-prefill relation values from local observations such as annual summaries or
-prior-quarter carryovers.
+Use `--prefill-relations` only when you want the spreadsheet to include values
+carried from related filings, such as annual summaries or prior-quarter
+carryovers.
 
 ## Pull operator edits
 
@@ -69,19 +67,19 @@ After reviewing or editing the workbook, pull typed edits back from the Sheet:
 aeat config google sync calc pull --modelo 303 --year 2026 --period 1T --spreadsheet-id <spreadsheet-id>
 ```
 
-Add `--compute` when you want the local Decimal engine to compute casilla
-values from the pulled edits:
+Add `--compute` when you want `aeat` to re-calculate casilla values from the
+edits you pulled back from the Sheet:
 
 ```bash
 aeat config google sync calc pull --modelo 303 --year 2026 --period 1T --spreadsheet-id <spreadsheet-id> --compute
 ```
 
-Add `--assemble-observations` when you want row-set detail edits assembled into
-typed observations in the pull payload.
+Add `--assemble-observations` when you want edited row-level data saved back
+as structured observations.
 
-The pull command validates that the workbook belongs to the app surface and
-matches the registry snapshot. If it refuses, re-export for the active profile
-and retry from the new workbook.
+The pull command checks that the spreadsheet belongs to the current profile and
+matches the expected filing period. If it refuses, re-export and retry from the
+new spreadsheet.
 
 ## Verify the calculation surface
 

@@ -160,6 +160,7 @@ _MASTER_KEY = b"m" * 32
 
 _GOOGLE_OAUTH_ENDPOINT = "https://oauth2.googleapis.com/token"
 
+
 @pytest.fixture(autouse=True)
 def _isolated_storage(tmp_path: Path) -> Iterator[None]:
     with override_settings(aeat_local_storage_root=tmp_path) as settings:
@@ -168,6 +169,7 @@ def _isolated_storage(tmp_path: Path) -> Iterator[None]:
             yield
         finally:
             dispose_engine(settings)
+
 
 @contextmanager
 def _active_runtime(tmp_path: Path, bucket_id: str) -> Iterator[None]:
@@ -179,6 +181,7 @@ def _active_runtime(tmp_path: Path, bucket_id: str) -> Iterator[None]:
             finally:
                 dispose_engine(settings)
 
+
 def _session(bucket_id: str) -> BucketSession:
     return BucketSession.open(
         bucket_id=bucket_id,
@@ -187,6 +190,7 @@ def _session(bucket_id: str) -> BucketSession:
         idle_minutes=15,
         opened_at=datetime.now(UTC),
     )
+
 
 def _workflow_state(label: str) -> WorkflowState:
     now = datetime.now(UTC).replace(microsecond=0)
@@ -202,6 +206,7 @@ def _workflow_state(label: str) -> WorkflowState:
         },
         updated_at=now,
     )
+
 
 def _transaction(label: str) -> Transaction:
     raw = RawTransaction(
@@ -224,6 +229,7 @@ def _transaction(label: str) -> Transaction:
     )
     return Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
 
+
 def _asset(identifier: str) -> AssetRecord:
     return AssetRecord(
         identifier=identifier,
@@ -232,6 +238,7 @@ def _asset(identifier: str) -> AssetRecord:
         acquisition_date=date(2026, 1, 1),
         cost_basis=Decimal("1000.00"),
     )
+
 
 def _storage_state(label: str) -> dict[str, object]:
     return {
@@ -246,8 +253,10 @@ def _storage_state(label: str) -> dict[str, object]:
         "origins": [],
     }
 
+
 def _hex(label: str) -> str:
     return hashlib.sha256(label.encode("utf-8")).hexdigest()
+
 
 def _workflow_run(label: str) -> WorkflowResult:
     when = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
@@ -267,6 +276,7 @@ def _workflow_run(label: str) -> WorkflowResult:
         steps=(step,),
         summary=f"runtime migrated workflow run {label}",
     )
+
 
 def _bucket_event(label: str) -> BucketEvent:
     occurred_at = datetime(2026, 5, 26, 10, 0, tzinfo=UTC)
@@ -290,6 +300,7 @@ def _bucket_event(label: str) -> BucketEvent:
         payload_version=1,
         payload=payload,
     )
+
 
 def _invoice(label: str) -> Invoice:
     line = InvoiceLine(
@@ -315,6 +326,7 @@ def _invoice(label: str) -> Invoice:
         payment_status=PaymentStatus.PENDING,
         linked_transaction_ids=(),
     )
+
 
 def _modelo_draft(label: str) -> ModeloDraft:
     now = datetime.now(UTC).replace(microsecond=0)
@@ -346,6 +358,7 @@ def _modelo_draft(label: str) -> ModeloDraft:
         schema_version="schema-2026-1",
     )
 
+
 def _modelo_amendment(label: str) -> ModeloComplementaria:
     draft = _modelo_draft(label)
     delta = (
@@ -372,6 +385,7 @@ def _modelo_amendment(label: str) -> ModeloComplementaria:
         created_at=datetime.now(UTC).replace(microsecond=0),
     )
 
+
 def _submission(label: str) -> ModeloPresentado:
     submitted_at = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
     draft_id = f"draft-{label}"
@@ -394,6 +408,7 @@ def _submission(label: str) -> ModeloPresentado:
         ),
     )
 
+
 def _justificante(tmp_path: Path, label: str) -> Justificante:
     csv = f"CSV{_hex(label)[:13].upper()}"
     pdf = tmp_path / f"{csv}.pdf"
@@ -408,13 +423,12 @@ def _justificante(tmp_path: Path, label: str) -> Justificante:
         tax_id="00000000T",
         total_a_ingresar=Decimal("10.00"),
         total_a_devolver=None,
-        verification_url=TypeAdapter(AnyHttpUrl).validate_python(
-            aeat_url("sede", JUSTIFICANTE_VERIFY_PATH_FIXTURE)
-        ),
+        verification_url=TypeAdapter(AnyHttpUrl).validate_python(aeat_url("sede", JUSTIFICANTE_VERIFY_PATH_FIXTURE)),
         source_pdf_path=pdf,
         source_pdf_sha256=hashlib.sha256(pdf.read_bytes()).hexdigest(),
         parsed_at=datetime(2026, 4, 12, tzinfo=UTC),
     )
+
 
 def _work_unit(bucket_id: str, label: str) -> WorkUnit:
     now = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
@@ -441,6 +455,7 @@ def _work_unit(bucket_id: str, label: str) -> WorkUnit:
         state=WorkUnitState.BORRADOR,
     )
 
+
 def _calculation_catalogue(label: str) -> CalculationRevisionCatalogue:
     work_unit_id = _hex(f"work-unit-{label}")
     values = {"casilla-01": Decimal("100.00")}
@@ -463,6 +478,7 @@ def _calculation_catalogue(label: str) -> CalculationRevisionCatalogue:
         updated_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
     )
     return CalculationRevisionCatalogue(revisions={revision_id: revision})
+
 
 def _filing_record_catalogue(bucket_id: str, label: str) -> ModeloRecordCatalogue:
     filed_at = datetime(2026, 5, 26, 11, 0, tzinfo=UTC)
@@ -489,6 +505,7 @@ def _filing_record_catalogue(bucket_id: str, label: str) -> ModeloRecordCatalogu
     )
     return ModeloRecordCatalogue(records={record_id: record})
 
+
 def _verification_catalogue(label: str) -> VerificationReportCatalogue:
     run_at = datetime(2026, 5, 26, 12, 0, tzinfo=UTC)
     revision_id = _hex(f"verification-revision-{label}")
@@ -510,6 +527,7 @@ def _verification_catalogue(label: str) -> VerificationReportCatalogue:
     )
     return VerificationReportCatalogue(reports={report_id: report})
 
+
 def _history(label: str) -> ModeloHistory:
     submitted_at = datetime(2026, 5, 26, 13, 0, tzinfo=UTC)
     return ModeloHistory(
@@ -523,6 +541,7 @@ def _history(label: str) -> ModeloHistory:
             ),
         ),
     )
+
 
 def _iva_state(label: str) -> IvaCompensationPeriodState:
     period = "1TA" if label.endswith("a") else "1TB"
@@ -538,8 +557,10 @@ def _iva_state(label: str) -> IvaCompensationPeriodState:
         source_observation_key=f"303:2026:1T:{label}",
     )
 
+
 def _usage_profile(category: SpendingCategory, ratio: str) -> UsageRatioProfile:
     return UsageRatioProfile(ratios={category: Decimal(ratio)})
+
 
 def _inventory_ledger(label: str) -> InventoryLedger:
     return InventoryLedger(
@@ -549,9 +570,11 @@ def _inventory_ledger(label: str) -> InventoryLedger:
         opening_stock=Decimal("0.00"),
     )
 
+
 def _amortizacion_ledger(label: str) -> AmortizacionLedger:
     entry = AmortizacionEntry(asset_id=f"asset-{label}", year=2026, amount=Decimal("1.00"))
     return AmortizacionLedger(entries=(entry,))
+
 
 def _google_records(label: str) -> tuple[OAuthClient, OAuthToken, OAuthMetadata, DriveConfig]:
     issued_at = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
@@ -577,8 +600,10 @@ def _google_records(label: str) -> tuple[OAuthClient, OAuthToken, OAuthMetadata,
         DriveConfig(root_folder_id=f"drive-folder-{label}"),
     )
 
+
 def _llm_request() -> LLMRequest:
     return LLMRequest(prompt="Summarise a runtime storage migration", cache_key="runtime-storage")
+
 
 def _llm_response(label: str) -> LLMResponse:
     return LLMResponse(
@@ -592,6 +617,7 @@ def _llm_response(label: str) -> LLMResponse:
         created_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
         request_id=f"request-{label}",
     )
+
 
 def _usage_record(label: str) -> UsageRecord:
     response = _llm_response(label)
@@ -609,6 +635,7 @@ def _usage_record(label: str) -> UsageRecord:
         request_id=response.request_id,
     )
 
+
 def _sede_artefact(label: str) -> tuple[FiledDeclaracionArtefact, bytes]:
     body = f"runtime migrated sede artefact {label}".encode()
     return (
@@ -623,6 +650,7 @@ def _sede_artefact(label: str) -> tuple[FiledDeclaracionArtefact, bytes]:
         body,
     )
 
+
 def _borrador_snapshot(bucket_id: str, label: str) -> Borrador100Snapshot:
     return Borrador100Snapshot(
         snapshot_id=f"snapshot-{label}",
@@ -635,6 +663,7 @@ def _borrador_snapshot(bucket_id: str, label: str) -> Borrador100Snapshot:
         state=SnapshotLifecycleState.ACTIVE,
         binding_values={"casilla-001": Decimal("1.00")},
     )
+
 
 def _repair_decision(label: str) -> RepairRemediationDecision:
     decided_at = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
@@ -665,6 +694,7 @@ def _repair_decision(label: str) -> RepairRemediationDecision:
         verified_replacement_evidence_refs=(),
     )
 
+
 def _iva_wallet_decision(label: str, *, target_period: str = "2T") -> IvaCompensationReconciliationDecision:
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=f"ES{label.upper()}",
@@ -683,6 +713,7 @@ def _iva_wallet_decision(label: str, *, target_period: str = "2T") -> IvaCompens
         decided_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
     )
 
+
 def _save_auth_diagnostic(label: str) -> None:
     payload = {
         "diagnostic_id": f"diagnostic-{label}",
@@ -699,6 +730,7 @@ def _save_auth_diagnostic(label: str) -> None:
         written_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
         payload=json.dumps(payload, sort_keys=True).encode(),
     )
+
 
 def _save_diagnostic_probe_row(label: str) -> None:
     secure_object_repository_for_active_bucket().save(

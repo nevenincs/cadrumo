@@ -1,4 +1,7 @@
-"""Amendment actions for externally filed modelo baselines."""
+"""Amendment actions for externally filed modelo baselines.
+
+Use of :class:`BucketEventHistoryRepository`, :class:`CalculationRevision`, :class:`ModeloRecord` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -105,7 +108,11 @@ def amend_modelo_revision(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
-    """Build and file an amendment over an externally-filed return."""
+    """Build and file an amendment over an externally-filed return.
+
+    Returns:
+        :class:`ModeloRecord`: The new filing record for the amended return.
+    """
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()

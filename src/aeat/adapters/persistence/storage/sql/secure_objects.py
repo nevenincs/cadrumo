@@ -909,11 +909,8 @@ class SecureObjectRepository:
             ).one()
             previous_revision_id = previous_metadata.revision_id
             previous_revision_ancestor_ids = self._parse_revision_ancestor_ids(previous_metadata.revision_ancestor_ids)
-            previous_payload_hash = (
-                previous_metadata.payload_hash
-                or sha256_hex(
-                    previous_metadata.payload,
-                )
+            previous_payload_hash = previous_metadata.payload_hash or sha256_hex(
+                previous_metadata.payload,
             )
         elif expected_revision_id is not None:
             raise self._revision_conflict(

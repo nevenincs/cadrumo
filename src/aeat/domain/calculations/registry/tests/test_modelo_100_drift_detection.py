@@ -115,7 +115,7 @@ def test_no_orphan_formula_feeding_bindings_in_any_revision() -> None:
     (declaration filling, observation capture) and are not expected to be
     consumed by formulas; they are excluded from the orphan check.
     Manual_input and previous_filing bindings are formula-feeding and must
-    be referenced by at least one formula or relation.
+    be referenced by at least one formula, relation, or casilla binding.
     """
     modelo, _ = _modelo_100()
     offences: list[str] = []
@@ -128,6 +128,9 @@ def test_no_orphan_formula_feeding_bindings_in_any_revision() -> None:
             target_binding = getattr(relation, "target_binding", None)
             if target_binding:
                 referenced.add(target_binding)
+        for casilla in revision.casillas:
+            if casilla.binding:
+                referenced.add(casilla.binding)
         orphans = formula_feeding - referenced
         for orphan in sorted(orphans):
             offences.append(f"{revision_id}: orphan formula-feeding binding {orphan!r}")

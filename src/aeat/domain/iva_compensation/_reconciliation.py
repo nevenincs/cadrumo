@@ -178,7 +178,6 @@ class LocalIvaCompensationRecurrenceProtocol(Protocol):
     def resolved_at(self) -> datetime: ...
 
 
-
 @dataclass(frozen=True)
 class _ReconciliationContext:
     taxpayer_nif: str
@@ -322,9 +321,7 @@ def _first_period_zero_decision(ctx: _ReconciliationContext) -> IvaCompensationR
             ),
             wallet_captured_at=ctx.wallet_captured_at,
         )
-    local_recurrence_is_zero = (
-        ctx.local_recurrence_amount is not None and ctx.local_recurrence_amount == effective_zero
-    )
+    local_recurrence_is_zero = ctx.local_recurrence_amount is not None and ctx.local_recurrence_amount == effective_zero
     if ctx.wallet_amount is None and local_recurrence_is_zero:
         return _decision(
             ctx,

@@ -433,12 +433,8 @@ def config_profile_show(
 def config_profile_preflight(
     ctx: typer.Context,
     modelo: str = typer.Option(..., "--modelo", help=tr("cli.config.profile.preflight_modelo_help")),
-    revision_id: str = typer.Option(
-        ..., "--revision-id", help=tr("cli.config.profile.preflight_revision_id_help")
-    ),
-    filing_year: int = typer.Option(
-        ..., "--filing-year", help=tr("cli.config.profile.preflight_filing_year_help")
-    ),
+    revision_id: str = typer.Option(..., "--revision-id", help=tr("cli.config.profile.preflight_revision_id_help")),
+    filing_year: int = typer.Option(..., "--filing-year", help=tr("cli.config.profile.preflight_filing_year_help")),
     period: str = typer.Option(..., "--period", help=tr("cli.config.profile.preflight_period_help")),
     output_language: OutputLanguage | None = typer.Option(
         None,
@@ -1106,5 +1102,3 @@ __all__ = [
     "repair_app",
     "tr",
 ]
-
-

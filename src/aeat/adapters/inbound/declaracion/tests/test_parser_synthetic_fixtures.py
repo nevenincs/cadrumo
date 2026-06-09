@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from .test_parser_boundary import (
+from ._parser_boundary_support import (
     _MODELO_115_SYNTHETIC_FIXTURE,
     _MODELO_131_SYNTHETIC_FIXTURE,
     _MODELO_184_SYNTHETIC_FIXTURE,

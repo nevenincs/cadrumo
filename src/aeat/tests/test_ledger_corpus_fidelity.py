@@ -71,9 +71,7 @@ def _q(value: Decimal) -> Decimal:
     return value.quantize(_CENT, rounding=ROUND_HALF_UP)
 
 
-def _derive_base_iva(
-    rule: dict, native_amount_abs: Decimal
-) -> tuple[Decimal | None, Decimal | None, Decimal | None]:
+def _derive_base_iva(rule: dict, native_amount_abs: Decimal) -> tuple[Decimal | None, Decimal | None, Decimal | None]:
     """Return (taxable_base, iva_rate, iva_amount) per the oracle base_mode."""
     mode = rule["base_mode"]
     rate = Decimal(rule["iva_rate"]) if rule.get("iva_rate") else None
@@ -179,11 +177,7 @@ def _catalogue() -> TransactionCatalogue:
 
 def test_iva_pipeline_gates_transfers_personal_and_nondeclarable() -> None:
     """No gated row may ever surface as an IVA observation, any period."""
-    gated_ids = {
-        tx.transaction_id
-        for tx, rule, _ in _BUILT
-        if not rule.get("iva_declarable", False)
-    }
+    gated_ids = {tx.transaction_id for tx, rule, _ in _BUILT if not rule.get("iva_declarable", False)}
     catalogue = _catalogue()
     emitted: set[str] = set()
     for period in ("2025Q1", "2025Q2", "2025Q3", "2025Q4", "2026Q1", "2026Q2"):
@@ -208,9 +202,7 @@ def test_iva_observations_match_oracle_category_and_flow() -> None:
                 f"{rule['match']}: {obs.category} != {rule['iva_category']}"
             )
             expected_flow = (
-                IvaFlowDirection.REPERCUTIDO
-                if rule["direction"] == "INCOMING"
-                else IvaFlowDirection.SOPORTADO
+                IvaFlowDirection.REPERCUTIDO if rule["direction"] == "INCOMING" else IvaFlowDirection.SOPORTADO
             )
             # Reverse-charge / intra-community acquisition / import self-assess
             # as inversion sujeto pasivo; allow either the directional flow or ISP.
@@ -238,11 +230,7 @@ def test_iva_pipeline_emits_intracommunity_and_export_and_import() -> None:
 
 def test_renta_income_excludes_salary_rent_and_interest_from_m130() -> None:
     """Trabajo / capital income must not feed M130 actividad income."""
-    excluded_ids = {
-        tx.transaction_id
-        for tx, rule, _ in _BUILT
-        if "excluded_m130" in rule.get("feeds", [])
-    }
+    excluded_ids = {tx.transaction_id for tx, rule, _ in _BUILT if "excluded_m130" in rule.get("feeds", [])}
     assert excluded_ids, "corpus must contain salary/rent/interest income"
     catalogue = _catalogue()
     emitted: set[str] = set()
@@ -264,9 +252,5 @@ def test_recargo_equivalencia_is_not_deductible_input_iva() -> None:
     catalogue = _catalogue()
     for period in ("2025Q1", "2025Q2", "2025Q3", "2025Q4", "2026Q1", "2026Q2"):
         result = aggregate_iva_ledger_observations(catalogue, period=period)
-        soportado = {
-            o.ledger_id
-            for o in result.observations
-            if o.flow_direction is IvaFlowDirection.SOPORTADO
-        }
+        soportado = {o.ledger_id for o in result.observations if o.flow_direction is IvaFlowDirection.SOPORTADO}
         assert not (soportado & re_ids), "RE row leaked into deductible soportado IVA"

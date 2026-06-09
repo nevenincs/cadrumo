@@ -1,0 +1,7 @@
+[labels]
+"00001" = "Entitat sense ànim de lucre acollida al règim fiscal Títol II Llei 49/2002"
+"00027" = "Base imposable negativa o zero"
+
+[help]
+"00001" = "Indicador de si l'entitat és sense ànim de lucre i està acollida al règim del Títol II de la Llei 49/2002."
+"00027" = "Base imposable negativa o zero abans d'ajustaments o compensacions."

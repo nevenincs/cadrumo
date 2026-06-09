@@ -1,4 +1,8 @@
-"""Fail-closed guard for live AEAT cross-reference surfaces."""
+"""Fail-closed guard for live AEAT cross-reference surfaces.
+
+This module uses :class:`LiveCrossReferenceDecision` and :class:`RemoteOperation`
+to enforce fail-closed access control.
+"""
 
 from __future__ import annotations
 
@@ -299,9 +303,7 @@ def assert_remote_operations_allowed(
         try:
             assert_remote_operation_allowed(policy, operation)
         except RegistryValidationError as exc:
-            raise RegistryValidationError(
-                f"{context} {index} blocked by policy {policy.id!r}: {exc}"
-            ) from exc
+            raise RegistryValidationError(f"{context} {index} blocked by policy {policy.id!r}: {exc}") from exc
     return operation_tuple
 
 

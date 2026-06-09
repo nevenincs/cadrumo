@@ -104,7 +104,7 @@ class TestNoLiveOrWriteSurface:
         # source scan suffices.
         from pathlib import Path
 
-        source = Path(__file__).parent.joinpath("_service.py").read_text(encoding="utf-8")
+        source = Path(__file__).parent.parent.joinpath("_service.py").read_text(encoding="utf-8")
         assert "require_live_read" not in source
         assert "require_live_write" not in source
         assert "BrowserSession" not in source

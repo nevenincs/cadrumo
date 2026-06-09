@@ -1,4 +1,7 @@
-"""Settings and active-profile storage scopes for auth operator services."""
+"""Settings and active-profile storage scopes for auth operator services.
+
+This module uses :class:`Settings` to derive the auth operator configuration.
+"""
 
 from __future__ import annotations
 

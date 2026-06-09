@@ -96,8 +96,7 @@ def read_sealed_archive(source_path: Path) -> SealedArchiveContents:
                 header = ExportArchiveHeader.model_validate_json(header_bytes)
             except Exception as exc:  # pydantic ValidationError or its subclasses
                 raise SealedArchiveHeaderError(
-                    f"sealed-archive read refused: header schema validation failed: "
-                    f"{type(exc).__name__}: {exc}",
+                    f"sealed-archive read refused: header schema validation failed: {type(exc).__name__}: {exc}",
                 ) from exc
 
             payload_bytes = _read_member(archive, PAYLOAD_MEMBER_NAME)
@@ -106,13 +105,11 @@ def read_sealed_archive(source_path: Path) -> SealedArchiveContents:
                 recovery_wrap_bytes = _read_member(archive, RECOVERY_WRAP_MEMBER_NAME)
     except tarfile.TarError as exc:
         raise SealedArchiveLayoutError(
-            f"sealed-archive read refused: tar layer rejected the archive: "
-            f"{type(exc).__name__}: {exc}",
+            f"sealed-archive read refused: tar layer rejected the archive: {type(exc).__name__}: {exc}",
         ) from exc
     except OSError as exc:
         raise SealedArchivePayloadError(
-            f"sealed-archive read of {source_path!s} failed at IO layer: "
-            f"{type(exc).__name__}: {exc}",
+            f"sealed-archive read of {source_path!s} failed at IO layer: {type(exc).__name__}: {exc}",
         ) from exc
 
     return SealedArchiveContents(
@@ -126,23 +123,19 @@ def _validate_layout(member_names: tuple[str, ...]) -> None:
     """Ensure the archive carries exactly the expected member set in order."""
     if len(member_names) not in (2, 3):
         raise SealedArchiveLayoutError(
-            f"sealed-archive read refused: expected 2 or 3 members, got {len(member_names)}: "
-            f"{list(member_names)!r}",
+            f"sealed-archive read refused: expected 2 or 3 members, got {len(member_names)}: {list(member_names)!r}",
         )
     if member_names[0] != HEADER_MEMBER_NAME:
         raise SealedArchiveLayoutError(
-            f"sealed-archive read refused: first member must be {HEADER_MEMBER_NAME!r}, "
-            f"got {member_names[0]!r}",
+            f"sealed-archive read refused: first member must be {HEADER_MEMBER_NAME!r}, got {member_names[0]!r}",
         )
     if member_names[1] != PAYLOAD_MEMBER_NAME:
         raise SealedArchiveLayoutError(
-            f"sealed-archive read refused: second member must be {PAYLOAD_MEMBER_NAME!r}, "
-            f"got {member_names[1]!r}",
+            f"sealed-archive read refused: second member must be {PAYLOAD_MEMBER_NAME!r}, got {member_names[1]!r}",
         )
     if len(member_names) == 3 and member_names[2] != RECOVERY_WRAP_MEMBER_NAME:
         raise SealedArchiveLayoutError(
-            f"sealed-archive read refused: third member must be {RECOVERY_WRAP_MEMBER_NAME!r}, "
-            f"got {member_names[2]!r}",
+            f"sealed-archive read refused: third member must be {RECOVERY_WRAP_MEMBER_NAME!r}, got {member_names[2]!r}",
         )
 
 

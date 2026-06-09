@@ -107,9 +107,7 @@ def test_rename_returns_result_carrying_before_and_after_labels(
     del registered_profile
 
     service = BucketMaintenanceService()
-    result = service.rename(
-        RenameBucketCommand(bucket_id=runtime.bucket_id, new_label=_NEW_LABEL)
-    )
+    result = service.rename(RenameBucketCommand(bucket_id=runtime.bucket_id, new_label=_NEW_LABEL))
 
     assert result.bucket_id == runtime.bucket_id
     assert result.previous_label == _ORIGINAL_LABEL
@@ -129,9 +127,7 @@ def test_rename_updates_plaintext_manifest_label(
     """
     del registered_profile
 
-    BucketMaintenanceService().rename(
-        RenameBucketCommand(bucket_id=runtime.bucket_id, new_label=_NEW_LABEL)
-    )
+    BucketMaintenanceService().rename(RenameBucketCommand(bucket_id=runtime.bucket_id, new_label=_NEW_LABEL))
 
     manifest_after = read_manifest(runtime.paths)
     assert manifest_after.label == _NEW_LABEL
@@ -144,15 +140,11 @@ def test_rename_emits_bucket_renamed_event_with_label_pair(
     """``BUCKET_RENAMED`` lands in the bucket-event history with both labels."""
     del registered_profile
 
-    BucketMaintenanceService().rename(
-        RenameBucketCommand(bucket_id=runtime.bucket_id, new_label=_NEW_LABEL)
-    )
+    BucketMaintenanceService().rename(RenameBucketCommand(bucket_id=runtime.bucket_id, new_label=_NEW_LABEL))
 
     catalogue = BucketEventHistoryRepository(objects=runtime.repository).load()
     rename_events = tuple(
-        event
-        for event in catalogue.events.values()
-        if event.event_type is BucketEventType.BUCKET_RENAMED
+        event for event in catalogue.events.values() if event.event_type is BucketEventType.BUCKET_RENAMED
     )
     assert len(rename_events) == 1, "expected exactly one BUCKET_RENAMED event"
     event = rename_events[0]
@@ -176,9 +168,7 @@ def test_rename_emission_coexists_with_lifecycle_profile_renamed_event(
     """
     del registered_profile
 
-    BucketMaintenanceService().rename(
-        RenameBucketCommand(bucket_id=runtime.bucket_id, new_label=_NEW_LABEL)
-    )
+    BucketMaintenanceService().rename(RenameBucketCommand(bucket_id=runtime.bucket_id, new_label=_NEW_LABEL))
 
     catalogue = BucketEventHistoryRepository(objects=runtime.repository).load()
     event_kinds = {event.event_type for event in catalogue.events.values()}

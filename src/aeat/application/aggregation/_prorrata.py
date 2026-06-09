@@ -1,5 +1,7 @@
 """Application-layer aggregation for IVA prorrata (LIVA arts. 101-103).
 
+Used by: :mod:`~._service` (per-modelo aggregator) for modelo 303/390 prorrata bindings.
+
 This module sits between the bucket's persisted revenue records and the
 pure prorrata domain calculator in :mod:`aeat.domain.iva`. It takes a
 year's classified IVA operations, applies the LIVA art. 104 exclusions,
@@ -7,14 +9,6 @@ sums the remaining amounts into the two prorrata pools (operations
 granting the right to deduct vs operations exempt without that right),
 and produces a :class:`~aeat.domain.iva.ProrrataInputs` value the
 :func:`~aeat.domain.iva.compute_prorrata_general` calculator consumes.
-
-The aggregator is a pure function: it does not touch the registry,
-persistence, or the CLI. The caller — typically the modelo 303 or 390
-binding provider — supplies a sequence of already-classified
-:class:`IvaOperation` records sourced from the active bucket's
-collectible invoices and ledger transactions. The classification step
-itself happens upstream in :mod:`aeat.domain.iva._classification`; this
-module relies on the upstream decision and only routes amounts.
 
 Two high-level orchestrators wrap the aggregation:
 

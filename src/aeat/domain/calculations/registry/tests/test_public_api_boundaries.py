@@ -154,7 +154,7 @@ def _relative_private_imports(path: Path) -> tuple[str, ...]:
 
 
 def _is_test_source(path: Path) -> bool:
-    return path.name.startswith("test_") or path.name == "conftest.py"
+    return path.name.startswith("test_") or path.name == "conftest.py" or "tests" in path.parts
 
 
 def _module_name_for(path: Path) -> str:

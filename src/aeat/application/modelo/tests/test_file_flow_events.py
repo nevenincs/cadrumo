@@ -30,6 +30,8 @@ from ._file_flow_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
 def test_calculate_emits_modelo_calculation_created_event(repos) -> None:
     """calculate_modelo_revision appends a ``modelo.calculation.created``
     event with the new revision id as object_id and the work unit's
@@ -67,6 +69,7 @@ def test_calculate_emits_modelo_calculation_created_event(repos) -> None:
     assert event.payload["period"] == work_unit.period
     assert event.payload["borrador_snapshot_id"] == ""
     assert event.payload["borrador_binding_count"] == "0"
+
 
 def test_verify_emits_passed_event_on_success(repos) -> None:
     """verify_modelo_revision emits ``modelo.verification.passed``
@@ -112,6 +115,7 @@ def test_verify_emits_passed_event_on_success(repos) -> None:
     assert event.object_id == report.verification_report_id
     assert event.payload["calculation_revision_id"] == revision.calculation_revision_id
     assert event.payload["completeness_status"] == "complete"
+
 
 def test_verify_emits_refused_event_on_missing_casilla(repos) -> None:
     """verify_modelo_revision emits ``modelo.verification.refused``
@@ -166,6 +170,7 @@ def test_verify_emits_refused_event_on_missing_casilla(repos) -> None:
     assert int(event.payload["missing_required_count"]) >= 1
     assert omitted not in event.payload  # omitted casilla id stays in the report, not the event payload
 
+
 def test_file_emits_modelo_filed_event(repos) -> None:
     """file_modelo_revision appends a ``modelo.filed`` event
     referencing the new filing record id and carrying the modelo /
@@ -213,6 +218,7 @@ def test_file_emits_modelo_filed_event(repos) -> None:
     assert event.payload["modelo"] == work_unit.modelo
     # No prior filing was superseded — payload carries empty string.
     assert event.payload["supersedes_filing_record_id"] == ""
+
 
 def test_file_supersession_emits_both_filed_and_superseded_events(repos) -> None:
     """A second filing supersedes the prior one. The bucket-event

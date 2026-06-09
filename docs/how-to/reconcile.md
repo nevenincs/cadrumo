@@ -1,43 +1,73 @@
-# How to reconcile a filed Modelo against its justificante
+# Reconcile a filed modelo against its justificante
 
-After you file with the Agencia Estatal de Administración Tributaria (AEAT),
-download the justificante. Reconcile it against your local filing record to confirm
-that the receipt belongs to the expected modelo and filing year. This check is
-local: it reads the Portable Document Format (PDF) file you supply and never
-contacts AEAT.
+After you file through the AEAT portal, download the justificante (the official
+receipt AEAT issues after you sign and submit). Use this guide to check that the
+justificante matches your local filing record.
 
-You need an active profile, a local filing record, and the justificante PDF on disk.
-To set up a profile, see [Set up your taxpayer profile](profile-setup.md). To
-create a local filing record, see the [quickstart](quickstart.md).
+This check is local. It reads the PDF you supply and never contacts AEAT.
+
+## Before you start
+
+You need:
+
+- an active profile
+- a locally filed work unit (you have run `aeat app modelo work file` for this
+  filing)
+- the justificante PDF on disk
+
+To create a profile, see [Set up your taxpayer profile](profile-setup.md). For
+the filing workflow, see the [quickstart](quickstart.md).
 
 ## Run the reconciliation
 
-Pass the same visible filing target you used for the lifecycle commands, plus
-the path to the justificante PDF:
+Compare your local filing record against the justificante:
 
 ```bash
 aeat app modelo reconcile --modelo 303 --year 2026 --period 1T --from-justificante ./justificante.pdf
 ```
 
-The command finds the active-profile filing record for that modelo, year, and
-period. It then reads the justificante and checks its filing details against the
-selected local record. Add `--by "<actor>"` to record who ran the check.
-
-If more than one rule set could match the same filing target, the CLI refuses
-to guess. Re-run the command with `--revision` after choosing the candidate you
-intend to reconcile. Exact work-unit IDs remain available as an advanced option
-when an automation already holds one.
+Replace `303`, `2026`, and `1T` with the modelo, year, and period of your
+actual filing.
 
 ## Read the result
 
-On a clean match, the report confirms that the justificante modelo and filing
-year agree with the selected local record. If it diverges, check that you
-selected the right modelo, year, and PDF before relying on the receipt.
+The command reports one of three verdicts:
+
+- **matches** — the justificante matches the local filing record.
+- **mismatches** — one or more fields differ. The report names each field and
+  shows the local value next to the value found in the PDF.
+- **evidence_invalid** — the PDF could not be read. Check that the file is the
+  actual AEAT justificante and not a different document.
+
+Fields checked include the modelo code, the filing year, and the taxpayer
+identifier (NIF, CIF, DNI, NIE, or NII).
+
+## Handle a mismatch
+
+If the verdict is `mismatches`:
+
+1. Check that the justificante PDF is the correct one for this filing (not a
+   different period or a different taxpayer).
+2. If the PDF is correct and your local record has the wrong value, use the
+   amendment workflow. See
+   [Review and supply calculation inputs](review-calculation-values.md).
+3. If the PDF appears wrong, contact your asesor or AEAT directly.
+
+## Shortcut: start from the PDF file path
+
+If you prefer to pass the PDF first and the filing target second:
+
+```bash
+aeat app modelo reconcile-from-justificante ./justificante.pdf --modelo 303 --year 2026 --period 1T
+```
+
+Both commands produce the same result.
 
 ## Next steps
 
-- [Quickstart](quickstart.md) - build and export a modelo.
-- [Common filing recipes](index.md) - other modelos and tasks.
-- [Command reference](../cli/index.rst) - every reconcile flag and exit code.
-- [Diagnose and repair your local setup](troubleshooting.md) - fix local setup
-  or readiness problems.
+- [Quickstart](quickstart.md) — the end-to-end filing workflow.
+- [Review and supply calculation inputs](review-calculation-values.md) — amend
+  a filing if reconciliation finds a mismatch.
+- [CLI reference](../cli/index.rst) — full option reference.
+- [Diagnose and repair your local setup](troubleshooting.md) — fix local
+  readiness problems.

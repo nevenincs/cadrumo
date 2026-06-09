@@ -36,7 +36,7 @@ class _ObservedGeminiRequest(BaseHTTPRequestHandler):
             }
         )
         payload = {
-            "candidates": [{"content": {"parts": [{"text": " Gemini response "}]} }],
+            "candidates": [{"content": {"parts": [{"text": " Gemini response "}]}}],
             "usageMetadata": {"promptTokenCount": 7, "candidatesTokenCount": 3},
         }
         encoded = json.dumps(payload).encode("utf-8")

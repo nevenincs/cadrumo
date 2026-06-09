@@ -1,13 +1,9 @@
 """Shared currency predicates for aggregation gates.
 
-Every aggregation pipeline that projects transaction amounts into
-casilla observations must decide whether to gate a non-EUR row as
-unsupported or to accept it using a pre-converted ``value_in_eur``.
+Used by: :mod:`_iva_ledger`, :mod:`_renta_ledger`, :mod:`_renta_income_ledger`
+to gate non-EUR rows and extract effective EUR amounts.
 
-This module provides two predicates that replace the three independent
-``if transaction.raw.currency != "EUR": ...`` guards that existed in
-``_iva_ledger.py``, ``_renta_ledger.py``, and
-``_renta_income_ledger.py``.
+Provides two predicates that replace independent ``if transaction.raw.currency != "EUR": ...`` guards.
 """
 
 from __future__ import annotations

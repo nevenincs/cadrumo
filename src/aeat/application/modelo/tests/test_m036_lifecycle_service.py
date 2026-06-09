@@ -83,8 +83,7 @@ def test_record_alta_emits_bucket_event_of_matching_kind(tmp_path: Path) -> None
     matching = [
         event
         for event in catalogue.events.values()
-        if event.event_type is BucketEventType.CENSO_DECLARATION_ALTA
-        and event.object_id == result.declaration_id
+        if event.event_type is BucketEventType.CENSO_DECLARATION_ALTA and event.object_id == result.declaration_id
     ]
     assert len(matching) == 1
     event = matching[0]
@@ -104,11 +103,7 @@ def test_record_modificacion_emits_modificacion_event(tmp_path: Path) -> None:
         result = record_m036_declaration(command, bucket_id=runtime.bucket_id)
         catalogue = BucketEventHistoryRepository().load()
 
-    matching = [
-        event
-        for event in catalogue.events.values()
-        if event.object_id == result.declaration_id
-    ]
+    matching = [event for event in catalogue.events.values() if event.object_id == result.declaration_id]
     assert len(matching) == 1
     assert matching[0].event_type is BucketEventType.CENSO_DECLARATION_MODIFICACION
 
@@ -124,11 +119,7 @@ def test_record_baja_emits_baja_event(tmp_path: Path) -> None:
         result = record_m036_declaration(command, bucket_id=runtime.bucket_id)
         catalogue = BucketEventHistoryRepository().load()
 
-    matching = [
-        event
-        for event in catalogue.events.values()
-        if event.object_id == result.declaration_id
-    ]
+    matching = [event for event in catalogue.events.values() if event.object_id == result.declaration_id]
     assert len(matching) == 1
     assert matching[0].event_type is BucketEventType.CENSO_DECLARATION_BAJA
 
@@ -147,11 +138,7 @@ def test_record_is_idempotent_for_identical_input(tmp_path: Path) -> None:
 
     assert first.declaration_id == second.declaration_id
     assert first.bucket_id == second.bucket_id
-    matching = [
-        event
-        for event in catalogue.events.values()
-        if event.object_id == first.declaration_id
-    ]
+    matching = [event for event in catalogue.events.values() if event.object_id == first.declaration_id]
     # Content-addressed event id deduplicates the catalogue entry, but if
     # the implementation grows to allow multiple recordings the count
     # remains bounded to the distinct event_ids — never zero.

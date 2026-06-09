@@ -39,6 +39,7 @@ class _Modelo349Fixture:
     numero_rectificaciones: str
     importe_rectificaciones: str
 
+
 _MODELO_349_FIXTURES: tuple[_Modelo349Fixture, ...] = (
     _Modelo349Fixture(
         filename="349/2024-1T.pdf",
@@ -52,6 +53,7 @@ _MODELO_349_FIXTURES: tuple[_Modelo349Fixture, ...] = (
         importe_rectificaciones="0,00",
     ),
 )
+
 
 def _draw_modelo_349(c: canvas.Canvas, fixture: _Modelo349Fixture) -> None:
     """Render a sanitized M349 hoja-resumen page onto ``c``.
@@ -114,6 +116,7 @@ def _draw_modelo_349(c: canvas.Canvas, fixture: _Modelo349Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
+
 @dataclass(frozen=True)
 class _Modelo180Fixture:
     """Sanitized M180 resumen-anual declaracion fixture.
@@ -150,6 +153,7 @@ class _Modelo180Fixture:
     base_total: str
     retenciones_total: str
 
+
 _MODELO_180_FIXTURES: tuple[_Modelo180Fixture, ...] = (
     _Modelo180Fixture(
         filename="180/2024-0A.pdf",
@@ -161,6 +165,7 @@ _MODELO_180_FIXTURES: tuple[_Modelo180Fixture, ...] = (
         retenciones_total="2.280,00",
     ),
 )
+
 
 def _draw_modelo_180(c: canvas.Canvas, fixture: _Modelo180Fixture) -> None:
     """Render a sanitized M180 resumen-anual declaracion page onto ``c``.
@@ -233,6 +238,7 @@ def _draw_modelo_180(c: canvas.Canvas, fixture: _Modelo180Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
+
 @dataclass(frozen=True)
 class _Modelo369Fixture:
     """Sanitized M369 OSS Union scheme declaracion fixture.
@@ -271,6 +277,7 @@ class _Modelo369Fixture:
     tax_id: str
     full_name: str
 
+
 _MODELO_369_FIXTURES: tuple[_Modelo369Fixture, ...] = (
     _Modelo369Fixture(
         filename="369/2024-1T.pdf",
@@ -280,6 +287,7 @@ _MODELO_369_FIXTURES: tuple[_Modelo369Fixture, ...] = (
         full_name="DEMO EMPRESA SL",
     ),
 )
+
 
 def _draw_modelo_369(c: canvas.Canvas, fixture: _Modelo369Fixture) -> None:
     """Render a sanitized M369 OSS Union scheme declaracion page onto ``c``.
@@ -333,6 +341,7 @@ def _draw_modelo_369(c: canvas.Canvas, fixture: _Modelo369Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
+
 @dataclass(frozen=True)
 class _Modelo193Fixture:
     """Sanitized M193 resumen-anual declaracion fixture.
@@ -359,6 +368,7 @@ class _Modelo193Fixture:
     base_total: str
     retenciones_total: str
 
+
 _MODELO_193_FIXTURES: tuple[_Modelo193Fixture, ...] = (
     _Modelo193Fixture(
         filename="193/2024-0A.pdf",
@@ -370,6 +380,7 @@ _MODELO_193_FIXTURES: tuple[_Modelo193Fixture, ...] = (
         retenciones_total="1.520,00",
     ),
 )
+
 
 def _draw_modelo_193(c: canvas.Canvas, fixture: _Modelo193Fixture) -> None:
     """Render a sanitized M193 resumen-anual declaracion page onto ``c``.
@@ -452,6 +463,7 @@ def _draw_modelo_193(c: canvas.Canvas, fixture: _Modelo193Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
+
 @dataclass(frozen=True)
 class _Modelo115Fixture:
     """Sanitized M115 quarterly retenciones-arrendamientos autoliquidacion fixture.
@@ -486,6 +498,7 @@ class _Modelo115Fixture:
     resultado_anteriores: str
     resultado_ingresar: str
 
+
 _MODELO_115_FIXTURES: tuple[_Modelo115Fixture, ...] = (
     _Modelo115Fixture(
         filename="115/2024-1T.pdf",
@@ -500,6 +513,7 @@ _MODELO_115_FIXTURES: tuple[_Modelo115Fixture, ...] = (
         resultado_ingresar="2.280,00",
     ),
 )
+
 
 def _draw_modelo_115(c: canvas.Canvas, fixture: _Modelo115Fixture) -> None:
     """Render a sanitized M115 retenciones-arrendamientos autoliquidacion page onto ``c``.
@@ -579,6 +593,7 @@ def _draw_modelo_115(c: canvas.Canvas, fixture: _Modelo115Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
+
 @dataclass(frozen=True)
 class _Modelo720Fixture:
     """Sanitized M720 foreign-asset informative declaracion fixture.
@@ -615,6 +630,7 @@ class _Modelo720Fixture:
     tax_id: str
     full_name: str
 
+
 _MODELO_720_FIXTURES: tuple[_Modelo720Fixture, ...] = (
     _Modelo720Fixture(
         filename="720/2024-0A.pdf",
@@ -623,6 +639,7 @@ _MODELO_720_FIXTURES: tuple[_Modelo720Fixture, ...] = (
         full_name="DEMO EMPRESA SL",
     ),
 )
+
 
 def _draw_modelo_720(c: canvas.Canvas, fixture: _Modelo720Fixture) -> None:
     """Render a sanitized M720 declaracion informativa page onto ``c``.
@@ -685,6 +702,7 @@ def _draw_modelo_720(c: canvas.Canvas, fixture: _Modelo720Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
+
 @dataclass(frozen=True)
 class _Modelo036Fixture:
     """Sanitized M036 declaracion-censal fixture.
@@ -712,6 +730,7 @@ class _Modelo036Fixture:
     event_kind: str
     presented_at: str = "2025-01-01 10:00:00"
 
+
 _MODELO_036_FIXTURES: tuple[_Modelo036Fixture, ...] = (
     _Modelo036Fixture(
         filename="036/2025-0A.pdf",
@@ -728,6 +747,7 @@ _MODELO_036_FIXTURES: tuple[_Modelo036Fixture, ...] = (
         event_kind="Alta",
     ),
 )
+
 
 def _draw_modelo_036(c: canvas.Canvas, fixture: _Modelo036Fixture) -> None:
     """Render a sanitized M036 declaracion-censal page onto ``c``.

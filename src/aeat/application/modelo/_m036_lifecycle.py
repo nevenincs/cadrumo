@@ -109,8 +109,7 @@ class M036DeclarationResult(BaseModel):
         max_length=64,
         pattern=r"^[0-9a-f]{64}$",
         description=(
-            "SHA-256 hex content-address derived from "
-            "(profile_id, event_kind, declared_on, sede_justificante)."
+            "SHA-256 hex content-address derived from (profile_id, event_kind, declared_on, sede_justificante)."
         ),
     )
     bucket_id: BucketId
@@ -147,12 +146,8 @@ def _m036_declaration_not_found(declaration_id: str) -> KeyError:
     return KeyError(f"M036 declaration {declaration_id!r} not found")
 
 
-def _m036_declaration_ambiguous_prefix(
-    declaration_id: str, full_ids: tuple[str, ...]
-) -> KeyError:
-    return KeyError(
-        f"M036 declaration prefix {declaration_id!r} is ambiguous; matches {list(full_ids)!r}"
-    )
+def _m036_declaration_ambiguous_prefix(declaration_id: str, full_ids: tuple[str, ...]) -> KeyError:
+    return KeyError(f"M036 declaration prefix {declaration_id!r} is ambiguous; matches {list(full_ids)!r}")
 
 
 def record_m036_declaration(

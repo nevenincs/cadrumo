@@ -62,16 +62,17 @@ jobs:
           just env-setup
 
       - name: Lint
-        run: just lint
+        run: |
+          just check-style
+          just check-relative-imports
 
       - name: Typecheck
-        run: just typecheck
+        run: just check-types
 
       - name: Semgrep regression rules (linkage-design type-uniformity)
         # Semgrep requires the Unix `resource` module and does not run on
         # Windows. Rules in `.semgrep/rules/` enforce the type-uniformity
-        # discipline established in Wave 1 of the linkage-design epic;
-        # see `.semgrep/README.md` for the rule inventory and policy.
+        # discipline; see `.semgrep/README.md` for the rule inventory and policy.
         if: matrix.os == 'ubuntu-latest'
         run: uv run --no-sync semgrep --config .semgrep/rules/ --error src/aeat/
 
@@ -110,7 +111,7 @@ jobs:
           uvx pip-audit --strict -r /tmp/audit-reqs.txt
 
       - name: Hooks
-        run: just hooks
+        run: just check-pre-commit
 
       - name: Upload Test Results
         if: always()

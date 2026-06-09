@@ -1,4 +1,7 @@
-"""External filing import actions for modelo baselines."""
+"""External filing import actions for modelo baselines.
+
+Use of :class:`BucketEventHistoryRepository`, :class:`CalculationRevision`, :class:`ModeloRecord` for compliance.
+"""
 
 from __future__ import annotations
 

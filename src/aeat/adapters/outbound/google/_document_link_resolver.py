@@ -1,4 +1,4 @@
-"""Scope-compatible resolution of recorded document links (follow-up S03).
+"""Scope-compatible resolution of recorded document links.
 
 A ledger row may carry recorded Gmail/Drive/URL document links (the offline
 doclink feature stores the link reference as evidence metadata; it never fetches

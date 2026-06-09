@@ -175,6 +175,7 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
             "renta-2025-profile-marriage-full-year": Decimal("0"),
             "renta-2025-profile-marriage-month-start": Decimal("0"),
             "renta-2025-profile-marriage-month-end": Decimal("0"),
+            "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={
@@ -260,6 +261,7 @@ def _simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
             "renta-2025-profile-marriage-full-year": Decimal("0"),
             "renta-2025-profile-marriage-month-start": Decimal("0"),
             "renta-2025-profile-marriage-month-end": Decimal("0"),
+            "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={
@@ -311,6 +313,7 @@ def _negative_simplified_base_scenario() -> RegistryCalculationScenario:
             "renta-2025-profile-marriage-full-year": Decimal("0"),
             "renta-2025-profile-marriage-month-start": Decimal("0"),
             "renta-2025-profile-marriage-month-end": Decimal("0"),
+            "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={
@@ -383,6 +386,7 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
             "renta-2025-profile-marriage-full-year": Decimal("0"),
             "renta-2025-profile-marriage-month-start": Decimal("0"),
             "renta-2025-profile-marriage-month-end": Decimal("0"),
+            "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={
@@ -523,6 +527,7 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
             "renta-2025-profile-marriage-full-year": Decimal("0"),
             "renta-2025-profile-marriage-month-start": Decimal("0"),
             "renta-2025-profile-marriage-month-end": Decimal("0"),
+            "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={

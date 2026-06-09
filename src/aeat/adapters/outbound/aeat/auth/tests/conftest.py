@@ -1,5 +1,3 @@
-"""Pytest fixtures for split adapter tests."""
+"""Pytest fixtures for outbound auth adapter tests."""
 
-pytest_plugins = (
-    'aeat.adapters.outbound.aeat.auth.tests._authenticator_support',
-)
+from ._authenticator_support import _isolated_secure_session_backend, _settings_factory  # noqa: F401

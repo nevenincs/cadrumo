@@ -31,6 +31,7 @@ from ..pdf import parse_spanish_decimal
 from ..pdf._utils import sha256_file, source_pdf_reference_path
 
 _logger = get_logger(__name__)
+_ANY_HTTP_URL_ADAPTER = TypeAdapter(AnyHttpUrl)
 
 
 # The CSV is 16 uppercase alphanumeric characters in the modern AEAT
@@ -439,7 +440,7 @@ def _extract_verification_url(text: str, pdf_path: Path) -> AnyHttpUrl:
         # function's own -> AnyHttpUrl annotation.  The PDF text-extraction
         # boundary does not permit a narrower construction without an explicit
         # cast that would add noise without safety benefit.
-        return TypeAdapter(AnyHttpUrl).validate_python(verification_url_raw)
+        return _ANY_HTTP_URL_ADAPTER.validate_python(verification_url_raw)
     except ValidationError as exc:
         raise JustificanteParseError(
             f"invalid verification URL in {pdf_path}: {verification_url_raw!r}",

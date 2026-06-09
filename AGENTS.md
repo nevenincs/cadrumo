@@ -23,6 +23,7 @@ You MUST respect these rules at all times:
 @.codex/rules/aeat-spanish-stem-naming.md
 @.codex/rules/aeat-swarm-audit-cadence.md
 @.codex/rules/aeat-swarm-orchestration.md
+@.codex/rules/aeat-user-docs-hardening.md
 @.codex/rules/aeat-vaultspec-centralisation.md
 @.codex/rules/composition-service-no-parallel-write-path.md
 @.codex/rules/core-struct-docstring-links.md

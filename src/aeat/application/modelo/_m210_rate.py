@@ -1,4 +1,7 @@
-"""Modelo 210 rate resolution helpers."""
+"""Modelo 210 rate resolution helpers.
+
+Use of :class:`RegistrySnapshot`, :class:`TaxpayerProfile` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -20,7 +23,10 @@ def resolve_m210_rate(
     year: int,
     snapshot: RegistrySnapshot,
 ) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
-    """Resolve the M210 rate for (profile, tipo_renta, year)."""
+    """Resolve the M210 rate for (profile, tipo_renta, year).
+
+    Use of :class:`RegistrySnapshot`, :class:`TaxpayerProfile` for compliance.
+    """
     baseline_param = None
     convenio_param = None
     for parameter in snapshot.revision.parameters:

@@ -41,13 +41,14 @@ class TestPartSpecs:
     """The PartSpec table covers every supported triple and only those triples."""
 
     def test_part_specs_cover_v1_triples(self) -> None:
-        """PART_SPECS contains exactly the three (renta p1, renta p2, iva) entries."""
+        """PART_SPECS contains exactly the supported (renta p1, renta p2, iva) entries."""
         triples = {(spec.manual_id, spec.year, spec.part) for spec in PART_SPECS}
-        assert triples == {
-            (ManualId.RENTA, 2025, ManualPart.PARTE_1),
-            (ManualId.RENTA, 2025, ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS),
-            (ManualId.IVA, 2025, ManualPart.SINGLE),
-        }
+        expected = set()
+        for year in [2020, 2021, 2022, 2023, 2024, 2025]:
+            expected.add((ManualId.RENTA, year, ManualPart.PARTE_1))
+            expected.add((ManualId.RENTA, year, ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS))
+            expected.add((ManualId.IVA, year, ManualPart.SINGLE))
+        assert triples == expected
 
     def test_part_specs_urls_are_aeat(self) -> None:
         """Every URL points at the configured AEAT Sede manuals root."""

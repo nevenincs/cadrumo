@@ -1,4 +1,7 @@
-"""Relation selector helpers for resolving revision and period coverage."""
+"""Relation selector helpers for resolving revision and period coverage.
+
+Use of :class:`ModeloDefinition`, :class:`ModeloRevision` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -50,7 +53,10 @@ def validate_source_year_coverage(
     fixed_source_year: int | None = None,
     source_is_observation_history: bool = False,
 ) -> list[str]:
-    """Verify source-year coverage, with observation history requiring only shape coverage."""
+    """Verify source-year coverage, with observation history requiring only shape coverage.
+
+    Use of :class:`ModeloRevision` for compliance.
+    """
     source_period_set = set(source_periods)
     period_matching_revisions = tuple(
         source_revision

@@ -43,6 +43,8 @@ from ._declarations_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
 def test_authoritative_declaration_selection_uses_latest_alta_row_for_duplicate_period() -> None:
     older = _declaration_row(
         expediente_id="202430313521426G",
@@ -62,6 +64,7 @@ def test_authoritative_declaration_selection_uses_latest_alta_row_for_duplicate_
     )
 
     assert selected.expediente_id == "202430313521428B"
+
 
 def test_declarations_page_shape_context_redacts_url_query_and_input_values() -> None:
     html = """
@@ -98,6 +101,7 @@ def test_declarations_page_shape_context_redacts_url_query_and_input_values() ->
     assert "ROW-CANARY" not in str(context)
     assert context["raw_sha256"]
 
+
 def test_modelo_303_submitted_file_fallback_extracts_result_casillas() -> None:
     snapshot = _modelo_snapshot("303", filing_year=2025, period="1T")
     artefact = FiledDeclaracionArtefact(
@@ -132,6 +136,7 @@ def test_modelo_303_submitted_file_fallback_extracts_result_casillas() -> None:
         "69": "-258.02",
         "71": "-258.02",
     }
+
 
 def test_modelo_303_2022_submitted_file_fallback_uses_2022_result_position() -> None:
     snapshot = _modelo_snapshot("303", filing_year=2022, period="1T")
@@ -170,6 +175,7 @@ def test_modelo_303_2022_submitted_file_fallback_uses_2022_result_position() -> 
         f"record:T30303:pos:{casilla_71_position}:width:17"
     )
 
+
 def test_modelo_303_submitted_file_fallback_refuses_invalid_page_record_footer() -> None:
     snapshot = _modelo_snapshot("303", filing_year=2025, period="1T")
     artefact = FiledDeclaracionArtefact(
@@ -202,6 +208,7 @@ def test_modelo_303_submitted_file_fallback_refuses_invalid_page_record_footer()
             artefact=artefact,
         )
 
+
 def test_modelo_303_filed_observation_derives_compensation_available() -> None:
     observation = _filed_observation(
         modelo="303",
@@ -217,6 +224,7 @@ def test_modelo_303_filed_observation_derives_compensation_available() -> None:
         "iva.compensacion-disponible-fin-periodo"
     ] == "258.02"
     assert registry_observation.casilla_values["iva.compensacion-disponible-fin-periodo"] == Decimal("258.02")
+
 
 class TestParseListbox:
     """Verify :func:`_parse_listbox` extracts typed Declaracion rows from the post-Buscar HTML."""
@@ -341,6 +349,7 @@ class TestParseListbox:
         with pytest.raises(SedeParseError, match=r"listbox|missing|parse"):
             _parse_listbox("<html><body>not a listbox</body></html>", modelo="100", ejercicio=2022)
 
+
 class TestParsePresentedAt:
     """Verify the Spanish ``dd/mm/YYYY hh:mm:ss`` timestamp shape parses to UTC."""
 
@@ -366,6 +375,7 @@ class TestParsePresentedAt:
         """Assert a date-only string (no time component) is rejected."""
         with pytest.raises(ValueError, match=r"presented_at|format|does not match"):
             _parse_presented_at("01/02/2024")
+
 
 class TestSearchOptionSelection:
     """Verify AEAT combobox selection failures do not select another offered value."""
@@ -397,6 +407,7 @@ class TestSearchOptionSelection:
 
         assert selected is False
         assert selected_year is None
+
 
 class TestExtractCsvFromUrl:
     """Verify cotejo-URL CSV extraction validates the AEAT shape strictly."""
@@ -440,6 +451,7 @@ class TestExtractCsvFromUrl:
         # indicate a malformed response or an attacker-crafted URL.
         with pytest.raises(SedeParseError, match="2 CSV values"):
             _extract_csv_from_url(f"{self._COTEJO}AAAA1234&CSV=BBBB5678")
+
 
 class TestSubmittedFileContext:
     """Verify submitted files are bound to the declaration row context."""

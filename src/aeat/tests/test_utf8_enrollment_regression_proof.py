@@ -24,7 +24,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = pathlib.Path(__file__).parent
+_SRC_ROOT = pathlib.Path(__file__).parent.parent
 
 _BARE_UTF8_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r'encoding="utf-8"'),

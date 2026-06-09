@@ -577,8 +577,10 @@ def _m210_baseline_rate(
     if parameter is None:
         return None
     for entry in parameter.keyed_brackets:
-        if entry.key == tipo_renta and entry.valid_from.year <= year and (
-            entry.valid_to is None or entry.valid_to.year >= year
+        if (
+            entry.key == tipo_renta
+            and entry.valid_from.year <= year
+            and (entry.valid_to is None or entry.valid_to.year >= year)
         ):
             try:
                 return Decimal(entry.value)
@@ -597,8 +599,11 @@ def _m210_convenio_rate_row(
     if parameter is None:
         return None
     for row in parameter.convenio_rates:
-        if row.country_code == country_code and row.tipo_renta == tipo_renta and row.valid_from.year <= year and (
-            row.valid_to is None or row.valid_to.year >= year
+        if (
+            row.country_code == country_code
+            and row.tipo_renta == tipo_renta
+            and row.valid_from.year <= year
+            and (row.valid_to is None or row.valid_to.year >= year)
         ):
             return row
     return None

@@ -1,4 +1,7 @@
-"""Calculation revision actions for modelo filings."""
+"""Calculation revision actions for modelo filings.
+
+Use of :class:`BucketEventHistoryRepository`, :class:`ModeloRevision` for compliance.
+"""
 
 from __future__ import annotations
 

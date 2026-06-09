@@ -36,6 +36,7 @@ class _Modelo232Fixture:
     tax_id: str
     full_name: str
 
+
 _MODELO_232_FIXTURES: tuple[_Modelo232Fixture, ...] = (
     _Modelo232Fixture(
         filename="232/2016-0A.pdf",
@@ -54,6 +55,7 @@ _MODELO_232_FIXTURES: tuple[_Modelo232Fixture, ...] = (
         full_name="DEMO EMPRESA SL",
     ),
 )
+
 
 def _draw_modelo_232(c: canvas.Canvas, fixture: _Modelo232Fixture) -> None:
     """Render a sanitized M232 declaracion informativa page onto ``c``.
@@ -115,6 +117,7 @@ def _draw_modelo_232(c: canvas.Canvas, fixture: _Modelo232Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
+
 @dataclass(frozen=True)
 class _Modelo123Fixture:
     """Sanitized M123 autoliquidacion fixture â€” numeric_casilla layout verification.
@@ -149,6 +152,7 @@ class _Modelo123Fixture:
     tax_id: str
     full_name: str
     casillas: tuple[tuple[str, str], ...]  # (casilla_id, spanish_formatted_amount)
+
 
 _MODELO_123_2024_CASILLAS: tuple[tuple[str, str], ...] = (
     # 2024-y-siguientes revision: 14 casillas.
@@ -209,6 +213,7 @@ _MODELO_123_FIXTURES: tuple[_Modelo123Fixture, ...] = (
     ),
 )
 
+
 def _draw_modelo_123(c: canvas.Canvas, fixture: _Modelo123Fixture) -> None:
     """Render a sanitized M123 autoliquidacion page onto ``c``.
 
@@ -264,6 +269,7 @@ def _draw_modelo_123(c: canvas.Canvas, fixture: _Modelo123Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
+
 @dataclass(frozen=True)
 class _Modelo347Fixture:
     """Sanitized M347 declaracion informativa anual de operaciones con terceras personas fixture.
@@ -290,6 +296,7 @@ class _Modelo347Fixture:
     tax_id: str
     full_name: str
 
+
 _MODELO_347_FIXTURES: tuple[_Modelo347Fixture, ...] = (
     _Modelo347Fixture(
         filename="347/2024-0A.pdf",
@@ -298,6 +305,7 @@ _MODELO_347_FIXTURES: tuple[_Modelo347Fixture, ...] = (
         full_name="DEMO EMPRESA SL",
     ),
 )
+
 
 def _draw_modelo_347(c: canvas.Canvas, fixture: _Modelo347Fixture) -> None:
     """Render a sanitized M347 declaracion informativa anual page onto ``c``.
@@ -351,6 +359,7 @@ def _draw_modelo_347(c: canvas.Canvas, fixture: _Modelo347Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
+
 @dataclass(frozen=True)
 class _Modelo184Fixture:
     """Sanitized M184 declaracion informativa fixture.
@@ -382,6 +391,7 @@ class _Modelo184Fixture:
     tax_id: str
     full_name: str
 
+
 _MODELO_184_FIXTURES: tuple[_Modelo184Fixture, ...] = (
     _Modelo184Fixture(
         filename="184/2024-0A.pdf",
@@ -390,6 +400,7 @@ _MODELO_184_FIXTURES: tuple[_Modelo184Fixture, ...] = (
         full_name="DEMO EMPRESA SL",
     ),
 )
+
 
 def _draw_modelo_184(c: canvas.Canvas, fixture: _Modelo184Fixture) -> None:
     """Render a sanitized M184 declaracion informativa page onto ``c``.
@@ -437,6 +448,7 @@ def _draw_modelo_184(c: canvas.Canvas, fixture: _Modelo184Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
+
 @dataclass(frozen=True)
 class _Modelo131Fixture:
     """Sanitized M131 IRPF pago-fraccionado estimacion-objetiva fixture.
@@ -481,6 +493,7 @@ class _Modelo131Fixture:
     full_name: str
     casillas: tuple[tuple[str, str, str], ...]  # (box_number, label_text, spanish_amount)
 
+
 _MODELO_131_CASILLAS: tuple[tuple[str, str, str], ...] = (
     # Box number, label text (from modelo-131-instrucciones.html), sanitized amount
     # Layout: line-end box number like M130 tabular form.
@@ -516,6 +529,7 @@ _MODELO_131_FIXTURES: tuple[_Modelo131Fixture, ...] = (
         casillas=_MODELO_131_CASILLAS,
     ),
 )
+
 
 def _draw_modelo_131(c: canvas.Canvas, fixture: _Modelo131Fixture) -> None:
     """Render a sanitized M131 autoliquidacion page onto ``c``.
@@ -580,6 +594,7 @@ def _draw_modelo_131(c: canvas.Canvas, fixture: _Modelo131Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, _SEDE_ORIGIN)
 
+
 @dataclass(frozen=True)
 class _Modelo840Fixture:
     """Sanitized M840 declaracion fixture.
@@ -598,6 +613,7 @@ class _Modelo840Fixture:
     tax_id: str
     full_name: str
 
+
 _MODELO_840_FIXTURES: tuple[_Modelo840Fixture, ...] = (
     _Modelo840Fixture(
         filename="840/2024-0A.pdf",
@@ -607,6 +623,7 @@ _MODELO_840_FIXTURES: tuple[_Modelo840Fixture, ...] = (
         full_name="DEMO AUTONOMO UNO",
     ),
 )
+
 
 def _draw_modelo_840(c: canvas.Canvas, fixture: _Modelo840Fixture) -> None:
     """Render a sanitized M840 declaracion page onto ``c``.

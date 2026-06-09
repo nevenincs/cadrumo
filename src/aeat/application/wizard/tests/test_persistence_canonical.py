@@ -285,8 +285,5 @@ def test_persist_patch_rejects_unknown_question_id() -> None:
     with pytest.raises(WorkflowInputMismatchError) as excinfo:
         persist_patch(flow, {"missing-question": "12345678Z"}, state=WorkflowState())
 
-    assert (
-        excinfo.value.translated_message
-        == "application.wizard.errors.persist_patch_unknown_question_id"
-    )
+    assert excinfo.value.translated_message == "application.wizard.errors.persist_patch_unknown_question_id"
     assert excinfo.value.context == {"question_id": "missing-question"}

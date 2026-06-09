@@ -111,7 +111,7 @@ def test_no_bare_scan_status_scanned_comparison() -> None:
 # ---------------------------------------------------------------------------
 
 _LAYOUT_FILE = _SRC_ROOT / "adapters" / "persistence" / "storage" / "bucket" / "_layout.py"
-_SECURE_OBJECTS_FILE = _SRC_ROOT / "adapters" / "persistence" / "storage" / "sql" / "secure_objects.py"
+_SECURE_OBJECTS_FILE = _SRC_ROOT / "adapters" / "persistence" / "storage" / "sql" / "_secure_object_records.py"
 
 _RE_LOCAL_STRICT_FROZEN_DEF = re.compile(r"_STRICT_FROZEN\s*=\s*ConfigDict\s*\(")
 
@@ -155,7 +155,6 @@ _UTF8_ENROLLED_FILES: tuple[Path, ...] = (
     _SRC_ROOT / "adapters" / "persistence" / "storage" / "master_key" / "_master_key.py",
     _SRC_ROOT / "adapters" / "persistence" / "storage" / "master_key" / "_recovery.py",
     _SRC_ROOT / "application" / "workflow" / "_profile_health.py",
-    _SRC_ROOT / "application" / "topics" / "__init__.py",
     _SRC_ROOT / "adapters" / "outbound" / "aeat" / "sede" / "_observation_store.py",
     _SRC_ROOT / "application" / "user_profile" / "_orchestration.py",
     _SRC_ROOT / "application" / "user_profile" / "_profile_repository.py",

@@ -128,6 +128,4 @@ def test_bulk_classify_270_rows_persists_catalogue_once(_profile: object) -> Non
 
     # The classifications actually landed.
     reloaded = TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects).load()
-    assert all(
-        txn.business_classification is BusinessClassification.BUSINESS for txn in reloaded.values()
-    )
+    assert all(txn.business_classification is BusinessClassification.BUSINESS for txn in reloaded.values())

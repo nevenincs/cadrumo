@@ -68,9 +68,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         profile_create_storage_span("default"),
     ):
         try:
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id="default")
-            )
+            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
             yield
         finally:
             dispose_engine()
@@ -90,9 +88,7 @@ def _match(description: str, rules: list[dict]) -> dict | None:
 
 def _import_corpus() -> None:
     for name in _FILES:
-        result = _RUNNER.invoke(
-            app, ["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"]
-        )
+        result = _RUNNER.invoke(app, ["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"])
         assert result.exit_code == 0, f"{name}: {result.output}"
 
 
@@ -187,9 +183,7 @@ def test_annual_income_and_expense_picture_must_be_summed_by_hand() -> None:
         fh.write("\n".join(lines) + "\n")
         classify_csv = fh.name
 
-    classified = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "classify", "--from-csv", classify_csv]
-    )
+    classified = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "classify", "--from-csv", classify_csv])
     assert classified.exit_code == 0, classified.output
     applied = json.loads(classified.output)["result"]["applied"]
     assert applied == len(classified_ids), (applied, len(classified_ids))
@@ -197,15 +191,9 @@ def test_annual_income_and_expense_picture_must_be_summed_by_hand() -> None:
     # Assemble the annual picture by hand: there is no verb that does this.
     rows = _list_rows()
     rows_2025 = [r for r in rows if _year_of(r) == 2025]
-    business_2025 = [
-        r for r in rows_2025 if r.get("business_classification") == "BUSINESS"
-    ]
-    income = sum(
-        Decimal(str(r["amount"])) for r in business_2025 if r.get("direction") == "INCOMING"
-    )
-    expense = sum(
-        -Decimal(str(r["amount"])) for r in business_2025 if r.get("direction") == "OUTGOING"
-    )
+    business_2025 = [r for r in rows_2025 if r.get("business_classification") == "BUSINESS"]
+    income = sum(Decimal(str(r["amount"])) for r in business_2025 if r.get("direction") == "INCOMING")
+    expense = sum(-Decimal(str(r["amount"])) for r in business_2025 if r.get("direction") == "OUTGOING")
     # Internal-consistency checks only (anti-tautology): a real autónoma year
     # has positive business income and positive deductible expense.
     assert income > 0, f"expected positive 2025 business income, got {income}"

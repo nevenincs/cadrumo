@@ -2,8 +2,8 @@
 
 Use this when `aeat app ledger classify --llm` cannot find or run your LLM
 provider. `aeat` does not store LLM credentials and does not have a separate
-LLM account configuration command. It shells out to a provider CLI that is
-already installed, on `PATH`, and authenticated in that provider's own tooling.
+LLM account configuration command. It runs a provider CLI that is already installed and authenticated in your
+system. `aeat` does not store or manage LLM credentials itself.
 
 ## Supported providers
 

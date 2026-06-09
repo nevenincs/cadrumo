@@ -10,6 +10,9 @@ storage backend without going through the runtime default. The
 :class:`WorkflowState` record carries a reference to the active-bucket
 :class:`TransactionCatalogueRepository` when one is needed downstream.
 
+This module uses :class:`WorkflowResult`, :class:`WorkflowEngine`,
+and :class:`UserProfileRecord` for workflow persistence and state management.
+
 Import ordering note
 --------------------
 The ``SiteHealthStatus`` and ``ModeloDeadline`` imports are placed

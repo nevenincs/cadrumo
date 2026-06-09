@@ -81,8 +81,8 @@ _INITIAL_THRESHOLD_EUR = Decimal("50000.00")
 _REDECLARATION_DELTA_EUR = Decimal("20000.00")
 
 # Year-N (2023) valuations at 31 December 2023 (both above €50k initial threshold).
-_BTC_N = Decimal("60000.00")   # BTC via Coinbase, above €50k threshold
-_ETH_N = Decimal("55000.00")   # ETH via Coinbase, above €50k threshold
+_BTC_N = Decimal("60000.00")  # BTC via Coinbase, above €50k threshold
+_ETH_N = Decimal("55000.00")  # ETH via Coinbase, above €50k threshold
 
 # Year-N+1 (2024) valuations at 31 December 2024.
 # BTC: +€27,000 (> €20k delta → re-declaration required per art. 42-quater)
@@ -93,11 +93,11 @@ _ETH_N1 = Decimal("63000.00")
 #: Custodian identity anchor: Coinbase (US-based custodian).
 #: Must survive the roundtrip unchanged — identity-continuity contract.
 #: Encoded as Decimal for CasillaObservation (text-content stored as numeric).
-_CUSTODIO_NOMBRE = Decimal("1")   # proxy for "Coinbase Inc" — numeric sentinel
-_CUSTODIO_PAIS = Decimal("840")   # US ISO 3166-1 numeric country code
+_CUSTODIO_NOMBRE = Decimal("1")  # proxy for "Coinbase Inc" — numeric sentinel
+_CUSTODIO_PAIS = Decimal("840")  # US ISO 3166-1 numeric country code
 
 # Clock timestamps (M721 filing window: 1 January – 31 March following ejercicio).
-_CLOCK_N = datetime(2024, 2, 15, 10, 0, 0, tzinfo=UTC)     # filed for ejercicio 2023
+_CLOCK_N = datetime(2024, 2, 15, 10, 0, 0, tzinfo=UTC)  # filed for ejercicio 2023
 _CLOCK_N_PLUS_1 = datetime(2025, 2, 15, 10, 0, 0, tzinfo=UTC)  # filed for ejercicio 2024
 
 
@@ -141,10 +141,10 @@ def _year_n_observation() -> RegistryModeloObservation:
             CasillaObservation(casilla_id="custodio.nombre-razon-social", value=_CUSTODIO_NOMBRE),
             CasillaObservation(casilla_id="custodio.codigo-pais", value=_CUSTODIO_PAIS),
             # BTC row — token identity + 31-December valuation
-            CasillaObservation(casilla_id="btc.moneda.clave-token", value=Decimal("1")),   # BTC=1
+            CasillaObservation(casilla_id="btc.moneda.clave-token", value=Decimal("1")),  # BTC=1
             CasillaObservation(casilla_id="btc.moneda.saldo-31-diciembre", value=_BTC_N),
             # ETH row — token identity + 31-December valuation
-            CasillaObservation(casilla_id="eth.moneda.clave-token", value=Decimal("2")),   # ETH=2
+            CasillaObservation(casilla_id="eth.moneda.clave-token", value=Decimal("2")),  # ETH=2
             CasillaObservation(casilla_id="eth.moneda.saldo-31-diciembre", value=_ETH_N),
         ),
     )
@@ -189,9 +189,7 @@ def test_year_n_observation_persists_and_reloads_strictly(tmp_path: Path) -> Non
         repo.save_observation(obs_n, source_kind="app_filing", captured_at=_CLOCK_N)
         loaded = _find_observation(repo, filing_year=_YEAR_N, period="0A")
 
-        assert loaded is not None, (
-            f"year-N observation not found for ({_MODELO!r}, {_YEAR_N}, '0A') after save"
-        )
+        assert loaded is not None, f"year-N observation not found for ({_MODELO!r}, {_YEAR_N}, '0A') after save"
         assert loaded.observation == obs_n, (
             "721 year-N observation did not survive the encrypted-SQL roundtrip; "
             "at least one casilla was silently dropped, coerced, or defaulted away"
@@ -367,15 +365,10 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="0A",
-        observations=tuple(
-            o for o in obs_n.observations
-            if "saldo-31-diciembre" not in o.casilla_id
-        ),
+        observations=tuple(o for o in obs_n.observations if "saldo-31-diciembre" not in o.casilla_id),
     )
 
-    assert obs_n != obs_n_no_saldo, (
-        "the full observation and the saldo-omitted observation must be strictly unequal"
-    )
+    assert obs_n != obs_n_no_saldo, "the full observation and the saldo-omitted observation must be strictly unequal"
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
@@ -440,8 +433,7 @@ def test_enrollment_recorder_evidences_two_distinct_annual_cycles_and_matches_ma
 
     evidence = recorder.evidence()
     assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1), (
-        f"expected distinct renta years {(_YEAR_N, _YEAR_N_PLUS_1)!r}; "
-        f"got {evidence.distinct_renta_years!r}"
+        f"expected distinct renta years {(_YEAR_N, _YEAR_N_PLUS_1)!r}; got {evidence.distinct_renta_years!r}"
     )
 
     assert_enrollment_matches_manifest(evidence)

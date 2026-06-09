@@ -50,7 +50,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _logger = get_logger(__name__)
 
-_SRC_AEAT = Path(__file__).resolve().parent
+_SRC_AEAT = Path(__file__).resolve().parent.parent
 _REPO_ROOT = _SRC_AEAT.parents[1]  # chore-476-restructure-execution
 _FIXTURES_DIR = _SRC_AEAT / "tests" / "fixtures"
 

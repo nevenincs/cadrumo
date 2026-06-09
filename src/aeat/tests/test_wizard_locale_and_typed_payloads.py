@@ -24,7 +24,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_SRC_ROOT = pathlib.Path(__file__).parent
+_SRC_ROOT = pathlib.Path(__file__).parent.parent
 
 
 # ---------------------------------------------------------------------------

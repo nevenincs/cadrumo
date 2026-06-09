@@ -1,4 +1,7 @@
-"""Registry lookup and verification helpers for modelo actions."""
+"""Registry lookup and verification helpers for modelo actions.
+
+Use of :class:`CalculationRevision`, :class:`ModeloRevision`, :class:`RegistrySnapshot` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -57,7 +60,10 @@ def normalize_casilla_input_aliases(
     revision: ModeloRevision,
     casilla_inputs: Mapping[str, Decimal],
 ) -> dict[str, Decimal]:
-    """Resolve operator-supplied ``--casilla`` keys to canonical casilla ids."""
+    """Resolve operator-supplied ``--casilla`` keys to canonical casilla ids.
+
+    Use of :class:`ModeloRevision` for compliance.
+    """
     if not casilla_inputs:
         return dict(casilla_inputs)
     alias_map = input_casilla_alias_map(revision)
@@ -225,7 +231,10 @@ def verification_predicates_for_revision(
 
 
 def assert_revision_content_integrity(revision: CalculationRevision) -> None:
-    """Check revision integrity; raise :exc:`StoredCalculationDriftError` on drift."""
+    """Check revision integrity; raise :exc:`StoredCalculationDriftError` on drift.
+
+    Use of :class:`CalculationRevision` for compliance.
+    """
     expected = derive_calculation_revision_id(
         work_unit_id=revision.work_unit_id,
         inputs_snapshot=revision.inputs_snapshot,

@@ -19,6 +19,34 @@ def verify_source_file(root: Path, source: SourceReference) -> None:
         raise RegistryValidationError(f"source {source.id!r} escapes repository root")
     if not path.is_file():
         raise RegistryValidationError(f"source {source.id!r} missing corpus file {source.corpus_path!r}")
+
+    if source.kind == "manual_pdf" and "corpus/manuals" in source.corpus_path:
+        parts = source.corpus_path.split("/")
+        try:
+            idx = parts.index("manuals")
+            if idx >= 0 and idx + 3 < len(parts):
+                manual_id_str = parts[idx + 1]
+                year_str = parts[idx + 2]
+                part_str = parts[idx + 3]
+
+                from ....core.config import Settings
+                from ...manuals import ManualId, ManualPart, load_manual
+
+                manual_id = ManualId(manual_id_str)
+                year = int(year_str)
+                part = ManualPart.SINGLE if part_str == "source.pdf" else ManualPart(part_str)
+
+                manuals_dir = repo_root / "corpus" / "manuals"
+                if not manuals_dir.is_dir():
+                    manuals_dir = repo_root / "src" / "aeat" / "_data" / "corpus" / "manuals"
+
+                settings = Settings(aeat_manuals_root=manuals_dir)
+                load_manual(manual_id=manual_id, year=year, part=part, settings=settings)
+        except Exception as exc:
+            raise RegistryValidationError(
+                f"source {source.id!r} manual structure check failed for path {source.corpus_path!r}: {exc}"
+            ) from exc
+
     stat = path.stat()
     length, actual_sha256 = _source_file_fingerprint(str(path), stat.st_size, stat.st_mtime_ns)
     if length != source.bytes:

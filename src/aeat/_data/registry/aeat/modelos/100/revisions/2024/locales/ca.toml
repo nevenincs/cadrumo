@@ -1,0 +1,9 @@
+[labels]
+"0001" = "Contribuent que obté els rendiments"
+"1479" = "Rendiment net d'activitats econòmiques en estimació objectiva excepte agrícoles, ramaderes i forestals"
+"1553" = "Rendiment net d'activitats agrícoles ramaderes i forestals en estimació objectiva"
+
+[help]
+"0001" = "Selector del contribuent que obté els rendiments econòmics de l'activitat."
+"1479" = "Rendiment net calculat per a les activitats econòmiques no agrícoles sota estimació objectiva."
+"1553" = "Rendiment net calculat per a les activitats agrícoles, ramaderes o forestals sota estimació objectiva."

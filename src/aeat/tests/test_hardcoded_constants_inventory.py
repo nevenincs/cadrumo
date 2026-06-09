@@ -39,7 +39,7 @@ def _production_py_files() -> list[Path]:
     return [
         p
         for p in _SRC_ROOT.rglob("*.py")
-        if not any(part.startswith("test_") or part == "__pycache__" for part in p.parts)
+        if not any(part.startswith("test_") or part == "tests" or part == "__pycache__" for part in p.parts)
         and p not in _CANONICAL_DEFINITIONS
     ]
 

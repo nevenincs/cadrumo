@@ -442,9 +442,7 @@ class TestUseTypeReduccionGate:
             UseType.VIVIENDA_DESOCUPADA,
         ],
     )
-    def test_resolve_reduccion_refuses_non_arrendada_use_types(
-        self, ineligible_use_type: UseType
-    ) -> None:
+    def test_resolve_reduccion_refuses_non_arrendada_use_types(self, ineligible_use_type: UseType) -> None:
         """Any use_type other than VIVIENDA_ARRENDADA refuses the reducción."""
         with pytest.raises(TierResolutionError, match=r"art\. 23\.2 LIRPF"):
             resolve_reduccion(

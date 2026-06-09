@@ -524,9 +524,7 @@ def test_sede_calculation_observation_is_not_justificante_verification() -> None
 
 def test_filed_declaration_observation_with_stored_justificante_marks_verified() -> None:
     evidence = calendar_filing_evidence_from_sources(
-        filed_declaration_observations=(
-            _filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),
-        ),
+        filed_declaration_observations=(_filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),),
     )
 
     assert len(evidence) == 1
@@ -647,9 +645,7 @@ def test_calendar_event_carries_verified_justificante_from_filed_observation() -
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
     )
     evidence = calendar_filing_evidence_from_sources(
-        filed_declaration_observations=(
-            _filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),
-        ),
+        filed_declaration_observations=(_filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),),
     )
 
     calendar = build_overview_calendar(
@@ -697,9 +693,7 @@ def test_calendar_event_justificante_verification_is_expediente_specific() -> No
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
     )
     evidence = calendar_filing_evidence_from_sources(
-        filed_declaration_observations=(
-            _filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),
-        ),
+        filed_declaration_observations=(_filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),),
     )
 
     calendar = build_overview_calendar(

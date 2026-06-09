@@ -1,3 +1,3 @@
 """Pytest fixtures for ledger application tests."""
 
-pytest_plugins = ("aeat.application.ledger.tests._action_test_support",)
+from ._action_test_support import secure_objects  # noqa: F401

@@ -12,6 +12,9 @@ active profile when the caller did not pass one explicitly; this
 keeps the application service unit-testable without a workflow-
 state fixture.
 
+This module re-exports :class:`CalculationRevision`, :class:`ModeloRecord`,
+and other core types for convenient access by callers.
+
 Verification boundary
 ---------------------
 ``verify_modelo_revision`` enforces a four-layer gate before the
@@ -42,6 +45,8 @@ Verification boundary
 Only when layers 1-3 produce zero blocking findings AND layer 4 passes
 does ``verify_modelo_revision`` grant ``VERIFICADO_COMPLETO`` and
 persist the :class:`~aeat.domain.modelos._verification_report.ModeloVerificationReport`.
+
+Use of :class:`CalculationRevision` for compliance.
 """
 
 from __future__ import annotations

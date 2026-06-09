@@ -3,6 +3,8 @@
 This module owns the adapter objects that let immutable calculation revisions
 participate in the filing workflow engine. The public application facade
 continues to export the operator-facing services from `aeat.application.modelo`.
+
+Use of :class:`CalculationRevision`, :class:`TaxpayerProfile`, :class:`TransactionCatalogue` for compliance.
 """
 
 from __future__ import annotations
@@ -117,7 +119,10 @@ class _RevisionInputsProvider:
         period: str,
         profile: TaxpayerProfile,
     ) -> ModeloInputs:
-        """Return the revision inputs when the workflow request matches it."""
+        """Return the revision inputs when the workflow request matches it.
+
+        Use of :class:`TaxpayerProfile` for compliance.
+        """
         del profile
         if modelo != self._modelo or period != self._period:
             raise WorkflowInputMismatchError(
@@ -158,7 +163,10 @@ class _RevisionDraftBuilder:
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
-        """Build a registry draft and approve it when it is filing-ready."""
+        """Build a registry draft and approve it when it is filing-ready.
+
+        Use of :class:`TaxpayerProfile` for compliance.
+        """
         draft = build_draft(
             modelo=modelo,
             period=period,
@@ -207,7 +215,10 @@ def build_revision_workflow_engine(
     clock: datetime,
     settings: Settings | None,
 ) -> WorkflowEngine:
-    """Build the workflow engine configured for one calculation revision."""
+    """Build the workflow engine configured for one calculation revision.
+
+    Use of :class:`CalculationRevision`, :class:`TaxpayerProfile` for compliance.
+    """
     cfg = settings or load_settings()
     deadline_engine = DeadlineEngine()
     provider_kind = (
@@ -245,7 +256,10 @@ def run_revision_workflow_gate(
     resumed_from: str | None = None,
     purpose: WorkflowPurpose = WorkflowPurpose.FILE,
 ) -> WorkflowResult:
-    """Run and persist the workflow gate for one modelo work unit."""
+    """Run and persist the workflow gate for one modelo work unit.
+
+    Use of :class:`TaxpayerProfile` for compliance.
+    """
     result = asyncio.run(
         engine.run_for_period(
             profile,

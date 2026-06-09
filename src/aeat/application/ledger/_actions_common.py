@@ -77,6 +77,7 @@ _REMOVAL_BLOCKING_REVISION_STATES = frozenset(
     }
 )
 
+
 def _transaction_repository(
     *,
     bucket_id: str,
@@ -194,6 +195,7 @@ def _optional_patched[T](
     # via the fallback parameter.
     return getattr(patch, field)  # type: ignore[no-any-return]
 
+
 def _blocking_modelo_references(
     *,
     bucket_id: str,
@@ -289,6 +291,7 @@ def _catalogue_modelo_source_ids(catalogue: TransactionCatalogue) -> tuple[str, 
         )
     )
 
+
 def _raise_finalized_modelo_blocked(
     *,
     operation: str,
@@ -308,6 +311,7 @@ def _raise_finalized_modelo_blocked(
             "blocking_reference_count": str(len(blockers)),
         },
     )
+
 
 def transaction_catalogue_object_id(bucket_id: str) -> str:
     return f"transaction-catalogue:{bucket_id.strip()}"
@@ -450,6 +454,7 @@ def _display_decimal(value: Decimal) -> str:
 
 def _decimal_to_string(value: Decimal) -> str:
     return format(value, "f")
+
 
 def _normalise_timestamp(value: datetime | None) -> datetime:
     timestamp = value or now()
@@ -652,6 +657,7 @@ def _evidence_event_ids(events: tuple[BucketEvent, ...]) -> dict[tuple[str, str]
             mapping[("attachment", event.object_id)] = event.event_id
     return mapping
 
+
 def _result(
     bucket_id: str,
     transaction: Transaction,
@@ -662,4 +668,3 @@ def _result(
         transaction=transaction,
         bucket_event_ids=bucket_event_ids,
     )
-

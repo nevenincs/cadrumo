@@ -37,14 +37,18 @@ from ._action_test_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
 def test_create_manual_transaction_returns_bucket_ref(secure_objects: SecureObjectRepository) -> None:
     outcome = _drive_create_manual_transaction(secure_objects)
     assert outcome.result.ref.bucket_id == "bucket-a"
+
 
 def test_create_manual_transaction_persists_source_provenance(secure_objects: SecureObjectRepository) -> None:
     outcome = _drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.raw.provenance.source_format is SourceFormat.MANUAL
     assert outcome.persisted.raw.provenance.provider_name == "manual-ledger"
+
 
 @pytest.mark.parametrize(("field", "expected"), _PROVENANCE_RAW_FIELD_EXPECTATIONS)
 def test_create_manual_transaction_persists_raw_field(
@@ -53,11 +57,13 @@ def test_create_manual_transaction_persists_raw_field(
     outcome = _drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.raw.raw_fields[field] == expected
 
+
 def test_create_manual_transaction_persists_purchase_invoice_evidence_in_raw_fields(
     secure_objects: SecureObjectRepository,
 ) -> None:
     outcome = _drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.raw.raw_fields["purchase_invoice_evidence_id"] == outcome.purchase_invoice_evidence_id
+
 
 @pytest.mark.parametrize(("attribute", "expected"), _TAXABLE_IVA_EXPECTATIONS)
 def test_create_manual_transaction_persists_taxable_iva(
@@ -66,15 +72,18 @@ def test_create_manual_transaction_persists_taxable_iva(
     outcome = _drive_create_manual_transaction(secure_objects)
     assert getattr(outcome.persisted, attribute) == expected
 
+
 def test_create_manual_transaction_links_purchase_invoice_evidence(secure_objects: SecureObjectRepository) -> None:
     outcome = _drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.purchase_invoice_evidence_id == outcome.purchase_invoice_evidence_id
+
 
 def test_create_manual_transaction_records_audit_actor_and_command(secure_objects: SecureObjectRepository) -> None:
     outcome = _drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.created_by == "operator-A"
     assert outcome.persisted.source_command == "aeat app ledger add"
     assert outcome.persisted.created_event_id == outcome.result.bucket_event_ids[0]
+
 
 def test_create_manual_transaction_persists_evidence_provenance(secure_objects: SecureObjectRepository) -> None:
     outcome = _drive_create_manual_transaction(secure_objects)
@@ -84,10 +93,12 @@ def test_create_manual_transaction_persists_evidence_provenance(secure_objects: 
     assert provenance.actor == "operator-A"
     assert provenance.bucket_event_id == outcome.result.bucket_event_ids[0]
 
+
 def test_create_manual_transaction_classifies_as_business(secure_objects: SecureObjectRepository) -> None:
     outcome = _drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.business_classification is BusinessClassification.BUSINESS
     assert outcome.persisted.classified_by == "manual"
+
 
 def test_create_manual_transaction_emits_bucket_event_chain(secure_objects: SecureObjectRepository) -> None:
     outcome = _drive_create_manual_transaction(secure_objects)
@@ -97,6 +108,7 @@ def test_create_manual_transaction_emits_bucket_event_chain(secure_objects: Secu
     assert first.object_type is BucketEventObjectType.LEDGER_TRANSACTION
     assert first.object_id == outcome.result.ref.transaction_id
     assert first.payload["source_command"] == "aeat app ledger add"
+
 
 def test_create_manual_transaction_validates_and_persists_usage_ratio_reference(
     secure_objects: SecureObjectRepository,
@@ -133,6 +145,7 @@ def test_create_manual_transaction_validates_and_persists_usage_ratio_reference(
     assert events[0].payload["usage_ratio_id"] == category.value
     assert events[0].payload["business_pct"] == "0.60"
 
+
 def test_create_manual_transaction_rejects_usage_ratio_reference_missing_from_profile(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -160,6 +173,7 @@ def test_create_manual_transaction_rejects_usage_ratio_reference_missing_from_pr
 
     assert transaction_repository.load().transactions == {}
     assert event_repository.load().events == {}
+
 
 def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismatch(
     secure_objects: SecureObjectRepository,
@@ -209,6 +223,7 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
     assert transaction_repository.load().transactions == {}
     assert event_repository.load().events == {}
 
+
 def test_create_manual_transaction_rejects_usage_ratio_business_pct_drift(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -238,6 +253,7 @@ def test_create_manual_transaction_rejects_usage_ratio_business_pct_drift(
     assert transaction_repository.load().transactions == {}
     assert event_repository.load().events == {}
 
+
 def test_create_manual_transaction_rejects_missing_purchase_evidence(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
@@ -262,6 +278,7 @@ def test_create_manual_transaction_rejects_missing_purchase_evidence(secure_obje
     assert transaction_repository.load().transactions == {}
     assert event_repository.load().events == {}
 
+
 def test_create_manual_transaction_rejects_missing_attachment_manifest(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     objects = secure_objects
@@ -284,6 +301,7 @@ def test_create_manual_transaction_rejects_missing_attachment_manifest(secure_ob
 
     assert transaction_repository.load().transactions == {}
     assert event_repository.load().events == {}
+
 
 def test_create_manual_transaction_rejects_purchase_evidence_from_other_bucket(
     secure_objects: SecureObjectRepository,
@@ -311,6 +329,7 @@ def test_create_manual_transaction_rejects_purchase_evidence_from_other_bucket(
 
     assert transaction_repository.load().transactions == {}
     assert event_repository.load().events == {}
+
 
 def test_create_manual_transaction_rejects_attachment_from_other_bucket(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
@@ -353,6 +372,7 @@ def test_create_manual_transaction_rejects_attachment_from_other_bucket(secure_o
     assert transaction_repository.load().transactions == {}
     assert event_repository.load().events == {}
 
+
 def test_create_manual_transaction_rejects_repository_bucket_mismatch(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects, bucket_id="bucket-b")
 
@@ -369,6 +389,7 @@ def test_create_manual_transaction_rejects_repository_bucket_mismatch(secure_obj
             bucket_event_repository=event_repository,
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
+
 
 def test_create_manual_transaction_default_event_repository_fails_closed_for_inactive_bucket(
     secure_objects: SecureObjectRepository,

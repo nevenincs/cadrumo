@@ -110,7 +110,7 @@ def test_singleton_object_keys_are_named_registry_values() -> None:
     assert inventory_ledger.require_default_object_key() == SECURE_OBJECT_DEFAULT_KEY
 
 
-def test_profile_ledger_namespaces_are_registered_for_w03_s21() -> None:
+def test_profile_ledger_namespaces_are_registered() -> None:
     inventory = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("profile_inventory_ledger")
     assets = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("profile_assets_ledger")
     amortization = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("profile_assets_amortization_ledger")
@@ -132,7 +132,7 @@ def test_profile_ledger_namespaces_are_registered_for_w03_s21() -> None:
     assert amortization.require_default_object_key() == "default"
 
 
-def test_w03_s21_namespace_registration_coverage_is_present() -> None:
+def test_profile_ledger_namespace_registration_coverage_is_present() -> None:
     registered_keys = {definition.key for definition in STORAGE_NAMESPACE_REGISTRY.namespaces}
 
     assert {
@@ -152,7 +152,7 @@ def test_w03_s21_namespace_registration_coverage_is_present() -> None:
     } <= registered_keys
 
 
-def test_w03_s22_auth_session_cache_remote_namespaces_are_registered() -> None:
+def test_auth_session_cache_remote_namespaces_are_registered() -> None:
     expected_contracts = {
         "aeat_browser_sessions": (
             AEAT_BROWSER_SESSION_NAMESPACE,
@@ -274,7 +274,7 @@ def test_w03_s22_auth_session_cache_remote_namespaces_are_registered() -> None:
         assert registered.object_key_grammar == object_key_grammar
 
 
-def test_w03_s22_namespace_registration_coverage_is_present() -> None:
+def test_auth_session_cache_namespace_registration_coverage_is_present() -> None:
     registered_keys = {definition.key for definition in STORAGE_NAMESPACE_REGISTRY.namespaces}
 
     assert {
@@ -300,7 +300,7 @@ def test_w03_s22_namespace_registration_coverage_is_present() -> None:
     } <= registered_keys
 
 
-def test_w05_s41_secure_namespaces_default_to_ciphertext_remote_mirror_policy() -> None:
+def test_secure_namespaces_default_to_ciphertext_remote_mirror_policy() -> None:
     production_namespaces = tuple(
         namespace for namespace in STORAGE_NAMESPACE_REGISTRY.namespaces if not namespace.key.startswith("test_")
     )
@@ -314,7 +314,7 @@ def test_w05_s41_secure_namespaces_default_to_ciphertext_remote_mirror_policy() 
     assert all(namespace.remote_mirror_requires_integrity_manifest for namespace in production_namespaces)
 
 
-def test_w05_s41_test_only_namespaces_do_not_require_remote_mirror_metadata() -> None:
+def test_test_only_namespaces_do_not_require_remote_mirror_metadata() -> None:
     expected_namespaces = {
         "test_secure_bound_contract": TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
         "test_snapshot_base_probe": TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,

@@ -13,6 +13,8 @@ from ._parser_boundary_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+
 def test_parser_extracts_modelo_180_synthetic_fixture_targets() -> None:
     """Round-trip: parse the sanitized M180 synthetic fixture and verify all three casillas.
 
@@ -86,6 +88,7 @@ def test_parser_extracts_modelo_180_synthetic_fixture_targets() -> None:
         f"decl.retenciones-total: expected Decimal('2280.00'), got {values['decl.retenciones-total']!r}"
     )
 
+
 def test_parser_extracts_modelo_193_synthetic_fixture_targets() -> None:
     """Round-trip: parse the sanitized M193 synthetic fixture and verify all three casillas.
 
@@ -152,6 +155,7 @@ def test_parser_extracts_modelo_193_synthetic_fixture_targets() -> None:
     assert values["decl.retenciones-total"] == Decimal("1520.00"), (
         f"decl.retenciones-total: expected Decimal('1520.00'), got {values['decl.retenciones-total']!r}"
     )
+
 
 def test_parser_extracts_modelo_369_synthetic_fixture_targets() -> None:
     """Round-trip: parse the sanitized M369 OSS Union synthetic fixture and verify both casillas.

@@ -1,4 +1,7 @@
-"""Filed-declaration listing helpers for live AEAT workflows."""
+"""Filed-declaration listing helpers for live AEAT workflows.
+
+This module uses :class:`Declaracion` to list and select filed declarations.
+"""
 
 from __future__ import annotations
 

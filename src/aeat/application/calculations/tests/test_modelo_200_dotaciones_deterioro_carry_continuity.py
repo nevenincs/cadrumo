@@ -182,9 +182,9 @@ def test_dotaciones_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
 
     assert Decimal(result_n.values[_SALDO_INICIAL_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2023][_SALDO_FINAL_CUMPLIDO]
     assert Decimal(result_n1.values[_SALDO_INICIAL_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2024][_SALDO_FINAL_CUMPLIDO]
-    assert Decimal(result_n1.values[_SALDO_INICIAL_NO_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2024][
-        _SALDO_FINAL_NO_CUMPLIDO
-    ]
+    assert (
+        Decimal(result_n1.values[_SALDO_INICIAL_NO_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2024][_SALDO_FINAL_NO_CUMPLIDO]
+    )
 
     evidence = recorder.evidence()
     assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)

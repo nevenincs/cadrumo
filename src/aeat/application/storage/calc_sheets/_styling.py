@@ -188,13 +188,7 @@ def compute_styling(
     and the two transports stay in lock-step.
 
     Returns:
-        tuple[
-            tuple[:class:`SheetStyledRange`, ...],
-            tuple[:class:`SheetColumnWidth`, ...],
-            tuple[:class:`SheetFrozenView`, ...],
-            tuple[:class:`SheetAutoFilter`, ...],
-        ]:
-        The computed styling facets.
+        A four-tuple of (styled_ranges, column_widths, frozen_views, auto_filters).
     """
     entradas_last = max(
         (row.row for row in layout.entradas_rows),

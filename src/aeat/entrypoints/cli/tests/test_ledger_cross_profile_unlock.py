@@ -40,8 +40,9 @@ _RETAILER_CSV = _FIX / "ledger-corpus-retailer" / "bbva-retail-eur.csv"
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     dispose_engine()
-    with override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"), isolated_profile_storage_root(
-        tmp_path=tmp_path
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
+        isolated_profile_storage_root(tmp_path=tmp_path),
     ):
         try:
             yield

@@ -146,9 +146,7 @@ def test_auth_gate_detector_matches_aeat_4033_redirect() -> None:
 def test_auth_gate_detector_rejects_non_4033_aeat_pages() -> None:
     """Other AEAT error pages and the form servlet itself are not auth-gates."""
 
-    assert not is_aeat_auth_gate_redirect(
-        _AEAT.oracles.nif_iva_verification
-    )
+    assert not is_aeat_auth_gate_redirect(_AEAT.oracles.nif_iva_verification)
     assert not is_aeat_auth_gate_redirect(
         f"{_AEAT.domains.sede}{_AEAT.sede_paths.auth_gate_4033.replace('4033', '4032')}"
     )

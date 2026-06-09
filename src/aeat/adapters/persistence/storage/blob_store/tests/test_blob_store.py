@@ -186,8 +186,8 @@ class TestNotFoundAndIntegrity:
         store: EncryptedBlobStore,
     ) -> None:
         ref = store.put(b"corrupt-manifest-direct-get-proof", classification=SensitivityClass.CORPUS)
-        manifest_path = store.root_dir / "blobs" / ref.sha256_plaintext_hex[:2] / (
-            f"{ref.sha256_plaintext_hex}.manifest.json"
+        manifest_path = (
+            store.root_dir / "blobs" / ref.sha256_plaintext_hex[:2] / (f"{ref.sha256_plaintext_hex}.manifest.json")
         )
         manifest_path.write_text("{", encoding=UTF_8_ENCODING)
 
@@ -233,8 +233,8 @@ class TestIterate:
         caplog: pytest.LogCaptureFixture,
     ) -> None:
         ref = store.put(b"corrupt-manifest-proof", classification=SensitivityClass.CORPUS)
-        manifest_path = store.root_dir / "blobs" / ref.sha256_plaintext_hex[:2] / (
-            f"{ref.sha256_plaintext_hex}.manifest.json"
+        manifest_path = (
+            store.root_dir / "blobs" / ref.sha256_plaintext_hex[:2] / (f"{ref.sha256_plaintext_hex}.manifest.json")
         )
         manifest_path.write_text("{", encoding=UTF_8_ENCODING)
 

@@ -1,5 +1,7 @@
 """Pydantic command + result records for ``BucketMaintenanceService``.
 
+Used by: :mod:`~._service` (BucketMaintenanceService) to implement bucket operations.
+
 The contract records sit at the package boundary so a programmatic
 caller (the CLI handler, a future MCP surface) gets the same typed
 input + output shape that the service consumes. Closed-value axes are

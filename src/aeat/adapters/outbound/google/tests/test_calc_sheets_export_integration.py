@@ -93,9 +93,7 @@ def test_apply_design_request_set_is_complete_for_a_real_modelo() -> None:
 
     # The base font sets a monospace family on every tab's whole grid.
     assert base_font, "base font requests missing"
-    families = {
-        req["repeatCell"]["cell"]["userEnteredFormat"]["textFormat"]["fontFamily"] for req in base_font
-    }
+    families = {req["repeatCell"]["cell"]["userEnteredFormat"]["textFormat"]["fontFamily"] for req in base_font}
     assert families == {plan.font_family}
 
     # Styled ranges carry fills / bold / alignment; at least one sets a fill.
@@ -107,9 +105,7 @@ def test_apply_design_request_set_is_complete_for_a_real_modelo() -> None:
 
     # Frozen header rows present; at least one tab freezes its header row.
     assert frozen, "frozen view requests missing"
-    assert any(
-        req["updateSheetProperties"]["properties"]["gridProperties"]["frozenRowCount"] >= 1 for req in frozen
-    )
+    assert any(req["updateSheetProperties"]["properties"]["gridProperties"]["frozenRowCount"] >= 1 for req in frozen)
 
     assert filters, "basic filter requests missing"
     for request in styled + widths + frozen + filters:

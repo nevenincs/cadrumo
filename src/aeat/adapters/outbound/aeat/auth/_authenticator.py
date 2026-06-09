@@ -906,7 +906,7 @@ class AeatAuthenticator:
                         "AeatAuthenticator: context.close after resume error suppressed: %s",
                         _exc,
                         exc_info=True,
-            )
+                    )
             if owns_session:
                 await self._close_browser_session(session_like)
         if resume_failed:

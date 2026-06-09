@@ -1,0 +1,9 @@
+[labels]
+"0001" = "Jövedelmet megszerző adózó"
+"1479" = "Gazdasági tevékenységek nettó hozama objektív becslésben, kivéve mezőgazdasági, állattenyésztési és erdészeti tevékenységek"
+"1553" = "Mezőgazdasági, állattenyésztési és erdészeti tevékenységek nettó hozama objektív becslésben"
+
+[help]
+"0001" = "A vállalkozási jövedelmet megszerző adózó kiválasztója."
+"1479" = "Számított nettó hozam a nem mezőgazdasági vállalkozási tevékenységekre vonatkozóan, objektív becslési módszer szerint."
+"1553" = "Számított nettó hozam a mezőgazdasági, állattenyésztési vagy erdészeti tevékenységekre vonatkozóan, objektív becslési módszer szerint."

@@ -85,9 +85,7 @@ def test_delete_refuses_when_confirmed_flag_is_false(
     del registered_profile
 
     with pytest.raises(BucketDeleteRefusedError):
-        BucketMaintenanceService().delete(
-            DeleteBucketCommand(bucket_id=runtime.bucket_id, confirmed=False)
-        )
+        BucketMaintenanceService().delete(DeleteBucketCommand(bucket_id=runtime.bucket_id, confirmed=False))
 
 
 def test_delete_refuses_active_bucket_even_when_confirmed(
@@ -98,9 +96,7 @@ def test_delete_refuses_active_bucket_even_when_confirmed(
     del registered_profile
 
     with pytest.raises(BucketDeleteRefusedError):
-        BucketMaintenanceService().delete(
-            DeleteBucketCommand(bucket_id=runtime.bucket_id, confirmed=True)
-        )
+        BucketMaintenanceService().delete(DeleteBucketCommand(bucket_id=runtime.bucket_id, confirmed=True))
 
 
 def test_delete_refusals_carry_translated_message(
@@ -116,15 +112,11 @@ def test_delete_refusals_carry_translated_message(
     del registered_profile
 
     with pytest.raises(BucketDeleteRefusedError) as unconfirmed:
-        BucketMaintenanceService().delete(
-            DeleteBucketCommand(bucket_id=runtime.bucket_id, confirmed=False)
-        )
+        BucketMaintenanceService().delete(DeleteBucketCommand(bucket_id=runtime.bucket_id, confirmed=False))
     assert "bucket_id" in (unconfirmed.value.context or {})
 
     with pytest.raises(BucketDeleteRefusedError) as active:
-        BucketMaintenanceService().delete(
-            DeleteBucketCommand(bucket_id=runtime.bucket_id, confirmed=True)
-        )
+        BucketMaintenanceService().delete(DeleteBucketCommand(bucket_id=runtime.bucket_id, confirmed=True))
     assert "bucket_id" in (active.value.context or {})
 
 

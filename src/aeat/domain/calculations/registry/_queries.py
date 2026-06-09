@@ -15,7 +15,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistryValidationError
@@ -207,6 +207,8 @@ class ModeloCasillaRow(BaseModel):
     form_number: str | None
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
+    localized_labels: dict[str, str] = Field(default_factory=dict)
+    localized_help: dict[str, str] = Field(default_factory=dict)
 
 
 class ModeloCasillasReport(BaseModel):
@@ -542,6 +544,8 @@ class RegistryQueryService:
                 form_number=casilla.form_number,
                 legal_refs=tuple(str(ref) for ref in casilla.legal_refs),
                 source_refs=tuple(str(ref) for ref in casilla.source_refs),
+                localized_labels=dict(casilla.localized_labels),
+                localized_help=dict(casilla.localized_help),
             )
             for casilla in revision.casillas
             if (input_kind is None or casilla.input_kind == input_kind)

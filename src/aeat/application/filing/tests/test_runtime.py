@@ -123,3 +123,38 @@ def test_unsupported_casilla_data_type_error_is_localized() -> None:
 
     assert exc_info.value.translated_message == "application.filing.runtime.errors.unsupported_casilla_data_type"
     assert exc_info.value.context == {"data_type": "blob"}
+
+
+def test_registry_tree_fingerprint_ttl_cache(tmp_path: Path, time_machine) -> None:
+    """_registry_tree_fingerprint must cache results with a 1-second TTL and support clearing."""
+    import os
+
+    from ..runtime import _registry_tree_fingerprint, clear_runtime_fingerprint_cache
+
+    clear_runtime_fingerprint_cache()
+    reg_root = tmp_path / "registry"
+    (reg_root / "legal").mkdir(parents=True)
+    (reg_root / "modelos").mkdir()
+
+    toml_file = reg_root / "legal" / "test.toml"
+    toml_file.write_text("a = 1")
+
+    time_machine.move_to("2026-06-09T12:00:00+00:00")
+    fp1 = _registry_tree_fingerprint(reg_root)
+
+    toml_file.write_text("a = 2")
+    os.utime(toml_file, (1812542400, 1812542400))  # 2027-06-09 12:00:00
+
+    fp2 = _registry_tree_fingerprint(reg_root)
+    assert fp2 == fp1
+
+    clear_runtime_fingerprint_cache()
+    fp3 = _registry_tree_fingerprint(reg_root)
+    assert fp3 != fp1
+
+    toml_file.write_text("a = 3")
+    os.utime(toml_file, (1812542405, 1812542405))
+
+    time_machine.move_to("2026-06-09T12:00:02+00:00")
+    fp4 = _registry_tree_fingerprint(reg_root)
+    assert fp4 != fp3

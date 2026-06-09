@@ -1,4 +1,8 @@
-"""Storage route derivation helpers for core settings."""
+"""Storage route derivation helpers for core settings.
+
+This module uses :class:`Settings` and :class:`StorageRouteClassification`
+for SQL database route classification.
+"""
 
 from __future__ import annotations
 

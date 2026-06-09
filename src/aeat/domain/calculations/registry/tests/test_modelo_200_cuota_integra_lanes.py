@@ -104,6 +104,8 @@ def _cuota_for(
             # BIN-pendiente fresh-filer baseline: previous_filing binding
             # for casilla 00670 resolves to zero with no prior filing.
             "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
         date_context={"filing_period": filing_period},
@@ -451,6 +453,8 @@ def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_suppli
             _ESTADO_PCT_BINDING: Decimal("100"),
             # BIN-pendiente fresh-filer baseline.
             "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
         date_context={"filing_period": date(2024, 12, 31)},
@@ -488,6 +492,8 @@ def test_cuota_ejercicio_00599_raises_when_estado_porcentaje_binding_absent() ->
                 # _ESTADO_PCT_BINDING intentionally absent
                 # BIN-pendiente fresh-filer baseline (separate gate).
                 "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+                "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+                "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
             },
             relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
             date_context={"filing_period": date(2024, 12, 31)},

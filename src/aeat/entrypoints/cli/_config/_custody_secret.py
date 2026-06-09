@@ -39,6 +39,7 @@ def _resolve_confirmed_new_passphrase(value: str | None, confirmation: str | Non
 
 def _register_lock_command(app: typer.Typer) -> None:
     """Register the profile lock transport command."""
+
     @app.command("lock", help=tr("cli.config.lock.help"))
     def config_lock(
         ctx: typer.Context,
@@ -73,6 +74,7 @@ def _register_lock_command(app: typer.Typer) -> None:
 
 def _register_rekey_command(app: typer.Typer) -> None:
     """Register the profile rekey transport command."""
+
     @app.command("rekey", help=tr("cli.config.rekey.help"))
     def config_rekey(
         ctx: typer.Context,
@@ -114,6 +116,7 @@ def _register_rekey_command(app: typer.Typer) -> None:
 
 def _register_recover_command(app: typer.Typer) -> None:
     """Register the recovery transport command."""
+
     @app.command("recover", help=tr("cli.config.recover.help"))
     def config_recover(
         ctx: typer.Context,
@@ -161,6 +164,7 @@ def _register_recover_command(app: typer.Typer) -> None:
 
 def _register_show_recovery_command(app: typer.Typer) -> None:
     """Register the show-recovery transport command."""
+
     @app.command("show-recovery", help=tr("cli.config.show_recovery.help"))
     def config_show_recovery(
         ctx: typer.Context,
@@ -223,6 +227,7 @@ def _register_show_recovery_command(app: typer.Typer) -> None:
 
 def _register_verify_recovery_command(app: typer.Typer) -> None:
     """Register the verify-recovery transport command."""
+
     @app.command("verify-recovery", help=tr("cli.config.verify_recovery.help"))
     def config_verify_recovery(
         ctx: typer.Context,

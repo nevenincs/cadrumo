@@ -20,7 +20,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = Path(__file__).parent
+_SRC_ROOT = Path(__file__).parent.parent
 _CANONICAL_UTC_MODULE = _SRC_ROOT / "core" / "time" / "_utc.py"
 
 # Pattern matched against the raw source text before AST walk, for speed.

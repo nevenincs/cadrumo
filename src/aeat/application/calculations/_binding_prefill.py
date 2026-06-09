@@ -1,5 +1,7 @@
 """Binding prefill: resolve `previous_filing` bindings from prior filings.
 
+Used by: :mod:`~aeat.application.calculations._calculate` (model calculation orchestrator).
+
 Sister module to `_relation_prefill`. The runtime distinguishes
 `relation` leaves (cross-revision aggregations declared as
 `RelationDefinition` records) from `previous_filing` bindings
@@ -7,22 +9,6 @@ Sister module to `_relation_prefill`. The runtime distinguishes
 Modelo 390 uses bindings — modelo 200 uses relations — both express
 "sum a prior modelo's casilla across periods" but route through
 different schema entities.
-
-This module reads observations from the local
-`CalculationObservationRepository`, calls the runtime's
-`resolve_previous_filing_binding_values`, and returns a mapping
-keyed by binding id that callers pass through `binding_values=` to
-`calculate_registry_snapshot`. The Sheets engine consumes the same
-mapping so binding cells in the workbook get prefilled with the
-authoritative value.
-
-Provenance metadata returned alongside lets the apply adapter stamp
-each binding's source filing identity so the pull adapter can
-detect stale prefills.
-
-The resolved values are returned as :class:`CasillaObservation` rows
-alongside a flat Decimal mapping. The caller selects the active revision
-through a :class:`RegistrySnapshot` obtained from the registry authority.
 """
 
 from __future__ import annotations
@@ -132,9 +118,7 @@ def _merge_gathered_observations(
     source_kinds = {primary.source_kind, overlay.source_kind}
     source_kind = primary.source_kind if len(source_kinds) == 1 else _MIXED_OBSERVATION_SOURCE_KIND
     return _GatheredObservation(
-        observation=primary.observation.model_copy(
-            update={"observations": tuple(observations_by_casilla.values())}
-        ),
+        observation=primary.observation.model_copy(update={"observations": tuple(observations_by_casilla.values())}),
         source_kind=source_kind,
         casilla_source_kinds=casilla_source_kinds,
     )
@@ -246,14 +230,13 @@ def _gather_observations(
     return tuple(needed.values())
 
 
-def _per_grupo_member_requirement_keys(
-    revision: object, snapshot: RegistrySnapshot
-) -> set[tuple[str, int, str]]:
+def _per_grupo_member_requirement_keys(revision: object, snapshot: RegistrySnapshot) -> set[tuple[str, int, str]]:
     """Return the (modelo, filing_year, period) requirement keys whose binding declares per_grupo_member.
 
     These keys must be gathered by enumeration (every member's filing), not by
     single-key load — the cross-member fan-in for the 353<-322 aggregation.
     """
+
     def _is_per_grupo_member(binding: object) -> bool:
         if getattr(binding, "source", None) != "previous_filing":
             return False
@@ -262,9 +245,7 @@ def _per_grupo_member_requirement_keys(
             return selector.get("grouping") == "per_grupo_member"
         return getattr(selector, "grouping", None) == "per_grupo_member"
 
-    grouped_binding_ids = {
-        binding.id for binding in snapshot.revision.bindings if _is_per_grupo_member(binding)
-    }
+    grouped_binding_ids = {binding.id for binding in snapshot.revision.bindings if _is_per_grupo_member(binding)}
     if not grouped_binding_ids:
         return set()
     keys: set[tuple[str, int, str]] = set()

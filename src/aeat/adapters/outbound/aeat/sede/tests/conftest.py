@@ -1,5 +1,3 @@
-"""Pytest fixtures for split adapter tests."""
+"""Pytest fixtures for outbound sede adapter tests."""
 
-pytest_plugins = (
-    'aeat.adapters.outbound.aeat.sede.tests._declarations_support',
-)
+from ._declarations_support import _isolate_secure_object_backend  # noqa: F401

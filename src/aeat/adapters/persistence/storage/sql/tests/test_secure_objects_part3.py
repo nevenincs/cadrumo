@@ -26,6 +26,8 @@ from ._secure_objects_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
 def test_secure_object_save_many_revision_conflict_rolls_back_batch(tmp_path: Path) -> None:
     """A CAS conflict in a batch rolls back sibling writes in the unit of work."""
 
@@ -78,6 +80,7 @@ def test_secure_object_save_many_revision_conflict_rolls_back_batch(tmp_path: Pa
         finally:
             engine.dispose()
 
+
 def test_secure_object_save_with_raw_key_supports_expected_revision(tmp_path: Path) -> None:
     """Raw-key archive writes use the same expected-revision conflict contract."""
 
@@ -122,6 +125,7 @@ def test_secure_object_save_with_raw_key_supports_expected_revision(tmp_path: Pa
             assert conflict_policy == "compare-and-swap"
         finally:
             engine.dispose()
+
 
 def test_secure_object_save_with_raw_key_stale_expected_revision_refuses_without_overwrite(
     tmp_path: Path,
@@ -191,6 +195,7 @@ def test_secure_object_save_with_raw_key_stale_expected_revision_refuses_without
         finally:
             engine.dispose()
 
+
 def test_peek_metadata_matches_the_saved_row(tmp_path: Path) -> None:
     """`peek_metadata` reports a row's wire-envelope columns without
     decrypting the payload; the namespace, classification,
@@ -224,6 +229,7 @@ def test_peek_metadata_matches_the_saved_row(tmp_path: Path) -> None:
             assert metadata.byte_length > 0
         finally:
             engine.dispose()
+
 
 def test_peek_metadata_reflects_on_disk_schema_version_drift(tmp_path: Path) -> None:
     """Anti-tautology: `peek_metadata` reads the row's actual on-disk
@@ -260,6 +266,7 @@ def test_peek_metadata_reflects_on_disk_schema_version_drift(tmp_path: Path) -> 
             assert after.schema_version == 9
         finally:
             engine.dispose()
+
 
 def test_two_repositories_writing_one_key_converge_to_a_single_row(tmp_path: Path) -> None:
     """Two independent SecureObjectRepository instances writing the same
@@ -314,6 +321,7 @@ def test_two_repositories_writing_one_key_converge_to_a_single_row(tmp_path: Pat
         finally:
             engine.dispose()
 
+
 def test_registry_bound_repository_rejects_unregistered_namespace_on_write(tmp_path: Path) -> None:
     """Runtime-bound secure-object writes must use a registered namespace."""
 
@@ -340,6 +348,7 @@ def test_registry_bound_repository_rejects_unregistered_namespace_on_write(tmp_p
             assert row_count == 0
         finally:
             engine.dispose()
+
 
 def test_registry_bound_repository_rejects_wrong_write_classification_and_schema(tmp_path: Path) -> None:
     """The namespace registry, not the caller, is authoritative for write policy."""
@@ -381,6 +390,7 @@ def test_registry_bound_repository_rejects_wrong_write_classification_and_schema
         finally:
             engine.dispose()
 
+
 def test_registry_bound_repository_rejects_reader_class_not_declared_by_registry(tmp_path: Path) -> None:
     """A caller cannot widen a registered namespace to a different sensitivity on read."""
 
@@ -411,6 +421,7 @@ def test_registry_bound_repository_rejects_reader_class_not_declared_by_registry
             assert raised.value.translated_message == "errors.storage.namespace.classification_mismatch"
         finally:
             engine.dispose()
+
 
 def test_registry_bound_repository_rejects_on_disk_schema_newer_than_registry(tmp_path: Path) -> None:
     """Registry policy catches stored schema drift even if the reader claims support."""

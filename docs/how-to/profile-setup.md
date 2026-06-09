@@ -43,7 +43,7 @@ aeat config profile create my-profile --quiet --tax-id 12345678Z
 
 `--quiet` runs without prompts and uses only the flags you provide. Add
 `--accept-defaults` only when you intentionally want `aeat` to fill omitted
-questions from descriptor defaults.
+questions from automatic configuration defaults.
 
 You can also run:
 
@@ -81,7 +81,8 @@ legal-entity form applies to legal entities.
 `--entity-type`
 : Choose `natural_person`, `legal_entity`, or `attribution_entity`. Natural
   persons are individuals. Legal entities cover companies such as SL or SA.
-  Attribution entities cover contexts such as communities of goods.
+  Attribution entities cover property co-owners and communities of goods
+  (Comunidades de Bienes) where income is attributed across members.
 
 `--legal-entity-form`
 : Use this only for a legal entity. It records the legal form such as `sl`,
@@ -89,15 +90,17 @@ legal-entity form applies to legal entities.
   `sin_fines_lucrativos`, or `other`.
 
 `--irpf-income-categories`
-: Use this for a natural person. Repeat it for each IRPF income category that
-  applies, such as `actividad_economica`, `trabajo`,
-  `capital_inmobiliario`, `capital_mobiliario`, `ganancias_patrimoniales`, or
-  `pension`. Do not select `actividad_economica` for a pure landlord,
-  salaried-only taxpayer, or pensioner who has no economic activity.
+: Use this for a natural person (individual taxpayer). Repeat it for each IRPF income category that applies:
+  * `actividad_economica` — Business or professional activity (such as individual freelancer, company economic activity, or sole proprietor income)
+  * `trabajo` — Salaried employment (ordinary payroll income)
+  * `capital_inmobiliario` — Real estate rental income (renting out houses, flats, or premises)
+  * `capital_mobiliario` — Investment income (dividends, bank interest, etc.)
+  * `ganancias_patrimoniales` — Capital gains (selling shares, property, cryptocurrency, etc.)
+  * `pension` — Retirement or disability pension
+  Do not select `actividad_economica` for a pure landlord, salaried-only taxpayer, or pensioner who has no economic activity.
 
 `--incn-prior-12-months`
-: Optional net turnover for the previous 12 months. It matters for corporate
-  tax contexts such as Modelo 202 modality checks.
+: Optional net turnover (INCN — *Importe Neto de la Cifra de Negocios*) for the previous 12 months. It matters for corporate tax contexts such as Modelo 202 modality checks.
 
 `--new-entity-first-two-profit-periods` / `--no-new-entity-first-two-profit-periods`
 : Legal-entity fact for the first two profit-making periods. Use the positive
@@ -107,9 +110,10 @@ legal-entity form applies to legal entities.
 ### Identity and Display
 
 `--tax-id`
-: The taxpayer identifier. Spanish citizens usually use DNI/NIF, foreign
-  individuals use NIE, and companies or other entities use NIF/CIF. This is the
-  only unconditionally required creation flag in non-interactive mode.
+: The taxpayer identifier (NIF, CIF, DNI, NIE, or NII). Spanish citizens use
+  DNI or NIF, foreign individuals use NIE, companies or legal entities use
+  NIF or CIF, and certain foreign entities or EU operators use NII or NIF-IVA.
+  This is the only unconditionally required creation flag in non-interactive mode.
 
 `--name` and `--surnames`
 : The person's name and surnames, or the entity's display name where the
@@ -200,23 +204,27 @@ declaration path.
 ### IVA
 
 `--iva-regime`
-: IVA regime for the taxpayer activity. Common values include `GENERAL`,
-  `SIMPLIFICADO`, `RECARGO_EQUIVALENCIA`, `REAGP`, and `EXENTO`.
+: IVA (Value Added Tax) regime for the taxpayer activity. Common values include:
+  * `GENERAL` — General regime (standard quarterly VAT declarations via Modelo 303).
+  * `SIMPLIFICADO` — Simplified regime (based on modules/activities rather than real invoices).
+  * `RECARGO_EQUIVALENCIA` — Equivalence Surcharge (obligatory for retailers selling directly to end-consumers without modifying the product).
+  * `REAGP` — Special regime for Agriculture, Livestock, and Fisheries.
+  * `EXENTO` — Exempt from VAT (for activities like education or healthcare).
 
 `--iva-roi-enrolled`
-: Mark if the taxpayer is registered in ROI.
+: Mark if the taxpayer is registered in ROI (Registro de Operadores Intracomunitarios / VIES) to perform VAT-exempt transactions with businesses in other EU countries.
 
 `--iva-oss-enrolled`
-: Mark if the taxpayer is registered in OSS.
+: Mark if the taxpayer is registered in OSS (One Stop Shop) for declaring and paying VAT on B2C electronic services or distance sales within the EU.
 
 `--iva-sii-enrolled`
-: Mark if the taxpayer is registered in SII.
+: Mark if the taxpayer is registered in SII (Suministro Inmediato de Información) for near-real-time electronic invoice reporting (obligatory for large companies).
 
 `--iva-redeme-enrolled`
-: Mark if the taxpayer is registered in REDEME.
+: Mark if the taxpayer is registered in REDEME (Registro de Devolución Mensual) to request VAT refunds on a monthly basis rather than annually.
 
 `--iva-intracommunity-operations-exceed-50000-eur`
-: Mark when intracommunity operations exceed the documented threshold.
+: Mark when intracommunity operations exceed the €50,000 threshold.
 
 ### Enrollment
 
@@ -232,16 +240,16 @@ Use these flags to record which recurring obligations apply to the taxpayer.
 They influence calendars, applicability checks, and modelo readiness.
 
 `--has-employees`
-: The taxpayer has employees and pays salaries with withholding.
+: The taxpayer has employees and pays salaries with withholding. Checking this triggers the obligation to file **Modelo 111** (quarterly tax withholding for employees).
 
 `--pays-professionals-with-retencion`
-: The taxpayer pays professionals with withholding.
+: The taxpayer pays professionals (e.g. business consultants, lawyers, independent freelancers) with withholding. Checking this triggers the obligation to file **Modelo 111**.
 
 `--professional-income-withholding-ge-70pct`
-: At least 70 percent of professional income has prior withholding.
+: At least 70 percent of your professional income has prior tax withholding. **Checking this is very important for individual freelancers and sole proprietors: if at least 70% of professional invoices are issued with IRPF withholding, the taxpayer is legally exempt from filing and paying the quarterly Modelo 130 payments-on-account.**
 
 `--pays-rent-with-retencion`
-: The taxpayer pays premises rent with withholding.
+: The taxpayer pays rent for a business premises or office with tax withholding. Checking this triggers the obligation to file **Modelo 115** (quarterly premise rent withholding).
 
 `--pays-capital-income-with-retencion`
 : The taxpayer pays capital income with withholding.
@@ -283,7 +291,7 @@ They influence calendars, applicability checks, and modelo readiness.
 : Fiscal representative details when required for a non-resident context.
 
 `--tax-residence-ccaa`
-: Autonomous community for Spanish IRPF residents. The setup flow does not use
+: Autonomous community (*Comunidad Autónoma* — CCAA) for Spanish IRPF residents. The setup flow does not use
   this for non-resident IRNR profiles. The active implementation accepts common
   regime CCAA values; `pais_vasco` and `navarra` are refused with the foral
   regime message.
@@ -295,9 +303,9 @@ They influence calendars, applicability checks, and modelo readiness.
   not store secrets, certificate material, bank credentials, or full personal
   documents here.
 
-## Create a practical autonomo profile
+## Create a practical freelancer profile (Persona Tutorial)
 
-This example creates a minimal natural-person profile with economic activity:
+To make the setup concrete, this tutorial assumes a specific filing persona: Ana Garcia Lopez, an individual freelancer. This example creates a minimal natural-person profile with economic activity:
 
 ```bash
 aeat config profile create ana-2026 --quiet --accept-defaults --entity-type natural_person --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --irpf-income-categories actividad_economica --activity "diseno grafico" --iva-regime GENERAL --tax-residence-ccaa madrid --output-language en
@@ -325,21 +333,21 @@ Run `show`, `status`, or `validate` again after editing.
 
 ## Check modelo-specific readiness
 
-General validation checks the profile schema:
+General validation checks the correctness of your profile fields:
 
 ```bash
 aeat config profile validate
 ```
 
-Modelo-specific readiness needs a modelo, registry revision, filing year, and
-period:
+Modelo-specific readiness checks whether the profile contains the facts a
+particular modelo needs. Run it before calculating:
 
 ```bash
-aeat config profile preflight --modelo 303 --revision-id <revision-id> --filing-year 2026 --period 1T
+aeat config profile preflight --modelo 303 --filing-year 2026 --period 1T
 ```
 
-Use `aeat app modelo describe MODELO` to inspect available registry revisions,
-and the [command-line reference](../cli/index.rst) for exact options.
+Use `aeat app modelo describe MODELO` to see available period codes for that
+modelo.
 
 ## Rename, duplicate, delete, and remove profiles
 
@@ -363,8 +371,8 @@ aeat config profile delete ana-copy --yes
 ```
 
 Deletion is local and destructive. The profile is removed from ordinary list,
-switch, and app workflows. If it was active, `aeat` clears the active-profile
-pointer.
+switch, and app workflows. If it was active, `aeat` clears the active profile
+status.
 
 Clear the active profile without deleting it:
 
@@ -393,10 +401,9 @@ name:
 aeat config profile import ./ana-real-profile.json --label ana-restored
 ```
 
-Portable profile JSON contains raw profile data, including raw taxpayer
-identity such as `identity.tax_id`. It can also contain local filing data.
-Store it as sensitive tax data and do not send it in support requests unless
-you have redacted it.
+Portable profile files contain taxpayer data including your tax identifier,
+activity, and local filing history. Store them as sensitive tax data and do
+not send them in support requests unless you have removed personal details.
 
 ## Show profile contents and privacy notes
 
@@ -412,12 +419,10 @@ Display a named profile:
 aeat config profile show ana-real
 ```
 
-`profile show` is meant for local review. The normal CLI rendering redacts tax
-ids as a short hash such as `sha256:<8hex>`, but it can still show names,
-activity, residence, regime, and other personal facts. There is no `profile
-show --reveal` flag in the current help surface. If you need to share profile
-information for support, prefer a small redacted excerpt that keeps only the
-relevant field names and non-sensitive values.
+`profile show` is meant for local review. The normal CLI rendering hides tax
+IDs but can still show names, activity, residence, regime, and other personal
+facts. If you need to share profile information for support, share only the
+specific field names and non-sensitive values.
 
 ## If setup looks wrong
 

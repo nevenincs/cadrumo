@@ -189,8 +189,8 @@ def test_extracted_modelo_cli_modules_do_not_define_raw_id_regexes_outside_suppo
         for line_number in _raw_id_regex_lines(path):
             offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}:{line_number}")
 
-    assert offenders == [], (
-        "modelo CLI modules define raw id regexes outside shared support:\n  " + "\n  ".join(offenders)
+    assert offenders == [], "modelo CLI modules define raw id regexes outside shared support:\n  " + "\n  ".join(
+        offenders
     )
 
 

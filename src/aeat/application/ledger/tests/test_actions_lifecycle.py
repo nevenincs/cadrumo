@@ -32,6 +32,8 @@ from ._action_test_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
 def test_archive_manual_transaction_records_lifecycle_lineage_and_event(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
@@ -73,6 +75,7 @@ def test_archive_manual_transaction_records_lifecycle_lineage_and_event(secure_o
     assert events[-1].payload["previous_lifecycle_state"] == "ACTIVE"
     assert events[-1].payload["lifecycle_state"] == "ARCHIVED"
     assert events[-1].payload["reason"] == "wrong account import"
+
 
 def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
     secure_objects: SecureObjectRepository,
@@ -127,6 +130,7 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
         BucketEventType.LEDGER_TRANSACTION_ARCHIVED,
     ]
 
+
 def test_stash_manual_transaction_records_lifecycle_lineage_and_event(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
@@ -164,6 +168,7 @@ def test_stash_manual_transaction_records_lifecycle_lineage_and_event(secure_obj
         BucketEventType.LEDGER_TRANSACTION_STASHED,
     ]
     assert events[-1].payload["lifecycle_state"] == "STASHED"
+
 
 def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
@@ -212,6 +217,7 @@ def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_objects: 
         BucketEventType.LEDGER_TRANSACTION_CREATED,
         BucketEventType.LEDGER_TRANSACTION_ARCHIVED,
     ]
+
 
 def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_emits_events(
     secure_objects: SecureObjectRepository,
@@ -269,6 +275,7 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
     assert events[-1].payload["purchase_invoice_evidence_ids"] == purchase_evidence.invoice_id
     assert events[-1].payload["reason"] == "wrong account import"
 
+
 def test_remove_manual_transaction_dry_run_reports_without_mutation(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
@@ -301,6 +308,7 @@ def test_remove_manual_transaction_dry_run_reports_without_mutation(secure_objec
     assert [event.event_type for event in event_repository.load().for_bucket("bucket-a")] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED
     ]
+
 
 def test_remove_manual_transaction_refuses_finalized_modelo_reference(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
@@ -343,6 +351,7 @@ def test_remove_manual_transaction_refuses_finalized_modelo_reference(secure_obj
         )
     assert transaction_repository.load().get(created.ref.transaction_id) is not None
 
+
 def test_lifecycle_change_refuses_finalized_modelo_reference(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
@@ -378,6 +387,7 @@ def test_lifecycle_change_refuses_finalized_modelo_reference(secure_objects: Sec
     assert [event.event_type for event in event_repository.load().for_bucket("bucket-a")] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED
     ]
+
 
 def test_remove_manual_transaction_refuses_finalized_reference_to_prior_edit_id(
     secure_objects: SecureObjectRepository,
@@ -424,6 +434,7 @@ def test_remove_manual_transaction_refuses_finalized_reference_to_prior_edit_id(
         )
 
     assert transaction_repository.load().get(updated.ref.transaction_id) is not None
+
 
 def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
     secure_objects: SecureObjectRepository,
@@ -495,6 +506,7 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
     assert events[-1].event_type is BucketEventType.LEDGER_CATALOGUE_RESET
     assert events[-1].payload["removed_transaction_count"] == "2"
     assert events[-1].payload["reason"] == "contaminated import batch"
+
 
 def test_reset_ledger_catalogue_refuses_finalized_modelo_reference(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)

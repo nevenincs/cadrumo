@@ -1,7 +1,6 @@
 """Shared str→Decimal coercion for modelo binding pipelines.
 
-W09.P41.S200 (cross-domain-continuity): the borrador-binding and
-profile-binding pipelines each shipped a near-duplicate ``_decimal_value``
+The borrador-binding and profile-binding pipelines each shipped a near-duplicate ``_decimal_value``
 helper. They diverged on:
 
 - accepted input shapes: the profile-binding variant accepts

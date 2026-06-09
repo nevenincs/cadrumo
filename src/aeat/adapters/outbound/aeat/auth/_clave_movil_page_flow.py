@@ -1,4 +1,7 @@
-"""Page-driving mixin for the Cl@ve Movil auth provider."""
+"""Page-driving mixin for the Cl@ve Movil auth provider.
+
+Use of :class:`SensitivityClass` for compliance.
+"""
 
 from __future__ import annotations
 

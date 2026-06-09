@@ -308,9 +308,7 @@ def test_classify_from_csv_accepts_business_pct_for_mixed(tmp_path: Path) -> Non
         f"transaction_id,classification,category_id,business_pct\n{tx1},MIXED,telefonia_movil,0.50\n",
         encoding="utf-8",
     )
-    result = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)]
-    )
+    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)])
     assert result.exit_code == 0, result.output
     assert json.loads(result.output)["result"]["applied"] == 1
     row = {r["transaction_id"]: r for r in _list_transactions()}[tx1]

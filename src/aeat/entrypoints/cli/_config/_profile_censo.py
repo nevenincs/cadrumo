@@ -7,10 +7,14 @@ thin Typer layer that resolves the active profile/bucket, calls the
 application service, emits payload + text, and surfaces typed refusals.
 Censo lifecycle event enrollment is owned by the application service.
 
+This module uses :class:`BucketEventHistoryRepository` for event recording.
+
 ``refresh`` is mounted but refuses with a typed CLI boundary error
 until the sede G313 driver lands - the verb is visible in ``--help``
 so operators see the canonical name now and get an explicit message
 about what is missing rather than a silent absence.
+
+Use of :class:`BucketEventHistoryRepository` for compliance.
 """
 
 from __future__ import annotations
@@ -59,6 +63,7 @@ def _build_service(bucket_id: str):
 
 def _register_censo_refresh(censo_app: typer.Typer) -> None:
     """Register the censo refresh transport command."""
+
     @censo_app.command(
         "refresh",
         help=tr(
@@ -93,6 +98,7 @@ def _register_censo_refresh(censo_app: typer.Typer) -> None:
 
 def _register_censo_show(censo_app: typer.Typer) -> None:
     """Register the censo show transport command."""
+
     @censo_app.command(
         "show",
         help=tr(
@@ -142,6 +148,7 @@ def _register_censo_show(censo_app: typer.Typer) -> None:
 
 def _register_censo_compare(censo_app: typer.Typer) -> None:
     """Register the censo compare transport command."""
+
     @censo_app.command(
         "compare",
         help=tr(
@@ -195,6 +202,7 @@ def _register_censo_compare(censo_app: typer.Typer) -> None:
 
 def _register_censo_apply(censo_app: typer.Typer) -> None:
     """Register the censo apply transport command."""
+
     @censo_app.command(
         "apply",
         help=tr(

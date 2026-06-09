@@ -28,9 +28,7 @@ def test_google_drive_module_does_not_construct_settings_at_import_time() -> Non
     offenders = [
         node.lineno
         for node in ast.walk(tree)
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id in {"Settings", "_Settings"}
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in {"Settings", "_Settings"}
     ]
 
     assert offenders == []

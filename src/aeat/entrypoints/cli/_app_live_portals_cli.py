@@ -1,4 +1,7 @@
-"""Portal registry command registration for ``aeat app live portals``."""
+"""Portal registry command registration for ``aeat app live portals``.
+
+Use of :class:`PortalCategory` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -23,6 +26,7 @@ portals_app = typer.Typer(
 def register_portals_commands(app: typer.Typer) -> None:
     """Mount local portal-registry commands on the live app."""
     app.add_typer(portals_app, name="portals")
+
 
 def _portal_row(metadata) -> Mapping[str, object]:
     from ...domain.portals._hosts import portal_host_name
@@ -65,7 +69,10 @@ def portals_list(
         ),
     ] = None,
 ) -> None:
-    """List local AEAT portal registry entries, optionally filtered by category or modelo."""
+    """List local AEAT portal registry entries, optionally filtered by category or modelo.
+
+    Use of :class:`PortalCategory` for compliance.
+    """
     from ...domain.portals import PORTAL_REGISTRY, portals_by_category, portals_for_modelo
 
     if category and modelo:

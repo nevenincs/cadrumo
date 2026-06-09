@@ -4,6 +4,9 @@ Records are stored at :class:`SensitivityClass` ``AUDIT`` under the IVA
 compensation history namespace. The repository exposes typed
 :class:`IvaCompensationPeriodState` objects; carry-forward projection is
 produced by :func:`build_iva_compensation_carry_forward_report`.
+
+This module uses :class:`IvaCompensationAnnualSummary` and :class:`IvaCompensationAnnualCrossCheck`
+for annual cross-checking.
 """
 
 from __future__ import annotations
@@ -223,9 +226,7 @@ def iva_compensation_annual_summary_from_filed_observation(
         )
     values = _decimal_casilla_values(observation)
     last_period = _casilla_value(values, "97", "iva.anual.compensacion-ultimo-periodo-97") or _ZERO
-    generated_not_in_last = (
-        _casilla_value(values, "662", "iva.anual.compensacion-generada-ejercicio-no-97") or _ZERO
-    )
+    generated_not_in_last = _casilla_value(values, "662", "iva.anual.compensacion-generada-ejercicio-no-97") or _ZERO
     source_artefact_sha256 = next(
         (artefact.sha256 for artefact in observation.artefacts if artefact.kind == "submitted_file"),
         None,
@@ -270,9 +271,7 @@ def cross_check_iva_compensation_annual_summary(
     last_period_difference = last_period - summary.last_period_compensation_amount
     generated_difference = generated_not_in_last - summary.generated_not_in_last_period_amount
     mismatches = tuple(
-        casilla
-        for casilla, drift in (("97", last_period_difference), ("662", generated_difference))
-        if drift != _ZERO
+        casilla for casilla, drift in (("97", last_period_difference), ("662", generated_difference)) if drift != _ZERO
     )
     return IvaCompensationAnnualCrossCheck(
         filing_year=summary.filing_year,

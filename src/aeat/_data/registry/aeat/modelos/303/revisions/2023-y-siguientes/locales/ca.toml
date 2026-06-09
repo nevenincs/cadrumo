@@ -1,0 +1,7 @@
+[labels]
+"iva.repercutido.general" = "Quota IVA repercutit al tipus general (21%)"
+"iva.soportado.interiores" = "Quota IVA suportat en operacions interiors corrents"
+
+[help]
+"iva.repercutido.general" = "Total d'IVA repercutit calculat al tipus general del 21%."
+"iva.soportado.interiores" = "Total d'IVA suportat pagat en compres interiors de béns i serveis corrents."

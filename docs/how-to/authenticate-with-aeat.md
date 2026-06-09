@@ -14,8 +14,14 @@ List providers:
 aeat config auth providers
 ```
 
-Current command help exposes providers such as `certificate`, `clave_movil`,
-`clave_pin`, `clave_permanente`, and `dnie_pkcs`.
+Available providers include:
+
+- `certificate` — your digital certificate file (certificado digital)
+- `clave_pin` — Cl@ve PIN (a one-time code system from AEAT)
+- `clave_permanente` — Cl@ve Permanente (a username and password for
+  government services)
+- `clave_movil` — mobile-based Cl@ve
+- `dnie_pkcs` — the national ID card (DNI electrónico)
 
 ## Configure a provider
 
@@ -25,9 +31,8 @@ Configure the provider you use:
 aeat config auth configure --provider certificate --file ./certificate.p12
 ```
 
-Use `--file` for providers that need a credential file, such as a certificate
-or key file. Keep credential files private and do not commit them to the
-repository or attach them to support requests.
+Use `--file` for providers that need a file, such as your digital certificate.
+Keep credential files private and do not share them.
 
 ## Check local readiness
 
@@ -55,8 +60,9 @@ Force a fresh authentication when needed:
 aeat config auth login --fresh
 ```
 
-Use `--reset-lock` only when a previous authentication acquisition left a stale
-local lock.
+Use `--reset-lock` only when a previous login was interrupted and left the
+authentication step stuck. Run it if `login` reports that another login is
+already in progress when it is not.
 
 ## Clear local auth metadata
 
@@ -80,17 +86,18 @@ setup:
 aeat config auth clear --all
 ```
 
-## Apoderado support
+## Authorized representative (apoderado)
 
-If you work as an authorized representative, inspect the apoderado surface:
+If you act as an authorized tax representative for someone else (a gestor,
+asesor, or authorized agent), inspect the representative access commands:
 
 ```bash
 aeat config auth apoderado --help
 ```
 
-That command group has status, configure, clear, check, and scope-management
-commands. Use command help for the exact options before changing apoderado
-configuration.
+Those commands let you set up, check, and clear representative access scopes.
+Run the help command first to see the available options before changing
+anything.
 
 ## Next steps
 

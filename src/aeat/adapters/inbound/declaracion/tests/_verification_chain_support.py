@@ -31,9 +31,11 @@ _COMPUTED_CASILLAS_M130 = frozenset(
 
 _COMPUTED_CASILLAS_M111 = frozenset({"28", "30"})
 
+
 def _registry_snapshot(modelo: str, filing_year: int, period: str):
     """Resolve a validated registry snapshot from the committed authority."""
     return resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+
 
 _COMPUTED_CASILLAS_M303 = frozenset(
     {
@@ -61,6 +63,7 @@ _M303_2023_ONWARDS_PARAMS = [
     ("2024-3T", 2024, "3T"),
     ("2024-4T", 2024, "4T"),
 ]
+
 
 def _build_m303_engine_result(pdf_stem: str, year: int, period: str):  # type: ignore[return]
     """Parse the corpus PDF and run the registry engine.  Returns (extracted, engine_values)."""
@@ -122,6 +125,7 @@ def _build_m303_engine_result(pdf_stem: str, year: int, period: str):  # type: i
         )
     return extracted, dict(result.values), inputs
 
+
 _COMPUTED_CASILLAS_M390 = frozenset(
     {"iva.anual.cuota-devengada-total", "iva.anual.cuota-deducible-total", "iva.anual.resultado-regimen-general"}
 )
@@ -141,6 +145,7 @@ _COMPUTED_CASILLAS_M123_2019 = frozenset({"06-legacy", "08-legacy"})
 _COMPUTED_CASILLAS_M123_2024 = frozenset({"03", "06", "09", "12", "14"})
 
 _COMPUTED_CASILLAS_M131 = frozenset({"04", "06", "07", "10", "13", "15", "saldo-negativo-fin-periodo"})
+
 
 def _period_to_date(year: int, period: str) -> date:
     """Convert a filing year and AEAT period string to the last date of that period.

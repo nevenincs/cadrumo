@@ -23,6 +23,7 @@ You MUST respect these rules at all times:
 @.claude/rules/aeat-spanish-stem-naming.md
 @.claude/rules/aeat-swarm-audit-cadence.md
 @.claude/rules/aeat-swarm-orchestration.md
+@.claude/rules/aeat-user-docs-hardening.md
 @.claude/rules/aeat-vaultspec-centralisation.md
 @.claude/rules/composition-service-no-parallel-write-path.md
 @.claude/rules/core-struct-docstring-links.md

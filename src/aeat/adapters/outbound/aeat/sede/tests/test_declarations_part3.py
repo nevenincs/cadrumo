@@ -19,6 +19,8 @@ from ._declarations_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
 class TestFiledObservationRelations:
     """Verify filed observations can supply registry cross-model relations."""
 
@@ -222,6 +224,7 @@ class TestFiledObservationRelations:
                 period="0A",
             )
 
+
 def test_capture_filed_declaration_empty_nif_carries_translated_message() -> None:
     """contract-A: capture_filed_declaration_observation raises SedeNavigationError with
     translated_message when AeatSession.identity_nif is whitespace-only."""
@@ -253,6 +256,7 @@ def test_capture_filed_declaration_empty_nif_carries_translated_message() -> Non
 
     assert exc_info.value.translated_message is not None
     assert "adapters.sede.errors.empty_identity_nif" not in exc_info.value.translated_message
+
 
 def test_capture_filed_declaration_empty_nif_locale_key_resolves_to_real_copy() -> None:
     """contract-B: the empty-identity-nif locale key resolves to non-placeholder copy."""

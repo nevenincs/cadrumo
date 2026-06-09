@@ -99,11 +99,14 @@ _MODELO_123_CURRENT_EXPECTED_TARGETS = tuple(f"{index:02d}" for index in range(1
 
 _MODELO_123_HISTORICAL_EXPECTED_TARGETS = tuple(f"{index:02d}-legacy" for index in range(1, 9))
 
+
 def _modelo_130_snapshot():
     return _modelo_snapshot("130", filing_year=2024, period="1T")
 
+
 def _modelo_snapshot(modelo_id: str, *, filing_year: int, period: str):
     return resources().modelos.authority.snapshot(modelo_id, filing_year=filing_year, period=period)
+
 
 def _write_declaration_pdf(
     path: Path,
@@ -129,6 +132,7 @@ def _write_declaration_pdf(
     pdf.drawString(50, 54, f"NIF: {tax_id}")
     pdf.drawRightString(width - 50, 54, "CSV: TESTCSV0000000000")
     pdf.save()
+
 
 def _spanish_amount(value: Decimal) -> str:
     formatted = f"{value:,.2f}"

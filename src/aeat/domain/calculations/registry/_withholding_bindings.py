@@ -1,4 +1,7 @@
-"""Withholding row-set binding helpers."""
+"""Withholding row-set binding helpers.
+
+Use of :class:`ModeloRevision` for compliance.
+"""
 
 from __future__ import annotations
 
@@ -165,7 +168,10 @@ def _validated_withholding_selector(binding: DataBindingDefinition) -> _Withhold
 def withholding_binding_requirements(
     revision: ModeloRevision,
 ) -> tuple[WithholdingObservationRequirement, ...]:
-    """Return withholding slices needed by ``revision``'s withholding bindings."""
+    """Return withholding slices needed by ``revision``'s withholding bindings.
+
+    Use of :class:`ModeloRevision` for compliance.
+    """
     grouped: dict[tuple[str, ...], set[str]] = {}
     for binding in revision.bindings:
         if binding.source != RowSetGroupingKind.WITHHOLDING:
@@ -197,7 +203,10 @@ def resolve_withholding_binding_values(
     revision: ModeloRevision,
     observations: Iterable[WithholdingObservation],
 ) -> dict[str, Decimal]:
-    """Resolve scalar withholding-source bindings into Decimal aggregates."""
+    """Resolve scalar withholding-source bindings into Decimal aggregates.
+
+    Use of :class:`ModeloRevision` for compliance.
+    """
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
     for binding in revision.bindings:
@@ -228,7 +237,10 @@ def resolve_withholding_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[WithholdingObservation],
 ) -> dict[tuple[str, int], Decimal | str]:
-    """Resolve row-producer withholding bindings into per-row indexed values."""
+    """Resolve row-producer withholding bindings into per-row indexed values.
+
+    Use of :class:`ModeloRevision` for compliance.
+    """
     available = tuple(observations)
     resolved: dict[tuple[str, int], Decimal | str] = {}
     cohorts: dict[

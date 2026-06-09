@@ -129,7 +129,6 @@ def _make_http_error(status: int, content: bytes = b"error") -> Exception:
     return HttpError(resp=response, content=content)
 
 
-
 def test_http_401_translates_to_permission_error() -> None:
     req = _RaisingRequest(_make_http_error(401))
     with pytest.raises(OutboundStoragePermissionError):

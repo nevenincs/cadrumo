@@ -140,9 +140,7 @@ def _check_banned_live_imports(paths: Iterable[Path]) -> list[str]:
     for path in sorted(paths):
         hits = _scan_banned_imports(path)
         if hits:
-            violations.append(
-                f"{path}: imports banned symbol(s) {sorted(hits)} in a file containing an aeat_live item"
-            )
+            violations.append(f"{path}: imports banned symbol(s) {sorted(hits)} in a file containing an aeat_live item")
     return violations
 
 

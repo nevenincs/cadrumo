@@ -1,0 +1,7 @@
+[labels]
+"iva.repercutido.general" = "Output IVA quota at general rate (21%)"
+"iva.soportado.interiores" = "Deductible IVA quota on domestic current transactions"
+
+[help]
+"iva.repercutido.general" = "Total output VAT calculated at the standard rate of 21%."
+"iva.soportado.interiores" = "Total input VAT paid on general domestic purchases of goods and services."

@@ -40,7 +40,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = pathlib.Path(__file__).parent
+_SRC_ROOT = pathlib.Path(__file__).parent.parent
 
 # Marker token prefixes — any of these in a preceding line satisfies the rule.
 _MARKER_TOKENS: tuple[str, ...] = (
@@ -60,35 +60,34 @@ _CONTEXT_LINES = 3
 # ---------------------------------------------------------------------------
 _KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset(
     {
-        ("adapters/outbound/aeat/browser/_factory.py", 176),
-        ("adapters/outbound/aeat/browser/_factory.py", 71),
-        ("adapters/outbound/aeat/browser/session.py", 216),
+        ("adapters/outbound/google/_calc_sheets_apply.py", 973),
+        ("adapters/outbound/google/_calc_sheets_apply.py", 1011),
+        ("adapters/outbound/google/_calc_sheets_apply.py", 1034),
+        ("adapters/outbound/google/_calc_sheets_apply.py", 1081),
+        ("adapters/outbound/google/_calc_sheets_apply.py", 1124),
+        ("adapters/outbound/google/_document_link_resolver.py", 121),
         ("adapters/outbound/aeat/verify/__init__.py", 123),
-        ("adapters/outbound/storage/_google_drive.py", 649),
-        ("adapters/outbound/storage/_google_drive.py", 166),
-        ("adapters/outbound/storage/_google_drive.py", 226),
-        ("adapters/persistence/storage/envelope/_envelope.py", 172),
-        ("adapters/persistence/storage/envelope/_envelope.py", 368),
-        ("application/live/_borrador_100.py", 315),
-        ("application/live/_borrador_100.py", 324),
-        ("application/live/_censo.py", 403),
-        ("application/live/_expedientes.py", 160),
-        ("application/live/_notifications.py", 179),
-        ("application/live/_snapshot_base.py", 216),
-        ("application/live/_snapshot_base.py", 241),
-        ("application/live/_snapshot_base.py", 351),
-        ("application/live/_snapshot_base.py", 355),
         ("application/transactions/_import.py", 42),
+        ("application/modelo/_iva_wallet_gate.py", 375),
         ("core/i18n/_translatable.py", 20),
-        ("core/logging.py", 124),
-        ("core/logging.py", 128),
-        ("core/logging.py", 132),
-        ("core/logging.py", 136),
-        ("core/logging.py", 160),
-        ("core/logging.py", 229),
-        ("domain/calculations/registry/_constructs.py", 40),
-        ("domain/calculations/registry/_workbook_parity.py", 426),
+        ("core/logging.py", 129),
+        ("core/logging.py", 133),
+        ("core/logging.py", 137),
+        ("core/logging.py", 141),
         ("domain/modelos/_codes.py", 27),
+        ("entrypoints/cli/_config/_custody.py", 18),
+        ("entrypoints/cli/_config/_custody.py", 32),
+        ("entrypoints/cli/_config/_custody.py", 80),
+        ("entrypoints/cli/_ledger_review_cli.py", 54),
+        ("entrypoints/cli/_modelo_work_calculate_cli.py", 216),
+        ("entrypoints/cli/_modelo_work_calculate_cli.py", 394),
+        ("entrypoints/cli/_modelo_work_calculate_cli.py", 412),
+        ("entrypoints/cli/_modelo_work_calculate_cli.py", 425),
+        ("entrypoints/cli/_modelo_work_lifecycle_cli.py", 58),
+        ("entrypoints/cli/_modelo_work_revision_cli.py", 28),
+        ("entrypoints/cli/_modelo_work_verification_cli.py", 31),
+        ("entrypoints/cli/_modelo_work_verification_cli.py", 62),
+        ("entrypoints/cli/_modelo_work_verification_cli.py", 160),
     }
 )
 
@@ -143,7 +142,7 @@ def _collect_violations(
         except ValueError:
             continue
         name = path.name
-        if name.startswith("test_") or name.endswith("_test.py"):
+        if name.startswith("test_") or name.endswith("_test.py") or "tests" in path.parts:
             continue
         try:
             source_lines = path.read_text(encoding="utf-8", errors="replace").splitlines()

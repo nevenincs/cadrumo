@@ -150,9 +150,7 @@ def _resolve_import_paths(path: Path) -> list[Path]:
     if not path.is_dir():
         return [path]
     files = sorted(
-        child
-        for child in path.iterdir()
-        if child.is_file() and child.suffix.lower() in _IMPORT_DIR_EXTENSIONS
+        child for child in path.iterdir() if child.is_file() and child.suffix.lower() in _IMPORT_DIR_EXTENSIONS
     )
     if not files:
         raise _bad(

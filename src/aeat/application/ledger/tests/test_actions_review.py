@@ -30,6 +30,8 @@ from ._action_test_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
 def test_list_and_get_manual_transactions_read_the_requested_bucket_only(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -77,6 +79,7 @@ def test_list_and_get_manual_transactions_read_the_requested_bucket_only(
             transaction_id="0" * 64,
             transaction_repository=repo_a,
         )
+
 
 def test_summarize_manual_transactions_reports_bucket_status_and_readiness(
     secure_objects: SecureObjectRepository,
@@ -138,6 +141,7 @@ def test_summarize_manual_transactions_reports_bucket_status_and_readiness(
     assert report.readiness_issue_count == 0
     assert report.ready is True
 
+
 def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -190,6 +194,7 @@ def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(
     assert single.rows[0].transaction is not None
     assert single_filtered_out.rows == ()
 
+
 def test_query_ledger_review_rows_filters_by_direction(secure_objects: SecureObjectRepository) -> None:
     """direction= narrows to one TransactionDirection; the other direction drops out.
 
@@ -237,6 +242,7 @@ def test_query_ledger_review_rows_filters_by_direction(secure_objects: SecureObj
     assert len(full.rows) == 2
     assert [row.id for row in outgoing.rows] == [expense.ref.transaction_id]
     assert outgoing.filters == ("direction=OUTGOING",)
+
 
 def test_query_ledger_review_rows_filters_quarter_import_and_issue_events(
     secure_objects: SecureObjectRepository,

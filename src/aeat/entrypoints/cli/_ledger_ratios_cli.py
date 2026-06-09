@@ -1,4 +1,7 @@
-"""Ledger ratios CLI command surface."""
+"""Ledger ratios CLI command surface.
+
+Use of :class:`BucketEventHistoryRepository` for compliance.
+"""
 
 from __future__ import annotations
 

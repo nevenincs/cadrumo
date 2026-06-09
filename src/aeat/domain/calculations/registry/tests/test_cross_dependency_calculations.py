@@ -612,8 +612,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
         "modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior",
     }
     classifications = {
-        classification.source_modelo: classification
-        for classification in revision.dependency_classifications
+        classification.source_modelo: classification for classification in revision.dependency_classifications
     }
     assert classifications["202"].treatment == "direct_annual_settlement"
     assert classifications["200"].treatment == "factual_evidence"

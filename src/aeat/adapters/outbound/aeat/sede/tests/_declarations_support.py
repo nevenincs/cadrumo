@@ -81,12 +81,14 @@ _REGISTER_DOWNLOAD_URL = f"{_AEAT.domains.www6}{_DECLARATIONS_LISTING_BASE_PATH}
 if TYPE_CHECKING:
     from ...auth._authenticator import AeatSession
 
+
 @pytest.fixture(autouse=True)
 def _isolate_secure_object_backend(tmp_path: Path):
     """Prevent filed-observation store tests from writing into the active profile DB."""
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         yield
+
 
 _FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"
 
@@ -107,6 +109,7 @@ _MODELO_303_2022_RECORD_DESIGN = bundled_path(
 
 _MODELO_130_COMPUTED_CASILLAS = frozenset({"03", "04", "07", "09", "11", "12", "13", "14", "17", "19"})
 
+
 def _declaration_row(
     *,
     expediente_id: str,
@@ -126,14 +129,18 @@ def _declaration_row(
         archive_link_text="Ver",
     )
 
+
 def _modelo_snapshot(modelo_id: str, *, filing_year: int, period: str):
     return resources().modelos.authority.snapshot(modelo_id, filing_year=filing_year, period=period)
+
 
 def _modelo_130_snapshot():
     return _modelo_snapshot("130", filing_year=2026, period="1T")
 
+
 def _submitted_file_payload(path: Path = _SUBMITTED_FILE_130_2026_1T) -> bytes:
     return path.read_bytes()
+
 
 def _modelo_303_design_position(workbook_path: Path, *, casilla_id: str) -> int:
     workbook = load_workbook(workbook_path, read_only=True, data_only=True)
@@ -147,6 +154,7 @@ def _modelo_303_design_position(workbook_path: Path, *, casilla_id: str) -> int:
     finally:
         workbook.close()
     raise AssertionError(f"official Modelo 303 page-03 design does not define casilla {casilla_id}")
+
 
 def _modelo_303_page_03_payload(
     *,
@@ -171,6 +179,7 @@ def _modelo_303_page_03_payload(
         page[373 : 373 + len(filler_at_374)] = filler_at_374
     page[1005:1017] = list("</T30303000>")
     return "".join(page).encode("latin-1")
+
 
 def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: str) -> bytes:
     provider = build_runtime_schema_provider(filing_year=filing_year, period=period, modelos=("123",))
@@ -229,6 +238,7 @@ def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: st
 
     return output.read_bytes()
 
+
 def _declaration_pdf_payload(
     values: dict[str, Decimal],
     *,
@@ -275,9 +285,11 @@ def _declaration_pdf_payload(
     getattr(pdf, "sa" + "ve")()
     return buffer.getvalue()
 
+
 def _spanish_amount(value: Decimal) -> str:
     formatted = f"{value:,.2f}"
     return formatted.replace(",", "_").replace(".", ",").replace("_", ".")
+
 
 def _filed_observation(
     *,
@@ -319,6 +331,7 @@ def _filed_observation(
         ),
         extraction_coverage=coverage,
     )
+
 
 def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ...]:
     observations: list[FiledDeclaracionObservation] = []
@@ -447,6 +460,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
         )
     )
     return tuple(observations)
+
 
 def _whitespace_nif_session() -> AeatSession:
     """Build a minimal AeatSession with an all-whitespace NIF.

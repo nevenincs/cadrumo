@@ -48,6 +48,8 @@ from ._declarations_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
 class TestSubmittedFileObservation:
     """Verify submitted-file artefacts are interpreted through the registry layout."""
 
@@ -420,6 +422,7 @@ class TestSubmittedFileObservation:
         assert encrypted_artefact.storage_ref is not None
         assert store.load_artefact(encrypted_artefact.storage_ref) == body
 
+
 class TestDeclaracionPdfObservation:
     """Verify declaration-copy PDFs are interpreted through registry profiles."""
 
@@ -513,6 +516,7 @@ class TestDeclaracionPdfObservation:
 
         assert {item.casilla_id: Decimal(item.value) for item in observed} == values
 
+
 class TestReadOperationGuard:
     """Verify declaration-reader remote operations are fail-closed."""
 
@@ -574,6 +578,7 @@ class TestReadOperationGuard:
     def test_mutating_action_rejected(self) -> None:
         with pytest.raises(RegistryValidationError, match="browser action token"):
             _assert_read_browser_action("Presentar declaracion")
+
 
 class TestFiledObservationBindings:
     """Verify filed observations can supply registry previous-filing bindings."""

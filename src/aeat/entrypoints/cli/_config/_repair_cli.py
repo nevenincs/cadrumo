@@ -332,6 +332,7 @@ def _register_repair_connectivity_command(repair_app: typer.Typer) -> None:
             lines=_render_browser_connectivity_text(report).splitlines(),
         )
 
+
 def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
     """Return the last ``count`` lines from ``path`` without trailing newlines."""
     if count <= 0:

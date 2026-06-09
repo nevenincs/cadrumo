@@ -26,7 +26,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = pathlib.Path(__file__).parent
+_SRC_ROOT = pathlib.Path(__file__).parent.parent
 
 # Canonical modules that are allowed to use these primitives directly.
 _CANONICAL_MODULES: frozenset[str] = frozenset(

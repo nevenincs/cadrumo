@@ -1,0 +1,12 @@
+[labels]
+"01" = "Income"
+"02" = "Expenses"
+"03" = "Net yield"
+"04" = "Fractional payment amount"
+"05" = "Prior fractional payments"
+"06" = "Withholdings and payments on account"
+"07" = "Partial result of Section I"
+
+[help]
+"01" = "Total cumulative business income for the tax year."
+"02" = "Total cumulative business expenses for the tax year."

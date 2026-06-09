@@ -31,10 +31,13 @@ from ._parser_boundary_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+
 def test_declaracion_errors_stay_on_core_exception_hierarchy() -> None:
     assert issubclass(DeclaracionParseError, PdfModeloImportError)
     assert issubclass(DeclaracionParseError, AeatError)
     assert issubclass(TemplateNotDetectedError, DeclaracionParseError)
+
 
 def test_parser_extracts_registry_profile_targets_from_pdf() -> None:
     """Assert the M130 declaracion_pdf profile declares exactly the expected 19 targets.
@@ -54,6 +57,7 @@ def test_parser_extracts_registry_profile_targets_from_pdf() -> None:
             f"casilla {target.casilla_id}: bbox_anchor must be set for bbox_anchored targets"
         )
 
+
 def test_parser_extracts_legal_entity_nif_from_pdf() -> None:
     """Verify NIF extraction from a real M130 corpus PDF for a CIF-format declarant.
 
@@ -67,6 +71,7 @@ def test_parser_extracts_legal_entity_nif_from_pdf() -> None:
     assert filing.source_pdf_path == source_pdf_reference_path(filing.source_pdf_sha256)
     assert pdf_path.name not in str(filing.source_pdf_path)
 
+
 def test_parser_debug_log_does_not_expose_source_filename(caplog: pytest.LogCaptureFixture) -> None:
     pdf_path = FIXTURES_DIR / "justificantes" / "130" / "2022-2T.pdf"
 
@@ -76,6 +81,7 @@ def test_parser_debug_log_does_not_expose_source_filename(caplog: pytest.LogCapt
     rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
     assert pdf_path.name not in rendered_logs
     assert "source=<input-pdf>" in rendered_logs
+
 
 def test_template_not_detected_context_does_not_expose_source_filename(tmp_path: Path) -> None:
     pdf_path = tmp_path / "12345678Z-private-declaracion.pdf"
@@ -88,6 +94,7 @@ def test_template_not_detected_context_does_not_expose_source_filename(tmp_path:
 
     assert excinfo.value.context is not None
     assert excinfo.value.context.get("path") == "<input-pdf>"
+
 
 def test_word_extraction_debug_log_does_not_expose_source_filename(
     tmp_path: Path,
@@ -104,6 +111,7 @@ def test_word_extraction_debug_log_does_not_expose_source_filename(
     assert pdf_path.name not in rendered_logs
     assert str(pdf_path) not in rendered_logs
     assert "<input-pdf>" in rendered_logs
+
 
 def test_parser_extracts_modelo_111_registry_profile_targets_from_pdf() -> None:
     """Assert the M111 declaracion_pdf profile declares exactly the expected 29 targets.
@@ -123,6 +131,7 @@ def test_parser_extracts_modelo_111_registry_profile_targets_from_pdf() -> None:
         assert target.bbox_anchor is not None, (
             f"casilla {target.casilla_id}: bbox_anchor must be set for bbox_anchored targets"
         )
+
 
 @pytest.mark.parametrize(
     "pdf_stem,year,period",
@@ -150,6 +159,7 @@ def test_parser_extracts_modelo_111_tax_id_from_corpus(pdf_stem: str, year: int,
     tax_id = _extract_tax_id(text)
 
     assert tax_id == "Y0000001S", f"{pdf_stem}: expected tax_id='Y0000001S', got {tax_id!r}"
+
 
 @pytest.mark.parametrize(
     "pdf_stem,year,period",
@@ -223,6 +233,7 @@ def test_parser_extracts_modelo_111_casillas_from_corpus(pdf_stem: str, year: in
             f"{pdf_stem}: casilla '28' expected Decimal('1000.00'), got {values['28']!r}"
         )
 
+
 @pytest.mark.parametrize(
     "pdf_stem,year,period",
     [
@@ -263,6 +274,7 @@ def test_parser_extracts_modelo_130_tax_id_from_corpus(pdf_stem: str, year: int,
         f"{pdf_stem}: expected tax_id='Y0000001S', got {tax_id!r} — "
         "check _TAX_ID_RE and _DECLARANT_ROW_RE in _parser.py"
     )
+
 
 @pytest.mark.parametrize(
     "pdf_stem,year,period",
@@ -361,6 +373,7 @@ def test_parser_extracts_modelo_130_casillas_from_corpus(pdf_stem: str, year: in
         f"{pdf_stem}: extracted casillas do not match ground truth.\n  expected: {expected}\n  got:      {extracted}"
     )
 
+
 def test_parser_extracts_modelo_123_current_registry_profile_targets_from_pdf(tmp_path: Path) -> None:
     snapshot = _modelo_snapshot("123", filing_year=2026, period="1T")
     profile = snapshot.extraction_profiles["modelo-123-declaracion-pdf"]
@@ -379,6 +392,7 @@ def test_parser_extracts_modelo_123_current_registry_profile_targets_from_pdf(tm
     assert filing.tax_id == "00000000T"
     assert {value.casilla_id: value.printed_value for value in filing.values} == values
 
+
 def test_parser_extracts_modelo_123_historical_registry_profile_targets_from_pdf(tmp_path: Path) -> None:
     snapshot = _modelo_snapshot("123", filing_year=2023, period="4T")
     profile = snapshot.extraction_profiles["modelo-123-2019-declaracion-pdf"]
@@ -396,6 +410,7 @@ def test_parser_extracts_modelo_123_historical_registry_profile_targets_from_pdf
     assert filing.period == "4T"
     assert filing.tax_id == "00000000T"
     assert {value.casilla_id: value.printed_value for value in filing.values} == values
+
 
 def test_parser_extracts_modelo_123_2024_corpus_round_trip() -> None:
     """Round-trip: parse the committed M123 2024-y-siguientes synthetic fixture.
@@ -466,6 +481,7 @@ def test_parser_extracts_modelo_123_2024_corpus_round_trip() -> None:
     assert values["12"] == Decimal("2850.00"), f"casilla 12: expected Decimal('2850.00'), got {values['12']!r}"
     assert values["13"] == Decimal("0.00"), f"casilla 13: expected Decimal('0.00'), got {values['13']!r}"
     assert values["14"] == Decimal("2850.00"), f"casilla 14: expected Decimal('2850.00'), got {values['14']!r}"
+
 
 def test_parser_extracts_modelo_123_2023_legacy_corpus_round_trip() -> None:
     """Round-trip: parse the committed M123 2019-2023 legacy revision synthetic fixture.
@@ -544,6 +560,7 @@ def test_parser_extracts_modelo_123_2023_legacy_corpus_round_trip() -> None:
         f"casilla 08-legacy: expected Decimal('1520.00'), got {values['08-legacy']!r}"
     )
 
+
 def test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy() -> None:
     filing = parse_declaracion(
         _REAL_MODELO_303_DECLARATION_COPY,
@@ -597,6 +614,7 @@ def test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy(
     assert filing.registry_snapshot_ref.modelo == "303"
     assert filing.registry_snapshot_ref.modelo_year == 2024
     assert filing.registry_snapshot_ref.period == "1T"
+
 
 @pytest.mark.parametrize(
     "pdf_stem",

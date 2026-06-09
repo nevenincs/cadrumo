@@ -21,5 +21,8 @@ Submodules
    aeat.application.auth._errors
    aeat.application.auth._models
    aeat.application.auth._operator
+   aeat.application.auth._operator_probes
+   aeat.application.auth._operator_results
+   aeat.application.auth._operator_scope
    aeat.application.auth._protocols
    aeat.application.auth._sessions

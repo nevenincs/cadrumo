@@ -265,9 +265,7 @@ _BARE_EMIT_EXEMPTIONS: frozenset[tuple[str, str]] = frozenset(
     }
 )
 
-_BARE_EMIT_EXEMPTION_PATHS: frozenset[str] = frozenset(
-    path for path, _rationale in _BARE_EMIT_EXEMPTIONS
-)
+_BARE_EMIT_EXEMPTION_PATHS: frozenset[str] = frozenset(path for path, _rationale in _BARE_EMIT_EXEMPTIONS)
 
 
 def test_zero_bare_emit_sites_outside_exemption_set() -> None:

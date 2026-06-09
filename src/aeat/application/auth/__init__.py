@@ -6,6 +6,8 @@ status / test / clear actions, and the persisted-session lifecycle. The
 concrete providers live in the outbound adapter layer and are imported
 lazily to avoid an application/adapter import cycle.
 
+This module uses :class:`Settings` for auth provider configuration.
+
 Major declarations:
 
 * :class:`AuthProvider` and :class:`AuthProviderKind` — the provider

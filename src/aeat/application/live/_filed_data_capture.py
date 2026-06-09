@@ -1,4 +1,7 @@
-"""Filed-declaration capture services for live AEAT workflows."""
+"""Filed-declaration capture services for live AEAT workflows.
+
+Use of :class:`ValidatedRegistryAuthority` for compliance.
+"""
 
 from __future__ import annotations
 

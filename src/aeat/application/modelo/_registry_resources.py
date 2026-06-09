@@ -1,4 +1,7 @@
-"""Registry resource helpers shared by modelo application actions."""
+"""Registry resource helpers shared by modelo application actions.
+
+Use of :class:`ValidatedRegistryAuthority` for compliance.
+"""
 
 from __future__ import annotations
 

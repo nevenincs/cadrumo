@@ -685,12 +685,15 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
         stored_work_unit = work_repo.load().get(work_unit.work_unit_id)
         assert stored_work_unit is not None
         assert stored_work_unit.filed_calculation_revision_id == verified.calculation_revision_id
-        assert filing_repo.load().current_for(
-            bucket_id="operator",
-            modelo="303",
-            filing_year=_TARGET_YEAR,
-            period=_TARGET_PERIOD,
-        ) == filing
+        assert (
+            filing_repo.load().current_for(
+                bucket_id="operator",
+                modelo="303",
+                filing_year=_TARGET_YEAR,
+                period=_TARGET_PERIOD,
+            )
+            == filing
+        )
 
 
 def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine_prefill(tmp_path: Path) -> None:

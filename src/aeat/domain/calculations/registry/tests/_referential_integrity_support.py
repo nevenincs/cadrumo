@@ -52,10 +52,12 @@ from .._validate_references import _check_all_id_references
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+
 def _load_registry() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
 
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     return modelos, catalogues
+
 
 def _snapshot_for_revision(
     modelo: ModeloDefinition,
@@ -75,9 +77,11 @@ def _snapshot_for_revision(
         revision_id=revision.id,
     )
 
+
 _DUMMY_LEGAL_ID = "lirpf:art-1"
 
 _DUMMY_SOURCE_ID = "aeat-dr-130-2019-v12"
+
 
 def _minimal_legal_ref() -> LegalReference:
     return LegalReference(
@@ -91,6 +95,7 @@ def _minimal_legal_ref() -> LegalReference:
         effective_from=date(2006, 11, 30),
         review_status="reviewed",
     )
+
 
 def _minimal_source_ref() -> SourceReference:
     return SourceReference(
@@ -106,11 +111,13 @@ def _minimal_source_ref() -> SourceReference:
         review_status="reviewed",
     )
 
+
 def _minimal_catalogues() -> RegistryCatalogues:
     return RegistryCatalogues(
         legal={_DUMMY_LEGAL_ID: _minimal_legal_ref()},
         sources={_DUMMY_SOURCE_ID: _minimal_source_ref()},
     )
+
 
 def _minimal_casilla(casilla_id: str = "01") -> CasillaDefinition:
     return CasillaDefinition(
@@ -122,6 +129,7 @@ def _minimal_casilla(casilla_id: str = "01") -> CasillaDefinition:
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
     )
+
 
 def _minimal_workbook_ref(source_ref: str = _DUMMY_SOURCE_ID) -> WorkbookParityReference:
     from .._schema import WorkbookParityReference
@@ -136,6 +144,7 @@ def _minimal_workbook_ref(source_ref: str = _DUMMY_SOURCE_ID) -> WorkbookParityR
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(source_ref,),
     )
+
 
 def _minimal_application_link(
     surface: Literal[
@@ -162,6 +171,7 @@ def _minimal_application_link(
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
     )
+
 
 def _minimal_revision(
     *,
@@ -209,6 +219,7 @@ def _minimal_revision(
         deadline_windows=deadline_windows,
     )
 
+
 def _minimal_modelo(revision: ModeloRevision) -> ModeloDefinition:
     return ModeloDefinition(
         id="130",
@@ -223,10 +234,12 @@ def _minimal_modelo(revision: ModeloRevision) -> ModeloDefinition:
         revisions={"test-revision": revision},
     )
 
+
 def _build_minimal_snapshot(revision: ModeloRevision) -> RegistrySnapshot:
     catalogues = _minimal_catalogues()
     modelo = _minimal_modelo(revision)
     return _snapshot_for_revision(modelo, catalogues, revision)
+
 
 def _build_snapshot_with_missing_legal(revision: ModeloRevision, missing_legal_id: str) -> RegistrySnapshot:
     """Build a snapshot whose `legal` map omits a ref that the revision content references.
@@ -247,6 +260,7 @@ def _build_snapshot_with_missing_legal(revision: ModeloRevision, missing_legal_i
     patched_legal = {k: v for k, v in snapshot.legal.items() if k != missing_legal_id}
     return snapshot.model_copy(update={"legal": patched_legal})
 
+
 def _build_snapshot_with_missing_source(revision: ModeloRevision, missing_source_id: str) -> RegistrySnapshot:
     """Build a snapshot whose `sources` map omits a ref that the revision content references."""
     extra_source = _minimal_source_ref().model_copy(update={"id": missing_source_id})
@@ -258,6 +272,7 @@ def _build_snapshot_with_missing_source(revision: ModeloRevision, missing_source
     snapshot = _snapshot_for_revision(modelo, augmented_catalogues, revision)
     patched_sources = {k: v for k, v in snapshot.sources.items() if k != missing_source_id}
     return snapshot.model_copy(update={"sources": patched_sources})
+
 
 def _segmented_casilla(
     casilla_id: str,
@@ -276,6 +291,7 @@ def _segmented_casilla(
         source_refs=(_DUMMY_SOURCE_ID,),
     )
 
+
 def _single_segment_casilla() -> CasillaDefinition:
     """A real single-segment casilla, the shape every existing modelo authors."""
     return CasillaDefinition(
@@ -287,6 +303,7 @@ def _single_segment_casilla() -> CasillaDefinition:
         legal_refs=("ley-58-2003:art-29",),
         source_refs=("aeat-manual-modelo",),
     )
+
 
 def _completeness_manifest(
     casillas: tuple[CalculationCompletenessCasilla, ...],

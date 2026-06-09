@@ -1,6 +1,8 @@
 """Registry binding provider adapters for per-modelo aggregation.
 
-Uses a :class:`ModeloRevision` to resolve bound casilla inputs and
+Used by: :mod:`~._service` (per-modelo aggregation service) to resolve registry bindings.
+
+Uses a :class:`~aeat.domain.calculations.registry.ModeloRevision` to resolve bound casilla inputs and
 counterpart binding values for the aggregation pipeline.
 """
 

@@ -16,7 +16,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = pathlib.Path(__file__).parent
+_SRC_ROOT = pathlib.Path(__file__).parent.parent
 _RATIONALE_MARKER = "CAST-RATIONALE-"
 
 
@@ -101,7 +101,7 @@ def _collect_cast_violations(
     violations: list[str] = []
     if source_tree_ast is None:
         for path in sorted(_SRC_ROOT.rglob("*.py")):
-            if path.name.startswith("test_"):
+            if path.name.startswith("test_") or "tests" in path.parts:
                 continue
             source = path.read_text(encoding="utf-8", errors="replace")
             try:
@@ -116,7 +116,7 @@ def _collect_cast_violations(
         return violations
 
     for path in sorted(source_tree_ast):
-        if path.name.startswith("test_"):
+        if path.name.startswith("test_") or "tests" in path.parts:
             continue
         try:
             path.relative_to(_SRC_ROOT)

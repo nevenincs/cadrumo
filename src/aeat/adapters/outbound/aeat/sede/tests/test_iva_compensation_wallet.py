@@ -117,7 +117,7 @@ def test_parse_iva_compensation_wallet_html_does_not_under_declare_a_populated_c
     """
     html = _cartera_results_html(
         total="123,45",
-        rows='<tr><td>2024</td><td>4T</td><td>123,45</td></tr>',
+        rows="<tr><td>2024</td><td>4T</td><td>123,45</td></tr>",
     )
 
     observation = parse_iva_compensation_wallet_html(
@@ -163,7 +163,7 @@ def test_parse_iva_compensation_wallet_html_rejects_summary_row_mismatch() -> No
     """The aggregate total must reconcile with the sum of detail rows."""
     html = _cartera_results_html(
         total="999,99",
-        rows='<tr><td>2024</td><td>4T</td><td>123,45</td></tr>',
+        rows="<tr><td>2024</td><td>4T</td><td>123,45</td></tr>",
     )
 
     with pytest.raises(SedeParseError, match="does not equal the sum"):
@@ -278,7 +278,7 @@ def test_parse_iva_compensation_wallet_html_refuses_executed_empty_wallet_shell_
 def test_parse_iva_compensation_wallet_html_refuses_wrong_rendered_target_period() -> None:
     html = _cartera_results_html(
         total="123,45",
-        rows='<tr><td>2024</td><td>4T</td><td>123,45</td></tr>',
+        rows="<tr><td>2024</td><td>4T</td><td>123,45</td></tr>",
     )
 
     with pytest.raises(SedeParseError, match="does not match requested period"):

@@ -1,25 +1,9 @@
 # Review and supply calculation inputs
 
-Use this guide when calculation reports missing values, when you need to review
-which casillas were filled, or when a modelo needs manual inputs, offsets, or
-binding values.
-
-Keep this separate from the first Quickstart path. Most ordinary work should be:
-set up the active profile, import and classify transactions, create a draft,
-calculate, verify, and export. Manual calculation inputs are for the cases where
-the modelo cannot derive every value from the profile and ledger.
-
-## How calculation fills a modelo
-
-Calculation combines:
-
-- the active profile facts
-- the saved, classified ledger for that profile
-- modelo registry casillas, bindings, and formulas
-- explicit manual inputs or offsets where the modelo requires them
-
-The result is saved as a new calculation revision. Re-running calculation saves
-another revision; it does not mutate the previous revision.
+Use this guide when aeat tells you a field is missing after you run a
+calculation, or when your form requires a value you must enter by hand — for
+example, a prior-year income figure or a compensation amount from an earlier
+period.
 
 ## Inspect the modelo before entering values
 
@@ -78,54 +62,51 @@ export.
 
 ## Supply manual casilla values
 
-Use `--casilla CASILLA=DECIMAL` only when the modelo expects an operator-supplied
-casilla value or you are intentionally doing a manual correction workflow.
-`CASILLA` can be the registry casilla id, record number, or printed BOE casilla
-number shown by `aeat app modelo casillas`.
+Use `--casilla` only when aeat asks you to supply a specific box value by
+hand. Use the box number printed on the official AEAT form — the same number
+you see on the paper or PDF version of the modelo. Run
+`aeat app modelo casillas 130 --period 2026Q1` to see the list.
 
-Example after checking the casilla list:
+Example:
 
 ```bash
 aeat app modelo work calculate --modelo 130 --year 2026 --period 1T --casilla 02=4000.00
 ```
 
-Do not use `--casilla NUMBER=VALUE` as a blind placeholder. First list the
-casillas and read the labels so you know which field you are filling.
+Do not enter a box value without checking the list first — read the label so
+you know which field you are filling.
 
-## Understand bindings
+## Supply a missing field value
 
-A binding is the registry mechanism that connects a modelo field to a source.
-Sources can include profile facts, ledger aggregates, prior filed revisions,
-live observations, constants, or explicit operator input.
+When aeat cannot fill a field automatically, the missing field appears in the
+bindings list. Use the list to see which fields need your input, then supply
+the value during calculation.
 
-List bindings for a target:
+List fields that still need a value:
 
 ```bash
 aeat app modelo bindings list --modelo 130 --year 2026 --period 1T
 ```
 
-Show only bindings not already resolved by constants or the active profile:
+Show only fields not yet resolved:
 
 ```bash
 aeat app modelo bindings list --modelo 130 --year 2026 --period 1T --missing
 ```
 
-Preview temporary binding values without mutating state:
+Preview what a value would produce — without saving anything:
 
 ```bash
 aeat app modelo bindings preview --modelo 130 --year 2026 --period 1T --binding irpf.previous_year_economic_activity_net_income=0
 ```
 
-Provide binding values during calculation only when the binding list shows that
-the value cannot be resolved from the profile, ledger, constants, or saved
-history:
+Supply the value during calculation when the list shows the field cannot be
+resolved automatically:
 
 ```bash
 aeat app modelo work calculate --modelo 130 --year 2026 --period 1T --binding irpf.previous_year_economic_activity_net_income=0
 ```
 
-Bindings exist so the registry can name why a value is needed and where it
-should come from. They are not part of the basic first-user path.
 
 ## Handle offsets and carry-forwards
 
@@ -153,18 +134,44 @@ registry/help text identifies the relation you need:
 aeat app modelo work calculate --modelo 100 --year 2026 --period 0A --relation <relation-id>=<decimal>
 ```
 
+## Special calculation tools (IRPF comparison and exemptions)
+
+For specialized calculations, the CLI provides evaluation and comparison commands:
+
+- **Joint vs. individual IRPF comparison (`compare-taxation`)**: Compare filing
+  jointly as a family unit against filing individually for an active Modelo 100:
+  
+  ```bash
+  aeat app modelo work compare-taxation --modelo 100 --year 2026 --period 0A
+  ```
+  
+  This check does not save a draft. It shows the tax difference and a
+  recommendation so you can decide which filing option costs less.
+
+- **Maritime worker exemption preview (`preview-maritime-exemption`)**: Preview
+  the IRPF exemption for maritime workers (Art. 7.p LIRPF or REBECA 50%):
+  
+  ```bash
+  aeat app modelo work preview-maritime-exemption
+  ```
+  
+  The command shows which tax boxes are affected by the exemption and the
+  amounts, with references to the applicable law. This applies only to maritime
+  workers — most filers can skip this section.
+
 ## Correct an already filed local record
 
-If a real filing was already uploaded and later needs correction, use the
-amendment workflow rather than quietly replacing the basic draft:
+If a filing was already uploaded and later needs correction, use the amendment
+command. Do not simply recalculate the same period — that would not create the
+correct complementaria (supplementary return) record:
 
 ```bash
 aeat app modelo work amend --from-filing-record <filing-record-id> --kind complementaria --reason "corrected value" --set <casilla>=<decimal>
 ```
 
-The amendment command requires an existing filing record with imported official
-evidence. It builds a corrected local declaration; it does not submit anything
-to AEAT.
+Before using this command, you must have imported the justificante (the receipt
+from AEAT) for the filing you are correcting. The amendment command does not
+submit anything to AEAT.
 
 ## Where to go next
 

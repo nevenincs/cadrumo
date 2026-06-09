@@ -14,10 +14,10 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from ....core._toml import freeze_toml, read_toml
-from ._errors import RegistryLoadError
+from ._errors import RegistryLoadError, RegistryValidationError
 from ._schema import (
     LegalParameter,
     LegalReference,
@@ -208,6 +208,10 @@ def load_modelo_directory(directory: Path) -> ModeloDefinition:
         raise RegistryLoadError(f"{resolved}: missing manifest.toml")
 
     fingerprints: list[tuple[str, int, int]] = [_toml_fingerprint(manifest_path)]
+    locales_dir = resolved / "locales"
+    if locales_dir.is_dir():
+        for path in sorted(locales_dir.glob("*.toml")):
+            fingerprints.append(_toml_fingerprint(path))
     revisions_dir = resolved / "revisions"
     if revisions_dir.is_dir():
         for path in sorted(revisions_dir.rglob("*.toml")):
@@ -236,6 +240,149 @@ def load_modelo_source(source: ModeloSource) -> ModeloDefinition:
     return load_modelo_directory(source.path)
 
 
+class RegistryLocaleTranslation(BaseModel):
+    labels: dict[str, str] = Field(default_factory=dict)
+    help: dict[str, str] = Field(default_factory=dict)
+
+
+def _apply_locales(modelo_dir: Path, merged_revisions: dict[str, object]) -> None:
+    # 1. Load modelo-wide translations
+    modelo_translations: dict[str, RegistryLocaleTranslation] = {}
+    locales_dir = modelo_dir / "locales"
+    if locales_dir.is_dir():
+        for path in sorted(locales_dir.glob("*.toml")):
+            locale = path.stem
+            try:
+                raw_data = freeze_toml(read_toml(path, error_factory=RegistryLoadError))
+                modelo_translations[locale] = RegistryLocaleTranslation.model_validate(raw_data)
+            except Exception as exc:
+                raise RegistryValidationError(f"Invalid locales file {path}: {exc}") from exc
+
+    # 2. Load revision-local translations
+    revision_translations: dict[str, dict[str, RegistryLocaleTranslation]] = {}
+    revisions_dir = modelo_dir / "revisions"
+    if revisions_dir.is_dir():
+        for path in sorted(revisions_dir.iterdir()):
+            if path.is_dir():
+                revision_id = path.name
+                rev_locales_dir = path / "locales"
+                if rev_locales_dir.is_dir():
+                    for locale_path in sorted(rev_locales_dir.glob("*.toml")):
+                        locale = locale_path.stem
+                        try:
+                            raw_data = freeze_toml(read_toml(locale_path, error_factory=RegistryLoadError))
+                            trans = RegistryLocaleTranslation.model_validate(raw_data)
+                            revision_translations.setdefault(revision_id, {})[locale] = trans
+                        except Exception as exc:
+                            raise RegistryValidationError(f"Invalid locales file {locale_path}: {exc}") from exc
+
+    # 3. Collect valid casilla_ids and continuity_ids
+    valid_casilla_ids: dict[str, set[str]] = {}
+    valid_continuidad_ids: set[str] = set()
+
+    for revision_id, raw_rev in merged_revisions.items():
+        raw_rev_table = _as_toml_table(raw_rev)
+        if raw_rev_table is None:
+            continue
+        casillas_list = raw_rev_table.get("casillas", ())
+        if not isinstance(casillas_list, (list, tuple)):
+            continue
+
+        rev_casilla_ids = set()
+        for casilla in casillas_list:
+            casilla_table = _as_toml_table(casilla)
+            if casilla_table is None:
+                continue
+            c_id = casilla_table.get("id")
+            if isinstance(c_id, str):
+                rev_casilla_ids.add(c_id)
+            cont_id = casilla_table.get("continuidad_id")
+            if isinstance(cont_id, str):
+                valid_continuidad_ids.add(cont_id)
+        valid_casilla_ids[revision_id] = rev_casilla_ids
+
+    # 4. Check referential integrity
+    # Modelo-wide locales check
+    for locale, trans in modelo_translations.items():
+        for key in trans.labels:
+            if key not in valid_continuidad_ids:
+                raise RegistryValidationError(
+                    f"Invalid translation key {key!r} in labels for locale {locale!r}: "
+                    "no continuity chain found with this continuity id"
+                )
+        for key in trans.help:
+            if key not in valid_continuidad_ids:
+                raise RegistryValidationError(
+                    f"Invalid translation key {key!r} in help for locale {locale!r}: "
+                    "no continuity chain found with this continuity id"
+                )
+
+    # Revision-local locales check
+    for revision_id, locale_map in revision_translations.items():
+        rev_ids = valid_casilla_ids.get(revision_id, set())
+        for locale, trans in locale_map.items():
+            for key in trans.labels:
+                if key not in rev_ids:
+                    raise RegistryValidationError(
+                        f"Invalid translation key {key!r} in labels for locale {locale!r} "
+                        f"under revision {revision_id!r}: "
+                        "no casilla found with this id"
+                    )
+            for key in trans.help:
+                if key not in rev_ids:
+                    raise RegistryValidationError(
+                        f"Invalid translation key {key!r} in help for locale {locale!r} "
+                        f"under revision {revision_id!r}: "
+                        "no casilla found with this id"
+                    )
+
+    # 5. Inject localized_labels and localized_help into the raw casilla dictionaries
+    for revision_id, raw_rev in merged_revisions.items():
+        raw_rev_table = _as_toml_table(raw_rev)
+        if raw_rev_table is None:
+            continue
+        casillas_list = raw_rev_table.get("casillas", ())
+        if not isinstance(casillas_list, (list, tuple)):
+            continue
+
+        new_casillas = []
+        for casilla in casillas_list:
+            casilla_table = _as_toml_table(casilla)
+            if casilla_table is None:
+                new_casillas.append(casilla)
+                continue
+
+            casilla_id = casilla_table.get("id")
+            continuidad_id = casilla_table.get("continuidad_id")
+
+            localized_labels = {}
+            localized_help = {}
+
+            # Concept continuity (modelo-wide) translations
+            if isinstance(continuidad_id, str):
+                for locale, trans in modelo_translations.items():
+                    if continuidad_id in trans.labels:
+                        localized_labels[locale] = trans.labels[continuidad_id]
+                    if continuidad_id in trans.help:
+                        localized_help[locale] = trans.help[continuidad_id]
+
+            # Revision-local override translations
+            if isinstance(casilla_id, str):
+                for locale, trans in revision_translations.get(revision_id, {}).items():
+                    if casilla_id in trans.labels:
+                        localized_labels[locale] = trans.labels[casilla_id]
+                    if casilla_id in trans.help:
+                        localized_help[locale] = trans.help[casilla_id]
+
+            # Reconstruct the casilla dictionary with the injected maps
+            new_casilla = dict(casilla_table)
+            new_casilla["localized_labels"] = localized_labels
+            new_casilla["localized_help"] = localized_help
+            new_casillas.append(new_casilla)
+
+        raw_rev_table["casillas"] = tuple(new_casillas)
+
+
 @lru_cache(maxsize=64)
 def _load_modelo_directory_cached(
     directory: str,
@@ -247,6 +394,7 @@ def _load_modelo_directory_cached(
     merged_revisions = _load_modelo_revisions(resolved)
     if not merged_revisions:
         raise RegistryLoadError(f"{resolved}: no revisions found in revisions/")
+    _apply_locales(resolved, merged_revisions)
     merged: dict[str, object] = {**manifest_data, "revisions": merged_revisions}
     return _build_modelo_definition_from_data(resolved, merged)
 
@@ -312,7 +460,11 @@ def _merge_revision_directory(path: Path, merged_revisions: dict[str, object]) -
     if not revision_manifest.is_file():
         raise RegistryLoadError(f"{path}: revision fragment directory must contain revision.toml")
     fragment_paths = [revision_manifest]
-    fragment_paths.extend(sorted(p for p in path.rglob("*.toml") if p != revision_manifest))
+    fragment_paths.extend(
+        sorted(
+            p for p in path.rglob("*.toml") if p != revision_manifest and not any(part == "locales" for part in p.parts)
+        )
+    )
     merged_revision: dict[str, object] = {}
     for fragment_path in fragment_paths:
         _merge_revision_fragment(fragment_path, revision_id, merged_revision)
@@ -410,7 +562,7 @@ def _merge_singleton_table_fragment(
     if incoming_table is None:
         raise RegistryLoadError(f"{path}: revision fragment field {field_name!r} must be a table")
     if existing is None:
-        existing_table: dict[str, object] = {}
+        existing_table: dict[str, object] | None = {}
     else:
         existing_table = _as_toml_table(existing)
         if existing_table is None:
@@ -576,8 +728,8 @@ def _reject_duplicate_appended_table_ids(
     item_id: str,
     field: str,
 ) -> None:
-    existing_ids = {item_id for item in existing if (item_id := _toml_table_id(item)) is not None}
-    incoming_ids = {item_id for item in incoming if (item_id := _toml_table_id(item)) is not None}
+    existing_ids = {iid for item in existing if (iid := _toml_table_id(item)) is not None}
+    incoming_ids = {iid for item in incoming if (iid := _toml_table_id(item)) is not None}
     duplicate_ids = sorted(existing_ids.intersection(incoming_ids))
     if duplicate_ids:
         raise RegistryLoadError(
@@ -720,9 +872,16 @@ def discover_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
     sources: list[ModeloSource] = []
     seen_modelo_ids: dict[str, ModeloSource] = {}
     for path in sorted(resolved.glob("*.toml")):
-        modelo = load_modelo_file(path)
+        try:
+            raw_data = read_toml(path, error_factory=RegistryLoadError)
+            modelo_table = raw_data.get("modelo")
+            if not isinstance(modelo_table, dict) or "id" not in modelo_table:
+                raise RegistryLoadError(f"{path}: missing [modelo].id")
+            modelo_id = str(modelo_table["id"])
+        except Exception as exc:
+            raise RegistryLoadError(f"{path}: invalid modelo file: {exc}") from exc
         source = ModeloSource(
-            modelo_id=modelo.id,
+            modelo_id=modelo_id,
             layout="single_file",
             path=path.resolve(),
             manifest_path=path.resolve(),
@@ -732,12 +891,20 @@ def discover_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
         for entry in sorted(resolved.iterdir()):
             if not (entry.is_dir() and (entry / "manifest.toml").is_file()):
                 continue
-            modelo = load_modelo_directory(entry)
+            manifest_path = entry / "manifest.toml"
+            try:
+                manifest_data = read_toml(manifest_path, error_factory=RegistryLoadError)
+                modelo_table = manifest_data.get("modelo")
+                if not isinstance(modelo_table, dict) or "id" not in modelo_table:
+                    raise RegistryLoadError(f"{manifest_path}: missing [modelo].id")
+                modelo_id = str(modelo_table["id"])
+            except Exception as exc:
+                raise RegistryLoadError(f"{manifest_path}: invalid manifest: {exc}") from exc
             source = ModeloSource(
-                modelo_id=modelo.id,
+                modelo_id=modelo_id,
                 layout="directory",
                 path=entry.resolve(),
-                manifest_path=(entry / "manifest.toml").resolve(),
+                manifest_path=manifest_path.resolve(),
                 revision_sources=_discover_revision_sources(entry / "revisions"),
             )
             _append_modelo_source(source, sources, seen_modelo_ids)
@@ -775,28 +942,40 @@ def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSourc
                 ModeloRevisionSource(
                     revision_id=revision_id,
                     layout="revision_file",
-                    path=path.resolve(),
-                    fragment_paths=(path.resolve(),),
+                    path=path,
+                    fragment_paths=(path,),
                 )
             )
     for path in sorted(revisions_dir.iterdir()):
         if not path.is_dir():
             continue
         revision_manifest = path / "revision.toml"
-        fragment_paths = (revision_manifest.resolve(),) if revision_manifest.is_file() else ()
+        fragment_paths = (revision_manifest,) if revision_manifest.is_file() else ()
         fragment_paths = (
             *fragment_paths,
-            *tuple(p.resolve() for p in sorted(path.rglob("*.toml")) if p != revision_manifest),
+            *tuple(
+                p
+                for p in sorted(path.rglob("*.toml"))
+                if p != revision_manifest and not any(part == "locales" for part in p.parts)
+            ),
         )
         sources.append(
             ModeloRevisionSource(
                 revision_id=path.name,
                 layout="fragment_directory",
-                path=path.resolve(),
+                path=path,
                 fragment_paths=fragment_paths,
             )
         )
     return tuple(sources)
+
+
+_registry_fingerprint_cache: dict[Path, tuple[float, tuple[tuple[str, int, int], ...]]] = {}
+
+
+def clear_fingerprint_cache() -> None:
+    """Clear the 1-second TTL fingerprint cache."""
+    _registry_fingerprint_cache.clear()
 
 
 def _collect_registry_tree_fingerprints(resolved: Path) -> tuple[tuple[str, int, int], ...]:
@@ -814,6 +993,14 @@ def _collect_registry_tree_fingerprints(resolved: Path) -> tuple[tuple[str, int,
     authorization. The cache key invalidates the moment any of those files
     changes shape on disk.
     """
+    import time
+
+    now = time.time()
+    if resolved in _registry_fingerprint_cache:
+        cached_time, cached_val = _registry_fingerprint_cache[resolved]
+        if now - cached_time < 1.0:
+            return cached_val
+
     legal_dir = resolved / "legal"
     modelos_dir = resolved / "modelos"
     fingerprints: list[tuple[str, int, int]] = []
@@ -828,7 +1015,12 @@ def _collect_registry_tree_fingerprints(resolved: Path) -> tuple[tuple[str, int,
     if modelos_dir.is_dir():
         for entry in sorted(modelos_dir.iterdir()):
             fingerprints.extend(_modelo_directory_fingerprints(entry))
-    return tuple(fingerprints)
+    schema_path = resolved / "user_profile" / "schema.toml"
+    if schema_path.is_file():
+        fingerprints.append(_toml_fingerprint(schema_path))
+    res = tuple(fingerprints)
+    _registry_fingerprint_cache[resolved] = (now, res)
+    return res
 
 
 def _modelo_directory_fingerprints(entry: Path) -> tuple[tuple[str, int, int], ...]:
@@ -836,6 +1028,10 @@ def _modelo_directory_fingerprints(entry: Path) -> tuple[tuple[str, int, int], .
     if not (entry.is_dir() and (entry / "manifest.toml").is_file()):
         return ()
     fingerprints: list[tuple[str, int, int]] = [_toml_fingerprint(entry / "manifest.toml")]
+    locales_dir = entry / "locales"
+    if locales_dir.is_dir():
+        for path in sorted(locales_dir.glob("*.toml")):
+            fingerprints.append(_toml_fingerprint(path))
     revisions_dir = entry / "revisions"
     if revisions_dir.is_dir():
         for rev_path in sorted(revisions_dir.rglob("*.toml")):
@@ -848,11 +1044,41 @@ def _load_registry_tree_cached(
     root: str,
     fingerprints: tuple[tuple[str, int, int], ...],
 ) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    del fingerprints
+    import contextlib
+    import hashlib
+    import os
+    import pickle
+    import tempfile
+
+    hasher = hashlib.sha256()
+    hasher.update(root.encode("utf-8"))
+    for item in fingerprints:
+        hasher.update(item[0].encode("utf-8"))
+        hasher.update(str(item[1]).encode("utf-8"))
+        hasher.update(str(item[2]).encode("utf-8"))
+    key_hash = hasher.hexdigest()
+
+    cache_path = Path(tempfile.gettempdir()) / f"aeat_registry_{key_hash}.pkl"
+    if cache_path.is_file():
+        with contextlib.suppress(Exception), open(cache_path, "rb") as f:
+            return pickle.load(f)  # noqa: S301
+
     resolved = Path(root)
     catalogues = _load_shared_catalogue_files(resolved / "legal")
     modelos = _load_all_modelo_definitions(resolved / "modelos")
-    return modelos, catalogues
+    result = (modelos, catalogues)
+
+    temp_name = None
+    try:
+        with tempfile.NamedTemporaryFile("wb", dir=cache_path.parent, delete=False) as tf:
+            pickle.dump(result, tf, protocol=pickle.HIGHEST_PROTOCOL)
+            temp_name = tf.name
+        os.replace(temp_name, cache_path)
+    except Exception:
+        if temp_name is not None:
+            with contextlib.suppress(Exception):
+                os.unlink(temp_name)
+    return result
 
 
 def _load_shared_catalogue_files(legal_dir: Path) -> RegistryCatalogues:
@@ -888,6 +1114,5 @@ def _load_all_modelo_definitions(modelos_dir: Path) -> tuple[ModeloDefinition, .
 
 
 def _toml_fingerprint(path: Path) -> tuple[str, int, int]:
-    resolved = path.resolve()
-    stat = resolved.stat()
-    return str(resolved), stat.st_size, stat.st_mtime_ns
+    stat = path.stat()
+    return str(path), stat.st_size, stat.st_mtime_ns

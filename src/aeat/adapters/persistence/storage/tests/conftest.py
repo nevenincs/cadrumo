@@ -1,5 +1,3 @@
-"""Pytest fixtures for split adapter tests."""
+"""Pytest fixtures for storage persistence adapter tests."""
 
-pytest_plugins = (
-    'aeat.adapters.persistence.storage.tests._runtime_migrated_repositories_support',
-)
+from ._runtime_migrated_repositories_support import _isolated_storage  # noqa: F401

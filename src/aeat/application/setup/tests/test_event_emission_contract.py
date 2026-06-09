@@ -55,9 +55,7 @@ _REQUIRED_EMISSION_SITES: tuple[tuple[BucketEventType, Path, str], ...] = (
     _REQUIRED_EMISSION_SITES,
     ids=[event.value for event, _, _ in _REQUIRED_EMISSION_SITES],
 )
-def test_required_setup_event_has_emission_site(
-    event_type: BucketEventType, module_path: Path, needle: str
-) -> None:
+def test_required_setup_event_has_emission_site(event_type: BucketEventType, module_path: Path, needle: str) -> None:
     """Each required setup event must appear in its declared production module."""
     text = module_path.read_text(encoding="utf-8")
     assert needle in text, (

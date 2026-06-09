@@ -1,4 +1,7 @@
-"""Persist filed AEAT observations into calculation-history repositories."""
+"""Persist filed AEAT observations into calculation-history repositories.
+
+Use of :class:`CasillaObservation` for compliance.
+"""
 
 from __future__ import annotations
 

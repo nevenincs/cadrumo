@@ -83,6 +83,7 @@ exclude_patterns = [
     ".DS_Store",
     "**/test_*.py",
     "**/_test_*.py",
+    "USERDOCS-KICKOFF-BRIEF.md",
 ]
 
 _DOCS_ROOT = Path(__file__).resolve().parent
@@ -426,7 +427,7 @@ nitpick_ignore_regex = [
     # real CamelCase class.
     (
         r"py:.*",
-        r"^(T|K|V|KT|VT|RT|_T|T_co|T_contra|TPayload|PayloadT|PayloadT_co|ResultT|RecordT|PayloadType|CheckerObservation)$",
+        r"^(T|K|V|KT|VT|RT|_T|T_co|T_contra|TPayload|PayloadT|PayloadT_co|ResultT|RecordT|PayloadType|CheckerObservation|ObservationT)$",
     ),
     # SQLAlchemy column/type vocabulary referenced from the encrypted-column
     # adapters; resolved online via the vendored sqlalchemy inventory under its
@@ -791,7 +792,7 @@ def setup(app):
         """
         if not _should_generate_cli_reference():
             return
-        from docs.tools.cli_reference import generate_cli_reference
+        from dev.docs.cli_reference import generate_cli_reference
 
         generate_cli_reference(Path(__file__).resolve().parent)
 

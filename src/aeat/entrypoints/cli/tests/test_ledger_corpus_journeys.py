@@ -48,9 +48,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         profile_create_storage_span("default"),
     ):
         try:
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id="default")
-            )
+            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
             yield
         finally:
             dispose_engine()
@@ -71,9 +69,7 @@ def _match(description: str, rules: list[dict]) -> dict | None:
 def _import_corpus() -> int:
     total = 0
     for name in _FILES:
-        result = _RUNNER.invoke(
-            app, ["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"]
-        )
+        result = _RUNNER.invoke(app, ["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"])
         assert result.exit_code == 0, f"{name}: {result.output}"
         total += 1
     return total
@@ -98,7 +94,7 @@ def _find(rows: list[dict], needle: str) -> dict:
     return next(r for r in rows if needle in r["description"])
 
 
-# --- P04: import + dedup + multicurrency ------------------------------------
+# --- Journey 1: import, dedup, and multicurrency ----------------------------
 def test_import_full_corpus_persists_operating_scale() -> None:
     _import_corpus()
     rows = _list_rows()
@@ -134,7 +130,7 @@ def test_import_preserves_foreign_currencies() -> None:
     assert {"EUR", "GBP", "USD"} <= currencies, currencies
 
 
-# --- P05: classification (single + bulk) + allocate + ratios ----------------
+# --- Journey 2: classification (single and bulk), allocate, and ratios -------
 def test_bulk_classify_from_oracle_resolved_at_runtime() -> None:
     _import_corpus()
     rules = _oracle_rules()
@@ -165,9 +161,7 @@ def test_bulk_classify_from_oracle_resolved_at_runtime() -> None:
         fh.write("\n".join(lines) + "\n")
         classify_csv = fh.name
 
-    result = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "classify", "--from-csv", classify_csv]
-    )
+    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "classify", "--from-csv", classify_csv])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     assert payload["applied"] == 12, payload
@@ -186,16 +180,23 @@ def test_single_classify_intracommunity_with_eu_state() -> None:
     result = _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "classify", "--id", tx,
-            "--classification", "BUSINESS",
-            "--iva-category", "intra_community_supply",
-            "--counterparty-eu-member-state", "de",
+            "app",
+            "ledger",
+            "classify",
+            "--id",
+            tx,
+            "--classification",
+            "BUSINESS",
+            "--iva-category",
+            "intra_community_supply",
+            "--counterparty-eu-member-state",
+            "de",
         ],
     )
     assert result.exit_code == 0, result.output
 
 
-# --- P06: filter / review / search ------------------------------------------
+# --- Journey 3: filter, review, and search ----------------------------------
 def test_review_renders_corpus() -> None:
     _import_corpus()
     result = _RUNNER.invoke(app, ["app", "ledger", "review"])
@@ -217,15 +218,12 @@ def test_operator_can_filter_income_vs_expense() -> None:
     transfer_candidates = [
         r
         for r in rows
-        if any(
-            token in r["description"]
-            for token in ("Transferencia", "Traspaso", "Top-Up", "Exchange")
-        )
+        if any(token in r["description"] for token in ("Transferencia", "Traspaso", "Top-Up", "Exchange"))
     ]
     assert transfer_candidates, "corpus must carry transfer candidates to reclassify"
 
 
-# --- P07: lifecycle ---------------------------------------------------------
+# --- Journey 4: lifecycle ---------------------------------------------------
 def test_split_then_merge_roundtrip() -> None:
     _import_corpus()
     rows = _list_rows()
@@ -237,10 +235,22 @@ def test_split_then_merge_roundtrip() -> None:
     split = _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "split", "--id", tx,
-            "--child-amount", f"-{half}", "--child-description", "Subcontratacion parte A",
-            "--child-amount", f"-{other}", "--child-description", "Subcontratacion parte B",
-            "--reason", "split for project allocation", "--yes",
+            "app",
+            "ledger",
+            "split",
+            "--id",
+            tx,
+            "--child-amount",
+            f"-{half}",
+            "--child-description",
+            "Subcontratacion parte A",
+            "--child-amount",
+            f"-{other}",
+            "--child-description",
+            "Subcontratacion parte B",
+            "--reason",
+            "split for project allocation",
+            "--yes",
         ],
     )
     assert split.exit_code == 0, split.output
@@ -251,24 +261,20 @@ def test_archive_then_history() -> None:
     rows = _list_rows()
     personal = next(r for r in rows if "Suscripcion Netflix" in r["description"])
     tx = personal["transaction_id"]
-    archived = _RUNNER.invoke(
-        app, ["app", "ledger", "archive", "--id", tx, "--reason", "personal", "--yes"]
-    )
+    archived = _RUNNER.invoke(app, ["app", "ledger", "archive", "--id", tx, "--reason", "personal", "--yes"])
     assert archived.exit_code == 0, archived.output
     history = _RUNNER.invoke(app, ["app", "ledger", "history", tx])
     assert history.exit_code == 0, history.output
 
 
-# --- P08: export fidelity + preflight/status --------------------------------
+# --- Journey 5: export fidelity, preflight, and status ----------------------
 @pytest.mark.parametrize("fmt", ["csv", "jsonl"])
 def test_export_each_format(tmp_path: Path, fmt: str) -> None:
     # The ledger export surface emits canonical CSV and JSONL (one JSON object
     # per row); there is no xlsx export verb on this surface.
     _import_corpus()
     out = tmp_path / f"ledger-export.{fmt}"
-    result = _RUNNER.invoke(
-        app, ["app", "ledger", "export", "--output", str(out), "--export-format", fmt]
-    )
+    result = _RUNNER.invoke(app, ["app", "ledger", "export", "--output", str(out), "--export-format", fmt])
     assert result.exit_code == 0, result.output
     assert out.exists() and out.stat().st_size > 0
 
@@ -278,14 +284,10 @@ def test_export_csv_roundtrips_back_through_import(tmp_path: Path) -> None:
     _import_corpus()
     before = len(_list_rows())
     out = tmp_path / "ledger-export.csv"
-    exported = _RUNNER.invoke(
-        app, ["app", "ledger", "export", "--output", str(out), "--export-format", "csv"]
-    )
+    exported = _RUNNER.invoke(app, ["app", "ledger", "export", "--output", str(out), "--export-format", "csv"])
     assert exported.exit_code == 0, exported.output
     # Re-importing the canonical export must dedup to zero new rows.
-    reimported = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "import", str(out), "--provider", "csv"]
-    )
+    reimported = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "import", str(out), "--provider", "csv"])
     # The canonical export may or may not be recognised by a bank layout; either
     # it dedups (0 imported) or the layout is unrecognised -- both leave the
     # active row count unchanged, which is the fidelity invariant we assert.
@@ -298,15 +300,22 @@ def test_status_reports_active_ledger() -> None:
     assert result.exit_code == 0, result.output
 
 
-# --- P05: allocate + ratios -------------------------------------------------
+# --- Journey 6: allocate and ratios -----------------------------------------
 def test_allocate_records_business_proportion() -> None:
     _import_bbva()
     internet = _find(_list_rows(), "Factura internet fibra oficina enero")
     result = _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "allocate", "--id", internet["transaction_id"],
-            "--business-pct", "0.30", "--category-id", "suministros_home_office_internet",
+            "app",
+            "ledger",
+            "allocate",
+            "--id",
+            internet["transaction_id"],
+            "--business-pct",
+            "0.30",
+            "--category-id",
+            "suministros_home_office_internet",
         ],
     )
     assert result.exit_code == 0, result.output
@@ -326,7 +335,7 @@ def test_ratios_eligible_set_list_validate() -> None:
     assert validate.exit_code == 0, validate.output
 
 
-# --- P06: filter / search via review typed spec -----------------------------
+# --- Journey 7: filter and search via review typed spec ---------------------
 def test_review_filter_by_period_and_status() -> None:
     _import_bbva()
     by_period = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=2025Q1"])
@@ -335,7 +344,7 @@ def test_review_filter_by_period_and_status() -> None:
     assert by_status.exit_code == 0, by_status.output
 
 
-# --- P07: merge + stash/remove/track ----------------------------------------
+# --- Journey 8: merge, stash, remove, and track -----------------------------
 def test_split_children_then_merge() -> None:
     _import_bbva()
     parent = _find(_list_rows(), "Subcontratacion desarrollo freelance Juan")
@@ -345,10 +354,22 @@ def test_split_children_then_merge() -> None:
     split = _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "split", "--id", parent["transaction_id"],
-            "--child-amount", f"-{half}", "--child-description", "Subcontratacion parte A",
-            "--child-amount", f"-{other}", "--child-description", "Subcontratacion parte B",
-            "--reason", "project allocation", "--yes",
+            "app",
+            "ledger",
+            "split",
+            "--id",
+            parent["transaction_id"],
+            "--child-amount",
+            f"-{half}",
+            "--child-description",
+            "Subcontratacion parte A",
+            "--child-amount",
+            f"-{other}",
+            "--child-description",
+            "Subcontratacion parte B",
+            "--reason",
+            "project allocation",
+            "--yes",
         ],
     )
     assert split.exit_code == 0, split.output
@@ -363,9 +384,7 @@ def test_split_children_then_merge() -> None:
     # discriminator rather than filtering the parent out).
     assert child_a_row["lifecycle_state"] == "ACTIVE"
     assert child_b_row["lifecycle_state"] == "ACTIVE"
-    parent_after_split = next(
-        (r for r in rows if r["transaction_id"] == parent["transaction_id"]), None
-    )
+    parent_after_split = next((r for r in rows if r["transaction_id"] == parent["transaction_id"]), None)
     assert parent_after_split is not None, "the SPLIT parent is retained for audit lineage"
     assert parent_after_split["lifecycle_state"] == "SPLIT", (
         "the parent transitions ACTIVE -> SPLIT once its children carry the balance"
@@ -374,9 +393,16 @@ def test_split_children_then_merge() -> None:
     merged = _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "merge",
-            "--child-id", child_a, "--child-id", child_b,
-            "--reason", "re-merge after review", "--yes",
+            "app",
+            "ledger",
+            "merge",
+            "--child-id",
+            child_a,
+            "--child-id",
+            child_b,
+            "--reason",
+            "re-merge after review",
+            "--yes",
         ],
     )
     assert merged.exit_code == 0, merged.output
@@ -388,12 +414,8 @@ def test_split_children_then_merge() -> None:
     # re-carrying the rejoined balance.
     rows_after_merge = _list_rows()
     by_id = {r["transaction_id"]: r for r in rows_after_merge}
-    assert by_id.get(child_a, {}).get("lifecycle_state") == "ARCHIVED", (
-        "merged child A must transition to ARCHIVED"
-    )
-    assert by_id.get(child_b, {}).get("lifecycle_state") == "ARCHIVED", (
-        "merged child B must transition to ARCHIVED"
-    )
+    assert by_id.get(child_a, {}).get("lifecycle_state") == "ARCHIVED", "merged child A must transition to ARCHIVED"
+    assert by_id.get(child_b, {}).get("lifecycle_state") == "ARCHIVED", "merged child B must transition to ARCHIVED"
     assert by_id.get(parent["transaction_id"], {}).get("lifecycle_state") == "ARCHIVED", (
         "the original SPLIT parent transitions to ARCHIVED on merge, never back to ACTIVE"
     )
@@ -425,9 +447,7 @@ def test_stash_remove_and_track() -> None:
     assert stashed.exit_code == 0, stashed.output
     # Post-stash post-state: the row remains listed but transitions to STASHED
     # (parked pending review — reversible, not removed from the catalogue).
-    stashed_row = next(
-        (r for r in _list_rows() if r["transaction_id"] == stash_row["transaction_id"]), None
-    )
+    stashed_row = next((r for r in _list_rows() if r["transaction_id"] == stash_row["transaction_id"]), None)
     assert stashed_row is not None, "a stashed row stays in the catalogue (reversible state)"
     assert stashed_row["lifecycle_state"] == "STASHED"
 
@@ -441,9 +461,7 @@ def test_stash_remove_and_track() -> None:
     tracked = _RUNNER.invoke(app, ["app", "ledger", "track", stash_row["transaction_id"]])
     assert tracked.exit_code == 0, tracked.output
     assert "STASHED" in tracked.output, "track must report the row's STASHED lifecycle state"
-    after_track = next(
-        (r for r in _list_rows() if r["transaction_id"] == stash_row["transaction_id"]), None
-    )
+    after_track = next((r for r in _list_rows() if r["transaction_id"] == stash_row["transaction_id"]), None)
     assert after_track is not None, "track is read-only; the row stays in the catalogue"
     assert after_track["lifecycle_state"] == "STASHED", (
         "track is a read-only lineage view and must not change lifecycle state"
@@ -456,12 +474,12 @@ def test_stash_remove_and_track() -> None:
     )
     assert removed.exit_code == 0, removed.output
     # Post-remove: the removed row is absent from the default list.
-    assert remove_row["transaction_id"] not in {
-        r["transaction_id"] for r in _list_rows()
-    }, "a removed row must be absent from the default list"
+    assert remove_row["transaction_id"] not in {r["transaction_id"] for r in _list_rows()}, (
+        "a removed row must be absent from the default list"
+    )
 
 
-# --- P08: preflight + check gates -------------------------------------------
+# --- Journey 9: preflight and check gates ------------------------------------
 def test_preflight_and_check_surface_missing_facts() -> None:
     _import_bbva()
     preflight = _RUNNER.invoke(app, ["app", "ledger", "preflight", "--period", "2025Q1"])
@@ -563,9 +581,7 @@ def test_unrelated_update_preserves_group_label() -> None:
     row = _find(rows, "Material oficina Papeleria Gomez")
     _set_group(row["transaction_id"], "Q1 viajes")
     # An edit to an unrelated field must NOT wipe the operator's grouping.
-    res = _RUNNER.invoke(
-        app, ["app", "ledger", "update", "--id", row["transaction_id"], "--notes", "revisado"]
-    )
+    res = _RUNNER.invoke(app, ["app", "ledger", "update", "--id", row["transaction_id"], "--notes", "revisado"])
     assert res.exit_code == 0, res.output
     after = {r["transaction_id"]: r for r in _list_rows()}[row["transaction_id"]]
     assert after["group_label"] == "Q1 viajes"
@@ -656,17 +672,13 @@ def test_transfer_row_reclassified_to_internal_transfer_and_locked_out_of_tax() 
     assert transfer["direction"] == "OUTGOING"
     assert transfer["business_classification"] == "NOT_YET_PROCESSED"
 
-    reclass = _RUNNER.invoke(
-        app, ["app", "ledger", "update", "--id", tx, "--direction", "INTERNAL_TRANSFER"]
-    )
+    reclass = _RUNNER.invoke(app, ["app", "ledger", "update", "--id", tx, "--direction", "INTERNAL_TRANSFER"])
     assert reclass.exit_code == 0, reclass.output
     after = {r["transaction_id"]: r for r in _list_rows()}[tx]
     assert after["direction"] == "INTERNAL_TRANSFER"
 
     # A transfer must not be promotable to a tax-relevant BUSINESS row.
-    refused = _RUNNER.invoke(
-        app, ["app", "ledger", "update", "--id", tx, "--classification", "BUSINESS"]
-    )
+    refused = _RUNNER.invoke(app, ["app", "ledger", "update", "--id", tx, "--classification", "BUSINESS"])
     assert refused.exit_code != 0, refused.output
     assert after["business_classification"] != "BUSINESS"
 
@@ -890,10 +902,22 @@ def test_split_mixed_invoice_into_business_and_personal_children() -> None:
     split = _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "split", "--id", parent_id,
-            "--child-amount", str(biz), "--child-description", "Material oficina (negocio)",
-            "--child-amount", str(personal), "--child-description", "Material oficina (personal)",
-            "--reason", "uso mixto", "--yes",
+            "app",
+            "ledger",
+            "split",
+            "--id",
+            parent_id,
+            "--child-amount",
+            str(biz),
+            "--child-description",
+            "Material oficina (negocio)",
+            "--child-amount",
+            str(personal),
+            "--child-description",
+            "Material oficina (personal)",
+            "--reason",
+            "uso mixto",
+            "--yes",
         ],
     )
     assert split.exit_code == 0, split.output
@@ -901,9 +925,7 @@ def test_split_mixed_invoice_into_business_and_personal_children() -> None:
     catalogue = _active_repo().load()
     # Locate the two children by their split descriptions.
     children = [
-        t
-        for t in catalogue.values()
-        if t.split_lineage is not None and "Material oficina (" in t.raw.description
+        t for t in catalogue.values() if t.split_lineage is not None and "Material oficina (" in t.raw.description
     ]
     assert len(children) == 2, [t.raw.description for t in children]
     biz_child = next(t for t in children if "negocio" in t.raw.description)
@@ -913,8 +935,15 @@ def test_split_mixed_invoice_into_business_and_personal_children() -> None:
     cls_biz = _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "classify", "--id", biz_child.transaction_id,
-            "--classification", "BUSINESS", "--category-id", "material_oficina",
+            "app",
+            "ledger",
+            "classify",
+            "--id",
+            biz_child.transaction_id,
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            "material_oficina",
         ],
     )
     assert cls_biz.exit_code == 0, cls_biz.output

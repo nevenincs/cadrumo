@@ -96,6 +96,8 @@ from ._runtime_migrated_repositories_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
 @pytest.mark.parametrize(
     ("case_name", "operation"),
     (
@@ -166,6 +168,7 @@ def test_migrated_runtime_defaults_refuse_missing_session(
         pytest.raises(StorageValidationError, match="no active bucket session"),
     ):
         operation()
+
 
 @pytest.mark.parametrize(
     ("case_name", "operation"),
@@ -239,6 +242,7 @@ def test_migrated_runtime_defaults_refuse_route_session_mismatch(
     ):
         operation()
 
+
 def test_diagnostics_secure_object_total_degrades_on_missing_session(
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
@@ -250,6 +254,7 @@ def test_diagnostics_secure_object_total_degrades_on_missing_session(
 
     assert "secure objects engine unreachable for repair probe" in caplog.text
     assert "no active bucket session" in caplog.text
+
 
 def test_diagnostics_secure_object_total_degrades_on_route_session_mismatch(
     tmp_path: Path,
@@ -266,6 +271,7 @@ def test_diagnostics_secure_object_total_degrades_on_route_session_mismatch(
     assert "secure objects engine unreachable for repair probe" in caplog.text
     assert "route does not match the active bucket session" in caplog.text
 
+
 def test_workflow_state_default_isolates_active_profile_writes(tmp_path: Path) -> None:
     with _active_runtime(tmp_path, "bucket-a"):
         WorkflowStateRepository().save(_workflow_state("bucket-a"))
@@ -280,6 +286,7 @@ def test_workflow_state_default_isolates_active_profile_writes(tmp_path: Path) -
 
     assert "303:bucket-a" in loaded.declarations
     assert "303:bucket-b" not in loaded.declarations
+
 
 def test_auth_session_store_default_isolates_active_profile_writes(tmp_path: Path) -> None:
     logical_path = Path("/profile/active/aeat-session")
@@ -310,6 +317,7 @@ def test_auth_session_store_default_isolates_active_profile_writes(tmp_path: Pat
     assert isinstance(first_cookie, dict)
     assert first_cookie["value"] == "bucket-a"
 
+
 def test_transaction_repository_default_isolates_bucket_writes(tmp_path: Path) -> None:
     with _active_runtime(tmp_path, "bucket-a"):
         repo = TransactionCatalogueRepository(bucket_id="bucket-a")
@@ -327,6 +335,7 @@ def test_transaction_repository_default_isolates_bucket_writes(tmp_path: Path) -
     transaction = next(iter(loaded.transactions.values()))
     assert transaction.raw.description == "runtime migrated repository bucket-a"
 
+
 def test_attachment_store_default_isolates_active_profile_writes(tmp_path: Path) -> None:
     with _active_runtime(tmp_path, "bucket-a"):
         digest_a = AttachmentStore().put_bytes(b"bucket-a attachment payload")
@@ -342,6 +351,7 @@ def test_attachment_store_default_isolates_active_profile_writes(tmp_path: Path)
         with pytest.raises(AttachmentNotFoundError):
             AttachmentStore().read_bytes(digest_b)
 
+
 def test_profile_asset_defaults_isolate_active_profile_writes(tmp_path: Path) -> None:
     with _active_runtime(tmp_path, "bucket-a"):
         save_assets((_asset("asset-a"),))
@@ -354,6 +364,7 @@ def test_profile_asset_defaults_isolate_active_profile_writes(tmp_path: Path) ->
         loaded = load_assets()
 
     assert tuple(asset.identifier for asset in loaded) == ("asset-a",)
+
 
 def test_event_and_workflow_run_defaults_isolate_active_profile_writes(tmp_path: Path) -> None:
     event_a = _bucket_event("bucket-a")
@@ -375,6 +386,7 @@ def test_event_and_workflow_run_defaults_isolate_active_profile_writes(tmp_path:
 
     assert tuple(events) == (event_a.event_id,)
     assert [run.summary for run in runs] == ["runtime migrated workflow run bucket-a"]
+
 
 def test_domain_repository_defaults_isolate_active_profile_writes(tmp_path: Path) -> None:
     draft_a = _modelo_draft("bucket-a")
@@ -422,6 +434,7 @@ def test_domain_repository_defaults_isolate_active_profile_writes(tmp_path: Path
     assert submissions == (submission_a.submission_id,)
     assert csvs == (justificante_a.csv,)
 
+
 def test_modelo_catalogue_defaults_isolate_bucket_writes(tmp_path: Path) -> None:
     work_a = _work_unit("bucket-a", "bucket-a")
     work_b = _work_unit("bucket-b", "bucket-b")
@@ -462,6 +475,7 @@ def test_modelo_catalogue_defaults_isolate_bucket_writes(tmp_path: Path) -> None
     assert tuple(calc_loaded) == tuple(calc_a.revisions)
     assert tuple(filing_loaded) == tuple(filing_a.records)
     assert tuple(verification_loaded) == tuple(verification_a.reports)
+
 
 def test_application_repository_defaults_isolate_active_profile_writes(tmp_path: Path) -> None:
     observation_a = RegistryModeloObservation(modelo="303", filing_year=2026, period="1T")
@@ -516,7 +530,8 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
     assert tuple(state.period for state in iva_periods) == ("1TA",)
     assert usage == usage_a
 
-def test_s85_runtime_default_surfaces_isolate_active_profile_writes(tmp_path: Path) -> None:
+
+def test_runtime_default_surfaces_isolate_active_profile_writes(tmp_path: Path) -> None:
     with _active_runtime(tmp_path, "bucket-a"):
         Borrador100SnapshotRepository(bucket_id="bucket-a").save(_borrador_snapshot("bucket-a", "bucket-a"))
         RepairRemediationDecisionRepository().save_decision(_repair_decision("bucket-a"))
@@ -544,6 +559,7 @@ def test_s85_runtime_default_surfaces_isolate_active_profile_writes(tmp_path: Pa
     assert auth_report.row_count == 1
     assert tuple(row.diagnostic_id for row in auth_report.rows) == ("diagnostic-bucket-a",)
     assert LLM_USAGE_NAMESPACE.namespace in tuple(item.namespace for item in diagnostic_report.namespaces)
+
 
 def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Path) -> None:
     profile = "operator-google"

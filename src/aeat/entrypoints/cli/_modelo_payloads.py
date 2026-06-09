@@ -751,6 +751,8 @@ class CasillaRowPayload(OutputSchema):
     input_kind: str
     required: bool
     label: str
+    localized_labels: dict[str, str] = Field(default_factory=dict)
+    localized_help: dict[str, str] = Field(default_factory=dict)
 
 
 @register_schema("modelo.casillas")

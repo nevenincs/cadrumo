@@ -18,6 +18,7 @@ def _fmt_spanish(d: Decimal) -> str:
     # Python locale-independent: '5,000.00' â†’ '5.000,00'
     return s.replace(",", "X").replace(".", ",").replace("X", ".")
 
+
 @dataclass(frozen=True)
 class _Modelo303CorpusFixture:
     """Synthetic M303 corpus fixture with formula-consistent casilla values.
@@ -92,6 +93,7 @@ class _Modelo303CorpusFixture:
     csv: str = ""
     presented_at: str = "2024-01-01 10:00:00"
 
+
 def _compute_m303_closure(c27: Decimal, c45: Decimal) -> tuple[Decimal, Decimal, Decimal, Decimal, Decimal]:
     """Compute M303 closure casillas from leaf inputs c27 (devengada) and c45 (deducible).
 
@@ -118,6 +120,7 @@ def _compute_m303_closure(c27: Decimal, c45: Decimal) -> tuple[Decimal, Decimal,
     # No prior filings (c70=0), no returns (c109=0): c71 = c69
     c71 = c69.quantize(Decimal("0.01"))
     return c46, c64, c66, c69, c71
+
 
 def _compute_m303_primitives(c27: Decimal, c29: Decimal) -> dict[str, Decimal]:
     """Compute single-rate M303 primitives whose engine-summed totals equal c27/c29.
@@ -152,6 +155,7 @@ def _compute_m303_primitives(c27: Decimal, c29: Decimal) -> dict[str, Decimal]:
         "soportado_interiores": c29,
         "autoconsumo_promotor_base": zero,
     }
+
 
 _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
     # --- 2009-y-siguientes (legacy) revision: 2021-2T through 2022-4T ---
@@ -398,6 +402,7 @@ _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
     ),
 )
 
+
 def _draw_modelo_303_corpus(c: canvas.Canvas, fixture: _Modelo303CorpusFixture) -> None:
     """Render a synthetic M303 corpus fixture page onto ``c``.
 
@@ -629,6 +634,7 @@ def _draw_modelo_303_corpus(c: canvas.Canvas, fixture: _Modelo303CorpusFixture) 
         _SEDE_ORIGIN,
     )
 
+
 @dataclass(frozen=True)
 class _Modelo130CorpusFixture:
     """Synthetic M130 corpus fixture with formula-consistent casilla values.
@@ -668,6 +674,7 @@ class _Modelo130CorpusFixture:
     csv: str = ""
     presented_at: str = "2024-01-01 10:00:00"
 
+
 def _compute_m130_closure(c03: Decimal) -> Decimal:
     """Compute M130 closure casilla 19 from rendimiento neto c03.
 
@@ -704,6 +711,7 @@ def _compute_m130_closure(c03: Decimal) -> Decimal:
     # c19 = c17 - 0
     c19 = c17.quantize(Decimal("0.01"))
     return c19
+
 
 _MODELO_130_CORPUS_FIXTURES: tuple[_Modelo130CorpusFixture, ...] = (
     _Modelo130CorpusFixture(
@@ -834,6 +842,7 @@ _M130_VAL_X = 535.0  # x-position for value text (right of box number)
 
 _M130_ROW_STEP = 14.0  # vertical spacing between casilla rows (points)
 
+
 def _draw_modelo_130_corpus(c: canvas.Canvas, fixture: _Modelo130CorpusFixture) -> None:
     """Render a synthetic M130 corpus fixture page onto ``c``.
 
@@ -913,6 +922,7 @@ def _draw_modelo_130_corpus(c: canvas.Canvas, fixture: _Modelo130CorpusFixture) 
         _SEDE_ORIGIN,
     )
 
+
 @dataclass(frozen=True)
 class _Modelo390CorpusFixture:
     """Synthetic M390 corpus fixture with formula-consistent casilla values.
@@ -961,6 +971,7 @@ class _Modelo390CorpusFixture:
     csv: str = ""
     presented_at: str = "2024-01-01 10:00:00"
 
+
 def _compute_m390_closure(
     c06: Decimal,
     c04: Decimal,
@@ -985,6 +996,7 @@ def _compute_m390_closure(
     c64 = (c49 + c26).quantize(Decimal("0.01"))
     c65 = (c47 - c64).quantize(Decimal("0.01"))
     return c47, c64, c65
+
 
 def _m390_fixture(
     filename: str,
@@ -1014,6 +1026,7 @@ def _m390_fixture(
         c65=c65,
     )
 
+
 _MODELO_390_CORPUS_FIXTURES: tuple[_Modelo390CorpusFixture, ...] = (
     _m390_fixture("390/2022-0A.pdf", "2022", "Y0000001S", Decimal("10500.00"), Decimal("8400.00")),
     _m390_fixture("390/2023-0A.pdf", "2023", "Y0000001S", Decimal("12600.00"), Decimal("9800.00")),
@@ -1024,6 +1037,7 @@ _M390_BOX_X = 414.0  # x-position for box number text (within anchor 407-425)
 _M390_VAL_X = 480.0  # x-position for value text (right of box number)
 
 _M390_ROW_STEP = 14.0  # vertical spacing between casilla rows (points)
+
 
 def _draw_modelo_390_corpus(c: canvas.Canvas, fixture: _Modelo390CorpusFixture) -> None:
     """Render a synthetic M390 corpus fixture page onto ``c``.

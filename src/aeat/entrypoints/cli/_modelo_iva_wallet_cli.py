@@ -226,4 +226,5 @@ def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_buc
         ]
         _emit_envelope(ctx, command="modelo.iva_wallet.seed", result=seed_result, lines=lines)
 
+
 __all__ = ["register_iva_wallet_commands"]

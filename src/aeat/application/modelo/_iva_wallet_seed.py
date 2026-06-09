@@ -1,4 +1,7 @@
-"""Application facade for Modelo IVA wallet seed operations."""
+"""Application facade for Modelo IVA wallet seed operations.
+
+This module uses :class:`IvaCompensationPeriodState` for seeding the IVA compensation history.
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,8 @@
-"""Live AEAT session acquisition helpers."""
+"""Live AEAT session acquisition helpers.
+
+This module uses :class:`AeatSession` and :class:`Settings` to acquire
+authenticated sessions for live AEAT operations.
+"""
 
 from __future__ import annotations
 

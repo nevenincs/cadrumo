@@ -27,9 +27,7 @@ from ._schema import DataBindingDefinition, ModeloRevision
 # (transaction-classified IVA aggregation or Renta first-slice expense
 # aggregation). Cross-domain consumers route through this frozenset so
 # the registry stays the single source of truth for ledger readiness.
-LEDGER_BINDING_SOURCE_KINDS: frozenset[str] = frozenset(
-    {"ledger_iva_aggregation", "ledger_renta_expense_aggregation"}
-)
+LEDGER_BINDING_SOURCE_KINDS: frozenset[str] = frozenset({"ledger_iva_aggregation", "ledger_renta_expense_aggregation"})
 
 __all__ = [
     "LEDGER_BINDING_SOURCE_KINDS",
@@ -228,7 +226,6 @@ def resolve_ledger_oss_aggregation_binding_values(
 # acquisitions, exports, imports, recargo de equivalencia, and
 # domestic-reverse-charge operations.
 # ---------------------------------------------------------------------------
-
 
 
 class IvaLedgerObservation(BaseModel):
@@ -642,5 +639,3 @@ def resolve_ledger_renta_income_aggregation_binding_values(
         else:
             resolved[str(binding.id)] = sum((observation.gross_amount for observation in matched), Decimal("0"))
     return resolved
-
-

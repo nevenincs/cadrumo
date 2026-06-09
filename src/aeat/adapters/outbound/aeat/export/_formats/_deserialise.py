@@ -126,8 +126,7 @@ def _decode_date(raw: bytes, fmt: DateFmt) -> date:
         failure = None
     if failure is not None:
         raise AeatExportFormatError(
-            f"DATE field contains non-ASCII wire bytes; length={len(raw)} "
-            f"digest={_wire_digest(raw)} failure={failure}"
+            f"DATE field contains non-ASCII wire bytes; length={len(raw)} digest={_wire_digest(raw)} failure={failure}"
         )
     try:
         match fmt:
@@ -143,8 +142,7 @@ def _decode_date(raw: bytes, fmt: DateFmt) -> date:
         failure = None
     if failure is not None:
         raise AeatExportFormatError(
-            f"DATE field does not match {fmt.value}; length={len(raw)} "
-            f"digest={_wire_digest(raw)} failure={failure}"
+            f"DATE field does not match {fmt.value}; length={len(raw)} digest={_wire_digest(raw)} failure={failure}"
         )
 
 

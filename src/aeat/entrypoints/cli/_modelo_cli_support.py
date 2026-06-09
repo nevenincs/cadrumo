@@ -484,8 +484,7 @@ def selector_bad_parameter(exc: BaseException) -> typer.BadParameter:
             tr(
                 "cli.app.modelo.work.revision_selector_ambiguous",
                 default=(
-                    "More than one calculation revision matches this selector. "
-                    "Choose one explicitly.\n{candidates}"
+                    "More than one calculation revision matches this selector. Choose one explicitly.\n{candidates}"
                 ),
                 candidates=candidates,
             )

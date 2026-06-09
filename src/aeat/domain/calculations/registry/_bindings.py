@@ -136,6 +136,7 @@ __all__ = [
     "withholding_binding_requirements",
 ]
 
+
 class CasillaObservation(BaseModel):
     """One typed casilla observation emitted by the formula runtime.
 

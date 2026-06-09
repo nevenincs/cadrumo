@@ -172,9 +172,7 @@ def reconcile_modelo_303_iva_compensation(
     # so the decision is the non-blocking ``first_period_zero`` rather than the
     # ``missing`` block. This NEVER overrides a real recurrence: only the
     # genuinely-absent (None) case is mapped to zero.
-    is_first_iva_period = (
-        treat_absent_recurrence_as_first_period and wallet is None and local_recurrence_amount is None
-    )
+    is_first_iva_period = treat_absent_recurrence_as_first_period and wallet is None and local_recurrence_amount is None
     if is_first_iva_period:
         local_recurrence_amount = Decimal("0")
     decision = reconcile_iva_compensation_wallet(

@@ -156,6 +156,7 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     requires_aeat_authorization=True,
 )
 
+
 @asynccontextmanager
 async def shared_playwright(
     session: AeatSession,
