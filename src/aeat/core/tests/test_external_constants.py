@@ -1200,6 +1200,90 @@ def test_no_bare_csv_mime_literal_in_tabular() -> None:
 
 
 # ---------------------------------------------------------------------------
+# contract — ART_7P_EXEMPTION_CAP_EUR centralisation tests
+# ---------------------------------------------------------------------------
+
+
+def test_art_7p_exemption_cap_eur_value() -> None:
+    """``ART_7P_EXEMPTION_CAP_EUR`` equals €60,100 per Art. 7.p) LIRPF (Ley 35/2006)."""
+
+    from decimal import Decimal
+
+    from ..external_constants import ART_7P_EXEMPTION_CAP_EUR
+
+    assert Decimal("60100") == ART_7P_EXEMPTION_CAP_EUR
+
+
+def test_art_7p_exemption_cap_eur_is_final_decimal() -> None:
+    """``ART_7P_EXEMPTION_CAP_EUR`` is a ``Decimal`` instance (typed ``Final[Decimal]``)."""
+
+    from decimal import Decimal
+
+    from ..external_constants import ART_7P_EXEMPTION_CAP_EUR
+
+    assert isinstance(ART_7P_EXEMPTION_CAP_EUR, Decimal)
+
+
+def test_maritime_exemption_imports_art_7p_cap_from_core() -> None:
+    """``domain/renta/_maritime_exemption.py`` reads ``ART_7P_EXEMPTION_CAP_EUR`` from core."""
+
+    import importlib
+
+    from ..external_constants import ART_7P_EXEMPTION_CAP_EUR
+
+    mod = importlib.import_module("aeat.domain.renta._maritime_exemption")
+
+    assert hasattr(mod, "ART_7P_EXEMPTION_CAP_EUR"), (
+        "_maritime_exemption must import ART_7P_EXEMPTION_CAP_EUR from aeat.core.external_constants"
+    )
+    assert mod.ART_7P_EXEMPTION_CAP_EUR is ART_7P_EXEMPTION_CAP_EUR
+
+
+def test_renta_package_reexports_art_7p_cap_from_core() -> None:
+    """``aeat.domain.renta`` re-exports ``ART_7P_EXEMPTION_CAP_EUR`` and it resolves to the core constant."""
+
+    import importlib
+
+    from ..external_constants import ART_7P_EXEMPTION_CAP_EUR
+
+    renta = importlib.import_module("aeat.domain.renta")
+
+    assert hasattr(renta, "ART_7P_EXEMPTION_CAP_EUR"), (
+        "aeat.domain.renta must re-export ART_7P_EXEMPTION_CAP_EUR"
+    )
+    assert renta.ART_7P_EXEMPTION_CAP_EUR is ART_7P_EXEMPTION_CAP_EUR
+
+
+def test_no_bare_art_7p_cap_decimal_literal_in_maritime_exemption() -> None:
+    """No bare ``Decimal("60100")`` literal in ``domain/renta/_maritime_exemption.py``.
+
+    Anti-tautology: parses the real AST so any future re-introduction triggers failure.
+    """
+
+    repo_root = Path(__file__).parents[4]
+    source = (repo_root / "src/aeat/domain/renta/_maritime_exemption.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
+        if func_name != "Decimal":
+            continue
+        if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "60100":
+            offenders.append(
+                f"_maritime_exemption.py:{node.lineno}: bare Decimal('60100'); use ART_7P_EXEMPTION_CAP_EUR"
+            )
+
+    assert offenders == [], (
+        "Local Art. 7.p cap literals found; import ART_7P_EXEMPTION_CAP_EUR from core instead:\n"
+        + "\n".join(offenders)
+    )
+
+
+# ---------------------------------------------------------------------------
 # contract — MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR centralisation tests
 # ---------------------------------------------------------------------------
 
