@@ -9,6 +9,15 @@ related:
   - '[[2026-06-03-m303-cross-period-carry-continuity-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `m303-cross-period-carry-continuity` `M303 cross-period carry continuity diagnostic + fix + anti-regression` plan
 
@@ -23,9 +32,9 @@ Run the year-N 4T branch of _calculate_303 with the credit scenario and emit a c
 
 Conditional on Phase 1 diagnostic: execute the matching branch (A devengada-total chain, B result.values key drift, or C cross-step collapse) with one atomic explicit-path commit; verification chain tests AND carry continuity tests both green.
 
-- [ ] `P02.S03` - Conditional Branch A: extend engine evaluator-precedence so autoconsumo-promotor computed leaf with zero base binding resolves before devengada-total addends; `preserve verification chain greens; `src/aeat/domain/calculations/registry/`.
-- [ ] `P02.S04` - Conditional Branch B: repoint relation source_output to the post-rename saldo casilla id in both 2023-y-siguientes and 2009-y-siguientes revisions; `preserve legal_refs and source_refs; `src/aeat/_data/registry/aeat/modelos/303/`.
-- [ ] `P02.S05` - Conditional Branch C: extend the single-rate filer primitive distribution so c69 / saldo are preserved across the cross-period wrap; `regenerate the 15 M303 corpus PDFs if generator changes; update sidecars per fixture-provenance rule; `src/aeat/tests/fixtures/justificantes/_generate.py`.
+- [x] `P02.S03` - Conditional Branch A: extend engine evaluator-precedence so autoconsumo-promotor computed leaf with zero base binding resolves before devengada-total addends; `preserve verification chain greens; `src/aeat/domain/calculations/registry/`.
+- [x] `P02.S04` - Conditional Branch B: repoint relation source_output to the post-rename saldo casilla id in both 2023-y-siguientes and 2009-y-siguientes revisions; `preserve legal_refs and source_refs; `src/aeat/_data/registry/aeat/modelos/303/`.
+- [x] `P02.S05` - Conditional Branch C: extend the single-rate filer primitive distribution so c69 / saldo are preserved across the cross-period wrap; `regenerate the 15 M303 corpus PDFs if generator changes; update sidecars per fixture-provenance rule; `src/aeat/tests/fixtures/justificantes/_generate.py`.
 
 ### Phase `P03` - Anti-regression contract
 
