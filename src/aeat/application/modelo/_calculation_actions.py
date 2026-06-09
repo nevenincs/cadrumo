@@ -6,6 +6,7 @@ Use of :class:`BucketEventHistoryRepository`, :class:`ModeloRevision` for compli
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
@@ -59,7 +60,25 @@ from ._registry_resources import registry_root as _registry_root
 from ._revision_persistence import persist_calculation_revision
 
 if TYPE_CHECKING:
+    from ..aggregation import CalculationSourceDiagnostic
     from ..calculations._observations_repository import IvaWalletDecisionRepository
+
+
+@dataclass(frozen=True, slots=True)
+class BucketAggregationCalculationResult:
+    """Calculation revision plus the non-blocking source diagnostics raised while resolving it.
+
+    ``source_diagnostics`` carries the :class:`CalculationSourceDiagnostic`
+    rows the source mesh emitted during resolution — notably the
+    unconsumed-declarable-IVA advisories (a declarable IVA observation no
+    ``ledger_iva_aggregation`` binding selects). They are NON-blocking: the
+    revision in ``revision`` was computed and persisted regardless. Surfacing
+    them keeps an unrouted declarable observation from being silently
+    under-declared (no-silent-under-declaration).
+    """
+
+    revision: CalculationRevision
+    source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
 
 _apply_iva_compensation_decision_binding = _iva_wallet_gate.apply_iva_compensation_decision_binding
 _taxpayer_nif_for_bucket = _iva_wallet_gate.taxpayer_nif_for_bucket
@@ -369,7 +388,65 @@ def calculate_modelo_revision_from_bucket_aggregation(
     ``invoice_repository`` is an :class:`InvoiceCatalogueRepository` used to load
     invoice data for the aggregation resolvers that require it.
 
-    Returns a :class:`CalculationRevision`.
+    Returns a :class:`CalculationRevision`. Use
+    :func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`
+    when the caller also needs the non-blocking source diagnostics (e.g. the
+    operator-facing CLI calculate surface, which surfaces unconsumed-declarable
+    -IVA advisories).
+    """
+    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        work_unit_id,
+        actor=actor,
+        casilla_inputs=casilla_inputs,
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        iva_compensation_decision=iva_compensation_decision,
+        iva_compensation_decision_repository=iva_compensation_decision_repository,
+        borrador_snapshot_id=borrador_snapshot_id,
+        relation_values=relation_values,
+        filing_period_date=filing_period_date,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        bucket_event_repository=bucket_event_repository,
+        transaction_repository=transaction_repository,
+        invoice_repository=invoice_repository,
+        borrador_snapshot_repository=borrador_snapshot_repository,
+        detail_rows=detail_rows,
+        clock=clock,
+    ).revision
+
+
+def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+    work_unit_id: str,
+    *,
+    actor: str = "system",
+    casilla_inputs: Mapping[str, Decimal] | None = None,
+    binding_values: Mapping[str, Decimal] | None = None,
+    enum_binding_values: Mapping[str, str] | None = None,
+    iva_compensation_decision: object | None = None,
+    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
+    borrador_snapshot_id: str | None = None,
+    relation_values: Mapping[str, Decimal] | None = None,
+    filing_period_date: date | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepository | None = None,
+    invoice_repository: InvoiceCatalogueRepository | None = None,
+    borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
+    detail_rows: tuple[ModeloDetailRow, ...] = (),
+    clock: datetime | None = None,
+) -> BucketAggregationCalculationResult:
+    """Calculate a modelo revision and return it alongside the source diagnostics.
+
+    Identical orchestration to
+    :func:`calculate_modelo_revision_from_bucket_aggregation`, but returns a
+    :class:`BucketAggregationCalculationResult` carrying both the persisted
+    :class:`CalculationRevision` and the NON-blocking
+    :class:`CalculationSourceDiagnostic` rows the source mesh raised while
+    resolving the bucket ledger (the unconsumed-declarable-IVA advisories the
+    operator-facing CLI surfaces so an unrouted observation is never silently
+    under-declared).
     """
     from ...domain.calculations.registry import RegistrySnapshotError
     from ..aggregation import (
@@ -462,7 +539,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
             source_resolution.binding_values,
         ),
     )
-    return calculate_modelo_revision(
+    revision = calculate_modelo_revision(
         work_unit_id,
         actor=actor,
         casilla_inputs=casilla_inputs or {},
@@ -483,6 +560,10 @@ def calculate_modelo_revision_from_bucket_aggregation(
         borrador_snapshot_repository=borrador_snapshot_repository,
         detail_rows=detail_rows,
         clock=clock,
+    )
+    return BucketAggregationCalculationResult(
+        revision=revision,
+        source_diagnostics=tuple(source_resolution.diagnostics),
     )
 
 

@@ -84,6 +84,24 @@ class ResultSummaryRowPayload(OutputSchema):
     label: str
 
 
+class SourceAdvisoryPayload(OutputSchema):
+    """One NON-blocking source-resolution advisory surfaced on calculate.
+
+    Emitted by the source mesh while resolving the bucket ledger — notably the
+    unconsumed-declarable-IVA advisory (a declarable IVA observation no
+    ``ledger_iva_aggregation`` binding selects). The calculate verb succeeded
+    regardless; the advisory keeps an unrouted observation from being silently
+    under-declared (no-silent-under-declaration). ``message`` carries the
+    observation's category / rate / flow provenance verbatim from the
+    diagnostic.
+    """
+
+    reason: str
+    source_kind: str
+    message: str
+    resolver_id: str | None = None
+
+
 class CalculationRevisionPayload(OutputSchema):
     """Calculation revision fields surfaced by calculate / revisions commands."""
 
@@ -349,6 +367,15 @@ class WorkCalculateResult(OutputSchema):
     # calculation still ran. The result is informational, not refused.
     authorization_advisory: str | None = None
     authorization_state: str | None = None
+    # NON-blocking source-resolution advisories raised while resolving the
+    # bucket ledger. Notably the unconsumed-declarable-IVA advisory: a
+    # declarable IVA observation no ``ledger_iva_aggregation`` binding selects
+    # (e.g. an INTRA_COMMUNITY_SUPPLY sale on a Modelo 303 whose bindings only
+    # select domestic + intra-community-acquisition triples). The calculation
+    # still succeeded; the advisory keeps the unrouted observation from being
+    # silently under-declared (no-silent-under-declaration). Empty tuple when
+    # every resolved observation was consumed by a binding.
+    source_advisories: tuple[SourceAdvisoryPayload, ...] = ()
 
 
 @register_schema("modelo.work.revisions")

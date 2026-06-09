@@ -28,6 +28,7 @@ from ...domain.modelos._row_models import (
 )
 from ...domain.modelos._sal_reserva_especial import compute_sal_reserva_especial_dotacion
 from ...domain.modelos._work_unit import WorkUnit
+from ..aggregation import CalculationSourceDiagnostic
 
 _AUTOCONSUMO_PROMOTOR_BINDING = "modelo-303-autoconsumo-promotor-base"
 _INSS_EXENTA_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta"
@@ -104,12 +105,23 @@ class ModeloAuthorizationAdvisorySummary:
 
 @dataclass(frozen=True, slots=True)
 class ModeloWorkCalculationServiceResult:
-    """Application-owned result for one `modelo work calculate` command."""
+    """Application-owned result for one `modelo work calculate` command.
+
+    ``source_diagnostics`` carries the NON-blocking
+    :class:`CalculationSourceDiagnostic` rows the source mesh raised while
+    resolving the bucket ledger — notably the unconsumed-declarable-IVA
+    advisories (a declarable IVA observation no ``ledger_iva_aggregation``
+    binding selects). The calculate verb succeeded regardless; surfacing them
+    keeps an unrouted observation from being silently under-declared
+    (no-silent-under-declaration). Each diagnostic's ``message`` carries the
+    observation's category / rate / flow provenance.
+    """
 
     revision: CalculationRevision
     work_unit: WorkUnit
     modality: Modelo202ModalitySummary | None = None
     authorization_advisory: ModeloAuthorizationAdvisorySummary | None = None
+    source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
 
 
 def calculate_modelo_work_revision(
@@ -119,10 +131,10 @@ def calculate_modelo_work_revision(
     inputs: WorkCalculateInputBundle,
 ) -> ModeloWorkCalculationServiceResult:
     """Persist a draft revision and return a :class:`ModeloWorkCalculationServiceResult`."""
-    from ._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
+    from ._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
     from ._work_lifecycle import get_work_unit
 
-    revision = calculate_modelo_revision_from_bucket_aggregation(
+    calculation = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit_id,
         actor=actor,
         casilla_inputs=inputs.casilla_inputs,
@@ -132,12 +144,14 @@ def calculate_modelo_work_revision(
         relation_values=inputs.optional_relation_values(),
         detail_rows=inputs.detail_rows,
     )
+    revision = calculation.revision
     work_unit = get_work_unit(revision.work_unit_id)
     return ModeloWorkCalculationServiceResult(
         revision=revision,
         work_unit=work_unit,
         modality=modelo_202_modality_for_work_unit(work_unit),
         authorization_advisory=authorization_advisory_for_modelo(str(work_unit.modelo)),
+        source_diagnostics=calculation.source_diagnostics,
     )
 
 
