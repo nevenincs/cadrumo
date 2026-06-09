@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#registry-localization-backend'
-date: '2026-06-08'
+date: '2026-06-09'
 related:
   - '[[2026-06-08-registry-localization-backend-P01-S01]]'
   - '[[2026-06-08-registry-localization-backend-P01-S02]]'
@@ -39,6 +39,7 @@ related:
   - '[[2026-06-08-registry-localization-backend-adr]]'
   - '[[2026-06-08-registry-localization-backend-plan]]'
   - '[[2026-06-08-registry-localization-backend-research]]'
+  - '[[2026-06-09-registry-localization-backend-audit]]'
 ---
 
 # `registry-localization-backend` feature index
@@ -50,6 +51,10 @@ Auto-generated index of all documents tagged with `#registry-localization-backen
 ### adr
 
 - `2026-06-08-registry-localization-backend-adr` - `registry-localization-backend` adr: `schema localization support architecture` | (**status:** `accepted`)
+
+### audit
+
+- `2026-06-09-registry-localization-backend-audit` - `registry-localization-backend` audit: `registry-localization-backend honesty review`
 
 ### exec
 
