@@ -42,6 +42,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from .. import Modelo
 from .._toml import read_toml
 from ._errors import AuthorizationManifestError
 
@@ -69,38 +70,7 @@ AUTHORIZATION_MANIFEST_DIRNAME: Final[str] = "authorization.d"
 #: this tuple against the live registry so a registry change that adds or
 #: drops a modelo surfaces loudly rather than silently moving the
 #: denominator.
-CANONICAL_MODELO_FLEET: Final[tuple[str, ...]] = (
-    "036",
-    "100",
-    "111",
-    "115",
-    "123",
-    "130",
-    "131",
-    "151",
-    "180",
-    "184",
-    "190",
-    "193",
-    "200",
-    "202",
-    "210",
-    "232",
-    "303",
-    "308",
-    "309",
-    "322",
-    "347",
-    "349",
-    "353",
-    "360",
-    "369",
-    "390",
-    "714",
-    "720",
-    "721",
-    "840",
-)
+CANONICAL_MODELO_FLEET: Final[tuple[str, ...]] = tuple(Modelo)
 
 #: The enrolled-fleet size used as the meta-test denominator. Derived from
 #: the canonical fleet rather than hard-coded so the two cannot disagree.
