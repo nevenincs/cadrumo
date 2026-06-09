@@ -51,7 +51,7 @@ _ESTADO_MIEMBRO_N = Decimal("276")  # claimant established in Germany in year N
 _ESTADO_MIEMBRO_N_PLUS_1 = Decimal("250")  # claimant moves to France for year N+1
 
 
-def _find_observation(repo, *, filing_year, period):
+def _find_observation(repo: CalculationObservationRepository, *, filing_year: int, period: str):
     for payload in repo.iter_modelo(_MODELO):
         obs = payload.observation
         if obs.filing_year == filing_year and obs.period == period:
