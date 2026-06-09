@@ -18,7 +18,9 @@ categories, the EU member state, the FX conversion, and the lifecycle state.
 Cosmetic fields (description, counterparty, notes) are deliberately excluded so
 staleness fires on material change, not on a relabel.
 
-This module uses :class:`~aeat.domain.modelos._ledger_filing_snapshot.LedgerFilingStalenessVerdict` for drift evaluation.
+This module uses
+:class:`~aeat.domain.modelos._ledger_filing_snapshot.LedgerFilingStalenessVerdict`
+for drift evaluation.
 """
 
 from __future__ import annotations

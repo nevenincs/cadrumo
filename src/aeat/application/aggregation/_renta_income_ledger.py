@@ -3,7 +3,8 @@
 Used by: :mod:`~._service` (per-modelo aggregation service) for Modelo 130 income aggregation.
 
 The primary entry point :func:`aggregate_renta_income_ledger_from_repositories`
-loads a :class:`~aeat.domain.transactions.TransactionCatalogue` via :class:`~aeat.domain.transactions.TransactionCatalogueRepository`
+loads a :class:`~aeat.domain.transactions.TransactionCatalogue` via
+:class:`~aeat.domain.transactions.TransactionCatalogueRepository`
 from the active bucket and delegates to :func:`aggregate_renta_income_ledger`
 for period-scoped aggregation.
 

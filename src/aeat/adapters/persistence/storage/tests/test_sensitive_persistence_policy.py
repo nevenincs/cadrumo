@@ -295,11 +295,7 @@ def _iter_python_files(path: Path) -> list[Path]:
     return sorted(
         candidate
         for candidate in path.rglob("*.py")
-        if not (
-            candidate.name.startswith("test_")
-            or candidate.name.startswith("_test_")
-            or "tests" in candidate.parts
-        )
+        if not (candidate.name.startswith("test_") or candidate.name.startswith("_test_") or "tests" in candidate.parts)
     )
 
 
@@ -307,11 +303,7 @@ def _iter_production_python_files() -> list[Path]:
     return sorted(
         candidate
         for candidate in _PRODUCTION_ROOT.rglob("*.py")
-        if not (
-            candidate.name.startswith("test_")
-            or candidate.name.startswith("_test_")
-            or "tests" in candidate.parts
-        )
+        if not (candidate.name.startswith("test_") or candidate.name.startswith("_test_") or "tests" in candidate.parts)
     )
 
 

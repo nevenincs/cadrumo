@@ -53,16 +53,13 @@ def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:
     casilla_200_01 = next(c for c in rev200.casillas if c.id == "00001")
     assert casilla_200_01.get_label("en") == "Non-profit entity under special tax regime Title II Law 49/2002"
     assert casilla_200_01.get_label("ca") == (
-        "Entitat sense ànim de lucre acollida al "
-        "règim fiscal Títol II Llei 49/2002"
+        "Entitat sense ànim de lucre acollida al règim fiscal Títol II Llei 49/2002"
     )
     assert casilla_200_01.get_label("hu") == (
-        "Nonprofit szervezet a 49/2002. törvény II. "
-        "címe szerinti különleges adórendszerben"
+        "Nonprofit szervezet a 49/2002. törvény II. címe szerinti különleges adórendszerben"
     )
     assert casilla_200_01.get_help("en") == (
-        "Flag indicating if the entity is non-profit "
-        "and subject to the Title II regime of Law 49/2002."
+        "Flag indicating if the entity is non-profit and subject to the Title II regime of Law 49/2002."
     )
 
     # Verify Modelo 303 (revision 2023-y-siguientes)
@@ -73,4 +70,3 @@ def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:
     assert casilla_303_gen.get_label("ca") == "Quota IVA repercutit al tipus general (21%)"
     assert casilla_303_gen.get_label("hu") == "Felszámított ÁFA összeg általános kulccsal (21%)"
     assert casilla_303_gen.get_help("en") == "Total output VAT calculated at the standard rate of 21%."
-

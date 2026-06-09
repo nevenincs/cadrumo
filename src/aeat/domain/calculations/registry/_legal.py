@@ -61,6 +61,7 @@ def verify_legal_reference(
             if path.is_file():
                 try:
                     from ...manuals import Section
+
                     Section.model_validate_json(path.read_text(encoding="utf-8"))
                 except Exception as exc:
                     raise RegistryValidationError(
@@ -129,4 +130,3 @@ def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
     text = normalise_corpus_text(path.read_text(encoding="utf-8", errors="replace"))
     _LEGAL_CORPUS_CACHE[cache_key] = text
     return text
-

@@ -5,7 +5,7 @@ set windows-shell := ["pwsh.exe", "-NoLogo", "-Command"]
 default:
     @just --list
 
-# ── Bootstrap / install ──────────────────────────────────────────────────────
+# ── Bootstrap / Install ──────────────────────────────────────────────────────
 
 # Full bootstrap for a fresh clone or worktree: additively install deps,
 # install vaultspec, provision env/.env. Avoid `uv sync` here because shared
@@ -61,30 +61,7 @@ workstation-tools:
         }
     done
 
-# Verify the local venv and workstation provide the full audit toolchain.
-tooling-doctor:
-    uv run --no-sync python -c "import aeat; print(aeat.__file__)"
-    uv run --no-sync ruff --version
-    uv run --no-sync ty --version
-    uv run --no-sync pyright --version
-    uv run --no-sync lint-imports --version
-    uv run --no-sync deptry --version
-    uv run --no-sync vulture --version
-    uv run --no-sync radon --version
-    uv run --no-sync complexipy --help
-    uvx --from semgrep semgrep --version
-    npx --yes jscpd@4.2.0 --version
-    just tooling-pip-check
-
-[windows]
-tooling-pip-check:
-    uv pip check --python .venv/Scripts/python.exe
-
-[unix]
-tooling-pip-check:
-    uv pip check --python .venv/bin/python
-
-# ── Env-file provisioning ────────────────────────────────────────────────────
+# ── Environment Setup and Doctor ─────────────────────────────────────────────
 
 # Copy env/.env.example → env/.env if the latter is missing. No-op otherwise.
 [unix]
@@ -117,243 +94,81 @@ env-setup:
         Write-Host 'Created env/.env from env/.env.example.'
     }
 
-# ── Dev loop ─────────────────────────────────────────────────────────────────
+# Verify the local venv and workstation provide the full audit toolchain and RAG status.
+env-doctor: env-playwright
+    uv run --no-sync python -c "import aeat; print(aeat.__file__)"
+    uv run --no-sync ruff --version
+    uv run --no-sync ty --version
+    uv run --no-sync pyright --version
+    uv run --no-sync lint-imports --version
+    uv run --no-sync deptry --version
+    uv run --no-sync vulture --version
+    uv run --no-sync radon --version
+    uv run --no-sync complexipy --help
+    uvx --from semgrep semgrep --version
+    npx --yes jscpd@4.2.0 --version
+    just env-pip-check
+    -just check-rag
 
-# Lint with ruff and enforce the relative-imports mandate.
-lint:
+[windows]
+env-pip-check:
+    uv pip check --python .venv/Scripts/python.exe
+
+[unix]
+env-pip-check:
+    uv pip check --python .venv/bin/python
+
+# Run the Playwright doctor health check.
+[unix]
+env-playwright:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python -m aeat.entrypoints.cli.browser.health
+
+[windows]
+env-playwright:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    uv run python -m aeat.entrypoints.cli.browser.health
+
+# Start the background vaultspec-rag HTTP service daemon on loopback port 8766.
+env-rag-start:
+    uv run --no-sync vaultspec-rag server service start --watch --port 8766
+
+# Stop the background vaultspec-rag HTTP service daemon.
+env-rag-stop:
+    uv run --no-sync vaultspec-rag server service stop
+
+# ── Static checks (Verify, Read-only) ────────────────────────────────────────
+
+# Verify code style using ruff check.
+check-style:
     uv run ruff check .
-    uv run python scripts/check_relative_imports.py
 
-# Format with ruff.
-fmt:
-    uv run ruff format .
+# Verify code format using ruff format --check.
+check-format:
+    uv run ruff format --check .
 
-# Type-check with ty (primary) and pyright (cross-checker on
-# src/aeat/domain and src/aeat/application). Both must pass.
-# Pyright config in pyrightconfig.json sets standard mode globally
-# with selected strict rules on the two listed packages; the
-# Unknown-family rules are deferred to a tracked ratchet workstream.
-typecheck:
+# Verify type correctness using ty check and pyright.
+check-types:
     uv run --no-sync ty check src
     uv run --no-sync pyright src/aeat/domain src/aeat/application
 
-# Full-tree type audit. Advisory: use for ratchet discovery and type debt
-# triage, not as the default daily hard gate until the baseline is clean.
-typecheck-audit:
-    uv run --no-sync ty check src --output-format concise
-    uv run --no-sync pyright src/aeat --level warning --warnings
-
-# Run the pytest suite (unit-only by default via pyproject addopts).
-test:
-    uv run pytest
-
-# Run the produce → verify → export end-to-end smoke tests (Modelo 130 + 303).
-# Used as the behavioural CI gate for the restructure (#476) per ADR
-# Acceptance criterion 13: structural import-resolution alone is not
-# sufficient proof of restructure correctness.
-test-smoke-produce-verify-export:
-    uv run pytest src/aeat/application/modelo/tests/test_file_flow_calculation.py src/aeat/application/modelo/tests/test_file_flow_verify.py src/aeat/application/modelo/tests/test_file_flow_filing.py src/aeat/application/modelo/tests/test_export.py -v
-
-# Verify every documented re-export shim still resolves its symbols
-# (Step 8 acceptance precondition for the deterministic semver-bump rule).
-verify-shims:
-    uv run --no-sync python scripts/verify_shims.py
-
-# Run the import-linter contract against the current layout.
-# Pre-Step-7 reports "no matches" warnings for the future paths;
-# post-Step-7 enforces the layered + independence + forbidden contracts.
-lint-imports:
+# Verify import structure and hexagonal boundaries.
+check-imports:
     uv run --no-sync lint-imports
 
-# Hard local quality gate. Keeps required daily checks separate from the
-# advisory quality-audit dashboard below.
-quality:
-    just lint
-    just typecheck
-    just lint-imports
-    just verify-shims
-    just test
+# Verify that all test modules only use relative imports.
+check-relative-imports:
+    uv run python scripts/check_relative_imports.py
 
-# Structural hard checks that do not need the full unit suite.
-audit-structure:
-    just lint-imports
-    just verify-shims
-    uv run --no-sync python scripts/check_relative_imports.py
-
-# Dependency declaration drift: missing, unused, transitive, and misplaced deps.
-audit-deps:
+# Verify dependency declarations for drift or unused packages.
+check-dependencies:
     uv run --no-sync deptry src/aeat --known-first-party aeat --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
 
-# Dead-code discovery. Configuration lives in pyproject.toml.
-audit-dead-code:
-    uv run --no-sync vulture --config pyproject.toml
-
-# Deprecation, private-usage, unused-function, and type-opportunity report.
-audit-deprecation:
-    uv run --no-sync pyright src/aeat/domain src/aeat/application --level warning --warnings
-
-# Cyclomatic, maintainability, and cognitive-complexity report for production
-# refactor planning. Thresholds are advisory until ratcheted by ADR.
-audit-complexity:
-    just audit-complexity-production
-
-# Production-only complexity lane. Test ratchets are tracked separately so the
-# production hotspot list is not crowded out by inventory-test maintenance debt.
-[windows]
-audit-complexity-production:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    $exclude = 'src/aeat/test_*.py,src/aeat/**/test_*.py,src/aeat/**/_test_*.py,src/aeat/tests/*,src/aeat/_data/*'
-    uv run --no-sync radon cc src/aeat -n C -s -a -e $exclude
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    uv run --no-sync radon mi src/aeat -s -e $exclude
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    @'
-    from pathlib import Path
-
-    from complexipy import file_complexity
-
-    ROOT = Path("src/aeat")
-    THRESHOLD = 20
-
-    def is_production(path: Path) -> bool:
-        parts = path.parts
-        name = path.name
-        if "_data" in parts or "tests" in parts:
-            return False
-        return not (name.startswith("test_") or name.startswith("_test_") or "_test_" in name)
-
-    findings: list[tuple[int, str, str]] = []
-    files = sorted(path for path in ROOT.rglob("*.py") if is_production(path))
-    for path in files:
-        result = file_complexity(str(path))
-        for function in result.functions:
-            if function.complexity > THRESHOLD:
-                findings.append((function.complexity, str(path), function.name))
-
-    findings.sort(reverse=True)
-    print(f"complexipy production cognitive complexity: {len(files)} files analyzed")
-    if findings:
-        print(f"functions above {THRESHOLD}:")
-        for complexity, path, function_name in findings[:80]:
-            print(f"{complexity:>4}  {path}::{function_name}")
-        raise SystemExit(1)
-    print(f"no production functions exceed {THRESHOLD}")
-    '@ | uv run --no-sync python -
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
+# Verify codebase security posture using semgrep scans.
 [unix]
-audit-complexity-production:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    exclude='src/aeat/test_*.py,src/aeat/**/test_*.py,src/aeat/**/_test_*.py,src/aeat/tests/*,src/aeat/_data/*'
-    uv run --no-sync radon cc src/aeat -n C -s -a -e "$exclude"
-    uv run --no-sync radon mi src/aeat -s -e "$exclude"
-    uv run --no-sync python - <<'PY'
-    from pathlib import Path
-
-    from complexipy import file_complexity
-
-    ROOT = Path("src/aeat")
-    THRESHOLD = 20
-
-    def is_production(path: Path) -> bool:
-        parts = path.parts
-        name = path.name
-        if "_data" in parts or "tests" in parts:
-            return False
-        return not (name.startswith("test_") or name.startswith("_test_") or "_test_" in name)
-
-    findings: list[tuple[int, str, str]] = []
-    files = sorted(path for path in ROOT.rglob("*.py") if is_production(path))
-    for path in files:
-        result = file_complexity(str(path))
-        for function in result.functions:
-            if function.complexity > THRESHOLD:
-                findings.append((function.complexity, str(path), function.name))
-
-    findings.sort(reverse=True)
-    print(f"complexipy production cognitive complexity: {len(files)} files analyzed")
-    if findings:
-        print(f"functions above {THRESHOLD}:")
-        for complexity, path, function_name in findings[:80]:
-            print(f"{complexity:>4}  {path}::{function_name}")
-        raise SystemExit(1)
-    print(f"no production functions exceed {THRESHOLD}")
-    PY
-
-# Top-level package ratchet-test complexity lane. This keeps inventory-test
-# cognitive debt visible without mixing it into the production refactor queue.
-[windows]
-audit-complexity-tests:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    @'
-    from pathlib import Path
-
-    from complexipy import file_complexity
-
-    ROOT = Path("src/aeat")
-    THRESHOLD = 20
-
-    findings: list[tuple[int, str, str]] = []
-    files = sorted(ROOT.glob("test_*.py"))
-    for path in files:
-        result = file_complexity(str(path))
-        for function in result.functions:
-            if function.complexity > THRESHOLD:
-                findings.append((function.complexity, str(path), function.name))
-
-    findings.sort(reverse=True)
-    print(f"complexipy top-level test cognitive complexity: {len(files)} files analyzed")
-    if findings:
-        print(f"functions above {THRESHOLD}:")
-        for complexity, path, function_name in findings[:80]:
-            print(f"{complexity:>4}  {path}::{function_name}")
-        raise SystemExit(1)
-    print(f"no top-level test functions exceed {THRESHOLD}")
-    '@ | uv run --no-sync python -
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-[unix]
-audit-complexity-tests:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    uv run --no-sync python - <<'PY'
-    from pathlib import Path
-
-    from complexipy import file_complexity
-
-    ROOT = Path("src/aeat")
-    THRESHOLD = 20
-
-    findings: list[tuple[int, str, str]] = []
-    files = sorted(ROOT.glob("test_*.py"))
-    for path in files:
-        result = file_complexity(str(path))
-        for function in result.functions:
-            if function.complexity > THRESHOLD:
-                findings.append((function.complexity, str(path), function.name))
-
-    findings.sort(reverse=True)
-    print(f"complexipy top-level test cognitive complexity: {len(files)} files analyzed")
-    if findings:
-        print(f"functions above {THRESHOLD}:")
-        for complexity, path, function_name in findings[:80]:
-            print(f"{complexity:>4}  {path}::{function_name}")
-        raise SystemExit(1)
-    print(f"no top-level test functions exceed {THRESHOLD}")
-    PY
-
-# Copy/paste duplication discovery. Uses the workstation Node toolchain so the
-# Python uv bootstrap does not inherit a Node package dependency.
-audit-duplication:
-    npx --yes jscpd@4.2.0 src/aeat --format python --min-lines 6 --min-tokens 80 --max-size 250kb --ignore "**/test_*.py,**/_test_*.py,**/tests/**,**/_data/**" --gitignore --reporters console --noTips
-
-# Semgrep security scan. Prefer a workstation executable, then fall back to uvx
-# so a fresh worktree still has an authoritative just endpoint.
-[unix]
-audit-security:
+check-security:
     #!/usr/bin/env bash
     set -euo pipefail
     if command -v semgrep >/dev/null 2>&1; then
@@ -363,7 +178,7 @@ audit-security:
     fi
 
 [windows]
-audit-security:
+check-security:
     #!pwsh
     $ErrorActionPreference = 'Stop'
     if (Get-Command semgrep -ErrorAction SilentlyContinue) {
@@ -372,117 +187,125 @@ audit-security:
         uvx --from semgrep semgrep scan --config auto src/aeat
     }
 
-# Advisory dashboard for refactor planning. Each line is intentionally
-# error-tolerant so all reports run even when one audit finds existing debt.
-quality-audit:
-    -just typecheck-audit
-    -just audit-structure
-    -just audit-deps
-    -just audit-dead-code
-    -just audit-deprecation
-    -just audit-complexity
-    -just audit-duplication
-    -just audit-security
+# Check if the RAG service daemon is running.
+check-rag:
+    uv run --no-sync vaultspec-rag server service status
 
-# Build the HTML documentation (furo) from Google-style docstrings plus
-# the narrative pages under docs/. Output to docs/_build/html (gitignored).
+# Run programmatic semantic audit checks using the local RAG daemon.
+check-semantic:
+    uv run --no-sync python scripts/audit_semantic.py
+
+# Run all pre-commit hooks via prek.
+check-pre-commit:
+    uv run --no-sync prek run --all-files
+
+# Run all fast static checks.
+check-all: check-style check-format check-types check-imports check-relative-imports check-dependencies check-pre-commit
+
+# ── Code mutations (Write) ──────────────────────────────────────────────────
+
+# Auto-repair ruff style violations.
+fix-style:
+    uv run ruff check --fix .
+
+# Auto-format all python source files.
+fix-format:
+    uv run ruff format .
+
+# Trigger incremental vector re-indexing via the loopback service.
+fix-rag:
+    uv run --no-sync vaultspec-rag index --type all --port 8766
+
+# ── Testing ──────────────────────────────────────────────────────────────────
+
+# Run the unit test suite, ignoring workbook parity tests.
+test-unit:
+    uv run pytest -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity
+
+# Run the integration test suite.
+test-integration:
+    uv run pytest -m integration
+
+# Run the live test suite.
+test-live:
+    uv run pytest -m aeat_live
+
+# Run the produce, verify, and export end-to-end smoke tests.
+test-smoke:
+    uv run pytest src/aeat/application/modelo/tests/test_file_flow_calculation.py src/aeat/application/modelo/tests/test_file_flow_verify.py src/aeat/application/modelo/tests/test_file_flow_filing.py src/aeat/application/modelo/tests/test_export.py -v
+
+# Run the LibreOffice workbook parity tests.
+test-workbook-parity:
+    uv run --no-sync pytest src/aeat/domain/calculations/registry/tests/workbook_parity/test_workbook_parity.py
+
+# Run the unit test suite with coverage report and fail-under check.
+[unix]
+test-coverage:
+    uv run pytest --cov=aeat --cov-report=term-missing --cov-fail-under=60
+
+[windows]
+test-coverage:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    uv run pytest --cov=aeat --cov-report=term-missing --cov-fail-under=60
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# ── Advisory audits ──────────────────────────────────────────────────────────
+
+# Run complexity audits for production code.
+audit-complexity:
+    uv run --no-sync python scripts/audit_complexity.py
+
+# Scan for dead code.
+audit-dead-code:
+    uv run --no-sync vulture --config pyproject.toml
+
+# Scan for copy-paste code duplication.
+audit-duplication:
+    npx --yes jscpd@4.2.0 src/aeat --format python --min-lines 6 --min-tokens 80 --max-size 250kb --ignore "**/test_*.py,**/_test_*.py,**/tests/**,**/_data/**" --gitignore --reporters console --noTips
+
+# Perform an on-demand semantic search query delegating to the running RAG daemon.
+audit-rag QUERY:
+    uv run --no-sync vaultspec-rag search "{{QUERY}}" --port 8766 --timeout 45.0
+
+# Run all advisory audits.
+audit-debt-dashboard:
+    -just audit-complexity
+    -just audit-dead-code
+    -just audit-duplication
+    -just check-security
+
+# ── Documentation ────────────────────────────────────────────────────────────
+
+# Build changed narrative and API reference documents.
 docs:
     uv run --no-sync python docs/tools/build_changed_docs.py docs/conf.py
 
-# Build one non-API documentation source file into the canonical HTML output
-# without rebuilding generated API/autodoc pages.
+# Build a single narrative page.
 docs-page PAGE:
     uv run --no-sync python docs/tools/build_changed_docs.py --single-page {{PAGE}}
 
-# Build only documentation pages affected by local changes since BASE.
+# Build documentation changed since a base commit.
 docs-changed BASE="HEAD":
     uv run --no-sync python docs/tools/build_changed_docs.py --base {{BASE}}
 
-# Build explicit repository-relative docs/source paths in a noisy worktree.
-docs-path +PATHS:
-    uv run --no-sync python docs/tools/build_changed_docs.py {{PATHS}}
-
-# Strict changed-page build: nitpicky warnings-as-errors, offline inventories.
+# Build changed documentation with strict warnings-as-errors flags.
 docs-changed-strict BASE="HEAD":
     uv run --no-sync python docs/tools/build_changed_docs.py --base {{BASE}} --strict
 
-# Build changed docs and refresh the resident vaultspec-rag service index.
+# Build changed documentation and update the vector index.
 docs-changed-rag BASE="HEAD":
     uv run --no-sync python docs/tools/build_changed_docs.py --base {{BASE}} --rag-index
 
-# Documentation conformance gate: the docs-marked tests (nitpicky
-# warnings-as-errors Sphinx build, module-to-stub correspondence, and CLI
-# reference drift/conformance), doc8 reStructuredText formatting, and
-# interrogate docstring coverage.
+# Run docstring structure and Sphinx build checks.
 docs-check:
     uv run --no-sync pytest docs/tools/tests src/aeat/tests/test_docstring_core_struct_links.py -m docs
     uv run --no-sync doc8 docs
     uv run --no-sync interrogate -c pyproject.toml src/aeat
 
-# Run the LibreOffice workbook-parity tests. Excluded from the default unit
-# lane (adds 60-90s wallclock per soffice subprocess call). Requires
-# LibreOffice / soffice on PATH.
-test-workbook-parity:
-    uv run --no-sync pytest -m workbook_parity
+# ── Database migrations ──────────────────────────────────────────────────────
 
-# Run unit plus live_read tests (requires AEAT_LIVE_TESTS_ENABLED=1 for live_read items).
-test-live:
-    uv run pytest -m "unit or live_read"
-
-# Run only live_read tests.
-test-live-read:
-    uv run pytest -m "live_read"
-
-# Run unit tests in a single domain, e.g. `just test-domain financial_input`.
-test-domain DOMAIN:
-    uv run pytest -m "unit and domain_{{DOMAIN}}"
-
-# Documentation surface for @pytest.mark.live_write tests. Live AEAT writes
-# are permanently forbidden and collection-dropped with no bypass.
-[unix]
-test-live-write:
-    #!/usr/bin/env bash
-    echo "WARNING: @pytest.mark.live_write tests are permanently collection-dropped; there is no bypass."
-    uv run pytest -m live_write
-
-[windows]
-test-live-write:
-    #!pwsh
-    Write-Host "WARNING: @pytest.mark.live_write tests are permanently collection-dropped; there is no bypass."
-    uv run pytest -m live_write
-
-# Run the unit suite with coverage and enforce the fail-under floor.
-[unix]
-test-cov:
-    uv run pytest --cov=aeat --cov-report=term-missing --cov-fail-under=60
-
-[windows]
-test-cov:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    uv run pytest --cov=aeat --cov-report=term-missing --cov-fail-under=60
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# Run the unit suite in parallel via pytest-xdist. Opt-in; never on live tests.
-[unix]
-test-parallel:
-    uv run pytest -n auto
-
-[windows]
-test-parallel:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    uv run pytest -n auto
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# Run all pre-commit hooks via prek.
-hooks:
-    uv run prek run --all-files
-
-# ── Database migrations (aeat#10) ────────────────────────────────────────────
-
-# Generate a new Alembic revision from the current model metadata.
-# Usage: just db-migrate message="add foo column"
+# Generate a new Alembic database migration file.
 [unix]
 db-migrate message:
     uv run alembic revision --autogenerate -m "{{message}}"
@@ -491,7 +314,7 @@ db-migrate message:
 db-migrate message:
     uv run alembic revision --autogenerate -m "{{message}}"
 
-# Apply every pending migration up to head.
+# Upgrade the database schema to the latest version.
 [unix]
 db-upgrade:
     uv run alembic upgrade head
@@ -500,27 +323,9 @@ db-upgrade:
 db-upgrade:
     uv run alembic upgrade head
 
-# Run the Playwright doctor health check.
-[unix]
-playwright-doctor:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    uv run python -m aeat.entrypoints.cli.browser.health
+# ── Release ──────────────────────────────────────────────────────────────────
 
-[windows]
-playwright-doctor:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    uv run python -m aeat.entrypoints.cli.browser.health
-
-# ── Release (local-only; see RELEASING.md + aeat#60) ────────────────────────
-#
-# release-please runs LOCALLY, never in GitHub Actions (Actions is
-# permanently disabled on this repo). `just release` previews the next
-# release in --dry-run mode. `just release-apply` guides the human
-# operator through applying the bump + tagging, never pushing.
-
-# Preview the next release. Dry-run only; never writes to the tree.
+# Preview the next version release via dry-run.
 [unix]
 release:
     #!/usr/bin/env bash
@@ -582,7 +387,7 @@ release:
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Write-Host "✔ dry-run complete - review $log, then run 'just release-apply' if the proposal is correct."
 
-# Apply the previewed release locally. Human-gated; never pushes.
+# Apply the release changes locally.
 [unix]
 release-apply:
     #!/usr/bin/env bash

@@ -43,7 +43,7 @@ _HEX_MARKERS = frozenset(
         "hex_persistence_adapter",
     }
 )
-_EXPECTED_CONFIGURED_MARKERS = _EXECUTION_MARKERS | _HEX_MARKERS
+_EXPECTED_CONFIGURED_MARKERS = _EXECUTION_MARKERS | _HEX_MARKERS | {"docs"}
 _LEGACY_READ_MARKER = "live_" + "read"
 _LEGACY_WRITE_MARKER = "live_" + "write"
 _LEGACY_DOMAIN_MARKERS = frozenset(
@@ -89,7 +89,6 @@ _PROCESS_SYMBOL_METADATA_PATTERNS = (
 _FORBIDDEN_MARKERS = (
     frozenset(
         {
-            "docs",
             _LEGACY_FIXTURE_TIER_MARKER,
             "flaky",
             "inventory",
