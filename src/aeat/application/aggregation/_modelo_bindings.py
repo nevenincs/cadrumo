@@ -26,6 +26,7 @@ from ...domain.calculations.registry import (
     resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_renta_expense_aggregation_binding_values,
     resolve_ledger_renta_income_aggregation_binding_values,
+    unsupported_ledger_iva_observations,
 )
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoicePersistenceError
 from ...domain.renta import RentaDeductibleExpenseObservation
@@ -166,6 +167,14 @@ class LedgerIvaAggregationSourceResolver:
             )
         transaction_ids = {observation.ledger_id for observation in aggregation.observations}
         transaction_ids.update(reference.transaction_id for reference in aggregation.prorrata_references)
+        # Reuse the fail-closed candidate-path screen as a NON-blocking advisory on
+        # the calculate path: a declarable IVA observation whose category/rate/flow
+        # triple no ``ledger_iva_aggregation`` binding selects would otherwise be
+        # silently dropped. Surface it (calculate still succeeds) so the operator
+        # sees the unrouted IVA rather than filing an under-declared form
+        # (no-silent-under-declaration). The category/rate/flow axes are the
+        # observation's own provenance — no legal_ref is fabricated.
+        unconsumed = unsupported_ledger_iva_observations(context.revision, aggregation.observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -182,6 +191,21 @@ class LedgerIvaAggregationSourceResolver:
                     message=issue.detail,
                 )
                 for issue in aggregation.issues
+            )
+            + tuple(
+                CalculationSourceDiagnostic(
+                    reason="source_issue",
+                    source_kind="ledger_iva_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=(
+                        f"declarable IVA observation {observation.ledger_id!r} "
+                        f"(category={observation.category.value!r}, rate_kind={observation.rate_kind.value!r}, "
+                        f"flow_direction={observation.flow_direction.value!r}) is not consumed by any "
+                        f"ledger_iva_aggregation binding on revision {context.revision.id!r}; "
+                        "its base/cuota is not declared on this calculation"
+                    ),
+                )
+                for observation in unconsumed
             ),
             provenance=(
                 tuple(
