@@ -451,6 +451,11 @@ FOREIGN_ASSET_MODELOS: Final[tuple[str, ...]] = ("720",)
 #: Covers: M303 (quarterly/monthly IVA self-assessment), M390 (IVA annual summary).
 IVA_REGIME_MODELOS: Final[tuple[str, ...]] = ("303", "390")
 
+#: 3% amortización de inmuebles arrendados; rate fixed by RD 439/2007 (RIRPF) art. 14.2.a
+#: ("3 por 100 sobre el mayor de coste de adquisición o valor catastral, excluido el suelo").
+#: Deductibility base: Ley 35/2006 art. 23 (capital inmobiliario gastos deducibles).
+AMORTIZACION_INMUEBLE_RATE: Final[Decimal] = Decimal("0.03")
+
 #: Art. 81 LIRPF (Ley 35/2006, BOE-A-2006-20764) monthly accrual per hijo menor de tres años.
 #: Proration of the €1,200 annual cap; casilla 0611 carries integer euros only.
 DEDUCCION_MATERNIDAD_MENSUAL_EUR: Final[int] = 100
