@@ -2014,3 +2014,85 @@ def test_no_bare_1000_guarderia_cap_literal_in_family() -> None:
     assert offenders == [], (
         "Bare 1000 guarderia cap literals found in family.py:\n" + "\n".join(offenders)
     )
+
+
+# ---------------------------------------------------------------------------
+# contract — AMORTIZACION_INMUEBLE_RATE centralisation tests
+# ---------------------------------------------------------------------------
+
+
+def test_amortizacion_inmueble_rate_value() -> None:
+    """``AMORTIZACION_INMUEBLE_RATE`` equals 0.03 per RD 439/2007 (RIRPF) art. 14.2.a."""
+
+    from decimal import Decimal
+
+    from ..external_constants import AMORTIZACION_INMUEBLE_RATE
+
+    assert AMORTIZACION_INMUEBLE_RATE == Decimal("0.03")
+
+
+def test_amortizacion_inmueble_rate_is_final_decimal() -> None:
+    """``AMORTIZACION_INMUEBLE_RATE`` is a ``Decimal`` instance (typed ``Final[Decimal]``)."""
+
+    from decimal import Decimal
+
+    from ..external_constants import AMORTIZACION_INMUEBLE_RATE
+
+    assert isinstance(AMORTIZACION_INMUEBLE_RATE, Decimal)
+
+
+def test_amortization_ledger_imports_amortizacion_inmueble_rate_from_core() -> None:
+    """``domain/fincas/_amortization_ledger.py`` reads ``AMORTIZACION_INMUEBLE_RATE`` from core."""
+
+    import importlib
+
+    from ..external_constants import AMORTIZACION_INMUEBLE_RATE
+
+    mod = importlib.import_module("aeat.domain.fincas._amortization_ledger")
+
+    assert hasattr(mod, "AMORTIZACION_INMUEBLE_RATE"), (
+        "_amortization_ledger must import AMORTIZACION_INMUEBLE_RATE from aeat.core.external_constants"
+    )
+    assert mod.AMORTIZACION_INMUEBLE_RATE is AMORTIZACION_INMUEBLE_RATE
+
+
+def test_amortization_ledger_art_23_alias_equals_core_constant() -> None:
+    """``ART_23_1_F_RATE`` in ``_amortization_ledger.py`` is identical to ``AMORTIZACION_INMUEBLE_RATE``."""
+
+    import importlib
+
+    from ..external_constants import AMORTIZACION_INMUEBLE_RATE
+
+    mod = importlib.import_module("aeat.domain.fincas._amortization_ledger")
+
+    assert hasattr(mod, "ART_23_1_F_RATE"), "_amortization_ledger must expose ART_23_1_F_RATE alias"
+    assert mod.ART_23_1_F_RATE is AMORTIZACION_INMUEBLE_RATE
+
+
+def test_no_bare_amortizacion_decimal_literal_in_amortization_ledger() -> None:
+    """No bare ``Decimal("0.03")`` literal in ``domain/fincas/_amortization_ledger.py``.
+
+    Anti-tautology: parses the real AST so any re-introduction triggers failure.
+    """
+
+    repo_root = Path(__file__).parents[4]
+    source = (repo_root / "src/aeat/domain/fincas/_amortization_ledger.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
+        if func_name != "Decimal":
+            continue
+        if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "0.03":
+            offenders.append(
+                f"_amortization_ledger.py:{node.lineno}: bare Decimal('0.03'); use AMORTIZACION_INMUEBLE_RATE"
+            )
+
+    assert offenders == [], (
+        "Bare Decimal('0.03') amortization literals found; import AMORTIZACION_INMUEBLE_RATE from core instead:\n"
+        + "\n".join(offenders)
+    )
