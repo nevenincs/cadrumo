@@ -43,7 +43,7 @@ class ModeloVisibleFilingTarget:
     bucket_id: str | None = None
 
     def to_work_address(self) -> ModeloWorkAddress:
-        """Project the visible target into the legacy-compatible address shape."""
+        """Project the visible target into the legacy-compatible :class:`ModeloWorkAddress` shape."""
         return ModeloWorkAddress(
             modelo=self.modelo,
             filing_year=self.filing_year,
@@ -61,7 +61,7 @@ class ModeloExactWorkUnitTarget:
     bucket_id: str | None = None
 
     def to_work_address(self) -> ModeloWorkAddress:
-        """Project the exact target into the legacy-compatible address shape."""
+        """Project the exact target into the legacy-compatible :class:`ModeloWorkAddress` shape."""
         return ModeloWorkAddress(work_unit_id=self.work_unit_id, bucket_id=self.bucket_id)
 
 
@@ -83,7 +83,7 @@ class ModeloRevisionPick:
 
     @classmethod
     def explicit(cls, calculation_revision_id: CalculationRevisionId) -> ModeloRevisionPick:
-        """Create an exact calculation-revision pick."""
+        """Create an exact calculation-revision :class:`ModeloRevisionPick`."""
         return cls(
             selector=ModeloCalculationRevisionSelector.EXPLICIT,
             calculation_revision_id=calculation_revision_id,
@@ -110,7 +110,7 @@ class ModeloResolvedWorkProjection:
 
     @classmethod
     def from_work_unit(cls, work_unit: WorkUnit) -> ModeloResolvedWorkProjection:
-        """Project an internal work unit into visible support metadata."""
+        """Project an internal :class:`WorkUnit` into a :class:`ModeloResolvedWorkProjection`."""
         return cls(
             work_unit_id=work_unit.work_unit_id,
             short_work_unit_id=work_unit.work_unit_id[-12:],
@@ -150,7 +150,7 @@ class ModeloResolvedRevisionProjection:
         *,
         selector: ModeloCalculationRevisionSelector,
     ) -> ModeloResolvedRevisionProjection:
-        """Project an internal calculation revision into support metadata.
+        """Project an internal calculation revision into a :class:`ModeloResolvedRevisionProjection` support metadata.
 
         Use of :class:`CalculationRevision` for compliance.
         """
@@ -188,12 +188,12 @@ class ModeloWorkAddress:
 
     @classmethod
     def from_visible_target(cls, target: ModeloVisibleFilingTarget) -> ModeloWorkAddress:
-        """Create an address from a natural modelo filing target."""
+        """Create a :class:`ModeloWorkAddress` from a natural modelo filing target."""
         return target.to_work_address()
 
     @classmethod
     def from_exact_target(cls, target: ModeloExactWorkUnitTarget) -> ModeloWorkAddress:
-        """Create an address from an exact work-unit target."""
+        """Create a :class:`ModeloWorkAddress` from an exact work-unit target."""
         return target.to_work_address()
 
 
@@ -250,7 +250,7 @@ class ModeloWorkEnsureResult:
 
 
 def work_address_for_modelo_target(target: ModeloWorkTarget) -> ModeloWorkAddress:
-    """Coerce a typed modelo work target into the selector address shape."""
+    """Coerce a typed modelo work target into a :class:`ModeloWorkAddress` selector shape."""
     if isinstance(target, ModeloWorkAddress):
         return target
     if isinstance(target, ModeloVisibleFilingTarget):
@@ -307,7 +307,7 @@ def modelo_work_address_from_operator_target(
     registry_revision_id: str | None,
     bucket_id: str | None = None,
 ) -> ModeloWorkAddress:
-    """Build a centralized work address from exact or visible operator input."""
+    """Build a :class:`ModeloWorkAddress` from exact or visible operator input."""
     if modelo is not None and year is not None and period is not None:
         year, period = normalize_modelo_work_period(year, period, modelo=modelo)
     elif work_unit_id is None:
@@ -333,7 +333,7 @@ def resolve_modelo_work_unit_for_operator_target(
     registry_revision_id: str | None = None,
     bucket_id: str | None = None,
 ) -> WorkUnit:
-    """Resolve exact or visible operator input to one active work unit."""
+    """Resolve exact or visible operator input to one active :class:`WorkUnit`."""
     return resolve_modelo_work_address_unit(
         modelo_work_address_from_operator_target(
             work_unit_id=work_unit_id,
@@ -358,7 +358,7 @@ def resolve_modelo_revision_for_operator_target(
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
     default_for: ModeloCalculationRevisionDefault | None = None,
 ) -> CalculationRevision:
-    """Resolve one calculation revision from exact or visible operator input."""
+    """Resolve one :class:`CalculationRevision` from exact or visible operator input."""
     if (
         calculation_revision_id is not None
         and work_unit_id is None
@@ -404,7 +404,10 @@ def resolve_modelo_revision_for_operator_target(
 
 
 def resolve_modelo_work_target(target: ModeloWorkTarget) -> ModeloWorkResolution:
-    """Resolve any supported modelo target through the shared selector boundary."""
+    """Resolve any supported modelo target through the shared selector boundary.
+
+    Returns a :class:`ModeloWorkResolution`.
+    """
     return resolve_modelo_work_address(work_address_for_modelo_target(target))
 
 
@@ -416,12 +419,12 @@ def resolve_modelo_work_unit_id(target: ModeloWorkTarget) -> WorkUnitId:
 
 
 def project_modelo_work_unit(work_unit: WorkUnit) -> ModeloResolvedWorkProjection:
-    """Project an internal work unit into the visible addressing contract."""
+    """Project an internal work unit into the visible :class:`ModeloResolvedWorkProjection` addressing contract."""
     return ModeloResolvedWorkProjection.from_work_unit(work_unit)
 
 
 def project_modelo_work_target(target: ModeloWorkTarget) -> ModeloResolvedWorkProjection:
-    """Resolve a target and project it back to visible modelo filing metadata."""
+    """Resolve a target and project it back to a :class:`ModeloResolvedWorkProjection`."""
     resolution = resolve_modelo_work_target(target)
     assert resolution.work_unit is not None
     return project_modelo_work_unit(resolution.work_unit)
@@ -475,7 +478,10 @@ def ensure_modelo_work_unit_for_visible_target(
     actor: str = "operator",
     causante_ccaa: CCAA | None = None,
 ) -> ModeloWorkEnsureResult:
-    """Resume or create the active work unit for one visible filing target."""
+    """Resume or create the active work unit for one visible filing target.
+
+    Returns a :class:`ModeloWorkEnsureResult`.
+    """
     requested_revision = registry_revision_id.strip() if registry_revision_id is not None else None
     resolution = resolve_optional_modelo_work_address(
         ModeloWorkAddress(
@@ -514,7 +520,7 @@ def ensure_modelo_work_unit_for_visible_target(
 
 
 def resolve_modelo_work_address(address: ModeloWorkAddress) -> ModeloWorkResolution:
-    """Resolve an operator-facing modelo work address."""
+    """Resolve an operator-facing modelo work address and return a :class:`ModeloWorkResolution`."""
     resolution = resolve_optional_modelo_work_address(address)
     if resolution.state is ModeloWorkSelectorState.ABSENT or resolution.work_unit is None:
         raise ModeloWorkAddressNotFoundError("no active modelo work unit matches the supplied address")
@@ -522,7 +528,7 @@ def resolve_modelo_work_address(address: ModeloWorkAddress) -> ModeloWorkResolut
 
 
 def resolve_optional_modelo_work_address(address: ModeloWorkAddress) -> ModeloWorkResolution:
-    """Resolve an operator-facing modelo work address, allowing absence."""
+    """Resolve an operator-facing modelo work address and return a :class:`ModeloWorkResolution`, allowing absence."""
     resolution = resolve_modelo_work_unit(
         ModeloWorkSelectorRequest(
             work_unit_id=address.work_unit_id,
@@ -537,7 +543,7 @@ def resolve_optional_modelo_work_address(address: ModeloWorkAddress) -> ModeloWo
 
 
 def resolve_modelo_work_address_unit(address: ModeloWorkAddress) -> WorkUnit:
-    """Resolve an operator-facing modelo work address to one work unit."""
+    """Resolve an operator-facing modelo work address to one :class:`WorkUnit`."""
     resolution = resolve_modelo_work_address(address)
     assert resolution.work_unit is not None
     return resolution.work_unit
@@ -550,7 +556,7 @@ def resolve_modelo_calculation_revision_address(
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
     default_for: ModeloCalculationRevisionDefault | None = None,
 ) -> CalculationRevision:
-    """Resolve a calculation revision by exact id or under a modelo work address."""
+    """Resolve a :class:`CalculationRevision` by exact id or under a modelo work address."""
     if calculation_revision_id is not None and address == ModeloWorkAddress():
         return get_calculation_revision(calculation_revision_id)
 
@@ -568,7 +574,7 @@ def resolve_modelo_revision_pick(
     target: ModeloWorkTarget,
     pick: ModeloRevisionPick | None = None,
 ) -> ModeloResolvedRevisionProjection:
-    """Resolve and project a calculation revision for a visible or exact work target."""
+    """Resolve and project a :class:`ModeloResolvedRevisionProjection` for a visible or exact work target."""
     if pick is None:
         pick = ModeloRevisionPick()
     work_unit = resolve_modelo_work_address_unit(work_address_for_modelo_target(target))
@@ -602,7 +608,7 @@ def resolve_verifiable_modelo_calculation_revision_address(
     calculation_revision_id: str | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
 ) -> CalculationRevision:
-    """Resolve the calculation revision that ``work verify`` may consume."""
+    """Resolve the :class:`CalculationRevision` that ``work verify`` may consume."""
     revision = resolve_modelo_calculation_revision_address(
         address=address,
         calculation_revision_id=calculation_revision_id,
@@ -622,7 +628,7 @@ def resolve_fileable_modelo_calculation_revision_address(
     calculation_revision_id: str | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
 ) -> CalculationRevision:
-    """Resolve the calculation revision that ``work file`` may consume."""
+    """Resolve the :class:`CalculationRevision` that ``work file`` may consume."""
     revision = resolve_modelo_calculation_revision_address(
         address=address,
         calculation_revision_id=calculation_revision_id,
@@ -642,7 +648,7 @@ def resolve_exportable_modelo_calculation_revision_address(
     calculation_revision_id: str | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
 ) -> CalculationRevision:
-    """Resolve the calculation revision that ``modelo export`` may consume."""
+    """Resolve the :class:`CalculationRevision` that ``modelo export`` may consume."""
     revision = resolve_modelo_calculation_revision_address(
         address=address,
         calculation_revision_id=calculation_revision_id,

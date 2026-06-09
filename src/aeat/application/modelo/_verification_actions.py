@@ -701,7 +701,8 @@ def verify_modelo_revision(
 ) -> VerificationReport:
     """Evaluate a draft revision against registry, clean-state, provenance, and workflow gates.
 
-    Use of :class:`TaxpayerProfile`, :class:`TransactionCatalogueRepository` for compliance.
+    Returns a :class:`VerificationReport`. Uses :class:`TaxpayerProfile` and
+    :class:`TransactionCatalogueRepository` for compliance checks.
     """
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()

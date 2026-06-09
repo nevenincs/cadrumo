@@ -118,7 +118,7 @@ def calculate_modelo_work_revision(
     actor: str,
     inputs: WorkCalculateInputBundle,
 ) -> ModeloWorkCalculationServiceResult:
-    """Persist a draft calculation revision and derive command-facing summaries."""
+    """Persist a draft revision and return a :class:`ModeloWorkCalculationServiceResult`."""
     from ._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
     from ._work_lifecycle import get_work_unit
 
@@ -159,7 +159,7 @@ def build_work_calculate_input_bundle(
     sal_capital_social: Decimal | None = None,
     autoconsumo_promotor_base: Decimal | None = None,
 ) -> WorkCalculateInputBundle:
-    """Build a calculation input bundle from operator-supplied override tokens."""
+    """Build a :class:`WorkCalculateInputBundle` from operator-supplied override tokens."""
     _validate_detail_rows(detail_rows)
     revision = _revision_for_work_unit(work_unit_id)
     casilla_inputs: dict[str, Decimal] = {}
@@ -284,7 +284,7 @@ def _normalise_casilla_key(key: str, revision: object) -> str:
 
 
 def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalitySummary | None:
-    """Return the Modelo 202 modality summary for a work unit, when applicable."""
+    """Return a :class:`Modelo202ModalitySummary` for a work unit, or ``None`` when not applicable."""
     if str(work_unit.modelo) != "202":
         return None
 
@@ -300,7 +300,7 @@ def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalityS
 
 
 def authorization_advisory_for_modelo(modelo: str) -> ModeloAuthorizationAdvisorySummary | None:
-    """Return authorization advisory state for an unauthorized-but-computable modelo."""
+    """Return a :class:`ModeloAuthorizationAdvisorySummary` for an unauthorized-but-computable modelo."""
     from ...core.access_gate import AuthorizationState
 
     try:

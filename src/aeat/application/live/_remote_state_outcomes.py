@@ -30,7 +30,7 @@ def surface_outcome(
     error: BaseException | None,
     auth: LiveIvaAuthOutcome,
 ) -> LiveIvaReadOutcome:
-    """Build the redacted outcome for one live IVA read surface."""
+    """Build and return a :class:`LiveIvaReadOutcome` for one live IVA read surface."""
     if auth.status is LiveIvaReadStatus.FAILED and auth.failure_type != "MissingAuthResult":
         return LiveIvaReadOutcome(
             surface=surface,
@@ -91,7 +91,7 @@ def auth_outcome(
     auth_result: AuthenticatedAeatSessionResult | None,
     error: BaseException | None,
 ) -> LiveIvaAuthOutcome:
-    """Build the redacted authentication outcome for live IVA acquisition."""
+    """Build and return a :class:`LiveIvaAuthOutcome` for live IVA acquisition."""
     if error is not None:
         failure_mode = classify_live_iva_acquisition_failure(error)
         return LiveIvaAuthOutcome(

@@ -216,7 +216,7 @@ def load_persisted_iva_compensation_decision_for_work_unit(
     *,
     repository: IvaWalletDecisionRepository | None = None,
 ) -> IvaCompensationReconciliationDecision | None:
-    """Load the persisted Modelo 303 wallet decision for a work unit."""
+    """Load and return the :class:`IvaCompensationReconciliationDecision` for a work unit."""
     if work_unit.modelo != "303":
         return None
     taxpayer_nif = taxpayer_nif_for_bucket(work_unit.bucket_id)
@@ -301,9 +301,9 @@ def require_persisted_iva_compensation_decision_matches_revision(
     *,
     repository: IvaWalletDecisionRepository | None = None,
 ) -> IvaCompensationReconciliationDecision | None:
-    """Require the persisted Modelo 303 wallet decision to match a calculation revision.
+    """Return the :class:`IvaCompensationReconciliationDecision` when it matches the revision.
 
-    Use of :class:`CalculationRevision` for compliance.
+    Uses :class:`CalculationRevision` for the revision match check.
     """
     if work_unit.modelo != "303":
         return None

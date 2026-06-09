@@ -33,7 +33,7 @@ from ._registry_resources import (
 
 
 def load_work_unit_for_calculation(work_units: WorkUnitCatalogue, *, work_unit_id: str) -> WorkUnit:
-    """Load a work unit by id, rejecting missing ids and DISCARDED state."""
+    """Load and return a :class:`WorkUnit` by id, rejecting missing ids and DISCARDED state."""
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
@@ -49,7 +49,7 @@ def load_work_unit_for_calculation(work_units: WorkUnitCatalogue, *, work_unit_i
 
 
 def resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnapshot:
-    """Resolve the registry snapshot for ``(modelo, filing_year, period)``."""
+    """Resolve and return the :class:`RegistrySnapshot` for ``(modelo, filing_year, period)``."""
     from ...domain.calculations.registry import RegistrySnapshotError
 
     try:
@@ -85,9 +85,9 @@ def resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnap
 def build_typed_observations(
     *, engine_result: RegistryCalculationResult, snapshot: RegistrySnapshot
 ) -> tuple[CasillaObservation, ...]:
-    """Build a typed ``CasillaObservation`` tuple for every engine-result casilla.
+    """Build a :class:`CasillaObservation` tuple for every engine-result casilla.
 
-    Use of :class:`RegistrySnapshot` for compliance.
+    Uses :class:`RegistrySnapshot` for provenance fields.
     """
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     entries_by_target = {entry.target: entry for entry in engine_result.entries}
@@ -107,9 +107,9 @@ def external_filing_observations(
     casilla_values: Mapping[str, Decimal],
     snapshot: RegistrySnapshot,
 ) -> tuple[CasillaObservation, ...]:
-    """Build registry-grounded observations for externally imported casilla values.
+    """Build :class:`CasillaObservation` records for externally imported casilla values.
 
-    Use of :class:`RegistrySnapshot` for compliance.
+    Uses :class:`RegistrySnapshot` for provenance fields.
     """
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     return tuple(
@@ -130,7 +130,7 @@ def casilla_observation_for(
     entry: RegistryCalculationEntry | None,
     registry_casilla: CasillaDefinition | None,
 ) -> CasillaObservation:
-    """Project one casilla into a ``CasillaObservation`` with full provenance."""
+    """Project one casilla into a :class:`CasillaObservation` with full provenance."""
     if entry is not None:
         return CasillaObservation(
             casilla_id=casilla_id,
@@ -166,9 +166,9 @@ def amendment_observations(
     baseline_revision: CalculationRevision,
     snapshot: RegistrySnapshot,
 ) -> tuple[CasillaObservation, ...]:
-    """Build typed observations for an amendment revision.
+    """Build :class:`CasillaObservation` records for an amendment revision.
 
-    Use of :class:`CalculationRevision`, :class:`RegistrySnapshot` for compliance.
+    Uses :class:`CalculationRevision` and :class:`RegistrySnapshot` for provenance.
     """
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     baseline_by_id = {obs.casilla_id: obs for obs in baseline_revision.observations}

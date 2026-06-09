@@ -441,6 +441,8 @@ class SecureObjectRepository:
     def probe_namespace_integrity(self, namespace: str) -> SecureObjectNamespaceIntegrity:
         """Count decryptable and undecryptable rows in ``namespace``.
 
+        Returns a :class:`SecureObjectNamespaceIntegrity` for the namespace.
+
         This method answers a strictly crypto-layer question -- can the
         ``payload`` ciphertext be unwrapped under the current master key
         -- and intentionally bypasses the classification and

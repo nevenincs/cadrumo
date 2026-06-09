@@ -1194,12 +1194,12 @@ _settings_override: contextvars.ContextVar[Settings | None] = contextvars.Contex
 
 
 def classify_storage_route(settings: Settings | None = None) -> StorageRouteClassification:
-    """Classify the effective primary SQL route for write guards."""
+    """Classify the effective primary SQL route and return a :class:`StorageRouteClassification`."""
     return classify_storage_route_for_settings(settings or load_settings())
 
 
 def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None = None) -> Settings:
-    """Return settings routed to ``bucket_id``'s active-profile database."""
+    """Return a :class:`Settings` instance routed to ``bucket_id``'s active-profile database."""
     return settings_for_bucket_route(bucket_id, source or load_settings())
 
 

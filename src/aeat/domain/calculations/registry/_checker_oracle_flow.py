@@ -34,7 +34,7 @@ def normalize_expected_verdicts(expected: Mapping[str, object], *, blank_message
 
 
 def replay_parse_operation(action: str) -> tuple[RemoteOperation, ...]:
-    """Return the single local replay-parse operation."""
+    """Return the single local replay-parse :class:`RemoteOperation` tuple."""
     return (RemoteOperation(kind="local_workbook", action=action),)
 
 
@@ -55,7 +55,7 @@ def observed_verdict(values: Mapping[str, str], key: str) -> str | None:
 
 
 def compare_verdict_field(key: str, expected: str, *, observed: str | None) -> ParityFieldComparison:
-    """Compare one expected verdict against one observed verdict."""
+    """Compare one expected verdict against one observed verdict and return a :class:`ParityFieldComparison`."""
     if observed is None:
         return ParityFieldComparison(name=key, expected=expected, observed="<missing>", verdict="mismatch")
     normalized_observed = observed.strip().lower()

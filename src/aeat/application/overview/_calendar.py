@@ -514,7 +514,7 @@ def calendar_events_from_expedientes_snapshots(
     snapshots: tuple[PersistedExpedientesSnapshot, ...],
     calendar_range: OverviewCalendarRange,
 ) -> tuple[OverviewCalendarEvent, ...]:
-    """Project persisted AEAT declaration-register snapshots into calendar events."""
+    """Project persisted AEAT declaration-register snapshots into :class:`OverviewCalendarEvent` tuples."""
     events: list[OverviewCalendarEvent] = []
     for snapshot in sorted(snapshots, key=lambda item: item.captured_at):
         for declaration in snapshot.declarations:
@@ -546,7 +546,7 @@ def calendar_events_from_notification_snapshots(
     snapshots: tuple[PersistedNotificationsSnapshot, ...],
     calendar_range: OverviewCalendarRange,
 ) -> tuple[OverviewCalendarEvent, ...]:
-    """Project persisted AEAT notifications and communications into calendar events."""
+    """Project persisted AEAT notifications and communications into :class:`OverviewCalendarEvent` tuples."""
     events: list[OverviewCalendarEvent] = []
     for snapshot in sorted(snapshots, key=lambda item: item.captured_at):
         for row in snapshot.rows:
@@ -577,7 +577,7 @@ def build_overview_calendar_events(
     expedientes_snapshots: tuple[PersistedExpedientesSnapshot, ...] = (),
     notification_snapshots: tuple[PersistedNotificationsSnapshot, ...] = (),
 ) -> tuple[OverviewCalendarEvent, ...]:
-    """Build observed calendar events from persisted local live-read snapshots."""
+    """Build :class:`OverviewCalendarEvent` tuples from persisted local live-read snapshots."""
     events = [
         *calendar_events_from_expedientes_snapshots(expedientes_snapshots, calendar_range),
         *calendar_events_from_notification_snapshots(notification_snapshots, calendar_range),
@@ -592,7 +592,7 @@ def calendar_filing_evidence_from_sources(
     filed_declaration_observations: tuple[object, ...] = (),
     calculation_observations: tuple[object, ...] = (),
 ) -> tuple[OverviewCalendarFilingEvidence, ...]:
-    """Build per-obligation filing evidence from local records and AEAT observations.
+    """Build :class:`OverviewCalendarFilingEvidence` tuples from local records and AEAT observations.
 
     The function is pure and intentionally accepts already-loaded
     records. CLI/storage code owns I/O; this projection only reconciles

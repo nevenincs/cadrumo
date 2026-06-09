@@ -25,7 +25,9 @@ def resolve_m210_rate(
 ) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
     """Resolve the M210 rate for (profile, tipo_renta, year).
 
-    Use of :class:`RegistrySnapshot`, :class:`TaxpayerProfile` for compliance.
+    Returns a two-tuple of ``(rate, findings)`` where findings is a list of
+    :class:`ModeloVerificationFinding` records. Uses :class:`RegistrySnapshot`
+    and :class:`TaxpayerProfile` for rate lookup.
     """
     baseline_param = None
     convenio_param = None

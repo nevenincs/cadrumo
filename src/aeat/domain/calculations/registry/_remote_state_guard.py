@@ -293,7 +293,7 @@ def assert_remote_operations_allowed(
     *,
     context: str = "remote operation",
 ) -> tuple[RemoteOperation, ...]:
-    """Pre-flight an operation plan through the remote-state guard.
+    """Pre-flight an operation plan through the remote-state guard and return a tuple of :class:`RemoteOperation`.
 
     Returns:
         The validated operations as an immutable tuple.

@@ -200,9 +200,9 @@ class CrossPeriodCleanStateVerdict(BaseModel):
 
 
 def cross_period_dependency_requirements(snapshot: RegistrySnapshot) -> tuple[CrossPeriodDependencyRequirement, ...]:
-    """Return the registry-derived filed-history requirements for ``snapshot``.
+    """Return the :class:`CrossPeriodDependencyRequirement` records for ``snapshot``.
 
-    Use of :class:`RegistrySnapshot` for compliance.
+    Derives filed-history requirements from :class:`RegistrySnapshot`.
     """
     requirements: dict[
         tuple[str, int, str, CrossPeriodDependencyOrigin, tuple[str, ...]],
@@ -231,14 +231,13 @@ def cross_period_dependency_inventory(
     filing_year: int,
     modelos: Iterable[str] | None = None,
 ) -> CrossPeriodDependencyInventory:
-    """Return every registry snapshot that declares cross-period dependencies.
+    """Return a :class:`CrossPeriodDependencyInventory` of snapshots with cross-period dependencies.
 
     The inventory is a backend coverage surface. It lets callers prove which
     modelos and periods are in scope for the clean-state guard before they wire
     model-specific workflow tests or operator diagnostics.
 
-
-    Use of :class:`ValidatedRegistryAuthority` for compliance.
+    Uses :class:`ValidatedRegistryAuthority` for snapshot resolution.
     """
     selected_modelos = authority.modelos if modelos is None else tuple(authority.modelo(modelo) for modelo in modelos)
     items: list[CrossPeriodDependencyInventoryItem] = []
@@ -291,9 +290,9 @@ def evaluate_cross_period_clean_state(
     justificante_repository: JustificanteRepository | None = None,
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
 ) -> CrossPeriodCleanStateVerdict:
-    """Evaluate whether every cross-period dependency is filing-grade clean.
+    """Evaluate cross-period dependencies and return a :class:`CrossPeriodCleanStateVerdict`.
 
-    Use of :class:`RegistrySnapshot` for compliance.
+    Uses :class:`RegistrySnapshot` to derive the dependency requirements.
     """
     filing_catalogue = filing_repository.load()
     calculation_catalogue = calculation_repository.load()

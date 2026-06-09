@@ -180,7 +180,7 @@ class ModeloWorkUnitCandidate(BaseModel):
 
     @classmethod
     def from_work_unit(cls, unit: WorkUnit) -> ModeloWorkUnitCandidate:
-        """Project a work unit into selector guidance metadata."""
+        """Project a work unit into a :class:`ModeloWorkUnitCandidate` selector guidance record."""
         return cls(
             work_unit_id=unit.work_unit_id,
             short_work_unit_id=unit.work_unit_id[-12:],
@@ -214,10 +214,7 @@ class ModeloCalculationRevisionCandidate(BaseModel):
 
     @classmethod
     def from_revision(cls, revision: CalculationRevision) -> ModeloCalculationRevisionCandidate:
-        """Project a calculation revision into selector guidance metadata.
-
-        Use of :class:`CalculationRevision` for compliance.
-        """
+        """Project a :class:`CalculationRevision` into a :class:`ModeloCalculationRevisionCandidate`."""
         return cls(
             calculation_revision_id=revision.calculation_revision_id,
             short_calculation_revision_id=revision.calculation_revision_id[-12:],
@@ -275,7 +272,7 @@ def visible_target_work_units(
     *,
     repository: WorkUnitCatalogueRepositoryProtocol | None = None,
 ) -> tuple[WorkUnit, ...]:
-    """Return non-discarded work units matching the operator-visible target."""
+    """Return non-discarded :class:`WorkUnit` records matching the operator-visible target."""
     if not request.has_visible_target:
         raise ModeloWorkSelectorContradictionError("modelo, filing_year, and period are required for natural lookup")
     bucket_id = resolve_modelo_work_bucket(request)
@@ -304,7 +301,7 @@ def resolve_modelo_work_unit(
     *,
     repository: WorkUnitCatalogueRepositoryProtocol | None = None,
 ) -> ModeloWorkResolution:
-    """Resolve one work unit by exact id or visible target.
+    """Resolve one work unit and return a :class:`ModeloWorkResolution` by exact id or visible target.
 
     The visible-target path deliberately searches by bucket/modelo/year/period
     before registry-revision exact targeting. That prevents a command from
@@ -391,7 +388,7 @@ def select_modelo_calculation_revision(
     calculation_revision_id: str | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
 ) -> ModeloCalculationRevisionSelection:
-    """Select a calculation revision under one resolved work unit."""
+    """Select a :class:`ModeloCalculationRevisionSelection` under one resolved work unit."""
     revisions = _revisions_for_work_unit(work_unit, calculation_repository=calculation_repository)
     if selector is ModeloCalculationRevisionSelector.EXPLICIT:
         if calculation_revision_id is None:
@@ -450,7 +447,7 @@ def resolve_modelo_calculation_revision_pick(
     default_for: ModeloCalculationRevisionDefault | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
 ) -> ModeloCalculationRevisionSelection:
-    """Resolve a command-specific revision pick under one work unit.
+    """Resolve a command-specific :class:`ModeloCalculationRevisionSelection` pick under one work unit.
 
     This is the application selector policy surface for commands that
     accept a natural work target plus a revision selector. It preserves
@@ -485,7 +482,7 @@ def select_current_draft_revision(
     *,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
 ) -> ModeloCalculationRevisionSelection:
-    """Select the current draft revision for verification."""
+    """Select the current draft revision and return a :class:`ModeloCalculationRevisionSelection` for verification."""
     selection = select_modelo_calculation_revision(
         work_unit,
         selector=ModeloCalculationRevisionSelector.CURRENT,
@@ -504,7 +501,10 @@ def select_current_verified_revision(
     *,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
 ) -> ModeloCalculationRevisionSelection:
-    """Select the current verified-complete revision for filing."""
+    """Select the current verified-complete revision for filing.
+
+    Returns a :class:`ModeloCalculationRevisionSelection`.
+    """
     selection = select_modelo_calculation_revision(
         work_unit,
         selector=ModeloCalculationRevisionSelector.CURRENT,
@@ -523,7 +523,7 @@ def select_exportable_revision(
     *,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
 ) -> ModeloCalculationRevisionSelection:
-    """Select the default exportable revision for a work unit.
+    """Select the default exportable :class:`ModeloCalculationRevisionSelection` for a work unit.
 
     Preference order:
     1. current filed pointer, when it points to a current filed revision;

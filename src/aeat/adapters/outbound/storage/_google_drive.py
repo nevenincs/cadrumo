@@ -459,7 +459,7 @@ class GoogleDriveProvider:
                 ``[A-Za-z0-9\\-_.]{1,64}``.
 
         Returns:
-            ``ProviderObjectMetadata`` populated from the Drive API response.
+            :class:`ProviderObjectMetadata` populated from the Drive API response.
 
         Raises:
             OutboundStorageValidationError: When ``namespace``,
@@ -544,7 +544,7 @@ class GoogleDriveProvider:
             object_key_hmac: Full HMAC string identifying the object.
 
         Returns:
-            A two-tuple of ``(payload_bytes, ProviderObjectMetadata)``.
+            A two-tuple of ``(payload_bytes, :class:`ProviderObjectMetadata`)``.
 
         Raises:
             OutboundStorageNotFoundError: When the namespace folder or object
@@ -699,7 +699,7 @@ class GoogleDriveProvider:
             namespace: Logical bucket name.
 
         Yields:
-            ``ProviderObjectMetadata`` records in Drive-returned order.
+            :class:`ProviderObjectMetadata` records in Drive-returned order.
 
         Raises:
             OutboundStorageNotFoundError: When the namespace folder is absent

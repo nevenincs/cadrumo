@@ -103,7 +103,7 @@ def persist_iva_compensation_history_observations_strict(
 
 
 def latest_declarations_by_period(declarations: tuple[Declaracion, ...]) -> tuple[Declaracion, ...]:
-    """Return one latest accepted declaration per period from register rows."""
+    """Return the latest :class:`Declaracion` per period from register rows."""
     latest: dict[str, Declaracion] = {}
     for declaration in declarations:
         current = latest.get(declaration.period)

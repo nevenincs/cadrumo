@@ -43,7 +43,7 @@ def modelo_work_create_applicability_refusal(
     *,
     allow_not_applicable: bool,
 ) -> ModeloWorkCreateApplicabilityRefusal | None:
-    """Return the active-profile applicability refusal for work creation, if any."""
+    """Return a :class:`ModeloWorkCreateApplicabilityRefusal` for the active profile, or ``None`` when applicable."""
     if allow_not_applicable:
         return None
 

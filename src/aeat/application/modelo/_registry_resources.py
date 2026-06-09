@@ -22,7 +22,7 @@ def registry_root() -> Path:
 
 
 def authority_via_resources() -> ValidatedRegistryAuthority:
-    """Return the registry authority via the central resource registry."""
+    """Return the :class:`ValidatedRegistryAuthority` via the central resource registry."""
     from ...core.resources import resources
 
     return resources().modelos.authority

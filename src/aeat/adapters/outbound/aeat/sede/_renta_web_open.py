@@ -149,7 +149,7 @@ class RentaWebOpenSedeDriver:
         *,
         expected: Mapping[str, object],
     ) -> RentaWebOpenObservation:
-        """Return an observation by delegating to the functional collector."""
+        """Return a :class:`RentaWebOpenObservation` by delegating to the functional collector."""
         return await collect_renta_web_open_observation(payload, expected=expected, settings=self._settings)
 
 

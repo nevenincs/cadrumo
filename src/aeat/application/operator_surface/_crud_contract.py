@@ -244,7 +244,7 @@ class CrudContractCatalogue(BaseModel):
         return self
 
     def find(self, cli_path: str) -> MutatingNounGroupContract | None:
-        """Return the contract for ``cli_path``, or ``None`` if not registered.
+        """Return the :class:`MutatingNounGroupContract` for ``cli_path``, or ``None`` if not registered.
 
         Args:
             cli_path: The Typer mount path to look up (e.g.
