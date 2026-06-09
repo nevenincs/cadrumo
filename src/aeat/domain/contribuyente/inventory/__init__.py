@@ -27,6 +27,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from ....core.errors import AeatError as _AeatError
 from ....core.errors import CoreValidationError as _CoreValidationError
+from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 from ....core.money import round_to_cents as _quantize
 
 
@@ -133,7 +134,7 @@ class MovementRecord(BaseModel):
     quantity: Decimal = Field(gt=Decimal("0"))
     unit_cost: Decimal | None = Field(default=None, ge=Decimal("0"))
     taxable_base: Decimal | None = Field(default=None, ge=Decimal("0"))
-    iva_rate: Decimal = Field(default=Decimal("21.00"), ge=Decimal("0"), le=Decimal("100"))
+    iva_rate: Decimal = Field(default=DEFAULT_IVA_GENERAL_RATE_PCT, ge=Decimal("0"), le=Decimal("100"))
     iva_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     deductible_iva_ratio: Decimal = Field(default=Decimal("1.00"), ge=Decimal("0"), le=Decimal("1"))
     schema_version: str = INVENTORY_SCHEMA_VERSION
