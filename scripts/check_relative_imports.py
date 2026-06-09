@@ -12,7 +12,7 @@ docstrings or `textwrap.dedent` blocks does not produce false positives.
 
 Intended invocation:
 
-* `just lint` â€” runs this with no arguments (full-tree scan).
+* `just check-relative-imports` â€” runs this with no arguments (full-tree scan).
 * `prek run` â€” runs as a local hook with the staged file paths
   appended (per-file scan); see `prek.toml`.
 * Direct invocation: `python scripts/check_relative_imports.py [PATH...]`.

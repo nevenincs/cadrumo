@@ -78,7 +78,7 @@ Run `just docs` to build the rendered site, which adds the command-line and sour
 Contributor documentation lives separately from this user guide.
 
 - Build the documentation with `just docs`, and check it with `just docs-check`. The built site holds the command-line and source-code reference.
-- The local quality gates are the source of truth: `just lint`, `just typecheck`, `just test`, and `just hooks`.
+- The local quality gates are the source of truth: `just check-style`, `just check-types`, `just test-unit`, and `just check-pre-commit`.
 - The [architecture overview](docs/architecture.md) explains how the codebase fits together.
 - The agent-driven contribution workflow is documented in [`CLAUDE.md`](CLAUDE.md).
 

@@ -1,207 +1,213 @@
 #!/usr/bin/env python
 """Zero-noise code complexity and maintainability auditor.
 
-Enforces cyclomatic complexity (Radon), maintainability index (Radon),
-and cognitive complexity (Complexipy) thresholds, filtering out noise
-to output only actionable violations.
+Reports cyclomatic complexity (Radon CC), maintainability index (Radon MI),
+and cognitive complexity (Complexipy) as signal only:
+
+* On success (nothing exceeds thresholds): one-line green aggregate, exit 0.
+* On findings: a one-line aggregate, then only the most actionable entries
+  per category (worst first, capped), with a trailing count of the
+  remainder — never an unbounded wall of every borderline function.
+
+Pass ``--full`` to list every finding (uncapped) for deep review.
 """
 
 from __future__ import annotations
 
 import argparse
+import re
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 try:
     from complexipy import file_complexity
-except ImportError:
-    # Fallback if complexipy is run outside the correct venv
+except ImportError:  # pragma: no cover - environment fallback
     file_complexity = None
 
-
-def parse_args() -> argparse.Namespace:
-    """Parse command-line arguments for the complexity audit."""
-    parser = argparse.ArgumentParser(description="Audit code complexity with zero-noise filtering.")
-    parser.add_argument(
-        "--tests",
-        action="store_true",
-        help="Audit test files instead of production packages.",
-    )
-    parser.add_argument(
-        "--threshold",
-        type=int,
-        default=20,
-        help="Cognitive complexity threshold for complexipy.",
-    )
-    return parser.parse_args()
+_TARGET = "src/aeat"
+_PROD_EXCLUDE = "src/aeat/test_*.py,src/aeat/**/test_*.py,src/aeat/**/_test_*.py,src/aeat/tests/*,src/aeat/_data/*"
+_TEST_EXCLUDE = "src/aeat/application/*,src/aeat/domain/*,src/aeat/adapters/*,src/aeat/core/*,src/aeat/_data/*"
+_CC_CAP = 20
+_MI_CAP = 15
+_COG_CAP = 20
+_CC_LINE = re.compile(r"^\s+\w \d+:\d+ (?P<name>\S+) - (?P<grade>[A-F]) \((?P<score>\d+)\)")
+_MI_LINE = re.compile(r"^(?P<path>\S+) - (?P<grade>[A-F]) \((?P<score>[\d.]+)\)")
 
 
-def run_radon_cc(target: str, exclude: str) -> list[str]:
-    """Run radon cc and filter out non-violation output."""
-    cmd = ["radon", "cc", target, "-n", "C", "-s", "-a"]
+@dataclass(frozen=True)
+class CcHit:
+    """One cyclomatic-complexity violation."""
+
+    path: str
+    name: str
+    grade: str
+    score: int
+
+
+@dataclass(frozen=True)
+class MiHit:
+    """One maintainability-index violation."""
+
+    path: str
+    grade: str
+    score: float
+
+
+@dataclass(frozen=True)
+class CogHit:
+    """One cognitive-complexity violation."""
+
+    path: str
+    name: str
+    score: int
+
+
+def _radon(args: list[str], exclude: str) -> list[str]:
+    """Run a radon subcommand and return raw stdout lines."""
+    cmd = ["uv", "run", "--no-sync", "radon", *args]
     if exclude:
         cmd.extend(["-e", exclude])
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)  # noqa: S603
+    return result.stdout.splitlines()
 
-    result = subprocess.run(  # noqa: S603
-        ["uv", "run", "--no-sync", *cmd],  # noqa: S607
-        capture_output=True,
-        text=True,
-        check=False,
-    )
 
-    lines = result.stdout.splitlines()
-    violations: list[str] = []
-    has_functions = False
-
+def collect_cc(exclude: str) -> list[CcHit]:
+    """Collect Radon cyclomatic-complexity hits at grade C or worse."""
+    lines = _radon(["cc", _TARGET, "-n", "C", "-s"], exclude)
+    hits: list[CcHit] = []
+    current = "?"
     for line in lines:
-        stripped = line.strip()
-        if not stripped:
+        if not line.strip() or line.startswith("Average complexity:"):
             continue
-        # Radon cc outputs file paths and then blocks with grades:
-        # e.g., "    F 12:0 my_func - C (12)"
-        # We detect if there are actual function lines (indented)
-        if line.startswith(" ") or line.startswith("\t"):
-            violations.append(line)
-            has_functions = True
-        elif not line.startswith("Average complexity:"):
-            # This is a file header line, we will append it if it precedes a violation
-            violations.append(line)
-
-    # Clean up file headers that have no following violations
-    cleaned: list[str] = []
-    last_header = None
-    for line in violations:
-        if line.startswith(" ") or line.startswith("\t"):
-            if last_header:
-                cleaned.append(last_header)
-                last_header = None
-            cleaned.append(line)
-        else:
-            last_header = line
-
-    if has_functions:
-        # Append the average complexity line at the end for context
-        avg_line = next((ln for ln in lines if ln.startswith("Average complexity:")), None)
-        if avg_line:
-            cleaned.append(avg_line)
-        return cleaned
-    return []
-
-
-def run_radon_mi(target: str, exclude: str) -> list[str]:
-    """Run radon mi and return only files with grade B or worse."""
-    cmd = ["radon", "mi", target, "-s"]
-    if exclude:
-        cmd.extend(["-e", exclude])
-
-    result = subprocess.run(  # noqa: S603
-        ["uv", "run", "--no-sync", *cmd],  # noqa: S607
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-    lines = result.stdout.splitlines()
-    violations: list[str] = []
-
-    for line in lines:
-        stripped = line.strip()
-        if not stripped:
+        if not (line.startswith(" ") or line.startswith("\t")):
+            current = line.strip().replace("\\", "/")
             continue
-        # MI outputs: "path/to/file.py - A" (or B, C)
-        # We filter out A-grade files (high maintainability) to reduce noise.
-        # Actionable files are B, C, or lower.
-        if not (stripped.endswith(" - A") or " - A (" in stripped):
-            violations.append(line)
+        match = _CC_LINE.match(line)
+        if match:
+            hits.append(
+                CcHit(
+                    path=current,
+                    name=match["name"],
+                    grade=match["grade"],
+                    score=int(match["score"]),
+                )
+            )
+    return hits
 
-    return violations
+
+def collect_mi(exclude: str) -> list[MiHit]:
+    """Collect Radon maintainability-index hits below grade A."""
+    hits: list[MiHit] = []
+    for line in _radon(["mi", _TARGET, "-s"], exclude):
+        match = _MI_LINE.match(line)
+        if match and match["grade"] != "A":
+            hits.append(
+                MiHit(
+                    path=match["path"].replace("\\", "/"),
+                    grade=match["grade"],
+                    score=float(match["score"]),
+                )
+            )
+    return hits
 
 
-def run_cognitive_complexity(root: Path, is_test_run: bool, threshold: int) -> list[str]:
-    """Audit cognitive complexity using complexipy."""
+def collect_cog(root: Path, is_test_run: bool, threshold: int) -> list[CogHit]:
+    """Collect Complexipy cognitive-complexity hits above the threshold."""
     if file_complexity is None:
-        return ["[WARNING] complexipy is not installed or available in this environment."]
+        return []
 
     def is_production(path: Path) -> bool:
         parts = path.parts
-        name = path.name
         if "_data" in parts or "tests" in parts:
             return False
+        name = path.name
         return not (name.startswith("test_") or name.startswith("_test_") or "_test_" in name)
 
     if is_test_run:
-        # Top-level test files matching test_*.py in target root
         files = sorted(root.glob("test_*.py"))
     else:
-        # Production files
         files = sorted(path for path in root.rglob("*.py") if is_production(path))
 
-    findings: list[tuple[int, str, str]] = []
+    hits: list[CogHit] = []
     for path in files:
         try:
             result = file_complexity(str(path))
-            for function in result.functions:
-                if function.complexity > threshold:
-                    findings.append((function.complexity, str(path), function.name))
-        except Exception:  # noqa: S110
-            # Handle parsing errors gracefully
-            pass
-
-    findings.sort(reverse=True)
-    violations: list[str] = []
-    if findings:
-        violations.append(f"Cognitive complexity violations (threshold {threshold}):")
-        for complexity, path, function_name in findings[:80]:
-            violations.append(f"{complexity:>4}  {path}::{function_name}")
-    return violations
+        except Exception:
+            result = None
+        if result is None:
+            continue
+        for function in result.functions:
+            if function.complexity > threshold:
+                hits.append(CogHit(path=str(path).replace("\\", "/"), name=function.name, score=function.complexity))
+    return hits
 
 
-def main() -> None:
-    """Run complexity audits against production or test packages."""
-    args = parse_args()
-    target_dir = "src/aeat"
+def _emit_cc(hits: list[CcHit], full: bool) -> None:
+    """Print cyclomatic hits worst-first, capped unless full."""
+    ordered = sorted(hits, key=lambda h: h.score, reverse=True)
+    shown = ordered if full else ordered[:_CC_CAP]
+    print("\nCyclomatic complexity (grade C+):")
+    for hit in shown:
+        print(f"  {hit.grade} ({hit.score:>2})  {hit.path}::{hit.name}")
+    if len(ordered) > len(shown):
+        print(f"         ... {len(ordered) - len(shown)} more at grade C+")
 
-    if args.tests:
-        # Exclude pattern for test run is not needed as we only target top-level test files,
-        # but for Radon we exclude production and data folders:
-        exclude_pattern = (
-            "src/aeat/application/*,src/aeat/domain/*,src/aeat/adapters/*,src/aeat/core/*,src/aeat/_data/*"
-        )
-        scope_name = "test files"
-    else:
-        exclude_pattern = (
-            "src/aeat/test_*.py,src/aeat/**/test_*.py,src/aeat/**/_test_*.py,src/aeat/tests/*,src/aeat/_data/*"
-        )
-        scope_name = "production code"
 
-    # Run radon CC
-    cc_violations = run_radon_cc(target_dir, exclude_pattern)
+def _emit_mi(hits: list[MiHit], full: bool) -> None:
+    """Print maintainability hits worst-first, capped unless full."""
+    ordered = sorted(hits, key=lambda h: h.score)
+    shown = ordered if full else ordered[:_MI_CAP]
+    print("\nMaintainability index (grade < A):")
+    for hit in shown:
+        print(f"  {hit.grade} ({hit.score:>5.1f})  {hit.path}")
+    if len(ordered) > len(shown):
+        print(f"             ... {len(ordered) - len(shown)} more below grade A")
 
-    # Run radon MI
-    mi_violations = run_radon_mi(target_dir, exclude_pattern)
 
-    # Run cognitive complexity
-    cog_violations = run_cognitive_complexity(Path(target_dir), args.tests, args.threshold)
+def _emit_cog(hits: list[CogHit], threshold: int, full: bool) -> None:
+    """Print cognitive hits worst-first, capped unless full."""
+    ordered = sorted(hits, key=lambda h: h.score, reverse=True)
+    shown = ordered if full else ordered[:_COG_CAP]
+    print(f"\nCognitive complexity (> {threshold}):")
+    for hit in shown:
+        print(f"  {hit.score:>4}  {hit.path}::{hit.name}")
+    if len(ordered) > len(shown):
+        print(f"        ... {len(ordered) - len(shown)} more over threshold")
 
-    has_violations = bool(cc_violations or mi_violations or cog_violations)
 
-    if has_violations:
-        print(f"=== Complexity Audit Failures for {scope_name} ===")
-        if cc_violations:
-            print("\n--- Cyclomatic Complexity (Radon CC Grade >= C) ---")
-            print("\n".join(cc_violations))
-        if mi_violations:
-            print("\n--- Maintainability Index (Radon MI Grade < A) ---")
-            print("\n".join(mi_violations))
-        if cog_violations:
-            print("\n--- Cognitive Complexity (Complexipy > threshold) ---")
-            print("\n".join(cog_violations))
-        sys.exit(1)
-    else:
-        print(f"no {scope_name} functions/files exceed complexity thresholds")
-        sys.exit(0)
+def main() -> int:
+    """Run complexity audits and emit signal-only output."""
+    parser = argparse.ArgumentParser(description="Audit code complexity with zero-noise filtering.")
+    parser.add_argument("--tests", action="store_true", help="Audit test files instead of production packages.")
+    parser.add_argument("--threshold", type=int, default=20, help="Cognitive complexity threshold for complexipy.")
+    parser.add_argument("--full", action="store_true", help="List every finding (uncapped).")
+    args = parser.parse_args()
+
+    exclude = _TEST_EXCLUDE if args.tests else _PROD_EXCLUDE
+    scope = "test files" if args.tests else "production code"
+
+    cc = collect_cc(exclude)
+    mi = collect_mi(exclude)
+    cog = collect_cog(Path(_TARGET), args.tests, args.threshold)
+
+    if not (cc or mi or cog):
+        print(f"complexity ({scope}): no functions or files exceed thresholds.")
+        return 0
+
+    print(
+        f"complexity ({scope}): {len(cc)} cyclomatic grade C+, "
+        f"{len(mi)} maintainability < A, {len(cog)} cognitive > {args.threshold}."
+    )
+    if cc:
+        _emit_cc(cc, args.full)
+    if mi:
+        _emit_mi(mi, args.full)
+    if cog:
+        _emit_cog(cog, args.threshold, args.full)
+    return 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

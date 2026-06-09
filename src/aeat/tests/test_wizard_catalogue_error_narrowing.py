@@ -45,7 +45,7 @@ class TestNewErrorClassesRegistered:
             ProjectAnswersNotRegisteredError,
         ],
     )
-    def test_is_aeat_error_subclass(self, error_cls: type) -> None:
+    def test_is_aeat_error_subclass(self, error_cls: type[AeatError]) -> None:
         assert issubclass(error_cls, AeatError)
 
     @pytest.mark.parametrize(
@@ -68,7 +68,7 @@ class TestNewErrorClassesRegistered:
             ProjectAnswersNotRegisteredError,
         ],
     )
-    def test_envelope_roundtrip(self, error_cls: type) -> None:
+    def test_envelope_roundtrip(self, error_cls: type[AeatError]) -> None:
         """An instance can be built into an ErrorEnvelope without raising."""
         try:
             instance = error_cls()
@@ -149,9 +149,9 @@ class TestResultSummaryNarrowing:
         def _raising(*args: object, **kwargs: object) -> object:
             raise ProjectAnswersNotRegisteredError()
 
-        module.get_work_unit = _raising  # type: ignore[assignment]
+        module.get_work_unit = _raising  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
         try:
-            result = module.calculation_result_summary(self._make_fake_revision())  # type: ignore[arg-type]
+            result = module.calculation_result_summary(self._make_fake_revision())  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
         finally:
             module.get_work_unit = original  # type: ignore[assignment]
 
@@ -166,9 +166,9 @@ class TestResultSummaryNarrowing:
         def _raising(*args: object, **kwargs: object) -> object:
             raise LookupError("not found")
 
-        module.get_work_unit = _raising  # type: ignore[assignment]
+        module.get_work_unit = _raising  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
         try:
-            result = module.calculation_result_summary(self._make_fake_revision())  # type: ignore[arg-type]
+            result = module.calculation_result_summary(self._make_fake_revision())  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
         finally:
             module.get_work_unit = original  # type: ignore[assignment]
 
@@ -183,10 +183,10 @@ class TestResultSummaryNarrowing:
         def _raising(*args: object, **kwargs: object) -> object:
             raise RuntimeError("unexpected db failure")
 
-        module.get_work_unit = _raising  # type: ignore[assignment]
+        module.get_work_unit = _raising  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
         try:
             with pytest.raises(RuntimeError, match="unexpected db failure"):
-                module.calculation_result_summary(self._make_fake_revision())  # type: ignore[arg-type]
+                module.calculation_result_summary(self._make_fake_revision())  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
         finally:
             module.get_work_unit = original  # type: ignore[assignment]
 

@@ -9,6 +9,15 @@ related:
   - '[[2026-06-09-justfile-redesign-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `justfile-redesign` `implementation` plan
 
@@ -32,6 +41,31 @@ related:
 - [x] `S18` - update CI workflow step names and just commands; `.github/workflows/ci.yml`.
 - [x] `S19` - run local pre-commit and check-all validations to verify harness health; `justfile`.
 - [x] `S20` - delete temporary backup file once verification passes; `justfile.bak`.
+- [x] `S21` - Audit check-style output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/quiet_ok.py`.
+- [x] `S22` - Audit check-format output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/quiet_ok.py`.
+- [x] `S23` - Audit check-types output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/check_types.py`.
+- [x] `S24` - Audit check-imports output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/quiet_ok.py`.
+- [x] `S25` - Audit check-relative-imports output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/check_relative_imports.py`.
+- [x] `S26` - Audit check-dependencies output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/quiet_ok.py`.
+- [x] `S27` - Audit check-security output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [x] `S28` - Audit check-rag output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [x] `S29` - Audit check-semantic output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/audit_semantic.py`.
+- [x] `S30` - Audit check-pre-commit output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/quiet_ok.py`.
+- [x] `S31` - Audit check-all output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/check_all.py`.
+- [x] `S32` - Audit audit-types output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/check_types.py`.
+- [x] `S33` - Audit audit-complexity output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/audit_complexity.py`.
+- [x] `S34` - Audit audit-dead-code output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [x] `S35` - Audit audit-duplication output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [x] `S36` - Audit audit-rag output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [x] `S37` - Audit audit-debt-dashboard output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [x] `S38` - Audit test-unit output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [x] `S39` - Audit test-integration output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [x] `S40` - Audit test-live output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [x] `S41` - Audit test-smoke output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [x] `S42` - Audit test-workbook-parity output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [x] `S43` - Audit test-coverage output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [x] `S44` - Audit env-doctor output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [x] `S45` - Audit docs-check output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
 Redesign the root build harness and project quality checks to enforce naming prefix standards, script separation, verify-only hooks, and programmatic RAG semantic audits.
 
 ## Description
@@ -53,4 +87,3 @@ The plan is complete when:
 4. Actionable complexity checks exit with zero noise and code 0 when all files satisfy the thresholds.
 5. The temporary backup file `justfile.bak` is removed from the directory tree.
 6. All execution steps have completed with valid step records.
-

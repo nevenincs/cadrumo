@@ -141,30 +141,30 @@ env-rag-stop:
 
 # ── Static checks (Verify, Read-only) ────────────────────────────────────────
 
-# Verify code style using ruff check.
+# Verify code style using ruff check. Silent on success; lists violations on failure.
 check-style:
-    uv run ruff check .
+    @uv run --no-sync python scripts/quiet_ok.py ruff check .
 
-# Verify code format using ruff format --check.
+# Verify code format using ruff format --check. Silent on success; lists drift on failure.
 check-format:
-    uv run ruff format --check .
+    @uv run --no-sync python scripts/quiet_ok.py ruff format --check .
 
-# Verify type correctness using ty check and pyright.
+# Verify type correctness with ty (full src) and pyright (strict domain + application).
+# Wrapper emits a signal-only summary grouped by rule and file; silent on success.
 check-types:
-    uv run --no-sync ty check src
-    uv run --no-sync pyright src/aeat/domain src/aeat/application
+    @uv run --no-sync python scripts/check_types.py
 
-# Verify import structure and hexagonal boundaries.
+# Verify import structure and hexagonal boundaries. Silent on success.
 check-imports:
-    uv run --no-sync lint-imports
+    @uv run --no-sync python scripts/quiet_ok.py lint-imports
 
-# Verify that all test modules only use relative imports.
+# Verify that all test modules only use relative imports. Silent on success.
 check-relative-imports:
-    uv run python scripts/check_relative_imports.py
+    @uv run --no-sync python scripts/check_relative_imports.py
 
-# Verify dependency declarations for drift or unused packages.
+# Verify dependency declarations for drift or unused packages. Silent on success.
 check-dependencies:
-    uv run --no-sync deptry src/aeat --known-first-party aeat --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
+    @uv run --no-sync python scripts/quiet_ok.py deptry src/aeat --known-first-party aeat --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
 
 # Verify codebase security posture using semgrep scans.
 [unix]
@@ -172,9 +172,9 @@ check-security:
     #!/usr/bin/env bash
     set -euo pipefail
     if command -v semgrep >/dev/null 2>&1; then
-        semgrep scan --config auto src/aeat
+        semgrep scan --quiet --config auto src/aeat
     else
-        uvx --from semgrep semgrep scan --config auto src/aeat
+        uvx --from semgrep semgrep scan --quiet --config auto src/aeat
     fi
 
 [windows]
@@ -182,53 +182,62 @@ check-security:
     #!pwsh
     $ErrorActionPreference = 'Stop'
     if (Get-Command semgrep -ErrorAction SilentlyContinue) {
-        semgrep scan --config auto src/aeat
+        semgrep scan --quiet --config auto src/aeat
     } else {
-        uvx --from semgrep semgrep scan --config auto src/aeat
+        uvx --from semgrep semgrep scan --quiet --config auto src/aeat
     }
 
 # Check if the RAG service daemon is running.
 check-rag:
-    uv run --no-sync vaultspec-rag server service status
+    @uv run --no-sync vaultspec-rag server service status
 
-# Run programmatic semantic audit checks using the local RAG daemon.
+# Run programmatic semantic audit checks using the local RAG daemon. Silent on success.
 check-semantic:
-    uv run --no-sync python scripts/audit_semantic.py
+    @uv run --no-sync python scripts/audit_semantic.py
 
-# Run all pre-commit hooks via prek.
+# Run all pre-commit hooks via prek. Silent on success; replays hook output on failure.
 check-pre-commit:
-    uv run --no-sync prek run --all-files
+    @uv run --no-sync python scripts/quiet_ok.py uv run --no-sync prek run --all-files
 
-# Run all fast static checks.
-check-all: check-style check-format check-types check-imports check-relative-imports check-dependencies check-pre-commit
+# Excludes check-pre-commit (re-runs ruff + ty) and the local-only RAG/semantic checks.
+# Run every fast static gate to completion; report only failures; silent on full pass.
+check-all:
+    @uv run --no-sync python scripts/check_all.py
 
 # ── Code mutations (Write) ──────────────────────────────────────────────────
 
-# Auto-repair ruff style violations.
+# Auto-repair every lint violation that carries a safe fix (ruff check --fix).
 fix-style:
-    uv run ruff check --fix .
+    @uv run --no-sync ruff check --fix .
 
-# Auto-format all python source files.
+# Auto-sort imports only (ruff I-rule safe fixes).
+fix-imports:
+    @uv run --no-sync ruff check --select I --fix .
+
+# Auto-format all python source files (ruff format).
 fix-format:
-    uv run ruff format .
+    @uv run --no-sync ruff format .
+
+# Action every automatically-fixable issue in one pass: safe lint fixes then formatting.
+fix-all: fix-style fix-format
 
 # Trigger incremental vector re-indexing via the loopback service.
 fix-rag:
-    uv run --no-sync vaultspec-rag index --type all --port 8766
+    @uv run --no-sync vaultspec-rag index --type all --port 8766
 
 # ── Testing ──────────────────────────────────────────────────────────────────
 
-# Run the unit test suite, ignoring workbook parity tests.
+# Run the unit test suite, ignoring workbook parity tests. Quiet progress; failures shown.
 test-unit:
-    uv run pytest -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity
+    @uv run pytest -q -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity
 
-# Run the integration test suite.
+# Run the integration test suite. Quiet progress; failures shown.
 test-integration:
-    uv run pytest -m integration
+    @uv run pytest -q -m integration
 
-# Run the live test suite.
+# Run the live test suite. Quiet progress; failures shown.
 test-live:
-    uv run pytest -m aeat_live
+    @uv run pytest -q -m aeat_live
 
 # Run the produce, verify, and export end-to-end smoke tests.
 test-smoke:
@@ -238,42 +247,50 @@ test-smoke:
 test-workbook-parity:
     uv run --no-sync pytest src/aeat/domain/calculations/registry/tests/workbook_parity/test_workbook_parity.py
 
-# Run the unit test suite with coverage report and fail-under check.
+# Run the unit test suite with coverage report and fail-under check. Quiet progress.
 [unix]
 test-coverage:
-    uv run pytest --cov=aeat --cov-report=term-missing --cov-fail-under=60
+    @uv run pytest -q --cov=aeat --cov-report=term-missing --cov-fail-under=60
 
 [windows]
 test-coverage:
     #!pwsh
     $ErrorActionPreference = 'Stop'
-    uv run pytest --cov=aeat --cov-report=term-missing --cov-fail-under=60
+    uv run pytest -q --cov=aeat --cov-report=term-missing --cov-fail-under=60
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # ── Advisory audits ──────────────────────────────────────────────────────────
 
+# List every ty + pyright diagnostic verbatim (advisory; always exits 0).
+audit-types:
+    @uv run --no-sync python scripts/check_types.py --full
+
 # Run complexity audits for production code.
 audit-complexity:
-    uv run --no-sync python scripts/audit_complexity.py
+    @uv run --no-sync python scripts/audit_complexity.py
 
 # Scan for dead code.
 audit-dead-code:
-    uv run --no-sync vulture --config pyproject.toml
+    @uv run --no-sync vulture --config pyproject.toml
 
-# Scan for copy-paste code duplication.
+# Scan for copy-paste code duplication. Aggregate line + capped clone list.
 audit-duplication:
-    npx --yes jscpd@4.2.0 src/aeat --format python --min-lines 6 --min-tokens 80 --max-size 250kb --ignore "**/test_*.py,**/_test_*.py,**/tests/**,**/_data/**" --gitignore --reporters console --noTips
+    @npx --yes jscpd@4.2.0 src/aeat --format python --min-lines 6 --min-tokens 80 --max-size 250kb --ignore "**/test_*.py,**/_test_*.py,**/tests/**,**/_data/**" --gitignore --reporters console --noTips | uv run --no-sync python scripts/filter_jscpd.py
 
 # Perform an on-demand semantic search query delegating to the running RAG daemon.
 audit-rag QUERY:
-    uv run --no-sync vaultspec-rag search "{{QUERY}}" --port 8766 --timeout 45.0
+    @uv run --no-sync vaultspec-rag search "{{QUERY}}" --port 8766 --timeout 45.0
 
-# Run all advisory audits.
+# Run all advisory audits with section headers; tolerant of individual findings.
 audit-debt-dashboard:
-    -just audit-complexity
-    -just audit-dead-code
-    -just audit-duplication
-    -just check-security
+    @echo "=== complexity ==="
+    -@just audit-complexity
+    @echo "=== dead code ==="
+    -@just audit-dead-code
+    @echo "=== duplication ==="
+    -@just audit-duplication
+    @echo "=== security ==="
+    -@just check-security
 
 # ── Documentation ────────────────────────────────────────────────────────────
 
@@ -297,11 +314,11 @@ docs-changed-strict BASE="HEAD":
 docs-changed-rag BASE="HEAD":
     uv run --no-sync python docs/tools/build_changed_docs.py --base {{BASE}} --rag-index
 
-# Run docstring structure and Sphinx build checks.
+# Run docstring structure and Sphinx build checks. Quiet pytest progress.
 docs-check:
-    uv run --no-sync pytest docs/tools/tests src/aeat/tests/test_docstring_core_struct_links.py -m docs
-    uv run --no-sync doc8 docs
-    uv run --no-sync interrogate -c pyproject.toml src/aeat
+    @uv run --no-sync pytest -q docs/tools/tests src/aeat/tests/test_docstring_core_struct_links.py -m docs
+    @uv run --no-sync doc8 docs
+    @uv run --no-sync interrogate -c pyproject.toml src/aeat
 
 # ── Database migrations ──────────────────────────────────────────────────────
 
