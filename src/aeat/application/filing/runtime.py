@@ -324,18 +324,36 @@ def _build_runtime_schema_provider_cached(
     )
 
 
+_FINGERPRINT_CACHE: dict[Path, tuple[float, tuple[tuple[str, int, int], ...]]] = {}
+
+
+def clear_runtime_fingerprint_cache() -> None:
+    """Clear the time-based TTL cache for registry tree fingerprints."""
+    _FINGERPRINT_CACHE.clear()
+
+
 def _registry_tree_fingerprint(  # ALT-FINGERPRINT-RATIONALE-REGISTRY-TREE
     root: Path,
 ) -> tuple[tuple[str, int, int], ...]:
     # ALT-FINGERPRINT-RATIONALE-REGISTRY-TREE:
     # relative-path keyed for tree-walk change detection (distinct from
     # filename-keyed canonical file_stat_fingerprint).
+    import time
+
+    now = time.time()
+    if root in _FINGERPRINT_CACHE:
+        cached_time, cached_val = _FINGERPRINT_CACHE[root]
+        if now - cached_time < 1.0:
+            return cached_val
+
     paths = sorted((root / "legal").rglob("*.toml")) + sorted((root / "modelos").rglob("*.toml"))
     fingerprint: list[tuple[str, int, int]] = []
     for path in paths:
         stat = path.stat()
         fingerprint.append((path.relative_to(root).as_posix(), stat.st_mtime_ns, stat.st_size))
-    return tuple(fingerprint)
+    val = tuple(fingerprint)
+    _FINGERPRINT_CACHE[root] = (now, val)
+    return val
 
 
 def _normalize_modelo_selection(modelos: Sequence[str] | None) -> set[str] | None:
@@ -492,6 +510,7 @@ __all__ = [
     "RegistryModeloSubview",
     "RegistrySchemaProvider",
     "build_runtime_schema_provider",
+    "clear_runtime_fingerprint_cache",
     "filing_profile_from_taxpayer",
     "load_default_filing_profile",
 ]
