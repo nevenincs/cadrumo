@@ -13,20 +13,21 @@ related:
   - '[[2026-06-04-suite-redgreen-2026-06-02-research]]'
 ---
 
-
-
-
-
-
-
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `suite-redgreen-2026-06-02` `Suite red-green burndown 2026-06-02` plan
 
 ### Phase `P01` - CLI work-calculate envelope cluster
 
 Resolve the 14-test work-calculate empty-envelope cluster (peer signature drift around casilla_inputs)
-
-
 
 - [x] `P01.S01` - Diagnose work-calculate empty-envelope; `Reproduce on test_modelo_discovery_defects[1P]; identify where _emit_envelope is silenced; document the precise call path in a comment`.
 - [x] `P01.S02` - Restore envelope emission for work-calculate; `Production fix in CLI handler + service so success/refusal always emits the SchemaEnvelope; cite the 14 failing test ids`.
@@ -96,9 +97,9 @@ test_date_relation_routing non-iso rejection, test_binding_prefill modelo 390 pr
 
 Land architect Route A spec — synthetic-PDF primitive encoding + extraction profile + anti-tautology test
 
-- [ ] `P09.S29` - Land synthetic-PDF generator primitive encoding per ADR 2026-06-03-m303-synthetic-generator-primitive-spec; `src/aeat/tests/fixtures/justificantes/_generate.py`.
-- [ ] `P09.S30` - Update M303 extraction_profile to parse primitives drop totals 27 and 45; `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml`.
-- [ ] `P09.S31` - Author anti-tautology proof test mutate iva.repercutido.general and assert engine total tracks; `src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.
+- [x] `P09.S29` - Land synthetic-PDF generator primitive encoding per ADR 2026-06-03-m303-synthetic-generator-primitive-spec; `src/aeat/tests/fixtures/justificantes/_generate.py`.
+- [x] `P09.S30` - Update M303 extraction_profile to parse primitives drop totals 27 and 45; `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml`.
+- [x] `P09.S31` - Author anti-tautology proof test mutate iva.repercutido.general and assert engine total tracks; `src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.
 
 ### Phase `P10` - any-return rationale 23-red cluster
 
@@ -110,7 +111,7 @@ Sweep test_any_return_rationale_markers reds — add rationale marker tokens or 
 
 Diagnose + fix test_cli_workflow_verification failures
 
-- [ ] `P11.S33` - Diagnose then fix test_cli_workflow_verification 15-red cluster; `src/aeat/entrypoints/cli/test_cli_workflow_verification.py`.
+- [x] `P11.S33` - Diagnose then fix test_cli_workflow_verification 15-red cluster; `src/aeat/entrypoints/cli/test_cli_workflow_verification.py`.
 
 ### Phase `P12` - M100 tarifa_real 14-red cluster
 
@@ -141,13 +142,13 @@ tarifa_real + ahorro_base + settlement + retenciones + renta_chain_behaviour + r
 
 Diagnose + fix CLI modelo discovery cluster
 
-- [ ] `P15.S44` - Diagnose then fix modelo_discovery_defects 14 reds; `src/aeat/entrypoints/cli/test_modelo_discovery_defects.py`.
+- [x] `P15.S44` - Diagnose then fix modelo_discovery_defects 14 reds; `src/aeat/entrypoints/cli/test_modelo_discovery_defects.py`.
 
 ### Phase `P16` - cli_surface 13-red cluster
 
 Diagnose + fix CLI surface tests
 
-- [ ] `P16.S45` - Diagnose then fix cli_surface 13 reds; `src/aeat/entrypoints/cli/test_cli_surface.py`.
+- [x] `P16.S45` - Diagnose then fix cli_surface 13 reds; `src/aeat/entrypoints/cli/test_cli_surface.py`.
 
 ## Description
 
@@ -164,4 +165,3 @@ Diagnose + fix CLI surface tests
 
 
 ## Verification
-
