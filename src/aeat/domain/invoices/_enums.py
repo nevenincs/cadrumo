@@ -110,9 +110,37 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
     return rate_record.pct / Decimal("100")
 
 
+def numeric_iva_rate_percentages() -> frozenset[Decimal]:
+    """Return the integer-percentage values for the numeric :class:`IvaRate` slots.
+
+    Parses the ``RATE_<n>`` member names of :class:`IvaRate` to derive the
+    closed set of integer percentages the CLI boundary accepts on
+    ``--set iva.rate``.  :attr:`IvaRate.EXEMPT` and
+    :attr:`IvaRate.NOT_SUBJECT` carry no numeric percentage and are
+    excluded.
+
+    The derivation is structural — the ``RATE_`` prefix is stripped and the
+    remainder is parsed as an integer — so the returned set tracks
+    :class:`IvaRate` membership without re-listing ``0 / 4 / 10 / 21`` as
+    literals.
+
+    Returns:
+        A :class:`frozenset` of :class:`Decimal` integer percentages; for
+        the current taxonomy ``frozenset({Decimal("0"), Decimal("4"),
+        Decimal("10"), Decimal("21")})``.
+    """
+    _prefix = "RATE_"
+    return frozenset(
+        Decimal(member.value[len(_prefix) :])
+        for member in IvaRate
+        if member.value.startswith(_prefix)
+    )
+
+
 __all__ = [
     "IvaRate",
     "IvaRateNotFoundError",
     "PaymentStatus",
     "iva_rate_percentage",
+    "numeric_iva_rate_percentages",
 ]
