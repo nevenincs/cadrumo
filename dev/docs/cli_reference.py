@@ -5,7 +5,7 @@ walks every group and leaf command (forcing lazy-module imports), and renders
 per-family RST pages under ``docs/cli/``.  An ``index.rst`` page links the
 family pages and includes the retired-surface redirect table.
 
-The generator is documentation tooling.  It lives under ``docs/tools`` and
+The generator is documentation tooling.  It lives under ``dev/docs`` and
 introspects the production package from outside rather than being part of the
 ``aeat`` runtime package.
 
@@ -784,7 +784,7 @@ def generate_cli_reference_in_subprocess(docs_root: Path) -> dict[str, str]:
     code = textwrap.dedent(
         f"""
         from pathlib import Path
-        from docs.tools.cli_reference import generate_cli_reference
+        from dev.docs.cli_reference import generate_cli_reference
         docs_root = Path({str(docs_root)!r})
         generate_cli_reference(docs_root)
         """
@@ -836,7 +836,7 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
         from typer.main import get_command as _typer_get_command
         from aeat.entrypoints.cli import app
         from aeat.entrypoints.cli._command_suggestions import _LAZY_REGISTRY
-        from docs.tools.cli_reference import (
+        from dev.docs.cli_reference import (
             _force_lazy_imports,
             _collect_leaf_paths,
             _normalise_command_path,

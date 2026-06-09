@@ -25,7 +25,7 @@ _DOCS_BUILD = _DOCS / "_build"
 _CANONICAL_BUILD_ROOT = "html"
 _DOCS_BUILD_LITERAL_RE = re.compile(r"docs[/\\]_build[/\\]([A-Za-z0-9_.-]+)")
 _PATH_BUILD_ROOT_RE = re.compile(r"[\"']_build[\"']\s*/\s*[\"']([^\"']+)[\"']")
-_BUILD_ROOT_SCAN_PREFIXES = ("src/", "scripts/", ".github/")
+_BUILD_ROOT_SCAN_PREFIXES = ("src/", "dev/", ".github/")
 _BUILD_ROOT_SCAN_FILES = {"justfile", "pyproject.toml", "docs/conf.py"}
 
 
@@ -77,7 +77,7 @@ def test_docs_build_directory_contains_only_canonical_html() -> None:
 
 def test_docs_build_cleanup_removes_noncanonical_entries(tmp_path: Path) -> None:
     """Canonical docs builds clear stale preview files from their build root."""
-    from docs.tools.build_changed_docs import remove_noncanonical_build_entries
+    from dev.docs.build import remove_noncanonical_build_entries
 
     docs_root = tmp_path / "docs"
     build_root = docs_root / "_build"
@@ -97,8 +97,8 @@ def test_docs_build_cleanup_removes_noncanonical_entries(tmp_path: Path) -> None
 @pytest.mark.parametrize(
     "changed_path",
     [
-        "docs/tools/apidocs/manager.py",
-        "docs/tools/cli_reference.py",
+        "dev/docs/apidocs/manager.py",
+        "dev/docs/cli_reference.py",
     ],
 )
 def test_changed_docs_validation_does_not_pollute_repository_docs(changed_path: str) -> None:
@@ -109,7 +109,8 @@ def test_changed_docs_validation_does_not_pollute_repository_docs(changed_path: 
     result = subprocess.run(
         [
             sys.executable,
-            "docs/tools/build_changed_docs.py",
+            "-m",
+            "dev.docs.build",
             changed_path,
         ],
         cwd=_REPO_ROOT,
@@ -143,7 +144,8 @@ def test_single_page_rejects_generated_documentation_sources(generated_page: str
     result = subprocess.run(
         [
             sys.executable,
-            "docs/tools/build_changed_docs.py",
+            "-m",
+            "dev.docs.build",
             "--single-page",
             generated_page,
         ],

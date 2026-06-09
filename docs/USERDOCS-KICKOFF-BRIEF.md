@@ -40,7 +40,7 @@ deliberately separated):
    interrogate + the nitpicky build. (A large docstring-hardening pass just
    landed; ~259 docstrings across ~48 modules.)
 3. **Generated reference** — the API stub tree (`docs/api/`, via
-   `python -m docs.tools.apidocs scaffold` — `aeat-docs-scaffolding-cli` rule) and the
+   `python -m dev.docs.apidocs scaffold` — `aeat-docs-scaffolding-cli` rule) and the
    build-time CLI reference. Never hand-edited.
 
 The **narrative user-facing set** (the focus of this initiative) lives under

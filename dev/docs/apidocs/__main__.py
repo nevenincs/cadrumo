@@ -1,4 +1,4 @@
-"""Run the API docs stub maintenance CLI with ``python -m docs.tools.apidocs``."""
+"""Run the API docs stub maintenance CLI with ``python -m dev.docs.apidocs``."""
 
 from __future__ import annotations
 

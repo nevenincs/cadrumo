@@ -792,7 +792,7 @@ def setup(app):
         """
         if not _should_generate_cli_reference():
             return
-        from docs.tools.cli_reference import generate_cli_reference
+        from dev.docs.cli_reference import generate_cli_reference
 
         generate_cli_reference(Path(__file__).resolve().parent)
 

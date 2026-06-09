@@ -1,13 +1,13 @@
 """Correspondence gate: every in-scope module has a stub, no stub is orphaned.
 
-Delegates all discovery and drift logic to :class:`docs.tools.apidocs.ApiStubManager`
+Delegates all discovery and drift logic to :class:`dev.docs.apidocs.ApiStubManager`
 so this file is the single enforcement surface for module-to-stub correspondence.
-Run ``python -m docs.tools.apidocs scaffold`` to regenerate stubs; run
-``python -m docs.tools.apidocs scaffold --check`` for a zero-drift gate.
+Run ``python -m dev.docs.apidocs scaffold`` to regenerate stubs; run
+``python -m dev.docs.apidocs scaffold --check`` for a zero-drift gate.
 
 Run via::
 
-    uv run --no-sync pytest docs/tools/tests/test_api_stubs.py -m "unit and hex_core" -q
+    uv run --no-sync pytest dev/docs/tests/test_api_stubs.py -m "unit and hex_core" -q
 """
 
 from __future__ import annotations
@@ -15,7 +15,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from docs.tools.apidocs import ApiStubManager
+
+from dev.docs.apidocs import ApiStubManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -29,7 +30,7 @@ def test_every_source_module_has_a_stub() -> None:
 
     The assertion fails with the symmetric difference so both missing stubs
     and orphaned stubs are reported in one shot.  Run
-    ``python -m docs.tools.apidocs scaffold`` to regenerate the stub tree.
+    ``python -m dev.docs.apidocs scaffold`` to regenerate the stub tree.
     """
     manager = ApiStubManager(src_aeat=_SRC_AEAT, docs_api=_DOCS_API)
     drift = manager.check()

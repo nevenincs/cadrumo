@@ -288,8 +288,8 @@ convention = "google"
 "src/aeat/**/conftest.py" = ["D"]
 # Sphinx build configuration is tooling, not the documented package API.
 "docs/conf.py" = ["D"]
-# docs/tools/ holds contributor-only documentation tools and tests.
-"docs/tools/**/*.py" = ["T20", "D", "E402"]
+# dev/docs/ holds contributor-only documentation tools and tests.
+"dev/docs/**/*.py" = ["T20", "D", "E402"]
 # `dev/` holds contributor-only developer tooling (quality gates, audits,
 # docs build); print() is the canonical CLI output surface for these.
 "dev/**/*.py" = ["T20"]
@@ -413,7 +413,7 @@ convention = "google"
 # The docs build gate runs sphinx via `sys.executable -m sphinx` with a fixed,
 # literal argv (no user/untrusted input), in an isolated subprocess so the
 # build's package imports and global state do not leak into the test process.
-"docs/tools/tests/test_docs_build.py" = ["S603"]
+"dev/docs/tests/test_docs_build.py" = ["S603"]
 "src/aeat/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
 "src/aeat/adapters/persistence/storage/tests/test_substrate_smoke.py" = ["S603"]
 "src/aeat/domain/calculations/registry/tests/test_cross_domain_snapshot_registration.py" = ["S603"]
@@ -477,8 +477,8 @@ convention = "google"
 # helper use fixed argv built from controlled inputs. S603 ("subprocess
 # without shell=True") is a heuristic ban that does not recognise our
 # controlled-argv pattern; granted per-file.
-"docs/tools/cli_reference.py" = ["S603", "F401"]
-"docs/tools/tests/test_cli_reference_conformance.py" = ["F401"]
+"dev/docs/cli_reference.py" = ["S603", "F401"]
+"dev/docs/tests/test_cli_reference_conformance.py" = ["F401"]
 "src/aeat/entrypoints/cli/tests/test_cold_start_wizard_registration.py" = ["S603"]
 "src/aeat/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py" = ["S603"]
 "src/aeat/entrypoints/cli/tests/test_lazy_command_tree.py" = ["S603"]

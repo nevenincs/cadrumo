@@ -296,27 +296,27 @@ audit-debt-dashboard:
 
 # Build changed narrative and API reference documents.
 docs:
-    uv run --no-sync python docs/tools/build_changed_docs.py docs/conf.py
+    uv run --no-sync python -m dev.docs.build docs/conf.py
 
 # Build a single narrative page.
 docs-page PAGE:
-    uv run --no-sync python docs/tools/build_changed_docs.py --single-page {{PAGE}}
+    uv run --no-sync python -m dev.docs.build --single-page {{PAGE}}
 
 # Build documentation changed since a base commit.
 docs-changed BASE="HEAD":
-    uv run --no-sync python docs/tools/build_changed_docs.py --base {{BASE}}
+    uv run --no-sync python -m dev.docs.build --base {{BASE}}
 
 # Build changed documentation with strict warnings-as-errors flags.
 docs-changed-strict BASE="HEAD":
-    uv run --no-sync python docs/tools/build_changed_docs.py --base {{BASE}} --strict
+    uv run --no-sync python -m dev.docs.build --base {{BASE}} --strict
 
 # Build changed documentation and update the vector index.
 docs-changed-rag BASE="HEAD":
-    uv run --no-sync python docs/tools/build_changed_docs.py --base {{BASE}} --rag-index
+    uv run --no-sync python -m dev.docs.build --base {{BASE}} --rag-index
 
 # Run docstring structure and Sphinx build checks. Quiet pytest progress.
 docs-check:
-    @uv run --no-sync pytest -q docs/tools/tests src/aeat/tests/test_docstring_core_struct_links.py -m docs
+    @uv run --no-sync pytest -q dev/docs/tests dev/docs/apidocs/tests src/aeat/tests/test_docstring_core_struct_links.py -m docs
     @uv run --no-sync doc8 docs
     @uv run --no-sync interrogate -c pyproject.toml src/aeat
 
