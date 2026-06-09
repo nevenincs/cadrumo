@@ -152,7 +152,7 @@ test:
 # Acceptance criterion 13: structural import-resolution alone is not
 # sufficient proof of restructure correctness.
 test-smoke-produce-verify-export:
-    uv run pytest src/aeat/adapters/outbound/aeat/export/_formats/test_integration_operator_e2e.py src/aeat/adapters/outbound/aeat/export/_formats/test_integration_operator_303_e2e.py -v
+    uv run pytest src/aeat/application/modelo/tests/test_file_flow_calculation.py src/aeat/application/modelo/tests/test_file_flow_verify.py src/aeat/application/modelo/tests/test_file_flow_filing.py src/aeat/application/modelo/tests/test_export.py -v
 
 # Verify every documented re-export shim still resolves its symbols
 # (Step 8 acceptance precondition for the deterministic semver-bump rule).
