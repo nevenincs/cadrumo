@@ -30,7 +30,7 @@ from urllib.parse import urlsplit
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page
 
-from pydantic import AnyUrl, BaseModel, ConfigDict, Field
+from pydantic import AnyUrl, Field
 
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
@@ -41,12 +41,13 @@ from .....domain.calculations.registry import (
     RegistryValidationError,
     RemoteOperation,
     RemoteStateGuardPolicy,
-    assert_remote_operation_allowed,
 )
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser import BrowserError, default_browser_session_factory
 from ._adapter_utils import (
-    first_visible_locator,
+    _SedeCheckerModel,
+    assert_query_browser_action_for,
+    make_locate_helper,
     normalize_response_text,
     registry_failure_message,
 )
@@ -55,7 +56,6 @@ from ._browser_constants import (
 )
 from ._browser_constants import (
     default_viewport,
-    selector_probe_timeout_ms,
 )
 from ._browser_stage import build_playwright_stage_runner
 from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError
@@ -82,10 +82,7 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
 
 
 def _assert_query_browser_action(action: str) -> None:
-    assert_remote_operation_allowed(
-        _READ_GUARD_POLICY,
-        RemoteOperation(kind="browser_action", action=action),
-    )
+    assert_query_browser_action_for(_READ_GUARD_POLICY, action)
 
 
 def _nif_iva_shape_suggestion() -> str:
@@ -99,26 +96,7 @@ _playwright_stage = build_playwright_stage_runner(
     logger=logger,
 )
 
-
-async def _locate(
-    page: Page,
-    selectors: tuple[str, ...],
-    *,
-    stage: str,
-    description: str,
-    timeout_ms: int,
-) -> Locator:
-    return await first_visible_locator(
-        page,
-        selectors,
-        stage=stage,
-        description=description,
-        timeout_ms=timeout_ms,
-        probe_timeout_ms=selector_probe_timeout_ms(),
-        surface_label="NIF-IVA",
-        shape_suggestion=_nif_iva_shape_suggestion(),
-    )
-
+_locate = make_locate_helper("NIF-IVA", _nif_iva_shape_suggestion())
 
 DEFAULT_NIF_IVA_TIMEOUT_MS: int = 30000
 _COUNTRY_SELECTORS: tuple[str, ...] = (
@@ -154,7 +132,7 @@ _SUBMIT_SELECTORS: tuple[str, ...] = (
 )
 
 
-class NifIvaCheckObservation(BaseModel):
+class NifIvaCheckObservation(_SedeCheckerModel):
     """One observation emitted per declared NIF after live navigation.
 
     ``verdict`` is the AEAT/VIES-rendered validity for that NIF:
@@ -162,22 +140,18 @@ class NifIvaCheckObservation(BaseModel):
     structurally unanswerable (network error mid-query, etc.).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
-
     nif: str = Field(min_length=1, max_length=32)
     verdict: Literal["valid", "invalid", "unknown"]
     raw_evidence_locator: str | None = Field(default=None, max_length=512)
 
 
-class NifIvaCheckResult(BaseModel):
+class NifIvaCheckResult(_SedeCheckerModel):
     """Aggregate live-driver result across all declared NIFs for one browser pass.
 
     Each entry in ``observations`` corresponds to one NIF submitted to the
     AEAT-hosted VIES proxy form. An empty tuple signals that no NIFs were
     queried (caller-side guard: ``expected`` was empty before the driver ran).
     """
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     observations: tuple[NifIvaCheckObservation, ...] = ()
 
