@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import contextlib
+import json
+import os
+import tempfile
 from collections.abc import Iterable, Mapping
 from functools import lru_cache
 from pathlib import Path
@@ -16,11 +20,6 @@ _NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, str] = {}
 @lru_cache(maxsize=4096)
 def _normalise_required_text(text: str) -> str:
     return normalise_corpus_text(text)
-
-
-import json
-import os
-import tempfile
 
 _STAT_CACHE: dict[Path, os.stat_result] = {}
 _DISK_CACHE: dict[str, str] | None = None
@@ -61,10 +60,8 @@ def _write_disk_cache(data: dict[str, str]) -> None:
         os.replace(temp_name, cache_path)
     except Exception:
         if temp_name is not None:
-            try:
+            with contextlib.suppress(Exception):
                 os.unlink(temp_name)
-            except Exception:
-                pass
 
 
 def _extract_pdf_text_impl(path: str) -> str:
