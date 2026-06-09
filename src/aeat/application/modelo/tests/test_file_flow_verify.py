@@ -32,6 +32,7 @@ from ._file_flow_support import (
     _canonical_work_unit_period,
     _registry_required_manual_casillas,
     _registry_required_manual_casillas_for,
+    _Repos,
     _seed_clean_cross_period_sources,
     _seed_modelo_180_work_unit,
     _seed_work_unit,
@@ -51,7 +52,7 @@ from ._file_flow_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_mark_verificado_completo_requires_borrador_state(repos) -> None:
+def test_mark_verificado_completo_requires_borrador_state(repos: _Repos) -> None:
     """A revision in any state other than BORRADOR cannot be marked
     verificado-completo."""
 
@@ -84,7 +85,7 @@ def test_mark_verificado_completo_requires_borrador_state(repos) -> None:
         )
 
 
-def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos) -> None:
+def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos: _Repos) -> None:
     """A granted verification must still pass the WorkflowEngine gate.
 
     Auth/preflight blockers abort before the verified-complete state,
@@ -144,7 +145,7 @@ def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos
     assert verification_events == ()
 
 
-def test_verify_grants_for_a_closed_past_period_real_registry(repos) -> None:
+def test_verify_grants_for_a_closed_past_period_real_registry(repos: _Repos) -> None:
     """``work verify`` is independent of the AEAT filing calendar.
 
     A modelo 130 calculation for 2024 Q1 — whose filing window closed
@@ -191,7 +192,7 @@ def test_verify_grants_for_a_closed_past_period_real_registry(repos) -> None:
     assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
 
 
-def test_verify_records_deadline_state_as_informational_not_abort(repos) -> None:
+def test_verify_records_deadline_state_as_informational_not_abort(repos: _Repos) -> None:
     """The verify run's ``COMPUTING_DEADLINES`` step never aborts.
 
     For a closed past period it records the filing-window state as an
@@ -232,7 +233,7 @@ def test_verify_records_deadline_state_as_informational_not_abort(repos) -> None
     assert deadline_step.details["deadline_role"] == "informational"
 
 
-def test_get_calculation_revision_raises_on_missing_id(repos) -> None:
+def test_get_calculation_revision_raises_on_missing_id(repos: _Repos) -> None:
     _, cr_repo, _, _, _ = repos
     with pytest.raises(CalculationRevisionNotFoundError):
         get_calculation_revision(
@@ -242,7 +243,7 @@ def test_get_calculation_revision_raises_on_missing_id(repos) -> None:
 
 
 def test_verify_grants_when_all_required_casillas_present_real_registry(
-    repos,
+    repos: _Repos,
 ) -> None:
     """Real e2e: registry resolves modelo 180 (2024, 0A); every required
     manual casilla is supplied; the verifier persists a granted report
@@ -304,7 +305,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
 
 
 def test_verify_refuses_when_required_casilla_missing_real_registry(
-    repos,
+    repos: _Repos,
 ) -> None:
     """Real e2e: omit one required casilla; the verifier emits a
     BLOCKING ``MISSING_REQUIRED_CASILLA`` finding for it; the
@@ -372,7 +373,7 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
 
 
 def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
-    repos,
+    repos: _Repos,
 ) -> None:
     """Real e2e: a work unit anchored to a year that predates modelo
     180's earliest revision (``valid_from=2019``) cannot resolve a
@@ -447,7 +448,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     assert refreshed.state is CalculationRevisionState.BORRADOR
 
 
-def test_verify_rejects_non_borrador_revision_real_registry(repos) -> None:
+def test_verify_rejects_non_borrador_revision_real_registry(repos: _Repos) -> None:
     """Real e2e: a verificado-completo revision cannot be re-verified.
     The operator must produce a fresh draft (which lands as BORRADOR)
     to verify again."""
@@ -488,7 +489,7 @@ def test_verify_rejects_non_borrador_revision_real_registry(repos) -> None:
         )
 
 
-def test_list_and_get_verification_reports_real_registry(repos) -> None:
+def test_list_and_get_verification_reports_real_registry(repos: _Repos) -> None:
     """Real e2e: reports persist through the encrypted catalogue and
     are indexable by id and by calculation_revision_id."""
 

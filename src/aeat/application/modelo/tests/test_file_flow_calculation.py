@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from ._file_flow_support import (
@@ -12,6 +14,7 @@ from ._file_flow_support import (
     BucketEventType,
     CalculationRevisionState,
     Decimal,
+    _Repos,
     _seed_work_unit,
     calculate_modelo_revision,
     create_work_unit,
@@ -23,7 +26,7 @@ from ._file_flow_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_two_calculates_under_one_work_unit_produce_two_revisions(repos) -> None:
+def test_two_calculates_under_one_work_unit_produce_two_revisions(repos: _Repos) -> None:
     """The toilet-break scenario. Operator calculates, walks away,
     comes back, calculates again with different inputs. Two
     ``CalculationRevision`` records exist; the work unit's
@@ -75,7 +78,7 @@ def test_two_calculates_under_one_work_unit_produce_two_revisions(repos) -> None
     assert refreshed_work_unit.current_filing_record_id is None
 
 
-def test_calculate_is_idempotent_on_identical_inputs(repos) -> None:
+def test_calculate_is_idempotent_on_identical_inputs(repos: _Repos) -> None:
     """Re-running calculate with identical inputs / outputs returns
     the existing revision (content-addressed id collides) without
     creating a duplicate."""
@@ -109,7 +112,7 @@ def test_calculate_is_idempotent_on_identical_inputs(repos) -> None:
     assert len(revisions) == 1
 
 
-def test_duplicate_draft_calculation_reuse_advances_current_pointer(repos) -> None:
+def test_duplicate_draft_calculation_reuse_advances_current_pointer(repos: _Repos) -> None:
     """Reusing an existing draft revision still restores it as current."""
 
     wu_repo, cr_repo, _, _, bv_repo = repos
@@ -146,7 +149,7 @@ def test_duplicate_draft_calculation_reuse_advances_current_pointer(repos) -> No
     assert refreshed.current_filing_record_id is None
 
 
-def test_calculate_refused_on_discarded_work_unit(repos) -> None:
+def test_calculate_refused_on_discarded_work_unit(repos: _Repos) -> None:
     """A discarded work unit refuses further calculation. The
     operator must create a fresh work unit to continue."""
 
@@ -176,7 +179,7 @@ def test_calculate_refused_on_discarded_work_unit(repos) -> None:
         )
 
 
-def test_discard_emits_modelo_work_unit_discarded_event(repos) -> None:
+def test_discard_emits_modelo_work_unit_discarded_event(repos: _Repos) -> None:
     """``discard_work_unit`` emits a ``modelo.work_unit.discarded``
     bucket event with actor + reason payload."""
 
@@ -203,7 +206,7 @@ def test_discard_emits_modelo_work_unit_discarded_event(repos) -> None:
     assert event.payload["reason"] == "superseded by new work unit"
 
 
-def test_calculate_runs_registry_formula_engine(repos) -> None:
+def test_calculate_runs_registry_formula_engine(repos: _Repos) -> None:
     """``calculate_modelo_revision`` runs the registry's formula engine
     over the operator-supplied inputs and persists the FULL computed
     casilla map. Modelo 130 1T 2026 declares 9 manual casillas plus
@@ -258,8 +261,8 @@ def test_calculate_runs_registry_formula_engine(repos) -> None:
 
 
 def test_calculate_works_when_cwd_is_not_the_repo_root(
-    repos,
-    tmp_path,
+    repos: _Repos,
+    tmp_path: Path,
 ) -> None:
     """The registry root resolves via ``PROJECT_ROOT`` from
     ``aeat.core.config``, not via a CWD-relative ``"registry/aeat"``
@@ -297,7 +300,7 @@ def test_calculate_works_when_cwd_is_not_the_repo_root(
     assert revision.casilla_values["03"] == Decimal("7000.00")
 
 
-def test_calculate_refuses_when_registry_snapshot_unresolvable(repos) -> None:
+def test_calculate_refuses_when_registry_snapshot_unresolvable(repos: _Repos) -> None:
     """``calculate_modelo_revision`` runs the formula engine, so it
     cannot operate on a work unit whose (modelo, year, period) tuple
     does not resolve a registry snapshot. The action raises

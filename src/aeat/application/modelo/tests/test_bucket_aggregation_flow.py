@@ -13,6 +13,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ....domain.modelos._calculation_revision import CalculationRevision
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.transactions import (
     BusinessClassification,
@@ -152,7 +153,7 @@ def _wallet_decision(*, period: str, selected_amount: Decimal) -> IvaCompensatio
     )
 
 
-def _assert_modelo_303_trace(revision) -> None:
+def _assert_modelo_303_trace(revision: CalculationRevision) -> None:
     observations = {observation.casilla_id: observation for observation in revision.observations}
     for casilla_id in ("iva.repercutido.general", "iva.soportado.interiores"):
         observation = observations[casilla_id]

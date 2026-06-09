@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -27,11 +28,19 @@ from .. import (
     discard_work_unit,
 )
 
+_Repos = tuple[
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    ModeloRecordCatalogueRepository,
+    VerificationReportCatalogueRepository,
+    BucketEventHistoryRepository,
+]
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 @pytest.fixture
-def repos(tmp_path: Path):
+def repos(tmp_path: Path) -> Iterator[_Repos]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
         objects = profile.repository
         yield (
@@ -43,7 +52,7 @@ def repos(tmp_path: Path):
         )
 
 
-def test_create_rejects_unknown_period_for_modelo_revision(repos) -> None:
+def test_create_rejects_unknown_period_for_modelo_revision(repos: _Repos) -> None:
     """``create_work_unit`` must refuse a period the revision's
     ``filing_schedules`` do not declare.
 
@@ -70,7 +79,7 @@ def test_create_rejects_unknown_period_for_modelo_revision(repos) -> None:
     assert "1P" in message
 
 
-def test_create_rejects_unknown_revision_with_helpful_list(repos) -> None:
+def test_create_rejects_unknown_revision_with_helpful_list(repos: _Repos) -> None:
     """``create_work_unit`` must refuse a revision id the modelo registry does
     not declare, naming the modelo and listing the available revisions so the
     operator can re-issue the command with a valid id.
@@ -98,7 +107,7 @@ def test_create_rejects_unknown_revision_with_helpful_list(repos) -> None:
     assert "2019-y-siguientes" in message
 
 
-def test_history_for_missing_work_unit_raises(repos) -> None:
+def test_history_for_missing_work_unit_raises(repos: _Repos) -> None:
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     with pytest.raises(WorkUnitNotFoundError) as exc_info:
         assemble_work_unit_history(
@@ -113,7 +122,7 @@ def test_history_for_missing_work_unit_raises(repos) -> None:
     assert exc_info.value.context == {"work_unit_id": "no-such-work-unit"}
 
 
-def test_history_records_creation_event(repos) -> None:
+def test_history_records_creation_event(repos: _Repos) -> None:
     """``create_work_unit`` emits a ``modelo.work_unit.created`` event so
     the work-unit history is complete from its first moment. The
     creation event names when and by whom the unit was provisioned."""
@@ -158,7 +167,7 @@ def test_history_records_creation_event(repos) -> None:
     }
 
 
-def test_history_idempotent_create_does_not_duplicate_creation_event(repos) -> None:
+def test_history_idempotent_create_does_not_duplicate_creation_event(repos: _Repos) -> None:
     """Re-running ``create_work_unit`` on the same four-axis key reloads
     the existing unit and emits no second creation event - the original
     creation event already stands."""
@@ -199,7 +208,7 @@ def test_history_idempotent_create_does_not_duplicate_creation_event(repos) -> N
     assert history.events[0].event_type is BucketEventType.MODELO_WORK_UNIT_CREATED
 
 
-def test_history_records_discard_event(repos) -> None:
+def test_history_records_discard_event(repos: _Repos) -> None:
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     t0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
     t1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)
@@ -244,7 +253,7 @@ def test_history_records_discard_event(repos) -> None:
     assert event.actor == "operator@example.test"
 
 
-def test_history_excludes_events_from_other_work_units(repos) -> None:
+def test_history_excludes_events_from_other_work_units(repos: _Repos) -> None:
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     t0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
     t1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)

@@ -11,8 +11,10 @@ contract: Regression — Modelo 130 with all casilla values zero (specifically c
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -42,6 +44,13 @@ from .._actions import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_Repos = tuple[
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    VerificationReportCatalogueRepository,
+    BucketEventHistoryRepository,
+]
 
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
@@ -397,7 +406,7 @@ def _workflow_profile() -> TaxpayerProfile:
 
 
 @pytest.fixture
-def repos(tmp_path):
+def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over a fresh isolated profile."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
         objects = profile.repository
@@ -408,7 +417,7 @@ def repos(tmp_path):
         yield wu, cr, vr, bv
 
 
-def test_m130_all_zero_without_gastos_is_blocked(repos) -> None:
+def test_m130_all_zero_without_gastos_is_blocked(repos: _Repos) -> None:
     """M130 revision with casilla 02 (Gastos) absent is blocked even when other casillas are zero.
 
     contract regression: Layer 1 required=true on casilla 02 must block the
@@ -542,7 +551,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         )
 
 
-def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c14(repos) -> None:
+def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c14(repos: _Repos) -> None:
     """End-to-end integration test for the M130 C15 <= C14 cap predicate.
 
     Drives the full registry-load → snapshot → calculate_modelo_revision →
@@ -624,7 +633,7 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     assert report.granted_verificado_completo is False
 
 
-def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c10(repos) -> None:
+def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c10(repos: _Repos) -> None:
     """M131 cap-predicate end-to-end integration.
 
     M131 declares modelo-131-<rev>-c11-cap-by-c10 on all 4 revisions
@@ -695,7 +704,7 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
 # ---------------------------------------------------------------------------
 
 
-def test_observation_tampering_is_detected_by_verify_path(repos) -> None:
+def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None:
     """Mutating a stored observation value between calculate and verify is caught.
 
     contract regression: the observation provenance cross-check added in contract
@@ -807,7 +816,7 @@ _M130_CASILLA_02_SOURCE_REFS = frozenset(
 )
 
 
-def test_missing_required_casilla_finding_carries_registry_provenance(repos) -> None:
+def test_missing_required_casilla_finding_carries_registry_provenance(repos: _Repos) -> None:
     """A MISSING_REQUIRED_CASILLA finding must carry legal_refs and source_refs
     drawn from the registry casilla definition.
 
