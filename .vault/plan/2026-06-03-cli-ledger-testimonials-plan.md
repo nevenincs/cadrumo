@@ -35,7 +35,7 @@ Resolve the round-trip, atomicity, and IVA-wallet-seed blockers that sever the o
 Bucket-session fixture regression plus the UUID-vs-display-name in-process profile-resolution split.
 
 - [x] `P02.S04` - Migrate ledger/modelo CLI test fixtures to bucket-session span pattern (#52); `src/aeat/entrypoints/cli/test_ledger_validation_paths.py`.
-- [ ] `P02.S05` - Resolve UUID-vs-display-name in-process profile identity for regime-variant tests (#53); `src/aeat/application/workflow/_errors.py`.
+- [x] `P02.S05` - Resolve UUID-vs-display-name in-process profile identity for regime-variant tests (#53); `src/aeat/application/workflow/_errors.py`.
 - [x] `P02.S06` - Journey-suite lifecycle post-state asserts + devengo-vs-caja basis test + README count (#48); `src/aeat/entrypoints/cli/test_ledger_corpus_journeys.py`.
 
 ### Phase `P03` - MAJOR UX fixes
@@ -46,7 +46,7 @@ File-obligation discoverability, ledger list filters, bulk classification facts,
 - [x] `P03.S08` - ledger list --filter via LedgerReviewFilterSpec reuse (period/year/status/classification/text) (#54); `src/aeat/entrypoints/cli/_ledger.py`.
 - [x] `P03.S09` - ledger list --filter direction + account via shared-spec extension (#55); `src/aeat/entrypoints/cli/_ledger.py`.
 - [x] `P03.S10` - config repair recovery honesty: fix or honestly disclaim the read-model failure class (M4); `src/aeat/entrypoints/cli/_config`.
-- [ ] `P03.S11` - Bulk classify supplies IVA facts (taxable_base/iva_rate/iva_amount), not only classification/category (m-bulk); `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `P03.S11` - Bulk classify supplies IVA facts (taxable_base/iva_rate/iva_amount), not only classification/category (m-bulk); `src/aeat/entrypoints/cli/_ledger.py`.
 
 ### Phase `P04` - MINOR and COSMETIC polish
 
