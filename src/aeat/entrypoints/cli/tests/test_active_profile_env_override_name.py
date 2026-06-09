@@ -158,28 +158,81 @@ def _write_second_live_bucket_sharing_label(label: str) -> None:
     )
 
 
+# English rendering of the DEDICATED ambiguity refusal key
+# ``errors.refused.refused_profile_label_ambiguous`` (en.yml:3910). The fix
+# routes BOTH entrypoint resolution sites (the env-override normalizer and the
+# ``--profile`` override) to THIS message.
+_DEDICATED_AMBIGUITY_FRAGMENT = "Use the profile UUID to disambiguate"
+
+# English rendering of the GENERIC ``cli.config.profile.unknown_profile`` key
+# (en.yml:2047). The profile is ambiguous, NOT unknown; the dedicated key must
+# render and this generic phrasing must be absent.
+_GENERIC_UNKNOWN_FRAGMENT = "Unknown profile"
+
+
+def _combined_output(result: object) -> str:
+    """Combine stdout, stderr, and any raised exception text for fragment checks."""
+    combined = getattr(result, "output", "") or ""
+    stderr = getattr(result, "stderr", None)
+    if stderr:
+        combined = f"{combined}\n{stderr}"
+    exc = getattr(result, "exception", None)
+    if exc:
+        combined = f"{combined}\n{exc}"
+    return combined
+
+
 def test_env_override_ambiguous_label_refuses_cleanly_not_traceback() -> None:
-    """Two live buckets sharing the env-override label → CLEAN refusal, not a traceback.
+    """Two live buckets sharing the env-override label → CLEAN, DEDICATED refusal.
 
     The entrypoint normalizer resolves the label via resolve_profile_bucket, whose
     fallback raises ProfileLabelAmbiguousError (a WorkflowError, NOT a ValueError)
     when two live profiles share the name. The root-callback catch must convert
-    that to a clean CLI refusal (non-zero exit, no Python traceback) — never an
-    arbitrary bucket pick and never an unhandled crash. This is the test that
-    catches a wrong ``except ValueError`` guard (which would let the error escape).
+    that to a clean CLI refusal (non-zero exit, no Python traceback) AND render the
+    DEDICATED ambiguity key — never the generic "Unknown profile" phrasing, which
+    is honest only for a not-found / empty label, and never an arbitrary bucket
+    pick.
     """
     _create_profile_and_resolve_uuid()  # bucket 1: label "operator"
     _write_second_live_bucket_sharing_label(_LABEL)  # bucket 2: same label
 
     with override_settings(aeat_active_profile=_LABEL):
-        listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+        listed = _RUNNER.invoke(app, ["--language", "en", "app", "ledger", "list"])
 
     assert listed.exit_code != 0, listed.output
+    combined = _combined_output(listed)
     # A clean operator-facing refusal, not an unhandled ProfileLabelAmbiguousError
     # traceback escaping the catch.
-    combined = (listed.output or "") + (str(listed.exception) if listed.exception else "")
     assert "Traceback" not in combined, combined
     assert "ProfileLabelAmbiguousError" not in combined, combined
+    # The DEDICATED ambiguity key must render (GREEN only after the key swap).
+    assert _DEDICATED_AMBIGUITY_FRAGMENT in combined, combined
+    # The GENERIC unknown-profile phrasing must NOT render — the profile is
+    # ambiguous, not unknown (RED before the key swap).
+    assert _GENERIC_UNKNOWN_FRAGMENT not in combined, combined
+
+
+def test_profile_flag_ambiguous_label_refuses_with_dedicated_key() -> None:
+    """``--profile <ambiguous-label>`` refuses with the DEDICATED ambiguity key.
+
+    The ``--profile`` override resolves through the same single application-layer
+    resolver as the env-override normalizer; its ``except ProfileLabelAmbiguousError``
+    arm must likewise render the dedicated ambiguity message, never the generic
+    "Unknown profile" phrasing reserved for a not-found / empty label.
+    """
+    _create_profile_and_resolve_uuid()  # bucket 1: label "operator"
+    _write_second_live_bucket_sharing_label(_LABEL)  # bucket 2: same label
+
+    listed = _RUNNER.invoke(
+        app, ["--language", "en", "--profile", _LABEL, "app", "ledger", "list"]
+    )
+
+    assert listed.exit_code != 0, listed.output
+    combined = _combined_output(listed)
+    assert "Traceback" not in combined, combined
+    assert "ProfileLabelAmbiguousError" not in combined, combined
+    assert _DEDICATED_AMBIGUITY_FRAGMENT in combined, combined
+    assert _GENERIC_UNKNOWN_FRAGMENT not in combined, combined
 
 
 def test_env_override_unknown_label_does_not_resolve() -> None:
