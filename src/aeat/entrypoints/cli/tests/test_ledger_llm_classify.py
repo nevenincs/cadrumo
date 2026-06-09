@@ -2,7 +2,7 @@
 
 Exercises ``aeat app ledger classify --llm`` end to end against the real CLI,
 real application use cases, and real SQLite persistence in an isolated storage
-root. No mocks, stubs, skips, xfail, or monkeypatch: determinism comes from
+root. No test doubles or monkeypatch: determinism comes from
 **dependency injection** — a tiny concrete :class:`LLMClassifier` registered
 through the production :func:`register_classifier` registry (the same offline
 pattern the LLM adapter's deterministic provider establishes), and a real
