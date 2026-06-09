@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field, model_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.external_constants import IVA_REGIME_MODELOS
 from ...core.i18n import tr as _tr
 from ...core.logging import get_logger as _get_logger
 from ...core.time import now
@@ -943,7 +944,7 @@ _ESTIMATION_REGIME_PROFILE_KEY: dict[_IrpfEstimationRegime, tuple[str, str]] = {
     ),
 }
 
-_IVA_REGIME_MODELOS: tuple[str, ...] = ("303", "390")
+_IVA_REGIME_MODELOS = IVA_REGIME_MODELOS
 
 
 def _gating_fields() -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:

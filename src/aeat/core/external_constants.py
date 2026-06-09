@@ -434,6 +434,23 @@ DEFAULT_IVA_GENERAL_RATE_PCT: Final[Decimal] = Decimal("21.00")
 #: Used by the auth diagnostics service and the persistence namespace registry.
 CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE: Final[str] = "aeat.outbound.aeat.auth.clave_movil.diagnostics"
 
+#: Modelos belonging to the *retenciones* aggregation family (withholding/retention filings).
+#: Covers: M111 (labour income), M115 (leases), M123 (capital yields), M180 (lease annual),
+#: M190 (labour annual summary), M193 (capital yields annual summary).
+RETENCIONES_MODELOS: Final[tuple[str, ...]] = ("111", "115", "123", "180", "190", "193")
+
+#: Modelos belonging to the *counterpart* aggregation family (third-party declaration filings).
+#: Covers: M347 (annual operations with third parties), M349 (intra-EU operations summary).
+COUNTERPART_MODELOS: Final[tuple[str, ...]] = ("347", "349")
+
+#: Modelos belonging to the *foreign assets* aggregation family (overseas-asset declaration).
+#: Covers: M720 (assets and rights abroad declaration per Ley 7/2012).
+FOREIGN_ASSET_MODELOS: Final[tuple[str, ...]] = ("720",)
+
+#: Modelos belonging to the *IVA regime* gating group (value-added tax periodic filings).
+#: Covers: M303 (quarterly/monthly IVA self-assessment), M390 (IVA annual summary).
+IVA_REGIME_MODELOS: Final[tuple[str, ...]] = ("303", "390")
+
 
 @lru_cache(maxsize=1)
 def load_external_constants(path: Path | None = None) -> ExternalConstants:
