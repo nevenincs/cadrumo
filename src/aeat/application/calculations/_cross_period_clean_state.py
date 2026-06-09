@@ -2,7 +2,9 @@
 
 Used by: :mod:`~aeat.application.calculations._calculate` to verify cross-period requirements before filing.
 
-Use of :class:`~aeat.domain.calculations.registry.RegistrySnapshot`, :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` for compliance.
+Use of :class:`~aeat.domain.calculations.registry.RegistrySnapshot` and
+:class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` for
+compliance.
 """
 
 from __future__ import annotations
