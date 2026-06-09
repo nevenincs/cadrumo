@@ -152,4 +152,3 @@ def _max_sequence_match_ratio(left_length: int, right_length: int) -> float:
     if left_length == 0 and right_length == 0:
         return 1.0
     return (2 * min(left_length, right_length)) / (left_length + right_length)
-

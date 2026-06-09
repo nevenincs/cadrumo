@@ -9,12 +9,12 @@ from pathlib import Path
 import pytest
 from openpyxl import Workbook, load_workbook
 
-from .....core.errors import ERROR_REGISTRY, get_registered_error_code
-from .....core.resources import bundled_path
-from .._loader import load_registry_tree
-from .._schema import RegistrySnapshot
-from .._snapshot import build_snapshot
-from .._workbook_parity import (
+from ......core.errors import ERROR_REGISTRY, get_registered_error_code
+from ......core.resources import bundled_path
+from ..._loader import load_registry_tree
+from ..._schema import RegistrySnapshot
+from ..._snapshot import build_snapshot
+from ..._workbook_parity import (
     SyntheticInputSet,
     SyntheticInputValue,
     WorkbookCellRef,

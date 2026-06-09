@@ -968,6 +968,8 @@ def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSourc
             )
         )
     return tuple(sources)
+
+
 _registry_fingerprint_cache: dict[Path, tuple[float, tuple[tuple[str, int, int], ...]]] = {}
 
 

@@ -36,11 +36,11 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
 _TESTS_DIR = Path(__file__).parent
 _AEAT_ROOT = _TESTS_DIR.parent
 _REPO_ROOT = _AEAT_ROOT.parent.parent
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 # Waivers: builder functions exempt from the saturation marker check.
 # Format: "path:lineno:function_name" -> "rationale"

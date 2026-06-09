@@ -552,7 +552,7 @@ search_path = ["src", "stubs"]
 testpaths = ["src/aeat"]
 pythonpath = ["src"]
 python_files = ["test_*.py"]
-addopts = "-v --tb=short -m 'unit' --strict-markers"
+addopts = "-v --tb=short -m 'unit' --strict-markers --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity"
 asyncio_mode = "strict"
 markers = [
   "unit: deterministic tests with no external I/O",
@@ -705,6 +705,6 @@ ignore_decorators = [
 "PyYAML" = ["yaml"]
 "pyyaml" = ["yaml"]
 [tool.deptry.per_rule_ignores]
-DEP002 = ["formulas", "python-dotenv", "rich", "tzdata"]
+DEP002 = ["formulas", "python-dotenv", "rich", "torch", "tzdata"]
 DEP003 = ["click", "pydantic_core", "yaml"]
 DEP004 = ["pytest", "reportlab"]

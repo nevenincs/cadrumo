@@ -21,6 +21,7 @@ _NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, str] = {}
 def _normalise_required_text(text: str) -> str:
     return normalise_corpus_text(text)
 
+
 _STAT_CACHE: dict[Path, os.stat_result] = {}
 _DISK_CACHE: dict[str, str] | None = None
 
@@ -88,7 +89,6 @@ def _extract_pdf_text_impl(path: str) -> str:
         return "\n".join(pages)
     except Exception as exc:
         raise OSError(f"could not extract text from manual PDF {path}") from exc
-
 
 
 class EvidenceValidator:

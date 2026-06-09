@@ -386,6 +386,7 @@ def test_registry_validator_corpus_strict_false_does_not_abort(tmp_path: Path) -
 def test_verify_source_file_checks_manual_structure(tmp_path: Path) -> None:
     """verify_source_file must fail if a manual_pdf source reference points to an invalid manual structure."""
     from datetime import date
+
     pdf_path = tmp_path / "corpus" / "manuals" / "renta" / "2020" / "part1" / "source.pdf"
     pdf_path.parent.mkdir(parents=True)
     pdf_path.write_bytes(b"dummy pdf bytes that satisfy file presence")
@@ -414,31 +415,26 @@ def test_verify_source_file_checks_manual_structure(tmp_path: Path) -> None:
     structure_dir.mkdir(parents=True)
 
     (structure_dir / "manual.json").write_text(
-        json.dumps({
-            "manual_id": "renta",
-            "year": 2020,
-            "part": "part1",
-            "title": "Manual Renta 2020",
-            "summary": "Resumen",
-            "source_pdf_url": "https://sede.agenciatributaria.gob.es/Manual.pdf",
-            "source_html_url": None,
-            "fetched_at": "2026-05-06T00:00:00Z",
-            "definition_reviewed_by": "operator",
-            "definition_reviewed_at": "2026-06-08"
-        }),
-        encoding="utf-8"
+        json.dumps(
+            {
+                "manual_id": "renta",
+                "year": 2020,
+                "part": "part1",
+                "title": "Manual Renta 2020",
+                "summary": "Resumen",
+                "source_pdf_url": "https://sede.agenciatributaria.gob.es/Manual.pdf",
+                "source_html_url": None,
+                "fetched_at": "2026-05-06T00:00:00Z",
+                "definition_reviewed_by": "operator",
+                "definition_reviewed_at": "2026-06-08",
+            }
+        ),
+        encoding="utf-8",
     )
 
     (structure_dir / "chapters.json").write_text(
-        json.dumps([
-            {
-                "chapter_id": "cap1",
-                "title": "Capitulo 1",
-                "summary": "Resumen",
-                "sections": []
-            }
-        ]),
-        encoding="utf-8"
+        json.dumps([{"chapter_id": "cap1", "title": "Capitulo 1", "summary": "Resumen", "sections": []}]),
+        encoding="utf-8",
     )
 
     verify_source_file(tmp_path, source)
@@ -449,21 +445,13 @@ def test_verify_legal_reference_checks_manual_section_json(tmp_path: Path) -> No
     from datetime import date
 
     section_path = (
-        tmp_path
-        / "corpus"
-        / "manuals"
-        / "renta"
-        / "2020"
-        / "part1"
-        / "structure"
-        / "sections"
-        / "cap1"
-        / "sec1.json"
+        tmp_path / "corpus" / "manuals" / "renta" / "2020" / "part1" / "structure" / "sections" / "cap1" / "sec1.json"
     )
     section_path.parent.mkdir(parents=True)
     section_path.write_text("{corrupt json", encoding="utf-8")
 
     from .._schema import LegalReference
+
     reference = LegalReference(
         id="renta-2020-manual:sec1",
         evidence_tier="legal_authority",
@@ -484,23 +472,22 @@ def test_verify_legal_reference_checks_manual_section_json(tmp_path: Path) -> No
         verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
 
     section_path.write_text(
-        json.dumps({
-            "section_id": "sec1",
-            "chapter_id": "cap1",
-            "title": "Seccion 1",
-            "summary": "Resumen",
-            "prose": [],
-            "rules": [],
-            "references_sections": [],
-            "references_legal_acts": [],
-            "source": {
-                "manual_url": "https://sede.agenciatributaria.gob.es/",
-                "page": 1
-            },
-            "definition_reviewed_by": "operator",
-            "definition_reviewed_at": "2026-06-08"
-        }),
-        encoding="utf-8"
+        json.dumps(
+            {
+                "section_id": "sec1",
+                "chapter_id": "cap1",
+                "title": "Seccion 1",
+                "summary": "Resumen",
+                "prose": [],
+                "rules": [],
+                "references_sections": [],
+                "references_legal_acts": [],
+                "source": {"manual_url": "https://sede.agenciatributaria.gob.es/", "page": 1},
+                "definition_reviewed_by": "operator",
+                "definition_reviewed_at": "2026-06-08",
+            }
+        ),
+        encoding="utf-8",
     )
 
     verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
