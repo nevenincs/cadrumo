@@ -7,14 +7,17 @@ Public surface
   notation, with optional normalization and ``None`` handling.
 * :func:`coerce_decimal` — parse any raw input to :class:`~decimal.Decimal`
   with a configurable fallback default.
+* :func:`coerce_decimal_strict` — same coercion but raises on unparseable
+  input, for callers that must record the parse-failure type.
 """
 
 from __future__ import annotations
 
-from ._coerce import coerce_decimal
+from ._coerce import coerce_decimal, coerce_decimal_strict
 from ._format import format_decimal
 
 __all__ = [
     "coerce_decimal",
+    "coerce_decimal_strict",
     "format_decimal",
 ]

@@ -90,3 +90,29 @@ def coerce_decimal(
             },
         )
         return default
+
+
+def coerce_decimal_strict(value: object) -> Decimal:
+    """Coerce *value* to :class:`~decimal.Decimal`, raising on unparseable input.
+
+    Unlike :func:`coerce_decimal` — which swallows the parse failure and returns a
+    default — this variant lets the underlying :exc:`~decimal.InvalidOperation` (or
+    :exc:`ValueError`) propagate, so callers that need to record *which* parse error
+    occurred (e.g. a redaction-safe diagnostic that logs ``type(exc).__name__``) can
+    catch it themselves. The caller is responsible for the empty/``None`` case.
+
+    Args:
+        value: Raw input. Accepts :class:`~decimal.Decimal`, :class:`int`,
+            :class:`float`, or :class:`str`. Leading/trailing whitespace in a
+            string is stripped by the :class:`~decimal.Decimal` constructor.
+
+    Returns:
+        The parsed decimal.
+
+    Raises:
+        decimal.InvalidOperation: When the string form is not a valid decimal.
+        ValueError: When the value cannot be coerced to a decimal.
+    """
+    if isinstance(value, Decimal):
+        return value
+    return Decimal(str(value))
