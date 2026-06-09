@@ -968,6 +968,12 @@ def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSourc
             )
         )
     return tuple(sources)
+_registry_fingerprint_cache: dict[Path, tuple[float, tuple[tuple[str, int, int], ...]]] = {}
+
+
+def clear_fingerprint_cache() -> None:
+    """Clear the 1-second TTL fingerprint cache."""
+    _registry_fingerprint_cache.clear()
 
 
 def _collect_registry_tree_fingerprints(resolved: Path) -> tuple[tuple[str, int, int], ...]:
@@ -985,6 +991,14 @@ def _collect_registry_tree_fingerprints(resolved: Path) -> tuple[tuple[str, int,
     authorization. The cache key invalidates the moment any of those files
     changes shape on disk.
     """
+    import time
+
+    now = time.time()
+    if resolved in _registry_fingerprint_cache:
+        cached_time, cached_val = _registry_fingerprint_cache[resolved]
+        if now - cached_time < 1.0:
+            return cached_val
+
     legal_dir = resolved / "legal"
     modelos_dir = resolved / "modelos"
     fingerprints: list[tuple[str, int, int]] = []
@@ -999,7 +1013,9 @@ def _collect_registry_tree_fingerprints(resolved: Path) -> tuple[tuple[str, int,
     if modelos_dir.is_dir():
         for entry in sorted(modelos_dir.iterdir()):
             fingerprints.extend(_modelo_directory_fingerprints(entry))
-    return tuple(fingerprints)
+    res = tuple(fingerprints)
+    _registry_fingerprint_cache[resolved] = (now, res)
+    return res
 
 
 def _modelo_directory_fingerprints(entry: Path) -> tuple[tuple[str, int, int], ...]:
@@ -1023,10 +1039,11 @@ def _load_registry_tree_cached(
     root: str,
     fingerprints: tuple[tuple[str, int, int], ...],
 ) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
+    import contextlib
     import hashlib
+    import os
     import pickle
     import tempfile
-    import os
 
     hasher = hashlib.sha256()
     hasher.update(root.encode("utf-8"))
@@ -1038,11 +1055,8 @@ def _load_registry_tree_cached(
 
     cache_path = Path(tempfile.gettempdir()) / f"aeat_registry_{key_hash}.pkl"
     if cache_path.is_file():
-        try:
-            with open(cache_path, "rb") as f:
-                return pickle.load(f)
-        except Exception:
-            pass
+        with contextlib.suppress(Exception), open(cache_path, "rb") as f:
+            return pickle.load(f)  # noqa: S301
 
     resolved = Path(root)
     catalogues = _load_shared_catalogue_files(resolved / "legal")
@@ -1057,10 +1071,8 @@ def _load_registry_tree_cached(
         os.replace(temp_name, cache_path)
     except Exception:
         if temp_name is not None:
-            try:
+            with contextlib.suppress(Exception):
                 os.unlink(temp_name)
-            except Exception:
-                pass
     return result
 
 

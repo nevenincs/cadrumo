@@ -183,6 +183,10 @@ def test_authority_cache_invalidates_when_fragmented_revision_changes(tmp_path: 
 
     first = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
     revision_path.write_text(_MINIMAL_REVISION_TOML_TEMPLATE.format(label="after cache invalidation"), encoding="utf-8")
+
+    from .._loader import clear_fingerprint_cache
+
+    clear_fingerprint_cache()
     second = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
 
     assert first is not second
