@@ -15,8 +15,8 @@ _ROOT_FOR_DIRECT_INVOCATION = Path(__file__).resolve().parents[2]
 if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
     sys.path.insert(0, str(_ROOT_FOR_DIRECT_INVOCATION))
 
-from docs.tools.apidocs import ApiStubManager
-from docs.tools.cli_reference import generate_cli_reference
+from dev.docs.apidocs import ApiStubManager
+from dev.docs.cli_reference import generate_cli_reference
 
 DOC_SUFFIXES = {".md", ".rst"}
 PY_SUFFIX = ".py"

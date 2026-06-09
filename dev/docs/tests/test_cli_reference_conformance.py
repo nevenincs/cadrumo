@@ -58,7 +58,7 @@ def _rendered_reference() -> dict[str, str]:
     """
     import tempfile
 
-    from docs.tools.cli_reference import generate_cli_reference_in_subprocess
+    from dev.docs.cli_reference import generate_cli_reference_in_subprocess
 
     with tempfile.TemporaryDirectory() as tmp:
         return generate_cli_reference_in_subprocess(Path(tmp))
@@ -99,7 +99,7 @@ def test_every_live_leaf_is_documented() -> None:
     Failures indicate that a command was added to the tree but the reference
     was not regenerated and committed.
     """
-    from docs.tools.cli_reference import collect_live_leaf_paths_in_subprocess
+    from dev.docs.cli_reference import collect_live_leaf_paths_in_subprocess
 
     live_keys = set(collect_live_leaf_paths_in_subprocess())
     documented_keys = _rendered_doc_registry_keys()
@@ -118,7 +118,7 @@ def test_every_documented_path_resolves_to_a_live_command() -> None:
     Failures indicate that a command was removed from the tree but the reference
     was not regenerated — a stale documentation entry.
     """
-    from docs.tools.cli_reference import collect_live_leaf_paths_in_subprocess
+    from dev.docs.cli_reference import collect_live_leaf_paths_in_subprocess
 
     live_keys = set(collect_live_leaf_paths_in_subprocess())
     documented_keys = _rendered_doc_registry_keys()
@@ -147,8 +147,6 @@ def test_schema_registry_entries_map_to_live_commands_or_group_callbacks() -> No
     explicitly exempted because they register under a group callback rather than
     a leaf command.
     """
-    from docs.tools.cli_reference import collect_live_leaf_paths_in_subprocess
-
     from aeat.core.json_contract import SCHEMA_REGISTRY
     from aeat.entrypoints.cli import (
         _app_live_payloads,
@@ -165,6 +163,7 @@ def test_schema_registry_entries_map_to_live_commands_or_group_callbacks() -> No
         _google_payloads,
         _profile_censo_payloads,
     )
+    from dev.docs.cli_reference import collect_live_leaf_paths_in_subprocess
 
     live_keys = set(collect_live_leaf_paths_in_subprocess())
     registry_keys = set(SCHEMA_REGISTRY.keys())
@@ -190,8 +189,6 @@ def test_every_live_leaf_has_a_registered_schema() -> None:
     generated reference docs are not consulted here so the gate is independent
     of the drift check.
     """
-    from docs.tools.cli_reference import collect_live_leaf_paths_in_subprocess
-
     from aeat.core.json_contract import SCHEMA_REGISTRY
     from aeat.entrypoints.cli import (
         _app_live_payloads,
@@ -208,6 +205,7 @@ def test_every_live_leaf_has_a_registered_schema() -> None:
         _google_payloads,
         _profile_censo_payloads,
     )
+    from dev.docs.cli_reference import collect_live_leaf_paths_in_subprocess
 
     live_keys = set(collect_live_leaf_paths_in_subprocess())
     registry_keys = set(SCHEMA_REGISTRY.keys())

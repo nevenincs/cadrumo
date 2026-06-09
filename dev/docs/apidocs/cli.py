@@ -17,7 +17,7 @@ app = typer.Typer(
 
 
 def _default_manager() -> ApiStubManager:
-    # cli.py lives at docs/tools/apidocs/cli.py; parents[3] is the repo root.
+    # cli.py lives at dev/docs/apidocs/cli.py; parents[3] is the repo root.
     repo_root = Path(__file__).resolve().parents[3]
     return ApiStubManager(
         src_aeat=repo_root / "src" / "aeat",

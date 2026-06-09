@@ -1,7 +1,7 @@
 """Committed-versus-regenerated CLI reference drift gate.
 
 Every commit that changes the CLI surface must also regenerate the docs/cli/ subtree so the
-committed pages match what ``docs.tools.cli_reference.generate_cli_reference``
+committed pages match what ``dev.docs.cli_reference.generate_cli_reference``
 emits. Without this gate, a verb/flag/help-text drift silently
 diverges from the published reference and the docs-check lane
 catches it only at the next manual regen.
@@ -16,7 +16,8 @@ import difflib
 from pathlib import Path
 
 import pytest
-from docs.tools.cli_reference import generate_cli_reference_in_subprocess
+
+from dev.docs.cli_reference import generate_cli_reference_in_subprocess
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.docs]
 
