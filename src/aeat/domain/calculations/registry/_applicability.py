@@ -91,6 +91,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
+from ....core import Modelo
 from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...deadlines.taxpayer_model import (
     EntityType,
@@ -538,8 +539,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # income category they declare. It does NOT apply to a legal entity:
     # an S.L. is a contribuyente del Impuesto sobre Sociedades and files
     # Modelo 200, never Modelo 100. Research §1.1, §1.2.
-    "100": ModeloApplicabilityRule(
-        modelo="100",
+    Modelo.M100: ModeloApplicabilityRule(
+        modelo=Modelo.M100,
         applicable_entity_types=_NATURAL_PERSON,
         required_income_categories=frozenset(),
         applicable_reason=(
@@ -569,8 +570,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # A natural person whose only income is capital inmobiliario (a pure
     # landlord), trabajo, pensión, etc. has no actividad económica and
     # therefore no Modelo 130. A legal entity never files Modelo 130.
-    "130": ModeloApplicabilityRule(
-        modelo="130",
+    Modelo.M130: ModeloApplicabilityRule(
+        modelo=Modelo.M130,
         applicable_entity_types=_NATURAL_PERSON,
         required_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         required_estimation_regimes=frozenset(
@@ -611,8 +612,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # objetiva. This is the regime counterpart of Modelo 130: an activity
     # in estimación directa files Modelo 130, never Modelo 131. A legal
     # entity never files Modelo 131. Research §2.1.
-    "131": ModeloApplicabilityRule(
-        modelo="131",
+    Modelo.M131: ModeloApplicabilityRule(
+        modelo=Modelo.M131,
         applicable_entity_types=_NATURAL_PERSON,
         required_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         required_estimation_regimes=frozenset({IrpfEstimationRegime.OBJETIVA}),
@@ -650,8 +651,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # a payer fact the three-axis model cannot decide on its own; a
     # profile that does not positively declare it yields INCOMPLETE rather
     # than a guessed NOT_APPLICABLE. Research §1.1.
-    "111": ModeloApplicabilityRule(
-        modelo="111",
+    Modelo.M111: ModeloApplicabilityRule(
+        modelo=Modelo.M111,
         applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_payer_fact=PayerFact.PAYS_WITHHELD_INCOME,
         applicable_reason=(
@@ -680,8 +681,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # subject to retención. Whether the taxpayer pays such rent is a payer
     # fact the three-axis model cannot decide alone; an undeclared fact
     # yields INCOMPLETE.
-    "115": ModeloApplicabilityRule(
-        modelo="115",
+    Modelo.M115: ModeloApplicabilityRule(
+        modelo=Modelo.M115,
         applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_payer_fact=PayerFact.PAYS_RENT_WITH_RETENCION,
         applicable_reason=(
@@ -708,8 +709,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # IRPF sobre rendimientos del trabajo y de actividades económicas. The
     # annual companion to Modelo 111: a taxpayer who files Modelo 111
     # files Modelo 190. Gated on the same payer fact as Modelo 111.
-    "190": ModeloApplicabilityRule(
-        modelo="190",
+    Modelo.M190: ModeloApplicabilityRule(
+        modelo=Modelo.M190,
         applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_payer_fact=PayerFact.PAYS_WITHHELD_INCOME,
         applicable_reason=(
@@ -735,8 +736,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # Modelo 180 — resumen anual de retenciones e ingresos a cuenta del
     # IRPF sobre rendimientos del arrendamiento de inmuebles urbanos. The
     # annual companion to Modelo 115: gated on the same payer fact.
-    "180": ModeloApplicabilityRule(
-        modelo="180",
+    Modelo.M180: ModeloApplicabilityRule(
+        modelo=Modelo.M180,
         applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_payer_fact=PayerFact.PAYS_RENT_WITH_RETENCION,
         applicable_reason=(
@@ -765,8 +766,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # intracomunitarias. Whether the taxpayer trades intracommunity is a
     # payer fact the three-axis model cannot decide alone; an undeclared
     # fact yields INCOMPLETE. Research §3.3.
-    "349": ModeloApplicabilityRule(
-        modelo="349",
+    Modelo.M349: ModeloApplicabilityRule(
+        modelo=Modelo.M349,
         applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_payer_fact=PayerFact.TRADES_INTRACOMMUNITY,
         applicable_reason=(
@@ -792,8 +793,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # declaration threshold. Whether the threshold is exceeded is a payer
     # fact the three-axis model cannot decide alone; an undeclared fact
     # yields INCOMPLETE.
-    "347": ModeloApplicabilityRule(
-        modelo="347",
+    Modelo.M347: ModeloApplicabilityRule(
+        modelo=Modelo.M347,
         applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_payer_fact=PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD,
         applicable_reason=(
@@ -823,8 +824,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # entity — files it. Same applicability gate as Modelo 303. (SII
     # filers are exempt from Modelo 390; that suppression is a deferred
     # expansion gated on the SII enrolment axis — research §3.1.)
-    "390": ModeloApplicabilityRule(
-        modelo="390",
+    Modelo.M390: ModeloApplicabilityRule(
+        modelo=Modelo.M390,
         applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         applicable_reason=(
@@ -852,8 +853,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # IVA-subject; the seed gates on the actividad-económica category,
     # which a pure landlord does not declare. Finer rental-IVA nuance is
     # a deferred expansion.)
-    "303": ModeloApplicabilityRule(
-        modelo="303",
+    Modelo.M303: ModeloApplicabilityRule(
+        modelo=Modelo.M303,
         applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         applicable_reason=(
@@ -874,8 +875,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # Applies, in general, to every IS contribuyente — a legal entity with
     # personalidad jurídica. It does NOT apply to a natural person, who
     # files the Renta (Modelo 100). Research §1.2.
-    "200": ModeloApplicabilityRule(
-        modelo="200",
+    Modelo.M200: ModeloApplicabilityRule(
+        modelo=Modelo.M200,
         applicable_entity_types=_LEGAL_ENTITY,
         required_income_categories=frozenset(),
         applicable_reason=(
@@ -900,8 +901,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # Modelo 202 — pago fraccionado del Impuesto sobre Sociedades. Filed by
     # IS contribuyentes in April / October / December. A natural person
     # never files Modelo 202. Research §1.2.
-    "202": ModeloApplicabilityRule(
-        modelo="202",
+    Modelo.M202: ModeloApplicabilityRule(
+        modelo=Modelo.M202,
         applicable_entity_types=_LEGAL_ENTITY,
         required_income_categories=frozenset(),
         applicable_reason=(
@@ -930,8 +931,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # file it. Modelo 184 is not cuota-bearing: a non-attribution
     # entity asked about it gets a plain NOT_APPLICABLE, never a
     # pass-through verdict. Corporate-entity ADR §2; research §1.3.
-    "184": ModeloApplicabilityRule(
-        modelo="184",
+    Modelo.M184: ModeloApplicabilityRule(
+        modelo=Modelo.M184,
         applicable_entity_types=_ATTRIBUTION_ENTITY,
         required_income_categories=frozenset(),
         applicable_reason=(
@@ -971,8 +972,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # decides whether the EUR 50,000 threshold is crossed.
     # Path-B stub: registry entry records legal authority; full casilla
     # authoring is a follow-on step (full casilla inventory not yet authored).
-    "721": ModeloApplicabilityRule(
-        modelo="721",
+    Modelo.M721: ModeloApplicabilityRule(
+        modelo=Modelo.M721,
         applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_income_categories=frozenset(),
         applicable_reason=(
@@ -1017,8 +1018,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # obligations reserved for IRPF residents. This exemption is enforced by
     # the pre-check in :func:`derive_modelo_applicability` before this rule
     # is evaluated.
-    "720": ModeloApplicabilityRule(
-        modelo="720",
+    Modelo.M720: ModeloApplicabilityRule(
+        modelo=Modelo.M720,
         applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_payer_fact=PayerFact.BIENES_EXTRANJERO_ABOVE_THRESHOLD,
         applicable_reason=(
@@ -1197,9 +1198,9 @@ def derive_modelo_applicability(
     # exemption before the rule table so the payer-fact gate is never reached.
     # Year-7+ filers whose window has expired revert to the general IRPF
     # regime and owe M720 again — the window-expiry check is wired here.
-    if modelo == "720" and profile.beckham_window_active(_today):
+    if modelo == Modelo.M720 and profile.beckham_window_active(_today):
         return ModeloApplicability(
-            modelo="720",
+            modelo=Modelo.M720,
             verdict=ApplicabilityVerdict.NOT_APPLICABLE,
             reason=_IMPATRIADO_M720_EXEMPT_REASON,
             legal_refs=_IMPATRIADO_M720_LEGAL_REFS,
