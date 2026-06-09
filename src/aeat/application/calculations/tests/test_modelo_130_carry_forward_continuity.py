@@ -30,8 +30,10 @@ the prior-quarter negative result carried forward "sin signo".
 
 from __future__ import annotations
 
+from collections.abc import Iterator, Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -39,11 +41,19 @@ from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ....domain.modelos._calculation_revision import CalculationRevision
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import calculate_modelo_revision, create_work_unit
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._observations_repository import CalculationObservationRepository
+
+_Repos = tuple[
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    BucketEventHistoryRepository,
+    CalculationObservationRepository,
+]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -78,7 +88,7 @@ _EXPECTED_Q1_SALDO = Decimal("100.00")
 
 
 @pytest.fixture
-def repos(tmp_path):
+def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over an isolated profile — no mocks."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
         objects = profile.repository
@@ -90,7 +100,13 @@ def repos(tmp_path):
         )
 
 
-def _calculate_quarter(repos, *, period, casilla_inputs, binding_values):
+def _calculate_quarter(
+    repos: _Repos,
+    *,
+    period: str,
+    casilla_inputs: Mapping[str, Decimal],
+    binding_values: Mapping[str, Decimal],
+) -> CalculationRevision:
     wu_repo, cr_repo, bv_repo, _obs_repo = repos
     work_unit = create_work_unit(
         bucket_id="default",
@@ -112,7 +128,7 @@ def _calculate_quarter(repos, *, period, casilla_inputs, binding_values):
     )
 
 
-def _observation_from_revision(revision, *, period) -> RegistryModeloObservation:
+def _observation_from_revision(revision: CalculationRevision, *, period: str) -> RegistryModeloObservation:
     return RegistryModeloObservation(
         modelo="130",
         filing_year=2026,
@@ -123,7 +139,7 @@ def _observation_from_revision(revision, *, period) -> RegistryModeloObservation
     )
 
 
-def _seed_prior_year_m100(obs_repo) -> None:
+def _seed_prior_year_m100(obs_repo: CalculationObservationRepository) -> None:
     """Record the prior-year annual Renta (M100 2025) net-income observation.
 
     M130's casilla-13 minoración reads ``irpf.previous_year_economic_activity_net_income``
@@ -152,7 +168,7 @@ def _seed_prior_year_m100(obs_repo) -> None:
     )
 
 
-def test_q1_loss_produces_carry_forward_saldo(repos) -> None:
+def test_q1_loss_produces_carry_forward_saldo(repos: _Repos) -> None:
     """A loss-making Q1 produces a positive ``saldo-negativo-fin-periodo``.
 
     This is the seed the next quarter carries forward. The value is
@@ -165,7 +181,7 @@ def test_q1_loss_produces_carry_forward_saldo(repos) -> None:
     assert Decimal(revision.casilla_values["saldo-negativo-fin-periodo"]) == _EXPECTED_Q1_SALDO
 
 
-def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(repos) -> None:
+def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(repos: _Repos) -> None:
     """Q2's carry-forward binding auto-resolves to Q1's persisted saldo.
 
     The cross-period continuity contract: once Q1 is recorded as a
@@ -191,7 +207,7 @@ def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(repos) -> None:
     assert report.binding_values.get(_PREV_YEAR_BINDING) == _PRIOR_YEAR_NET_INCOME
 
 
-def test_q2_carry_forward_flows_into_casilla_15_value(repos) -> None:
+def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos) -> None:
     """The resolved carry-forward lands in Q2's casilla 15 through a real calculate.
 
     End-to-end: Q1 recorded -> Q2 prefill -> Q2 calculate with the

@@ -40,8 +40,10 @@ assertion.
 
 from __future__ import annotations
 
+from collections.abc import Iterator, Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -49,12 +51,20 @@ from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ....domain.modelos._calculation_revision import CalculationRevision
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import calculate_modelo_revision, create_work_unit
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
+
+_Repos = tuple[
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    BucketEventHistoryRepository,
+    CalculationObservationRepository,
+]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -102,7 +112,7 @@ _Q1_INPUTS = {
 
 
 @pytest.fixture
-def repos(tmp_path):
+def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over an isolated profile — no mocks."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
         objects = profile.repository
@@ -114,7 +124,14 @@ def repos(tmp_path):
         )
 
 
-def _calculate_quarter(repos, *, filing_year, period, casilla_inputs, binding_values):
+def _calculate_quarter(
+    repos: _Repos,
+    *,
+    filing_year: int,
+    period: str,
+    casilla_inputs: Mapping[str, Decimal],
+    binding_values: Mapping[str, Decimal],
+) -> CalculationRevision:
     """Run the REAL M130 calculation for one renta year quarter.
 
     Returns the persisted :class:`CalculationRevision`-derived result whose
@@ -142,7 +159,7 @@ def _calculate_quarter(repos, *, filing_year, period, casilla_inputs, binding_va
     )
 
 
-def _seed_prior_year_m100(obs_repo, *, filing_year: int) -> None:
+def _seed_prior_year_m100(obs_repo: CalculationObservationRepository, *, filing_year: int) -> None:
     """Record renta year N's annual Renta (M100) net-income observation.
 
     The :data:`_PREV_YEAR_BINDING` sums M100 casillas 0224/1479/1553/1577 of
@@ -167,7 +184,7 @@ def _seed_prior_year_m100(obs_repo, *, filing_year: int) -> None:
     )
 
 
-def test_modelo_130_enrolls_two_renta_years_via_prior_year_minoracion(repos) -> None:
+def test_modelo_130_enrolls_two_renta_years_via_prior_year_minoracion(repos: _Repos) -> None:
     """End-to-end enrollment: prior-year M100 net income folds into next year's M130.
 
     Drives the REAL M130 backend for two distinct renta years. Renta year N's
