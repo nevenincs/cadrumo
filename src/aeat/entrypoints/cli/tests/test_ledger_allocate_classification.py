@@ -92,3 +92,43 @@ def test_allocate_partial_business_pct_yields_mixed(tmp_path: Path) -> None:
 def test_allocate_zero_business_pct_yields_personal(tmp_path: Path) -> None:
     txn = _imported_transaction_id(tmp_path)
     assert _allocate(txn, "0")["business_classification"] == "PERSONAL"
+
+
+def _allocate_raw(transaction_id: str, business_pct: str):
+    return _RUNNER.invoke(
+        app,
+        [
+            "app",
+            "ledger",
+            "allocate",
+            "--id",
+            transaction_id,
+            "--business-pct",
+            business_pct,
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+
+
+def test_allocate_out_of_range_pct_shows_value_and_percent(tmp_path: Path) -> None:
+    """An operator who types ``50`` (meaning 50 %) or ``1.5`` sees the
+    offending value WITH its percent context, not a bare 'invalid'."""
+    txn = _imported_transaction_id(tmp_path)
+    result = _allocate_raw(txn, "1.5")
+    assert result.exit_code != 0, result.output
+    # The offending value and its percent translation both appear.
+    assert "1.5" in result.output
+    assert "150%" in result.output
+    # And the convention is shown so the operator can self-correct.
+    assert "0.5 for 50" in result.output
+
+
+def test_allocate_whole_number_pct_shows_percent_context(tmp_path: Path) -> None:
+    """``--business-pct 50`` (a percent typed as a whole number) is out of
+    the 0..1 range and is refused with the 5000% context, steering the
+    operator to the 0..1 share convention."""
+    txn = _imported_transaction_id(tmp_path)
+    result = _allocate_raw(txn, "50")
+    assert result.exit_code != 0, result.output
+    assert "50" in result.output
+    assert "5000%" in result.output

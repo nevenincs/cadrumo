@@ -130,6 +130,40 @@ def _parse_required_decimal(raw: str, *, label: str) -> Decimal:
     return parsed
 
 
+def _format_percent(value: Decimal) -> str:
+    """Render a 0..1 proportion as its percentage for operator context."""
+    # ``format(..., "f")`` avoids scientific notation (e.g. ``5E+3``);
+    # trim trailing zeros only when a fractional part is present.
+    text = format(value * Decimal(100), "f")
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+    return f"{text}%"
+
+
+def _validate_business_pct_range(value: Decimal | None) -> Decimal | None:
+    """Refuse a business proportion outside the inclusive 0..1 range.
+
+    The domain validator rejects an out-of-range proportion but its
+    message ("business_pct must be within 0..1") names neither the
+    offending value nor its percentage. An operator who types ``50``
+    (meaning 50 %) or ``1.5`` then sees a bare invalid. Surface the
+    value with its percent context here at the CLI boundary — the
+    operator's first instructive surface — so the share is
+    self-explanatory and the 0.5-for-50 % convention is shown.
+    """
+    if value is None:
+        return None
+    if not Decimal("0") <= value <= Decimal("1"):
+        raise _bad(
+            tr(
+                "cli.ledger.errors.business_pct_out_of_range",
+                value=format(value.normalize(), "f"),
+                percent=_format_percent(value),
+            )
+        )
+    return value
+
+
 def _category_catalogue_text() -> str:
     """Return the comma-joined recognised spending-category ids."""
     return ", ".join(category.value for category in SpendingCategory)
@@ -352,7 +386,7 @@ def ledger_add(
         bucket_id=transaction_repository.bucket_id,
         active_profile=resolve_active_bucket_id(),
         category_id=validated_category_id,
-        operator_supplied=_parse_decimal(business_pct, label="business-pct"),
+        operator_supplied=_validate_business_pct_range(_parse_decimal(business_pct, label="business-pct")),
     )
     active_taxpayer = _profile_to_taxpayer(current_state)
     resolved_source_jurisdiction = _resolve_source_jurisdiction(
@@ -592,7 +626,7 @@ def ledger_classify(
     try:
         patch = _patch_from_options(
             business_classification=classification,
-            business_pct=_parse_decimal(business_pct, label="business-pct"),
+            business_pct=_validate_business_pct_range(_parse_decimal(business_pct, label="business-pct")),
             category_id=validated_category_id,
             taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
             iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
@@ -794,7 +828,10 @@ def ledger_allocate(
     transaction_repository = _tx_repo(state)
     validated_category_id = _validate_category_id(category_id)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
-    parsed_business_pct = _parse_required_decimal(business_pct, label="business-pct")
+    parsed_business_pct = _validate_business_pct_range(
+        _parse_required_decimal(business_pct, label="business-pct")
+    )
+    assert parsed_business_pct is not None
     # The classification follows the proportion: a 100% allocation is
     # BUSINESS, a 0% allocation is PERSONAL, and anything strictly
     # between is genuinely MIXED. Hard-coding MIXED silently mislabels

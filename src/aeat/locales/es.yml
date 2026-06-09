@@ -1352,7 +1352,7 @@ cli:
           válido: {details}.'
         modelo_help: Codigo de modelo soportado por el servicio backend de agregacion
           (111, 115, 123, 180, 190, 193, 347, 349 o 720).
-        period_help: Periodo de agregacion enviado al servicio backend.
+        period_help: 'Token de periodo de agregacion: 0A anual, 1T-4T trimestres, 01-12 meses.'
         retencion_observation_help: Objeto JSON RetencionObservation. El valor source_kind
           debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
           o collectible_invoice. Repetible para varias observaciones.
@@ -1404,8 +1404,7 @@ cli:
         input_kind_help: Filtrar las casillas por tipo de entrada (manual, bound,
           computed, informational)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
-        period_help: Token de periodo; para Modelo 036 usa alta, modificacion o baja;
-          ejemplos periodicos incluyen 2026Q1 y 2026-01
+        period_help: 'Token de periodo para resolver la revision del modelo: 0A anual, 1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificacion o baja.'
         required_help: Mostrar solo las casillas marcadas como obligatorias
       compare:
         modelo_help: Número de modelo a comparar (p. ej. 100, 130).
@@ -1483,11 +1482,10 @@ cli:
         help: Listar todas las casillas calculadas y sus formulas para la revision
           de un modelo especifico.
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
-        period_help: Token de periodo; para Modelo 036 usa alta, modificacion o baja;
-          ejemplos periodicos incluyen 2026Q1 y 2026-01
+        period_help: 'Token de periodo para resolver la revision del modelo: 0A anual, 1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificacion o baja.'
       history:
         modelo_help: Código de modelo (p. ej. 100, 303)
-        period_help: Filtro opcional de periodo (p. ej. Q1, annual)
+        period_help: 'Filtro opcional de periodo con el token de revision del modelo: 0A anual, 1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificacion o baja.'
         year_help: Filtro opcional de ejercicio de presentación
       history_help: Muestra la auditoría cronológica del ciclo de vida de un modelo
       iva_wallet:
@@ -1514,7 +1512,7 @@ cli:
           \ compensación pendiente de períodos posteriores de la última declaración\
           \ presentada."
         seed_invalid_amount: 'El importe de semilla IVA no es válido: %{amount}.'
-        seed_period_help: Período del importe inicial (p. ej. 2024N4).
+        seed_period_help: 'Periodo de la presentacion del Modelo 303: trimestres 1T-4T (p. ej. 4T).'
       list:
         help: Listar todos los modelos tributarios oficiales registrados en el sistema.
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
@@ -1551,7 +1549,7 @@ cli:
         anual del Modelo 130).
       readiness:
         modelo_help: Código de modelo (p. ej. 303).
-        period_help: Token de periodo (p. ej. Q1, annual).
+        period_help: 'Token de periodo para resolver la revision del modelo: 0A anual, 1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificacion o baja.'
         revision_help: Identificador de revisión del registro.
         year_help: Ejercicio de presentación.
       readiness_help: Informa de si el perfil activo está listo para presentar un
@@ -2549,6 +2547,7 @@ cli:
         Ejecuta `aeat app ledger categories` para ver todos los identificadores reconocidos.
       unknown_provider: 'Proveedor de importación --provider {provider!r} desconocido.
         Proveedores reconocidos: {providers}.'
+      business_pct_out_of_range: 'La proporción de uso profesional %{value} (= %{percent}) está fuera de rango. Introduce una proporción entre 0 y 1, p. ej. 0.5 para el 50 por ciento.'
     export:
       actor_help: Nombre del operador registrado en el evento del bucket
       format_help: Formato de serialización de exportación
