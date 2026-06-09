@@ -66,6 +66,8 @@ related:
 - [x] `S43` - Audit test-coverage output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
 - [x] `S44` - Audit env-doctor output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
 - [x] `S45` - Audit docs-check output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [x] `S46` - Relocate scripts/ dev tooling into dev.quality and dev.audit submodules with cohabiting tests; `rewire recipes, ruff ignores, and the utf8/ratchet gates; `dev/quality, dev/audit, justfile`.
+- [x] `S47` - Relocate docs/tools into dev.docs (build, cli_reference, apidocs) with cohabiting tests; `rewire conf.py, recipes, ruff ignores, and the docs rules; `dev/docs, docs/conf.py, justfile`.
 Redesign the root build harness and project quality checks to enforce naming prefix standards, script separation, verify-only hooks, and programmatic RAG semantic audits.
 
 ## Description
