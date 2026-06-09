@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 # Filesystem root
 # ---------------------------------------------------------------------------
 
-_SRC = Path(__file__).parent  # src/aeat/
+_SRC = Path(__file__).parent.parent  # src/aeat/
 
 
 def _source_lines(path: Path) -> list[str]:

@@ -46,7 +46,7 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-_SRC_ROOT = pathlib.Path(__file__).parent
+_SRC_ROOT = pathlib.Path(__file__).parent.parent
 
 # Exception class names that are NOT AeatError subclasses and therefore
 # do not need the translated_message pattern (Typer/Click/stdlib classes).

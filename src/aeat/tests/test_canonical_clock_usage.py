@@ -34,7 +34,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = pathlib.Path(__file__).parent
+_SRC_ROOT = pathlib.Path(__file__).parent.parent
 _CLOCK_MODULE = _SRC_ROOT / "core" / "time" / "_clock.py"
 _TEST_INFRA_MODULES: frozenset[pathlib.Path] = frozenset(
     {
@@ -52,7 +52,7 @@ _VIOLATION_PATTERNS: tuple[str, ...] = (
 
 
 def _is_excluded(path: pathlib.Path) -> bool:
-    if path.name.startswith("test_"):
+    if path.name.startswith("test_") or "tests" in path.parts:
         return True
     if path in _TEST_INFRA_MODULES:
         return True

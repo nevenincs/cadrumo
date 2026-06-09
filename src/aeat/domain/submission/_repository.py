@@ -78,6 +78,7 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
                     exc_info=True,
                 )
                 continue
+            # CAST-RATIONALE-SUBMISSION-ENVELOPE-CAST: envelope verified via metadata
             payload = cast(ModeloPresentado, envelope.payload)
             records.append((payload.submission_id, payload))
         for _, payload in sorted(records, key=lambda record: record[0]):

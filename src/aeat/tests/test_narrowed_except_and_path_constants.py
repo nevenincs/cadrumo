@@ -25,7 +25,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC = Path(__file__).parent  # src/aeat/
+_SRC = Path(__file__).parent.parent  # src/aeat/
 
 
 def _src(rel: str) -> Path:

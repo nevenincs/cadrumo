@@ -134,7 +134,7 @@ def test_profiles_parse_date_delegates_to_canonical() -> None:
 def test_apoderado_service_importable_and_has_cli_callers() -> None:
     """ApoderadoService must be importable; CLI entrypoint must reference it."""
 
-    cli_path = Path(__file__).parents[1] / "aeat/entrypoints/cli/_config/__init__.py"
+    cli_path = Path(__file__).parents[2] / "aeat/entrypoints/cli/_config/_apoderado.py"
     assert cli_path.exists(), f"CLI entrypoint not found at {cli_path}"
     cli_src = cli_path.read_text(encoding="utf-8")
     assert "ApoderadoService" in cli_src, (
