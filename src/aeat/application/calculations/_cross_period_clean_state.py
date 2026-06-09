@@ -1,6 +1,8 @@
 """Clean-state proof for filing-grade cross-period modelo dependencies.
 
-Use of :class:`RegistrySnapshot`, :class:`ValidatedRegistryAuthority` for compliance.
+Used by: :mod:`~aeat.application.calculations._calculate` to verify cross-period requirements before filing.
+
+Use of :class:`~aeat.domain.calculations.registry.RegistrySnapshot`, :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` for compliance.
 """
 
 from __future__ import annotations
