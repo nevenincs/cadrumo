@@ -21,6 +21,7 @@ from typing import Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
+from ._modelo import Modelo
 from .errors import CoreValidationError
 
 #: ISO 4217 currency code for the Euro, used as the functional currency throughout AEAT.
@@ -437,19 +438,26 @@ CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE: Final[str] = "aeat.outbound.aeat.auth.clave_mo
 #: Modelos belonging to the *retenciones* aggregation family (withholding/retention filings).
 #: Covers: M111 (labour income), M115 (leases), M123 (capital yields), M180 (lease annual),
 #: M190 (labour annual summary), M193 (capital yields annual summary).
-RETENCIONES_MODELOS: Final[tuple[str, ...]] = ("111", "115", "123", "180", "190", "193")
+RETENCIONES_MODELOS: Final[tuple[Modelo, ...]] = (
+    Modelo.M111,
+    Modelo.M115,
+    Modelo.M123,
+    Modelo.M180,
+    Modelo.M190,
+    Modelo.M193,
+)
 
 #: Modelos belonging to the *counterpart* aggregation family (third-party declaration filings).
 #: Covers: M347 (annual operations with third parties), M349 (intra-EU operations summary).
-COUNTERPART_MODELOS: Final[tuple[str, ...]] = ("347", "349")
+COUNTERPART_MODELOS: Final[tuple[Modelo, ...]] = (Modelo.M347, Modelo.M349)
 
 #: Modelos belonging to the *foreign assets* aggregation family (overseas-asset declaration).
 #: Covers: M720 (assets and rights abroad declaration per Ley 7/2012).
-FOREIGN_ASSET_MODELOS: Final[tuple[str, ...]] = ("720",)
+FOREIGN_ASSET_MODELOS: Final[tuple[Modelo, ...]] = (Modelo.M720,)
 
 #: Modelos belonging to the *IVA regime* gating group (value-added tax periodic filings).
 #: Covers: M303 (quarterly/monthly IVA self-assessment), M390 (IVA annual summary).
-IVA_REGIME_MODELOS: Final[tuple[str, ...]] = ("303", "390")
+IVA_REGIME_MODELOS: Final[tuple[Modelo, ...]] = (Modelo.M303, Modelo.M390)
 
 #: REBECA 50% exemption of qualifying maritime navigation income.
 #: Applies to crew of REBECA-registered vessels and scheduled Canary Islands routes.
