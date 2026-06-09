@@ -223,8 +223,7 @@ def parse_iva_compensation_wallet_html(
 ) -> IvaCompensationWalletObservation:
     """Parse wallet rows and the total from a captured AEAT cartera HTML page.
 
-    Returns a :class:`IvaCompensationWalletObservation` containing the
-    authoritative aggregate and the per-period detail rows.
+    Returns a :class:`IvaCompensationWalletObservation` with the aggregate and per-period detail rows.
 
     The own-name "Cartera de cuotas de IVA a compensar" results view carries an
     authoritative aggregate — the "Cuotas a compensar pendientes de períodos
