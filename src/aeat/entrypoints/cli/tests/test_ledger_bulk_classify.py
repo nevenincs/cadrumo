@@ -300,6 +300,134 @@ def test_rule_priority_order_first_match_wins(tmp_path: Path) -> None:
     assert by_id[tx1]["business_classification"] == "BUSINESS"
 
 
+def test_classify_from_csv_persists_iva_facts(tmp_path: Path) -> None:
+    """Bulk --from-csv supplies the same IVA facts single-classify supplies.
+
+    Drives the real bulk-CSV classify against the live ledger backend and
+    asserts the persisted transaction carries the supplied
+    ``taxable_base``/``iva_rate``/``iva_amount`` with strict equality. A
+    classification-only row (no IVA columns) on the same batch must still
+    classify with the IVA facts absent (zero regression).
+    """
+    tx1, tx2 = _import_two_transactions(tmp_path)
+
+    csv_file = tmp_path / "iva.csv"
+    # tx1 (gross 100.00 EUR) carries the IVA facts; the base + iva_amount must
+    # equal the gross to the cent (the same domain invariant single-classify
+    # enforces): 82.64 + 17.36 = 100.00. tx2 is classification-only (blank IVA
+    # cells) and must behave exactly as a row without the columns at all.
+    csv_file.write_text(
+        "transaction_id,classification,taxable_base,iva_rate,iva_amount\n"
+        f"{tx1},BUSINESS,82.64,0.21,17.36\n"
+        f"{tx2},PERSONAL,,,\n",
+        encoding="utf-8",
+    )
+
+    result = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)["result"]
+    assert payload["applied"] == 2, payload
+    assert not payload["failures"], payload
+
+    by_id = {r["transaction_id"]: r for r in _list_transactions()}
+
+    # tx1: the supplied IVA facts persisted, strict string equality.
+    assert by_id[tx1]["business_classification"] == "BUSINESS"
+    assert by_id[tx1]["taxable_base"] == "82.64"
+    assert by_id[tx1]["iva_rate"] == "0.21"
+    assert by_id[tx1]["iva_amount"] == "17.36"
+
+    # tx2: classification-only row, IVA facts remain absent (no regression).
+    assert by_id[tx2]["business_classification"] == "PERSONAL"
+    assert by_id[tx2]["taxable_base"] is None
+    assert by_id[tx2]["iva_rate"] is None
+    assert by_id[tx2]["iva_amount"] is None
+
+
+def test_classify_from_csv_iva_facts_match_single_classify(tmp_path: Path) -> None:
+    """Bulk and --id mode persist the supplied IVA facts via the same write path.
+
+    tx1 (gross 100.00) is classified through the single ``--id`` surface and
+    tx2 (gross 200.00) through the bulk ``--from-csv`` surface; each row's
+    ``taxable_base + iva_amount`` equals its own gross (the shared domain
+    invariant). Both surfaces must persist exactly the supplied values,
+    proving the bulk path reuses the single-classify primitive rather than a
+    parallel write path.
+    """
+    tx1, tx2 = _import_two_transactions(tmp_path)
+
+    # Single-classify tx1 (gross 100.00) with IVA facts via --id mode.
+    single = _RUNNER.invoke(
+        app,
+        [
+            "app",
+            "ledger",
+            "classify",
+            "--id",
+            tx1,
+            "--classification",
+            "BUSINESS",
+            "--taxable-base",
+            "82.64",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "17.36",
+        ],
+    )
+    assert single.exit_code == 0, single.output
+
+    # Bulk-classify tx2 (gross 200.00) with IVA facts via --from-csv.
+    csv_file = tmp_path / "bulk_iva.csv"
+    csv_file.write_text(
+        "transaction_id,classification,taxable_base,iva_rate,iva_amount\n"
+        f"{tx2},BUSINESS,165.29,0.21,34.71\n",
+        encoding="utf-8",
+    )
+    bulk = _RUNNER.invoke(app, ["app", "ledger", "classify", "--from-csv", str(csv_file)])
+    assert bulk.exit_code == 0, bulk.output
+
+    by_id = {r["transaction_id"]: r for r in _list_transactions()}
+    # Single-classify persisted exactly what was supplied for tx1.
+    assert by_id[tx1]["taxable_base"] == "82.64"
+    assert by_id[tx1]["iva_rate"] == "0.21"
+    assert by_id[tx1]["iva_amount"] == "17.36"
+    # Bulk classify persisted exactly what was supplied for tx2.
+    assert by_id[tx2]["taxable_base"] == "165.29"
+    assert by_id[tx2]["iva_rate"] == "0.21"
+    assert by_id[tx2]["iva_amount"] == "34.71"
+    # The IVA rate carried identically across both surfaces.
+    assert by_id[tx1]["iva_rate"] == by_id[tx2]["iva_rate"]
+
+
+def test_classify_from_csv_rejects_malformed_iva_fact(tmp_path: Path) -> None:
+    """A malformed IVA-fact Decimal reds the row, not a silent coercion."""
+    tx1, tx2 = _import_two_transactions(tmp_path)
+    csv_file = tmp_path / "bad_iva.csv"
+    # tx1 carries a malformed taxable_base (reds the row); tx2 (gross 200.00)
+    # carries a valid IVA set that satisfies the gross-equality invariant.
+    csv_file.write_text(
+        "transaction_id,classification,taxable_base,iva_rate,iva_amount\n"
+        f"{tx1},BUSINESS,not-a-number,0.21,17.36\n"
+        f"{tx2},BUSINESS,165.29,0.21,34.71\n",
+        encoding="utf-8",
+    )
+    result = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)["result"]
+    # The malformed row failed; the valid row applied (partial-success).
+    assert payload["failures"], payload
+    assert payload["applied"] == 1, payload
+    by_id = {r["transaction_id"]: r for r in _list_transactions()}
+    assert by_id[tx2]["taxable_base"] == "165.29"
+
+
 def test_classify_from_csv_accepts_business_pct_for_mixed(tmp_path: Path) -> None:
     """MIXED rows classify in bulk via --from-csv with a business_pct column."""
     tx1, _tx2 = _import_two_transactions(tmp_path)
