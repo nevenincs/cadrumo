@@ -101,8 +101,58 @@ def _extract_pages_text_with_pdfium_cached(
     return tuple(pages)
 
 
+_PDFIUM_BYTES_CACHE: dict[str, tuple[str, ...]] = {}
+
+
+def _extract_pages_text_with_pdfium_from_bytes(pdf_bytes: bytes) -> tuple[str, ...] | None:
+    from hashlib import sha256
+
+    digest = sha256(pdf_bytes).hexdigest()
+    if digest in _PDFIUM_BYTES_CACHE:
+        return _PDFIUM_BYTES_CACHE[digest]
+
+    try:
+        import pypdfium2 as pdfium
+
+        document = pdfium.PdfDocument(pdf_bytes)
+        try:
+            pages: list[str] = []
+            for page in document:
+                text_page = page.get_textpage()
+                try:
+                    pages.append((text_page.get_text_range() or "").strip())
+                finally:
+                    text_page.close()
+                    page.close()
+        finally:
+            document.close()
+    except (ImportError, OSError, ValueError, RuntimeError) as exc:
+        _logger.debug(
+            "pypdfium2 failed to extract declaración PDF text from bytes: %s",
+            type(exc).__name__,
+            exc_info=True,
+        )
+        return None
+
+    if not any(pages):
+        return None
+    text = "\n".join(pages)
+    if not (_TAX_ID_CANARY_RE.search(text) or _DECLARANT_ROW_CANARY_RE.search(text)):
+        return None
+
+    result = tuple(pages)
+    if len(_PDFIUM_BYTES_CACHE) >= 256:
+        first_key = next(iter(_PDFIUM_BYTES_CACHE))
+        _PDFIUM_BYTES_CACHE.pop(first_key, None)
+    _PDFIUM_BYTES_CACHE[digest] = result
+    return result
+
+
 def extract_pages_text_from_bytes(pdf_bytes: bytes, *, source_label: str = "in-memory PDF") -> tuple[str, ...]:
     """Extract text from PDF bytes without materialising a plaintext file."""
+    fast_pages = _extract_pages_text_with_pdfium_from_bytes(pdf_bytes)
+    if fast_pages is not None:
+        return fast_pages
     return _extract_pages_text_from_bytes_impl(
         pdf_bytes,
         error_class=DeclaracionParseError,
