@@ -19,6 +19,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ...core import Modelo
 from ...core.aggregation import (
     COUNTERPART_SOURCE_KINDS,
     CounterpartSourceKind,
@@ -140,8 +141,8 @@ class CounterpartAggregation(BaseModel):
 _MODELO_347_KINDS: frozenset[str] = frozenset(k.value for k in OperationKind347)
 _MODELO_349_KINDS: frozenset[str] = frozenset(k.value for k in OperationKind349)
 _MODELO_KIND_CATALOGUE: dict[str, frozenset[str]] = {
-    "347": _MODELO_347_KINDS,
-    "349": _MODELO_349_KINDS,
+    Modelo.M347.value: _MODELO_347_KINDS,
+    Modelo.M349.value: _MODELO_349_KINDS,
 }
 
 
@@ -256,7 +257,7 @@ def _counterpart_readiness_for_modelo(
     country: str,
     observations: tuple[CounterpartObservation, ...],
 ) -> dict[str, bool]:
-    if modelo != "349":
+    if modelo != Modelo.M349.value:
         return {
             "requires_groi_check": False,
             "requires_nif_iva_check": False,

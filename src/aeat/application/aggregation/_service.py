@@ -17,6 +17,7 @@ from functools import lru_cache
 
 from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
+from ...core import Modelo
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.aggregation import AggregationSourceKind
 from ...core.external_constants import COUNTERPART_MODELOS, FOREIGN_ASSET_MODELOS, RETENCIONES_MODELOS
@@ -367,12 +368,12 @@ def _aggregate_retenciones(
     observations: tuple[RetencionObservation, ...],
 ) -> RetencionesAggregation:
     dispatch = {
-        "111": aggregate_retenciones_111,
-        "115": aggregate_retenciones_115,
-        "123": aggregate_retenciones_123,
-        "180": aggregate_retenciones_180,
-        "190": aggregate_retenciones_190,
-        "193": aggregate_retenciones_193,
+        Modelo.M111.value: aggregate_retenciones_111,
+        Modelo.M115.value: aggregate_retenciones_115,
+        Modelo.M123.value: aggregate_retenciones_123,
+        Modelo.M180.value: aggregate_retenciones_180,
+        Modelo.M190.value: aggregate_retenciones_190,
+        Modelo.M193.value: aggregate_retenciones_193,
     }
     return dispatch[modelo](observations, period=period)
 
@@ -382,7 +383,7 @@ def _aggregate_counterpart(
     period: str,
     observations: tuple[CounterpartObservation, ...],
 ) -> CounterpartAggregation:
-    if modelo == "347":
+    if modelo == Modelo.M347.value:
         return aggregate_counterpart_347(observations, period=period)
     return aggregate_counterpart_349(observations, period=period)
 
