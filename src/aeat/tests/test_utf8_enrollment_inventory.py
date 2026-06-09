@@ -46,7 +46,7 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SRC_ROOT = pathlib.Path(__file__).parent.parent
-_SCRIPTS_ROOT = _SRC_ROOT.parent.parent / "scripts"
+_DEV_ROOT = _SRC_ROOT.parent.parent / "dev"
 
 # Patterns that indicate a bare UTF-8 literal (string form only).
 _BARE_UTF8_PATTERNS: tuple[re.Pattern[str], ...] = (
@@ -254,55 +254,48 @@ def test_no_bare_utf8_literals_in_production_files() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Scripts-tree ratchet (behavior contract — ratchet history)
+# Dev-tooling-tree ratchet (behavior contract — ratchet history)
 # ---------------------------------------------------------------------------
-# The ``scripts/`` directory is repo tooling; it must not import
+# The ``dev/`` package is repo tooling; it must not import
 # ``aeat.core.external_constants`` just to satisfy the production UTF-8
-# constant rule.  Instead, each script carries a local ``_UTF_8: Final[str]``
-# constant.  This test enforces that the scripts tree doesn't drift back to
+# constant rule.  Instead, each module carries a local ``_UTF_8: Final[str]``
+# constant.  This test enforces that the dev tree doesn't drift back to
 # bare literals beyond the pre-existing backlog below.
 #
 # Hash-protocol allowlist: same tokens as the src/aeat/ scan.
 #
-# Pre-existing backlog (to be cleaned up in future campaigns):
-#   scripts/derive_completeness_manifests.py  — file-write encoding literals
-#   scripts/derive_m100_closure.py             — file-write encoding literal
-#   scripts/gen_aeip_audit.py                  — file-read/write encoding literals
-#
-# scripts/check_relative_imports.py was previously fixed and must
+# dev/quality/relative_imports.py was previously fixed and must
 # NOT be re-added to the known-violating set.
 
-_SCRIPTS_KNOWN_VIOLATING: frozenset[str] = frozenset(
-    {
-        "derive_completeness_manifests.py",
-        "derive_m100_closure.py",
-        "gen_aeip_audit.py",
-    }
-)
+_DEV_KNOWN_VIOLATING: frozenset[str] = frozenset()
 
 
-def _all_scripts_files() -> list[pathlib.Path]:
-    """Return all Python files directly under scripts/ (non-test)."""
-    if not _SCRIPTS_ROOT.is_dir():
+def _all_dev_files() -> list[pathlib.Path]:
+    """Return all Python tooling files under dev/ (recursive, non-test, non-init)."""
+    if not _DEV_ROOT.is_dir():
         return []
-    return sorted(p for p in _SCRIPTS_ROOT.glob("*.py") if not p.name.startswith("test_"))
+    return sorted(
+        p
+        for p in _DEV_ROOT.rglob("*.py")
+        if not p.name.startswith("test_") and p.name != "__init__.py" and "tests" not in p.parts
+    )
 
 
-def test_no_bare_utf8_literals_in_scripts() -> None:
-    """scripts/ Python files must not introduce new bare UTF-8 literals.
+def test_no_bare_utf8_literals_in_dev() -> None:
+    """dev/ Python files must not introduce new bare UTF-8 literals.
 
-    Each script that needs to read/write text must carry a local
+    Each module that needs to read/write text must carry a local
     ``_UTF_8: Final[str] = "utf-8"`` constant and use it consistently.
-    Pre-existing violators are ratcheted in ``_SCRIPTS_KNOWN_VIOLATING``;
+    Pre-existing violators are ratcheted in ``_DEV_KNOWN_VIOLATING``;
     only the ratchet set may shrink, never grow.
 
     Hash/HMAC sites (hashlib, hmac, sha*) are allowlisted as in src/aeat/.
     """
     violations: list[str] = []
-    scripts_files = _all_scripts_files()
+    dev_files = _all_dev_files()
 
-    for path in scripts_files:
-        if path.name in _SCRIPTS_KNOWN_VIOLATING:
+    for path in dev_files:
+        if path.name in _DEV_KNOWN_VIOLATING:
             continue
         module_violations = _bare_utf8_violations(path)
         for lineno, snippet in module_violations:
@@ -311,11 +304,11 @@ def test_no_bare_utf8_literals_in_scripts() -> None:
     if violations:
         joined = "\n  ".join(violations)
         raise AssertionError(
-            f"{len(violations)} bare UTF-8 literal(s) found in non-ratcheted scripts/ files:\n"
+            f"{len(violations)} bare UTF-8 literal(s) found in non-ratcheted dev/ files:\n"
             f"  {joined}\n\n"
             "Add a local _UTF_8: Final[str] = 'utf-8' constant and use it.\n"
             "Hash/HMAC sites (hashlib, hmac, sha*) are allowlisted.\n"
-            f"Scanned {len(scripts_files)} scripts/ files; "
-            f"{len(_SCRIPTS_KNOWN_VIOLATING)} are ratcheted as known backlog.\n"
-            "Do NOT add a file to _SCRIPTS_KNOWN_VIOLATING — fix it instead."
+            f"Scanned {len(dev_files)} dev/ files; "
+            f"{len(_DEV_KNOWN_VIOLATING)} are ratcheted as known backlog.\n"
+            "Do NOT add a file to _DEV_KNOWN_VIOLATING — fix it instead."
         )

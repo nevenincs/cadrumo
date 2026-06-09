@@ -9,7 +9,7 @@ fully actionable, and the original exit code is propagated.
 
 Usage::
 
-    python scripts/quiet_ok.py <command> [args...]
+    python -m dev.quality.quiet <command> [args...]
 
 The command runs inside the active environment, so venv console scripts
 (``ruff``, ``deptry``, ``lint-imports``) are invoked by bare name.

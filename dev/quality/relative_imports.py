@@ -15,12 +15,12 @@ Intended invocation:
 * `just check-relative-imports` â€” runs this with no arguments (full-tree scan).
 * `prek run` â€” runs as a local hook with the staged file paths
   appended (per-file scan); see `prek.toml`.
-* Direct invocation: `python scripts/check_relative_imports.py [PATH...]`.
+* Direct invocation: `python -m dev.quality.relative_imports [PATH...]`.
   When PATHs are supplied, only those files are scanned (any path
   outside `src/aeat/` is silently skipped â€” boundary `tests/` and
-  `scripts/` are out of scope by design).
+  `dev/` are out of scope by design).
 
-Boundaries: `tests/` and `scripts/` live outside the package and may
+Boundaries: `tests/` and `dev/` live outside the package and may
 import `aeat.*` absolutely; this script does not scan them, even when
 explicitly listed on the command line.
 
@@ -41,7 +41,7 @@ import sys
 from pathlib import Path
 from typing import Final
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 _UTF_8: Final[str] = "utf-8"
 SRC_AEAT = REPO_ROOT / "src" / "aeat"
@@ -177,7 +177,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if all_errors:
         sys.stderr.write(
-            "scripts/check_relative_imports.py: refusing to certify the tree because "
+            "dev/quality/relative_imports.py: refusing to certify the tree because "
             f"{len(all_errors)} file(s) could not be scanned:\n"
         )
         for err in all_errors:
