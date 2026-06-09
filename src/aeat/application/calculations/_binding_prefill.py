@@ -1,5 +1,7 @@
 """Binding prefill: resolve `previous_filing` bindings from prior filings.
 
+Used by: :mod:`~aeat.application.calculations._calculate` (model calculation orchestrator).
+
 Sister module to `_relation_prefill`. The runtime distinguishes
 `relation` leaves (cross-revision aggregations declared as
 `RelationDefinition` records) from `previous_filing` bindings
@@ -7,22 +9,6 @@ Sister module to `_relation_prefill`. The runtime distinguishes
 Modelo 390 uses bindings — modelo 200 uses relations — both express
 "sum a prior modelo's casilla across periods" but route through
 different schema entities.
-
-This module reads observations from the local
-`CalculationObservationRepository`, calls the runtime's
-`resolve_previous_filing_binding_values`, and returns a mapping
-keyed by binding id that callers pass through `binding_values=` to
-`calculate_registry_snapshot`. The Sheets engine consumes the same
-mapping so binding cells in the workbook get prefilled with the
-authoritative value.
-
-Provenance metadata returned alongside lets the apply adapter stamp
-each binding's source filing identity so the pull adapter can
-detect stale prefills.
-
-The resolved values are returned as :class:`CasillaObservation` rows
-alongside a flat Decimal mapping. The caller selects the active revision
-through a :class:`RegistrySnapshot` obtained from the registry authority.
 """
 
 from __future__ import annotations
