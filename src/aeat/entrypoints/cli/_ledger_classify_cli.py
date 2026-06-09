@@ -69,8 +69,7 @@ def ledger_classify_bulk_csv(
     from ._ledger_payloads import LedgerClassifyResult
 
     for failure in result.failures:
-        # MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE:
-        # tab-separated machine record (id, reason), not user-facing prose.
+        # MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE: tab-separated machine record (id, reason).
         lines.append(f"  failed\t{failure.transaction_id}\t{failure.reason}")
     classify_result = LedgerClassifyResult.model_validate(
         {
