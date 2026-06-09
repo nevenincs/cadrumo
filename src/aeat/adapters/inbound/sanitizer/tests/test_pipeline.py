@@ -272,7 +272,7 @@ class TestPublicReexports:
     """Every public symbol is importable from :mod:`aeat.adapters.inbound.sanitizer`."""
 
     def test_all_public_names_are_importable(self) -> None:
-        sanitizer = import_module(__package__ or "aeat.adapters.inbound.sanitizer")
+        sanitizer = import_module("aeat.adapters.inbound.sanitizer")
 
         assert sanitizer.__all__, "package must declare a non-empty __all__"
         for name in sanitizer.__all__:

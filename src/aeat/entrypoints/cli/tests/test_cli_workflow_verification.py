@@ -21,6 +21,25 @@ from ....tests.secure_sql import isolated_profile_storage_root
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
+def _assert_is_command_group(value: object) -> None:
+    """isinstance check that recognises typer's vendored Click hierarchy.
+
+    ``aeat_click_command()`` and ``get_command`` return ``typer.core.TyperGroup``
+    instances whose MRO is ``TyperGroup -> typer._click.core.Command -> ABC``
+    and never descends from the upstream ``click.Group``, so a bare
+    ``isinstance(value, click.Group)`` is False. Derive the vendored
+    ``Command`` base from the value's MRO and assert against it (mirrors the
+    production fix in ``cli/_errors.py`` and the test-side fix in
+    ``test_backend_boundary.py``).
+    """
+    vendored_command = next(
+        (base for base in type(value).__mro__ if base.__name__ == "Command"),
+        None,
+    )
+    assert vendored_command is not None, f"{type(value).__name__} has no Command in MRO"
+    assert isinstance(value, vendored_command)
+
+
 @pytest.fixture(autouse=True)
 def _isolated_cli_backend(tmp_path: Path):
     # The round-trip helper writes its synthetic certificate to
@@ -75,9 +94,9 @@ def _mounted_child_names(root_name: str) -> set[str]:
 
     root = aeat_click_command()
     ctx = click.Context(root)
-    assert isinstance(root, click.Group)
+    _assert_is_command_group(root)
     group = root.get_command(ctx, root_name)
-    assert isinstance(group, click.Group)
+    _assert_is_command_group(group)
     return set(group.list_commands(click.Context(group)))
 
 
@@ -103,11 +122,11 @@ def test_config_profile_create_mounts_existing_setup_wizard_flow() -> None:
     """First-run configuration is the wizard flow, not a parallel interface."""
 
     root = aeat_click_command()
-    assert isinstance(root, click.Group)
+    _assert_is_command_group(root)
     config_group = root.get_command(click.Context(root), "config")
-    assert isinstance(config_group, click.Group)
+    _assert_is_command_group(config_group)
     profile_group = config_group.get_command(click.Context(config_group), "profile")
-    assert isinstance(profile_group, click.Group)
+    _assert_is_command_group(profile_group)
     create_command = profile_group.get_command(click.Context(profile_group), "create")
     assert create_command is not None
     callback = create_command.callback

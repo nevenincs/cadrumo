@@ -96,9 +96,9 @@ _LEDGER_TOKEN = "MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE"
 
 
 def test_ledger_bulk_classify_failure_machine_format_rationale() -> None:
-    """_ledger.py bulk-classify failure line must carry the machine-format rationale marker."""
-    src = _read("entrypoints/cli/_ledger.py")
-    assert _LEDGER_TOKEN in src, f"entrypoints/cli/_ledger.py: missing {_LEDGER_TOKEN!r}"
+    """The bulk-classify failure line must carry the machine-format rationale marker."""
+    src = _read("entrypoints/cli/_ledger_classify_cli.py")
+    assert _LEDGER_TOKEN in src, f"entrypoints/cli/_ledger_classify_cli.py: missing {_LEDGER_TOKEN!r}"
     lines_with_token = [ln for ln in src.splitlines() if _LEDGER_TOKEN in ln]
     assert any("transaction_id" in ln or "reason" in ln for ln in lines_with_token), (
         f"entrypoints/cli/_ledger.py: {_LEDGER_TOKEN!r} found but not on the tab-separated failure line"
@@ -171,7 +171,7 @@ def test_schedules_uses_constants_in_resolver() -> None:
 
 def test_broad_except_ratchet_still_covers_xlsx() -> None:
     """The broad-except rationale inventory must still list _xlsx.py."""
-    ratchet = _read("test_broad_except_and_any_return_rationale.py")
+    ratchet = _read("tests/test_broad_except_and_any_return_rationale.py")
     assert "_xlsx.py" in ratchet, (
         "test_broad_except_and_any_return_rationale.py: _xlsx.py no longer listed — ratchet coverage broken"
     )

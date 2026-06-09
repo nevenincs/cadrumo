@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -468,33 +469,66 @@ def _label_for(namespace: str) -> str:
     return safe[:32] or "obj"
 
 
-def _push_secure_object_mirror_rows(
+@dataclass(frozen=True)
+class _MirrorRowPartition:
+    """Row partition produced before any remote mirror write occurs.
+
+    ``planned_rows_by_namespace`` carries the rows that will be uploaded on a
+    non-dry-run; ``skipped_by_namespace`` records the per-namespace counts a
+    dry-run reports without touching the provider.
+    """
+
+    planned_rows_by_namespace: dict[str, list[SecureObjectRawRow]]
+    skipped_by_namespace: dict[str, int]
+
+
+@dataclass(frozen=True)
+class _MirrorPreflightOutcome:
+    """Result of inspecting the existing remote mirror before pushing.
+
+    ``manifests_by_namespace`` holds the locally-built manifest for each
+    namespace cleared to push; ``blocked_namespaces`` names the namespaces a
+    preflight failure removed from the push set. ``failed`` and ``degraded``
+    accumulate the operator-facing `(namespace, detail)` diagnostics.
+    """
+
+    manifests_by_namespace: dict[str, RemoteMirrorNamespaceManifest]
+    blocked_namespaces: set[str]
+    failed: list[tuple[str, str]]
+    degraded: list[tuple[str, str]]
+
+
+@dataclass(frozen=True)
+class _MirrorObjectPushOutcome:
+    """Result of uploading each planned row's ciphertext to the provider.
+
+    ``pushed_by_namespace`` counts the rows that uploaded cleanly;
+    ``failed_namespaces`` names every namespace that saw at least one object
+    failure (so its manifest is withheld); ``failed`` carries the
+    `(namespace, hmac, error)` triples for the operator surface.
+    """
+
+    pushed_by_namespace: dict[str, int]
+    failed_namespaces: set[str]
+    failed: list[tuple[str, str, str]]
+
+
+def _partition_mirror_rows(
     *,
-    provider: StorageProvider,
     repository: SecureObjectRepository,
     namespace_filter: str | None,
     limit: int | None,
     dry_run: bool,
-) -> dict[str, object]:
-    if limit is not None and not dry_run:
-        raise OutboundStorageValidationError(
-            "non-dry-run Google sync push with --limit cannot produce a complete remote mirror manifest",
-            context={"limit": str(limit)},
-            suggestion="run without --limit, or add --dry-run for bounded inspection",
-            translated_message="cli.config.google.detail.sync_push_limit_requires_dry_run",
-        )
-    pushed_by_ns: dict[str, int] = {}
-    skipped_by_ns: dict[str, int] = {}
-    failed: list[tuple[str, str, str]] = []
-    planned_rows_by_ns: dict[str, list[SecureObjectRawRow]] = {}
-    failed_namespaces: set[str] = set()
-    manifest_pushed_by_ns: dict[str, int] = {}
-    manifest_failed: list[tuple[str, str]] = []
-    manifest_degraded: list[tuple[str, str]] = []
-    manifest_by_ns: dict[str, RemoteMirrorNamespaceManifest] = {}
-    preflight_blocked_namespaces: set[str] = set()
-    total_seen = 0
+) -> _MirrorRowPartition:
+    """Split :meth:`SecureObjectRepository.iter_all_records_raw` into push vs skip.
 
+    Applies the optional ``namespace_filter`` and ``limit`` while iterating;
+    on a dry-run every selected row is counted as skipped and no row is
+    planned for upload.
+    """
+    planned_rows_by_ns: dict[str, list[SecureObjectRawRow]] = {}
+    skipped_by_ns: dict[str, int] = {}
+    total_seen = 0
     for raw_row in repository.iter_all_records_raw():
         if namespace_filter is not None and raw_row.namespace != namespace_filter:
             continue
@@ -505,29 +539,66 @@ def _push_secure_object_mirror_rows(
             skipped_by_ns[raw_row.namespace] = skipped_by_ns.get(raw_row.namespace, 0) + 1
             continue
         planned_rows_by_ns.setdefault(raw_row.namespace, []).append(raw_row)
+    return _MirrorRowPartition(planned_rows_by_namespace=planned_rows_by_ns, skipped_by_namespace=skipped_by_ns)
 
-    if not dry_run:
-        for namespace, rows in planned_rows_by_ns.items():
-            manifest = build_remote_mirror_namespace_manifest(namespace, rows)
-            try:
-                blocking_failures, degradations = _inspect_existing_remote_mirror(
-                    provider=provider,
-                    manifest=manifest,
-                )
-            except OutboundStorageError as exc:
-                manifest_failed.append((namespace, str(exc)))
-                preflight_blocked_namespaces.add(namespace)
-                continue
-            if degradations:
-                manifest_degraded.append((namespace, "; ".join(degradations)))
-            if blocking_failures:
-                manifest_failed.append((namespace, "; ".join(blocking_failures)))
-                preflight_blocked_namespaces.add(namespace)
-                continue
-            manifest_by_ns[namespace] = manifest
 
-    for namespace, rows in planned_rows_by_ns.items():
-        if namespace in preflight_blocked_namespaces:
+def _preflight_mirror_namespaces(
+    *,
+    provider: StorageProvider,
+    planned_rows_by_namespace: dict[str, list[SecureObjectRawRow]],
+) -> _MirrorPreflightOutcome:
+    """Inspect the existing remote mirror for every planned namespace.
+
+    Builds the local :class:`RemoteMirrorNamespaceManifest` per namespace and
+    compares it against the remote state. A namespace is blocked (and its
+    manifest withheld) on a remote inspection error or a blocking revision
+    conflict; degradations are recorded without blocking.
+    """
+    manifest_by_ns: dict[str, RemoteMirrorNamespaceManifest] = {}
+    blocked: set[str] = set()
+    failed: list[tuple[str, str]] = []
+    degraded: list[tuple[str, str]] = []
+    for namespace, rows in planned_rows_by_namespace.items():
+        manifest = build_remote_mirror_namespace_manifest(namespace, rows)
+        try:
+            blocking_failures, degradations = _inspect_existing_remote_mirror(provider=provider, manifest=manifest)
+        except OutboundStorageError as exc:
+            failed.append((namespace, str(exc)))
+            blocked.add(namespace)
+            continue
+        if degradations:
+            degraded.append((namespace, "; ".join(degradations)))
+        if blocking_failures:
+            failed.append((namespace, "; ".join(blocking_failures)))
+            blocked.add(namespace)
+            continue
+        manifest_by_ns[namespace] = manifest
+    return _MirrorPreflightOutcome(
+        manifests_by_namespace=manifest_by_ns,
+        blocked_namespaces=blocked,
+        failed=failed,
+        degraded=degraded,
+    )
+
+
+def _push_mirror_objects(
+    *,
+    provider: StorageProvider,
+    planned_rows_by_namespace: dict[str, list[SecureObjectRawRow]],
+    blocked_namespaces: set[str],
+) -> _MirrorObjectPushOutcome:
+    """Upload every planned row's ciphertext payload to the provider.
+
+    Skips namespaces that preflight blocked. Each row uploads via
+    :meth:`StorageProvider.put` under its `<hmac>--<label>.bin` name; a
+    per-object upload error records the failure and marks the namespace so
+    its manifest is later withheld.
+    """
+    pushed_by_ns: dict[str, int] = {}
+    failed_namespaces: set[str] = set()
+    failed: list[tuple[str, str, str]] = []
+    for namespace, rows in planned_rows_by_namespace.items():
+        if namespace in blocked_namespaces:
             continue
         for raw_row in rows:
             hmac_hex = _object_key_hmac(raw_row.namespace, raw_row.object_key)
@@ -546,29 +617,97 @@ def _push_secure_object_mirror_rows(
                 failed_namespaces.add(raw_row.namespace)
                 continue
             pushed_by_ns[raw_row.namespace] = pushed_by_ns.get(raw_row.namespace, 0) + 1
+    return _MirrorObjectPushOutcome(
+        pushed_by_namespace=pushed_by_ns,
+        failed_namespaces=failed_namespaces,
+        failed=failed,
+    )
 
-    if not dry_run:
-        for namespace, manifest in manifest_by_ns.items():
-            if namespace in failed_namespaces:
-                continue
-            try:
-                put_remote_mirror_namespace_manifest(provider, manifest)
-                inspection_failures = _inspect_pushed_remote_mirror(provider=provider, manifest=manifest)
-            except OutboundStorageError as exc:
-                manifest_failed.append((namespace, str(exc)))
-                continue
-            if inspection_failures:
-                manifest_failed.append((namespace, "; ".join(inspection_failures)))
-                continue
-            manifest_pushed_by_ns[namespace] = manifest.object_count
+
+def _push_mirror_manifests(
+    *,
+    provider: StorageProvider,
+    manifests_by_namespace: dict[str, RemoteMirrorNamespaceManifest],
+    failed_namespaces: set[str],
+    manifest_failed: list[tuple[str, str]],
+) -> dict[str, int]:
+    """Persist and verify each namespace manifest whose objects uploaded cleanly.
+
+    Withholds the manifest for any namespace that saw an object failure.
+    Appends post-push inspection failures (or a put error) onto the shared
+    ``manifest_failed`` accumulator and returns the per-namespace object
+    counts for the manifests that pushed and verified.
+    """
+    manifest_pushed_by_ns: dict[str, int] = {}
+    for namespace, manifest in manifests_by_namespace.items():
+        if namespace in failed_namespaces:
+            continue
+        try:
+            put_remote_mirror_namespace_manifest(provider, manifest)
+            inspection_failures = _inspect_pushed_remote_mirror(provider=provider, manifest=manifest)
+        except OutboundStorageError as exc:
+            manifest_failed.append((namespace, str(exc)))
+            continue
+        if inspection_failures:
+            manifest_failed.append((namespace, "; ".join(inspection_failures)))
+            continue
+        manifest_pushed_by_ns[namespace] = manifest.object_count
+    return manifest_pushed_by_ns
+
+
+def _push_secure_object_mirror_rows(
+    *,
+    provider: StorageProvider,
+    repository: SecureObjectRepository,
+    namespace_filter: str | None,
+    limit: int | None,
+    dry_run: bool,
+) -> dict[str, object]:
+    if limit is not None and not dry_run:
+        raise OutboundStorageValidationError(
+            "non-dry-run Google sync push with --limit cannot produce a complete remote mirror manifest",
+            context={"limit": str(limit)},
+            suggestion="run without --limit, or add --dry-run for bounded inspection",
+            translated_message="cli.config.google.detail.sync_push_limit_requires_dry_run",
+        )
+
+    partition = _partition_mirror_rows(
+        repository=repository,
+        namespace_filter=namespace_filter,
+        limit=limit,
+        dry_run=dry_run,
+    )
+    planned_rows_by_ns = partition.planned_rows_by_namespace
+
+    if dry_run:
+        preflight = _MirrorPreflightOutcome(manifests_by_namespace={}, blocked_namespaces=set(), failed=[], degraded=[])
+    else:
+        preflight = _preflight_mirror_namespaces(provider=provider, planned_rows_by_namespace=planned_rows_by_ns)
+
+    object_push = _push_mirror_objects(
+        provider=provider,
+        planned_rows_by_namespace=planned_rows_by_ns,
+        blocked_namespaces=preflight.blocked_namespaces,
+    )
+
+    manifest_failed = preflight.failed
+    if dry_run:
+        manifest_pushed_by_ns: dict[str, int] = {}
+    else:
+        manifest_pushed_by_ns = _push_mirror_manifests(
+            provider=provider,
+            manifests_by_namespace=preflight.manifests_by_namespace,
+            failed_namespaces=object_push.failed_namespaces,
+            manifest_failed=manifest_failed,
+        )
 
     return {
-        "pushed_by_namespace": pushed_by_ns,
-        "skipped_by_namespace": skipped_by_ns,
-        "failed_objects": failed,
+        "pushed_by_namespace": object_push.pushed_by_namespace,
+        "skipped_by_namespace": partition.skipped_by_namespace,
+        "failed_objects": object_push.failed,
         "manifest_pushed_by_namespace": manifest_pushed_by_ns,
         "failed_manifests": manifest_failed,
-        "degraded_manifests": manifest_degraded,
+        "degraded_manifests": preflight.degraded,
     }
 
 

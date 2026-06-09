@@ -54,7 +54,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _PCT_PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
 _FMT_PLACEHOLDER_RE = re.compile(r"\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?:![^}]*)?\}")
 
-_SRC_ROOT = Path(__file__).parent.parent.parent  # src/aeat
+_SRC_ROOT = Path(__file__).parent.parent.parent.parent  # src/aeat
 _LOCALES_DIR = _SRC_ROOT / "locales"
 _CANONICAL_LOCALE = _LOCALES_DIR / "es.yml"
 

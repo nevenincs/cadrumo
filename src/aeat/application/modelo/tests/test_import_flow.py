@@ -353,7 +353,7 @@ def test_import_refuses_casilla_ids_not_in_registry(repos) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
 
-    with pytest.raises(ExternalModeloImportError, match=r"9999|not declared"):
+    with pytest.raises(ExternalModeloImportError) as exc_info:
         import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
             casilla_values={"9999": Decimal("100")},
@@ -365,6 +365,8 @@ def test_import_refuses_casilla_ids_not_in_registry(repos) -> None:
             bucket_event_repository=bv_repo,
             clock=_T1,
         )
+    assert exc_info.value.translated_message == "application.modelo.errors.external_import_unknown_casillas"
+    assert exc_info.value.context is not None and "9999" in exc_info.value.context["casillas"]
 
 
 def test_import_refuses_empty_casilla_values(repos) -> None:

@@ -497,8 +497,11 @@ def test_modelo_303_lifecycle_gate_rejects_wallet_authority_amount_drift(tmp_pat
         _save_wallet_gate_decision(amount=Decimal("800.00"))
         work_unit, revision = _work_unit_and_revision_for_wallet_gate(compensation_amount=Decimal("1200.00"))
 
-        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="authority_amount_mismatch"):
+        with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
             _require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
+        assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_blocked"
+        assert exc_info.value.context is not None
+        assert exc_info.value.context["divergence"] == "authority_amount_mismatch"
 
 
 def test_modelo_303_lifecycle_gate_accepts_matching_wallet_authority(tmp_path: Path) -> None:

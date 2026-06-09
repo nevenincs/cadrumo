@@ -32,6 +32,7 @@ import atexit as _atexit
 from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
+from typing import override
 
 from .....core.errors import resolve_error_message
 from .....core.logging import get_logger
@@ -63,6 +64,7 @@ class NoActiveBucketSessionError(SecretStoreError):
         )
         self._detail = detail
 
+    @override
     def __str__(self) -> str:
         """Render the locale-backed remediation message while keeping positional args empty."""
         return resolve_error_message(self)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from .._repository import ResourceCacheRepository
 
@@ -16,6 +16,7 @@ class TopicCatalogueRepository(ResourceCacheRepository["TopicCatalogue", None]):
     Wraps :func:`aeat.core.topics.load_topic_catalogue`.
     """
 
+    @override
     def _load(self, key: None) -> TopicCatalogue:
         from ...topics import load_topic_catalogue
 

@@ -205,7 +205,9 @@ def emit_json_success(
     )
 
 
-def register_schema(command_path: str) -> Callable[[RegisteredSchema], RegisteredSchema]:
+def register_schema[RegisteredSchemaT: OutputSchema | OutputRootSchema[Any]](
+    command_path: str,
+) -> Callable[[type[RegisteredSchemaT]], type[RegisteredSchemaT]]:
     """Decorator that binds a strict schema to a stable ``command_path``.
 
     Usage::
@@ -235,7 +237,7 @@ def register_schema(command_path: str) -> Callable[[RegisteredSchema], Registere
     if not normalized_path:
         raise OutputSchemaError("command_path must not be blank")
 
-    def _decorator(schema: RegisteredSchema) -> RegisteredSchema:
+    def _decorator(schema: type[RegisteredSchemaT]) -> type[RegisteredSchemaT]:
         try:
             is_output_schema = issubclass(schema, (OutputSchema, OutputRootSchema))
         except TypeError as error:

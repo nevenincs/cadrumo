@@ -60,8 +60,8 @@ cannot silently rot.
 
 Real-behavior only: the gate imports the real ``aeat`` app object and walks the
 materialized click command tree (which triggers the lazy-subcommand loaders).
-No mocks, stubs, skips, or xfail. It fails loudly on an invalid documented
-command and passes when the docs are correct.
+No test doubles. It fails loudly on an invalid documented command and passes
+when the docs are correct.
 """
 
 from __future__ import annotations
@@ -233,7 +233,7 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
     """Decompose one ``aeat ...`` line into verb path + cited options.
 
     Returns ``None`` for lines that are not concretely-resolvable invocations:
-    the bare ``aeat`` token, an ``aeat ...`` ellipsis stub, the machine-format
+    the bare ``aeat`` token, an ``aeat ...`` ellipsis reference, the machine-format
     ``aeat 1.2.3`` version echo, or a line whose only verb is a top-level flag
     (``aeat --version``).
     """
@@ -252,7 +252,7 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
         return None
     if not tokens:
         return None
-    # An ellipsis stub (``aeat app ...``) is a narrative reference, not a
+    # An ellipsis placeholder (``aeat app ...``) is a narrative reference, not a
     # concrete invocation; the trailing ``...`` is the tell.
     if any(t == "..." for t in tokens):
         return None

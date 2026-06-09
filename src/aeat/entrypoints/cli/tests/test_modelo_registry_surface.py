@@ -22,6 +22,88 @@ _UUID_TEXT_RE = re.compile(
 )
 
 
+# ---------------------------------------------------------------------------
+# Discoverability: the modelo `describe` verb is listed in `modelo --help`
+# and resolves; the ledger `preflight` verb is listed in `ledger --help` and
+# resolves. There is deliberately NO `modelo preflight` verb — signposting
+# one would mislead the operator (the #51 lesson), so we assert its absence.
+# ---------------------------------------------------------------------------
+
+
+def test_modelo_describe_verb_is_listed_in_help_and_resolves() -> None:
+    """`describe` appears in `app modelo --help` and resolves to a real command."""
+    listing = invoke_cached_cli(["app", "modelo", "--help"])
+    assert listing.exit_code == 0, listing.output
+    assert "describe" in listing.output
+
+    resolved = invoke_cached_cli(["app", "modelo", "describe", "--help"])
+    assert resolved.exit_code == 0, resolved.output
+    assert "MODELO" in resolved.output
+
+
+def test_ledger_preflight_verb_is_listed_in_help_and_resolves() -> None:
+    """`preflight` appears in `app ledger --help` and resolves to a real command."""
+    listing = invoke_cached_cli(["app", "ledger", "--help"])
+    assert listing.exit_code == 0, listing.output
+    assert "preflight" in listing.output
+
+    resolved = invoke_cached_cli(["app", "ledger", "preflight", "--help"])
+    assert resolved.exit_code == 0, resolved.output
+
+
+def test_no_modelo_preflight_verb_is_signposted() -> None:
+    """No `app modelo preflight` verb exists (preflight runs inside
+    verify/file); the help must not advertise it as a standalone verb."""
+    listing = invoke_cached_cli(["app", "modelo", "--help"])
+    assert listing.exit_code == 0, listing.output
+    # `describe` is present but `preflight` must not appear as a modelo verb.
+    assert "preflight" not in listing.output
+    unknown = invoke_cached_cli(["app", "modelo", "preflight", "--help"])
+    assert unknown.exit_code != 0
+
+
+# ---------------------------------------------------------------------------
+# Period-token consistency: every modelo `--period` help uses the canonical
+# registry token vocabulary (0A / 1T-4T / 01-12), never the misleading
+# "Q1, annual" or ledger-style "2026Q1" examples.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        ["app", "modelo", "describe", "--help"],
+        ["app", "modelo", "casillas", "--help"],
+        ["app", "modelo", "formulas", "--help"],
+        ["app", "modelo", "history", "--help"],
+        ["app", "modelo", "readiness", "--help"],
+        ["app", "modelo", "work", "create", "--help"],
+    ],
+)
+def test_modelo_period_help_uses_canonical_registry_tokens(command: list[str]) -> None:
+    """Every modelo `--period` help advertises the canonical registry
+    token set (0A / 1T-4T / 01-12) and never the misleading 'Q1, annual'
+    or ledger-style 'YYYYQn' examples that diverged across surfaces."""
+    result = invoke_cached_cli(command)
+    assert result.exit_code == 0, result.output
+    ascii_only = "".join(c for c in result.output if c.isascii())
+    collapsed = " ".join(ascii_only.split())
+    assert "1T-4T" in collapsed, collapsed
+    # The misleading tokens that previously diverged must be gone.
+    assert "Q1, annual" not in collapsed
+    assert "2026Q1" not in collapsed
+
+
+def test_invalid_modelo_period_surfaces_accepted_set() -> None:
+    """A period that no revision declares is refused with the declared
+    set listed inline (the architecture-rule instructive-refusal contract
+    for the dynamic registry period axis)."""
+    result = invoke_cached_cli(["app", "modelo", "describe", "303", "--period", "0A"])
+    assert result.exit_code != 0, result.output
+    # The accepted/declared set is surfaced, not a bare 'invalid'.
+    assert "1T" in result.output and "4T" in result.output
+
+
 def test_modelo_bad_parameter_helper_renders_registered_errors() -> None:
     error = _bad_parameter_from_error(WorkUnitNotFoundError())
 

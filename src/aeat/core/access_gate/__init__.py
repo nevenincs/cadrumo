@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from ..config import LIVE_READ_TEST_OPT_IN_ENV_VAR
+from ..config import LIVE_READ_TEST_OPT_IN_ENV_VAR as _LIVE_READ_TEST_OPT_IN_ENV_VAR
 from ._authorization import (
     AUTHORIZATION_MANIFEST_DIRNAME,
     CANONICAL_MODELO_FLEET,
@@ -85,7 +85,7 @@ class AeatGateEnvSnapshot(BaseModel):
             with their raw string values.
         """
         return {
-            LIVE_READ_TEST_OPT_IN_ENV_VAR: self.aeat_live_tests_enabled,
+            _LIVE_READ_TEST_OPT_IN_ENV_VAR: self.aeat_live_tests_enabled,
             _PYTEST_CURRENT_TEST_ENV: self.pytest_current_test,
         }
 
@@ -136,7 +136,7 @@ class AeatAccessGate:
             self.settings.aeat_live_tests_enabled != "1"
         ):
             raise AeatLiveReadNotEnabledError(
-                f"pytest live AEAT reads require {LIVE_READ_TEST_OPT_IN_ENV_VAR} set to the literal "
+                f"pytest live AEAT reads require {_LIVE_READ_TEST_OPT_IN_ENV_VAR} set to the literal "
                 f"value 1 (the exact string '1', not 'true'/'yes'/'on'); "
                 f"current value: {self.settings.aeat_live_tests_enabled!r}"
             )

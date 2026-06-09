@@ -12,6 +12,8 @@ exceptions are mapped to :exc:`aeat.adapters.outbound.llm._errors.LLMProviderErr
 
 from __future__ import annotations
 
+from typing import override
+
 from anthropic import (
     APIConnectionError,
     APIStatusError,
@@ -59,6 +61,7 @@ class AnthropicAdapter(_ProviderAdapter):
             raise LLMConfigError(msg)
         self._client = AsyncAnthropic(api_key=api_key, timeout=timeout_s)
 
+    @override
     async def complete(self, request: ProviderRequest) -> ProviderCompletion:
         """Execute a completion request against Anthropic and normalize the result.
 

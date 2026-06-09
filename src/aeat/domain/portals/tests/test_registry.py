@@ -188,7 +188,7 @@ def test_registry_module_has_no_print_calls() -> None:
     import ast
     from pathlib import Path
 
-    source = Path(__file__).resolve().parent.joinpath("_registry.py").read_text(encoding="utf-8")
+    source = Path(__file__).resolve().parent.parent.joinpath("_registry.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
     for node in ast.walk(tree):
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):

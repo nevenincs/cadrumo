@@ -21,7 +21,10 @@ def quarantine_unreadable_rows(
     *,
     logger: Logger,
 ) -> tuple[SecureObjectNamespaceIntegrity, ...]:
-    """Move every undecryptable row into ``secure_objects_quarantine``."""
+    """Move every undecryptable row into ``secure_objects_quarantine``.
+
+    Returns a tuple of :class:`SecureObjectNamespaceIntegrity` records, one per namespace.
+    """
     ensure_quarantine_table(engine)
     with session_scope(engine) as session:
         quarantined_at = quarantine_timestamp()
@@ -118,7 +121,10 @@ def probe_namespace_integrity(
     *,
     logger: Logger,
 ) -> SecureObjectNamespaceIntegrity:
-    """Count decryptable and undecryptable rows in ``namespace``."""
+    """Count decryptable and undecryptable rows in ``namespace``.
+
+    Returns a :class:`SecureObjectNamespaceIntegrity` for the given namespace.
+    """
     readable = 0
     unreadable = 0
     with session_scope(engine) as session:
@@ -149,7 +155,7 @@ def iter_namespace_decryptability(
     engine: Engine,
     namespace: str,
 ) -> Iterator[SecureObjectDecryptabilityRow]:
-    """Yield row-level decryptability metadata for one namespace."""
+    """Yield :class:`SecureObjectDecryptabilityRow` records for one namespace."""
     with session_scope(engine) as session:
         stmt = (
             text(

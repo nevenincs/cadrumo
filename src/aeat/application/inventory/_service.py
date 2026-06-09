@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings
+from ...core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 from ...core.time import now as _now_utc
 from ...domain.buckets import (
     BucketEventHistoryRepository,
@@ -64,7 +65,7 @@ class InventoryMovementCommand(BaseModel):
     quantity: Decimal
     unit_cost: Decimal | None = Field(default=None)
     taxable_base: Decimal | None = Field(default=None)
-    iva_rate: Decimal = Decimal("21.00")
+    iva_rate: Decimal = DEFAULT_IVA_GENERAL_RATE_PCT
 
 
 class InventoryValuationPreview(BaseModel):

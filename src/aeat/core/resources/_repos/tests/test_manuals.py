@@ -9,6 +9,9 @@ shape against what the bundle actually provides.
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import pytest
 
 from ..manuals import ManualKey, ManualRepository
@@ -45,7 +48,7 @@ def test_manual_repository_constructs_with_root_override(tmp_path) -> None:
     assert repo._root == tmp_path
 
 
-def test_manual_repository_get_raises_for_unextracted_manual() -> None:
+def test_manual_repository_get_raises_for_unextracted_manual(tmp_path: Path) -> None:
     """Manuals that ship without a structure/ tree raise the domain error.
 
     The bundled corpus carries manifest + source.pdf for every
@@ -57,7 +60,30 @@ def test_manual_repository_get_raises_for_unextracted_manual() -> None:
     """
     from .....domain.manuals._errors import ManualNotFoundError
 
-    repo = ManualRepository()
+    # The bundled corpus is now fully extracted, so this contract is exercised
+    # against a synthetic unextracted manual (manifest + source.pdf present, no
+    # structure/ tree) rather than a real corpus part whose extraction state can
+    # change. load_manual requires structure/manual.json and raises when absent.
+    part_root = tmp_path / "iva" / "2025"
+    part_root.mkdir(parents=True)
+    (part_root / "source.pdf").write_bytes(b"%PDF-1.4\n%%EOF\n")
+    (part_root / "manifest.json").write_text(
+        json.dumps(
+            {
+                "manual_id": "iva",
+                "year": 2025,
+                "part": "single",
+                "sha256": "0" * 64,
+                "source_pdf_url": "https://example.invalid/manual.pdf",
+                "relative_pdf_path": "source.pdf",
+                "content_length": 12,
+                "fetched_at": "2026-01-01T00:00:00Z",
+                "synthetic": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    repo = ManualRepository(root=tmp_path)
     key = ManualKey(manual_id="iva", year=2025, part="single")
 
     with pytest.raises(ManualNotFoundError):

@@ -159,9 +159,10 @@ def test_ledger_update_rejects_empty_patch(tmp_path: Path) -> None:
 def test_ledger_allocate_rejects_out_of_range_business_pct(tmp_path: Path) -> None:
     """``ledger allocate`` with ``--business-pct 1.5`` exceeds the 0..1 bound.
 
-    The ``ManualLedgerTransactionCommand._validate_business_percentage``
-    validator raises "business_pct must be within 0..1 when classification is
-    MIXED".  ``_ledger_validation_bad`` must extract and surface this."""
+    The CLI boundary refuses the out-of-range share before the backend and
+    surfaces the offending value WITH its percent context, so the operator
+    is steered to the 0..1 share convention rather than seeing a bare
+    'invalid'."""
 
     txn_id = _create_profile_and_import(tmp_path)
 
@@ -176,11 +177,14 @@ def test_ledger_allocate_rejects_out_of_range_business_pct(tmp_path: Path) -> No
             "--business-pct",
             "1.5",
         ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
 
     assert result.exit_code != 0, result.output
     combined = result.output or ""
-    assert "business_pct" in combined or "0..1" in combined or "within" in combined, combined
+    # The offending value and its percent translation both appear.
+    assert "1.5" in combined and "150%" in combined, combined
+    assert "0.5 for 50" in combined, combined
 
 
 # ---------------------------------------------------------------------------

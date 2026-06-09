@@ -6,7 +6,7 @@ import hashlib
 import zipfile
 from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, override
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -42,6 +42,7 @@ class EvidenceBundleRepository(SecureBoundRepository[EvidenceBundle]):
     schema_version: ClassVar[int] = APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.schema_version
     payload_type: ClassVar[type[EvidenceBundle]] = EvidenceBundle
 
+    @override
     def extract_identifier(self, payload: EvidenceBundle) -> str:
         """Return the stable storage key for an :class:`EvidenceBundle`."""
         return payload.bundle_id

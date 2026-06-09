@@ -23,7 +23,7 @@ _MASTER_KEY_UNAVAILABLE_MESSAGE_KEY: Final[str] = "errors.auth.auth_storage_mast
 
 
 def master_key_unavailable_error(message: str) -> MasterKeyUnavailableError:
-    """Build the localized master-key-unavailable error used by this substrate."""
+    """Build and return a :class:`MasterKeyUnavailableError` for this substrate."""
     return MasterKeyUnavailableError(message, translated_message=_MASTER_KEY_UNAVAILABLE_MESSAGE_KEY)
 
 

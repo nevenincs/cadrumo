@@ -19,6 +19,7 @@ from ....adapters.persistence.storage import StorageValidationError
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....application.export import ExportSerializationFormat
+from ....core.aggregation import AggregationSourceKind
 from ....domain.attachments import Attachment, AttachmentKind, AttachmentSource
 from ....domain.buckets import (
     BucketEvent,
@@ -274,7 +275,7 @@ def _drive_create_manual_transaction(secure_objects: SecureObjectRepository) -> 
 
 
 _PROVENANCE_RAW_FIELD_EXPECTATIONS = (
-    ("source_kind", "ledger_transaction"),
+    ("source_kind", AggregationSourceKind.LEDGER_TRANSACTION.value),
     ("taxable_base", "100.00"),
 )
 

@@ -68,7 +68,7 @@ _KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset(
         ("adapters/outbound/google/_document_link_resolver.py", 121),
         ("adapters/outbound/aeat/verify/__init__.py", 123),
         ("application/transactions/_import.py", 42),
-        ("application/modelo/_iva_wallet_gate.py", 375),
+        ("application/modelo/_iva_wallet_gate.py", 354),
         ("core/i18n/_translatable.py", 20),
         ("core/logging.py", 129),
         ("core/logging.py", 133),

@@ -197,7 +197,7 @@ class BucketMaintenanceService:
         )
 
     def browse(self, command: BrowseBucketCommand) -> BrowseBucketResult:
-        """Enumerate the bucket's namespace inventory without decrypting payloads.
+        """Enumerate the bucket namespace inventory and return a :class:`BrowseBucketResult`.
 
         Composes :meth:`SecureObjectRepository.list_namespaces` with a
         per-namespace row count via :meth:`list_keys` (whose return is

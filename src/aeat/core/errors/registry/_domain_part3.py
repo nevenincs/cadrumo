@@ -70,61 +70,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.calculations.registry._errors.RegistryError",
-        ErrorCode(
-            code="ERROR_CALCULATIONS_REGISTRY",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_calculations_registry",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.domain.calculations.registry._errors.RegistryLoadError",
-        ErrorCode(
-            code="ERROR_CALCULATIONS_REGISTRY_LOAD",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_calculations_registry_load",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.domain.calculations.registry._errors.RegistryValidationError",
-        ErrorCode(
-            code="ERROR_CALCULATIONS_REGISTRY_VALIDATION",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_calculations_registry_validation",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.domain.calculations.registry._errors.RegistrySnapshotError",
-        ErrorCode(
-            code="ERROR_CALCULATIONS_REGISTRY_SNAPSHOT",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_calculations_registry_snapshot",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.domain.calculations.registry._errors.CasillaConstraintViolationError",
-        ErrorCode(
-            code="REFUSED_CALCULATIONS_CASILLA_CONSTRAINT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_calculations_casilla_constraint",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.domain.contribuyente.assets.AssetRecordError",
         ErrorCode(
             code="ERROR_PROFILE_ASSET_RECORD",

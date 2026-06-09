@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import override
+
 from .._repository import ResourceCacheRepository
 
 
@@ -11,6 +13,7 @@ class RecargoBandsRepository(ResourceCacheRepository[object, None]):
     Wraps :func:`aeat.domain.deadlines.load_recargo_bands`.
     """
 
+    @override
     def _load(self, key: None) -> object:
         from ....domain.deadlines import load_recargo_bands
 

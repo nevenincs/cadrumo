@@ -12,4 +12,4 @@
 modelo = "714"
 renta_years = [2023, 2024]
 evidence_class = "data_fidelity"
-enrolling_test = "src/aeat/application/calculations/test_modelo_714_patrimonio_baseline_fidelity.py"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_714_patrimonio_baseline_fidelity.py"

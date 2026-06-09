@@ -35,6 +35,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+from typing import override
 
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import LargeBinary
@@ -138,6 +139,7 @@ class EncryptedString(TypeDecorator[str]):
     impl = LargeBinary
     cache_ok = True
 
+    @override
     def process_bind_param(self, value: str | None, dialect: Dialect) -> bytes | None:
         if value is None:
             return None
@@ -147,6 +149,7 @@ class EncryptedString(TypeDecorator[str]):
         blob = encrypt_record(value.encode("utf-8"), key=key, associated_data=_AAD_STRING)
         return blob.to_wire()
 
+    @override
     def process_result_value(self, value: bytes | None, dialect: Dialect) -> str | None:
         if value is None:
             return None
@@ -170,6 +173,7 @@ class EncryptedBytes(TypeDecorator[bytes]):
     impl = LargeBinary
     cache_ok = True
 
+    @override
     def process_bind_param(self, value: bytes | None, dialect: Dialect) -> bytes | None:
         if value is None:
             return None
@@ -179,6 +183,7 @@ class EncryptedBytes(TypeDecorator[bytes]):
         blob = encrypt_record(bytes(value), key=key, associated_data=_AAD_BYTES)
         return blob.to_wire()
 
+    @override
     def process_result_value(self, value: bytes | None, dialect: Dialect) -> bytes | None:
         if value is None:
             return None
@@ -199,6 +204,7 @@ class EncryptedJSON(TypeDecorator[object]):
     impl = LargeBinary
     cache_ok = True
 
+    @override
     def process_bind_param(self, value: object | None, dialect: Dialect) -> bytes | None:
         if value is None:
             return None
@@ -215,6 +221,7 @@ class EncryptedJSON(TypeDecorator[object]):
         blob = encrypt_record(serialised, key=key, associated_data=_AAD_JSON)
         return blob.to_wire()
 
+    @override
     def process_result_value(self, value: bytes | None, dialect: Dialect) -> object | None:
         if value is None:
             return None
@@ -289,6 +296,7 @@ class HashedLookup(TypeDecorator[bytes]):
         sub_key = cls._derive_lookup_key(key)
         return hmac.new(sub_key, plaintext.encode("utf-8"), hashlib.sha256).digest()
 
+    @override
     def process_bind_param(self, value: str | bytes | None, dialect: Dialect) -> bytes | None:
         if value is None:
             return None
@@ -305,6 +313,7 @@ class HashedLookup(TypeDecorator[bytes]):
             f"HashedLookup expects str or bytes; got {type(value).__name__}",
         )
 
+    @override
     def process_result_value(self, value: bytes | None, dialect: Dialect) -> bytes | None:
         if value is None:
             return None

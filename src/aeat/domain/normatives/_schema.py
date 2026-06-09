@@ -15,7 +15,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping
 from datetime import date
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, override
 
 from pydantic import (
     AnyHttpUrl,
@@ -254,6 +254,7 @@ class NormativeCatalogue(_NormativeStrictMutable):
                 )
         return self
 
+    @override
     def __iter__(self) -> Iterator[NormativeReference]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         """Iterate over every loaded :class:`NormativeReference`."""
         return iter(self.references.values())

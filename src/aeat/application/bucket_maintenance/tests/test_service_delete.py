@@ -17,7 +17,7 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.buckets import BucketDeleteRefusedError, BucketEventHistoryRepository
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...user_profile import RegisterProfileCommand
 from .. import BucketMaintenanceService, DeleteBucketCommand
@@ -29,7 +29,7 @@ _BUCKET_ID = "bucket-maintenance-delete-test"
 _ORIGINAL_LABEL = "Doomed bucket"
 
 
-def _all_required_facts(schema) -> tuple[UserProfileFact, ...]:
+def _all_required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, ...]:
     facts: list[UserProfileFact] = []
     for section in schema.sections:
         if section.repeatable:

@@ -265,9 +265,11 @@ def stale_filed_revisions(
 ) -> tuple[tuple[CalculationRevision, LedgerFilingStalenessVerdict], ...]:
     """Return finalized snapshot-backed revisions whose ledger drifted.
 
-    Scans verified/filed revisions carrying a ``ledger_filing_snapshot`` and
-    re-evaluates each against the live catalogue. A revision with no snapshot
-    (legacy) or a non-finalized state is skipped. Pure given its inputs.
+    Each item pairs a :class:`CalculationRevision` with its
+    :class:`LedgerFilingStalenessVerdict`. Scans verified/filed revisions
+    carrying a ``ledger_filing_snapshot`` and re-evaluates each against the
+    live catalogue. A revision with no snapshot (legacy) or a non-finalized
+    state is skipped. Pure given its inputs.
 
     Args:
         revisions: A mapping of :class:`CalculationRevision` files.

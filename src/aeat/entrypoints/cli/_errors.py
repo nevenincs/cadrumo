@@ -458,13 +458,34 @@ def _unwrap_aeat_error(error: BaseException) -> AeatError | None:
     return None
 
 
+# Typer vendors its own Click fork; ``typer.BadParameter`` and friends descend
+# from ``typer._click.exceptions.ClickException`` rather than the upstream
+# ``click.ClickException``. Derive the vendored base from ``typer.BadParameter``'s
+# MRO so both hierarchies are recognised without a brittle private-module import.
+_TYPER_CLICK_EXCEPTION: type[BaseException] = next(
+    base for base in typer.BadParameter.__mro__ if base.__name__ == "ClickException"
+)
+_CONTROL_FLOW_EXCEPTIONS: tuple[type[BaseException], ...] = (
+    click.ClickException,
+    click.exceptions.Exit,
+    click.Abort,
+    typer.Exit,
+    _TYPER_CLICK_EXCEPTION,
+)
+
+
 def _is_click_control_flow(error: Exception) -> bool:
     """Return :data:`True` when ``error`` is Typer/Click control flow, not a bug.
 
     Recognises :exc:`click.ClickException`, :exc:`click.exceptions.Exit`,
-    :exc:`click.Abort`, and :exc:`typer.Exit`.
+    :exc:`click.Abort`, and :exc:`typer.Exit`. Typer vendors its own Click
+    fork (``typer._click.exceptions``), so ``typer.BadParameter`` raised by a
+    ``_bad(...)`` refusal is NOT an instance of the upstream
+    :exc:`click.ClickException`; recognise the vendored hierarchy too so an
+    instructive operator refusal is re-raised for Click/CliRunner to render
+    rather than mis-classified as an unexpected internal error.
     """
-    return isinstance(error, (click.ClickException, click.exceptions.Exit, click.Abort, typer.Exit))
+    return isinstance(error, _CONTROL_FLOW_EXCEPTIONS)
 
 
 __all__ = [

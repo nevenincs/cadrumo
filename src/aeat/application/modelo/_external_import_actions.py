@@ -9,7 +9,6 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 
-from ...core.i18n import tr
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectType, BucketEventType
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
@@ -86,7 +85,7 @@ def import_external_filing_evidence(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
-    """Persist an externally-filed return as a baseline filing record."""
+    """Persist an externally-filed return and return a :class:`ModeloRecord`."""
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
@@ -114,10 +113,6 @@ def import_external_filing_evidence(
     revisions = cr_repo.load()
     if revision_id in revisions:
         raise ExternalModeloImportError(
-            tr(
-                "application.modelo.errors.external_import_duplicate_revision",
-                calculation_revision_id=revision_id,
-            ),
             translated_message="application.modelo.errors.external_import_duplicate_revision",
             context={"calculation_revision_id": revision_id},
         )

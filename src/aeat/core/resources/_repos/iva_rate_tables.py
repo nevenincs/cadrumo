@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from .._repository import ResourceCacheRepository
 
@@ -17,6 +17,7 @@ class IvaRateTableRepository(ResourceCacheRepository[Mapping["EUMemberState", "t
     Wraps :func:`aeat.domain.iva._rates.load_iva_rate_table`.
     """
 
+    @override
     def _load(self, key: None) -> Mapping[EUMemberState, tuple[IvaRateRecord, ...]]:
         from ....domain.iva._rates import load_iva_rate_table
 

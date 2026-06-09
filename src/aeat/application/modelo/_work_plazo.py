@@ -37,7 +37,7 @@ def modelo_work_plazo_summary(
     *,
     today: date | None = None,
 ) -> ModeloWorkPlazoSummary | None:
-    """Return deadline and recargo information for a work unit, when known."""
+    """Return a :class:`ModeloWorkPlazoSummary` with deadline and recargo information, or ``None`` when unknown."""
     from ...domain.deadlines._errors import DeadlineValidationError
     from ...domain.deadlines._plazo import resolve_filing_closes_on
     from ...domain.deadlines._recargo import build_recovery_for_overdue

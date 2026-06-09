@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core.config import Settings
 from .....core.paths import PROJECT_ROOT
 from .....core.resources import bundled_path
 from .._citation_blocklist import _KNOWN_BAD_CITATIONS, find_known_bad
@@ -402,7 +403,7 @@ def test_verify_source_file_checks_manual_structure(tmp_path: Path) -> None:
         sha256=sha,
         bytes=len(b"dummy pdf bytes that satisfy file presence"),
         retrieved_at=date(2026, 5, 6),
-        source_url="https://sede.agenciatributaria.gob.es/Manual.pdf",
+        source_url=f"{Settings.external_constants().aeat.domains.sede}/Manual.pdf",
         review_status="reviewed",
     )
 
@@ -422,7 +423,7 @@ def test_verify_source_file_checks_manual_structure(tmp_path: Path) -> None:
                 "part": "part1",
                 "title": "Manual Renta 2020",
                 "summary": "Resumen",
-                "source_pdf_url": "https://sede.agenciatributaria.gob.es/Manual.pdf",
+                "source_pdf_url": f"{Settings.external_constants().aeat.domains.sede}/Manual.pdf",
                 "source_html_url": None,
                 "fetched_at": "2026-05-06T00:00:00Z",
                 "definition_reviewed_by": "operator",
@@ -459,7 +460,7 @@ def test_verify_legal_reference_checks_manual_section_json(tmp_path: Path) -> No
         kind="manual",
         corpus_ref="corpus/manuals/renta/2020/part1/structure/sections/cap1/sec1.json#sec1",
         document_id="BOE-A-2020-0000",
-        permalink="https://sede.agenciatributaria.gob.es/",
+        permalink=f"{Settings.external_constants().aeat.domains.sede}/",
         published_at=date(2020, 3, 31),
         effective_from=date(2020, 4, 1),
         review_status="reviewed",
@@ -482,7 +483,7 @@ def test_verify_legal_reference_checks_manual_section_json(tmp_path: Path) -> No
                 "rules": [],
                 "references_sections": [],
                 "references_legal_acts": [],
-                "source": {"manual_url": "https://sede.agenciatributaria.gob.es/", "page": 1},
+                "source": {"manual_url": f"{Settings.external_constants().aeat.domains.sede}/", "page": 1},
                 "definition_reviewed_by": "operator",
                 "definition_reviewed_at": "2026-06-08",
             }

@@ -29,7 +29,7 @@ import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Final
+from typing import Final, override
 
 from .config import load_settings as _load_settings
 from .locks_errors import LockAcquisitionError
@@ -57,6 +57,7 @@ def _default_retry_backoff() -> float:
 class _DefaultLockTimeout:
     """Sentinel marking ``timeout`` as "resolve from settings on call"."""
 
+    @override
     def __repr__(self) -> str:
         return "DEFAULT_LOCK_TIMEOUT"
 

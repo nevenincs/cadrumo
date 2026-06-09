@@ -208,7 +208,7 @@ def result_summary_lines(rev) -> list[str]:
 
 
 def result_summary_payload(rev) -> tuple[ResultSummaryRowPayload, ...]:
-    """Return the headline-result summary rows for the JSON payload."""
+    """Return a tuple of :class:`ResultSummaryRowPayload` headline-result summary rows for the JSON payload."""
     summary = calculation_result_summary(rev)
     if summary is None:
         return ()

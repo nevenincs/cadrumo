@@ -52,7 +52,7 @@ _CLOCK_N = datetime(2024, 6, 15, 10, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_1 = datetime(2025, 9, 20, 10, 0, 0, tzinfo=UTC)
 
 
-def _find_observation(repo, *, filing_year, period):
+def _find_observation(repo: CalculationObservationRepository, *, filing_year: int, period: str):
     for payload in repo.iter_modelo(_MODELO):
         obs = payload.observation
         if obs.filing_year == filing_year and obs.period == period:

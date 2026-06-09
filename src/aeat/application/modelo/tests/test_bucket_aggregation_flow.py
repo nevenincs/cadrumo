@@ -265,7 +265,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_p
     ).model_copy(update={"category_id": None})
     tx_repo.save(TransactionCatalogue.from_transactions((incomplete,)))
 
-    with pytest.raises(ModeloAggregationBindingError, match="ledger preflight blocks"):
+    with pytest.raises(ModeloAggregationBindingError) as exc_info:
         calculate_modelo_revision_from_bucket_aggregation(
             work_unit.work_unit_id,
             actor="operator-A",
@@ -275,6 +275,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_p
             transaction_repository=tx_repo,
             clock=_T1,
         )
+    assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
 
     assert len(cr_repo.load()) == 0
 
@@ -511,7 +512,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo)
 
-    with pytest.raises(ModeloAggregationBindingError, match="cannot override"):
+    with pytest.raises(ModeloAggregationBindingError) as exc_info:
         calculate_modelo_revision_from_bucket_aggregation(
             work_unit.work_unit_id,
             actor="operator-A",
@@ -522,6 +523,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_
             transaction_repository=tx_repo,
             clock=_T1,
         )
+    assert exc_info.value.translated_message == "application.modelo.errors.caller_casilla_source_binding_conflict"
 
     assert cr_repo.load().revisions == {}
     assert all(

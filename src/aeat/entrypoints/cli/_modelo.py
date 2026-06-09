@@ -1070,7 +1070,10 @@ def modelo_history(
             "--period",
             help=tr(
                 "cli.app.modelo.history.period_help",
-                default="Optional period filter (e.g. Q1, annual).",
+                default=(
+                    "Optional period filter using the modelo revision token: 0A annual, 1T-4T quarters, "
+                    "01-12 months; for censo modelos (036) use alta, modificacion, or baja."
+                ),
             ),
         ),
     ] = None,

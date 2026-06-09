@@ -18,7 +18,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Self, override
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
@@ -353,6 +353,7 @@ class Invoice(BaseModel):
     retention_amount: Decimal | None = None
     payment_id: str | None = None
 
+    @override
     def __hash__(self) -> int:
         return hash(self.invoice_id)
 
@@ -548,6 +549,7 @@ class InvoiceCatalogue(BaseModel):
         """
         return cls.model_validate(tuple(invoices))
 
+    @override
     def __iter__(self) -> Iterator[Invoice]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         """Iterate over catalogue invoices."""
         return iter(self.invoices.values())

@@ -20,6 +20,7 @@ from ....core.access_gate import (
     derive_modelo_authorization,
     load_authorization_manifest,
 )
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.resources import bundled_path as _bundled_path
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._loader import _collect_registry_tree_fingerprints, load_registry_tree
@@ -274,5 +275,5 @@ def _load_authority(
     )
     authority.validate_registry()
     with suppress(Exception):
-        validated_cache_path.write_text("validated", encoding="utf-8")
+        validated_cache_path.write_text("validated", encoding=UTF_8_ENCODING)
     return authority

@@ -374,7 +374,7 @@ def test_source_bound_casilla_override_error_is_localised() -> None:
 
     assert raised.value.translated_message == "application.modelo.errors.caller_casilla_source_binding_conflict"
     assert raised.value.context == {"casillas": ["0001"]}
-    assert "0001" in str(raised.value)
+    assert raised.value.context is not None and "0001" in raised.value.context["casillas"]
 
 
 # ---------------------------------------------------------------------------

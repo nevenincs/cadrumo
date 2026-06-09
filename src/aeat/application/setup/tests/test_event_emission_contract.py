@@ -23,7 +23,7 @@ from ....domain.buckets import BucketEventType
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-_AEAT_ROOT = Path(__file__).resolve().parents[2]
+_AEAT_ROOT = Path(__file__).resolve().parents[3]
 
 
 _REQUIRED_EMISSION_SITES: tuple[tuple[BucketEventType, Path, str], ...] = (

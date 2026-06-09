@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Iterator, Mapping
 from datetime import datetime
 from types import MappingProxyType
-from typing import Self
+from typing import Self, override
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
@@ -302,6 +302,7 @@ class AttachmentCatalogue(BaseModel):
         """
         return cls.model_validate(tuple(attachments))
 
+    @override
     def __iter__(self) -> Iterator[Attachment]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         """Iterate over catalogue attachments."""
         return iter(self.attachments.values())

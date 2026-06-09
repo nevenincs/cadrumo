@@ -55,7 +55,13 @@ def register_readiness_commands(app: typer.Typer) -> None:
             str | None,
             typer.Option(
                 "--period",
-                help=tr("cli.app.modelo.readiness.period_help", default="Period token (e.g. Q1, annual)."),
+                help=tr(
+                    "cli.app.modelo.readiness.period_help",
+                    default=(
+                        "Period token used to resolve the modelo revision: 0A annual, 1T-4T quarters, "
+                        "01-12 months; for censo modelos (036) use alta, modificacion, or baja."
+                    ),
+                ),
             ),
         ] = None,
     ) -> None:

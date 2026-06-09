@@ -139,7 +139,7 @@ async def capture_expedientes_bulk(
     year_to: int,
     modelos: tuple[str, ...] | None = None,
 ) -> ExpedientesBulkCaptureReport:
-    """Live-walk AEAT declaration-register rows for many modelos and years."""
+    """Live-walk AEAT declaration-register rows and return an :class:`ExpedientesBulkCaptureReport`."""
     if year_from > year_to:
         raise LiveApplicationInputError(
             message="from-year must be less than or equal to to-year",

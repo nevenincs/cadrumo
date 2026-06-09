@@ -34,7 +34,7 @@ class LedgerListProjection:
 
 
 def parse_ledger_list_filter_spec(filters: list[str]) -> LedgerReviewFilterSpec:
-    """Parse ``ledger list --filter`` clauses using the shared review filter catalogue."""
+    """Parse ``ledger list --filter`` clauses and return a :class:`LedgerReviewFilterSpec`."""
     return LedgerReviewFilterSpec.from_strings(filters)
 
 
@@ -47,7 +47,7 @@ def project_ledger_list(
     limit: int | None,
     offset: int,
 ) -> LedgerListProjection:
-    """Project, page, and render one ``ledger list`` result set."""
+    """Project, page, and render one ``ledger list`` result set and return a :class:`LedgerListProjection`."""
     bucket_id = transaction_repository.bucket_id
     all_results = list_manual_transactions(
         bucket_id=bucket_id,

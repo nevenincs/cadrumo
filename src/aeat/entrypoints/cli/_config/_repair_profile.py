@@ -62,15 +62,6 @@ def register_repair_profile_command(
         yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.yes_help")),
     ) -> None:
         """Inspect profile health or safely repair a degraded active-profile pointer/manifest."""
-        from ....application.workflow import (
-            repair_active_profile_manifest_status,
-            repair_active_profile_pointer,
-        )
-
-        if clear_active and repair_manifest_status:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.repair.profile_one_action",
-            )
         if profile is not None and not clear_active and not repair_manifest_status:
             _emit_profile_record_status(
                 ctx,
@@ -79,58 +70,97 @@ def register_repair_profile_command(
                 read_profile_record=read_profile_record,
             )
             return
-        if profile is not None:
-            resolved = resolve_profile_by_label(profile)
-            if resolved.bucket_id != _resolve_active_bucket_id():
-                raise _CliRefusedBoundaryError(
-                    translated_message="cli.config.repair.profile_clear_active_mismatch",
-                    context={"profile": profile},
-                )
-        if (clear_active or repair_manifest_status) and not yes:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.repair.profile_requires_yes",
-            )
-        from .._config_payloads import RepairProfileResult
-
+        _validate_repair_action_preconditions(
+            profile=profile,
+            clear_active=clear_active,
+            repair_manifest_status=repair_manifest_status,
+            yes=yes,
+            resolve_profile_by_label=resolve_profile_by_label,
+        )
         if repair_manifest_status:
-            result = repair_active_profile_manifest_status(confirmed=yes)
-            health = result.after or result.before
-            lines = [
-                f"dry_run\t{result.dry_run}",
-                f"repaired\t{result.repaired}",
-                f"active_profile\t{CLI_PROFILE_ID_PLACEHOLDER if health.active_profile else ''}",
-                f"status\t{health.status}",
-                f"manifest_status\t{result.status or ''}",
-                f"reason\t{result.reason}",
-            ]
-            if health.profile_record_error:
-                lines.append(f"profile_record_error\t{health.profile_record_error}")
-            if health.next_action:
-                lines.append(f"next_action\t{health.next_action}")
-            repair_payload = RepairProfileResult.model_validate(
-                _redact_profile_repair_payload(result.model_dump(mode="json"))
-            )
-            _emit_envelope(ctx, command="config.repair.profile", result=repair_payload, lines=lines)
+            _emit_manifest_status_repair(ctx, confirmed=yes)
             return
-        result = repair_active_profile_pointer(clear_active=clear_active, confirmed=yes)
-        health = result.after or result.before
-        payload = _redact_profile_repair_payload(result.model_dump(mode="json"))
-        lines = [
-            f"dry_run\t{result.dry_run}",
-            f"cleared_pointer\t{result.cleared_pointer}",
-            f"active_profile\t{CLI_PROFILE_ID_PLACEHOLDER if health.active_profile else ''}",
-            f"source\t{health.source}",
-            f"status\t{health.status}",
-            f"registered_bucket\t{health.registered_bucket}",
-            f"profile_record_present\t{health.profile_record_present}",
-            f"repairable_by_clearing_pointer\t{health.repairable_by_clearing_pointer}",
-        ]
-        if health.profile_record_error:
-            lines.append(f"profile_record_error\t{health.profile_record_error}")
-        if health.next_action:
-            lines.append(f"next_action\t{health.next_action}")
-        repair_payload = RepairProfileResult.model_validate(payload)
-        _emit_envelope(ctx, command="config.repair.profile", result=repair_payload, lines=lines)
+        _emit_pointer_repair(ctx, clear_active=clear_active, confirmed=yes)
+
+
+def _validate_repair_action_preconditions(
+    *,
+    profile: str | None,
+    clear_active: bool,
+    repair_manifest_status: bool,
+    yes: bool,
+    resolve_profile_by_label: ProfileResolver,
+) -> None:
+    """Refuse mutually-exclusive, mismatched, or unconfirmed repair actions.
+
+    Raises :class:`CliRefusedBoundaryError` when both repair actions are
+    requested at once, when ``--profile`` names a non-active bucket for a
+    pointer/manifest repair, or when a destructive action lacks ``--yes``.
+    """
+    if clear_active and repair_manifest_status:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.repair.profile_one_action",
+        )
+    if profile is not None:
+        resolved = resolve_profile_by_label(profile)
+        if resolved.bucket_id != _resolve_active_bucket_id():
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.repair.profile_clear_active_mismatch",
+                context={"profile": profile},
+            )
+    if (clear_active or repair_manifest_status) and not yes:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.repair.profile_requires_yes",
+        )
+
+
+def _emit_manifest_status_repair(ctx: typer.Context, *, confirmed: bool) -> None:
+    """Backfill a legacy active-bucket manifest status and emit the result."""
+    from ....application.workflow import repair_active_profile_manifest_status
+    from .._config_payloads import RepairProfileResult
+
+    result = repair_active_profile_manifest_status(confirmed=confirmed)
+    health = result.after or result.before
+    lines = [
+        f"dry_run\t{result.dry_run}",
+        f"repaired\t{result.repaired}",
+        f"active_profile\t{CLI_PROFILE_ID_PLACEHOLDER if health.active_profile else ''}",
+        f"status\t{health.status}",
+        f"manifest_status\t{result.status or ''}",
+        f"reason\t{result.reason}",
+    ]
+    if health.profile_record_error:
+        lines.append(f"profile_record_error\t{health.profile_record_error}")
+    if health.next_action:
+        lines.append(f"next_action\t{health.next_action}")
+    repair_payload = RepairProfileResult.model_validate(_redact_profile_repair_payload(result.model_dump(mode="json")))
+    _emit_envelope(ctx, command="config.repair.profile", result=repair_payload, lines=lines)
+
+
+def _emit_pointer_repair(ctx: typer.Context, *, clear_active: bool, confirmed: bool) -> None:
+    """Repair a degraded active-profile pointer and emit the health result."""
+    from ....application.workflow import repair_active_profile_pointer
+    from .._config_payloads import RepairProfileResult
+
+    result = repair_active_profile_pointer(clear_active=clear_active, confirmed=confirmed)
+    health = result.after or result.before
+    payload = _redact_profile_repair_payload(result.model_dump(mode="json"))
+    lines = [
+        f"dry_run\t{result.dry_run}",
+        f"cleared_pointer\t{result.cleared_pointer}",
+        f"active_profile\t{CLI_PROFILE_ID_PLACEHOLDER if health.active_profile else ''}",
+        f"source\t{health.source}",
+        f"status\t{health.status}",
+        f"registered_bucket\t{health.registered_bucket}",
+        f"profile_record_present\t{health.profile_record_present}",
+        f"repairable_by_clearing_pointer\t{health.repairable_by_clearing_pointer}",
+    ]
+    if health.profile_record_error:
+        lines.append(f"profile_record_error\t{health.profile_record_error}")
+    if health.next_action:
+        lines.append(f"next_action\t{health.next_action}")
+    repair_payload = RepairProfileResult.model_validate(payload)
+    _emit_envelope(ctx, command="config.repair.profile", result=repair_payload, lines=lines)
 
 
 def _redact_profile_repair_payload(payload: dict[str, typing.Any]) -> dict[str, typing.Any]:

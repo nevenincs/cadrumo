@@ -26,7 +26,7 @@ this boundary; the service has no verb that would write to AEAT.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import ClassVar
+from typing import ClassVar, override
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -94,10 +94,12 @@ class _ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
     sensitivity: ClassVar[SensitivityClass] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.schema_version
 
+    @override
     @classmethod
     def payload_model(cls) -> type[ApoderadoConfiguration]:
         return ApoderadoConfiguration
 
+    @override
     def extract_identifier(self, payload: ApoderadoConfiguration) -> str:
         """Return the ``bucket_id`` as the SQL object key."""
         return safe_repository_id(payload.bucket_id, context="bucket_id")

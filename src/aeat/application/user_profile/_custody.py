@@ -89,7 +89,7 @@ def recovery_wrap_path(settings: Settings | None = None) -> Path:
 
 
 def inspect_recovery_status(settings: Settings | None = None) -> CustodyRecoveryStatus:
-    """Inspect whether the configured recovery wrapper exists."""
+    """Inspect whether the configured recovery wrapper exists and return a :class:`CustodyRecoveryStatus`."""
     path = recovery_wrap_path(settings)
     return CustodyRecoveryStatus(recovery_path=path, recovery_enrolled=path.is_file())
 
@@ -110,7 +110,7 @@ def _mark_active_profile_recovery_enrolled(settings: Settings) -> None:
 
 
 def mint_recovery_code(settings: Settings | None = None) -> CustodyRecoveryEnrollment:
-    """Mint a new recovery mnemonic and persist its master-key wrapper.
+    """Mint a new recovery mnemonic and return a :class:`CustodyRecoveryEnrollment`.
 
     The mnemonic is returned exactly once. The plaintext words are not
     persisted; only the wrapped master key lands in the secret-store
@@ -129,7 +129,7 @@ def mint_recovery_code(settings: Settings | None = None) -> CustodyRecoveryEnrol
 
 
 def verify_recovery_code(*, mnemonic: str, settings: Settings | None = None) -> CustodyRecoveryVerification:
-    """Return whether ``mnemonic`` unwraps the configured recovery wrapper."""
+    """Verify ``mnemonic`` against the configured recovery wrapper and return a :class:`CustodyRecoveryVerification`."""
     path = recovery_wrap_path(settings)
     try:
         envelope = load_recovery_envelope(path)
@@ -156,7 +156,7 @@ def rekey_secret_store(
     new_passphrase: str,
     settings: Settings | None = None,
 ) -> CustodyRekeyResult:
-    """Rewrap the current master key under ``new_passphrase``."""
+    """Rewrap the current master key under ``new_passphrase`` and return a :class:`CustodyRekeyResult`."""
     resolved = _settings(settings)
     current_provider = get_master_key_provider(settings_override=resolved)
     with activate_master_key_provider(current_provider):
@@ -174,7 +174,7 @@ def recover_secret_store(
     new_passphrase: str,
     settings: Settings | None = None,
 ) -> CustodyRecoverResult:
-    """Recover the master key from ``mnemonic`` and bind it to ``new_passphrase``."""
+    """Recover the master key from ``mnemonic`` and return a :class:`CustodyRecoverResult`."""
     resolved = _settings(settings)
     path = recovery_wrap_path(resolved)
     envelope = load_recovery_envelope(path)
@@ -196,7 +196,7 @@ def recover_secret_store_with_callback(
     passphrase_callback: Callable[[], str],
     settings: Settings | None = None,
 ) -> CustodyRecoverResult:
-    """Recover the master key using a caller-owned passphrase callback."""
+    """Recover the master key using a caller-owned passphrase callback and return a :class:`CustodyRecoverResult`."""
     return recover_secret_store(
         mnemonic=mnemonic,
         new_passphrase=passphrase_callback(),

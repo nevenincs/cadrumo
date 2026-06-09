@@ -317,7 +317,7 @@ def work_calculate_input_bundle_from_cli(
     sal_capital_social: str | None,
     autoconsumo_promotor_base: str | None,
 ) -> WorkCalculateInputBundle:
-    """Build application calculate input from raw Typer option values."""
+    """Build a :class:`WorkCalculateInputBundle` from raw Typer option values."""
     casilla_pairs = dict(parse_casilla_override(spec) for spec in (casilla or ()))
     binding_pairs = dict(parse_binding_override(spec) for spec in (binding or ()))
     relation_pairs = dict(
@@ -504,7 +504,7 @@ def selector_bad_parameter(exc: BaseException) -> typer.BadParameter:
 
 
 def parse_revision_selector(value: str) -> ModeloCalculationRevisionSelector:
-    """Parse a command-line revision selector token."""
+    """Parse a command-line revision selector token and return a :class:`ModeloCalculationRevisionSelector`."""
     try:
         return ModeloCalculationRevisionSelector(value)
     except ValueError as exc:

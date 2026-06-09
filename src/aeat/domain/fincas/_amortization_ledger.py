@@ -20,6 +20,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.external_constants import AMORTIZACION_INMUEBLE_RATE
 from ...core.logging import get_logger
 from ...core.money import round_to_cents as _round_to_cents
 from ._errors import AmortizationLedgerCapExceededError
@@ -27,8 +28,10 @@ from ._models import Finca, FincaAmortizacionLedgerEntry, FincaRendimientoRecord
 
 _logger = get_logger(__name__)
 
-ART_23_1_F_RATE: Decimal = Decimal("0.03")
-"""3 % rate per LIRPF art. 23.1, párrafo f."""
+ART_23_1_F_RATE: Decimal = AMORTIZACION_INMUEBLE_RATE
+"""3 % amortización of capital-inmobiliario rental properties; rate fixed by RD 439/2007
+(RIRPF) art. 14.2.a; deductibility base Ley 35/2006 art. 23.  Re-export alias for
+:data:`~aeat.core.external_constants.AMORTIZACION_INMUEBLE_RATE`."""
 
 DAYS_PER_YEAR: Decimal = Decimal("365")
 """Pro-rate denominator. The BOE wording uses "anual" — we adopt 365

@@ -25,7 +25,7 @@ import re
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, override, runtime_checkable
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
@@ -207,6 +207,7 @@ class LoadedCertificate(BaseModel):
         reference = now if now is not None else datetime.now(UTC)
         return reference > self.not_after
 
+    @override
     def __repr__(self) -> str:  # pragma: no cover - trivial
         """Return a developer-readable string showing subject, issuer, thumbprint, and backend."""
         return (

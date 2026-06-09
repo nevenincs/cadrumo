@@ -19,7 +19,7 @@ from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, override
 
 from pydantic import (
     AnyHttpUrl,
@@ -396,6 +396,7 @@ class IvaCatalogue(_IvaStrictMutable):
                 )
         return self
 
+    @override
     def __iter__(self) -> Iterator[IvaRegulation]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         """Iterate over every loaded :class:`IvaRegulation`."""
         return iter(self.regulations.values())

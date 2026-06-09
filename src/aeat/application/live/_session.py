@@ -17,7 +17,7 @@ async def active_verified_session(
     operation: str = "live-filed-read",
     target_url: str | None = None,
 ) -> tuple[AeatSession, Settings]:
-    """Return an authenticated AEAT session after enforcing the live-read gate."""
+    """Return an :class:`AeatSession` and :class:`Settings` after enforcing the live-read gate."""
     settings = load_settings()
     AeatAccessGate(settings).require_live_read()
     result = await ensure_authenticated_aeat_session(

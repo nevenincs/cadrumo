@@ -10,6 +10,7 @@ import pytest
 
 from .....adapters.outbound.storage import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
+    OutboundStorageNotFoundError,
     OutboundStorageValidationError,
     RemoteMirrorNamespaceManifest,
     build_remote_mirror_namespace_manifest,
@@ -288,6 +289,89 @@ def test_google_sync_push_refuses_remote_revision_conflict_before_overwriting_ob
         assert result["failed_manifests"][0][0] == namespace
         assert "revision_conflict" in result["failed_manifests"][0][1]
         assert persisted_payload == remote_payload
+
+
+def test_google_sync_push_dry_run_counts_every_row_as_skipped_without_writing(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-sync-dry-run") as profile:
+        repository = profile.repository
+        plaintext_by_key = {
+            "google_oauth_client": b"dry-run-client-secret-plaintext",
+            "google_oauth_token": b"dry-run-refresh-token-plaintext",
+            "google_oauth_metadata": b"dry-run-metadata-plaintext",
+        }
+        for namespace_key, plaintext in plaintext_by_key.items():
+            namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key(namespace_key)
+            repository.save(
+                namespace=namespace_definition.namespace,
+                object_key=f"natural-key-{namespace_key}",
+                classification=namespace_definition.sensitivity,
+                schema_version=1,
+                written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
+                payload=plaintext,
+            )
+        raw_rows = tuple(repository.iter_all_records_raw())
+        provider = LocalFileSystemProvider(tmp_path / "mirror")
+
+        result = _push_secure_object_mirror_rows(
+            provider=provider,
+            repository=repository,
+            namespace_filter=None,
+            limit=None,
+            dry_run=True,
+        )
+
+        expected_counts = {row.namespace: 1 for row in raw_rows}
+        assert result["skipped_by_namespace"] == expected_counts
+        assert result["pushed_by_namespace"] == {}
+        assert result["manifest_pushed_by_namespace"] == {}
+        assert result["failed_objects"] == []
+        assert result["failed_manifests"] == []
+        assert result["degraded_manifests"] == []
+        # A dry-run must not touch the provider at all: no namespace directory
+        # is created, so iter_objects raises not-found for every row's namespace.
+        for row in raw_rows:
+            with pytest.raises(OutboundStorageNotFoundError):
+                next(iter(provider.iter_objects(row.namespace)), None)
+
+
+def test_google_sync_push_namespace_filter_restricts_pushed_rows(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-sync-namespace-filter") as profile:
+        repository = profile.repository
+        plaintext_by_key = {
+            "google_oauth_client": b"filter-client-secret-plaintext",
+            "google_oauth_token": b"filter-refresh-token-plaintext",
+        }
+        for namespace_key, plaintext in plaintext_by_key.items():
+            namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key(namespace_key)
+            repository.save(
+                namespace=namespace_definition.namespace,
+                object_key=f"natural-key-{namespace_key}",
+                classification=namespace_definition.sensitivity,
+                schema_version=1,
+                written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
+                payload=plaintext,
+            )
+        target_namespace = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_client").namespace
+        other_namespace = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_token").namespace
+        provider = LocalFileSystemProvider(tmp_path / "mirror")
+
+        result = _push_secure_object_mirror_rows(
+            provider=provider,
+            repository=repository,
+            namespace_filter=target_namespace,
+            limit=None,
+            dry_run=False,
+        )
+
+        assert result["pushed_by_namespace"] == {target_namespace: 1}
+        assert result["manifest_pushed_by_namespace"] == {target_namespace: 1}
+        assert result["failed_objects"] == []
+        assert result["failed_manifests"] == []
+        # The filtered-out namespace must never reach the provider (no directory
+        # created), while the target namespace receives exactly its one object.
+        with pytest.raises(OutboundStorageNotFoundError):
+            next(iter(provider.iter_objects(other_namespace)), None)
+        assert len(list(provider.iter_objects(target_namespace))) == 1
 
 
 def test_google_sync_push_refuses_non_dry_run_limit_because_manifest_would_be_partial(tmp_path: Path) -> None:

@@ -51,7 +51,7 @@ def emit_bucket_event(
     object_id: str,
     payload: Mapping[str, str],
 ) -> BucketEvent:
-    """Append one event to the bucket-event-history catalogue and return the persisted record."""
+    """Append one event to the bucket-event-history catalogue and return the persisted :class:`BucketEvent`."""
     event_id = derive_bucket_event_id(
         bucket_id=bucket_id,
         event_type=event_type,
@@ -97,9 +97,10 @@ def persist_calculation_revision(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
 ) -> CalculationRevision:
-    """Persist a freshly calculated draft revision, or return the existing duplicate.
+    """Persist a freshly calculated draft revision and return the :class:`CalculationRevision`.
 
-    Use of :class:`CasillaObservation` for compliance.
+    Returns the existing duplicate when an identical revision is already persisted.
+    Uses :class:`CasillaObservation` for provenance.
     """
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -201,9 +202,9 @@ def persist_filed_revision(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
 ) -> ModeloRecord:
-    """Persist the filing transition for a verified-complete calculation revision.
+    """Persist the filing transition for a verified-complete calculation revision and return a :class:`ModeloRecord`.
 
-    Use of :class:`CalculationRevision` for compliance.
+    Uses :class:`CalculationRevision` for the source revision.
     """
     calculation_revision_id = target.calculation_revision_id
     new_filing_id = derive_filing_record_id(

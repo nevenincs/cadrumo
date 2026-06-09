@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import hashlib
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -161,12 +161,14 @@ class ExpedientesService(StatelessSnapshotService[PersistedExpedientesSnapshot])
             return None
         return max(snapshots, key=lambda s: s.captured_at)
 
+    @override
     # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: SnapshotService[T] abstract hook
     # contract uses **kwargs to allow concrete subclasses to accept caller-
     # specific keyword arguments without a shared typed parameter set.
     def _derive_snapshot_id(self, **kwargs: Any) -> str:
         return _derive_snapshot_id(kwargs["capture"])
 
+    @override
     # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD: StatelessSnapshotService[T]
     # abstract _build_payload hook carries **kwargs: Any so concrete subclasses
     # accept caller-specific keyword arguments without a shared typed set.

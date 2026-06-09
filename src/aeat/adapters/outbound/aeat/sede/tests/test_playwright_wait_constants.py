@@ -22,7 +22,7 @@ from .._browser_constants import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_SEDE_DIR = Path(__file__).parent
+_SEDE_DIR = Path(__file__).parent.parent
 
 _CHECKED_MODULES = (
     "_declarations.py",

@@ -325,7 +325,10 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
 
 
 def compare_taxation_for_work_address(address: object) -> TaxationComparisonResult:
-    """Run conjunta-vs-individual comparison for a natural or exact work address."""
+    """Run conjunta-vs-individual comparison for a natural or exact work address.
+
+    Returns a :class:`TaxationComparisonResult`.
+    """
     from ._work_addressing import ModeloWorkAddress, resolve_modelo_work_address_unit
 
     if not isinstance(address, ModeloWorkAddress):

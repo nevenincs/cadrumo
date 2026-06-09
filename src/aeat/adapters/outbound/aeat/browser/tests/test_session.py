@@ -600,7 +600,7 @@ def test_build_context_kwargs_boundary_rationale_comment_present() -> None:
     # at this third-party API boundary.
     import pathlib
 
-    session_path = pathlib.Path(__file__).parent / "session.py"
+    session_path = pathlib.Path(__file__).parent.parent / "session.py"
     assert session_path.exists(), f"session.py not found at {session_path}"
     source = session_path.read_text(encoding="utf-8")
     assert "irreducible" in source, (

@@ -29,7 +29,7 @@ def _hash(payload: bytes) -> str:
 
 
 def test_factory_import_does_not_import_concrete_backends() -> None:
-    tree = ast.parse(Path(__file__).with_name("_factory.py").read_text(encoding="utf-8"))
+    tree = ast.parse((Path(__file__).parent.parent / "_factory.py").read_text(encoding="utf-8"))
     concrete_backend_modules = {
         "aeat.adapters.outbound.storage._google_drive",
         "aeat.adapters.outbound.storage._local",

@@ -569,7 +569,7 @@ def test_work_calculate_rejects_decimal_override_for_text_casilla(
     registration for the ``operator`` profile (the UUID-vs-display-name /
     manifest-registration in-process resolution class split into task #53,
     distinct from the #52 bucket-session bootstrap this module's other tests
-    needed). Left failing loudly (no skip/xfail) per the #52 brief until #53's
+    needed). Left failing loudly per the #52 brief until #53's
     profile-resolution fix lands.
     """
 

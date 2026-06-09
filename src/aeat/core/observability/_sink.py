@@ -30,7 +30,7 @@ import logging  # LOGGING-STDLIB-RATIONALE-SINK-HANDLER
 import os
 import threading
 from pathlib import Path
-from typing import TextIO
+from typing import TextIO, override
 
 from ..logging import get_logger
 from ._models import RunEvent
@@ -76,6 +76,7 @@ class JsonlRunSink(logging.Handler):
         """The run identifier this sink is bound to."""
         return self._run_id
 
+    @override
     def emit(self, record: logging.LogRecord) -> None:
         """Write the JSON-encoded :class:`RunEvent` carried by ``record``.
 
@@ -135,6 +136,7 @@ class JsonlRunSink(logging.Handler):
             self._handle = self._target.open("a", encoding="utf-8", newline="")
         return self._handle
 
+    @override
     def close(self) -> None:
         """Flush, :func:`os.fsync`, and close the underlying file handle.
 

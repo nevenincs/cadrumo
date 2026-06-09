@@ -163,9 +163,9 @@ class _RevisionDraftBuilder:
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
-        """Build a registry draft and approve it when it is filing-ready.
+        """Build a :class:`RegistryModeloDraftProtocol` and approve it when it is filing-ready.
 
-        Use of :class:`TaxpayerProfile` for compliance.
+        Uses :class:`TaxpayerProfile` for deadline and filing-period scoping.
         """
         draft = build_draft(
             modelo=modelo,
@@ -215,9 +215,9 @@ def build_revision_workflow_engine(
     clock: datetime,
     settings: Settings | None,
 ) -> WorkflowEngine:
-    """Build the workflow engine configured for one calculation revision.
+    """Build and return a :class:`WorkflowEngine` configured for one calculation revision.
 
-    Use of :class:`CalculationRevision`, :class:`TaxpayerProfile` for compliance.
+    Uses :class:`CalculationRevision` for revision inputs and :class:`TaxpayerProfile` for deadline scoping.
     """
     cfg = settings or load_settings()
     deadline_engine = DeadlineEngine()
@@ -256,9 +256,9 @@ def run_revision_workflow_gate(
     resumed_from: str | None = None,
     purpose: WorkflowPurpose = WorkflowPurpose.FILE,
 ) -> WorkflowResult:
-    """Run and persist the workflow gate for one modelo work unit.
+    """Run and persist the workflow gate for one modelo work unit and return a :class:`WorkflowResult`.
 
-    Use of :class:`TaxpayerProfile` for compliance.
+    Uses :class:`TaxpayerProfile` for deadline and filing-period scoping.
     """
     result = asyncio.run(
         engine.run_for_period(

@@ -33,6 +33,7 @@ is resolved, so they never trigger a loader.
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import override
 
 import click
 import typer
@@ -144,6 +145,7 @@ class AeatTyperGroup(TyperGroup):
         """Return the lazy-subcommand table for this group, if any."""
         return _LAZY_REGISTRY.get(self.name or "", {})
 
+    @override
     def list_commands(self, ctx: click.Context) -> list[str]:
         """Return eager and lazy subcommand names without importing modules.
 
@@ -158,6 +160,7 @@ class AeatTyperGroup(TyperGroup):
         merged = [*eager, *(name for name in lazy if name not in eager)]
         return sorted(merged)
 
+    @override
     def get_command(self, ctx: click.Context, cmd_name: str) -> click.Command | None:
         """Resolve ``cmd_name``, importing a lazy module only if selected.
 
@@ -174,6 +177,7 @@ class AeatTyperGroup(TyperGroup):
             return lazy.load()
         return None
 
+    @override
     def resolve_command(
         self,
         ctx: click.Context,

@@ -19,7 +19,7 @@ audit-sink artefact and is irreducibly AUDIT regardless of modelo.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, override
 
 from ...adapters.persistence.storage import SecureBoundRepository, SensitivityClass
 from ._schema import Justificante
@@ -40,10 +40,12 @@ class JustificanteRepository(SecureBoundRepository[Justificante]):
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
     schema_version: ClassVar[int] = 1
 
+    @override
     @classmethod
     def payload_model(cls) -> type[Justificante]:
         return Justificante
 
+    @override
     def extract_identifier(self, payload: Justificante) -> str:
         return payload.csv
 

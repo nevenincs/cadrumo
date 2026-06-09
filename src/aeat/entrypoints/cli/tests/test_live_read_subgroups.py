@@ -391,7 +391,7 @@ def _live_process_command_lines() -> str:
     if platform.system() == "Windows":
         powershell = shutil.which("powershell") or shutil.which("pwsh")
         if powershell is None:
-            pytest.skip("PowerShell is required for Windows process inventory")
+            raise RuntimeError("PowerShell (powershell or pwsh) is required for Windows process inventory but was not found on PATH")
         script = "Get-CimInstance Win32_Process | Select-Object -ExpandProperty CommandLine | ConvertTo-Json -Compress"
         completed = subprocess.run(
             [powershell, "-NoProfile", "-Command", script],
@@ -409,7 +409,7 @@ def _live_process_command_lines() -> str:
 
     ps = shutil.which("ps")
     if ps is None:
-        pytest.skip("ps is required for process inventory")
+        raise RuntimeError("ps is required for Unix process inventory but was not found on PATH")
     completed = subprocess.run(
         [ps, "-axo", "args="],
         check=True,

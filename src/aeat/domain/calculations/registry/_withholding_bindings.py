@@ -168,9 +168,9 @@ def _validated_withholding_selector(binding: DataBindingDefinition) -> _Withhold
 def withholding_binding_requirements(
     revision: ModeloRevision,
 ) -> tuple[WithholdingObservationRequirement, ...]:
-    """Return withholding slices needed by ``revision``'s withholding bindings.
+    """Return :class:`WithholdingObservationRequirement` slices needed by ``revision``'s withholding bindings.
 
-    Use of :class:`ModeloRevision` for compliance.
+    Uses :class:`ModeloRevision` for binding introspection.
     """
     grouped: dict[tuple[str, ...], set[str]] = {}
     for binding in revision.bindings:

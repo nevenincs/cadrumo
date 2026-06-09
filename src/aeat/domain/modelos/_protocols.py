@@ -90,7 +90,7 @@ class ModeloRecordCatalogueQueryProtocol(Protocol):
         period: str,
         member_nif: str | None = None,
     ) -> ModeloRecord | None:
-        """Return the current filing record for a filing tuple and optional group member."""
+        """Return the current :class:`ModeloRecord` for a filing tuple and optional group member."""
         ...
 
     def history_for(
@@ -102,7 +102,7 @@ class ModeloRecordCatalogueQueryProtocol(Protocol):
         period: str,
         member_nif: str | None = None,
     ) -> tuple[ModeloRecord, ...]:
-        """Return filing history for a filing tuple and optional group member."""
+        """Return :class:`ModeloRecord` filing history for a filing tuple and optional group member."""
         ...
 
 

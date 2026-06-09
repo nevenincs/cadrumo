@@ -39,7 +39,7 @@ def create_work_unit(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> WorkUnit:
-    """Create or load a work unit for the filing target key."""
+    """Create or load a :class:`WorkUnit` for the filing target key."""
     reject_unknown_revision(modelo=modelo, revision_id=revision_id)
     reject_unknown_period_for_revision(modelo=modelo, revision_id=revision_id, period=period)
     repo = repository or WorkUnitCatalogueRepository()
@@ -94,7 +94,7 @@ def list_work_units(
     include_discarded: bool = False,
     repository: WorkUnitCatalogueRepositoryProtocol | None = None,
 ) -> tuple[WorkUnit, ...]:
-    """Return work units, optionally filtered to one bucket."""
+    """Return :class:`WorkUnit` records, optionally filtered to one bucket."""
     repo = repository or WorkUnitCatalogueRepository()
     catalogue = repo.load()
     units = tuple(
@@ -121,7 +121,7 @@ def get_work_unit(
     *,
     repository: WorkUnitCatalogueRepositoryProtocol | None = None,
 ) -> WorkUnit:
-    """Return one work unit by id."""
+    """Return one :class:`WorkUnit` by id."""
     repo = repository or WorkUnitCatalogueRepository()
     catalogue = repo.load()
     unit = catalogue.get(work_unit_id)
@@ -142,7 +142,7 @@ def rename_work_unit(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> WorkUnit:
-    """Update a work unit's display name, bump ``updated_at``, and return the work unit."""
+    """Update a :class:`WorkUnit` display name, bump ``updated_at``, and return the updated record."""
     repo = repository or WorkUnitCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     catalogue: WorkUnitCatalogue = repo.load()
@@ -191,7 +191,7 @@ def discard_work_unit(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> WorkUnit:
-    """Transition a work unit to ``DISCARDED`` state."""
+    """Transition a :class:`WorkUnit` to ``DISCARDED`` state and return the updated record."""
     repo = repository or WorkUnitCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     catalogue: WorkUnitCatalogue = repo.load()

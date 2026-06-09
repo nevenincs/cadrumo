@@ -470,6 +470,34 @@ def test_row_binding_period_grouping_requires_rectification_scope() -> None:
         resolve_invoice_binding_row_values(revision, ())
 
 
+def test_row_field_binding_requires_rows_aggregation_op() -> None:
+    revision = _revision(
+        _with_aggregation(
+            _with_selector(
+                _binding("iva-349-operador-row-clave"),
+                claves=("E",),
+                rectification_scope="exclude_rectifications",
+            ),
+            "sum",
+        ),
+    )
+    with pytest.raises(RegistryValidationError, match=r"fact 'row_field' requires aggregation op 'rows'"):
+        resolve_invoice_binding_row_values(revision, ())
+
+
+def test_scalar_fact_rejects_row_field_or_grouping_selector_keys() -> None:
+    revision = _revision(
+        _with_selector(
+            _binding("iva-349-declarante-importe-operaciones"),
+            grouping="operator_clave",
+            claves=("E",),
+            rectification_scope="exclude_rectifications",
+        ),
+    )
+    with pytest.raises(RegistryValidationError, match=r"non-row fact must not declare row_field or grouping"):
+        resolve_invoice_binding_values(revision, ())
+
+
 def test_registry_modelo_349_has_no_bare_invoice_source_kind() -> None:
     """Modelo 349's binding declarations resolve to canonical source
     kinds (collectible_invoice / payable_invoice / ledger_transaction

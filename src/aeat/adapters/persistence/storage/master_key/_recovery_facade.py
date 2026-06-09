@@ -166,7 +166,7 @@ def save_recovery_envelope(envelope: RecoveryRecord, path: Path) -> None:
 
 
 def load_recovery_envelope(path: Path) -> RecoveryRecord:
-    """Read and validate a typed recovery envelope."""
+    """Read, validate, and return a :class:`RecoveryRecord` from ``path``."""
     try:
         return RecoveryRecord.model_validate_json(path.read_text(encoding=_UTF_8_ENCODING))
     except (OSError, ValueError, ValidationError) as exc:

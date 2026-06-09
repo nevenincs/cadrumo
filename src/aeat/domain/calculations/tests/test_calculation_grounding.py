@@ -30,8 +30,8 @@ from ....core.paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_TAUTOLOGY_GATE_PATH = PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_tautology_gate.py"
-_CHAIN_BEHAVIOUR_PATH = PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py"
+_TAUTOLOGY_GATE_PATH = PROJECT_ROOT / "src/aeat/domain/calculations/registry/tests/test_tautology_gate.py"
+_CHAIN_BEHAVIOUR_PATH = PROJECT_ROOT / "src/aeat/domain/calculations/registry/tests/test_renta_chain_behaviour.py"
 
 
 def _count_test_functions(path: Path) -> int:

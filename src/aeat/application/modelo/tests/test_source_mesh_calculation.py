@@ -125,7 +125,7 @@ def test_bucket_calculation_rejects_source_owned_bound_casilla_overrides(
         revision_id=revision_id,
     )
 
-    with pytest.raises(ModeloAggregationBindingError, match=r"source[- ]bound casillas"):
+    with pytest.raises(ModeloAggregationBindingError) as exc_info:
         calculate_modelo_revision_from_bucket_aggregation(
             work_unit.work_unit_id,
             actor="operator-A",
@@ -136,5 +136,7 @@ def test_bucket_calculation_rejects_source_owned_bound_casilla_overrides(
             invoice_repository=invoice_repo,
             clock=_T1,
         )
+    assert exc_info.value.translated_message == "application.modelo.errors.caller_casilla_source_binding_conflict"
+    assert exc_info.value.context is not None and casilla_id in exc_info.value.context["casillas"]
 
     assert cr_repo.load().revisions == {}

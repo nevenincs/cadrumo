@@ -16,7 +16,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_SRC = pathlib.Path(__file__).parent
+_SRC = pathlib.Path(__file__).parent.parent
 
 _BOUNDARY_RATIONALE_MARKER = "irreducible"
 """Shared substring present in every documented ``dict[str, Any]`` rationale comment."""

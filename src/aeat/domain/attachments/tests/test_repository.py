@@ -72,6 +72,41 @@ def test_blob_and_manifest_round_trip_without_plaintext_files(
     assert b"deductible invoice" not in database_bytes
 
 
+def test_legacy_un_enveloped_blob_still_reads(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """A blob persisted before the envelope framing must remain readable.
+
+    Simulates a pre-hardening on-disk row by saving the raw content (no
+    envelope prefix) directly through the secure-object substrate, then
+    asserts :meth:`AttachmentStore.read_bytes` returns it unchanged. This
+    pins the legacy-tolerant branch of ``_unwrap_blob_payload`` so the
+    forward-compatible read path cannot rot.
+    """
+    from datetime import UTC, datetime
+
+    from ....adapters.persistence.storage.attachment import (
+        _ATTACHMENT_BLOB_NAMESPACE,
+        _ATTACHMENT_BLOB_SENSITIVITY,
+        _ATTACHMENT_BLOB_VERSION,
+    )
+
+    store = AttachmentStore()
+    body = b"%PDF-1.4\nlegacy unenveloped blob\n%%EOF"
+    digest = hashlib.sha256(body).hexdigest()
+    store._objects_repo().save(
+        namespace=_ATTACHMENT_BLOB_NAMESPACE,
+        object_key=digest,
+        classification=_ATTACHMENT_BLOB_SENSITIVITY,
+        schema_version=_ATTACHMENT_BLOB_VERSION,
+        written_at=datetime(2026, 4, 27, 10, 0, tzinfo=UTC),
+        payload=body,
+    )
+
+    assert store.read_bytes(digest) == body
+    store.verify_blob(digest)
+
+
 def test_put_file_reads_source_but_persists_only_secure_database_object(
     tmp_path: Path,
     runtime_profile: TestRuntimeProfile,

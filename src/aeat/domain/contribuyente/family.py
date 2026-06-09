@@ -14,6 +14,11 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.external_constants import (
+    DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR,
+    DEDUCCION_MATERNIDAD_MENSUAL_EUR,
+    INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR,
+)
 from ...core.parsing._dates import _parse_iso8601_date
 from ._errors import ProfileValidationError
 
@@ -368,18 +373,19 @@ class RentaFamilyProfile(BaseModel):
         total = 0
         for d in self.descendientes:
             if d.is_eligible_menor_tres(filing_year) and d.meses_madre_trabajo_2024 > 0:
-                total += min(d.meses_madre_trabajo_2024 * 100, 1200)
+                total += min(d.meses_madre_trabajo_2024 * DEDUCCION_MATERNIDAD_MENSUAL_EUR, DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR)
         return total
 
     # ------------------------------------------------------------------
-    # Art. 81 bis LIRPF guardería incremento (casilla 0613)
+    # Art. 81 LIRPF guardería incremento (casilla 0613)
     # ------------------------------------------------------------------
 
     def incremento_guarderia_0613(self, filing_year: int) -> int:
-        """Compute the Art. 81 bis LIRPF guardería incremento for casilla 0613.
+        """Compute the Art. 81 LIRPF guardería incremento for casilla 0613.
 
-        Formula (Art. 81 bis LIRPF):
-            min(gastos_guarderia_reales, hijos_menores_3 × 1_000,
+        Formula (Art. 81 LIRPF — incremento por gastos de custodia en guardería,
+        NOT Art. 81 bis which covers familia numerosa / discapacidad):
+            min(gastos_guarderia_reales, hijos_menores_3 × :data:`INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR`,
                 cotizaciones_ss_madre_2024)
 
         Only the 2024 filing year is supported by the profile fields
@@ -396,7 +402,7 @@ class RentaFamilyProfile(BaseModel):
         cotizaciones = self.cotizaciones_ss_madre_2024
         if gastos_reales == 0 or hijos_menores_3 == 0 or cotizaciones == 0:
             return 0
-        return min(gastos_reales, hijos_menores_3 * 1000, cotizaciones)
+        return min(gastos_reales, hijos_menores_3 * INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR, cotizaciones)
 
     def incremento_guarderia_advisory(self, filing_year: int) -> str | None:
         """Return a translated advisory string when 0613 can be auto-populated.

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -92,6 +92,55 @@ def _selector_is_cross_modelo(selector: Mapping[str, object], modelo_id: str) ->
     return str(source_modelo) != modelo_id
 
 
+def _binding_selector_tokens(binding) -> Iterator[str]:
+    source_casillas = binding.selector.get("source_casillas")
+    if isinstance(source_casillas, tuple):
+        for token in source_casillas:
+            if isinstance(token, str):
+                yield token
+    source_output = binding.selector.get("source_output")
+    if isinstance(source_output, str):
+        yield source_output
+
+
+def _walk_calculation_closure(
+    revision: ModeloRevision,
+    modelo_id: str,
+    *,
+    visit_token: Callable[[str], None],
+    visit_endpoint: Callable[[CasillaDefinition], None],
+) -> None:
+    """Walk the within-modelo calculation closure, dispatching each member.
+
+    Shared by :func:`calculation_closure_numbers` and
+    :func:`calculation_closure_identities`; ``visit_endpoint`` receives every
+    formula/binding endpoint casilla and ``visit_token`` every referenced
+    casilla token (formula targets, transitive expression refs,
+    verification-expectation operands, and within-modelo binding/relation
+    selectors).
+    """
+    for casilla in revision.casillas:
+        if casilla.formula is not None or casilla.binding is not None:
+            visit_endpoint(casilla)
+    for formula in revision.formulas:
+        visit_token(formula.target)
+        for ref in expression_casilla_refs(formula.expression):
+            visit_token(ref)
+    for expectation in revision.verification_expectations:
+        for ref in expectation.computed_casillas:
+            visit_token(ref)
+        for ref in expectation.reconciliation_totals.values():
+            visit_token(ref)
+    for binding in revision.bindings:
+        if _selector_is_cross_modelo(binding.selector, modelo_id):
+            continue
+        for token in _binding_selector_tokens(binding):
+            visit_token(token)
+    for relation in revision.relations:
+        if relation.source_modelo == modelo_id:
+            visit_token(relation.source_output)
+
+
 def calculation_closure_numbers(revision: ModeloRevision, modelo_id: str) -> frozenset[str]:
     """Return the bare casilla numbers in a revision's calculation closure.
 
@@ -144,37 +193,13 @@ def calculation_closure_numbers(revision: ModeloRevision, modelo_id: str) -> fro
             selector casillas from the closure.
     """
     id_to_number = {casilla.id: casilla.number for casilla in revision.casillas}
-
-    def _as_number(token: str) -> str:
-        return id_to_number.get(token, token)
-
     closure: set[str] = set()
-    for casilla in revision.casillas:
-        if casilla.formula is not None or casilla.binding is not None:
-            closure.add(casilla.number)
-    for formula in revision.formulas:
-        closure.add(_as_number(formula.target))
-        for ref in expression_casilla_refs(formula.expression):
-            closure.add(_as_number(ref))
-    for expectation in revision.verification_expectations:
-        for ref in expectation.computed_casillas:
-            closure.add(_as_number(ref))
-        for ref in expectation.reconciliation_totals.values():
-            closure.add(_as_number(ref))
-    for binding in revision.bindings:
-        if _selector_is_cross_modelo(binding.selector, modelo_id):
-            continue
-        source_casillas = binding.selector.get("source_casillas")
-        if isinstance(source_casillas, tuple):
-            for token in source_casillas:
-                if isinstance(token, str):
-                    closure.add(_as_number(token))
-        source_output = binding.selector.get("source_output")
-        if isinstance(source_output, str):
-            closure.add(_as_number(source_output))
-    for relation in revision.relations:
-        if relation.source_modelo == modelo_id:
-            closure.add(_as_number(relation.source_output))
+    _walk_calculation_closure(
+        revision,
+        modelo_id,
+        visit_token=lambda token: closure.add(id_to_number.get(token, token)),
+        visit_endpoint=lambda casilla: closure.add(casilla.number),
+    )
     return frozenset(closure)
 
 
@@ -241,32 +266,12 @@ def calculation_closure_identities(revision: ModeloRevision, modelo_id: str) -> 
             return
         identities.add((None, token))
 
-    for casilla in revision.casillas:
-        if casilla.formula is not None or casilla.binding is not None:
-            identities.add((casilla.segmento, casilla.number))
-    for formula in revision.formulas:
-        _resolve(formula.target)
-        for ref in expression_casilla_refs(formula.expression):
-            _resolve(ref)
-    for expectation in revision.verification_expectations:
-        for ref in expectation.computed_casillas:
-            _resolve(ref)
-        for ref in expectation.reconciliation_totals.values():
-            _resolve(ref)
-    for binding in revision.bindings:
-        if _selector_is_cross_modelo(binding.selector, modelo_id):
-            continue
-        source_casillas = binding.selector.get("source_casillas")
-        if isinstance(source_casillas, tuple):
-            for token in source_casillas:
-                if isinstance(token, str):
-                    _resolve(token)
-        source_output = binding.selector.get("source_output")
-        if isinstance(source_output, str):
-            _resolve(source_output)
-    for relation in revision.relations:
-        if relation.source_modelo == modelo_id:
-            _resolve(relation.source_output)
+    _walk_calculation_closure(
+        revision,
+        modelo_id,
+        visit_token=_resolve,
+        visit_endpoint=lambda casilla: identities.add((casilla.segmento, casilla.number)),
+    )
     return frozenset(identities)
 
 

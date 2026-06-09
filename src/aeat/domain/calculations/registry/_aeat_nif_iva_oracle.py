@@ -22,7 +22,7 @@ oracle still exposes planned operations and guard evaluation, but returns an
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Literal, Protocol
+from typing import Literal, Protocol, override
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator
 
@@ -225,6 +225,7 @@ class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
     def __init__(self, *, driver: AeatNifIvaDriver | None = None) -> None:
         super().__init__(driver=driver)
 
+    @override
     @property
     def oracle_id(self) -> str:
         """Return the stable catalogue identifier for this oracle.
@@ -235,6 +236,7 @@ class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
         """
         return ORACLE_ID
 
+    @override
     @property
     def surface_kind(self) -> OracleSurfaceKind:
         """Classify the kind of AEAT surface this oracle verifies.
@@ -249,6 +251,7 @@ class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
         """
         return "iva_id_check"
 
+    @override
     def planned_operations(
         self,
         payload: bytes,
@@ -309,18 +312,22 @@ class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
         operations.append(RemoteOperation(kind="browser_action", action="discard-session"))
         return tuple(operations)
 
+    @override
     def _expected_values(self, expected: Mapping[str, object]) -> dict[str, str]:
         return normalize_expected_verdicts(
             expected,
             blank_message="AEAT NIF-IVA expected values must not contain blanks",
         )
 
+    @override
     def _observed_for(self, observation: AeatNifIvaObservation, key: str) -> str | None:
         return observed_verdict(observation.values, key)
 
+    @override
     def _compare_field(self, key: str, expected: str, *, observed: str | None) -> ParityFieldComparison:
         return compare_verdict_field(key, expected, observed=observed)
 
+    @override
     def _observation_locator(self, observation: AeatNifIvaObservation) -> str | None:
         return observation.raw_evidence_locator
 

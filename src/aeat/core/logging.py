@@ -22,7 +22,7 @@ import re
 from collections.abc import Mapping
 from contextvars import ContextVar
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, overload
+from typing import TYPE_CHECKING, Any, overload, override
 
 if TYPE_CHECKING:
     from .observability._context import RunContextInfo
@@ -180,6 +180,7 @@ def _scrub_positional_args(message: str, args: tuple[Any, ...]) -> tuple[Any, ..
 class SecretScrubbingFilter(logging.Filter):
     """Redact sensitive fields from log records before formatting."""
 
+    @override
     def filter(self, record: logging.LogRecord) -> bool:
         """Scrub sensitive values from ``record`` in-place and return ``True`` to allow it.
 
@@ -271,6 +272,7 @@ class _DropRunEventFilter(logging.Filter):
     the record intact for any other handler (including the JSONL sink).
     """
 
+    @override
     def filter(self, record: logging.LogRecord) -> bool:
         return getattr(record, "run_event", None) is None
 

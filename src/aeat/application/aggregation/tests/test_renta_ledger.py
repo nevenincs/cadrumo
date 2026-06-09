@@ -458,6 +458,62 @@ def test_linked_incoming_refund_becomes_negative_binding_value() -> None:
     assert result.casilla_values == {"0199": Decimal("-121.00")}
 
 
+def test_transaction_only_renta_expense_buckets_on_value_date_caja_basis() -> None:
+    """Document the CAJA-only basis for a transaction-only (un-invoiced) expense.
+
+    For a Renta expense with no linked invoice, the first-slice ``filing_date``
+    falls back to ``operation_date`` = ``value_date or booked_date`` — a CASH
+    (caja) basis. There is no accrual/devengo basis selector.
+
+    This pins the current behaviour as the regression anchor for the future
+    devengo follow-on (#58): the row whose VALUE_DATE lands in the tax year is
+    aggregated; the mirror row whose value_date is outside (but booked_date
+    inside) is excluded. A devengo basis would invert both outcomes.
+
+    Note ``test_linked_invoice_issue_date_controls_period_filtering`` covers the
+    *linked-invoice* branch, where the invoice issue date (not the payment date)
+    drives period selection — that is invoice-date provenance, NOT an accrual
+    basis selector. This test covers the un-invoiced branch where caja governs.
+    """
+    # value_date in-year (caja), booked_date in the prior year (devengo would differ).
+    caja_in_year = _transaction(
+        "row-caja-in-year",
+        amount=Decimal("-100.00"),
+        category=SpendingCategory.GASTOS_BANCARIOS,
+        booked_date=date(2024, 12, 31),
+        value_date=date(2025, 1, 2),
+        purchase_invoice_evidence_id=None,
+    )
+    # value_date in the prior year (caja), booked_date in-year (devengo would include).
+    caja_out_of_year = _transaction(
+        "row-caja-out-of-year",
+        amount=Decimal("-100.00"),
+        category=SpendingCategory.GASTOS_BANCARIOS,
+        booked_date=date(2025, 1, 2),
+        value_date=date(2024, 12, 31),
+        purchase_invoice_evidence_id=None,
+    )
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((caja_in_year, caja_out_of_year)),
+        InvoiceCatalogue(),
+        bucket_id="test",
+        period="2025",
+        profile_year=2025,
+    )
+
+    # Caja basis: only the row whose VALUE_DATE is in-year is aggregated, and the
+    # observation's filing_date is that value_date (operation_date fallback).
+    assert [observation.transaction_id for observation in result.observations] == [caja_in_year.transaction_id]
+    assert result.observations[0].filing_date == date(2025, 1, 2)
+    assert result.casilla_values == {"0203": Decimal("100.00")}
+    # The mirror row is excluded keyed on value_date — a devengo basis
+    # (booked_date 2025-01-02) would instead have INCLUDED it.
+    assert [issue.transaction_id for issue in result.issues] == [caja_out_of_year.transaction_id]
+    assert result.issues[0].reason is RentaLedgerAggregationIssueReason.OUTSIDE_PERIOD
+    assert "2024-12-31" in result.issues[0].detail
+
+
 def test_non_eur_transaction_is_reported_as_issue_before_fact_creation() -> None:
     usd_expense = _transaction(
         "row-usd",

@@ -123,7 +123,19 @@ def _registered_ledger_command_names() -> set[str]:
 
 def _ledger_help_by_command() -> dict[str, str]:
     group = typer.main.get_command(_ledger.app)
-    assert isinstance(group, click.Group)
+    # Typer vendors its own Click fork: ``typer.main.get_command`` returns a
+    # ``typer.core.TyperGroup`` whose MRO is ``TyperGroup -> typer._click.core
+    # .Command -> ABC -> object`` and never descends from the upstream
+    # ``click.Group``, so a bare ``isinstance(group, click.Group)`` is False.
+    # Derive the vendored ``Command`` base from the TyperGroup MRO so the
+    # command-group hierarchy is recognised without a brittle private-module
+    # import (mirrors the production fix in ``cli/_errors.py``, which derives the
+    # vendored ``ClickException`` from ``typer.BadParameter.__mro__``).
+    vendored_command = next(
+        base for base in type(group).__mro__ if base.__name__ == "Command"
+    )
+    assert isinstance(group, vendored_command)
+    assert hasattr(group, "commands")
     parent = group.make_context("ledger", [], resilient_parsing=True)
     help_by_command = {"ledger": _render_click_help(group, parent)}
     for name, command in group.commands.items():
@@ -173,7 +185,15 @@ def test_manual_ledger_import_and_review_boundaries_stay_backend_owned() -> None
     """Manual ledger import and review logic must not move back into the CLI."""
 
     ledger_cli = (PROJECT_ROOT / "src/aeat/entrypoints/cli/_ledger.py").read_text(encoding="utf-8")
-    ledger_backend = (PROJECT_ROOT / "src/aeat/application/ledger/_actions.py").read_text(encoding="utf-8")
+    # The monolithic ``_actions.py`` was decomposed into sibling backend modules
+    # (``_actions_import.py``, ``_actions_common.py``, ``_actions_manual.py``,
+    # ``_models.py``, ...); ``_actions.py`` now re-exports them. Scan the whole
+    # ledger backend package so the backend-owned tokens are found wherever the
+    # decomposition relocated them.
+    ledger_backend = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in sorted((PROJECT_ROOT / "src/aeat/application/ledger").glob("*.py"))
+    )
     forbidden_cli_tokens = (
         "CsvProvider",
         "OfxProvider",
@@ -386,8 +406,8 @@ def test_per_modelo_aggregation_placeholder_paths_stay_removed() -> None:
     scoped_files = (
         "src/aeat/application/aggregation/_retenciones.py",
         "src/aeat/application/aggregation/_counterpart.py",
-        "src/aeat/application/aggregation/test_retenciones.py",
-        "src/aeat/application/aggregation/test_counterpart.py",
+        "src/aeat/application/aggregation/tests/test_retenciones.py",
+        "src/aeat/application/aggregation/tests/test_counterpart.py",
     )
     forbidden_tokens = ("NotImplementedError", "not implemented")
     offenders: list[str] = []
@@ -452,17 +472,19 @@ def test_censo_modelo_removed_shims_and_stubs_stay_removed() -> None:
     # input aliases under test — not censo shim language.
     # scopes.toml is excluded: the CENSO apoderamiento scope legitimately carries
     # "036, 037" and modelo_codes = ["036", "037"] as live AEAT catalogue data.
+    registry_dir = PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry"
+    registry_tests = registry_dir / "tests"
     scanned_files = (
         _CLI_ROOT / "_modelo.py",
         PROJECT_ROOT / "src" / "aeat" / "locales" / "en.yml",
         PROJECT_ROOT / "src" / "aeat" / "locales" / "es.yml",
         PROJECT_ROOT / "src" / "aeat" / "locales" / "ca.yml",
         PROJECT_ROOT / "src" / "aeat" / "locales" / "hu.yml",
-        PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "_censo_modelos.py",
-        PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "_queries.py",
-        PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_censo_modelo_foundation.py",
-        PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_censo_modelo_registry_data.py",
-        PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_queries.py",
+        registry_dir / "_censo_modelos.py",
+        registry_dir / "_queries.py",
+        registry_tests / "test_censo_modelo_foundation.py",
+        registry_tests / "test_censo_modelo_registry_data.py",
+        registry_tests / "test_queries.py",
         *_modelo_source_paths("036"),
     )
     forbidden_tokens = (

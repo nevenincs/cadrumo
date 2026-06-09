@@ -42,6 +42,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import coerce_decimal
+from ...domain.invoices import numeric_iva_rate_percentages
 from ._errors import EditParseError
 
 _CASILLA_EDIT_RE = re.compile(r"^casilla\.(?P<casilla_id>\d{2,5})$")
@@ -143,12 +144,14 @@ def _coerce_decimal(clause: EditClause, *, scope: str) -> Decimal:
     return result
 
 
-_INVOICE_IVA_RATE_ALLOWED: frozenset[Decimal] = frozenset({Decimal("0"), Decimal("4"), Decimal("10"), Decimal("21")})
+_INVOICE_IVA_RATE_ALLOWED: frozenset[Decimal] = numeric_iva_rate_percentages()
 """Closed set of integer-percentage IVA rates the CLI accepts on
-``--set iva.rate``. The values map onto :class:`aeat.domain.invoices.IvaRate`
-slots (``RATE_0`` / ``RATE_4`` / ``RATE_10`` / ``RATE_21``); the underlying
-substrate at :func:`aeat.domain.iva.lookup_rate` is the authority for the
-fractional percentages those slots resolve to at a date.
+``--set iva.rate``.  Derived structurally from
+:func:`aeat.domain.invoices.numeric_iva_rate_percentages` so it tracks
+:class:`aeat.domain.invoices.IvaRate` membership (``RATE_0`` / ``RATE_4``
+/ ``RATE_10`` / ``RATE_21``) without re-listing literals here.  The
+underlying substrate at :func:`aeat.domain.iva.lookup_rate` is the
+authority for the fractional percentages those slots resolve to at a date.
 
 Rejecting non-canonical values at parse time keeps free-form Decimal IVA
 rates from flowing through the edit spec into ledger records."""

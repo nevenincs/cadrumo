@@ -107,7 +107,7 @@ class JustificanteParserBackendSetting(StrEnum):
 
 
 def coerce_output_language_setting(value: str) -> OutputLanguage | None:
-    """Coerce env-var output-language to the enum or ``None`` for invalid input."""
+    """Coerce an env-var output-language string to an :class:`OutputLanguage` member, or ``None`` for invalid input."""
     if not value:
         return None
     normalized = value.lower().strip()

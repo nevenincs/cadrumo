@@ -87,7 +87,7 @@ _BINDING_FR_SERVICES = "modelo-369-union-fr-services-21pct"
 _BINDING_DE_GOODS = "modelo-369-union-de-goods-distance-21pct"
 
 
-def _find_observation(repo, *, filing_year, period):
+def _find_observation(repo: CalculationObservationRepository, *, filing_year: int, period: str):
     for payload in repo.iter_modelo(_MODELO):
         obs = payload.observation
         if obs.filing_year == filing_year and obs.period == period:

@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import ClassVar
+from typing import ClassVar, override
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -95,6 +95,7 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
     schema_version: ClassVar[int] = IVA_COMPENSATION_HISTORY_NAMESPACE.schema_version
     payload_type: ClassVar[type[IvaCompensationPeriodState]] = IvaCompensationPeriodState
 
+    @override
     def extract_identifier(self, payload: IvaCompensationPeriodState) -> str:
         return iva_compensation_period_key(payload.filing_year, payload.period)
 
@@ -212,7 +213,7 @@ def iva_compensation_state_from_filed_observation(
 def iva_compensation_annual_summary_from_filed_observation(
     observation: FiledDeclaracionObservationProtocol,
 ) -> IvaCompensationAnnualSummary:
-    """Build a Modelo 390 annual IVA compensation summary from a filed observation.
+    """Build an :class:`IvaCompensationAnnualSummary` from a filed Modelo 390 observation.
 
     Casilla 97 carries the final-period amount to compensate. Casilla 662
     carries generated pending compensation from the exercise that is not
@@ -249,7 +250,7 @@ def cross_check_iva_compensation_annual_summary(
     report: IvaCompensationCarryForwardReport,
     summary: IvaCompensationAnnualSummary,
 ) -> IvaCompensationAnnualCrossCheck:
-    """Compare projected Modelo 303 carry-forward lots with filed Modelo 390 evidence."""
+    """Compare projections with filed evidence and return an :class:`IvaCompensationAnnualCrossCheck`."""
     last_period = sum(
         (
             lot.generated_amount

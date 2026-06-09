@@ -411,9 +411,70 @@ M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
 #: An asset class is declarable iff its total valuation strictly exceeds this amount.
 MODELO_720_REPORTING_THRESHOLD_EUR: Final[Decimal] = Decimal("50000.00")
 
+#: Art. 7.p) LIRPF (Ley 35/2006, BOE-A-2006-20764) annual exemption cap for
+#: foreign-work income of maritime and other qualifying workers.
+#: The exempt amount is the lesser of the proportional daily salary for
+#: qualifying days and this ceiling.  Binding provision: Art. 7.p) LIRPF.
+ART_7P_EXEMPTION_CAP_EUR: Final[Decimal] = Decimal("60100")
+
+#: Art. 96.3 LIRPF (Ley 35/2006) secondary-pagador filing floor.
+#: A natural person whose rendimientos del trabajo originate from more than one
+#: pagador must file Modelo 100 when aggregate income from the 2nd and subsequent
+#: pagadores exceeds this amount.  Binding provision: Art. 96.3 LIRPF (Ley 35/2006).
+MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR: Final[Decimal] = Decimal("1500")
+
+#: Default IVA general-rate percentage for input/pre-fill purposes.
+#: This is the LIVA art. 90 Uno general rate currently in force for Spain (ES).
+#: The DATED authoritative percentage lives in ``registry/aeat/iva/rates.toml``
+#: and is resolved via :func:`aeat.domain.iva.lookup_rate`; this constant is
+#: bound to that registry authority by a gate test so it cannot silently drift.
+DEFAULT_IVA_GENERAL_RATE_PCT: Final[Decimal] = Decimal("21.00")
+
 #: Secure-object namespace slug for Cl@ve Móvil auth diagnostics.
 #: Used by the auth diagnostics service and the persistence namespace registry.
 CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE: Final[str] = "aeat.outbound.aeat.auth.clave_movil.diagnostics"
+
+#: Modelos belonging to the *retenciones* aggregation family (withholding/retention filings).
+#: Covers: M111 (labour income), M115 (leases), M123 (capital yields), M180 (lease annual),
+#: M190 (labour annual summary), M193 (capital yields annual summary).
+RETENCIONES_MODELOS: Final[tuple[str, ...]] = ("111", "115", "123", "180", "190", "193")
+
+#: Modelos belonging to the *counterpart* aggregation family (third-party declaration filings).
+#: Covers: M347 (annual operations with third parties), M349 (intra-EU operations summary).
+COUNTERPART_MODELOS: Final[tuple[str, ...]] = ("347", "349")
+
+#: Modelos belonging to the *foreign assets* aggregation family (overseas-asset declaration).
+#: Covers: M720 (assets and rights abroad declaration per Ley 7/2012).
+FOREIGN_ASSET_MODELOS: Final[tuple[str, ...]] = ("720",)
+
+#: Modelos belonging to the *IVA regime* gating group (value-added tax periodic filings).
+#: Covers: M303 (quarterly/monthly IVA self-assessment), M390 (IVA annual summary).
+IVA_REGIME_MODELOS: Final[tuple[str, ...]] = ("303", "390")
+
+#: REBECA 50% exemption of qualifying maritime navigation income.
+#: Applies to crew of REBECA-registered vessels and scheduled Canary Islands routes.
+#: Binding provisions: Ley 19/1994 arts. 73.2, 73.3, 75.1, 75.3 (BOE-A-1994-16100).
+REBECA_MARITIME_EXEMPTION_FRACTION: Final[Decimal] = Decimal("0.50")
+
+#: 3% amortización de inmuebles arrendados; rate fixed by RD 439/2007 (RIRPF) art. 14.2.a
+#: ("3 por 100 sobre el mayor de coste de adquisición o valor catastral, excluido el suelo").
+#: Deductibility base: Ley 35/2006 art. 23 (capital inmobiliario gastos deducibles).
+AMORTIZACION_INMUEBLE_RATE: Final[Decimal] = Decimal("0.03")
+
+#: Art. 81 LIRPF (Ley 35/2006, BOE-A-2006-20764) monthly accrual per hijo menor de tres años.
+#: Proration of the €1,200 annual cap; casilla 0611 carries integer euros only.
+DEDUCCION_MATERNIDAD_MENSUAL_EUR: Final[int] = 100
+
+#: Art. 81 LIRPF (Ley 35/2006, BOE-A-2006-20764) annual cap per hijo menor de tres años.
+#: The deducción accrues at €100/month and is capped at this amount per hijo; casilla 0611.
+DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR: Final[int] = 1200
+
+#: Art. 81 LIRPF (Ley 35/2006, BOE-A-2006-20764) incremento por gastos de custodia en
+#: guardería o centro de educación infantil autorizado, per hijo menor de tres años cap.
+#: Capped at the lesser of real gastos, this amount × hijos_menores_3, and SS cotizaciones;
+#: casilla 0613.  Note: this is Art. 81 LIRPF (deducción maternidad supplemento), NOT Art. 81
+#: bis (familia numerosa / discapacidad).
+INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR: Final[int] = 1000
 
 
 @lru_cache(maxsize=1)

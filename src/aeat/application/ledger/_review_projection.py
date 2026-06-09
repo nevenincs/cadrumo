@@ -29,9 +29,9 @@ def project_ledger_review_query(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
     transaction_payload_builder: Callable[[Transaction], LedgerTransactionPayload],
 ) -> LedgerReviewQueryResult:
-    """Return the filtered review projection for an already loaded transaction catalogue.
+    """Return a :class:`LedgerReviewQueryResult` for the already loaded transaction catalogue.
 
-    Use of :class:`TransactionCatalogue` for compliance.
+    Uses :class:`TransactionCatalogue` for filtering.
     """
     rows = _filter_ledger_review_rows(
         rows=tuple(catalogue.values()),
@@ -61,7 +61,7 @@ def project_ledger_review_query(
 
 
 def ledger_transaction_review_status(transaction: Transaction) -> LedgerReviewStatus:
-    """Return the operator-review status for one bucket-local transaction fact."""
+    """Return the :class:`LedgerReviewStatus` for one bucket-local transaction fact."""
     if transaction.business_classification is BusinessClassification.SKIPPED_BY_RULE:
         return LedgerReviewStatus.SKIPPED
     if transaction.business_classification in {

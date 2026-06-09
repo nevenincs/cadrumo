@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 def classify_storage_route_for_settings(settings: Settings) -> StorageRouteClassification:
-    """Classify the effective primary SQL route for write guards."""
+    """Classify the effective primary SQL route and return a :class:`StorageRouteClassification`."""
     from .config import StorageRouteClassification, StorageRouteKind
 
     database_url = settings.aeat_database_url
@@ -54,7 +54,7 @@ def classify_storage_route_for_settings(settings: Settings) -> StorageRouteClass
 
 
 def settings_for_bucket_route(bucket_id: str, source: Settings) -> Settings:
-    """Return settings routed to ``bucket_id``'s active-profile database."""
+    """Return a :class:`Settings` instance routed to ``bucket_id``'s active-profile database."""
     from .config import Settings
 
     trimmed = bucket_id.strip()

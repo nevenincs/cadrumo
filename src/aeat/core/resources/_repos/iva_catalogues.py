@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import override
 
 from .._errors import ResourceNotFoundError
 from .._repository import ResourceCacheRepository
@@ -22,6 +23,7 @@ class IvaCatalogueRepository(ResourceCacheRepository[object, int]):
         super().__init__()
         self._root = root
 
+    @override
     def _load(self, key: int) -> object:
         from ....domain.iva._catalogue import load_iva_catalogues
 

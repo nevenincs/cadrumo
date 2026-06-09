@@ -172,6 +172,9 @@ def test_bulk_classify_from_oracle_resolved_at_runtime() -> None:
 
 
 def test_single_classify_intracommunity_with_eu_state() -> None:
+    from ....domain.iva import EUMemberState, IvaCategory
+    from ....domain.transactions import BusinessClassification
+
     _import_corpus()
     rows = _list_rows()
     de_rows = [r for r in rows if "cliente DE GmbH intracom" in r["description"]]
@@ -194,6 +197,13 @@ def test_single_classify_intracommunity_with_eu_state() -> None:
         ],
     )
     assert result.exit_code == 0, result.output
+    # Post-state: the row now carries the explicit intra-community IVA category
+    # and the DE counterparty member state (concrete read-back, not exit-code only).
+    txn = _active_repo().load().get(tx)
+    assert txn is not None
+    assert txn.business_classification is BusinessClassification.BUSINESS
+    assert txn.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+    assert txn.counterparty_eu_member_state is EUMemberState.DE
 
 
 # --- Journey 3: filter, review, and search ----------------------------------
@@ -225,6 +235,8 @@ def test_operator_can_filter_income_vs_expense() -> None:
 
 # --- Journey 4: lifecycle ---------------------------------------------------
 def test_split_then_merge_roundtrip() -> None:
+    from decimal import Decimal
+
     _import_corpus()
     rows = _list_rows()
     parent = next(r for r in rows if "Subcontratacion desarrollo" in r["description"])
@@ -254,6 +266,18 @@ def test_split_then_merge_roundtrip() -> None:
         ],
     )
     assert split.exit_code == 0, split.output
+    # Post-split post-state: parent transitions ACTIVE -> SPLIT (retained for
+    # audit lineage), two ACTIVE children appear, and the children re-carry the
+    # parent balance exactly (no value lost). Concrete post-state, not exit-code only.
+    rows_after = _list_rows()
+    parent_after = next((r for r in rows_after if r["transaction_id"] == tx), None)
+    assert parent_after is not None, "the SPLIT parent is retained for audit lineage"
+    assert parent_after["lifecycle_state"] == "SPLIT"
+    child_a = _find(rows_after, "Subcontratacion parte A")
+    child_b = _find(rows_after, "Subcontratacion parte B")
+    assert child_a["lifecycle_state"] == "ACTIVE"
+    assert child_b["lifecycle_state"] == "ACTIVE"
+    assert Decimal(child_a["amount"]) + Decimal(child_b["amount"]) == Decimal(parent["amount"])
 
 
 def test_archive_then_history() -> None:
@@ -302,8 +326,13 @@ def test_status_reports_active_ledger() -> None:
 
 # --- Journey 6: allocate and ratios -----------------------------------------
 def test_allocate_records_business_proportion() -> None:
+    from decimal import Decimal
+
+    from ....domain.transactions import BusinessClassification
+
     _import_bbva()
     internet = _find(_list_rows(), "Factura internet fibra oficina enero")
+    tx = internet["transaction_id"]
     result = _RUNNER.invoke(
         app,
         [
@@ -311,7 +340,7 @@ def test_allocate_records_business_proportion() -> None:
             "ledger",
             "allocate",
             "--id",
-            internet["transaction_id"],
+            tx,
             "--business-pct",
             "0.30",
             "--category-id",
@@ -319,6 +348,13 @@ def test_allocate_records_business_proportion() -> None:
         ],
     )
     assert result.exit_code == 0, result.output
+    # Post-state: allocate records a MIXED business proportion (0.30) and the
+    # supplied category against the row (concrete read-back, not exit-code only).
+    txn = _active_repo().load().get(tx)
+    assert txn is not None
+    assert txn.business_classification is BusinessClassification.MIXED
+    assert txn.business_pct == Decimal("0.30")
+    assert txn.category_id == "suministros_home_office_internet"
 
 
 def test_ratios_eligible_set_list_validate() -> None:

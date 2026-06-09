@@ -25,19 +25,21 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ....core.errors import AeatError, CoreValidationError
+from ....core.errors import AeatError as _AeatError
+from ....core.errors import CoreValidationError as _CoreValidationError
+from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 from ....core.money import round_to_cents as _quantize
 
 
-class AmortizacionLedgerError(AeatError):
+class AmortizacionLedgerError(_AeatError):
     """Raised when an amortizacion ledger operation is invalid."""
 
 
-class InventoryLedgerError(AeatError):
+class InventoryLedgerError(_AeatError):
     """Raised when an inventory ledger operation is invalid."""
 
 
-class InventoryValidationError(InventoryLedgerError, CoreValidationError):
+class InventoryValidationError(InventoryLedgerError, _CoreValidationError):
     """Raised when an inventory ledger fails Pydantic validation.
 
     Inherits from CoreValidationError (which itself inherits from CoreError
@@ -132,7 +134,7 @@ class MovementRecord(BaseModel):
     quantity: Decimal = Field(gt=Decimal("0"))
     unit_cost: Decimal | None = Field(default=None, ge=Decimal("0"))
     taxable_base: Decimal | None = Field(default=None, ge=Decimal("0"))
-    iva_rate: Decimal = Field(default=Decimal("21.00"), ge=Decimal("0"), le=Decimal("100"))
+    iva_rate: Decimal = Field(default=DEFAULT_IVA_GENERAL_RATE_PCT, ge=Decimal("0"), le=Decimal("100"))
     iva_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     deductible_iva_ratio: Decimal = Field(default=Decimal("1.00"), ge=Decimal("0"), le=Decimal("1"))
     schema_version: str = INVENTORY_SCHEMA_VERSION
@@ -539,6 +541,7 @@ def _layers_value(layers: tuple[StockLayer, ...] | list[StockLayer]) -> Decimal:
 
 
 __all__ = [
+    "DEFAULT_IVA_GENERAL_RATE_PCT",
     "AmortizacionLedgerError",
     "BasisCapExceededError",
     "InventoryLedger",

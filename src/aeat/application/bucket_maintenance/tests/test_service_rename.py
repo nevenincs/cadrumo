@@ -28,7 +28,7 @@ from ....domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...user_profile import RegisterProfileCommand
 from .. import BucketMaintenanceService, RenameBucketCommand
@@ -51,7 +51,7 @@ def runtime(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
         yield profile
 
 
-def _all_required_facts(schema) -> tuple[UserProfileFact, ...]:
+def _all_required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, ...]:
     facts: list[UserProfileFact] = []
     for section in schema.sections:
         if section.repeatable:

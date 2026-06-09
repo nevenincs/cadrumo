@@ -26,6 +26,7 @@ from ....domain.invoices import (
 )
 from ....domain.iva import (
     EUMemberState,
+    IvaCategory,
     IvaRateKind,
     OssIossRegime,
     TransactionKind,
@@ -108,20 +109,25 @@ def _iva_transaction(
     taxable_base: Decimal,
     iva_amount: Decimal,
     booked_date: date = date(2026, 2, 10),
+    iva_category: IvaCategory | None = None,
+    counterparty_eu_member_state: EUMemberState | None = None,
 ) -> Transaction:
-    return Transaction.model_validate(
-        {
-            "raw": _raw_transaction(provider_id, booked_date=booked_date, amount=amount),
-            "direction": direction,
-            "business_classification": BusinessClassification.BUSINESS,
-            "category_id": "test_iva_operation",
-            "taxable_base": taxable_base,
-            "iva_rate": Decimal("0.21"),
-            "iva_amount": iva_amount,
-            "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        }
-    )
+    fields: dict[str, object] = {
+        "raw": _raw_transaction(provider_id, booked_date=booked_date, amount=amount),
+        "direction": direction,
+        "business_classification": BusinessClassification.BUSINESS,
+        "category_id": "test_iva_operation",
+        "taxable_base": taxable_base,
+        "iva_rate": Decimal("0.21"),
+        "iva_amount": iva_amount,
+        "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
+        "classified_by": "manual",
+    }
+    if iva_category is not None:
+        fields["iva_category"] = iva_category
+    if counterparty_eu_member_state is not None:
+        fields["counterparty_eu_member_state"] = counterparty_eu_member_state
+    return Transaction.model_validate(fields)
 
 
 def _renta_transaction(
@@ -222,6 +228,107 @@ def test_iva_source_mesh_resolver_matches_existing_bucket_ledger_bridge(secure_o
         f"transaction:{incoming.transaction_id}",
         f"transaction:{outgoing.transaction_id}",
     }
+
+
+def test_iva_source_mesh_resolver_surfaces_unconsumed_declarable_observation_non_blocking(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """#64: a declarable IVA observation no M303 binding consumes is surfaced, not dropped.
+
+    The M303 ``2009-y-siguientes`` ``ledger_iva_aggregation`` bindings select
+    domestic + intra-community-acquisition triples only; an
+    ``INTRA_COMMUNITY_SUPPLY`` repercutido observation is declarable (Ley 37/1992
+    art. 25) but matches no binding selector. The candidate path already refuses
+    such an observation via ``unsupported_ledger_iva_observations``; the calculate
+    path (this resolver) must instead surface it as a NON-blocking diagnostic so it
+    is never silently under-declared (no-silent-under-declaration) while calculate
+    still succeeds (the resolution resolves to a non-empty binding map).
+    """
+    revision = _revision("303", "2009-y-siguientes")
+    tx_repo = TransactionCatalogueRepository(
+        bucket_id="bucket-a",
+        objects=secure_objects,
+    )
+    # A consumed domestic sale (matches the repercutido-general binding) ...
+    domestic_sale = _iva_transaction(
+        "sale-general",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("121.00"),
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+    )
+    # ... plus a declarable intra-community supply NO M303 binding selects.
+    unrouted_supply = _iva_transaction(
+        "intra-community-supply",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("242.00"),
+        taxable_base=Decimal("200.00"),
+        iva_amount=Decimal("42.00"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        counterparty_eu_member_state=EUMemberState.DE,
+    )
+    tx_repo.save(TransactionCatalogue.from_transactions((domestic_sale, unrouted_supply)))
+
+    resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
+        CalculationSourceContext(
+            bucket_id="bucket-a",
+            modelo="303",
+            filing_year=2026,
+            period="1T",
+            revision=revision,
+        )
+    )
+
+    # Calculate still succeeds: the consumed domestic sale resolved to bindings.
+    assert resolution.binding_values
+    # The unrouted declarable observation is surfaced NON-silently and NON-blockingly.
+    unconsumed_diagnostics = [
+        diagnostic
+        for diagnostic in resolution.diagnostics
+        if diagnostic.source_kind == "ledger_iva_aggregation"
+        and unrouted_supply.transaction_id in diagnostic.message
+    ]
+    assert len(unconsumed_diagnostics) == 1
+    diagnostic = unconsumed_diagnostics[0]
+    assert diagnostic.reason == "source_issue"
+    assert IvaCategory.INTRA_COMMUNITY_SUPPLY.value in diagnostic.message
+
+
+def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_consumed(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """#64 converse: an all-consumed IVA observation set surfaces ZERO unconsumed diagnostics.
+
+    This is the anti-tautology guard for the advisory above: only observations no
+    binding selects produce the diagnostic. A domestic sale matched by the
+    repercutido-general binding must leave ``diagnostics`` empty.
+    """
+    revision = _revision("303", "2009-y-siguientes")
+    tx_repo = TransactionCatalogueRepository(
+        bucket_id="bucket-a",
+        objects=secure_objects,
+    )
+    domestic_sale = _iva_transaction(
+        "sale-general",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("121.00"),
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+    )
+    tx_repo.save(TransactionCatalogue.from_transactions((domestic_sale,)))
+
+    resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
+        CalculationSourceContext(
+            bucket_id="bucket-a",
+            modelo="303",
+            filing_year=2026,
+            period="1T",
+            revision=revision,
+        )
+    )
+
+    assert resolution.binding_values
+    assert resolution.diagnostics == ()
 
 
 def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(

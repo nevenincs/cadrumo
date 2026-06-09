@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...iva import InvoiceKind
-from .._enums import IvaRate, PaymentStatus, iva_rate_percentage
+from .._enums import IvaRate, PaymentStatus, iva_rate_percentage, numeric_iva_rate_percentages
 from .._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -515,3 +515,43 @@ def test_catalogue_iteration_yields_invoices() -> None:
     assert [invoice.invoice_id for invoice in catalogue] == [first.invoice_id, second.invoice_id]
     assert first.invoice_id in catalogue
     assert len(catalogue) == 2
+
+
+# ---------------------------------------------------------------------------
+# numeric_iva_rate_percentages helper
+# ---------------------------------------------------------------------------
+
+
+def test_numeric_iva_rate_percentages_value() -> None:
+    """The helper returns exactly the four canonical integer percentages.
+
+    This literal set is the external anchor — ``{0, 4, 10, 21}`` as
+    ``Decimal`` — grounded in the LIVA art. 90/91 slot taxonomy.
+    """
+    assert numeric_iva_rate_percentages() == frozenset(
+        {Decimal("0"), Decimal("4"), Decimal("10"), Decimal("21")}
+    )
+
+
+def test_numeric_iva_rate_percentages_cardinality_tracks_rate_members() -> None:
+    """The set cardinality equals the count of ``RATE_*`` enum members.
+
+    Derivation test: if a new ``RATE_<n>`` slot is added to
+    :class:`IvaRate` the helper must pick it up without code changes.
+    """
+    rate_members = [m for m in IvaRate if m.value.startswith("RATE_")]
+    assert len(numeric_iva_rate_percentages()) == len(rate_members)
+
+
+def test_numeric_iva_rate_percentages_excludes_exempt_and_not_subject() -> None:
+    """EXEMPT and NOT_SUBJECT must not contribute a percentage to the set."""
+    result = numeric_iva_rate_percentages()
+    # These two members carry no numeric percentage; they must not appear.
+    assert IvaRate.EXEMPT not in {str(p) for p in result}
+    assert IvaRate.NOT_SUBJECT not in {str(p) for p in result}
+    # Structural check: the non-RATE_ members must not widen the set.
+    non_rate_count = sum(1 for m in IvaRate if not m.value.startswith("RATE_"))
+    rate_count = sum(1 for m in IvaRate if m.value.startswith("RATE_"))
+    assert len(result) == rate_count
+    assert len(result) < len(IvaRate)
+    assert non_rate_count > 0  # guards against the guard itself becoming vacuous

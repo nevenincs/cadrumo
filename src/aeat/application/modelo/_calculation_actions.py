@@ -10,7 +10,6 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
-from ...core.i18n import tr
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepository
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
@@ -319,13 +318,6 @@ def _raise_if_ledger_preflight_blocks_calculation(
         return
     first_issue = report.issues[0]
     raise ModeloAggregationBindingError(
-        tr(
-            "application.modelo.errors.ledger_preflight_blocked",
-            transaction_id=first_issue.transaction_id,
-            reason=first_issue.reason.value,
-            detail=first_issue.detail,
-            period=report.period.raw,
-        ),
         translated_message="application.modelo.errors.ledger_preflight_blocked",
         context={
             "transaction_id": first_issue.transaction_id,
@@ -410,21 +402,11 @@ def calculate_modelo_revision_from_bucket_aggregation(
         )
     except FileNotFoundError as exc:
         raise CalculationRegistryUnavailableError(
-            tr(
-                "application.modelo.errors.calculation_registry_root_missing",
-                registry_root=_registry_root(),
-            ),
             translated_message="application.modelo.errors.calculation_registry_root_missing",
             context={"registry_root": _registry_root()},
         ) from exc
     except RegistrySnapshotError as exc:
         raise CalculationRegistryUnavailableError(
-            tr(
-                "application.modelo.errors.calculation_registry_snapshot_unresolved",
-                modelo=work_unit.modelo,
-                filing_year=work_unit.filing_year,
-                period=work_unit.period,
-            ),
             translated_message="application.modelo.errors.calculation_registry_snapshot_unresolved",
             context={"modelo": work_unit.modelo, "filing_year": work_unit.filing_year, "period": work_unit.period},
         ) from exc
@@ -573,10 +555,6 @@ def _reject_caller_overrides_of_source_bindings(
     )
     if rejected_casillas:
         raise ModeloAggregationBindingError(
-            tr(
-                "application.modelo.errors.caller_casilla_source_binding_conflict",
-                casillas=rejected_casillas,
-            ),
             translated_message="application.modelo.errors.caller_casilla_source_binding_conflict",
             context={"casillas": rejected_casillas},
         )

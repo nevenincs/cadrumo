@@ -154,9 +154,10 @@ def test_general_profile_raises_preflight_error_when_transactions_are_unclassifi
         work_unit = _build_work_unit(bucket_id)
         snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
 
-        with pytest.raises(ModeloAggregationBindingError, match="ledger preflight"):
+        with pytest.raises(ModeloAggregationBindingError) as exc_info:
             _raise_if_ledger_preflight_blocks_calculation(
                 work_unit=work_unit,
                 revision=snapshot.revision,
                 transaction_repository=tx_repo,
             )
+        assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
