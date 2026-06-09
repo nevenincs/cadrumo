@@ -118,3 +118,63 @@ to the next campaign iteration.
 No findings in this audit meet the three durability criteria (cross-session, constraint-shaped,
 project-bound) for a new rule. The MINOR finding on M130 implies_nonzero is informational
 and model-specific; it is tracked as a follow-up finding rather than a durable rule.
+
+## Post-closure honesty addendum (fresh-context verification, 2026-06-09)
+
+This section is appended after the P05.S13 closure above, per the
+aeat-campaign-close-honesty-review discipline (a fresh-context review run against the
+closure summary before the campaign is treated as structurally complete). It records one
+gap the closure missed and re-affirms two deferrals. It does not retract the closure
+verdicts above; it corrects their coverage.
+
+### Finding H1 — the #64 unconsumed-IVA advisory was computed but never reached the operator (FIXED)
+
+The "Item 1" review above evaluated the M130 verify-gate silent-zero-cuota concern and
+correctly graded it MINOR for M130. A distinct silent-under-declaration gap was not
+evaluated: the #64 calculate-path advisory. Commit `2714fda98` wired
+`unsupported_ledger_iva_observations` into `LedgerIvaAggregationSourceResolver.resolve`, so a
+declarable IVA observation that no binding consumes emits a non-blocking
+`CalculationSourceDiagnostic`. But `calculate_modelo_revision_from_bucket_aggregation`
+forwarded only `binding_values` / `source_transaction_ids` downstream and discarded
+`source_resolution.diagnostics`, so `aeat app modelo work calculate` showed the operator
+nothing. The no-silent-under-declaration rule requires an operator-facing alert, so #64 was
+necessary-but-insufficient at the moment P05.S13 was declared closed: an unrouted declarable
+IVA amount was still silently dropped from the operator's view.
+
+Resolution: commit `84c51886` threads the diagnostics end-to-end — resolver ->
+`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics` ->
+`ModeloWorkCalculationServiceResult.source_diagnostics` -> the CLI `source_advisories` JSON
+list plus a human `ADVISORY:` line via the new locale key
+`cli.app.modelo.work.calculate_source_advisory` (mirroring the `authorization_advisory`
+renderer precedent in the same calculate output). Real-behaviour E2E tests assert the advisory
+surfaces in both JSON and human output on an unrouted `INTRA_COMMUNITY_SUPPLY` observation and
+is absent when all IVA is consumed; RED-before was confirmed by neutralising
+`source_diagnostics` and observing the advisory test fail. The operator now sees the
+unrouted-IVA advisory at calculate time.
+
+### Deferred to a successor campaign (re-affirmed)
+
+- **M303 special-IVA routing nuance.** The `modelo-303-iva-autorepercutido-intracomunitaria-cuota`
+  binding requires `flow_direction = inversion_sujeto_pasivo`, but the ledger's
+  `_flow_direction_for` only ever emits `REPERCUTIDO` / `SOPORTADO`, so the
+  intra-community-acquisition reverse-charge cuota is structurally unreachable from ledger
+  data; and 11 declarable categories remain unrouted in M303. These are now non-silent (the H1
+  advisory surfaces them) but still undeclared. They need LIVA art. 84 grounding for the
+  correct target casillas plus a flow-direction model fix. The "Item 2" closure above verified
+  base-casilla routing (59 vs 60) and category presence in the selector; it did not assert the
+  reverse-charge cuota value, which is the gap recorded here.
+
+- **Local cross-period previous_filing carry.** The "Item 3" closure verified the manual
+  `--casilla` override path. Automatic local carry is not wired:
+  `PreviousFilingSourceResolver` is enrolled in no production source mesh, and the local `file`
+  verb does not persist observations to `CalculationObservationRepository` (automatic carry
+  works only via AEAT-remote capture). Wiring automatic local carry needs a design decision and
+  is carried to the successor campaign.
+
+### Provenance note
+
+This addendum was authored from a fresh context after a process crash. The crash orphaned a set
+of duplicate campaign commits; a commit-by-commit reconciliation confirmed every orphaned commit
+has a functional equivalent already on the branch, so no work was lost. The campaign is
+structurally complete (13/13) with H1 closed; the two deferrals above are formally carried to
+the successor campaign.
