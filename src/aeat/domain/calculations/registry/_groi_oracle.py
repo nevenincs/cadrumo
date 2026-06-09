@@ -43,10 +43,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Literal, Protocol, override
 
-from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator
+from pydantic import AnyUrl, Field, field_validator
 
 from ....core.config import Settings
 from ._checker_oracle_flow import (
+    _CheckerBaseModel,
     compare_verdict_field,
     decode_replay_observation,
     normalize_expected_verdicts,
@@ -67,13 +68,7 @@ from ._remote_state_guard import RemoteOperation
 GROI_ORACLE_ID = "aeat-groi-spanish-roi-checker"
 
 
-class _GroiModel(BaseModel):
-    """Strict frozen base for GROI parity records."""
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-
-class GroiObservation(_GroiModel):
+class GroiObservation(_CheckerBaseModel):
     """Observed Spanish-ROI verdicts returned by an executable adapter.
 
     ``values`` keys are upper-cased Spanish NIFs; ``values`` values are
