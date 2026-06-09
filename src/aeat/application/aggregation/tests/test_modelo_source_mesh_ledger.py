@@ -230,19 +230,21 @@ def test_iva_source_mesh_resolver_matches_existing_bucket_ledger_bridge(secure_o
     }
 
 
-def test_iva_source_mesh_resolver_surfaces_unconsumed_declarable_observation_non_blocking(
+def test_iva_source_mesh_resolver_surfaces_unconsumed_cuota_bearing_observation_non_blocking(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """#64: a declarable IVA observation no M303 binding consumes is surfaced, not dropped.
+    """#64: a cuota-bearing IVA observation no M303 binding consumes is surfaced, not dropped.
 
     The M303 ``2009-y-siguientes`` ``ledger_iva_aggregation`` bindings select
-    domestic + intra-community-acquisition triples only; an
-    ``INTRA_COMMUNITY_SUPPLY`` repercutido observation is declarable (Ley 37/1992
-    art. 25) but matches no binding selector. The candidate path already refuses
-    such an observation via ``unsupported_ledger_iva_observations``; the calculate
-    path (this resolver) must instead surface it as a NON-blocking diagnostic so it
-    is never silently under-declared (no-silent-under-declaration) while calculate
-    still succeeds (the resolution resolves to a non-empty binding map).
+    domestic + intra-community-acquisition triples only; a
+    ``DOMESTIC_REVERSE_CHARGE`` observation genuinely bears an M303 cuota
+    (inversión del sujeto pasivo, Ley 37/1992 art. 84.Uno.2) but matches no
+    binding selector yet — its binding is a separate follow-up. The candidate
+    path refuses such an observation via ``unsupported_ledger_iva_observations``;
+    the calculate path (this resolver) must instead surface it as a NON-blocking
+    diagnostic so it is never silently under-declared
+    (no-silent-under-declaration) while calculate still succeeds (the resolution
+    resolves to a non-empty binding map).
     """
     revision = _revision("303", "2009-y-siguientes")
     tx_repo = TransactionCatalogueRepository(
@@ -257,17 +259,18 @@ def test_iva_source_mesh_resolver_surfaces_unconsumed_declarable_observation_non
         taxable_base=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
     )
-    # ... plus a declarable intra-community supply NO M303 binding selects.
-    unrouted_supply = _iva_transaction(
-        "intra-community-supply",
+    # ... plus a cuota-bearing reverse-charge operation NO M303 binding selects.
+    # Self-assessed IVA: the bank gross equals the base (no IVA charged on the
+    # invoice); the cuota is self-assessed.
+    unrouted_reverse_charge = _iva_transaction(
+        "domestic-reverse-charge",
         direction=TransactionDirection.INCOMING,
-        amount=Decimal("242.00"),
+        amount=Decimal("200.00"),
         taxable_base=Decimal("200.00"),
         iva_amount=Decimal("42.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        counterparty_eu_member_state=EUMemberState.DE,
+        iva_category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
     )
-    tx_repo.save(TransactionCatalogue.from_transactions((domestic_sale, unrouted_supply)))
+    tx_repo.save(TransactionCatalogue.from_transactions((domestic_sale, unrouted_reverse_charge)))
 
     resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
         CalculationSourceContext(
@@ -281,17 +284,73 @@ def test_iva_source_mesh_resolver_surfaces_unconsumed_declarable_observation_non
 
     # Calculate still succeeds: the consumed domestic sale resolved to bindings.
     assert resolution.binding_values
-    # The unrouted declarable observation is surfaced NON-silently and NON-blockingly.
+    # The unrouted cuota-bearing observation is surfaced NON-silently and NON-blockingly.
     unconsumed_diagnostics = [
         diagnostic
         for diagnostic in resolution.diagnostics
         if diagnostic.source_kind == "ledger_iva_aggregation"
-        and unrouted_supply.transaction_id in diagnostic.message
+        and unrouted_reverse_charge.transaction_id in diagnostic.message
     ]
     assert len(unconsumed_diagnostics) == 1
     diagnostic = unconsumed_diagnostics[0]
     assert diagnostic.reason == "source_issue"
-    assert IvaCategory.INTRA_COMMUNITY_SUPPLY.value in diagnostic.message
+    assert IvaCategory.DOMESTIC_REVERSE_CHARGE.value in diagnostic.message
+
+
+def test_iva_source_mesh_resolver_does_not_flag_cuota_less_by_law_observation(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """#64 refinement: a cuota-less-by-law observation must NOT fire the advisory.
+
+    An ``INTRA_COMMUNITY_SUPPLY`` repercutido operation is an entrega
+    intracomunitaria exenta (Ley 37/1992 art. 25): it bears zero M303 cuota and
+    correctly matches no ``ledger_iva_aggregation`` cuota binding. Before the
+    refinement the advisory false-fired on it (any unconsumed declarable
+    observation was flagged); after, it must be silent because the category is
+    cuota-less by law. This guards against the false-positive that surfaced an
+    unactionable "modelling gap" for a category that simply has no cuota.
+    """
+    revision = _revision("303", "2009-y-siguientes")
+    tx_repo = TransactionCatalogueRepository(
+        bucket_id="bucket-a",
+        objects=secure_objects,
+    )
+    domestic_sale = _iva_transaction(
+        "sale-general",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("121.00"),
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+    )
+    exempt_supply = _iva_transaction(
+        "intra-community-supply",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("242.00"),
+        taxable_base=Decimal("200.00"),
+        iva_amount=Decimal("42.00"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        counterparty_eu_member_state=EUMemberState.DE,
+    )
+    tx_repo.save(TransactionCatalogue.from_transactions((domestic_sale, exempt_supply)))
+
+    resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
+        CalculationSourceContext(
+            bucket_id="bucket-a",
+            modelo="303",
+            filing_year=2026,
+            period="1T",
+            revision=revision,
+        )
+    )
+
+    assert resolution.binding_values
+    cuota_less_diagnostics = [
+        diagnostic
+        for diagnostic in resolution.diagnostics
+        if diagnostic.source_kind == "ledger_iva_aggregation"
+        and exempt_supply.transaction_id in diagnostic.message
+    ]
+    assert cuota_less_diagnostics == []
 
 
 def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_consumed(
