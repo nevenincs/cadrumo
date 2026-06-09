@@ -43,11 +43,18 @@ Configure read-only AEAT authentication for live-read workflows.
 Pull, compare, and apply AEAT census facts for the active profile.
 :::
 
+:::{grid-item-card} Choose Your Modelos
+:link: choose-modelo
+:link-type: doc
+
+Ask which modelos apply to you and why, from your saved profile facts.
+:::
+
 :::{grid-item-card} Filing Calendar
 :link: filing-calendar
 :link-type: doc
 
-See what may be due and why a modelo applies.
+See what may be due and when filing windows open and close.
 :::
 
 :::{grid-item-card} Filing Periods
@@ -90,6 +97,20 @@ Review which form boxes were filled, supply missing values, and handle offsets.
 :link-type: doc
 
 Export, edit, and pull back model calculations using a Google Sheets spreadsheet.
+:::
+
+:::{grid-item-card} Verify a Filing
+:link: verification-reports
+:link-type: doc
+
+Run verification, read the report findings, and fix what blocks export.
+:::
+
+:::{grid-item-card} File at AEAT
+:link: file-at-aeat
+:link-type: doc
+
+Export the file, upload it at the AEAT portal yourself, record, and reconcile.
 :::
 
 :::{grid-item-card} Reconcile a Filing
@@ -160,6 +181,7 @@ records.
 quickstart
 profile-setup
 censo-update
+choose-modelo
 filing-calendar
 filing-periods
 check-aeat-notifications
@@ -172,6 +194,8 @@ review-with-google-sheets
 filing-spine
 modelo-303
 modelo-390
+verification-reports
+file-at-aeat
 reconcile
 troubleshooting
 authenticate-with-aeat
