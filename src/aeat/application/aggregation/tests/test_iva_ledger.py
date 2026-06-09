@@ -342,6 +342,85 @@ def test_out_of_period_and_foreign_currency_rows_do_not_project() -> None:
     ]
 
 
+def test_iva_aggregation_buckets_on_value_date_caja_basis_only() -> None:
+    """Document the confirmed CAJA-only aggregation basis (no devengo selector).
+
+    The ledger keys a transaction into a filing period on a single
+    ``value_date or booked_date`` axis — a CASH (caja) basis. There is no
+    accrual/devengo basis selector anywhere in the aggregation surface.
+
+    This is a *documentation* test: it pins the current, intentionally
+    single-basis behaviour so the future devengo follow-on (#58) has a
+    regression anchor. If someone silently introduces a devengo branch (e.g.
+    bucketing on ``booked_date`` while ``value_date`` says otherwise, or a
+    new basis-selector argument), the assertions below turn RED.
+
+    Construction: ``value_date`` (the caja/payment date) lands inside 2026Q2,
+    while ``booked_date`` (the would-be devengo/accrual posting date) lands in
+    2026Q1. A devengo-basis path would exclude the row from 2026Q2; the
+    caja-basis path includes it and stamps the observation date as the
+    value_date. The mirror row inverts the two dates and must be excluded.
+    """
+    # value_date in-period (caja), booked_date out-of-period (devengo would differ).
+    caja_in_period = _transaction(
+        "row-caja-in-period",
+        booked_date=date(2026, 1, 31),
+        value_date=date(2026, 4, 2),
+    )
+    # value_date out-of-period (caja), booked_date in-period (devengo would include).
+    caja_out_of_period = _transaction(
+        "row-caja-out-of-period",
+        booked_date=date(2026, 4, 2),
+        value_date=date(2026, 1, 31),
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((caja_in_period, caja_out_of_period)),
+        period="2026Q2",
+    )
+
+    # Caja basis: the row whose VALUE_DATE is in-period is the only one projected,
+    # and the observation date is the value_date — never the booked_date.
+    assert [observation.ledger_id for observation in result.observations] == [caja_in_period.transaction_id]
+    assert result.observations[0].transaction_date == date(2026, 4, 2)
+    # The row whose value_date is out-of-period is excluded, keyed on value_date —
+    # a devengo basis (booked_date 2026-04-02) would instead have INCLUDED it.
+    assert [issue.transaction_id for issue in result.issues] == [caja_out_of_period.transaction_id]
+    assert result.issues[0].reason is IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD
+    assert "2026-01-31" in result.issues[0].detail
+
+
+def test_no_devengo_basis_selector_exists_on_iva_aggregation_surface() -> None:
+    """Assert the absence of any accrual/devengo basis selector (caja-only).
+
+    Confirms (against the live module/signature, re-read at runtime) that
+    neither the public IVA-aggregation entry points nor their parameters
+    expose a ``basis``/``devengo``/``accrual`` axis. Caja is the only basis.
+    The future devengo design (#58) will add such a selector; until then this
+    test fails RED the moment a basis selector is introduced without the
+    accompanying behaviour and tests.
+    """
+    import inspect
+
+    from .. import _iva_ledger
+
+    forbidden_tokens = ("devengo", "accrual", "basis")
+    for entry_point in (
+        _iva_ledger.aggregate_iva_ledger_observations,
+        _iva_ledger.aggregate_iva_ledger_observations_from_repositories,
+        _iva_ledger.aggregate_iva_ledger_candidates,
+    ):
+        params = inspect.signature(entry_point).parameters
+        assert not any(token in name.lower() for name in params for token in forbidden_tokens), (
+            f"{entry_point.__name__} unexpectedly grew a basis selector parameter: {tuple(params)}"
+        )
+
+    # No basis-selector symbol is exported from the aggregation package surface.
+    assert not any(token in symbol.lower() for symbol in _iva_ledger.__all__ for token in forbidden_tokens), (
+        _iva_ledger.__all__
+    )
+
+
 def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(
     secure_objects: SecureObjectRepository,
 ) -> None:
