@@ -4027,7 +4027,7 @@ errors:
       ebben a profilban. Válasszon egy támogatott adózási rendet.
     refused_profile_inventory_validation: Egy profil készlet-főkönyve nem ment át
       az érvényesítésen.
-    refused_profile_label_ambiguous: errors.refused.refused_profile_label_ambiguous
+    refused_profile_label_ambiguous: 'A profilcímke egynél több aktív profilra illeszkedik. A profil UUID-jával egyértelműsítse.'
     refused_profile_lifo_forbidden: A LIFO készletértékelés adózási célból nem megengedett.
       Használjon FIFO-t, súlyozott átlagárat vagy átlagköltséget.
     refused_profile_not_configured: A RENTA-ellenőrzéshez adóügyi illetőségi profil
