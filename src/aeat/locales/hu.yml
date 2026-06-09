@@ -1332,9 +1332,11 @@ cli:
         year_help: A nyomtatvány adóéve (pl. 2026).
       casillas:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
+        explain_help: 'Lokalizált súgószöveg bevonása a szöveges kimenetbe.'
         form_number_help: Mezők szűrése BOE-n nyomtatott nyomtatványszám szerint (pl.
           46).
-        help: 'A kivalasztott modelo verziohoz tartozo osszes casilla (mezo/doboz) listazasa.'
+        help: A kivalasztott modelo verziohoz tartozo osszes casilla (mezo/doboz)
+          listazasa.
         input_kind_help: Mezők szűrése beviteli típus szerint (manual, bound, computed,
           informational).
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
@@ -1359,7 +1361,8 @@ cli:
         csoportosítva.
       describe:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
-        help: 'Reszletes struktura, metaadatok es aktiv idoszakok megjelenitese egy adott modelo-hoz.'
+        help: Reszletes struktura, metaadatok es aktiv idoszakok megjelenitese egy
+          adott modelo-hoz.
         label_bindings: Kötések
         label_cadence: Gyakoriság
         label_casillas: Mezők
@@ -1412,7 +1415,8 @@ cli:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
         explain_help: Az egyes képleteket megalapozó legal_refs és source_refs bevonása
           a szöveges kimenetbe. A JSON-adatcsomag mindig tartalmazza azokat.
-        help: 'A kivalasztott modelo verziohoz tartozo osszes szamitott casilla es keplet listazasa.'
+        help: A kivalasztott modelo verziohoz tartozo osszes szamitott casilla es
+          keplet listazasa.
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
         period_help: 'Időszaktokent; Modelo 036-hoz: alta, modificacion vagy baja;
           időszaki példák: 2026N1, 2026-01.'
@@ -1438,7 +1442,7 @@ cli:
           lennie.
         seed_period_help: A vetőösszeg időszaka (pl. 2024N4).
       list:
-        help: 'A rendszerben regisztralt osszes hivatalos adobevallas (modelo) listazasa.'
+        help: A rendszerben regisztralt osszes hivatalos adobevallas (modelo) listazasa.
         year_help: A nyomtatványkatalógus szűrése egyetlen adóévre.
       m036:
         alta_help: Rögzítse az M036 alta nyilatkozatot (kezdeti adónyilvántartási

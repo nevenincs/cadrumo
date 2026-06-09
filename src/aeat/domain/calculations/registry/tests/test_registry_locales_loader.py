@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+
 import pytest
-from pydantic import ValidationError
 
 from .._errors import RegistryValidationError
 from .._loader import load_modelo_directory
@@ -62,10 +62,10 @@ def _setup_modelo_dir(
 ) -> None:
     target_dir.mkdir(parents=True, exist_ok=True)
     (target_dir / "manifest.toml").write_text(manifest, encoding="utf-8")
-    
+
     revisions_dir = target_dir / "revisions"
     revisions_dir.mkdir(exist_ok=True)
-    
+
     # We write revision.toml directly or as fragment files
     rev_id_dir = revisions_dir / "2019-y-siguientes"
     rev_id_dir.mkdir(exist_ok=True)
@@ -113,18 +113,18 @@ class TestRegistryLocalesLoader:
 
         modelo = load_modelo_directory(tmp_path)
         revision = modelo.revisions["2019-y-siguientes"]
-        
+
         casilla_01 = next(c for c in revision.casillas if c.id == "01")
         casilla_02 = next(c for c in revision.casillas if c.id == "02")
 
         # Casilla 01 gets continuity help, but label is overridden by revision
         assert casilla_01.get_label("en") == "English Overridden Label 01"
         assert casilla_01.get_help("en") == "English Concept Help 01"
-        
+
         # Casilla 02 gets revision-level translations
         assert casilla_02.get_label("en") == "English Revision Label 02"
         assert casilla_02.get_help("en") == "English Revision Help 02"
-        
+
         # Fallbacks to Spanish invariant
         assert casilla_01.get_label("ca") == "Spanish Label 01"
         assert casilla_01.get_help("ca") is None
@@ -140,7 +140,7 @@ class TestRegistryLocalesLoader:
 
         with pytest.raises(RegistryValidationError) as exc_info:
             load_modelo_directory(tmp_path)
-        
+
         assert "no continuity chain found with this continuity id" in str(exc_info.value)
 
     def test_referential_integrity_validation_fails_on_invalid_revision_key(self, tmp_path: Path) -> None:
@@ -154,7 +154,7 @@ class TestRegistryLocalesLoader:
 
         with pytest.raises(RegistryValidationError) as exc_info:
             load_modelo_directory(tmp_path)
-        
+
         assert "no casilla found with this id" in str(exc_info.value)
 
     def test_locales_file_updates_invalidate_cache(self, tmp_path: Path) -> None:

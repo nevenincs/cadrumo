@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+
 import pytest
 from click.testing import CliRunner
 
@@ -60,15 +61,15 @@ def test_casillas_json_envelope_carries_localized_attributes(cli_runner: CliRunn
     """JSON output for casillas carries raw translation dictionaries in the envelope."""
     result = cli_runner.invoke(app, ["--format", "json", "app", "modelo", "casillas", "130"])
     assert result.exit_code == 0, result.output
-    
+
     parsed = json.loads(result.output)
     assert parsed["command"] == "modelo.casillas"
-    
+
     rows = parsed["result"]["rows"]
     row_01 = next(r for r in rows if r["casilla_id"] == "01")
-    
+
     assert row_01["localized_labels"]["en"] == "Income"
     assert row_01["localized_labels"]["ca"] == "Ingressos"
     assert row_01["localized_labels"]["hu"] == "Bevételek"
-    
+
     assert "Total cumulative business income for the tax year." in row_01["localized_help"]["en"]

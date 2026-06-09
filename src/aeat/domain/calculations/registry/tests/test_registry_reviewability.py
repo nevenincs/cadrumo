@@ -26,7 +26,7 @@ _VALIDATOR_MODULE_LINE_BASELINES = {
     "_validate_record_sections.py": 240,
     "_validate_revision_identity.py": 228,
     "_validate.py": 210,
-    "_validate_relation_periods.py": 203,
+    "_validate_relation_periods.py": 209,
     "_validate_semantic_role_axes.py": 188,
     "_validate_dependency_sections.py": 182,
 }

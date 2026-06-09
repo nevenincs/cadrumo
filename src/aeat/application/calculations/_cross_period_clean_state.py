@@ -234,7 +234,7 @@ def cross_period_dependency_inventory(
     The inventory is a backend coverage surface. It lets callers prove which
     modelos and periods are in scope for the clean-state guard before they wire
     model-specific workflow tests or operator diagnostics.
-    
+
 
     Use of :class:`ValidatedRegistryAuthority` for compliance.
     """

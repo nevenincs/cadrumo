@@ -1,0 +1,7 @@
+[labels]
+"00001" = "Non-profit entity under special tax regime Title II Law 49/2002"
+"00027" = "Negative or zero tax base"
+
+[help]
+"00001" = "Flag indicating if the entity is non-profit and subject to the Title II regime of Law 49/2002."
+"00027" = "Negative or zero tax base before adjustments or compensations."

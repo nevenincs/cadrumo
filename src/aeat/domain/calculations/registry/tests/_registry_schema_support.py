@@ -111,7 +111,10 @@ def _as_communication_revision(revision: ModeloRevision) -> ModeloRevision:
 def _copy_committed_modelo(path: Path) -> None:
     revision_dir = _MODELO_130_DIR / "revisions" / "2019-y-siguientes"
     fragments = [revision_dir / "revision.toml"]
-    fragments.extend(sorted(item for item in revision_dir.rglob("*.toml") if item.name != "revision.toml"))
+    fragments.extend(sorted(
+        item for item in revision_dir.rglob("*.toml")
+        if item.name != "revision.toml" and not any(part == "locales" for part in item.parts)
+    ))
     text = _MODELO_130_DIR.joinpath("manifest.toml").read_text(encoding="utf-8")
     text += "".join(fragment.read_text(encoding="utf-8") for fragment in fragments)
     path.write_text(text, encoding="utf-8")

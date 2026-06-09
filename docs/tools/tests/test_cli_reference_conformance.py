@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.docs]
 
 _DOCS_CLI_DIR = Path(__file__).parent.parent.parent.parent.parent / "docs" / "cli"
 

@@ -219,9 +219,7 @@ class CasillaDefinition(RegistryModel):
     )
     localized_help: dict[str, str] = Field(
         default_factory=dict,
-        description=(
-            "Optional localized help/hint texts mapped by locale code (e.g., 'en', 'ca', 'hu')."
-        ),
+        description=("Optional localized help/hint texts mapped by locale code (e.g., 'en', 'ca', 'hu')."),
     )
     section: tuple[str, ...]
     data_type: Literal[
