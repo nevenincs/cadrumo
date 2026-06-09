@@ -309,7 +309,7 @@ def _write_unextracted_renta_part1(root: Path) -> None:
                 "part": "part1",
                 "relative_pdf_path": "source.pdf",
                 "sha256": "0" * 64,
-                "source_pdf_url": "https://sede.agenciatributaria.gob.es/static_files/synthetic/renta-2025-part1.pdf",
+                "source_pdf_url": "https://example.invalid/synthetic/renta-2025-part1.pdf",
                 "synthetic": True,
                 "year": 2025,
             }
