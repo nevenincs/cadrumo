@@ -1,7 +1,7 @@
 """Central settings facade for AEAT automation.
 
 This module uses :class:`StorageRouteClassification` for SQL database route
-classification and :class:`SettingsConfigDict` for Pydantic configuration.
+classification and ``SettingsConfigDict`` for Pydantic configuration.
 The primary export is the :class:`Settings` class, which is built on
 :class:`pydantic_settings.BaseSettings` with custom validation rules.
 """
