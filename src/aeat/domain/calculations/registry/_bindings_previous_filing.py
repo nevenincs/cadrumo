@@ -78,6 +78,80 @@ def previous_filing_observation_requirements(
     )
 
 
+def _observed_casilla_values(
+    binding: DataBindingDefinition,
+    selector: _PreviousModeloSelector,
+    match: _RegistryModeloObservationLike,
+    expected_year: int,
+    required_period: str,
+) -> list[Decimal]:
+    values: list[Decimal] = []
+    for casilla_id in _previous_filing_source_ids(selector):
+        casilla_value = match.casilla_values.get(casilla_id)
+        if casilla_value is None:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} requires observed casilla {casilla_id!r} "
+                f"from {selector.source_modelo!r}/{expected_year}/{required_period!r}"
+            )
+        values.append(casilla_value)
+    return values
+
+
+def _resolve_anchor_values(
+    binding: DataBindingDefinition,
+    selector: _PreviousModeloSelector,
+    available: tuple[_RegistryModeloObservationLike, ...],
+    *,
+    expected_year: int,
+    required_period: str,
+) -> list[Decimal]:
+    matches = tuple(
+        observation
+        for observation in available
+        if observation.modelo == selector.source_modelo
+        and observation.filing_year == expected_year
+        and observation.period == required_period
+    )
+    if selector.grouping == "per_grupo_member":
+        if not matches:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} (per_grupo_member) expected at least one observed filing "
+                f"{selector.source_modelo!r}/{expected_year}/{required_period!r}, found 0"
+            )
+        values: list[Decimal] = []
+        for member_match in matches:
+            values.extend(_observed_casilla_values(binding, selector, member_match, expected_year, required_period))
+        return values
+    if len(matches) != 1:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} expected one observed filing "
+            f"{selector.source_modelo!r}/{expected_year}/{required_period!r}, found {len(matches)}"
+        )
+    return _observed_casilla_values(binding, selector, matches[0], expected_year, required_period)
+
+
+def _resolve_binding_values(
+    binding: DataBindingDefinition,
+    available: tuple[_RegistryModeloObservationLike, ...],
+    *,
+    filing_year: int,
+    period: str,
+) -> list[Decimal] | None:
+    selector = _previous_filing_selector(binding)
+    required_anchors = selector.required_period_anchors_for_target(period)
+    if not required_anchors:
+        return None
+    values: list[Decimal] = []
+    for period_year_delta, required_period in required_anchors:
+        expected_year = filing_year + selector.filing_year_delta + period_year_delta
+        values.extend(
+            _resolve_anchor_values(
+                binding, selector, available, expected_year=expected_year, required_period=required_period
+            )
+        )
+    return values
+
+
 def resolve_previous_filing_binding_values(
     revision: ModeloRevision,
     observations: Iterable[_RegistryModeloObservationLike],
@@ -96,49 +170,9 @@ def resolve_previous_filing_binding_values(
             continue
         if not _is_direct_previous_filing_binding(binding):
             continue
-        selector = _previous_filing_selector(binding)
-        values = []
-        required_anchors = selector.required_period_anchors_for_target(period)
-        if not required_anchors:
+        values = _resolve_binding_values(binding, available, filing_year=filing_year, period=period)
+        if values is None:
             continue
-        for period_year_delta, required_period in required_anchors:
-            expected_year = filing_year + selector.filing_year_delta + period_year_delta
-            matches = tuple(
-                observation
-                for observation in available
-                if observation.modelo == selector.source_modelo
-                and observation.filing_year == expected_year
-                and observation.period == required_period
-            )
-            if selector.grouping == "per_grupo_member":
-                if not matches:
-                    raise RegistryValidationError(
-                        f"binding {binding.id!r} (per_grupo_member) expected at least one observed filing "
-                        f"{selector.source_modelo!r}/{expected_year}/{required_period!r}, found 0"
-                    )
-                for member_match in matches:
-                    for casilla_id in _previous_filing_source_ids(selector):
-                        casilla_value = member_match.casilla_values.get(casilla_id)
-                        if casilla_value is None:
-                            raise RegistryValidationError(
-                                f"binding {binding.id!r} requires observed casilla {casilla_id!r} "
-                                f"from {selector.source_modelo!r}/{expected_year}/{required_period!r}"
-                            )
-                        values.append(casilla_value)
-            else:
-                if len(matches) != 1:
-                    raise RegistryValidationError(
-                        f"binding {binding.id!r} expected one observed filing "
-                        f"{selector.source_modelo!r}/{expected_year}/{required_period!r}, found {len(matches)}"
-                    )
-                for casilla_id in _previous_filing_source_ids(selector):
-                    casilla_value = matches[0].casilla_values.get(casilla_id)
-                    if casilla_value is None:
-                        raise RegistryValidationError(
-                            f"binding {binding.id!r} requires observed casilla {casilla_id!r} "
-                            f"from {selector.source_modelo!r}/{expected_year}/{required_period!r}"
-                        )
-                    values.append(casilla_value)
         resolved[binding.id] = _aggregate_previous_filing_binding(binding, values)
     return resolved
 
