@@ -267,7 +267,61 @@ Remaining ~34 + 3 errors (not yet actioned), categorised:
 The integration `test_json_schema_conformance` harness bug is fixed (QHC-009);
 `test-live` skips cleanly without AEAT credentials.
 
+## QHC-010 | session result | 30 of 49 unit failures cleared; 19 hard-tail remain
+
+Session end state. The original 46 failures + 3 errors were driven to **19 failures**
+(30 of the 49-node set now pass). The cleared set was dominated by a single
+recurring class — **test-topology-refactor regressions**: every relocated `test_*.py`
+that resolved a sibling production module or repo root relative to its own location
+broke when the relocation added a `tests/` directory level. The fixes were uniform:
+climb one extra parent (`.parent`→`.parent.parent`, `parents[N]`→`parents[N+1]`),
+repoint a `_read(...)` target at the relocated file, or point a `from .` self-import
+at `..`. Files fixed this way: `calculation_grounding`, `smoke` (modelos/portals),
+sanitizer `test_pipeline`/`test_no_write_surface`, `placeholder_parity`,
+`playwright_wait_constants`, portals `test_registry`, storage `test_factory`,
+`test_boundary_rationale`, browser `test_session`, secure-repo `cast_rationale`,
+`output_language_typed`, plus the `narrowed_except` ledger/ratchet repoints. Also
+cleared: utf-8/ledger-transaction/tr-alias canonical-constant fixes and the
+`_binding_prefill` core-struct link. The CLI conformance harness (vendored-typer
+`isinstance`) and the 145-function return-type-link backlog (delegated subagent)
+also landed.
+
+**Codification candidate (strong):** the topology-regression pattern is durable,
+cross-session, and project-bound — a rule like `relocated-tests-repoint-roots`
+would bind future `tests/` relocations to re-point every `__file__`-relative root
+(self-imports, `parents[N]`, `_read`/path targets) at the new depth. See the
+Codification candidates section.
+
+The remaining 19 are NOT topology — they are real work and several are guards
+flagging genuine issues that must be fixed in product code, not silenced:
+- **Real domain gaps**: M200 `01494` previous-filing binding (2 `decimal_inputs_routing`);
+  attachments blob/manifest plaintext roundtrip; manuals corpus (3 `test_corpus` +
+  `test_manuals` get-raises); `oss_ioss` parallel-aggregator surface in
+  `_ledger_bindings.py`; `ledger_modelo_staleness`; `modelo_authorization` coverage.
+- **Real feature gaps**: `event_emission_contract` — 4 required setup events
+  (`auth.provider.configured`, `profile.activated`, `profile.bucket.created`,
+  `profile.values.updated`) have no emission site.
+- **Behaviour-changing**: `test_no_aeat_error_raise_with_positional_tr` — 26 sites
+  passing `tr(...)` positionally as `message`; correcting to `translated_message=`
+  changes `str(error)` rendering and needs per-site test verification.
+- **Surface/inventory judgment**: `cross_module_imports` `__all__` drift
+  (`core/access_gate`, `domain/contribuyente/assets`); `sensitive_persistence`
+  production-write inventory; `external_constants` test URL; `decimal_enrollment`
+  `Decimal(str())` at `overview/__init__.py:113`.
+
+**check-types** remains the dominant hard gate at ~1850 (952 ty + ~900 pyright)
+after the keystone + @override eliminations — a per-site typed-boundary grind.
+
 ## Codification candidates
+
+- **Source:** QHC-010 topology-regression cluster (≈20 relocated-test failures from
+  one root cause). **Rule slug:** `relocated-tests-repoint-file-relative-roots`.
+  **Rule:** When relocating a `test_*.py` into a `tests/` subpackage, re-point every
+  `__file__`-relative root it computes — `from . import` self-imports (→ `..`),
+  `Path(__file__).parent[...]` / `parents[N]` depths (→ +1), `import_module(__package__)`
+  (→ explicit package), and any `_read`/source-path targets — to the new depth, and
+  run the relocated file before landing. (Promote only if the operator wants it; the
+  pattern recurred ~20× this session.)
 
 None yet. The campaign's mechanics (fix-or-justify-at-line for semgrep,
 behaviour-preserving extraction for complexity, substitutability pre-filter for
