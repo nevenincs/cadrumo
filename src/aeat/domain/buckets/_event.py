@@ -17,7 +17,7 @@ import json
 from collections.abc import Iterator, Mapping, ValuesView
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, override
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
@@ -335,6 +335,7 @@ class BucketEventHistoryCatalogue(BaseModel):
     # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PYDANTIC-METACLASS:
     # pydantic BaseModel.__iter__ override requires pydantic-v2 metaclass-aware
     # base class. Successor epic required.
+    @override
     def __iter__(self) -> Iterator[BucketEvent]:  # type: ignore[override]  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]
         """Iterate over every :class:`BucketEvent` in insertion order."""
         return iter(self.events.values())

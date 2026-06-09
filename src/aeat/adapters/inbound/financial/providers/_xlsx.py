@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 from openpyxl import load_workbook
 from openpyxl.workbook import Workbook
@@ -76,6 +76,7 @@ class XlsxProvider(FinancialProvider):
         self._last_sheet_name = "Sheet1"
         self._last_header_index = 1
 
+    @override
     def validate_source(self, path: Path) -> ProviderValidation:
         """Validate workbook accessibility and header detection.
 
@@ -122,6 +123,7 @@ class XlsxProvider(FinancialProvider):
             detected_dialect=f"worksheet={self._last_sheet_name},header_row={self._last_header_index}",
         )
 
+    @override
     def ingest(self, path: Path) -> Iterator[RawTransaction]:
         """Yield strict :class:`RawTransaction` records from the first matching worksheet."""
         source_bytes = self._read_source_bytes(path)

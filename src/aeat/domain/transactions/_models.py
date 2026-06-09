@@ -25,7 +25,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from types import MappingProxyType
-from typing import Literal, Self
+from typing import Literal, Self, override
 
 from pydantic import BaseModel, Field, ValidationError, field_serializer, field_validator, model_validator
 from pydantic_core import core_schema
@@ -1082,6 +1082,7 @@ class TransactionCatalogue(BaseModel):
         """
         return cls.model_validate(tuple(transactions))
 
+    @override
     def __iter__(self) -> Iterator[Transaction]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         """Iterate over catalogue transactions."""
         return iter(self.transactions.values())

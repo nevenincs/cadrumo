@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import ClassVar
+from typing import ClassVar, override
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -95,6 +95,7 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
     schema_version: ClassVar[int] = IVA_COMPENSATION_HISTORY_NAMESPACE.schema_version
     payload_type: ClassVar[type[IvaCompensationPeriodState]] = IvaCompensationPeriodState
 
+    @override
     def extract_identifier(self, payload: IvaCompensationPeriodState) -> str:
         return iva_compensation_period_key(payload.filing_year, payload.period)
 

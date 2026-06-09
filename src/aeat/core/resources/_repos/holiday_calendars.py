@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import override
+
 from .._repository import ResourceCacheRepository
 
 
@@ -11,6 +13,7 @@ class HolidayCalendarRepository(ResourceCacheRepository[object, int]):
     Wraps :func:`aeat.domain.deadlines.load_holiday_calendar`.
     """
 
+    @override
     def _load(self, key: int) -> object:
         from ....domain.deadlines import load_holiday_calendar
 

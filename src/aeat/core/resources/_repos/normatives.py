@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from .._repository import ResourceCacheRepository
 
@@ -32,6 +32,7 @@ class NormativeRepository(ResourceCacheRepository["NormativeCatalogue", None]):
 
         return _Settings(aeat_normatives_root=self._root)
 
+    @override
     def _load(self, key: None) -> NormativeCatalogue:
         from ....domain.normatives import load_catalogue
 

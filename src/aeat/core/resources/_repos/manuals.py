@@ -10,7 +10,7 @@ passing the operator-resolved root through the constructor.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pydantic import ConfigDict
 
@@ -63,6 +63,7 @@ class ManualRepository(ResourceCacheRepository["Manual", ManualKey]):
 
         return _Settings(aeat_manuals_root=self._root)
 
+    @override
     def _load(self, key: ManualKey) -> Manual:
         from ....domain.manuals import ManualId, ManualPart, load_manual
 

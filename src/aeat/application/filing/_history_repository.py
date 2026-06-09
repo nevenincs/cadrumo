@@ -10,7 +10,7 @@ file lands on disk.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import ClassVar
+from typing import ClassVar, override
 
 from ...adapters.persistence.storage import (
     APPLICATION_FILING_HISTORY_NAMESPACE,
@@ -46,6 +46,7 @@ class ModeloHistoryRepository(SecureBoundRepository[ModeloHistory]):
         """Return the profile bucket id when this repository resolved one."""
         return self._bucket_id
 
+    @override
     def extract_identifier(self, payload: ModeloHistory) -> str:
         return str(payload.modelo)
 

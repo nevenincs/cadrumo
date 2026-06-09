@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import override
+
 from .._repository import ResourceCacheRepository
 
 
@@ -11,6 +13,7 @@ class ApoderamientosRepository(ResourceCacheRepository[object, None]):
     Wraps :func:`aeat.domain.auth.apoderamientos.load_default_catalogue`.
     """
 
+    @override
     def _load(self, key: None) -> object:
         from ....domain.auth.apoderamientos import load_default_catalogue
 

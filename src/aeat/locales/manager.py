@@ -3,6 +3,7 @@
 import re
 from collections.abc import Iterator
 from pathlib import Path
+from typing import override
 
 import yaml
 
@@ -24,6 +25,7 @@ class LocaleError(AeatError):
 class StrictUniqueKeyLoader(yaml.SafeLoader):
     """YAML loader that raises an error on duplicate keys."""
 
+    @override
     def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict:
         """Construct a mapping node, raising ``LocaleError`` on duplicate keys.
 

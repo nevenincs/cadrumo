@@ -21,6 +21,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
+from typing import override
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
@@ -149,6 +150,7 @@ class PurchaseInvoiceEvidenceRepository(SecureBoundRepository[PurchaseInvoiceEvi
     schema_version = LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE.schema_version
     payload_type = PurchaseInvoiceEvidenceDocument
 
+    @override
     def extract_identifier(self, payload: PurchaseInvoiceEvidenceDocument) -> str:
         return payload.bucket_id
 

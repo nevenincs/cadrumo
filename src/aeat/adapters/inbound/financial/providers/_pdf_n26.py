@@ -14,7 +14,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterator, Sequence
 from pathlib import Path
-from typing import TypedDict
+from typing import TypedDict, override
 
 from .....core.external_constants import DEFAULT_CURRENCY
 from .....core.logging import get_logger
@@ -111,6 +111,7 @@ class PdfN26Provider(FinancialProvider):
     verification_source = "synthetic_from_bank_published_text"
     provisional_pending_specimen = False
 
+    @override
     def validate_source(self, path: Path) -> ProviderValidation:
         """Validate that ``path`` is an N26 PDF statement with at least one row.
 
@@ -137,6 +138,7 @@ class PdfN26Provider(FinancialProvider):
             detected_dialect=f"pages={len(pages)};currency={currency};rows={row_count}",
         )
 
+    @override
     def ingest(self, path: Path) -> Iterator[RawTransaction]:
         """Yield strict :class:`RawTransaction` records from the N26 PDF statement."""
         source_bytes = self._read_source_bytes(path)

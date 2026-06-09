@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Literal
+from typing import Literal, override
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -48,6 +48,7 @@ class WorkbookCellRef(WorkbookParityModel):
     coordinate: str
     formula: str | None = None
 
+    @override
     def __hash__(self) -> int:
         return hash((self.sheet, self.coordinate, self.formula))
 

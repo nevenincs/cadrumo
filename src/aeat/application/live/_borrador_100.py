@@ -19,7 +19,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, override
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -286,6 +286,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
     # TYPE-IGNORE-RATIONALE-OVERRIDE-COVARIANT-RETURN:
     # Subclass returns a narrower snapshot type and adds optional filter params;
     # base-class signature widening would ripple to N subclasses.
+    @override
     def list_snapshots(  # type: ignore[override]
         self,
         *,
@@ -317,6 +318,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
     # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: SnapshotService[T] abstract hook
     # contract uses **kwargs to allow concrete subclasses to accept caller-
     # specific keyword arguments without a shared typed parameter set.
+    @override
     def _derive_snapshot_id(self, **kwargs: Any) -> str:
         return derive_borrador_100_snapshot_id(
             filing_year=kwargs["filing_year"],
@@ -329,6 +331,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
     # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD: SnapshotService[T] abstract
     # _build_active_payload hook carries **kwargs: Any so concrete subclasses
     # accept caller-specific keyword arguments without a shared typed set.
+    @override
     def _build_active_payload(self, *, snapshot_id: str, **kwargs: Any) -> Borrador100Snapshot:
         return Borrador100Snapshot(
             snapshot_id=snapshot_id,
@@ -342,18 +345,23 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
             binding_values=dict(kwargs["binding_values"]),
         )
 
+    @override
     def _payload_axis_key(self, payload: Borrador100Snapshot) -> tuple[Any, ...]:
         return (payload.modelo, payload.filing_year, payload.period)
 
+    @override
     def _payload_captured_at(self, payload: Borrador100Snapshot) -> datetime:
         return payload.captured_at
 
+    @override
     def _payload_snapshot_id(self, payload: Borrador100Snapshot) -> str:
         return payload.snapshot_id
 
+    @override
     def _payload_state(self, payload: Borrador100Snapshot) -> SnapshotLifecycleState:
         return payload.state
 
+    @override
     def _demote_to_superseded(self, payload: Borrador100Snapshot, *, superseded_by: str) -> Borrador100Snapshot:
         return payload.model_copy(
             update={

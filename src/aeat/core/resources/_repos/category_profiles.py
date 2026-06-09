@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from .._repository import ResourceCacheRepository
 
@@ -17,6 +17,7 @@ class CategoryProfileRepository(ResourceCacheRepository[Mapping["SpendingCategor
     Wraps :func:`aeat.domain.categories.resolve_category_profiles`.
     """
 
+    @override
     def _load(self, key: int) -> Mapping[SpendingCategory, CategoryProfile]:
         from ....domain.categories import resolve_category_profiles
 

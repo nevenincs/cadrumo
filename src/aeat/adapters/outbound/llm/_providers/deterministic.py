@@ -8,6 +8,8 @@ network test doubles.
 
 from __future__ import annotations
 
+from typing import override
+
 from .._errors import LLMProviderError, LLMRateLimitError
 from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter
@@ -58,6 +60,7 @@ class _DeterministicAdapter(_ProviderAdapter):
         self.error_mode = error_mode
         self.calls = 0
 
+    @override
     async def complete(self, request: ProviderRequest) -> ProviderCompletion:
         """Return a deterministic completion or raise the configured error.
 

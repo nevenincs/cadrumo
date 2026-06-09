@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import override
+
 from .._repository import ResourceCacheRepository
 
 
@@ -11,6 +13,7 @@ class UserProfileSchemaRepository(ResourceCacheRepository[object, None]):
     Wraps :func:`aeat.domain.user_profile.load_user_profile_schema`.
     """
 
+    @override
     def _load(self, key: None) -> object:
         from ....domain.user_profile import load_user_profile_schema
 
