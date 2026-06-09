@@ -149,7 +149,7 @@ def test_guard_stub_modelo_210_refuses_when_engine_live_flag_is_unset() -> None:
     with pytest.raises(CliRefusedBoundaryError) as exc_info:
         _guard_stub_modelo("210")
 
-    # Refusal carries a locale key and context for deferred rendering by the CLI layer.
+    # Refusal carries a locale key and context for lazy rendering by the CLI layer.
     assert exc_info.value.translated_message is not None
     assert exc_info.value.context is not None
     assert exc_info.value.context.get("modelo") == "210"
