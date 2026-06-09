@@ -1948,3 +1948,69 @@ def test_no_bare_1200_maternidad_cap_literal_in_deduccion_maternidad() -> None:
     assert offenders == [], (
         "Bare 1200 maternidad cap literals found in _deduccion_maternidad.py:\n" + "\n".join(offenders)
     )
+
+
+# ---------------------------------------------------------------------------
+# contract — INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR centralisation tests
+# ---------------------------------------------------------------------------
+
+
+def test_incremento_guarderia_por_hijo_cap_eur_value() -> None:
+    """``INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR`` equals 1000 per Art. 81 LIRPF (Ley 35/2006)."""
+
+    from ..external_constants import INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR
+
+    assert INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR == 1000
+
+
+def test_incremento_guarderia_por_hijo_cap_eur_is_int() -> None:
+    """``INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR`` is an ``int`` (casilla 0613 carries no decimal places)."""
+
+    from ..external_constants import INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR
+
+    assert isinstance(INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR, int)
+
+
+def test_family_module_imports_incremento_guarderia_cap_from_core() -> None:
+    """``domain/contribuyente/family.py`` reads ``INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR`` from core."""
+
+    import importlib
+
+    from ..external_constants import INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR
+
+    mod = importlib.import_module("aeat.domain.contribuyente.family")
+
+    assert hasattr(mod, "INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR"), (
+        "family must import INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR from aeat.core.external_constants"
+    )
+    assert mod.INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR is INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR
+
+
+def test_no_bare_1000_guarderia_cap_literal_in_family() -> None:
+    """No bare ``1000`` integer literal as a ``min()`` argument in ``family.py``.
+
+    Anti-tautology: parses the real AST so any re-introduction of the local literal triggers failure.
+    Scoped to ``min()`` calls to avoid false positives from unrelated integer constants.
+    """
+
+    repo_root = Path(__file__).parents[4]
+    source = (repo_root / "src/aeat/domain/contribuyente/family.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
+        if func_name != "min":
+            continue
+        for arg in node.args:
+            if isinstance(arg, ast.Constant) and arg.value == 1000:
+                offenders.append(
+                    f"family.py:{node.lineno}: bare 1000 literal in min(); use INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR"
+                )
+
+    assert offenders == [], (
+        "Bare 1000 guarderia cap literals found in family.py:\n" + "\n".join(offenders)
+    )
