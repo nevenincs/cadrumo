@@ -2628,7 +2628,7 @@ cli:
       reason_help: A reset-előzményekben rögzített ok.
       yes_help: Az aktív főkönyvi katalógus törlésének megerősítése.
     review:
-      filter_help: Sorok szűrése állapot, időszak, probléma vagy importálás alapján.
+      filter_help: 'Sorok szűrése status, period, issue, import, classification, text vagy direction alapján.'
       header: KÖNYVELÉSI FŐKÖNYVI FELÜLVIZSGÁLATI MUNKAMENET
       help: Főkönyvi bejegyzések interaktív felülvizsgálata és érvényesítése.
       id_help: A felülvizsgálandó bejegyzés azonosítója.
