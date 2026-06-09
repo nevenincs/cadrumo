@@ -106,6 +106,9 @@ def test_calculate_registry_snapshot_accepts_enum_binding_via_enum_channel() -> 
             "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
             # Fresh-filer scenario: no prior-period BIN to compensate.
             "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            # Fresh filer: no prior-year unfulfilled credit-impairment balance (casilla 01494).
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         enum_binding_values={
             "modelo-200-2024-profile-legal-entity-form": "sl",
@@ -152,6 +155,9 @@ def test_calculate_registry_snapshot_applies_non_zero_bin_pendiente_compensation
             "modelo-200-2024-profile-incn-prior-12-months": Decimal("500000"),
             "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
             "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("10000"),
+            # No prior-year unfulfilled credit-impairment balance (casilla 01494).
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         enum_binding_values={
             "modelo-200-2024-profile-legal-entity-form": "sl",
