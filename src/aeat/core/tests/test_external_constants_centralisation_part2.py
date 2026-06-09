@@ -1,4 +1,4 @@
-"""Centralisation contract tests (part 2): IVA rate, modelo-ID group tuples, and renta deduction/amortizacion constants."""
+"""Centralisation contract tests (part 2): IVA rate, modelo-ID groups, and renta deduction/amortizacion constants."""
 
 from __future__ import annotations
 
