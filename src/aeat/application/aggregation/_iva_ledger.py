@@ -1,12 +1,14 @@
 """Repository-backed IVA observation projection from ledger catalogues.
 
-Consumes a :class:`ModeloRevision` to resolve the IVA aggregation binding
+Consumes a :class:`~aeat.domain.calculations.registry.ModeloRevision` to resolve the IVA aggregation binding
 values declared for the target modelo period. The primary entry point
 :func:`aggregate_iva_ledger_observations` accepts a
-:class:`TransactionCatalogue` and returns an :class:`IvaLedgerAggregation`.
+:class:`~aeat.domain.transactions.TransactionCatalogue` and returns an :class:`IvaLedgerAggregation`.
 The repository-backed entry point constructs a
-:class:`TransactionCatalogueRepository` for the active bucket when none
+:class:`~aeat.domain.transactions.TransactionCatalogueRepository` for the active bucket when none
 is supplied.
+
+Related: :mod:`_renta_ledger`, :mod:`_renta_income_ledger` for similar pipelines.
 """
 
 from __future__ import annotations

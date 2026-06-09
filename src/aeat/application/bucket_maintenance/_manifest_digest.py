@@ -1,7 +1,9 @@
 """Manifest-digest helper for the sealed bucket-export archive header.
 
+Used by: :mod:`~._service` (BucketMaintenanceService) to generate export archive digests.
+
 The ``ExportArchiveHeader.manifest_digest`` field carries a
-SHA-256 hex digest over the serialised :class:`BucketManifest` TOML
+SHA-256 hex digest over the serialised :class:`aeat.adapters.persistence.storage.bucket.BucketManifest` TOML
 bytes. The importer cross-checks this digest against the
 freshly-provisioned manifest as a pre-flight integrity gate: a
 mismatched digest means the source archive was generated from a

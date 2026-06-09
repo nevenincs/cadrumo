@@ -1,7 +1,9 @@
-"""Repository-backed Renta income aggregation for actividad económica (Modelo 130).
+"""Repository-backed Renta income aggregation for actividad economía (Modelo 130).
+
+Used by: :mod:`~._service` (per-modelo aggregation service) for Modelo 130 income aggregation.
 
 The primary entry point :func:`aggregate_renta_income_ledger_from_repositories`
-loads a :class:`TransactionCatalogue` via :class:`TransactionCatalogueRepository`
+loads a :class:`~aeat.domain.transactions.TransactionCatalogue` via :class:`~aeat.domain.transactions.TransactionCatalogueRepository`
 from the active bucket and delegates to :func:`aggregate_renta_income_ledger`
 for period-scoped aggregation.
 

@@ -1,7 +1,8 @@
 """Shared group-by + name-cache helper for per-modelo aggregators.
 
-Both :mod:`_retenciones` and :mod:`_counterpart` implement the same
-shape of aggregation: bucket observations by a composite key, then
+Used by: :mod:`_retenciones`, :mod:`_counterpart` to bucket observations and cache canonical names.
+
+Both implement the same shape of aggregation: bucket observations by a composite key, then
 roll up each bucket. They additionally need to resolve a stable
 human-readable name per (source_kind, identity_nif) pair across
 multiple observations.
