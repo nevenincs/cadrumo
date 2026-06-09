@@ -453,3 +453,30 @@ duplication, typed-boundary-over-ignore for types) are already captured by
 existing rules. A codification candidate will be reconsidered only if a burn-down
 slice surfaces a durable, cross-session, project-bound constraint not already
 covered.
+
+## QHC-014 | post-summary reconciliation (current HEAD)
+
+- **Budget regressions (self-inflicted, FIXED — commit `ffee4458b`):** the
+  return-type-link docstring sweep pushed two files past the flat size budgets
+  (`sede/_iva_compensation_wallet.py` 1251 > 1250;
+  `application/modelo/_projection.py:project_modelo_100_from_m130` 182 > 180). Both
+  `Returns a :class:…` sentences folded to one line, preserving the `:class:`
+  cross-reference (return-link gate still green) and recovering the lines. Both
+  budget gates green; ruff + format clean.
+- **Three full-suite-only failures confirmed TRANSIENT:** `test_runtime_graph`,
+  `test_cast_rationale_inventory`, and `test_core_time_deletion_and_cast_rationale`
+  failed in the 23-min full-suite run but PASS at HEAD when re-run together
+  (`1 failed, 5 passed` — only attachments). They were perturbed by a peer's
+  concurrent `entrypoints/cli/_config` WIP and this session's own in-flight commits
+  during the long run, not by a real regression. They are not added to any ratchet.
+- **Single remaining unit failure = QHC-013-A (attachments / `payload_hash`),
+  OPEN by design.** It is a deliberately-red structural gate (added 2026-06-05 by a
+  peer's `5350c5864`, not skipped) per the roundtrip-discipline rule ("write tests
+  that fail loudly today when the structural work is incomplete"). Closing it means
+  making `payload_hash` a keyed HMAC, which changes `derive_revision_id` for every
+  existing secure object across every namespace (modelos, profiles, revisions,
+  attachments) → it requires an integrity-algorithm version bump + migration +
+  security review, i.e. an owner-driven ADR, not a rushed autonomous crypto edit.
+  Literal single-session ALL-GREEN is therefore unreachable honestly: this gate plus
+  the documented multi-session `check-types` ratchet are the two standing blockers,
+  both correctly deferred rather than papered over with a skip/xfail/stub.
