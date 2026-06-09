@@ -283,10 +283,10 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
             binding_values=binding_values,
         )
 
+    @override
     # TYPE-IGNORE-RATIONALE-OVERRIDE-COVARIANT-RETURN:
     # Subclass returns a narrower snapshot type and adds optional filter params;
     # base-class signature widening would ripple to N subclasses.
-    @override
     def list_snapshots(  # type: ignore[override]
         self,
         *,
@@ -315,10 +315,10 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
 
     # ---- SnapshotService[Borrador100Snapshot] hooks ----------------------
 
+    @override
     # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: SnapshotService[T] abstract hook
     # contract uses **kwargs to allow concrete subclasses to accept caller-
     # specific keyword arguments without a shared typed parameter set.
-    @override
     def _derive_snapshot_id(self, **kwargs: Any) -> str:
         return derive_borrador_100_snapshot_id(
             filing_year=kwargs["filing_year"],
@@ -328,10 +328,10 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
             binding_values=kwargs["binding_values"],
         )
 
+    @override
     # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD: SnapshotService[T] abstract
     # _build_active_payload hook carries **kwargs: Any so concrete subclasses
     # accept caller-specific keyword arguments without a shared typed set.
-    @override
     def _build_active_payload(self, *, snapshot_id: str, **kwargs: Any) -> Borrador100Snapshot:
         return Borrador100Snapshot(
             snapshot_id=snapshot_id,
