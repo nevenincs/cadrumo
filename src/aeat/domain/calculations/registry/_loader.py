@@ -245,41 +245,46 @@ class RegistryLocaleTranslation(BaseModel):
     help: dict[str, str] = Field(default_factory=dict)
 
 
-def _apply_locales(modelo_dir: Path, merged_revisions: dict[str, object]) -> None:
-    # 1. Load modelo-wide translations
-    modelo_translations: dict[str, RegistryLocaleTranslation] = {}
+def _load_locale_translation(path: Path) -> RegistryLocaleTranslation:
+    try:
+        raw_data = freeze_toml(read_toml(path, error_factory=RegistryLoadError))
+        return RegistryLocaleTranslation.model_validate(raw_data)
+    except Exception as exc:
+        raise RegistryValidationError(f"Invalid locales file {path}: {exc}") from exc
+
+
+def _load_modelo_translations(modelo_dir: Path) -> dict[str, RegistryLocaleTranslation]:
+    translations: dict[str, RegistryLocaleTranslation] = {}
     locales_dir = modelo_dir / "locales"
     if locales_dir.is_dir():
         for path in sorted(locales_dir.glob("*.toml")):
-            locale = path.stem
-            try:
-                raw_data = freeze_toml(read_toml(path, error_factory=RegistryLoadError))
-                modelo_translations[locale] = RegistryLocaleTranslation.model_validate(raw_data)
-            except Exception as exc:
-                raise RegistryValidationError(f"Invalid locales file {path}: {exc}") from exc
+            translations[path.stem] = _load_locale_translation(path)
+    return translations
 
-    # 2. Load revision-local translations
-    revision_translations: dict[str, dict[str, RegistryLocaleTranslation]] = {}
+
+def _load_revision_translations(
+    modelo_dir: Path,
+) -> dict[str, dict[str, RegistryLocaleTranslation]]:
+    translations: dict[str, dict[str, RegistryLocaleTranslation]] = {}
     revisions_dir = modelo_dir / "revisions"
-    if revisions_dir.is_dir():
-        for path in sorted(revisions_dir.iterdir()):
-            if path.is_dir():
-                revision_id = path.name
-                rev_locales_dir = path / "locales"
-                if rev_locales_dir.is_dir():
-                    for locale_path in sorted(rev_locales_dir.glob("*.toml")):
-                        locale = locale_path.stem
-                        try:
-                            raw_data = freeze_toml(read_toml(locale_path, error_factory=RegistryLoadError))
-                            trans = RegistryLocaleTranslation.model_validate(raw_data)
-                            revision_translations.setdefault(revision_id, {})[locale] = trans
-                        except Exception as exc:
-                            raise RegistryValidationError(f"Invalid locales file {locale_path}: {exc}") from exc
+    if not revisions_dir.is_dir():
+        return translations
+    for path in sorted(revisions_dir.iterdir()):
+        if not path.is_dir():
+            continue
+        rev_locales_dir = path / "locales"
+        if not rev_locales_dir.is_dir():
+            continue
+        for locale_path in sorted(rev_locales_dir.glob("*.toml")):
+            translations.setdefault(path.name, {})[locale_path.stem] = _load_locale_translation(locale_path)
+    return translations
 
-    # 3. Collect valid casilla_ids and continuity_ids
+
+def _collect_valid_locale_ids(
+    merged_revisions: dict[str, object],
+) -> tuple[dict[str, set[str]], set[str]]:
     valid_casilla_ids: dict[str, set[str]] = {}
     valid_continuidad_ids: set[str] = set()
-
     for revision_id, raw_rev in merged_revisions.items():
         raw_rev_table = _as_toml_table(raw_rev)
         if raw_rev_table is None:
@@ -287,8 +292,7 @@ def _apply_locales(modelo_dir: Path, merged_revisions: dict[str, object]) -> Non
         casillas_list = raw_rev_table.get("casillas", ())
         if not isinstance(casillas_list, (list, tuple)):
             continue
-
-        rev_casilla_ids = set()
+        rev_casilla_ids: set[str] = set()
         for casilla in casillas_list:
             casilla_table = _as_toml_table(casilla)
             if casilla_table is None:
@@ -300,43 +304,94 @@ def _apply_locales(modelo_dir: Path, merged_revisions: dict[str, object]) -> Non
             if isinstance(cont_id, str):
                 valid_continuidad_ids.add(cont_id)
         valid_casilla_ids[revision_id] = rev_casilla_ids
+    return valid_casilla_ids, valid_continuidad_ids
 
-    # 4. Check referential integrity
-    # Modelo-wide locales check
+
+def _validate_translation_keys(
+    trans: RegistryLocaleTranslation,
+    valid_ids: set[str],
+    locale: str,
+    *,
+    context: str,
+    reason: str,
+) -> None:
+    for field_name, mapping in (("labels", trans.labels), ("help", trans.help)):
+        for key in mapping:
+            if key not in valid_ids:
+                raise RegistryValidationError(
+                    f"Invalid translation key {key!r} in {field_name} for locale {locale!r}{context}: {reason}"
+                )
+
+
+def _check_locale_referential_integrity(
+    modelo_translations: dict[str, RegistryLocaleTranslation],
+    revision_translations: dict[str, dict[str, RegistryLocaleTranslation]],
+    valid_casilla_ids: dict[str, set[str]],
+    valid_continuidad_ids: set[str],
+) -> None:
     for locale, trans in modelo_translations.items():
-        for key in trans.labels:
-            if key not in valid_continuidad_ids:
-                raise RegistryValidationError(
-                    f"Invalid translation key {key!r} in labels for locale {locale!r}: "
-                    "no continuity chain found with this continuity id"
-                )
-        for key in trans.help:
-            if key not in valid_continuidad_ids:
-                raise RegistryValidationError(
-                    f"Invalid translation key {key!r} in help for locale {locale!r}: "
-                    "no continuity chain found with this continuity id"
-                )
-
-    # Revision-local locales check
+        _validate_translation_keys(
+            trans,
+            valid_continuidad_ids,
+            locale,
+            context="",
+            reason="no continuity chain found with this continuity id",
+        )
     for revision_id, locale_map in revision_translations.items():
         rev_ids = valid_casilla_ids.get(revision_id, set())
         for locale, trans in locale_map.items():
-            for key in trans.labels:
-                if key not in rev_ids:
-                    raise RegistryValidationError(
-                        f"Invalid translation key {key!r} in labels for locale {locale!r} "
-                        f"under revision {revision_id!r}: "
-                        "no casilla found with this id"
-                    )
-            for key in trans.help:
-                if key not in rev_ids:
-                    raise RegistryValidationError(
-                        f"Invalid translation key {key!r} in help for locale {locale!r} "
-                        f"under revision {revision_id!r}: "
-                        "no casilla found with this id"
-                    )
+            _validate_translation_keys(
+                trans,
+                rev_ids,
+                locale,
+                context=f" under revision {revision_id!r}",
+                reason="no casilla found with this id",
+            )
 
-    # 5. Inject localized_labels and localized_help into the raw casilla dictionaries
+
+def _localize_casilla(
+    casilla: object,
+    revision_id: str,
+    modelo_translations: dict[str, RegistryLocaleTranslation],
+    revision_translations: dict[str, dict[str, RegistryLocaleTranslation]],
+) -> object:
+    casilla_table = _as_toml_table(casilla)
+    if casilla_table is None:
+        return casilla
+
+    casilla_id = casilla_table.get("id")
+    continuidad_id = casilla_table.get("continuidad_id")
+
+    localized_labels: dict[str, str] = {}
+    localized_help: dict[str, str] = {}
+
+    # Concept continuity (modelo-wide) translations
+    if isinstance(continuidad_id, str):
+        for locale, trans in modelo_translations.items():
+            if continuidad_id in trans.labels:
+                localized_labels[locale] = trans.labels[continuidad_id]
+            if continuidad_id in trans.help:
+                localized_help[locale] = trans.help[continuidad_id]
+
+    # Revision-local override translations
+    if isinstance(casilla_id, str):
+        for locale, trans in revision_translations.get(revision_id, {}).items():
+            if casilla_id in trans.labels:
+                localized_labels[locale] = trans.labels[casilla_id]
+            if casilla_id in trans.help:
+                localized_help[locale] = trans.help[casilla_id]
+
+    new_casilla = dict(casilla_table)
+    new_casilla["localized_labels"] = localized_labels
+    new_casilla["localized_help"] = localized_help
+    return new_casilla
+
+
+def _inject_localized_translations(
+    merged_revisions: dict[str, object],
+    modelo_translations: dict[str, RegistryLocaleTranslation],
+    revision_translations: dict[str, dict[str, RegistryLocaleTranslation]],
+) -> None:
     for revision_id, raw_rev in merged_revisions.items():
         raw_rev_table = _as_toml_table(raw_rev)
         if raw_rev_table is None:
@@ -344,43 +399,20 @@ def _apply_locales(modelo_dir: Path, merged_revisions: dict[str, object]) -> Non
         casillas_list = raw_rev_table.get("casillas", ())
         if not isinstance(casillas_list, (list, tuple)):
             continue
+        raw_rev_table["casillas"] = tuple(
+            _localize_casilla(casilla, revision_id, modelo_translations, revision_translations)
+            for casilla in casillas_list
+        )
 
-        new_casillas = []
-        for casilla in casillas_list:
-            casilla_table = _as_toml_table(casilla)
-            if casilla_table is None:
-                new_casillas.append(casilla)
-                continue
 
-            casilla_id = casilla_table.get("id")
-            continuidad_id = casilla_table.get("continuidad_id")
-
-            localized_labels = {}
-            localized_help = {}
-
-            # Concept continuity (modelo-wide) translations
-            if isinstance(continuidad_id, str):
-                for locale, trans in modelo_translations.items():
-                    if continuidad_id in trans.labels:
-                        localized_labels[locale] = trans.labels[continuidad_id]
-                    if continuidad_id in trans.help:
-                        localized_help[locale] = trans.help[continuidad_id]
-
-            # Revision-local override translations
-            if isinstance(casilla_id, str):
-                for locale, trans in revision_translations.get(revision_id, {}).items():
-                    if casilla_id in trans.labels:
-                        localized_labels[locale] = trans.labels[casilla_id]
-                    if casilla_id in trans.help:
-                        localized_help[locale] = trans.help[casilla_id]
-
-            # Reconstruct the casilla dictionary with the injected maps
-            new_casilla = dict(casilla_table)
-            new_casilla["localized_labels"] = localized_labels
-            new_casilla["localized_help"] = localized_help
-            new_casillas.append(new_casilla)
-
-        raw_rev_table["casillas"] = tuple(new_casillas)
+def _apply_locales(modelo_dir: Path, merged_revisions: dict[str, object]) -> None:
+    modelo_translations = _load_modelo_translations(modelo_dir)
+    revision_translations = _load_revision_translations(modelo_dir)
+    valid_casilla_ids, valid_continuidad_ids = _collect_valid_locale_ids(merged_revisions)
+    _check_locale_referential_integrity(
+        modelo_translations, revision_translations, valid_casilla_ids, valid_continuidad_ids
+    )
+    _inject_localized_translations(merged_revisions, modelo_translations, revision_translations)
 
 
 @lru_cache(maxsize=64)
