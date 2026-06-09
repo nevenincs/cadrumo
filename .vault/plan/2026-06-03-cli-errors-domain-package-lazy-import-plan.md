@@ -10,12 +10,15 @@ related:
   - '[[2026-06-03-user-profile-lazy-import-adr]]'
 ---
 
-
-
-
-
-
-
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `cli-errors-domain-package-lazy-import` `Lazy domain-package boundary execution` plan
 
@@ -23,18 +26,16 @@ related:
 
 Convert aeat.domain.user_profile/__init__.py to dispatch UserProfilePortableExport through PEP 562 __getattr__ and land the producer-side probe.
 
-
-
-- [ ] `P01.S01` - convert to dispatch UserProfilePortableExport via module-level __getattr__ (PEP 562); `src/aeat/domain/user_profile/__init__.py`.
-- [ ] `P01.S02` - add producer-side regression probe asserting fresh-interpreter import places zero registry modules; `src/aeat/domain/user_profile/test_lazy_boundary.py`.
+- [x] `P01.S01` - convert to dispatch UserProfilePortableExport via module-level __getattr__ (PEP 562); `src/aeat/domain/user_profile/__init__.py`.
+- [x] `P01.S02` - add producer-side regression probe asserting fresh-interpreter import places zero registry modules; `src/aeat/domain/user_profile/test_lazy_boundary.py`.
 
 ### Phase `P02` - verify the CLI gate is green end-to-end
 
 Run the CLI lazy-command-tree gate plus the producer probes to confirm 6/6 green and the application-package boundary is preserved.
 
-- [ ] `P02.S03` - run pytest test_lazy_command_tree and confirm 6/6 green; `src/aeat/entrypoints/cli/test_lazy_command_tree.py`.
-- [ ] `P02.S04` - re-run application-side probe to confirm parent boundary preserved; `src/aeat/application/user_profile/test_lazy_boundary.py`.
-- [ ] `P02.S05` - re-run cli suite and confirm no new reds beyond pre-existing baseline; `src/aeat/entrypoints/cli`.
+- [x] `P02.S03` - run pytest test_lazy_command_tree and confirm 6/6 green; `src/aeat/entrypoints/cli/test_lazy_command_tree.py`.
+- [x] `P02.S04` - re-run application-side probe to confirm parent boundary preserved; `src/aeat/application/user_profile/test_lazy_boundary.py`.
+- [x] `P02.S05` - re-run cli suite and confirm no new reds beyond pre-existing baseline; `src/aeat/entrypoints/cli`.
 
 ## Description
 
@@ -63,4 +64,3 @@ The plan is complete when every Step closes against a verifiable gate:
 - The producer-side probe at `src/aeat/application/user_profile/test_lazy_boundary.py` continues to pass: the parent campaign's application-package boundary is preserved.
 - The CLI suite under `src/aeat/entrypoints/cli/` shows no new reds beyond the pre-existing baseline at the start of this campaign.
 - The relocation lands as one atomic explicit-path commit per the `aeat-architecture-boundaries` symbol-relocation atomicity clause.
-
