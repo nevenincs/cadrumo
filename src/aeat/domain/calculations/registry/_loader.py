@@ -1015,6 +1015,9 @@ def _collect_registry_tree_fingerprints(resolved: Path) -> tuple[tuple[str, int,
     if modelos_dir.is_dir():
         for entry in sorted(modelos_dir.iterdir()):
             fingerprints.extend(_modelo_directory_fingerprints(entry))
+    schema_path = resolved / "user_profile" / "schema.toml"
+    if schema_path.is_file():
+        fingerprints.append(_toml_fingerprint(schema_path))
     res = tuple(fingerprints)
     _registry_fingerprint_cache[resolved] = (now, res)
     return res
