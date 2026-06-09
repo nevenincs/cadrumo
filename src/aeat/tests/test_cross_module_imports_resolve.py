@@ -250,10 +250,8 @@ _INIT_MISSING_FROM_ALL_BASELINE: dict[str, int] = {
     # Decrement the cap (never increment) as imports get listed.
     "aeat/application/filing/__init__.py": 12,
     "aeat/application/live/__init__.py": 1,
-    "aeat/application/overview/__init__.py": 2,
     "aeat/core/corpus_manifest/__init__.py": 1,
     "aeat/entrypoints/cli/__init__.py": 1,
-    "aeat/entrypoints/cli/_config/__init__.py": 5,
 }
 
 

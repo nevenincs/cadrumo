@@ -1093,12 +1093,20 @@ from ._google import google_app as _google_app
 app.add_typer(_google_app, name="google")
 
 __all__ = [
+    "OutputLanguage",
     "_parse_bucket_event_types",
     "apoderado_app",
     "app",
     "auth_app",
+    "auth_diagnostics_app",
     "bucket_app",
     "profile_app",
+    "register_apoderado_commands",
+    "register_bucket_history_commands",
+    "register_custody_commands",
+    "register_profile_bundle_commands",
+    "register_repair_maintenance_commands",
+    "register_repair_profile_command",
     "repair_app",
     "tr",
 ]
