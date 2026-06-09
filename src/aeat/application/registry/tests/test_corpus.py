@@ -290,17 +290,47 @@ def test_manuals_list_report_rows_verify_against_canonical_corpus() -> None:
     assert verification.part == listed_part.part
 
 
-def test_manuals_list_report_rows_show_manifest_metadata_without_structure() -> None:
-    report = list_registry_manuals(RegistryManualsListCommand(manual=RegistryManualId.RENTA, year=2025))
-    listed_part = next(part for part in report.parts if part.part == ManualPart.PARTE_1.value)
+def _write_unextracted_renta_part1(root: Path) -> None:
+    """Write a synthetic RENTA 2025 part1 manual: manifest + source.pdf, no extracted structure/.
 
-    manual = show_registry_manual(
-        RegistryManualShowCommand(
-            manual=RegistryManualId(listed_part.manual_id),
-            year=listed_part.year,
-            part=ManualPart(listed_part.part),
-        )
+    The bundled corpus is now fully extracted, so the 'manual without extracted
+    structure' contracts are exercised against this synthetic part rather than a
+    real corpus part whose extraction state changes.
+    """
+    part_root = root / "renta" / "2025" / "part1"
+    part_root.mkdir(parents=True)
+    (part_root / "source.pdf").write_bytes(b"%PDF-1.4\n%%EOF\n")
+    (part_root / "manifest.json").write_text(
+        json.dumps(
+            {
+                "content_length": 12,
+                "fetched_at": "2026-01-01T00:00:00Z",
+                "manual_id": "renta",
+                "part": "part1",
+                "relative_pdf_path": "source.pdf",
+                "sha256": "0" * 64,
+                "source_pdf_url": "https://sede.agenciatributaria.gob.es/static_files/synthetic/renta-2025-part1.pdf",
+                "synthetic": True,
+                "year": 2025,
+            }
+        ),
+        encoding="utf-8",
     )
+
+
+def test_manuals_list_report_rows_show_manifest_metadata_without_structure(tmp_path: Path) -> None:
+    _write_unextracted_renta_part1(tmp_path)
+    with override_settings(aeat_manuals_root=tmp_path):
+        report = list_registry_manuals(RegistryManualsListCommand(manual=RegistryManualId.RENTA, year=2025))
+        listed_part = next(part for part in report.parts if part.part == ManualPart.PARTE_1.value)
+
+        manual = show_registry_manual(
+            RegistryManualShowCommand(
+                manual=RegistryManualId(listed_part.manual_id),
+                year=listed_part.year,
+                part=ManualPart(listed_part.part),
+            )
+        )
 
     assert manual.manual_id == listed_part.manual_id
     assert manual.year == listed_part.year
@@ -311,19 +341,21 @@ def test_manuals_list_report_rows_show_manifest_metadata_without_structure() -> 
     assert manual.section_count == 0
 
 
-def test_manuals_view_refuses_section_when_structure_is_not_extracted_with_localized_error() -> None:
-    report = list_registry_manuals(RegistryManualsListCommand(manual=RegistryManualId.RENTA, year=2025))
-    listed_part = next(part for part in report.parts if part.part == ManualPart.PARTE_1.value)
+def test_manuals_view_refuses_section_when_structure_is_not_extracted_with_localized_error(tmp_path: Path) -> None:
+    _write_unextracted_renta_part1(tmp_path)
+    with override_settings(aeat_manuals_root=tmp_path):
+        report = list_registry_manuals(RegistryManualsListCommand(manual=RegistryManualId.RENTA, year=2025))
+        listed_part = next(part for part in report.parts if part.part == ManualPart.PARTE_1.value)
 
-    with pytest.raises(RegistryApplicationInputError) as exc_info:
-        show_registry_manual(
-            RegistryManualShowCommand(
-                manual=RegistryManualId(listed_part.manual_id),
-                year=listed_part.year,
-                part=ManualPart(listed_part.part),
-                section="missing-section",
+        with pytest.raises(RegistryApplicationInputError) as exc_info:
+            show_registry_manual(
+                RegistryManualShowCommand(
+                    manual=RegistryManualId(listed_part.manual_id),
+                    year=listed_part.year,
+                    part=ManualPart(listed_part.part),
+                    section="missing-section",
+                )
             )
-        )
 
     assert exc_info.value.translated_message == "application.registry.errors.manual_section_requires_structure"
     assert exc_info.value.context == {
@@ -337,17 +369,19 @@ def test_manuals_view_refuses_section_when_structure_is_not_extracted_with_local
     }
 
 
-def test_manuals_list_report_rows_rules_returns_extracted_rule_report() -> None:
-    report = list_registry_manuals(RegistryManualsListCommand(manual=RegistryManualId.RENTA, year=2025))
-    listed_part = next(part for part in report.parts if part.part == ManualPart.PARTE_1.value)
+def test_manuals_list_report_rows_rules_returns_extracted_rule_report(tmp_path: Path) -> None:
+    _write_unextracted_renta_part1(tmp_path)
+    with override_settings(aeat_manuals_root=tmp_path):
+        report = list_registry_manuals(RegistryManualsListCommand(manual=RegistryManualId.RENTA, year=2025))
+        listed_part = next(part for part in report.parts if part.part == ManualPart.PARTE_1.value)
 
-    rules = list_registry_manual_rules(
-        RegistryManualRulesCommand(
-            manual=RegistryManualId(listed_part.manual_id),
-            year=listed_part.year,
-            part=ManualPart(listed_part.part),
+        rules = list_registry_manual_rules(
+            RegistryManualRulesCommand(
+                manual=RegistryManualId(listed_part.manual_id),
+                year=listed_part.year,
+                part=ManualPart(listed_part.part),
+            )
         )
-    )
 
     assert rules.manual_id == listed_part.manual_id
     assert rules.year == listed_part.year
