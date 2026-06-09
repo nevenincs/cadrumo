@@ -1342,7 +1342,7 @@ cli:
           vàlid: {details}.'
         modelo_help: Codi de model admès (111, 115, 123, 180, 190, 193, 347, 349 o
           720)
-        period_help: Període enviat al servei d'agregació
+        period_help: 'Token de periode d''agregacio: 0A anual, 1T-4T trimestres, 01-12 mesos.'
         retencion_observation_help: Objecte JSON RetencionObservation; repeteix l'opció
           per a diverses observacions
       aggregate_help: Executa l'agregació per model amb observacions canòniques explícites
@@ -1387,8 +1387,7 @@ cli:
         input_kind_help: Filtrar les caselles per tipus d'entrada (manual, bound,
           computed, informational)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
-        period_help: Token de periode; per a Modelo 036 usa alta, modificacion o baja;
-          exemples periodics inclouen 2026Q1 i 2026-01
+        period_help: 'Token de periode per resoldre la revisio del model: 0A anual, 1T-4T trimestres, 01-12 mesos; per a models censals (036) usa alta, modificacion o baja.'
         required_help: Mostrar només les caselles marcades com a obligatòries
       compare:
         modelo_help: Número de model a comparar (p. ex. 100, 130).
@@ -1464,11 +1463,10 @@ cli:
         help: Llistar totes les caselles calculades i les seves formules per a la
           revisio d'un model especific.
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
-        period_help: Token de periode; per a Modelo 036 usa alta, modificacion o baja;
-          exemples periodics inclouen 2026Q1 i 2026-01
+        period_help: 'Token de periode per resoldre la revisio del model: 0A anual, 1T-4T trimestres, 01-12 mesos; per a models censals (036) usa alta, modificacion o baja.'
       history:
         modelo_help: Codi de model (p. ex. 100, 303)
-        period_help: Filtre opcional de període (p. ex. Q1, annual)
+        period_help: 'Filtre opcional de periode amb el token de revisio del model: 0A anual, 1T-4T trimestres, 01-12 mesos; per a models censals (036) usa alta, modificacion o baja.'
         year_help: Filtre opcional d'exercici de presentació
       history_help: Mostra l'auditoria cronològica del cicle de vida d'un model
       iva_wallet:
@@ -1487,7 +1485,7 @@ cli:
         seed_help: Creació d'un registre d'import inicial del moneder de compensació
           d'IVA per inicialitzar el saldo anterior del moneder.
         seed_invalid_amount: L'import inicial ha de ser un decimal vàlid i no negatiu.
-        seed_period_help: Període de l'import inicial (p. ex. 2024N4).
+        seed_period_help: 'Periode de la presentacio del Model 303: trimestres 1T-4T (p. ex. 4T).'
       list:
         help: Llistar tots els models tributaris oficials registrats en el sistema.
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
@@ -1524,7 +1522,7 @@ cli:
         del Modelo 130).
       readiness:
         modelo_help: Codi de model (p. ex. 303).
-        period_help: Token de període (p. ex. Q1, annual).
+        period_help: 'Token de periode per resoldre la revisio del model: 0A anual, 1T-4T trimestres, 01-12 mesos; per a models censals (036) usa alta, modificacion o baja.'
         revision_help: Identificador de revisió del registre.
         year_help: Exercici de presentació.
       readiness_help: Informa de si el perfil actiu està a punt per presentar un model
@@ -2515,6 +2513,7 @@ cli:
         Executa `aeat app ledger categories` per veure tots els identificadors reconeguts.
       unknown_provider: 'Proveïdor d''importació --provider {provider!r} desconegut.
         Proveïdors reconeguts: {providers}.'
+      business_pct_out_of_range: 'La proporció d''ús professional %{value} (= %{percent}) està fora de rang. Introdueix una proporció entre 0 i 1, p. ex. 0.5 per al 50 per cent.'
     export:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       format_help: Format de serialització d'exportació

@@ -1291,7 +1291,7 @@ cli:
           {details}.'
         modelo_help: A háttéraggregálási szolgáltatás által támogatott nyomtatványkód
           (111, 115, 123, 180, 190, 193, 347, 349 vagy 720).
-        period_help: A háttérszolgáltatásnak átadott aggregálási időszak.
+        period_help: 'Aggregációs időszaktoken: 0A éves, 1T-4T negyedévek, 01-12 hónapok.'
         retencion_observation_help: JSON RetencionObservation objektum. A source_kind
           értéke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy
           collectible_invoice lehet. Több megfigyeléshez ismételje meg.
@@ -1340,8 +1340,7 @@ cli:
         input_kind_help: Mezők szűrése beviteli típus szerint (manual, bound, computed,
           informational).
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
-        period_help: 'Időszaktokent; Modelo 036-hoz: alta, modificacion vagy baja;
-          időszaki példák: 2026N1, 2026-01.'
+        period_help: 'A nyomtatvány-revíziót feloldó időszaktoken: 0A éves, 1T-4T negyedévek, 01-12 hónapok; nyilvántartási nyomtatványokhoz (036): alta, modificacion vagy baja.'
         required_help: Csak a nyomtatvány által kötelezőként jelölt mezők megjelenítése.
       compare:
         modelo_help: Az összehasonlítandó modell száma (pl. 100, 130).
@@ -1418,11 +1417,10 @@ cli:
         help: A kivalasztott modelo verziohoz tartozo osszes szamitott casilla es
           keplet listazasa.
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
-        period_help: 'Időszaktokent; Modelo 036-hoz: alta, modificacion vagy baja;
-          időszaki példák: 2026N1, 2026-01.'
+        period_help: 'A nyomtatvány-revíziót feloldó időszaktoken: 0A éves, 1T-4T negyedévek, 01-12 hónapok; nyilvántartási nyomtatványokhoz (036): alta, modificacion vagy baja.'
       history:
         modelo_help: Nyomtatványkód (pl. 100, 303).
-        period_help: Opcionális időszakszűrő (pl. N1, annual).
+        period_help: 'Opcionális időszakszűrő a nyomtatvány-revízió tokenjével: 0A éves, 1T-4T negyedévek, 01-12 hónapok; nyilvántartási nyomtatványokhoz (036): alta, modificacion vagy baja.'
         year_help: Opcionális benyújtási év szűrő.
       history_help: Egy nyomtatvány kronológiai életciklus-auditjának megjelenítése.
       iva_wallet:
@@ -1440,7 +1438,7 @@ cli:
           pénztárca-egyenleg inicializálásához.
         seed_invalid_amount: A vetőösszegnek érvényes, nem negatív decimálisnak kell
           lennie.
-        seed_period_help: A vetőösszeg időszaka (pl. 2024N4).
+        seed_period_help: 'A 303-as nyomtatvány benyújtásának időszaka: 1T-4T negyedévek (pl. 4T).'
       list:
         help: A rendszerben regisztralt osszes hivatalos adobevallas (modelo) listazasa.
         year_help: A nyomtatványkatalógus szűrése egyetlen adóévre.
@@ -1478,7 +1476,7 @@ cli:
         összesítés).
       readiness:
         modelo_help: Nyomtatványkód (pl. 303).
-        period_help: Időszaktokent (pl. N1, annual).
+        period_help: 'A nyomtatvány-revíziót feloldó időszaktoken: 0A éves, 1T-4T negyedévek, 01-12 hónapok; nyilvántartási nyomtatványokhoz (036): alta, modificacion vagy baja.'
         revision_help: Nyilvántartási revízió azonosítója.
         year_help: Benyújtási év.
       readiness_help: Jelentés arról, hogy az aktív profil készen áll-e egy nyomtatvány/év/időszak
@@ -2479,6 +2477,7 @@ cli:
         listázásához.'
       unknown_provider: 'Ismeretlen importálási --provider {provider!r}. Elismert
         szolgáltatók: {providers}.'
+      business_pct_out_of_range: 'A(z) %{value} (= %{percent}) üzleti használati arány tartományon kívül esik. Adj meg 0 és 1 közötti arányt, pl. 0.5 az 50 százalékhoz.'
     export:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       format_help: Exportálási sorosítási formátum.

@@ -1254,7 +1254,7 @@ cli:
           {details}.'
         modelo_help: Supported modelo code for the backend aggregation service (111,
           115, 123, 180, 190, 193, 347, 349, or 720).
-        period_help: Aggregation period passed to the backend service.
+        period_help: 'Aggregation period token: 0A annual, 1T-4T quarters, 01-12 months.'
         retencion_observation_help: JSON RetencionObservation object. The source_kind
           value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
           or collectible_invoice. Repeat for multiple observations.
@@ -1298,8 +1298,7 @@ cli:
         help: List all casillas (fields/boxes) defined for a specific modelo revision.
         input_kind_help: Filter casillas by input kind (manual, bound, computed, informational)
         modelo_help: Tax form code (e.g. 303, 130, 100)
-        period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
-          periodic examples include 2026Q1 and 2026-01
+        period_help: 'Period token used to resolve the modelo revision: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.'
         required_help: Show only casillas the modelo marks as required
       compare:
         modelo_help: Modelo number to compare (e.g. 100, 130).
@@ -1371,11 +1370,10 @@ cli:
         help: List all computed casillas and their formulas for a specific modelo
           revision.
         modelo_help: Tax form code (e.g. 303, 130, 100)
-        period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
-          periodic examples include 2026Q1 and 2026-01
+        period_help: 'Period token used to resolve the modelo revision: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.'
       history:
         modelo_help: Modelo code (e.g. 100, 303)
-        period_help: Optional period filter (e.g. Q1, annual)
+        period_help: 'Optional period filter using the modelo revision token: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.'
         year_help: Optional filing year filter
       history_help: Show the chronological lifecycle audit for one modelo
       iva_wallet:
@@ -1404,7 +1402,7 @@ cli:
           \ tool or directly with AEAT. X is the compensacion pendiente de periodos\
           \ posteriores from the last filed M303."
         seed_invalid_amount: The seed amount must be a valid, non-negative decimal.
-        seed_period_help: Period of the seed amount (e.g. 2024N4).
+        seed_period_help: 'Period of the Modelo 303 filing: 1T-4T quarters (e.g. 4T).'
       list:
         help: List all official tax forms (modelos) registered in the system.
         year_help: Filter the modelo catalogue to a single fiscal year
@@ -1441,7 +1439,7 @@ cli:
       project_help: Run modelo aggregate projections (e.g. year-end Modelo 130 aggregation).
       readiness:
         modelo_help: Modelo code (e.g. 303).
-        period_help: Period token (e.g. Q1, annual).
+        period_help: 'Period token used to resolve the modelo revision: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.'
         revision_help: Registry revision id.
         year_help: Filing year.
       readiness_help: Report whether the active profile is ready to file one modelo
@@ -2377,6 +2375,7 @@ cli:
         app ledger categories` to list every recognised id.
       unknown_provider: 'Unknown import --provider {provider!r}. Recognised providers:
         {providers}.'
+      business_pct_out_of_range: 'Business-use share %{value} (= %{percent}) is out of range. Enter a share between 0 and 1, e.g. 0.5 for 50 percent.'
     export:
       actor_help: Operator name recorded on the bucket event
       format_help: Export serialization format
