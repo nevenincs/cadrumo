@@ -158,6 +158,65 @@ genuine drift before quoting a target number.
 5. Treat suite runs as rolling checkpoints; never declare the campaign "done".
    Re-run the relevant lane after each landed slice and update this audit.
 
+## ALL-GREEN re-scope and progress (2026-06-09)
+
+The campaign goal was raised to ALL-GREEN: every `check-all` hard gate plus all
+test suites (unit, integration, live) green. The `check-all` suite hard-gates on
+`check-style`, `check-format`, `check-types`, `check-imports`,
+`check-relative-imports`, and `check-dependencies` — so `check-types` (0 ty over
+`src` plus 0 pyright over domain+application) is a hard gate, not advisory. Live
+tests skip cleanly unless `AEAT_LIVE_TESTS_ENABLED=1`, so "live green" means clean
+collection and clean skips, not real AEAT access.
+
+### QHC-006 | CLOSED | Keystone type fix: register_schema was not type-preserving
+
+`register_schema` (in `src/aeat/core/json_contract.py`) returned
+`Callable[[RegisteredSchema], RegisteredSchema]` where
+`RegisteredSchema = type[OutputSchema] | type[OutputRootSchema[Any]]`. ty
+therefore typed every `@register_schema`-decorated CLI payload as that union and
+modelled its constructor as `RootModel(root=...)`, emitting a `missing-argument:
+root` plus an `unknown-argument` for every real field across all CLI payload
+modules. Making the decorator generic over the decorated class (PEP 695, matching
+`SchemaEnvelope[ResultT: OutputSchema]`) preserves the exact subclass type.
+Runtime behaviour unchanged. Impact: full-tree ty dropped 2383 -> 1126 (-1257);
+the `unknown-argument` class is eliminated and `missing-argument` fell 116 -> 7.
+`_app_live.py` alone went 154 -> 0. Landed `fix(types): make register_schema
+type-preserving`.
+
+### QHC-003 progress | 6 of 28 cognitive hotspots cleared
+
+Cleared below threshold 20, each behaviour-preserving with focused tests green:
+`_loader.py::_apply_locales` (108), `_cross_period_clean_state.py::_evaluate_requirement`
+(48) and `::_evaluate_filing_history` (25, also converted `dict[str, object]` to a
+typed `_FilingHistory` so ty for that file dropped 15 -> 9),
+`_bindings_previous_filing.py::resolve_previous_filing_binding_values` (44), and
+`_record_design_coverage.py::calculation_closure_identities` (37) +
+`::calculation_closure_numbers` (29) via a shared `_walk_calculation_closure`
+(also removed one clone family). Remaining over-threshold: ~22, led by
+`_config/_google.py::_push_secure_object_mirror_rows` (37),
+`_cross_revision_divergence.py::_iter_cross_revision_casilla_divergences` (34),
+`live/_errors.py::classify_live_iva_acquisition_failure` (32).
+
+### QHC-005 refresh | check-types now 2028 (1126 ty + 902 pyright)
+
+After the keystone, no single further mega-fix remains; the residue is a genuine
+long tail. ty classes: `invalid-argument-type` 604 (109 are `found object`, e.g.
+the `**_verify_row(...)` `Mapping[str, object]` splat into CLI payloads),
+`unresolved-attribute` 190, `missing-override-decorator` 174 (mechanical; spread
+over ~50 files), then smaller classes. pyright classes: `reportMissingParameterType`
+329 (mechanical), `reportArgumentType` 324, `reportAttributeAccessIssue` 89,
+`reportUnsupportedDunderAll` 36. Burn-down order: mechanical classes
+(`missing-override`, `reportMissingParameterType`) first as low-risk bulk, then
+the row-splat helpers' return types, then genuine argument-type drift per package.
+
+### QHC-007 | OPEN | Test-suite baseline (for the all-tests-green goal)
+
+`test_json_schema_conformance.py::test_every_cli_leaf_has_a_registered_schema`
+fails pre-existing on CLI/registry drift (201 registry keys with no matching CLI
+leaf, 1 CLI leaf with no schema) — not caused by the keystone (runtime-identical).
+A full `-m unit` run is in progress to enumerate the rest; treat each failure as
+an in-scope all-green item.
+
 ## Codification candidates
 
 None yet. The campaign's mechanics (fix-or-justify-at-line for semgrep,
