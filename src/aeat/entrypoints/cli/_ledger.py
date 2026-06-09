@@ -499,7 +499,10 @@ def ledger_classify(
         "--from-csv",
         help=tr(
             "cli.ledger.classify.from_csv_help",
-            default="Path to a CSV file with columns transaction_id, classification[, category_id].",
+            default=(
+                "Path to a CSV file with columns transaction_id, classification"
+                "[, category_id, business_pct, taxable_base, iva_rate, iva_amount]."
+            ),
         ),
     ),
     business_pct: str | None = typer.Option(

@@ -2481,8 +2481,7 @@ cli:
         (ISO 3166-1 alfa-2 minúsculas, p. ej. de); obligatorio con --iva-category
         intra_community_supply, prohibido con export_third_country_zero_rated
       from_csv_exclusive: --from-csv no puede combinarse con --id ni --classification.
-      from_csv_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
-        category_id].
+      from_csv_help: 'Ruta a un archivo CSV con columnas transaction_id, classification[, category_id, business_pct, taxable_base, iva_rate, iva_amount].'
       from_csv_not_found: 'Archivo CSV no encontrado: %{path}'
       help: Clasificar un movimiento del libro en el bucket del perfil activo
       id_help: Id del movimiento del libro a clasificar

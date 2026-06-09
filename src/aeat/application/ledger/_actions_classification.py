@@ -72,11 +72,17 @@ def bulk_classify_from_csv(
     """Apply batch classifications from a CSV string.
 
     The CSV must contain ``transaction_id`` and ``classification`` columns;
-    ``category_id`` is optional. Unknown columns are rejected before
+    ``category_id``, ``business_pct``, ``taxable_base``, ``iva_rate``, and
+    ``iva_amount`` are optional. The IVA facts ride the same
+    :class:`ManualLedgerTransactionPatch` and
+    :func:`update_manual_transaction_fields` write path the single-classify
+    surface uses, so a bulk row persists the same typed
+    ``taxable_base``/``iva_rate``/``iva_amount`` values as ``--id``-mode
+    classify with identical validation. Unknown columns are rejected before
     any writes. Rows that fail validation (unknown transaction id, invalid
-    classification value, pydantic error) are collected in ``failures``
-    and the remaining valid rows are applied (partial-success semantics
-    matching the ledger import pattern).
+    classification value, malformed IVA-fact Decimal, pydantic error) are
+    collected in ``failures`` and the remaining valid rows are applied
+    (partial-success semantics matching the ledger import pattern).
 
     Returns a :class:`BulkClassifyResult`.
     """
@@ -104,7 +110,14 @@ def bulk_classify_from_csv(
         try:
             parsed_rows.append(
                 BulkClassifyRow.model_validate(
-                    {k: (v.strip() if v else v) for k, v in raw_row.items()},
+                    # A present-but-blank optional cell (e.g. an empty
+                    # ``taxable_base`` on a classification-only row) maps to
+                    # ``None`` so the row behaves exactly as if the column were
+                    # absent; a populated cell carries its trimmed text into the
+                    # same typed ``Decimal`` coercion the single-classify path
+                    # uses, so a malformed value reds the row rather than
+                    # coercing silently.
+                    {k: (v.strip() or None if v is not None else v) for k, v in raw_row.items()},
                     strict=False,
                 )
             )
@@ -141,6 +154,9 @@ def bulk_classify_from_csv(
             business_classification=row.classification,
             category_id=row.category_id,
             business_pct=row.business_pct,
+            taxable_base=row.taxable_base,
+            iva_rate=row.iva_rate,
+            iva_amount=row.iva_amount,
         )
         try:
             current = _require_transaction(working, row.transaction_id)
