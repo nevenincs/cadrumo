@@ -451,6 +451,14 @@ FOREIGN_ASSET_MODELOS: Final[tuple[str, ...]] = ("720",)
 #: Covers: M303 (quarterly/monthly IVA self-assessment), M390 (IVA annual summary).
 IVA_REGIME_MODELOS: Final[tuple[str, ...]] = ("303", "390")
 
+#: Art. 81 LIRPF (Ley 35/2006, BOE-A-2006-20764) monthly accrual per hijo menor de tres años.
+#: Proration of the €1,200 annual cap; casilla 0611 carries integer euros only.
+DEDUCCION_MATERNIDAD_MENSUAL_EUR: Final[int] = 100
+
+#: Art. 81 LIRPF (Ley 35/2006, BOE-A-2006-20764) annual cap per hijo menor de tres años.
+#: The deducción accrues at €100/month and is capped at this amount per hijo; casilla 0611.
+DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR: Final[int] = 1200
+
 
 @lru_cache(maxsize=1)
 def load_external_constants(path: Path | None = None) -> ExternalConstants:

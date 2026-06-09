@@ -1789,3 +1789,162 @@ def test_no_bare_iva_regime_modelos_tuple_literal_in_calendar() -> None:
     assert not _ast_contains_modelo_group_tuple(source, ("303", "390")), (
         "Bare IVA-regime-modelos tuple literal found in _calendar.py; use IVA_REGIME_MODELOS from core"
     )
+
+
+# ---------------------------------------------------------------------------
+# contract — DEDUCCION_MATERNIDAD_MENSUAL_EUR / DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR
+# ---------------------------------------------------------------------------
+
+
+def test_deduccion_maternidad_mensual_eur_value() -> None:
+    """``DEDUCCION_MATERNIDAD_MENSUAL_EUR`` equals 100 per Art. 81 LIRPF (Ley 35/2006)."""
+
+    from ..external_constants import DEDUCCION_MATERNIDAD_MENSUAL_EUR
+
+    assert DEDUCCION_MATERNIDAD_MENSUAL_EUR == 100
+
+
+def test_deduccion_maternidad_anual_cap_eur_value() -> None:
+    """``DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR`` equals 1200 per Art. 81 LIRPF (Ley 35/2006)."""
+
+    from ..external_constants import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR
+
+    assert DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR == 1200
+
+
+def test_deduccion_maternidad_mensual_eur_is_int() -> None:
+    """``DEDUCCION_MATERNIDAD_MENSUAL_EUR`` is an ``int`` (casilla 0611 carries no decimal places)."""
+
+    from ..external_constants import DEDUCCION_MATERNIDAD_MENSUAL_EUR
+
+    assert isinstance(DEDUCCION_MATERNIDAD_MENSUAL_EUR, int)
+
+
+def test_deduccion_maternidad_anual_cap_eur_is_int() -> None:
+    """``DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR`` is an ``int`` (casilla 0611 carries no decimal places)."""
+
+    from ..external_constants import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR
+
+    assert isinstance(DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR, int)
+
+
+def test_deduccion_maternidad_monthly_times_12_equals_annual_cap() -> None:
+    """12 monthly accruals sum to the annual cap: consistency guard."""
+
+    from ..external_constants import (
+        DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR,
+        DEDUCCION_MATERNIDAD_MENSUAL_EUR,
+    )
+
+    assert DEDUCCION_MATERNIDAD_MENSUAL_EUR * 12 == DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR
+
+
+def test_deduccion_maternidad_module_imports_mensual_from_core() -> None:
+    """``domain/contribuyente/_deduccion_maternidad.py`` reads ``DEDUCCION_MATERNIDAD_MENSUAL_EUR`` from core."""
+
+    import importlib
+
+    from ..external_constants import DEDUCCION_MATERNIDAD_MENSUAL_EUR
+
+    mod = importlib.import_module("aeat.domain.contribuyente._deduccion_maternidad")
+
+    assert hasattr(mod, "DEDUCCION_MATERNIDAD_MENSUAL_EUR"), (
+        "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_MENSUAL_EUR from aeat.core.external_constants"
+    )
+    assert mod.DEDUCCION_MATERNIDAD_MENSUAL_EUR is DEDUCCION_MATERNIDAD_MENSUAL_EUR
+
+
+def test_deduccion_maternidad_module_imports_anual_cap_from_core() -> None:
+    """``domain/contribuyente/_deduccion_maternidad.py`` reads ``DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR`` from core."""
+
+    import importlib
+
+    from ..external_constants import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR
+
+    mod = importlib.import_module("aeat.domain.contribuyente._deduccion_maternidad")
+
+    assert hasattr(mod, "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR"), (
+        "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR from aeat.core.external_constants"
+    )
+    assert mod.DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR is DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR
+
+
+def test_family_module_imports_deduccion_maternidad_constants_from_core() -> None:
+    """``domain/contribuyente/family.py`` reads both maternidad constants from core."""
+
+    import importlib
+
+    from ..external_constants import (
+        DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR,
+        DEDUCCION_MATERNIDAD_MENSUAL_EUR,
+    )
+
+    mod = importlib.import_module("aeat.domain.contribuyente.family")
+
+    assert hasattr(mod, "DEDUCCION_MATERNIDAD_MENSUAL_EUR"), (
+        "family must import DEDUCCION_MATERNIDAD_MENSUAL_EUR from aeat.core.external_constants"
+    )
+    assert hasattr(mod, "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR"), (
+        "family must import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR from aeat.core.external_constants"
+    )
+    assert mod.DEDUCCION_MATERNIDAD_MENSUAL_EUR is DEDUCCION_MATERNIDAD_MENSUAL_EUR
+    assert mod.DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR is DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR
+
+
+def test_no_bare_1200_maternidad_cap_literal_in_family() -> None:
+    """No bare ``1200`` integer literal as a ``min()`` argument in ``family.py``.
+
+    Anti-tautology: parses the real AST so any re-introduction of the local literal triggers failure.
+    """
+
+    repo_root = Path(__file__).parents[4]
+    source = (repo_root / "src/aeat/domain/contribuyente/family.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
+        if func_name != "min":
+            continue
+        for arg in node.args:
+            if isinstance(arg, ast.Constant) and arg.value == 1200:
+                offenders.append(
+                    f"family.py:{node.lineno}: bare 1200 literal in min(); use DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR"
+                )
+
+    assert offenders == [], (
+        "Bare 1200 maternidad cap literals found in family.py:\n" + "\n".join(offenders)
+    )
+
+
+def test_no_bare_1200_maternidad_cap_literal_in_deduccion_maternidad() -> None:
+    """No bare ``1200`` integer literal as a ``min()`` argument in ``_deduccion_maternidad.py``.
+
+    Anti-tautology: parses the real AST so any re-introduction triggers failure.
+    """
+
+    repo_root = Path(__file__).parents[4]
+    source = (repo_root / "src/aeat/domain/contribuyente/_deduccion_maternidad.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
+        if func_name != "min":
+            continue
+        for arg in node.args:
+            if isinstance(arg, ast.Constant) and arg.value == 1200:
+                offenders.append(
+                    f"_deduccion_maternidad.py:{node.lineno}: bare 1200 literal in min(); "
+                    f"use DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR"
+                )
+
+    assert offenders == [], (
+        "Bare 1200 maternidad cap literals found in _deduccion_maternidad.py:\n" + "\n".join(offenders)
+    )
