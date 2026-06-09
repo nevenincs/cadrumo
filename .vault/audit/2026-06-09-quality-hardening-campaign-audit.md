@@ -416,7 +416,27 @@ In flight: `tr_positional` (26 sites) is being converted by a background subagen
 to `translated_message="key", context={…}` with the cascading `match=`→
 `translated_message` test-assertion updates.
 
-### QHC-013-A | OPEN | attachments plaintext: payload_hash leaks the content digest
+### QHC-013-A | RESOLVED (commit `fix(attachments): envelope blob payload…`) | attachments plaintext: payload_hash leaks the content digest
+
+**Resolution (post-summary).** Deeper investigation overturned the "needs an
+integrity-chain redesign + migration" framing: the `load` path only SELECTs
+`payload_hash` (never recomputes-and-compares it from plaintext on read), and ~20
+`test_secure_objects_part{1,2,3}` tests assert `payload_hash == sha256(payload)`
+as the *intended* generic design — correct because every other namespace stores a
+high-entropy JSON envelope whose digest is not a useful confirmation oracle. The
+leak is therefore specific to the content-addressed attachment **blob**, whose
+plaintext payload IS the operator's bytes. Fix is attachment-adapter-local: frame
+the stored blob behind a fixed envelope prefix
+(`_wrap_blob_payload`/`_unwrap_blob_payload` in `attachment.py`) so
+`payload_hash = sha256(prefix + content) ≠ digest`; the bare content digest no
+longer reaches any plaintext column. `object_key` stays HMAC-digested, payload
+stays encrypted, the shared integrity chain and its 20 tests are untouched, and
+no migration is required. Reads tolerate legacy pre-envelope blobs (prefix check)
+so existing on-disk data stays readable; `test_legacy_un_enveloped_blob_still_reads`
+pins that path. `test_blob_and_manifest_round_trip_without_plaintext_files` now
+passes; the full attachments + secure-object suites are green (77 + 4 tests).
+
+_Original analysis (retained for provenance):_
 
 `test_blob_and_manifest_round_trip_without_plaintext_files` fails because the
 attachment content digest (`sha256(content)`, which is the attachment id) appears
