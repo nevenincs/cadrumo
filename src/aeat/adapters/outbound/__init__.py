@@ -5,6 +5,6 @@ Submodules group adapters by external counterpart, currently
 :mod:`aeat.adapters.outbound.aeat` for the Spanish tax administration
 portal.
 
-This module uses :class:`AeatSession`, :class:`AuthProvider`,
-:class:`BrowserSessionFactory`, and :class:`GoogleService` for external integration.
+This module uses ``AeatSession``, ``AuthProvider``,
+``BrowserSessionFactory``, and ``GoogleService`` for external integration.
 """
