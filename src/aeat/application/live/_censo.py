@@ -426,10 +426,10 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
             censo_facts=censo_facts,
         )
 
+    @override
     # TYPE-IGNORE-RATIONALE-OVERRIDE-COVARIANT-RETURN:
     # Subclass returns a narrower snapshot type and adds optional filter params;
     # base-class signature widening would ripple to N subclasses.
-    @override
     def list_snapshots(  # type: ignore[override]
         self,
         *,
@@ -515,10 +515,10 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
 
     # ---- SnapshotService[CensoSnapshot] hooks ---------------------------
 
+    @override
     # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: SnapshotService[T] abstract hook
     # contract uses **kwargs to allow concrete subclasses to accept caller-
     # specific keyword arguments without a shared typed parameter set.
-    @override
     def _derive_snapshot_id(self, **kwargs: Any) -> str:
         return derive_censo_snapshot_id(
             profile_id=kwargs["profile_id"],
@@ -527,10 +527,10 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
             censo_facts=kwargs["censo_facts"],
         )
 
+    @override
     # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD: SnapshotService[T] abstract
     # _build_active_payload hook; concrete subclasses accept caller-specific
     # keyword arguments without a shared typed parameter set.
-    @override
     def _build_active_payload(self, *, snapshot_id: str, **kwargs: Any) -> CensoSnapshot:
         return CensoSnapshot(
             snapshot_id=snapshot_id,
