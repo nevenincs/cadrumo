@@ -2,8 +2,8 @@
 
 Asserts that the following ratchet and marker changes are in place:
 
-(a) scripts/ ratchet extension in test_utf8_enrollment_inventory.py and
-    check_relative_imports.py fixed (no bare encoding="utf-8").
+(a) dev/ ratchet extension in test_utf8_enrollment_inventory.py and
+    dev/quality/relative_imports.py fixed (no bare encoding="utf-8").
 
 (b) _google_drive.py Any-return markers complete (4 sites).
 
@@ -43,30 +43,30 @@ def _source(path: Path) -> str:
 # ---------------------------------------------------------------------------
 
 _UTF8_INVENTORY_TEST = _TESTS_DIR / "test_utf8_enrollment_inventory.py"
-_CHECK_REL_IMPORTS = _REPO_ROOT / "scripts" / "check_relative_imports.py"
+_CHECK_REL_IMPORTS = _REPO_ROOT / "dev" / "quality" / "relative_imports.py"
 
 
-def test_scripts_ratchet_exists_in_utf8_inventory() -> None:
-    """test_utf8_enrollment_inventory.py must define the scripts/ ratchet function."""
+def test_dev_ratchet_exists_in_utf8_inventory() -> None:
+    """test_utf8_enrollment_inventory.py must define the dev/ ratchet function."""
     src = _source(_UTF8_INVENTORY_TEST)
-    assert "test_no_bare_utf8_literals_in_scripts" in src, (
-        "test_utf8_enrollment_inventory.py: scripts/ ratchet function not found"
+    assert "test_no_bare_utf8_literals_in_dev" in src, (
+        "test_utf8_enrollment_inventory.py: dev/ ratchet function not found"
     )
-    assert "_SCRIPTS_ROOT" in src, (
-        "test_utf8_enrollment_inventory.py: _SCRIPTS_ROOT constant not found — scripts/ tree scope not defined"
+    assert "_DEV_ROOT" in src, (
+        "test_utf8_enrollment_inventory.py: _DEV_ROOT constant not found — dev/ tree scope not defined"
     )
-    assert "_SCRIPTS_KNOWN_VIOLATING" in src, (
-        "test_utf8_enrollment_inventory.py: _SCRIPTS_KNOWN_VIOLATING ratchet set not found"
+    assert "_DEV_KNOWN_VIOLATING" in src, (
+        "test_utf8_enrollment_inventory.py: _DEV_KNOWN_VIOLATING ratchet set not found"
     )
 
 
 def test_check_relative_imports_uses_local_utf8_constant() -> None:
-    """check_relative_imports.py must define _UTF_8 constant and not use bare encoding="utf-8"."""
+    """relative_imports.py must define _UTF_8 constant and not use bare encoding="utf-8"."""
     src = _source(_CHECK_REL_IMPORTS)
-    assert '_UTF_8: Final[str] = "utf-8"' in src, "scripts/check_relative_imports.py: _UTF_8 constant not found"
+    assert '_UTF_8: Final[str] = "utf-8"' in src, "dev/quality/relative_imports.py: _UTF_8 constant not found"
     # The bare literal must not survive outside the constant definition line itself.
     lines_with_bare = [(i + 1, ln) for i, ln in enumerate(src.splitlines()) if 'encoding="utf-8"' in ln]
-    assert not lines_with_bare, 'scripts/check_relative_imports.py: bare encoding="utf-8" survived at ' + ", ".join(
+    assert not lines_with_bare, 'dev/quality/relative_imports.py: bare encoding="utf-8" survived at ' + ", ".join(
         f"line {i}: {ln.strip()!r}" for i, ln in lines_with_bare
     )
 

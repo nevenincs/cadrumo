@@ -143,28 +143,28 @@ env-rag-stop:
 
 # Verify code style using ruff check. Silent on success; lists violations on failure.
 check-style:
-    @uv run --no-sync python scripts/quiet_ok.py ruff check .
+    @uv run --no-sync python -m dev.quality.quiet ruff check .
 
 # Verify code format using ruff format --check. Silent on success; lists drift on failure.
 check-format:
-    @uv run --no-sync python scripts/quiet_ok.py ruff format --check .
+    @uv run --no-sync python -m dev.quality.quiet ruff format --check .
 
 # Verify type correctness with ty (full src) and pyright (strict domain + application).
 # Wrapper emits a signal-only summary grouped by rule and file; silent on success.
 check-types:
-    @uv run --no-sync python scripts/check_types.py
+    @uv run --no-sync python -m dev.quality.types
 
 # Verify import structure and hexagonal boundaries. Silent on success.
 check-imports:
-    @uv run --no-sync python scripts/quiet_ok.py lint-imports
+    @uv run --no-sync python -m dev.quality.quiet lint-imports
 
 # Verify that all test modules only use relative imports. Silent on success.
 check-relative-imports:
-    @uv run --no-sync python scripts/check_relative_imports.py
+    @uv run --no-sync python -m dev.quality.relative_imports
 
 # Verify dependency declarations for drift or unused packages. Silent on success.
 check-dependencies:
-    @uv run --no-sync python scripts/quiet_ok.py deptry src/aeat --known-first-party aeat --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
+    @uv run --no-sync python -m dev.quality.quiet deptry src/aeat --known-first-party aeat --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
 
 # Verify codebase security posture using semgrep scans.
 [unix]
@@ -193,16 +193,16 @@ check-rag:
 
 # Run programmatic semantic audit checks using the local RAG daemon. Silent on success.
 check-semantic:
-    @uv run --no-sync python scripts/audit_semantic.py
+    @uv run --no-sync python -m dev.audit.semantic
 
 # Run all pre-commit hooks via prek. Silent on success; replays hook output on failure.
 check-pre-commit:
-    @uv run --no-sync python scripts/quiet_ok.py uv run --no-sync prek run --all-files
+    @uv run --no-sync python -m dev.quality.quiet uv run --no-sync prek run --all-files
 
 # Excludes check-pre-commit (re-runs ruff + ty) and the local-only RAG/semantic checks.
 # Run every fast static gate to completion; report only failures; silent on full pass.
 check-all:
-    @uv run --no-sync python scripts/check_all.py
+    @uv run --no-sync python -m dev.quality.suite
 
 # ── Code mutations (Write) ──────────────────────────────────────────────────
 
@@ -263,11 +263,11 @@ test-coverage:
 
 # List every ty + pyright diagnostic verbatim (advisory; always exits 0).
 audit-types:
-    @uv run --no-sync python scripts/check_types.py --full
+    @uv run --no-sync python -m dev.quality.types --full
 
 # Run complexity audits for production code.
 audit-complexity:
-    @uv run --no-sync python scripts/audit_complexity.py
+    @uv run --no-sync python -m dev.audit.complexity
 
 # Scan for dead code.
 audit-dead-code:
@@ -275,7 +275,7 @@ audit-dead-code:
 
 # Scan for copy-paste code duplication. Aggregate line + capped clone list.
 audit-duplication:
-    @npx --yes jscpd@4.2.0 src/aeat --format python --min-lines 6 --min-tokens 80 --max-size 250kb --ignore "**/test_*.py,**/_test_*.py,**/tests/**,**/_data/**" --gitignore --reporters console --noTips | uv run --no-sync python scripts/filter_jscpd.py
+    @npx --yes jscpd@4.2.0 src/aeat --format python --min-lines 6 --min-tokens 80 --max-size 250kb --ignore "**/test_*.py,**/_test_*.py,**/tests/**,**/_data/**" --gitignore --reporters console --noTips | uv run --no-sync python -m dev.audit.duplication
 
 # Perform an on-demand semantic search query delegating to the running RAG daemon.
 audit-rag QUERY:
