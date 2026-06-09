@@ -114,12 +114,25 @@ def _force_load_lazy_subcommands(app: typer.Typer) -> None:
                 pending.append(group.typer_instance)
 
 
+def _is_command_group(command: object) -> bool:
+    """Return True when ``command`` is a Click group / multi-command.
+
+    Typer vendors its own Click (``typer._click``), so commands returned by
+    ``typer.main.get_command`` are NOT instances of the top-level ``click.Group``
+    this module imports — an ``isinstance(command, click.Group)`` check silently
+    fails for every group and collapses the walk to the root leaf. Duck-typing on
+    the group interface (``list_commands`` + ``get_command``) is version- and
+    vendor-robust.
+    """
+    return callable(getattr(command, "list_commands", None)) and callable(getattr(command, "get_command", None))
+
+
 def _click_leaf_paths(command: click.Command, prefix: tuple[str, ...]) -> set[tuple[str, ...]]:
     """Return the set of leaf-command paths reachable from ``command``."""
     leaves: set[tuple[str, ...]] = set()
     name = command.name or ""
     path = (*prefix, name) if name else prefix
-    if isinstance(command, click.Group):
+    if _is_command_group(command):
         # Materialise the synthetic root context so AeatTyperGroup's
         # lazy ``get_command`` resolves every registered subcommand,
         # including those that live behind a LazySubcommand loader.
