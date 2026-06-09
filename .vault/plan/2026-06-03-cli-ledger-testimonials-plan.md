@@ -52,7 +52,7 @@ File-obligation discoverability, ledger list filters, bulk classification facts,
 
 Discoverability and consistency papercuts surfaced by the testimonials.
 
-- [ ] `P04.S12` - MINOR/COSMETIC polish: id-arg hint, describe/preflight in --help, period-token consistency, output_language honoring, percent-in-error, bindings list --missing, create --help minimal hint; `src/aeat/entrypoints/cli`.
+- [x] `P04.S12` - MINOR/COSMETIC polish: id-arg hint, describe/preflight in --help, period-token consistency, output_language honoring, percent-in-error, bindings list --missing, create --help minimal hint; `src/aeat/entrypoints/cli`.
 
 ### Phase `P05` - Post-fix persona re-run and verification
 
