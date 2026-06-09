@@ -348,6 +348,47 @@ behaviour:
 type lane are the genuine multi-session / domain-expert remainder; everything
 mechanically or structurally tractable in one pass has been cleared.
 
+## QHC-012 | session result (final, corrected) | 40 of 49 unit failures cleared; 9 genuine-decision remain
+
+Continued burn-down corrected several more QHC-011 "hard" items to tractable
+root causes and fixed them honestly with verification:
+- `event_emission_contract` (4): scan root `parents[2]`→`parents[3]` (the emission
+  sites existed; the scan looked in `application/application/...`).
+- `oss_ioss` (1): the `resolve_ledger_oss_aggregation_binding_values` resolver
+  moved `_bindings.py`→`_ledger_bindings.py`; skip both registry binding modules.
+- `modelo_authorization` (1): 30 `authorization.d/*.toml` manifests named
+  relocated `application/calculations/test_*.py` enrolling tests; swept to `tests/`.
+- `external_constants` (1): four dummy AEAT URLs in `test_catalogue_verification`
+  sourced from `Settings.external_constants().aeat.domains.sede`.
+- `cross_module_imports` (1): aliased internal cross-package imports private in
+  access_gate/assets/inventory; listed `_config`'s sibling hooks in `__all__`;
+  trimmed the resolved overview/_config baseline entries.
+- `sensitive_persistence` (1): reviewed the three registry-cache writes (tree
+  pickle, corpus-text cache, validation marker) as non-sensitive in the inventory.
+- `ledger_modelo_staleness` (1): re-split the fixed gross (`iva = gross - base`)
+  so the drift row satisfies `base+iva=gross` while keeping the content-addressed id.
+
+**Net: 40 of the 49-node set pass.** The remaining 9 are genuine decisions, not
+mechanical fixes (the `decimal_enrollment` attempt proved a naive swap breaks
+`test_calendar`):
+- M200 `01494` previous-filing binding (2 `decimal_inputs_routing`).
+- manuals/corpus (4): the bundled corpus is now fully extracted, so the
+  "unextracted manual raises / report shows no structure" contracts can't be
+  exercised by real data — needs synthetic fixtures or a corpus-policy decision.
+- attachments plaintext (1): the content digest is stored in plaintext in the
+  secure DB; relates to the secure-storage HMAC-key migration — a security-design
+  call, not a test tweak.
+- `decimal_enrollment` (1): `coerce_decimal` can't surface the `InvalidOperation`
+  type a redaction test asserts (helper-enhancement or exemption decision).
+- `tr_positional` (1 test / 26 sites): convert `raise E(tr("key", **kw))` to
+  `raise E(translated_message="key", context={**kw})` across 6 modelo modules —
+  a deferred-rendering behaviour change needing per-site context migration and
+  error-rendering verification.
+
+**check-types ~1850** remains the dominant hard gate. These 9 + the type lane are
+the genuine deliberate remainder; everything topology/inventory/fixture/refactor
+tractable in this campaign has been cleared and committed.
+
 ## Codification candidates
 
 - **Source:** QHC-010 topology-regression cluster (≈20 relocated-test failures from
