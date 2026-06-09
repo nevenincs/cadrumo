@@ -32,6 +32,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....domain.calculations.registry import RegistrySnapshot
 from .._taxation_comparison import (
     TaxationComparisonError,
     TaxationRecommendation,
@@ -45,7 +46,7 @@ importlib.import_module("aeat.domain.renta")
 
 
 @pytest.fixture(scope="module")
-def snapshot_2025():
+def snapshot_2025() -> RegistrySnapshot:
     """Real Modelo 100 2025 registry snapshot (module-level singleton)."""
     from ....core.resources import resources
 
@@ -118,7 +119,7 @@ _BASE_DATE_BINDINGS = {
 }
 
 
-def test_high_disparity_couple_conjunta_recommended(snapshot_2025) -> None:
+def test_high_disparity_couple_conjunta_recommended(snapshot_2025: RegistrySnapshot) -> None:
     """High-disparity couple: €52,000 + €0 → conjunta saves money.
 
     Authority: AEAT Renta WEB 2025 comparative tool confirms that for a
@@ -157,7 +158,7 @@ def test_high_disparity_couple_conjunta_recommended(snapshot_2025) -> None:
     assert result.modelo == "100"
 
 
-def test_moderate_income_conjunta_recommended_via_art84_reduccion(snapshot_2025) -> None:
+def test_moderate_income_conjunta_recommended_via_art84_reduccion(snapshot_2025: RegistrySnapshot) -> None:
     """For a married filer, conjunta is recommended because Art. 84 applies.
 
     Authority: AEAT Renta WEB 2025 — for a married filer declaring under
@@ -202,7 +203,7 @@ def test_moderate_income_conjunta_recommended_via_art84_reduccion(snapshot_2025)
     )
 
 
-def test_comparison_result_structure_is_typed(snapshot_2025) -> None:
+def test_comparison_result_structure_is_typed(snapshot_2025: RegistrySnapshot) -> None:
     """TaxationComparisonResult carries all required typed fields.
 
     Structural wiring check: verifies that the result payload is
