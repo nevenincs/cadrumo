@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ......core.i18n import tr
 from ._authenticator_support import (
     _SENSITIVE_HEALTH_PAYLOAD,
     _SENSITIVE_STORAGE_BASENAME,
@@ -37,7 +38,6 @@ from ._authenticator_support import (
     logging,
     select_provider,
     timedelta,
-    tr,
     x509,
 )
 
