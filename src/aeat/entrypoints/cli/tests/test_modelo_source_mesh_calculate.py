@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.transactions import (
     BusinessClassification,
@@ -109,20 +110,25 @@ def _transaction(
     amount: Decimal,
     taxable_base: Decimal,
     iva_amount: Decimal,
+    iva_category: IvaCategory | None = None,
+    counterparty_eu_member_state: EUMemberState | None = None,
 ) -> Transaction:
-    return Transaction.model_validate(
-        {
-            "raw": _raw_transaction(provider_id, amount=amount),
-            "direction": direction,
-            "business_classification": BusinessClassification.BUSINESS,
-            "category_id": "test_iva_operation",
-            "taxable_base": taxable_base,
-            "iva_rate": Decimal("0.21"),
-            "iva_amount": iva_amount,
-            "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        }
-    )
+    fields: dict[str, object] = {
+        "raw": _raw_transaction(provider_id, amount=amount),
+        "direction": direction,
+        "business_classification": BusinessClassification.BUSINESS,
+        "category_id": "test_iva_operation",
+        "taxable_base": taxable_base,
+        "iva_rate": Decimal("0.21"),
+        "iva_amount": iva_amount,
+        "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
+        "classified_by": "manual",
+    }
+    if iva_category is not None:
+        fields["iva_category"] = iva_category
+    if counterparty_eu_member_state is not None:
+        fields["counterparty_eu_member_state"] = counterparty_eu_member_state
+    return Transaction.model_validate(fields)
 
 
 def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
@@ -224,3 +230,186 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
     payload_observations = {observation["casilla_id"]: observation for observation in payload["observations"]}
     assert payload_observations["iva.repercutido.general"]["source_refs"] == list(output_observation.source_refs)
     assert payload_observations["iva.soportado.interiores"]["source_refs"] == list(input_observation.source_refs)
+
+
+def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
+    """Persist a zero-amount local-recurrence IVA wallet decision for bucket.
+
+    The Modelo 303 reconciliation guard blocks calculation when
+    ``compensacion-pendiente-anteriores`` is supplied without a persisted
+    decision, even when the amount is zero. A ``local_recurrence`` decision
+    with ``selected_amount=0`` satisfies the guard while leaving the source-mesh
+    advisory assertions meaningful.
+    """
+    from ....application.calculations._observations_repository import IvaWalletDecisionRepository
+    from ....application.user_profile._orchestration import profile_storage_session
+    from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
+
+    with profile_storage_session(bucket_id):
+        decision = IvaCompensationReconciliationDecision(
+            taxpayer_nif="12345678Z",
+            target_year=2026,
+            target_period="1T",
+            selected_authority="local_recurrence",
+            selected_amount=Decimal("0"),
+            wallet_amount=None,
+            local_recurrence_amount=Decimal("0"),
+            override_amount=None,
+            divergence="wallet_missing",
+            blocked=False,
+            stale_wallet=False,
+            reason="test: no prior IVA compensation",
+            decided_at=datetime.now(UTC),
+        )
+        IvaWalletDecisionRepository().save_decision(decision)
+
+
+def test_work_calculate_surfaces_unconsumed_declarable_iva_advisory() -> None:
+    """#64: an INTRA_COMMUNITY_SUPPLY sale no M303 binding consumes surfaces as an advisory.
+
+    The M303 ``ledger_iva_aggregation`` bindings select domestic +
+    intra-community-acquisition triples only; an ``INTRA_COMMUNITY_SUPPLY``
+    repercutido observation is declarable (Ley 37/1992 art. 25) but matches no
+    binding selector. The resolver emits a NON-blocking diagnostic; this test
+    asserts it survives the threading all the way to the operator-facing CLI in
+    BOTH the JSON ``source_advisories`` list AND the human output, so an unrouted
+    declarable observation is never silently under-declared
+    (no-silent-under-declaration).
+    """
+    from ....application.user_profile._orchestration import profile_storage_session
+    from ....core import resolve_active_bucket_id
+
+    _create_profile()
+    work_unit = _create_303_work_unit()
+    resolved = resolve_active_bucket_id()
+    assert resolved is not None, "profile create must install an active-profile pointer"
+    bucket_id = resolved
+
+    # A consumed domestic sale (matches the repercutido-general binding) ...
+    domestic_sale = _transaction(
+        "sale-general",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("121.00"),
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+    )
+    # ... plus a declarable intra-community supply NO M303 binding selects.
+    unrouted_supply = _transaction(
+        "intra-community-supply",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("242.00"),
+        taxable_base=Decimal("200.00"),
+        iva_amount=Decimal("42.00"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        counterparty_eu_member_state=EUMemberState.DE,
+    )
+    with profile_storage_session(bucket_id):
+        TransactionCatalogueRepository(bucket_id=bucket_id).save(
+            TransactionCatalogue.from_transactions((domestic_sale, unrouted_supply))
+        )
+    _seed_zero_iva_wallet_decision(bucket_id)
+
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(work_unit["work_unit_id"]),
+        ]
+    )
+    assert result.exit_code == 0, result.output
+
+    payload = _payload(result.output)
+    advisories = payload["source_advisories"]
+    matching = [
+        advisory
+        for advisory in advisories
+        if advisory["source_kind"] == "ledger_iva_aggregation"
+        and unrouted_supply.transaction_id in advisory["message"]
+    ]
+    assert len(matching) == 1, advisories
+    advisory = matching[0]
+    assert advisory["reason"] == "source_issue"
+    assert IvaCategory.INTRA_COMMUNITY_SUPPLY.value in advisory["message"]
+
+    # The human-readable (default text) rendering carries the same advisory.
+    # Re-run in text mode against the same seeded bucket; the calculate verb is
+    # idempotent over the ledger substrate (it persists a new draft revision but
+    # surfaces the identical unconsumed-IVA advisory).
+    text_result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(work_unit["work_unit_id"]),
+        ]
+    )
+    assert text_result.exit_code == 0, text_result.output
+    assert "ADVISORY:" in text_result.output
+    assert unrouted_supply.transaction_id in text_result.output
+    assert IvaCategory.INTRA_COMMUNITY_SUPPLY.value in text_result.output
+
+
+def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
+    """#64 converse: an all-consumed IVA observation set surfaces ZERO advisories.
+
+    Anti-tautology guard for the advisory test above: only observations no
+    binding selects produce a diagnostic. A domestic sale matched by the
+    repercutido-general binding must leave ``source_advisories`` empty and emit
+    no ADVISORY line.
+    """
+    from ....application.user_profile._orchestration import profile_storage_session
+    from ....core import resolve_active_bucket_id
+
+    _create_profile()
+    work_unit = _create_303_work_unit()
+    resolved = resolve_active_bucket_id()
+    assert resolved is not None, "profile create must install an active-profile pointer"
+    bucket_id = resolved
+
+    domestic_sale = _transaction(
+        "sale-general",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("121.00"),
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+    )
+    with profile_storage_session(bucket_id):
+        TransactionCatalogueRepository(bucket_id=bucket_id).save(
+            TransactionCatalogue.from_transactions((domestic_sale,))
+        )
+    _seed_zero_iva_wallet_decision(bucket_id)
+
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(work_unit["work_unit_id"]),
+        ]
+    )
+    assert result.exit_code == 0, result.output
+
+    payload = _payload(result.output)
+    assert payload["source_advisories"] == []
+
+    # Text mode emits no ADVISORY line either: only an unrouted declarable
+    # observation produces one, and every observation here was consumed.
+    text_result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(work_unit["work_unit_id"]),
+        ]
+    )
+    assert text_result.exit_code == 0, text_result.output
+    assert "ADVISORY:" not in text_result.output
