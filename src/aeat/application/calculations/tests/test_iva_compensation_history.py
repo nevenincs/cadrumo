@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
@@ -314,7 +315,7 @@ def test_modelo_390_cross_check_keeps_expired_prior_year_lots_out_of_annual_fiel
     assert "expired_review_required" in cross_check.expiry_review_states
 
 
-def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_path) -> None:
+def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="m390-compensation-history"):
         observation_repo = CalculationObservationRepository()
         history_repo = IvaCompensationHistoryRepository()
@@ -372,7 +373,7 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
     )
 
 
-def test_three_year_filed_history_repository_projects_compensation_lots(tmp_path) -> None:
+def test_three_year_filed_history_repository_projects_compensation_lots(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="iva-history-three-year"):
         repository = IvaCompensationHistoryRepository()
         observations = (
@@ -651,7 +652,7 @@ def test_iva_compensation_state_from_filed_observation_raises_localized_decimal_
     assert excinfo.value.context == {"casilla_id": "69"}
 
 
-def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path) -> None:
+def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="iva-compensation-conflict"):
         seed_iva_compensation_period(
             taxpayer_nif=_TAXPAYER_REF,

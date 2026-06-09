@@ -79,7 +79,7 @@ _BINDING_AUTOREPERCUTIDO = "modelo-309-iva-autorepercutido-intracomunitaria-cuot
 _BINDING_RECARGO = "modelo-309-iva-soportado-recargo-equivalencia-cuota"
 
 
-def _find_observation(repo, *, filing_year, period):
+def _find_observation(repo: CalculationObservationRepository, *, filing_year: int, period: str):
     for payload in repo.iter_modelo(_MODELO):
         obs = payload.observation
         if obs.filing_year == filing_year and obs.period == period:
