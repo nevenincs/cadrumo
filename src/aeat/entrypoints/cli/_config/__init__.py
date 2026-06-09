@@ -14,6 +14,7 @@ from ....application.config_reset import parse_config_reset_scope as _parse_conf
 from ....application.operator_surface import build_help_document as _build_help_document
 from ....application.operator_surface import render_help_text as _render_help_text
 from ....application.wizard import build_wizard_command as _build_wizard_command
+from ....application.workflow import ProfileLabelAmbiguousError as _ProfileLabelAmbiguousError
 from ....application.workflow import read_profile_bucket as _read_profile_bucket
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.errors import AeatError as _AeatError
@@ -104,6 +105,14 @@ def _resolve_profile_by_label(name: str):
     """
     try:
         pointer = _read_profile_bucket(name)
+    except _ProfileLabelAmbiguousError as exc:
+        # ``ProfileLabelAmbiguousError`` is a ``WorkflowError``, NOT a
+        # ``ValueError``; refuse clearly with the dedicated ambiguity message
+        # rather than letting it escape to an unhandled traceback or picking
+        # an arbitrary bucket.
+        raise _CliRefusedBoundaryError(
+            translated_message="errors.refused.refused_profile_label_ambiguous",
+        ) from exc
     except ValueError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.unknown_profile",
@@ -343,6 +352,13 @@ def config_profile_show(
         # status; it never reports the profile as a live ``ready`` one.
         try:
             pointer = _read_profile_bucket(name, include_tombstoned=True)
+        except _ProfileLabelAmbiguousError as exc:
+            # ``ProfileLabelAmbiguousError`` is a ``WorkflowError``, NOT a
+            # ``ValueError``; refuse clearly with the dedicated ambiguity
+            # message rather than escaping to an unhandled traceback.
+            raise _CliRefusedBoundaryError(
+                translated_message="errors.refused.refused_profile_label_ambiguous",
+            ) from exc
         except ValueError as exc:
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.unknown_profile",
@@ -529,6 +545,13 @@ def config_profile_validate(
     if name is not None:
         try:
             pointer = _read_profile_bucket(name, include_tombstoned=True)
+        except _ProfileLabelAmbiguousError as exc:
+            # ``ProfileLabelAmbiguousError`` is a ``WorkflowError``, NOT a
+            # ``ValueError``; refuse clearly with the dedicated ambiguity
+            # message rather than escaping to an unhandled traceback.
+            raise _CliRefusedBoundaryError(
+                translated_message="errors.refused.refused_profile_label_ambiguous",
+            ) from exc
         except ValueError as exc:
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.unknown_profile",
