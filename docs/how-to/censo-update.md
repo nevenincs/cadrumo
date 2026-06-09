@@ -51,8 +51,7 @@ profile. The consequence is that profile-dependent workflows use your manual
 facts only. Calendar and filing-calendar checks may be less reliable if the
 activity start date, tax regime, IVA regime, Renta/IRPF regime, or enrollment
 facts are incomplete or wrong. Home-office ratios derived from censo floor-area
-facts will not be available. If a persisted HOME_OFFICE override conflicts with
-the guardrails, the ledger ratio guard can refuse it.
+facts will not be available.
 
 Use [Plan your filing calendar](filing-calendar.md) after profile and censo
 review. Use modelo-specific guides, such as
@@ -69,8 +68,7 @@ aeat config profile censo refresh
 
 This uses the active profile and the configured AEAT authentication. It saves a
 snapshot under the profile. It does not apply those values to the profile yet.
-It is a live read guarded by `live-censo-read`, so it requires an authenticated
-AEAT session.
+It is a live read that requires an active AEAT authentication session.
 
 If AEAT returns no usable censo facts, refresh can stop with a no-facts error.
 
@@ -82,7 +80,7 @@ Show the latest snapshot:
 aeat config profile censo show
 ```
 
-Show a specific snapshot by id or unambiguous prefix:
+Show a specific earlier snapshot by its reference number:
 
 ```bash
 aeat config profile censo show --snapshot-id <snapshot-id>
@@ -122,8 +120,8 @@ manual profile values with AEAT-reported values.
 
 If the snapshot includes home-office floor-area facts, apply can seed local
 home-office usage ratios for categories that use that censo-derived ratio. If
-the snapshot has no valid area facts, no censo-derived `business_pct` is seeded
-and home-office classification falls back to manual or saved ratio workflow.
+the snapshot has no valid area facts, no home-office ratio is seeded and
+home-office classification falls back to the manual or saved ratio workflow.
 
 ## Record a Modelo 036 filing done outside aeat
 
@@ -156,7 +154,7 @@ aeat config profile edit <profile-name> --quiet --activity <value>
 For modelo-specific readiness, use profile preflight:
 
 ```bash
-aeat config profile preflight --modelo 303 --revision-id <revision-id> --filing-year 2026 --period 1T
+aeat config profile preflight --modelo 303 --filing-year 2026 --period 1T
 ```
 
 ## Required or optional?

@@ -36,6 +36,10 @@ from pathlib import Path
 
 import pytest
 
+_TESTS_DIR = Path(__file__).parent
+_AEAT_ROOT = _TESTS_DIR.parent
+_REPO_ROOT = _AEAT_ROOT.parent.parent
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 # Waivers: builder functions exempt from the saturation marker check.
@@ -117,8 +121,7 @@ def test_snapshot_files_still_exist() -> None:
     If a roundtrip test file is renamed or deleted the snapshot becomes stale.
     This test surfaces that drift before the next saturation audit runs blind.
     """
-    src_root = Path(__file__).parent
-    snapshot_path = src_root / "_data" / "audit" / "s223-roundtrip-fixture-builders-2026-05-28.txt"
+    snapshot_path = _AEAT_ROOT / "_data" / "audit" / "s223-roundtrip-fixture-builders-2026-05-28.txt"
     assert snapshot_path.exists(), f"S223 audit snapshot not found: {snapshot_path}"
 
     missing: list[str] = []
@@ -137,8 +140,7 @@ def test_snapshot_files_still_exist() -> None:
             continue
         rel_path = path_lineno[:colon_idx]
         # rel_path starts with "src/aeat/"; strip to get relative-to-repo
-        repo_root = src_root.parent.parent
-        abs_path = repo_root / Path(rel_path)
+        abs_path = _REPO_ROOT / Path(rel_path)
         if not abs_path.exists():
             missing.append(rel_path)
 
@@ -160,8 +162,7 @@ def test_populated_builders_carry_saturation_markers() -> None:
 
     Builders in ``_WAIVERS`` are exempt with a documented rationale.
     """
-    src_root = Path(__file__).parent
-    builders = _collect_populated_builders(src_root)
+    builders = _collect_populated_builders(_AEAT_ROOT)
 
     assert builders, (
         "No _populated_* builders found in roundtrip test files — "

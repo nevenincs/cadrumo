@@ -1,0 +1,7 @@
+[labels]
+"iva.repercutido.general" = "Felszámított ÁFA összeg általános kulccsal (21%)"
+"iva.soportado.interiores" = "Levonható ÁFA összeg belföldi folyó ügyletek után"
+
+[help]
+"iva.repercutido.general" = "Az általános 21%-os kulccsal kiszámított teljes felszámított ÁFA."
+"iva.soportado.interiores" = "A belföldi termékbeszerzések és szolgáltatásigénybevételek után fizetett, levonható ÁFA."

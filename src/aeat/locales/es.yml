@@ -1397,9 +1397,10 @@ cli:
       casillas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
+        explain_help: 'Incluir el texto de ayuda localizado en la salida de texto.'
         form_number_help: Filtrar casillas por número de casilla impreso en el BOE
           (p. ej. 46)
-        help: 'Listar todas las casillas definidas para la revision de un modelo especifico.'
+        help: Listar todas las casillas definidas para la revision de un modelo especifico.
         input_kind_help: Filtrar las casillas por tipo de entrada (manual, bound,
           computed, informational)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
@@ -1424,7 +1425,8 @@ cli:
       describe:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
-        help: 'Mostrar la estructura detallada, metadatos y periodos activos para un modelo especifico.'
+        help: Mostrar la estructura detallada, metadatos y periodos activos para un
+          modelo especifico.
         label_bindings: Vinculaciones
         label_cadence: Periodicidad
         label_casillas: Casillas
@@ -1478,7 +1480,8 @@ cli:
           (AAAA-MM-DD)
         explain_help: Incluir legal_refs y source_refs que sustentan cada fórmula
           en la salida de texto. El payload JSON los lleva siempre.
-        help: 'Listar todas las casillas calculadas y sus formulas para la revision de un modelo especifico.'
+        help: Listar todas las casillas calculadas y sus formulas para la revision
+          de un modelo especifico.
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         period_help: Token de periodo; para Modelo 036 usa alta, modificacion o baja;
           ejemplos periodicos incluyen 2026Q1 y 2026-01
@@ -1513,7 +1516,7 @@ cli:
         seed_invalid_amount: 'El importe de semilla IVA no es válido: %{amount}.'
         seed_period_help: Período del importe inicial (p. ej. 2024N4).
       list:
-        help: 'Listar todos los modelos tributarios oficiales registrados en el sistema.'
+        help: Listar todos los modelos tributarios oficiales registrados en el sistema.
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
       m036:
         alta_help: Registra una declaración M036 de alta (inscripción censal inicial)

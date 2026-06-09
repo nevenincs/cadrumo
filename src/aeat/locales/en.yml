@@ -1293,8 +1293,9 @@ cli:
         year_help: Tax year of the modelo (e.g. 2026)
       casillas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
+        explain_help: 'Include localized help text in the text output.'
         form_number_help: Filter casillas by BOE-printed form number (e.g. 46)
-        help: 'List all casillas (fields/boxes) defined for a specific modelo revision.'
+        help: List all casillas (fields/boxes) defined for a specific modelo revision.
         input_kind_help: Filter casillas by input kind (manual, bound, computed, informational)
         modelo_help: Tax form code (e.g. 303, 130, 100)
         period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
@@ -1316,7 +1317,8 @@ cli:
         Emits per-casilla delta rows (year_b - year_a) grouped by section.
       describe:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
-        help: 'Show detailed structure, metadata, and active periods for a specific modelo.'
+        help: Show detailed structure, metadata, and active periods for a specific
+          modelo.
         label_bindings: Bindings
         label_cadence: Cadence
         label_casillas: Casillas
@@ -1366,7 +1368,8 @@ cli:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         explain_help: Include the legal_refs and source_refs that ground each formula
           in the text output. The JSON payload always carries them.
-        help: 'List all computed casillas and their formulas for a specific modelo revision.'
+        help: List all computed casillas and their formulas for a specific modelo
+          revision.
         modelo_help: Tax form code (e.g. 303, 130, 100)
         period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
           periodic examples include 2026Q1 and 2026-01
@@ -1403,7 +1406,7 @@ cli:
         seed_invalid_amount: The seed amount must be a valid, non-negative decimal.
         seed_period_help: Period of the seed amount (e.g. 2024N4).
       list:
-        help: 'List all official tax forms (modelos) registered in the system.'
+        help: List all official tax forms (modelos) registered in the system.
         year_help: Filter the modelo catalogue to a single fiscal year
       m036:
         alta_help: Record an M036 alta declaration (initial census registration) filed

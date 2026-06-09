@@ -705,8 +705,10 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
 def test_render_config_repair_text_lists_specific_findings() -> None:
     """The renderer prints each finding line, not just the check summary."""
 
-    from ..diagnostics import _profile_check
+    from ..diagnostics import _ensure_models_rebuilt, _profile_check
     from ..wizard._status import WizardStatusReport
+
+    _ensure_models_rebuilt()
 
     report = WizardStatusReport(
         active_profile="demo",
