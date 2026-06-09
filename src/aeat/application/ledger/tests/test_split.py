@@ -62,7 +62,12 @@ def _repositories(objects: SecureObjectRepository, *, bucket_id: str = "bucket-a
     )
 
 
-def _create_parent(transaction_repository, event_repository, *, amount: Decimal = Decimal("-100.00")):
+def _create_parent(
+    transaction_repository: TransactionCatalogueRepository,
+    event_repository: BucketEventHistoryRepository,
+    *,
+    amount: Decimal = Decimal("-100.00"),
+):
     direction = TransactionDirection.OUTGOING if amount < Decimal("0") else TransactionDirection.INCOMING
     command = ManualLedgerTransactionCommand(
         bucket_id="bucket-a",

@@ -56,7 +56,12 @@ def _repositories(objects: SecureObjectRepository, *, bucket_id: str = "bucket-a
     )
 
 
-def _split_setup(transaction_repository, event_repository, *, parent_amount: Decimal = Decimal("-100.00")):
+def _split_setup(
+    transaction_repository: TransactionCatalogueRepository,
+    event_repository: BucketEventHistoryRepository,
+    *,
+    parent_amount: Decimal = Decimal("-100.00"),
+):
     direction = TransactionDirection.OUTGOING if parent_amount < Decimal("0") else TransactionDirection.INCOMING
     parent_command = ManualLedgerTransactionCommand(
         bucket_id="bucket-a",
