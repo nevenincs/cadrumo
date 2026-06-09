@@ -2096,3 +2096,73 @@ def test_no_bare_amortizacion_decimal_literal_in_amortization_ledger() -> None:
         "Bare Decimal('0.03') amortization literals found; import AMORTIZACION_INMUEBLE_RATE from core instead:\n"
         + "\n".join(offenders)
     )
+
+
+# ---------------------------------------------------------------------------
+# contract — REBECA_MARITIME_EXEMPTION_FRACTION centralisation tests
+# ---------------------------------------------------------------------------
+
+
+def test_rebeca_maritime_exemption_fraction_value() -> None:
+    """``REBECA_MARITIME_EXEMPTION_FRACTION`` equals 0.50 per Ley 19/1994 arts. 73/75."""
+
+    from decimal import Decimal
+
+    from ..external_constants import REBECA_MARITIME_EXEMPTION_FRACTION
+
+    assert REBECA_MARITIME_EXEMPTION_FRACTION == Decimal("0.50")
+
+
+def test_rebeca_maritime_exemption_fraction_is_final_decimal() -> None:
+    """``REBECA_MARITIME_EXEMPTION_FRACTION`` is a ``Decimal`` instance (typed ``Final[Decimal]``)."""
+
+    from decimal import Decimal
+
+    from ..external_constants import REBECA_MARITIME_EXEMPTION_FRACTION
+
+    assert isinstance(REBECA_MARITIME_EXEMPTION_FRACTION, Decimal)
+
+
+def test_maritime_exemption_imports_rebeca_fraction_from_core() -> None:
+    """``domain/renta/_maritime_exemption.py`` reads ``REBECA_MARITIME_EXEMPTION_FRACTION`` from core."""
+
+    import importlib
+
+    from ..external_constants import REBECA_MARITIME_EXEMPTION_FRACTION
+
+    mod = importlib.import_module("aeat.domain.renta._maritime_exemption")
+
+    assert hasattr(mod, "REBECA_MARITIME_EXEMPTION_FRACTION"), (
+        "_maritime_exemption must import REBECA_MARITIME_EXEMPTION_FRACTION from aeat.core.external_constants"
+    )
+    assert mod.REBECA_MARITIME_EXEMPTION_FRACTION is REBECA_MARITIME_EXEMPTION_FRACTION
+
+
+def test_no_bare_rebeca_fraction_decimal_literal_in_maritime_exemption() -> None:
+    """No bare ``Decimal("0.50")`` literal in ``domain/renta/_maritime_exemption.py``.
+
+    Anti-tautology: parses the real AST so any re-introduction of the local literal triggers failure.
+    Scoped to the REBECA calculation; does not flag Decimal("0") or other unrelated values.
+    """
+
+    repo_root = Path(__file__).parents[4]
+    source = (repo_root / "src/aeat/domain/renta/_maritime_exemption.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
+        if func_name != "Decimal":
+            continue
+        if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "0.50":
+            offenders.append(
+                f"_maritime_exemption.py:{node.lineno}: bare Decimal('0.50'); use REBECA_MARITIME_EXEMPTION_FRACTION"
+            )
+
+    assert offenders == [], (
+        "Bare Decimal('0.50') REBECA literals found; import REBECA_MARITIME_EXEMPTION_FRACTION from core instead:\n"
+        + "\n".join(offenders)
+    )
