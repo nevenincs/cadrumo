@@ -738,3 +738,51 @@ no crypto/auth/submission sensitivity. The standing blockers are now external to
 the campaign's lanes: the peer amendment-flow / M303 campaigns settling (which
 own the type-lane residual and two docstring-link gate residuals) and the two
 owner-deferred over-budget CLI feature files.
+
+## QHC-022 | test-unit lane: 36 -> 5 failures; cross-file isolation leak root-caused (2026-06-10)
+
+Full unit-suite triage drove the lane from **36 failures to 5 deterministic
+gates**, and the dominant cause was a systemic test-isolation leak, not code
+regressions. Root cause: ``override_settings`` set/reset the override ContextVar
+but never invalidated the output-language cache, whose override-branch key is
+``("override", id(override), VERSION)``. Under suite-wide GC the prior block's
+Settings address is reused by the next block, so the cache key collides and a
+prior test's output language (e.g. ``ca``) leaks into a later block — breaking
+~21 localisation-dependent tests (filing ``*_is_localized``, i18n fallback,
+wizard translation resolution, plus modelo_390 / ledger_iva / revision-stamp
+ordering artefacts) that all pass in isolation. Fix: ``override_settings`` now
+calls ``clear_output_language_cache()`` on enter and exit, making each block's
+key version-distinct so ``id()`` reuse can no longer serve a stale entry. The
+same ``id()``-reuse class surfaced (via a RAG sweep for ``id``-keyed caches +
+targeted ``rg``) three more live instances — ``_RESOLVER_CACHE``,
+``_ALIAS_MAP_CACHE``, ``_EVALUATION_ORDER_CACHE`` in the registry runtime graph,
+all keyed on ``id(revision)`` and feeding the calculation dependency graph (a
+stale hit = wrong evaluation order / casilla resolution). ``ModeloRevision`` is
+unhashable (nested ``FormulaExpression`` ``Mapping``) and ``model_copy`` yields
+same-coordinate / different-content revisions, so neither value-keying nor a
+coordinate key is safe; removed all three per the module's own documented
+recompute discipline (168 calc tests pass in 7.7s, callers invoke once per
+execution, no perf regression).
+
+Five structural gates closed in the same lane (each clean, verified, committed):
+LLM-cache no-plaintext assertion scoped past the new ``bucket.dek.json`` DEK
+keystore; ``FakeRevision`` given ``calculation_revision_id``; a relative
+self-import; two ``pytestmark``-ordering moves; five DI-resolver
+``Callable[..., Any]`` params rationale-marked; two ``__init__`` public sibling
+imports privatised; two hand-summed LLM-saturation assertions rebased onto the
+seeded gross input.
+
+**Five gates remain, none cleanly actionable by this campaign now:** the
+``codebase_size_budgets`` module + callable gates (the same owner-deferred
+over-budget feature files as QHC-020, now joined by peer-grown
+``_iva_compensation_wallet`` and ``register_m036_commands``); the export-package
+``latin1`` gate (29 sites — deferred because the constant is ``"latin-1"`` while
+the literals are ``"iso-8859-1"``, so a blind swap risks BOE name-fidelity
+assertions and needs export-campaign judgment); the one docstring-link residual
+(dirty ``registry/__init__.py``, peer-WIP); and the campaign-metadata
+comments/docstrings gate — **94 violations across ~30 peer test files** (process
+labels ``S03`` / ``W04.P10.S16`` / ``ADR`` / ``wave`` / ``phase``). The last is
+the only remaining actionable-by-me gate but is a broad cross-file source-hygiene
+sweep best run as its own focused pass, not rushed at session end, given the
+conflict surface across 30 churning peer files and the per-violation judgment
+(legitimate ADR references vs process labels) each rewrite needs.
