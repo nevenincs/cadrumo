@@ -35,6 +35,7 @@ import shutil
 import subprocess
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
+from datetime import date
 from decimal import Decimal
 from typing import Protocol
 
@@ -42,8 +43,10 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.i18n import Translatable as tr
+from ...core.i18n import tr as _localize
 from ...core.logging import get_logger
 from ..categories import SpendingCategory, resolve_category_profiles
+from ..iva import IvaCategory, resolve_catalogue
 from ._enums import BusinessClassification
 from ._errors import LLMClassifierError, TransactionValidationError
 from ._model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier, resolve_profile
@@ -68,6 +71,8 @@ class LLMClassificationResponse(BaseModel):
     confidence: Decimal
     reason: str = Field(min_length=1, max_length=_REASON_MAX_LENGTH)
     category: SpendingCategory | None = None
+    iva_category: IvaCategory | None = None
+    business_pct: Decimal | None = None
 
     @field_validator("confidence")
     @classmethod
@@ -75,6 +80,19 @@ class LLMClassificationResponse(BaseModel):
         """Restrict confidence to the inclusive 0..1 range."""
         if not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
             raise TransactionValidationError("confidence must be within the inclusive 0..1 range")
+        return value
+
+    @field_validator("business_pct")
+    @classmethod
+    def _check_business_pct_range(cls, value: Decimal | None) -> Decimal | None:
+        """Restrict the proposed MIXED business percentage to the inclusive 0..1 range.
+
+        The model only *proposes* the split direction; the percentage is a
+        non-regulated hint the operator confirms. ``None`` is the common case
+        (BUSINESS / PERSONAL suggestions carry no percentage).
+        """
+        if value is not None and not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
+            raise TransactionValidationError("business_pct must be within the inclusive 0..1 range")
         return value
 
     @field_validator("reason")
@@ -126,6 +144,14 @@ class CategoryChoice:
     hint: str
 
 
+@dataclass(frozen=True)
+class IvaCategoryChoice:
+    """One allowed :class:`aeat.domain.iva.IvaCategory` paired with an LLM-facing hint."""
+
+    value: IvaCategory
+    hint: str
+
+
 # Descriptive hints for the four LLM-addressable classification states. Kept
 # as module constants so the descriptions live next to their values and can
 # be overridden by callers that build a custom PromptSpec.
@@ -170,6 +196,7 @@ class PromptSpec:
         default_factory=default_classification_choices,
     )
     categories: tuple[CategoryChoice, ...] = ()
+    iva_categories: tuple[IvaCategoryChoice, ...] = ()
     header: str = "You are classifying a Spanish autónomo's bank transaction for tax purposes."
 
     def allowed_classifications(self) -> frozenset[BusinessClassification]:
@@ -183,6 +210,15 @@ class PromptSpec:
             Frozenset of :class:`SpendingCategory` values the LLM may emit.
         """
         return frozenset(choice.value for choice in self.categories)
+
+    def allowed_iva_categories(self) -> frozenset[IvaCategory]:
+        """Return the set of :class:`aeat.domain.iva.IvaCategory` values the LLM may emit (empty = none).
+
+        Returns:
+            Frozenset of :class:`aeat.domain.iva.IvaCategory` values the LLM may
+            select from; empty when the spec does not ask for an IVA category.
+        """
+        return frozenset(choice.value for choice in self.iva_categories)
 
     def render(self, transaction: Transaction) -> str:
         """Render the prompt for ``transaction`` against this spec."""
@@ -221,6 +257,65 @@ def prompt_spec_with_every_spending_category(
     return PromptSpec(
         classifications=classifications or default_classification_choices(),
         categories=category_choices,
+    )
+
+
+# Year whose IVA catalogue grounds the saturation prompt's IVA-category
+# allow-list and label hints. Mirrors the SpendingCategory hint year so the
+# two grounded allow-lists are sourced from the same filing period.
+_SATURATION_CATALOGUE_YEAR = 2025
+
+
+def default_iva_category_choices() -> tuple[IvaCategoryChoice, ...]:
+    """Return the registry-grounded IVA-category choices for the saturation prompt.
+
+    Built from the codified :class:`aeat.domain.iva.IvaCatalogue` for
+    :data:`_SATURATION_CATALOGUE_YEAR` so the allow-list the LLM selects from
+    is exactly the closed set of Spanish IVA situations, each hinted with the
+    catalogue's authoritative localized label (resolved to the active output
+    language). The model SELECTS a category only; every regulated euro figure
+    is derived downstream from the registry rate, never emitted by the model
+    (``2026-06-04-llm-ledger-classification-adr``).
+
+    Returns:
+        One :class:`IvaCategoryChoice` per :class:`aeat.domain.iva.IvaCategory`,
+        ordered by enum declaration, hinted from the catalogue label.
+    """
+    catalogue = resolve_catalogue(on=date(_SATURATION_CATALOGUE_YEAR, 1, 1))
+    choices: list[IvaCategoryChoice] = []
+    for category in IvaCategory:
+        regulation = catalogue.get(category)
+        hint = _localize(str(regulation.label)) if regulation is not None else category.value.replace("_", " ")
+        choices.append(IvaCategoryChoice(value=category, hint=hint))
+    return tuple(choices)
+
+
+def prompt_spec_with_saturation_fields(
+    *,
+    classifications: tuple[ClassificationChoice, ...] | None = None,
+) -> PromptSpec:
+    """Return a prompt spec for full saturation: spending + IVA category selection.
+
+    Extends :func:`prompt_spec_with_every_spending_category` with the
+    registry-grounded IVA-category allow-list (and invites a proposed MIXED
+    ``business_pct``) so one reviewed suggestion can carry the rich tax
+    metadata. The model selects categories only; the regulated rate, taxable
+    base, and IVA amount are derived downstream from the registry, never
+    emitted by the model (``2026-06-04-llm-ledger-classification-adr``).
+
+    Args:
+        classifications: Optional override for the classification choices;
+            defaults to :func:`default_classification_choices`.
+
+    Returns:
+        A :class:`PromptSpec` carrying both the spending-category and the
+        IVA-category allow-lists.
+    """
+    category_choices = tuple(CategoryChoice(value=value, hint=_category_hint(value)) for value in SpendingCategory)
+    return PromptSpec(
+        classifications=classifications or default_classification_choices(),
+        categories=category_choices,
+        iva_categories=default_iva_category_choices(),
     )
 
 
@@ -293,12 +388,26 @@ def _render_prompt(spec: PromptSpec, transaction: Transaction) -> str:
             ]
         )
         schema_fields.append('"category": "<one SpendingCategory or null>"')
+    if spec.iva_categories:
+        iva_block = _render_choices((choice.value.value, choice.hint) for choice in spec.iva_categories)
+        sections.extend(
+            [
+                "",
+                "Also pick exactly one iva_category — the IVA situation that fits this transaction. "
+                "Pick the category only; do NOT compute or output any rate, base, or IVA amount.",
+                iva_block,
+            ]
+        )
+        schema_fields.append('"iva_category": "<one IvaCategory or null>"')
+        schema_fields.append('"business_pct": <0.0-1.0 when MIXED, else null>')
     schema_line = "{" + ", ".join(schema_fields) + "}"
     example_confidence = "0.85"
     example_reason = "restaurante meal with a named client strongly suggests business meal"
     example = f'{{"classification": "BUSINESS", "confidence": {example_confidence}, "reason": "{example_reason}"'
     if spec.categories:
         example += ', "category": "manutencion_dietas_nacional"'
+    if spec.iva_categories:
+        example += ', "iva_category": "domestic_general_21", "business_pct": null'
     example += "}"
     sections.extend(
         [
@@ -345,6 +454,7 @@ def parse_response(
     resolved_spec = spec or default_prompt_spec()
     allowed_classifications = resolved_spec.allowed_classifications()
     allowed_categories = resolved_spec.allowed_categories()
+    allowed_iva_categories = resolved_spec.allowed_iva_categories()
     failures: list[str] = []
     any_candidate_seen = False
 
@@ -365,6 +475,13 @@ def parse_response(
                 continue
             if response.category not in allowed_categories:
                 failures.append(f"disallowed category {response.category.value!r} (payload {payload[:100]!r})")
+                continue
+        if response.iva_category is not None:
+            if not allowed_iva_categories:
+                failures.append(f"unexpected iva_category {response.iva_category.value!r} (payload {payload[:100]!r})")
+                continue
+            if response.iva_category not in allowed_iva_categories:
+                failures.append(f"disallowed iva_category {response.iva_category.value!r} (payload {payload[:100]!r})")
                 continue
         return response
 
@@ -694,6 +811,7 @@ __all__ = [
     "PIPELINE_ONLY_CLASSIFICATIONS",
     "CategoryChoice",
     "ClassificationChoice",
+    "IvaCategoryChoice",
     "LLMClassificationResponse",
     "LLMClassifier",
     "LLMClassifierError",
@@ -705,9 +823,11 @@ __all__ = [
     "build_codex_classifier",
     "build_gemini_classifier",
     "default_classification_choices",
+    "default_iva_category_choices",
     "default_prompt_spec",
     "parse_response",
     "prompt_spec_with_every_spending_category",
+    "prompt_spec_with_saturation_fields",
     "register_classifier",
     "resolve_classifier",
     "unregister_classifier",
