@@ -1,0 +1,59 @@
+# Terminology Handbook concept fragment.
+# `broader = ["prorrata"]` declares this concept as a child of the
+# general prorrata concept; the loader DERIVES the inverse
+# `narrower = ["prorrata-especial"]` onto `prorrata` at compile time.
+# The inverse relation is never authored on both sides.
+
+[concept]
+concept_id = "prorrata-especial"
+domain = "concepto"
+lifecycle = "approved"
+domain_refs = ["modelo:303"]
+legal_refs = ["ley-37-1992:art-104"]
+broader = ["prorrata"]
+created_at = 2026-06-10
+updated_at = 2026-06-10
+
+[language.es]
+short_description = "Modalidad de prorrata que deduce el IVA de cada sector de actividad por separado."
+definition = "Modalidad de la regla de prorrata en la que las cuotas soportadas se deducen segun el destino real de cada bien o servicio, aplicando la prorrata general solo a las cuotas comunes a varios sectores. Es obligatoria cuando la prorrata general superaria en mas de un 10 por ciento la deduccion que resulta de la especial."
+
+[language.es.source]
+citation = "Articulo 103 de la Ley 37/1992 del IVA (LIVA)."
+authority = "boe"
+
+[[language.es.term]]
+label = "prorrata especial"
+term_status = "preferred"
+part_of_speech = "noun"
+grammatical_gender = "feminine"
+
+[language.en]
+short_description = "The prorrata variant that deducts input VAT per activity sector separately."
+definition = "The variant of the pro rata rule under which input VAT is deducted according to the actual use of each good or service, applying the general pro rata only to inputs shared across sectors."
+
+[language.en.source]
+citation = "Article 103 of Law 37/1992 on VAT (LIVA)."
+authority = "boe"
+
+[[language.en.term]]
+label = "special pro rata"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[language.ca]
+short_description = "Modalitat de prorrata que dedueix l'IVA de cada sector d'activitat per separat."
+
+[[language.ca.term]]
+label = "prorrata especial"
+term_status = "preferred"
+part_of_speech = "noun"
+grammatical_gender = "feminine"
+
+[language.hu]
+short_description = "A prorrata azon valtozata, amely tevekenysegi szektoronkent kulon vonja le az elozetes afat."
+
+[[language.hu.term]]
+label = "kulonleges aranyositas"
+term_status = "admitted"
+part_of_speech = "noun"
