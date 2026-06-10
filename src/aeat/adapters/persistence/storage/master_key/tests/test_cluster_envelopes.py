@@ -36,8 +36,8 @@ def _envelope_round_trip(err: AeatError) -> None:
     assert code.code in ERROR_REGISTRY, f"{type(err).__name__}.code={code.code!r} not found in ERROR_REGISTRY"
 
     envelope = build_error_envelope(err)
-    assert envelope.schema_version == "1"
     assert envelope.code == code.code
+    assert envelope.category != "", f"{type(err).__name__} produced empty envelope.category"
     assert envelope.message, f"{type(err).__name__} produced empty envelope.message"
 
 
