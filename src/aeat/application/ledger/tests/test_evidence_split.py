@@ -1,0 +1,36 @@
+"""Tests for deterministic split child-amount derivation."""
+
+from __future__ import annotations
+
+from decimal import Decimal
+
+import pytest
+
+from .._evidence_split import derive_child_amounts
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def test_two_way_split_sums_to_parent() -> None:
+    amounts = derive_child_amounts(Decimal("121.00"), [Decimal("0.6"), Decimal("0.4")])
+    assert amounts == (Decimal("72.60"), Decimal("48.40"))
+    assert sum(amounts) == Decimal("121.00")
+
+
+def test_three_way_split_remainder_lands_on_last_child() -> None:
+    amounts = derive_child_amounts(Decimal("100.00"), [Decimal("0.333"), Decimal("0.333"), Decimal("0.334")])
+    assert sum(amounts) == Decimal("100.00")
+    # First two round to 33.30; the remainder absorbs the rest on the last child.
+    assert amounts[0] == round(amounts[0], 2)
+    assert amounts[-1] == Decimal("100.00") - amounts[0] - amounts[1]
+
+
+def test_negative_gross_keeps_sign() -> None:
+    amounts = derive_child_amounts(Decimal("-50.00"), [Decimal("0.5"), Decimal("0.5")])
+    assert sum(amounts) == Decimal("-50.00")
+    assert all(a < 0 for a in amounts)
+
+
+def test_single_child_rejected() -> None:
+    with pytest.raises(ValueError, match="at least two"):
+        derive_child_amounts(Decimal("10.00"), [Decimal("1.0")])
