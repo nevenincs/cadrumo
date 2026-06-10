@@ -72,12 +72,12 @@ change is a single cohesive landing verified by one shared gate.
   full-suite-green gate must be re-run once the peer transaction refactor
   settles. S17 is therefore verified for this change's scope but its
   full-suite-green clause is deferred to a post-peer-WIP rerun.
-- **S15 (overview next-step) deferred as a non-violating enhancement.** The
-  overview status next-step guidance is text-only rendering with no bespoke JSON
-  field, so it does not violate the uniform-channel rule and the gate passes.
-  Surfacing it additionally as a JSON `info` notice is a clean follow-up that
-  requires extracting the next-step string from the text renderer; it was not
-  forced here to protect the byte-identical text-output invariant.
+- **S15 (overview next-step) landed.** The overview status next-step guidance is
+  now also surfaced as `info`-severity notices (`overview_next_step_notices`)
+  on the `overview.status` JSON envelope, mirroring the text guidance so JSON
+  consumers get the same forward steps. The byte-identical text output is
+  preserved (the text renderer is unchanged); overview rendering + conformance
+  tests stay green (102 passed).
 - **Notice design refinement vs the ADR sketch.** The ADR sketched
   `suggestion`/`next` on the notice; the landed model collapses the actionable
   field to a single `suggestion` (uniform with `ErrorEnvelope.suggestion`) and
