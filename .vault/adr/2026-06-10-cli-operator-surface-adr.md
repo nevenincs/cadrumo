@@ -73,6 +73,36 @@ re-prioritised toward the strictest honest outcome (caveat 1); and D2, D3, D5,
 D7, D8 are confirmed against the caveats with the input-override decisions (D3,
 D8) named as such.
 
+## Post-acceptance reconciliation
+
+Two notes recorded after acceptance, to keep this decision record true to the
+shipped tree (surfaced by the `2026-06-10-cli-operator-surface-closure-review`
+honesty pass):
+
+- **The `_RETIRED_VERBS` tracking subsystem was nuked.** D1's context prose
+  below references a `_RETIRED_VERBS` constant in
+  `test_config_profile_surface_inventory.py` as the decision-time mechanism for
+  recording retired spellings. Per the operator directive "find it, nuke it,
+  ensure the codebase speaks for itself", that whole retired-verb deprecation
+  subsystem was removed in commit `44a859855`; the inventory test now asserts the
+  live surface positively (no retired-verb ledger). The D1 references describe the
+  pre-nuke context only -- there is no retired-verb constant in the tree now, and
+  retired spellings are simply absent rather than tracked. This is the deletion
+  the strict-rollout caveat 1 mandates, applied to the tracking apparatus itself.
+- **Stable machine-API tokens are a deliberate exception to the no-shadow
+  rule.** Caveat 1 and D1 forbid an operator-facing alias, synonym, or shadow
+  surviving a rename. That prohibition governs *operator-facing spellings*; it
+  does not extend to the JSON envelope `operation`/`command` tokens that
+  programmatic consumers key on. When the operator-facing `config bucket history`
+  command relocated to `config profile history` (D1 family) and the operator-facing
+  "bucket" noun was renamed to "profile" (FU-2), the underlying envelope token was
+  deliberately kept stable as `config.bucket.history` -- it is a machine contract,
+  documented as such at `_config_payloads.py` (`register_schema("config.bucket.history")`)
+  and bridged by the `_PATH_KEY_OVERRIDES` map (`config.profile.history` ->
+  `config.bucket.history`) the json-schema conformance gate enforces. Renaming it
+  would break consumers for no operator-visible benefit. A stable machine token is
+  not a shadow verb; it carries no operator-facing spelling.
+
 ## Considerations
 
 - The audits are written decision-shaped and pre-reconciled, so each decision can
