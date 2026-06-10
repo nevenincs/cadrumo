@@ -12,7 +12,7 @@ Use of :class:`OutputSchema` for compliance.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Protocol
+from typing import Annotated, Protocol
 
 import typer
 from pydantic import ValidationError
@@ -445,17 +445,9 @@ def ledger_update(
     )
 
 
-@app.command("classify", help=tr("cli.ledger.classify.help"))
-def ledger_classify(
-    ctx: typer.Context,
-    transaction_id: str | None = typer.Option(None, "--id", help=tr("cli.ledger.classify.id_help")),
-    classification: BusinessClassification | None = typer.Option(
-        None,
-        "--classification",
-        help=tr("cli.ledger.classify.classification_help"),
-    ),
-    from_csv: str | None = typer.Option(
-        None,
+_FromCsvOpt = Annotated[
+    str | None,
+    typer.Option(
         "--from-csv",
         help=tr(
             "cli.ledger.classify.from_csv_help",
@@ -465,6 +457,19 @@ def ledger_classify(
             ),
         ),
     ),
+]
+
+
+@app.command("classify", help=tr("cli.ledger.classify.help"))
+def ledger_classify(
+    ctx: typer.Context,
+    transaction_id: str | None = typer.Option(None, "--id", help=tr("cli.ledger.classify.id_help")),
+    classification: BusinessClassification | None = typer.Option(
+        None,
+        "--classification",
+        help=tr("cli.ledger.classify.classification_help"),
+    ),
+    from_csv: _FromCsvOpt = None,
     business_pct: str | None = typer.Option(
         None,
         "--business-pct",

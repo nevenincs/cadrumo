@@ -89,7 +89,7 @@ class _DeterministicClassifier:
     def decided_by(self) -> str:
         return f"llm:claude:{self._model}"
 
-    def classify(self, transaction: Transaction) -> LLMClassificationResponse:
+    def classify(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMClassificationResponse:
         return LLMClassificationResponse(
             classification=self._classification,
             confidence=self._confidence,
