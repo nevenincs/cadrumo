@@ -254,11 +254,11 @@ def test_split_then_merge_roundtrip() -> None:
             "--id",
             tx,
             "--child-amount",
-            f"-{half}",
+            f"{half}",
             "--child-description",
             "Subcontratacion parte A",
             "--child-amount",
-            f"-{other}",
+            f"{other}",
             "--child-description",
             "Subcontratacion parte B",
             "--reason",
@@ -375,7 +375,7 @@ def test_ratios_eligible_set_list_validate() -> None:
 # --- Journey 7: filter and search via review typed spec ---------------------
 def test_review_filter_by_period_and_status() -> None:
     _import_bbva()
-    by_period = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=2025Q1"])
+    by_period = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=2025-1T"])
     assert by_period.exit_code == 0, by_period.output
     by_status = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "status=pending"])
     assert by_status.exit_code == 0, by_status.output
@@ -397,11 +397,11 @@ def test_split_children_then_merge() -> None:
             "--id",
             parent["transaction_id"],
             "--child-amount",
-            f"-{half}",
+            f"{half}",
             "--child-description",
             "Subcontratacion parte A",
             "--child-amount",
-            f"-{other}",
+            f"{other}",
             "--child-description",
             "Subcontratacion parte B",
             "--reason",
@@ -519,7 +519,7 @@ def test_stash_remove_and_track() -> None:
 # --- Journey 9: preflight and check gates ------------------------------------
 def test_preflight_and_check_surface_missing_facts() -> None:
     _import_bbva()
-    preflight = _RUNNER.invoke(app, ["app", "ledger", "preflight", "--period", "2025Q1"])
+    preflight = _RUNNER.invoke(app, ["app", "ledger", "preflight", "--period", "1T", "--year", "2025"])
     assert preflight.exit_code == 0, preflight.output
     check = _RUNNER.invoke(app, ["app", "ledger", "check"])
     assert check.exit_code == 0, check.output
