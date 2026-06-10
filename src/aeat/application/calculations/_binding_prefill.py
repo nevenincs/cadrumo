@@ -345,7 +345,8 @@ def _selector_source_casillas(value: object) -> tuple[str, ...]:
 
 def _selector_value(selector: object, key: str, default: object) -> object:
     if isinstance(selector, dict):
-        return selector.get(key, default)
+        # items() yields (Unknown, object) pairs; filter by key to preserve None-valued entries.
+        return next((v for k, v in selector.items() if k == key), default)
     return getattr(selector, key, default)
 
 

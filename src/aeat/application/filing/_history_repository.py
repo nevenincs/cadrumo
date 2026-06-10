@@ -12,6 +12,8 @@ from __future__ import annotations
 from collections.abc import Iterator
 from typing import ClassVar, override
 
+from pydantic import BaseModel
+
 from ...adapters.persistence.storage import (
     APPLICATION_FILING_HISTORY_NAMESPACE,
     SensitivityClass,
@@ -32,7 +34,7 @@ class ModeloHistoryRepository(SecureBoundRepository[ModeloHistory]):
     namespace: ClassVar[str] = APPLICATION_FILING_HISTORY_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = APPLICATION_FILING_HISTORY_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = APPLICATION_FILING_HISTORY_NAMESPACE.schema_version
-    payload_type: ClassVar[type[ModeloHistory]] = ModeloHistory
+    payload_type: ClassVar[type[BaseModel]] = ModeloHistory
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None

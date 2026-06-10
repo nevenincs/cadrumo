@@ -22,8 +22,8 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...core import Modelo
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
+from ...core import Modelo
 from ...core.time import now
 from ...domain.iva_compensation._carry_forward import (
     IvaCompensationCarryForwardReport,
@@ -94,7 +94,7 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
     namespace: ClassVar[str] = IVA_COMPENSATION_HISTORY_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = IVA_COMPENSATION_HISTORY_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = IVA_COMPENSATION_HISTORY_NAMESPACE.schema_version
-    payload_type: ClassVar[type[IvaCompensationPeriodState]] = IvaCompensationPeriodState
+    payload_type: ClassVar[type[BaseModel]] = IvaCompensationPeriodState
 
     @override
     def extract_identifier(self, payload: IvaCompensationPeriodState) -> str:
