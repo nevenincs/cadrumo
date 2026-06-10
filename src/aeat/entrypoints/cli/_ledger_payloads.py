@@ -195,6 +195,16 @@ class LedgerClassifyResult(OutputSchema):
     reason: str | None = None
     provenance: str | None = None
     persisted: bool | None = None
+    # Saturation path fields (--llm --saturate): the model-selected IVA category
+    # plus the system-derived euro substrate. The numbers are present only when
+    # the category was derivable; otherwise ``derivation_note`` explains why the
+    # operator must complete them.
+    iva_category: str | None = None
+    iva_rate: str | None = None
+    taxable_base: str | None = None
+    iva_amount: str | None = None
+    rate_derivable: bool | None = None
+    derivation_note: str | None = None
 
 
 @register_schema("ledger.allocate")

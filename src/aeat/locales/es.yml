@@ -2558,6 +2558,9 @@ cli:
       reaffirm_help: Reafirmar la clasificación de una transacción ya clasificada.
       reaffirmed: Clasificación reafirmada.
       taxable_base_help: Importe de base imponible
+      saturate_help: 'Satura con IA: selecciona tambien la categoria de IVA y deriva el tipo, la base y la cuota.'
+      saturate_non_derivable: 'Tipo no derivable'
+      saturate_requires_llm: 'La opcion --saturate solo se aplica con --llm; indique --llm con un proveedor.'
     doclink:
       actor_help: Etiqueta del operador.
       help: Registra un enlace a documento de Gmail/Drive/URL en una fila de libro
@@ -2684,6 +2687,7 @@ cli:
       warning: Aviso
       warnings: Avisos
       'yes': Sí
+      iva_category: 'Categoria de IVA'
     link:
       actor_help: Etiqueta del operador registrada en los eventos del bucket.
       errors:

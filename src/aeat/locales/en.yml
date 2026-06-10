@@ -2387,6 +2387,9 @@ cli:
       reaffirm_help: Reaffirm the classification of an already-classified transaction.
       reaffirmed: Classification reaffirmed.
       taxable_base_help: Taxable base amount
+      saturate_help: 'Saturate via LLM: also select the IVA category and derive the rate, base, and IVA amount.'
+      saturate_non_derivable: 'Rate not derivable'
+      saturate_requires_llm: 'The --saturate option applies only with --llm; supply --llm with a provider.'
     doclink:
       actor_help: Operator label.
       help: Record a Gmail/Drive/URL document link on a ledger row (never fetched).
@@ -2505,6 +2508,7 @@ cli:
       warning: Warning
       warnings: Warnings
       'yes': 'Yes'
+      iva_category: 'IVA category'
     link:
       actor_help: Operator label recorded on bucket events.
       errors:
