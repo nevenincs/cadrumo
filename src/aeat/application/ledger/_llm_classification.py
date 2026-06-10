@@ -23,11 +23,18 @@ Hallucination containment stays inside the engine: the classifier's
 :func:`aeat.domain.transactions.parse_response`, so an out-of-allow-list
 value is rejected before it ever reaches this module.
 
-**Hard constraint (MVP).** This path persists only the non-regulated
-``business_classification`` and optional expense ``category``. It never sets
-or persists a regulated tax value (``taxable_base``, ``iva_rate``,
-``iva_amount``, ``iva_category``, ``irpf_category``) — those are deferred to a
-separate, legally-grounded ADR.
+**Stage-1 constraint.** :func:`suggest_llm_classification` /
+:func:`apply_llm_classification` persist only the non-regulated
+``business_classification`` and optional expense ``category``; they never set a
+regulated tax value.
+
+**Stage-2 saturation.** :func:`saturate_llm_classification` /
+:func:`apply_saturated_llm_classification` additionally persist the
+model-selected ``iva_category`` and the system-DERIVED ``taxable_base`` /
+``iva_rate`` / ``iva_amount``. The model still never emits a number — the rate
+is looked up from the registry and the base and amount are derived with
+``round_to_cents`` (see ``2026-06-04-llm-ledger-classification-adr``).
+``irpf_category`` remains operator-only.
 """
 
 from __future__ import annotations
@@ -581,6 +588,12 @@ def apply_saturated_llm_classification(
         patch_fields["iva_amount"] = suggestion.iva_amount
     patch = ManualLedgerTransactionPatch.model_validate(patch_fields)
 
+    # Compose the single-writer manual write rather than re-implementing the
+    # regulated-field persistence (composition-service-no-parallel-write-path).
+    # The operator's verb is recorded via ``source_command`` on the manual
+    # write's own classification event, and model provenance via
+    # ``classified_by_override``; we deliberately do not emit a second,
+    # parallel LLM-specific event here.
     result = update_manual_transaction_fields(
         bucket_id=bucket_id,
         transaction_id=suggestion.transaction_id,
