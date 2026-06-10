@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Protocol, cast
 
 from sqlalchemy import Engine, bindparam, delete, inspect, select, text, update
-from sqlalchemy.exc import IntegrityError, OperationalError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .....core.classification import SensitivityClass
@@ -41,7 +41,6 @@ from ._secure_object_integrity import (
 from ._secure_object_integrity import (
     quarantine_unreadable_rows as _quarantine_unreadable_rows,
 )
-from ._secure_object_migration import ensure_deterministic_object_keys
 from ._secure_object_records import (
     DEFAULT_WRITE_PROVENANCE,
     SecureObjectDecryptabilityRow,
@@ -56,10 +55,7 @@ from ._secure_object_records import (
 from ._secure_object_schema import (
     build_revision_ancestor_ids,
     coerce_raw_bytes,
-    copy_row_to_quarantine,
     ensure_quarantine_table,
-    ensure_table_revision_metadata_columns,
-    is_duplicate_column_race,
     parse_revision_ancestor_ids,
 )
 from .engine import get_engine
@@ -101,35 +97,6 @@ class SecureObjectRepository:
         local_table = inspect(_orm.SecureObjectRow).local_table
         assert isinstance(local_table, _Table)
         local_table.create(self._engine, checkfirst=True)
-        self._ensure_table_revision_metadata_columns("secure_objects")
-        self._ensure_deterministic_object_keys()
-
-    def _ensure_table_revision_metadata_columns(self, table_name: str) -> None:
-        """Add nullable revision metadata columns to a pre-existing table."""
-        missing = ensure_table_revision_metadata_columns(self._engine, table_name)
-        if not missing:
-            return
-        _log.debug(
-            "%s: added missing revision metadata columns: %s",
-            table_name,
-            ", ".join(missing),
-        )
-
-    def _is_duplicate_column_race(self, table_name: str, column_name: str, exc: OperationalError) -> bool:
-        """Return whether an ``ALTER TABLE ADD COLUMN`` failed after a concurrent add."""
-        return is_duplicate_column_race(self._engine, table_name, column_name, exc)
-
-    def _ensure_deterministic_object_keys(self) -> None:
-        """Migrate legacy randomized object-key ciphertexts to HMAC digests.
-
-        Older secure-object rows stored ``object_key`` through
-        ``EncryptedString``. Equality lookups against that column miss
-        because every bind creates fresh ciphertext. Current rows use
-        :class:`HashedLookup`; this bootstrap pass converts decryptable
-        legacy keys in place and quarantines duplicate superseded rows so
-        the active table regains the one-row-per-logical-key contract.
-        """
-        ensure_deterministic_object_keys(self._engine, logger=_log)
 
     @staticmethod
     def _coerce_raw_bytes(value: object) -> bytes:
@@ -145,8 +112,6 @@ class SecureObjectRepository:
         previous_revision_ancestor_ids: tuple[str, ...],
     ) -> tuple[str, ...]:
         return build_revision_ancestor_ids(previous_revision_id, previous_revision_ancestor_ids)
-
-    _copy_row_to_quarantine = staticmethod(copy_row_to_quarantine)
 
     def _ensure_quarantine_table(self) -> None:
         """Create the quarantine archive table with the secure-object metadata shape."""

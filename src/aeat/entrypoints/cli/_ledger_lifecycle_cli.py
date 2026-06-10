@@ -22,6 +22,7 @@ from ...application.ledger import (
     remove_manual_transaction,
     reset_ledger_catalogue,
     resolve_transaction_id,
+    restore_manual_transaction,
     split_transaction,
     stash_manual_transaction,
 )
@@ -55,6 +56,7 @@ def register_lifecycle_commands(app: typer.Typer) -> None:
     )(ledger_doclink)
     app.command("archive", help=tr("cli.ledger.archive.help"))(ledger_archive)
     app.command("stash", help=tr("cli.ledger.stash.help"))(ledger_stash)
+    app.command("restore", help=tr("cli.ledger.restore.help"))(ledger_restore)
     app.command("remove", help=tr("cli.ledger.remove.help"))(ledger_remove)
     app.command("reset", help=tr("cli.ledger.reset.help"))(ledger_reset)
     app.command("split", help=tr("cli.ledger.split.help"))(ledger_split)
@@ -322,6 +324,39 @@ def ledger_stash(
     )
 
 
+def ledger_restore(
+    ctx: typer.Context,
+    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.restore.id_help")),
+    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.restore.reason_help")),
+    yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.restore.yes_help")),
+    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.restore.actor_help")),
+) -> None:
+    """Restore one stashed or archived ledger transaction to active."""
+    if not yes:
+        raise _bad(tr("cli.ledger.errors.confirm_required"))
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    result = restore_manual_transaction(
+        bucket_id=transaction_repository.bucket_id,
+        transaction_id=resolved_id,
+        actor=actor or resolve_active_bucket_id() or "operator",
+        reason=reason,
+        source_command="aeat app ledger restore",
+        transaction_repository=transaction_repository,
+    )
+    from ._ledger_payloads import LedgerRestoreResult
+
+    _emit_update_result(
+        ctx,
+        result.transaction,
+        result.ref.bucket_id,
+        result.bucket_event_ids,
+        command="ledger.restore",
+        result_cls=LedgerRestoreResult,
+    )
+
+
 def ledger_remove(
     ctx: typer.Context,
     transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.remove.id_help")),
@@ -517,6 +552,7 @@ __all__ = [
     "ledger_merge",
     "ledger_remove",
     "ledger_reset",
+    "ledger_restore",
     "ledger_split",
     "ledger_stash",
     "register_lifecycle_commands",

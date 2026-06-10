@@ -239,8 +239,9 @@ Use the least destructive action that matches the problem:
   work. Use this when a movement was imported by mistake but you want to keep a
   record of it.
 - `stash` — set aside a transaction you are not sure about. A stashed
-  transaction leaves the everyday lists. Note that neither stashed nor
-  archived transactions can be returned to active from the command line.
+  transaction leaves the everyday lists. Both stash and archive are
+  reversible: `restore` returns the transaction to active.
+- `restore` — return a stashed or archived transaction to active.
 - `remove` — delete the transaction from your active records.
 - `reset` — clear the entire transaction list for the active profile and start
   over. **Use with care — this removes all imported data.**
@@ -250,6 +251,7 @@ Examples:
 ```bash
 aeat app ledger archive --id <transaction-id> --reason "duplicate imported row" --yes
 aeat app ledger stash --id <transaction-id> --reason "waiting for invoice" --yes
+aeat app ledger restore --id <transaction-id> --reason "stashed by mistake" --yes
 aeat app ledger remove --id <transaction-id> --reason "wrong file imported" --yes
 aeat app ledger reset --reason "re-importing all statements" --yes
 ```

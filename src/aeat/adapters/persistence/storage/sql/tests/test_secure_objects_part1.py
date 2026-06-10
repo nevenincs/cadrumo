@@ -13,14 +13,11 @@ from ._secure_objects_support import (
     Path,
     SecureObjectRecord,
     SecureObjectRepository,
-    SecureObjectRow,
     SecureObjectUnreadable,
     SecureObjectUnreadableError,
     SensitivityClass,
     Settings,
     StorageValidationError,
-    _create_legacy_secure_objects_table,
-    _seed_legacy_encrypted_string_key_row,
     _seed_under_key,
     create_engine_from_settings,
     datetime,
@@ -70,115 +67,6 @@ def test_secure_object_payload_is_encrypted_in_database(tmp_path: Path) -> None:
             assert natural_key.encode("utf-8") not in stored_key
             assert isinstance(stored, bytes)
             assert payload not in stored
-        finally:
-            engine.dispose()
-
-
-def test_repository_migrates_legacy_encrypted_string_object_key(tmp_path: Path) -> None:
-    """A row written with the old randomized key column loads through the natural key."""
-
-    with EphemeralMasterKeyProvider():
-        db_path = tmp_path / "legacy-key-migration.db"
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-        namespace = "aeat.legacy.key"
-        natural_key = "legacy-natural-key"
-        payload = b"legacy-key-migration-payload"
-        try:
-            _create_legacy_secure_objects_table(engine)
-            _seed_legacy_encrypted_string_key_row(
-                engine,
-                namespace=namespace,
-                natural_key=natural_key,
-                classification=SensitivityClass.FINANCIAL,
-                schema_version=1,
-                written_at=datetime(2026, 5, 22, 9, 0, 0, tzinfo=UTC),
-                payload=payload,
-            )
-
-            repo = SecureObjectRepository(engine=engine)
-            loaded = repo.load(
-                namespace,
-                natural_key,
-                expected_class=SensitivityClass.FINANCIAL,
-                max_supported_version=1,
-            )
-
-            assert loaded is not None
-            assert loaded.payload == payload
-            with sqlite3.connect(db_path) as con:
-                (stored_key,) = con.execute(
-                    "SELECT object_key FROM secure_objects WHERE namespace = ?",
-                    (namespace,),
-                ).fetchone()
-                (row_count,) = con.execute(
-                    "SELECT COUNT(*) FROM secure_objects WHERE namespace = ?",
-                    (namespace,),
-                ).fetchone()
-            assert row_count == 1
-            assert isinstance(stored_key, bytes)
-            assert len(stored_key) == 32
-            assert natural_key.encode("utf-8") not in db_path.read_bytes()
-        finally:
-            engine.dispose()
-
-
-def test_repository_migrates_duplicate_legacy_keys_to_latest_and_quarantines_loser(
-    tmp_path: Path,
-) -> None:
-    """Duplicate old encrypted-key rows collapse to one latest active row."""
-
-    with EphemeralMasterKeyProvider():
-        db_path = tmp_path / "legacy-key-duplicates.db"
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-        namespace = "aeat.legacy.key.duplicate"
-        natural_key = "shared-legacy-key"
-        try:
-            _create_legacy_secure_objects_table(engine)
-            _seed_legacy_encrypted_string_key_row(
-                engine,
-                namespace=namespace,
-                natural_key=natural_key,
-                classification=SensitivityClass.FINANCIAL,
-                schema_version=1,
-                written_at=datetime(2026, 5, 22, 9, 0, 0, tzinfo=UTC),
-                payload=b"first-legacy-payload",
-            )
-            _seed_legacy_encrypted_string_key_row(
-                engine,
-                namespace=namespace,
-                natural_key=natural_key,
-                classification=SensitivityClass.FINANCIAL,
-                schema_version=2,
-                written_at=datetime(2026, 5, 22, 10, 0, 0, tzinfo=UTC),
-                payload=b"second-legacy-payload",
-            )
-
-            repo = SecureObjectRepository(engine=engine)
-            loaded = repo.load(
-                namespace,
-                natural_key,
-                expected_class=SensitivityClass.FINANCIAL,
-                max_supported_version=2,
-            )
-
-            assert loaded is not None
-            assert loaded.payload == b"second-legacy-payload"
-            assert loaded.schema_version == 2
-            with sqlite3.connect(db_path) as con:
-                active_rows = con.execute(
-                    "SELECT object_key, schema_version FROM secure_objects WHERE namespace = ?",
-                    (namespace,),
-                ).fetchall()
-                quarantine_rows = con.execute(
-                    "SELECT object_key, schema_version FROM secure_objects_quarantine WHERE namespace = ?",
-                    (namespace,),
-                ).fetchall()
-            assert len(active_rows) == 1
-            assert len(active_rows[0][0]) == 32
-            assert active_rows[0][1] == 2
-            assert len(quarantine_rows) == 1
-            assert quarantine_rows[0][1] == 1
-            assert len(quarantine_rows[0][0]) > 32
         finally:
             engine.dispose()
 
@@ -261,69 +149,6 @@ def test_secure_object_table_materializes_revision_integrity_columns(tmp_path: P
             assert int(columns[column_name][3]) == 0, f"{column_name} must remain nullable until row backfill"
     finally:
         engine.dispose()
-
-
-def test_secure_object_repository_bootstraps_old_table_revision_columns(tmp_path: Path) -> None:
-    """Repository construction upgrades an old-shape table before ORM reads.
-
-    The row is inserted through SQLAlchemy column types before the new
-    columns exist, matching a database created by the previous mapper.
-    Loading it through the current repository proves the bootstrap ran
-    before the mapper tried to select the added columns.
-    """
-
-    with EphemeralMasterKeyProvider():
-        db_path = tmp_path / "legacy-revision-bootstrap.db"
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-        payload = b"legacy-secure-object-payload"
-        from typing import Any, cast
-
-        try:
-            with engine.begin() as connection:
-                connection.exec_driver_sql(
-                    "CREATE TABLE secure_objects ("
-                    "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                    "namespace VARCHAR(128) NOT NULL, "
-                    "object_key BLOB NOT NULL, "
-                    "classification VARCHAR(32) NOT NULL, "
-                    "schema_version INTEGER NOT NULL, "
-                    "written_at DATETIME NOT NULL, "
-                    "payload BLOB NOT NULL, "
-                    "CONSTRAINT uq_secure_objects_identity UNIQUE (namespace, object_key)"
-                    ")"
-                )
-                connection.execute(
-                    cast(Any, SecureObjectRow.__table__)
-                    .insert()
-                    .values(
-                        namespace="aeat.legacy.revision",
-                        object_key="legacy-key",
-                        classification=SensitivityClass.FINANCIAL.value,
-                        schema_version=1,
-                        written_at=datetime(2026, 5, 22, 12, 0, 0, tzinfo=UTC),
-                        payload=payload,
-                    )
-                )
-
-            repo = SecureObjectRepository(engine=engine)
-            loaded = repo.load(
-                "aeat.legacy.revision",
-                "legacy-key",
-                expected_class=SensitivityClass.FINANCIAL,
-                max_supported_version=1,
-            )
-
-            assert loaded is not None
-            assert loaded.payload == payload
-            with sqlite3.connect(db_path) as con:
-                columns = {str(row[1]) for row in con.execute("PRAGMA table_info(secure_objects)").fetchall()}
-                revision_values = con.execute(
-                    "SELECT revision_id, payload_hash, ciphertext_hash FROM secure_objects"
-                ).fetchone()
-            assert {"revision_id", "payload_hash", "ciphertext_hash"} <= columns
-            assert revision_values == (None, None, None)
-        finally:
-            engine.dispose()
 
 
 def test_secure_object_record_schema_version_mutation_breaks_roundtrip(tmp_path: Path) -> None:
