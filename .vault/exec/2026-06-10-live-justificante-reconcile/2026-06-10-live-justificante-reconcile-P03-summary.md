@@ -40,13 +40,15 @@ loadable justificante, and the stamp is an in-place update of the already-filed
 VIGENTE record (not a parallel write path, so
 `composition-service-no-parallel-write-path` does not apply).
 
-## Deferred follow-ups (formally deferred per campaign-close honesty)
+## Review follow-ups — actioned
 
-- **MEDIUM-1 — no bucket event on the stamp.** `register_capture_as_filing_evidence`
-  mutates the filing record without emitting a `BucketEvent`, unlike the
-  `import_external_filing_evidence` sibling. Deferred: attaching official
-  acceptance evidence should leave an audit-trail event; tracked as a follow-up
-  before the stamp is wired to an operator verb.
-- **MEDIUM-2 (shared with P04) — the stamp has no operator CLI surface yet.** See
-  the P04 summary; the stamp and reconcile-from-capture are library seams pending
-  a follow-up CLI increment.
+- **MEDIUM-1 — bucket event on the stamp. RESOLVED.**
+  `register_capture_as_filing_evidence` now emits a `MODELO_LIVE_EVIDENCE_STAMPED`
+  bucket event (work unit, evidence kind, reference id, snapshot id), and the
+  stamp is wired into the capture flow per the ADR's "in the same flow" wording —
+  best-effort, a no-op when the period has no current in-app filing. Landed in the
+  follow-up commit `02fba781b`; tests prove the stamp + event on a filed period
+  and the skip on an unfiled one.
+- **MEDIUM-2 (operator surface). RESOLVED** — see the P04 summary: the capture
+  verb now stamps in-flow, and `aeat app modelo reconcile --from-capture` reaches
+  the reconcile payoff.
