@@ -29,7 +29,7 @@ import time
 from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, override
 from urllib.parse import quote, urlsplit
 
 from pydantic import ValidationError
@@ -455,6 +455,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         template = self._settings.aeat_clave_sede_access_url_template
         return template.format(target=quote(target_path, safe=""))
 
+    @override
     def _clave_surface(self):
         return self._settings.external_constants().aeat.clave_movil
 
@@ -512,6 +513,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
             return landing_parts[:2] == target_parts[:2]
         return False
 
+    @override
     def _attempt_context(self) -> dict[str, object]:
         identity = unwrap_optional_secret(self._settings.aeat_clave_movil_dni_nie).strip()
         try:

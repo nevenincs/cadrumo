@@ -5,6 +5,7 @@ Use of :class:`SensitivityClass` for compliance.
 
 from __future__ import annotations
 
+import abc
 import asyncio
 import base64
 import contextlib
@@ -51,10 +52,35 @@ from ._errors import AeatLoginAssertionError
 if TYPE_CHECKING:
     from playwright.async_api import Dialog
 
+    from .....core.config import Settings
+    from .....core.external_constants import AeatClaveMovilSurface
+
 log = get_logger(__name__)
 
 
-class _ClaveMovilPageFlowMixin:
+class _ClaveMovilPageFlowMixin(abc.ABC):
+    """Abstract mixin declaring the provider-side contract consumed by the page-driving helpers.
+
+    Concrete subclasses (:class:`ClaveMovilAuthProvider`) supply the
+    implementations of every abstract member declared here.
+    """
+
+    # ── Abstract contract consumed by page-driving helpers ──────────────────
+    # Instance-variable annotations: concrete subclasses assign these in
+    # ``__init__``.  Declared here so type checkers resolve ``self._settings``
+    # and ``self._navigation_timeout_ms`` without reaching into the subclass.
+
+    _settings: Settings
+    _navigation_timeout_ms: int
+
+    @abc.abstractmethod
+    def _clave_surface(self) -> AeatClaveMovilSurface:
+        """Return the Cl@ve Móvil surface constants from external config."""
+
+    @abc.abstractmethod
+    def _attempt_context(self) -> dict[str, object]:
+        """Return a redacted diagnostic context dict for the current auth attempt."""
+
     # ── Page-driving helpers ────────────────────────────────────────────────
 
     @staticmethod
