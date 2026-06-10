@@ -37,7 +37,7 @@ from ....adapters.outbound.aeat.sede import Expediente, NotificationsSnapshot, R
 from ....application.auth import AuthProviderDescription, AuthProviderKind
 from ....core.config import Settings
 from ....core.errors import BaseSeverity, SiteHealthError, build_error_envelope
-from ....core.errors._registry import ErrorCategory
+from ....core.errors._registry import ErrorCategory, ErrorEnvelope
 from ....domain.deadlines import (
     IVARegime,
     ModeloDeadline,
@@ -574,7 +574,7 @@ class TestAbortReasons:
         details = dict(last.details)
         assert details["error_count"] == "1"
         assert "next_action" in details
-        assert "verification-report list" in details["next_action"]
+        assert "verification-report list" in str(details["next_action"])
 
     def test_preflight_failed(self) -> None:
         fx = _fixtures()
@@ -980,7 +980,7 @@ class TestUnhandledEnvelope:
     asserts the envelope shape rather than the abort reason alone.
     """
 
-    def _envelope_for_unhandled(self, exc: BaseException) -> object:
+    def _envelope_for_unhandled(self, exc: BaseException) -> ErrorEnvelope:
         """Return the envelope built from an :class:`UnhandledWorkflowError`
         wrapping ``exc``, proving :func:`build_error_envelope` resolves the
         registered code without raising."""
