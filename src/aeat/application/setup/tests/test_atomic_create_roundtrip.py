@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 from click.testing import Result
@@ -56,7 +57,7 @@ def _invoke(args: list[str]):
     return invoke_cached_cli(args)
 
 
-def _json(result: Result) -> dict:
+def _json(result: Result) -> dict[str, Any]:
     """Unwrap the emit-envelope ``result`` payload from a CLI JSON emission.
 
     Every CLI verb now emits ``{schema_version, command, result, warnings}``
