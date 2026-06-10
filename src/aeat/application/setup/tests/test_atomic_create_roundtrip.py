@@ -21,6 +21,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import override_settings
@@ -55,7 +56,7 @@ def _invoke(args: list[str]):
     return invoke_cached_cli(args)
 
 
-def _json(result) -> dict:
+def _json(result: Result) -> dict:
     """Unwrap the emit-envelope ``result`` payload from a CLI JSON emission.
 
     Every CLI verb now emits ``{schema_version, command, result, warnings}``
