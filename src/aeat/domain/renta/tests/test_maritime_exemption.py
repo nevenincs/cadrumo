@@ -5,7 +5,7 @@ authoritative fixture values), and the DA 41 / RETMAR completeness gate tests.
 
 Expected values are grounded in:
   Art. 7.p) cap: Ley 35/2006 Art. 7.p) BOE-A-2006-20764 (60,100 EUR)
-  REBECA fraction: Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-16100 (0.50)
+  REBECA fraction: Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-15794 (0.50)
   DA 41 status: inactive_pending_eu_clearance per trabajador_del_mar.toml
   RETMAR filing: Ley 47/2015 BOE-A-2015-11346
 """
@@ -111,7 +111,7 @@ class TestRebecaEligible:
 
     def test_rebeca_eu_eea_registry_is_eligible(self) -> None:
         # Extended to EU/EEA sister-registry vessels since 1 January 2021
-        # per Ley 19/1994 Art. 75.1 BOE-A-1994-16100.
+        # per Ley 19/1994 Art. 75.1 BOE-A-1994-15794.
         facts = MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
             vessel_registry="rebeca_eu_eea",
@@ -405,7 +405,7 @@ class TestCalculateRebecaExemption:
     """REBECA 50% exemption: exempt_amount = gross_navigation_income * 0.50.
 
     The 50% fraction is statutory per Ley 19/1994 Arts. 73.2 73.3 75.1 75.3
-    BOE-A-1994-16100 and is not variable by election.
+    BOE-A-1994-15794 and is not variable by election.
     """
 
     _REBECA_FACTS = MaritimeWorkerFacts(
@@ -461,8 +461,8 @@ class TestCalculateRebecaExemption:
             facts=self._REBECA_FACTS,
         )
         combined = " ".join(obs.legal_refs)
-        assert "BOE-A-1994-16100" in combined, (
-            f"CasillaObservation.legal_refs must cite BOE-A-1994-16100, got {obs.legal_refs!r}"
+        assert "BOE-A-1994-15794" in combined, (
+            f"CasillaObservation.legal_refs must cite BOE-A-1994-15794, got {obs.legal_refs!r}"
         )
         assert "73" in combined, "legal_refs must reference Art. 73"
         assert "75" in combined, "legal_refs must reference Art. 75"
@@ -531,7 +531,7 @@ def test_art7p_legal_refs_contain_no_wrong_provision() -> None:
         f"Art. 7.p) observation must only carry Art. 7.p) / BOE-A-2006-20764 refs, got {obs.legal_refs!r}"
     )
     # REBECA citation must not appear in Art. 7.p) output.
-    assert not any("BOE-A-1994-16100" in ref for ref in obs.legal_refs)
+    assert not any("BOE-A-1994-15794" in ref for ref in obs.legal_refs)
 
 
 def test_rebeca_legal_refs_contain_no_wrong_provision() -> None:
@@ -547,7 +547,7 @@ def test_rebeca_legal_refs_contain_no_wrong_provision() -> None:
         gross_navigation_income=Decimal("30000"),
         facts=facts,
     )
-    # Must cite only Ley 19/1994 BOE-A-1994-16100.
-    assert all("BOE-A-1994-16100" in ref for ref in obs.legal_refs), (
-        f"REBECA observation must only carry BOE-A-1994-16100 refs, got {obs.legal_refs!r}"
+    # Must cite only Ley 19/1994 BOE-A-1994-15794.
+    assert all("BOE-A-1994-15794" in ref for ref in obs.legal_refs), (
+        f"REBECA observation must only carry BOE-A-1994-15794 refs, got {obs.legal_refs!r}"
     )

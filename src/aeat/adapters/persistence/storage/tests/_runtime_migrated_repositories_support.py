@@ -39,6 +39,7 @@ from .....application.workflow import DeclaracionPointer, WorkflowResult, Workfl
 from .....application.workflow._persistence import WorkflowRunRepository, WorkflowStateRepository
 from .....core.config import override_settings
 from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
+from .....domain._identifiers import ModeloIdentifier
 from .....domain.attachments import AttachmentNotFoundError
 from .....domain.buckets import (
     BucketEvent,
@@ -70,6 +71,7 @@ from .....domain.invoices import (
     InvoiceLine,
     IvaRate,
     PaymentStatus,
+    derive_invoice_id,
 )
 from .....domain.iva import InvoiceKind
 from .....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
@@ -311,7 +313,16 @@ def _invoice(label: str) -> Invoice:
         iva_rate=IvaRate.RATE_21,
         iva_amount=Decimal("21.00"),
     )
+    invoice_id = derive_invoice_id(
+        kind=InvoiceKind.ISSUED,
+        invoice_number=f"INV-{label.upper()}",
+        issued_at=date(2026, 4, 1),
+        counterparty_tax_id="B12345674",
+        currency="EUR",
+        grand_total=Decimal("121.00"),
+    )
     return Invoice(
+        invoice_id=invoice_id,
         kind=InvoiceKind.ISSUED,
         invoice_number=f"INV-{label.upper()}",
         issued_at=date(2026, 4, 1),
@@ -531,10 +542,10 @@ def _verification_catalogue(label: str) -> VerificationReportCatalogue:
 def _history(label: str) -> ModeloHistory:
     submitted_at = datetime(2026, 5, 26, 13, 0, tzinfo=UTC)
     return ModeloHistory(
-        modelo="303",
+        modelo=ModeloIdentifier("303"),
         entries=(
             ModeloHistoryEntry(
-                modelo="303",
+                modelo=ModeloIdentifier("303"),
                 period=f"2026Q1-{label}",
                 submitted_at=submitted_at,
                 status="presentada",

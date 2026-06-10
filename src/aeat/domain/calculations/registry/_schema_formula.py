@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from itertools import pairwise
-from typing import Literal
+from typing import Literal, cast
 
 from pydantic import Field, model_validator
 
@@ -30,12 +30,11 @@ def _normalise_dispatch_table_entries(value: object) -> object:
         return value
     # TOML fragments always parse to string-keyed tables; ``isinstance`` narrows
     # to Mapping[Unknown, object] because the key type is erased by the object
-    # parameter.  The annotation below re-attaches the known str key type at
-    # this single TOML deserialization boundary.
-    # TYPE-IGNORE-RATIONALE-TOML-STR-KEY-ERASURE:
-    # TOML deserialization erases str-key type after isinstance narrowing;
-    # annotation re-attaches the known str key at the boundary.
-    mapping: Mapping[str, object] = value  # type: ignore[assignment]
+    # parameter.  The cast re-attaches the known str key type at this single
+    # TOML deserialization boundary.
+    # CAST-RATIONALE-TOML-STR-KEY-ERASURE: tomllib always produces str keys;
+    # isinstance(value, Mapping) erases the key type to Unknown; cast restores it.
+    mapping = cast("Mapping[str, object]", value)
     if "dispatch_table" in mapping:
         raise RegistryValidationError("formula leaf must use dispatch_table or dispatch_table_entries, not both")
 
@@ -47,10 +46,9 @@ def _normalise_dispatch_table_entries(value: object) -> object:
     for raw_entry in raw_entries:
         if not isinstance(raw_entry, Mapping):
             raise RegistryValidationError("dispatch_table_entries entries must be tables")
-        # TYPE-IGNORE-RATIONALE-TOML-STR-KEY-ERASURE:
-        # TOML deserialization erases str-key type after isinstance narrowing;
-        # annotation re-attaches the known str key at the boundary.
-        entry: Mapping[str, object] = raw_entry  # type: ignore[assignment]
+        # CAST-RATIONALE-TOML-STR-KEY-ERASURE: tomllib always produces str keys;
+        # isinstance(raw_entry, Mapping) erases the key type to Unknown; cast restores it.
+        entry = cast("Mapping[str, object]", raw_entry)
         if set(entry) != {"key", "parameter"}:
             raise RegistryValidationError("dispatch_table_entries entries must declare key and parameter")
         key = entry["key"]

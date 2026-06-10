@@ -8,6 +8,7 @@ end-to-end against local justificante fixture PDFs under
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -16,6 +17,7 @@ from ....domain.justificante import JustificanteParseError
 from ....tests import FIXTURES_DIR
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from .. import import_filing_from_justificante
+from .._import import RegistryImportSchemaProvider
 from ..runtime import RegistrySchemaProvider, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -44,12 +46,12 @@ class TestImportFromJustificante:
     ) -> None:
         pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
         with pytest.raises(ModeloImportError, match="previous_year_economic_activity_net_income"):
-            import_filing_from_justificante(pdf, schema_provider=schema_provider)
+            import_filing_from_justificante(pdf, schema_provider=cast(RegistryImportSchemaProvider, schema_provider))
 
     def test_unsupported_modelo_raises_import_error(self, schema_provider: RegistrySchemaProvider) -> None:
         pdf = _FIXTURES / "modelo_100_2025A.pdf"
         with pytest.raises(ModeloImportError, match="modelo '100'"):
-            import_filing_from_justificante(pdf, schema_provider=schema_provider)
+            import_filing_from_justificante(pdf, schema_provider=cast(RegistryImportSchemaProvider, schema_provider))
 
     def test_year_only_period_rejected_for_quarterly_registry_revision(
         self,
@@ -59,7 +61,7 @@ class TestImportFromJustificante:
         pdf = _justificante_pdf_without_period(tmp_path, modelo="130", ejercicio="2026")
 
         with pytest.raises(ModeloImportError, match="period token '0A'"):
-            import_filing_from_justificante(pdf, schema_provider=schema_provider)
+            import_filing_from_justificante(pdf, schema_provider=cast(RegistryImportSchemaProvider, schema_provider))
 
     def test_missing_pdf_raises_parse_error(
         self,
@@ -68,7 +70,10 @@ class TestImportFromJustificante:
     ) -> None:
         missing = tmp_path / "nonexistent.pdf"
         with pytest.raises(JustificanteParseError, match="not found"):
-            import_filing_from_justificante(missing, schema_provider=schema_provider)
+            import_filing_from_justificante(
+                missing,
+                schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
+            )
 
 
 def _justificante_pdf_without_period(tmp_path: Path, *, modelo: str, ejercicio: str) -> Path:

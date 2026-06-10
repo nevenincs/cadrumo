@@ -86,7 +86,12 @@ def _tx(
     )
 
 
-def _revision(modelo: str, *, source_ids: tuple[str, ...], snapshot: LedgerFilingSnapshot) -> CalculationRevision:
+def _revision(
+    modelo: str,
+    *,
+    source_ids: tuple[str, ...],
+    snapshot: LedgerFilingSnapshot | None,
+) -> CalculationRevision:
     wid = derive_work_unit_id(bucket_id="bkt", modelo=modelo, filing_year=2026, period="1T", revision_id="r1")
     rid = derive_calculation_revision_id(
         work_unit_id=wid,

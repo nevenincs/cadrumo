@@ -60,7 +60,7 @@ from ._registry_resources import registry_root as _registry_root
 from ._revision_persistence import persist_calculation_revision
 
 if TYPE_CHECKING:
-    from ..aggregation import CalculationSourceDiagnostic
+    from ..aggregation import CalculationSourceDiagnostic, CalculationSourceResolution
     from ..calculations._observations_repository import IvaWalletDecisionRepository
 
 
@@ -460,6 +460,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         LedgerRentaExpenseAggregationSourceResolver,
         merge_source_resolutions,
     )
+    from ..calculations import PreviousFilingSourceResolver
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     work_units = wu_repo.load()
@@ -505,34 +506,41 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         caller_binding_values=binding_values or {},
         caller_casilla_inputs=casilla_inputs or {},
     )
+    context = CalculationSourceContext(
+        bucket_id=work_unit.bucket_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        revision=snapshot.revision,
+    )
     source_resolution = merge_source_resolutions(
         (
-            LedgerIvaAggregationSourceResolver(transaction_repository=transaction_repository).resolve(
-                CalculationSourceContext(
-                    bucket_id=work_unit.bucket_id,
-                    modelo=work_unit.modelo,
-                    filing_year=work_unit.filing_year,
-                    period=work_unit.period,
-                    revision=snapshot.revision,
-                )
-            ),
+            LedgerIvaAggregationSourceResolver(transaction_repository=transaction_repository).resolve(context),
             LedgerRentaExpenseAggregationSourceResolver(
                 transaction_repository=transaction_repository,
                 invoice_repository=invoice_repository,
-            ).resolve(
-                CalculationSourceContext(
-                    bucket_id=work_unit.bucket_id,
-                    modelo=work_unit.modelo,
-                    filing_year=work_unit.filing_year,
-                    period=work_unit.period,
-                    revision=snapshot.revision,
-                )
+            ).resolve(context),
+            # Cross-period carry: prior-filing observations flow through the
+            # backend-binding channel so an automatically-carried previous_filing
+            # value fills the binding gap, while a caller --binding still
+            # overrides it (it is deliberately NOT added to the owned-source
+            # rejection set below — ADR ruling D2). The 303 IVA-compensation
+            # binding is excluded here because the iva-wallet compensación
+            # decision owns it (ADR ruling D3).
+            _previous_filing_resolution_excluding_iva_compensation(
+                PreviousFilingSourceResolver(registry_snapshot=snapshot).resolve(context)
             ),
         )
     )
+    # NOTE (ADR ruling D2): re-run the guard against the merged owned-sources,
+    # but EXCLUDE "previous_filing" — a caller --binding override of an
+    # automatically-carried previous_filing value is legitimate and must reach
+    # the engine, where the casilla-lift no-ops on the already-resolved binding
+    # and the engine's consistency check adjudicates any divergence. Every other
+    # dynamically-discovered source (the ledger aggregations) stays guarded.
     _reject_caller_overrides_of_source_bindings(
         revision=snapshot.revision,
-        owned_sources=frozenset(source_resolution.owned_sources),
+        owned_sources=frozenset(source_resolution.owned_sources) - {PreviousFilingSourceResolver.owned_sources[0]},
         caller_binding_values=binding_values or {},
         caller_casilla_inputs=casilla_inputs or {},
     )
@@ -590,6 +598,36 @@ def _merge_bucket_bound_inputs(
             context={"computed": computed},
         )
     return dict(sorted({**bound_inputs, **casilla_inputs}.items()))
+
+
+def _previous_filing_resolution_excluding_iva_compensation(
+    resolution: CalculationSourceResolution,
+) -> CalculationSourceResolution:
+    """Strip the M303 IVA-compensation binding from a previous_filing resolution.
+
+    ADR ruling D3: the iva-wallet compensación decision owns the
+    ``modelo-303-compensacion-pendiente-anteriores`` binding. The cross-period
+    carry resolver must NOT also emit it, or the two write paths would
+    double-count the prior carry-forward balance. This drops both the binding
+    value and any matching provenance row before the resolution enters the
+    source mesh.
+
+    Uses :class:`CalculationSourceResolution` (immutable); returns a copy with
+    the 303 compensation binding removed.
+    """
+    from ..calculations._binding_prefill import _MODELO_303_IVA_COMPENSATION_BINDING_ID
+
+    excluded = _MODELO_303_IVA_COMPENSATION_BINDING_ID
+    if excluded not in resolution.binding_values:
+        return resolution
+    return resolution.model_copy(
+        update={
+            "binding_values": {k: v for k, v in resolution.binding_values.items() if k != excluded},
+            "provenance": tuple(
+                item for item in resolution.provenance if not item.source_ref.endswith(f":{excluded}")
+            ),
+        }
+    )
 
 
 def _source_owned_binding_ids(revision: ModeloRevision, owned_sources: frozenset[str]) -> frozenset[str]:

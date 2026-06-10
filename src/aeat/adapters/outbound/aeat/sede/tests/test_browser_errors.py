@@ -112,10 +112,16 @@ def test_open_renta_web_open_session_raises_browser_adapter_type_error_on_wrong_
     fake_payload = _FakeLivePayload()
 
     with pytest.raises(BrowserAdapterTypeError) as exc_info:
-        asyncio.run(_open_renta_web_open_session(fake_session, live_payload=fake_payload))
+        asyncio.run(
+            _open_renta_web_open_session(
+                fake_session,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test double
+                live_payload=fake_payload,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test double
+            )
+        )
 
     assert "actual_type" in (exc_info.value.context or {})
-    assert exc_info.value.context["actual_type"] == "_NonPageSentinel"  # type: ignore[index]
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["actual_type"] == "_NonPageSentinel"
 
 
 # ---------------------------------------------------------------------------
@@ -136,7 +142,8 @@ def test_collect_nif_iva_check_observations_raises_browser_adapter_type_error_on
             collect_nif_iva_check_observations(
                 b"",
                 expected={"ES12345678A": None},
-                browser_session_factory=_fake_browser_factory,
+                # test double: factory vends a fake session, not a real BrowserSession
+                browser_session_factory=_fake_browser_factory,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
             )
         )
 
@@ -162,7 +169,8 @@ def test_collect_groi_observations_raises_browser_adapter_type_error_on_wrong_pa
             collect_groi_observations(
                 b"",
                 expected={"B12345678": None},
-                browser_session_factory=_fake_browser_factory,
+                # test double: factory vends a fake session, not a real BrowserSession
+                browser_session_factory=_fake_browser_factory,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
             )
         )
 

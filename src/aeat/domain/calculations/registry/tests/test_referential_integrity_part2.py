@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from .._schema_input_kind import InputKind
 from ._referential_integrity_support import (
     _DUMMY_LEGAL_ID,
     _DUMMY_SOURCE_ID,
@@ -130,7 +131,7 @@ def test_segmented_casilla_survives_strict_load_cycle_roundtrip() -> None:
             "Liquidación III cuota íntegra is the single cuota-chain integral-quota casilla within the modelo revision."
         ),
         required=False,
-        input_kind="manual",
+        input_kind=InputKind.MANUAL,
         export_refs=("modelo-200-page-014-casilla-00562",),
         legal_refs=("ley-27-2014:art-30", "ley-27-2014:art-29"),
         source_refs=("aeat-dr-200-2025", "aeat-modelo-200-manual-2024"),

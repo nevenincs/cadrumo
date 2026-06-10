@@ -9,7 +9,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+import typer
 from pydantic import AnyHttpUrl
+from typer.core import TyperGroup
 
 from ....adapters.outbound.aeat.sede import (
     Declaracion,
@@ -53,6 +55,22 @@ _BUCKET_ID = "registry-cli"
 _DECLARATIONS_LISTING_URL = aeat_url("www6", configured_path("sede_paths", "declarations_listing"))
 
 
+def _child(group: object, name: str):
+    """Resolve a subcommand from the AEAT command tree.
+
+    ``aeat_click_command()`` returns an ``AeatTyperGroup`` whose MRO is
+    ``TyperGroup -> typer._click.core.Command`` and never descends from the
+    upstream :class:`click.Group`, so the parent is narrowed to
+    :class:`typer.core.TyperGroup` (whose ``get_command`` is typed) rather
+    than ``click.Group``. Intermediate nodes are themselves ``TyperGroup``
+    instances and leaf nodes are vendored ``Command`` instances; the returned
+    value carries the vendored ``Command | None`` type ``get_command``
+    declares, exposing the ``help`` / ``callback`` surface the chain asserts.
+    """
+    assert isinstance(group, TyperGroup)
+    return group.get_command(typer.Context(group), name)
+
+
 def _session() -> BucketSession:
     return BucketSession.open(
         bucket_id=_BUCKET_ID,
@@ -81,7 +99,7 @@ def _first_registry_modelo() -> str:
 
 
 @pytest.fixture(autouse=True)
-def _isolated_secure_backend(tmp_path: Path) -> None:
+def _isolated_secure_backend(tmp_path: Path):  # type: ignore[no-untyped-def]
     """Point encrypted SQL runtime at a per-test active bucket.
 
     The filed-state verification tests construct a
@@ -616,8 +634,6 @@ def test_live_filed_capture_sources_cli_help_resolves_without_registry_alias() -
 
 
 def test_live_filed_capture_all_cli_help_resolves() -> None:
-    import click
-
     result = invoke_cached_cli(
         ["app", "live", "filed", "capture-all", "--help"],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
@@ -629,22 +645,19 @@ def test_live_filed_capture_all_cli_help_resolves() -> None:
     assert "--modelo" in result.output
 
     root = aeat_click_command()
-    assert hasattr(root, "get_command")
-    app_group = root.get_command(click.Context(root), "app")
-    assert hasattr(app_group, "get_command")
-    live_group = app_group.get_command(click.Context(app_group), "live")
-    assert hasattr(live_group, "get_command")
-    filed_group = live_group.get_command(click.Context(live_group), "filed")
-    assert hasattr(filed_group, "get_command")
-    capture_all = filed_group.get_command(click.Context(filed_group), "capture-all")
-    assert hasattr(capture_all, "callback")
+    app_group = _child(root, "app")
+    assert app_group is not None
+    live_group = _child(app_group, "live")
+    assert live_group is not None
+    filed_group = _child(live_group, "filed")
+    assert filed_group is not None
+    capture_all = _child(filed_group, "capture-all")
+    assert capture_all is not None
     help_text = (capture_all.help or "").lower()
     assert "read-only" in help_text or "solo lectura" in help_text
 
 
 def test_live_notifications_latest_cli_help_resolves() -> None:
-    import click
-
     result = invoke_cached_cli(
         ["app", "live", "notifications", "latest", "--help"],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
@@ -654,20 +667,18 @@ def test_live_notifications_latest_cli_help_resolves() -> None:
     assert "latest" in result.output.lower()
 
     root = aeat_click_command()
-    assert hasattr(root, "get_command")
-    app_group = root.get_command(click.Context(root), "app")
-    assert hasattr(app_group, "get_command")
-    live_group = app_group.get_command(click.Context(app_group), "live")
-    assert hasattr(live_group, "get_command")
-    notifications_group = live_group.get_command(click.Context(live_group), "notifications")
-    assert hasattr(notifications_group, "get_command")
-    latest = notifications_group.get_command(click.Context(notifications_group), "latest")
+    app_group = _child(root, "app")
+    assert app_group is not None
+    live_group = _child(app_group, "live")
+    assert live_group is not None
+    notifications_group = _child(live_group, "notifications")
+    assert notifications_group is not None
+    latest = _child(notifications_group, "latest")
+    assert latest is not None
     assert hasattr(latest, "callback")
 
 
 def test_live_expedientes_capture_all_cli_help_resolves() -> None:
-    import click
-
     result = invoke_cached_cli(
         ["app", "live", "expedientes", "capture-all", "--help"],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
@@ -679,14 +690,14 @@ def test_live_expedientes_capture_all_cli_help_resolves() -> None:
     assert "--modelo" in result.output
 
     root = aeat_click_command()
-    assert hasattr(root, "get_command")
-    app_group = root.get_command(click.Context(root), "app")
-    assert hasattr(app_group, "get_command")
-    live_group = app_group.get_command(click.Context(app_group), "live")
-    assert hasattr(live_group, "get_command")
-    expedientes_group = live_group.get_command(click.Context(live_group), "expedientes")
-    assert hasattr(expedientes_group, "get_command")
-    capture_all = expedientes_group.get_command(click.Context(expedientes_group), "capture-all")
+    app_group = _child(root, "app")
+    assert app_group is not None
+    live_group = _child(app_group, "live")
+    assert live_group is not None
+    expedientes_group = _child(live_group, "expedientes")
+    assert expedientes_group is not None
+    capture_all = _child(expedientes_group, "capture-all")
+    assert capture_all is not None
     assert hasattr(capture_all, "callback")
 
 

@@ -25,17 +25,6 @@ _InvoiceRowField = Literal[
     "rectified_period",
     "rectified_base_previous",
 ]
-_InvoiceGrouping = Literal["operator_clave", "operator_clave_period"]
-_InvoiceRowField = Literal[
-    "party_tax_id",
-    "country_code",
-    "party_legal_name",
-    "clave",
-    "base_imponible",
-    "rectified_year",
-    "rectified_period",
-    "rectified_base_previous",
-]
 
 # Canonical source-kind strings the registry uses for invoice-shaped
 # bindings. The bare ``"invoice"`` source was retired; every consumer
@@ -53,18 +42,6 @@ __all__ = [
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
     "validate_invoice_binding_definition",
-]
-
-_InvoiceGrouping = Literal["operator_clave", "operator_clave_period"]
-_InvoiceRowField = Literal[
-    "party_tax_id",
-    "country_code",
-    "party_legal_name",
-    "clave",
-    "base_imponible",
-    "rectified_year",
-    "rectified_period",
-    "rectified_base_previous",
 ]
 
 # Invoice-source bindings (modelo-agnostic factual aggregation from the user's

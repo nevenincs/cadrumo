@@ -48,6 +48,7 @@ would require a new dated revision.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -91,7 +92,7 @@ def _calculate_210(
     *,
     filing_year: int,
     base: Decimal,
-) -> tuple[dict, int]:
+) -> tuple[Mapping[str, object], int]:
     """Run the REAL M210 primary engine for a FR EU-resident landlord.
 
     Supplies:
@@ -106,7 +107,7 @@ def _calculate_210(
     # Text casillas (tipo_renta) and enum bindings (country_of_fiscal_residence)
     # are supplied through text_inputs and enum_binding_values respectively.
     # Numeric manual casillas go through casilla_inputs.
-    binding_values: dict = {}
+    binding_values: dict[str, Decimal] = {}
     enum_binding_values = {_COUNTRY_BINDING: _COUNTRY_GB}
     text_inputs = {"tipo_renta": _TIPO_RENTA}
     casilla_inputs = {

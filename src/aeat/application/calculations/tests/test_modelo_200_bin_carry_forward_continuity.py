@@ -50,6 +50,7 @@ from ....domain.calculations.registry import (
     materialize_relation_binding_values,
     resolve_bound_casilla_inputs,
 )
+from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos._verification_report import ModeloVerificationFindingKind
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo._actions import _evaluate_verification_predicates
@@ -59,6 +60,11 @@ from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+# Casilla-only predicates (cap_le_when_positive) ignore the profile, but
+# _evaluate_verification_predicates requires a real TaxpayerProfile; supply a
+# minimal one rather than the typed-None hole the casilla-only path tolerated.
+_CASILLA_ONLY_PROFILE = TaxpayerProfile(tax_id="B12345678", iva_regime=IVARegime.GENERAL)
 
 _MODELO_200 = "200"
 
@@ -234,7 +240,7 @@ def test_modelo_200_bin_over_application_above_cap_is_blocked() -> None:
         "DP200014:bin-aplicada-maxima": Decimal("1000000.00"),
         "DP200014:00547": Decimal("1200000.00"),  # over the ceiling
     }
-    findings = _evaluate_verification_predicates((predicate,), casilla_values, None)
+    findings = _evaluate_verification_predicates((predicate,), casilla_values, _CASILLA_ONLY_PROFILE)
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
     assert _BIN_CAP_PREDICATE_ID in findings[0].message
@@ -253,7 +259,7 @@ def test_modelo_200_electing_less_than_cap_is_permitted() -> None:
         "DP200014:bin-aplicada-maxima": Decimal("1000000.00"),
         "DP200014:00547": Decimal("400000.00"),  # elected below the ceiling
     }
-    findings = _evaluate_verification_predicates((predicate,), casilla_values, None)
+    findings = _evaluate_verification_predicates((predicate,), casilla_values, _CASILLA_ONLY_PROFILE)
     assert findings == []
 
 
@@ -264,5 +270,5 @@ def test_modelo_200_applying_exactly_the_cap_is_permitted() -> None:
         "DP200014:bin-aplicada-maxima": Decimal("1000000.00"),
         "DP200014:00547": Decimal("1000000.00"),
     }
-    findings = _evaluate_verification_predicates((predicate,), casilla_values, None)
+    findings = _evaluate_verification_predicates((predicate,), casilla_values, _CASILLA_ONLY_PROFILE)
     assert findings == []

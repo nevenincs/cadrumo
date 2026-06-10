@@ -130,8 +130,7 @@ adapters:
       errors:
         no_active_profile: No hay ningún perfil AEAT activo enlazado para Google OAuth.
       suggestions:
-        create_profile: Ejecuta `aeat config profile create NAME --tax-id <DNI/NIE/NIF/CIF>`
-          y vuelve a intentar el comando de Google.
+        create_profile: 'Ejecuta `aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>` y vuelve a intentar el comando de Google.'
   inbound:
     declaracion:
       errors:
@@ -847,6 +846,11 @@ application:
           mediante el comando `aeat config profile edit`. El TRLIRNR Art. 10 exige
           que los declarantes IRNR no residentes en la UE/EEE designen un representante
           para comunicaciones con la AEAT.
+      modelo_131_2019_2023_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Los rendimientos netos de actividades en datos-base (C01) son positivos pero el pago fraccionado previo por datos-base (C02) es cero; revise la casilla 02 con el porcentaje de la Orden de módulos (mínimo 2 por 100).'
+      modelo_131_2024_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Los rendimientos netos de actividades en datos-base (C01) son positivos pero el pago fraccionado previo por datos-base (C02) es cero; revise la casilla 02 con el porcentaje de la Orden de módulos (mínimo 2 por 100).'
+      modelo_131_2025_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Los rendimientos netos de actividades en datos-base (C01) son positivos pero el pago fraccionado previo por datos-base (C02) es cero; revise la casilla 02 con el porcentaje de la Orden de módulos (mínimo 2 por 100).'
+      modelo_131_2026_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Los rendimientos netos de actividades en datos-base (C01) son positivos pero el pago fraccionado previo por datos-base (C02) es cero; revise la casilla 02 con el porcentaje de la Orden de módulos (mínimo 2 por 100).'
+      modelo_200_base_imponible_determinada_cuando_resultado_positivo: 'El resultado contable es positivo pero la base imponible (C552) es cero; revise la determinación de la base imponible.'
     iva_wallet:
       seed_negative_amount: El importe inicial no puede ser negativo.
       seed_no_nif: No hay NIF definido para la operación de importe inicial; asócielo
@@ -1137,7 +1141,7 @@ cli:
         yes_required: Debes pasar --yes para eliminar una factura cobrable
       evidence:
         add_help: Registra un justificante de factura de compra desde PDF o imagen
-        evidence_id_help: Identificador del justificante (o prefijo no ambiguo)
+        evidence_id_help: 'Identificador del justificante (coincidencia exacta)'
         group_help: Justificantes de facturas de compra en PDF o imagen
         invoice_date_help: Fecha de emisión de la factura (AAAA-MM-DD)
         invoice_number_help: Número de factura del proveedor
@@ -1874,6 +1878,7 @@ cli:
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
         calculate_source_advisory: 'AVISO: %{message} El cálculo se completó, pero este importe declarable no se asigna a ninguna casilla y no se declara en esta presentación; revísalo antes de presentar.'
+        verify_selector_help: 'Selector de revision borrador (current, latest-draft o explicit).'
   common:
     errors:
       draft_id_not_found: ID de borrador %{draft_id} no encontrado
@@ -1981,8 +1986,7 @@ cli:
       new_passphrase_prompt: 'Nueva contrasena del almacen secreto AEAT: '
     errors:
       invalid_value: 'Valor inválido para %{name}: %{value}'
-      no_active_profile: No hay un perfil activo. Ejecuta 'aeat config profile create
-        NAME --tax-id <DNI/NIE/NIF/CIF>' primero.
+      no_active_profile: 'No hay un perfil activo. Ejecuta ''aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>'' primero.'
       unknown_key: 'Clave de configuración desconocida: %{name}. Ejecuta ''aeat config
         profile list'' para ver las claves disponibles.'
     get:
@@ -2117,7 +2121,7 @@ cli:
       submissions_dir_help: Directory to store submitted filing receipts
       success:
         next_step: 'Próximo paso: ejecuta `aeat app overview status`'
-      tax_id_help: Identificador fiscal español (DNI/NIE/NIF/CIF)
+      tax_id_help: 'Identificador fiscal español (NIF/CIF/DNI/NIE)'
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: Listar todos los perfiles registrados y marcar el activo
@@ -2173,15 +2177,14 @@ cli:
         Los verbos posteriores en este terminal seran rechazados con NoActiveBucketSessionError
         hasta que ejecutes aeat config unlock NAME o abras un nuevo terminal y vuelvas
         a seleccionar.
-      no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
-        NAME --tax-id <DNI/NIE/NIF/CIF>` primero.
+      no_active_profile: 'No hay un perfil activo. Ejecuta `aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>` primero.'
       preflight_filing_year_help: Ejercicio de presentación (cuatro dígitos).
       preflight_help: Informa qué campos del perfil faltan para un contexto de presentación
         (modelo, revisión, ejercicio, periodo).
       preflight_modelo_help: Identificador numérico del modelo (p. ej. 303).
       preflight_period_help: Código de periodo (p. ej. 1T, 1P, 0A, 01).
       preflight_revision_help: Registry revision id.
-      preflight_revision_id_help: Identificador de revisión del registro (p. ej. 2024-0A).
+      preflight_revision_id_help: 'Anulacion opcional del id de revision del registro para reproduccion exacta (p. ej. 2024-0A); por defecto usa la revision activa para el modelo, ejercicio y periodo.'
       preflight_year_help: Filing year.
       remove_help: Marcar un perfil como retirado (las snapshots inmutables se conservan)
       remove_name_help: Id del perfil a retirar
@@ -2204,6 +2207,9 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; por defecto el perfil
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
+      preflight_revision_ambiguous: 'Mas de una revision del registro coincide con el modelo %{modelo} periodo %{period}: %{candidates}. Vuelva a ejecutar con --revision-id indicando una de ellas.'
+      preflight_revision_unresolved: 'Ninguna revision del registro cubre el modelo %{modelo} ejercicio %{filing_year} periodo %{period}. Ejecute `aeat app modelo describe %{modelo}` para ver los periodos y revisiones validos.'
+      preflight_revision_override_invalid: 'La anulacion de la revision del registro no es valida para el modelo %{modelo} ejercicio %{filing_year}: %{detail}. Ejecute `aeat app modelo describe %{modelo}` para listar las revisiones registradas.'
     recover:
       help: Recuperar el almacen secreto de archivo con una clave de recuperacion
         y vincularlo a una nueva contrasena.
@@ -2219,7 +2225,7 @@ cli:
         objects_help: Comprueba la integridad de los objetos seguros.
         objects_namespace_help: Limita las comprobaciones de integridad de objetos
           seguros a un espacio de nombres.
-        registry_help: Comprueba la integridad del registro de perfiles.
+        registry_help: 'Comprueba la integridad del registro de cálculo.'
       integrity_attribution_details_help: Incluir detalles de metadatos seguros por
         fila
       integrity_attribution_help: Agrupa las filas de objetos seguros no descifrables
@@ -2514,8 +2520,6 @@ cli:
       taxable_base_help: Importe de base imponible
     doclink:
       actor_help: Etiqueta del operador.
-      bad_source: 'el origen del enlace debe ser uno de: gmail, google_drive, url
-        (recibido ''{source}'').'
       help: Registra un enlace a documento de Gmail/Drive/URL en una fila de libro
         mayor (nunca se descarga).
       id_help: Identificador de transacción del libro mayor.
@@ -4355,7 +4359,7 @@ profile:
   keys:
     description: Profile configuration keys and their descriptions
     tax:
-      id: Identificador fiscal (DNI/NIE/NIF/CIF)
+      id: 'Identificador fiscal (NIF/CIF/DNI/NIE)'
 review:
   adapters:
     errors:
@@ -4466,9 +4470,7 @@ topic:
       los datos del trimestre y, para algunos casos, los del ejercicio anterior.
     title: Pago fraccionado IRPF
   profile:
-    body: El perfil local contiene tu identificador fiscal (DNI/NIE/NIF/CIF), actividad
-      principal, régimen IVA / IRPF y enrolamientos opcionales (SII, Verifactu, intracomunitario).
-      Edítalo con 'aeat config profile edit NAME'.
+    body: 'El perfil local contiene tu identificador fiscal (NIF/CIF/DNI/NIE), actividad principal, régimen IVA / IRPF y enrolamientos opcionales (SII, Verifactu, intracomunitario). Edítalo con ''aeat config profile edit NAME''.'
     title: Perfil del contribuyente
   providers:
     body: Proveedores de autenticación soportados; cada uno requiere requisitos distintos.
@@ -4527,16 +4529,11 @@ wizard:
     invalid_integer: 'Entero no válido para %{prompt_key}: %{raw}.'
     invalid_postcode: 'Código postal no válido para %{prompt_key}: %{raw}. Un código
       postal español tiene 5 dígitos (código de provincia 01-52 seguido de tres dígitos).'
-    invalid_tax_id: 'DNI/NIE/NIF/CIF no válido para %{prompt_key}: %{raw}. %{detail}'
+    invalid_tax_id: 'NIF/CIF/DNI/NIE no válido para %{prompt_key}: %{raw}. %{detail}'
     select_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
       %{choices}.'
     select_without_choices: La pregunta %{prompt_key} no declara opciones para select.
-    unsupported_console: "El asistente guiado necesita una terminal interactiva, y\
-      \ esta ejecución no la tiene.\nTodavía no se ha guardado nada.\n\nPuedes terminar\
-      \ de crear este perfil de dos maneras:\n \n1. Ejecuta el comando otra vez desde\
-      \ una terminal interactiva para usar el asistente guiado:\n     aeat config\
-      \ profile create NAME\n\n2. O créalo en un solo paso indicando los datos obligatorios\
-      \ como flags:\n     aeat config profile create NAME --quiet --tax-id DNI/NIE/NIF/CIF"
+    unsupported_console: "El asistente guiado necesita una terminal interactiva, y esta ejecución no la tiene.\nTodavía no se ha guardado nada.\n\nPuedes terminar de crear este perfil de dos maneras:\n \n1. Ejecuta el comando otra vez desde una terminal interactiva para usar el asistente guiado:\n     aeat config profile create NAME\n\n2. O créalo en un solo paso indicando los datos obligatorios como flags:\n     aeat config profile create NAME --quiet --tax-id NIF/CIF/DNI/NIE"
     unsupported_console_edit: "No pude abrir el asistente guiado en esta ejecución.\n\
       Todavía no se ha guardado nada.\n\nEdita este perfil de forma no interactiva\
       \ indicando el campo a cambiar:\n  aeat config profile edit %{profile_name}\
@@ -4719,7 +4716,7 @@ wizard:
       surnames:
         help: Apellidos o razón social para cabeceras de exportación
       tax-id:
-        help: Identificador fiscal (DNI/NIE/NIF/CIF) del perfil activo
+        help: 'Identificador fiscal (NIF/CIF/DNI/NIE) del perfil activo'
       tax-residence-ccaa:
         help: 'Comunidad autónoma de residencia fiscal. Una de: %{choices}.'
       taxation-type:
@@ -4745,19 +4742,7 @@ wizard:
         help: Operaciones con terceros superan el umbral del Modelo 347
       uses-objective-estimation-irpf:
         help: Tributa IRPF en estimación objetiva
-    intro: 'Configuración guiada del perfil tributario
-
-
-      Esto prepara el perfil local que la app usa para los libros registro y las comprobaciones
-      de modelos.
-
-      Hay %{section_total} pasos. Solo %{required_total} respuestas son obligatorias
-      para empezar; puedes dejar en blanco lo que todavía no sepas.
-
-      Ten a mano tu DNI/NIE/NIF/CIF, una descripción breve de la actividad, régimen
-      de IVA/IRPF, residencia fiscal y datos familiares si aplican.
-
-      Después de guardar, revisa el progreso con `aeat config profile status`.'
+    intro: "Configuración guiada del perfil tributario\n\nEsto prepara el perfil local que la app usa para los libros registro y las comprobaciones de modelos.\nHay %{section_total} pasos. Solo %{required_total} respuestas son obligatorias para empezar; puedes dejar en blanco lo que todavía no sepas.\nTen a mano tu NIF/CIF/DNI/NIE, una descripción breve de la actividad, régimen de IVA/IRPF, residencia fiscal y datos familiares si aplican.\nDespués de guardar, revisa el progreso con `aeat config profile status`."
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Operaciones intracomunitarias superan 50.000 EUR
@@ -4860,7 +4845,7 @@ wizard:
       surnames:
         prompt: Apellidos o razón social para cabeceras de exportación
       tax-id:
-        prompt: Identificador fiscal (DNI/NIE/NIF/CIF) para declaraciones
+        prompt: 'Identificador fiscal (NIF/CIF/DNI/NIE) para declaraciones'
       taxation-type:
         choices:
           individual:

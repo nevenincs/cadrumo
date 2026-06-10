@@ -12,6 +12,7 @@ from .. import parse_bool, parse_ddmmyyyy_date, parse_iso8601_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+assert __package__ is not None, "test module must be runnable from a package"
 _PARSING_PACKAGE = import_module(__package__.rsplit(".", 1)[0])
 
 

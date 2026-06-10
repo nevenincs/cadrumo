@@ -47,7 +47,7 @@ class _ObservedGeminiRequest(BaseHTTPRequestHandler):
         self.wfile.write(encoded)
 
     @override
-    def log_message(self, _format: str, *_args: object) -> None:
+    def log_message(self, format: str, *args: object) -> None:
         """Silence stdlib request logging during tests."""
 
 
@@ -90,7 +90,7 @@ def test_gemini_uses_central_endpoint_setting_and_api_key_header() -> None:
     assert observed["api_key_header"] == "gemini-secret"
     assert "gemini-secret" not in str(observed["path"])
     assert isinstance(body, dict)
-    assert body["generationConfig"] == {"temperature": 0.0, "maxOutputTokens": 32}
+    assert body["generationConfig"] == {"temperature": 0.0, "maxOutputTokens": 32}  # ty: ignore[invalid-argument-type]  # narrowed by isinstance above
 
 
 def test_gemini_transport_failure_raises_llm_provider_error() -> None:

@@ -64,7 +64,7 @@ def test_describe_lists_every_declared_revision_id() -> None:
 def test_query_service_exposes_casillas_bindings_and_formulas_from_same_revision() -> None:
     service = _service()
 
-    casillas = service.casillas("303", period="2026Q1", input_kind="computed")
+    casillas = service.casillas("303", period="2026Q1", input_kind=InputKind.COMPUTED)
     bindings = service.bindings("130", period="2026Q1")
     formulas = service.formulas("303", period="2026Q1")
 

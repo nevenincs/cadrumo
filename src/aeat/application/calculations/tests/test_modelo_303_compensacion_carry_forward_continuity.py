@@ -111,7 +111,12 @@ _LEDGER_CUOTA_BINDINGS = (
     "modelo-303-iva-repercutido-reducido-cuota",
     "modelo-303-iva-repercutido-super-reducido-cuota",
     "modelo-303-iva-soportado-interiores-cuota",
+    "modelo-303-iva-soportado-importaciones-cuota",
     "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
+    "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota",
+    "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota",
+    "modelo-303-iva-autorepercutido-interior-devengado-cuota",
+    "modelo-303-iva-autorepercutido-interior-deducible-cuota",
 )
 
 _CLOCK = datetime(2026, 5, 1, 9, 0, 0, tzinfo=UTC)

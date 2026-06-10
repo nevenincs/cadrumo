@@ -5,6 +5,7 @@ Use of :class:`CasillaObservation` for compliance.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal
 
 from ...adapters.outbound.aeat.sede import (
@@ -174,7 +175,7 @@ def _with_derived_303_compensation_available(
     return observation.model_copy(update={"observations": (*observation.observations, derived)})
 
 
-def _casilla_decimal(values: dict[str, Decimal], *casilla_ids: str) -> Decimal | None:
+def _casilla_decimal(values: Mapping[str, Decimal], *casilla_ids: str) -> Decimal | None:
     for casilla_id in casilla_ids:
         value = values.get(casilla_id)
         if value is not None:

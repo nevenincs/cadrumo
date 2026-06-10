@@ -17,6 +17,15 @@ from ._schema import CasillaDefinition, ModeloDefinition
 class _RoleObservation:
     """One casilla's contribution to a semantic-role consistency check."""
 
+    modelo_id: str
+    revision_id: str
+    casilla_id: str
+    data_type: object
+    constraints: object
+    label: str
+    semantic_role_cardinality: str
+    semantic_role_cardinality_reason: str | None
+
     __slots__ = (
         "casilla_id",
         "constraints",

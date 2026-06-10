@@ -29,6 +29,8 @@ You MUST respect these rules at all times:
 @.codex/rules/core-struct-docstring-links.md
 @.codex/rules/fixture-provenance-declared-in-sidecar.md
 @.codex/rules/ledger-derived-revisions-bundle-evidence.md
+@.codex/rules/ledger-iva-advisory-only-on-cuota-bearing-categories.md
+@.codex/rules/local-filed-observations-are-non-official-evidence.md
 @.codex/rules/modelo-export-mirrors-official-structure.md
 @.codex/rules/no-silent-under-declaration.md
 @.codex/rules/no-tautological-calculation-tests.md

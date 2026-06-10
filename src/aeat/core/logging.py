@@ -204,8 +204,15 @@ class SecretScrubbingFilter(logging.Filter):
             # Normalising to a tuple sidesteps the union mismatch
             # without changing the runtime contract.
             record.args = tuple(scrubbed_args)
-        elif record.args:
-            record.args = _scrub_value(record.args)
+        elif isinstance(record.args, Mapping):
+            scrubbed_mapping = {str(k): _scrub_value(v, key=str(k)) for k, v in record.args.items()}
+            record.args = scrubbed_mapping
+        elif isinstance(record.args, tuple | list):
+            # Residual tuple/list args reached only when ``record.msg`` is not a
+            # str (the positional branch above requires a str format). Preserve
+            # the original ``_scrub_value`` element-wise scrubbing so no args
+            # path skips redaction.
+            record.args = tuple(_scrub_value(item) for item in record.args)
 
         if record.exc_info is not None:
             record.exc_text = _scrub_text(_EXCEPTION_FORMATTER.formatException(record.exc_info))

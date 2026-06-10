@@ -11,7 +11,6 @@ from decimal import Decimal
 
 import pytest
 
-from .......core.external_constants import LATIN_1_ENCODING
 from .._deserialise import deserialise_envelope
 from .._record_spec import (
     FieldKind,
@@ -149,7 +148,7 @@ class TestEnvelopeSerialise:
                 "FIELD_IDENTITY": "X1234567L",
             },
             segments=segments,
-            encoding=LATIN_1_ENCODING,
+            encoding="iso-8859-1",
         )
 
         # 17 (seg 1) + 43 (seg 2) + 2 (CRLF) = 62.
@@ -178,12 +177,12 @@ class TestEnvelopeSerialise:
                 "FIELD_IDENTITY": "X1234567L",
             },
             segments=segments,
-            encoding=LATIN_1_ENCODING,
+            encoding="iso-8859-1",
         )
         parsed = deserialise_envelope(
             payload,
             segments=segments,
-            encoding=LATIN_1_ENCODING,
+            encoding="iso-8859-1",
         )
         assert "SEG0_MINI" in parsed.segments
         assert "SEG1_MINI" in parsed.segments
@@ -198,7 +197,7 @@ class TestEnvelopeSerialise:
                 casilla_values={"01": Decimal("0.00")},
                 headers={"FIELD_YEAR": "2024"},
                 segments=segments,
-                encoding=LATIN_1_ENCODING,
+                encoding="iso-8859-1",
                 required_field_ids=frozenset({"FIELD_IDENTITY"}),
             )
 
@@ -210,5 +209,5 @@ class TestEnvelopeSerialise:
             deserialise_envelope(
                 b"SHORT",
                 segments=segments,
-                encoding=LATIN_1_ENCODING,
+                encoding="iso-8859-1",
             )

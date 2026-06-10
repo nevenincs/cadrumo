@@ -10,7 +10,6 @@ Use of :class:`CalculationRevision`, :class:`TaxpayerProfile`, :class:`Transacti
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
 from datetime import date, datetime
 from functools import lru_cache
 from pathlib import Path
@@ -98,7 +97,7 @@ def workflow_period_for_work_unit(work_unit: WorkUnit) -> str:
         return str(work_unit.filing_year)
     if len(work_unit.period) == 2 and work_unit.period.isdigit():
         return f"{work_unit.filing_year}-{work_unit.period}"
-    if len(work_unit.period) == 2 and work_unit.period.endswith("P") and work_unit.period[0] in "123":
+    if len(work_unit.period) == 2 and work_unit.period.endswith("P") and work_unit.period[0] in ("1", "2", "3"):
         return f"{work_unit.filing_year}P{work_unit.period[0]}"
     parse_canonical_period(work_unit.period)
     return work_unit.period
@@ -160,7 +159,7 @@ class _RevisionDraftBuilder:
         modelo: str,
         period: str,
         profile: TaxpayerProfile,
-        inputs: Mapping[str, object],
+        inputs: ModeloInputs,
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
         """Build a :class:`RegistryModeloDraftProtocol` and approve it when it is filing-ready.

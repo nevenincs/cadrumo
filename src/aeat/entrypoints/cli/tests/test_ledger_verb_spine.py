@@ -64,8 +64,8 @@ def test_ledger_verb_roster_matches_canonical_spine() -> None:
     registered = frozenset(cmd.name for cmd in ledger_app.registered_commands)
     missing = EXPECTED_LEDGER_VERBS - registered
     extras = registered - EXPECTED_LEDGER_VERBS
-    assert not missing, f"ledger verbs disappeared: {sorted(missing)}"
-    assert not extras, f"ledger verbs added without test update: {sorted(extras)}"
+    assert not missing, f"ledger verbs disappeared: {sorted(n for n in missing if n)}"
+    assert not extras, f"ledger verbs added without test update: {sorted(n for n in extras if n)}"
 
 
 def test_ledger_link_check_preflight_sit_at_noun_group_root() -> None:
@@ -73,7 +73,7 @@ def test_ledger_link_check_preflight_sit_at_noun_group_root() -> None:
     `aeat app ledger`, not under a sub-noun-group. The orthogonal-axis
     verbs must sit alongside the CRUD spine."""
 
-    top_level = frozenset(cmd.name for cmd in ledger_app.registered_commands)
+    top_level = frozenset(n for n in (cmd.name for cmd in ledger_app.registered_commands) if n)
     assert LINK_CHECK_PREFLIGHT.issubset(top_level), (
         f"link/check/preflight not at root; mounted verbs: {sorted(top_level)}"
     )
@@ -111,7 +111,7 @@ def test_ledger_verb_count_matches_canonical_spine() -> None:
         f"(CRUD {_CRUD_SPINE_COUNT} + orthogonal axes "
         f"{_RATIFIED_ORTHOGONAL_AXIS_COUNT} + workflow axes "
         f"{_RATIFIED_WORKFLOW_AXIS_COUNT}); got {registered_count}: "
-        f"{sorted(cmd.name for cmd in ledger_app.registered_commands)!r}"
+        f"{sorted(n for n in (cmd.name for cmd in ledger_app.registered_commands) if n)!r}"
     )
 
 
@@ -146,7 +146,7 @@ def test_ledger_help_enumerates_every_registered_verb(cli_runner: CliRunner) -> 
 
     result = cli_runner.invoke(app, ["app", "ledger", "--help"])
     assert result.exit_code == 0, result.output
-    missing = sorted(cmd.name for cmd in ledger_app.registered_commands if cmd.name not in result.output)
+    missing = sorted(cmd.name for cmd in ledger_app.registered_commands if cmd.name and cmd.name not in result.output)
     assert not missing, f"`aeat app ledger --help` omits registered verbs {missing!r}; help output: {result.output!r}"
 
 
@@ -158,7 +158,7 @@ def test_modelo_help_enumerates_every_registered_verb(cli_runner: CliRunner) -> 
 
     result = cli_runner.invoke(app, ["app", "modelo", "--help"])
     assert result.exit_code == 0, result.output
-    missing = sorted(cmd.name for cmd in modelo_app.registered_commands if cmd.name not in result.output)
+    missing = sorted(cmd.name for cmd in modelo_app.registered_commands if cmd.name and cmd.name not in result.output)
     assert not missing, f"`aeat app modelo --help` omits registered verbs {missing!r}; help output: {result.output!r}"
 
 
@@ -197,11 +197,11 @@ def test_modelo_top_level_verb_roster_matches_canonical_spine() -> None:
 
     from .._modelo import app as modelo_app
 
-    registered = frozenset(cmd.name for cmd in modelo_app.registered_commands)
+    registered = frozenset(n for n in (cmd.name for cmd in modelo_app.registered_commands) if n)
     missing = EXPECTED_MODELO_TOP_LEVEL_VERBS - registered
     extras = registered - EXPECTED_MODELO_TOP_LEVEL_VERBS
-    assert not missing, f"modelo verbs disappeared: {sorted(missing)}"
-    assert not extras, f"modelo verbs added without test update: {sorted(extras)}"
+    assert not missing, f"modelo verbs disappeared: {sorted(n for n in missing if n)}"
+    assert not extras, f"modelo verbs added without test update: {sorted(n for n in extras if n)}"
 
 
 # Bucket_app maintenance-verb pre-landing state pinned.
@@ -226,7 +226,7 @@ def test_bucket_app_verb_roster_pins_pre_maintenance_state() -> None:
 
     from .._config import bucket_app
 
-    registered = frozenset(cmd.name for cmd in bucket_app.registered_commands)
+    registered = frozenset(n for n in (cmd.name for cmd in bucket_app.registered_commands) if n)
     expected = sorted(EXPECTED_BUCKET_APP_VERBS)
     actual = sorted(registered)
     assert registered == EXPECTED_BUCKET_APP_VERBS, (

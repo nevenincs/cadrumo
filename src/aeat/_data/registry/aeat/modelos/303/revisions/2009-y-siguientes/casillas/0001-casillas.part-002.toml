@@ -461,7 +461,12 @@ data_type = "money"
 semantic_role = "dr303_59"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+# Casilla 59 reports the base imponible of exempt intra-community supplies
+# (entregas intracomunitarias exentas). The substantive ground is LIVA art. 25
+# (exenciones en las entregas de bienes destinados a otro Estado miembro), not
+# the repercusión/deducción articles 88/92 — an exempt entrega carries no cuota
+# repercutida nor deducible, so this is an informativa base-only box.
+legal_refs = ["ley-37-1992:art-25", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-59"]
 
@@ -474,7 +479,13 @@ data_type = "money"
 semantic_role = "dr303_60"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+# Casilla 60 reports the base imponible of exempt exports and operations
+# treated as exports. The substantive grounds are LIVA art. 21 (exenciones en
+# las exportaciones de bienes) for the "Exportaciones" leg and art. 22
+# (exenciones en las operaciones asimiladas a las exportaciones) for the
+# "operaciones asimiladas" leg the label names. Both are exempt (zero cuota),
+# so the repercusión/deducción articles 88/92 do not apply — base-only box.
+legal_refs = ["ley-37-1992:art-21", "ley-37-1992:art-22", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-60"]
 

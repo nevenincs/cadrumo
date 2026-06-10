@@ -20,6 +20,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Final, Literal
 
+from .....core import Modelo
+
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator
 
 from .....domain.calculations.registry import CasillaId
@@ -232,7 +234,7 @@ class IvaCompensationWalletObservation(BaseModel):
 
     taxpayer_nif: str = Field(min_length=1, max_length=32)
     authenticated_identity: str = Field(min_length=1, max_length=32)
-    target_modelo: Literal["303"] = "303"
+    target_modelo: Literal[Modelo.M303] = Modelo.M303
     target_year: int = Field(ge=2000, le=2099)
     target_period: str = Field(min_length=1, max_length=8)
     rows: tuple[IvaCompensationWalletRow, ...] = ()

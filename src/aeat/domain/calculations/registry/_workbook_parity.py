@@ -18,7 +18,7 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Literal
+from typing import Any
 from zipfile import BadZipFile
 
 from openpyxl import load_workbook
@@ -50,6 +50,7 @@ from ._workbook_parity_models import (
     WorkbookParityModel,
     WorkbookParityRunReport,
     WorkbookRunnerAvailability,
+    _WorkbookExtension,
 )
 from ._workbook_parity_types import (
     ParityStatus,
@@ -1026,7 +1027,7 @@ def _failed_report(
     *,
     relative: str,
     modelo: str | None,
-    suffix: Literal[_XLSX_EXTENSION, _XLS_EXTENSION],
+    suffix: _WorkbookExtension,
     byte_count: int,
     digest: str,
     status: WorkbookScanStatus,

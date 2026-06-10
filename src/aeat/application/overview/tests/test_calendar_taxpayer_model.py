@@ -541,8 +541,9 @@ def test_calendar_benign_no_windows_year_still_degrades(caplog: pytest.LogCaptur
         if record.getMessage() == "overview calendar ignored covered year with no registered deadline windows"
     ]
     assert len(relevant) == 2
-    assert {record.year for record in relevant} == {2029, 2030}
-    assert {record.error_type for record in relevant} == {"NoDeadlineWindowsError"}
+    # year and error_type are added via logging.extra={...} — access via getattr.
+    assert {getattr(record, "year", None) for record in relevant} == {2029, 2030}
+    assert {getattr(record, "error_type", None) for record in relevant} == {"NoDeadlineWindowsError"}
 
 
 def test_calendar_propagates_genuine_registry_fault() -> None:

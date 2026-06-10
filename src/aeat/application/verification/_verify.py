@@ -7,6 +7,7 @@ used to run the formula engine over operator-provided casilla values.
 
 from __future__ import annotations
 
+from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -287,7 +288,7 @@ def _classify_discrepancy(
 
 def _compute_coverage(
     declaracion: DeclaracionObservation,
-    expected_casillas: set[str],
+    expected_casillas: AbstractSet[str],
 ) -> float:
     """Return the fraction of registry casillas the extraction supplied.
 

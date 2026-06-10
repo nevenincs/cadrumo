@@ -17,6 +17,7 @@ from ...application.modelo import (
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ._common import _emit_envelope
+from ._modelo_cli_support import OutputLanguageOpt
 from ._modelo_payloads import WorkRevisionResult, WorkRevisionsResult
 from ._modelo_rendering import (
     calculation_revision_lines,
@@ -64,12 +65,7 @@ def register_work_revision_commands(
             str | None,
             typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
         ] = None,
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
+        output_language: OutputLanguageOpt = None,
     ) -> None:
         """List calculation revisions, optionally filtered to one work unit."""
         activate_output_language(ctx, output_language)
@@ -153,12 +149,7 @@ def register_work_revision_commands(
             str | None,
             typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
         ] = None,
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
+        output_language: OutputLanguageOpt = None,
     ) -> None:
         """Show one stored calculation revision's persisted casilla values."""
         activate_output_language(ctx, output_language)

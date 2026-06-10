@@ -377,6 +377,7 @@ def test_get_work_unit_raises_when_id_is_absent(repo: WorkUnitCatalogueRepositor
     with pytest.raises(WorkUnitNotFoundError) as excinfo:
         get_work_unit("missing", repository=repo)
     assert excinfo.value.translated_message == "application.modelo.errors.work_unit_not_found"
+    assert isinstance(excinfo.value.context, dict)
     assert excinfo.value.context["work_unit_id"] == "missing"
 
 
@@ -408,6 +409,7 @@ def test_rename_work_unit_raises_when_id_is_absent(repo: WorkUnitCatalogueReposi
     with pytest.raises(WorkUnitNotFoundError) as excinfo:
         rename_work_unit("missing", "ignored", actor="test-operator", repository=repo)
     assert excinfo.value.translated_message == "application.modelo.errors.work_unit_not_found"
+    assert isinstance(excinfo.value.context, dict)
     assert excinfo.value.context["work_unit_id"] == "missing"
 
 
@@ -468,6 +470,7 @@ def test_discard_work_unit_raises_on_missing_id(repo: WorkUnitCatalogueRepositor
     with pytest.raises(WorkUnitNotFoundError) as excinfo:
         discard_work_unit("missing", actor="operator-A", repository=repo)
     assert excinfo.value.translated_message == "application.modelo.errors.work_unit_not_found"
+    assert isinstance(excinfo.value.context, dict)
     assert excinfo.value.context["work_unit_id"] == "missing"
 
 

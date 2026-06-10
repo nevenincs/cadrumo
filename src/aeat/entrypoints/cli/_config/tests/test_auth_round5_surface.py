@@ -155,6 +155,7 @@ def test_login_refuses_with_user_prose_citing_live_tests_gate(
     # surface this round-5 B2 finding promises.
     from .....core.i18n import tr
 
+    assert exc_info.value.translated_message is not None
     message = tr(exc_info.value.translated_message, **(exc_info.value.context or {}))
     assert "AEAT_LIVE_TESTS_ENABLED" not in message, f"refusal must not echo the env-var name — got {message!r}"
     assert "CertificateBundle" not in message, f"refusal must not echo Python class names — got {message!r}"
@@ -186,6 +187,7 @@ def test_login_refuses_when_certificate_path_unset(
     # the user-prose surface this round-5 finding promises.
     from .....core.i18n import tr
 
+    assert exc_info.value.translated_message is not None
     message = tr(exc_info.value.translated_message)
     assert "AEAT_CERTIFICATE_PATH" not in message
     assert "CertificateBundle" not in message

@@ -31,12 +31,14 @@ from ...domain.calculations.registry import (
 )
 from ...domain.iva import (
     EUMemberState,
+    InvoiceKind,
     IvaCategory,
     IvaFlowDirection,
     IvaRateKind,
     IvaRateNotFoundError,
     ProrrataInputError,
     ProrrataReference,
+    derive_flow_for_classification,
     lookup_rate,
     validate_prorrata_reference,
 )
@@ -517,6 +519,20 @@ def _classify_iva_transaction(
     else:
         effective_category = _RATE_KIND_TO_DOMESTIC_CATEGORY[rate_kind]
 
+    # Recompute the IVA flow now the effective category is known. The
+    # direction-only screen above only rejects non-settlement directions;
+    # the canonical flow routes reverse-charge categories
+    # (DOMESTIC_REVERSE_CHARGE, INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE)
+    # to INVERSION_SUJETO_PASIVO and leaves every other category on its
+    # repercutido/soportado direction. ``_invoice_kind_for`` cannot be
+    # None here: ``flow_direction`` above already gated unknown directions.
+    invoice_kind = _invoice_kind_for(transaction.direction)
+    assert invoice_kind is not None
+    flow_direction = derive_flow_for_classification(
+        category=effective_category,
+        invoice_direction=invoice_kind,
+    )
+
     prorrata_reference, prorrata_issue, linked_prorrata_id = _resolve_iva_prorrata_attachment(
         transaction,
         flow_direction=flow_direction,
@@ -625,12 +641,36 @@ def _validate_intracom_export_counterparty(
     return None
 
 
-def _flow_direction_for(direction: TransactionDirection) -> IvaFlowDirection | None:
+def _invoice_kind_for(direction: TransactionDirection) -> InvoiceKind | None:
+    """Map a bank :class:`TransactionDirection` onto the invoice-issuance axis.
+
+    ``INCOMING`` money is a sale the autónomo issued (output IVA);
+    ``OUTGOING`` money is a purchase the autónomo received (input IVA).
+    Returns ``None`` for any direction that is not an IVA settlement
+    flow, so the caller can reject it as ``UNSUPPORTED_DIRECTION``.
+    """
     if direction is TransactionDirection.INCOMING:
-        return IvaFlowDirection.REPERCUTIDO
+        return InvoiceKind.ISSUED
     if direction is TransactionDirection.OUTGOING:
-        return IvaFlowDirection.SOPORTADO
+        return InvoiceKind.RECEIVED
     return None
+
+
+def _flow_direction_for(direction: TransactionDirection) -> IvaFlowDirection | None:
+    """Return the direction-only IVA flow, used as the settlement-flow gate.
+
+    This screens the bank direction before the IVA category is known
+    (an ``UNKNOWN``/``UNRESOLVED`` direction is not an IVA settlement
+    flow). The final flow that lands on the observation is recomputed
+    once the effective :class:`IvaCategory` is resolved via
+    :func:`derive_flow_for_classification`, which routes reverse-charge
+    categories to :attr:`IvaFlowDirection.INVERSION_SUJETO_PASIVO` while
+    preserving ``REPERCUTIDO``/``SOPORTADO`` for every other category.
+    """
+    invoice_kind = _invoice_kind_for(direction)
+    if invoice_kind is None:
+        return None
+    return IvaFlowDirection.REPERCUTIDO if invoice_kind is InvoiceKind.ISSUED else IvaFlowDirection.SOPORTADO
 
 
 def _business_proportionality(transaction: Transaction) -> Decimal | None:

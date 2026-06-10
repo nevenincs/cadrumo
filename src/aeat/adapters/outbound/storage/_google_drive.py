@@ -578,6 +578,7 @@ class GoogleDriveProvider:
 
         request = service.files().get_media(fileId=entry["id"])
         translated_error: OutboundStorageError | None = None
+        payload: Any = None
         try:
             payload = request.execute()
         except OutboundStorageError:

@@ -198,7 +198,7 @@ def test_bucket_event_inner_classification_drift_is_structured(tmp_path: Path) -
         envelope = Envelope[BucketEventHistoryCatalogue].model_validate_json(record.payload)
         profile.repository.save(
             namespace=record.namespace,
-            object_key=record.object_key,
+            object_key=_OBJECT_KEY,
             classification=record.classification,
             schema_version=record.schema_version,
             written_at=record.written_at,
@@ -236,7 +236,7 @@ def test_bucket_event_inner_schema_version_drift_is_structured(tmp_path: Path) -
         envelope = Envelope[BucketEventHistoryCatalogue].model_validate_json(record.payload)
         profile.repository.save(
             namespace=record.namespace,
-            object_key=record.object_key,
+            object_key=_OBJECT_KEY,
             classification=record.classification,
             schema_version=record.schema_version,
             written_at=record.written_at,

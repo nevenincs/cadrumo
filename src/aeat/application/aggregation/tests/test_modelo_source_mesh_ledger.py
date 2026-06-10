@@ -230,21 +230,23 @@ def test_iva_source_mesh_resolver_matches_existing_bucket_ledger_bridge(secure_o
     }
 
 
-def test_iva_source_mesh_resolver_surfaces_unconsumed_cuota_bearing_observation_non_blocking(
+def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_37_net_zero(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """#64: a cuota-bearing IVA observation no M303 binding consumes is surfaced, not dropped.
+    """A ``DOMESTIC_REVERSE_CHARGE`` operation is now CONSUMED, not surfaced as a gap.
 
-    The M303 ``2009-y-siguientes`` ``ledger_iva_aggregation`` bindings select
-    domestic + intra-community-acquisition triples only; a
-    ``DOMESTIC_REVERSE_CHARGE`` observation genuinely bears an M303 cuota
-    (inversión del sujeto pasivo, Ley 37/1992 art. 84.Uno.2) but matches no
-    binding selector yet — its binding is a separate follow-up. The candidate
-    path refuses such an observation via ``unsupported_ledger_iva_observations``;
-    the calculate path (this resolver) must instead surface it as a NON-blocking
-    diagnostic so it is never silently under-declared
-    (no-silent-under-declaration) while calculate still succeeds (the resolution
-    resolves to a non-empty binding map).
+    Inversión del sujeto pasivo interior (Ley 37/1992 art. 84.Uno.2): the
+    recipient self-assesses both an IVA devengado entry (official casilla 13,
+    ``modelo-303-iva-autorepercutido-interior-devengado-cuota``) AND a matching
+    IVA deducible entry (official casilla 37,
+    ``modelo-303-iva-autorepercutido-interior-deducible-cuota``). Before the
+    flow-fix the application classifier left the observation on its
+    direction-only ``SOPORTADO`` flow, no binding selected it, and the #64
+    advisory surfaced it as an unrouted cuota-bearing gap. Now the classifier
+    recomputes the flow via :func:`derive_flow_for_classification`, routing the
+    reverse-charge category to ``INVERSION_SUJETO_PASIVO``; the two new bindings
+    consume it (each resolves the 42.00 self-assessed cuota), so the pair nets
+    to zero in the M303 resultado and the advisory no longer fires.
     """
     revision = _revision("303", "2009-y-siguientes")
     tx_repo = TransactionCatalogueRepository(
@@ -259,10 +261,10 @@ def test_iva_source_mesh_resolver_surfaces_unconsumed_cuota_bearing_observation_
         taxable_base=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
     )
-    # ... plus a cuota-bearing reverse-charge operation NO M303 binding selects.
+    # ... plus a reverse-charge operation now routed to box 13 + 37.
     # Self-assessed IVA: the bank gross equals the base (no IVA charged on the
     # invoice); the cuota is self-assessed.
-    unrouted_reverse_charge = _iva_transaction(
+    reverse_charge = _iva_transaction(
         "domestic-reverse-charge",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("200.00"),
@@ -270,7 +272,7 @@ def test_iva_source_mesh_resolver_surfaces_unconsumed_cuota_bearing_observation_
         iva_amount=Decimal("42.00"),
         iva_category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
     )
-    tx_repo.save(TransactionCatalogue.from_transactions((domestic_sale, unrouted_reverse_charge)))
+    tx_repo.save(TransactionCatalogue.from_transactions((domestic_sale, reverse_charge)))
 
     resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
         CalculationSourceContext(
@@ -282,19 +284,25 @@ def test_iva_source_mesh_resolver_surfaces_unconsumed_cuota_bearing_observation_
         )
     )
 
-    # Calculate still succeeds: the consumed domestic sale resolved to bindings.
-    assert resolution.binding_values
-    # The unrouted cuota-bearing observation is surfaced NON-silently and NON-blockingly.
+    # The reverse-charge observation is now CONSUMED: the #64 advisory no longer
+    # flags it once the binding routes its self-assessed cuota.
     unconsumed_diagnostics = [
         diagnostic
         for diagnostic in resolution.diagnostics
         if diagnostic.source_kind == "ledger_iva_aggregation"
-        and unrouted_reverse_charge.transaction_id in diagnostic.message
+        and reverse_charge.transaction_id in diagnostic.message
     ]
-    assert len(unconsumed_diagnostics) == 1
-    diagnostic = unconsumed_diagnostics[0]
-    assert diagnostic.reason == "source_issue"
-    assert IvaCategory.DOMESTIC_REVERSE_CHARGE.value in diagnostic.message
+    assert unconsumed_diagnostics == []
+    # Both the devengado (box 13) and deducible (box 37) bindings carry the
+    # self-assessed 42.00 cuota, so the pair nets to zero in the resultado.
+    devengado = resolution.binding_values["modelo-303-iva-autorepercutido-interior-devengado-cuota"]
+    deducible = resolution.binding_values["modelo-303-iva-autorepercutido-interior-deducible-cuota"]
+    assert devengado == Decimal("42.00")
+    assert deducible == Decimal("42.00")
+    assert devengado - deducible == Decimal("0")
+    # The reverse-charge transaction is recorded in the resolved provenance set,
+    # not discarded as an unsupported observation.
+    assert reverse_charge.transaction_id in resolution.source_transaction_ids
 
 
 def test_iva_source_mesh_resolver_does_not_flag_cuota_less_by_law_observation(

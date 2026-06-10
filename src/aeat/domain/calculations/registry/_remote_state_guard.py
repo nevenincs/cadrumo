@@ -143,6 +143,16 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
 
     @model_validator(mode="after")
     def _validate_policy(self) -> RemoteStateGuardPolicy:
+        # Each predicate group raises in the same order as before; the phases are
+        # evidence-tier consistency, allowed-hosts presence, authentication
+        # consistency, then synthetic-data consistency.
+        self._validate_evidence_tier()
+        self._validate_allowed_hosts_presence()
+        self._validate_authentication_consistency()
+        self._validate_synthetic_data_consistency()
+        return self
+
+    def _validate_evidence_tier(self) -> None:
         if self.classification in {"open_simulator", "integration_test_service"} and (
             self.evidence_tier != "executable_parity_evidence"
         ):
@@ -155,20 +165,26 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
             )
         if self.classification == "static_official_only" and self.evidence_tier == "executable_parity_evidence":
             raise RegistryValidationError("static official documentation is not executable parity evidence")
+
+    def _validate_allowed_hosts_presence(self) -> None:
         if (
             self.classification
             in {"open_simulator", "integration_test_service", "public_read_surface", "authenticated_read_surface"}
             and not self.allowed_hosts
         ):
             raise RegistryValidationError("AEAT remote policy must declare allowed hosts")
+
+    def _validate_authentication_consistency(self) -> None:
         if self.classification == "open_simulator" and self.requires_authentication:
             raise RegistryValidationError("open simulator policy must not require authentication")
         if self.classification == "public_read_surface" and self.requires_authentication:
             raise RegistryValidationError("public read policy must not require authentication")
-        if self.classification == "public_read_surface" and self.synthetic_data_allowed:
-            raise RegistryValidationError("public reads must not use synthetic remote data")
         if self.classification == "authenticated_read_surface" and not self.requires_authentication:
             raise RegistryValidationError("authenticated filed-data read policy must require authentication")
+
+    def _validate_synthetic_data_consistency(self) -> None:
+        if self.classification == "public_read_surface" and self.synthetic_data_allowed:
+            raise RegistryValidationError("public reads must not use synthetic remote data")
         if self.classification == "authenticated_read_surface" and self.synthetic_data_allowed:
             raise RegistryValidationError("authenticated filed-data reads must not use synthetic remote data")
         if self.classification == "static_official_only" and self.synthetic_data_allowed:
@@ -182,7 +198,6 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
                     f"AEAT-hosted policy {self.id!r} declares synthetic_data_allowed = true "
                     f"on AEAT host {aeat_host!r}; synthetic data is prohibited on AEAT-hosted surfaces"
                 )
-        return self
 
     @field_validator("allowed_hosts")
     @classmethod

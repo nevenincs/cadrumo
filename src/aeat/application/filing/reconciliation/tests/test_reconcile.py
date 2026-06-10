@@ -67,6 +67,7 @@ _MODELO_123_INPUTS = {
 
 
 def _provider_for(draft: ModeloDraft) -> RegistrySchemaProvider:
+    assert draft.snapshot_ref is not None
     return build_runtime_schema_provider(
         modelos=(draft.modelo,),
         filing_year=draft.snapshot_ref.modelo_year,

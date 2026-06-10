@@ -12,6 +12,7 @@ oracle-grounded against the AEAT form field constraints documented in:
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import TypedDict
 
 import pytest
 from pydantic import ValidationError
@@ -26,6 +27,15 @@ from .._row_models import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+class _BaseRevisionIdKwargs(TypedDict):
+    """Typed base kwargs for derive_calculation_revision_id calls in tests."""
+
+    work_unit_id: str
+    inputs_snapshot: dict[str, str]
+    binding_overrides: dict[str, str]
+    casilla_values: dict[str, Decimal]
 
 
 # ---------------------------------------------------------------------------
@@ -214,7 +224,7 @@ class TestRevisionIdWithDetailRows:
     def test_revision_id_changes_when_rows_differ(self) -> None:
         from .._calculation_revision import derive_calculation_revision_id
 
-        base_kwargs = {
+        base_kwargs: _BaseRevisionIdKwargs = {
             "work_unit_id": "a" * 64,
             "inputs_snapshot": {},
             "binding_overrides": {},
@@ -368,7 +378,10 @@ class TestModelo349OperadorRow:
         """Clave not in the Orden HAC/174/2020 catalogue is rejected."""
         with pytest.raises(ValidationError):
             Modelo349OperadorRow(
-                codigo_pais="DE", nif_comunitario="DE123456789", clave_operacion="Z", importe=Decimal("1")
+                codigo_pais="DE",
+                nif_comunitario="DE123456789",
+                clave_operacion="Z",  # pyright: ignore[reportArgumentType] # ty: ignore[invalid-argument-type]
+                importe=Decimal("1"),
             )
 
     def test_frozen_model_immutable(self) -> None:
@@ -590,7 +603,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
         """
         from .._calculation_revision import derive_calculation_revision_id
 
-        base = {
+        base: _BaseRevisionIdKwargs = {
             "work_unit_id": "a" * 64,
             "inputs_snapshot": {},
             "binding_overrides": {},
@@ -638,7 +651,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
         """
         from .._calculation_revision import derive_calculation_revision_id
 
-        base = {
+        base: _BaseRevisionIdKwargs = {
             "work_unit_id": "c" * 64,
             "inputs_snapshot": {},
             "binding_overrides": {},
@@ -676,7 +689,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
         """
         from .._calculation_revision import derive_calculation_revision_id
 
-        base = {
+        base: _BaseRevisionIdKwargs = {
             "work_unit_id": "d" * 64,
             "inputs_snapshot": {},
             "binding_overrides": {},

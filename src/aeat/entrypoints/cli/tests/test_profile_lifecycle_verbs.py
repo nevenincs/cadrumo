@@ -274,7 +274,7 @@ def test_config_profile_create_bare_name_refusal_names_both_recovery_paths(
     output = result.output
     # Both concrete recovery paths are named in the message body.
     assert "aeat config profile create NAME" in output
-    assert "--quiet --tax-id DNI/NIE/NIF/CIF" in output
+    assert "--quiet --tax-id NIF/CIF/DNI/NIE" in output
     # No internal tokens leak into the operator-facing refusal.
     assert "flow_id" not in output
     assert "('tax-id'" not in output

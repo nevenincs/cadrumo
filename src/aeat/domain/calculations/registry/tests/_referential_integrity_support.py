@@ -12,11 +12,12 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError
 
+from .....core._tax_domain import TaxDomain
 from .....core._toml import freeze_toml
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
 from .....core.resources import bundled_path
-from .. import RegistryValidationError
+from .. import InputKind, RegistryValidationError
 from .._authority import ValidatedRegistryAuthority
 from .._loader import load_registry_tree
 from .._schema import (
@@ -125,7 +126,7 @@ def _minimal_casilla(casilla_id: str = "01") -> CasillaDefinition:
         number=casilla_id,
         label=f"Casilla {casilla_id}",
         section=("test",),
-        input_kind="manual",
+        input_kind=InputKind.MANUAL,
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
     )
@@ -225,7 +226,7 @@ def _minimal_modelo(revision: ModeloRevision) -> ModeloDefinition:
         id="130",
         title="Test",
         official_name="Test",
-        tax_domain="iva",
+        tax_domain=TaxDomain.IVA,
         cadence="annual",
         jurisdiction="ES-AEAT",
         output_sensitivity=SensitivityClass.FINANCIAL,
@@ -286,7 +287,7 @@ def _segmented_casilla(
         segmento=segmento,
         label=f"Casilla {casilla_id}",
         section=("test",),
-        input_kind="manual",
+        input_kind=InputKind.MANUAL,
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
     )

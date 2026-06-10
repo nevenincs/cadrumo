@@ -63,6 +63,7 @@ def test_serialize_tabular_rows_writes_readable_xlsx_payload() -> None:
 
     workbook = load_workbook(BytesIO(result.payload), read_only=True, data_only=True)
     worksheet = workbook.active
+    assert worksheet is not None
     rows = tuple(worksheet.iter_rows(values_only=True))
 
     assert rows == (
@@ -106,7 +107,9 @@ def test_export_format_error_registry_has_no_name_collision() -> None:
     (code REFUSED_EXPORT_FORMAT) should appear under that simple name.  The
     adapter class is now AeatExportFormatError (code FAIL_EXPORT_FORMAT).
     """
-    from ....core.errors.registry import _ALL_DECLARED_ERROR_CODES
+    from ....core.errors.registry import (
+        _ALL_DECLARED_ERROR_CODES,  # pyright: ignore[reportPrivateUsage]  # test introspection
+    )
 
     qualnames_named_export_format_error = [
         qualname for qualname, _ in _ALL_DECLARED_ERROR_CODES if qualname.split(".")[-1] == "ExportFormatError"
@@ -354,7 +357,9 @@ def test_model_validator_raises_export_field_error_on_invalid_sha256() -> None:
             row_count=0,
             fieldnames=("transaction_id", "amount"),
         )
-    cause = exc_info.value.errors()[0]["ctx"]["error"]
+    error_detail = exc_info.value.errors()[0]
+    assert "ctx" in error_detail and "error" in error_detail["ctx"]
+    cause = error_detail["ctx"]["error"]
     assert isinstance(cause, ExportFieldError)
     assert cause.translated_message == "errors.refused.refused_export_field"
     assert cause.context == {"reason": "sha256_invalid"}

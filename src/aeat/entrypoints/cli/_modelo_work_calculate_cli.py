@@ -20,6 +20,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...domain.calculations.registry import RegistryValidationError
 from ._common import _emit_envelope
+from ._modelo_cli_support import OutputLanguageOpt
 from ._modelo_payloads import SourceAdvisoryPayload, WorkCalculateResult
 from ._modelo_rendering import (
     calculation_revision_lines,
@@ -215,12 +216,6 @@ _AutoconsumoPromotorOpt = Annotated[
         ),
     ),
 ]
-_OutputLanguageOpt = Annotated[
-    OutputLanguage | None,
-    typer.Option("--output-language", "--language", help=tr("cli.config.auth.output_language_help")),
-]
-
-
 def register_work_calculate_commands(
     work_app: typer.Typer,
     *,
@@ -267,7 +262,7 @@ def register_work_calculate_commands(
         sal_reserva_dotada: _SalReservaOpt = None,
         sal_capital_social: _SalCapitalOpt = None,
         autoconsumo_promotor_base: _AutoconsumoPromotorOpt = None,
-        output_language: _OutputLanguageOpt = None,
+        output_language: OutputLanguageOpt = None,
     ) -> None:
         """Persist a new draft calculation revision for the work unit."""
         _run_work_calculate(

@@ -12,6 +12,7 @@ from ...domain.calculations.registry import RegistryValidationError, parse_model
 from ...domain.calculations.registry._temporal import select_revision
 from ...domain.contribuyente import CCAA
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
 from ...domain.modelos._work_unit import WorkUnit
@@ -532,7 +533,7 @@ def resolve_optional_modelo_work_address(address: ModeloWorkAddress) -> ModeloWo
     resolution = resolve_modelo_work_unit(
         ModeloWorkSelectorRequest(
             work_unit_id=address.work_unit_id,
-            modelo=address.modelo,
+            modelo=ModeloCode(address.modelo) if address.modelo is not None else None,
             filing_year=address.filing_year,
             period=address.period,
             revision_id=address.registry_revision_id,

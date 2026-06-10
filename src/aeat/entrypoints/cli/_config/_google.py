@@ -655,6 +655,24 @@ def _push_mirror_manifests(
     return manifest_pushed_by_ns
 
 
+class _MirrorRowsResult(TypedDict):
+    """Typed result of :func:`_push_secure_object_mirror_rows`.
+
+    Each value mirrors the corresponding field on the mirror-pass outcome
+    dataclasses (:class:`_MirrorObjectPushOutcome`,
+    :class:`_MirrorRowPartition`, :class:`_MirrorPreflightOutcome`), so the
+    push handler reads precisely-typed counts and diagnostic triples rather
+    than ``object``.
+    """
+
+    pushed_by_namespace: dict[str, int]
+    skipped_by_namespace: dict[str, int]
+    failed_objects: list[tuple[str, str, str]]
+    manifest_pushed_by_namespace: dict[str, int]
+    failed_manifests: list[tuple[str, str]]
+    degraded_manifests: list[tuple[str, str]]
+
+
 def _push_secure_object_mirror_rows(
     *,
     provider: StorageProvider,
@@ -662,7 +680,7 @@ def _push_secure_object_mirror_rows(
     namespace_filter: str | None,
     limit: int | None,
     dry_run: bool,
-) -> dict[str, object]:
+) -> _MirrorRowsResult:
     if limit is not None and not dry_run:
         raise OutboundStorageValidationError(
             "non-dry-run Google sync push with --limit cannot produce a complete remote mirror manifest",

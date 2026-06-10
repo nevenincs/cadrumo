@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from decimal import Decimal
+from typing import Literal, cast
 
 from ...application.calculations import resolve_maritime_exemption
 from ...application.calculations._maritime_exemption_service import MaritimeExemptionResult
@@ -30,7 +31,7 @@ def maritime_facts_from_active_profile() -> MaritimeWorkerFacts:
     state = workflow_state_repository().load()
     record = state.active_profile_record()
 
-    def _enum(path: str) -> str | None:
+    def _raw(path: str) -> str | None:
         raw = fact_value(record, path)
         return raw.strip() if raw else None
 
@@ -40,18 +41,34 @@ def maritime_facts_from_active_profile() -> MaritimeWorkerFacts:
             return False
         return raw.strip().lower() in {"true", "1", "yes"}
 
-    # CAST-RATIONALE-MARITIME-LITERAL-FIELD:
-    # _enum returns str|None from raw profile fact; Literal field type is
-    # validated by MaritimeWorkerFacts dataclass at construction.
+    # fact_value() returns unvalidated str from encrypted profile storage.
+    # Each Literal field on MaritimeWorkerFacts carries a closed value set;
+    # membership tests below narrow the runtime value and cast bridges the
+    # str→Literal narrowing that ty cannot express from a membership test.
+    # This is a genuine profile-storage adapter boundary.
+    _vf_raw = _raw("maritime_worker.vessel_flag")
+    # CAST-RATIONALE-MARITIME-LITERAL-FIELD: str->Literal narrowing at profile-storage boundary.
+    vessel_flag = cast(
+        "Literal['ES', 'foreign'] | None",
+        _vf_raw if _vf_raw in ("ES", "foreign") else None,
+    )
+    _wt_raw = _raw("maritime_worker.waters_type")
+    # CAST-RATIONALE-MARITIME-LITERAL-FIELD: str->Literal narrowing at profile-storage boundary.
+    waters_type = cast(
+        "Literal['national', 'international'] | None",
+        _wt_raw if _wt_raw in ("national", "international") else None,
+    )
+    _vr_raw = _raw("maritime_worker.vessel_registry")
+    # CAST-RATIONALE-MARITIME-LITERAL-FIELD: str->Literal narrowing at profile-storage boundary.
+    vessel_registry = cast(
+        "Literal['REBECA', 'rebeca_eu_eea', 'scheduled_canary_route'] | None",
+        _vr_raw if _vr_raw in ("REBECA", "rebeca_eu_eea", "scheduled_canary_route") else None,
+    )
     return MaritimeWorkerFacts(
-        worker_class=_enum("maritime_worker.worker_class"),
-        vessel_flag=_enum("maritime_worker.vessel_flag"),  # type: ignore[arg-type]  # CAST-RATIONALE-MARITIME-LITERAL-FIELD
-        waters_type=_enum(
-            "maritime_worker.waters_type"
-        ),  # CAST-RATIONALE-MARITIME-LITERAL-FIELD: same as vessel_flag  # type: ignore[arg-type]
-        vessel_registry=_enum(
-            "maritime_worker.vessel_registry"
-        ),  # CAST-RATIONALE-MARITIME-LITERAL-FIELD: same as vessel_flag  # type: ignore[arg-type]
+        worker_class=_raw("maritime_worker.worker_class"),
+        vessel_flag=vessel_flag,
+        waters_type=waters_type,
+        vessel_registry=vessel_registry,
         tuna_fleet=_bool("maritime_worker.tuna_fleet"),
         pending_eu_clearance=_bool("maritime_worker.pending_eu_clearance"),
         retmar_registered=_bool("maritime_worker.retmar_registered"),

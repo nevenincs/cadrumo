@@ -158,6 +158,7 @@ def test_hardening_test_surfaces_do_not_reintroduce_shortcut_markers() -> None:
         environ_aliases = _collect_environ_aliases(tree)
         for node in ast.walk(tree):
             if _is_pytest_skip_or_xfail_marker(node):
+                assert isinstance(node, (ast.expr, ast.stmt))
                 offences.append(f"{relative}:{node.lineno}: {_qualified_name(node)}")
             if (
                 isinstance(node, ast.Call)
@@ -172,6 +173,7 @@ def test_hardening_test_surfaces_do_not_reintroduce_shortcut_markers() -> None:
             if isinstance(node, ast.ClassDef) and node.name.startswith(("_Fake", "_Stub")):
                 offences.append(f"{relative}:{node.lineno}: {node.name}")
             if _is_mock_import(node):
+                assert isinstance(node, (ast.Import, ast.ImportFrom))
                 offences.append(f"{relative}:{node.lineno}: mock import")
     assert offences == []
 

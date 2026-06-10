@@ -119,6 +119,15 @@ class _ReconfigurableStream(Protocol):
 
     def reconfigure(self, *, encoding: str, errors: str) -> None:
         """Reset the stream's encoding and error-handling mode."""
+        ...
+
+    def write(self, s: str, /) -> int:
+        """Write ``s`` to the stream and return the number of characters written."""
+        ...
+
+    def flush(self) -> None:
+        """Flush the write buffers."""
+        ...
 
 
 def emit_json_document(

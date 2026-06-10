@@ -185,10 +185,12 @@ class OfxProvider(FinancialProvider):
             )
             raise InvalidFinancialSourceError(f"could not parse OFX file: {_INPUT_OFX_SOURCE_LABEL}") from exc
         accounts = []
-        if getattr(parsed, "accounts", None):
-            accounts.extend(parsed.accounts)
-        if getattr(parsed, "account", None):
-            accounts.append(parsed.account)
+        _multi = getattr(parsed, "accounts", None)
+        if _multi:
+            accounts.extend(_multi)
+        _single = getattr(parsed, "account", None)
+        if _single:
+            accounts.append(_single)
         if not accounts:
             raise InvalidFinancialSourceError("OFX file does not contain a bank account statement")
         typed_accounts: list[_OfxAccountLike] = []

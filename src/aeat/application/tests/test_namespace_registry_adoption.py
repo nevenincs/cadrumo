@@ -33,17 +33,20 @@ def test_application_production_secure_object_namespaces_use_registry_definition
         registry_namespaces.update(_collect_registry_derived_namespace_bindings(tree, registry_namespaces))
         for node in ast.walk(tree):
             if _assigns_namespace_literal(node):
-                offences.append(f"{relative}:{node.lineno}: namespace literal assigned outside registry")
+                lineno = getattr(node, "lineno", "?")
+                offences.append(f"{relative}:{lineno}: namespace literal assigned outside registry")
             if isinstance(node, ast.Call) and _passes_namespace_literal(node):
-                offences.append(f"{relative}:{node.lineno}: namespace literal passed to secure-object call")
+                lineno = getattr(node, "lineno", "?")
+                offences.append(f"{relative}:{lineno}: namespace literal passed to secure-object call")
             if (
                 isinstance(node, ast.Call)
                 and (namespace_name := _secure_object_namespace_name(node)) is not None
                 and namespace_name in local_namespaces
                 and namespace_name not in registry_namespaces
             ):
+                lineno = getattr(node, "lineno", "?")
                 offences.append(
-                    f"{relative}:{node.lineno}: secure-object namespace constant must come from storage registry"
+                    f"{relative}:{lineno}: secure-object namespace constant must come from storage registry"
                 )
 
     assert offences == []

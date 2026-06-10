@@ -48,7 +48,7 @@ def m100_2025_snapshot(registry_authority: ValidatedRegistryAuthority):
     return registry_authority.snapshot("100", filing_year=2025, period="0A")
 
 
-def _binding_values_2024() -> dict:
+def _binding_values_2024() -> dict[str, Decimal]:
     return {
         "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
@@ -161,7 +161,7 @@ def test_2024_1812_anti_tautology_different_gain(m100_2024_snapshot: RegistrySna
 # ---------------------------------------------------------------------------
 
 
-def _binding_values_2025() -> dict:
+def _binding_values_2025() -> dict[str, Decimal]:
     # 2025 retenciones/pagos are carried via relation_values not binding_values.
     # Only scalar bindings that lack a relation source are passed here.
     return {
@@ -179,7 +179,7 @@ def _binding_values_2025() -> dict:
     }
 
 
-def _relation_values_2025() -> dict:
+def _relation_values_2025() -> dict[str, Decimal]:
     # All retenciones/pagos relations zero — no retenciones scenario.
     return {
         "renta-2025-rel-111-retenciones-trimestrales": Decimal("0"),

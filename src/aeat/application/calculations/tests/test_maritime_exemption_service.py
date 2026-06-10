@@ -130,14 +130,14 @@ class TestResolveMaritimeExemptionRebeca:
         assert len(result.observations) == 1
 
     def test_observation_carries_rebeca_legal_refs(self) -> None:
-        """contract close gate: legal_refs must include BOE-A-1994-16100 for REBECA."""
+        """contract close gate: legal_refs must include BOE-A-1994-15794 for REBECA."""
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             gross_navigation_income=Decimal("30000"),
         )
         obs = result.observations[0]
         combined = " ".join(obs.legal_refs)
-        assert "BOE-A-1994-16100" in combined, f"legal_refs must carry BOE-A-1994-16100, got {obs.legal_refs!r}"
+        assert "BOE-A-1994-15794" in combined, f"legal_refs must carry BOE-A-1994-15794, got {obs.legal_refs!r}"
         assert "73" in combined
         assert "75" in combined
 

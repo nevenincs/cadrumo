@@ -215,7 +215,8 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
         )
     if transaction.business_classification is BusinessClassification.PERSONAL:
         return ()
-    anomaly = _ANOMALY_IVA_REASONS.get(transaction.iva_category)
+    iva_cat = transaction.iva_category
+    anomaly = _ANOMALY_IVA_REASONS.get(iva_cat) if iva_cat is not None else None
     if anomaly is not None:
         reason, detail = anomaly
         return (LedgerPreflightIssue(**common, reason=reason, detail=detail),)

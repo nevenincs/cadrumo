@@ -10,6 +10,7 @@ from io import BytesIO
 from typing import TYPE_CHECKING, Literal
 
 from openpyxl import Workbook
+from openpyxl.cell.cell import Cell
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -19,13 +20,17 @@ from pydantic import BaseModel, Field
 from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.external_constants import UTF_8_ENCODING
 from ._records import (
+    SheetAutoFilter,
+    SheetColumnWidth,
     SheetEvidenceContributorRow,
     SheetEvidenceFacet,
     SheetEvidenceManualEntry,
     SheetExportMetadata,
     SheetExportPlan,
     SheetFormulaCell,
+    SheetFrozenView,
     SheetRowSet,
+    SheetStyledRange,
     SheetValueCell,
     TabName,
 )
@@ -106,6 +111,7 @@ def build_offline_workbook(plan: SheetExportPlan) -> Workbook:
     """Materialise a ``SheetExportPlan`` as an offline openpyxl workbook."""
     workbook = Workbook()
     default = workbook.active
+    assert default is not None
     default.title = TabName.ENTRADAS.value
     for tab in TabName:
         if tab.value not in workbook.sheetnames:
@@ -128,9 +134,21 @@ def _apply_styling(workbook: Workbook, plan: SheetExportPlan) -> None:
     role (header band, section banner, pale-yellow inputs, grey computed, green
     result), wraps the body columns, sizes the columns, freezes the header rows,
     and installs the basic filters — mirroring exactly what the online apply
-    adapter emits from the same ``SheetExportPlan`` facets.
+    adapter emits from the same ``SheetExportPlan`` facets. The phases run in the
+    same order as before: base font first, then styled overrides, widths, freezes,
+    filters, and finally print setup.
     """
     family = plan.font_family or WORKBOOK_FONT_FAMILY
+    _apply_base_font(workbook, family)
+    _apply_styled_ranges(workbook, family, plan.styled_ranges)
+    _apply_column_widths(workbook, plan.column_widths)
+    _apply_frozen_views(workbook, plan.frozen_views)
+    _apply_auto_filters(workbook, plan.auto_filters)
+    _apply_print_setup(workbook)
+
+
+def _apply_base_font(workbook: Workbook, family: str) -> None:
+    """Set the monospace family on every populated cell across all tabs."""
     base_font = Font(name=family)
     for tab in TabName:
         worksheet = workbook[tab.value]
@@ -139,7 +157,12 @@ def _apply_styling(workbook: Workbook, plan: SheetExportPlan) -> None:
                 if cell.value is not None:
                     cell.font = base_font
 
-    for styled in plan.styled_ranges:
+
+def _apply_styled_ranges(
+    workbook: Workbook, family: str, styled_ranges: Sequence[SheetStyledRange]
+) -> None:
+    """Tint each styled range by its role, in declaration order so later ranges win."""
+    for styled in styled_ranges:
         style = ROLE_STYLES[styled.role]
         font = Font(
             name=family,
@@ -161,23 +184,35 @@ def _apply_styling(workbook: Workbook, plan: SheetExportPlan) -> None:
                 if fill is not None:
                     cell.fill = fill
 
-    for width in plan.column_widths:
+
+def _apply_column_widths(workbook: Workbook, column_widths: Sequence[SheetColumnWidth]) -> None:
+    """Size each declared column."""
+    for width in column_widths:
         worksheet = workbook[width.tab.value]
         worksheet.column_dimensions[get_column_letter(width.column)].width = width.width
 
-    for frozen in plan.frozen_views:
+
+def _apply_frozen_views(workbook: Workbook, frozen_views: Sequence[SheetFrozenView]) -> None:
+    """Freeze the header rows/columns on each declared tab."""
+    for frozen in frozen_views:
         worksheet = workbook[frozen.tab.value]
         worksheet.freeze_panes = f"{get_column_letter(frozen.frozen_columns + 1)}{frozen.frozen_rows + 1}"
 
-    for filter_range in plan.auto_filters:
+
+def _apply_auto_filters(workbook: Workbook, auto_filters: Sequence[SheetAutoFilter]) -> None:
+    """Install the basic filter over each declared range."""
+    for filter_range in auto_filters:
         worksheet = workbook[filter_range.tab.value]
         start = f"{get_column_letter(filter_range.start_column)}{filter_range.start_row}"
         end = f"{get_column_letter(filter_range.end_column)}{filter_range.end_row}"
         worksheet.auto_filter.ref = f"{start}:{end}"
 
-    # Print setup: landscape, fit all columns to one page width, and repeat the
-    # header row on every printed page so a printed filing artefact stays
-    # readable across page breaks.
+
+def _apply_print_setup(workbook: Workbook) -> None:
+    """Landscape, fit all columns to one page width, repeat the header row.
+
+    A printed filing artefact then stays readable across page breaks.
+    """
     for tab in TabName:
         worksheet = workbook[tab.value]
         worksheet.page_setup.orientation = "landscape"
@@ -240,16 +275,16 @@ def serialize_offline_export(plan: SheetExportPlan) -> OfflineWorkbookExportResu
 def _write_value_cells(workbook: Workbook, cells: Iterable[SheetValueCell]) -> None:
     for cell in cells:
         worksheet = workbook[cell.address.tab.value]
-        target = worksheet.cell(row=cell.address.row, column=cell.address.column)
-        target.value = _coerce_cell_value(cell.value)
+        target = worksheet.cell(row=cell.address.row, column=cell.address.column, value=_coerce_cell_value(cell.value))
         if cell.note is not None:
+            assert isinstance(target, Cell)
             target.comment = Comment(cell.note, "AEAT")
 
 
 def _write_formula_cells(workbook: Workbook, cells: Iterable[SheetFormulaCell]) -> None:
     for cell in cells:
         worksheet = workbook[cell.address.tab.value]
-        worksheet.cell(row=cell.address.row, column=cell.address.column).value = f"={cell.formula}"
+        worksheet.cell(row=cell.address.row, column=cell.address.column, value=f"={cell.formula}")
 
 
 def _write_row_set_headers(workbook: Workbook, row_sets: Iterable[SheetRowSet]) -> None:
@@ -259,13 +294,14 @@ def _write_row_set_headers(workbook: Workbook, row_sets: Iterable[SheetRowSet]) 
             worksheet.cell(
                 row=column.header_address.row,
                 column=column.header_address.column,
-            ).value = column.header_label
+                value=column.header_label,
+            )
 
 
 def _write_guide(worksheet: Worksheet, plan: SheetExportPlan) -> None:
     worksheet["A1"] = plan.guide.title
     for row, paragraph in enumerate(plan.guide.paragraphs, start=3):
-        worksheet.cell(row=row, column=1).value = paragraph
+        worksheet.cell(row=row, column=1, value=paragraph)
 
     metadata = plan.metadata
     base_row = 3 + len(plan.guide.paragraphs) + 2
@@ -278,15 +314,15 @@ def _write_guide(worksheet: Worksheet, plan: SheetExportPlan) -> None:
         ("Exportado", metadata.exported_at.isoformat()),
     )
     for offset, (label, value) in enumerate(stamps):
-        worksheet.cell(row=base_row + offset, column=1).value = label
-        worksheet.cell(row=base_row + offset, column=2).value = value
+        worksheet.cell(row=base_row + offset, column=1, value=label)
+        worksheet.cell(row=base_row + offset, column=2, value=value)
 
 
 def _write_evidence(worksheet: Worksheet, plan: SheetExportPlan) -> None:
     worksheet["A1"] = "Snapshot fingerprint"
     worksheet["B1"] = plan.evidence.snapshot_fingerprint or ""
     for column, header in enumerate(_EVIDENCE_HEADERS, start=1):
-        worksheet.cell(row=3, column=column).value = header
+        worksheet.cell(row=3, column=column, value=header)
 
     row_index = 4
     for row in plan.evidence.contributor_rows:
@@ -300,12 +336,12 @@ def _write_evidence(worksheet: Worksheet, plan: SheetExportPlan) -> None:
     worksheet.protection.sheet = True
 
 
-def _write_evidence_row(worksheet: Worksheet, row_index: int, values: Sequence[object]) -> None:
+def _write_evidence_row(worksheet: Worksheet, row_index: int, values: Sequence[str]) -> None:
     for column, value in enumerate(values, start=1):
-        worksheet.cell(row=row_index, column=column).value = value
+        worksheet.cell(row=row_index, column=column, value=value)
 
 
-def _contributor_values(row: SheetEvidenceContributorRow) -> tuple[object, ...]:
+def _contributor_values(row: SheetEvidenceContributorRow) -> tuple[str, ...]:
     return (
         "ledger",
         row.casilla_id,
@@ -326,7 +362,7 @@ def _contributor_values(row: SheetEvidenceContributorRow) -> tuple[object, ...]:
     )
 
 
-def _manual_values(row: SheetEvidenceManualEntry) -> tuple[object, ...]:
+def _manual_values(row: SheetEvidenceManualEntry) -> tuple[str, ...]:
     return (
         "manual",
         row.casilla_id,
@@ -347,7 +383,7 @@ def _manual_values(row: SheetEvidenceManualEntry) -> tuple[object, ...]:
     )
 
 
-def _coerce_cell_value(value: Decimal | str | bool | None) -> object:
+def _coerce_cell_value(value: Decimal | str | bool | None) -> str | bool:
     if value is None:
         return ""
     if isinstance(value, Decimal):

@@ -1105,7 +1105,7 @@ enum_values = ["trabajador_del_mar"]
 schedule_predicates = ["maritime_worker.worker_class"]
 legal_refs = [
   "Ley 35/2006 Art. 7.p) BOE-A-2006-20764",
-  "Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-16100",
+  "Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-15794",
   "Ley 35/2006 DA 41 BOE-A-2006-20764",
   "Ley 6/2018 BOE-A-2018-9268",
   "Ley 47/2015 BOE-A-2015-11346",
@@ -1140,7 +1140,7 @@ effective_dated = true
 description = "Vessel registry classification. REBECA is the Registro Especial de Buques y Empresas Navieras de Canarias (Ley 19/1994). rebeca_eu_eea covers the 2021 extension to vessels of REBECA-registered companies enrolled in another EU/EEA member state registry. scheduled_canary_route covers vessels on Canary Islands to mainland Spain scheduled routes. Absent this field no REBECA exemption is evaluated."
 enum_values = ["REBECA", "rebeca_eu_eea", "scheduled_canary_route", "other"]
 legal_refs = [
-  "Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-16100",
+  "Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-15794",
 ]
 
 [[sections.fields]]

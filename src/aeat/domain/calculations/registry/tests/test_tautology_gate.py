@@ -30,6 +30,7 @@ import shutil
 from decimal import Decimal
 from itertools import combinations
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -45,7 +46,7 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _load_modelo_100_formulas_2025() -> dict[str, dict]:
+def _load_modelo_100_formulas_2025() -> dict[str, dict[str, object]]:
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "100"))
     return {
         formula.target: formula.model_dump(mode="json", exclude_none=True)
@@ -53,7 +54,7 @@ def _load_modelo_100_formulas_2025() -> dict[str, dict]:
     }
 
 
-def _evaluate_expression(expr: dict | None, casilla_values: dict[str, Decimal]) -> Decimal | None:
+def _evaluate_expression(expr: dict[str, object] | None, casilla_values: dict[str, Decimal]) -> Decimal | None:
     """Best-effort replay of a registry formula expression against test inputs.
 
     Returns None whenever the expression depends on a binding or
@@ -68,8 +69,11 @@ def _evaluate_expression(expr: dict | None, casilla_values: dict[str, Decimal]) 
     if not isinstance(leaf_value, _LeafNotLeaf):
         return leaf_value
     op = expr.get("op")
-    args = expr.get("args") or []
-    raw_values = [_evaluate_expression(a, casilla_values) for a in args]
+    args_val = expr.get("args")
+    args_list: list[dict[str, object] | None] = cast(
+        list[dict[str, object] | None], args_val if isinstance(args_val, list) else []
+    )
+    raw_values = [_evaluate_expression(a, casilla_values) for a in args_list]
     if any(v is None for v in raw_values):
         return None
     arg_values: list[Decimal] = [v for v in raw_values if v is not None]
@@ -93,16 +97,20 @@ failed" from "wasn't a leaf in the first place".
 
 
 def _evaluate_leaf_expression(
-    expr: dict,
+    expr: dict[str, object],
     casilla_values: dict[str, Decimal],
 ) -> Decimal | None | _LeafNotLeaf:
     """Return the leaf-shape value, ``None`` if the leaf can't resolve, or the sentinel."""
     if "literal" in expr:
         return Decimal(str(expr["literal"]))
     if "casilla" in expr:
-        return casilla_values.get(expr["casilla"])
+        casilla_key = expr["casilla"]
+        if isinstance(casilla_key, str):
+            return casilla_values.get(casilla_key)
     if "relation" in expr:
-        return casilla_values.get(expr["relation"])
+        relation_key = expr["relation"]
+        if isinstance(relation_key, str):
+            return casilla_values.get(relation_key)
     if "binding" in expr or "parameter" in expr or "dispatch_table" in expr:
         return None  # runtime-only leaf; replay can't resolve without context
     return _LEAF_NOT_LEAF
@@ -247,7 +255,12 @@ def test_chain_behaviour_scenarios_are_not_tautological() -> None:
             formula = formulas.get(target)
             if formula is None:
                 continue
-            computed = _evaluate_expression(formula.get("expression"), overrides)
+            expr_val = formula.get("expression") if isinstance(formula, dict) else None
+            expr: dict[str, object] | None = cast(
+                dict[str, object] | None,
+                expr_val if isinstance(expr_val, (dict, type(None))) else None,
+            )
+            computed = _evaluate_expression(expr, overrides)
             if computed is None:
                 continue
             if abs(computed - expected_value) < Decimal("0.01"):

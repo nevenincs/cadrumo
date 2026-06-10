@@ -37,6 +37,10 @@ from typing import override
 
 import click
 import typer
+from typer._click.core import Command as TyCommand
+
+# Use typer's internal click re-export to align with TyperGroup's type signatures
+from typer._click.core import Context as TyContext
 from typer.core import TyperGroup
 from typer.main import get_command as _typer_get_command
 
@@ -87,9 +91,9 @@ class LazySubcommand:
         self.name = name
         self._factory = factory
         self._decorate = decorate
-        self._command: click.Command | None = None
+        self._command: TyCommand | None = None
 
-    def load(self) -> click.Command:
+    def load(self) -> TyCommand:
         """Import the module, decorate the Typer, return the Click command.
 
         The materialized Click command is cached so repeated resolution
@@ -146,7 +150,7 @@ class AeatTyperGroup(TyperGroup):
         return _LAZY_REGISTRY.get(self.name or "", {})
 
     @override
-    def list_commands(self, ctx: click.Context) -> list[str]:
+    def list_commands(self, ctx: TyContext) -> list[str]:
         """Return eager and lazy subcommand names without importing modules.
 
         Help rendering and shell completion enumerate command names
@@ -161,7 +165,7 @@ class AeatTyperGroup(TyperGroup):
         return sorted(merged)
 
     @override
-    def get_command(self, ctx: click.Context, cmd_name: str) -> click.Command | None:
+    def get_command(self, ctx: TyContext, cmd_name: str) -> TyCommand | None:
         """Resolve ``cmd_name``, importing a lazy module only if selected.
 
         Eagerly-registered commands resolve through the base class. A
@@ -180,9 +184,9 @@ class AeatTyperGroup(TyperGroup):
     @override
     def resolve_command(
         self,
-        ctx: click.Context,
+        ctx: TyContext,
         args: list[str],
-    ) -> tuple[str | None, click.Command | None, list[str]]:
+    ) -> tuple[str | None, TyCommand | None, list[str]]:
         try:
             return super().resolve_command(ctx, args)
         except click.UsageError as exc:

@@ -13,6 +13,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
+from typing import TypedDict
 
 from ...core import Modelo
 from ...core.parsing import parse_bool as _parse_bool
@@ -30,6 +31,16 @@ from ._models import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
+
+
+class _ObjectiveFieldsDict(TypedDict, total=False):
+    """Optional dict shape for objective-estimation fields.
+
+    The field is only included when ``estimation_regime`` is ``None``,
+    so all fields are optional (``total=False``).
+    """
+
+    uses_objective_estimation_irpf: bool
 
 
 def taxpayer_profile_from_mapping(
@@ -102,7 +113,7 @@ def taxpayer_profile_from_mapping(
     # let TaxpayerProfile's mode="before" validator derive the boolean
     # from it so the projection never raises a regime/boolean conflict;
     # when no regime is declared the boolean is forwarded as before.
-    objective_fields: dict[str, object] = {}
+    objective_fields: _ObjectiveFieldsDict = {}
     if estimation_regime is None:
         objective_fields["uses_objective_estimation_irpf"] = typed.uses_objective_estimation_irpf
 

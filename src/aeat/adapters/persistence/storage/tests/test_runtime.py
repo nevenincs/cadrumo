@@ -12,6 +12,7 @@ from .....core._bucket_pointer import BucketPointer
 from .....core._bucket_pointer_io import write_pointer
 from .....core.config import Settings, StorageRouteKind, override_settings
 from .....core.errors import resolve_error_message
+from .....core.external_constants import OutputLanguage
 from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
 from ..errors import StorageValidationError
 from ..master_key._active_session import activate_session
@@ -547,7 +548,7 @@ def test_cold_bootstrap_repository_refuses_settings_scoped_active_profile(
     settings = Settings(
         aeat_local_storage_root=tmp_path,
         aeat_active_profile="bucket-a",
-        aeat_output_language="en",
+        aeat_output_language=OutputLanguage.EN,
     )
 
     with pytest.raises(StorageValidationError) as excinfo:
@@ -558,7 +559,7 @@ def test_cold_bootstrap_repository_refuses_settings_scoped_active_profile(
 def test_cold_bootstrap_repository_refuses_explicit_database_route(tmp_path: Path) -> None:
     settings = Settings(
         aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}",
-        aeat_output_language="en",
+        aeat_output_language=OutputLanguage.EN,
     )
 
     with pytest.raises(StorageValidationError) as excinfo:

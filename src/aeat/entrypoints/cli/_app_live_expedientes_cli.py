@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Mapping
-from typing import Annotated
+from collections.abc import Callable
+from datetime import datetime as _datetime
+from typing import Annotated, Protocol, TypedDict
 
 import typer
 
@@ -52,12 +53,27 @@ def _metric_line(key: str, value: object) -> str:
     return f"{key}={value}"
 
 
-def _expedientes_row(snapshot) -> Mapping[str, object]:
+class _ExpedientesRowDict(TypedDict):
+    snapshot_id: str
+    captured_at: str
+    source_url: str
+    declaration_count: int
+
+
+class _SnapshotWithCapturedAt(Protocol):
+    """Minimal surface required by :func:`_expedientes_row`."""
+
+    @property
+    def captured_at(self) -> _datetime: ...
+
+
+def _expedientes_row(snapshot: _SnapshotWithCapturedAt) -> _ExpedientesRowDict:
+    captured_at = snapshot.captured_at
     return {
-        "snapshot_id": snapshot.snapshot_id,
-        "captured_at": snapshot.captured_at.isoformat(),
-        "source_url": snapshot.source_url,
-        "declaration_count": len(snapshot.declarations),
+        "snapshot_id": str(getattr(snapshot, "snapshot_id", "")),
+        "captured_at": captured_at.isoformat(),
+        "source_url": str(getattr(snapshot, "source_url", "")),
+        "declaration_count": len(getattr(snapshot, "declarations", ())),
     }
 
 

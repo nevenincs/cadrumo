@@ -21,9 +21,8 @@ class _TyperAwareCliRunner(CliRunner):
     explicit ``get_command`` call at every invoke site.
     """
 
-    # KWARGS-ANY-RATIONALE-CLIRUNNER-INVOKE-OVERRIDE: click.testing.CliRunner.
-    # invoke accepts varargs/kwargs that change across click minor versions;
-    # typing them concretely couples this subclass to a specific click release.
+    # CliRunner.invoke accepts varargs/kwargs that shift across click minor versions;
+    # concrete typing would couple it to one click release. KWARGS-ANY-RATIONALE-CLIRUNNER-INVOKE-OVERRIDE
     @override
     def invoke(self, cli: Any, *args: Any, **kwargs: Any) -> Result:  # type: ignore[override]  # TYPE-IGNORE-RATIONALE-CLIRUNNER-INVOKE-OVERRIDE
         if isinstance(cli, typer.Typer):

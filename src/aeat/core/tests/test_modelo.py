@@ -9,17 +9,20 @@ from __future__ import annotations
 
 import pytest
 
-from .._modelo import Modelo
+from .._modelo import NON_REGISTRY_MODELOS, Modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_modelo_set_matches_registry() -> None:
-    """The :class:`Modelo` member set is exactly the set of registry modelo codes.
+def test_modelo_registry_backed_members_match_registry() -> None:
+    """The registry-backed :class:`Modelo` members are exactly the registry codes.
 
     Uses the real registry via :func:`aeat.application.modelo.registry_modelo_codes`
-    (no mocks).  A discrepancy means the enum and the registry directory tree are
-    out of sync and must be reconciled — the registry is the authority.
+    (no mocks).  The enum is the full identifier taxonomy; subtracting the
+    documented :data:`NON_REGISTRY_MODELOS` (retired codes with no registry
+    definition, e.g. M037) must leave exactly the registry directory listing.
+    A discrepancy means the enum and the registry tree have drifted and must be
+    reconciled — the registry is the authority for its members.
 
     Note: registry-backed tests can flake under ``pytest -n`` due to a
     loader-cache race (see aeat-local-execution rule).  If this test fails under
@@ -30,12 +33,34 @@ def test_modelo_set_matches_registry() -> None:
 
     registry_set = set(registry_modelo_codes())
     enum_set = {m.value for m in Modelo}
+    non_registry = {m.value for m in NON_REGISTRY_MODELOS}
 
-    assert enum_set == registry_set, (
-        f"Modelo enum is out of sync with the registry.\n"
-        f"  In enum but not registry: {sorted(enum_set - registry_set)}\n"
+    assert enum_set - non_registry == registry_set, (
+        f"Modelo registry-backed members are out of sync with the registry.\n"
+        f"  In enum (registry-backed) but not registry: {sorted((enum_set - non_registry) - registry_set)}\n"
         f"  In registry but not enum: {sorted(registry_set - enum_set)}"
     )
+    assert non_registry.isdisjoint(registry_set), (
+        f"NON_REGISTRY_MODELOS unexpectedly present in the registry: "
+        f"{sorted(non_registry & registry_set)}"
+    )
+
+
+def test_non_registry_modelos_are_not_registry_loadable() -> None:
+    """Every :data:`NON_REGISTRY_MODELOS` member is deliberately absent from the registry.
+
+    Binds the carve-out to its invariant: a retired code (M037) carried by the
+    enum must still raise from ``validate_modelo`` — adding a registry TOML for
+    it (reviving active support) would break this test.
+    """
+    from aeat.core.resources import resources
+    from aeat.domain.calculations.registry import RegistrySnapshotError
+
+    authority = resources().modelos.authority
+    assert NON_REGISTRY_MODELOS, "expected at least the retired M037 carve-out"
+    for member in NON_REGISTRY_MODELOS:
+        with pytest.raises(RegistrySnapshotError):
+            authority.validate_modelo(member.value)
 
 
 def test_modelo_members_are_valid_modelo_codes() -> None:

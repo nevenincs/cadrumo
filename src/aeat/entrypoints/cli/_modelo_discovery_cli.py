@@ -45,7 +45,7 @@ from ._modelo_payloads import (
 @dataclass(frozen=True, slots=True)
 class _DiscoveryDeps:
     resolve_year_period: Callable[..., tuple[int, str]]
-    bare_period_error: Callable[[str, str], str]
+    bare_period_error: Callable[..., str]
     parse_binding_override: Callable[[str], tuple[str, str]]
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
 
@@ -54,7 +54,7 @@ def register_discovery_commands(
     app: typer.Typer,
     *,
     resolve_year_period: Callable[..., tuple[int, str]],
-    bare_period_error: Callable[[str, str], str],
+    bare_period_error: Callable[..., str],
     parse_binding_override: Callable[[str], tuple[str, str]],
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
 ) -> None:

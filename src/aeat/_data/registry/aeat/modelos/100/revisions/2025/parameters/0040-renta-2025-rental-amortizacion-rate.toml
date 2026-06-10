@@ -1,0 +1,16 @@
+[[revisions."2025".parameters]]
+id = "renta-2025-rental-amortizacion-rate"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "amortización"]
+
+[[revisions."2025".parameters.values]]
+value = "0.03"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31

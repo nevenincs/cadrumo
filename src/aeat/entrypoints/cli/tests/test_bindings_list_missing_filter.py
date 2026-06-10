@@ -23,9 +23,12 @@ from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from typing import cast
 
+import click
 import pytest
 from click.testing import CliRunner
+from typer.main import get_command
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span, set_active_fields
@@ -120,9 +123,10 @@ def test_bindings_list_missing_returns_strict_subset_of_unfiltered(
     _seed_partial_modelo_100_profile()
     scope = ["app", "modelo", "bindings", "list", "--modelo", _MODELO, "--year", str(_YEAR), "--period", _PERIOD]
 
-    unfiltered = cli_runner.invoke(app, scope)
+    cmd = cast(click.Command, get_command(app))
+    unfiltered = cli_runner.invoke(cmd, scope)
     assert unfiltered.exit_code == 0, unfiltered.output
-    filtered = cli_runner.invoke(app, [*scope, "--missing"])
+    filtered = cli_runner.invoke(cmd, [*scope, "--missing"])
     assert filtered.exit_code == 0, filtered.output
 
     all_ids = _binding_ids_in_listing(unfiltered.output)
@@ -155,7 +159,8 @@ def test_bindings_list_without_missing_retains_profile_resolved_rows(
     _seed_partial_modelo_100_profile()
     scope = ["app", "modelo", "bindings", "list", "--modelo", _MODELO, "--year", str(_YEAR), "--period", _PERIOD]
 
-    unfiltered = cli_runner.invoke(app, scope)
+    cmd = cast(click.Command, get_command(app))
+    unfiltered = cli_runner.invoke(cmd, scope)
     assert unfiltered.exit_code == 0, unfiltered.output
 
     all_ids = _binding_ids_in_listing(unfiltered.output)

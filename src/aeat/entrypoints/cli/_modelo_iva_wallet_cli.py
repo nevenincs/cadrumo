@@ -183,6 +183,7 @@ def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_buc
                 amount=seed_amount,
             )
         except ModeloIvaWalletSeedNegativeAmountError as exc:
+            assert exc.translated_message is not None
             raise typer.BadParameter(
                 tr(
                     exc.translated_message,
@@ -190,6 +191,7 @@ def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_buc
                 )
             ) from exc
         except ModeloIvaWalletSeedNoTaxpayerError as exc:
+            assert exc.translated_message is not None
             raise typer.BadParameter(
                 tr(
                     exc.translated_message,

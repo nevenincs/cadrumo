@@ -7,9 +7,24 @@ from typer.testing import CliRunner
 
 from ..locales._ast_scanner import scan_namespace_markers, scan_source_tree
 from ..locales.cli import app
-from ..locales.manager import LocaleError, LocaleManager
+from ..locales.manager import LocaleError, LocaleManager, LocaleNode
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _leaf(data: dict[str, LocaleNode], *keys: str) -> str:
+    """Walk a nested locale tree to a string leaf, asserting each level is a dict.
+
+    ``LocaleNode`` is the recursive ``str | dict`` union, so chained
+    ``data[a][b]`` subscripting is not type-safe; this helper narrows each
+    intermediate node to a dict and the final node to a str.
+    """
+    node: LocaleNode = data
+    for key in keys:
+        assert isinstance(node, dict), f"expected dict at {key!r}, got {type(node).__name__}"
+        node = node[key]
+    assert isinstance(node, str), f"expected str leaf, got {type(node).__name__}"
+    return node
 
 
 @pytest.fixture(scope="module")
@@ -74,9 +89,45 @@ def test_set_locale_value_updates_one_leaf(tmp_path: Path):
 
     assert written_path == locale_path
     data = temp_manager.load_locale(locale_path)
-    aggregate = data["cli"]["app"]["modelo"]["aggregate"]
-    assert aggregate["json_validation_error"] == "%{flag} no es válido: %{details}."
-    assert aggregate["json_parse_error"] == "{flag} debe ser un objeto JSON."
+    assert _leaf(data, "cli", "app", "modelo", "aggregate", "json_validation_error") == (
+        "%{flag} no es válido: %{details}."
+    )
+    assert _leaf(data, "cli", "app", "modelo", "aggregate", "json_parse_error") == "{flag} debe ser un objeto JSON."
+
+
+def test_set_locale_value_preserves_multiline_value_roundtrip(tmp_path: Path):
+    """A multi-line value survives set + reload byte-identically.
+
+    Single-quoted YAML folds raw line breaks into spaces, so a naive
+    quoted write of a multi-line value silently corrupts it on the next
+    parse. The setter must emit a representation whose reload equals the
+    exact string that was set.
+    """
+
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    locale_path = locales_dir / "es.yml"
+    locale_path.write_text(
+        "wizard:\n  errors:\n    unsupported_console: marcador\n    other: intacto\n",
+        encoding="utf-8",
+    )
+
+    value = (
+        "El asistente necesita una terminal interactiva.\n"
+        "Todavía no se ha guardado nada.\n"
+        "\n"
+        "1. Vuelve a ejecutar el comando:\n"
+        "     aeat config profile create NAME\n"
+        "\n"
+        "2. O usa flags: --quiet --tax-id NIF/CIF/DNI/NIE"
+    )
+
+    temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+    temp_manager.set_locale_value("es", "wizard.errors.unsupported_console", value)
+
+    data = temp_manager.load_locale(locale_path)
+    assert _leaf(data, "wizard", "errors", "unsupported_console") == value
+    assert _leaf(data, "wizard", "errors", "other") == "intacto"
 
 
 def test_set_locale_value_appends_missing_leaf_under_existing_parent(tmp_path: Path):
@@ -96,7 +147,7 @@ def test_set_locale_value_appends_missing_leaf_under_existing_parent(tmp_path: P
 
     assert "    set_locale_help: 'Código de locale.'\n" in locale_path.read_text(encoding="utf-8")
     data = temp_manager.load_locale(locale_path)
-    assert data["cli"]["locales"]["set_locale_help"] == "Código de locale."
+    assert _leaf(data, "cli", "locales", "set_locale_help") == "Código de locale."
 
 
 def test_remove_locale_value_deletes_existing_leaf(tmp_path: Path):

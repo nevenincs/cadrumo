@@ -168,7 +168,7 @@ class TestRetmarMandatoryFilingWarningSurface:
         # non-blocking per service contract).
         assert len(validated.observations) == 1
         combined = " ".join(validated.observations[0].legal_refs)
-        assert "BOE-A-1994-16100" in combined
+        assert "BOE-A-1994-15794" in combined
 
 
 class TestDa41InactiveGuard:

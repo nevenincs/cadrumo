@@ -30,8 +30,8 @@ Run:
 aeat config profile create tutorial --quiet --accept-defaults --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez"
 ```
 
-The sample `--tax-id` has the same shape as a Spanish citizen DNI/NIF. Use your
-own DNI, NIE, NIF, or CIF when you create a real profile.
+The sample `--tax-id` has the same shape as a Spanish citizen's NIF (their DNI
+number). Use your own NIF, CIF, DNI, or NIE when you create a real profile.
 
 The command output should identify `tutorial` as the active profile and point to
 the next modelo work command. It looks similar to:
@@ -162,6 +162,9 @@ Once you have your `borrador.boe` file, you need to file it with the tax agency:
 4. Click **Importar** (Import) and upload your `borrador.boe` file. The form boxes (*casillas*) will be automatically filled with your calculated figures.
 5. Review and sign the presentation, and download the receipt PDF (*justificante*).
 
+The detailed handoff checklist is in
+[Upload your exported modelo at the AEAT portal](../how-to/file-at-aeat.md).
+
 After completing the upload in the AEAT portal, record a local filing marker in `aeat` to mark this verified draft as filed:
 
 ```bash
@@ -182,7 +185,7 @@ period.
 
 For task-focused procedures, read the [how-to guides](../how-to/index.md). To
 understand the advanced filing workspace and revision model, read
-[How filings, work units, and calculation revisions fit together](../how-to/filing-spine.md).
+[The filing workflow: work units and calculation revisions](../how-to/filing-spine.md).
 For the underlying concepts, read [How calculations work](../explanation/ledger-to-calculation.md).
 For manual casilla values, offsets, and binding mechanics, read
 [Review and supply calculation inputs](../how-to/review-calculation-values.md).

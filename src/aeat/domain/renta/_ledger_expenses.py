@@ -8,6 +8,8 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 
+from ...core import Modelo
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ..categories import (
@@ -185,7 +187,7 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
 
     observation_id: str = Field(min_length=1, max_length=160)
     source_kind: Literal["ledger_renta_expense_aggregation"] = LEDGER_RENTA_EXPENSE_SOURCE
-    modelo: Literal["100"] = "100"
+    modelo: Literal[Modelo.M100] = Modelo.M100
     period: Literal["0A"] = "0A"
     tax_year: int = Field(ge=2000, le=2099)
     activity_key: str = Field(min_length=1, max_length=128)

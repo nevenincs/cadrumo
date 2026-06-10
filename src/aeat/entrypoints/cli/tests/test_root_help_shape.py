@@ -162,7 +162,7 @@ def test_installed_console_profile_create_fails_fast_without_prompt_host(tmp_pat
     # act on: re-run from an interactive terminal, or supply the
     # required details as flags in one step.
     assert "aeat config profile create NAME" in combined_output
-    assert "--quiet --tax-id DNI/NIE/NIF/CIF" in combined_output
+    assert "--quiet --tax-id NIF/CIF/DNI/NIE" in combined_output
     # The refusal must not push corruption-recovery commands at an
     # operator whose only problem is the absence of an interactive
     # terminal; that wording wrongly implies the profile state is bad.

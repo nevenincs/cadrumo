@@ -202,6 +202,7 @@ def file_modelo_revision(
         filing_repository=fr_repo,
         work_unit_repository=wu_repo,
         bucket_event_repository=bv_repo,
+        calculation_observation_repository=obs_repo,
     )
 
 

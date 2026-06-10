@@ -459,7 +459,7 @@ def _overview_calendar_all_profiles(
             }
         )
 
-    typed_all = OverviewCalendarResult(profiles=all_calendars)
+    typed_all = OverviewCalendarResult.model_validate({"profiles": all_calendars})
     _emit_envelope(ctx, command="overview.calendar", result=typed_all, lines=all_lines)
 
 

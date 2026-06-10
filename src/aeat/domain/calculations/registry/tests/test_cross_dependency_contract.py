@@ -85,7 +85,11 @@ def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
                 # self-source relations would be circular.
                 if relation.source_modelo == modelo.id:
                     selector = relation.source_revision_selector or {}
-                    assert relation.kind == "previous_period" or selector.get("filing_year_delta", 0) < 0, (
+                    filing_year_delta = selector.get("filing_year_delta", 0)
+                    assert isinstance(filing_year_delta, int), (
+                        f"filing_year_delta must be int, got {type(filing_year_delta).__name__}"
+                    )
+                    assert relation.kind == "previous_period" or filing_year_delta < 0, (
                         f"{modelo.id}/{revision.id}/{relation.id}"
                     )
                 _assert_relation_role_contract(relation, scope=f"{modelo.id}/{revision.id}/{relation.id}")

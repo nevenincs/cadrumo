@@ -33,14 +33,12 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
-from .....core import Modelo
 from .....core.config import Settings, load_settings
 from .....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.external_constants import PDF_MIME_TYPE as _PDF_MIME_TYPE
 from .....core.i18n import tr
 from .....core.logging import get_logger
-from .....core.resources import bundled_path
 from .....core.time import now
 
 # Importing the renta package registers the first-slice routing
@@ -51,10 +49,8 @@ from .....domain.calculations.registry import (
     RegistrySnapshot,
     RegistryValidationError,
     RemoteStateGuardPolicy,
-    parse_export_payload,
     previous_filing_observation_requirements,
     relation_source_requirements,
-    resolve_export_layout,
 )
 from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
 from ..browser import Profile, opened_browser_page, shared_playwright_runtime
@@ -74,14 +70,13 @@ from ._declarations_diagnostics import (
 from ._declarations_listbox import _parse_listbox, _parse_presented_at
 from ._declarations_observations import (
     FiledDeclaracionArtefactSink,
-    _is_modelo_303_page_03_fallback,
     _observed_casillas_from_declaration_pdf,
     _observed_casillas_from_submitted_file,
     _read_guard_policy_from_snapshot,
     _register_row_artefact,
     _registry_snapshot_for_declaration,
     _store_artefact,
-    _submitted_file_extraction_coverage,
+    _submitted_file_coverage_for_casillas,
     _temporary_sensitive_pdf_path,
     _verify_submitted_file_context,
     _with_derived_303_compensation_available_observation,
@@ -933,28 +928,11 @@ async def _capture_filed_declaration_observation_from_row(
                     body=submitted_body,
                     artefact=submitted_artefact,
                 )
-                try:
-                    resolved_layout = resolve_export_layout(snapshot)
-                except RegistryValidationError as exc:
-                    if snapshot.modelo.id == Modelo.M303 and "has no exports" in str(exc):
-                        extraction_coverage["submitted_file"] = 1.0
-                    else:
-                        raise
-                else:
-                    if resolved_layout.layout.format == "xml_dictionary" or _is_modelo_303_page_03_fallback(casillas):
-                        extraction_coverage["submitted_file"] = 1.0
-                    else:
-                        parsed = parse_export_payload(
-                            resolved_layout.layout,
-                            submitted_body,
-                            source_root=bundled_path(),
-                            sources=snapshot.sources,
-                        )
-                        extraction_coverage["submitted_file"] = _submitted_file_extraction_coverage(
-                            parsed_field_ids=frozenset(field.field_id for field in parsed.fields),
-                            observed_casillas=frozenset(casilla.casilla_id for casilla in casillas),
-                            fields_by_casilla=resolved_layout.fields_by_casilla,
-                        )
+                extraction_coverage["submitted_file"] = _submitted_file_coverage_for_casillas(
+                    snapshot=snapshot,
+                    body=submitted_body,
+                    casillas=casillas,
+                )
             except (RegistryValidationError, SedeParseError) as exc:
                 metadata["submitted_file_extraction_error"] = str(exc)
 

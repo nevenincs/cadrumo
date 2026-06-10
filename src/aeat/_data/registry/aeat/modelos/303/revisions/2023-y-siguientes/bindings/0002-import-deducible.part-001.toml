@@ -1,0 +1,35 @@
+# Third-country import IVA deducible (importación de bienes).
+#
+# The IVA devengado on an import is settled at customs against the DUA, so it
+# NEVER appears on the M303 devengado side — only the deducible side reaches the
+# autoliquidación (official boxes 32 base / 33 cuota, "IVA deducible importaciones
+# bienes corrientes"). Unlike the reverse-charge pairs this is NOT net-zero: the
+# import deduction has no offsetting M303 devengado entry, so it genuinely reduces
+# the resultado.
+#
+# Grounded in LIVA art. 17 (hecho imponible — las importaciones de bienes están
+# sujetas al impuesto) and art. 92 (cuotas tributarias deducibles — the right to
+# deduct the IVA borne, including IVA paid on importaciones). When an operator
+# classifies a ledger transaction as IMPORT_THIRD_COUNTRY with an iva_amount, the
+# application aggregation candidate path projects a SOPORTADO observation that this
+# binding consumes, so the #64 unconsumed-declarable advisory no longer flags it.
+# Split into this fragment (the loader merges revision bindings across fragments)
+# to keep revision.toml under the reviewability cap.
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-303-iva-soportado-importaciones-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.bindings.selector]
+categories = ["import_third_country"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+flow_direction = "soportado"
+fact = "iva_amount_sum"
+
+[revisions.2023-y-siguientes.bindings.aggregation]
+op = "sum"

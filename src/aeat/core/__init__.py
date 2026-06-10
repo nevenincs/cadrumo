@@ -28,7 +28,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._modelo import Modelo
+from ._modelo import NON_REGISTRY_MODELOS, Modelo
 from ._models import STRICT_FROZEN_CONFIG
 from ._period import StandardPeriodCode
 
@@ -41,6 +41,7 @@ if TYPE_CHECKING:
 __all__: list[str] = [
     "STRICT_FROZEN_CONFIG",
     "AggregationSourceKind",
+    "NON_REGISTRY_MODELOS",
     "Modelo",
     "StandardPeriodCode",
     "require_active_bucket_id",

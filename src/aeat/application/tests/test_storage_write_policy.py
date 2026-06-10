@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from ...core.config import Settings, StorageRouteKind
+from ...core.external_constants import OutputLanguage
 from ..storage_write_policy import (
     StorageWritePolicyCode,
     inspect_storage_write_policy,
@@ -20,7 +21,7 @@ def test_profile_bound_write_refuses_root_fallback_route(tmp_path: Path) -> None
     decision = inspect_storage_write_policy(
         "app ledger add",
         bootstrap_exempt=False,
-        settings=Settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
+        settings=Settings(aeat_local_storage_root=tmp_path, aeat_output_language=OutputLanguage.EN),
     )
 
     assert decision.allowed is False
@@ -37,7 +38,7 @@ def test_profile_bound_write_refuses_explicit_database_route(tmp_path: Path) -> 
         settings=Settings(
             aeat_local_storage_root=tmp_path,
             aeat_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
-            aeat_output_language="en",
+            aeat_output_language=OutputLanguage.EN,
         ),
     )
 

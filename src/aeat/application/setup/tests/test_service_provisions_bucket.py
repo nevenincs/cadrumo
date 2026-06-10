@@ -22,6 +22,7 @@ import pytest
 from ....adapters.persistence.storage.bucket._layout import bucket_paths
 from ....adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
 from ....core.config import load_settings
+from ....domain.deadlines import IVARegime
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...user_profile._orchestration import ProfileAlreadyRegisteredError
 from .._contracts import InitializeWorkspaceCommand
@@ -50,7 +51,7 @@ def test_initialize_workspace_provisions_bucket_directory_and_manifest(
             profile_name="catering",
             tax_id="12345678Z",
             activity="catering",
-            iva_regime="GENERAL",
+            iva_regime=IVARegime.GENERAL,
             auth_provider="none",
         )
     )
@@ -78,7 +79,7 @@ def test_initialize_workspace_writes_manifest_with_uuid_id_and_name_label(
             profile_name="catering",
             tax_id="12345678Z",
             activity="catering",
-            iva_regime="GENERAL",
+            iva_regime=IVARegime.GENERAL,
             auth_provider="none",
         )
     )
@@ -114,7 +115,7 @@ def test_initialize_workspace_refuses_a_duplicate_operator_name(
         profile_name="catering",
         tax_id="12345678Z",
         activity="catering",
-        iva_regime="GENERAL",
+        iva_regime=IVARegime.GENERAL,
         auth_provider="none",
     )
     initialize_workspace(command)
@@ -135,7 +136,7 @@ def test_initialize_workspace_logs_reserved_auth_provider_refusal(
                 profile_name="catering",
                 tax_id="12345678Z",
                 activity="catering",
-                iva_regime="GENERAL",
+                iva_regime=IVARegime.GENERAL,
                 auth_provider="clave_pin",
             )
         )
@@ -159,7 +160,7 @@ def test_initialize_workspace_two_distinct_names_get_distinct_uuids(
             profile_name="catering",
             tax_id="12345678Z",
             activity="catering",
-            iva_regime="GENERAL",
+            iva_regime=IVARegime.GENERAL,
             auth_provider="none",
         )
     )
@@ -168,7 +169,7 @@ def test_initialize_workspace_two_distinct_names_get_distinct_uuids(
             profile_name="consulting",
             tax_id="87654321X",
             activity="consulting",
-            iva_regime="GENERAL",
+            iva_regime=IVARegime.GENERAL,
             auth_provider="none",
         )
     )

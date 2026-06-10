@@ -13,7 +13,7 @@ import subprocess
 from collections.abc import Awaitable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 
@@ -728,11 +728,13 @@ def _process_command_inventory() -> tuple[_ProcessCommand, ...]:
             payload = completed.stdout.strip()
             if not payload:
                 return ()
-            decoded = json.loads(payload)
-            rows = [decoded] if isinstance(decoded, dict) else decoded
+            # ANY-RETURN-RATIONALE-JSON-PROCESS-INVENTORY: json.loads returns Any;
+            # payload is a Win32_Process PowerShell JSON array or single-object response.
+            decoded: Any = json.loads(payload)
+            win_rows: list[Any] = [decoded] if isinstance(decoded, dict) else decoded
             return tuple(
                 _ProcessCommand(pid=int(row["ProcessId"]), command_line=str(row.get("CommandLine") or ""))
-                for row in rows
+                for row in win_rows
             )
 
         ps = shutil.which("ps")

@@ -13,11 +13,8 @@ has tax-specific setup or review choices.
 
 ## 1. Create your taxpayer profile
 
-A profile is your personal taxpayer record inside the tool. It stores your NIF,
-your activity type, your tax regime, your income and expense records, and which
-forms you have already prepared.
-
-Create or check your profile before you import records or calculate a modelo:
+A profile is your personal taxpayer record inside the tool. Create or check
+your profile before you import records or calculate a modelo:
 
 ```bash
 aeat config profile create my-profile --quiet --tax-id 12345678Z
@@ -149,6 +146,9 @@ The final filing step is outside `aeat`:
 2. Choose the Modelo 130 file-upload path for the relevant year and period.
 3. Upload the exported `.boe` file.
 4. Review, sign, and keep the justificante AEAT issues after filing.
+
+The full handoff checklist, including what to do when the upload goes wrong,
+is in [Upload your exported modelo at the AEAT portal](file-at-aeat.md).
 
 After a real filing, you can record the local filing marker:
 

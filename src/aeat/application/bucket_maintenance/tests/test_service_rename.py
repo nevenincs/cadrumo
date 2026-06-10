@@ -80,6 +80,7 @@ def registered_profile(runtime: TestRuntimeProfile) -> None:
     )
 
     schema = resources().user_profile_schema.singleton
+    assert isinstance(schema, ProfileSchemaDefinition)
     repository = UserProfileLifecycleRepository(
         bucket_id=runtime.bucket_id,
         objects=runtime.repository,

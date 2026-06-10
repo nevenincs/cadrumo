@@ -9,8 +9,6 @@ translation, and the re-raise contract for nested
 
 from __future__ import annotations
 
-from typing import Any
-
 import pytest
 
 from .....adapters.outbound.storage._errors import (
@@ -32,10 +30,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 class _SuccessRequest:
     """Returns a fixed payload dict from execute()."""
 
-    def __init__(self, payload: dict[str, Any]) -> None:
+    def __init__(self, payload: GoogleApiResponseBody) -> None:
         self._payload = payload
 
-    def execute(self, http: object = None, num_retries: int = 0) -> dict[str, Any]:
+    def execute(self, http: object = None, num_retries: int = 0) -> GoogleApiResponseBody:
         return self._payload
 
 
@@ -45,18 +43,18 @@ class _RaisingRequest:
     def __init__(self, exc: BaseException) -> None:
         self._exc = exc
 
-    def execute(self, http: object = None, num_retries: int = 0) -> dict[str, Any]:
+    def execute(self, http: object = None, num_retries: int = 0) -> GoogleApiResponseBody:
         raise self._exc
 
 
 class _RetryRecordingRequest:
     """Records the retry count passed through the Google request boundary."""
 
-    def __init__(self, payload: dict[str, Any]) -> None:
+    def __init__(self, payload: GoogleApiResponseBody) -> None:
         self._payload = payload
         self.seen_num_retries: int | None = None
 
-    def execute(self, http: object = None, num_retries: int = 0) -> dict[str, Any]:
+    def execute(self, http: object = None, num_retries: int = 0) -> GoogleApiResponseBody:
         self.seen_num_retries = num_retries
         return self._payload
 

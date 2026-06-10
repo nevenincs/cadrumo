@@ -102,7 +102,10 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
         birth_raw = row.get("birth_date")
         if not birth_raw:
             continue
+        # _parse_iso8601_date returns None only for absent/empty input (it raises
+        # on a malformed non-empty string); birth_raw is non-empty here.
         birth_date = _parse_iso8601_date(birth_raw)
+        assert birth_date is not None
         adoption_raw = row.get("adoption_date")
         adoption_date = _parse_iso8601_date(adoption_raw) if adoption_raw else None
         discapacidad_raw = row.get("discapacidad")
@@ -129,7 +132,10 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
             DescendantInfo(
                 birth_date=birth_date,
                 adoption_date=adoption_date,
-                discapacidad_grado=disc_val,
+                discapacidad_grado=cast(  # CAST-RATIONALE-DISCAPACIDAD-GRADO-LITERAL-NARROW
+                    "Literal[0, 33, 65] | None",
+                    disc_val,
+                ),
                 convive_con_contribuyente=convive,
                 custodia_compartida=custodia,
                 meses_madre_trabajo_2024=meses,
@@ -161,7 +167,10 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     nacimiento_raw = parts.get("NACIMIENTO")
     if not nacimiento_raw:
         raise ProfileAnswerTypeError(f"--descendiente flag requires NACIMIENTO=YYYY-MM-DD; got: {raw!r}")
+    # _parse_iso8601_date returns None only for absent/empty input (it raises on a
+    # malformed non-empty string); nacimiento_raw is non-empty here.
     birth_date = _parse_iso8601_date(nacimiento_raw)
+    assert birth_date is not None
 
     adoption_date: date | None = None
     adopcion_raw = parts.get("ADOPCION")

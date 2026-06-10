@@ -11,6 +11,7 @@ import typer
 
 from ....application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES as _CONFIG_RESET_SCOPE_CLI_VALUES
 from ....application.config_reset import parse_config_reset_scope as _parse_config_reset_scope
+from ....application.modelo import ModeloWorkRegistryYearMismatchError
 from ....application.operator_surface import build_help_document as _build_help_document
 from ....application.operator_surface import render_help_text as _render_help_text
 from ....application.wizard import build_wizard_command as _build_wizard_command
@@ -445,13 +446,65 @@ def config_profile_show(
         raise typer.Exit(code=2)
 
 
+def _resolve_preflight_revision_id(*, modelo: str, filing_year: int, period: str, revision_id: str | None) -> str:
+    """Resolve the registry revision a preflight check is assessed against.
+
+    When ``revision_id`` is supplied it is an explicit override and is
+    validated against the registry for the modelo and filing year. When it
+    is omitted the active revision for the natural key (modelo, filing
+    year, period) is resolved through the modelo-addressing resolver, which
+    consumes the :class:`ValidatedRegistryAuthority` and never a raw loader.
+
+    Refuses instructively when the natural key resolves no revision or is
+    ambiguous: the refusal names the candidate revisions or points at
+    ``aeat app modelo describe <modelo>`` rather than emitting a bare error.
+    """
+    from ....application.modelo import resolve_registry_revision_for_work_target
+    from ....domain.calculations.registry import RegistrySnapshotError
+
+    try:
+        return resolve_registry_revision_for_work_target(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            registry_revision_id=revision_id,
+        )
+    except RegistrySnapshotError as exc:
+        message = str(exc)
+        # ``select_revision`` raises ``RegistrySnapshotError`` for both the
+        # ambiguous case ("ambiguous revision selection: <ids>") and the
+        # no-candidate case ("no revision for ..."). Surface the candidate
+        # ids when present, otherwise point the operator at the discovery
+        # command, never a bare unresolved error.
+        if "ambiguous revision selection:" in message:
+            candidates = message.split("ambiguous revision selection:", 1)[1].strip()
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.preflight_revision_ambiguous",
+                context={"modelo": modelo, "period": period, "candidates": candidates},
+            ) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.preflight_revision_unresolved",
+            context={"modelo": modelo, "filing_year": filing_year, "period": period},
+        ) from exc
+    except ModeloWorkRegistryYearMismatchError as exc:
+        # An explicit ``--revision-id`` override that is unknown to the
+        # modelo or does not cover the filing year. List the registered
+        # revisions so the operator can correct the override.
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.preflight_revision_override_invalid",
+            context={"modelo": modelo, "filing_year": filing_year, "detail": str(exc)},
+        ) from exc
+
+
 @profile_app.command("preflight", help=tr("cli.config.profile.preflight_help"))
 def config_profile_preflight(
     ctx: typer.Context,
     modelo: str = typer.Option(..., "--modelo", help=tr("cli.config.profile.preflight_modelo_help")),
-    revision_id: str = typer.Option(..., "--revision-id", help=tr("cli.config.profile.preflight_revision_id_help")),
     filing_year: int = typer.Option(..., "--filing-year", help=tr("cli.config.profile.preflight_filing_year_help")),
     period: str = typer.Option(..., "--period", help=tr("cli.config.profile.preflight_period_help")),
+    revision_id: str | None = typer.Option(
+        None, "--revision-id", help=tr("cli.config.profile.preflight_revision_id_help")
+    ),
     output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
@@ -461,8 +514,11 @@ def config_profile_preflight(
 ) -> None:
     """Report which profile fields a given filing context requires that are missing.
 
-    Operates on the active profile. Exits with code ``2`` when any required
-    field is missing so operators discover the gap via the shell exit status.
+    Operates on the active profile. ``--revision-id`` is an explicit override
+    for exact replay; when omitted the active revision for the natural key
+    (modelo, filing year, period) is resolved through the modelo-addressing
+    resolver. Exits with code ``2`` when any required field is missing so
+    operators discover the gap via the shell exit status.
     """
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile import ProfilePreflightService
@@ -480,12 +536,18 @@ def config_profile_preflight(
             translated_message="cli.config.profile.unknown_profile",
             context={"name": pointer.label or pointer.bucket_id},
         ) from exc
+    resolved_revision_id = _resolve_preflight_revision_id(
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
+    )
     from .._config_payloads import ConfigProfilePreflightResult, ProfilePreflightMissingPayload
 
     report = ProfilePreflightService(schema=load_user_profile_schema()).report(
         record=record,
         modelo=modelo,
-        revision_id=revision_id,
+        revision_id=resolved_revision_id,
         filing_year=filing_year,
         period=period,
     )

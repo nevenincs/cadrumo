@@ -82,12 +82,12 @@ Use this when you want the full repeatable loop: prepare, verify, export, file
 through AEAT, and keep local history.
 :::
 
-:::{grid-item-card} Example Filing Walkthrough
+:::{grid-item-card} Build Your First Modelo 130 Filing
 :link: tutorials/index
 :link-type: doc
 :class-card: aeat-route-card
 
-Build your first Modelo 130 filing from setup through the final local export.
+A guided walkthrough from setup through the final local export.
 :::
 
 ::::

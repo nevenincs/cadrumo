@@ -40,6 +40,8 @@ def declarations_page_shape_context(
     modelo: str,
     ejercicio: int,
 ) -> dict[str, object]:
+    from bs4 import Tag
+
     soup = BeautifulSoup(html, "html.parser")
     normalized_text = normalize_response_text(soup.get_text(" ", strip=True))
     buttons = tuple(_bounded_text(button.get_text(" ", strip=True)) for button in soup.find_all("button")[:12])
@@ -47,12 +49,14 @@ def declarations_page_shape_context(
         _bounded_text(header.get_text(" ", strip=True))
         for header in soup.find_all(class_=_has_class("z-listheader"))[:12]
     )
+    _title_tag = soup.find("title")
+    _title_text = _bounded_text(_title_tag.get_text(" ", strip=True)) if isinstance(_title_tag, Tag) else ""
     return {
         "stage": stage,
         "modelo": modelo,
         "ejercicio": ejercicio,
         "landing_url": redacted_url(landing_url),
-        "title": _bounded_text(soup.find("title").get_text(" ", strip=True)) if soup.find("title") else "",
+        "title": _title_text,
         "has_modelo_label": "modelo (*)" in normalized_text,
         "has_ejercicio_label": "ejercicio (*)" in normalized_text,
         "has_buscar_button": any(button.casefold() == "buscar" for button in buttons),

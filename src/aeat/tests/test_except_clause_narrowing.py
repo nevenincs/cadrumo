@@ -47,7 +47,7 @@ class TestSiteHealthValidatorUsesValueError:
                 url=_AnyHttpUrl(_SEDE_ROOT_URL),
                 http_status=200,
                 html_fragment="",
-                detected_markers=(42,),  # type: ignore[arg-type]
+                detected_markers=(42,),  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # negative test
             )
 
         errors = exc_info.value.errors(include_url=False)
@@ -68,7 +68,7 @@ class TestSiteHealthValidatorUsesValueError:
                 url=_AnyHttpUrl(_SEDE_ROOT_URL),
                 http_status=200,
                 html_fragment="",
-                detected_markers=(99,),  # type: ignore[arg-type]
+                detected_markers=(99,),  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # negative test
             )
         except ValidationError:
             pass  # expected — Pydantic wraps the ValueError
@@ -282,10 +282,16 @@ class TestAuthenticatorDescribeNarrowing:
 
     def test_unexpected_exception_raises_auth_validation_error(self, tmp_path) -> None:
         """An unexpected exception from the certificate health check raises AuthValidationError."""
+        from datetime import datetime
+        from pathlib import Path
+        from typing import cast
+
         from pydantic import SecretStr
 
         from ..adapters.outbound.aeat.auth._authenticator import AeatAuthenticator
+        from ..adapters.outbound.aeat.auth._authenticator_types import CertificateHealthCheck
         from ..adapters.outbound.aeat.auth._errors import AuthValidationError
+        from ..adapters.outbound.aeat.auth.certificate import CertificateBackend
         from ..core.config import Settings
 
         cert_path = tmp_path / "cert.p12"
@@ -299,10 +305,19 @@ class TestAuthenticatorDescribeNarrowing:
         class _UnexpectedError(Exception):
             pass
 
-        def _raise_unexpected(_path, **_kwargs):  # type: ignore[no-untyped-def]
+        def _raise_unexpected(
+            path: Path,
+            *,
+            password: SecretStr,
+            warn_days: int,
+            critical_days: int,
+            backend: CertificateBackend = CertificateBackend.PLAYWRIGHT_CONTEXT,
+            friendly_name: str | None = None,
+            now: datetime | None = None,
+        ) -> None:  # type: ignore[return]
             raise _UnexpectedError("boom")
 
-        auth = AeatAuthenticator(settings, certificate_health_check=_raise_unexpected)
+        auth = AeatAuthenticator(settings, certificate_health_check=cast(CertificateHealthCheck, _raise_unexpected))
 
         with pytest.raises(AuthValidationError) as exc_info:
             auth.describe()
@@ -315,10 +330,15 @@ class TestAuthenticatorDescribeNarrowing:
 
     def test_certificate_error_returns_unavailable_description(self, tmp_path) -> None:
         """CertificateError (expected) returns available=False description, not re-raises."""
+        from datetime import datetime
+        from pathlib import Path
+        from typing import cast
+
         from pydantic import SecretStr
 
         from ..adapters.outbound.aeat.auth._authenticator import AeatAuthenticator
-        from ..adapters.outbound.aeat.auth.certificate import CertificateError
+        from ..adapters.outbound.aeat.auth._authenticator_types import CertificateHealthCheck
+        from ..adapters.outbound.aeat.auth.certificate import CertificateBackend, CertificateError
         from ..core.config import Settings
 
         cert_path = tmp_path / "cert.p12"
@@ -329,10 +349,21 @@ class TestAuthenticatorDescribeNarrowing:
             aeat_certificate_password_secret=SecretStr("test"),
         )
 
-        def _raise_certificate_error(_path, **_kwargs):  # type: ignore[no-untyped-def]
+        def _raise_certificate_error(
+            path: Path,
+            *,
+            password: SecretStr,
+            warn_days: int,
+            critical_days: int,
+            backend: CertificateBackend = CertificateBackend.PLAYWRIGHT_CONTEXT,
+            friendly_name: str | None = None,
+            now: datetime | None = None,
+        ) -> None:  # type: ignore[return]
             raise CertificateError("expired")
 
-        auth = AeatAuthenticator(settings, certificate_health_check=_raise_certificate_error)
+        auth = AeatAuthenticator(
+            settings, certificate_health_check=cast(CertificateHealthCheck, _raise_certificate_error)
+        )
         desc = auth.describe()
 
         assert desc.available is False

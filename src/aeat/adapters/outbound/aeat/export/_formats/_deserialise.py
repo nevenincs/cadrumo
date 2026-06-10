@@ -118,16 +118,18 @@ def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
 
 def _decode_date(raw: bytes, fmt: DateFmt) -> date:
     """Decode a fixed-width ASCII date payload per ``fmt``."""
+    text: str = ""
+    decode_failure: str | None = None
     try:
         text = raw.decode("ascii").strip()
     except UnicodeDecodeError as exc:
-        failure = type(exc).__name__
-    else:
-        failure = None
-    if failure is not None:
+        decode_failure = type(exc).__name__
+    if decode_failure is not None:
         raise AeatExportFormatError(
-            f"DATE field contains non-ASCII wire bytes; length={len(raw)} digest={_wire_digest(raw)} failure={failure}"
+            f"DATE field contains non-ASCII wire bytes; length={len(raw)} "
+            f"digest={_wire_digest(raw)} failure={decode_failure}"
         )
+    parse_failure: str | None = None
     try:
         match fmt:
             case DateFmt.YYYYMMDD:
@@ -137,13 +139,10 @@ def _decode_date(raw: bytes, fmt: DateFmt) -> date:
             case _:
                 raise AeatExportFormatError(f"unsupported DATE format {fmt!s}")
     except ValueError as exc:
-        failure = type(exc).__name__
-    else:
-        failure = None
-    if failure is not None:
-        raise AeatExportFormatError(
-            f"DATE field does not match {fmt.value}; length={len(raw)} digest={_wire_digest(raw)} failure={failure}"
-        )
+        parse_failure = type(exc).__name__
+    raise AeatExportFormatError(
+        f"DATE field does not match {fmt.value}; length={len(raw)} digest={_wire_digest(raw)} failure={parse_failure}"
+    )
 
 
 def deserialise(
@@ -263,18 +262,18 @@ def _decode_currency_field(
 ) -> None:
     """Decode a CURRENCY field and mirror the value into casilla_values when bound."""
     inline_sign = spec.signed_mode is SignedMode.INLINE_SIGN
+    value: Decimal = Decimal(0)
+    currency_failure: str | None = None
     try:
         value = _decode_currency(raw, inline_sign=inline_sign)
     except AeatExportFormatError:
         raise
     except (UnicodeDecodeError, ValueError) as exc:
-        failure = type(exc).__name__
-    else:
-        failure = None
-    if failure is not None:
+        currency_failure = type(exc).__name__
+    if currency_failure is not None:
         raise AeatExportFormatError(
             f"CURRENCY field {spec.field_id!r} has invalid wire bytes; "
-            f"length={len(raw)} digest={_wire_digest(raw)} failure={failure}"
+            f"length={len(raw)} digest={_wire_digest(raw)} failure={currency_failure}"
         )
     field_values[spec.field_id] = value
     if spec.casilla_id is not None:
@@ -290,16 +289,16 @@ def _decode_text_field(spec: RecordFieldSpec, raw: bytes, encoding: FicheroBoeEn
     needs the padded form. This mirrors :func:`_decode_currency` which
     also collapses all-zero CURRENCY fields to ``Decimal("0.00")``.
     """
+    text: str = ""
+    text_failure: str | None = None
     try:
         text = raw.decode(encoding)
     except UnicodeDecodeError as exc:
-        failure = type(exc).__name__
-    else:
-        failure = None
-    if failure is not None:
+        text_failure = type(exc).__name__
+    if text_failure is not None:
         raise AeatExportFormatError(
             f"{spec.kind.value} field {spec.field_id!r} cannot be decoded with {encoding}; "
-            f"length={len(raw)} digest={_wire_digest(raw)} failure={failure}"
+            f"length={len(raw)} digest={_wire_digest(raw)} failure={text_failure}"
         )
     if spec.pad_char == " ":
         return text.rstrip(" ") if spec.justification.value == "left" else text.lstrip(" ")

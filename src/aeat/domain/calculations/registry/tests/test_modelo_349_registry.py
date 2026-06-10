@@ -24,6 +24,7 @@ from .. import (
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
+from .._schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW6_HOST = aeat_host("www6")
@@ -609,7 +610,7 @@ def test_committed_modelo_349_declares_invoice_source_bindings_for_declarant_sum
     modelo, _ = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
 
-    invoice_bindings = {
+    invoice_bindings: dict[str, DataBindingDefinition] = {
         b.id: b
         for b in revision.bindings
         if b.source == "collectible_invoice" and b.aggregation is not None and b.aggregation.get("op") != "rows"
@@ -764,7 +765,7 @@ def test_committed_modelo_349_declares_operador_and_rectificacion_row_bindings()
     modelo, _ = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
 
-    row_bindings = {
+    row_bindings: dict[str, DataBindingDefinition] = {
         b.id: b
         for b in revision.bindings
         if b.source == "collectible_invoice" and b.aggregation is not None and b.aggregation.get("op") == "rows"

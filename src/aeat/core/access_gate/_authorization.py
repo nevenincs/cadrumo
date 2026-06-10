@@ -42,7 +42,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .. import Modelo
+from .. import NON_REGISTRY_MODELOS, Modelo
 from .._toml import read_toml
 from ._errors import AuthorizationManifestError
 
@@ -69,8 +69,10 @@ AUTHORIZATION_MANIFEST_DIRNAME: Final[str] = "authorization.d"
 #: the ADR's engine-build sub-decision keeps in scope. The meta-test pins
 #: this tuple against the live registry so a registry change that adds or
 #: drops a modelo surfaces loudly rather than silently moving the
-#: denominator.
-CANONICAL_MODELO_FLEET: Final[tuple[str, ...]] = tuple(Modelo)
+#: denominator.  Retired identifiers carried by :class:`Modelo` but with no
+#: registry definition (:data:`NON_REGISTRY_MODELOS`, e.g. the suppressed M037
+#: censo simplificada) are NOT enrolled and are excluded here.
+CANONICAL_MODELO_FLEET: Final[tuple[str, ...]] = tuple(m for m in Modelo if m not in NON_REGISTRY_MODELOS)
 
 #: The enrolled-fleet size used as the meta-test denominator. Derived from
 #: the canonical fleet rather than hard-coded so the two cannot disagree.

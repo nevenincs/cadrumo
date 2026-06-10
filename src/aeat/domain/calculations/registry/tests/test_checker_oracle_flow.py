@@ -34,7 +34,7 @@ def test_normalize_verdict_mapping_rejects_blank_identifier() -> None:
 
 def test_normalize_expected_verdicts_stringifies_inputs_before_normalizing() -> None:
     result = normalize_expected_verdicts(
-        {123: " VALID "},
+        {"123": " VALID "},
         blank_message="blank expected verdict",
     )
 

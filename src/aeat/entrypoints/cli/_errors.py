@@ -66,6 +66,14 @@ class _ReconfigurableTextIO(Protocol):
     def reconfigure(self, *, encoding: str | None = None, errors: str | None = None) -> None:
         """Reconfigure the underlying text stream's encoding and error mode."""
 
+    def write(self, s: str, /) -> int:
+        """Write string ``s`` to the stream."""
+        ...
+
+    def flush(self) -> None:
+        """Flush the write buffers of the stream."""
+        ...
+
 
 class CliValidationBoundaryError(AeatError):
     """Raised when a CLI callback leaks a :exc:`pydantic.ValidationError`.
@@ -462,9 +470,9 @@ def _unwrap_aeat_error(error: BaseException) -> AeatError | None:
 # from ``typer._click.exceptions.ClickException`` rather than the upstream
 # ``click.ClickException``. Derive the vendored base from ``typer.BadParameter``'s
 # MRO so both hierarchies are recognised without a brittle private-module import.
-_TYPER_CLICK_EXCEPTION: type[BaseException] = next(
-    base for base in typer.BadParameter.__mro__ if base.__name__ == "ClickException"
-)
+_typer_click_exc_raw = next(base for base in typer.BadParameter.__mro__ if base.__name__ == "ClickException")
+assert issubclass(_typer_click_exc_raw, BaseException)
+_TYPER_CLICK_EXCEPTION: type[BaseException] = _typer_click_exc_raw
 _CONTROL_FLOW_EXCEPTIONS: tuple[type[BaseException], ...] = (
     click.ClickException,
     click.exceptions.Exit,

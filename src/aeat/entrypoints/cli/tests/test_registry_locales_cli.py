@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import json
+from typing import cast
 
+import click
 import pytest
 from click.testing import CliRunner
+from typer.main import get_command
 
 from .. import app
 
@@ -20,7 +23,8 @@ def _no_force_english(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_casillas_command_default_language_is_spanish(cli_runner: CliRunner) -> None:
     """Invoking casillas without overrides defaults to Spanish labels."""
-    result = cli_runner.invoke(app, ["app", "modelo", "casillas", "130"])
+    cmd = cast(click.Command, get_command(app))
+    result = cli_runner.invoke(cmd, ["app", "modelo", "casillas", "130"])
     assert result.exit_code == 0, result.output
     # Default Spanish labels from TOML registry
     assert "Ingresos" in result.output
@@ -42,7 +46,8 @@ def test_casillas_command_respects_language_flag(
     expected_label_2: str,
 ) -> None:
     """Invoking casillas with `--language` returns localized labels."""
-    result = cli_runner.invoke(app, ["--language", lang, "app", "modelo", "casillas", "130"])
+    cmd = cast(click.Command, get_command(app))
+    result = cli_runner.invoke(cmd, ["--language", lang, "app", "modelo", "casillas", "130"])
     assert result.exit_code == 0, result.output
     assert expected_label_1 in result.output
     assert expected_label_2 in result.output
@@ -50,7 +55,8 @@ def test_casillas_command_respects_language_flag(
 
 def test_casillas_command_explain_option_displays_localized_help(cli_runner: CliRunner) -> None:
     """Invoking casillas with `--explain` includes the help/hint column with translations."""
-    result = cli_runner.invoke(app, ["--language", "en", "app", "modelo", "casillas", "130", "--explain"])
+    cmd = cast(click.Command, get_command(app))
+    result = cli_runner.invoke(cmd, ["--language", "en", "app", "modelo", "casillas", "130", "--explain"])
     assert result.exit_code == 0, result.output
     assert "help" in result.output
     assert "Total cumulative business income for the tax year." in result.output
@@ -59,7 +65,8 @@ def test_casillas_command_explain_option_displays_localized_help(cli_runner: Cli
 
 def test_casillas_json_envelope_carries_localized_attributes(cli_runner: CliRunner) -> None:
     """JSON output for casillas carries raw translation dictionaries in the envelope."""
-    result = cli_runner.invoke(app, ["--format", "json", "app", "modelo", "casillas", "130"])
+    cmd = cast(click.Command, get_command(app))
+    result = cli_runner.invoke(cmd, ["--format", "json", "app", "modelo", "casillas", "130"])
     assert result.exit_code == 0, result.output
 
     parsed = json.loads(result.output)

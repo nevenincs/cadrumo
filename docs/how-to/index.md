@@ -43,7 +43,7 @@ Configure read-only AEAT authentication for live-read workflows.
 Pull, compare, and apply AEAT census facts for the active profile.
 :::
 
-:::{grid-item-card} Choose Your Modelos
+:::{grid-item-card} Which Modelos Apply to You
 :link: choose-modelo
 :link-type: doc
 
@@ -85,7 +85,7 @@ Import, add, edit, remove, and review ledger rows.
 Classify rows manually, in bulk, with allocation, or with LLM assistance.
 :::
 
-:::{grid-item-card} Attach Evidence
+:::{grid-item-card} Attach Invoices and Receipts
 :link: ledger-evidence
 :link-type: doc
 

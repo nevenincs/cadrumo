@@ -21,7 +21,7 @@ from pathlib import Path
 
 import click
 import pytest
-from click import Group
+from click import Command, Group
 from click.testing import Result
 
 from ....core.paths import PROJECT_ROOT
@@ -297,12 +297,14 @@ def test_rejected_topic_and_help_commands_are_absent_from_discovery() -> None:
     ``.commands`` mapping.
     """
 
-    def _names(group: Group) -> set[str]:
+    def _names(group: Command) -> set[str]:
+        assert isinstance(group, Group)
         return set(group.list_commands(click.Context(group)))
 
-    def _child(group: Group, name: str) -> Group:
+    def _child(group: Command, name: str) -> Command:
+        assert isinstance(group, Group)
         child = group.get_command(click.Context(group), name)
-        assert hasattr(child, "get_command")
+        assert child is not None
         return child
 
     root = aeat_click_command()

@@ -99,9 +99,9 @@ def test_coerce_decimal_debug_log_omits_raw_malformed_value(
         if record.getMessage() == "coerce_decimal: could not parse value, returning configured default"
     ]
     assert len(relevant) == 1
-    assert relevant[0].value_type == "str"
-    assert relevant[0].default_is_none is True
-    assert relevant[0].error_type == "InvalidOperation"
+    assert getattr(relevant[0], "value_type", None) == "str"
+    assert getattr(relevant[0], "default_is_none", None) is True
+    assert getattr(relevant[0], "error_type", None) == "InvalidOperation"
     assert raw_value not in relevant[0].getMessage()
 
 

@@ -6,10 +6,10 @@ import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import cast
 
-import click
 import pytest
+import typer
+from typer.core import TyperGroup
 
 from ....application.operator_surface import get_operator_surface_contract
 from ....application.wizard._catalogue import SETUP_FLOW
@@ -38,6 +38,18 @@ def _assert_is_command_group(value: object) -> None:
     )
     assert vendored_command is not None, f"{type(value).__name__} has no Command in MRO"
     assert isinstance(value, vendored_command)
+
+
+def _as_group(command: object) -> TyperGroup:
+    """Narrow a resolved command to the vendored ``TyperGroup``.
+
+    The AEAT tree is the vendored Typer hierarchy
+    (``AeatTyperGroup -> typer.core.TyperGroup``), which does not descend from
+    upstream ``click.Group``; ``TyperGroup`` is the correct narrow target and
+    carries the typed ``get_command`` / ``list_commands`` surface.
+    """
+    assert isinstance(command, TyperGroup)
+    return command
 
 
 @pytest.fixture(autouse=True)
@@ -92,12 +104,9 @@ def _mounted_child_names(root_name: str) -> set[str]:
     subcommands alike.
     """
 
-    root = aeat_click_command()
-    ctx = click.Context(root)
-    _assert_is_command_group(root)
-    group = root.get_command(ctx, root_name)
-    _assert_is_command_group(group)
-    return set(group.list_commands(click.Context(group)))
+    root_group = _as_group(aeat_click_command())
+    group = _as_group(root_group.get_command(typer.Context(root_group), root_name))
+    return set(group.list_commands(typer.Context(group)))
 
 
 def test_backend_declared_command_families_are_mounted_in_cli() -> None:
@@ -121,13 +130,10 @@ def test_backend_declared_command_families_are_mounted_in_cli() -> None:
 def test_config_profile_create_mounts_existing_setup_wizard_flow() -> None:
     """First-run configuration is the wizard flow, not a parallel interface."""
 
-    root = aeat_click_command()
-    _assert_is_command_group(root)
-    config_group = root.get_command(click.Context(root), "config")
-    _assert_is_command_group(config_group)
-    profile_group = config_group.get_command(click.Context(config_group), "profile")
-    _assert_is_command_group(profile_group)
-    create_command = profile_group.get_command(click.Context(profile_group), "create")
+    root_group = _as_group(aeat_click_command())
+    config_group = _as_group(root_group.get_command(typer.Context(root_group), "config"))
+    profile_group = _as_group(config_group.get_command(typer.Context(config_group), "profile"))
+    create_command = profile_group.get_command(typer.Context(profile_group), "create")
     assert create_command is not None
     callback = create_command.callback
     assert callback is not None
@@ -179,7 +185,7 @@ def _review_rows(outcome: _WorkflowRoundTripOutcome) -> list[Mapping[str, object
     for row in rows:
         assert isinstance(row, Mapping)
         # Review-queue rows decode from JSON as string-keyed objects.
-        typed_rows.append(cast("Mapping[str, object]", row))
+        typed_rows.append({str(key): value for key, value in row.items()})
     return typed_rows
 
 

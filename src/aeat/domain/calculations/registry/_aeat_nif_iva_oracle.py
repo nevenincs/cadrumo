@@ -220,8 +220,8 @@ class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
     def __init__(self, *, driver: AeatNifIvaDriver | None = None) -> None:
         super().__init__(driver=driver)
 
-    @override
     @property
+    @override
     def oracle_id(self) -> str:
         """Return the stable catalogue identifier for this oracle.
 
@@ -231,8 +231,8 @@ class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
         """
         return ORACLE_ID
 
-    @override
     @property
+    @override
     def surface_kind(self) -> OracleSurfaceKind:
         """Classify the kind of AEAT surface this oracle verifies.
 

@@ -156,11 +156,13 @@ def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
     excerpt = None
     if html and html.strip():
         excerpt = f"[redacted html captured: {len(html)} chars]"
-    return AuthDiagnosticDetail(
-        **summary.model_dump(),
-        **_detail_fingerprints_from_payload(payload),
-        html_excerpt=excerpt,
-        operator_report_commands=_operator_report_commands(summary.diagnostic_id or diagnostic_id),
+    return AuthDiagnosticDetail.model_validate(
+        {
+            **summary.model_dump(),
+            **_detail_fingerprints_from_payload(payload),
+            "html_excerpt": excerpt,
+            "operator_report_commands": _operator_report_commands(summary.diagnostic_id or diagnostic_id),
+        }
     )
 
 

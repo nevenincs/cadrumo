@@ -58,7 +58,9 @@ def test_cache_key_distinguishes_request_axes(tmp_path: Path) -> None:
     )
     different_model = cache.build_key(base, LLMProvider.ANTHROPIC, "claude-haiku-4-5")
 
-    assert len({base_key, different_prompt, different_temperature, different_language, different_model}) == 5
+    keys = [base_key, different_prompt, different_temperature, different_language, different_model]
+    # Verify all keys are distinct by comparing each pair
+    assert len(keys) == len(set(k.model_dump_json() for k in keys))
 
 
 def test_cache_hit_miss_and_stats(tmp_path: Path) -> None:

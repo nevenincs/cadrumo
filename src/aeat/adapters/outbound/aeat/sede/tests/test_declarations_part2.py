@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from .._declarations_observations import _submitted_file_coverage_for_casillas
 from ._declarations_support import (
     _COTEJO_DOCUMENT_URL,
     _DECLARATIONS_LISTING_BASE_PATH,
@@ -186,6 +187,51 @@ class TestSubmittedFileObservation:
             casilla_id: observed_values[casilla_id] for casilla_id in _MODELO_130_COMPUTED_CASILLAS
         }
         assert calculated.values["saldo-negativo-fin-periodo"] == Decimal("0.00")
+
+    def test_submitted_file_coverage_scores_fully_extracted_modelo_130_filing(self) -> None:
+        # The extracted coverage helper resolves the export layout and scores the
+        # observed casillas against the registry-expected set. The M130 redacted
+        # submitted file yields every expected result casilla, so coverage is 1.0.
+        snapshot = _modelo_130_snapshot()
+        body = _submitted_file_payload()
+        declaration = Declaracion(
+            modelo="130",
+            ejercicio=2026,
+            period="1T",
+            expediente_id="202610013522222A",
+            estado="ALTA",
+            presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+            justificante_link_text="Ver",
+            archive_link_text="Ver",
+        )
+        artefact = FiledDeclaracionArtefact(
+            kind="submitted_file",
+            source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
+            content_type="application/octet-stream",
+            byte_count=len(body),
+            sha256=hashlib.sha256(body).hexdigest(),
+            captured_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+        )
+        casillas = _observed_casillas_from_submitted_file(
+            snapshot=snapshot,
+            declaration=declaration,
+            body=body,
+            artefact=artefact,
+        )
+
+        coverage = _submitted_file_coverage_for_casillas(snapshot=snapshot, body=body, casillas=casillas)
+
+        # The helper must agree with the leaf coverage scorer it composes.
+        resolved = resolve_export_layout(snapshot)
+        parsed = parse_export_payload(resolved.layout, body)
+        expected = {
+            casilla_id
+            for casilla_id, fields in resolved.fields_by_casilla.items()
+            if any(field.id in {f.field_id for f in parsed.fields} for field in fields)
+        }
+        observed_ids = {casilla.casilla_id for casilla in casillas}
+        assert coverage == len(observed_ids & expected) / len(expected)
+        assert coverage == pytest.approx(1.0)
 
     def test_modelo_111_live_redacted_submitted_file_values_become_observed_casillas(self) -> None:
         snapshot = _modelo_snapshot("111", filing_year=2025, period="1T")

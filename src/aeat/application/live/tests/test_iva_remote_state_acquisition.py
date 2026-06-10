@@ -361,6 +361,7 @@ def test_surface_timeout_does_not_collapse_to_success(tmp_path: Path) -> None:
     assert filed_outcome.failure_type == "LiveIvaSurfaceTimeoutError"
     assert filed_outcome.captured_count is None
     assert wallet_outcome.status is LiveIvaReadStatus.FAILED
+    assert timeout.context is not None
     assert timeout.context["progress"] == {
         "stage": "walk_declarations_register",
         "modelo": "303",
@@ -380,6 +381,7 @@ def test_surface_timeout_context_preserves_wallet_progress() -> None:
         },
     )
 
+    assert timeout.context is not None
     assert timeout.context["progress"] == {
         "stage": "fetch_iva_compensation_wallet",
         "target_year": 2026,

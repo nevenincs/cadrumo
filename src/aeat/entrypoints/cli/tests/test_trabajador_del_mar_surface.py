@@ -10,7 +10,7 @@ at this layer is the canonical CLI-input contract for the fact.
 contract — when the maritime exemption application service resolves an
 Art. 7.p) or REBECA observation, the typed envelope that the CLI emit
 boundary serialises carries ``legal_refs`` traceable to BOE-A-2006-20764
-(Art. 7.p) / Ley 35/2006) and BOE-A-1994-16100 (REBECA / Ley 19/1994).
+(Art. 7.p) / Ley 35/2006) and BOE-A-1994-15794 (REBECA / Ley 19/1994).
 The flat ``casilla_values`` view is a derived projection; the canonical
 contract is the typed observations.
 
@@ -67,7 +67,7 @@ class TestWorkerClassProfileFactAcceptance:
         # All three exemption pathways and the RETMAR completeness gate
         # must be cited in the field definition that the CLI surfaces.
         assert "BOE-A-2006-20764" in combined  # Art. 7.p) / DA 41
-        assert "BOE-A-1994-16100" in combined  # REBECA
+        assert "BOE-A-1994-15794" in combined  # REBECA
         assert "BOE-A-2015-11346" in combined  # RETMAR
 
 
@@ -101,7 +101,7 @@ class TestMaritimeExemptionEnvelopeCarriesLegalRefs:
         assert len(result.observations) == 1
         obs = result.observations[0]
         combined = " ".join(obs.legal_refs)
-        assert "BOE-A-1994-16100" in combined
+        assert "BOE-A-1994-15794" in combined
 
     def test_envelope_flat_view_matches_typed_observations(self) -> None:
         # The CLI emit layer often surfaces the flat casilla_values view

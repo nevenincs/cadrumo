@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from ..._export_field_kind import CasillaFieldKind
 from ._referential_integrity_support import (
     _DUMMY_LEGAL_ID,
     _DUMMY_SOURCE_ID,
@@ -474,7 +475,7 @@ def test_dangling_export_field_casilla_ref() -> None:
     casilla = _minimal_casilla("01")
     field = ExportFieldDefinition(
         id="el.test.field-01",
-        kind="casilla",
+        kind=CasillaFieldKind.CASILLA,
         casilla="nonexistent-casilla",
         data_type="money",
         required=True,

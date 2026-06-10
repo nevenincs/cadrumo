@@ -21,10 +21,11 @@ from ._errors import ConfigBoundaryError as _ConfigBoundaryError
 
 if typing.TYPE_CHECKING:
     from ....application.workflow import ProfileBucketPointer
+    from ....domain.user_profile import UserProfileRecord
 
 
 ProfileResolver = Callable[[str], "ProfileBucketPointer"]
-ProfileRecordReader = Callable[..., object]
+ProfileRecordReader = Callable[..., "UserProfileRecord"]
 
 
 def register_repair_profile_command(
@@ -168,7 +169,7 @@ def _redact_profile_repair_payload(payload: dict[str, typing.Any]) -> dict[str, 
     redacted = redact_structured_for_cli_output(payload)
     if not isinstance(redacted, dict):
         return {}
-    return redacted
+    return {str(k): v for k, v in redacted.items()}
 
 
 def profile_record_missing_next_action(profile_id: str, *, label: str) -> str:

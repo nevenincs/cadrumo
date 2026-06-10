@@ -163,6 +163,7 @@ def _serialize_xlsx(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str, 
 
     workbook = Workbook()
     worksheet = workbook.active
+    assert worksheet is not None, "Workbook.active must not be None on a fresh Workbook"
     worksheet.title = "ledger"
     worksheet.append(list(fieldnames))
     for row in rows:

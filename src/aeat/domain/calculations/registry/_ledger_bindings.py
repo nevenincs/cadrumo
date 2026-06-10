@@ -7,6 +7,8 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal, Protocol
 
+from ....core import Modelo
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...iva import (
@@ -403,9 +405,12 @@ def unsupported_ledger_iva_observations(
     zero-rated, not-subject, exempt intra-community supplies/exports,
     triangulation, and régimen simplificado) are excluded: they
     correctly match no cuota binding, so flagging them would be a false
-    positive. Only categories that genuinely *should* produce a cuota
-    but currently have no binding (domestic / intra-community
-    reverse-charge, imports) remain in the unsupported set.
+    positive. After the M303 routing tail (domestic / intra-community
+    reverse-charge bindings, the import deducible binding) landed, every
+    cuota-bearing declarable category has a consuming binding, so the
+    residual unsupported set is empty for the known declarable categories;
+    the function still fail-closes on any *new* declarable triple that no
+    binding selects.
     """
     selectors = tuple(
         _iva_ledger_selector(binding) for binding in revision.bindings if binding.source == "ledger_iva_aggregation"
@@ -453,7 +458,7 @@ class RentaExpenseObservationProtocol(Protocol):
     this protocol without any explicit declaration.
 
     Properties are declared read-only so that Literal-typed concrete attributes
-    (e.g. ``modelo: Literal["100"]``) satisfy the protocol under strict
+    (e.g. ``modelo: Literal[Modelo.M100]``) satisfy the protocol under strict
     covariant checking.
     """
 
@@ -475,7 +480,7 @@ class _RentaLedgerExpenseSelector(BaseModel):
 
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
 
-    modelo: Literal["100"] = "100"
+    modelo: Literal[Modelo.M100] = Modelo.M100
     period: Literal["0A"] = "0A"
     target_casilla: str = Field(min_length=4, max_length=4)
     fact: Literal["deductible_amount_sum"] = "deductible_amount_sum"
@@ -560,7 +565,7 @@ class _RentaLedgerIncomeSelector(BaseModel):
 
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
 
-    modelo: Literal["130"] = "130"
+    modelo: Literal[Modelo.M130] = Modelo.M130
     target_casilla: str = Field(min_length=2, max_length=8)
     fact: Literal["gross_income_sum", "taxable_base_sum"] = "gross_income_sum"
 

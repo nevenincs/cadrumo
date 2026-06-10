@@ -18,10 +18,12 @@ than failing.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date
 from typing import TYPE_CHECKING
 
 from ...core.config import Settings, load_settings
+from ...core.identity import SubjectTaxId
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth import AeatSession
@@ -52,6 +54,23 @@ from ._protocols import (
 )
 
 _logger = get_logger(__name__)
+
+
+@dataclass(frozen=True, slots=True)
+class _TaxpayerProfileBridge:
+    """Minimal :class:`~aeat.domain.filing.ModeloProfile`-compatible wrapper.
+
+    :class:`~aeat.domain.deadlines.TaxpayerProfile` does not declare
+    ``display_name``, which the :class:`~aeat.domain.filing.ModeloProfile`
+    Protocol requires. This thin bridge adds a default empty ``display_name``
+    so the structural protocol check passes without modifying either model.
+
+    The bridge is intentionally private: no production code outside
+    :class:`ModeloDraftBuilderAdapter` should depend on it.
+    """
+
+    tax_id: SubjectTaxId
+    display_name: str = ""
 
 
 class DeadlineEngineAdapter:
@@ -98,24 +117,21 @@ class ModeloDraftBuilderAdapter:
     ) -> RegistryModeloDraftProtocol:
         """Delegate to :func:`build_draft` and return a :class:`RegistryModeloDraftProtocol`.
 
-        :class:`TaxpayerProfile` and :class:`aeat.application.filing.ModeloProfile`
-        are structurally compatible (both expose ``tax_id``) but
-        ``TaxpayerProfile`` does not declare ``display_name`` and therefore
-        does not satisfy the Protocol statically. The ``type: ignore`` at the
-        call site documents this intentional structural bridging.
+        :class:`TaxpayerProfile` lacks ``display_name`` required by the
+        :class:`~aeat.domain.filing.ModeloProfile` Protocol.
+        :class:`_TaxpayerProfileBridge` bridges the gap without modifying
+        either domain model.
         """
-        # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PROTOCOL-CIRCULAR:
-        # Protocol introduction would create a cross-module circular dependency.
-        # Successor epic required.
+        bridged_profile = _TaxpayerProfileBridge(tax_id=profile.tax_id)
         draft: ModeloDraft = build_draft(
             modelo=modelo,
             period=period,
-            profile=profile,  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-TAXPAYER-PROFILE-PROTOCOL-BRIDGE
+            profile=bridged_profile,
             inputs=inputs,
             schema_provider=self._schema_provider,
             fail_on_warning=fail_on_warning,
         )
-        return draft  # type: ignore[return-value]  # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-MODELO-DRAFT-PROTOCOL-BRIDGE
+        return draft
 
 
 class SubmissionEngineAdapter:
@@ -142,24 +158,22 @@ class SubmissionEngineAdapter:
 
 
 async def _live_expedientes_source(session: object, modelo: str | None) -> tuple[WorkflowExpedienteProtocol, ...]:
+    from ...adapters.outbound.aeat.auth import AeatSession
     from ...adapters.outbound.aeat.sede import walk_expedientes_tree
 
     # session is typed as ``object`` to match the ``ExpedientesSource`` Protocol
     # (Callable[[object, str | None], ...]); the concrete value at this call
     # site is always an ``AeatSession`` supplied by ``default_engine``.
-    # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PROTOCOL-CIRCULAR:
-    # Protocol introduction would create a cross-module circular dependency.
-    # Successor epic required.
-    return await walk_expedientes_tree(session, modelo=modelo)  # type: ignore[arg-type]
+    assert isinstance(session, AeatSession)
+    return await walk_expedientes_tree(session, modelo=modelo)
 
 
 async def _live_notifications_source(session: object) -> WorkflowNotificationsSnapshotProtocol:
+    from ...adapters.outbound.aeat.auth import AeatSession
     from ...adapters.outbound.aeat.sede import fetch_notifications_query
 
-    # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PROTOCOL-CIRCULAR:
-    # Protocol introduction would create a cross-module circular dependency.
-    # Successor epic required.
-    return await fetch_notifications_query(session)  # type: ignore[arg-type]
+    assert isinstance(session, AeatSession)
+    return await fetch_notifications_query(session)
 
 
 def default_engine(

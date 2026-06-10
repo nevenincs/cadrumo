@@ -46,6 +46,7 @@ from ....domain.calculations.registry import (
     materialize_relation_binding_values,
     resolve_bound_casilla_inputs,
 )
+from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos._verification_report import ModeloVerificationFindingKind
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo._actions import _evaluate_verification_predicates
@@ -55,6 +56,11 @@ from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+# The advisory/casilla predicates here ignore the profile, but
+# _evaluate_verification_predicates requires a real TaxpayerProfile; supply a
+# minimal one rather than the typed-None hole the casilla-only path tolerated.
+_CASILLA_ONLY_PROFILE = TaxpayerProfile(tax_id="B12345678", iva_regime=IVARegime.GENERAL)
 
 _MODELO_200 = "200"
 
@@ -212,7 +218,7 @@ def test_advisory_fires_when_cumplido_stock_available_but_none_integrated() -> N
     """Cumplido stock present (01495 > 0) but 01496 = 0 surfaces a non-blocking advisory."""
     predicate = _advisory_predicate()
     findings = _evaluate_verification_predicates(
-        (predicate,), {"01495": Decimal("12000.00"), "01496": Decimal("0")}, None
+        (predicate,), {"01495": Decimal("12000.00"), "01496": Decimal("0")}, _CASILLA_ONLY_PROFILE
     )
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
@@ -224,7 +230,7 @@ def test_advisory_silent_when_some_cumplido_stock_integrated() -> None:
     """Integrating any of the available cumplido stock clears the advisory."""
     predicate = _advisory_predicate()
     findings = _evaluate_verification_predicates(
-        (predicate,), {"01495": Decimal("12000.00"), "01496": Decimal("4000.00")}, None
+        (predicate,), {"01495": Decimal("12000.00"), "01496": Decimal("4000.00")}, _CASILLA_ONLY_PROFILE
     )
     assert findings == []
 
@@ -232,5 +238,7 @@ def test_advisory_silent_when_some_cumplido_stock_integrated() -> None:
 def test_advisory_silent_when_no_cumplido_stock_available() -> None:
     """No cumplido stock (01495 = 0) raises nothing — implies_nonzero holds trivially."""
     predicate = _advisory_predicate()
-    findings = _evaluate_verification_predicates((predicate,), {"01495": Decimal("0"), "01496": Decimal("0")}, None)
+    findings = _evaluate_verification_predicates(
+        (predicate,), {"01495": Decimal("0"), "01496": Decimal("0")}, _CASILLA_ONLY_PROFILE
+    )
     assert findings == []

@@ -27,6 +27,7 @@ from ....domain.modelos._calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos._codes import ModeloCode
 from ....domain.modelos._filing_record import ModeloRecordStatus
 from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
@@ -216,7 +217,7 @@ def _work_unit_and_revision_for_wallet_gate(
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id="operator",
-        modelo="303",
+        modelo=ModeloCode("303"),
         filing_year=_TARGET_YEAR,
         period=_TARGET_PERIOD,
         revision_id="m303-wallet-gate-test",
@@ -377,6 +378,7 @@ def test_no_seed_no_override_303_calculate_lazily_reconciles_local_zero_and_surf
     assert casilla_110_obs.legal_refs, "casilla 110 must surface its LIVA legal_refs, not a silent zero"
     assert decision is not None
     assert not decision.blocked
+    assert decision.selected_amount is not None
     assert Decimal(decision.selected_amount) == Decimal("0.00")
     assert decision.divergence == "first_period_zero"
 

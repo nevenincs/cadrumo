@@ -133,7 +133,9 @@ def _redacted_failure_context(error: BaseException) -> dict[str, object] | None:
     return redacted or None
 
 
-def _redacted_context_mapping(context: Mapping[object, object]) -> dict[str, object]:
+def _redacted_context_mapping(context: object) -> dict[str, object]:
+    if not isinstance(context, Mapping):
+        return {}
     redacted: dict[str, object] = {}
     for raw_key, raw_value in context.items():
         key = str(raw_key)
@@ -269,7 +271,9 @@ def _redacted_sensitive_context_value(value: object, *, key: str) -> object | No
     return _evidence_ref(bounded_context_text(value))
 
 
-def _redacted_sensitive_context_mapping(context: Mapping[object, object]) -> dict[str, object]:
+def _redacted_sensitive_context_mapping(context: object) -> dict[str, object]:
+    if not isinstance(context, Mapping):
+        return {}
     redacted: dict[str, object] = {}
     for raw_key, raw_value in context.items():
         key = str(raw_key)

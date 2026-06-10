@@ -38,6 +38,7 @@ from ...domain.deadlines._festivos import DeadlineValidationError as _DeadlineVa
 from ...domain.deadlines.taxpayer_model import IrpfEstimationRegime as _IrpfEstimationRegime
 
 if TYPE_CHECKING:
+    from ...domain.modelos import ModeloRecord
     from ..live._expedientes import PersistedExpedientesSnapshot
     from ..live._notifications import PersistedNotificationsSnapshot
 
@@ -588,7 +589,7 @@ def build_overview_calendar_events(
 
 def calendar_filing_evidence_from_sources(
     *,
-    filing_records: tuple[object, ...] = (),
+    filing_records: tuple[ModeloRecord, ...] = (),
     observed_events: tuple[OverviewCalendarEvent, ...] = (),
     filed_declaration_observations: tuple[object, ...] = (),
     calculation_observations: tuple[object, ...] = (),
@@ -629,15 +630,14 @@ def calendar_filing_evidence_from_sources(
     return tuple(sorted(unique.values(), key=_calendar_filing_evidence_sort_key))
 
 
-def _filing_evidence_from_modelo_record(record: object) -> OverviewCalendarFilingEvidence | None:
+def _filing_evidence_from_modelo_record(record: ModeloRecord) -> OverviewCalendarFilingEvidence | None:
     """Project one local Modelo filing record into calendar evidence."""
-    status = getattr(record, "status", None)
-    if str(getattr(status, "value", status)).lower() != "vigente":
+    if record.status.value.lower() != "vigente":
         return None
     modelo = str(record.modelo)
     filing_year = int(record.filing_year)
     period = str(record.period)
-    external_evidence = getattr(record, "external_evidence", None)
+    external_evidence = record.external_evidence
     local_state = (
         OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED
         if external_evidence is not None
@@ -976,8 +976,9 @@ def _gating_fields() -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
 
     for rule in _iter_modelo_applicability_rules():
         if rule.required_payer_fact is not None:
-            profile_key, locale_key = _PAYER_FACT_PROFILE_KEY.get(rule.required_payer_fact, (None, None))
-            if profile_key is not None:
+            payer_fact_meta = _PAYER_FACT_PROFILE_KEY.get(rule.required_payer_fact)
+            if payer_fact_meta is not None:
+                profile_key, locale_key = payer_fact_meta
                 key_to_modelos.setdefault(profile_key, set()).add(rule.modelo)
                 key_to_meta[profile_key] = (locale_key, _FIX)
 
