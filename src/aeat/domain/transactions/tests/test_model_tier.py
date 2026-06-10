@@ -34,9 +34,9 @@ def test_minimum_classification_tier_is_medium_or_above() -> None:
 
 
 def test_catalogue_covers_every_supported_provider() -> None:
-    """claude, gemini, and codex each have at least one registered profile."""
+    """claude, antigravity, and codex each have at least one registered profile."""
     providers = {profile.provider for profile in catalogue()}
-    assert {"claude", "gemini", "codex"} <= providers
+    assert {"claude", "antigravity", "codex"} <= providers
 
 
 def test_each_provider_has_a_profile_meeting_the_minimum_tier() -> None:
@@ -45,7 +45,7 @@ def test_each_provider_has_a_profile_meeting_the_minimum_tier() -> None:
     Otherwise the default classifier for that provider would always
     fail tier enforcement, defeating the whole capability abstraction.
     """
-    for provider in ("claude", "gemini", "codex"):
+    for provider in ("claude", "antigravity", "codex"):
         profiles = profiles_for_provider(provider)
         assert profiles, f"no profiles registered for provider {provider!r}"
         assert any(p.tier >= MINIMUM_CLASSIFICATION_TIER for p in profiles), (

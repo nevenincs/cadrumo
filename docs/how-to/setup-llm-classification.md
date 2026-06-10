@@ -7,8 +7,10 @@ system. `aeat` does not store or manage LLM credentials itself.
 
 ## Supported providers
 
-The classification command accepts provider names such as `claude`, `gemini`,
-and `codex`. For the current list, run `aeat app ledger providers`.
+The classification command accepts provider names such as `claude`,
+`antigravity`, and `codex`. The `antigravity` provider uses Google's `agy`
+CLI, the supported successor to the retired standalone `gemini` CLI. For the
+current list, run `aeat app ledger providers`.
 
 Use one of those names in the classification command:
 

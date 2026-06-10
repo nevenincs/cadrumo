@@ -2,7 +2,7 @@
 
 Defines the :class:`LLMClassifier` protocol plus subprocess-based
 reference implementations for the three local LLM CLIs
-(:func:`build_claude_classifier`, :func:`build_gemini_classifier`,
+(:func:`build_claude_classifier`, :func:`build_antigravity_classifier`,
 :func:`build_codex_classifier`). The prompt is built
 PROGRAMMATICALLY from the available enum values so the LLM prompt
 stays in sync with :class:`aeat.domain.transactions.BusinessClassification`:
@@ -35,7 +35,6 @@ import shutil
 import subprocess
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
-from datetime import date
 from decimal import Decimal
 from typing import Protocol
 
@@ -43,10 +42,9 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.i18n import Translatable as tr
-from ...core.i18n import tr as _localize
 from ...core.logging import get_logger
 from ..categories import SpendingCategory, resolve_category_profiles
-from ..iva import IvaCategory, resolve_catalogue
+from ..iva import IvaCategory
 from ._enums import BusinessClassification
 from ._errors import LLMClassifierError, TransactionValidationError
 from ._model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier, resolve_profile
@@ -260,34 +258,52 @@ def prompt_spec_with_every_spending_category(
     )
 
 
-# Year whose IVA catalogue grounds the saturation prompt's IVA-category
-# allow-list and label hints. Mirrors the SpendingCategory hint year so the
-# two grounded allow-lists are sourced from the same filing period.
-_SATURATION_CATALOGUE_YEAR = 2025
+# Concise operator-/LLM-facing descriptions for each closed Spanish IVA
+# situation. These hint the model's SELECTION; they do not ground a number —
+# the rate is looked up from the registry and the base/amount derived
+# downstream. The IVA catalogue's own ``label`` fields are i18n keys that are
+# not carried in the locale catalogues, so they cannot serve as hints; these
+# curated one-liners are the authoritative prompt descriptions instead.
+_IVA_CATEGORY_HINTS: dict[IvaCategory, str] = {
+    IvaCategory.DOMESTIC_GENERAL_21: "domestic supply at the general 21% rate",
+    IvaCategory.DOMESTIC_REDUCED_10: "reduced 10% rate (hospitality, transport, some foods)",
+    IvaCategory.DOMESTIC_SUPER_REDUCED_4: "super-reduced 4% rate (basic foods, books, medicines)",
+    IvaCategory.DOMESTIC_ZERO: "domestic supply at a 0% rate",
+    IvaCategory.DOMESTIC_EXEMPT: "domestic supply exempt from IVA (education, health, finance — Art. 20)",
+    IvaCategory.DOMESTIC_NOT_SUBJECT: "operation not subject to Spanish IVA",
+    IvaCategory.DOMESTIC_REVERSE_CHARGE: "domestic reverse charge — the recipient self-assesses IVA (Art. 84)",
+    IvaCategory.INTRA_COMMUNITY_SUPPLY: "exempt intra-community supply of goods to an EU business (Art. 25)",
+    IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE: "reverse-charge EU goods acquisition",
+    IvaCategory.INTRA_COMMUNITY_TRIANGULATION: "intra-community triangular operation",
+    IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED: "export of goods outside the EU, zero-rated (Art. 21)",
+    IvaCategory.IMPORT_THIRD_COUNTRY: "import of goods from outside the EU",
+    IvaCategory.RECARGO_EQUIVALENCIA: "purchase subject to the recargo de equivalencia surcharge",
+    IvaCategory.REGIMEN_SIMPLIFICADO: "régimen simplificado (modules), not a general-regime invoice",
+    IvaCategory.OPERACION_NO_SUJETA: "operation outside the scope of Spanish IVA",
+    IvaCategory.ERRONEOUS_INVOICE: "erroneous invoice flagged for correction",
+    IvaCategory.UNKNOWN: "IVA situation not yet determined",
+}
 
 
 def default_iva_category_choices() -> tuple[IvaCategoryChoice, ...]:
-    """Return the registry-grounded IVA-category choices for the saturation prompt.
+    """Return the grounded IVA-category choices for the saturation prompt.
 
-    Built from the codified :class:`aeat.domain.iva.IvaCatalogue` for
-    :data:`_SATURATION_CATALOGUE_YEAR` so the allow-list the LLM selects from
-    is exactly the closed set of Spanish IVA situations, each hinted with the
-    catalogue's authoritative localized label (resolved to the active output
-    language). The model SELECTS a category only; every regulated euro figure
-    is derived downstream from the registry rate, never emitted by the model
-    (``2026-06-04-llm-ledger-classification-adr``).
+    The allow-list is the closed :class:`aeat.domain.iva.IvaCategory` enum (the
+    registry :class:`aeat.domain.iva.IvaCatalogue` is validated to carry a
+    regulation for every member, so the enum and the catalogue set are
+    identical). Each choice is hinted with a concise description from
+    :data:`_IVA_CATEGORY_HINTS`. The model SELECTS a category only; every
+    regulated euro figure is derived downstream from the registry rate, never
+    emitted by the model (``2026-06-04-llm-ledger-classification-adr``).
 
     Returns:
         One :class:`IvaCategoryChoice` per :class:`aeat.domain.iva.IvaCategory`,
-        ordered by enum declaration, hinted from the catalogue label.
+        ordered by enum declaration.
     """
-    catalogue = resolve_catalogue(on=date(_SATURATION_CATALOGUE_YEAR, 1, 1))
-    choices: list[IvaCategoryChoice] = []
-    for category in IvaCategory:
-        regulation = catalogue.get(category)
-        hint = _localize(str(regulation.label)) if regulation is not None else category.value.replace("_", " ")
-        choices.append(IvaCategoryChoice(value=category, hint=hint))
-    return tuple(choices)
+    return tuple(
+        IvaCategoryChoice(value=category, hint=_IVA_CATEGORY_HINTS.get(category, category.value.replace("_", " ")))
+        for category in IvaCategory
+    )
 
 
 def prompt_spec_with_saturation_fields(
@@ -636,36 +652,44 @@ def build_claude_classifier(
     )
 
 
-def build_gemini_classifier(
+def build_antigravity_classifier(
     *,
     alias: str | None = None,
     model: str | None = None,
     spec: PromptSpec | None = None,
     minimum_tier: ModelTier = MINIMUM_CLASSIFICATION_TIER,
 ) -> SubprocessLLMClassifier:
-    """Build a classifier that shells out to ``gemini -p <prompt>``.
+    """Build a classifier that shells out to ``agy --prompt <prompt>``.
 
-    Gemini expects the prompt as the positional argument to ``-p``
-    (its ``--prompt`` flag); stdin piping alongside ``-p`` without a
-    value raises "Not enough arguments following: p". Gemini's stdout
-    is often polluted with MCP tool-registration warnings; the JSON
-    iterator in :func:`parse_response` tolerates the noise.
+    Antigravity (Google's agentic CLI ``agy``) is the supported successor to
+    the retired standalone ``gemini`` CLI. Its ``--print`` / ``-p`` /
+    ``--prompt`` mode runs a single prompt non-interactively; the prompt is the
+    VALUE of that flag, so it is passed as the final positional argument
+    (``prompt_via_argument=True``). Unlike the old ``gemini`` CLI (a Node
+    wrapper whose command line overflowed a ~8 KB limit on the larger
+    saturation prompt), ``agy`` is a native binary invoked through the
+    subprocess argument list, so it carries the full platform command-line
+    budget. ``--model`` selects a model when one is pinned; otherwise ``agy``
+    uses its own current default. Its stdout may carry start-up noise; the JSON
+    iterator in :func:`parse_response` tolerates it.
 
     Args:
-        alias: Capability-tier alias (``gemini-flash`` / ``gemini-pro``).
-            Enforces ``minimum_tier``.
+        alias: Capability-tier alias (``antigravity-default``). Enforces
+            ``minimum_tier``.
         model: Explicit provider-specific model override.
         spec: Prompt spec override.
         minimum_tier: Refuses aliases below this tier.
 
     Returns:
-        A :class:`SubprocessLLMClassifier` configured for the
-        ``gemini`` CLI with ``prompt_via_argument=True``.
+        A :class:`SubprocessLLMClassifier` configured for the ``agy`` CLI with
+        ``prompt_via_argument=True``.
     """
-    resolved_model = _resolve_model_id(provider="gemini", alias=alias, explicit_model=model, minimum_tier=minimum_tier)
-    command = ("gemini", "-p") if not resolved_model else ("gemini", "-m", resolved_model, "-p")
+    resolved_model = _resolve_model_id(
+        provider="antigravity", alias=alias, explicit_model=model, minimum_tier=minimum_tier
+    )
+    command = ("agy", "--prompt") if not resolved_model else ("agy", "--model", resolved_model, "--prompt")
     return SubprocessLLMClassifier(
-        name="gemini",
+        name="antigravity",
         command=command,
         model=resolved_model or None,
         spec=spec or default_prompt_spec(),
@@ -735,7 +759,7 @@ def _resolve_model_id(
 
 _BUILDERS: dict[str, Callable[..., LLMClassifier]] = {
     "claude": build_claude_classifier,
-    "gemini": build_gemini_classifier,
+    "antigravity": build_antigravity_classifier,
     "codex": build_codex_classifier,
 }
 
@@ -751,7 +775,7 @@ def resolve_classifier(
     """Return a classifier for the given provider name.
 
     Args:
-        provider: One of ``"claude"``, ``"gemini"``, ``"codex"``, or a
+        provider: One of ``"claude"``, ``"antigravity"``, ``"codex"``, or a
             name registered via :func:`register_classifier`.
         alias: Optional capability-tier alias (see
             :class:`aeat.domain.transactions._model_tier.ModelProfile`).
@@ -819,9 +843,9 @@ __all__ = [
     "ModelTier",
     "PromptSpec",
     "SubprocessLLMClassifier",
+    "build_antigravity_classifier",
     "build_claude_classifier",
     "build_codex_classifier",
-    "build_gemini_classifier",
     "default_classification_choices",
     "default_iva_category_choices",
     "default_prompt_spec",

@@ -2476,8 +2476,7 @@ cli:
       llm_exclusive: --llm nem kombinalhato a --classification vagy --from-csv kapcsoloval;
         a kezi ut a kezelo kifejezett felulbiralasa.
       llm_failed: 'Az LLM osztalyozas sikertelen: {reason}'
-      llm_help: Kerd meg egy helyi LLM szolgaltatot (claude/gemini/codex), hogy osztalyozza
-        a tranzakciot; alapertelmezetten elonezet, --apply kapcsoloval menti.
+      llm_help: 'Kerd meg egy helyi LLM szolgaltatot (claude/antigravity/codex), hogy osztalyozza a tranzakciot; alapertelmezetten elonezet, --apply kapcsoloval menti.'
       llm_provider_unavailable: 'A(z) ''{provider}'' LLM szolgaltato nem erheto el:
         a CLI nincs a PATH-on. Telepitsd a(z) ''{provider}'' CLI-t es gondoskodj rola,
         hogy a PATH-on legyen, vagy futtasd az ''aeat app ledger providers'' parancsot

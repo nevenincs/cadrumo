@@ -2,14 +2,14 @@
 
 Decouples consumer code from the shifting sands of model IDs at each
 provider. The operator picks a *capability tier* (``LOW`` /
-``MEDIUM`` / ``HIGH``) and a *provider* (``claude`` / ``gemini`` /
+``MEDIUM`` / ``HIGH``) and a *provider* (``claude`` / ``antigravity`` /
 ``codex``); :func:`resolve_profile` returns the current
 :class:`ModelProfile` whose ``model_id`` meets the tier floor for
 that provider.
 
 Rationale:
 
-- Model IDs change every few months (``sonnet-4.5``, ``gemini-2.5-pro``,
+- Model IDs change every few months (``sonnet-4.5``, ``gemini-3-pro``,
   ``o3`` -> ``o4``). Hard-coding IDs in CLI flags forces consumers to
   chase them. A stable tier + alias table is a better interface.
 - Thinking models (multi-step reasoning, chain-of-thought) classify
@@ -66,7 +66,7 @@ class ModelProfile:
     """One concrete model at one provider, tagged with its capability tier.
 
     Attributes:
-        provider: Lower-case provider name (``claude`` / ``gemini`` /
+        provider: Lower-case provider name (``claude`` / ``antigravity`` /
             ``codex``).
         alias: Stable human-friendly identifier, e.g. ``claude-sonnet``.
             The operator uses this on the CLI; the tool maps it to ``model_id``.
@@ -104,9 +104,9 @@ on."""
 # for operator's choices, not an archive.
 #
 # Tier placement rationale:
-# - claude-haiku, gemini-flash, gpt-4o-mini: fast/cheap, ~LOW.
-# - claude-sonnet, gemini-pro, gpt-4o, codex default: solid single-shot, MEDIUM.
-# - claude-opus, gemini-ultra, o3/o4, codex-high: top-tier reasoning, HIGH.
+# - claude-haiku, gpt-4o-mini: fast/cheap, ~LOW.
+# - claude-sonnet, antigravity default, gpt-4o, codex default: solid single-shot, MEDIUM.
+# - claude-opus, o3/o4, codex-high: top-tier reasoning, HIGH.
 _CATALOGUE: tuple[ModelProfile, ...] = (
     # Claude
     ModelProfile(
@@ -130,18 +130,15 @@ _CATALOGUE: tuple[ModelProfile, ...] = (
         tier=ModelTier.HIGH,
         capability=ModelCapability.THINKING,
     ),
-    # Gemini
+    # Antigravity (Google's agentic CLI ``agy``, the supported successor to the
+    # retired standalone ``gemini`` CLI). The CLI selects its own current
+    # default model; an empty ``model_id`` omits ``--model`` and lets ``agy``
+    # choose, mirroring the ``codex-default`` profile. Explicit model pinning is
+    # a follow-up once ``agy models`` is queryable in CI.
     ModelProfile(
-        provider="gemini",
-        alias="gemini-flash",
-        model_id="gemini-2.5-flash",
-        tier=ModelTier.LOW,
-        capability=ModelCapability.NON_THINKING,
-    ),
-    ModelProfile(
-        provider="gemini",
-        alias="gemini-pro",
-        model_id="gemini-2.5-pro",
+        provider="antigravity",
+        alias="antigravity-default",
+        model_id="",
         tier=ModelTier.MEDIUM,
         capability=ModelCapability.THINKING,
     ),
