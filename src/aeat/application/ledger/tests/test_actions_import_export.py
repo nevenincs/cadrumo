@@ -20,7 +20,6 @@ from ._action_test_support import (
     TransactionDirection,
     TransactionValidationError,
     _parsed_import_transaction,
-    _raw_import_transaction,
     _repositories,
     create_manual_transaction,
     csv,
