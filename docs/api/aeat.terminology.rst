@@ -17,3 +17,4 @@ Submodules
    aeat.terminology._errors
    aeat.terminology._loader
    aeat.terminology._schema
+   aeat.terminology._validators
