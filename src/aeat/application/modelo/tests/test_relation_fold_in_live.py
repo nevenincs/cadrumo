@@ -1,11 +1,11 @@
-"""W03.P08.S14 — relation cross-modelo fold-in fires on the LIVE calculate path.
+"""Relation cross-modelo fold-in fires on the LIVE calculate path.
 
-Before this wave the registry relations were dead on the live operator calculate
+Previously the registry relations were dead on the live operator calculate
 path: ``RelationPrefillSourceResolver`` was not enrolled in the
 ``merge_source_resolutions`` mesh, so a cross-modelo fold-in (M180 annual ←
 M115 quarterly, M100 pagos-fraccionados ← M130, the M180/M190/M193
 reconciliations, the M200/M202 carries) resolved to a silent blank. The relation
-became canonical for cross-modelo fold-in (aggregation-taxonomy ADR rulings 2-4):
+became canonical for cross-modelo fold-in (aggregation-taxonomy rulings 2-4):
 the resolver is enrolled, it folds prior filed observations through each declared
 relation's aggregation op, and it materialises the result into the relation's
 ``target_binding`` slot (re-stamped from ``previous_filing`` to
@@ -168,7 +168,7 @@ def test_relation_target_collision_refused_by_mesh_guard(secure_objects: SecureO
     relation's ``target_binding`` slot and emits them in ``binding_values``. If
     another resolver in the mesh also claims that binding id, the mesh
     ``_claim_binding`` exclusive-ownership guard raises rather than silently
-    out-ranking one of the two (the double-write closure, ADR ruling 4).
+    out-ranking one of the two (the double-write closure, aggregation-taxonomy ruling 4).
     """
     obs_repo = CalculationObservationRepository()
     _seed_115_quarters(obs_repo=obs_repo)

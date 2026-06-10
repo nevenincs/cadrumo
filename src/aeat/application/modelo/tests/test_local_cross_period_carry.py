@@ -1,4 +1,4 @@
-"""Automatic local cross-period previous_filing carry (ADR modelo-iva-routing-carry, Wave C).
+"""Automatic local cross-period previous_filing carry.
 
 These tests exercise the local ``file`` -> next-period ``calculate`` carry seam end
 to end with real encrypted-SQLite repositories and the real registry — no mocks,
@@ -10,7 +10,7 @@ The carry vehicle is Modelo 130 (IRPF pago fraccionado, estimación directa). Ca
 ``saldo-negativo-fin-periodo`` (RD 439/2007 art. 110.5). When a quarter's Diferencia
 (casilla 17) is negative the absolute value seeds the next quarter's casilla 15.
 
-The four behaviours under test mirror the ADR rulings D1-D4:
+The four behaviours under test:
 
 * E2E (carry): filing 1T with a negative Diferencia persists an ``app_filing``
   observation; calculating 2T then auto-fills casilla 15 from it WITHOUT any manual
@@ -83,7 +83,7 @@ _NEGATIVE_1T_INPUTS: dict[str, Decimal] = {
     "18": Decimal("0"),
 }
 # Casilla "01" (actividad-económica gross income) is now owned by the enrolled
-# LedgerRentaIncomeAggregationSourceResolver (S09).  Callers must not supply it
+# LedgerRentaIncomeAggregationSourceResolver.  Callers must not supply it
 # on the aggregation path; the resolver returns zero for an empty transaction
 # bucket, which is correct for these carry-forward tests that do not seed income
 # transactions.  The carry-forward assertion (casilla 15 == 1T saldo-negativo)

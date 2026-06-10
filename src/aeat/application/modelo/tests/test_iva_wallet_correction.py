@@ -1,8 +1,7 @@
 """Real-behavior tests for the guarded IVA wallet correction path.
 
-Authority: ``2026-06-10-cli-operator-surface-adr`` decision D7 (read-back /
-correction baseline), plan ``2026-06-10-cli-operator-surface-plan`` steps
-W04.P10.S52-S54; CRUD-matrix audit finding F-05 (IVA wallet seed-once, no
+Authority: the operator-surface decision D7 (read-back /
+correction baseline); CRUD-matrix audit finding F-05 (IVA wallet seed-once, no
 correction path).
 
 ``iva-wallet seed`` is one-shot — it refuses to overwrite an existing record —

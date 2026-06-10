@@ -357,7 +357,7 @@ def test_guard_rejects_each_aeat_suffix_form_with_synthetic_data(aeat_host: str)
 def test_public_read_surface_synthetic_data_message_is_classification_specific() -> None:
     """public_read_surface synthetic data raises its own message, not the authenticated one.
 
-    Locks the validator phase split: the synthetic-data consistency predicates are
+    Locks the validator branch split: the synthetic-data consistency predicates are
     keyed on mutually-exclusive classifications, so a public_read_surface policy can
     only ever surface the public-reads message — never the authenticated-read one.
     """

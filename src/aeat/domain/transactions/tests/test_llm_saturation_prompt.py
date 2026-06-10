@@ -1,6 +1,6 @@
 """Real-behavior tests for the saturation extension of the LLM classifier.
 
-Covers the stage-2 P02 contract (``2026-06-04-llm-ledger-classification-adr``):
+Covers the IVA-category saturation contract (llm-ledger-classification decision):
 
 * :class:`LLMClassificationResponse` carries the ``iva_category`` *selection*
   and a proposed ``business_pct`` — and structurally REFUSES any regulated

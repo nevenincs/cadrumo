@@ -1,7 +1,6 @@
 """CLI surface tests for `aeat config profile preflight` revision defaulting.
 
-These tests prove the D8 decision (operator-surface ADR
-``2026-06-10-cli-operator-surface-adr``): ``--revision-id`` is no longer
+These tests prove the operator-surface decision: ``--revision-id`` is no longer
 required. When omitted, the active registry revision for the natural key
 (modelo, filing year, period) is resolved through the modelo-addressing
 resolver, which consumes the :class:`ValidatedRegistryAuthority`. An explicit
@@ -255,7 +254,7 @@ def test_ambiguous_resolution_carries_candidates_on_typed_field_not_message() ->
     TYPE and reads the candidate ids from the typed field, not by matching a
     substring of the human-readable message.
 
-    This pins the W01.P02 review follow-up contract: a rewording of the
+    This pins the robustness contract: a rewording of the
     ``AmbiguousRevisionSelectionError`` ``str()`` message must NOT break the
     operator-facing candidate listing, because the resolver never parses the
     message. The test installs a real twin revision into the live authority

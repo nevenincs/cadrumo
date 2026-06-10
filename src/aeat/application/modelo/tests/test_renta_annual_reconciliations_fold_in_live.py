@@ -1,6 +1,6 @@
-"""W04.P11.S18 — M180/M190/M193 renta annual reconciliations fold LIVE.
+"""M180/M190/M193 renta annual reconciliations fold LIVE.
 
-Three dormant cross-modelo annual reconciliations are proven end-to-end on the
+Three cross-modelo annual reconciliations are proven end-to-end on the
 LIVE operator calculate path
 (:func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`).
 Each annual summary modelo derives its declarante totals by folding the four
@@ -38,7 +38,7 @@ the enrolled relation resolver wires the four prior periodic filings through to
 each annual declarante casilla.
 
 Both M190 and M193 additionally declare ``source = "withholding"`` per-perceptor
-detalle bindings (the tipo-2 row producers) that are DEFER-with-advisory (S27):
+detalle bindings (the tipo-2 row producers) that are deferred with advisory:
 no resolver is enrolled, so the live calculate's ``source_diagnostics`` carries
 an ``unhandled_binding_source`` advisory naming ``withholding``. That advisory
 is EXPECTED and is asserted present alongside the clean relation fold — M190/M193
@@ -349,7 +349,7 @@ def test_m190_folds_in_four_m111_quarters_with_withholding_advisory(
 
     # The relation fold is clean (claimed source, no diagnostic names it)...
     assert not any(diag.source_kind == _RELATION_PREFILL_SOURCE for diag in result.source_diagnostics)
-    # ...but the deferred withholding detalle bindings MUST surface the S27
+    # ...but the deferred withholding detalle bindings MUST surface the
     # advisory (NOT empty diagnostics — that is the M180 relation-only case).
     withholding_advisories = [
         diag

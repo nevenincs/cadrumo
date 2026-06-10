@@ -7,7 +7,7 @@ storage root. Determinism comes from dependency injection — a concrete
 ``iva_category``) registered through the production
 :func:`register_classifier` registry — never a mock or monkeypatch.
 
-Coverage for the saturate contract (``2026-06-04-llm-ledger-classification-adr``):
+Coverage for the saturate contract (llm-ledger-classification decision):
 
 * preview (``--saturate`` without ``--apply``) derives the rate / base / amount
   from the model-selected IVA category and persists nothing;

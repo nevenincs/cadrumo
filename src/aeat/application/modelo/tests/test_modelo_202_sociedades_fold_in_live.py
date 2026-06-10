@@ -1,4 +1,4 @@
-"""W04.P12.S19 — Sociedades M202 cross-period folds fire on the LIVE calculate path.
+"""Sociedades M202 cross-period folds fire on the LIVE calculate path.
 
 The Impuesto sobre Sociedades fraccionado (Modelo 202) carries two cross-period
 values that the operator must not re-key. Both are proven here end-to-end on the
@@ -44,10 +44,10 @@ change in the relation's ``source_output``, ``source_periods``, or
 ``aggregation`` op would red the assertion.
 
 ----------------------------------------------------------------------------
-Coverage map for the W04.P12.S19 sociedades fold surface
+Coverage map for the sociedades fold surface
 ----------------------------------------------------------------------------
-* **M202 cumulative self-carry (casilla 30)** — newly proven LIVE here.
-* **M202 <- M200 cuota-base (casilla 01)** — newly proven LIVE here.
+* **M202 cumulative self-carry (casilla 30)** — proven LIVE here.
+* **M202 <- M200 cuota-base (casilla 01)** — proven LIVE here.
 * **M200 self BIN stock carry (00670) / dotaciones-deterioro (01494/01495)** —
   already driven through the REAL M200 engine by the direct-resolver continuity
   tests
@@ -70,9 +70,9 @@ Coverage map for the W04.P12.S19 sociedades fold surface
   orphaned: ``resolve_bound_casilla_inputs`` only routes a binding value to a
   casilla that names it, so the folded M202 pagos sum never reaches a casilla
   value. The fold is unobservable on the live path until a casilla is wired to
-  the binding; reported as a wiring gap (no fix in this test-only step).
+  the binding; reported as a wiring gap.
 * **M390 <- M303 iva** — already proven LIVE by
-  ``test_modelo_390_303_fold_in_live`` (S16); not duplicated here.
+  ``test_modelo_390_303_fold_in_live``; not duplicated here.
 """
 
 from __future__ import annotations

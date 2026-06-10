@@ -170,7 +170,7 @@ def test_config_profile_verb_accepts_output_language(verb: str) -> None:
 
 def test_config_switch_accepts_output_language() -> None:
     """``aeat config switch`` (the profile-switch verb that replaced
-    ``config unlock`` per the cli-operator-surface ADR D1) accepts
+    ``config unlock`` per the cli-operator-surface rename decision) accepts
     ``--output-language`` for parity with the rest of the config surface."""
     _assert_output_language_registered(["config", "switch"])
 

@@ -246,7 +246,7 @@ def test_modelo_100_dependent_modelos_construct_covers_every_previous_filing_bin
     # relation_prefill fold-in slots (130/131/111/115/123/180/184/190/193). The
     # latter were re-stamped from previous_filing to relation_prefill when the
     # relation became canonical for cross-modelo fold-ins (aggregation-taxonomy
-    # ADR ruling 3).
+    # decision ruling 3).
     filed_dependency_bindings = {
         binding.id
         for binding in snapshot.revision.bindings

@@ -1,4 +1,4 @@
-"""W04.P10.S16 — M390 annual folds M303 1T-4T quarters via cross_model_output relations (LIVE path).
+"""M390 annual folds M303 1T-4T quarters via cross_model_output relations (LIVE path).
 
 The annual IVA resumen (Modelo 390) casillas
 ``iva.anual.reconciliacion.devengada-303``,
@@ -11,9 +11,9 @@ The annual IVA resumen (Modelo 390) casillas
 by the single-period copy (4T only) and the three-quarter sum (1T-3T)
 compensación relations respectively.
 
-W04.P10.S16 migrated these five bindings from the now-retired ``previous_filing``
+These five bindings were migrated from the now-retired ``previous_filing``
 path to the canonical ``relation_prefill`` + ``cross_model_output`` relation
-pattern (ADR ``2026-06-10-calculation-aggregation-taxonomy-adr``, ruling 3).  This
+pattern (calculation-aggregation-taxonomy decision, ruling 3).  This
 module proves the wiring works end-to-end on the LIVE operator calculate path
 (:func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`):
 four M303 quarterly filings fold into the M390/0A annual reconciliation casillas.
@@ -37,7 +37,7 @@ empty IVA transaction ledger → zero for all ledger-derived casillas.
 
 M353←M322 ``per_grupo_member`` exemption note:
 The M353←M322 ``per_grupo_member`` cross-filer fan-in is EXEMPT from the
-``relation_prefill`` migration (ADR ruling 4 / W04.P10.S16 scope) because it
+``relation_prefill`` migration (calculation-aggregation-taxonomy ruling 4) because it
 represents a cross-taxpayer fan-in (many declarante GRUPO members → one
 consolidated resumen), not the single-owner quarterly fold-in pattern.  That
 relation is addressed separately when the M322/M353 grupo consolidation surface
@@ -202,8 +202,7 @@ def test_m390_folds_five_m303_relations_on_live_calculate(secure_objects: Secure
     - ``iva.anual.compensacion-ultimo-periodo-97`` (casilla 97) == copy(4T compensacion)
     - ``iva.anual.compensacion-generada-ejercicio-no-97`` (casilla 662) == sum(1T-3T compensacion)
 
-    This is the value-parity migration gate for W04.P10.S16.  The asserted
-    values derive from the seeded observations via the declared aggregation ops,
+    The asserted values derive from the seeded observations via the declared aggregation ops,
     never from the registry formula (non-tautological).
     """
     obs_repo = CalculationObservationRepository()
