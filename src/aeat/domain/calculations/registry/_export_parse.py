@@ -216,15 +216,15 @@ def _normalize_dictionary_casilla(value: str) -> str | None:
     return text if text.isdigit() else None
 
 
-def _find_xml_path(root: Element, absolute_path: str) -> tuple[Element, ...]:
+def _find_xml_path(root: Element[str], absolute_path: str) -> tuple[Element[str], ...]:
     parts = tuple(part for part in absolute_path.strip("/").split("/") if part)
     if not parts:
         return ()
-    current = (root,)
+    current: tuple[Element[str], ...] = (root,)
     for index, part in enumerate(parts):
         if index == 0 and len(current) == 1 and _local_name(current[0].tag) == part:
             continue
-        next_elements: list[Element] = []
+        next_elements: list[Element[str]] = []
         for element in current:
             next_elements.extend(child for child in element if _local_name(child.tag) == part)
         current = tuple(next_elements)

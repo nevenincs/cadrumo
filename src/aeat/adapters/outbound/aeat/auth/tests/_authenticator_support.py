@@ -75,7 +75,7 @@ def _isolated_secure_session_backend(tmp_path: Path):
 
 def _serialise_pkcs12(
     *,
-    subject_attrs: list[x509.NameAttribute] | None,
+    subject_attrs: list[x509.NameAttribute[str]] | None,
     not_valid_after: datetime | None,
 ) -> bytes:
     """Generate a real self-signed PKCS#12 bundle and return its bytes."""
@@ -123,7 +123,7 @@ def _default_pkcs12_bytes() -> bytes:
 def _build_bundle(
     tmp_path: Path,
     *,
-    subject_attrs: list[x509.NameAttribute] | None = None,
+    subject_attrs: list[x509.NameAttribute[str]] | None = None,
     not_valid_after: datetime | None = None,
 ) -> Path:
     """Generate a real self-signed PKCS#12 bundle on disk.
@@ -143,7 +143,7 @@ def _build_bundle(
 def _load_cert(
     tmp_path: Path,
     *,
-    subject_attrs: list[x509.NameAttribute] | None = None,
+    subject_attrs: list[x509.NameAttribute[str]] | None = None,
     not_valid_after: datetime | None = None,
 ) -> LoadedCertificate:
     """Build a bundle + load it under a deterministic env var name."""
