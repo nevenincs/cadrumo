@@ -45,13 +45,19 @@ _EXP_1T = "202613000010001A"
 _EXP_2T = "202613000020002B"
 
 
-def _declaration(*, period: str, expediente_id: str, presented_at: datetime) -> Declaracion:
+def _declaration(
+    *,
+    period: str,
+    expediente_id: str,
+    presented_at: datetime,
+    estado: str = "ALTA",
+) -> Declaracion:
     return Declaracion(
         modelo=_MODELO,
         ejercicio=_YEAR,
         period=period,
         expediente_id=expediente_id,
-        estado="Presentada",
+        estado=estado,
         presented_at=presented_at,
     )
 
@@ -118,7 +124,7 @@ def test_declaration_with_expediente_absent_from_tree_refuses() -> None:
         )
 
 
-def test_refiled_period_resolves_to_the_latest_filing() -> None:
+def test_refiled_period_resolves_to_the_latest_active_filing() -> None:
     early = _declaration(period="1T", expediente_id=_EXP_1T, presented_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC))
     refile_exp = "202613000010099Z"
     late = _declaration(period="1T", expediente_id=refile_exp, presented_at=datetime(2026, 5, 2, 11, 0, tzinfo=UTC))
@@ -129,6 +135,34 @@ def test_refiled_period_resolves_to_the_latest_filing() -> None:
         period="1T",
     )
     assert resolved.expediente_id == refile_exp
+
+
+def test_later_cancellation_does_not_win_over_earlier_active_filing() -> None:
+    """A later non-ALTA (cancelled/corrected) row must not outrank the ALTA filing.
+
+    Without the estado-aware tiebreak this would pick the later cancellation
+    row's expediente and pull the wrong-state receipt.
+    """
+    accepted = _declaration(
+        period="1T",
+        expediente_id=_EXP_1T,
+        presented_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC),
+        estado="ALTA",
+    )
+    cancelled_exp = "202613000010088Y"
+    cancelled = _declaration(
+        period="1T",
+        expediente_id=cancelled_exp,
+        presented_at=datetime(2026, 5, 10, 9, 0, tzinfo=UTC),
+        estado="Anulada",
+    )
+    resolved = resolve_period_expediente(
+        declarations=(accepted, cancelled),
+        expedientes=(_expediente(expediente_id=_EXP_1T), _expediente(expediente_id=cancelled_exp)),
+        modelo=_MODELO,
+        period="1T",
+    )
+    assert resolved.expediente_id == _EXP_1T
 
 
 def test_orchestrator_persists_period_correct_capture_offline(tmp_path: Path) -> None:
