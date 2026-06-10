@@ -60,6 +60,7 @@ __all__ = [
     "_register_row_artefact",
     "_registry_snapshot_for_declaration",
     "_store_artefact",
+    "_submitted_file_coverage_for_casillas",
     "_submitted_file_extraction_coverage",
     "_temporary_sensitive_pdf_path",
     "_verify_submitted_file_context",
@@ -214,6 +215,44 @@ def _submitted_file_extraction_coverage(
         if any(field.id in parsed_field_ids for field in fields)
     }
     return len(observed_casillas.intersection(expected)) / len(expected) if expected else 0.0
+
+
+def _submitted_file_coverage_for_casillas(
+    *,
+    snapshot: RegistrySnapshot,
+    body: bytes,
+    casillas: tuple[ObservedCasillaValue, ...],
+) -> float:
+    """Compute the submitted-file extraction coverage for observed ``casillas``.
+
+    Resolves the export layout for the snapshot and derives the fraction of
+    registry-expected casillas that the parsed submitted file actually yielded.
+    Mirrors the inline derivation that previously lived in the live capture
+    routine: a Modelo 303 snapshot without exports, an ``xml_dictionary`` layout,
+    and a Modelo 303 page-03 fallback are each treated as fully covered (1.0);
+    otherwise the parsed export fields are scored against the resolved layout's
+    ``fields_by_casilla`` map. Raises :class:`RegistryValidationError` for any
+    layout-resolution failure other than the Modelo 303 "no exports" case.
+    """
+    try:
+        resolved_layout = resolve_export_layout(snapshot)
+    except RegistryValidationError as exc:
+        if snapshot.modelo.id == Modelo.M303 and "has no exports" in str(exc):
+            return 1.0
+        raise
+    if resolved_layout.layout.format == "xml_dictionary" or _is_modelo_303_page_03_fallback(casillas):
+        return 1.0
+    parsed = parse_export_payload(
+        resolved_layout.layout,
+        body,
+        source_root=bundled_path(),
+        sources=snapshot.sources,
+    )
+    return _submitted_file_extraction_coverage(
+        parsed_field_ids=frozenset(field.field_id for field in parsed.fields),
+        observed_casillas=frozenset(casilla.casilla_id for casilla in casillas),
+        fields_by_casilla=resolved_layout.fields_by_casilla,
+    )
 
 
 _MODELO_303_PAGE_03_TAG = "<T30303000>"
