@@ -354,6 +354,81 @@ def test_guard_rejects_each_aeat_suffix_form_with_synthetic_data(aeat_host: str)
         )
 
 
+def test_public_read_surface_synthetic_data_message_is_classification_specific() -> None:
+    """public_read_surface synthetic data raises its own message, not the authenticated one.
+
+    Locks the validator phase split: the synthetic-data consistency predicates are
+    keyed on mutually-exclusive classifications, so a public_read_surface policy can
+    only ever surface the public-reads message — never the authenticated-read one.
+    """
+    with pytest.raises(ValueError, match="public reads must not use synthetic remote data"):
+        RemoteStateGuardPolicy(
+            id="public-read-synthetic",
+            evidence_tier="official_source_guidance",
+            classification="public_read_surface",
+            allowed_hosts=(_SEDE_HOST,),
+            synthetic_data_allowed=True,
+            requires_authentication=False,
+            requires_aeat_authorization=False,
+        )
+
+
+def test_authenticated_read_surface_requires_authentication_message() -> None:
+    """authenticated_read_surface without requires_authentication raises its own message."""
+    with pytest.raises(ValueError, match="authenticated filed-data read policy must require authentication"):
+        RemoteStateGuardPolicy(
+            id="auth-read-no-auth",
+            evidence_tier="official_source_guidance",
+            classification="authenticated_read_surface",
+            allowed_hosts=(_WWW6_HOST,),
+            synthetic_data_allowed=False,
+            requires_authentication=False,
+            requires_aeat_authorization=False,
+        )
+
+
+def test_forbidden_stateful_surface_rejects_synthetic_data() -> None:
+    """forbidden_stateful_surface with synthetic data raises in the synthetic-data phase."""
+    with pytest.raises(ValueError, match="forbidden stateful surface cannot accept synthetic remote data"):
+        RemoteStateGuardPolicy(
+            id="forbidden-synthetic",
+            evidence_tier="official_source_guidance",
+            classification="forbidden_stateful_surface",
+            allowed_hosts=(),
+            synthetic_data_allowed=True,
+            requires_authentication=False,
+            requires_aeat_authorization=False,
+        )
+
+
+def test_open_simulator_must_not_require_authentication() -> None:
+    """open_simulator with requires_authentication raises in the authentication phase."""
+    with pytest.raises(ValueError, match="open simulator policy must not require authentication"):
+        RemoteStateGuardPolicy(
+            id="open-sim-auth",
+            evidence_tier="executable_parity_evidence",
+            classification="open_simulator",
+            allowed_hosts=(_SEDE_HOST,),
+            synthetic_data_allowed=False,
+            requires_authentication=True,
+            requires_aeat_authorization=False,
+        )
+
+
+def test_live_policy_must_declare_allowed_hosts() -> None:
+    """A live read surface with no allowed hosts raises in the allowed-hosts phase."""
+    with pytest.raises(ValueError, match="AEAT remote policy must declare allowed hosts"):
+        RemoteStateGuardPolicy(
+            id="open-sim-no-hosts",
+            evidence_tier="executable_parity_evidence",
+            classification="open_simulator",
+            allowed_hosts=(),
+            synthetic_data_allowed=False,
+            requires_authentication=False,
+            requires_aeat_authorization=False,
+        )
+
+
 def test_remote_state_guard_blocks_unknown_aeat_host() -> None:
     with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
         assert_remote_operation_allowed(
