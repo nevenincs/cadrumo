@@ -1757,6 +1757,25 @@ required_text = [
     "Zona Especial Canaria",
 ]
 
+[legal."ley-19-1994:art-75"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-19-1994-art-75.html#a75"
+document_id = "BOE-A-1994-15794"
+article = "75"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794#a75"
+published_at = 1994-07-07
+effective_from = 1994-07-08
+review_status = "reviewed"
+reviewed_at = 2026-06-10
+reviewed_by = "wgergely"
+notes = "REBECA (Registro Especial de Buques de Canarias): el art 75.1 fija como renta exenta el 50 por 100 de los rendimientos del trabajo personal de los tripulantes de buques inscritos en el Registro Especial de Buques y Empresas Navieras devengados con ocasion de la navegacion. Provision que establece el 50 por 100 aplicado por REBECA_MARITIME_EXEMPTION_FRACTION y por la seccion renta exenta del Modelo 100 para trabajadores del mar."
+required_text = [
+    "renta exenta el 50 por 100",
+    "Registro Especial de Buques y Empresas Navieras",
+]
+
 [legal."ley-35-2006:art-48"]
 evidence_tier = "legal_authority"
 authority = "boe"
