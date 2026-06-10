@@ -1027,7 +1027,7 @@ def test_xlsx_import_is_id_for_id_parity_with_csv(tmp_path: Path) -> None:
 
     csv_path = _CORPUS / "bbva-business-eur.csv"
     # Canonical CSV id-set computed in-process (no bucket pollution / no reset).
-    csv_ids = {derive_transaction_id(raw) for raw in CsvProvider().ingest(csv_path)}
+    csv_ids = {derive_transaction_id(parsed.raw) for parsed in CsvProvider().ingest(csv_path)}
     assert len(csv_ids) > 40
 
     # Importing the XLSX mirror into the empty bucket must reproduce that exact

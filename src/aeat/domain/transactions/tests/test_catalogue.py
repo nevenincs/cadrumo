@@ -50,7 +50,7 @@ def _sample_raw(*, provider_id: str, amount: Decimal, description: str) -> RawTr
 def _sample_transaction(
     *,
     provider_id: str = "provider-row-1",
-    amount: Decimal = Decimal("-80.00"),
+    amount: Decimal = Decimal("80.00"),
     description: str = "Software subscription",
     classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED,
 ) -> Transaction:
@@ -154,7 +154,7 @@ def test_persistence_round_trip_preserves_catalogue(tmp_path: Path) -> None:
     """Saving then loading should round-trip the full catalogue."""
     catalogue = TransactionCatalogue.from_transactions(
         [
-            _sample_transaction(provider_id="provider-row-1", amount=Decimal("-80.00"), description="Subscription"),
+            _sample_transaction(provider_id="provider-row-1", amount=Decimal("80.00"), description="Subscription"),
             _sample_transaction(
                 provider_id="provider-row-2",
                 amount=Decimal("2500.00"),
@@ -279,7 +279,7 @@ def _bare_transaction() -> Transaction:
         transaction_id="provider-row-1",
         booked_date=date(2026, 4, 10),
         value_date=date(2026, 4, 10),
-        amount=Decimal("-12.00"),
+        amount=Decimal("12.00"),
         currency="EUR",
         counterparty="Vendor SL",
         description="Expense",

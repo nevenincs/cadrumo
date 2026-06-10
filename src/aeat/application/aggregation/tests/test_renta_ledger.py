@@ -56,7 +56,7 @@ def _raw_transaction(
     *,
     booked_date: date = date(2025, 4, 5),
     value_date: date | None = date(2025, 4, 5),
-    amount: Decimal = Decimal("-121.00"),
+    amount: Decimal = Decimal("121.00"),
     currency: str = "EUR",
 ) -> RawTransaction:
     return RawTransaction(
@@ -82,7 +82,7 @@ def _raw_transaction(
 def _transaction(
     provider_id: str,
     *,
-    amount: Decimal = Decimal("-121.00"),
+    amount: Decimal = Decimal("121.00"),
     category: SpendingCategory = SpendingCategory.ASESORIA_FISCAL,
     purchase_invoice_evidence_id: str | None = None,
     direction: TransactionDirection = TransactionDirection.OUTGOING,
@@ -222,7 +222,7 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
     ledger bindings from repository-backed transactions, keyed by binding id."""
     transaction = _transaction(
         "row-cli-renta",
-        amount=Decimal("-121.00"),
+        amount=Decimal("121.00"),
         category=SpendingCategory.ASESORIA_FISCAL,
     )
     tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
@@ -298,7 +298,7 @@ def test_repository_backed_aggregation_rejects_unbound_invoice_repository(
 def test_mixed_business_percentage_scales_transaction_only_expenses() -> None:
     mixed = _transaction(
         "row-mixed",
-        amount=Decimal("-200.00"),
+        amount=Decimal("200.00"),
         category=SpendingCategory.GASTOS_BANCARIOS,
         business_classification=BusinessClassification.MIXED,
         business_pct=Decimal("0.25"),
@@ -322,18 +322,18 @@ def test_mixed_business_percentage_scales_transaction_only_expenses() -> None:
 def test_archived_and_stashed_transactions_do_not_feed_renta_expense_aggregation() -> None:
     active = _transaction(
         "row-active",
-        amount=Decimal("-100.00"),
+        amount=Decimal("100.00"),
         category=SpendingCategory.GASTOS_BANCARIOS,
     )
     archived = _transaction(
         "row-archived",
-        amount=Decimal("-500.00"),
+        amount=Decimal("500.00"),
         category=SpendingCategory.GASTOS_BANCARIOS,
         lifecycle_state=TransactionLifecycleState.ARCHIVED,
     )
     stashed = _transaction(
         "row-stashed",
-        amount=Decimal("-700.00"),
+        amount=Decimal("700.00"),
         category=SpendingCategory.GASTOS_BANCARIOS,
         lifecycle_state=TransactionLifecycleState.STASHED,
     )
@@ -354,7 +354,7 @@ def test_archived_and_stashed_transactions_do_not_feed_renta_expense_aggregation
 def test_manual_transaction_tax_fields_feed_renta_observation_without_invoice_catalogue() -> None:
     manual = _transaction(
         "manual-tax-fields",
-        amount=Decimal("-121.00"),
+        amount=Decimal("121.00"),
         category=SpendingCategory.ASESORIA_FISCAL,
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("0.21"),
@@ -394,7 +394,7 @@ def test_linked_invoice_issue_date_controls_period_filtering() -> None:
 
 def test_multi_transaction_invoice_link_is_excluded_from_first_slice() -> None:
     first = _transaction("row-partial-a")
-    second = _transaction("row-partial-b", amount=Decimal("-60.50"))
+    second = _transaction("row-partial-b", amount=Decimal("60.50"))
     invoice = _invoice(first.transaction_id, linked_transaction_ids=(first.transaction_id, second.transaction_id))
     linked = _transaction("row-partial-a", purchase_invoice_evidence_id=invoice.invoice_id)
 
@@ -478,7 +478,7 @@ def test_transaction_only_renta_expense_buckets_on_value_date_caja_basis() -> No
     # value_date in-year (caja), booked_date in the prior year (devengo would differ).
     caja_in_year = _transaction(
         "row-caja-in-year",
-        amount=Decimal("-100.00"),
+        amount=Decimal("100.00"),
         category=SpendingCategory.GASTOS_BANCARIOS,
         booked_date=date(2024, 12, 31),
         value_date=date(2025, 1, 2),
@@ -487,7 +487,7 @@ def test_transaction_only_renta_expense_buckets_on_value_date_caja_basis() -> No
     # value_date in the prior year (caja), booked_date in-year (devengo would include).
     caja_out_of_year = _transaction(
         "row-caja-out-of-year",
-        amount=Decimal("-100.00"),
+        amount=Decimal("100.00"),
         category=SpendingCategory.GASTOS_BANCARIOS,
         booked_date=date(2025, 1, 2),
         value_date=date(2024, 12, 31),
@@ -537,7 +537,7 @@ def test_non_eur_transaction_is_reported_as_issue_before_fact_creation() -> None
 def test_zero_business_amount_is_reported_as_invalid_fact_issue() -> None:
     zero_business = _transaction(
         "row-zero-business",
-        amount=Decimal("-200.00"),
+        amount=Decimal("200.00"),
         category=SpendingCategory.GASTOS_BANCARIOS,
         business_classification=BusinessClassification.MIXED,
         business_pct=Decimal("0"),

@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 
+from ......domain.transactions import TransactionDirection
 from ......tests import FIXTURES_DIR
 from .. import OfxProvider
 
@@ -26,11 +27,14 @@ def test_ofx_provider_prefers_fitid_and_payee() -> None:
     fixture = _FIXTURES / "synthetic-transactions.ofx"
     validation = provider.validate_source(fixture)
     assert validation.is_valid, validation.warnings
-    transactions = tuple(provider.ingest(fixture))
-    assert len(transactions) == 2
-    assert transactions[0].transaction_id == "FIT-001"
-    assert transactions[0].counterparty == "CLIENTE DOS"
-    assert transactions[1].amount < 0
+    parsed_rows = tuple(provider.ingest(fixture))
+    assert len(parsed_rows) == 2
+    assert parsed_rows[0].raw.transaction_id == "FIT-001"
+    assert parsed_rows[0].raw.counterparty == "CLIENTE DOS"
+    # The second source row is a debit: stored as a non-negative magnitude
+    # with the sign lifted into the authoritative OUTGOING direction.
+    assert parsed_rows[1].raw.amount >= 0
+    assert parsed_rows[1].direction is TransactionDirection.OUTGOING
 
 
 def test_ofx_provider_ingests_every_account_statement(tmp_path: Path) -> None:
@@ -124,10 +128,10 @@ NEWFILEUID:NONE
     assert validation.detected_dialect == "account_count=2"
     assert "ACC-1" not in validation.detected_dialect
     assert "ACC-2" not in validation.detected_dialect
-    transactions = tuple(provider.ingest(source))
-    assert [transaction.transaction_id for transaction in transactions] == ["ONE", "TWO"]
-    assert [transaction.provenance.source_row_index for transaction in transactions] == [1, 2]
-    assert transactions[1].raw_fields["ACCTID"] == "ACC-2"
+    parsed_rows = tuple(provider.ingest(source))
+    assert [parsed.raw.transaction_id for parsed in parsed_rows] == ["ONE", "TWO"]
+    assert [parsed.raw.provenance.source_row_index for parsed in parsed_rows] == [1, 2]
+    assert parsed_rows[1].raw.raw_fields["ACCTID"] == "ACC-2"
 
 
 def test_ofx_provider_invalid_source_does_not_expose_filename(

@@ -18,10 +18,11 @@ from typing import TypedDict, override
 
 from .....core.external_constants import DEFAULT_CURRENCY
 from .....core.logging import get_logger
-from .....domain.transactions import RawTransaction, SourceFormat
+from .....domain.transactions import SourceFormat
 from ._base import (
     FinancialProvider,
     InvalidFinancialSourceError,
+    ParsedLedgerRow,
     ProviderValidation,
     build_raw_transaction,
     parse_amount_value,
@@ -139,8 +140,8 @@ class PdfN26Provider(FinancialProvider):
         )
 
     @override
-    def ingest(self, path: Path) -> Iterator[RawTransaction]:
-        """Yield strict :class:`RawTransaction` records from the N26 PDF statement."""
+    def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:
+        """Yield :class:`ParsedLedgerRow` records (magnitude + direction) from the N26 PDF statement."""
         source_bytes = self._read_source_bytes(path)
         source_sha256 = self._compute_sha256(source_bytes)
         pages = self._extract_pages(path)

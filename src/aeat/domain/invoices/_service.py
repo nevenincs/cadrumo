@@ -24,6 +24,7 @@ from ...core.logging import get_logger
 from ..iva import InvoiceKind
 from ..transactions import (
     TransactionCatalogue,
+    TransactionDirection,
 )
 from ._errors import (
     InvoiceLinkError,
@@ -191,10 +192,19 @@ def suggest_reconciliations(
     )
     suggestions: list[ReconciliationSuggestion] = []
     for invoice in unmatched_invoices:
-        expected = invoice.grand_total if invoice.kind is InvoiceKind.ISSUED else -invoice.grand_total
+        # ``amount`` is a non-negative magnitude; flow is carried by
+        # ``direction`` (ledger-amount-direction ADR). An ISSUED invoice
+        # reconciles against an INCOMING transaction, a RECEIVED invoice
+        # against an OUTGOING transaction, both matched on the magnitude
+        # against the invoice grand total.
+        expected_direction = (
+            TransactionDirection.INCOMING if invoice.kind is InvoiceKind.ISSUED else TransactionDirection.OUTGOING
+        )
         invoice_counterparty = invoice.counterparty_name.strip().lower()
         for transaction in candidate_transactions:
-            amount_match = abs(transaction.raw.amount - expected) <= amount_tolerance
+            if transaction.direction is not expected_direction:
+                continue
+            amount_match = abs(transaction.raw.amount - invoice.grand_total) <= amount_tolerance
             if not amount_match:
                 continue
             tx_counterparty = transaction.raw.counterparty

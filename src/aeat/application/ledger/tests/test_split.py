@@ -8,7 +8,7 @@ hand-computed arithmetic. Specifically:
   and emits exactly one LEDGER_TRANSACTION_SPLIT event anchored on
   the parent id.
 - Refusal paths: non-ACTIVE parent, child sum != parent amount,
-  mixed-sign children, single child, child amount == 0.
+  negative-magnitude child, single child, child amount == 0.
 - The split_group_id is content-addressed and deterministic.
 
 No assertion compares a child amount against a hand-summed Decimal
@@ -66,9 +66,9 @@ def _create_parent(
     transaction_repository: TransactionCatalogueRepository,
     event_repository: BucketEventHistoryRepository,
     *,
-    amount: Decimal = Decimal("-100.00"),
+    amount: Decimal = Decimal("100.00"),
+    direction: TransactionDirection = TransactionDirection.OUTGOING,
 ):
-    direction = TransactionDirection.OUTGOING if amount < Decimal("0") else TransactionDirection.INCOMING
     command = ManualLedgerTransactionCommand(
         bucket_id="bucket-a",
         booked_date=date(2026, 5, 2),
@@ -94,8 +94,8 @@ def test_split_transitions_parent_to_split_and_creates_children(secure_objects: 
         bucket_id="bucket-a",
         transaction_id=parent_result.ref.transaction_id,
         children=(
-            SplitChildCommand(amount=Decimal("-60.00"), description="business portion"),
-            SplitChildCommand(amount=Decimal("-40.00"), description="personal portion"),
+            SplitChildCommand(amount=Decimal("60.00"), description="business portion"),
+            SplitChildCommand(amount=Decimal("40.00"), description="personal portion"),
         ),
         actor="operator-A",
         reason="separate business and personal",
@@ -134,8 +134,8 @@ def test_split_emits_single_event_anchored_on_parent(secure_objects: SecureObjec
         bucket_id="bucket-a",
         transaction_id=parent_result.ref.transaction_id,
         children=(
-            SplitChildCommand(amount=Decimal("-30.00"), description="part one"),
-            SplitChildCommand(amount=Decimal("-70.00"), description="part two"),
+            SplitChildCommand(amount=Decimal("30.00"), description="part one"),
+            SplitChildCommand(amount=Decimal("70.00"), description="part two"),
         ),
         actor="operator-A",
         transaction_repository=transaction_repository,
@@ -163,8 +163,8 @@ def test_split_group_id_is_deterministic(secure_objects: SecureObjectRepository)
         bucket_id="bucket-a",
         transaction_id=parent_result.ref.transaction_id,
         children=(
-            SplitChildCommand(amount=Decimal("-30.00"), description="a"),
-            SplitChildCommand(amount=Decimal("-70.00"), description="b"),
+            SplitChildCommand(amount=Decimal("30.00"), description="a"),
+            SplitChildCommand(amount=Decimal("70.00"), description="b"),
         ),
         actor="operator-A",
         transaction_repository=transaction_repository,
@@ -193,7 +193,7 @@ def test_split_group_id_is_deterministic(secure_objects: SecureObjectRepository)
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 9),
-            amount=Decimal("-100.00"),
+            amount=Decimal("100.00"),
             direction=TransactionDirection.OUTGOING,
             counterparty="Vendor SL",
             description="materials",
@@ -207,8 +207,8 @@ def test_split_group_id_is_deterministic(secure_objects: SecureObjectRepository)
         bucket_id="bucket-a",
         transaction_id=other_parent_result.ref.transaction_id,
         children=(
-            SplitChildCommand(amount=Decimal("-30.00"), description="a"),
-            SplitChildCommand(amount=Decimal("-70.00"), description="b"),
+            SplitChildCommand(amount=Decimal("30.00"), description="a"),
+            SplitChildCommand(amount=Decimal("70.00"), description="b"),
         ),
         actor="operator-A",
         transaction_repository=transaction_repository,
@@ -234,8 +234,8 @@ def test_split_refuses_non_active_parent(secure_objects: SecureObjectRepository)
             bucket_id="bucket-a",
             transaction_id=parent_result.ref.transaction_id,
             children=(
-                SplitChildCommand(amount=Decimal("-60.00"), description="a"),
-                SplitChildCommand(amount=Decimal("-40.00"), description="b"),
+                SplitChildCommand(amount=Decimal("60.00"), description="a"),
+                SplitChildCommand(amount=Decimal("40.00"), description="b"),
             ),
             actor="operator-A",
             transaction_repository=transaction_repository,
@@ -251,8 +251,8 @@ def test_split_refuses_sum_mismatch(secure_objects: SecureObjectRepository) -> N
             bucket_id="bucket-a",
             transaction_id=parent_result.ref.transaction_id,
             children=(
-                SplitChildCommand(amount=Decimal("-60.00"), description="a"),
-                SplitChildCommand(amount=Decimal("-50.00"), description="b"),  # 60+50 != 100
+                SplitChildCommand(amount=Decimal("60.00"), description="a"),
+                SplitChildCommand(amount=Decimal("50.00"), description="b"),  # 60+50 != 100
             ),
             actor="operator-A",
             transaction_repository=transaction_repository,
@@ -267,24 +267,25 @@ def test_split_refuses_single_child(secure_objects: SecureObjectRepository) -> N
         split_transaction(
             bucket_id="bucket-a",
             transaction_id=parent_result.ref.transaction_id,
-            children=(SplitChildCommand(amount=Decimal("-100.00"), description="only one"),),
+            children=(SplitChildCommand(amount=Decimal("100.00"), description="only one"),),
             actor="operator-A",
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
         )
 
 
-def test_split_refuses_mixed_signs(secure_objects: SecureObjectRepository) -> None:
+def test_split_refuses_negative_magnitude_child(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     parent_result = _create_parent(transaction_repository, event_repository)
-    # parent is -100; one child positive flips sign
-    with pytest.raises(TransactionValidationError, match="share the parent's sign"):
+    # Amounts are non-negative magnitudes; a negative child is refused
+    # (flow is carried by the inherited direction, not by a sign).
+    with pytest.raises(TransactionValidationError, match="non-negative magnitude"):
         split_transaction(
             bucket_id="bucket-a",
             transaction_id=parent_result.ref.transaction_id,
             children=(
-                SplitChildCommand(amount=Decimal("-150.00"), description="a"),
-                SplitChildCommand(amount=Decimal("50.00"), description="b"),
+                SplitChildCommand(amount=Decimal("-30.00"), description="a"),
+                SplitChildCommand(amount=Decimal("130.00"), description="b"),
             ),
             actor="operator-A",
             transaction_repository=transaction_repository,
@@ -300,7 +301,7 @@ def test_split_refuses_zero_child_amount(secure_objects: SecureObjectRepository)
             bucket_id="bucket-a",
             transaction_id=parent_result.ref.transaction_id,
             children=(
-                SplitChildCommand(amount=Decimal("-100.00"), description="a"),
+                SplitChildCommand(amount=Decimal("100.00"), description="a"),
                 SplitChildCommand(amount=Decimal("0.00"), description="b"),
             ),
             actor="operator-A",
@@ -318,7 +319,7 @@ def test_split_preserves_parent_amount_as_persisted_child_sum(secure_objects: Se
     """
     transaction_repository, event_repository = _repositories(secure_objects)
     parent_result = _create_parent(transaction_repository, event_repository)
-    amounts = (Decimal("-45.50"), Decimal("-54.50"))
+    amounts = (Decimal("45.50"), Decimal("54.50"))
     result = split_transaction(
         bucket_id="bucket-a",
         transaction_id=parent_result.ref.transaction_id,

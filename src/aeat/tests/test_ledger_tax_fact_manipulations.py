@@ -91,7 +91,7 @@ def test_base_iva_rederivation_at_21_10_4_routes_to_m303_soportado() -> None:
         txns.append(
             Transaction.model_validate(
                 {
-                    "raw": _raw(f"row-rate-{idx}", amount=-gross, description=f"Compra al {rate}"),
+                    "raw": _raw(f"row-rate-{idx}", amount=gross, description=f"Compra al {rate}"),
                     "direction": TransactionDirection.OUTGOING,
                     "business_classification": BusinessClassification.BUSINESS,
                     "taxable_base": base,
@@ -120,7 +120,7 @@ _DEDUCTIBLE_CATEGORY = SpendingCategory.ARRENDAMIENTO_LOCAL
 
 def _deductible_total(*, classification: BusinessClassification, business_pct: Decimal | None) -> Decimal:
     payload = {
-        "raw": _raw("row-mixed", amount=Decimal("-121.00"), description="Alquiler local comercial"),
+        "raw": _raw("row-mixed", amount=Decimal("121.00"), description="Alquiler local comercial"),
         "direction": TransactionDirection.OUTGOING,
         "business_classification": classification,
         "category_id": _DEDUCTIBLE_CATEGORY.value,

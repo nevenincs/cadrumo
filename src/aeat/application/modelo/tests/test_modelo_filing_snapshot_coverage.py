@@ -49,7 +49,7 @@ def _tx(
     *,
     taxable_base: Decimal = Decimal("100.00"),
     iva_amount: Decimal = Decimal("21.00"),
-    raw_amount: Decimal = Decimal("-121.00"),
+    raw_amount: Decimal = Decimal("121.00"),
     category_id: str = "material_oficina",
 ) -> Transaction:
     raw = RawTransaction(

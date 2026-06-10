@@ -66,7 +66,7 @@ def _drive_update_manual_transaction(secure_objects: SecureObjectRepository) -> 
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-50.00"),
+            amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
             description="draft description",
             idempotency_key="cash-row",
@@ -80,7 +80,7 @@ def _drive_update_manual_transaction(secure_objects: SecureObjectRepository) -> 
         command=ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-60.00"),
+            amount=Decimal("60.00"),
             direction=TransactionDirection.OUTGOING,
             description="corrected description",
             business_classification=BusinessClassification.MIXED,
@@ -183,7 +183,7 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-75.00"),
+            amount=Decimal("75.00"),
             direction=TransactionDirection.OUTGOING,
             description="pending row",
             idempotency_key="typed-patch",
@@ -234,7 +234,7 @@ def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassi
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-121.00"),
+            amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
             description="office supplies",
             business_classification=BusinessClassification.BUSINESS,
@@ -290,7 +290,7 @@ def test_update_manual_transaction_emits_purchase_evidence_attachment_event(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-121.00"),
+            amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
             description="material oficina",
             idempotency_key="evidence-attach",
@@ -305,7 +305,7 @@ def test_update_manual_transaction_emits_purchase_evidence_attachment_event(
         command=ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-121.00"),
+            amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
             description="material oficina",
             purchase_invoice_evidence_id=purchase_evidence.invoice_id,
@@ -344,7 +344,7 @@ def test_attach_manual_transaction_evidence_delegates_to_validated_backend_patch
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-121.00"),
+            amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
             description="material oficina",
             idempotency_key="evidence-helper-attach",
@@ -385,7 +385,7 @@ def test_update_manual_transaction_mixed_edit_and_evidence_lineage_uses_evidence
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-121.00"),
+            amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
             description="material oficina",
             idempotency_key="mixed-evidence-attach",
@@ -400,7 +400,7 @@ def test_update_manual_transaction_mixed_edit_and_evidence_lineage_uses_evidence
         command=ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-121.00"),
+            amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
             description="material oficina corrected",
             business_classification=BusinessClassification.BUSINESS,
@@ -430,7 +430,7 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_obj
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 2),
-            amount=Decimal("-25.00"),
+            amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
             description="modelo source row",
             idempotency_key="update-blocked",
@@ -447,7 +447,7 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_obj
             command=ManualLedgerTransactionCommand(
                 bucket_id="bucket-a",
                 booked_date=date(2026, 5, 2),
-                amount=Decimal("-35.00"),
+                amount=Decimal("35.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="mutated modelo source row",
                 idempotency_key="update-blocked",
@@ -474,7 +474,7 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-50.00"),
+            amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
             description="telefono movil",
             idempotency_key="usage-ratio-update",
@@ -491,7 +491,7 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
             command=ManualLedgerTransactionCommand(
                 bucket_id="bucket-a",
                 booked_date=date(2026, 5, 1),
-                amount=Decimal("-50.00"),
+                amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="telefono movil corrected",
                 business_classification=BusinessClassification.MIXED,
@@ -517,7 +517,7 @@ def test_update_manual_transaction_rejects_provenance_only_correction(secure_obj
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-50.00"),
+            amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
             description="same row",
             idempotency_key="same-row",
@@ -533,7 +533,7 @@ def test_update_manual_transaction_rejects_provenance_only_correction(secure_obj
             command=ManualLedgerTransactionCommand(
                 bucket_id="bucket-a",
                 booked_date=date(2026, 5, 1),
-                amount=Decimal("-50.00"),
+                amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="same row",
                 idempotency_key="same-row",
@@ -553,7 +553,7 @@ def _create_classified_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-121.00"),
+            amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
             description="office supplies",
             business_classification=BusinessClassification.BUSINESS,

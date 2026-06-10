@@ -9,7 +9,7 @@ or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -44,11 +44,9 @@ from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.transactions import (
     TX_BUCKET_NAMESPACE,
     BucketTransactionRef,
-    RawTransaction,
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepository,
-    TransactionDirection,
     TransactionNotFoundError,
     TransactionValidationError,
 )
@@ -66,7 +64,6 @@ from ._models import (
     ManualLedgerTransactionResult,
 )
 
-DirectionResolver = Callable[[RawTransaction], TransactionDirection]
 _BUCKET_EVENT_PAYLOAD_VERSION = 1
 
 _EventSpec = tuple[BucketEventType, BucketEventObjectType, str, dict[str, str]]
@@ -122,10 +119,6 @@ def _bucket_event_repository(
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
-
-
-def _direction_from_amount(raw: RawTransaction) -> TransactionDirection:
-    return TransactionDirection.OUTGOING if raw.amount < 0 else TransactionDirection.INCOMING
 
 
 def _require_actor(value: str, *, operation: str) -> str:

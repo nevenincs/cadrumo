@@ -218,7 +218,7 @@ def test_malformed_cli_input_surfaces_input_time_validation_boundary(
             "--date",
             "not-a-date",
             "--amount",
-            "-50.00",
+            "50.00",
             "--direction",
             "OUTGOING",
             "--description",
