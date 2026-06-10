@@ -168,7 +168,7 @@ To compare your local record with the AEAT receipt, see
   not ready yet.
 - [Classify transactions](classify-transactions.md) before calculating from
   imported rows.
-- [How calculations work](../explanation/ledger-to-calculation.md) - understand the transaction-to-box pipeline.
+- [How your records become tax figures](../explanation/from-records-to-figures.md) - understand the transaction-to-box pipeline.
 - [Review and supply calculation inputs](review-calculation-values.md) when a
   modelo needs manual values, offsets, or binding review.
 - [Diagnose and repair your local setup](troubleshooting.md) if a command stops

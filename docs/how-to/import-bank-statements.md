@@ -365,7 +365,7 @@ ledger is not ready, use
 
 - [Classify transactions](classify-transactions.md)
 - [Classify transactions with an LLM](classify-with-llm.md)
-- [How calculations work](../explanation/ledger-to-calculation.md)
+- [How your records become tax figures](../explanation/from-records-to-figures.md)
 - [Review calculations with Google Sheets](review-with-google-sheets.md)
 - [Quickstart: produce a modelo file](quickstart.md)
 - [Review and supply calculation inputs](review-calculation-values.md)

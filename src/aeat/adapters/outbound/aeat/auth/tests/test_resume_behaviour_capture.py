@@ -40,7 +40,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import cast
+from typing import cast, override
 
 import pytest
 
@@ -144,6 +144,7 @@ class _CaptureFailingContext(_RecordingBrowserContext):
     ``_capture_storage_state_locked`` before failing there.
     """
 
+    @override
     async def storage_state(self) -> dict[str, object]:
         raise RuntimeError("storage_state capture failed")
 

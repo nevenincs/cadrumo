@@ -225,4 +225,18 @@ document and proposing a split are the same act of understanding.
 
 ## Codification candidates
 
+- **Rule slug:** `evidence-read-never-emits-regulated-numbers`.
+  **Rule:** When an LLM reads attached evidence (PDF, image, email, document) to
+  classify a transaction, it may select the spending category and IVA category
+  from registry-grounded allow-lists and propose split boundaries, but the
+  persisted `iva_rate` / `taxable_base` / `iva_amount` MUST stay registry-derived;
+  an invoice-printed amount is an advisory cross-check only, never the persisted
+  value (capability to read a number is not permission to emit it). Extends
+  `llm-selects-system-derives-tax-numbers` to the evidence-reading case.
+- **Rule slug:** `decrypted-evidence-leaves-process-only-on-permitted-path`.
+  **Rule:** Decrypted `FINANCIAL`-sensitivity evidence may be sent to an LLM
+  provider (HTTP base64/file upload) or materialised to a temp file for a CLI agent
+  only along an explicitly operator-permitted path; the decrypted temp file MUST be
+  written to a private location, removed promptly after the read, and never logged,
+  and the permitted-provider set is read from central `Settings`, not hard-coded.
 

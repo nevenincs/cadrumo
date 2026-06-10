@@ -218,7 +218,7 @@ with `ledger view` before calculating.
 
 - [Work with Transactions](import-bank-statements.md)
 - [Classify transactions with an LLM](classify-with-llm.md)
-- [How calculations work](../explanation/ledger-to-calculation.md)
+- [How your records become tax figures](../explanation/from-records-to-figures.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [Review calculations with Google Sheets](review-with-google-sheets.md)
 - [CLI reference](../cli/index.rst)
