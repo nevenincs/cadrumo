@@ -32,24 +32,24 @@ Period-aware expediente resolution and the require_live_read-gated async orchest
 
 Stamp the captured justificante as official evidence under aeat_sede_live_capture so a dependent period clears MISSING_JUSTIFICANTE_VERIFICATION.
 
-- [ ] `P03.S07` - Stamp the captured justificante as official evidence (aeat_sede_live_capture observation plus ExternalEvidence on the filing record) reusing the import_external_filing_evidence single-writer pattern.; `src/aeat/application/live/_justificante.py`.
-- [ ] `P03.S08` - Prove a dependent period whose only upstream evidence is the live capture no longer raises MISSING_JUSTIFICANTE_VERIFICATION, and that a non-official kind still would.; `src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
+- [x] `P03.S07` - Stamp the captured justificante as official evidence (aeat_sede_live_capture observation plus ExternalEvidence on the filing record) reusing the import_external_filing_evidence single-writer pattern.; `src/aeat/application/live/_justificante.py`.
+- [x] `P03.S08` - Prove a dependent period whose only upstream evidence is the live capture no longer raises MISSING_JUSTIFICANTE_VERIFICATION, and that a non-official kind still would.; `src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
 
 ### Phase `P04` - Reconcile against the persisted artefact
 
 Materialise persisted pdf_bytes to a transient path and run the unchanged local modelo_reconcile, preserving the parser path-redaction privacy behaviour.
 
-- [ ] `P04.S09` - Add the reconcile-from-persisted seam that materialises stored pdf_bytes to a transient readable path, runs the unchanged local modelo_reconcile, and preserves the parser path-redaction behaviour.; `src/aeat/application/live/_justificante.py`.
-- [ ] `P04.S10` - Prove reconcile against a persisted live capture yields the expected verdict and that no caller-controlled path leaks into error messages.; `src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py`.
+- [x] `P04.S09` - Add the reconcile-from-persisted seam that materialises stored pdf_bytes to a transient readable path, runs the unchanged local modelo_reconcile, and preserves the parser path-redaction behaviour.; `src/aeat/application/live/_justificante.py`.
+- [x] `P04.S10` - Prove reconcile against a persisted live capture yields the expected verdict and that no caller-controlled path leaks into error messages.; `src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py`.
 
 ### Phase `P05` - CLI surface, locales and docs
 
 New aeat app live justificante capture verb mirroring the expedientes CLI, with locale parity and regenerated API stubs.
 
-- [ ] `P05.S11` - Add the aeat app live justificante capture/list/view verbs mirroring the expedientes CLI, with typed result payloads.; `src/aeat/entrypoints/cli/_app_live_justificante_cli.py`.
-- [ ] `P05.S12` - Register the justificante sub-app on the live read command group, verified by the live read subgroups test; `src/aeat/entrypoints/cli/_app_live.py`.
-- [ ] `P05.S13` - Add the cli.app.live.justificante locale keys across all four catalogues through the aeat.locales CLI, verified by parity and translation-honesty gates; `src/aeat/locales/en.yml`.
-- [ ] `P05.S14` - Regenerate the API reference stubs for the new modules via the apidocs CLI and gate documented-command conformance plus scaffold --check.; `docs/api/aeat.application.live.rst`.
+- [x] `P05.S11` - Add the aeat app live justificante capture/list/view verbs mirroring the expedientes CLI, with typed result payloads.; `src/aeat/entrypoints/cli/_app_live_justificante_cli.py`.
+- [x] `P05.S12` - Register the justificante sub-app on the live read command group, verified by the live read subgroups test; `src/aeat/entrypoints/cli/_app_live.py`.
+- [x] `P05.S13` - Add the cli.app.live.justificante locale keys across all four catalogues through the aeat.locales CLI, verified by parity and translation-honesty gates; `src/aeat/locales/en.yml`.
+- [x] `P05.S14` - Regenerate the API reference stubs for the new modules via the apidocs CLI and gate documented-command conformance plus scaffold --check.; `docs/api/aeat.application.live.rst`.
 
 ## Description
 
