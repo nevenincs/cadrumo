@@ -39,7 +39,6 @@ from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.logging import get_logger
 from ...core.parsing._dates import _parse_iso8601_date
-from ...core.parsing._utils import _parse_bool
 from ...domain.calculations.registry import (
     DataBindingDefinition,
     RegistrySnapshot,
@@ -56,7 +55,6 @@ from ...domain.user_profile import (
     load_user_profile_schema,
     profile_binding_selectors,
 )
-from ._decimal_binding_value import decimal_from_string
 
 
 class ProfileBindingResolutionError(ModeloError):
@@ -265,25 +263,6 @@ def _decimal_value(binding_id: str, value: object) -> Decimal:
         return value
     if isinstance(value, int):
         return Decimal(value)
-    if isinstance(value, str):
-        # Legacy path: tolerate string-encoded booleans and numeric strings
-        # that may arrive from older serialised records or direct callers.
-        stripped = value.strip()
-        _bool_candidate = _parse_bool(stripped)
-        if isinstance(_bool_candidate, bool):
-            return Decimal("1") if _bool_candidate else Decimal("0")
-        return decimal_from_string(
-            binding_id,
-            stripped,
-            error_factory=lambda _message: ProfileBindingResolutionError(
-                f"profile fact for numeric binding {binding_id!r} must be decimal-compatible. "
-                "The registry consumes this binding as a numeric operand, not an enum "
-                "dispatch key; the profile fact must carry a numeric value",
-                translated_message="application.modelo.profile_binding.errors.decimal_value_invalid",
-                context={"binding_id": binding_id, "value_type": "str"},
-            ),
-            pipeline_label="profile fact",
-        )
     raise ProfileBindingResolutionError(
         f"profile fact for Decimal-channel binding {binding_id!r} is not decimal-compatible; "
         f"got value type {type(value).__name__!r}. The registry consumes this binding as a "
