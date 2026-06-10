@@ -289,8 +289,7 @@ def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_3
     unconsumed_diagnostics = [
         diagnostic
         for diagnostic in resolution.diagnostics
-        if diagnostic.source_kind == "ledger_iva_aggregation"
-        and reverse_charge.transaction_id in diagnostic.message
+        if diagnostic.source_kind == "ledger_iva_aggregation" and reverse_charge.transaction_id in diagnostic.message
     ]
     assert unconsumed_diagnostics == []
     # Both the devengado (box 13) and deducible (box 37) bindings carry the
@@ -355,8 +354,7 @@ def test_iva_source_mesh_resolver_does_not_flag_cuota_less_by_law_observation(
     cuota_less_diagnostics = [
         diagnostic
         for diagnostic in resolution.diagnostics
-        if diagnostic.source_kind == "ledger_iva_aggregation"
-        and exempt_supply.transaction_id in diagnostic.message
+        if diagnostic.source_kind == "ledger_iva_aggregation" and exempt_supply.transaction_id in diagnostic.message
     ]
     assert cuota_less_diagnostics == []
 

@@ -121,9 +121,7 @@ _EXPECTED_RESULTADO_TOTAL = sum(v[_RESULTADO] for v in _M303_BY_PERIOD.values())
 # compensacion-ultimo-periodo: copy of 4T
 _EXPECTED_COMPENSACION_ULTIMO = _M303_BY_PERIOD["4T"][_COMPENSACION]  # 300.00
 # compensacion-generada-ejercicio-no-97: sum of 1T+2T+3T
-_EXPECTED_COMPENSACION_NO97 = sum(
-    _M303_BY_PERIOD[p][_COMPENSACION] for p in ("1T", "2T", "3T")
-)  # 45.00
+_EXPECTED_COMPENSACION_NO97 = sum(_M303_BY_PERIOD[p][_COMPENSACION] for p in ("1T", "2T", "3T"))  # 45.00
 
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 
@@ -149,9 +147,7 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
                 modelo="303",
                 filing_year=_YEAR,
                 period=period,
-                observations=tuple(
-                    CasillaObservation(casilla_id=cid, value=val) for cid, val in casillas.items()
-                ),
+                observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in casillas.items()),
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
@@ -217,7 +213,7 @@ def test_m390_folds_five_m303_relations_on_live_calculate(secure_objects: Secure
     # single-quarter copy cannot satisfy the assertion.
     devengada_values = [_M303_BY_PERIOD[p][_DEVENGADA] for p in ("1T", "2T", "3T", "4T")]
     assert len(set(devengada_values)) == 4, "test requires DISTINCT per-quarter devengada values"
-    assert _EXPECTED_DEVENGADA_TOTAL == Decimal("620.00")
+    assert Decimal("620.00") == _EXPECTED_DEVENGADA_TOTAL
 
     result = _calculate_m390_annual(secure_objects)
 

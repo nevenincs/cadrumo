@@ -9,74 +9,176 @@ related:
   - '[[2026-06-09-modelo-iva-routing-carry-adr]]'
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #adr) and one feature tag.
-     Replace live-justificante-reconcile with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar]]'.
 
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-# `live-justificante-reconcile` adr: `live-sourced justificante reconciliation bridge` | (**status:** `{accepted|rejected|deprecated}`)
+# `live-justificante-reconcile` adr: `live-sourced justificante reconciliation bridge` | (**status:** `accepted`)
 
 ## Problem Statement
 
-<!-- Briefly describe the architectural problem or concern.
-Describe why the ADR is being persisted. Is this a new feature? Result of an audit? -->
+The operator-facing modelo reconciliation surface only accepts a justificante PDF
+that the operator has already downloaded by hand and points at with a filesystem
+path (`modelo_reconcile` in `application/modelo/_reconcile.py`, fed by the
+`reconcile` / `reconcile-from-justificante` CLI verbs). Yet the application can
+already authenticate read-only to the AEAT sede electrónica and contains a
+complete end-to-end routine — `capture_justificante` in
+`adapters/outbound/aeat/sede/_walker.py` — that resolves a work unit's expediente,
+follows the CSV handle, and downloads the authentic AEAT-signed justificante PDF
+into a typed `SedeCapture` (`pdf_bytes`, `pdf_sha256`). The two halves are not
+connected: a repository-wide search finds `capture_justificante` / `SedeCapture`
+referenced only inside the `sede` adapter and `.vault/` documents — no
+application or CLI consumer. `SedeCapture`'s own docstring even declares it is
+"consumed by the reconciler", documenting wiring that was never built. From the
+operator's seat this is a regression: the app can fetch the receipt but forces a
+manual download anyway. This ADR records the decision, derived from the research,
+to bridge the orphaned live capture into the reconcile flow.
 
 ## Considerations
 
-<!-- Key factors, constraints, requirements. Tech/libraries considered. -->
+The decision space and the user-approved choice:
+
+- **Bridge shape — persist-then-reconcile (chosen) vs stream-bytes.** The chosen
+  shape introduces a new live-gated capture service that pulls the justificante,
+  persists its `pdf_bytes` into the active bucket as an encrypted secure object
+  stamped with an official source kind, and then lets the existing local
+  reconcile run against the persisted artefact. The rejected alternative
+  (`stream-bytes`) would add a `LIVE_SEDE` source kind to `modelo_reconcile`
+  itself, capture in-memory, diff, and persist nothing — which breaks the
+  deliberate local-only invariant of `modelo_reconcile`, discards the authentic
+  PDF, and leaves the official-evidence gate unsatisfied.
+- **CLI placement — new live verb (chosen) vs flag on `reconcile`.** The capture
+  verb lives in the live command family (alongside `aeat app live expedientes
+  capture` and `aeat app live notifications capture`), keeping the live-gate owner
+  distinct from the local `reconcile` verb. A `--from-sede` flag on `reconcile`
+  was rejected as it blurs the local/live boundary at the operator surface.
+- **A mature pattern already exists.** `application/live/` is a package of
+  read-only live snapshot services (`ExpedientesService`, `NotificationsService`,
+  `CensoService`, `Borrador100`) built on the shared `_snapshot_base`
+  abstraction. Each persists encrypted, content-addressed snapshots into a
+  `SecureObjectRepository` scoped to the active bucket, behind
+  `_AeatAccessGate.require_live_read()`, exposed by an `_app_live_*_cli.py` verb.
+  The new feature is a new sibling service, not a greenfield design.
+- **The official-evidence gate is the second beneficiary.** The cross-period
+  clean-state gate (`application/calculations/_cross_period_clean_state.py`)
+  raises `MISSING_JUSTIFICANTE_VERIFICATION` unless upstream evidence carries an
+  official `source_kind`. `_OFFICIAL_SOURCE_KINDS` already contains
+  `aeat_sede_live_capture`. A live-captured PDF persisted under that kind both
+  feeds reconcile and clears the dependent-period filing gate — a
+  hand-downloaded, transiently-parsed PDF does neither.
 
 ## Constraints
 
-<!-- Technical limitations, e.g.: depends on non-mature library, frontier feature, requires rigorous research. 'Frontier' risk, e.g. technology is new and falls outside the implementing model's training cutoff.
-
-List out the blocking constrainst, and features, gaps needed for reliable implementation. Must explicitly evaluate how stable 'parent' features are if this adr
-relies on another feature. -->
+- **The local-only reconcile invariant is load-bearing and must survive.**
+  `modelo_reconcile` documents that it "never contacts AEAT and never invokes
+  `require_live_read`". The new live capability MUST live in a separate
+  live-gated service; `modelo_reconcile` is consumed unchanged against the
+  persisted artefact.
+- **The justificante parser is path-only.** `parse_justificante` accepts a
+  `pathlib.Path` and reads through `extract_text(path, backend)`, and it redacts
+  caller-controlled filesystem paths out of its error messages. Reconciling
+  persisted bytes therefore requires either (a) materialising the secure-object
+  bytes to a transient readable file for the existing path-only parser, or (b)
+  adding a bytes-accepting parse entry point. This ADR selects (a) for the first
+  increment — a transient, redaction-safe temp materialisation owned by the live
+  service — to avoid widening the inbound parser surface; (b) is a viable later
+  refactor and is non-blocking.
+- **Read-only safety envelope.** Every sede record carries `mode:
+  Literal["read"]`; the capture follows the established named read-capability
+  pattern (cf. `aeat-csv-verifier-read`) and performs no submit/mutate, so it
+  does not touch the `aeat-safety-legal-gates` prohibition. It rides the existing
+  `AEAT_LIVE_TESTS_ENABLED` opt-in via `require_live_read`.
+- **Parent-feature stability.** This ADR depends only on already-shipped,
+  exercised surfaces: `capture_justificante` + `SedeCapture` (the aeat-verify
+  feature), the `_snapshot_base` lifecycle, the `SecureObjectRepository`
+  persistence layer, and `_OFFICIAL_SOURCE_KINDS`. No frontier or
+  outside-training-cutoff technology is involved. The only genuinely new logic is
+  expediente-resolution-from-work-unit and the justificante snapshot payload
+  model.
+- **Expediente resolution caveat.** `find_expediente(session, modelo, ejercicio)`
+  returns the first expediente matching `(modelo, ejercicio)` — it does not
+  disambiguate by period. For multi-period modelos (quarterly 1T–4T) the resolver
+  MUST narrow further (by period / presentation date) or surface an operator
+  disambiguation rather than silently reconciling against the wrong quarter's
+  receipt. This is the primary design risk the plan must address.
 
 ## Implementation
 
-<!-- A high-level overview (not a plan!) of HOW and WHAT will be implemented. Focus on condense but clear prose that describes functionality layering.
+A new live snapshot service `JustificanteCaptureService` is added under
+`application/live/` as a stateful `SnapshotService` sibling of `Borrador100`,
+keyed on the `(modelo, filing_year, period)` axis so a re-filed period's fresh
+capture supersedes the prior ACTIVE one through the shared lifecycle machinery. A
+strict `PersistedJustificanteCapture` payload model carries the bucket id, the
+content-addressed `snapshot_id` (derived from `pdf_sha256`), the expediente and
+CSV reference, the captured `pdf_bytes`, the lifecycle state, and the official
+`source_kind` `aeat_sede_live_capture`. Persistence reuses the
+`SecureSnapshotRepository` so the payload is stored as an encrypted, classified
+`Envelope` in the active bucket — no new persistence machinery.
 
-Do not add code (code references must be persisted in separate `{reference}` document. Important `{reference}` snippets must be summarised and referenced explicitly. -->
+The capture flow: `require_live_read()` gates entry; the work unit resolves to an
+`(modelo, filing_year, period)` triple; `find_expediente` (narrowed for period)
+locates the expediente; `capture_justificante` downloads the `SedeCapture`; the
+service builds and persists the snapshot, deduplicating on `pdf_sha256` so a
+repeat capture of the same receipt is idempotent. In the same flow the
+service stamps the official evidence onto the filing record by mirroring the
+`import_external_filing_evidence` pattern (an `ExternalEvidence` reference keyed
+by `pdf_sha256`), so the captured receipt satisfies the cross-period
+`MISSING_JUSTIFICANTE_VERIFICATION` gate.
+
+A new CLI verb in the live family — `aeat app live justificante capture` —
+mirrors `_app_live_expedientes_cli.py`: it takes the work-unit selectors, calls
+the service, and renders a typed envelope. Reconciliation is then a second step:
+the existing local `reconcile` runs against the persisted artefact, which the
+live service exposes by materialising the stored `pdf_bytes` to a transient
+readable path for the path-only `parse_justificante`. A convenience may later
+chain capture→reconcile, but the two services stay separate so the local-only
+boundary holds. CSV authenticity via the existing `verify_csv` /
+`application/live/_verify.py` surface is recorded as a deferred increment that can
+stamp an authenticity result onto the captured snapshot.
 
 ## Rationale
 
-<!-- Brief rationale why architecture descision was made. Reference `{research}` findings and grounding `{reference}`. -->
+The persist-then-reconcile shape is the only candidate that keeps the deliberate
+local-only reconcile boundary intact, converts the orphaned `capture_justificante`
+into a durable official-evidence artefact that simultaneously closes the
+cross-period evidence gap, and reuses three proven patterns
+(`_snapshot_base`/`SecureSnapshotRepository`, `_app_live_*_cli.py`,
+`import_external_filing_evidence`) rather than inventing new machinery — as the
+research concluded. Siting the work in `application/live/` inherits the
+read-only-by-construction guarantees and the `require_live_read` gate the whole
+package already enforces, which is why the decision is low-risk despite touching
+a live AEAT surface.
 
 ## Consequences
 
-<!-- Gains, but framed honestly. Difficulties. Pathways this feature opens. Pitfalls. -->
+- **Gains.** Operators stop hand-downloading receipts to reconcile; the captured
+  authentic PDF becomes durable, content-addressed, official evidence that also
+  unblocks dependent-period filing; the long-documented but missing
+  `SedeCapture`-to-reconciler wiring is finally honoured.
+- **Difficulties.** The expediente-resolution-by-period gap is real work, not a
+  given — naive `find_expediente` would reconcile a quarterly work unit against
+  the wrong quarter. Persisting `pdf_bytes` adds storage and a lifecycle
+  (supersession/discard) to manage. Materialising bytes to a transient path for
+  the path-only parser is a deliberate seam that must preserve the parser's
+  path-redaction privacy behaviour.
+- **Pathways opened.** A typed live-capture snapshot for justificantes invites
+  the deferred CSV-authenticity stamp (Option C), a capture→reconcile convenience
+  chain, and eventually a deeper per-casilla reconcile once the modelo-specific
+  declaration parser ships (orthogonal, not blocked here).
+- **Pitfalls.** Do not let the reconcile service acquire a live branch; do not
+  stamp the capture as official under a non-`_OFFICIAL_SOURCE_KINDS` value (it
+  would silently fail to clear the gate) nor invent a new official kind without
+  adding it to that frozenset; do not bypass `require_live_read`.
 
 ## Codification candidates
 
-<!-- If this decision introduces a durable cross-session constraint
-that should bind future agents (an obligation, a prohibition, a
-discipline that survives this feature's lifecycle), name it here as
-a candidate for promotion into a project rule under
-`.vaultspec/rules/rules/` via the codify pipeline phase.
+- **Rule slug:** `live-captures-persist-before-consuming`.
+  **Rule:** A live read-only AEAT capture whose artefact feeds a local-only
+  consumer (reconcile, calculate, verify) MUST persist the artefact as a
+  bucket-scoped encrypted secure object under an official `source_kind` first and
+  let the local consumer read the persisted artefact — never give the local
+  consumer a live branch.
 
-Each candidate names the proposed rule slug (kebab-case, naming the
-constraint's subject) and a one-sentence statement of the rule.
-
-Not every ADR produces a codification candidate. Decisions that are
-local to one feature, or that describe rather than constrain, leave
-this section empty. An empty Codification candidates section is a
-positive signal, not a failure. -->
-
-<!-- Example:
-
-- **Rule slug:** `destructive-verbs-need-dry-run`.
-  **Rule:** Every CLI verb that writes or removes state must
-  accept `--dry-run` and emit a usable preview before applying.
-
--->
+  *(Candidate only; promote via the codify phase after the review surfaces it as
+  a durable cross-session constraint. The existing `application/live/` package
+  already embodies this implicitly; this feature is the first to wire a live
+  capture into a previously local-only consumer, which is what makes the
+  constraint worth stating explicitly.)*

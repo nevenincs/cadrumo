@@ -215,9 +215,7 @@ def _calculate_390_annual(
     snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period="0A")
     relation_vals = resolve_relations_from_local_store(snapshot, repository=repository)
     relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
-    relation_binding_values = materialize_relation_binding_values(
-        snapshot.revision, relation_values_map, period="0A"
-    )
+    relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values_map, period="0A")
     binding_values = {
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, annual_ledger),
         **relation_binding_values,

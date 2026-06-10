@@ -32,7 +32,9 @@ def _project_metadata() -> dict[str, object]:
 _PYPROJECT = _project_metadata()
 _PROJECT_URLS = _PYPROJECT.get("urls", {})
 _DOCS_BASE_URL = os.environ.get("AEAT_DOCS_BASE_URL", "").rstrip("/")
-_DOCS_FONT_STACK = '"Geist", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
+_DOCS_FONT_STACK = (
+    '"Geist", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
+)
 _DOCS_HEADING_FONT_STACK = '"Geist", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif'
 _DOCS_MONO_FONT_STACK = '"Geist Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace'
 _REPOSITORY_URL = str(_PROJECT_URLS.get("Repository", ""))

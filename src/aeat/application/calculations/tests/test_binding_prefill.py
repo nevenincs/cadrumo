@@ -23,16 +23,13 @@ from ....domain.calculations.registry import (
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import CalculationSourceContext
 from .._binding_prefill import (
     _selector_periods,
     _selector_year_delta,
     extract_modelo_303_local_iva_compensation_recurrence,
-    resolve_bindings_from_local_store,
 )
 from .._errors import BindingPrefillTypeError
 from .._iva_compensation_history import IvaCompensationHistoryRepository
-from .._multi_year import PreviousFilingSourceResolver
 from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
 
@@ -168,11 +165,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             "modelo-390-rel-303-compensacion-generada-ejercicio-no-97",
         }
         # Provenance: resolved entries carry local_filing provenance.
-        assert all(
-            rv.provenance == "local_filing"
-            for rv in relation_vals.values
-            if rv.value is not None
-        )
+        assert all(rv.provenance == "local_filing" for rv in relation_vals.values if rv.value is not None)
         relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
         relation_binding_values = materialize_relation_binding_values(
             snapshot.revision, relation_values_map, period="0A"

@@ -318,9 +318,7 @@ def _committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCa
         ("369", "esquema-importacion"),
     ],
 )
-def test_backfilled_revision_has_valid_orden_aplicabilidad(
-    modelo_id: str, revision_id: str
-) -> None:
+def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revision_id: str) -> None:
     """Each backfilled revision declares a non-empty orden_aplicabilidad that resolves
     in the legal catalogue with corpus_ref and is present in legal_refs — the three
     gate checks from S05 all pass, and the hard-failure list is empty.
@@ -341,9 +339,7 @@ def test_backfilled_revision_has_valid_orden_aplicabilidad(
         revision,
         catalogues.legal,
     )
-    assert len(hard) == 0, (
-        f"Backfilled revision {modelo_id}/{revision_id} has hard gate failures: {hard}"
-    )
+    assert len(hard) == 0, f"Backfilled revision {modelo_id}/{revision_id} has hard gate failures: {hard}"
 
 
 # ---------------------------------------------------------------------------
@@ -365,9 +361,7 @@ def test_backfilled_revision_has_valid_orden_aplicabilidad(
         ("369", "esquema-importacion"),
     ],
 )
-def test_s24_open_ended_backfilled_revision_has_orden_aplicabilidad(
-    modelo_id: str, revision_id: str
-) -> None:
+def test_s24_open_ended_backfilled_revision_has_orden_aplicabilidad(modelo_id: str, revision_id: str) -> None:
     """Every open-ended (*-y-siguientes / year_from with no valid_to) backfilled
     revision has orden_aplicabilidad declared — the open-ended applicability claim
     is BOE-anchored per the S24 connective gate (Ruling 5 boundary).

@@ -132,9 +132,7 @@ def _ledger_help_by_command() -> dict[str, str]:
     # command-group hierarchy is recognised without a brittle private-module
     # import (mirrors the production fix in ``cli/_errors.py``, which derives the
     # vendored ``ClickException`` from ``typer.BadParameter.__mro__``).
-    vendored_command = next(
-        base for base in type(group).__mro__ if base.__name__ == "Command"
-    )
+    vendored_command = next(base for base in type(group).__mro__ if base.__name__ == "Command")
     assert isinstance(group, vendored_command)
     assert hasattr(group, "commands")
     # The runtime asserts above prove ``group`` is the vendored TyperGroup
@@ -197,8 +195,7 @@ def test_manual_ledger_import_and_review_boundaries_stay_backend_owned() -> None
     # ledger backend package so the backend-owned tokens are found wherever the
     # decomposition relocated them.
     ledger_backend = "\n".join(
-        path.read_text(encoding="utf-8")
-        for path in sorted((PROJECT_ROOT / "src/aeat/application/ledger").glob("*.py"))
+        path.read_text(encoding="utf-8") for path in sorted((PROJECT_ROOT / "src/aeat/application/ledger").glob("*.py"))
     )
     forbidden_cli_tokens = (
         "CsvProvider",

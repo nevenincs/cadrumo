@@ -35,7 +35,6 @@ from ....domain.iva_compensation._errors import (
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._errors import IvaCompensationModeloError
-from .._relation_prefill import resolve_relations_from_local_store
 from .._iva_compensation_history import (
     IvaCompensationHistoryRepository,
     cross_check_iva_compensation_annual_summary,
@@ -46,6 +45,7 @@ from .._iva_compensation_history import (
 )
 from .._iva_wallet_reconciliation import reconcile_iva_compensation_wallet
 from .._observations_repository import CalculationObservationRepository
+from .._relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

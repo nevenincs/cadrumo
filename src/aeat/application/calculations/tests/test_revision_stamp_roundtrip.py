@@ -10,6 +10,11 @@ Tests for ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2:
   stamped revision blocks the carry (binding absent from resolved map),
   a missing stamp (legacy record) carries and sets the advisory flag,
   a matching stamp carries cleanly.
+  Subject: Modelo 303/2025/2T whose single ``previous_filing`` binding
+  ``modelo-303-compensacion-pendiente-anteriores`` reads from M303/2025/1T.
+  M390's five M303-sourced bindings migrated to ``relation_prefill`` in
+  W04.P10.S16; the stamp R2 gate tests now use the M303 self-carry
+  (prior quarter compensacion carry) as subject instead.
 - R2 carry gate in ``MultiYearResolver.resolve``: a divergent stamp silently
   drops the observation from the result, a missing stamp passes through.
 """
@@ -190,168 +195,158 @@ def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path
 #
 # These tests require a modelo whose registry declares a previous_filing binding
 # so that resolve_bindings_from_local_store actually resolves something.
-# Modelo 390 consumes Modelo 303 quarterly bindings (1T–4T) so we use that pair.
-# We save a 303/2025/1T observation and then ask 390/2025/0A to prefill.
 #
-# Since tests do not set binding_values, the resolution may produce no values
-# (the binding resolver only fires when the full set of source periods is present).
-# The goal of these tests is the R2 gate behaviour, not binding arithmetic.
-# A divergent stamp must prevent the observation from participating in the gather;
-# a missing stamp must set unstamped_revision_advisory; a matching stamp must be clean.
+# Subject: Modelo 303/2025/2T whose single ``previous_filing`` binding
+# ``modelo-303-compensacion-pendiente-anteriores`` reads
+# ``iva.compensacion-disponible-fin-periodo`` from M303/2025/1T
+# (source_period_offset_from_target = -1).
+#
+# NOTE: Modelo 390's five M303-sourced bindings (cuota-devengada-total,
+# cuota-deducible-total, resultado-regimen-general, compensacion-ultimo-periodo,
+# compensacion-generada-ejercicio-no-97) migrated from ``previous_filing`` to
+# ``relation_prefill`` in W04.P10.S16.  resolve_bindings_from_local_store for
+# M390/0A now returns an empty BindingPrefillReport; it can no longer be used
+# as the R2 gate subject.  These three tests were repurposed to the M303 self-carry
+# (quarterly compensacion carry) instead, which retains a direct-selector
+# ``previous_filing`` binding.
+#
+# R2 carry gate behaviors under test:
+# - divergent stamp on 1T → 1T observation refused by the gate;
+#   _gather_observations returns () → early return with empty BindingPrefillReport.
+#   Proof: binding absent from report.binding_values.
+# - missing stamp (None) on 1T → carry proceeds with has_unstamped_revision_advisory.
+# - matching stamp on 1T → carry proceeds cleanly without advisory.
 # ---------------------------------------------------------------------------
 
-_M390_YEAR = 2025
-_M390_PERIOD = "0A"
+_M303_CARRY_YEAR = 2025
+_M303_CARRY_TARGET_PERIOD = "2T"
+_M303_CARRY_SOURCE_PERIOD = "1T"  # offset -1 from 2T
+_M303_CARRY_SOURCE_CASILLA = "iva.compensacion-disponible-fin-periodo"
+_M303_CARRY_BINDING_ID = "modelo-303-compensacion-pendiente-anteriores"
 
 
-def _m303_source_observation(period: str, value: Decimal = Decimal("1000.00")) -> RegistryModeloObservation:
+def _m303_carry_source_observation(value: Decimal = Decimal("500.00")) -> RegistryModeloObservation:
+    """M303/2025/1T observation providing the compensacion carry casilla for the 2T binding."""
     return RegistryModeloObservation(
         modelo="303",
-        filing_year=_M390_YEAR,
-        period=period,
+        filing_year=_M303_CARRY_YEAR,
+        period=_M303_CARRY_SOURCE_PERIOD,
         observations=(
             CasillaObservation(
-                casilla_id="iva.resultado",
+                casilla_id=_M303_CARRY_SOURCE_CASILLA,
                 value=value,
-                legal_refs=("liva.art-94",),
-                source_refs=("aeat.iva.2025",),
+                legal_refs=("ley-37-1992:art-99",),
+                source_refs=("aeat-dr-303-2025",),
             ),
         ),
     )
 
 
 def test_carry_divergent_stamp_refuses_single_observation(tmp_path: Path) -> None:
-    """R2: a divergent stamped_revision_id causes the single observation to be refused (carry blocked).
+    """R2: a divergent stamped_revision_id causes the M303/1T observation to be refused (carry blocked).
 
-    Save a 303/2025/1T observation with a deliberately wrong revision id.
-    resolve_bindings_from_local_store for 390/2025/0A must drop the observation
-    from the gathered set. The binding resolver sees a missing required period and
-    raises RegistryValidationError — that error IS the proof the carry was refused.
+    Subject: M303/2025/2T prefill; the single ``previous_filing`` binding
+    ``modelo-303-compensacion-pendiente-anteriores`` reads M303/2025/1T.
 
-    If the divergent stamp were silently accepted (R2 not enforced), the gather
-    would include 1T and the binding resolver would produce values instead of raising.
+    Save 303/2025/1T with a deliberately wrong revision id.
+    resolve_bindings_from_local_store for 303/2025/2T must drop the observation
+    from the gathered set via the R2 gate.  _gather_observations returns ()
+    (all gathered observations were refused), triggering the early-return path
+    in resolve_bindings_from_local_store that yields an empty BindingPrefillReport.
+
+    Proof: the binding ``modelo-303-compensacion-pendiente-anteriores`` is ABSENT
+    from report.binding_values.  If the divergent stamp were silently accepted,
+    the binding would be resolved and present in the map.
     """
-    from ....domain.calculations.registry._errors import RegistryValidationError
-
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        # All four quarters needed for 390 roll-up; only 1T has a divergent stamp.
-        # The binding resolver raises when a required period is missing —
-        # so the RegistryValidationError is the proof 1T was dropped (refused).
-        for period in ("1T", "2T", "3T", "4T"):
-            stamped = _FAKE_REVISION_ID if period == "1T" else _law_revision_id("303", _M390_YEAR, period)
-            repo.save_observation(
-                _m303_source_observation(period),
-                source_kind=_SOURCE_KIND,
-                captured_at=_CLOCK,
-                stamped_revision_id=stamped,
-            )
+        repo.save_observation(
+            _m303_carry_source_observation(),
+            source_kind=_SOURCE_KIND,
+            captured_at=_CLOCK,
+            stamped_revision_id=_FAKE_REVISION_ID,  # divergent: wrong revision
+        )
 
-        snapshot = resources().modelos.authority.snapshot("390", filing_year=_M390_YEAR, period=_M390_PERIOD)
+        snapshot = resources().modelos.authority.snapshot(
+            "303", filing_year=_M303_CARRY_YEAR, period=_M303_CARRY_TARGET_PERIOD
+        )
+        report = resolve_bindings_from_local_store(snapshot, repository=repo)
 
-        # The binding resolver raises because 1T was dropped by the R2 gate.
-        # This IS the proof of refusal — a silently-accepted divergent stamp would not raise.
-        with pytest.raises(RegistryValidationError, match="1T"):
-            resolve_bindings_from_local_store(snapshot, repository=repo)
+        assert isinstance(report, BindingPrefillReport)
+        # The carry was refused: 1T was dropped by the R2 gate.
+        # The binding must NOT appear in binding_values — its absence IS the refusal proof.
+        assert _M303_CARRY_BINDING_ID not in report.binding_values, (
+            f"R2 gate failure: divergent-stamp observation for M303/1T was not refused; "
+            f"binding {_M303_CARRY_BINDING_ID!r} appeared in report.binding_values when it must be absent."
+        )
+        assert not report.prefilled, (
+            "R2 gate failure: prefilled must be empty when all source observations were refused."
+        )
 
 
 def test_carry_missing_stamp_advises_and_carries(tmp_path: Path) -> None:
-    """R2: a missing (None) stamped_revision_id carries with unstamped_revision_advisory=True.
+    """R2: a missing (None) stamped_revision_id on M303/1T carries with unstamped_revision_advisory=True.
 
-    Save all four 303 quarters with no stamp (legacy records).
-    resolve_bindings_from_local_store must include them in binding resolution
+    Subject: M303/2025/2T prefill; the single ``previous_filing`` binding
+    ``modelo-303-compensacion-pendiente-anteriores`` reads M303/2025/1T.
+
+    Save 303/2025/1T with no stamp (legacy record).
+    resolve_bindings_from_local_store must include it in binding resolution
     and the BindingPrefillReport must surface has_unstamped_revision_advisory.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        # Provide realistic casilla values for each quarter so the binding arithmetic can
-        # actually produce a result.  Modelo 390 bindings sum specific 303 casillas;
-        # inject values on the casilla the binding requires.
-        snapshot_390 = resources().modelos.authority.snapshot("390", filing_year=_M390_YEAR, period=_M390_PERIOD)
-        # Determine which source casillas are needed for ANY binding.
-        from ....domain.calculations.registry import previous_filing_observation_requirements
-
-        requirements = previous_filing_observation_requirements(
-            snapshot_390.revision,
-            filing_year=_M390_YEAR,
-            period=_M390_PERIOD,
+        repo.save_observation(
+            _m303_carry_source_observation(),
+            source_kind=_SOURCE_KIND,
+            captured_at=_CLOCK,
+            stamped_revision_id=None,  # legacy: no stamp
         )
-        required_casillas: set[str] = set()
-        for req in requirements:
-            if req.modelo == "303":
-                required_casillas.update(req.source_casillas)
 
-        for period in ("1T", "2T", "3T", "4T"):
-            obs = RegistryModeloObservation(
-                modelo="303",
-                filing_year=_M390_YEAR,
-                period=period,
-                observations=tuple(
-                    CasillaObservation(casilla_id=casilla_id, value=Decimal("100.00"))
-                    for casilla_id in required_casillas
-                ),
-            )
-            repo.save_observation(
-                obs,
-                source_kind=_SOURCE_KIND,
-                captured_at=_CLOCK,
-                stamped_revision_id=None,  # legacy: no stamp
-            )
-
-        report = resolve_bindings_from_local_store(snapshot_390, repository=repo)
+        snapshot = resources().modelos.authority.snapshot(
+            "303", filing_year=_M303_CARRY_YEAR, period=_M303_CARRY_TARGET_PERIOD
+        )
+        report = resolve_bindings_from_local_store(snapshot, repository=repo)
 
         assert isinstance(report, BindingPrefillReport)
-        # Carry must proceed (observations gathered) — we expect at least one prefilled binding
-        # when all four quarters are present; the advisory must be set.
-        if report.prefilled:
-            assert report.has_unstamped_revision_advisory, (
-                "legacy unstamped observations must set has_unstamped_revision_advisory on the report"
-            )
-        # Even if no bindings resolved (no matching casilla_values), the advisory MUST
-        # not be silently swallowed — there is no fault here, carry simply needs a stamp.
-        # We confirm no exception was raised and the report is clean structurally.
+        # Carry must proceed (legacy unstamped observation is not refused).
+        assert report.prefilled, "missing-stamp observation must still carry; the prefill must not be empty."
+        assert _M303_CARRY_BINDING_ID in report.binding_values, (
+            f"binding {_M303_CARRY_BINDING_ID!r} must be resolved from the unstamped 1T observation."
+        )
+        assert report.has_unstamped_revision_advisory, (
+            "legacy unstamped observation must set has_unstamped_revision_advisory on the report."
+        )
 
 
 def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
-    """R2: a correctly stamped observation carries without advisory and without blocking."""
+    """R2: a correctly stamped M303/1T observation carries without advisory and without blocking.
+
+    Subject: M303/2025/2T prefill; the single ``previous_filing`` binding
+    ``modelo-303-compensacion-pendiente-anteriores`` reads M303/2025/1T.
+    """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        snapshot_390 = resources().modelos.authority.snapshot("390", filing_year=_M390_YEAR, period=_M390_PERIOD)
-        from ....domain.calculations.registry import previous_filing_observation_requirements
-
-        requirements = previous_filing_observation_requirements(
-            snapshot_390.revision,
-            filing_year=_M390_YEAR,
-            period=_M390_PERIOD,
+        revision_id = _law_revision_id("303", _M303_CARRY_YEAR, _M303_CARRY_SOURCE_PERIOD)
+        repo.save_observation(
+            _m303_carry_source_observation(),
+            source_kind=_SOURCE_KIND,
+            captured_at=_CLOCK,
+            stamped_revision_id=revision_id,
         )
-        required_casillas: set[str] = set()
-        for req in requirements:
-            if req.modelo == "303":
-                required_casillas.update(req.source_casillas)
 
-        for period in ("1T", "2T", "3T", "4T"):
-            revision_id = _law_revision_id("303", _M390_YEAR, period)
-            obs = RegistryModeloObservation(
-                modelo="303",
-                filing_year=_M390_YEAR,
-                period=period,
-                observations=tuple(
-                    CasillaObservation(casilla_id=casilla_id, value=Decimal("200.00"))
-                    for casilla_id in required_casillas
-                ),
-            )
-            repo.save_observation(
-                obs,
-                source_kind=_SOURCE_KIND,
-                captured_at=_CLOCK,
-                stamped_revision_id=revision_id,
-            )
-
-        report = resolve_bindings_from_local_store(snapshot_390, repository=repo)
+        snapshot = resources().modelos.authority.snapshot(
+            "303", filing_year=_M303_CARRY_YEAR, period=_M303_CARRY_TARGET_PERIOD
+        )
+        report = resolve_bindings_from_local_store(snapshot, repository=repo)
 
         assert isinstance(report, BindingPrefillReport)
+        assert report.prefilled, "correctly stamped 1T observation must carry; the prefill must not be empty."
+        assert _M303_CARRY_BINDING_ID in report.binding_values, (
+            f"binding {_M303_CARRY_BINDING_ID!r} must be resolved from the correctly stamped 1T observation."
+        )
         assert not report.has_unstamped_revision_advisory, (
-            "correctly stamped observations must not set the unstamped advisory"
+            "correctly stamped observation must not set the unstamped advisory."
         )
 
 

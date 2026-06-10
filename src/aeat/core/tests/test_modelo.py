@@ -41,8 +41,7 @@ def test_modelo_registry_backed_members_match_registry() -> None:
         f"  In registry but not enum: {sorted(registry_set - enum_set)}"
     )
     assert non_registry.isdisjoint(registry_set), (
-        f"NON_REGISTRY_MODELOS unexpectedly present in the registry: "
-        f"{sorted(non_registry & registry_set)}"
+        f"NON_REGISTRY_MODELOS unexpectedly present in the registry: {sorted(non_registry & registry_set)}"
     )
 
 
@@ -53,8 +52,8 @@ def test_non_registry_modelos_are_not_registry_loadable() -> None:
     enum must still raise from ``validate_modelo`` — adding a registry TOML for
     it (reviving active support) would break this test.
     """
-    from ..resources import resources
     from ...domain.calculations.registry import RegistrySnapshotError
+    from ..resources import resources
 
     authority = resources().modelos.authority
     assert NON_REGISTRY_MODELOS, "expected at least the retired M037 carve-out"
@@ -69,18 +68,11 @@ def test_modelo_members_are_valid_modelo_codes() -> None:
 
     for member in Modelo:
         result = ModeloCode(member.value)
-        assert result == member.value, (
-            f"ModeloCode({member.value!r}) returned {result!r}; "
-            f"expected {member.value!r}"
-        )
+        assert result == member.value, f"ModeloCode({member.value!r}) returned {result!r}; expected {member.value!r}"
 
 
 def test_modelo_values_are_three_digit() -> None:
     """Every :class:`Modelo` value is a three-character ASCII digit string."""
     for member in Modelo:
-        assert len(member.value) == 3, (
-            f"{member.name}.value {member.value!r} is not three characters"
-        )
-        assert member.value.isdigit(), (
-            f"{member.name}.value {member.value!r} contains non-digit characters"
-        )
+        assert len(member.value) == 3, f"{member.name}.value {member.value!r} is not three characters"
+        assert member.value.isdigit(), f"{member.name}.value {member.value!r} contains non-digit characters"

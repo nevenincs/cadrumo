@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ...core.config import load_settings
 from ...core import Modelo
+from ...core.config import load_settings
 
 STUB_MODELO_LOCALE_KEYS: dict[str, str] = {
     Modelo.M151.value: "cli.app.modelo.work.create_stub_modelo_151_refused",

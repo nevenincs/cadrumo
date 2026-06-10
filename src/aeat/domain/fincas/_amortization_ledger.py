@@ -64,7 +64,8 @@ def _resolve_amortizacion_inmueble_rate(period_year: int) -> Decimal:
         )
     except RegistryValidationError:
         _logger.debug(
-            "rental amortizacion rate: registry lookup failed for period_year=%d; fallback to AMORTIZACION_INMUEBLE_RATE",
+            "rental amortizacion rate: registry lookup failed for period_year=%d; "
+            "fallback to AMORTIZACION_INMUEBLE_RATE",
             period_year,
         )
         return ART_23_1_F_RATE
@@ -132,7 +133,10 @@ def compute_amortization_for_year(
     """
     basis = max(finca.coste_adquisicion_construccion, finca.valor_catastral_construccion)
     gross = _round_to_cents(
-        basis * _resolve_amortizacion_inmueble_rate(income.period_year) * Decimal(income.dias_alquilados) / DAYS_PER_YEAR,
+        basis
+        * _resolve_amortizacion_inmueble_rate(income.period_year)
+        * Decimal(income.dias_alquilados)
+        / DAYS_PER_YEAR,
     )
     cap = finca.coste_adquisicion_construccion
     remaining_cap = max(cap - cumulative_through_prior_year, Decimal("0"))

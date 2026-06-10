@@ -126,9 +126,7 @@ def test_register_refuses_duplicate_profile_id(
     assert error.context == {"profile_id": "operator", "bucket_id": "bucket-a"}
 
 
-def test_edit_field_upserts_a_fact(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
-) -> None:
+def test_edit_field_upserts_a_fact(secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition) -> None:
     svc = _service(secure_objects, schema)
     svc.register(
         RegisterProfileCommand(
@@ -147,9 +145,7 @@ def test_edit_field_upserts_a_fact(
     assert any(fact.path == "identity.tax_id" and fact.value == "X1234567Z" for fact in result.profile.facts)
 
 
-def test_remove_tombstones_the_profile(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
-) -> None:
+def test_remove_tombstones_the_profile(secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition) -> None:
     svc = _service(secure_objects, schema)
     svc.register(
         RegisterProfileCommand(
@@ -163,9 +159,7 @@ def test_remove_tombstones_the_profile(
     assert result.profile.removed_at is not None
 
 
-def test_duplicate_copies_to_a_new_id(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
-) -> None:
+def test_duplicate_copies_to_a_new_id(secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition) -> None:
     svc = _service(secure_objects, schema)
     svc.register(
         RegisterProfileCommand(
@@ -186,9 +180,7 @@ def test_duplicate_copies_to_a_new_id(
     assert result.profile.status is UserProfileStatus.ACTIVE
 
 
-def test_rename_updates_label_only(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
-) -> None:
+def test_rename_updates_label_only(secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition) -> None:
     """``rename`` changes ``display_name`` and nothing else.
 
     Profile identity is immutable: ``profile_id``, status, facts, and
@@ -273,9 +265,7 @@ def test_duplicate_refuses_a_tombstoned_source_without_rendering_profile_id(
     assert error.context == {"profile_id": "operator", "action": "duplicate"}
 
 
-def test_lifecycle_emits_bucket_events(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
-) -> None:
+def test_lifecycle_emits_bucket_events(secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition) -> None:
     svc = _service(secure_objects, schema)
     events_repo = BucketEventHistoryRepository(objects=secure_objects)
 
@@ -381,9 +371,7 @@ def test_list_profiles_returns_sorted_listings(
 # ---------------------------------------------------------------------------
 
 
-def test_read_returns_persisted_record(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
-) -> None:
+def test_read_returns_persisted_record(secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition) -> None:
     """Service-contract gate: read() loads the same record back as the
     register() call persisted (round-trip via the secure repository)."""
 

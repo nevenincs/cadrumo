@@ -348,13 +348,11 @@ def test_calculate_303_domestic_reverse_charge_books_boxes_13_and_37_with_zero_n
     # domestic-only filing. Each delta is computed by comparison, not by
     # summing literals (no-tautological-calculation-tests).
     assert (
-        with_reverse_charge.values["iva.cuota-devengada-total"]
-        - domestic_only.values["iva.cuota-devengada-total"]
+        with_reverse_charge.values["iva.cuota-devengada-total"] - domestic_only.values["iva.cuota-devengada-total"]
         == reverse_charge_cuota
     )
     assert (
-        with_reverse_charge.values["iva.cuota-deducible-total"]
-        - domestic_only.values["iva.cuota-deducible-total"]
+        with_reverse_charge.values["iva.cuota-deducible-total"] - domestic_only.values["iva.cuota-deducible-total"]
         == reverse_charge_cuota
     )
     assert (
@@ -653,10 +651,7 @@ def test_calculate_303_aic_official_box_parity_books_boxes_and_leaves_resultado_
     # The AIC contribution nets to zero in the resultado (the semantic
     # intracomunitaria casilla feeds both totals equally); the parity casillas
     # are pure official-box exposure, not in the resultado formula.
-    assert (
-        with_aic.values["iva.resultado-regimen-general"]
-        == domestic_only.values["iva.resultado-regimen-general"]
-    )
+    assert with_aic.values["iva.resultado-regimen-general"] == domestic_only.values["iva.resultado-regimen-general"]
 
 
 def test_resolve_import_third_country_routes_deducible_only() -> None:
@@ -713,13 +708,11 @@ def test_calculate_303_import_deducible_reduces_resultado_by_its_cuota() -> None
     )
     assert with_import.values["iva.soportado.importaciones"] == import_cuota
     assert (
-        with_import.values["iva.cuota-deducible-total"]
-        - without_import.values["iva.cuota-deducible-total"]
+        with_import.values["iva.cuota-deducible-total"] - without_import.values["iva.cuota-deducible-total"]
         == import_cuota
     )
     assert (
-        without_import.values["iva.resultado-regimen-general"]
-        - with_import.values["iva.resultado-regimen-general"]
+        without_import.values["iva.resultado-regimen-general"] - with_import.values["iva.resultado-regimen-general"]
         == import_cuota
     )
 
@@ -784,9 +777,7 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
     for category in IvaCategory:
         if category in non_declarable or category in CUOTA_LESS_M303_IVA_CATEGORIES:
             continue
-        invoice_direction = (
-            InvoiceKind.RECEIVED if category in received_categories else InvoiceKind.ISSUED
-        )
+        invoice_direction = InvoiceKind.RECEIVED if category in received_categories else InvoiceKind.ISSUED
         flow = derive_flow_for_classification(category=category, invoice_direction=invoice_direction)
         observation = _observation(
             ledger_id=f"probe-{category.value}",

@@ -309,8 +309,7 @@ def _route_resolved_binding(
         # through the Decimal or enum channels.
         if not isinstance(value, date):
             raise ProfileBindingResolutionError(
-                f"profile fact for date-channel binding {binding_id!r} must be a date, "
-                f"got {type(value).__name__!r}",
+                f"profile fact for date-channel binding {binding_id!r} must be a date, got {type(value).__name__!r}",
                 translated_message="application.modelo.profile_binding.errors.date_value_type_invalid",
                 context={"binding_id": binding_id, "value_type": type(value).__name__},
             )
