@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.inbound.financial.providers import ParsedLedgerRow
 from ....adapters.persistence.storage import StorageValidationError
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
@@ -135,7 +136,7 @@ def _purchase_invoice() -> Invoice:
 def _raw_import_transaction(
     *,
     transaction_id: str = "provider-row-1",
-    amount: Decimal = Decimal("-80.00"),
+    amount: Decimal = Decimal("80.00"),
     description: str = "provider import row",
 ) -> RawTransaction:
     return RawTransaction(
@@ -155,6 +156,20 @@ def _raw_import_transaction(
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": description},
+    )
+
+
+def _parsed_import_transaction(
+    *,
+    transaction_id: str = "provider-row-1",
+    amount: Decimal = Decimal("80.00"),
+    description: str = "provider import row",
+    direction: TransactionDirection = TransactionDirection.OUTGOING,
+) -> ParsedLedgerRow:
+    """Wrap a magnitude import row with an explicit direction (parse-boundary pair)."""
+    return ParsedLedgerRow(
+        raw=_raw_import_transaction(transaction_id=transaction_id, amount=amount, description=description),
+        direction=direction,
     )
 
 
@@ -240,7 +255,7 @@ def _drive_create_manual_transaction(secure_objects: SecureObjectRepository) -> 
         bucket_id="bucket-a",
         booked_date=date(2026, 5, 2),
         value_date=date(2026, 5, 3),
-        amount=Decimal("-121.00"),
+        amount=Decimal("121.00"),
         currency="EUR",
         direction=TransactionDirection.OUTGOING,
         counterparty="Proveedor SL",

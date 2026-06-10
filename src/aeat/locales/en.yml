@@ -1520,11 +1520,11 @@ cli:
         / year / period.
       reconcile:
         errors:
-          exclusive_capture_source: cli.app.modelo.reconcile.errors.exclusive_capture_source
+          exclusive_capture_source: 'The --from-capture source cannot be combined with --from-justificante or --from-declaration.'
           exclusive_source: --from-justificante and --from-declaration are mutually
             exclusive.
           missing_source: 'Supply --from-justificante PATH, --from-declaration PATH, or --from-capture SNAPSHOT_ID.'
-        from_capture_help: cli.app.modelo.reconcile.from_capture_help
+        from_capture_help: 'Snapshot id (or prefix) of a persisted live justificante capture to reconcile against. Local-only: reads the already-captured receipt, never contacts AEAT.'
         from_declaration_help: Path to the filed declaration PDF to reconcile against
           (reserved; parser pending).
         from_justificante_help: Path to the AEAT justificante PDF to reconcile against.

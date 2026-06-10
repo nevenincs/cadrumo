@@ -35,7 +35,7 @@ def _command(**overrides: object) -> ManualLedgerTransactionCommand:
     fields: dict[str, object] = {
         "bucket_id": "bucket-a",
         "booked_date": date(2026, 5, 1),
-        "amount": Decimal("-121.00"),
+        "amount": Decimal("121.00"),
         "direction": TransactionDirection.OUTGOING,
         "description": "material oficina",
     }
@@ -63,7 +63,7 @@ def test_manual_ledger_transaction_command_normalises_operator_text() -> None:
     command = ManualLedgerTransactionCommand(
         bucket_id=" bucket-a ",
         booked_date=date(2026, 5, 1),
-        amount=Decimal("-121.00"),
+        amount=Decimal("121.00"),
         currency=" eur ",
         direction=TransactionDirection.OUTGOING,
         counterparty=" Proveedor SL ",
@@ -89,7 +89,7 @@ def test_manual_ledger_transaction_command_enforces_mixed_business_percentage() 
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-121.00"),
+            amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
             description="mixed expense",
             business_classification=BusinessClassification.MIXED,
@@ -102,7 +102,7 @@ def test_manual_ledger_transaction_command_rejects_multi_purchase_evidence_value
             {
                 "bucket_id": "bucket-a",
                 "booked_date": date(2026, 5, 1),
-                "amount": Decimal("-121.00"),
+                "amount": Decimal("121.00"),
                 "direction": TransactionDirection.OUTGOING,
                 "description": "duplicate evidence",
                 "purchase_invoice_evidence_id": ("evidence-1", "evidence-2"),
@@ -115,7 +115,7 @@ def test_manual_ledger_transaction_command_rejects_duplicate_attachment_ids() ->
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-121.00"),
+            amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
             description="duplicate evidence",
             attachment_ids=("evidence-1", " evidence-1 "),
@@ -133,17 +133,20 @@ def test_manual_ledger_transaction_command_rejects_zero_amount_rows() -> None:
         )
 
 
-def test_manual_ledger_transaction_command_enforces_direction_sign_policy() -> None:
-    with pytest.raises(ValidationError, match=r"OUTGOING.*negative"):
+def test_manual_ledger_transaction_command_rejects_negative_magnitude() -> None:
+    # Flow is carried by direction; a negative amount is no longer a valid
+    # encoding of OUTGOING and is refused at the command boundary regardless
+    # of the declared direction.
+    with pytest.raises(ValidationError, match="non-negative magnitude"):
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("121.00"),
+            amount=Decimal("-121.00"),
             direction=TransactionDirection.OUTGOING,
-            description="positive outgoing is invalid",
+            description="negative outgoing is invalid",
         )
 
-    with pytest.raises(ValidationError, match=r"INCOMING.*positive"):
+    with pytest.raises(ValidationError, match="non-negative magnitude"):
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
@@ -151,6 +154,27 @@ def test_manual_ledger_transaction_command_enforces_direction_sign_policy() -> N
             direction=TransactionDirection.INCOMING,
             description="negative incoming is invalid",
         )
+
+
+def test_manual_ledger_transaction_command_accepts_magnitude_for_either_direction() -> None:
+    # The same non-negative magnitude is valid for both INCOMING and OUTGOING;
+    # direction alone decides the flow.
+    outgoing = ManualLedgerTransactionCommand(
+        bucket_id="bucket-a",
+        booked_date=date(2026, 5, 1),
+        amount=Decimal("121.00"),
+        direction=TransactionDirection.OUTGOING,
+        description="office supplies",
+    )
+    incoming = ManualLedgerTransactionCommand(
+        bucket_id="bucket-a",
+        booked_date=date(2026, 5, 1),
+        amount=Decimal("121.00"),
+        direction=TransactionDirection.INCOMING,
+        description="client payment",
+    )
+    assert outgoing.amount == Decimal("121.00")
+    assert incoming.amount == Decimal("121.00")
 
 
 def test_manual_ledger_transaction_command_rejects_tax_payload_on_internal_transfer() -> None:
@@ -170,7 +194,7 @@ def test_manual_ledger_transaction_result_requires_matching_strict_shapes() -> N
         transaction_id="manual-row-1",
         booked_date=date(2026, 5, 1),
         value_date=date(2026, 5, 1),
-        amount=Decimal("-121.00"),
+        amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Proveedor SL",
         description="manual ledger row",

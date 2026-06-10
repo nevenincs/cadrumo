@@ -41,20 +41,22 @@ def test_csv_provider_ingests_supported_bank_layouts(
     fixture = _FIXTURES / fixture_name
     validation = provider.validate_source(fixture)
     assert validation.is_valid, validation.warnings
-    transactions = tuple(provider.ingest(fixture))
-    assert transactions
-    assert transactions[0].currency == expected_currency
-    assert transactions[0].description == expected_description
-    assert transactions[0].provenance.source_format.value == "csv"
+    parsed_rows = tuple(provider.ingest(fixture))
+    assert parsed_rows
+    assert parsed_rows[0].raw.currency == expected_currency
+    assert parsed_rows[0].raw.description == expected_description
+    assert parsed_rows[0].raw.provenance.source_format.value == "csv"
+    # Amounts are stored as non-negative magnitudes; flow is in direction.
+    assert parsed_rows[0].raw.amount >= 0
 
 
 def test_csv_provider_synthesizes_ids_when_source_has_none() -> None:
     """Synthetic CSV rows should receive deterministic synthetic IDs."""
     provider = CsvProvider()
-    transactions = tuple(provider.ingest(_FIXTURES / "synthetic-transactions.csv"))
-    assert len(transactions) == 2
-    assert transactions[0].transaction_id.startswith("bbva-")
-    assert transactions[0].provenance.source_row_index == 2
+    parsed_rows = tuple(provider.ingest(_FIXTURES / "synthetic-transactions.csv"))
+    assert len(parsed_rows) == 2
+    assert parsed_rows[0].raw.transaction_id.startswith("bbva-")
+    assert parsed_rows[0].raw.provenance.source_row_index == 2
 
 
 def test_csv_provider_rejects_unknown_headers(tmp_path: Path) -> None:

@@ -46,6 +46,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.inbound.financial.providers import ParsedLedgerRow
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....application.ledger._actions import import_ledger_transactions
 from ....domain.currency import (
@@ -121,6 +122,11 @@ def _usd_raw(provider_id: str, *, amount: Decimal = _USD_AMOUNT) -> RawTransacti
     )
 
 
+def _usd_parsed(provider_id: str, *, amount: Decimal = _USD_AMOUNT) -> ParsedLedgerRow:
+    """Wrap a USD magnitude row with an explicit OUTGOING direction."""
+    return ParsedLedgerRow(raw=_usd_raw(provider_id, amount=amount), direction=TransactionDirection.OUTGOING)
+
+
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="test") as profile:
@@ -142,8 +148,7 @@ def test_usd_import_populates_fx_rate_and_value_in_eur(
 
     result = import_ledger_transactions(
         bucket_id="test",
-        raw_transactions=[_usd_raw("usd-inv-001")],
-        direction_resolver=lambda _raw: TransactionDirection.OUTGOING,
+        parsed_rows=[_usd_parsed("usd-inv-001")],
         transaction_repository=repo,
         currency_normalizer=normalizer,
     )
@@ -215,8 +220,7 @@ def test_missing_rate_leaves_fx_fields_absent(
 
     result = import_ledger_transactions(
         bucket_id="test",
-        raw_transactions=[_usd_raw("usd-norate-001")],
-        direction_resolver=lambda _raw: TransactionDirection.OUTGOING,
+        parsed_rows=[_usd_parsed("usd-norate-001")],
         transaction_repository=repo,
         currency_normalizer=normalizer,
     )
@@ -250,8 +254,7 @@ def test_anti_tautology_mutated_rate_changes_value_in_eur(
 
     result_canonical = import_ledger_transactions(
         bucket_id="test",
-        raw_transactions=[_usd_raw("usd-antitauto-canonical")],
-        direction_resolver=lambda _raw: TransactionDirection.OUTGOING,
+        parsed_rows=[_usd_parsed("usd-antitauto-canonical")],
         transaction_repository=repo_canonical,
         currency_normalizer=canonical_normalizer,
     )
@@ -261,8 +264,7 @@ def test_anti_tautology_mutated_rate_changes_value_in_eur(
     repo_mutant = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
     result_mutant = import_ledger_transactions(
         bucket_id="test",
-        raw_transactions=[_usd_raw("usd-antitauto-mutant")],
-        direction_resolver=lambda _raw: TransactionDirection.OUTGOING,
+        parsed_rows=[_usd_parsed("usd-antitauto-mutant")],
         transaction_repository=repo_mutant,
         currency_normalizer=mutant_normalizer,
     )

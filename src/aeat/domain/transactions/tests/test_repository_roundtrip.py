@@ -89,7 +89,7 @@ def test_transaction_catalogue_survives_encrypted_storage_roundtrip(
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         mixed_txn = _transaction(
             provider_id="provider-row-1",
-            amount=Decimal("-100.00"),
+            amount=Decimal("100.00"),
             description="Internet provider - mixed use",
             classification=BusinessClassification.MIXED,
             business_pct=Decimal("0.60"),
@@ -97,7 +97,7 @@ def test_transaction_catalogue_survives_encrypted_storage_roundtrip(
         )
         personal_txn = _transaction(
             provider_id="provider-row-2",
-            amount=Decimal("-25.50"),
+            amount=Decimal("25.50"),
             description="Personal lunch",
             classification=BusinessClassification.PERSONAL,
         )
@@ -149,7 +149,7 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         mixed_txn = _transaction(
             provider_id="provider-row-1",
-            amount=Decimal("-100.00"),
+            amount=Decimal("100.00"),
             description="Internet provider - mixed use",
             classification=BusinessClassification.MIXED,
             business_pct=Decimal("0.60"),
@@ -206,7 +206,7 @@ def test_transaction_catalogue_inner_classification_mismatch_is_structured(
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         txn = _transaction(
             provider_id="provider-row-1",
-            amount=Decimal("-100.00"),
+            amount=Decimal("100.00"),
             description="Internet provider - mixed use",
             classification=BusinessClassification.BUSINESS,
         )
@@ -258,7 +258,7 @@ def test_transaction_catalogue_inner_schema_version_mismatch_is_structured(
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         txn = _transaction(
             provider_id="provider-row-1",
-            amount=Decimal("-100.00"),
+            amount=Decimal("100.00"),
             description="Internet provider - mixed use",
             classification=BusinessClassification.BUSINESS,
         )
@@ -313,7 +313,7 @@ def test_transaction_catalogue_preserves_source_jurisdiction_through_encrypted_s
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         spanish_txn = Transaction.model_validate(
             {
-                "raw": _raw("provider-row-es", Decimal("-50.00"), "Compra material oficina"),
+                "raw": _raw("provider-row-es", Decimal("50.00"), "Compra material oficina"),
                 "direction": TransactionDirection.OUTGOING,
                 "business_classification": BusinessClassification.BUSINESS,
                 "source_jurisdiction": "ES",
@@ -350,7 +350,7 @@ def test_transaction_catalogue_grandfathers_missing_source_jurisdiction_key(
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         spanish_txn = Transaction.model_validate(
             {
-                "raw": _raw("provider-row-es", Decimal("-50.00"), "Compra material oficina"),
+                "raw": _raw("provider-row-es", Decimal("50.00"), "Compra material oficina"),
                 "direction": TransactionDirection.OUTGOING,
                 "business_classification": BusinessClassification.BUSINESS,
                 "source_jurisdiction": "ES",
@@ -408,7 +408,7 @@ def test_transaction_catalogue_preserves_group_label_through_encrypted_storage(
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         labelled = Transaction.model_validate(
             {
-                "raw": _raw("provider-row-grp", Decimal("-90.00"), "Billete tren Proyecto Acme"),
+                "raw": _raw("provider-row-grp", Decimal("90.00"), "Billete tren Proyecto Acme"),
                 "direction": TransactionDirection.OUTGOING,
                 "business_classification": BusinessClassification.BUSINESS,
                 "group_label": "Proyecto Acme",
@@ -443,7 +443,7 @@ def test_transaction_catalogue_grandfathers_missing_group_label_key(
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         labelled = Transaction.model_validate(
             {
-                "raw": _raw("provider-row-grp", Decimal("-90.00"), "Billete tren Proyecto Acme"),
+                "raw": _raw("provider-row-grp", Decimal("90.00"), "Billete tren Proyecto Acme"),
                 "direction": TransactionDirection.OUTGOING,
                 "business_classification": BusinessClassification.BUSINESS,
                 "group_label": "Proyecto Acme",
@@ -479,3 +479,101 @@ def test_transaction_catalogue_grandfathers_missing_group_label_key(
         loaded_txn = loaded.transactions[labelled.transaction_id]
         assert loaded_txn.group_label is None
         assert loaded != original
+
+
+def test_transaction_catalogue_preserves_nonnegative_amount_and_direction(
+    tmp_path: Path,
+) -> None:
+    """A non-negative amount + authoritative direction round-trip through storage.
+
+    The ledger-amount-direction convention stores ``raw.amount`` as a
+    non-negative magnitude and carries the flow solely in
+    :attr:`Transaction.direction`. This pins both halves through the encrypted
+    boundary: an OUTGOING magnitude row and an INTERNAL_TRANSFER magnitude row
+    must load back strictly equal, with the magnitude and the direction
+    preserved verbatim. A save-drops / load-re-derives regression on either
+    axis would silently lose the operator's flow encoding.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        outgoing = _transaction(
+            provider_id="provider-row-out",
+            amount=Decimal("121.00"),
+            description="Compra material oficina",
+            classification=BusinessClassification.BUSINESS,
+        )
+        transfer = Transaction.model_validate(
+            {
+                "raw": _raw("provider-row-transfer", Decimal("5000.00"), "Traspaso a cuenta de ahorro"),
+                "direction": TransactionDirection.INTERNAL_TRANSFER,
+                "business_classification": BusinessClassification.PERSONAL,
+            }
+        )
+        original = TransactionCatalogue.from_transactions([outgoing, transfer])
+        repo.save(original)
+        loaded = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+
+    assert loaded == original
+    loaded_out = loaded.transactions[outgoing.transaction_id]
+    loaded_transfer = loaded.transactions[transfer.transaction_id]
+    assert loaded_out.raw.amount == Decimal("121.00")
+    assert loaded_out.direction is TransactionDirection.OUTGOING
+    assert loaded_transfer.raw.amount == Decimal("5000.00")
+    assert loaded_transfer.direction is TransactionDirection.INTERNAL_TRANSFER
+
+
+def test_transaction_catalogue_negative_amount_payload_rejected_at_load(
+    tmp_path: Path,
+) -> None:
+    """Anti-tautology proof: a persisted envelope with a negative amount is refused.
+
+    Persists a valid non-negative-magnitude row, then surgically rewrites the
+    on-disk amount to a negative value and re-saves. The load path MUST reject
+    the mutated record because :class:`RawTransaction` enforces the
+    non-negative gate on rehydration. If the load silently admitted the
+    negative amount, the magnitude gate would be tautological and every
+    transaction roundtrip in the suite would be suspect.
+    """
+
+    import json as _json
+
+    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        txn = _transaction(
+            provider_id="provider-row-1",
+            amount=Decimal("100.00"),
+            description="Internet provider",
+            classification=BusinessClassification.BUSINESS,
+        )
+        original = TransactionCatalogue.from_transactions([txn])
+        repo.save(original)
+
+        object_key = transaction_catalogue_object_key(profile.bucket_id)
+        record = profile.repository.load(
+            TX_BUCKET_NAMESPACE,
+            object_key,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_TX_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        txn_dict = envelope["payload"]["transactions"][txn.transaction_id]
+        assert txn_dict["raw"]["amount"] == "100.00", (
+            "fixture must serialise the magnitude into the envelope for this proof to be meaningful"
+        )
+        txn_dict["raw"]["amount"] = "-100.00"
+        profile.repository.save(
+            namespace=TX_BUCKET_NAMESPACE,
+            object_key=object_key,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
+
+        with pytest.raises(StoredTransactionDriftError) as exc_info:
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+        assert isinstance(exc_info.value.original_exception, ValidationError)

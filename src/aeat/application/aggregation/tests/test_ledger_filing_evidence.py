@@ -56,7 +56,7 @@ def _txn() -> Transaction:
         transaction_id="provider-row-evidence",
         booked_date=date(2025, 2, 10),
         value_date=date(2025, 2, 11),
-        amount=Decimal("-121.00"),
+        amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Proveedor SL",
         description="Compra material oficina",
@@ -106,7 +106,7 @@ def test_capture_projects_tax_facts_and_binds_fingerprint() -> None:
     # Facts are projected verbatim and the row binds to its fingerprint.
     assert row.transaction_id == txn.transaction_id
     assert row.fingerprint == row_fingerprint(txn)
-    assert row.amount == Decimal("-121.00")
+    assert row.amount == Decimal("121.00")
     assert row.taxable_base == Decimal("100.00")
     assert row.iva_category == "domestic_general_21"
     assert row.direction == "OUTGOING"
@@ -210,7 +210,7 @@ def test_evidence_row_strict_json_roundtrip_all_fields() -> None:
         fingerprint="a" * 64,
         booked_date="2025-02-10",
         value_date="2025-02-11",
-        amount=Decimal("-121.00"),
+        amount=Decimal("121.00"),
         currency="EUR",
         direction="OUTGOING",
         business_classification="MIXED",

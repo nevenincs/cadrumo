@@ -56,7 +56,7 @@ def test_all_none_tax_substrate_validates() -> None:
     """A row with no tax substrate set must validate (the common case)."""
     tx = Transaction.model_validate(
         {
-            "raw": _raw(amount=Decimal("-121.00")),
+            "raw": _raw(amount=Decimal("121.00")),
             "direction": TransactionDirection.OUTGOING,
         }
     )
@@ -64,11 +64,11 @@ def test_all_none_tax_substrate_validates() -> None:
     assert tx.iva_amount is None
 
 
-def test_consistent_triple_validates_against_signed_gross() -> None:
-    """base + iva == abs(gross) to the cent is accepted regardless of sign."""
+def test_consistent_triple_validates_against_magnitude_gross() -> None:
+    """base + iva == gross magnitude to the cent is accepted (amount is non-negative)."""
     tx = Transaction.model_validate(
         {
-            "raw": _raw(amount=Decimal("-121.00")),
+            "raw": _raw(amount=Decimal("121.00")),
             "direction": TransactionDirection.OUTGOING,
             "business_classification": BusinessClassification.BUSINESS,
             "taxable_base": Decimal("100.00"),
@@ -85,7 +85,7 @@ def test_drifted_triple_is_rejected() -> None:
     with pytest.raises(ValidationError, match="must equal the gross to the cent"):
         Transaction.model_validate(
             {
-                "raw": _raw(amount=Decimal("-121.00")),
+                "raw": _raw(amount=Decimal("121.00")),
                 "direction": TransactionDirection.OUTGOING,
                 "business_classification": BusinessClassification.BUSINESS,
                 "taxable_base": Decimal("100.00"),
@@ -99,7 +99,7 @@ def test_base_present_but_iva_absent_validates() -> None:
     """The invariant fires only when both fields are present; base-only is fine."""
     tx = Transaction.model_validate(
         {
-            "raw": _raw(amount=Decimal("-121.00")),
+            "raw": _raw(amount=Decimal("121.00")),
             "direction": TransactionDirection.OUTGOING,
             "business_classification": BusinessClassification.BUSINESS,
             "taxable_base": Decimal("100.00"),
@@ -120,7 +120,7 @@ def test_invariant_uses_native_raw_amount_not_value_in_eur() -> None:
     """
     tx = Transaction.model_validate(
         {
-            "raw": _raw(amount=Decimal("-100.00"), currency="USD"),
+            "raw": _raw(amount=Decimal("100.00"), currency="USD"),
             "direction": TransactionDirection.OUTGOING,
             "business_classification": BusinessClassification.BUSINESS,
             "fx_rate": Decimal("1.10"),
@@ -143,7 +143,7 @@ def test_invariant_against_native_amount_rejects_eur_split() -> None:
     with pytest.raises(ValidationError, match="must equal the gross to the cent"):
         Transaction.model_validate(
             {
-                "raw": _raw(amount=Decimal("-100.00"), currency="USD"),
+                "raw": _raw(amount=Decimal("100.00"), currency="USD"),
                 "direction": TransactionDirection.OUTGOING,
                 "business_classification": BusinessClassification.BUSINESS,
                 "fx_rate": Decimal("1.10"),

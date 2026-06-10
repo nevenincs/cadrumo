@@ -200,6 +200,21 @@ def register_m036_commands(
             note=note,
         )
 
+    _register_m036_readback_commands(
+        m036_app,
+        require_active_profile=require_active_profile,
+        active_bucket_id=active_bucket_id,
+    )
+
+
+def _register_m036_readback_commands(
+    m036_app: typer.Typer,
+    *,
+    require_active_profile: Callable[[], None],
+    active_bucket_id: Callable[[], str],
+) -> None:
+    """Register the m036 ``list`` / ``view`` read-back commands on ``m036_app``."""
+
     @m036_app.command(
         "list",
         help=tr(

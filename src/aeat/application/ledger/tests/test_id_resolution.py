@@ -144,7 +144,7 @@ def _lineage_entry(previous_transaction_id: str) -> TransactionEditLineageEntry:
 
 def test_lineage_resolver_passes_live_id_through_unchanged() -> None:
     """A current id resolves directly, exactly like the base resolver."""
-    live = _transaction(provider_id="row-1", amount="-100.00", description="v0")
+    live = _transaction(provider_id="row-1", amount="100.00", description="v0")
     catalogue = TransactionCatalogue.from_transactions((live,))
     assert resolve_lineage_transaction_id(live.transaction_id, catalogue) == live.transaction_id
 
@@ -153,10 +153,10 @@ def test_lineage_resolver_resolves_a_superseded_old_id_to_the_heir() -> None:
     """An id that names no live row but is a previous_transaction_id on a live
     row's edit lineage resolves to that live row's current id.
     """
-    original = _transaction(provider_id="row-1", amount="-100.00", description="v0")
+    original = _transaction(provider_id="row-1", amount="100.00", description="v0")
     heir = _transaction(
         provider_id="row-1",
-        amount="-100.00",
+        amount="100.00",
         description="v1",
         edit_lineage=(_lineage_entry(original.transaction_id),),
     )
@@ -168,16 +168,16 @@ def test_lineage_resolver_resolves_a_superseded_old_id_to_the_heir() -> None:
 
 def test_lineage_resolver_walks_a_two_edit_chain() -> None:
     """The oldest handle in a two-edit chain still resolves to the latest row."""
-    v0 = _transaction(provider_id="row-1", amount="-100.00", description="v0")
+    v0 = _transaction(provider_id="row-1", amount="100.00", description="v0")
     v1 = _transaction(
         provider_id="row-1",
-        amount="-100.00",
+        amount="100.00",
         description="v1",
         edit_lineage=(_lineage_entry(v0.transaction_id),),
     )
     v2 = _transaction(
         provider_id="row-1",
-        amount="-100.00",
+        amount="100.00",
         description="v2",
         edit_lineage=(_lineage_entry(v0.transaction_id), _lineage_entry(v1.transaction_id)),
     )
@@ -188,7 +188,7 @@ def test_lineage_resolver_walks_a_two_edit_chain() -> None:
 
 def test_lineage_resolver_refuses_an_id_with_no_live_row_and_no_lineage() -> None:
     """An id that names neither a live row nor any lineage handle is refused."""
-    live = _transaction(provider_id="row-1", amount="-100.00", description="v0")
+    live = _transaction(provider_id="row-1", amount="100.00", description="v0")
     catalogue = TransactionCatalogue.from_transactions((live,))
     with pytest.raises(TransactionIdPrefixError):
         resolve_lineage_transaction_id("deadbeef" + "0" * 56, catalogue)
@@ -196,7 +196,7 @@ def test_lineage_resolver_refuses_an_id_with_no_live_row_and_no_lineage() -> Non
 
 def test_lineage_resolver_keeps_malformed_prefix_refusal() -> None:
     """Empty / non-hex prefixes are refused before lineage resolution runs."""
-    live = _transaction(provider_id="row-1", amount="-100.00", description="v0")
+    live = _transaction(provider_id="row-1", amount="100.00", description="v0")
     catalogue = TransactionCatalogue.from_transactions((live,))
     with pytest.raises(TransactionIdPrefixError):
         resolve_lineage_transaction_id("", catalogue)

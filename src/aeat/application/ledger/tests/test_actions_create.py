@@ -121,7 +121,7 @@ def test_create_manual_transaction_validates_and_persists_usage_ratio_reference(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 2),
-            amount=Decimal("-50.00"),
+            amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
             description="telefono movil",
             business_classification=BusinessClassification.MIXED,
@@ -157,7 +157,7 @@ def test_create_manual_transaction_rejects_usage_ratio_reference_missing_from_pr
             ManualLedgerTransactionCommand(
                 bucket_id="bucket-a",
                 booked_date=date(2026, 5, 2),
-                amount=Decimal("-50.00"),
+                amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="telefono movil",
                 business_classification=BusinessClassification.MIXED,
@@ -187,7 +187,7 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
             ManualLedgerTransactionCommand(
                 bucket_id="bucket-a",
                 booked_date=date(2026, 5, 2),
-                amount=Decimal("-50.00"),
+                amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="telefono movil",
                 business_classification=BusinessClassification.MIXED,
@@ -206,7 +206,7 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
             ManualLedgerTransactionCommand(
                 bucket_id="bucket-a",
                 booked_date=date(2026, 5, 2),
-                amount=Decimal("-50.00"),
+                amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="telefono movil",
                 business_classification=BusinessClassification.MIXED,
@@ -236,7 +236,7 @@ def test_create_manual_transaction_rejects_usage_ratio_business_pct_drift(
             ManualLedgerTransactionCommand(
                 bucket_id="bucket-a",
                 booked_date=date(2026, 5, 2),
-                amount=Decimal("-50.00"),
+                amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="telefono movil",
                 business_classification=BusinessClassification.MIXED,
@@ -264,7 +264,7 @@ def test_create_manual_transaction_rejects_missing_purchase_evidence(secure_obje
             ManualLedgerTransactionCommand(
                 bucket_id="bucket-a",
                 booked_date=date(2026, 5, 2),
-                amount=Decimal("-121.00"),
+                amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="material oficina",
                 purchase_invoice_evidence_id="missing-purchase-evidence",
@@ -288,7 +288,7 @@ def test_create_manual_transaction_rejects_missing_attachment_manifest(secure_ob
             ManualLedgerTransactionCommand(
                 bucket_id="bucket-a",
                 booked_date=date(2026, 5, 2),
-                amount=Decimal("-121.00"),
+                amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="material oficina",
                 attachment_ids=("a" * 64,),
@@ -316,7 +316,7 @@ def test_create_manual_transaction_rejects_purchase_evidence_from_other_bucket(
             ManualLedgerTransactionCommand(
                 bucket_id="bucket-a",
                 booked_date=date(2026, 5, 2),
-                amount=Decimal("-121.00"),
+                amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="material oficina",
                 purchase_invoice_evidence_id=other_bucket_invoice.invoice_id,
@@ -358,7 +358,7 @@ def test_create_manual_transaction_rejects_attachment_from_other_bucket(secure_o
             ManualLedgerTransactionCommand(
                 bucket_id="bucket-a",
                 booked_date=date(2026, 5, 2),
-                amount=Decimal("-121.00"),
+                amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="material oficina",
                 attachment_ids=(attachment_id,),
@@ -381,7 +381,7 @@ def test_create_manual_transaction_rejects_repository_bucket_mismatch(secure_obj
             ManualLedgerTransactionCommand(
                 bucket_id="bucket-a",
                 booked_date=date(2026, 5, 2),
-                amount=Decimal("-10.00"),
+                amount=Decimal("10.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="wrong bucket",
             ),
@@ -401,7 +401,7 @@ def test_create_manual_transaction_default_event_repository_fails_closed_for_ina
             ManualLedgerTransactionCommand(
                 bucket_id="bucket-b",
                 booked_date=date(2026, 5, 2),
-                amount=Decimal("-10.00"),
+                amount=Decimal("10.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="inactive bucket",
                 actor="operator-A",

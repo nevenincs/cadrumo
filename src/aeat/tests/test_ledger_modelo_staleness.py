@@ -60,7 +60,7 @@ def _txn(*, taxable_base: Decimal) -> Transaction:
         transaction_id="provider-row-stale",
         booked_date=date(2025, 2, 10),
         value_date=date(2025, 2, 10),
-        amount=Decimal("-121.00"),
+        amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Proveedor SL",
         description="Compra material oficina",

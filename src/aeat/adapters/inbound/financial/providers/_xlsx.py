@@ -20,11 +20,12 @@ from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
 from .....core.logging import get_logger
-from .....domain.transactions import RawTransaction, SourceFormat
+from .....domain.transactions import SourceFormat
 from ._base import (
     FinancialProvider,
     FinancialValidationError,
     InvalidFinancialSourceError,
+    ParsedLedgerRow,
     ProviderValidation,
     build_raw_transaction,
     coerce_cell_text,
@@ -124,8 +125,8 @@ class XlsxProvider(FinancialProvider):
         )
 
     @override
-    def ingest(self, path: Path) -> Iterator[RawTransaction]:
-        """Yield strict :class:`RawTransaction` records from the first matching worksheet."""
+    def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:
+        """Yield :class:`ParsedLedgerRow` records (magnitude + direction) from the first matching worksheet."""
         source_bytes = self._read_source_bytes(path)
         source_sha256 = self._compute_sha256(source_bytes)
         workbook, rows, sheet_name, layout, headers, lookup, header_index = self._locate_sheet(path)

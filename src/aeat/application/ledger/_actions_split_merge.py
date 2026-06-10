@@ -86,7 +86,8 @@ def split_transaction(
     - Parent must not be referenced by a finalized modelo calculation.
     - At least two children must be supplied.
     - Sum of child amounts equals the parent amount exactly (no rounding).
-    - Every child amount carries the same sign as the parent amount.
+    - Child amounts are non-negative magnitudes; direction is inherited
+      from the parent (the builder copies ``parent.direction``).
 
     Effect:
 
@@ -291,17 +292,16 @@ def _validate_split_child_amounts(
     parent_amount: Decimal,
     children: tuple[SplitChildCommand, ...],
 ) -> None:
-    """Verify split-child amounts sum to the parent exactly and share its sign.
+    """Verify split-child magnitudes sum to the parent exactly.
 
-    Three contracts enforced in order:
+    Two contracts enforced in order (amounts are non-negative magnitudes;
+    flow is carried by ``direction``, which every child inherits from the
+    parent in the split builder, so there is no sign to reconcile):
 
     * ``sum(child.amount) == parent_amount`` exactly â€” no rounding
       slack; bank ledgers carry exact cents.
     * Every child amount is non-zero; a zero-amount child is a
       modelling error, not a legitimate split.
-    * Every child amount carries the same sign as the parent â€”
-      mixing positive and negative children would silently invert
-      direction for the inverted siblings.
     """
     child_sum = sum((child.amount for child in children), start=Decimal("0"))
     if child_sum != parent_amount:
@@ -313,21 +313,17 @@ def _validate_split_child_amounts(
                 "child_amounts": tuple(str(child.amount) for child in children),
             },
         )
-    parent_negative = parent_amount < Decimal("0")
     for index, child in enumerate(children):
+        if child.amount < Decimal("0"):
+            raise TransactionValidationError(
+                "ledger split child amount must be a non-negative magnitude; "
+                "children inherit the parent's direction",
+                context={"child_index": index, "child_amount": str(child.amount)},
+            )
         if child.amount == Decimal("0"):
             raise TransactionValidationError(
                 "ledger split child amount must not be zero",
                 context={"child_index": index},
-            )
-        if (child.amount < Decimal("0")) != parent_negative:
-            raise TransactionValidationError(
-                "ledger split child amounts must share the parent's sign",
-                context={
-                    "parent_amount": str(parent_amount),
-                    "child_index": index,
-                    "child_amount": str(child.amount),
-                },
             )
 
 

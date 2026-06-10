@@ -51,7 +51,7 @@ def _raw_transaction(
     *,
     booked_date: date = date(2026, 4, 5),
     value_date: date | None = date(2026, 4, 5),
-    amount: Decimal = Decimal("-121.00"),
+    amount: Decimal = Decimal("121.00"),
     currency: str = "EUR",
 ) -> RawTransaction:
     return RawTransaction(
@@ -93,12 +93,12 @@ def _transaction(
     # Keep the gross consistent with base + iva (the Transaction
     # gross == taxable_base + iva_amount invariant). When the caller does not
     # pin an explicit amount and both tax fields are present, derive the
-    # IVA-inclusive gross from them, signed negative for the OUTGOING default.
+    # IVA-inclusive gross magnitude from them; flow is carried by ``direction``.
     if amount is None:
         if taxable_base is not None and iva_amount is not None:
-            amount = -(taxable_base + iva_amount)
+            amount = taxable_base + iva_amount
         else:
-            amount = Decimal("-121.00")
+            amount = Decimal("121.00")
     return Transaction.model_validate(
         {
             "raw": _raw_transaction(
@@ -459,7 +459,7 @@ def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_ob
 def test_internal_transfer_is_reported_as_unsupported_direction() -> None:
     transaction = _transaction(
         "row-transfer",
-        amount=Decimal("-10.00"),
+        amount=Decimal("10.00"),
         direction=TransactionDirection.INTERNAL_TRANSFER,
         business_classification=BusinessClassification.NOT_YET_PROCESSED,
         taxable_base=None,

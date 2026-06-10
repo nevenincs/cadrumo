@@ -172,14 +172,15 @@ class ManualLedgerTransactionCommand(BaseModel):
 
     @model_validator(mode="after")
     def _validate_direction_policy(self) -> Self:
+        if self.amount < Decimal("0"):
+            raise TransactionValidationError(
+                "manual ledger transaction amount must be a non-negative magnitude; "
+                "set the flow with --direction (OUTGOING / INCOMING / INTERNAL_TRANSFER), not a negative amount"
+            )
         if self.amount == Decimal("0"):
             raise TransactionValidationError(
                 "manual ledger transaction amount must be non-zero; attach zero-value evidence to an existing row"
             )
-        if self.direction is TransactionDirection.OUTGOING and self.amount >= Decimal("0"):
-            raise TransactionValidationError("OUTGOING manual ledger transactions require a negative amount")
-        if self.direction is TransactionDirection.INCOMING and self.amount <= Decimal("0"):
-            raise TransactionValidationError("INCOMING manual ledger transactions require a positive amount")
         if self.direction is TransactionDirection.INTERNAL_TRANSFER:
             self._validate_internal_transfer_payload()
         return self
@@ -402,9 +403,9 @@ class SplitChildCommand(BaseModel):
     """One slice of an N-way split.
 
     Attributes:
-        amount: Signed Decimal in the parent's currency. Must agree
-            with the parent's direction sign convention (positive for
-            INCOMING, negative for OUTGOING).
+        amount: Non-negative magnitude Decimal in the parent's currency;
+            direction is inherited from the parent (the split builder copies
+            ``parent.direction`` onto every child).
         description: Non-blank narrative for this slice.
         counterparty: Optional override; falls back to the parent's
             counterparty when ``None``.

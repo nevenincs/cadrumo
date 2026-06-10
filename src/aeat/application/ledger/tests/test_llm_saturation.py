@@ -97,7 +97,7 @@ def repositories(tmp_path: Path) -> Iterator[tuple[TransactionCatalogueRepositor
         )
 
 
-def _seed_unclassified(repository: TransactionCatalogueRepository, *, amount: Decimal = Decimal("-121.00")) -> str:
+def _seed_unclassified(repository: TransactionCatalogueRepository, *, amount: Decimal = Decimal("121.00")) -> str:
     """Persist one ACTIVE, NOT_YET_PROCESSED transaction and return its id."""
     raw = RawTransaction(
         transaction_id="row-saturate-1",
@@ -135,7 +135,7 @@ def test_suggest_derives_substrate_from_selected_category(
     # asserting base + iva against this seeded input (not a recomputed literal) is
     # the real invariant, not a hand-summed expectation.
     gross = Decimal("121.00")
-    tx_id = _seed_unclassified(repository, amount=-gross)
+    tx_id = _seed_unclassified(repository, amount=gross)
 
     suggestion = saturate_llm_classification(
         bucket_id=_BUCKET,
@@ -211,7 +211,7 @@ def test_apply_persists_derived_substrate_with_llm_provenance(
     # The gross is the seeded transaction input the substrate must reconstitute;
     # assert against it rather than a hand-summed literal.
     gross = Decimal("121.00")
-    tx_id = _seed_unclassified(repository, amount=-gross)
+    tx_id = _seed_unclassified(repository, amount=gross)
     suggestion = saturate_llm_classification(
         bucket_id=_BUCKET,
         transaction_id=tx_id,

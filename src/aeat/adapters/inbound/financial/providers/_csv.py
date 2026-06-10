@@ -25,11 +25,12 @@ from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.config import load_settings
 from .....core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from .....core.logging import get_logger
-from .....domain.transactions import RawTransaction, SourceFormat
+from .....domain.transactions import SourceFormat
 from ._base import (
     FinancialProvider,
     FinancialValidationError,
     InvalidFinancialSourceError,
+    ParsedLedgerRow,
     ProviderValidation,
     build_raw_transaction,
     coerce_cell_text,
@@ -250,8 +251,8 @@ class CsvProvider(FinancialProvider):
         )
 
     @override
-    def ingest(self, path: Path) -> Iterator[RawTransaction]:
-        """Yield strict :class:`RawTransaction` records from the CSV source."""
+    def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:
+        """Yield :class:`ParsedLedgerRow` records (magnitude + direction) from the CSV source."""
         _logger.debug("csv_provider ingest: loading %s", path.name)
         rows, source_sha256, _, _ = self._load_rows(path)
         header_index, layout, headers, lookup = self._locate_header(rows)

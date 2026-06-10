@@ -39,7 +39,7 @@ def _raw_transaction(
     provider_id: str,
     *,
     booked_date: date = date(2026, 4, 5),
-    amount: Decimal = Decimal("-121.00"),
+    amount: Decimal = Decimal("121.00"),
     currency: str = "EUR",
 ) -> RawTransaction:
     return RawTransaction(
@@ -66,7 +66,7 @@ def _transaction(
     provider_id: str,
     *,
     direction: TransactionDirection = TransactionDirection.OUTGOING,
-    amount: Decimal = Decimal("-121.00"),
+    amount: Decimal = Decimal("121.00"),
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
     business_pct: Decimal | None = None,
     category_id: str | None = SpendingCategory.MATERIAL_OFICINA.value,
@@ -184,7 +184,7 @@ def test_preflight_still_flags_missing_category_on_expense_transaction() -> None
     expense = _transaction(
         "row-expense",
         direction=TransactionDirection.OUTGOING,
-        amount=Decimal("-121.00"),
+        amount=Decimal("121.00"),
         category_id=None,
     )
 

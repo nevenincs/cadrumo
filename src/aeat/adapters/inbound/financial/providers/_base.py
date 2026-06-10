@@ -56,7 +56,7 @@ from .....core.errors import AeatError
 from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.logging import get_logger
 from .....core.time import now
-from .....domain.transactions import RawProvenance, RawTransaction, SourceFormat
+from .....domain.transactions import RawProvenance, RawTransaction, SourceFormat, TransactionDirection
 
 LOGGER = get_logger(__name__)
 
@@ -281,19 +281,21 @@ class FinancialProvider(ABC):
         return path.is_file() and path.suffix.lower() in self.supported_extensions
 
     @abstractmethod
-    def ingest(self, path: Path) -> Iterator[RawTransaction]:
-        """Yield raw transactions from ``path``.
+    def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:
+        """Yield parsed ledger rows from ``path``.
 
-        Implementations must produce one
-        :class:`aeat.domain.transactions.RawTransaction`
-        per source row, with provenance built via
+        Implementations must produce one :class:`ParsedLedgerRow` per source
+        row (via :func:`build_raw_transaction`), each carrying a magnitude
+        :class:`aeat.domain.transactions.RawTransaction` plus the
+        :class:`aeat.domain.transactions.TransactionDirection` derived from the
+        source sign at the parse boundary, with provenance built via
         :meth:`_build_provenance`.
 
         Args:
             path: Source document to ingest.
 
         Returns:
-            An iterator that yields one raw transaction per source row.
+            An iterator that yields one parsed ledger row per source row.
 
         Raises:
             InvalidFinancialSourceError: When the document cannot be parsed or a row is malformed.
@@ -563,6 +565,42 @@ def synthesize_transaction_id(
     return f"{prefix}-{source_sha256[:12]}-{source_row_index}"
 
 
+class ParsedLedgerRow(BaseModel):
+    """One parsed source row: a magnitude :class:`RawTransaction` + its flow.
+
+    The provider observes the bank export's sign (or native debit/credit
+    signal) once, at the parse boundary, to choose a
+    :class:`aeat.domain.transactions.TransactionDirection`; it then stores the
+    **absolute magnitude** on ``raw`` and discards the sign. Downstream the
+    import action carries ``direction`` straight onto the
+    :class:`aeat.domain.transactions.Transaction`, never re-deriving flow from
+    a sign that no longer exists.
+
+    Attributes:
+        raw: The verbatim per-row :class:`RawTransaction` carrying the
+            non-negative magnitude amount.
+        direction: The authoritative flow direction derived from the source
+            sign at the parse boundary.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    raw: RawTransaction
+    direction: TransactionDirection
+
+
+def direction_from_signed_amount(signed_amount: Decimal) -> TransactionDirection:
+    """Map a source-signed amount to the authoritative flow direction.
+
+    A negative source amount is an OUTGOING flow (money out); a positive
+    source amount is INCOMING (money in). The sign is consumed exactly once
+    here, at the adapter boundary, and discarded; the stored amount is the
+    absolute magnitude. A zero amount carries no flow and is rejected by
+    :func:`build_raw_transaction` before this is called.
+    """
+    return TransactionDirection.OUTGOING if signed_amount < Decimal("0") else TransactionDirection.INCOMING
+
+
 def build_raw_transaction(
     *,
     provider: FinancialProvider,
@@ -577,13 +615,29 @@ def build_raw_transaction(
     counterparty: str | None,
     description: str,
     raw_fields: Mapping[str, str],
-) -> RawTransaction:
-    """Create one strict :class:`RawTransaction` with shared provenance semantics."""
-    return RawTransaction(
+) -> ParsedLedgerRow:
+    """Create one :class:`ParsedLedgerRow` from a source-signed amount.
+
+    ``amount`` is the source-signed value as the parser read it. Its sign is
+    consumed here to choose the :class:`aeat.domain.transactions.TransactionDirection`,
+    then the stored :class:`aeat.domain.transactions.RawTransaction` carries the
+    absolute magnitude (flow lives in ``direction``, never in the sign). A
+    **zero-amount** row carries no flow and is refused at the parse boundary,
+    consistent with the manual ledger path.
+
+    Raises:
+        InvalidFinancialSourceError: When ``amount`` is zero.
+    """
+    if amount == Decimal("0"):
+        raise InvalidFinancialSourceError(
+            f"{provider.name} row {source_row_index} has a zero amount; a ledger movement must be non-zero"
+        )
+    direction = direction_from_signed_amount(amount)
+    raw = RawTransaction(
         transaction_id=transaction_id,
         booked_date=booked_date,
         value_date=value_date,
-        amount=amount,
+        amount=abs(amount),
         currency=currency,
         counterparty=counterparty,
         description=description,
@@ -594,6 +648,7 @@ def build_raw_transaction(
         ),
         raw_fields=raw_fields,
     )
+    return ParsedLedgerRow(raw=raw, direction=direction)
 
 
 def default_currency() -> str:

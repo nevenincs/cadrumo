@@ -37,7 +37,7 @@ _CAPTURED = datetime(2026, 6, 2, 12, 0, tzinfo=UTC)
 def _tx(
     provider_id: str,
     *,
-    amount: Decimal = Decimal("-121.00"),
+    amount: Decimal = Decimal("121.00"),
     taxable_base: Decimal | None = Decimal("100.00"),
     iva_amount: Decimal | None = Decimal("21.00"),
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
@@ -135,7 +135,7 @@ def test_evidence_capture_projects_tax_facts_and_manual_basis() -> None:
     row = evidence.rows[0]
     assert row.transaction_id == tx.transaction_id
     assert row.fingerprint == row_fingerprint(tx)
-    assert row.amount == Decimal("-121.00")
+    assert row.amount == Decimal("121.00")
     assert row.taxable_base == Decimal("100.00")
     assert row.iva_amount == Decimal("21.00")
     assert row.category_id == "material_oficina"

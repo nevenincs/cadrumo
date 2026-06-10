@@ -28,8 +28,10 @@ from ._base import (
     FinancialProviderError,
     FinancialValidationError,
     InvalidFinancialSourceError,
+    ParsedLedgerRow,
     ProviderValidation,
     UnsupportedFinancialSourceError,
+    direction_from_signed_amount,
 )
 from ._csv import CsvProvider
 from ._detection import detect_provider, provider_for_extension
@@ -46,10 +48,12 @@ __all__ = [
     "FinancialValidationError",
     "InvalidFinancialSourceError",
     "OfxProvider",
+    "ParsedLedgerRow",
     "PdfN26Provider",
     "ProviderValidation",
     "UnsupportedFinancialSourceError",
     "XlsxProvider",
     "detect_provider",
+    "direction_from_signed_amount",
     "provider_for_extension",
 ]

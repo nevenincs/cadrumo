@@ -38,7 +38,7 @@ def _transaction(source_path: Path) -> Transaction:
         transaction_id="runtime-row-1",
         booked_date=date(2026, 4, 5),
         value_date=date(2026, 4, 5),
-        amount=Decimal("-121.00"),
+        amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Proveedor SL",
         description="runtime storage enrollment transaction",

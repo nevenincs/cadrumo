@@ -134,6 +134,21 @@ def _parse_required_decimal(raw: str, *, label: str) -> Decimal:
     return parsed
 
 
+def _parse_amount_magnitude(raw: str) -> Decimal:
+    """Parse ``--amount`` as a non-negative magnitude.
+
+    Flow is carried by ``--direction``, not by the sign of the amount. A
+    negative input is refused at the CLI boundary with an instructive,
+    localised error that names the accepted form (a non-negative amount plus
+    ``--direction``) rather than a bare invalid, per the
+    ``aeat-architecture-boundaries`` instructive-refusal rule.
+    """
+    parsed = _parse_required_decimal(raw, label="amount")
+    if parsed < Decimal("0"):
+        raise _bad(tr("cli.ledger.errors.negative_amount", raw=raw))
+    return parsed
+
+
 def _format_percent(value: Decimal) -> str:
     """Render a 0..1 proportion as its percentage for operator context."""
     # ``format(..., "f")`` avoids scientific notation (e.g. ``5E+3``);
@@ -440,7 +455,7 @@ def ledger_add(
             bucket_id=transaction_repository.bucket_id,
             booked_date=_parse_iso_date(booked_date, label="date"),
             value_date=_parse_iso_date(value_date, label="value-date") if value_date is not None else None,
-            amount=_parse_required_decimal(amount, label="amount"),
+            amount=_parse_amount_magnitude(amount),
             currency=currency,
             direction=direction,
             counterparty=counterparty,

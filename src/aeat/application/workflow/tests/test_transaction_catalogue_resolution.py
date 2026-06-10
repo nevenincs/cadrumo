@@ -54,7 +54,7 @@ def _transaction(provider_id: str) -> Transaction:
         transaction_id=provider_id,
         booked_date=date(2026, 5, 1),
         value_date=date(2026, 5, 1),
-        amount=Decimal("-42.00"),
+        amount=Decimal("42.00"),
         currency="EUR",
         counterparty="Proveedor SL",
         description=f"bucket scoped row {provider_id}",

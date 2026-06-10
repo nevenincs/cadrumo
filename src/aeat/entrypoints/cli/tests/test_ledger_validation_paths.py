@@ -108,7 +108,7 @@ def test_ledger_add_rejects_business_pct_on_non_mixed_classification(tmp_path: P
             "--date",
             "2026-04-15",
             "--amount",
-            "-50.00",
+            "50.00",
             "--direction",
             "OUTGOING",
             "--description",
@@ -124,6 +124,64 @@ def test_ledger_add_rejects_business_pct_on_non_mixed_classification(tmp_path: P
     assert result.exit_code != 0, result.output
     combined = result.output or ""
     assert "business_pct" in combined or "MIXED" in combined, combined
+
+
+def test_ledger_add_rejects_negative_amount_with_instructive_error(tmp_path: Path) -> None:
+    """``ledger add --amount=-49.99`` is refused with an instructive, localised error.
+
+    Flow is carried by ``--direction``, not by the sign of the amount. The CLI
+    boundary refuses a negative magnitude and the error names the accepted form
+    (a non-negative amount plus ``--direction``), per the
+    ``aeat-architecture-boundaries`` instructive-refusal rule — never a bare
+    "value invalid".
+    """
+    result = _RUNNER.invoke(
+        app,
+        [
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-04-15",
+            "--amount",
+            "-49.99",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "office supplies",
+        ],
+    )
+    assert result.exit_code != 0, result.output
+    combined = result.output or ""
+    # Instructive: names the accepted non-negative form and the --direction axis.
+    assert "non-negative magnitude" in combined, combined
+    assert "--direction" in combined, combined
+
+
+def test_ledger_add_accepts_nonnegative_amount_with_direction(tmp_path: Path) -> None:
+    """``ledger add --amount=49.99 --direction OUTGOING`` is accepted."""
+    result = _RUNNER.invoke(
+        app,
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-04-15",
+            "--amount",
+            "49.99",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "office supplies",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)["result"]
+    assert payload["transaction"]["amount"] == "49.99"
+    assert payload["transaction"]["direction"] == "OUTGOING"
 
 
 # ---------------------------------------------------------------------------
@@ -311,7 +369,7 @@ def test_ledger_add_defaults_source_jurisdiction_to_es_for_resident_general(
             "--date",
             "2026-04-15",
             "--amount",
-            "-50.00",
+            "50.00",
             "--direction",
             "OUTGOING",
             "--description",
@@ -350,7 +408,7 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_impatriado(
             "--date",
             "2026-04-15",
             "--amount",
-            "-50.00",
+            "50.00",
             "--direction",
             "OUTGOING",
             "--description",
@@ -402,7 +460,7 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_non_resident(
             "--date",
             "2026-04-15",
             "--amount",
-            "-50.00",
+            "50.00",
             "--direction",
             "OUTGOING",
             "--description",

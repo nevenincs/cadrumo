@@ -785,6 +785,28 @@ class Settings(BaseSettings):
         description="Maximum retry attempts for retryable LLM failures",
     )
 
+    # ── Evidence reading: cloud-upload consent posture ──────────────────────
+    # Default and serious-usage posture is on-host reading; sensitive evidence
+    # never leaves the machine. Transmitting evidence to a cloud model is a
+    # deployment-permitted, per-invocation, acknowledged exception only and is
+    # categorically barred in gestor/professional deployments
+    # (sensitive-financial-data-secure-storage-only).
+    aeat_evidence_cloud_upload_permitted: bool = Field(
+        default=False,
+        description=(
+            "Whether this deployment permits transmitting evidence to a cloud model at all. "
+            "Default off: evidence reading is on-host only. When True, a per-invocation operator "
+            "consent acknowledgement is still required for each cloud read."
+        ),
+    )
+    aeat_evidence_gestor_mode: bool = Field(
+        default=False,
+        description=(
+            "Gestor/professional deployment flag. When True, cloud evidence upload is categorically "
+            "refused regardless of aeat_evidence_cloud_upload_permitted or per-invocation consent."
+        ),
+    )
+
     # ── Filing-deadline engine ──────────────────────────────────────────────
     aeat_deadline_due_soon_days: int = Field(
         default=14,

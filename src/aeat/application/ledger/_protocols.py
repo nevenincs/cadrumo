@@ -11,10 +11,8 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from ...domain.transactions import RawTransaction
-
 if TYPE_CHECKING:
-    from ...adapters.inbound.financial.providers import ProviderValidation
+    from ...adapters.inbound.financial.providers import ParsedLedgerRow, ProviderValidation
 
 
 @runtime_checkable
@@ -27,11 +25,12 @@ class FinancialProviderProtocol(Protocol):
     to the adapter implementation.
     """
 
-    def ingest(self, path: Path) -> Iterator[RawTransaction]:
-        """Yield raw transactions from ``path``.
+    def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:
+        """Yield parsed ledger rows from ``path``.
 
-        Each yielded item is a :class:`RawTransaction` parsed from the
-        provider-format file at ``path``.
+        Each yielded item is a :class:`ParsedLedgerRow` (a magnitude
+        :class:`RawTransaction` plus its :class:`TransactionDirection`)
+        parsed from the provider-format file at ``path``.
         """
         ...
 

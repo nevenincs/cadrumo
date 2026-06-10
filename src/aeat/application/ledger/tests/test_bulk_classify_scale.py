@@ -63,7 +63,7 @@ def _raw(idx: int) -> RawTransaction:
         transaction_id=f"provider-row-{idx:04d}",
         booked_date=date(2026, 5, 1),
         value_date=date(2026, 5, 1),
-        amount=Decimal("-80.00"),
+        amount=Decimal("80.00"),
         currency="EUR",
         counterparty="Proveedor SL",
         description=f"Compra material oficina lote {idx}",

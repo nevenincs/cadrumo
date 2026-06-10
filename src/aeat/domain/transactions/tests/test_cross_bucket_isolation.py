@@ -39,7 +39,12 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
         yield profile.repository
 
 
-def _tx(provider_id: str, *, amount: Decimal) -> Transaction:
+def _tx(
+    provider_id: str,
+    *,
+    amount: Decimal,
+    direction: TransactionDirection = TransactionDirection.OUTGOING,
+) -> Transaction:
     raw = RawTransaction(
         transaction_id=provider_id,
         booked_date=date(2026, 4, 5),
@@ -61,7 +66,7 @@ def _tx(provider_id: str, *, amount: Decimal) -> Transaction:
     return Transaction.model_validate(
         {
             "raw": raw,
-            "direction": TransactionDirection.OUTGOING if amount < 0 else TransactionDirection.INCOMING,
+            "direction": direction,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
         }
     )
@@ -71,7 +76,7 @@ def test_each_bucket_ledger_is_independent(secure_objects: SecureObjectRepositor
     marta = TransactionCatalogueRepository(bucket_id="marta", objects=secure_objects)
     retailer = TransactionCatalogueRepository(bucket_id="retailer", objects=secure_objects)
 
-    marta_tx = _tx("marta-1", amount=Decimal("-100.00"))
+    marta_tx = _tx("marta-1", amount=Decimal("100.00"))
     retailer_tx = _tx("retailer-1", amount=Decimal("250.00"))
     marta.save(TransactionCatalogue.from_transactions((marta_tx,)))
     retailer.save(TransactionCatalogue.from_transactions((retailer_tx,)))
@@ -88,7 +93,7 @@ def test_each_bucket_ledger_is_independent(secure_objects: SecureObjectRepositor
 
 def test_unknown_bucket_loads_empty(secure_objects: SecureObjectRepository) -> None:
     TransactionCatalogueRepository(bucket_id="marta", objects=secure_objects).save(
-        TransactionCatalogue.from_transactions((_tx("marta-1", amount=Decimal("-100.00")),))
+        TransactionCatalogue.from_transactions((_tx("marta-1", amount=Decimal("100.00")),))
     )
     fresh = TransactionCatalogueRepository(bucket_id="never-used", objects=secure_objects).load()
     assert tuple(fresh.values()) == ()

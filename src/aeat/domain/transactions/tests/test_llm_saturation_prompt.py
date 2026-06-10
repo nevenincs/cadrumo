@@ -51,7 +51,7 @@ def _transaction() -> Transaction:
         transaction_id="row-saturate",
         booked_date=date(2025, 3, 1),
         value_date=date(2025, 3, 1),
-        amount=Decimal("-121.00"),
+        amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Restaurante Sol",
         description="client lunch",

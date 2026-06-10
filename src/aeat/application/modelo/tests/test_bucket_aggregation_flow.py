@@ -192,7 +192,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
     outgoing = _transaction(
         "purchase-general",
         direction=TransactionDirection.OUTGOING,
-        amount=Decimal("-60.50"),
+        amount=Decimal("60.50"),
         taxable_base=Decimal("50.00"),
         iva_amount=Decimal("10.50"),
     )
@@ -264,7 +264,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_p
     incomplete = _transaction(
         "purchase-missing-category",
         direction=TransactionDirection.OUTGOING,
-        amount=Decimal("-121.00"),
+        amount=Decimal("121.00"),
         taxable_base=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
     ).model_copy(update={"category_id": None})
@@ -302,7 +302,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
         _transaction(
             "q1-purchase",
             direction=TransactionDirection.OUTGOING,
-            amount=Decimal("-60.50"),
+            amount=Decimal("60.50"),
             taxable_base=Decimal("50.00"),
             iva_amount=Decimal("10.50"),
             booked_date=date(2026, 2, 12),
@@ -318,7 +318,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
         _transaction(
             "q2-purchase",
             direction=TransactionDirection.OUTGOING,
-            amount=Decimal("-121.00"),
+            amount=Decimal("121.00"),
             taxable_base=Decimal("100.00"),
             iva_amount=Decimal("21.00"),
             booked_date=date(2026, 5, 12),
@@ -334,7 +334,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
         _transaction(
             "q3-purchase",
             direction=TransactionDirection.OUTGOING,
-            amount=Decimal("-121.00"),
+            amount=Decimal("121.00"),
             taxable_base=Decimal("100.00"),
             iva_amount=Decimal("21.00"),
             booked_date=date(2026, 8, 12),
@@ -350,7 +350,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
         _transaction(
             "q4-purchase",
             direction=TransactionDirection.OUTGOING,
-            amount=Decimal("-121.00"),
+            amount=Decimal("121.00"),
             taxable_base=Decimal("100.00"),
             iva_amount=Decimal("21.00"),
             booked_date=date(2026, 11, 12),

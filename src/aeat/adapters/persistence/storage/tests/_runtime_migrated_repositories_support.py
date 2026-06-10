@@ -215,7 +215,7 @@ def _transaction(label: str) -> Transaction:
         transaction_id=f"tx-{label}",
         booked_date=date(2026, 4, 5),
         value_date=date(2026, 4, 5),
-        amount=Decimal("-121.00"),
+        amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Proveedor SL",
         description=f"runtime migrated repository {label}",

@@ -106,7 +106,8 @@ def _build_transactions() -> list[tuple[Transaction, dict[str, Any], str]]:
 
     built: list[tuple[Transaction, dict[str, Any], str]] = []
     for account in manifest["accounts"]:
-        for raw in provider.ingest(_CORPUS / account["file"]):
+        for parsed in provider.ingest(_CORPUS / account["file"]):
+            raw = parsed.raw
             rule = _match_rule(raw.description, rules)
             assert rule is not None, f"no oracle rule for {raw.description!r}"
 

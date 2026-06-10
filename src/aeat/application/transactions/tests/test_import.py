@@ -56,7 +56,7 @@ def _raw_transaction(
     *,
     booked_date: date = date(2025, 4, 5),
     value_date: date | None = date(2025, 4, 5),
-    amount: Decimal = Decimal("-121.00"),
+    amount: Decimal = Decimal("121.00"),
     description: str | None = None,
 ) -> RawTransaction:
     """Build a minimal RawTransaction with stable distinguishing fields.

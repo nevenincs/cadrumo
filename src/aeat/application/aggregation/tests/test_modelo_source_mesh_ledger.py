@@ -140,7 +140,7 @@ def _renta_transaction(
             "raw": _raw_transaction(
                 provider_id,
                 booked_date=date(2025, 4, 5),
-                amount=Decimal("-121.00"),
+                amount=Decimal("121.00"),
             ),
             "direction": TransactionDirection.OUTGOING,
             "business_classification": BusinessClassification.BUSINESS,
@@ -197,7 +197,7 @@ def test_iva_source_mesh_resolver_matches_existing_bucket_ledger_bridge(secure_o
     outgoing = _iva_transaction(
         "purchase-general",
         direction=TransactionDirection.OUTGOING,
-        amount=Decimal("-60.50"),
+        amount=Decimal("60.50"),
         taxable_base=Decimal("50.00"),
         iva_amount=Decimal("10.50"),
     )

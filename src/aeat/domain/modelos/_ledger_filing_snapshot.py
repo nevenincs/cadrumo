@@ -20,7 +20,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
@@ -147,6 +147,9 @@ class LedgerEvidenceRow(BaseModel):
     fingerprint: str = Field(min_length=64, max_length=64)
     booked_date: str = Field(min_length=1)
     value_date: str | None = None
+    # Non-negative magnitude in the row's native currency; flow is carried by
+    # ``direction``, never by the sign (the amount mirrors the already-absolute
+    # ``value_in_eur`` projection). See the ledger-amount-direction ADR.
     amount: Decimal
     currency: str = Field(min_length=1)
     direction: str = Field(min_length=1)
@@ -169,6 +172,19 @@ class LedgerEvidenceRow(BaseModel):
     document_link_ids: tuple[str, ...] = ()
     legal_refs: tuple[str, ...] = ()
     source_refs: tuple[str, ...] = ()
+
+    @field_validator("amount", "value_in_eur")
+    @classmethod
+    def _reject_negative_magnitude(cls, value: Decimal | None) -> Decimal | None:
+        """Reject a negative ``amount`` / ``value_in_eur``; both are magnitudes.
+
+        Flow is carried by :attr:`direction`, never by the sign of the amount.
+        The evidence row mirrors the already-absolute EUR projection so a
+        reader never has to reconcile which field is signed.
+        """
+        if value is not None and value < Decimal("0"):
+            raise ValueError("ledger evidence amount must be a non-negative magnitude; flow is carried by direction")
+        return value
 
 
 class ManualFactBasisEntry(BaseModel):
