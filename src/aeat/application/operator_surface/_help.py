@@ -269,14 +269,9 @@ def _config_help() -> HelpDocument:
                         command="aeat config profile censo",
                         description=tr("cli.operator_surface.help.config.profile_censo"),
                     ),
-                ),
-            ),
-            HelpSection(
-                title=tr("cli.operator_surface.help.config.section_bucket_inspection"),
-                entries=(
                     HelpEntry(
-                        command="aeat config bucket history",
-                        description=tr("cli.operator_surface.help.config.bucket_history"),
+                        command="aeat config profile history",
+                        description=tr("cli.operator_surface.help.config.profile_history"),
                     ),
                 ),
             ),

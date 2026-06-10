@@ -80,11 +80,6 @@ repair_app = typer.Typer(
     no_args_is_help=False,
     invoke_without_command=True,
 )
-bucket_app = typer.Typer(
-    name="bucket",
-    help=tr("cli.config.bucket.help"),
-    no_args_is_help=True,
-)
 
 _OUTPUT_LANGUAGE_CLI = click.Choice(_SUPPORTED_OUTPUT_LANGUAGES)
 
@@ -1180,7 +1175,7 @@ register_repair_profile_command(
     read_profile_record=_read_profile_record,
 )
 register_repair_maintenance_commands(repair_app)
-register_bucket_history_commands(bucket_app)
+register_bucket_history_commands(profile_app)
 register_custody_commands(
     app,
     resolve_active_profile_pointer=_resolve_active_profile_pointer,
@@ -1192,7 +1187,6 @@ app.add_typer(profile_app, name="profile")
 register_apoderado_commands(auth_app, resolve_active_profile_pointer=_resolve_active_profile_pointer)
 auth_app.add_typer(auth_diagnostics_app, name="diagnostics")
 app.add_typer(auth_app, name="auth")
-app.add_typer(bucket_app, name="bucket")
 
 from ._google import google_app as _google_app
 
@@ -1205,7 +1199,6 @@ __all__ = [
     "app",
     "auth_app",
     "auth_diagnostics_app",
-    "bucket_app",
     "profile_app",
     "register_apoderado_commands",
     "register_bucket_history_commands",

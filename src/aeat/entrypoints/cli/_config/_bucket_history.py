@@ -1,4 +1,4 @@
-"""Bucket history command registration for ``aeat config bucket``.
+"""Profile event-history command registration for ``aeat config profile history``.
 
 Use of :class:`BucketEventHistoryRepository` for compliance.
 """
@@ -18,49 +18,49 @@ from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 
 
-def register_bucket_history_commands(bucket_app: typer.Typer) -> None:
-    """Register bucket history commands."""
+def register_bucket_history_commands(profile_app: typer.Typer) -> None:
+    """Register the ``config profile history`` event-history command on ``profile_app``."""
 
-    @bucket_app.command("history", help=tr("cli.config.bucket.history_help"))
-    def bucket_history(
+    @profile_app.command("history", help=tr("cli.config.profile.history_help"))
+    def profile_history(
         ctx: typer.Context,
         bucket_id: typing.Annotated[
             str,
-            typer.Argument(help=tr("cli.config.bucket.bucket_id_help")),
+            typer.Argument(help=tr("cli.config.profile.history_bucket_id_help")),
         ],
         event_type: typing.Annotated[
             list[str] | None,
             typer.Option(
                 "--event-type",
-                help=tr("cli.config.bucket.event_type_help"),
+                help=tr("cli.config.profile.history_event_type_help"),
             ),
         ] = None,
         since: typing.Annotated[
             str | None,
             typer.Option(
                 "--since",
-                help=tr("cli.config.bucket.since_help"),
+                help=tr("cli.config.profile.history_since_help"),
             ),
         ] = None,
         until: typing.Annotated[
             str | None,
             typer.Option(
                 "--until",
-                help=tr("cli.config.bucket.until_help"),
+                help=tr("cli.config.profile.history_until_help"),
             ),
         ] = None,
         object_id: typing.Annotated[
             str | None,
             typer.Option(
                 "--object-id",
-                help=tr("cli.config.bucket.object_id_help"),
+                help=tr("cli.config.profile.history_object_id_help"),
             ),
         ] = None,
         actor: typing.Annotated[
             str | None,
             typer.Option(
                 "--actor",
-                help=tr("cli.config.bucket.actor_help"),
+                help=tr("cli.config.profile.history_actor_help"),
             ),
         ] = None,
         output_language: OutputLanguage | None = typer.Option(
@@ -70,7 +70,7 @@ def register_bucket_history_commands(bucket_app: typer.Typer) -> None:
             help=tr("cli.config.auth.output_language_help"),
         ),
     ) -> None:
-        """Browse the append-only bucket-event history."""
+        """Browse the active profile's append-only event history."""
         _activate_subcommand_output_language(ctx, output_language)
         from ....domain.buckets import BucketEventHistoryRepository
         from .._config_payloads import BucketHistoryResult
@@ -79,7 +79,7 @@ def register_bucket_history_commands(bucket_app: typer.Typer) -> None:
         since_dt = _parse_bucket_history_instant(since, flag="--since")
         until_dt = _parse_bucket_history_instant(until, flag="--until")
         if since_dt is not None and until_dt is not None and since_dt > until_dt:
-            raise typer.BadParameter(tr("cli.config.bucket.history.since_after_until"))
+            raise typer.BadParameter(tr("cli.config.profile.history.since_after_until"))
         object_id_token = object_id.strip() if object_id else None
         actor_token = actor.strip() if actor else None
 
@@ -126,7 +126,7 @@ def _parse_bucket_event_types(event_type: list[str] | None) -> tuple[BucketEvent
         except ValueError as exc:
             raise typer.BadParameter(
                 tr(
-                    "cli.config.bucket.history.invalid_event_type",
+                    "cli.config.profile.history.invalid_event_type",
                     value=token,
                     valid=", ".join(member.value for member in BucketEventType),
                 ),
@@ -143,7 +143,7 @@ def _parse_bucket_history_instant(raw: str | None, *, flag: str) -> datetime | N
         return datetime.fromisoformat(raw.strip())
     except ValueError as exc:
         raise typer.BadParameter(
-            tr("cli.config.bucket.history.invalid_timestamp", flag=flag, raw=raw),
+            tr("cli.config.profile.history.invalid_timestamp", flag=flag, raw=raw),
         ) from exc
 
 

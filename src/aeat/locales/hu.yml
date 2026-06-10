@@ -509,7 +509,8 @@ application:
   calculations:
     iva_compensation:
       errors:
-        correction_missing: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}; a javítás egy meglévő beállítást ír felül, nem hoz létre újat.'
+        correction_missing: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period};
+          a javítás egy meglévő beállítást ír felül, nem hoz létre újat.'
         modelo_303_only: Az IVA-kompenzációs előzmények csak Modelo 303 megfigyeléseket
           fogadnak el.
         modelo_390_only: Az éves áfa-kompenzációs összesítő csak Modelo 390 megfigyeléseket
@@ -816,8 +817,12 @@ application:
           megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
     iva_wallet:
-      correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}. Először futtassa az ''aeat app modelo iva-wallet seed'' parancsot; a javítás egy meglévő beállítást ír felül.'
-      correct_sealed_blocked: 'A javítás elutasítva: egy már benyújtott Modelo 303 (%{blocking_filing_year}/%{blocking_period}) felhasználta ezt a beállított kompenzációs alapot. Módosítása egy benyújtott bevallást változtatna meg.'
+      correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
+        Először futtassa az ''aeat app modelo iva-wallet seed'' parancsot; a javítás
+        egy meglévő beállítást ír felül.'
+      correct_sealed_blocked: 'A javítás elutasítva: egy már benyújtott Modelo 303
+        (%{blocking_filing_year}/%{blocking_period}) felhasználta ezt a beállított
+        kompenzációs alapot. Módosítása egy benyújtott bevallást változtatna meg.'
       seed_negative_amount: A vetőösszeg nem lehet negatív.
       seed_no_nif: Nincs NIF meghatarozva a vetoosszeg-muvelethez; rendelje hozza
         az aktiv profilhoz a vetoosszeg letrehozasa elott.
@@ -1460,14 +1465,26 @@ cli:
         as_of_year_help: Reference year for carry-forward age and expiry calculations.
         balance_help: Show aggregated IVA compensation carry-forward balance computed
           from local Modelo 303 history.
-        correct_amount_help: 'A javított átvihető egyenleg összege EUR-ban (tizedes, pl. 1200.50).'
-        correct_confirm_help: 'Kötelező megerősítő jelző. Tudomásul veszi, hogy ez felülír egy korábban beállított átvihető egyenleget, és a bevallás pontossága az új értéktől függ.'
-        correct_confirm_required: 'Adja meg a --confirm jelzőt a megerősítéshez: ez felülírja a megadott időszakhoz korábban beállított M303 átvihető egyenleget.'
-        correct_filing_year_help: 'A javítandó beállított Modelo 303 időszak bevallási éve.'
-        correct_help: 'A helyi előzményeket megelőző időszakra korábban beállított, hibás Modelo 303 nyitó átvihető egyenleg javítása. Felülírja a meglévő beállított összeget; elutasítja, ha az időszakhoz nincs rekord (előbb seed), és ha egy már benyújtott Modelo 303 felhasználta a beállított alapot (annak módosítása egy benyújtott bevallást változtatna meg). A --reason értéket auditeseménybe rögzíti. Szükséges a --confirm.'
-        correct_period_help: 'A javítandó beállított Modelo 303 rekord időszaka (pl. 4T, 3T).'
-        correct_reason_help: 'A javítás indoka, az auditeseménybe rögzítve.'
-        correct_reason_required: 'Adja meg a --reason értéket: rögzítse, miért javítja a nyitó egyenleget; nem lehet üres.'
+        correct_amount_help: A javított átvihető egyenleg összege EUR-ban (tizedes,
+          pl. 1200.50).
+        correct_confirm_help: Kötelező megerősítő jelző. Tudomásul veszi, hogy ez
+          felülír egy korábban beállított átvihető egyenleget, és a bevallás pontossága
+          az új értéktől függ.
+        correct_confirm_required: 'Adja meg a --confirm jelzőt a megerősítéshez: ez
+          felülírja a megadott időszakhoz korábban beállított M303 átvihető egyenleget.'
+        correct_filing_year_help: A javítandó beállított Modelo 303 időszak bevallási
+          éve.
+        correct_help: A helyi előzményeket megelőző időszakra korábban beállított,
+          hibás Modelo 303 nyitó átvihető egyenleg javítása. Felülírja a meglévő beállított
+          összeget; elutasítja, ha az időszakhoz nincs rekord (előbb seed), és ha
+          egy már benyújtott Modelo 303 felhasználta a beállított alapot (annak módosítása
+          egy benyújtott bevallást változtatna meg). A --reason értéket auditeseménybe
+          rögzíti. Szükséges a --confirm.
+        correct_period_help: A javítandó beállított Modelo 303 rekord időszaka (pl.
+          4T, 3T).
+        correct_reason_help: A javítás indoka, az auditeseménybe rögzítve.
+        correct_reason_required: 'Adja meg a --reason értéket: rögzítse, miért javítja
+          a nyitó egyenleget; nem lehet üres.'
         group_help: Local IVA compensation wallet balance commands.
         seed_amount_help: Az IVA-kompenzáció kezdő összege decimálisban.
         seed_confirm_help: Erősítse meg a vetőösszeg műveletet.
@@ -1554,9 +1571,13 @@ cli:
         justificante_path_help: Az AEAT justificante PDF-jének elérési útja az egyeztetéshez.
         work_unit_id_help: Munkaegység-azonosító (SHA-256 vagy egyértelmű előtag).
       reconciliation_history:
-        empty: 'Még nincs rögzített egyeztetés.'
-        help: 'Az aktív profilhoz rögzített korábbi egyeztetések listázása. A csak hozzáfűzhető MODELO_RECONCILED bucket-eseménynaplót olvassa; az egyeztetések igény szerint megismételhetők, ezért ez kényelmi visszaolvasás, nem tárolt rekord.'
-        work_unit_id_help: 'Opcionális munkaegység-azonosító az előzmények egyetlen munkaegységre szűkítéséhez.'
+        empty: Még nincs rögzített egyeztetés.
+        help: Az aktív profilhoz rögzített korábbi egyeztetések listázása. A csak
+          hozzáfűzhető MODELO_RECONCILED bucket-eseménynaplót olvassa; az egyeztetések
+          igény szerint megismételhetők, ezért ez kényelmi visszaolvasás, nem tárolt
+          rekord.
+        work_unit_id_help: Opcionális munkaegység-azonosító az előzmények egyetlen
+          munkaegységre szűkítéséhez.
       verification_report:
         app_help: Rögzített ellenőrzési jelentések vizsgálata.
         list_help: Ellenőrzési jelentések listázása, opcionálisan egy számítási revízióra
@@ -1942,25 +1963,6 @@ cli:
       unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtassa:
         `aeat config auth --help` az érvényes azonosítókhoz.'
     bucket:
-      actor_help: Az előzmények szűrése egy adott aktor által rögzített eseményekre
-        (pontos egyezés).
-      bucket_id_help: A vizsgálandó eseményelőzményű bucket azonosítója.
-      event_type_help: Az előzmények szűrése egy vagy több eseménytípusra (ismételhető).
-      help: Bucket-szintű tár és eseményelőzmények vizsgálata.
-      history:
-        invalid_event_type: 'Ismeretlen eseménytípus: {value}. Érvényes eseménytípusok:
-          {valid}.'
-        invalid_timestamp: 'A(z) {flag} értékének ISO-8601 időbélyegnek kell lennie
-          (pl. 2026-04-01T00:00:00+00:00); kapott: {raw}.'
-        since_after_until: A --since értékének korábbinak vagy egyenlőnek kell lennie
-          az --until értékénél.
-      history_help: Egy bucket hozzáfűzés-alapú eseményelőzményének megjelenítése.
-      object_id_help: Az előzmények szűrése egy adott object_id-t célzó eseményekre
-        (pontos egyezés).
-      since_help: Az előzmények szűrése ennél az ISO-8601 időbélyegnél nem korábbi
-        eseményekre (pl. 2026-04-01T00:00:00+00:00).
-      until_help: Az előzmények szűrése ennél az ISO-8601 időbélyegnél nem újabb eseményekre
-        (pl. 2026-04-30T23:59:59+00:00).
     custody:
       confirm_new_passphrase_help: Ismetelje meg az uj titkos tar passphrase erteket.
       confirm_new_passphrase_prompt: 'Uj AEAT titkos tar passphrase megerositese: '
@@ -2155,6 +2157,25 @@ cli:
       export_name_help: 'Az exportálandó profil; alapértelmezés: az aktív profil.'
       export_out_help: A JSON-csomag célútvonala.
       help: Aktív profilkonfigurációs értékek kezelése.
+      history:
+        invalid_event_type: 'Ismeretlen eseménytípus: {value}. Érvényes eseménytípusok:
+          {valid}.'
+        invalid_timestamp: 'A(z) {flag} értékének ISO-8601 időbélyegnek kell lennie
+          (pl. 2026-04-01T00:00:00+00:00); kapott: {raw}.'
+        since_after_until: --since értékének korábbinak vagy egyenlőnek kell lennie
+          az --until értékénél.
+      history_actor_help: Az előzmények szűrése egy adott aktor által rögzített eseményekre
+        (pontos egyezés).
+      history_bucket_id_help: A vizsgálandó eseményelőzményű bucket azonosítója.
+      history_event_type_help: Az előzmények szűrése egy vagy több eseménytípusra
+        (ismételhető).
+      history_help: Egy profil hozzáfűzés-alapú eseményelőzményének megjelenítése.
+      history_object_id_help: Az előzmények szűrése egy adott object_id-t célzó eseményekre
+        (pontos egyezés).
+      history_since_help: Az előzmények szűrése ennél az ISO-8601 időbélyegnél nem
+        korábbi eseményekre (pl. 2026-04-01T00:00:00+00:00).
+      history_until_help: Az előzmények szűrése ennél az ISO-8601 időbélyegnél nem
+        újabb eseményekre (pl. 2026-04-30T23:59:59+00:00).
       import_help: Hordozható profilcsomag regisztrálása JSON-fájlból.
       import_invalid_bundle: 'Érvénytelen profilcsomag: a JSON nem felel meg a profilcsomag-sémának.'
       import_label_help: 'Az importált profil megjelenítési neve; alapértelmezés:
@@ -2268,11 +2289,15 @@ cli:
       quarantine_requires_yes: Ez a művelet visszafordíthatatlan. Futtassa újra a
         --yes kapcsolóval a megerősítéshez.
       quarantine_yes_help: A karantén-művelet explicit megerősítése.
+      reset_progress_dry_run_help: A boríték ujjlenyomatának jelentése a sor törlése
+        nélkül.
+      reset_progress_help: Az olvashatatlan munkafolyamat-állapot borítékának törlése
+        (visszafordíthatatlan; --yes szükséges).
+      reset_progress_requires_yes: Ez a művelet visszafordíthatatlan. Futtassa újra
+        a --yes kapcsolóval a megerősítéshez, vagy a --dry-run kapcsolóval az ujjlenyomat
+        vizsgálatához.
+      reset_progress_yes_help: A munkafolyamat-állapot visszaállítás explicit megerősítése.
       yes_help: Javítás megerősítése.
-      reset_progress_dry_run_help: 'A boríték ujjlenyomatának jelentése a sor törlése nélkül.'
-      reset_progress_help: 'Az olvashatatlan munkafolyamat-állapot borítékának törlése (visszafordíthatatlan; --yes szükséges).'
-      reset_progress_requires_yes: 'Ez a művelet visszafordíthatatlan. Futtassa újra a --yes kapcsolóval a megerősítéshez, vagy a --dry-run kapcsolóval az ujjlenyomat vizsgálatához.'
-      reset_progress_yes_help: 'A munkafolyamat-állapot visszaállítás explicit megerősítése.'
     reset:
       help: Üzemeltető által megadott konfigurációs hatókörök visszaállítása.
       invalid_scope: 'Érvénytelen hatókör: %{scope}. Érvényes hatókörök: %{valid}.'
@@ -2317,7 +2342,7 @@ cli:
       help: Az aktuális konfigurációs profil készenléti állapotának megjelenítése.
       next_step: 'Következő lépés: `aeat app overview status`'
     switch:
-      help: 'Váltson át egy profilra, és tegye aktívvá.'
+      help: Váltson át egy profilra, és tegye aktívvá.
       name_help: A profil neve, amelyre valtani szeretne. Ha nincs megadva, az aktivprofil-mutato
         az alapertelmezett.
     unlock: null
@@ -2854,10 +2879,11 @@ cli:
         auth_providers: Támogatott hitelesítési szolgáltatók listázása.
         auth_status: Beállított hitelesítési állapot megjelenítése.
         auth_test: Helyi hitelesítési készség ellenőrzése.
-        bucket_history: Az append-only bucket esemenytortenet megtekintese.
         diagnostics_logs: A beállított naplóútvonal és a legújabb sorok megjelenítése.
         diagnostics_quarantine: Olvashatatlan biztonságos objektumok karanténba helyezése.
         diagnostics_repair: Helyi konfiguráció és tár állapotának diagnosztikája.
+        diagnostics_reset_progress: Olvashatatlan munkafolyamat-állapot alaphelyzetbe
+          állítása.
         first_run_bootstrap: Helyi adóprofilmappa létrehozása.
         first_run_edit: A profilvarázsló újrafuttatása meglévő profilhoz.
         footer: 'Teljes áttekintésért futtassa: aeat --help.'
@@ -2866,18 +2892,17 @@ cli:
         profile_censo: AEAT nyilvántartási adatok szinkronizálása az aktív profilhoz.
         profile_delete: Profil törlése explicit megerősítés után.
         profile_duplicate: Profil másolása új azonosítóra.
+        profile_history: Az append-only profil eseménytörténet megtekintése.
         profile_list: Profiladatok listázása.
         profile_rename: Profil átnevezése és mappájának áthelyezése.
         profile_show: Egy profil adatainak megjelenítése.
         profile_status: Az aktív profil készültségének megjelenítése.
-        profile_switch: 'Switch to a profile and make it the active one.'
+        profile_switch: Switch to a profile and make it the active one.
         section_authentication: Hitelesítés
-        section_bucket_inspection: Bucket ellenorzes
         section_diagnostics: Diagnosztika
         section_first_run: Első futtatás
         section_profile_inspection: Profiladatok vizsgálata
         section_profile_lifecycle: Profil életciklusa
-        diagnostics_reset_progress: 'Olvashatatlan munkafolyamat-állapot alaphelyzetbe állítása.'
       root:
         diagnostics_live_filed: Rögzített benyújtott bevallás-megfigyelések listázása.
         diagnostics_overview: Az aktív munkaterület készültségének összefoglalása.
@@ -4069,6 +4094,7 @@ errors:
       a megadott azonosítóval.
     refused_live_expedientes_snapshot_not_found: Nem létezik expediente-pillanatkép
       a megadott azonosítóval.
+    refused_live_justificante_capture_snapshot_not_found: Nem létezik rögzített igazolás-pillanatkép
     refused_live_notifications_snapshot_not_found: Nem létezik értesítési pillanatkép
       a megadott azonosítóval.
     refused_live_portal_not_found: Nem létezik AEAT portál a megadott azonosítóval.
@@ -4180,7 +4206,6 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
-    refused_live_justificante_capture_snapshot_not_found: 'Nem létezik rögzített igazolás-pillanatkép'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'
