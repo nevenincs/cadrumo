@@ -162,6 +162,9 @@ Once you have your `borrador.boe` file, you need to file it with the tax agency:
 4. Click **Importar** (Import) and upload your `borrador.boe` file. The form boxes (*casillas*) will be automatically filled with your calculated figures.
 5. Review and sign the presentation, and download the receipt PDF (*justificante*).
 
+The detailed handoff checklist is in
+[Upload your exported modelo at the AEAT portal](../how-to/file-at-aeat.md).
+
 After completing the upload in the AEAT portal, record a local filing marker in `aeat` to mark this verified draft as filed:
 
 ```bash

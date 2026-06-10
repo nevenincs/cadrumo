@@ -32,9 +32,6 @@ be calculated:
   [Review and supply calculation inputs](review-calculation-values.md) before
   forcing manual values into the filing.
 
-For the general lifecycle behind the commands, see
-[How filings, work units, and calculation revisions fit together](filing-spine.md).
-
 ## What Modelo 303 calculates
 
 Modelo 303 calculates a period IVA self-assessment: IVA charged to customers
@@ -86,8 +83,9 @@ Use the same visible target on the later commands:
 aeat app modelo work status --modelo 303 --year 2026 --period 1T
 ```
 
-Use exact IDs only when a support or automation workflow needs them, or when
-`aeat` reports an ambiguous visible target.
+For routine work, the visible target (`--modelo`, `--year`, `--period`) is all
+you need. Reference-number workflows are covered in
+[How filings, work units, and calculation revisions fit together](filing-spine.md).
 
 ## Check the ledger period
 
