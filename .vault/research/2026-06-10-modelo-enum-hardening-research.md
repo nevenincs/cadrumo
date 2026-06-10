@@ -60,6 +60,27 @@ constants, unlike the rental reduction rates in `_tier_resolver.py` which
 already read from the registry with a constant fallback. Routing these two
 through the same pattern closes the gap.
 
+**Disposition (P04) - deferred, blocked on verified corpus.** The registry has
+no parameter for either rate, and the legal catalogue lacks `rd-439-2007:art-14`
+and `ley-19-1994:art-73`. The `registry-calculation-legal-grounding` rule
+requires a new registry parameter to cite a binding provision that resolves to a
+legal-catalogue entry with a `corpus_ref` whose `required_text` the evidence
+gate validates against the real BOE text. Authoring those entries needs the
+verified BOE corpus for both provisions; fabricating legal text is forbidden.
+The leaf constants are already correct and grounded in their docstrings, so the
+current state is sound. P04 is deferred to a focused session that can fetch and
+verify the BOE corpus for RD 439/2007 art. 14.2 and Ley 19/1994 art. 73, then
+author parameter TOMLs, the catalogue entries, the `_resolve_` wrappers, and
+grounding tests.
+
+**Disposition (P03) - deferred, low value against high churn.** The member
+versus `.value` inconsistency is benign because a `StrEnum` member equals,
+hashes, and `str()`-formats identically to its value, and serialises the same in
+JSON. Standardising removes roughly 80 `.value` suffixes across about 25 files,
+several of which peers are concurrently editing in this shared worktree. The
+cosmetic gain does not justify the churn and merge-conflict risk now; it is best
+done as a single mechanical pass when the surrounding files are quiet.
+
 ### F5 - Gate false positives (2)
 
 The AST gate's allowlist carries two non-modelo strings that read as codes: a
