@@ -105,7 +105,7 @@ def _write_registered_bucket(
     bucket_id: str,
     *,
     idle_lock_minutes: int | None = None,
-    key_schedule: BucketKeySchedule = BucketKeySchedule.LEGACY_MASTER_KEY,
+    key_schedule: BucketKeySchedule = BucketKeySchedule.BUCKET_DEK_V1,
 ) -> None:
     paths = provision_bucket_directory(root, bucket_id)
     write_manifest(
@@ -280,28 +280,6 @@ class TestFileFallbackProvider:
         envelope = build_error_envelope(excinfo.value)
         assert str(tmp_path) not in envelope.model_dump_json()
 
-    def test_registered_legacy_bucket_without_dek_keeps_master_key_data_path(self, tmp_path: Path) -> None:
-        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
-        settings.aeat_local_storage_root.mkdir(parents=True, exist_ok=True)
-        _write_registered_bucket(settings.aeat_local_storage_root, "legacy")
-        provider = FileFallbackMasterKeyProvider(
-            store_dir=settings.aeat_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
-        )
-        master_key = provider.provision_master_key()
-
-        with (
-            override_settings(
-                aeat_local_storage_root=settings.aeat_local_storage_root,
-                aeat_secret_store_dir=settings.aeat_secret_store_dir,
-                aeat_secret_store_backend=SecretStoreBackend.FILE,
-            ),
-            activate_master_key_provider(provider, fallback_bucket_id="legacy"),
-        ):
-            assert get_active_master_key() == master_key
-
-        assert not (settings.aeat_local_storage_root / "keystore" / "legacy" / "bucket.dek.json").exists()
-
     def test_bucket_dek_manifest_without_dek_fails_closed(self, tmp_path: Path) -> None:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
         settings.aeat_local_storage_root.mkdir(parents=True, exist_ok=True)
@@ -393,12 +371,28 @@ class TestFileFallbackProvider:
     def test_bucket_manifest_idle_lock_overrides_settings_default(self, tmp_path: Path) -> None:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
         settings.aeat_local_storage_root.mkdir(parents=True, exist_ok=True)
-        _write_registered_bucket(settings.aeat_local_storage_root, "short-idle", idle_lock_minutes=3)
         provider = FileFallbackMasterKeyProvider(
             store_dir=settings.aeat_secret_store_dir,
             passphrase_callback=lambda: "correct horse battery staple",
         )
         provider.provision_master_key()
+
+        # Mint the per-bucket DEK first (the BUCKET_DEK_V1 schedule requires a
+        # wrapped DEK on disk), then register the idle-lock manifest.
+        with (
+            override_settings(
+                aeat_local_storage_root=settings.aeat_local_storage_root,
+                aeat_secret_store_dir=settings.aeat_secret_store_dir,
+                aeat_secret_store_backend=SecretStoreBackend.FILE,
+            ),
+            activate_master_key_provider(
+                provider,
+                fallback_bucket_id="short-idle",
+                allow_bucket_dek_enrollment=True,
+            ),
+        ):
+            assert get_active_master_key() != provider.get_master_key()
+        _write_registered_bucket(settings.aeat_local_storage_root, "short-idle", idle_lock_minutes=3)
 
         with (
             override_settings(

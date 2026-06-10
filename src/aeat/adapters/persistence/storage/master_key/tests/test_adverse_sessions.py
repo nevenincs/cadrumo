@@ -190,7 +190,7 @@ def _write_registered_bucket(root: Path, bucket_id: str) -> None:
                 output_length=32,
             ),
             recovery_enrolled=False,
-            key_schedule=BucketKeySchedule.LEGACY_MASTER_KEY,
+            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
             schema_version=1,
             status=BucketLifecycleStatus.ACTIVE,
         ),

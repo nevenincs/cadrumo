@@ -33,37 +33,41 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.config import override_settings
 from ....core.resources import resources
 from ....domain.deadlines import IrpfSpecialRegime
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests.secure_sql import isolated_runtime_profile
+from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact, UserProfileRecord
+from ....tests.secure_sql import isolated_profile_storage_root
 from ...workflow._models import WorkflowState
-from .._orchestration import read_active_profile, register_active_profile
+from .._orchestration import (
+    profile_create_storage_span,
+    read_active_profile,
+    register_active_profile,
+)
 from .._projections import projection_for_taxpayer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with (
-        isolated_runtime_profile(
-            tmp_path=tmp_path,
-            bucket_id="irpf-special-regime-roundtrip-test",
-        ) as profile,
-        override_settings(aeat_active_profile=None),
-    ):
-        yield profile.repository
+@pytest.fixture(autouse=True)
+def _storage_root(tmp_path: Path) -> Iterator[None]:
+    """Real file-backed storage root for the production create-span mint path.
+
+    Each test registers its profile inside
+    :func:`profile_create_storage_span`, which mints the per-bucket
+    wrapped DEK under the resolved file-backend master key before
+    :func:`register_active_profile` writes the manifest — the genuine
+    ``BUCKET_DEK_V1`` create path, not a legacy no-DEK shortcut.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        yield
 
 
 @pytest.fixture(scope="module")
-def schema():
+def schema() -> ProfileSchemaDefinition:
     return resources().user_profile_schema.singleton
 
 
-def _required_facts(schema) -> list[UserProfileFact]:
+def _required_facts(schema: ProfileSchemaDefinition) -> list[UserProfileFact]:
     facts: list[UserProfileFact] = []
     for section in schema.sections:
         if section.repeatable:
@@ -81,8 +85,7 @@ def _fact_value(record: UserProfileRecord, path: str) -> object:
 
 
 def test_impatriado_regime_and_start_date_survive_encrypted_sql_roundtrip(
-    secure_objects: SecureObjectRepository,
-    schema,
+    schema: ProfileSchemaDefinition,
 ) -> None:
     """irpf.special_regime + irpf.special_regime_start_date survive the
     real encrypted-SQL cycle and project onto the typed TaxpayerProfile fields.
@@ -102,16 +105,17 @@ def test_impatriado_regime_and_start_date_survive_encrypted_sql_roundtrip(
         UserProfileFact(path="irpf.special_regime_start_date", value=election_date.isoformat()),
     )
 
-    state = register_active_profile(
-        WorkflowState(),
-        profile_id="impatriado-roundtrip",
-        display_name="Beckham-regime operator",
-        facts=facts,
-        secure_objects=secure_objects,
-        schema=schema,
-    )
+    with profile_create_storage_span("impatriado-roundtrip") as routing_profile_id:
+        state = register_active_profile(
+            WorkflowState(),
+            profile_id="impatriado-roundtrip",
+            display_name="Beckham-regime operator",
+            facts=facts,
+            schema=schema,
+            routing_profile_id=routing_profile_id,
+        )
 
-    record = read_active_profile(state, secure_objects=secure_objects, schema=schema)
+        record = read_active_profile(state, schema=schema)
     assert record is not None
     assert record.profile_id == "impatriado-roundtrip"
 
@@ -128,8 +132,7 @@ def test_impatriado_regime_and_start_date_survive_encrypted_sql_roundtrip(
 
 
 def test_record_without_special_regime_projects_to_none(
-    secure_objects: SecureObjectRepository,
-    schema,
+    schema: ProfileSchemaDefinition,
 ) -> None:
     """A record carrying no irpf.special_regime fact loads cleanly and
     projects irpf_special_regime = None, special_regime_start_date = None.
@@ -143,16 +146,17 @@ def test_record_without_special_regime_projects_to_none(
         for f in _required_facts(schema)
     )
 
-    state = register_active_profile(
-        WorkflowState(),
-        profile_id="general-regime-no-special",
-        display_name="General-regime operator",
-        facts=facts,
-        secure_objects=secure_objects,
-        schema=schema,
-    )
+    with profile_create_storage_span("general-regime-no-special") as routing_profile_id:
+        state = register_active_profile(
+            WorkflowState(),
+            profile_id="general-regime-no-special",
+            display_name="General-regime operator",
+            facts=facts,
+            schema=schema,
+            routing_profile_id=routing_profile_id,
+        )
 
-    record = read_active_profile(state, secure_objects=secure_objects, schema=schema)
+        record = read_active_profile(state, schema=schema)
     assert record is not None
     # Neither fact was stored.
     persisted_paths = {fact.path for fact in record.facts}
@@ -166,8 +170,7 @@ def test_record_without_special_regime_projects_to_none(
 
 
 def test_anti_tautology_mutating_regime_changes_projection(
-    secure_objects: SecureObjectRepository,
-    schema,
+    schema: ProfileSchemaDefinition,
 ) -> None:
     """Anti-tautology: projecting ``general`` yields a different
     irpf_special_regime than projecting ``impatriado``.
@@ -190,15 +193,22 @@ def test_anti_tautology_mutating_regime_changes_projection(
             ),
             *extra,
         )
-        state = register_active_profile(
-            WorkflowState(),
-            profile_id=f"anti-tautology-{regime_value}",
-            display_name=f"Anti-tautology {regime_value}",
-            facts=facts,
-            secure_objects=secure_objects,
-            schema=schema,
-        )
-        return read_active_profile(state, secure_objects=secure_objects, schema=schema)
+        profile_id = f"anti-tautology-{regime_value}"
+        with profile_create_storage_span(profile_id) as routing_profile_id:
+            state = register_active_profile(
+                WorkflowState(),
+                profile_id=profile_id,
+                display_name=f"Anti-tautology {regime_value}",
+                facts=facts,
+                schema=schema,
+                routing_profile_id=routing_profile_id,
+                # The two records are the same taxpayer re-declared with a
+                # mutated regime (both carry the shared placeholder tax id),
+                # so the cross-bucket duplicate-tax-id refusal is not the
+                # contract under test here — the projection inequality is.
+                enforce_unique_tax_id=False,
+            )
+            return read_active_profile(state, schema=schema)
 
     record_impatriado = _build_record("impatriado")
     record_general = _build_record("general")

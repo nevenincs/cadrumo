@@ -21,35 +21,38 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.config import override_settings
 from ....core.resources import resources
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....domain.user_profile._schema import ProfileSchemaDefinition
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_profile_storage_root
 from ...workflow._models import WorkflowState
-from .._orchestration import read_active_profile, register_active_profile
+from .._orchestration import (
+    profile_create_storage_span,
+    read_active_profile,
+    register_active_profile,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MARRIAGE_DATE_PATH = "renta_taxpayer.marriage_date"
 
 
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    """A real SecureObjectRepository over a real active-profile runtime."""
-    with (
-        isolated_runtime_profile(
-            tmp_path=tmp_path,
-            bucket_id="marriage-date-roundtrip-test",
-        ) as profile,
-        override_settings(aeat_active_profile=None),
-    ):
-        yield profile.repository
+@pytest.fixture(autouse=True)
+def _storage_root(tmp_path: Path) -> Iterator[None]:
+    """Real file-backed storage root for the production create-span mint path.
+
+    Each test registers its profile inside
+    :func:`profile_create_storage_span`, which mints the per-bucket
+    wrapped DEK under the resolved file-backend master key before
+    :func:`register_active_profile` writes the manifest — the genuine
+    ``BUCKET_DEK_V1`` create path, not a legacy no-DEK shortcut.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        yield
 
 
 @pytest.fixture(scope="module")
-def schema():
+def schema() -> ProfileSchemaDefinition:
     return resources().user_profile_schema.singleton
 
 
@@ -73,7 +76,6 @@ def _fact_value(record: UserProfileRecord, path: str) -> object:
 
 
 def test_marriage_date_fact_survives_encrypted_sql_roundtrip(
-    secure_objects: SecureObjectRepository,
     schema: ProfileSchemaDefinition,
 ) -> None:
     """marriage_date survives the real encrypted-SQL boundary as a typed date.
@@ -94,16 +96,17 @@ def test_marriage_date_fact_survives_encrypted_sql_roundtrip(
         ),
     )
 
-    state = register_active_profile(
-        WorkflowState(),
-        profile_id="marriage-date-roundtrip",
-        display_name="Marcos 2024",
-        facts=facts,
-        secure_objects=secure_objects,
-        schema=schema,
-    )
+    with profile_create_storage_span("marriage-date-roundtrip") as routing_profile_id:
+        state = register_active_profile(
+            WorkflowState(),
+            profile_id="marriage-date-roundtrip",
+            display_name="Marcos 2024",
+            facts=facts,
+            schema=schema,
+            routing_profile_id=routing_profile_id,
+        )
 
-    record = read_active_profile(state, secure_objects=secure_objects, schema=schema)
+        record = read_active_profile(state, schema=schema)
     assert record is not None
     assert record.profile_id == "marriage-date-roundtrip"
 
@@ -112,7 +115,6 @@ def test_marriage_date_fact_survives_encrypted_sql_roundtrip(
 
 
 def test_marriage_date_absent_when_not_stored(
-    secure_objects: SecureObjectRepository,
     schema: ProfileSchemaDefinition,
 ) -> None:
     """Anti-tautology: a record without marriage_date has no such fact on reload.
@@ -125,16 +127,17 @@ def test_marriage_date_absent_when_not_stored(
         for f in _required_facts(schema)
     )
 
-    state = register_active_profile(
-        WorkflowState(),
-        profile_id="no-marriage-date",
-        display_name="Soltera 2024",
-        facts=facts,
-        secure_objects=secure_objects,
-        schema=schema,
-    )
+    with profile_create_storage_span("no-marriage-date") as routing_profile_id:
+        state = register_active_profile(
+            WorkflowState(),
+            profile_id="no-marriage-date",
+            display_name="Soltera 2024",
+            facts=facts,
+            schema=schema,
+            routing_profile_id=routing_profile_id,
+        )
 
-    record = read_active_profile(state, secure_objects=secure_objects, schema=schema)
+        record = read_active_profile(state, schema=schema)
     assert record is not None
 
     # The marriage_date fact must be absent — the store must not fabricate it.

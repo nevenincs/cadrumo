@@ -45,7 +45,7 @@ def _manifest(*, bucket_id: str = "test-bucket", label: str = "Test label") -> B
         recovery_enrolled=False,
         schema_version=1,
         status=BucketLifecycleStatus.ACTIVE,
-        key_schedule=BucketKeySchedule.LEGACY_MASTER_KEY,
+        key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
     )
 
 
