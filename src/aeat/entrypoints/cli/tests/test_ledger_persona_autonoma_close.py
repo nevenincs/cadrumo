@@ -197,7 +197,9 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
 
     # --- Readiness gates --------------------------------------------------
     # Marta runs preflight for the quarter to see what's still missing.
-    preflight = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"])
+    preflight = _RUNNER.invoke(
+        app, ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"]
+    )
     assert preflight.exit_code == 0, preflight.output
     pf = json.loads(preflight.output)["result"]
     # The report carries a checked count, an issue list, and a ready flag.

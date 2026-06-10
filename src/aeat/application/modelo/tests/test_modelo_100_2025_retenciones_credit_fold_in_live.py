@@ -233,20 +233,20 @@ def _non_relation_zero_bindings() -> dict[str, Decimal]:
     snapshot = resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
     # Sources the live mesh resolves automatically or that are bucket-locked.
     # Passing any of these in binding_values triggers ModeloAggregationBindingError.
-    _AUTO_RESOLVED = frozenset({
-        "profile",
-        _RELATION_PREFILL_SOURCE,
-        "ledger_renta_expense_aggregation",
-        "ledger_renta_income_aggregation",
-        "ledger_iva_aggregation",
-        "ledger_oss_aggregation",
-        "collectible_invoice",
-        "payable_invoice",
-    })
+    _AUTO_RESOLVED = frozenset(
+        {
+            "profile",
+            _RELATION_PREFILL_SOURCE,
+            "ledger_renta_expense_aggregation",
+            "ledger_renta_income_aggregation",
+            "ledger_iva_aggregation",
+            "ledger_oss_aggregation",
+            "collectible_invoice",
+            "payable_invoice",
+        }
+    )
     return {
-        str(binding.id): Decimal("0")
-        for binding in snapshot.revision.bindings
-        if binding.source not in _AUTO_RESOLVED
+        str(binding.id): Decimal("0") for binding in snapshot.revision.bindings if binding.source not in _AUTO_RESOLVED
     }
 
 

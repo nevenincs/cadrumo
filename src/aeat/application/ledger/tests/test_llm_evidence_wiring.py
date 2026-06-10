@@ -100,14 +100,10 @@ def test_consent_off_refuses_evidence_read(profile: TestRuntimeProfile, tmp_path
     txn = _transaction(evidence_id=evidence_id)
     # Default posture: cloud upload not permitted -> refuse even when acknowledged.
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        _resolve_evidence_text(
-            txn, bucket_id="bucket-001", settings=profile.settings, evidence_acknowledged=True
-        )
+        _resolve_evidence_text(txn, bucket_id="bucket-001", settings=profile.settings, evidence_acknowledged=True)
 
 
-def test_consented_read_returns_on_host_extracted_text(
-    profile: TestRuntimeProfile, tmp_path: Path
-) -> None:
+def test_consented_read_returns_on_host_extracted_text(profile: TestRuntimeProfile, tmp_path: Path) -> None:
     evidence_id = _add_evidence(profile, tmp_path)
     txn = _transaction(evidence_id=evidence_id)
     consenting: Settings = profile.settings.model_copy(update={"aeat_evidence_cloud_upload_permitted": True})
@@ -122,6 +118,4 @@ def test_consented_read_returns_on_host_extracted_text(
 
     # Permitted but not acknowledged this invocation -> refused.
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        _resolve_evidence_text(
-            txn, bucket_id="bucket-001", settings=consenting, evidence_acknowledged=False
-        )
+        _resolve_evidence_text(txn, bucket_id="bucket-001", settings=consenting, evidence_acknowledged=False)
