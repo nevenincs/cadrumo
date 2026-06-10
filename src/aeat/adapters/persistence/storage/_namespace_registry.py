@@ -483,6 +483,15 @@ LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="notifications-snapshot:{bucket_id}:{snapshot_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
 )
+LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="live_justificante_capture_snapshot",
+    namespace="aeat.application.live.justificante_capture_snapshot",
+    owner="aeat.application.live",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="justificante-capture-snapshot:{bucket_id}:{snapshot_id}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+)
 LIVE_VERIFY_OBSERVATION_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_verify_observations",
     namespace="aeat.application.live.verify_observations",
@@ -829,6 +838,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         TEST_RUNTIME_PROFILE_NAMESPACE,
         LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
         LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
+        LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
         LIVE_VERIFY_OBSERVATION_NAMESPACE,
         ATTACHMENT_BLOB_NAMESPACE,
         ATTACHMENT_MANIFEST_NAMESPACE,
@@ -884,6 +894,7 @@ __all__ = [
     "LIVE_CENSO_SNAPSHOT_NAMESPACE",
     "LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE",
     "LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE",
+    "LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE",
     "LIVE_M036_DECLARATION_NAMESPACE",
     "LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE",
     "LIVE_VERIFY_OBSERVATION_NAMESPACE",
