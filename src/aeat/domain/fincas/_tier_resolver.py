@@ -36,6 +36,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core import Modelo
 from ...core.logging import get_logger
 from ._enums import ReduccionTier, UseType
 from ._errors import TierResolutionError
@@ -260,7 +261,7 @@ def _resolve_prior_rent_rebaja_threshold(period_year: int) -> Decimal:
 
     try:
         return read_parameter(
-            "100",
+            Modelo.M100.value,
             str(period_year),
             f"renta-{period_year}-rental-prior-rent-rebaja-threshold",
             date_context={"filing_period": date(period_year, 12, 31)},
@@ -285,7 +286,7 @@ def _resolve_ejercicio_amendment_year(period_year: int) -> int:
 
     try:
         value = read_parameter(
-            "100",
+            Modelo.M100.value,
             str(period_year),
             f"renta-{period_year}-rental-ejercicio-amendment-year",
             date_context={"filing_period": date(period_year, 12, 31)},
@@ -404,7 +405,7 @@ def _resolve_tier_reduccion_rate(period_year: int, tier_id: str) -> Decimal:
 
     try:
         return read_parameter(
-            "100",
+            Modelo.M100.value,
             str(period_year),
             f"renta-{period_year}-rental-reduccion-rate-{tier_id}",
             date_context={"filing_period": date(period_year, 12, 31)},
@@ -435,7 +436,7 @@ def _resolve_joven_tenant_age_range(period_year: int) -> tuple[int, int]:
     try:
         age_min = int(
             read_parameter(
-                "100",
+                Modelo.M100.value,
                 str(period_year),
                 f"renta-{period_year}-rental-joven-tenant-age-min",
                 date_context=ctx,
@@ -450,7 +451,7 @@ def _resolve_joven_tenant_age_range(period_year: int) -> tuple[int, int]:
     try:
         age_max = int(
             read_parameter(
-                "100",
+                Modelo.M100.value,
                 str(period_year),
                 f"renta-{period_year}-rental-joven-tenant-age-max",
                 date_context=ctx,
@@ -475,7 +476,7 @@ def _resolve_rehab_lookback_days(period_year: int) -> int:
 
     try:
         value = read_parameter(
-            "100",
+            Modelo.M100.value,
             str(period_year),
             f"renta-{period_year}-rental-rehab-lookback-days",
             date_context={"filing_period": date(period_year, 12, 31)},

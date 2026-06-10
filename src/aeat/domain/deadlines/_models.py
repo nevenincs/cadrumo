@@ -17,6 +17,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core import Modelo
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
 from ..contribuyente._renta_codes import UE_EEA_COUNTRY_CODES, FiscalResidency
@@ -260,7 +261,7 @@ class CrossPeriodGroupMemberRoster(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    source_modelo: str = Field(default="322", min_length=1, max_length=8)
+    source_modelo: str = Field(default=Modelo.M322.value, min_length=1, max_length=8)
     filing_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1, max_length=8)
     member_nifs: tuple[str, ...] = Field(min_length=1)
