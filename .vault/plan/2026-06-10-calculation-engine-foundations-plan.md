@@ -86,21 +86,21 @@ Make relation canonical for cross-modelo fold-in at the root: introduce the rela
 
 Introduce the relation_prefill slot source kind, re-stamp every relation-targeted non-direct slot binding, and add the two registry validation gates (previous_filing must be direct; no binding both relation-targeted and previous_filing-resolvable).
 
-- [ ] `W03.P07.S11` - Introduce the relation_prefill slot source kind and re-stamp every relation-targeted non-direct slot binding; `registry modelos/**/bindings + domain/calculations/registry`.
-- [ ] `W03.P07.S12` - Add the two registry validation gates (previous_filing must satisfy the direct-selector predicate; `no binding both relation-targeted and previous_filing-resolvable); `domain/calculations/registry/_validate.py family`.
+- [x] `W03.P07.S11` - Introduce the relation_prefill slot source kind and re-stamp every relation-targeted non-direct slot binding; `registry modelos/**/bindings + domain/calculations/registry`.
+- [x] `W03.P07.S12` - Add the two registry validation gates (previous_filing must satisfy the direct-selector predicate; `no binding both relation-targeted and previous_filing-resolvable); `domain/calculations/registry/_validate.py family`.
 
 ### Phase `W03.P08` - Enroll relation resolver + close double-write
 
 Enroll RelationPrefillSourceResolver in the live mesh; move relation target-binding materialization into the resolver so the mesh _claim_binding guard adjudicates collisions; retire the silent post-mesh merge.
 
-- [ ] `W03.P08.S13` - Enroll RelationPrefillSourceResolver in the live mesh and move relation target-binding materialization into the resolver so the mesh ownership guard adjudicates collisions; `retire the silent post-mesh merge; `application/modelo/_calculation_actions.py + _binding_resolution.py + _relation_prefill.py`.
-- [ ] `W03.P08.S14` - Real-behaviour test that a relation fold-in fires on live calculate and a relation-vs-other binding collision is refused loudly by the mesh guard; `application/modelo/tests + application/calculations/tests`.
+- [x] `W03.P08.S13` - Enroll RelationPrefillSourceResolver in the live mesh and move relation target-binding materialization into the resolver so the mesh ownership guard adjudicates collisions; `retire the silent post-mesh merge; `application/modelo/_calculation_actions.py + _binding_resolution.py + _relation_prefill.py`.
+- [x] `W03.P08.S14` - Real-behaviour test that a relation fold-in fires on live calculate and a relation-vs-other binding collision is refused loudly by the mesh guard; `application/modelo/tests + application/calculations/tests`.
 
 ### Phase `W03.P09` - Declared precedence ladder
 
 Codify the D2/D3 precedence out of inline comments into a declared ladder (profile < mesh-backend exclusive-ownership < borrador < caller; caller overrides only previous_filing + relation_prefill; iva_wallet exclusive owner with refusal-on-conflict).
 
-- [ ] `W03.P09.S15` - Codify the declared precedence ladder, extend the D2 caller-override carve-out to relation_prefill carries, keep ledger-owned refusal, reaffirm iva_wallet exclusive-owner; `application/modelo/_calculation_actions.py + _binding_resolution.py`.
+- [x] `W03.P09.S15` - Codify the declared precedence ladder, extend the D2 caller-override carve-out to relation_prefill carries, keep ledger-owned refusal, reaffirm iva_wallet exclusive-owner; `application/modelo/_calculation_actions.py + _binding_resolution.py`.
 
 ## Wave `W04` - Migrations and per-domain fold-in delivery
 
