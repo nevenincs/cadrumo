@@ -48,10 +48,6 @@ _CODES: frozenset[str] = frozenset(m.value for m in Modelo)
 #: Keyed by (``src/aeat``-relative POSIX path, code) → reason. Kept deliberately
 #: small; every entry is a judgement call recorded during the Modelo-enum sweep.
 _ALLOWLIST: dict[tuple[str, str], str] = {
-    ("application/modelo/_workflow_gate.py", "123"): (
-        "FALSE POSITIVE: `work_unit.period[0] in \"123\"` is a quarter-digit "
-        "membership test (1P/2P/3P), not Modelo 123."
-    ),
     ("domain/calculations/registry/_citation_blocklist.py", "100"): (
         "FALSE POSITIVE: RIRPF *article* 100 (urban-rental withholding), not "
         "Modelo 100."
