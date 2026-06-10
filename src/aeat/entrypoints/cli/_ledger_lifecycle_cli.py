@@ -28,7 +28,7 @@ from ...application.ledger import (
 from ...core import resolve_active_bucket_id
 from ...core.i18n import tr
 from ...core.time import now
-from ...domain.attachments import AttachmentSource
+from ...domain.attachments import DocumentLinkSource
 from ...domain.transactions import (
     Transaction,
     TransactionCatalogueRepository,
@@ -192,7 +192,7 @@ def ledger_doclink(
         "--id",
         help=tr("cli.ledger.doclink.id_help", default="Ledger transaction id."),
     ),
-    source: AttachmentSource = typer.Option(
+    source: DocumentLinkSource = typer.Option(
         ..., "--source", help=tr("cli.ledger.doclink.source_help", default="Link source: gmail, google_drive, or url.")
     ),
     reference: str = typer.Option(
@@ -210,20 +210,17 @@ def ledger_doclink(
     from ...domain.attachments import AttachmentKind
     from ...domain.attachments._service import add_link_attachment
 
+    # The advertised --source choice set (DocumentLinkSource) is exactly the
+    # three link sources this map covers, so the click Choice gate rejects any
+    # other value with an instructive accepted-set message before the handler
+    # runs; this mapping is therefore total over the option's domain.
     kind_by_source = {
-        AttachmentSource.GMAIL: AttachmentKind.EMAIL_MESSAGE,
-        AttachmentSource.GOOGLE_DRIVE: AttachmentKind.DRIVE_DOCUMENT,
-        AttachmentSource.URL: AttachmentKind.OTHER,
+        DocumentLinkSource.GMAIL: AttachmentKind.EMAIL_MESSAGE,
+        DocumentLinkSource.GOOGLE_DRIVE: AttachmentKind.DRIVE_DOCUMENT,
+        DocumentLinkSource.URL: AttachmentKind.OTHER,
     }
-    kind = kind_by_source.get(source)
-    if kind is None:
-        raise _bad(
-            tr(
-                "cli.ledger.doclink.bad_source",
-                source=source.value,
-                default=f"document-link source must be one of: gmail, google_drive, url (got '{source.value}').",
-            )
-        )
+    kind = kind_by_source[source]
+    attachment_source = source.to_attachment_source()
     state = _state()
     transaction_repository = _tx_repo(state)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
@@ -231,7 +228,7 @@ def ledger_doclink(
     attachment = add_link_attachment(
         store,
         kind=kind,
-        source=source,
+        source=attachment_source,
         source_reference=reference,
         captured_at=now(),
         bucket_id=transaction_repository.bucket_id,

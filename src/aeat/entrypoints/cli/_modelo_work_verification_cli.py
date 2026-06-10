@@ -11,6 +11,7 @@ from ...application.modelo import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloCalculationRevisionSelector,
+    ModeloVerifySelector,
     WorkUnitNotFoundError,
     file_modelo_revision,
     verify_modelo_revision,
@@ -97,12 +98,12 @@ def _register_work_verify_command(
             typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help")),
         ] = None,
         select: Annotated[
-            str,
+            ModeloVerifySelector,
             typer.Option(
                 "--select",
-                help=tr("cli.app.modelo.work.revision_selector_help", default="Revision selector."),
+                help=tr("cli.app.modelo.work.verify_selector_help", default="Draft revision selector."),
             ),
-        ] = ModeloCalculationRevisionSelector.CURRENT.value,
+        ] = ModeloVerifySelector.CURRENT,
         bucket_id: Annotated[
             str | None,
             typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
@@ -130,7 +131,7 @@ def _register_work_verify_command(
                 period=period,
                 registry_revision=revision,
                 bucket_id=bucket_id,
-                selector=select,
+                selector=select.to_calculation_revision_selector().value,
                 default_for="verify",
             )
             workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
