@@ -93,7 +93,6 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "app modelo work amend",
     "app modelo filing-record import",
     "app modelo reconcile",
-    "app modelo reconcile-from-justificante",
     "app modelo export",
     "config auth configure",
     "config auth login",

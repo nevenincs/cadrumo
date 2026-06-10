@@ -660,7 +660,7 @@ def _cross_period_clean_state_next_action(
     }:
         return (
             f"Capture or import AEAT justificante evidence for {source_hint}. "
-            f"Run `{target_capture}` or `aeat app modelo reconcile-from-justificante PATH WORK_UNIT_ID`, "
+            f"Run `{target_capture}` or `aeat app modelo reconcile file WORK_UNIT_ID --file PATH`, "
             "then rerun verification."
         )
     if blockers & {

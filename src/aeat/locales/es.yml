@@ -1635,36 +1635,15 @@ cli:
       readiness_help: Informa de si el perfil activo está listo para presentar un
         modelo / ejercicio / periodo.
       reconcile:
-        errors:
-          exclusive_capture_source: 'El parametro --from-capture es mutuamente excluyente con --from-justificante / --from-declaration.'
-          exclusive_source: --from-justificante y --from-declaration son mutuamente
-            excluyentes.
-          missing_source: 'Proporciona --from-justificante RUTA, --from-declaration RUTA o --from-capture ID_CAPTURA.'
-        from_capture_help: 'Id (o prefijo) de una captura de justificante en vivo ya guardada con la que conciliar. Solo local: lee el justificante ya capturado, nunca contacta con AEAT.'
-        from_declaration_help: Ruta al PDF de la declaración presentada para reconciliar
-          (reservado; parser pendiente).
-        from_justificante_help: Ruta al PDF del justificante AEAT para reconciliar.
-        help: Reconciliar una unidad de trabajo de modelo con evidencia externa (PDF
-          de justificante). Local; nunca contacta con AEAT.
+        app_help: 'Concilia una unidad de trabajo de modelo con su justificante AEAT: pull descarga el justificante de AEAT y concilia; file concilia un PDF local; history lista las conciliaciones anteriores.'
+        file_help: 'Concilia una unidad de trabajo contra un PDF de justificante local. Solo local; nunca contacta con AEAT.'
+        file_path_help: 'Ruta al PDF del justificante AEAT con el que conciliar.'
+        history_empty: 'Aun no hay conciliaciones registradas.'
+        history_help: 'Lista las conciliaciones registradas para el perfil activo.'
+        history_work_unit_id_help: 'Id de unidad de trabajo opcional para acotar el historial a una unidad.'
+        pull_help: 'Descarga de AEAT el justificante de una unidad de trabajo y concilia contra el. Contacta con AEAT (solo lectura).'
         work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
           inequívoco).
-      reconcile_from_justificante:
-        help: Reconciliar una unidad de trabajo de modelo con un PDF de justificante.
-          Azúcar para operadores que piensan "reconciliar desde este justificante"
-          en lugar de "reconciliar, fuente = justificante". Comparte el mismo punto
-          de entrada del servicio modelo_reconcile con la forma basada en flags. Local;
-          nunca contacta con AEAT.
-        justificante_path_help: Ruta al PDF del justificante AEAT para reconciliar.
-        work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
-          inequívoco).
-      reconciliation_history:
-        empty: Aún no se han registrado conciliaciones.
-        help: Lista las conciliaciones registradas para el perfil activo. Lee el historial
-          de eventos MODELO_RECONCILED, que es de solo anexado; las conciliaciones
-          se pueden repetir cuando se desee, por lo que esta es una lectura de conveniencia,
-          no un registro almacenado.
-        work_unit_id_help: Id de unidad de trabajo opcional para limitar el historial
-          a una sola unidad de trabajo.
       verification_report:
         app_help: Inspeccionar los informes de verificación registrados
         list_help: Listar los informes de verificación, opcionalmente filtrados por
