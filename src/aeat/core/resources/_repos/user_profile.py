@@ -24,4 +24,5 @@ class UserProfileSchemaRepository(ResourceCacheRepository["ProfileSchemaDefiniti
 
     @property
     def singleton(self) -> ProfileSchemaDefinition:
-        return self.get(None)
+        schema: ProfileSchemaDefinition = self.get(None)
+        return schema
