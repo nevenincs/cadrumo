@@ -1,0 +1,39 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `aeat.terminology` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `aeat.terminology` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "borrador"
+domain = "concepto"
+lifecycle = "approved"
+related = ["modelo-303"]
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "Un calculo en borrador de un modelo, guardado por la aplicacion."
+definition = "Calculo provisional de un modelo que la aplicacion guarda en cada calculo, conservando cada version para que el usuario pueda revisarlas y compararlas antes de dar por definitiva una."
+
+[language.es.source]
+citation = "Glosario del proyecto aeat (concepto de la aplicacion)."
+authority = "aeat"
+
+[[language.es.term]]
+label = "borrador"
+term_status = "preferred"
+
+[language.en]
+short_description = "A draft calculation of a modelo saved by the application."
+
+[[language.en.term]]
+label = "draft"
+term_status = "preferred"
+
+[language.ca]
+short_description = "Un calcul en esborrany d'un model, desat per l'aplicacio."
+
+[language.hu]
+short_description = "Egy modelo piszkozatszamitasa, amelyet az alkalmazas ment."
