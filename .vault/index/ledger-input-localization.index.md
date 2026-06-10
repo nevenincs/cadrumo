@@ -6,6 +6,7 @@ tags:
 date: '2026-06-10'
 related:
   - '[[2026-06-10-ledger-input-localization-adr]]'
+  - '[[2026-06-10-ledger-input-localization-plan]]'
   - '[[2026-06-10-ledger-input-localization-research]]'
 ---
 
@@ -18,6 +19,10 @@ Auto-generated index of all documents tagged with `#ledger-input-localization`.
 ### adr
 
 - `2026-06-10-ledger-input-localization-adr` - `ledger-input-localization` adr: `Enforce canonical amount and date input with localised actionable rejection` | (**status:** `accepted`)
+
+### plan
+
+- `2026-06-10-ledger-input-localization-plan` - `ledger-input-localization` `Ledger CLI canonical input parsing and localised rejection` plan
 
 ### research
 

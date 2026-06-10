@@ -6,6 +6,7 @@ tags:
 date: '2026-06-10'
 related:
   - '[[2026-06-10-ledger-evidence-enforcement-adr]]'
+  - '[[2026-06-10-ledger-evidence-enforcement-plan]]'
   - '[[2026-06-10-ledger-evidence-enforcement-research]]'
 ---
 
@@ -18,6 +19,10 @@ Auto-generated index of all documents tagged with `#ledger-evidence-enforcement`
 ### adr
 
 - `2026-06-10-ledger-evidence-enforcement-adr` - `ledger-evidence-enforcement` adr: `Require encrypted evidence bytes; advisory evidence gate` | (**status:** `accepted`)
+
+### plan
+
+- `2026-06-10-ledger-evidence-enforcement-plan` - `ledger-evidence-enforcement` `Encrypted evidence bytes and advisory evidence gate` plan
 
 ### research
 
