@@ -264,7 +264,10 @@ def _sheets_service(credentials: object) -> _GoogleResource:
     return build("sheets", "v4", credentials=credentials, cache_discovery=False)
 
 
-def _verify_ownership(drive_service: _GoogleResource, spreadsheet_id: str) -> None:
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource exposes
+# .files() / .spreadsheets() only via runtime Discovery JSON dispatch; the stub type
+# carries .close() alone, so service helpers accept Any for the dynamic attribute access.
+def _verify_ownership(drive_service: Any, spreadsheet_id: str) -> None:
     """Refuse to read from a spreadsheet that lacks the ownership marker."""
     file_meta = execute_request(
         drive_service.files().get(
@@ -284,8 +287,11 @@ def _verify_ownership(drive_service: _GoogleResource, spreadsheet_id: str) -> No
         )
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource exposes
+# .spreadsheets() only via runtime Discovery JSON dispatch; the stub carries .close()
+# alone, so the service helper accepts Any for the dynamic attribute access.
 def _read_developer_metadata(
-    sheets_service: _GoogleResource,
+    sheets_service: Any,
     spreadsheet_id: str,
 ) -> dict[str, str]:
     """Recover the engine-stamped developer metadata pairs."""
@@ -503,8 +509,11 @@ def _operator_input_addresses(
     return operator_input_ids, operator_input_ranges
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource exposes
+# .spreadsheets() only via runtime Discovery JSON dispatch; the stub carries .close()
+# alone, so the service helper accepts Any for the dynamic attribute access.
 def _batch_get_values(
-    sheets: _GoogleResource,
+    sheets: Any,
     spreadsheet_id: str,
     ranges: list[str],
 ) -> list[_ValueRange]:
@@ -675,9 +684,12 @@ def _parse_relation_metadata(
     return provenance, source_filing_year, source_periods, resolved_at
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource exposes
+# .spreadsheets() only via runtime Discovery JSON dispatch; the stub carries .close()
+# alone, so the service helper accepts Any for the dynamic attribute access.
 def _read_row_set_edits(
     snapshot: RegistrySnapshot,
-    sheets: _GoogleResource,
+    sheets: Any,
     spreadsheet_id: str,
 ) -> tuple[tuple[RowSetEdit, ...], int]:
     """Read each row-set's Detalle-tab data area into typed row edits.
@@ -714,8 +726,11 @@ def _row_set_block_range(row_set: Any) -> str:
     return f"'{row_set.tab.value}'!{start_col_letters}{start_row}:{end_col_letters}{end_row}"
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource exposes
+# .spreadsheets() only via runtime Discovery JSON dispatch; the stub carries .close()
+# alone, so the service helper accepts Any for the dynamic attribute access.
 def _batch_get_values_for_row_sets(
-    sheets: _GoogleResource,
+    sheets: Any,
     spreadsheet_id: str,
     block_ranges: list[str],
 ) -> list[_ValueRange]:
