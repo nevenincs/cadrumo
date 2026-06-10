@@ -88,10 +88,11 @@ def _add_evidence(profile: TestRuntimeProfile, tmp_path: Path) -> str:
 
 def test_no_linked_evidence_returns_none(profile: TestRuntimeProfile) -> None:
     txn = _transaction(evidence_id=None)
-    result = _resolve_evidence_text(
+    text, reference = _resolve_evidence_text(
         txn, bucket_id="bucket-001", settings=profile.settings, evidence_acknowledged=True
     )
-    assert result is None
+    assert text is None
+    assert reference is None
 
 
 def test_consent_off_refuses_evidence_read(profile: TestRuntimeProfile, tmp_path: Path) -> None:
@@ -111,12 +112,13 @@ def test_consented_read_returns_on_host_extracted_text(
     txn = _transaction(evidence_id=evidence_id)
     consenting: Settings = profile.settings.model_copy(update={"aeat_evidence_cloud_upload_permitted": True})
 
-    # Permitted deployment + per-invocation acknowledgement -> on-host text returned.
-    text = _resolve_evidence_text(
+    # Permitted deployment + per-invocation acknowledgement -> on-host text + reference.
+    text, reference = _resolve_evidence_text(
         txn, bucket_id="bucket-001", settings=consenting, evidence_acknowledged=True
     )
     assert text is not None
     assert "Acme SL" in text
+    assert reference == evidence_id
 
     # Permitted but not acknowledged this invocation -> refused.
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
