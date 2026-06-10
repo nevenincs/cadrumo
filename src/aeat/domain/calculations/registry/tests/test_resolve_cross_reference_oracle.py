@@ -20,6 +20,7 @@ from .._groi_oracle import GROI_ORACLE_ID, GroiOracle
 from .._live_parity import (
     LiveParityCatalogue,
     LiveParityOracle,
+    OracleEnvironment,
     collect_orphan_oracle_ids,
     resolve_cross_reference_oracle,
 )
@@ -32,13 +33,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _catalogue_with_production_oracle() -> LiveParityCatalogue:
     catalogue = LiveParityCatalogue()
-    catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
+    catalogue.register(AeatNifIvaCheckerOracle(), environment=OracleEnvironment.PRODUCTION)
     return catalogue
 
 
 def _catalogue_with_test_environment_oracle() -> LiveParityCatalogue:
     catalogue = LiveParityCatalogue()
-    catalogue.register(AeatNifIvaCheckerOracle(), environment="test_environment")
+    catalogue.register(AeatNifIvaCheckerOracle(), environment=OracleEnvironment.TEST_ENVIRONMENT)
     return catalogue
 
 
@@ -49,7 +50,7 @@ def test_resolves_registered_oracle_under_matching_environment() -> None:
         cross_reference_id="modelo-130-static-official",
         oracle_id=ORACLE_ID,
         catalogue=catalogue,
-        environment="production",
+        environment=OracleEnvironment.PRODUCTION,
     )
 
     assert isinstance(resolved, LiveParityOracle)
@@ -64,7 +65,7 @@ def test_raises_when_cross_reference_has_no_binding() -> None:
             cross_reference_id="modelo-130-static-official",
             oracle_id=None,
             catalogue=catalogue,
-            environment="production",
+            environment=OracleEnvironment.PRODUCTION,
         )
 
 
@@ -76,7 +77,7 @@ def test_unknown_oracle_error_names_cross_reference_and_oracle() -> None:
             cross_reference_id="modelo-349-nif-iva-check",
             oracle_id="aeat-nif-iva-checker",
             catalogue=catalogue,
-            environment="production",
+            environment=OracleEnvironment.PRODUCTION,
         )
 
     message = str(exc_info.value)
@@ -92,7 +93,7 @@ def test_environment_mismatch_error_names_cross_reference_and_oracle() -> None:
             cross_reference_id="modelo-100-test-only-binding",
             oracle_id=ORACLE_ID,
             catalogue=catalogue,
-            environment="production",
+            environment=OracleEnvironment.PRODUCTION,
         )
 
     message = str(exc_info.value)
@@ -142,7 +143,7 @@ def test_resolver_passes_when_applicability_gate_satisfied() -> None:
         cross_reference_id=decision.id,
         oracle_id=ORACLE_ID,
         catalogue=catalogue,
-        environment="production",
+        environment=OracleEnvironment.PRODUCTION,
         decision=decision,
         profile_facts={"does_intracomunitario": True},
     )
@@ -162,7 +163,7 @@ def test_resolver_raises_when_applicability_gate_says_not_applicable() -> None:
             cross_reference_id=decision.id,
             oracle_id=ORACLE_ID,
             catalogue=catalogue,
-            environment="production",
+            environment=OracleEnvironment.PRODUCTION,
             decision=decision,
             profile_facts={"does_intracomunitario": False},
         )
@@ -185,7 +186,7 @@ def test_resolver_ignores_applicability_gate_when_decision_or_profile_omitted() 
         cross_reference_id=decision.id,
         oracle_id=ORACLE_ID,
         catalogue=catalogue,
-        environment="production",
+        environment=OracleEnvironment.PRODUCTION,
     )
 
     assert resolved.oracle_id == ORACLE_ID
@@ -201,8 +202,8 @@ def test_orphan_oracle_collector_flags_unbound_catalogue_entries() -> None:
     """
 
     catalogue = LiveParityCatalogue()
-    catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
-    catalogue.register(GroiOracle(), environment="production")
+    catalogue.register(AeatNifIvaCheckerOracle(), environment=OracleEnvironment.PRODUCTION)
+    catalogue.register(GroiOracle(), environment=OracleEnvironment.PRODUCTION)
 
     orphans = collect_orphan_oracle_ids([], catalogue)
 
@@ -218,8 +219,8 @@ def test_orphan_oracle_collector_returns_empty_when_every_oracle_is_bound() -> N
 
     modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     catalogue = LiveParityCatalogue()
-    catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
-    catalogue.register(GroiOracle(), environment="production")
+    catalogue.register(AeatNifIvaCheckerOracle(), environment=OracleEnvironment.PRODUCTION)
+    catalogue.register(GroiOracle(), environment=OracleEnvironment.PRODUCTION)
 
     orphans = collect_orphan_oracle_ids(modelos, catalogue)
 
@@ -228,19 +229,19 @@ def test_orphan_oracle_collector_returns_empty_when_every_oracle_is_bound() -> N
 
 def test_dual_environment_oracle_resolves_under_either_environment() -> None:
     catalogue = LiveParityCatalogue()
-    catalogue.register(AeatNifIvaCheckerOracle(), environment="both")
+    catalogue.register(AeatNifIvaCheckerOracle(), environment=OracleEnvironment.BOTH)
 
     production = resolve_cross_reference_oracle(
         cross_reference_id="xref",
         oracle_id=ORACLE_ID,
         catalogue=catalogue,
-        environment="production",
+        environment=OracleEnvironment.PRODUCTION,
     )
     test_env = resolve_cross_reference_oracle(
         cross_reference_id="xref",
         oracle_id=ORACLE_ID,
         catalogue=catalogue,
-        environment="test_environment",
+        environment=OracleEnvironment.TEST_ENVIRONMENT,
     )
 
     assert production.oracle_id == ORACLE_ID
