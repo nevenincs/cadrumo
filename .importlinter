@@ -303,6 +303,12 @@ ignore_imports =
     aeat.application.live.tests.test_iva_wallet_live -> aeat.adapters.outbound.aeat.sede
     aeat.application.live.tests.test_iva_wallet_live -> aeat.adapters.persistence.storage
     aeat.application.live.tests.test_iva_wallet_live -> aeat.tests.live_gate
+    aeat.application.live.tests.test_justificante_capture -> aeat.adapters.persistence.storage.sql._orm
+    aeat.application.live.tests.test_justificante_capture -> aeat.adapters.persistence.storage.sql.session
+    aeat.application.live.tests.test_justificante_capture -> aeat.tests.secure_sql
+    aeat.application.live.tests.test_justificante_capture_resolution -> aeat.adapters.outbound.aeat.auth
+    aeat.application.live.tests.test_justificante_capture_resolution -> aeat.adapters.outbound.aeat.sede
+    aeat.application.live.tests.test_justificante_capture_resolution -> aeat.tests.secure_sql
     aeat.application.live.tests.test_notifications -> aeat.adapters.outbound.aeat.sede._notifications
     aeat.application.live.tests.test_notifications -> aeat.adapters.persistence.storage
     aeat.application.live.tests.test_notifications -> aeat.tests.secure_sql
@@ -316,6 +322,8 @@ ignore_imports =
     aeat.application.modelo.tests.test_bucket_aggregation_flow -> aeat.adapters.persistence.storage.sql
     aeat.application.modelo.tests.test_bucket_aggregation_flow -> aeat.tests.secure_sql
     aeat.application.modelo.tests.test_declaration_period_binding -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_dormant_ledger_resolvers_fire_live -> aeat.adapters.persistence.storage.sql
+    aeat.application.modelo.tests.test_dormant_ledger_resolvers_fire_live -> aeat.tests.secure_sql
     aeat.application.modelo.tests.test_export -> aeat.adapters.persistence.storage.runtime
     aeat.application.modelo.tests.test_export -> aeat.adapters.persistence.storage.sql.engine
     aeat.application.modelo.tests.test_export -> aeat.tests.secure_sql
@@ -602,6 +610,10 @@ ignore_imports =
     aeat.application.modelo.tests.test_iva_wallet_correction -> aeat.tests.secure_sql
     aeat.application.modelo.tests.test_m036_lifecycle_read_back -> aeat.tests.secure_sql
     aeat.application.modelo.tests.test_modelo_100_pagos_fraccionados_fold_in_live -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_modelo_100_retenciones_credit_fold_in_live -> aeat.adapters.persistence.storage.sql
+    aeat.application.modelo.tests.test_modelo_100_retenciones_credit_fold_in_live -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_modelo_202_sociedades_fold_in_live -> aeat.adapters.persistence.storage.sql
+    aeat.application.modelo.tests.test_modelo_202_sociedades_fold_in_live -> aeat.tests.secure_sql
     aeat.application.modelo.tests.test_modelo_390_303_fold_in_live -> aeat.tests.secure_sql
     aeat.application.modelo.tests.test_reconciliation_history -> aeat.tests.secure_sql
     aeat.application.modelo.tests.test_relation_fold_in_live -> aeat.tests.secure_sql
