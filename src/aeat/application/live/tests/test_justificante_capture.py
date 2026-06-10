@@ -15,6 +15,7 @@ from __future__ import annotations
 import hashlib
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 
@@ -35,6 +36,23 @@ _PDF_BYTES = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\
 _PDF_SHA256 = hashlib.sha256(_PDF_BYTES).hexdigest()
 _OTHER_PDF_BYTES = b"%PDF-1.4\n1 0 obj<</Type/Catalog/Rev 2>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
 _OTHER_PDF_SHA256 = hashlib.sha256(_OTHER_PDF_BYTES).hexdigest()
+
+
+class _CaptureKwargs(TypedDict):
+    """Typed keyword bundle for ``JustificanteCaptureSnapshotService.capture``.
+
+    Mirrors the capture signature so a ``**``-unpack type-checks each field to
+    its parameter instead of collapsing to the value union ``dict(...)`` infers.
+    """
+
+    modelo: str
+    filing_year: int
+    period: str
+    expediente_id: str
+    csv: str
+    pdf_bytes: bytes
+    pdf_sha256: str
+    captured_at: datetime
 
 
 def _active_snapshot(
@@ -227,7 +245,7 @@ def test_service_capture_is_idempotent_on_same_receipt(tmp_path: Path) -> None:
     bucket_id = "renta-2026-bucket"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         service = JustificanteCaptureSnapshotService(bucket_id=bucket_id)
-        kwargs = dict(
+        kwargs = _CaptureKwargs(
             modelo=Modelo.M130.value,
             filing_year=2026,
             period="2T",
