@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol
 
+from ....core import Modelo
+
 if TYPE_CHECKING:
     from ._snapshot import RegistrySnapshot
 
@@ -79,7 +81,7 @@ def check_cross_domain_snapshot_routing(
     surfaces at snapshot build instead of as a later runtime KeyError.
     """
     casilla_ids = frozenset(checker.casilla_ids)
-    if snapshot.modelo.id == "100" and not _CROSS_DOMAIN_SNAPSHOT_CHECKS:
+    if snapshot.modelo.id == Modelo.M100 and not _CROSS_DOMAIN_SNAPSHOT_CHECKS:
         checker.failures.append(
             f"{checker.prefix}: modelo 100 requires the renta first-slice "
             "routing cross-domain snapshot check, but no cross-domain checks "
