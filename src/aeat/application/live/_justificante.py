@@ -38,6 +38,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.sede import Declaracion, Expediente
     from ...domain.justificante import Justificante
+    from ...domain.modelos import ModeloRecord
     from ..modelo import ModeloReconciliationReport
 
 from ...adapters.persistence.storage import (
@@ -566,16 +567,18 @@ def reconcile_capture(
 def register_capture_as_filing_evidence(
     *,
     snapshot: JustificanteCaptureSnapshot,
-) -> object:
+) -> ModeloRecord:
     """Stamp a persisted live capture as official evidence on its filing record.
 
-    Registers the captured receipt as a domain ``Justificante`` (keyed by the
-    capture's CSV, which is the gate's evidence reference) and updates the work
-    unit's current filing record to carry ``AEAT_LIVE_CAPTURE`` external
-    evidence referencing it. After this, the cross-period clean-state gate's
+    Loads the work unit's current filing record first; with one present, parses
+    the captured receipt into a domain ``Justificante`` (keyed by the capture's
+    CSV, which is the gate's evidence reference), registers it, and updates the
+    filing record to carry ``AEAT_LIVE_CAPTURE`` external evidence referencing
+    it. After this, the cross-period clean-state gate's
     ``MISSING_JUSTIFICANTE_VERIFICATION`` blocker clears for the period, because
     ``aeat_live_capture`` is a justificante-verified evidence kind and the
-    referenced justificante record loads.
+    referenced justificante record loads. Emits a
+    ``MODELO_LIVE_EVIDENCE_STAMPED`` bucket event recording the action.
 
     Returns the stamped :class:`~aeat.domain.modelos.ModeloRecord`.
 
@@ -585,6 +588,14 @@ def register_capture_as_filing_evidence(
             the period before attaching live-capture evidence to it.
     """
     from ...core.time import now
+    from ...domain.buckets import (
+        BucketEvent,
+        BucketEventHistoryRepository,
+        BucketEventObjectType,
+        BucketEventType,
+        append_bucket_event,
+        derive_bucket_event_id,
+    )
     from ...domain.justificante import JustificanteRepository
     from ...domain.modelos import (
         ExternalEvidence,
@@ -592,9 +603,6 @@ def register_capture_as_filing_evidence(
         ModeloRecordCatalogueRepository,
         upsert_filing_record,
     )
-
-    justificante = parse_capture_to_justificante(snapshot).model_copy(update={"csv": snapshot.csv})
-    JustificanteRepository().save(justificante)
 
     filing_repository = ModeloRecordCatalogueRepository()
     catalogue = filing_repository.load()
@@ -610,18 +618,75 @@ def register_capture_as_filing_evidence(
             f"year={snapshot.filing_year} period={snapshot.period!r}; "
             "file the period before stamping live-capture evidence",
         )
+
+    justificante = parse_capture_to_justificante(snapshot).model_copy(update={"csv": snapshot.csv})
+    JustificanteRepository().save(justificante)
+
+    stamped_at = now()
     stamped = current.model_copy(
         update={
             "external_evidence": ExternalEvidence(
                 kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
                 reference_id=snapshot.csv,
-                imported_at=now(),
+                imported_at=stamped_at,
             ),
             "aeat_accepted": True,
         },
     )
     filing_repository.save(upsert_filing_record(catalogue, stamped))
+
+    event_payload = {
+        "work_unit_id": current.work_unit_id,
+        "modelo": snapshot.modelo,
+        "filing_year": str(snapshot.filing_year),
+        "period": snapshot.period,
+        "evidence_kind": ExternalEvidenceKind.AEAT_LIVE_CAPTURE.value,
+        "evidence_reference_id": snapshot.csv,
+        "snapshot_id": snapshot.snapshot_id,
+    }
+    bucket_event_repository = BucketEventHistoryRepository()
+    bucket_event_repository.save(
+        append_bucket_event(
+            bucket_event_repository.load(),
+            BucketEvent(
+                event_id=derive_bucket_event_id(
+                    bucket_id=snapshot.bucket_id,
+                    event_type=BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED,
+                    occurred_at=stamped_at,
+                    actor="aeat-live-capture",
+                    object_type=BucketEventObjectType.FILING_RECORD,
+                    object_id=stamped.filing_record_id,
+                    payload=event_payload,
+                ),
+                bucket_id=snapshot.bucket_id,
+                event_type=BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED,
+                occurred_at=stamped_at,
+                actor="aeat-live-capture",
+                object_type=BucketEventObjectType.FILING_RECORD,
+                object_id=stamped.filing_record_id,
+                payload_version=1,
+                payload=event_payload,
+            ),
+        )
+    )
     return stamped
+
+
+def stamp_capture_evidence_if_filed(snapshot: JustificanteCaptureSnapshot) -> ModeloRecord | None:
+    """Best-effort variant of :func:`register_capture_as_filing_evidence`.
+
+    Returns the stamped record when the captured period has a current filing
+    record, or ``None`` when none exists yet (the snapshot is still persisted;
+    the operator can stamp later by filing the period, then re-capturing) or the
+    captured PDF is not parseable into a justificante. Used by the capture
+    orchestrator so a capture of a period not yet filed in-app does not fail.
+    """
+    from ...domain.justificante import JustificanteParseError
+
+    try:
+        return register_capture_as_filing_evidence(snapshot=snapshot)
+    except (LiveApplicationInputError, JustificanteParseError):
+        return None
 
 
 __all__ = [
@@ -637,4 +702,5 @@ __all__ = [
     "reconcile_capture",
     "register_capture_as_filing_evidence",
     "resolve_period_expediente",
+    "stamp_capture_evidence_if_filed",
 ]
