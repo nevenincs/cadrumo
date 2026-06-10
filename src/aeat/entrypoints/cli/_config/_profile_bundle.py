@@ -20,15 +20,16 @@ from .._common import activate_subcommand_output_language as _activate_subcomman
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 if TYPE_CHECKING:
+    from ....application.workflow import ProfileBucketPointer, WorkflowStateRepository
     from ....domain.buckets import BucketEventType
 
 
 def register_profile_bundle_commands(
     profile_app: typer.Typer,
     *,
-    profile_state: Callable[[], object],
-    resolve_profile_by_label: Callable[[str], object],
-    resolve_active_profile_pointer: Callable[[], object | None],
+    profile_state: Callable[[], WorkflowStateRepository],
+    resolve_profile_by_label: Callable[[str], ProfileBucketPointer],
+    resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None],
     atomic_create_profile: Callable[..., str],
 ) -> None:
     """Register profile bundle import/export commands."""
@@ -44,9 +45,9 @@ def register_profile_bundle_commands(
 def _register_profile_export_command(
     profile_app: typer.Typer,
     *,
-    profile_state: Callable[[], object],
-    resolve_profile_by_label: Callable[[str], object],
-    resolve_active_profile_pointer: Callable[[], object | None],
+    profile_state: Callable[[], WorkflowStateRepository],
+    resolve_profile_by_label: Callable[[str], ProfileBucketPointer],
+    resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None],
 ) -> None:
     @profile_app.command(
         "export",
