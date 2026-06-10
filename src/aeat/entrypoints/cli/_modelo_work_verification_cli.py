@@ -29,6 +29,9 @@ from ._modelo_rendering import (
 )
 
 
+# KWARGS-ANY-RATIONALE-CLI-DI-RESOLVERS: resolve_revision_for_cli is an injected
+# resolver callable whose concrete return type varies by call site;
+# Callable[..., Any] is the DI composition seam.
 def register_work_verification_commands(
     work_app: typer.Typer,
     *,
@@ -60,6 +63,9 @@ def register_work_verification_commands(
     )
 
 
+# KWARGS-ANY-RATIONALE-CLI-DI-RESOLVERS: resolve_revision_for_cli is an injected
+# resolver callable whose concrete return type varies by call site;
+# Callable[..., Any] is the DI composition seam.
 def _register_work_verify_command(
     work_app: typer.Typer,
     *,
@@ -158,6 +164,9 @@ def _register_work_verify_command(
             raise typer.Exit(code=1)
 
 
+# KWARGS-ANY-RATIONALE-CLI-DI-RESOLVERS: resolve_revision_for_cli is an injected
+# resolver callable whose concrete return type varies by call site;
+# Callable[..., Any] is the DI composition seam.
 def _register_work_file_command(
     work_app: typer.Typer,
     *,
