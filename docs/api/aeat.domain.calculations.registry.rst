@@ -45,6 +45,7 @@ Submodules
    aeat.domain.calculations.registry._loader
    aeat.domain.calculations.registry._m232_row_bindings
    aeat.domain.calculations.registry._parity_tapes
+   aeat.domain.calculations.registry._period_offset_math
    aeat.domain.calculations.registry._queries
    aeat.domain.calculations.registry._record_design
    aeat.domain.calculations.registry._record_design_coverage
