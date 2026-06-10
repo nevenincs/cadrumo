@@ -175,18 +175,19 @@ def test_mounted_command_families_are_backend_owned_and_service_backed() -> None
         for command in family.commands
     }
     assert {"lock", "switch", "rekey", "recover", "show-recovery", "verify-recovery"} == custody_commands
-    assert by_domain[MountedCommandDomain.BUCKET].root is RootSurfaceName.CONFIG
-    assert by_domain[MountedCommandDomain.BUCKET].child == "bucket"
-    assert by_domain[MountedCommandDomain.BUCKET].commands == ("history",)
-    assert by_domain[MountedCommandDomain.BUCKET].mutability is OperatorMutability.READ_ONLY
-    assert by_domain[MountedCommandDomain.BUCKET].service_owner == "aeat.domain.buckets"
+    # The append-only event-history verb merged into the `config profile` group
+    # as `config profile history` (D1 family rename); the standalone
+    # `config bucket` group was retired, so there is no BUCKET family.
+    assert MountedCommandDomain.BUCKET not in by_domain
+    assert "history" in by_domain[MountedCommandDomain.PROFILE].commands
     assert by_domain[MountedCommandDomain.OVERVIEW].mutability is OperatorMutability.READ_ONLY
     assert by_domain[MountedCommandDomain.LEDGER].service_owner == "aeat.application.transactions"
     assert by_domain[MountedCommandDomain.REVIEW].service_owner == "aeat.application.review"
 
     mounted_pairs = {(family.root.value, family.child) for family in contract.command_families}
     assert ("config", "auth") in mounted_pairs
-    assert ("config", "bucket") in mounted_pairs
+    assert ("config", "bucket") not in mounted_pairs
+    assert ("config", "profile") in mounted_pairs
     assert ("app", "modelo") in mounted_pairs
     assert all("invoice" not in family.child for family in contract.command_families)
 
@@ -215,7 +216,8 @@ def test_help_documents_are_backend_owned_and_current_surface_only() -> None:
     assert "aeat app live filed list" in root_text
     assert "aeat app live filed capture" in app_text
     assert "aeat config bucket" not in root_text
-    assert "aeat config bucket history" in config_text
+    assert "aeat config bucket" not in config_text
+    assert "aeat config profile history" in config_text
     assert "aeat app invoice" not in app_text
     assert "aeat app declaration" not in app_text
 

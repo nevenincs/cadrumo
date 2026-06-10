@@ -553,7 +553,9 @@ application:
   calculations:
     iva_compensation:
       errors:
-        correction_missing: 'No existe ningún registro de compensación sembrado para %{filing_year}/%{period}; la corrección sobrescribe una siembra existente, no la crea.'
+        correction_missing: No existe ningún registro de compensación sembrado para
+          %{filing_year}/%{period}; la corrección sobrescribe una siembra existente,
+          no la crea.
         modelo_303_only: El historial de compensación de IVA solo acepta observaciones
           del Modelo 303.
         modelo_390_only: El resumen anual de compensación de IVA solo acepta observaciones
@@ -876,8 +878,12 @@ application:
           que los declarantes IRNR no residentes en la UE/EEE designen un representante
           para comunicaciones con la AEAT.
     iva_wallet:
-      correct_no_record: 'No existe ningún registro de compensación sembrado para %{filing_year}/%{period}. Ejecuta primero ''aeat app modelo iva-wallet seed''; la corrección sobrescribe una siembra existente.'
-      correct_sealed_blocked: 'Corrección rechazada: un Modelo 303 ya presentado (%{blocking_filing_year}/%{blocking_period}) ha consumido esta base de compensación sembrada. Cambiarla alteraría una declaración presentada.'
+      correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
+        Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe
+        una siembra existente.
+      correct_sealed_blocked: 'Corrección rechazada: un Modelo 303 ya presentado (%{blocking_filing_year}/%{blocking_period})
+        ha consumido esta base de compensación sembrada. Cambiarla alteraría una declaración
+        presentada.'
       seed_negative_amount: El importe inicial no puede ser negativo.
       seed_no_nif: No hay NIF definido para la operación de importe inicial; asócielo
         al perfil activo.
@@ -1528,14 +1534,26 @@ cli:
           del saldo arrastrado.
         balance_help: Muestra el saldo acumulado del crédito IVA por compensación
           calculado a partir del historial local del Modelo 303.
-        correct_amount_help: 'Importe corregido del saldo a compensar en EUR (decimal, p. ej. 1200.50).'
-        correct_confirm_help: 'Indicador de confirmación obligatorio. Reconoce que esto sobrescribe un saldo a compensar sembrado previamente y que la exactitud de la declaración depende del nuevo valor.'
-        correct_confirm_required: 'Pasa --confirm para confirmar: esto sobrescribe el saldo a compensar del M303 sembrado previamente para el periodo indicado.'
-        correct_filing_year_help: 'Ejercicio del periodo del Modelo 303 sembrado que se va a corregir.'
-        correct_help: 'Corrige un saldo de compensación inicial del Modelo 303 introducido erróneamente para un periodo anterior al historial local. Sobrescribe el importe sembrado existente; se rechaza si no existe ningún registro para el periodo (siembra primero) y si un Modelo 303 ya presentado ha consumido la base sembrada (corregirla cambiaría una declaración presentada). Registra --reason en un evento de auditoría. Requiere --confirm.'
-        correct_period_help: 'Periodo del registro del Modelo 303 sembrado que se va a corregir (p. ej. 4T, 3T).'
-        correct_reason_help: 'Motivo de la corrección, registrado en el evento de auditoría.'
-        correct_reason_required: 'Indica --reason: registra por qué se corrige el saldo inicial; no puede estar vacío.'
+        correct_amount_help: Importe corregido del saldo a compensar en EUR (decimal,
+          p. ej. 1200.50).
+        correct_confirm_help: Indicador de confirmación obligatorio. Reconoce que
+          esto sobrescribe un saldo a compensar sembrado previamente y que la exactitud
+          de la declaración depende del nuevo valor.
+        correct_confirm_required: 'Pasa --confirm para confirmar: esto sobrescribe
+          el saldo a compensar del M303 sembrado previamente para el periodo indicado.'
+        correct_filing_year_help: Ejercicio del periodo del Modelo 303 sembrado que
+          se va a corregir.
+        correct_help: Corrige un saldo de compensación inicial del Modelo 303 introducido
+          erróneamente para un periodo anterior al historial local. Sobrescribe el
+          importe sembrado existente; se rechaza si no existe ningún registro para
+          el periodo (siembra primero) y si un Modelo 303 ya presentado ha consumido
+          la base sembrada (corregirla cambiaría una declaración presentada). Registra
+          --reason en un evento de auditoría. Requiere --confirm.
+        correct_period_help: Periodo del registro del Modelo 303 sembrado que se va
+          a corregir (p. ej. 4T, 3T).
+        correct_reason_help: Motivo de la corrección, registrado en el evento de auditoría.
+        correct_reason_required: 'Indica --reason: registra por qué se corrige el
+          saldo inicial; no puede estar vacío.'
         group_help: Comandos de saldo local de la cartera de compensación IVA.
         seed_amount_help: Importe inicial de la compensación de IVA en decimal.
         seed_confirm_help: Confirme la operación de importe inicial.
@@ -1630,9 +1648,13 @@ cli:
         work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
           inequívoco).
       reconciliation_history:
-        empty: 'Aún no se han registrado conciliaciones.'
-        help: 'Lista las conciliaciones registradas para el perfil activo. Lee el historial de eventos MODELO_RECONCILED, que es de solo anexado; las conciliaciones se pueden repetir cuando se desee, por lo que esta es una lectura de conveniencia, no un registro almacenado.'
-        work_unit_id_help: 'Id de unidad de trabajo opcional para limitar el historial a una sola unidad de trabajo.'
+        empty: Aún no se han registrado conciliaciones.
+        help: Lista las conciliaciones registradas para el perfil activo. Lee el historial
+          de eventos MODELO_RECONCILED, que es de solo anexado; las conciliaciones
+          se pueden repetir cuando se desee, por lo que esta es una lectura de conveniencia,
+          no un registro almacenado.
+        work_unit_id_help: Id de unidad de trabajo opcional para limitar el historial
+          a una sola unidad de trabajo.
       verification_report:
         app_help: Inspeccionar los informes de verificación registrados
         list_help: Listar los informes de verificación, opcionalmente filtrados por
@@ -2018,24 +2040,6 @@ cli:
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
         ''aeat config auth --help'' para ver los identificadores válidos.'
     bucket:
-      actor_help: Filtrar el historial a eventos registrados por un actor concreto
-        (coincidencia exacta)
-      bucket_id_help: Identificador del bucket cuyo historial de eventos se inspecciona
-      event_type_help: Filtrar el historial por uno o varios tipos de evento (repetible)
-      help: Inspeccionar el almacenamiento por bucket y su historial de eventos
-      history:
-        invalid_event_type: 'Tipo de evento desconocido: {value}. Tipos de evento
-          válidos: {valid}.'
-        invalid_timestamp: '{flag} debe ser una marca de tiempo ISO-8601 (p. ej. 2026-04-01T00:00:00+00:00);
-          se recibió {raw}.'
-        since_after_until: --since debe ser anterior o igual a --until.
-      history_help: Mostrar el historial de eventos solo-append de un bucket
-      object_id_help: Filtrar el historial a eventos sobre un object_id concreto (coincidencia
-        exacta)
-      since_help: Filtrar el historial a eventos en o tras esta marca ISO-8601 (p.
-        ej. 2026-04-01T00:00:00+00:00)
-      until_help: Filtrar el historial a eventos en o antes de esta marca ISO-8601
-        (p. ej. 2026-04-30T23:59:59+00:00)
     custody:
       confirm_new_passphrase_help: Repite la nueva contrasena del almacen secreto.
       confirm_new_passphrase_prompt: 'Confirma la nueva contrasena del almacen secreto
@@ -2223,6 +2227,25 @@ cli:
       export_name_help: Perfil que quieres exportar; por defecto, el activo
       export_out_help: Ruta de destino para el paquete JSON
       help: Gestionar valores de configuración del perfil activo
+      history:
+        invalid_event_type: 'Tipo de evento desconocido: {value}. Tipos de evento
+          válidos: {valid}.'
+        invalid_timestamp: '{flag} debe ser una marca de tiempo ISO-8601 (p. ej. 2026-04-01T00:00:00+00:00);
+          se recibió {raw}.'
+        since_after_until: --since debe ser anterior o igual a --until.
+      history_actor_help: Filtrar el historial a eventos registrados por un actor
+        concreto (coincidencia exacta)
+      history_bucket_id_help: Identificador del bucket cuyo historial de eventos se
+        inspecciona
+      history_event_type_help: Filtrar el historial por uno o varios tipos de evento
+        (repetible)
+      history_help: Mostrar el historial de eventos solo-append de un perfil
+      history_object_id_help: Filtrar el historial a eventos sobre un object_id concreto
+        (coincidencia exacta)
+      history_since_help: Filtrar el historial a eventos en o tras esta marca ISO-8601
+        (p. ej. 2026-04-01T00:00:00+00:00)
+      history_until_help: Filtrar el historial a eventos en o antes de esta marca
+        ISO-8601 (p. ej. 2026-04-30T23:59:59+00:00)
       import_help: Registra un paquete portátil de perfil desde un JSON
       import_invalid_bundle: 'Paquete de perfil no válido: el JSON no se ajusta al
         esquema del paquete de perfil.'
@@ -2334,11 +2357,15 @@ cli:
       quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
         --yes para confirmar.
       quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
+      reset_progress_dry_run_help: Informar la huella del envoltorio sin eliminar
+        la fila
+      reset_progress_help: Descartar el envoltorio ilegible del estado del flujo de
+        trabajo (destructivo; requiere --yes)
+      reset_progress_requires_yes: Esta operación es destructiva. Vuelve a ejecutar
+        con --yes para confirmar o pasa --dry-run para inspeccionar la huella.
+      reset_progress_yes_help: Confirmar explícitamente el reinicio del estado del
+        flujo de trabajo
       yes_help: Confirmar la reparación.
-      reset_progress_dry_run_help: 'Informar la huella del envoltorio sin eliminar la fila'
-      reset_progress_help: 'Descartar el envoltorio ilegible del estado del flujo de trabajo (destructivo; requiere --yes)'
-      reset_progress_requires_yes: 'Esta operación es destructiva. Vuelve a ejecutar con --yes para confirmar o pasa --dry-run para inspeccionar la huella.'
-      reset_progress_yes_help: 'Confirmar explícitamente el reinicio del estado del flujo de trabajo'
     reset:
       help: Reiniciar ámbitos de configuración introducidos por el operador
       invalid_scope: 'Ámbito no válido: %{scope}. Los ámbitos válidos son: %{valid}.'
@@ -2383,7 +2410,7 @@ cli:
       help: Mostrar el estado del perfil de configuración activo
       next_step: 'Próximo paso: `aeat app overview status`'
     switch:
-      help: 'Cambia a un perfil y conviértelo en el activo.'
+      help: Cambia a un perfil y conviértelo en el activo.
       name_help: Nombre del perfil al que cambiar. Si se omite, se usa el puntero
         del perfil activo.
     unlock: null
@@ -2911,11 +2938,11 @@ cli:
         auth_providers: Listar los proveedores de autenticacion disponibles.
         auth_status: Mostrar el estado actual de la autenticacion con la AEAT.
         auth_test: Probar la autenticacion con la AEAT.
-        bucket_history: Inspecciona el historial append-only de eventos del bucket.
         diagnostics_logs: Consultar los registros de diagnostico de la aplicacion.
         diagnostics_quarantine: Gestionar los elementos en cuarentena.
         diagnostics_repair: Ejecutar comprobaciones de salud y reparar el estado de
           la aplicacion.
+        diagnostics_reset_progress: Reiniciar el estado interno de la aplicacion.
         first_run_bootstrap: Inicializar la configuracion en el primer uso.
         first_run_edit: Editar la configuracion inicial.
         footer: Ejecute 'aeat config <comando> --help' para obtener mas informacion
@@ -2926,18 +2953,17 @@ cli:
         profile_censo: Mostrar el estado del censo del perfil activo.
         profile_delete: Eliminar un perfil de contribuyente.
         profile_duplicate: Duplicar un perfil de contribuyente existente.
+        profile_history: Inspecciona el historial append-only de eventos del perfil.
         profile_list: Listar los perfiles de contribuyente disponibles.
         profile_rename: Renombrar un perfil de contribuyente.
         profile_show: Mostrar los datos del perfil activo.
         profile_status: Mostrar el estado del perfil activo.
-        profile_switch: 'Switch to a profile and make it the active one.'
+        profile_switch: Switch to a profile and make it the active one.
         section_authentication: Autenticacion AEAT
-        section_bucket_inspection: Inspeccion de bucket
         section_diagnostics: Diagnostico
         section_first_run: Primera ejecucion
         section_profile_inspection: Inspeccion de perfil
         section_profile_lifecycle: Ciclo de vida del perfil
-        diagnostics_reset_progress: 'Reiniciar el estado interno de la aplicacion.'
       root:
         diagnostics_live_filed: Diagnosticar las declaraciones presentadas capturadas
           en vivo.
@@ -4217,6 +4243,8 @@ errors:
       Modelo 036 con el identificador indicado.
     refused_live_expedientes_snapshot_not_found: No existe ningún snapshot de expedientes
       con el identificador indicado.
+    refused_live_justificante_capture_snapshot_not_found: No existe ninguna captura
+      de justificante
     refused_live_notifications_snapshot_not_found: No existe ningún snapshot de notificaciones
       con el identificador indicado.
     refused_live_portal_not_found: No existe ningún portal de la AEAT con el identificador
@@ -4338,7 +4366,6 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
-    refused_live_justificante_capture_snapshot_not_found: 'No existe ninguna captura de justificante'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'

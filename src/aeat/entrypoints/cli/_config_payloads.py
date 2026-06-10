@@ -468,7 +468,12 @@ class ApoderadoCheckResult(OutputSchema):
 
 @register_schema("config.bucket.history")
 class BucketHistoryResult(OutputSchema):
-    """JSON envelope for ``aeat config bucket history``."""
+    """JSON envelope for ``aeat config profile history``.
+
+    The envelope token ``config.bucket.history`` is a stable machine API and
+    is intentionally retained after the operator-facing verb moved from
+    ``config bucket history`` to ``config profile history`` (D1 family).
+    """
 
     operation: str
     bucket_id: str

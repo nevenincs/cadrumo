@@ -497,7 +497,8 @@ application:
   calculations:
     iva_compensation:
       errors:
-        correction_missing: 'No seeded compensation record exists for %{filing_year}/%{period}; correction overwrites an existing seed, it does not create one.'
+        correction_missing: No seeded compensation record exists for %{filing_year}/%{period};
+          correction overwrites an existing seed, it does not create one.
         modelo_303_only: IVA compensation history only accepts Modelo 303 observations.
         modelo_390_only: IVA compensation annual summary only accepts Modelo 390 observations.
         seed_conflict: An IVA compensation state already exists for this period; seeding
@@ -799,8 +800,12 @@ application:
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
     iva_wallet:
-      correct_no_record: 'No seeded compensation record exists for %{filing_year}/%{period}. Run ''aeat app modelo iva-wallet seed'' first; correction overwrites an existing seed.'
-      correct_sealed_blocked: 'Correction refused: an already-filed Modelo 303 (%{blocking_filing_year}/%{blocking_period}) has consumed this seeded compensation basis. Changing it would alter a filed return.'
+      correct_no_record: No seeded compensation record exists for %{filing_year}/%{period}.
+        Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing
+        seed.
+      correct_sealed_blocked: 'Correction refused: an already-filed Modelo 303 (%{blocking_filing_year}/%{blocking_period})
+        has consumed this seeded compensation basis. Changing it would alter a filed
+        return.'
       seed_negative_amount: The seed amount cannot be negative.
       seed_no_nif: No NIF defined for the seed operation; associate one with the active
         profile before seeding.
@@ -1414,14 +1419,24 @@ cli:
         as_of_year_help: Reference year for carry-forward age and expiry calculations.
         balance_help: Show aggregated IVA compensation carry-forward balance computed
           from local Modelo 303 history. Reports total_balance, lot_count, and next_expiry_year.
-        correct_amount_help: 'Corrected carry-forward balance amount in EUR (decimal, e.g. 1200.50).'
-        correct_confirm_help: 'Required confirmation flag. Acknowledge that this overwrites a previously seeded carry-forward balance and filing accuracy depends on the new value.'
-        correct_confirm_required: 'Pass --confirm to acknowledge: this overwrites the previously seeded M303 carry-forward balance for the specified period.'
-        correct_filing_year_help: 'Filing year of the seeded Modelo 303 period to correct.'
-        correct_help: 'Correct a wrong opening Modelo 303 carry-forward balance previously seeded for a pre-history period. Overwrites the existing seeded amount; refuses when no record exists for the period (seed first) and when an already-filed Modelo 303 has consumed the seeded basis (correcting it would change a filed return). Records --reason into an audit event. Requires --confirm.'
-        correct_period_help: 'Period of the seeded Modelo 303 record to correct (e.g. 4T, 3T).'
-        correct_reason_help: 'Reason for the correction, recorded into the audit event.'
-        correct_reason_required: 'Provide --reason: record why the opening balance is being corrected; it must not be blank.'
+        correct_amount_help: Corrected carry-forward balance amount in EUR (decimal,
+          e.g. 1200.50).
+        correct_confirm_help: Required confirmation flag. Acknowledge that this overwrites
+          a previously seeded carry-forward balance and filing accuracy depends on
+          the new value.
+        correct_confirm_required: 'Pass --confirm to acknowledge: this overwrites
+          the previously seeded M303 carry-forward balance for the specified period.'
+        correct_filing_year_help: Filing year of the seeded Modelo 303 period to correct.
+        correct_help: Correct a wrong opening Modelo 303 carry-forward balance previously
+          seeded for a pre-history period. Overwrites the existing seeded amount;
+          refuses when no record exists for the period (seed first) and when an already-filed
+          Modelo 303 has consumed the seeded basis (correcting it would change a filed
+          return). Records --reason into an audit event. Requires --confirm.
+        correct_period_help: Period of the seeded Modelo 303 record to correct (e.g.
+          4T, 3T).
+        correct_reason_help: Reason for the correction, recorded into the audit event.
+        correct_reason_required: 'Provide --reason: record why the opening balance
+          is being corrected; it must not be blank.'
         group_help: Local IVA compensation wallet balance commands.
         seed_amount_help: Carry-forward balance amount in EUR (decimal, e.g. 1200.50).
           This is the compensación pendiente de periodos anteriores for the NEXT period
@@ -1514,9 +1529,12 @@ cli:
         justificante_path_help: Path to the AEAT justificante PDF to reconcile against.
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
       reconciliation_history:
-        empty: 'No reconciliations recorded yet.'
-        help: 'List past reconciliations recorded for the active profile. Reads the append-only MODELO_RECONCILED bucket-event history; reconciliations are repeatable on demand, so this is a convenience read-back, not a stored record.'
-        work_unit_id_help: 'Optional work unit id to narrow the history to one work unit.'
+        empty: No reconciliations recorded yet.
+        help: List past reconciliations recorded for the active profile. Reads the
+          append-only MODELO_RECONCILED bucket-event history; reconciliations are
+          repeatable on demand, so this is a convenience read-back, not a stored record.
+        work_unit_id_help: Optional work unit id to narrow the history to one work
+          unit.
       verification_report:
         app_help: Inspect recorded verification reports
         list_help: List verification reports, optionally filtered to one calculation
@@ -1881,23 +1899,6 @@ cli:
       unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
         config auth --help'' for valid ids.'
     bucket:
-      actor_help: Filter the history to events recorded by a specific actor (exact
-        match)
-      bucket_id_help: Bucket identifier whose event history should be inspected
-      event_type_help: Filter the history to one or more event types (repeatable)
-      help: Inspect bucket-scoped storage and event history
-      history:
-        invalid_event_type: 'Unknown event type: {value}. Valid event types: {valid}.'
-        invalid_timestamp: '{flag} must be an ISO-8601 timestamp (e.g. 2026-04-01T00:00:00+00:00);
-          got {raw}.'
-        since_after_until: --since must be before or equal to --until.
-      history_help: Show the append-only event history for one bucket
-      object_id_help: Filter the history to events targeting a specific object_id
-        (exact match)
-      since_help: Filter the history to events at or after this ISO-8601 timestamp
-        (e.g. 2026-04-01T00:00:00+00:00)
-      until_help: Filter the history to events at or before this ISO-8601 timestamp
-        (e.g. 2026-04-30T23:59:59+00:00)
     custody:
       confirm_new_passphrase_help: Repeat the new secret-store passphrase.
       confirm_new_passphrase_prompt: 'Confirm new AEAT secret-store passphrase: '
@@ -2072,6 +2073,22 @@ cli:
       export_name_help: Profile to export; defaults to the active profile
       export_out_help: Destination path for the JSON bundle
       help: Manage active profile configuration values
+      history:
+        invalid_event_type: 'Unknown event type: {value}. Valid event types: {valid}.'
+        invalid_timestamp: '{flag} must be an ISO-8601 timestamp (e.g. 2026-04-01T00:00:00+00:00);
+          got {raw}.'
+        since_after_until: --since must be before or equal to --until.
+      history_actor_help: Filter the history to events recorded by a specific actor
+        (exact match)
+      history_bucket_id_help: Bucket identifier whose event history should be inspected
+      history_event_type_help: Filter the history to one or more event types (repeatable)
+      history_help: Show the append-only event history for one profile
+      history_object_id_help: Filter the history to events targeting a specific object_id
+        (exact match)
+      history_since_help: Filter the history to events at or after this ISO-8601 timestamp
+        (e.g. 2026-04-01T00:00:00+00:00)
+      history_until_help: Filter the history to events at or before this ISO-8601
+        timestamp (e.g. 2026-04-30T23:59:59+00:00)
       import_help: Register a portable profile bundle from a JSON file
       import_invalid_bundle: 'Invalid profile bundle: the JSON does not conform to
         the profile bundle schema.'
@@ -2177,11 +2194,14 @@ cli:
       quarantine_requires_yes: This operation is destructive. Re-run with --yes to
         confirm.
       quarantine_yes_help: Explicitly confirm the quarantine operation
+      reset_progress_dry_run_help: Report the envelope fingerprint without deleting
+        the row
+      reset_progress_help: Drop the unreadable workflow-state envelope (destructive;
+        requires --yes)
+      reset_progress_requires_yes: This operation is destructive. Re-run with --yes
+        to confirm or pass --dry-run to inspect the fingerprint.
+      reset_progress_yes_help: Explicitly confirm the workflow-state reset
       yes_help: Confirm repair.
-      reset_progress_dry_run_help: 'Report the envelope fingerprint without deleting the row'
-      reset_progress_help: 'Drop the unreadable workflow-state envelope (destructive; requires --yes)'
-      reset_progress_requires_yes: 'This operation is destructive. Re-run with --yes to confirm or pass --dry-run to inspect the fingerprint.'
-      reset_progress_yes_help: 'Explicitly confirm the workflow-state reset'
     reset:
       help: Reset operator-entered configuration scopes
       invalid_scope: 'Invalid scope: %{scope}. Valid scopes are: %{valid}.'
@@ -2221,7 +2241,7 @@ cli:
       help: Show the readiness of the current configuration profile
       next_step: 'Next step: `aeat app overview status`'
     switch:
-      help: 'Switch to a profile and make it the active one.'
+      help: Switch to a profile and make it the active one.
       name_help: Profile name to switch to. Defaults to the active profile pointer.
     unlock: null
     unset:
@@ -2735,10 +2755,10 @@ cli:
         auth_providers: List supported authentication providers.
         auth_status: Show configured authentication state.
         auth_test: Check local authentication readiness.
-        bucket_history: Inspect append-only bucket event history.
         diagnostics_logs: Show the configured log path and recent lines.
         diagnostics_quarantine: Quarantine unreadable secure objects.
         diagnostics_repair: Diagnose local configuration and storage health.
+        diagnostics_reset_progress: Reset unreadable workflow state.
         first_run_bootstrap: Create a local tax profile bucket.
         first_run_edit: Re-run the profile wizard for an existing profile.
         footer: Run aeat --help for the full overview.
@@ -2747,18 +2767,17 @@ cli:
         profile_censo: Sync AEAT censo facts for the active profile.
         profile_delete: Delete a profile after explicit confirmation.
         profile_duplicate: Copy a profile to a new id.
+        profile_history: Inspect the append-only profile event history.
         profile_list: List profile facts.
         profile_rename: Rename a profile and move its bucket.
         profile_show: Show one profile's facts.
         profile_status: Show active profile readiness.
-        profile_switch: 'Switch to a profile and make it the active one.'
+        profile_switch: Switch to a profile and make it the active one.
         section_authentication: Authentication
-        section_bucket_inspection: Bucket inspection
         section_diagnostics: Diagnostics
         section_first_run: First run
         section_profile_inspection: Profile inspection
         section_profile_lifecycle: Profile lifecycle
-        diagnostics_reset_progress: 'Reset unreadable workflow state.'
       root:
         diagnostics_live_filed: List captured filed-return observations.
         diagnostics_overview: Summarize active workspace readiness.
@@ -3952,6 +3971,8 @@ errors:
       the identifier provided.
     refused_live_expedientes_snapshot_not_found: No expedientes snapshot exists with
       the identifier provided.
+    refused_live_justificante_capture_snapshot_not_found: No captured justificante
+      snapshot exists
     refused_live_notifications_snapshot_not_found: No notifications snapshot exists
       with the identifier provided.
     refused_live_portal_not_found: No AEAT portal exists with the identifier provided.
@@ -4062,7 +4083,6 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
-    refused_live_justificante_capture_snapshot_not_found: 'No captured justificante snapshot exists'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'

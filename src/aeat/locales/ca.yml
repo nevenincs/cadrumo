@@ -547,7 +547,9 @@ application:
   calculations:
     iva_compensation:
       errors:
-        correction_missing: 'No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}; la correcció sobreescriu una sembra existent, no la crea.'
+        correction_missing: No existeix cap registre de compensació sembrat per a
+          %{filing_year}/%{period}; la correcció sobreescriu una sembra existent,
+          no la crea.
         modelo_303_only: L'historial de compensació d'IVA només accepta observacions
           del Model 303.
         modelo_390_only: El resum anual de compensació d'IVA només accepta observacions
@@ -867,8 +869,12 @@ application:
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
     iva_wallet:
-      correct_no_record: 'No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}. Executa primer ''aeat app modelo iva-wallet seed''; la correcció sobreescriu una sembra existent.'
-      correct_sealed_blocked: 'Correcció rebutjada: un Model 303 ja presentat (%{blocking_filing_year}/%{blocking_period}) ha consumit aquesta base de compensació sembrada. Canviar-la alteraria una declaració presentada.'
+      correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
+        Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu
+        una sembra existent.
+      correct_sealed_blocked: 'Correcció rebutjada: un Model 303 ja presentat (%{blocking_filing_year}/%{blocking_period})
+        ha consumit aquesta base de compensació sembrada. Canviar-la alteraria una
+        declaració presentada.'
       seed_negative_amount: L'import inicial no pot ser negatiu.
       seed_no_nif: No hi ha NIF definit per a l'operació d'import inicial; associeu-lo
         al perfil actiu.
@@ -1509,14 +1515,26 @@ cli:
           del saldo arrossegat.
         balance_help: Mostra el saldo acumulat del crèdit IVA per compensació calculat
           a partir de l'historial local del Model 303.
-        correct_amount_help: 'Import corregit del saldo a compensar en EUR (decimal, p. ex. 1200.50).'
-        correct_confirm_help: 'Indicador de confirmació obligatori. Reconeix que això sobreescriu un saldo a compensar sembrat prèviament i que l''exactitud de la declaració depèn del nou valor.'
-        correct_confirm_required: 'Passa --confirm per confirmar: això sobreescriu el saldo a compensar del M303 sembrat prèviament per al període indicat.'
-        correct_filing_year_help: 'Exercici del període del Model 303 sembrat que s''ha de corregir.'
-        correct_help: 'Corregeix un saldo de compensació inicial del Model 303 introduït erròniament per a un període anterior a l''historial local. Sobreescriu l''import sembrat existent; es rebutja si no existeix cap registre per al període (sembra primer) i si un Model 303 ja presentat ha consumit la base sembrada (corregir-la canviaria una declaració presentada). Registra --reason en un esdeveniment d''auditoria. Requereix --confirm.'
-        correct_period_help: 'Període del registre del Model 303 sembrat que s''ha de corregir (p. ex. 4T, 3T).'
-        correct_reason_help: 'Motiu de la correcció, registrat a l''esdeveniment d''auditoria.'
-        correct_reason_required: 'Indica --reason: registra per què es corregeix el saldo inicial; no pot estar buit.'
+        correct_amount_help: Import corregit del saldo a compensar en EUR (decimal,
+          p. ex. 1200.50).
+        correct_confirm_help: Indicador de confirmació obligatori. Reconeix que això
+          sobreescriu un saldo a compensar sembrat prèviament i que l'exactitud de
+          la declaració depèn del nou valor.
+        correct_confirm_required: 'Passa --confirm per confirmar: això sobreescriu
+          el saldo a compensar del M303 sembrat prèviament per al període indicat.'
+        correct_filing_year_help: Exercici del període del Model 303 sembrat que s'ha
+          de corregir.
+        correct_help: Corregeix un saldo de compensació inicial del Model 303 introduït
+          erròniament per a un període anterior a l'historial local. Sobreescriu l'import
+          sembrat existent; es rebutja si no existeix cap registre per al període
+          (sembra primer) i si un Model 303 ja presentat ha consumit la base sembrada
+          (corregir-la canviaria una declaració presentada). Registra --reason en
+          un esdeveniment d'auditoria. Requereix --confirm.
+        correct_period_help: Període del registre del Model 303 sembrat que s'ha de
+          corregir (p. ex. 4T, 3T).
+        correct_reason_help: Motiu de la correcció, registrat a l'esdeveniment d'auditoria.
+        correct_reason_required: 'Indica --reason: registra per què es corregeix el
+          saldo inicial; no pot estar buit.'
         group_help: Ordres de saldo local de la cartera de compensació IVA.
         seed_amount_help: Import inicial de la compensació d'IVA en decimal.
         seed_confirm_help: Confirmeu l'operació d'import inicial.
@@ -1602,9 +1620,13 @@ cli:
         work_unit_id_help: Identificador de la unitat de treball (SHA-256 o prefix
           inequívoc).
       reconciliation_history:
-        empty: 'Encara no s''ha registrat cap conciliació.'
-        help: 'Llista les conciliacions registrades per al perfil actiu. Llegeix l''historial d''esdeveniments MODELO_RECONCILED, que és només d''afegit; les conciliacions es poden repetir quan calgui, per la qual cosa aquesta és una lectura de conveniència, no un registre emmagatzemat.'
-        work_unit_id_help: 'Id d''unitat de treball opcional per limitar l''historial a una sola unitat de treball.'
+        empty: Encara no s'ha registrat cap conciliació.
+        help: Llista les conciliacions registrades per al perfil actiu. Llegeix l'historial
+          d'esdeveniments MODELO_RECONCILED, que és només d'afegit; les conciliacions
+          es poden repetir quan calgui, per la qual cosa aquesta és una lectura de
+          conveniència, no un registre emmagatzemat.
+        work_unit_id_help: Id d'unitat de treball opcional per limitar l'historial
+          a una sola unitat de treball.
       verification_report:
         app_help: Inspeccionar els informes de verificació registrats
         list_help: Llistar els informes de verificació, opcionalment filtrats per
@@ -1990,25 +2012,6 @@ cli:
       unknown_provider: 'Proveïdor d''autenticació desconegut: %{provider}. Executa
         ''aeat config auth --help'' per veure els identificadors vàlids.'
     bucket:
-      actor_help: Filtrar l'historial a esdeveniments registrats per un actor concret
-        (coincidència exacta)
-      bucket_id_help: Identificador del bucket l'historial d'esdeveniments del qual
-        s'inspecciona
-      event_type_help: Filtrar l'historial per un o més tipus d'esdeveniment (repetible)
-      help: Inspeccionar l'emmagatzematge per bucket i el seu historial d'esdeveniments
-      history:
-        invalid_event_type: 'Tipus d''esdeveniment desconegut: {value}. Tipus d''esdeveniment
-          vàlids: {valid}.'
-        invalid_timestamp: '{flag} ha de ser una marca de temps ISO-8601 (p. ex. 2026-04-01T00:00:00+00:00);
-          s''ha rebut {raw}.'
-        since_after_until: --since ha de ser anterior o igual a --until.
-      history_help: Mostrar l'historial d'esdeveniments només-append d'un bucket
-      object_id_help: Filtrar l'historial a esdeveniments sobre un object_id concret
-        (coincidència exacta)
-      since_help: Filtrar l'historial a esdeveniments en o després d'aquesta marca
-        ISO-8601 (p. ex. 2026-04-01T00:00:00+00:00)
-      until_help: Filtrar l'historial a esdeveniments en o abans d'aquesta marca ISO-8601
-        (p. ex. 2026-04-30T23:59:59+00:00)
     custody:
       confirm_new_passphrase_help: Repeteix la nova contrasenya del magatzem secret.
       confirm_new_passphrase_prompt: 'Confirma la nova contrasenya del magatzem secret
@@ -2194,6 +2197,25 @@ cli:
       export_name_help: Perfil que vols exportar; per defecte, l'actiu
       export_out_help: Ruta de destinació per al paquet JSON
       help: Gestionar valors de configuració del perfil actiu
+      history:
+        invalid_event_type: 'Tipus d''esdeveniment desconegut: {value}. Tipus d''esdeveniment
+          vàlids: {valid}.'
+        invalid_timestamp: '{flag} ha de ser una marca de temps ISO-8601 (p. ex. 2026-04-01T00:00:00+00:00);
+          s''ha rebut {raw}.'
+        since_after_until: --since ha de ser anterior o igual a --until.
+      history_actor_help: Filtrar l'historial a esdeveniments registrats per un actor
+        concret (coincidència exacta)
+      history_bucket_id_help: Identificador del bucket l'historial d'esdeveniments
+        del qual s'inspecciona
+      history_event_type_help: Filtrar l'historial per un o més tipus d'esdeveniment
+        (repetible)
+      history_help: Mostrar l'historial d'esdeveniments només-append d'un perfil
+      history_object_id_help: Filtrar l'historial a esdeveniments sobre un object_id
+        concret (coincidència exacta)
+      history_since_help: Filtrar l'historial a esdeveniments en o després d'aquesta
+        marca ISO-8601 (p. ex. 2026-04-01T00:00:00+00:00)
+      history_until_help: Filtrar l'historial a esdeveniments en o abans d'aquesta
+        marca ISO-8601 (p. ex. 2026-04-30T23:59:59+00:00)
       import_help: Registra un paquet portable de perfil des d'un JSON
       import_invalid_bundle: 'Paquet de perfil no vàlid: el JSON no s''ajusta a l''esquema
         del paquet de perfil.'
@@ -2303,11 +2325,15 @@ cli:
       quarantine_requires_yes: Aquesta operació és destructiva. Torna a executar amb
         --yes per confirmar.
       quarantine_yes_help: Confirmar explícitament l'operació de quarantena
+      reset_progress_dry_run_help: Informar l'empremta de l'envoltori sense eliminar
+        la fila
+      reset_progress_help: Descartar l'envoltori il·legible de l'estat del flux de
+        treball (destructiu; requereix --yes)
+      reset_progress_requires_yes: Aquesta operació és destructiva. Torna a executar
+        amb --yes per confirmar o passa --dry-run per inspeccionar l'empremta.
+      reset_progress_yes_help: Confirmar explícitament el reinici de l'estat del flux
+        de treball
       yes_help: Confirmar la reparació.
-      reset_progress_dry_run_help: 'Informar l''empremta de l''envoltori sense eliminar la fila'
-      reset_progress_help: 'Descartar l''envoltori il·legible de l''estat del flux de treball (destructiu; requereix --yes)'
-      reset_progress_requires_yes: 'Aquesta operació és destructiva. Torna a executar amb --yes per confirmar o passa --dry-run per inspeccionar l''empremta.'
-      reset_progress_yes_help: 'Confirmar explícitament el reinici de l''estat del flux de treball'
     reset:
       help: Reiniciar àmbits de configuració introduïts per l'operador
       invalid_scope: 'Àmbit no vàlid: %{scope}. Els àmbits vàlids són: %{valid}.'
@@ -2351,7 +2377,7 @@ cli:
       help: Mostrar l'estat del perfil de configuració actiu
       next_step: 'Següent pas: `aeat app overview status`'
     switch:
-      help: 'Canvia a un perfil i fes-lo l’actiu.'
+      help: Canvia a un perfil i fes-lo l’actiu.
       name_help: Nom del perfil al qual canviar. Si s'omet, s'utilitza el punter del
         perfil actiu.
     unlock: null
@@ -2875,10 +2901,10 @@ cli:
         auth_providers: Llistar els proveidors d'autenticacio disponibles.
         auth_status: Mostrar l'estat actual de l'autenticacio amb l'AEAT.
         auth_test: Provar l'autenticacio amb l'AEAT.
-        bucket_history: Inspecciona l historial append-only d esdeveniments del bucket.
         diagnostics_logs: Consultar els registres de diagnostic de l'aplicacio.
         diagnostics_quarantine: Gestionar els elements en quarantena.
         diagnostics_repair: Executar comprovacions de salut i reparar l'estat de l'aplicacio.
+        diagnostics_reset_progress: Reiniciar l'estat intern de l'aplicacio.
         first_run_bootstrap: Inicialitzar la configuracio en el primer us.
         first_run_edit: Editar la configuracio inicial.
         footer: Executeu 'aeat config <ordre> --help' per obtenir mes informacio sobre
@@ -2889,18 +2915,17 @@ cli:
         profile_censo: Mostrar l'estat del cens del perfil actiu.
         profile_delete: Eliminar un perfil de contribuent.
         profile_duplicate: Duplicar un perfil de contribuent existent.
+        profile_history: Inspecciona l'historial append-only d'esdeveniments del perfil.
         profile_list: Llistar els perfils de contribuent disponibles.
         profile_rename: Reanomenar un perfil de contribuent.
         profile_show: Mostrar les dades del perfil actiu.
         profile_status: Mostrar l'estat del perfil actiu.
-        profile_switch: 'Switch to a profile and make it the active one.'
+        profile_switch: Switch to a profile and make it the active one.
         section_authentication: Autenticacio AEAT
-        section_bucket_inspection: Inspeccio de bucket
         section_diagnostics: Diagnostic
         section_first_run: Primera execucio
         section_profile_inspection: Inspeccio del perfil
         section_profile_lifecycle: Cicle de vida del perfil
-        diagnostics_reset_progress: 'Reiniciar l''estat intern de l''aplicacio.'
       root:
         diagnostics_live_filed: Diagnosticar les declaracions presentades capturades
           en viu.
@@ -4174,6 +4199,8 @@ errors:
       Model 036 amb l'identificador indicat.
     refused_live_expedientes_snapshot_not_found: No existeix cap instantània d'expedients
       amb l'identificador indicat.
+    refused_live_justificante_capture_snapshot_not_found: No existeix cap captura
+      de justificant
     refused_live_notifications_snapshot_not_found: No existeix cap instantània de
       notificacions amb l'identificador indicat.
     refused_live_portal_not_found: No existeix cap portal de l'AEAT amb l'identificador
@@ -4291,7 +4318,6 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
-    refused_live_justificante_capture_snapshot_not_found: 'No existeix cap captura de justificant'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
