@@ -250,8 +250,8 @@ class GroiOracle(BaseCheckerOracle[GroiObservation]):
     def __init__(self, *, driver: GroiDriver | None = None) -> None:
         super().__init__(driver=driver)
 
-    @override
     @property
+    @override
     def oracle_id(self) -> str:
         """Return the stable catalogue identifier for this oracle.
 
@@ -264,8 +264,8 @@ class GroiOracle(BaseCheckerOracle[GroiObservation]):
         """
         return GROI_ORACLE_ID
 
-    @override
     @property
+    @override
     def surface_kind(self) -> OracleSurfaceKind:
         """Return the surface-kind tag that gates cross-reference pairing.
 

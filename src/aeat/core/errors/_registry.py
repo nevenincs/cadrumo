@@ -185,7 +185,7 @@ def _flush_deferred_binds() -> None:
     _DEFERRED_BIND.update(still_pending)
 
 
-def bind_error_code(error_type: type[BaseException]) -> ErrorCode:
+def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
     """Bind a stable :class:`ErrorCode` to ``error_type``.
 
     Called from ``AeatError.__init_subclass__`` at class-creation
@@ -215,7 +215,9 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode:
     declared = globals().get("_DECLARED_CODE_BY_QUALNAME")
     if declared is None:
         _DEFERRED_BIND.add(error_type)
-        return  # type: ignore[return-value]  # CAST-RATIONALE-REGISTRY-DEFERRED-BINDING: _DECLARED_CODE_BY_QUALNAME is absent during the circular-import window when a sibling module triggers AeatError subclass creation while _registry.py is still initialising; returning None here is intentional — get_registered_error_code drains _DEFERRED_BIND after the module finishes loading, supplying the code retroactively.
+        # _DECLARED_CODE_BY_QUALNAME is absent during the circular-import window;
+        # get_registered_error_code drains _DEFERRED_BIND after loading.
+        return None
     qualname = _qualname(error_type)
     code = declared.get(qualname)
     if code is None:
@@ -243,7 +245,18 @@ def get_registered_error_code(error: BaseException | type[BaseException]) -> Err
     error_type = error if isinstance(error, type) else type(error)
     code = _CLASS_CODE_REGISTRY.get(error_type)
     if code is None:
-        code = bind_error_code(error_type)
+        resolved = bind_error_code(error_type)
+        # bind_error_code returns None only during the circular-import window
+        # (when _DECLARED_CODE_BY_QUALNAME is absent).  Any runtime call to
+        # get_registered_error_code arrives after the module has finished
+        # loading so the deferred set has been drained by _flush_deferred_binds
+        # above; None here would mean the class has no declared ErrorCode entry.
+        if resolved is None:
+            raise ValueError(
+                f"AeatError subclass {_qualname(error_type)} has no registered ErrorCode "
+                f"even after deferred-bind drain; ensure it is declared in the error-code registry."
+            )
+        code = resolved
     return code
 
 
