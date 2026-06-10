@@ -124,6 +124,53 @@ fact = "iva_amount_sum"
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
+# Domestic reverse-charge (inversion del sujeto pasivo, LIVA art. 84.Uno.2).
+# The recipient self-assesses BOTH an IVA devengado entry (official box 13,
+# "IVA devengado otras ops inversion sujeto pasivo excl intracom - Cuota") and a
+# matching IVA deducible entry (official box 37, deducible inversion sujeto pasivo
+# interior corriente). The two cancel arithmetically in the M303 resultado
+# (devengada - deducible = 0 for the line) but both must be booked. Both bindings
+# select the same domestic_reverse_charge / inversion_sujeto_pasivo observations,
+# so they resolve to the same cuota (net-zero), mirroring the autorepercutido
+# intracomunitaria pair.
+[[revisions.2009-y-siguientes.bindings]]
+id = "modelo-303-iva-autorepercutido-interior-devengado-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.bindings.selector]
+categories = ["domestic_reverse_charge"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+
+[revisions.2009-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2009-y-siguientes.bindings]]
+id = "modelo-303-iva-autorepercutido-interior-deducible-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.bindings.selector]
+categories = ["domestic_reverse_charge"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+
+[revisions.2009-y-siguientes.bindings.aggregation]
+op = "sum"
+
 [[revisions.2009-y-siguientes.bindings]]
 id = "modelo-303-compensacion-pendiente-anteriores"
 source = "previous_filing"
@@ -168,6 +215,9 @@ casilla = "iva.repercutido.super-reducido"
 [[revisions.2009-y-siguientes.formulas.expression.args]]
 casilla = "iva.autorepercutido.intracomunitaria"
 
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla = "iva.autorepercutido.interior.devengado"
+
 [[revisions.2009-y-siguientes.formulas]]
 id = "modelo-303-iva-cuota-deducible-total"
 target = "iva.cuota-deducible-total"
@@ -187,6 +237,9 @@ casilla = "iva.soportado.interiores"
 
 [[revisions.2009-y-siguientes.formulas.expression.args]]
 casilla = "iva.autorepercutido.intracomunitaria"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla = "iva.autorepercutido.interior.deducible"
 
 [[revisions.2009-y-siguientes.formulas]]
 id = "modelo-303-iva-resultado-regimen-general"
@@ -538,6 +591,8 @@ casillas = [
     "iva.repercutido.super-reducido",
     "iva.soportado.interiores",
     "iva.autorepercutido.intracomunitaria",
+    "iva.autorepercutido.interior.devengado",
+    "iva.autorepercutido.interior.deducible",
     "iva.cuota-devengada-total",
     "iva.cuota-deducible-total",
     "iva.resultado-regimen-general",
@@ -555,7 +610,7 @@ casillas = [
     "decl.periodo",
 ]
 formulas = ["modelo-303-iva-cuota-devengada-total", "modelo-303-iva-cuota-deducible-total", "modelo-303-iva-resultado-regimen-general", "modelo-303-compensacion-aplicada-periodo", "modelo-303-compensacion-pendiente-periodos-posteriores", "modelo-303-iva-resultado", "modelo-303-compensacion-generada-periodo", "modelo-303-compensacion-disponible-fin-periodo", "modelo-303-iva-prorrata-porcentaje"]
-bindings = ["modelo-303-iva-repercutido-general-cuota", "modelo-303-iva-repercutido-reducido-cuota", "modelo-303-iva-repercutido-super-reducido-cuota", "modelo-303-iva-soportado-interiores-cuota", "modelo-303-iva-autorepercutido-intracomunitaria-cuota", "modelo-303-compensacion-pendiente-anteriores"]
+bindings = ["modelo-303-iva-repercutido-general-cuota", "modelo-303-iva-repercutido-reducido-cuota", "modelo-303-iva-repercutido-super-reducido-cuota", "modelo-303-iva-soportado-interiores-cuota", "modelo-303-iva-autorepercutido-intracomunitaria-cuota", "modelo-303-iva-autorepercutido-interior-devengado-cuota", "modelo-303-iva-autorepercutido-interior-deducible-cuota", "modelo-303-compensacion-pendiente-anteriores"]
 relations = ["modelo-303-rel-self-compensacion-anteriores"]
 dependency_classifications = ["modelo-303-dep-self-prior-quarter"]
 workbook_parity_refs = ["modelo-303-dr-2025"]
@@ -589,6 +644,12 @@ number = "compensacion-generada-periodo"
 
 [[revisions.2009-y-siguientes.completeness_manifest.casillas]]
 number = "iva.autorepercutido.intracomunitaria"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+number = "iva.autorepercutido.interior.devengado"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+number = "iva.autorepercutido.interior.deducible"
 
 [[revisions.2009-y-siguientes.completeness_manifest.casillas]]
 number = "iva.cuota-deducible-total"

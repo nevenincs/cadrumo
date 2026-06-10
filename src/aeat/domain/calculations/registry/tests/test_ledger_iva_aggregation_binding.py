@@ -232,6 +232,134 @@ def test_resolve_filters_by_flow_direction_autorepercutido() -> None:
     assert result == {"modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("42")}
 
 
+def test_resolve_routes_domestic_reverse_charge_to_devengado_and_deducible_net_zero() -> None:
+    """Domestic inversión del sujeto pasivo (LIVA art. 84.Uno.2) books both sides.
+
+    A ``DOMESTIC_REVERSE_CHARGE`` observation on the ``INVERSION_SUJETO_PASIVO``
+    flow (as the application classifier now emits via
+    ``derive_flow_for_classification``) is consumed by BOTH new bindings:
+    ``modelo-303-iva-autorepercutido-interior-devengado-cuota`` (official box 13)
+    and ``modelo-303-iva-autorepercutido-interior-deducible-cuota`` (official box
+    37). Each resolves the same self-assessed cuota, so the pair nets to zero in
+    the resultado. The ``SOPORTADO`` reverse-charge observation must NOT leak in
+    (it is a different flow and the application gate would never emit it).
+    """
+    revision = _revision_with_bindings(
+        _binding("modelo-303-iva-autorepercutido-interior-devengado-cuota"),
+        _binding("modelo-303-iva-autorepercutido-interior-deducible-cuota"),
+    )
+    observations = [
+        _observation(
+            ledger_id="domestic-rc",
+            category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+            flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+            iva=Decimal("42.00"),
+        ),
+        # A stray SOPORTADO reverse-charge row must not be selected by the
+        # inversion_sujeto_pasivo-flow bindings.
+        _observation(
+            ledger_id="stray-soportado",
+            category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+            flow=IvaFlowDirection.SOPORTADO,
+            iva=Decimal("99.00"),
+        ),
+    ]
+    result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
+    assert result == {
+        "modelo-303-iva-autorepercutido-interior-devengado-cuota": Decimal("42.00"),
+        "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("42.00"),
+    }
+    devengado = result["modelo-303-iva-autorepercutido-interior-devengado-cuota"]
+    deducible = result["modelo-303-iva-autorepercutido-interior-deducible-cuota"]
+    assert devengado - deducible == Decimal("0")
+
+
+def test_resolve_intracomunitaria_binding_consumes_inversion_sujeto_pasivo_flow() -> None:
+    """The intracomunitaria binding resolves the ISP-flow observation.
+
+    Pre-flow-fix the application classifier left intra-community-acquisition
+    reverse-charge observations on a direction-only ``SOPORTADO`` flow, so this
+    ``inversion_sujeto_pasivo``-flow binding was effectively unreachable from the
+    ledger path. With the classifier now routing reverse-charge categories to
+    ``INVERSION_SUJETO_PASIVO``, the binding consumes the observation; a
+    ``SOPORTADO`` row on the same category must NOT match.
+    """
+    revision = _revision_with_bindings(_binding("modelo-303-iva-autorepercutido-intracomunitaria-cuota"))
+    observations = [
+        _observation(
+            ledger_id="ica-isp",
+            category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+            iva=Decimal("63.00"),
+        ),
+        _observation(
+            ledger_id="ica-soportado",
+            category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            flow=IvaFlowDirection.SOPORTADO,
+            iva=Decimal("77.00"),
+        ),
+    ]
+    result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
+    assert result == {"modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("63.00")}
+
+
+def test_calculate_303_domestic_reverse_charge_books_boxes_13_and_37_with_zero_net_impact() -> None:
+    """End-to-end: a reverse-charge ISP observation books box 13 + 37 and nets to zero.
+
+    Calculates the M303 snapshot from a domestic sale plus a domestic
+    reverse-charge ISP observation whose self-assessed cuota the autorepercutido
+    interior bindings echo verbatim. Box 13 (devengado) and box 37 (deducible)
+    must each equal the observation's own ``iva_amount`` (the binding copies the
+    ledger fact; no hand-computed aggregate is asserted). Because the same cuota
+    lands on BOTH the cuota-devengada-total and the cuota-deducible-total (LIVA
+    art. 84.Uno.2 + art. 92 deduction), the reverse-charge contribution to the
+    resultado is exactly zero — the resultado and both totals' *deltas* versus the
+    domestic-only filing are derived by comparison, never by literal addition.
+    """
+    reverse_charge_cuota = Decimal("63.00")
+    domestic_only = _calculate_303_from_observations(
+        filing_year=2025,
+        period="1T",
+        observations=(_observation(ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("21.00")),),
+    )
+    with_reverse_charge = _calculate_303_from_observations(
+        filing_year=2025,
+        period="1T",
+        observations=(
+            _observation(ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("21.00")),
+            _observation(
+                ledger_id="domestic-rc",
+                txn_date=date(2025, 3, 1),
+                category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+                flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+                iva=reverse_charge_cuota,
+            ),
+        ),
+    )
+    # Box 13 (devengado) and box 37 (deducible) both echo the self-assessed cuota
+    # the observation carried — the binding copies the ledger fact verbatim.
+    assert with_reverse_charge.values["iva.autorepercutido.interior.devengado"] == reverse_charge_cuota
+    assert with_reverse_charge.values["iva.autorepercutido.interior.deducible"] == reverse_charge_cuota
+    # The reverse-charge nets to zero: both totals rose by exactly the
+    # self-assessed cuota, so the resultado is unchanged versus the
+    # domestic-only filing. Each delta is computed by comparison, not by
+    # summing literals (no-tautological-calculation-tests).
+    assert (
+        with_reverse_charge.values["iva.cuota-devengada-total"]
+        - domestic_only.values["iva.cuota-devengada-total"]
+        == reverse_charge_cuota
+    )
+    assert (
+        with_reverse_charge.values["iva.cuota-deducible-total"]
+        - domestic_only.values["iva.cuota-deducible-total"]
+        == reverse_charge_cuota
+    )
+    assert (
+        with_reverse_charge.values["iva.resultado-regimen-general"]
+        == domestic_only.values["iva.resultado-regimen-general"]
+    )
+
+
 def test_resolve_filters_by_category_set() -> None:
     """The selector's categories tuple is interpreted as a SET match —
     observations whose category is in the tuple count, others don't."""
